@@ -29,12 +29,12 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
-vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(Instruction _instruction)
+vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::SSTORE:
-	case Instruction::SLOAD:
+	case InternalInstruction::SSTORE:
+	case InternalInstruction::SLOAD:
 	{
 		assertThrow(memory(_instruction) == Effect::None, OptimizerException, "");
 		assertThrow(storage(_instruction) != Effect::None, OptimizerException, "");
@@ -46,9 +46,9 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 		op.lengthConstant = 1;
 		return {op};
 	}
-	case Instruction::MSTORE:
-	case Instruction::MSTORE8:
-	case Instruction::MLOAD:
+	case InternalInstruction::MSTORE:
+	case InternalInstruction::MSTORE8:
+	case InternalInstruction::MLOAD:
 	{
 		assertThrow(memory(_instruction) != Effect::None, OptimizerException, "");
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
@@ -56,21 +56,21 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 		op.effect = memory(_instruction);
 		op.location = Location::Memory;
 		op.startParameter = 0;
-		if (_instruction == Instruction::MSTORE || _instruction == Instruction::MLOAD)
+		if (_instruction == InternalInstruction::MSTORE || _instruction == InternalInstruction::MLOAD)
 			op.lengthConstant = 32;
-		else if (_instruction == Instruction::MSTORE8)
+		else if (_instruction == InternalInstruction::MSTORE8)
 			op.lengthConstant = 1;
 
 		return {op};
 	}
-	case Instruction::REVERT:
-	case Instruction::RETURN:
-	case Instruction::KECCAK256:
-	case Instruction::LOG0:
-	case Instruction::LOG1:
-	case Instruction::LOG2:
-	case Instruction::LOG3:
-	case Instruction::LOG4:
+	case InternalInstruction::REVERT:
+	case InternalInstruction::RETURN:
+	case InternalInstruction::KECCAK256:
+	case InternalInstruction::LOG0:
+	case InternalInstruction::LOG1:
+	case InternalInstruction::LOG2:
+	case InternalInstruction::LOG3:
+	case InternalInstruction::LOG4:
 	{
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
 		assertThrow(memory(_instruction) == Effect::Read, OptimizerException, "");
@@ -81,7 +81,7 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 		op.lengthParameter = 1;
 		return {op};
 	}
-	case Instruction::EXTCODECOPY:
+	case InternalInstruction::EXTCODECOPY:
 	{
 		assertThrow(memory(_instruction) == Effect::Write, OptimizerException, "");
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
@@ -92,9 +92,9 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 		op.lengthParameter = 3;
 		return {op};
 	}
-	case Instruction::CODECOPY:
-	case Instruction::CALLDATACOPY:
-	case Instruction::RETURNDATACOPY:
+	case InternalInstruction::CODECOPY:
+	case InternalInstruction::CALLDATACOPY:
+	case InternalInstruction::RETURNDATACOPY:
 	{
 		assertThrow(memory(_instruction) == Effect::Write, OptimizerException, "");
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
@@ -105,17 +105,17 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 		op.lengthParameter = 2;
 		return {op};
 	}
-	case Instruction::STATICCALL:
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
-	case Instruction::DELEGATECALL:
+	case InternalInstruction::STATICCALL:
+	case InternalInstruction::CALL:
+	case InternalInstruction::CALLCODE:
+	case InternalInstruction::DELEGATECALL:
 	{
 		size_t paramCount = static_cast<size_t>(instructionInfo(_instruction).args);
 		vector<Operation> operations{
 			Operation{Location::Memory, Effect::Read, paramCount - 4, paramCount - 3, {}},
 			Operation{Location::Storage, Effect::Read, {}, {}, {}}
 		};
-		if (_instruction != Instruction::STATICCALL)
+		if (_instruction != InternalInstruction::STATICCALL)
 			operations.emplace_back(Operation{Location::Storage, Effect::Write, {}, {}, {}});
 		operations.emplace_back(Operation{
 			Location::Memory,
@@ -128,8 +128,8 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 		});
 		return operations;
 	}
-	case Instruction::CREATE:
-	case Instruction::CREATE2:
+	case InternalInstruction::CREATE:
+	case InternalInstruction::CREATE2:
 		return vector<Operation>{
 			Operation{
 				Location::Memory,
@@ -141,7 +141,7 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 			Operation{Location::Storage, Effect::Read, {}, {}, {}},
 			Operation{Location::Storage, Effect::Write, {}, {}, {}}
 		};
-	case Instruction::MSIZE:
+	case InternalInstruction::MSIZE:
 		// This is just to satisfy the assert below.
 		return vector<Operation>{};
 	default:
@@ -174,18 +174,18 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	{
 		if (isSwapInstruction(_item) || isDupInstruction(_item))
 			return false;
-		if (_item.instruction() == Instruction::GAS || _item.instruction() == Instruction::PC)
+		if (_item.instruction() == InternalInstruction::GAS || _item.instruction() == InternalInstruction::PC)
 			return true; // GAS and PC assume a specific order of opcodes
-		if (_item.instruction() == Instruction::MSIZE)
+		if (_item.instruction() == InternalInstruction::MSIZE)
 			return true; // msize is modified already by memory access, avoid that for now
 		InstructionInfo info = instructionInfo(_item.instruction());
-		if (_item.instruction() == Instruction::SSTORE)
+		if (_item.instruction() == InternalInstruction::SSTORE)
 			return false;
-		if (_item.instruction() == Instruction::MSTORE)
+		if (_item.instruction() == InternalInstruction::MSTORE)
 			return false;
 		if (!_msizeImportant && (
-			_item.instruction() == Instruction::MLOAD ||
-			_item.instruction() == Instruction::KECCAK256
+			_item.instruction() == InternalInstruction::MLOAD ||
+			_item.instruction() == InternalInstruction::KECCAK256
 		))
 			return false;
 		//@todo: We do not handle the following memory instructions for now:
@@ -204,12 +204,12 @@ bool SemanticInformation::isCommutativeOperation(AssemblyItem const& _item)
 		return false;
 	switch (_item.instruction())
 	{
-	case Instruction::ADD:
-	case Instruction::MUL:
-	case Instruction::EQ:
-	case Instruction::AND:
-	case Instruction::OR:
-	case Instruction::XOR:
+	case InternalInstruction::ADD:
+	case InternalInstruction::MUL:
+	case InternalInstruction::EQ:
+	case InternalInstruction::AND:
+	case InternalInstruction::OR:
+	case InternalInstruction::XOR:
 		return true;
 	default:
 		return false;
@@ -232,7 +232,7 @@ bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 {
-	return _item == Instruction::JUMP || _item == Instruction::JUMPI;
+	return _item == InternalInstruction::JUMP || _item == InternalInstruction::JUMPI;
 }
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
@@ -243,40 +243,40 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	{
 	// note that CALL, CALLCODE and CREATE do not really alter the control flow, because we
 	// continue on the next instruction
-	case Instruction::JUMP:
-	case Instruction::JUMPI:
-	case Instruction::RETURN:
-	case Instruction::SELFDESTRUCT:
-	case Instruction::STOP:
-	case Instruction::INVALID:
-	case Instruction::REVERT:
+	case InternalInstruction::JUMP:
+	case InternalInstruction::JUMPI:
+	case InternalInstruction::RETURN:
+	case InternalInstruction::SELFDESTRUCT:
+	case InternalInstruction::STOP:
+	case InternalInstruction::INVALID:
+	case InternalInstruction::REVERT:
 		return true;
 	default:
 		return false;
 	}
 }
 
-bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
+bool SemanticInformation::terminatesControlFlow(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::RETURN:
-	case Instruction::SELFDESTRUCT:
-	case Instruction::STOP:
-	case Instruction::INVALID:
-	case Instruction::REVERT:
+	case InternalInstruction::RETURN:
+	case InternalInstruction::SELFDESTRUCT:
+	case InternalInstruction::STOP:
+	case InternalInstruction::INVALID:
+	case InternalInstruction::REVERT:
 		return true;
 	default:
 		return false;
 	}
 }
 
-bool SemanticInformation::reverts(Instruction _instruction)
+bool SemanticInformation::reverts(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-		case Instruction::INVALID:
-		case Instruction::REVERT:
+		case InternalInstruction::INVALID:
+		case InternalInstruction::REVERT:
 			return true;
 		default:
 			return false;
@@ -292,28 +292,28 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 
 	switch (_item.instruction())
 	{
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
-	case Instruction::DELEGATECALL:
-	case Instruction::STATICCALL:
-	case Instruction::CREATE:
-	case Instruction::CREATE2:
-	case Instruction::GAS:
-	case Instruction::PC:
-	case Instruction::MSIZE: // depends on previous writes and reads, not only on content
-	case Instruction::BALANCE: // depends on previous calls
-	case Instruction::SELFBALANCE: // depends on previous calls
-	case Instruction::EXTCODESIZE:
-	case Instruction::EXTCODEHASH:
-	case Instruction::RETURNDATACOPY: // depends on previous calls
-	case Instruction::RETURNDATASIZE:
+	case InternalInstruction::CALL:
+	case InternalInstruction::CALLCODE:
+	case InternalInstruction::DELEGATECALL:
+	case InternalInstruction::STATICCALL:
+	case InternalInstruction::CREATE:
+	case InternalInstruction::CREATE2:
+	case InternalInstruction::GAS:
+	case InternalInstruction::PC:
+	case InternalInstruction::MSIZE: // depends on previous writes and reads, not only on content
+	case InternalInstruction::BALANCE: // depends on previous calls
+	case InternalInstruction::SELFBALANCE: // depends on previous calls
+	case InternalInstruction::EXTCODESIZE:
+	case InternalInstruction::EXTCODEHASH:
+	case InternalInstruction::RETURNDATACOPY: // depends on previous calls
+	case InternalInstruction::RETURNDATASIZE:
 		return false;
 	default:
 		return true;
 	}
 }
 
-bool SemanticInformation::movable(Instruction _instruction)
+bool SemanticInformation::movable(InternalInstruction _instruction)
 {
 	// These are not really functional.
 	if (isDupInstruction(_instruction) || isSwapInstruction(_instruction))
@@ -323,16 +323,16 @@ bool SemanticInformation::movable(Instruction _instruction)
 		return false;
 	switch (_instruction)
 	{
-	case Instruction::KECCAK256:
-	case Instruction::BALANCE:
-	case Instruction::SELFBALANCE:
-	case Instruction::EXTCODESIZE:
-	case Instruction::EXTCODEHASH:
-	case Instruction::RETURNDATASIZE:
-	case Instruction::SLOAD:
-	case Instruction::PC:
-	case Instruction::MSIZE:
-	case Instruction::GAS:
+	case InternalInstruction::KECCAK256:
+	case InternalInstruction::BALANCE:
+	case InternalInstruction::SELFBALANCE:
+	case InternalInstruction::EXTCODESIZE:
+	case InternalInstruction::EXTCODEHASH:
+	case InternalInstruction::RETURNDATASIZE:
+	case InternalInstruction::SLOAD:
+	case InternalInstruction::PC:
+	case InternalInstruction::MSIZE:
+	case InternalInstruction::GAS:
 		return false;
 	default:
 		return true;
@@ -340,7 +340,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	return true;
 }
 
-bool SemanticInformation::canBeRemoved(Instruction _instruction)
+bool SemanticInformation::canBeRemoved(InternalInstruction _instruction)
 {
 	// These are not really functional.
 	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
@@ -348,42 +348,42 @@ bool SemanticInformation::canBeRemoved(Instruction _instruction)
 	return !instructionInfo(_instruction).sideEffects;
 }
 
-bool SemanticInformation::canBeRemovedIfNoMSize(Instruction _instruction)
+bool SemanticInformation::canBeRemovedIfNoMSize(InternalInstruction _instruction)
 {
-	if (_instruction == Instruction::KECCAK256 || _instruction == Instruction::MLOAD)
+	if (_instruction == InternalInstruction::KECCAK256 || _instruction == InternalInstruction::MLOAD)
 		return true;
 	else
 		return canBeRemoved(_instruction);
 }
 
-SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction)
+SemanticInformation::Effect SemanticInformation::memory(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::CALLDATACOPY:
-	case Instruction::CODECOPY:
-	case Instruction::EXTCODECOPY:
-	case Instruction::RETURNDATACOPY:
-	case Instruction::MSTORE:
-	case Instruction::MSTORE8:
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
-	case Instruction::DELEGATECALL:
-	case Instruction::STATICCALL:
+	case InternalInstruction::CALLDATACOPY:
+	case InternalInstruction::CODECOPY:
+	case InternalInstruction::EXTCODECOPY:
+	case InternalInstruction::RETURNDATACOPY:
+	case InternalInstruction::MSTORE:
+	case InternalInstruction::MSTORE8:
+	case InternalInstruction::CALL:
+	case InternalInstruction::CALLCODE:
+	case InternalInstruction::DELEGATECALL:
+	case InternalInstruction::STATICCALL:
 		return SemanticInformation::Write;
 
-	case Instruction::CREATE:
-	case Instruction::CREATE2:
-	case Instruction::KECCAK256:
-	case Instruction::MLOAD:
-	case Instruction::MSIZE:
-	case Instruction::RETURN:
-	case Instruction::REVERT:
-	case Instruction::LOG0:
-	case Instruction::LOG1:
-	case Instruction::LOG2:
-	case Instruction::LOG3:
-	case Instruction::LOG4:
+	case InternalInstruction::CREATE:
+	case InternalInstruction::CREATE2:
+	case InternalInstruction::KECCAK256:
+	case InternalInstruction::MLOAD:
+	case InternalInstruction::MSIZE:
+	case InternalInstruction::RETURN:
+	case InternalInstruction::REVERT:
+	case InternalInstruction::LOG0:
+	case InternalInstruction::LOG1:
+	case InternalInstruction::LOG2:
+	case InternalInstruction::LOG3:
+	case InternalInstruction::LOG4:
 		return SemanticInformation::Read;
 
 	default:
@@ -391,18 +391,18 @@ SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction
 	}
 }
 
-bool SemanticInformation::movableApartFromEffects(Instruction _instruction)
+bool SemanticInformation::movableApartFromEffects(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::EXTCODEHASH:
-	case Instruction::EXTCODESIZE:
-	case Instruction::RETURNDATASIZE:
-	case Instruction::BALANCE:
-	case Instruction::SELFBALANCE:
-	case Instruction::SLOAD:
-	case Instruction::KECCAK256:
-	case Instruction::MLOAD:
+	case InternalInstruction::EXTCODEHASH:
+	case InternalInstruction::EXTCODESIZE:
+	case InternalInstruction::RETURNDATASIZE:
+	case InternalInstruction::BALANCE:
+	case InternalInstruction::SELFBALANCE:
+	case InternalInstruction::SLOAD:
+	case InternalInstruction::KECCAK256:
+	case InternalInstruction::MLOAD:
 		return true;
 
 	default:
@@ -410,20 +410,20 @@ bool SemanticInformation::movableApartFromEffects(Instruction _instruction)
 	}
 }
 
-SemanticInformation::Effect SemanticInformation::storage(Instruction _instruction)
+SemanticInformation::Effect SemanticInformation::storage(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
-	case Instruction::DELEGATECALL:
-	case Instruction::CREATE:
-	case Instruction::CREATE2:
-	case Instruction::SSTORE:
+	case InternalInstruction::CALL:
+	case InternalInstruction::CALLCODE:
+	case InternalInstruction::DELEGATECALL:
+	case InternalInstruction::CREATE:
+	case InternalInstruction::CREATE2:
+	case InternalInstruction::SSTORE:
 		return SemanticInformation::Write;
 
-	case Instruction::SLOAD:
-	case Instruction::STATICCALL:
+	case InternalInstruction::SLOAD:
+	case InternalInstruction::STATICCALL:
 		return SemanticInformation::Read;
 
 	default:
@@ -431,28 +431,28 @@ SemanticInformation::Effect SemanticInformation::storage(Instruction _instructio
 	}
 }
 
-SemanticInformation::Effect SemanticInformation::otherState(Instruction _instruction)
+SemanticInformation::Effect SemanticInformation::otherState(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
-	case Instruction::DELEGATECALL:
-	case Instruction::CREATE:
-	case Instruction::CREATE2:
-	case Instruction::SELFDESTRUCT:
-	case Instruction::STATICCALL: // because it can affect returndatasize
+	case InternalInstruction::CALL:
+	case InternalInstruction::CALLCODE:
+	case InternalInstruction::DELEGATECALL:
+	case InternalInstruction::CREATE:
+	case InternalInstruction::CREATE2:
+	case InternalInstruction::SELFDESTRUCT:
+	case InternalInstruction::STATICCALL: // because it can affect returndatasize
 		// Strictly speaking, log0, .., log4 writes to the state, but the EVM cannot read it, so they
 		// are just marked as having 'other side effects.'
 		return SemanticInformation::Write;
 
-	case Instruction::EXTCODESIZE:
-	case Instruction::EXTCODEHASH:
-	case Instruction::RETURNDATASIZE:
-	case Instruction::BALANCE:
-	case Instruction::SELFBALANCE:
-	case Instruction::RETURNDATACOPY:
-	case Instruction::EXTCODECOPY:
+	case InternalInstruction::EXTCODESIZE:
+	case InternalInstruction::EXTCODEHASH:
+	case InternalInstruction::RETURNDATASIZE:
+	case InternalInstruction::BALANCE:
+	case InternalInstruction::SELFBALANCE:
+	case InternalInstruction::RETURNDATACOPY:
+	case InternalInstruction::EXTCODECOPY:
 		// PC and GAS are specifically excluded here. Instructions such as CALLER, CALLVALUE,
 		// ADDRESS are excluded because they cannot change during execution.
 		return SemanticInformation::Read;
@@ -462,31 +462,31 @@ SemanticInformation::Effect SemanticInformation::otherState(Instruction _instruc
 	}
 }
 
-bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
+bool SemanticInformation::invalidInPureFunctions(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::ADDRESS:
-	case Instruction::SELFBALANCE:
-	case Instruction::BALANCE:
-	case Instruction::ORIGIN:
-	case Instruction::CALLER:
-	case Instruction::CALLVALUE:
-	case Instruction::CHAINID:
-	case Instruction::BASEFEE:
-	case Instruction::GAS:
-	case Instruction::GASPRICE:
-	case Instruction::EXTCODESIZE:
-	case Instruction::EXTCODECOPY:
-	case Instruction::EXTCODEHASH:
-	case Instruction::BLOCKHASH:
-	case Instruction::COINBASE:
-	case Instruction::TIMESTAMP:
-	case Instruction::NUMBER:
-	case Instruction::DIFFICULTY:
-	case Instruction::GASLIMIT:
-	case Instruction::STATICCALL:
-	case Instruction::SLOAD:
+	case InternalInstruction::ADDRESS:
+	case InternalInstruction::SELFBALANCE:
+	case InternalInstruction::BALANCE:
+	case InternalInstruction::ORIGIN:
+	case InternalInstruction::CALLER:
+	case InternalInstruction::CALLVALUE:
+	case InternalInstruction::CHAINID:
+	case InternalInstruction::BASEFEE:
+	case InternalInstruction::GAS:
+	case InternalInstruction::GASPRICE:
+	case InternalInstruction::EXTCODESIZE:
+	case InternalInstruction::EXTCODECOPY:
+	case InternalInstruction::EXTCODEHASH:
+	case InternalInstruction::BLOCKHASH:
+	case InternalInstruction::COINBASE:
+	case InternalInstruction::TIMESTAMP:
+	case InternalInstruction::NUMBER:
+	case InternalInstruction::DIFFICULTY:
+	case InternalInstruction::GASLIMIT:
+	case InternalInstruction::STATICCALL:
+	case InternalInstruction::SLOAD:
 		return true;
 	default:
 		break;
@@ -494,24 +494,24 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	return invalidInViewFunctions(_instruction);
 }
 
-bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
+bool SemanticInformation::invalidInViewFunctions(InternalInstruction _instruction)
 {
 	switch (_instruction)
 	{
-	case Instruction::SSTORE:
-	case Instruction::JUMP:
-	case Instruction::JUMPI:
-	case Instruction::LOG0:
-	case Instruction::LOG1:
-	case Instruction::LOG2:
-	case Instruction::LOG3:
-	case Instruction::LOG4:
-	case Instruction::CREATE:
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
-	case Instruction::DELEGATECALL:
-	case Instruction::CREATE2:
-	case Instruction::SELFDESTRUCT:
+	case InternalInstruction::SSTORE:
+	case InternalInstruction::JUMP:
+	case InternalInstruction::JUMPI:
+	case InternalInstruction::LOG0:
+	case InternalInstruction::LOG1:
+	case InternalInstruction::LOG2:
+	case InternalInstruction::LOG3:
+	case InternalInstruction::LOG4:
+	case InternalInstruction::CREATE:
+	case InternalInstruction::CALL:
+	case InternalInstruction::CALLCODE:
+	case InternalInstruction::DELEGATECALL:
+	case InternalInstruction::CREATE2:
+	case InternalInstruction::SELFDESTRUCT:
 		return true;
 	default:
 		break;

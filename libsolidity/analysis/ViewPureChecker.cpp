@@ -112,7 +112,7 @@ public:
 	}
 
 private:
-	void checkInstruction(SourceLocation _location, evmasm::Instruction _instruction)
+	void checkInstruction(SourceLocation _location, evmasm::InternalInstruction _instruction)
 	{
 		if (evmasm::SemanticInformation::invalidInViewFunctions(_instruction))
 			m_reportMutability(StateMutability::NonPayable, _location);

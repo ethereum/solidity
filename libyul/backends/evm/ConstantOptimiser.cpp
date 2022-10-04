@@ -48,24 +48,24 @@ struct MiniEVMInterpreter
 		return std::visit(*this, _expr);
 	}
 
-	u256 eval(evmasm::Instruction _instr, vector<Expression> const& _arguments)
+	u256 eval(evmasm::InternalInstruction _instr, vector<Expression> const& _arguments)
 	{
 		vector<u256> args;
 		for (auto const& arg: _arguments)
 			args.emplace_back(eval(arg));
 		switch (_instr)
 		{
-		case evmasm::Instruction::ADD:
+		case evmasm::InternalInstruction::ADD:
 			return args.at(0) + args.at(1);
-		case evmasm::Instruction::SUB:
+		case evmasm::InternalInstruction::SUB:
 			return args.at(0) - args.at(1);
-		case evmasm::Instruction::MUL:
+		case evmasm::InternalInstruction::MUL:
 			return args.at(0) * args.at(1);
-		case evmasm::Instruction::EXP:
+		case evmasm::InternalInstruction::EXP:
 			return exp256(args.at(0), args.at(1));
-		case evmasm::Instruction::SHL:
+		case evmasm::InternalInstruction::SHL:
 			return args.at(0) > 255 ? 0 : (args.at(1) << unsigned(args.at(0)));
-		case evmasm::Instruction::NOT:
+		case evmasm::InternalInstruction::NOT:
 			return ~args.at(0);
 		default:
 			yulAssert(false, "Invalid operation generated in constant optimizer.");

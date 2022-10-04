@@ -88,36 +88,36 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 
 	ExpressionClasses& classes = m_state.expressionClasses();
 	SourceLocation const& itemLocation = m_breakingItem->location();
-	if (*m_breakingItem == AssemblyItem(Instruction::JUMPI))
+	if (*m_breakingItem == AssemblyItem(InternalInstruction::JUMPI))
 	{
 		AssemblyItem::JumpType jumpType = m_breakingItem->getJumpType();
 
 		Id condition = m_state.stackElement(m_state.stackHeight() - 1, itemLocation);
 		if (classes.knownNonZero(condition))
 		{
-			feedItem(AssemblyItem(Instruction::SWAP1, itemLocation), true);
-			feedItem(AssemblyItem(Instruction::POP, itemLocation), true);
+			feedItem(AssemblyItem(InternalInstruction::SWAP1, itemLocation), true);
+			feedItem(AssemblyItem(InternalInstruction::POP, itemLocation), true);
 
-			AssemblyItem item(Instruction::JUMP, itemLocation);
+			AssemblyItem item(InternalInstruction::JUMP, itemLocation);
 			item.setJumpType(jumpType);
 			m_breakingItem = classes.storeItem(item);
 		}
 		else if (classes.knownZero(condition))
 		{
-			AssemblyItem it(Instruction::POP, itemLocation);
+			AssemblyItem it(InternalInstruction::POP, itemLocation);
 			feedItem(it, true);
 			feedItem(it, true);
 			m_breakingItem = nullptr;
 		}
 	}
-	else if (*m_breakingItem == AssemblyItem(Instruction::RETURN))
+	else if (*m_breakingItem == AssemblyItem(InternalInstruction::RETURN))
 	{
 		Id size = m_state.stackElement(m_state.stackHeight() - 1, itemLocation);
 		if (classes.knownZero(size))
 		{
-			feedItem(AssemblyItem(Instruction::POP, itemLocation), true);
-			feedItem(AssemblyItem(Instruction::POP, itemLocation), true);
-			AssemblyItem item(Instruction::STOP, itemLocation);
+			feedItem(AssemblyItem(InternalInstruction::POP, itemLocation), true);
+			feedItem(AssemblyItem(InternalInstruction::POP, itemLocation), true);
+			AssemblyItem item(InternalInstruction::STOP, itemLocation);
 			m_breakingItem = classes.storeItem(item);
 		}
 	}
@@ -233,15 +233,15 @@ void CSECodeGenerator::addDependencies(Id _c)
 		m_neededBy.insert(make_pair(argument, _c));
 	}
 	if (expr.item && expr.item->type() == Operation && (
-		expr.item->instruction() == Instruction::SLOAD ||
-		expr.item->instruction() == Instruction::MLOAD ||
-		expr.item->instruction() == Instruction::KECCAK256
+		expr.item->instruction() == InternalInstruction::SLOAD ||
+		expr.item->instruction() == InternalInstruction::MLOAD ||
+		expr.item->instruction() == InternalInstruction::KECCAK256
 	))
 	{
 		// this loads an unknown value from storage or memory and thus, in addition to its
 		// arguments, depends on all store operations to addresses where we do not know that
 		// they are different that occur before this load
-		StoreOperation::Target target = expr.item->instruction() == Instruction::SLOAD ?
+		StoreOperation::Target target = expr.item->instruction() == InternalInstruction::SLOAD ?
 			StoreOperation::Storage : StoreOperation::Memory;
 		Id slotToLoadFrom = expr.arguments.at(0);
 		for (auto const& p: m_storeOperations)
@@ -255,16 +255,16 @@ void CSECodeGenerator::addDependencies(Id _c)
 			bool knownToBeIndependent = false;
 			switch (expr.item->instruction())
 			{
-			case Instruction::SLOAD:
+			case InternalInstruction::SLOAD:
 				knownToBeIndependent = m_expressionClasses.knownToBeDifferent(slot, slotToLoadFrom);
 				break;
-			case Instruction::MLOAD:
+			case InternalInstruction::MLOAD:
 				knownToBeIndependent = m_expressionClasses.knownToBeDifferentBy32(slot, slotToLoadFrom);
 				break;
-			case Instruction::KECCAK256:
+			case InternalInstruction::KECCAK256:
 			{
 				Id length = expr.arguments.at(1);
-				AssemblyItem offsetInstr(Instruction::SUB, expr.item->location());
+				AssemblyItem offsetInstr(InternalInstruction::SUB, expr.item->location());
 				Id offsetToStart = m_expressionClasses.find(offsetInstr, {slot, slotToLoadFrom});
 				u256 const* o = m_expressionClasses.knownConstant(offsetToStart);
 				u256 const* l = m_expressionClasses.knownConstant(length);
@@ -397,7 +397,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 
 	while (SemanticInformation::isCommutativeOperation(*expr.item) &&
 			!m_generatedItems.empty() &&
-			m_generatedItems.back() == AssemblyItem(Instruction::SWAP1))
+			m_generatedItems.back() == AssemblyItem(InternalInstruction::SWAP1))
 		// this will not append a swap but remove the one that is already there
 		appendOrRemoveSwap(m_stackHeight - 1, itemLocation);
 	for (size_t i = 0; i < arguments.size(); ++i)
@@ -464,7 +464,7 @@ bool CSECodeGenerator::removeStackTopIfPossible()
 		return false;
 	m_classPositions[m_stack[m_stackHeight]].erase(m_stackHeight);
 	m_stack.erase(m_stackHeight);
-	appendItem(AssemblyItem(Instruction::POP));
+	appendItem(AssemblyItem(InternalInstruction::POP));
 	return true;
 }
 

@@ -180,7 +180,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(
 		return arg.at(0) & uint32_t(-1);
 	else if (fun == "unreachable")
 	{
-		logTrace(evmasm::Instruction::INVALID, {});
+		logTrace(evmasm::InternalInstruction::INVALID, {});
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (fun == "i64.store")
@@ -334,7 +334,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		readAddress(arg[1]);
 		readU128(arg[2]);
 		accessMemory(arg[3], arg[4]);
-		logTrace(evmasm::Instruction::CALL, {});
+		logTrace(evmasm::InternalInstruction::CALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "callDataCopy")
@@ -355,21 +355,21 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		readAddress(arg[1]);
 		readU128(arg[2]);
 		accessMemory(arg[3], arg[4]);
-		logTrace(evmasm::Instruction::CALLCODE, {});
+		logTrace(evmasm::InternalInstruction::CALLCODE, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "callDelegate")
 	{
 		readAddress(arg[1]);
 		accessMemory(arg[2], arg[3]);
-		logTrace(evmasm::Instruction::DELEGATECALL, {});
+		logTrace(evmasm::InternalInstruction::DELEGATECALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "callStatic")
 	{
 		readAddress(arg[1]);
 		accessMemory(arg[2], arg[3]);
-		logTrace(evmasm::Instruction::STATICCALL, {});
+		logTrace(evmasm::InternalInstruction::STATICCALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "storageStore")
@@ -412,7 +412,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	{
 		readU128(arg[0]);
 		accessMemory(arg[1], arg[2]);
-		logTrace(evmasm::Instruction::CREATE, {});
+		logTrace(evmasm::InternalInstruction::CREATE, {});
 		writeAddress(arg[3], h160(0xcccccc + arg[1]));
 		return 1;
 	}
@@ -478,7 +478,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		bytes data;
 		accessMemory(arg[0], arg[1]);
 		data = readMemory(arg[0], arg[1]);
-		logTrace(evmasm::Instruction::RETURN, {}, data);
+		logTrace(evmasm::InternalInstruction::RETURN, {}, data);
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (_fun == "revert")
@@ -486,7 +486,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		bytes data;
 		accessMemory(arg[0], arg[1]);
 		data = readMemory(arg[0], arg[1]);
-		logTrace(evmasm::Instruction::REVERT, {}, data);
+		logTrace(evmasm::InternalInstruction::REVERT, {}, data);
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (_fun == "getReturnDataSize")
@@ -505,7 +505,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	else if (_fun == "selfDestruct")
 	{
 		readAddress(arg[0]);
-		logTrace(evmasm::Instruction::SELFDESTRUCT, {});
+		logTrace(evmasm::InternalInstruction::SELFDESTRUCT, {});
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (_fun == "getBlockTimestamp")
@@ -595,7 +595,7 @@ u256 EwasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
 	return value;
 }
 
-void EwasmBuiltinInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EwasmBuiltinInterpreter::logTrace(evmasm::InternalInstruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
 {
 	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
 }

@@ -50,7 +50,7 @@ bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulString const& _iden
 	return _identifier.empty() || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier);
 }
 
-optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulString const& _name)
+optional<evmasm::InternalInstruction> yul::toEVMInstruction(Dialect const& _dialect, YulString const& _name)
 {
 	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 		if (BuiltinFunctionForEVM const* builtin = dialect->builtin(_name))

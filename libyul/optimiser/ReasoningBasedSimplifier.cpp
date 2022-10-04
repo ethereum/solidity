@@ -109,7 +109,7 @@ ReasoningBasedSimplifier::ReasoningBasedSimplifier(
 
 
 smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
-	evmasm::Instruction _instruction,
+	evmasm::InternalInstruction _instruction,
 	vector<yul::Expression> const& _arguments
 )
 {
@@ -119,19 +119,19 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 	);
 	switch (_instruction)
 	{
-	case evmasm::Instruction::ADD:
+	case evmasm::InternalInstruction::ADD:
 		return wrap(arguments.at(0) + arguments.at(1));
-	case evmasm::Instruction::MUL:
+	case evmasm::InternalInstruction::MUL:
 		return wrap(arguments.at(0) * arguments.at(1));
-	case evmasm::Instruction::SUB:
+	case evmasm::InternalInstruction::SUB:
 		return wrap(arguments.at(0) - arguments.at(1));
-	case evmasm::Instruction::DIV:
+	case evmasm::InternalInstruction::DIV:
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
 			arguments.at(0) / arguments.at(1)
 		);
-	case evmasm::Instruction::SDIV:
+	case evmasm::InternalInstruction::SDIV:
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
@@ -143,13 +143,13 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 				twosComplementToSigned(arguments.at(1))
 			))
 		);
-	case evmasm::Instruction::MOD:
+	case evmasm::InternalInstruction::MOD:
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
 			arguments.at(0) % arguments.at(1)
 		);
-	case evmasm::Instruction::SMOD:
+	case evmasm::InternalInstruction::SMOD:
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
@@ -158,61 +158,61 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 				twosComplementToSigned(arguments.at(1))
 			))
 		);
-	case evmasm::Instruction::LT:
+	case evmasm::InternalInstruction::LT:
 		return booleanValue(arguments.at(0) < arguments.at(1));
-	case evmasm::Instruction::SLT:
+	case evmasm::InternalInstruction::SLT:
 		return booleanValue(twosComplementToSigned(arguments.at(0)) < twosComplementToSigned(arguments.at(1)));
-	case evmasm::Instruction::GT:
+	case evmasm::InternalInstruction::GT:
 		return booleanValue(arguments.at(0) > arguments.at(1));
-	case evmasm::Instruction::SGT:
+	case evmasm::InternalInstruction::SGT:
 		return booleanValue(twosComplementToSigned(arguments.at(0)) > twosComplementToSigned(arguments.at(1)));
-	case evmasm::Instruction::EQ:
+	case evmasm::InternalInstruction::EQ:
 		return booleanValue(arguments.at(0) == arguments.at(1));
-	case evmasm::Instruction::ISZERO:
+	case evmasm::InternalInstruction::ISZERO:
 		return booleanValue(arguments.at(0) == constantValue(0));
-	case evmasm::Instruction::AND:
+	case evmasm::InternalInstruction::AND:
 		return smtutil::Expression::ite(
 			(arguments.at(0) == 0 || arguments.at(0) == 1) &&
 			(arguments.at(1) == 0 || arguments.at(1) == 1),
 			booleanValue(arguments.at(0) == 1 && arguments.at(1) == 1),
 			bv2int(int2bv(arguments.at(0)) & int2bv(arguments.at(1)))
 		);
-	case evmasm::Instruction::OR:
+	case evmasm::InternalInstruction::OR:
 		return smtutil::Expression::ite(
 			(arguments.at(0) == 0 || arguments.at(0) == 1) &&
 			(arguments.at(1) == 0 || arguments.at(1) == 1),
 			booleanValue(arguments.at(0) == 1 || arguments.at(1) == 1),
 			bv2int(int2bv(arguments.at(0)) | int2bv(arguments.at(1)))
 		);
-	case evmasm::Instruction::XOR:
+	case evmasm::InternalInstruction::XOR:
 		return bv2int(int2bv(arguments.at(0)) ^ int2bv(arguments.at(1)));
-	case evmasm::Instruction::NOT:
+	case evmasm::InternalInstruction::NOT:
 		return smtutil::Expression(u256(-1)) - arguments.at(0);
-	case evmasm::Instruction::SHL:
+	case evmasm::InternalInstruction::SHL:
 		return smtutil::Expression::ite(
 			arguments.at(0) > 255,
 			constantValue(0),
 			bv2int(int2bv(arguments.at(1)) << int2bv(arguments.at(0)))
 		);
-	case evmasm::Instruction::SHR:
+	case evmasm::InternalInstruction::SHR:
 		return smtutil::Expression::ite(
 			arguments.at(0) > 255,
 			constantValue(0),
 			bv2int(int2bv(arguments.at(1)) >> int2bv(arguments.at(0)))
 		);
-	case evmasm::Instruction::SAR:
+	case evmasm::InternalInstruction::SAR:
 		return smtutil::Expression::ite(
 			arguments.at(0) > 255,
 			constantValue(0),
 			bv2int(smtutil::Expression::ashr(int2bv(arguments.at(1)), int2bv(arguments.at(0))))
 		);
-	case evmasm::Instruction::ADDMOD:
+	case evmasm::InternalInstruction::ADDMOD:
 		return smtutil::Expression::ite(
 			arguments.at(2) == constantValue(0),
 			constantValue(0),
 			(arguments.at(0) + arguments.at(1)) % arguments.at(2)
 		);
-	case evmasm::Instruction::MULMOD:
+	case evmasm::InternalInstruction::MULMOD:
 		return smtutil::Expression::ite(
 			arguments.at(2) == constantValue(0),
 			constantValue(0),

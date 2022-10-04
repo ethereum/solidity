@@ -50,7 +50,7 @@ struct BuiltinContext
 
 struct BuiltinFunctionForEVM: public BuiltinFunction
 {
-	std::optional<evmasm::Instruction> instruction;
+	std::optional<evmasm::InternalInstruction> instruction;
 	/// Function to generate code for the given function call and append it to the abstract
 	/// assembly. Expects all non-literal arguments of the call to be on stack in reverse order
 	/// (i.e. right-most argument pushed first).
@@ -91,7 +91,7 @@ struct EVMDialect: public Dialect
 
 	bool providesObjectAccess() const { return m_objectAccess; }
 
-	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
+	static SideEffects sideEffectsOfInstruction(evmasm::InternalInstruction _instruction);
 
 protected:
 	BuiltinFunctionForEVM const* verbatimFunction(size_t _arguments, size_t _returnVariables) const;

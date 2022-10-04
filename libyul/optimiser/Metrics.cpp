@@ -178,7 +178,7 @@ void CodeCost::visit(Expression const& _expression)
 	ASTWalker::visit(_expression);
 }
 
-void CodeCost::addInstructionCost(evmasm::Instruction _instruction)
+void CodeCost::addInstructionCost(evmasm::InternalInstruction _instruction)
 {
 	evmasm::Tier gasPriceTier = evmasm::instructionInfo(_instruction).gasPriceTier;
 	if (gasPriceTier < evmasm::Tier::VeryLow)

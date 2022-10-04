@@ -66,7 +66,7 @@ public:
 
 	AssemblyItem(u256 _push, langutil::SourceLocation _location = langutil::SourceLocation()):
 		AssemblyItem(Push, std::move(_push), std::move(_location)) { }
-	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
+	AssemblyItem(InternalInstruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
 		m_type(Operation),
 		m_instruction(_i),
 		m_location(std::move(_location))
@@ -76,7 +76,7 @@ public:
 		m_location(std::move(_location))
 	{
 		if (m_type == Operation)
-			m_instruction = Instruction(uint8_t(_data));
+			m_instruction = InternalInstruction(uint8_t(_data));
 		else
 			m_data = std::make_shared<u256>(std::move(_data));
 	}
@@ -116,7 +116,7 @@ public:
 	bytes const& verbatimData() const { assertThrow(m_type == VerbatimBytecode, util::Exception, ""); return std::get<2>(*m_verbatimBytecode); }
 
 	/// @returns the instruction of this item (only valid if type() == Operation)
-	Instruction instruction() const { assertThrow(m_type == Operation, util::Exception, ""); return m_instruction; }
+	InternalInstruction instruction() const { assertThrow(m_type == Operation, util::Exception, ""); return m_instruction; }
 
 	/// @returns true if the type and data of the items are equal.
 	bool operator==(AssemblyItem const& _other) const
@@ -145,11 +145,11 @@ public:
 	}
 
 	/// Shortcut that avoids constructing an AssemblyItem just to perform the comparison.
-	bool operator==(Instruction _instr) const
+	bool operator==(InternalInstruction _instr) const
 	{
 		return type() == Operation && instruction() == _instr;
 	}
-	bool operator!=(Instruction _instr) const { return !operator==(_instr); }
+	bool operator!=(InternalInstruction _instr) const { return !operator==(_instr); }
 
 	static std::string computeSourceMapping(
 		AssemblyItems const& _items,
@@ -189,7 +189,7 @@ private:
 	size_t opcodeCount() const noexcept;
 
 	AssemblyItemType m_type;
-	Instruction m_instruction; ///< Only valid if m_type == Operation
+	InternalInstruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
 	/// If m_type == VerbatimBytecode, this holds number of arguments, number of
 	/// return variables and verbatim bytecode.

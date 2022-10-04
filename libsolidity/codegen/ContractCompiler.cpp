@@ -142,7 +142,7 @@ void ContractCompiler::initializeContext(
 void ContractCompiler::appendCallValueCheck()
 {
 	// Throw if function is not payable but call contained ether.
-	m_context << Instruction::CALLVALUE;
+	m_context << InternalInstruction::CALLVALUE;
 	m_context.appendConditionalRevert(false, "Ether sent to non-payable function");
 }
 
@@ -201,9 +201,9 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	);
 	m_context.pushSubroutineSize(m_context.runtimeSub());
 	if (immutables.empty())
-		m_context << Instruction::DUP1;
+		m_context << InternalInstruction::DUP1;
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
-	m_context << u256(0) << Instruction::CODECOPY;
+	m_context << u256(0) << InternalInstruction::CODECOPY;
 	// Assign immutable values from stack in reversed order.
 	for (auto const& immutable: immutables | ranges::views::reverse)
 	{
@@ -216,7 +216,7 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	}
 	if (!immutables.empty())
 		m_context.pushSubroutineSize(m_context.runtimeSub());
-	m_context << u256(0) << Instruction::RETURN;
+	m_context << u256(0) << InternalInstruction::RETURN;
 
 	return m_context.runtimeSub();
 }
@@ -298,13 +298,13 @@ void ContractCompiler::appendConstructor(FunctionDefinition const& _constructor)
 		// which is the size of the generated code (``programSize``)
 		// plus the constructor arguments added to the transaction payload.
 		m_context.appendProgramSize();
-		m_context << Instruction::CODESIZE << Instruction::SUB;
+		m_context << InternalInstruction::CODESIZE << InternalInstruction::SUB;
 		// stack: <memptr> <argument size>
-		m_context << Instruction::DUP1;
+		m_context << InternalInstruction::DUP1;
 		m_context.appendProgramSize();
-		m_context << Instruction::DUP4 << Instruction::CODECOPY;
+		m_context << InternalInstruction::DUP4 << InternalInstruction::CODECOPY;
 		// stack: <memptr> <argument size>
-		m_context << Instruction::DUP2 << Instruction::DUP2 << Instruction::ADD;
+		m_context << InternalInstruction::DUP2 << InternalInstruction::DUP2 << InternalInstruction::ADD;
 		// stack: <memptr> <argument size> <mem end>
 		CompilerUtils(m_context).storeFreeMemoryPointer();
 		// stack: <memptr> <argument size>
@@ -318,7 +318,7 @@ void ContractCompiler::appendDelegatecallCheck()
 	// Special constant that will be replaced by the address at deploy time.
 	// At compilation time, this is just "PUSH20 00...000".
 	m_context.appendDeployTimeAddress();
-	m_context << Instruction::ADDRESS << Instruction::EQ;
+	m_context << InternalInstruction::ADDRESS << InternalInstruction::EQ;
 	// The result on the stack is
 	// "We have not been called via DELEGATECALL".
 }
@@ -366,7 +366,7 @@ void ContractCompiler::appendInternalSelector(
 	{
 		size_t pivotIndex = _ids.size() / 2;
 		FixedHash<4> pivot{_ids.at(pivotIndex)};
-		m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(pivot)) << Instruction::GT;
+		m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(pivot)) << InternalInstruction::GT;
 		evmasm::AssemblyItem lessTag{m_context.appendConditionalJump()};
 		// Here, we have funid >= pivot
 		vector<FixedHash<4>> larger{_ids.begin() + static_cast<ptrdiff_t>(pivotIndex), _ids.end()};
@@ -380,7 +380,7 @@ void ContractCompiler::appendInternalSelector(
 	{
 		for (auto const& id: _ids)
 		{
-			m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(id)) << Instruction::EQ;
+			m_context << dupInstruction(1) << u256(FixedHash<4>::Arith(id)) << InternalInstruction::EQ;
 			m_context.appendConditionalJumpTo(_entryPoints.at(id));
 		}
 		m_context.appendJumpTo(_notFoundTag);
@@ -439,7 +439,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 
 	// directly jump to fallback or ether receiver if the data is too short to contain a function selector
 	// also guards against short data
-	m_context << u256(4) << Instruction::CALLDATASIZE << Instruction::LT;
+	m_context << u256(4) << InternalInstruction::CALLDATASIZE << InternalInstruction::LT;
 	m_context.appendConditionalJumpTo(notFoundOrReceiveEther);
 
 	// retrieve the function signature hash from the calldata
@@ -467,7 +467,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		if (etherReceiver)
 		{
 			// directly jump to fallback, if there is calldata
-			m_context << Instruction::CALLDATASIZE;
+			m_context << InternalInstruction::CALLDATASIZE;
 			m_context.appendConditionalJumpTo(notFound);
 
 			solAssert(!_contract.isLibrary(), "");
@@ -475,7 +475,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			solAssert(FunctionType(*etherReceiver).parameterTypes().empty(), "");
 			solAssert(FunctionType(*etherReceiver).returnParameterTypes().empty(), "");
 			etherReceiver->accept(*this);
-			m_context << Instruction::STOP;
+			m_context << InternalInstruction::STOP;
 		}
 
 		m_context << notFound;
@@ -489,17 +489,17 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			m_context.setStackOffset(0);
 
 			if (!FunctionType(*fallback).parameterTypes().empty())
-				m_context << u256(0) << Instruction::CALLDATASIZE;
+				m_context << u256(0) << InternalInstruction::CALLDATASIZE;
 
 			fallback->accept(*this);
 
 			if (FunctionType(*fallback).returnParameterTypes().empty())
-				m_context << Instruction::STOP;
+				m_context << InternalInstruction::STOP;
 			else
 			{
-				m_context << Instruction::DUP1 << Instruction::MLOAD << Instruction::SWAP1;
-				m_context << u256(0x20) << Instruction::ADD;
-				m_context << Instruction::RETURN;
+				m_context << InternalInstruction::DUP1 << InternalInstruction::MLOAD << InternalInstruction::SWAP1;
+				m_context << u256(0x20) << InternalInstruction::ADD;
+				m_context << InternalInstruction::RETURN;
 			}
 		}
 		else
@@ -534,7 +534,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		{
 			// Parameter for calldataUnpacker
 			m_context << CompilerUtils::dataStartOffset;
-			m_context << Instruction::DUP1 << Instruction::CALLDATASIZE << Instruction::SUB;
+			m_context << InternalInstruction::DUP1 << InternalInstruction::CALLDATASIZE << InternalInstruction::SUB;
 			CompilerUtils(m_context).abiDecode(functionType->parameterTypes());
 		}
 		m_context.appendJumpTo(
@@ -557,7 +557,7 @@ void ContractCompiler::appendReturnValuePacker(TypePointers const& _typeParamete
 {
 	CompilerUtils utils(m_context);
 	if (_typeParameters.empty())
-		m_context << Instruction::STOP;
+		m_context << InternalInstruction::STOP;
 	else
 	{
 		utils.fetchFreeMemoryPointer();
@@ -565,7 +565,7 @@ void ContractCompiler::appendReturnValuePacker(TypePointers const& _typeParamete
 		// its data to add the needed parts and we avoid a memory copy.
 		utils.abiEncode(_typeParameters, _typeParameters, _isLibrary);
 		utils.toSizeAfterFreeMemoryPointer();
-		m_context << Instruction::RETURN;
+		m_context << InternalInstruction::RETURN;
 	}
 }
 
@@ -678,7 +678,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	while (!stackLayout.empty() && stackLayout.back() != static_cast<int>(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
 		{
-			m_context << Instruction::POP;
+			m_context << InternalInstruction::POP;
 			stackLayout.pop_back();
 		}
 		else
@@ -920,7 +920,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 					util::errinfo_comment(util::stackTooDeepString)
 				);
 			_assembly.appendInstruction(swapInstruction(stackDiff));
-			_assembly.appendInstruction(Instruction::POP);
+			_assembly.appendInstruction(InternalInstruction::POP);
 		}
 	};
 
@@ -1046,17 +1046,17 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
 
 		// stack: <selector>
-		m_context << Instruction::DUP1 << util::selectorFromSignatureU32("Error(string)") << Instruction::EQ;
-		m_context << Instruction::ISZERO;
+		m_context << InternalInstruction::DUP1 << util::selectorFromSignatureU32("Error(string)") << InternalInstruction::EQ;
+		m_context << InternalInstruction::ISZERO;
 		m_context.appendConditionalJumpTo(panicTag);
-		m_context << Instruction::POP; // remove selector
+		m_context << InternalInstruction::POP; // remove selector
 
 		// Try to decode the error message.
 		// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
 		m_context.callYulFunction(m_context.utilFunctions().tryDecodeErrorMessageFunction(), 0, 1);
-		m_context << Instruction::DUP1;
+		m_context << InternalInstruction::DUP1;
 		AssemblyItem decodeSuccessTag = m_context.appendConditionalJump();
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 		m_context.appendJumpTo(fallbackTag);
 		m_context.adjustStackOffset(1);
 
@@ -1078,15 +1078,15 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
 
 		// stack: <selector>
-		m_context << util::selectorFromSignatureU32("Panic(uint256)") << Instruction::EQ;
-		m_context << Instruction::ISZERO;
+		m_context << util::selectorFromSignatureU32("Panic(uint256)") << InternalInstruction::EQ;
+		m_context << InternalInstruction::ISZERO;
 		m_context.appendConditionalJumpTo(fallbackTag);
 
 		m_context.callYulFunction(m_context.utilFunctions().tryDecodePanicDataFunction(), 0, 2);
-		m_context << Instruction::SWAP1;
+		m_context << InternalInstruction::SWAP1;
 		// stack: <code> <success>
 		AssemblyItem decodeSuccessTag = m_context.appendConditionalJump();
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 		m_context.appendJumpTo(fallbackTag);
 		m_context.adjustStackOffset(1);
 
@@ -1096,7 +1096,7 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		m_context.adjustStackOffset(1);
 	}
 	if (error || panic)
-		m_context << Instruction::POP; // selector
+		m_context << InternalInstruction::POP; // selector
 	m_context << fallbackTag;
 	if (fallback)
 	{
@@ -1156,7 +1156,7 @@ bool ContractCompiler::visit(IfStatement const& _ifStatement)
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _ifStatement);
 	compileExpression(_ifStatement.condition());
-	m_context << Instruction::ISZERO;
+	m_context << InternalInstruction::ISZERO;
 	evmasm::AssemblyItem falseTag = m_context.appendConditionalJump();
 	evmasm::AssemblyItem endTag = falseTag;
 	_ifStatement.trueStatement().accept(*this);
@@ -1192,14 +1192,14 @@ bool ContractCompiler::visit(WhileStatement const& _whileStatement)
 
 		m_context << condition;
 		compileExpression(_whileStatement.condition());
-		m_context << Instruction::ISZERO << Instruction::ISZERO;
+		m_context << InternalInstruction::ISZERO << InternalInstruction::ISZERO;
 		m_context.appendConditionalJumpTo(loopStart);
 	}
 	else
 	{
 		m_continueTags.emplace_back(loopStart, m_context.stackHeight());
 		compileExpression(_whileStatement.condition());
-		m_context << Instruction::ISZERO;
+		m_context << InternalInstruction::ISZERO;
 		m_context.appendConditionalJumpTo(loopEnd);
 
 		_whileStatement.body().accept(*this);
@@ -1236,7 +1236,7 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 	if (_forStatement.condition())
 	{
 		compileExpression(*_forStatement.condition());
-		m_context << Instruction::ISZERO;
+		m_context << InternalInstruction::ISZERO;
 		m_context.appendConditionalJumpTo(loopEnd);
 	}
 

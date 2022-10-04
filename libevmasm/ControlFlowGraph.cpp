@@ -92,9 +92,9 @@ void ControlFlowGraph::splitBlocks()
 		if (SemanticInformation::altersControlFlow(item))
 		{
 			m_blocks[id].end = static_cast<unsigned>(index + 1);
-			if (item == Instruction::JUMP)
+			if (item == InternalInstruction::JUMP)
 				m_blocks[id].endType = BasicBlock::EndType::JUMP;
-			else if (item == Instruction::JUMPI)
+			else if (item == InternalInstruction::JUMPI)
 				m_blocks[id].endType = BasicBlock::EndType::JUMPI;
 			else
 				m_blocks[id].endType = BasicBlock::EndType::STOP;

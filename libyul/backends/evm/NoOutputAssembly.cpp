@@ -35,7 +35,7 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 
 
-void NoOutputAssembly::appendInstruction(evmasm::Instruction _instr)
+void NoOutputAssembly::appendInstruction(evmasm::InternalInstruction _instr)
 {
 	m_stackHeight += instructionInfo(_instr).ret - instructionInfo(_instr).args;
 }
@@ -47,7 +47,7 @@ void NoOutputAssembly::appendConstant(u256 const&)
 
 void NoOutputAssembly::appendLabel(LabelID)
 {
-	appendInstruction(evmasm::Instruction::JUMPDEST);
+	appendInstruction(evmasm::InternalInstruction::JUMPDEST);
 }
 
 void NoOutputAssembly::appendLabelReference(LabelID)
@@ -77,7 +77,7 @@ void NoOutputAssembly::appendVerbatim(bytes, size_t _arguments, size_t _returnVa
 
 void NoOutputAssembly::appendJump(int _stackDiffAfter, JumpType)
 {
-	appendInstruction(evmasm::Instruction::JUMP);
+	appendInstruction(evmasm::InternalInstruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
@@ -90,12 +90,12 @@ void NoOutputAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpT
 void NoOutputAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 {
 	appendLabelReference(_labelId);
-	appendInstruction(evmasm::Instruction::JUMPI);
+	appendInstruction(evmasm::InternalInstruction::JUMPI);
 }
 
 void NoOutputAssembly::appendAssemblySize()
 {
-	appendInstruction(evmasm::Instruction::PUSH1);
+	appendInstruction(evmasm::InternalInstruction::PUSH1);
 }
 
 pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(bool, std::string)
@@ -106,12 +106,12 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::cr
 
 void NoOutputAssembly::appendDataOffset(std::vector<AbstractAssembly::SubID> const&)
 {
-	appendInstruction(evmasm::Instruction::PUSH1);
+	appendInstruction(evmasm::InternalInstruction::PUSH1);
 }
 
 void NoOutputAssembly::appendDataSize(std::vector<AbstractAssembly::SubID> const&)
 {
-	appendInstruction(evmasm::Instruction::PUSH1);
+	appendInstruction(evmasm::InternalInstruction::PUSH1);
 }
 
 AbstractAssembly::SubID NoOutputAssembly::appendData(bytes const&)
@@ -140,7 +140,7 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 		{
 			for (size_t i: ranges::views::iota(0u, _call.arguments.size()))
 				if (!fun.second.literalArgument(i))
-					_assembly.appendInstruction(evmasm::Instruction::POP);
+					_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 
 			for (size_t i = 0; i < returns; i++)
 				_assembly.appendConstant(u256(0));

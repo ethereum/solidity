@@ -53,7 +53,7 @@ public:
 	bigint costs(Expression const& _expression) const;
 	/// @returns the combined costs of deploying and running the instruction, not including
 	/// the costs for its arguments.
-	bigint instructionCosts(evmasm::Instruction _instruction) const;
+	bigint instructionCosts(evmasm::InternalInstruction _instruction) const;
 
 private:
 	bigint combineCosts(std::pair<bigint, bigint> _costs) const;
@@ -73,7 +73,7 @@ public:
 	);
 
 	static std::pair<bigint, bigint> instructionCosts(
-		evmasm::Instruction _instruction,
+		evmasm::InternalInstruction _instruction,
 		EVMDialect const& _dialect,
 		bool _isCreation = false
 	);
@@ -93,7 +93,7 @@ private:
 	/// Computes the cost of storing and executing the single instruction (excluding its arguments).
 	/// For EXP, it assumes that the exponent is at most 255.
 	/// Does not work particularly exact for anything apart from arithmetic.
-	void instructionCostsInternal(evmasm::Instruction _instruction);
+	void instructionCostsInternal(evmasm::InternalInstruction _instruction);
 
 	EVMDialect const& m_dialect;
 	bool m_isCreation = false;

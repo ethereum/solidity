@@ -74,12 +74,12 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	// PushImmutable
 	_subAsm.appendImmutable("someImmutable");
 	_subAsm.append(AssemblyItem(PushTag, 0));
-	_subAsm.append(Instruction::INVALID);
+	_subAsm.append(InternalInstruction::INVALID);
 	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
 
 	_verbatimAsm.appendVerbatim({0xff,0xff}, 0, 0);
 	_verbatimAsm.appendVerbatim({0x74, 0x65, 0x73, 0x74}, 0, 1);
-	_verbatimAsm.append(Instruction::MSTORE);
+	_verbatimAsm.append(InternalInstruction::MSTORE);
 	shared_ptr<Assembly> _verbatimAsmPtr = make_shared<Assembly>(_verbatimAsm);
 
 	// Tag
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	_assembly.append(u256(1));
 	_assembly.append(u256(2));
 	// Push
-	auto keccak256 = AssemblyItem(Instruction::KECCAK256);
+	auto keccak256 = AssemblyItem(InternalInstruction::KECCAK256);
 	_assembly.m_currentModifierDepth = 1;
 	_assembly.append(keccak256);
 	_assembly.m_currentModifierDepth = 0;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	_assembly.append(u256(2));
 	_assembly.appendImmutableAssignment("someImmutable");
 	// Operation
-	_assembly.append(Instruction::STOP);
+	_assembly.append(InternalInstruction::STOP);
 	_assembly.appendToAuxiliaryData(bytes{0x42, 0x66});
 	_assembly.appendToAuxiliaryData(bytes{0xee, 0xaa});
 

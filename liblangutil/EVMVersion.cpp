@@ -25,28 +25,28 @@ using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
-bool EVMVersion::hasOpcode(Instruction _opcode) const
+bool EVMVersion::hasInstruction(InternalInstruction _instruction) const
 {
-	switch (_opcode)
+	switch (_instruction)
 	{
-	case Instruction::RETURNDATACOPY:
-	case Instruction::RETURNDATASIZE:
+	case InternalInstruction::RETURNDATACOPY:
+	case InternalInstruction::RETURNDATASIZE:
 		return supportsReturndata();
-	case Instruction::STATICCALL:
+	case InternalInstruction::STATICCALL:
 		return hasStaticCall();
-	case Instruction::SHL:
-	case Instruction::SHR:
-	case Instruction::SAR:
+	case InternalInstruction::SHL:
+	case InternalInstruction::SHR:
+	case InternalInstruction::SAR:
 		return hasBitwiseShifting();
-	case Instruction::CREATE2:
+	case InternalInstruction::CREATE2:
 		return hasCreate2();
-	case Instruction::EXTCODEHASH:
+	case InternalInstruction::EXTCODEHASH:
 		return hasExtCodeHash();
-	case Instruction::CHAINID:
+	case InternalInstruction::CHAINID:
 		return hasChainID();
-	case Instruction::SELFBALANCE:
+	case InternalInstruction::SELFBALANCE:
 		return hasSelfBalance();
-	case Instruction::BASEFEE:
+	case InternalInstruction::BASEFEE:
 		return hasBaseFee();
 	case InternalInstruction::DIFFICULTY:
 		return hasDifficulty();

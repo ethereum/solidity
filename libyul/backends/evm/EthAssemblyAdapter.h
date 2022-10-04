@@ -43,7 +43,7 @@ public:
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	int stackHeight() const override;
 	void setStackHeight(int height) override;
-	void appendInstruction(evmasm::Instruction _instruction) override;
+	void appendInstruction(evmasm::InternalInstruction _instruction) override;
 	void appendConstant(u256 const& _constant) override;
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;
@@ -69,7 +69,7 @@ public:
 
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
-	void appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType);
+	void appendJumpInstruction(evmasm::InternalInstruction _instruction, JumpType _jumpType);
 
 	evmasm::Assembly& m_assembly;
 	std::map<SubID, u256> m_dataHashBySubId;

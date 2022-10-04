@@ -58,7 +58,7 @@ SimplificationRule<Pattern> const* Rules::findFirstMatch(
 
 bool Rules::isInitialized() const
 {
-	return !m_rules[uint8_t(Instruction::ADD)].empty();
+	return !m_rules[uint8_t(InternalInstruction::ADD)].empty();
 }
 
 void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
@@ -96,7 +96,7 @@ Rules::Rules()
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
-Pattern::Pattern(Instruction _instruction, std::initializer_list<Pattern> _arguments):
+Pattern::Pattern(InternalInstruction _instruction, std::initializer_list<Pattern> _arguments):
 	m_type(Operation),
 	m_instruction(_instruction),
 	m_arguments(_arguments)

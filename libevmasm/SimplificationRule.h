@@ -54,9 +54,9 @@ struct SimplificationRule
 template <typename Pattern>
 struct EVMBuiltins
 {
-	using InstrType = Instruction;
+	using InstrType = InternalInstruction;
 
-	template<Instruction inst>
+	template<InternalInstruction inst>
 	struct PatternGenerator
 	{
 		template<typename... Args> constexpr Pattern operator()(Args&&... _args) const
@@ -67,7 +67,7 @@ struct EVMBuiltins
 
 	struct PatternGeneratorInstance
 	{
-		Instruction instruction;
+		InternalInstruction instruction;
 		template<typename... Args> constexpr Pattern operator()(Args&&... _args) const
 		{
 			return {instruction, {std::forward<Args>(_args)...}};
@@ -75,83 +75,83 @@ struct EVMBuiltins
 	};
 
 
-	static auto constexpr STOP = PatternGenerator<Instruction::STOP>{};
-	static auto constexpr ADD = PatternGenerator<Instruction::ADD>{};
-	static auto constexpr SUB = PatternGenerator<Instruction::SUB>{};
-	static auto constexpr MUL = PatternGenerator<Instruction::MUL>{};
-	static auto constexpr DIV = PatternGenerator<Instruction::DIV>{};
-	static auto constexpr SDIV = PatternGenerator<Instruction::SDIV>{};
-	static auto constexpr MOD = PatternGenerator<Instruction::MOD>{};
-	static auto constexpr SMOD = PatternGenerator<Instruction::SMOD>{};
-	static auto constexpr EXP = PatternGenerator<Instruction::EXP>{};
-	static auto constexpr NOT = PatternGenerator<Instruction::NOT>{};
-	static auto constexpr LT = PatternGenerator<Instruction::LT>{};
-	static auto constexpr GT = PatternGenerator<Instruction::GT>{};
-	static auto constexpr SLT = PatternGenerator<Instruction::SLT>{};
-	static auto constexpr SGT = PatternGenerator<Instruction::SGT>{};
-	static auto constexpr EQ = PatternGenerator<Instruction::EQ>{};
-	static auto constexpr ISZERO = PatternGenerator<Instruction::ISZERO>{};
-	static auto constexpr AND = PatternGenerator<Instruction::AND>{};
-	static auto constexpr OR = PatternGenerator<Instruction::OR>{};
-	static auto constexpr XOR = PatternGenerator<Instruction::XOR>{};
-	static auto constexpr BYTE = PatternGenerator<Instruction::BYTE>{};
-	static auto constexpr SHL = PatternGenerator<Instruction::SHL>{};
-	static auto constexpr SHR = PatternGenerator<Instruction::SHR>{};
-	static auto constexpr SAR = PatternGenerator<Instruction::SAR>{};
-	static auto constexpr ADDMOD = PatternGenerator<Instruction::ADDMOD>{};
-	static auto constexpr MULMOD = PatternGenerator<Instruction::MULMOD>{};
-	static auto constexpr SIGNEXTEND = PatternGenerator<Instruction::SIGNEXTEND>{};
-	static auto constexpr KECCAK256 = PatternGenerator<Instruction::KECCAK256>{};
-	static auto constexpr ADDRESS = PatternGenerator<Instruction::ADDRESS>{};
-	static auto constexpr BALANCE = PatternGenerator<Instruction::BALANCE>{};
-	static auto constexpr ORIGIN = PatternGenerator<Instruction::ORIGIN>{};
-	static auto constexpr CALLER = PatternGenerator<Instruction::CALLER>{};
-	static auto constexpr CALLVALUE = PatternGenerator<Instruction::CALLVALUE>{};
-	static auto constexpr CALLDATALOAD = PatternGenerator<Instruction::CALLDATALOAD>{};
-	static auto constexpr CALLDATASIZE = PatternGenerator<Instruction::CALLDATASIZE>{};
-	static auto constexpr CALLDATACOPY = PatternGenerator<Instruction::CALLDATACOPY>{};
-	static auto constexpr CODESIZE = PatternGenerator<Instruction::CODESIZE>{};
-	static auto constexpr CODECOPY = PatternGenerator<Instruction::CODECOPY>{};
-	static auto constexpr GASPRICE = PatternGenerator<Instruction::GASPRICE>{};
-	static auto constexpr EXTCODESIZE = PatternGenerator<Instruction::EXTCODESIZE>{};
-	static auto constexpr EXTCODECOPY = PatternGenerator<Instruction::EXTCODECOPY>{};
-	static auto constexpr RETURNDATASIZE = PatternGenerator<Instruction::RETURNDATASIZE>{};
-	static auto constexpr RETURNDATACOPY = PatternGenerator<Instruction::RETURNDATACOPY>{};
-	static auto constexpr EXTCODEHASH = PatternGenerator<Instruction::EXTCODEHASH>{};
-	static auto constexpr BLOCKHASH = PatternGenerator<Instruction::BLOCKHASH>{};
-	static auto constexpr COINBASE = PatternGenerator<Instruction::COINBASE>{};
-	static auto constexpr TIMESTAMP = PatternGenerator<Instruction::TIMESTAMP>{};
-	static auto constexpr NUMBER = PatternGenerator<Instruction::NUMBER>{};
-	static auto constexpr DIFFICULTY = PatternGenerator<Instruction::DIFFICULTY>{};
-	static auto constexpr PREVRANDAO = PatternGenerator<Instruction::PREVRANDAO>{};
-	static auto constexpr GASLIMIT = PatternGenerator<Instruction::GASLIMIT>{};
-	static auto constexpr CHAINID = PatternGenerator<Instruction::CHAINID>{};
-	static auto constexpr SELFBALANCE = PatternGenerator<Instruction::SELFBALANCE>{};
-	static auto constexpr BASEFEE = PatternGenerator<Instruction::BASEFEE>{};
-	static auto constexpr POP = PatternGenerator<Instruction::POP>{};
-	static auto constexpr MLOAD = PatternGenerator<Instruction::MLOAD>{};
-	static auto constexpr MSTORE = PatternGenerator<Instruction::MSTORE>{};
-	static auto constexpr MSTORE8 = PatternGenerator<Instruction::MSTORE8>{};
-	static auto constexpr SLOAD = PatternGenerator<Instruction::SLOAD>{};
-	static auto constexpr SSTORE = PatternGenerator<Instruction::SSTORE>{};
-	static auto constexpr PC = PatternGenerator<Instruction::PC>{};
-	static auto constexpr MSIZE = PatternGenerator<Instruction::MSIZE>{};
-	static auto constexpr GAS = PatternGenerator<Instruction::GAS>{};
-	static auto constexpr LOG0 = PatternGenerator<Instruction::LOG0>{};
-	static auto constexpr LOG1 = PatternGenerator<Instruction::LOG1>{};
-	static auto constexpr LOG2 = PatternGenerator<Instruction::LOG2>{};
-	static auto constexpr LOG3 = PatternGenerator<Instruction::LOG3>{};
-	static auto constexpr LOG4 = PatternGenerator<Instruction::LOG4>{};
-	static auto constexpr CREATE = PatternGenerator<Instruction::CREATE>{};
-	static auto constexpr CALL = PatternGenerator<Instruction::CALL>{};
-	static auto constexpr CALLCODE = PatternGenerator<Instruction::CALLCODE>{};
-	static auto constexpr STATICCALL = PatternGenerator<Instruction::STATICCALL>{};
-	static auto constexpr RETURN = PatternGenerator<Instruction::RETURN>{};
-	static auto constexpr DELEGATECALL = PatternGenerator<Instruction::DELEGATECALL>{};
-	static auto constexpr CREATE2 = PatternGenerator<Instruction::CREATE2>{};
-	static auto constexpr REVERT = PatternGenerator<Instruction::REVERT>{};
-	static auto constexpr INVALID = PatternGenerator<Instruction::INVALID>{};
-	static auto constexpr SELFDESTRUCT = PatternGenerator<Instruction::SELFDESTRUCT>{};
+	static auto constexpr STOP = PatternGenerator<InternalInstruction::STOP>{};
+	static auto constexpr ADD = PatternGenerator<InternalInstruction::ADD>{};
+	static auto constexpr SUB = PatternGenerator<InternalInstruction::SUB>{};
+	static auto constexpr MUL = PatternGenerator<InternalInstruction::MUL>{};
+	static auto constexpr DIV = PatternGenerator<InternalInstruction::DIV>{};
+	static auto constexpr SDIV = PatternGenerator<InternalInstruction::SDIV>{};
+	static auto constexpr MOD = PatternGenerator<InternalInstruction::MOD>{};
+	static auto constexpr SMOD = PatternGenerator<InternalInstruction::SMOD>{};
+	static auto constexpr EXP = PatternGenerator<InternalInstruction::EXP>{};
+	static auto constexpr NOT = PatternGenerator<InternalInstruction::NOT>{};
+	static auto constexpr LT = PatternGenerator<InternalInstruction::LT>{};
+	static auto constexpr GT = PatternGenerator<InternalInstruction::GT>{};
+	static auto constexpr SLT = PatternGenerator<InternalInstruction::SLT>{};
+	static auto constexpr SGT = PatternGenerator<InternalInstruction::SGT>{};
+	static auto constexpr EQ = PatternGenerator<InternalInstruction::EQ>{};
+	static auto constexpr ISZERO = PatternGenerator<InternalInstruction::ISZERO>{};
+	static auto constexpr AND = PatternGenerator<InternalInstruction::AND>{};
+	static auto constexpr OR = PatternGenerator<InternalInstruction::OR>{};
+	static auto constexpr XOR = PatternGenerator<InternalInstruction::XOR>{};
+	static auto constexpr BYTE = PatternGenerator<InternalInstruction::BYTE>{};
+	static auto constexpr SHL = PatternGenerator<InternalInstruction::SHL>{};
+	static auto constexpr SHR = PatternGenerator<InternalInstruction::SHR>{};
+	static auto constexpr SAR = PatternGenerator<InternalInstruction::SAR>{};
+	static auto constexpr ADDMOD = PatternGenerator<InternalInstruction::ADDMOD>{};
+	static auto constexpr MULMOD = PatternGenerator<InternalInstruction::MULMOD>{};
+	static auto constexpr SIGNEXTEND = PatternGenerator<InternalInstruction::SIGNEXTEND>{};
+	static auto constexpr KECCAK256 = PatternGenerator<InternalInstruction::KECCAK256>{};
+	static auto constexpr ADDRESS = PatternGenerator<InternalInstruction::ADDRESS>{};
+	static auto constexpr BALANCE = PatternGenerator<InternalInstruction::BALANCE>{};
+	static auto constexpr ORIGIN = PatternGenerator<InternalInstruction::ORIGIN>{};
+	static auto constexpr CALLER = PatternGenerator<InternalInstruction::CALLER>{};
+	static auto constexpr CALLVALUE = PatternGenerator<InternalInstruction::CALLVALUE>{};
+	static auto constexpr CALLDATALOAD = PatternGenerator<InternalInstruction::CALLDATALOAD>{};
+	static auto constexpr CALLDATASIZE = PatternGenerator<InternalInstruction::CALLDATASIZE>{};
+	static auto constexpr CALLDATACOPY = PatternGenerator<InternalInstruction::CALLDATACOPY>{};
+	static auto constexpr CODESIZE = PatternGenerator<InternalInstruction::CODESIZE>{};
+	static auto constexpr CODECOPY = PatternGenerator<InternalInstruction::CODECOPY>{};
+	static auto constexpr GASPRICE = PatternGenerator<InternalInstruction::GASPRICE>{};
+	static auto constexpr EXTCODESIZE = PatternGenerator<InternalInstruction::EXTCODESIZE>{};
+	static auto constexpr EXTCODECOPY = PatternGenerator<InternalInstruction::EXTCODECOPY>{};
+	static auto constexpr RETURNDATASIZE = PatternGenerator<InternalInstruction::RETURNDATASIZE>{};
+	static auto constexpr RETURNDATACOPY = PatternGenerator<InternalInstruction::RETURNDATACOPY>{};
+	static auto constexpr EXTCODEHASH = PatternGenerator<InternalInstruction::EXTCODEHASH>{};
+	static auto constexpr BLOCKHASH = PatternGenerator<InternalInstruction::BLOCKHASH>{};
+	static auto constexpr COINBASE = PatternGenerator<InternalInstruction::COINBASE>{};
+	static auto constexpr TIMESTAMP = PatternGenerator<InternalInstruction::TIMESTAMP>{};
+	static auto constexpr NUMBER = PatternGenerator<InternalInstruction::NUMBER>{};
+	static auto constexpr DIFFICULTY = PatternGenerator<InternalInstruction::DIFFICULTY>{};
+	static auto constexpr PREVRANDAO = PatternGenerator<InternalInstruction::PREVRANDAO>{};
+	static auto constexpr GASLIMIT = PatternGenerator<InternalInstruction::GASLIMIT>{};
+	static auto constexpr CHAINID = PatternGenerator<InternalInstruction::CHAINID>{};
+	static auto constexpr SELFBALANCE = PatternGenerator<InternalInstruction::SELFBALANCE>{};
+	static auto constexpr BASEFEE = PatternGenerator<InternalInstruction::BASEFEE>{};
+	static auto constexpr POP = PatternGenerator<InternalInstruction::POP>{};
+	static auto constexpr MLOAD = PatternGenerator<InternalInstruction::MLOAD>{};
+	static auto constexpr MSTORE = PatternGenerator<InternalInstruction::MSTORE>{};
+	static auto constexpr MSTORE8 = PatternGenerator<InternalInstruction::MSTORE8>{};
+	static auto constexpr SLOAD = PatternGenerator<InternalInstruction::SLOAD>{};
+	static auto constexpr SSTORE = PatternGenerator<InternalInstruction::SSTORE>{};
+	static auto constexpr PC = PatternGenerator<InternalInstruction::PC>{};
+	static auto constexpr MSIZE = PatternGenerator<InternalInstruction::MSIZE>{};
+	static auto constexpr GAS = PatternGenerator<InternalInstruction::GAS>{};
+	static auto constexpr LOG0 = PatternGenerator<InternalInstruction::LOG0>{};
+	static auto constexpr LOG1 = PatternGenerator<InternalInstruction::LOG1>{};
+	static auto constexpr LOG2 = PatternGenerator<InternalInstruction::LOG2>{};
+	static auto constexpr LOG3 = PatternGenerator<InternalInstruction::LOG3>{};
+	static auto constexpr LOG4 = PatternGenerator<InternalInstruction::LOG4>{};
+	static auto constexpr CREATE = PatternGenerator<InternalInstruction::CREATE>{};
+	static auto constexpr CALL = PatternGenerator<InternalInstruction::CALL>{};
+	static auto constexpr CALLCODE = PatternGenerator<InternalInstruction::CALLCODE>{};
+	static auto constexpr STATICCALL = PatternGenerator<InternalInstruction::STATICCALL>{};
+	static auto constexpr RETURN = PatternGenerator<InternalInstruction::RETURN>{};
+	static auto constexpr DELEGATECALL = PatternGenerator<InternalInstruction::DELEGATECALL>{};
+	static auto constexpr CREATE2 = PatternGenerator<InternalInstruction::CREATE2>{};
+	static auto constexpr REVERT = PatternGenerator<InternalInstruction::REVERT>{};
+	static auto constexpr INVALID = PatternGenerator<InternalInstruction::INVALID>{};
+	static auto constexpr SELFDESTRUCT = PatternGenerator<InternalInstruction::SELFDESTRUCT>{};
 };
 
 }

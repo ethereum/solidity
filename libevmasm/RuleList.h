@@ -367,10 +367,10 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	});
 
 	for (auto instr: {
-		Instruction::ADDRESS,
-		Instruction::CALLER,
-		Instruction::ORIGIN,
-		Instruction::COINBASE
+		InternalInstruction::ADDRESS,
+		InternalInstruction::CALLER,
+		InternalInstruction::ORIGIN,
+		InternalInstruction::COINBASE
 	})
 	{
 		assertThrow(Pattern::WordSize > 160, OptimizerException, "");
@@ -402,11 +402,11 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart6(
 	std::vector<SimplificationRule<Pattern>> rules;
 	// Double negation of opcodes with boolean result
 	for (auto instr: {
-		Instruction::EQ,
-		Instruction::LT,
-		Instruction::SLT,
-		Instruction::GT,
-		Instruction::SGT
+		InternalInstruction::EQ,
+		InternalInstruction::LT,
+		InternalInstruction::SLT,
+		InternalInstruction::GT,
+		InternalInstruction::SGT
 	})
 	{
 		typename Builtins::PatternGeneratorInstance op{instr};
@@ -448,12 +448,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 
 	std::vector<SimplificationRule<Pattern>> rules;
 	// Associative operations
-	for (auto&& instrAndFunc: std::vector<std::pair<Instruction, std::function<Word(Word, Word)>>>{
-		{Instruction::ADD, std::plus<Word>()},
-		{Instruction::MUL, std::multiplies<Word>()},
-		{Instruction::AND, std::bit_and<Word>()},
-		{Instruction::OR, std::bit_or<Word>()},
-		{Instruction::XOR, std::bit_xor<Word>()}
+	for (auto&& instrAndFunc: std::vector<std::pair<InternalInstruction, std::function<Word(Word, Word)>>>{
+		{InternalInstruction::ADD, std::plus<Word>()},
+		{InternalInstruction::MUL, std::multiplies<Word>()},
+		{InternalInstruction::AND, std::bit_and<Word>()},
+		{InternalInstruction::OR, std::bit_or<Word>()},
+		{InternalInstruction::XOR, std::bit_xor<Word>()}
 	})
 	{
 		typename Builtins::PatternGeneratorInstance op{instrAndFunc.first};
@@ -544,12 +544,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	});
 
 	// Move AND with constant across SHL and SHR by constant
-	for (auto instr: {Instruction::SHL, Instruction::SHR})
+	for (auto instr: {InternalInstruction::SHL, InternalInstruction::SHR})
 	{
 		typename Builtins::PatternGeneratorInstance shiftOp{instr};
 		auto replacement = [=]() -> Pattern {
 			Word mask =
-				instr == Instruction::SHL ?
+				instr == InternalInstruction::SHL ?
 				shlWorkaround(A.d(), unsigned(B.d())) :
 				A.d() >> unsigned(B.d());
 			return Builtins::AND(shiftOp(B.d(), X), std::move(mask));
@@ -743,8 +743,8 @@ std::vector<SimplificationRule<Pattern>> evmRuleList(
 
 	if (_evmVersion.hasSelfBalance())
 		rules.push_back({
-			Builtins::BALANCE(Instruction::ADDRESS),
-			[]() -> Pattern { return Instruction::SELFBALANCE; }
+			Builtins::BALANCE(InternalInstruction::ADDRESS),
+			[]() -> Pattern { return InternalInstruction::SELFBALANCE; }
 		});
 
 	rules.emplace_back(

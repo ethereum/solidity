@@ -84,10 +84,10 @@ bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
 	bigint gas = 0;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
-			gas += GasMeter::runGas(Instruction::PUSH1);
+			gas += GasMeter::runGas(InternalInstruction::PUSH1);
 		else if (item.type() == Operation)
 		{
-			if (item.instruction() == Instruction::EXP)
+			if (item.instruction() == InternalInstruction::EXP)
 				gas += GasCosts::expGas;
 			else
 				gas += GasMeter::runGas(item.instruction());
@@ -131,7 +131,7 @@ void ConstantOptimisationMethod::replaceConstants(
 bigint LiteralMethod::gasNeeded() const
 {
 	return combineGas(
-		simpleRunGas({Instruction::PUSH1}),
+		simpleRunGas({InternalInstruction::PUSH1}),
 		// PUSHX plus data
 		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas) + dataGas(toCompactBigEndian(m_value, 1)),
 		0
@@ -167,22 +167,22 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 
 		// back up memory
 		// mload(0)
-		Instruction::DUP1,
-		Instruction::MLOAD,
+		InternalInstruction::DUP1,
+		InternalInstruction::MLOAD,
 
 		// codecopy(0, <offset>, 32)
 		u256(32),
 		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[4]
-		Instruction::DUP4,
-		Instruction::CODECOPY,
+		InternalInstruction::DUP4,
+		InternalInstruction::CODECOPY,
 
 		// mload(0)
-		Instruction::DUP2,
-		Instruction::MLOAD,
+		InternalInstruction::DUP2,
+		InternalInstruction::MLOAD,
 
 		// restore original memory
-		Instruction::SWAP2,
-		Instruction::MSTORE
+		InternalInstruction::SWAP2,
+		InternalInstruction::MSTORE
 	};
 	return copyRoutine;
 }
@@ -194,7 +194,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 		return AssemblyItems{_value};
 	else if (numberEncodingSize(~_value) < numberEncodingSize(_value))
 		// Negated is shorter to represent
-		return findRepresentation(~_value) + AssemblyItems{Instruction::NOT};
+		return findRepresentation(~_value) + AssemblyItems{InternalInstruction::NOT};
 	else
 	{
 		// Decompose value into a * 2**k + b where abs(b) << 2**k
@@ -226,18 +226,18 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			if (m_params.evmVersion.hasBitwiseShifting())
 			{
 				newRoutine += findRepresentation(upperPart);
-				newRoutine += AssemblyItems{u256(bits), Instruction::SHL};
+				newRoutine += AssemblyItems{u256(bits), InternalInstruction::SHL};
 			}
 			else
 			{
-				newRoutine += AssemblyItems{u256(bits), u256(2), Instruction::EXP};
+				newRoutine += AssemblyItems{u256(bits), u256(2), InternalInstruction::EXP};
 				if (upperPart != 1)
-					newRoutine += findRepresentation(upperPart) + AssemblyItems{Instruction::MUL};
+					newRoutine += findRepresentation(upperPart) + AssemblyItems{InternalInstruction::MUL};
 			}
 			if (lowerPart > 0)
-				newRoutine += AssemblyItems{Instruction::ADD};
+				newRoutine += AssemblyItems{InternalInstruction::ADD};
 			else if (lowerPart < 0)
-				newRoutine.push_back(Instruction::SUB);
+				newRoutine.push_back(InternalInstruction::SUB);
 
 			if (m_maxSteps > 0)
 				m_maxSteps--;
@@ -267,24 +267,24 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 			u256* sp = &stack.back();
 			switch (item.instruction())
 			{
-			case Instruction::MUL:
+			case InternalInstruction::MUL:
 				sp[-1] = sp[0] * sp[-1];
 				break;
-			case Instruction::EXP:
+			case InternalInstruction::EXP:
 				if (sp[-1] > 0xff)
 					return false;
 				sp[-1] = boost::multiprecision::pow(sp[0], unsigned(sp[-1]));
 				break;
-			case Instruction::ADD:
+			case InternalInstruction::ADD:
 				sp[-1] = sp[0] + sp[-1];
 				break;
-			case Instruction::SUB:
+			case InternalInstruction::SUB:
 				sp[-1] = sp[0] - sp[-1];
 				break;
-			case Instruction::NOT:
+			case InternalInstruction::NOT:
 				sp[0] = ~sp[0];
 				break;
-			case Instruction::SHL:
+			case InternalInstruction::SHL:
 				assertThrow(
 					m_params.evmVersion.hasBitwiseShifting(),
 					OptimizerException,
@@ -293,7 +293,7 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 				assertThrow(sp[0] <= u256(255), OptimizerException, "Invalid shift generated.");
 				sp[-1] = u256(bigint(sp[-1]) << unsigned(sp[0]));
 				break;
-			case Instruction::SHR:
+			case InternalInstruction::SHR:
 				assertThrow(
 					m_params.evmVersion.hasBitwiseShifting(),
 					OptimizerException,
@@ -320,7 +320,7 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 
 bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 {
-	auto numExps = static_cast<size_t>(count(_routine.begin(), _routine.end(), Instruction::EXP));
+	auto numExps = static_cast<size_t>(count(_routine.begin(), _routine.end(), InternalInstruction::EXP));
 	return combineGas(
 		simpleRunGas(_routine) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
 		// Data gas for routine: Some bytes are zero, but we ignore them.

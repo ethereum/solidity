@@ -83,10 +83,10 @@ public:
 		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
 	}
 
-	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
-	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
-	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
-	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMPI); return ret; }
+	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(InternalInstruction::JUMP); return ret; }
+	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(InternalInstruction::JUMPI); return ret; }
+	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(InternalInstruction::JUMP); return ret; }
+	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(InternalInstruction::JUMPI); return ret; }
 
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.

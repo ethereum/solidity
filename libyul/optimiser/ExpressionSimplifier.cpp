@@ -50,7 +50,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 		_expression = match->action().toExpression(debugDataOf(_expression));
 
 	if (auto* functionCall = get_if<FunctionCall>(&_expression))
-		if (optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
+		if (optional<evmasm::InternalInstruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
 			for (auto op: evmasm::SemanticInformation::readWriteOperations(*instruction))
 				if (op.startParameter && op.lengthParameter)
 				{

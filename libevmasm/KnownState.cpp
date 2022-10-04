@@ -97,8 +97,8 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 		// Since AssignImmutable breaks blocks, it should be fine to only consider its changes to the stack, which
 		// is the same as two POPs.
 		// Note that the StoreOperation for POP is generic and _copyItem is ignored.
-		feedItem(AssemblyItem(Instruction::POP), _copyItem);
-		return feedItem(AssemblyItem(Instruction::POP), _copyItem);
+		feedItem(AssemblyItem(InternalInstruction::POP), _copyItem);
+		return feedItem(AssemblyItem(InternalInstruction::POP), _copyItem);
 	}
 	else if (_item.type() == VerbatimBytecode)
 	{
@@ -129,48 +129,48 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 	}
 	else
 	{
-		Instruction instruction = _item.instruction();
+		InternalInstruction instruction = _item.instruction();
 		InstructionInfo info = instructionInfo(instruction);
 		if (SemanticInformation::isDupInstruction(_item))
 			setStackElement(
 				m_stackHeight + 1,
 				stackElement(
-					m_stackHeight - static_cast<int>(instruction) + static_cast<int>(Instruction::DUP1),
+					m_stackHeight - static_cast<int>(instruction) + static_cast<int>(InternalInstruction::DUP1),
 					_item.location()
 				)
 			);
 		else if (SemanticInformation::isSwapInstruction(_item))
 			swapStackElements(
 				m_stackHeight,
-				m_stackHeight - 1 - static_cast<int>(instruction) + static_cast<int>(Instruction::SWAP1),
+				m_stackHeight - 1 - static_cast<int>(instruction) + static_cast<int>(InternalInstruction::SWAP1),
 				_item.location()
 			);
-		else if (instruction != Instruction::POP)
+		else if (instruction != InternalInstruction::POP)
 		{
 			vector<Id> arguments(static_cast<size_t>(info.args));
 			for (size_t i = 0; i < static_cast<size_t>(info.args); ++i)
 				arguments[i] = stackElement(m_stackHeight - static_cast<int>(i), _item.location());
 			switch (_item.instruction())
 			{
-			case Instruction::SSTORE:
+			case InternalInstruction::SSTORE:
 				op = storeInStorage(arguments[0], arguments[1], _item.location());
 				break;
-			case Instruction::SLOAD:
+			case InternalInstruction::SLOAD:
 				setStackElement(
 					m_stackHeight + static_cast<int>(_item.deposit()),
 					loadFromStorage(arguments[0], _item.location())
 				);
 				break;
-			case Instruction::MSTORE:
+			case InternalInstruction::MSTORE:
 				op = storeInMemory(arguments[0], arguments[1], _item.location());
 				break;
-			case Instruction::MLOAD:
+			case InternalInstruction::MLOAD:
 				setStackElement(
 					m_stackHeight + static_cast<int>(_item.deposit()),
 					loadFromMemory(arguments[0], _item.location())
 				);
 				break;
-			case Instruction::KECCAK256:
+			case InternalInstruction::KECCAK256:
 				setStackElement(
 					m_stackHeight + static_cast<int>(_item.deposit()),
 					applyKeccak256(arguments.at(0), arguments.at(1), _item.location())
@@ -335,7 +335,7 @@ KnownState::StoreOperation KnownState::storeInStorage(
 			storageContents.insert(storageItem);
 	m_storageContent = std::move(storageContents);
 
-	AssemblyItem item(Instruction::SSTORE, _location);
+	AssemblyItem item(InternalInstruction::SSTORE, _location);
 	Id id = m_expressionClasses->find(item, {_slot, _value}, true, m_sequenceNumber);
 	StoreOperation operation{StoreOperation::Storage, _slot, m_sequenceNumber, id};
 	m_storageContent[_slot] = _value;
@@ -350,7 +350,7 @@ ExpressionClasses::Id KnownState::loadFromStorage(Id _slot, SourceLocation const
 	if (m_storageContent.count(_slot))
 		return m_storageContent.at(_slot);
 
-	AssemblyItem item(Instruction::SLOAD, _location);
+	AssemblyItem item(InternalInstruction::SLOAD, _location);
 	return m_storageContent[_slot] = m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
 }
 
@@ -367,7 +367,7 @@ KnownState::StoreOperation KnownState::storeInMemory(Id _slot, Id _value, Source
 			memoryContents.insert(memoryItem);
 	m_memoryContent = std::move(memoryContents);
 
-	AssemblyItem item(Instruction::MSTORE, _location);
+	AssemblyItem item(InternalInstruction::MSTORE, _location);
 	Id id = m_expressionClasses->find(item, {_slot, _value}, true, m_sequenceNumber);
 	StoreOperation operation{StoreOperation::Memory, _slot, m_sequenceNumber, id};
 	m_memoryContent[_slot] = _value;
@@ -381,7 +381,7 @@ ExpressionClasses::Id KnownState::loadFromMemory(Id _slot, SourceLocation const&
 	if (m_memoryContent.count(_slot))
 		return m_memoryContent.at(_slot);
 
-	AssemblyItem item(Instruction::MLOAD, _location);
+	AssemblyItem item(InternalInstruction::MLOAD, _location);
 	return m_memoryContent[_slot] = m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
 }
 
@@ -391,7 +391,7 @@ KnownState::Id KnownState::applyKeccak256(
 	SourceLocation const& _location
 )
 {
-	AssemblyItem keccak256Item(Instruction::KECCAK256, _location);
+	AssemblyItem keccak256Item(InternalInstruction::KECCAK256, _location);
 	// Special logic if length is a short constant, otherwise we cannot tell.
 	u256 const* l = m_expressionClasses->knownConstant(_length);
 	// unknown or too large length
@@ -402,7 +402,7 @@ KnownState::Id KnownState::applyKeccak256(
 	for (unsigned i = 0; i < length; i += 32)
 	{
 		Id slot = m_expressionClasses->find(
-			AssemblyItem(Instruction::ADD, _location),
+			AssemblyItem(InternalInstruction::ADD, _location),
 			{_start, m_expressionClasses->find(u256(i))}
 		);
 		arguments.push_back(loadFromMemory(slot, _location));

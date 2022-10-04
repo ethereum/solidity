@@ -124,7 +124,7 @@ private:
 	void visit(Expression const& _expression) override;
 
 private:
-	void addInstructionCost(evmasm::Instruction _instruction);
+	void addInstructionCost(evmasm::InternalInstruction _instruction);
 
 	Dialect const& m_dialect;
 	size_t m_cost = 0;

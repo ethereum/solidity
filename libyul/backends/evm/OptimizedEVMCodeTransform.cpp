@@ -345,14 +345,14 @@ void OptimizedEVMCodeTransform::createStackLayout(std::shared_ptr<DebugData cons
 				[&](JunkSlot const&)
 				{
 					// Note: this will always be popped, so we can push anything.
-					m_assembly.appendInstruction(evmasm::Instruction::CODESIZE);
+					m_assembly.appendInstruction(evmasm::InternalInstruction::CODESIZE);
 				}
 			}, _slot);
 		},
 		// Pop callback.
 		[&]()
 		{
-			m_assembly.appendInstruction(evmasm::Instruction::POP);
+			m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 		}
 	);
 	yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
@@ -407,7 +407,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 	std::visit(util::GenericVisitor{
 		[&](CFG::BasicBlock::MainExit const&)
 		{
-			m_assembly.appendInstruction(evmasm::Instruction::STOP);
+			m_assembly.appendInstruction(evmasm::InternalInstruction::STOP);
 		},
 		[&](CFG::BasicBlock::Jump const& _jump)
 		{

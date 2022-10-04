@@ -31,7 +31,7 @@
 
 namespace solidity::evmasm
 {
-enum class Instruction: uint8_t;
+enum class InternalInstruction: uint8_t;
 }
 
 namespace solidity::yul
@@ -47,7 +47,7 @@ void removeEmptyBlocks(Block& _block);
 bool isRestrictedIdentifier(Dialect const& _dialect, YulString const& _identifier);
 
 /// Helper function that returns the instruction, if the `_name` is a BuiltinFunction
-std::optional<evmasm::Instruction> toEVMInstruction(Dialect const& _dialect, YulString const& _name);
+std::optional<evmasm::InternalInstruction> toEVMInstruction(Dialect const& _dialect, YulString const& _name);
 
 class StatementRemover: public ASTModifier
 {

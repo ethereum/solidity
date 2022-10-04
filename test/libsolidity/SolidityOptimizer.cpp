@@ -104,12 +104,12 @@ public:
 
 	/// @returns the number of instructions in the given bytecode, not taking the metadata hash
 	/// into account.
-	size_t numInstructions(bytes const& _bytecode, std::optional<Instruction> _which = std::optional<Instruction>{})
+	size_t numInstructions(bytes const& _bytecode, std::optional<InternalInstruction> _which = std::optional<InternalInstruction>{})
 	{
 		bytes realCode = bytecodeSansMetadata(_bytecode);
 		BOOST_REQUIRE_MESSAGE(!realCode.empty(), "Invalid or missing metadata in bytecode.");
 		size_t instructions = 0;
-		evmasm::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
+		evmasm::eachInstruction(realCode, langutil::EVMVersion(), [&](InternalInstruction _instr, u256 const&) {
 			if (!_which || *_which == _instr)
 				instructions++;
 		});
@@ -287,8 +287,8 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "c", true);
 	size_t numSHA3s = 0;
-	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == Instruction::KECCAK256)
+	eachInstruction(optimizedBytecode, langutil::EVMVersion(), [&](InternalInstruction _instr, u256 const&) {
+		if (_instr == InternalInstruction::KECCAK256)
 			numSHA3s++;
 	});
 // TEST DISABLED - OPTIMIZER IS NOT EFFECTIVE ON THIS ONE ANYMORE
@@ -330,8 +330,8 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "test", true);
 	size_t numSHA3s = 0;
-	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == Instruction::KECCAK256)
+	eachInstruction(optimizedBytecode, langutil::EVMVersion(), [&](InternalInstruction _instr, u256 const&) {
+		if (_instr == InternalInstruction::KECCAK256)
 			numSHA3s++;
 	});
 // TEST DISABLED UNTIL 93693404 IS IMPLEMENTED
@@ -635,8 +635,8 @@ BOOST_AUTO_TEST_CASE(optimise_multi_stores)
 	)";
 	compileBothVersions(sourceCode);
 	compareVersions("f()");
-	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, Instruction::SSTORE), 8);
-	BOOST_CHECK_EQUAL(numInstructions(m_optimizedBytecode, Instruction::SSTORE), 7);
+	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, InternalInstruction::SSTORE), 8);
+	BOOST_CHECK_EQUAL(numInstructions(m_optimizedBytecode, InternalInstruction::SSTORE), 7);
 }
 
 BOOST_AUTO_TEST_CASE(optimise_constant_to_codecopy)
@@ -672,8 +672,8 @@ BOOST_AUTO_TEST_CASE(optimise_constant_to_codecopy)
 	compareVersions("h()");
 	compareVersions("i()");
 	// This is counting in the deployed code.
-	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, Instruction::CODECOPY), 0);
-	BOOST_CHECK_EQUAL(numInstructions(m_optimizedBytecode, Instruction::CODECOPY), 4);
+	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, InternalInstruction::CODECOPY), 0);
+	BOOST_CHECK_EQUAL(numInstructions(m_optimizedBytecode, InternalInstruction::CODECOPY), 4);
 }
 
 BOOST_AUTO_TEST_CASE(byte_access)
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(avoid_double_cleanup)
 	)";
 	compileBothVersions(sourceCode, 0, "C", 50);
 	// Check that there is no double AND instruction in the resulting code
-	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, Instruction::AND), 1);
+	BOOST_CHECK_EQUAL(numInstructions(m_nonOptimizedBytecode, InternalInstruction::AND), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -51,7 +51,7 @@ public:
 	void setSourceLocation(langutil::SourceLocation const&) override {}
 	int stackHeight() const override { return m_stackHeight; }
 	void setStackHeight(int height) override { m_stackHeight = height; }
-	void appendInstruction(evmasm::Instruction _instruction) override;
+	void appendInstruction(evmasm::InternalInstruction _instruction) override;
 	void appendConstant(u256 const& _constant) override;
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;

@@ -30,7 +30,7 @@
 
 namespace solidity::evmasm
 {
-enum class Instruction: uint8_t;
+enum class InternalInstruction: uint8_t;
 }
 
 namespace solidity::yul
@@ -71,7 +71,7 @@ public:
 		m_disableMemoryWriteInstructions(_disableMemWriteTrace)
 	{}
 	/// Evaluate instruction
-	u256 eval(evmasm::Instruction _instruction, std::vector<u256> const& _arguments);
+	u256 eval(evmasm::InternalInstruction _instruction, std::vector<u256> const& _arguments);
 	/// Evaluate builtin function
 	u256 evalBuiltin(
 		BuiltinFunctionForEVM const& _fun,
@@ -95,7 +95,7 @@ private:
 	void writeMemoryWord(u256 const& _offset, u256 const& _value);
 
 	void logTrace(
-		evmasm::Instruction _instruction,
+		evmasm::InternalInstruction _instruction,
 		std::vector<u256> const& _arguments = {},
 		bytes const& _data = {}
 	);

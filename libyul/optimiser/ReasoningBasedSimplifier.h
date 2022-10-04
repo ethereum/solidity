@@ -65,7 +65,7 @@ private:
 	);
 
 	smtutil::Expression encodeEVMBuiltin(
-		evmasm::Instruction _instruction,
+		evmasm::InternalInstruction _instruction,
 		std::vector<Expression> const& _arguments
 	) override;
 

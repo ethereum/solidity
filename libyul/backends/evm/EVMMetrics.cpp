@@ -41,7 +41,7 @@ bigint GasMeter::costs(Expression const& _expression) const
 	return combineCosts(GasMeterVisitor::costs(_expression, m_dialect, m_isCreation));
 }
 
-bigint GasMeter::instructionCosts(evmasm::Instruction _instruction) const
+bigint GasMeter::instructionCosts(evmasm::InternalInstruction _instruction) const
 {
 	return combineCosts(GasMeterVisitor::instructionCosts(_instruction, m_dialect, m_isCreation));
 }
@@ -64,7 +64,7 @@ pair<bigint, bigint> GasMeterVisitor::costs(
 }
 
 pair<bigint, bigint> GasMeterVisitor::instructionCosts(
-	evmasm::Instruction _instruction,
+	evmasm::InternalInstruction _instruction,
 	EVMDialect const& _dialect,
 	bool _isCreation
 )
@@ -88,7 +88,7 @@ void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 
 void GasMeterVisitor::operator()(Literal const& _lit)
 {
-	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::PUSH1);
+	m_runGas += evmasm::GasMeter::runGas(evmasm::InternalInstruction::PUSH1);
 	m_dataGas +=
 		singleByteDataGas() +
 		evmasm::GasMeter::dataGas(
@@ -100,7 +100,7 @@ void GasMeterVisitor::operator()(Literal const& _lit)
 
 void GasMeterVisitor::operator()(Identifier const&)
 {
-	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::DUP1);
+	m_runGas += evmasm::GasMeter::runGas(evmasm::InternalInstruction::DUP1);
 	m_dataGas += singleByteDataGas();
 }
 
@@ -112,11 +112,11 @@ bigint GasMeterVisitor::singleByteDataGas() const
 		return evmasm::GasCosts::createDataGas;
 }
 
-void GasMeterVisitor::instructionCostsInternal(evmasm::Instruction _instruction)
+void GasMeterVisitor::instructionCostsInternal(evmasm::InternalInstruction _instruction)
 {
-	if (_instruction == evmasm::Instruction::EXP)
+	if (_instruction == evmasm::InternalInstruction::EXP)
 		m_runGas += evmasm::GasCosts::expGas + evmasm::GasCosts::expByteGas(m_dialect.evmVersion());
-	else if (_instruction == evmasm::Instruction::KECCAK256)
+	else if (_instruction == evmasm::InternalInstruction::KECCAK256)
 		// Assumes that Keccak-256 is computed on a single word (rounded up).
 		m_runGas += evmasm::GasCosts::keccak256Gas + evmasm::GasCosts::keccak256WordGas;
 	else

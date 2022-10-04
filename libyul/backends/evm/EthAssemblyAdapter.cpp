@@ -59,7 +59,7 @@ void EthAssemblyAdapter::setStackHeight(int height)
 	m_assembly.setDeposit(height);
 }
 
-void EthAssemblyAdapter::appendInstruction(evmasm::Instruction _instruction)
+void EthAssemblyAdapter::appendInstruction(evmasm::InternalInstruction _instruction)
 {
 	m_assembly.append(_instruction);
 }
@@ -101,7 +101,7 @@ void EthAssemblyAdapter::appendVerbatim(bytes _data, size_t _arguments, size_t _
 
 void EthAssemblyAdapter::appendJump(int _stackDiffAfter, JumpType _jumpType)
 {
-	appendJumpInstruction(evmasm::Instruction::JUMP, _jumpType);
+	appendJumpInstruction(evmasm::InternalInstruction::JUMP, _jumpType);
 	m_assembly.adjustDeposit(_stackDiffAfter);
 }
 
@@ -114,7 +114,7 @@ void EthAssemblyAdapter::appendJumpTo(LabelID _labelId, int _stackDiffAfter, Jum
 void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId, JumpType _jumpType)
 {
 	appendLabelReference(_labelId);
-	appendJumpInstruction(evmasm::Instruction::JUMPI, _jumpType);
+	appendJumpInstruction(evmasm::InternalInstruction::JUMPI, _jumpType);
 }
 
 void EthAssemblyAdapter::appendAssemblySize()
@@ -188,9 +188,9 @@ EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::
 	return LabelID(id);
 }
 
-void EthAssemblyAdapter::appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType)
+void EthAssemblyAdapter::appendJumpInstruction(evmasm::InternalInstruction _instruction, JumpType _jumpType)
 {
-	yulAssert(_instruction == evmasm::Instruction::JUMP || _instruction == evmasm::Instruction::JUMPI, "");
+	yulAssert(_instruction == evmasm::InternalInstruction::JUMP || _instruction == evmasm::InternalInstruction::JUMPI, "");
 	evmasm::AssemblyItem jump(_instruction);
 	switch (_jumpType)
 	{

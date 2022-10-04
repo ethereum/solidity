@@ -52,17 +52,17 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 	case PushProgramSize:
 	case PushLibraryAddress:
 	case PushDeployTimeAddress:
-		gas = runGas(Instruction::PUSH1);
+		gas = runGas(InternalInstruction::PUSH1);
 		break;
 	case Tag:
-		gas = runGas(Instruction::JUMPDEST);
+		gas = runGas(InternalInstruction::JUMPDEST);
 		break;
 	case Operation:
 	{
 		ExpressionClasses& classes = m_state->expressionClasses();
 		switch (_item.instruction())
 		{
-		case Instruction::SSTORE:
+		case InternalInstruction::SSTORE:
 		{
 			ExpressionClasses::Id slot = m_state->relativeStackElement(0);
 			ExpressionClasses::Id value = m_state->relativeStackElement(-1);
@@ -75,57 +75,57 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				gas = GasCosts::totalSstoreSetGas(m_evmVersion);
 			break;
 		}
-		case Instruction::SLOAD:
+		case InternalInstruction::SLOAD:
 			gas = GasCosts::sloadGas(m_evmVersion);
 			break;
-		case Instruction::RETURN:
-		case Instruction::REVERT:
+		case InternalInstruction::RETURN:
+		case InternalInstruction::REVERT:
 			gas = runGas(_item.instruction());
 			gas += memoryGas(0, -1);
 			break;
-		case Instruction::MLOAD:
-		case Instruction::MSTORE:
+		case InternalInstruction::MLOAD:
+		case InternalInstruction::MSTORE:
 			gas = runGas(_item.instruction());
-			gas += memoryGas(classes.find(Instruction::ADD, {
+			gas += memoryGas(classes.find(InternalInstruction::ADD, {
 				m_state->relativeStackElement(0),
 				classes.find(AssemblyItem(32))
 			}));
 			break;
-		case Instruction::MSTORE8:
+		case InternalInstruction::MSTORE8:
 			gas = runGas(_item.instruction());
-			gas += memoryGas(classes.find(Instruction::ADD, {
+			gas += memoryGas(classes.find(InternalInstruction::ADD, {
 				m_state->relativeStackElement(0),
 				classes.find(AssemblyItem(1))
 			}));
 			break;
-		case Instruction::KECCAK256:
+		case InternalInstruction::KECCAK256:
 			gas = GasCosts::keccak256Gas;
 			gas += memoryGas(0, -1);
 			gas += wordGas(GasCosts::keccak256WordGas, m_state->relativeStackElement(-1));
 			break;
-		case Instruction::CALLDATACOPY:
-		case Instruction::CODECOPY:
-		case Instruction::RETURNDATACOPY:
+		case InternalInstruction::CALLDATACOPY:
+		case InternalInstruction::CODECOPY:
+		case InternalInstruction::RETURNDATACOPY:
 			gas = runGas(_item.instruction());
 			gas += memoryGas(0, -2);
 			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-2));
 			break;
-		case Instruction::EXTCODESIZE:
+		case InternalInstruction::EXTCODESIZE:
 			gas = GasCosts::extCodeGas(m_evmVersion);
 			break;
-		case Instruction::EXTCODEHASH:
+		case InternalInstruction::EXTCODEHASH:
 			gas = GasCosts::balanceGas(m_evmVersion);
 			break;
-		case Instruction::EXTCODECOPY:
+		case InternalInstruction::EXTCODECOPY:
 			gas = GasCosts::extCodeGas(m_evmVersion);
 			gas += memoryGas(-1, -3);
 			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-3));
 			break;
-		case Instruction::LOG0:
-		case Instruction::LOG1:
-		case Instruction::LOG2:
-		case Instruction::LOG3:
-		case Instruction::LOG4:
+		case InternalInstruction::LOG0:
+		case InternalInstruction::LOG1:
+		case InternalInstruction::LOG2:
+		case InternalInstruction::LOG3:
+		case InternalInstruction::LOG4:
 		{
 			gas = GasCosts::logGas + GasCosts::logTopicGas * getLogNumber(_item.instruction());
 			gas += memoryGas(0, -1);
@@ -135,10 +135,10 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				gas = GasConsumption::infinite();
 			break;
 		}
-		case Instruction::CALL:
-		case Instruction::CALLCODE:
-		case Instruction::DELEGATECALL:
-		case Instruction::STATICCALL:
+		case InternalInstruction::CALL:
+		case InternalInstruction::CALLCODE:
+		case InternalInstruction::DELEGATECALL:
+		case InternalInstruction::STATICCALL:
 		{
 			if (_includeExternalCosts)
 				// We assume that we do not know the target contract and thus, the consumption is infinite.
@@ -150,10 +150,10 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 					gas += (*value);
 				else
 					gas = GasConsumption::infinite();
-				if (_item.instruction() == Instruction::CALL)
+				if (_item.instruction() == InternalInstruction::CALL)
 					gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
 				int valueSize = 1;
-				if (_item.instruction() == Instruction::DELEGATECALL || _item.instruction() == Instruction::STATICCALL)
+				if (_item.instruction() == InternalInstruction::DELEGATECALL || _item.instruction() == InternalInstruction::STATICCALL)
 					valueSize = 0;
 				else if (!classes.knownZero(m_state->relativeStackElement(-1 - valueSize)))
 					gas += GasCosts::callValueTransferGas;
@@ -162,12 +162,12 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			}
 			break;
 		}
-		case Instruction::SELFDESTRUCT:
+		case InternalInstruction::SELFDESTRUCT:
 			gas = GasCosts::selfdestructGas(m_evmVersion);
 			gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
 			break;
-		case Instruction::CREATE:
-		case Instruction::CREATE2:
+		case InternalInstruction::CREATE:
+		case InternalInstruction::CREATE2:
 			if (_includeExternalCosts)
 				// We assume that we do not know the target contract and thus, the consumption is infinite.
 				gas = GasConsumption::infinite();
@@ -177,7 +177,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				gas += memoryGas(-1, -2);
 			}
 			break;
-		case Instruction::EXP:
+		case InternalInstruction::EXP:
 			gas = GasCosts::expGas;
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
 			{
@@ -191,14 +191,14 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			else
 				gas += GasCosts::expByteGas(m_evmVersion) * 32;
 			break;
-		case Instruction::BALANCE:
+		case InternalInstruction::BALANCE:
 			gas = GasCosts::balanceGas(m_evmVersion);
 			break;
-		case Instruction::CHAINID:
-			gas = runGas(Instruction::CHAINID);
+		case InternalInstruction::CHAINID:
+			gas = runGas(InternalInstruction::CHAINID);
 			break;
-		case Instruction::SELFBALANCE:
-			gas = runGas(Instruction::SELFBALANCE);
+		case InternalInstruction::SELFBALANCE:
+			gas = runGas(InternalInstruction::SELFBALANCE);
 			break;
 		default:
 			gas = runGas(_item.instruction());
@@ -246,15 +246,15 @@ GasMeter::GasConsumption GasMeter::memoryGas(int _stackPosOffset, int _stackPosS
 	if (classes.knownZero(m_state->relativeStackElement(_stackPosSize)))
 		return GasConsumption(0);
 	else
-		return memoryGas(classes.find(Instruction::ADD, {
+		return memoryGas(classes.find(InternalInstruction::ADD, {
 			m_state->relativeStackElement(_stackPosOffset),
 			m_state->relativeStackElement(_stackPosSize)
 		}));
 }
 
-unsigned GasMeter::runGas(Instruction _instruction)
+unsigned GasMeter::runGas(InternalInstruction _instruction)
 {
-	if (_instruction == Instruction::JUMPDEST)
+	if (_instruction == InternalInstruction::JUMPDEST)
 		return 1;
 
 	switch (instructionInfo(_instruction).gasPriceTier)

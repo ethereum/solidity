@@ -129,7 +129,7 @@ void UnusedStoreEliminator::operator()(Leave const&)
 
 void UnusedStoreEliminator::visit(Statement const& _statement)
 {
-	using evmasm::Instruction;
+	using evmasm::InternalInstruction;
 
 	UnusedStoreBase::visit(_statement);
 
@@ -139,7 +139,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 
 	FunctionCall const* funCall = get_if<FunctionCall>(&exprStatement->expression);
 	yulAssert(funCall);
-	optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName.name);
+	optional<InternalInstruction> instruction = toEVMInstruction(m_dialect, funCall->functionName.name);
 	if (!instruction)
 		return;
 
@@ -152,14 +152,14 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	// both by querying a combination of semantic information and by listing the instructions.
 	// This way the assert below should be triggered on any change.
 	using evmasm::SemanticInformation;
-	bool isStorageWrite = (*instruction == Instruction::SSTORE);
+	bool isStorageWrite = (*instruction == InternalInstruction::SSTORE);
 	bool isMemoryWrite =
-		*instruction == Instruction::EXTCODECOPY ||
-		*instruction == Instruction::CODECOPY ||
-		*instruction == Instruction::CALLDATACOPY ||
-		*instruction == Instruction::RETURNDATACOPY ||
-		*instruction == Instruction::MSTORE ||
-		*instruction == Instruction::MSTORE8;
+		*instruction == InternalInstruction::EXTCODECOPY ||
+		*instruction == InternalInstruction::CODECOPY ||
+		*instruction == InternalInstruction::CALLDATACOPY ||
+		*instruction == InternalInstruction::RETURNDATACOPY ||
+		*instruction == InternalInstruction::MSTORE ||
+		*instruction == InternalInstruction::MSTORE8;
 	bool isCandidateForRemoval =
 		SemanticInformation::otherState(*instruction) != SemanticInformation::Write && (
 			SemanticInformation::storage(*instruction) == SemanticInformation::Write ||
@@ -169,7 +169,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	if (isCandidateForRemoval)
 	{
 		State initialState = State::Undecided;
-		if (*instruction == Instruction::RETURNDATACOPY)
+		if (*instruction == InternalInstruction::RETURNDATACOPY)
 		{
 			initialState = State::Used;
 			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
@@ -181,7 +181,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 				if (
 					knowledge.knownToBeZero(*startOffset) &&
 					lengthCall &&
-					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
+					toEVMInstruction(m_dialect, lengthCall->functionName.name) == InternalInstruction::RETURNDATASIZE
 				)
 					initialState = State::Undecided;
 			}
@@ -203,7 +203,7 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 	FunctionCall const& _functionCall
 ) const
 {
-	using evmasm::Instruction;
+	using evmasm::InternalInstruction;
 
 	YulString functionName = _functionCall.functionName.name;
 	SideEffects sideEffects;
@@ -212,7 +212,7 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 	else
 		sideEffects = m_functionSideEffects.at(functionName);
 
-	optional<Instruction> instruction = toEVMInstruction(m_dialect, functionName);
+	optional<InternalInstruction> instruction = toEVMInstruction(m_dialect, functionName);
 	if (!instruction)
 	{
 		vector<Operation> result;

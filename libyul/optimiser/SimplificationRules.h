@@ -69,7 +69,7 @@ public:
 	/// by the constructor, but we had some issues with static initialization.
 	bool isInitialized() const;
 
-	static std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
+	static std::optional<std::pair<evmasm::InternalInstruction, std::vector<Expression> const*>>
 	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
 
 private:
@@ -110,7 +110,7 @@ public:
 	// Matches a specific constant value.
 	Pattern(u256 const& _value): m_kind(PatternKind::Constant), m_data(std::make_shared<u256>(_value)) {}
 	// Matches a given instruction with given arguments
-	Pattern(evmasm::Instruction _instruction, std::initializer_list<Pattern> _arguments = {});
+	Pattern(evmasm::InternalInstruction _instruction, std::initializer_list<Pattern> _arguments = {});
 	/// Sets this pattern to be part of the match group with the identifier @a _group.
 	/// Inside one rule, all patterns in the same match group have to match expressions from the
 	/// same expression equivalence class.
@@ -127,7 +127,7 @@ public:
 	/// @returns the data of the matched expression if this pattern is part of a match group.
 	u256 d() const;
 
-	evmasm::Instruction instruction() const;
+	evmasm::InternalInstruction instruction() const;
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
@@ -137,7 +137,7 @@ private:
 	Expression const& matchGroupValue() const;
 
 	PatternKind m_kind = PatternKind::Any;
-	evmasm::Instruction m_instruction; ///< Only valid if m_kind is Operation
+	evmasm::InternalInstruction m_instruction; ///< Only valid if m_kind is Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_kind is Constant
 	std::vector<Pattern> m_arguments;
 	unsigned m_matchGroup = 0;

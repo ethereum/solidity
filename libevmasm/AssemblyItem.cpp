@@ -329,7 +329,7 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	{
 	case Operation:
 		_out << " " << instructionInfo(_item.instruction()).name;
-		if (_item.instruction() == Instruction::JUMP || _item.instruction() == Instruction::JUMPI)
+		if (_item.instruction() == InternalInstruction::JUMP || _item.instruction() == InternalInstruction::JUMPI)
 			_out << "\t" << _item.getJumpTypeAsString();
 		break;
 	case Push:

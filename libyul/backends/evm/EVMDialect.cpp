@@ -48,7 +48,7 @@ namespace
 
 pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	string const& _name,
-	evmasm::Instruction _instruction
+	evmasm::InternalInstruction _instruction
 )
 {
 	evmasm::InstructionInfo info = evmasm::instructionInfo(_instruction);
@@ -71,7 +71,7 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 			f.controlFlowSideEffects.canRevert = false;
 		}
 	}
-	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
+	f.isMSize = _instruction == evmasm::InternalInstruction::MSIZE;
 	f.literalArguments.clear();
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](
@@ -114,9 +114,9 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 {
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// basefee for VMs before london.
-	auto baseFeeException = [&](evmasm::Instruction _instr) -> bool
+	auto baseFeeException = [&](evmasm::InternalInstruction _instr) -> bool
 	{
-		return _instr == evmasm::Instruction::BASEFEE && _evmVersion < langutil::EVMVersion::london();
+		return _instr == evmasm::InternalInstruction::BASEFEE && _evmVersion < langutil::EVMVersion::london();
 	};
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// prevrandao for VMs before paris.
@@ -162,12 +162,12 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			instruction = evmasm::InternalInstruction::DIFFICULTY;
 
 		if (
-			!evmasm::isDupInstruction(opcode) &&
-			!evmasm::isSwapInstruction(opcode) &&
-			!evmasm::isPushInstruction(opcode) &&
-			opcode != evmasm::Instruction::JUMP &&
-			opcode != evmasm::Instruction::JUMPI &&
-			opcode != evmasm::Instruction::JUMPDEST &&
+			!evmasm::isDupInstruction(instruction) &&
+			!evmasm::isSwapInstruction(instruction) &&
+			!evmasm::isPushInstruction(instruction) &&
+			instruction != evmasm::InternalInstruction::JUMP &&
+			instruction != evmasm::InternalInstruction::JUMPI &&
+			instruction != evmasm::InternalInstruction::JUMPDEST &&
 			_evmVersion.hasInstruction(instruction)
 		)
 			builtins.emplace(createEVMFunction(name, instruction));
@@ -256,7 +256,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				AbstractAssembly& _assembly,
 				BuiltinContext&
 			) {
-				_assembly.appendInstruction(evmasm::Instruction::CODECOPY);
+				_assembly.appendInstruction(evmasm::InternalInstruction::CODECOPY);
 			}
 		));
 		builtins.emplace(createFunction(
@@ -352,7 +352,7 @@ EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _
 	return *dialects[_version];
 }
 
-SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instruction)
+SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::InternalInstruction _instruction)
 {
 	auto translate = [](evmasm::SemanticInformation::Effect _e) -> SideEffects::Effect
 	{
@@ -465,11 +465,11 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 		// TODO this should use a Panic.
 		// A value larger than 1 causes an invalid instruction.
 		_assembly.appendConstant(2);
-		_assembly.appendInstruction(evmasm::Instruction::DUP2);
-		_assembly.appendInstruction(evmasm::Instruction::LT);
+		_assembly.appendInstruction(evmasm::InternalInstruction::DUP2);
+		_assembly.appendInstruction(evmasm::InternalInstruction::LT);
 		AbstractAssembly::LabelID inRange = _assembly.newLabelId();
 		_assembly.appendJumpToIf(inRange);
-		_assembly.appendInstruction(evmasm::Instruction::INVALID);
+		_assembly.appendInstruction(evmasm::InternalInstruction::INVALID);
 		_assembly.appendLabel(inRange);
 	}));
 	m_functions["u256_to_bool"_yulstring].parameters = {"u256"_yulstring};

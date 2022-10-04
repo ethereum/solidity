@@ -30,7 +30,7 @@
 
 namespace solidity::evmasm
 {
-enum class Instruction: uint8_t;
+enum class InternalInstruction: uint8_t;
 }
 
 namespace solidity::yul
@@ -127,7 +127,7 @@ private:
 	util::h256 readBytes32(uint64_t _offset) { accessMemory(_offset, 32); return util::h256(readMemory(_offset, 32)); }
 	util::h160 readAddress(uint64_t _offset) { accessMemory(_offset, 20); return util::h160(readMemory(_offset, 20)); }
 
-	void logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
+	void logTrace(evmasm::InternalInstruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,
 	/// with arguments and auxiliary data (if nonempty).
 	void logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});

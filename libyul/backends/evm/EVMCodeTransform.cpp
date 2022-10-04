@@ -118,7 +118,7 @@ void CodeTransform::freeUnusedVariables(bool _popUnusedSlotsAtStackTop)
 		while (m_unusedStackSlots.count(m_assembly.stackHeight() - 1))
 		{
 			yulAssert(m_unusedStackSlots.erase(m_assembly.stackHeight() - 1), "");
-			m_assembly.appendInstruction(evmasm::Instruction::POP);
+			m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 		}
 }
 
@@ -168,7 +168,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			if (atTopOfStack)
 			{
 				m_context->variableStackHeights.erase(&var);
-				m_assembly.appendInstruction(evmasm::Instruction::POP);
+				m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 			}
 			else
 				m_variablesScheduledForDeletion.insert(&var);
@@ -186,7 +186,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 				m_context->variableStackHeights[&var] = slot;
 				if (size_t heightDiff = variableHeightDiff(var, varName, true))
 					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
-				m_assembly.appendInstruction(evmasm::Instruction::POP);
+				m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 				break;
 			}
 			if (!foundUnusedSlot)
@@ -197,10 +197,10 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 
 void CodeTransform::stackError(StackTooDeepError _error, int _targetStackHeight)
 {
-	m_assembly.appendInstruction(evmasm::Instruction::INVALID);
+	m_assembly.appendInstruction(evmasm::InternalInstruction::INVALID);
 	// Correct the stack.
 	while (m_assembly.stackHeight() > _targetStackHeight)
-		m_assembly.appendInstruction(evmasm::Instruction::POP);
+		m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 	while (m_assembly.stackHeight() < _targetStackHeight)
 		m_assembly.appendConstant(u256(0));
 	// Store error.
@@ -303,7 +303,7 @@ void CodeTransform::operator()(If const& _if)
 {
 	visitExpression(*_if.condition);
 	m_assembly.setSourceLocation(originLocationOf(_if));
-	m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
+	m_assembly.appendInstruction(evmasm::InternalInstruction::ISZERO);
 	AbstractAssembly::LabelID end = m_assembly.newLabelId();
 	m_assembly.appendJumpToIf(end);
 	(*this)(_if.body);
@@ -327,7 +327,7 @@ void CodeTransform::operator()(Switch const& _switch)
 			caseBodies[&c] = bodyLabel;
 			yulAssert(m_assembly.stackHeight() == expressionHeight + 1, "");
 			m_assembly.appendInstruction(evmasm::dupInstruction(2));
-			m_assembly.appendInstruction(evmasm::Instruction::EQ);
+			m_assembly.appendInstruction(evmasm::InternalInstruction::EQ);
 			m_assembly.appendJumpToIf(bodyLabel);
 		}
 		else
@@ -353,7 +353,7 @@ void CodeTransform::operator()(Switch const& _switch)
 
 	m_assembly.setSourceLocation(originLocationOf(_switch));
 	m_assembly.appendLabel(end);
-	m_assembly.appendInstruction(evmasm::Instruction::POP);
+	m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 }
 
 void CodeTransform::operator()(FunctionDefinition const& _function)
@@ -471,7 +471,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 			while (!stackLayout.empty() && stackLayout.back() != static_cast<int>(stackLayout.size() - 1))
 				if (stackLayout.back() < 0)
 				{
-					m_assembly.appendInstruction(evmasm::Instruction::POP);
+					m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 					stackLayout.pop_back();
 				}
 				else
@@ -508,7 +508,7 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 
 	visitExpression(*_forLoop.condition);
 	m_assembly.setSourceLocation(originLocationOf(_forLoop));
-	m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
+	m_assembly.appendInstruction(evmasm::InternalInstruction::ISZERO);
 	m_assembly.appendJumpToIf(loopEnd);
 
 	int const stackHeightBody = m_assembly.stackHeight();
@@ -533,7 +533,7 @@ int CodeTransform::appendPopUntil(int _targetDepth)
 {
 	int const stackDiffAfter = m_assembly.stackHeight() - _targetDepth;
 	for (int i = 0; i < stackDiffAfter; ++i)
-		m_assembly.appendInstruction(evmasm::Instruction::POP);
+		m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 	return stackDiffAfter;
 }
 
@@ -733,7 +733,7 @@ void CodeTransform::finalizeBlock(Block const& _block, optional<int> blockStartS
 				yulAssert(!m_context->variableReferences.count(&var), "");
 			}
 			else
-				m_assembly.appendInstruction(evmasm::Instruction::POP);
+				m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 		}
 
 	if (blockStartStackHeight)
@@ -758,7 +758,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 		Scope::Variable const& _var = std::get<Scope::Variable>(*var);
 		if (size_t heightDiff = variableHeightDiff(_var, _variableName.name, true))
 			m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
-		m_assembly.appendInstruction(evmasm::Instruction::POP);
+		m_assembly.appendInstruction(evmasm::InternalInstruction::POP);
 		decreaseReference(_variableName.name, _var);
 	}
 	else

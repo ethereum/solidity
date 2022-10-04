@@ -150,7 +150,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
 
 			// pop offset
-			m_context << Instruction::POP;
+			m_context << InternalInstruction::POP;
 			if (paramTypes[i]->isDynamicallySized())
 			{
 				solAssert(
@@ -175,7 +175,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 					slot_pos := hash
 				})", {"slot_pos", "key_ptr"});
 
-				m_context << Instruction::POP;
+				m_context << InternalInstruction::POP;
 			}
 			else
 			{
@@ -188,7 +188,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 				utils().copyToStackTop(static_cast<unsigned>(paramTypes.size() - i), 1);
 				utils().storeInMemory(0);
 				m_context << u256(64) << u256(0);
-				m_context << Instruction::KECCAK256;
+				m_context << InternalInstruction::KECCAK256;
 			}
 
 			// push offset
@@ -198,15 +198,15 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType))
 		{
 			// pop offset
-			m_context << Instruction::POP;
+			m_context << InternalInstruction::POP;
 			utils().copyToStackTop(static_cast<unsigned>(paramTypes.size() - i + 1), 1);
 
 			ArrayUtils(m_context).retrieveLength(*arrayType, 1);
 			// Stack: ref [length] index length
 			// check out-of-bounds access
-			m_context << Instruction::DUP2 << Instruction::LT;
+			m_context << InternalInstruction::DUP2 << InternalInstruction::LT;
 			auto tag = m_context.appendConditionalJump();
-			m_context << u256(0) << Instruction::DUP1 << Instruction::REVERT;
+			m_context << u256(0) << InternalInstruction::DUP1 << InternalInstruction::REVERT;
 			m_context << tag;
 
 			ArrayUtils(m_context).accessIndex(*arrayType, false);
@@ -217,11 +217,11 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	}
 	// remove index arguments.
 	if (paramTypes.size() == 1)
-		m_context << Instruction::SWAP2 << Instruction::POP << Instruction::SWAP1;
+		m_context << InternalInstruction::SWAP2 << InternalInstruction::POP << InternalInstruction::SWAP1;
 	else if (paramTypes.size() >= 2)
 	{
 		m_context << swapInstruction(static_cast<unsigned>(paramTypes.size()));
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 		m_context << swapInstruction(static_cast<unsigned>(paramTypes.size()));
 		utils().popStackSlots(paramTypes.size() - 1);
 	}
@@ -232,7 +232,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		solAssert(!_varDecl.immutable(), "");
 		// remove offset
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 		auto const& names = accessorType.returnParameterNames();
 		// struct
 		for (size_t i = 0; i < names.size(); ++i)
@@ -243,7 +243,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 				if (!arrayType->isByteArrayOrString())
 					continue;
 			pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
-			m_context << Instruction::DUP1 << u256(offsets.first) << Instruction::ADD << u256(offsets.second);
+			m_context << InternalInstruction::DUP1 << u256(offsets.first) << InternalInstruction::ADD << u256(offsets.second);
 			Type const* memberType = structType->memberType(names[i]);
 			StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true);
 			utils().convertType(*memberType, *returnTypes[i]);
@@ -251,7 +251,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			retSizeOnStack += returnTypes[i]->sizeOnStack();
 		}
 		// remove slot
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 	}
 	else
 	{
@@ -355,7 +355,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				);
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
-				m_context << swapInstruction(itemSize + lvalueSize) << Instruction::POP;
+				m_context << swapInstruction(itemSize + lvalueSize) << InternalInstruction::POP;
 		}
 		m_currentLValue->storeValue(*_assignment.annotation().type, _assignment.location());
 	}
@@ -371,7 +371,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 
 		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
 		utils().allocateMemory(max(u256(32u), arrayType.memoryDataSize()));
-		m_context << Instruction::DUP1;
+		m_context << InternalInstruction::DUP1;
 
 		for (auto const& component: _tuple.components())
 		{
@@ -379,7 +379,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 			utils().storeInMemoryDynamic(*arrayType.baseType(), true);
 		}
 
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 	}
 	else
 	{
@@ -422,10 +422,10 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	switch (_unaryOperation.getOperator())
 	{
 	case Token::Not: // !
-		m_context << Instruction::ISZERO;
+		m_context << InternalInstruction::ISZERO;
 		break;
 	case Token::BitNot: // ~
-		m_context << Instruction::NOT;
+		m_context << InternalInstruction::NOT;
 		break;
 	case Token::Delete: // delete
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
@@ -444,7 +444,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		{
 			// store value for later
 			solUnimplementedAssert(type.sizeOnStack() == 1, "Stack size != 1 not implemented.");
-			m_context << Instruction::DUP1;
+			m_context << InternalInstruction::DUP1;
 			if (m_currentLValue->sizeOnStack() > 0)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
 					m_context << swapInstruction(i);
@@ -456,7 +456,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			else
 			{
 				m_context << u256(1);
-				m_context << Instruction::ADD;
+				m_context << InternalInstruction::ADD;
 			}
 		}
 		else
@@ -466,7 +466,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			else
 			{
 				m_context << u256(1);
-				m_context << Instruction::SWAP1 << Instruction::SUB;
+				m_context << InternalInstruction::SWAP1 << InternalInstruction::SUB;
 			}
 		}
 		// Stack for prefix: [ref...] (*ref)+-1
@@ -489,7 +489,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		if (m_context.arithmetic() == Arithmetic::Checked)
 			m_context.callYulFunction(m_context.utilFunctions().negateNumberCheckedFunction(type), 1, 1);
 		else
-			m_context << u256(0) << Instruction::SUB;
+			m_context << u256(0) << InternalInstruction::SUB;
 		break;
 	default:
 		solAssert(false, "Invalid unary operator: " + string(TokenTraits::toString(_unaryOperation.getOperator())));
@@ -600,14 +600,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
 
 		utils().allocateMemory(max(u256(32u), structType.memoryDataSize()));
-		m_context << Instruction::DUP1;
+		m_context << InternalInstruction::DUP1;
 
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
 			acceptAndConvert(*arguments[i], *functionType->parameterTypes()[i]);
 			utils().storeInMemoryDynamic(*functionType->parameterTypes()[i]);
 		}
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 	}
 	else
 	{
@@ -670,7 +670,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().rightShiftNumberOnStack(32);
 			else
 				// Extract the runtime part.
-				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+				m_context << ((u256(1) << 32) - 1) << InternalInstruction::AND;
 
 			m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
 			m_context << returnLabel;
@@ -716,7 +716,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.saltSet())
 			{
 				m_context << dupInstruction(2 + (function.valueSet() ? 1 : 0));
-				m_context << Instruction::SWAP1;
+				m_context << InternalInstruction::SWAP1;
 			}
 
 			// now: [salt], [value], [salt], memory_end_ptr
@@ -730,19 +730,19 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			// now: [salt], [value], [salt], size, offset, value
 			if (function.saltSet())
-				m_context << Instruction::CREATE2;
+				m_context << InternalInstruction::CREATE2;
 			else
-				m_context << Instruction::CREATE;
+				m_context << InternalInstruction::CREATE;
 
 			// now: [salt], [value], address
 
 			if (function.valueSet())
-				m_context << swapInstruction(1) << Instruction::POP;
+				m_context << swapInstruction(1) << InternalInstruction::POP;
 			if (function.saltSet())
-				m_context << swapInstruction(1) << Instruction::POP;
+				m_context << swapInstruction(1) << InternalInstruction::POP;
 
 			// Check if zero (reverted)
-			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			m_context << InternalInstruction::DUP1 << InternalInstruction::ISZERO;
 			if (_functionCall.annotation().tryCall)
 			{
 				// If this is a try call, return "<address> 1" in the success case and
@@ -767,7 +767,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (stackDepth > 0)
 				m_context << swapInstruction(stackDepth);
 			if (function.gasSet())
-				m_context << Instruction::POP;
+				m_context << InternalInstruction::POP;
 			break;
 		}
 		case FunctionType::Kind::SetValue:
@@ -776,7 +776,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Note that function is not the original function, but the ".value" function.
 			// Its values of gasSet and valueSet is equal to the original function's though.
 			if (function.valueSet())
-				m_context << Instruction::POP;
+				m_context << InternalInstruction::POP;
 			arguments.front()->accept(*this);
 			break;
 		case FunctionType::Kind::Send:
@@ -788,8 +788,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << u256(evmasm::GasCosts::callStipend);
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
 			// gas <- gas * !value
-			m_context << Instruction::SWAP1 << Instruction::DUP2;
-			m_context << Instruction::ISZERO << Instruction::MUL << Instruction::SWAP1;
+			m_context << InternalInstruction::SWAP1 << InternalInstruction::DUP2;
+			m_context << InternalInstruction::ISZERO << InternalInstruction::MUL << InternalInstruction::SWAP1;
 			FunctionType::Options callOptions;
 			callOptions.valueSet = true;
 			callOptions.gasSet = true;
@@ -810,7 +810,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			if (function.kind() == FunctionType::Kind::Transfer)
 			{
 				// Check if zero (out of stack or not enough balance).
-				m_context << Instruction::ISZERO;
+				m_context << InternalInstruction::ISZERO;
 				// Revert message bubbles up.
 				m_context.appendConditionalRevert(true);
 			}
@@ -818,7 +818,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::Selfdestruct:
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
-			m_context << Instruction::SELFDESTRUCT;
+			m_context << InternalInstruction::SELFDESTRUCT;
 			break;
 		case FunctionType::Kind::Revert:
 		{
@@ -861,15 +861,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// Optimization: If type is bytes or string, then do not encode,
 				// but directly compute keccak256 on memory.
 				ArrayUtils(m_context).retrieveLength(*TypeProvider::bytesMemory());
-				m_context << Instruction::SWAP1 << u256(0x20) << Instruction::ADD;
-				m_context << Instruction::KECCAK256;
+				m_context << InternalInstruction::SWAP1 << u256(0x20) << InternalInstruction::ADD;
+				m_context << InternalInstruction::KECCAK256;
 			}
 			else
 			{
 				utils().fetchFreeMemoryPointer();
 				utils().packedEncode({argType}, TypePointers());
 				utils().toSizeAfterFreeMemoryPointer();
-				m_context << Instruction::KECCAK256;
+				m_context << InternalInstruction::KECCAK256;
 			}
 			break;
 		}
@@ -893,7 +893,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 							{referenceType}
 						);
 						utils().toSizeAfterFreeMemoryPointer();
-						m_context << Instruction::KECCAK256;
+						m_context << InternalInstruction::KECCAK256;
 					}
 					else
 					{
@@ -993,21 +993,21 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::BlockHash:
 		{
 			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
-			m_context << Instruction::BLOCKHASH;
+			m_context << InternalInstruction::BLOCKHASH;
 			break;
 		}
 		case FunctionType::Kind::AddMod:
 		case FunctionType::Kind::MulMod:
 		{
 			acceptAndConvert(*arguments[2], *TypeProvider::uint256());
-			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			m_context << InternalInstruction::DUP1 << InternalInstruction::ISZERO;
 			m_context.appendConditionalPanic(util::PanicCode::DivisionByZero);
 			for (unsigned i = 1; i < 3; i ++)
 				acceptAndConvert(*arguments[2 - i], *TypeProvider::uint256());
 			if (function.kind() == FunctionType::Kind::AddMod)
-				m_context << Instruction::ADDMOD;
+				m_context << InternalInstruction::ADDMOD;
 			else
-				m_context << Instruction::MULMOD;
+				m_context << InternalInstruction::MULMOD;
 			break;
 		}
 		case FunctionType::Kind::ECRecover:
@@ -1041,10 +1041,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				solAssert(arrayType, "");
 
 				// stack: ArrayReference
-				m_context << u256(1) << Instruction::DUP2;
+				m_context << u256(1) << InternalInstruction::DUP2;
 				ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
 				// stack: ArrayReference 1 newLength
-				m_context << Instruction::SUB;
+				m_context << InternalInstruction::SUB;
 				// stack: ArrayReference (newLength-1)
 				ArrayUtils(m_context).accessIndex(*arrayType, false);
 
@@ -1067,10 +1067,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// stack: ArrayReference argValue
 				utils().moveToStackTop(argType->sizeOnStack(), 1);
 				// stack: argValue ArrayReference
-				m_context << Instruction::DUP1;
+				m_context << InternalInstruction::DUP1;
 				ArrayUtils(m_context).incrementDynamicArraySize(*arrayType);
 				// stack: argValue ArrayReference newLength
-				m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
+				m_context << u256(1) << InternalInstruction::SWAP1 << InternalInstruction::SUB;
 				// stack: argValue ArrayReference (newLength-1)
 				ArrayUtils(m_context).accessIndex(*arrayType, false);
 				// stack: argValue storageSlot slotOffset
@@ -1137,13 +1137,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			utils().fetchFreeMemoryPointer();
 			// stack: <arg1> <arg2> ... <argn> <free mem>
-			m_context << u256(32) << Instruction::ADD;
+			m_context << u256(32) << InternalInstruction::ADD;
 			utils().packedEncode(argumentTypes, targetTypes);
 			utils().fetchFreeMemoryPointer();
 			m_context.appendInlineAssembly(R"({
 				mstore(mem_ptr, sub(sub(mem_end, mem_ptr), 0x20))
 			})", {"mem_end", "mem_ptr"});
-			m_context << Instruction::SWAP1;
+			m_context << InternalInstruction::SWAP1;
 			utils().storeFreeMemoryPointer();
 
 			break;
@@ -1159,42 +1159,42 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			// Make sure we can allocate memory without overflow
 			m_context << u256(0xffffffffffffffff);
-			m_context << Instruction::DUP2;
-			m_context << Instruction::GT;
+			m_context << InternalInstruction::DUP2;
+			m_context << InternalInstruction::GT;
 			m_context.appendConditionalPanic(PanicCode::ResourceError);
 
 			// Stack: requested_length
 			utils().fetchFreeMemoryPointer();
 
 			// Stack: requested_length memptr
-			m_context << Instruction::SWAP1;
+			m_context << InternalInstruction::SWAP1;
 			// Stack: memptr requested_length
 			// store length
-			m_context << Instruction::DUP1 << Instruction::DUP3 << Instruction::MSTORE;
+			m_context << InternalInstruction::DUP1 << InternalInstruction::DUP3 << InternalInstruction::MSTORE;
 			// Stack: memptr requested_length
 			// update free memory pointer
-			m_context << Instruction::DUP1;
+			m_context << InternalInstruction::DUP1;
 			// Stack: memptr requested_length requested_length
 			if (arrayType.isByteArrayOrString())
 				// Round up to multiple of 32
-				m_context << u256(31) << Instruction::ADD << u256(31) << Instruction::NOT << Instruction::AND;
+				m_context << u256(31) << InternalInstruction::ADD << u256(31) << InternalInstruction::NOT << InternalInstruction::AND;
 			else
-				m_context << arrayType.baseType()->memoryHeadSize() << Instruction::MUL;
+				m_context << arrayType.baseType()->memoryHeadSize() << InternalInstruction::MUL;
 			// stacK: memptr requested_length data_size
-			m_context << u256(32) << Instruction::ADD;
-			m_context << Instruction::DUP3 << Instruction::ADD;
+			m_context << u256(32) << InternalInstruction::ADD;
+			m_context << InternalInstruction::DUP3 << InternalInstruction::ADD;
 			utils().storeFreeMemoryPointer();
 			// Stack: memptr requested_length
 
 			// Check if length is zero
-			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			m_context << InternalInstruction::DUP1 << InternalInstruction::ISZERO;
 			auto skipInit = m_context.appendConditionalJump();
 			// Always initialize because the free memory pointer might point at
 			// a dirty memory area.
-			m_context << Instruction::DUP2 << u256(32) << Instruction::ADD;
+			m_context << InternalInstruction::DUP2 << u256(32) << InternalInstruction::ADD;
 			utils().zeroInitialiseMemoryArray(arrayType);
 			m_context << skipInit;
-			m_context << Instruction::POP;
+			m_context << InternalInstruction::POP;
 			break;
 		}
 		case FunctionType::Kind::Assert:
@@ -1227,7 +1227,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			// Stack: <error string (unconverted)> <condition>
 			// jump if condition was met
-			m_context << Instruction::ISZERO << Instruction::ISZERO;
+			m_context << InternalInstruction::ISZERO << InternalInstruction::ISZERO;
 			auto success = m_context.appendConditionalJump();
 			if (function.kind() == FunctionType::Kind::Assert)
 				// condition was not met, flag an error
@@ -1291,7 +1291,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// stack now: [<selector/functionPointer/signature>] <arg1> .. <argN> <free_mem>
 
 			// adjust by 32(+4) bytes to accommodate the length(+selector)
-			m_context << u256(32 + (hasSelectorOrSignature ? 4 : 0)) << Instruction::ADD;
+			m_context << u256(32 + (hasSelectorOrSignature ? 4 : 0)) << InternalInstruction::ADD;
 			// stack now: [<selector/functionPointer/signature>] <arg1> .. <argN> <data_encoding_area_start>
 
 			if (isPacked)
@@ -1311,7 +1311,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context.appendInlineAssembly(R"({
 				mstore(mem_ptr, sub(sub(mem_end, mem_ptr), 0x20))
 			})", {"mem_end", "mem_ptr"});
-			m_context << Instruction::SWAP1;
+			m_context << InternalInstruction::SWAP1;
 			utils().storeFreeMemoryPointer();
 			// stack: [<selector/functionPointer/signature>] <memory ptr>
 
@@ -1338,7 +1338,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						// stack: <memory pointer> <signature> <free mem ptr>
 						utils().packedEncode(TypePointers{selectorType}, TypePointers());
 						utils().toSizeAfterFreeMemoryPointer();
-						m_context << Instruction::KECCAK256;
+						m_context << InternalInstruction::KECCAK256;
 						// stack: <memory pointer> <hash>
 
 						dataOnStack = TypeProvider::fixedBytes(32);
@@ -1358,7 +1358,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						solAssert(selectorType->sizeOnStack() == 2);
 						// stack: <memory pointer> <functionPointer>
 						// Extract selector from the stack
-						m_context << Instruction::SWAP1 << Instruction::POP;
+						m_context << InternalInstruction::SWAP1 << InternalInstruction::POP;
 					}
 					// Conversion will be done below
 					dataOnStack = TypeProvider::uint(32);
@@ -1378,7 +1378,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					let mask := )" + mask + R"(
 					mstore(data_start, or(and(data, mask), selector))
 				})", {"mem_ptr", "selector"});
-				m_context << Instruction::POP;
+				m_context << InternalInstruction::POP;
 			}
 
 			// stack now: <memory pointer>
@@ -1405,8 +1405,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			else
 			{
 				utils().convertType(*firstArgType, *TypeProvider::bytesMemory());
-				m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
-				m_context << Instruction::SWAP1 << Instruction::MLOAD;
+				m_context << InternalInstruction::DUP1 << u256(32) << InternalInstruction::ADD;
+				m_context << InternalInstruction::SWAP1 << InternalInstruction::MLOAD;
 				// stack now: <mem_pos> <length>
 
 				utils().abiDecode(targetTypes, true);
@@ -1414,7 +1414,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 		case FunctionType::Kind::GasLeft:
-			m_context << Instruction::GAS;
+			m_context << InternalInstruction::GAS;
 			break;
 		case FunctionType::Kind::MetaType:
 			// No code to generate.
@@ -1649,7 +1649,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 							dynamic_cast<MagicVariableDeclaration const*>(arg->annotation().referencedDeclaration)
 						)
 						{
-							m_context << Instruction::SELFBALANCE;
+							m_context << InternalInstruction::SELFBALANCE;
 							return false;
 						}
 
@@ -1671,7 +1671,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			*TypeProvider::address(),
 			true
 		);
-		m_context << Instruction::EXTCODESIZE;
+		m_context << InternalInstruction::EXTCODESIZE;
 
 		return false;
 	}
@@ -1713,7 +1713,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				*TypeProvider::address(),
 				true
 			);
-			m_context << Instruction::BALANCE;
+			m_context << InternalInstruction::BALANCE;
 		}
 		else if (member == "code")
 		{
@@ -1724,28 +1724,28 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				true
 			);
 
-			m_context << Instruction::DUP1 << Instruction::EXTCODESIZE;
+			m_context << InternalInstruction::DUP1 << InternalInstruction::EXTCODESIZE;
 			// Stack post: <address> <size>
 
-			m_context << Instruction::DUP1;
+			m_context << InternalInstruction::DUP1;
 			// Account for the size field of `bytes memory`
-			m_context << u256(32) << Instruction::ADD;
+			m_context << u256(32) << InternalInstruction::ADD;
 			utils().allocateMemory();
 			// Stack post: <address> <size> <mem_offset>
 
 			// Store size at mem_offset
-			m_context << Instruction::DUP2 << Instruction::DUP2 << Instruction::MSTORE;
+			m_context << InternalInstruction::DUP2 << InternalInstruction::DUP2 << InternalInstruction::MSTORE;
 
-			m_context << u256(0) << Instruction::SWAP1 << Instruction::DUP1;
+			m_context << u256(0) << InternalInstruction::SWAP1 << InternalInstruction::DUP1;
 			// Stack post: <address> <size> 0 <mem_offset> <mem_offset>
 
-			m_context << u256(32) << Instruction::ADD << Instruction::SWAP1;
+			m_context << u256(32) << InternalInstruction::ADD << InternalInstruction::SWAP1;
 			// Stack post: <address> <size> 0 <mem_offset_adjusted> <mem_offset>
 
-			m_context << Instruction::SWAP4;
+			m_context << InternalInstruction::SWAP4;
 			// Stack post: <mem_offset> <size> 0 <mem_offset_adjusted> <address>
 
-			m_context << Instruction::EXTCODECOPY;
+			m_context << InternalInstruction::EXTCODECOPY;
 			// Stack post: <mem_offset>
 		}
 		else if (member == "codehash")
@@ -1755,7 +1755,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				*TypeProvider::address(),
 				true
 			);
-			m_context << Instruction::EXTCODEHASH;
+			m_context << InternalInstruction::EXTCODEHASH;
 		}
 		else if ((set<string>{"send", "transfer"}).count(member))
 		{
@@ -1785,7 +1785,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 
 			if (functionType.kind() == FunctionType::Kind::External)
 				CompilerUtils(m_context).popStackSlots(functionType.sizeOnStack() - 2);
-			m_context << Instruction::SWAP1 << Instruction::POP;
+			m_context << InternalInstruction::SWAP1 << InternalInstruction::POP;
 
 			/// need to store it as bytes4
 			utils().leftShiftNumberOnStack(224);
@@ -1805,34 +1805,34 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	case Type::Category::Magic:
 		// we can ignore the kind of magic and only look at the name of the member
 		if (member == "coinbase")
-			m_context << Instruction::COINBASE;
+			m_context << InternalInstruction::COINBASE;
 		else if (member == "timestamp")
-			m_context << Instruction::TIMESTAMP;
+			m_context << InternalInstruction::TIMESTAMP;
 		else if (member == "difficulty")
-			m_context << Instruction::DIFFICULTY;
+			m_context << InternalInstruction::DIFFICULTY;
 		else if (member == "prevrandao")
-			m_context << Instruction::PREVRANDAO;
+			m_context << InternalInstruction::PREVRANDAO;
 		else if (member == "number")
-			m_context << Instruction::NUMBER;
+			m_context << InternalInstruction::NUMBER;
 		else if (member == "gaslimit")
-			m_context << Instruction::GASLIMIT;
+			m_context << InternalInstruction::GASLIMIT;
 		else if (member == "sender")
-			m_context << Instruction::CALLER;
+			m_context << InternalInstruction::CALLER;
 		else if (member == "value")
-			m_context << Instruction::CALLVALUE;
+			m_context << InternalInstruction::CALLVALUE;
 		else if (member == "origin")
-			m_context << Instruction::ORIGIN;
+			m_context << InternalInstruction::ORIGIN;
 		else if (member == "gasprice")
-			m_context << Instruction::GASPRICE;
+			m_context << InternalInstruction::GASPRICE;
 		else if (member == "chainid")
-			m_context << Instruction::CHAINID;
+			m_context << InternalInstruction::CHAINID;
 		else if (member == "basefee")
-			m_context << Instruction::BASEFEE;
+			m_context << InternalInstruction::BASEFEE;
 		else if (member == "data")
-			m_context << u256(0) << Instruction::CALLDATASIZE;
+			m_context << u256(0) << InternalInstruction::CALLDATASIZE;
 		else if (member == "sig")
-			m_context << u256(0) << Instruction::CALLDATALOAD
-				<< (u256(0xffffffff) << (256 - 32)) << Instruction::AND;
+			m_context << u256(0) << InternalInstruction::CALLDATALOAD
+				<< (u256(0xffffffff) << (256 - 32)) << InternalInstruction::AND;
 		else if (member == "gas")
 			solAssert(false, "Gas has been removed.");
 		else if (member == "blockhash")
@@ -1844,7 +1844,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(!contractType.isSuper(), "");
 			ContractDefinition const& contract = contractType.contractDefinition();
 			utils().fetchFreeMemoryPointer();
-			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
+			m_context << InternalInstruction::DUP1 << u256(32) << InternalInstruction::ADD;
 			utils().copyContractCodeToMemory(contract, member == "creationCode");
 			// Stack: start end
 			m_context.appendInlineAssembly(
@@ -1854,7 +1854,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				})")("free", to_string(CompilerUtils::freeMemoryPointer)).render(),
 				{"start", "end"}
 			);
-			m_context << Instruction::POP;
+			m_context << InternalInstruction::POP;
 		}
 		else if (member == "name")
 		{
@@ -1865,9 +1865,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				dynamic_cast<ContractType const&>(*arg).contractDefinition();
 			utils().allocateMemory(((contract.name().length() + 31) / 32) * 32 + 32);
 			// store string length
-			m_context << u256(contract.name().length()) << Instruction::DUP2 << Instruction::MSTORE;
+			m_context << u256(contract.name().length()) << InternalInstruction::DUP2 << InternalInstruction::MSTORE;
 			// adjust pointer
-			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
+			m_context << InternalInstruction::DUP1 << u256(32) << InternalInstruction::ADD;
 			utils().storeStringData(contract.name());
 		}
 		else if (member == "interfaceId")
@@ -1903,13 +1903,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		case DataLocation::Storage:
 		{
 			pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
-			m_context << offsets.first << Instruction::ADD << u256(offsets.second);
+			m_context << offsets.first << InternalInstruction::ADD << u256(offsets.second);
 			setLValueToStorageItem(_memberAccess);
 			break;
 		}
 		case DataLocation::Memory:
 		{
-			m_context << type.memoryOffsetOfMember(member) << Instruction::ADD;
+			m_context << type.memoryOffsetOfMember(member) << InternalInstruction::ADD;
 			setLValue<MemoryItem>(_memberAccess, *memberType);
 			break;
 		}
@@ -1917,13 +1917,13 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			if (_memberAccess.annotation().type->isDynamicallyEncoded())
 			{
-				m_context << Instruction::DUP1;
-				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
+				m_context << InternalInstruction::DUP1;
+				m_context << type.calldataOffsetOfMember(member) << InternalInstruction::ADD;
 				CompilerUtils(m_context).accessCalldataTail(*memberType);
 			}
 			else
 			{
-				m_context << type.calldataOffsetOfMember(member) << Instruction::ADD;
+				m_context << type.calldataOffsetOfMember(member) << InternalInstruction::ADD;
 				// For non-value types the calldata offset is returned directly.
 				if (memberType->isValueType())
 				{
@@ -1971,14 +1971,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				switch (type.location())
 				{
 				case DataLocation::CallData:
-					m_context << Instruction::SWAP1 << Instruction::POP;
+					m_context << InternalInstruction::SWAP1 << InternalInstruction::POP;
 					break;
 				case DataLocation::Storage:
 					ArrayUtils(m_context).retrieveLength(type);
-					m_context << Instruction::SWAP1 << Instruction::POP;
+					m_context << InternalInstruction::SWAP1 << InternalInstruction::POP;
 					break;
 				case DataLocation::Memory:
-					m_context << Instruction::MLOAD;
+					m_context << InternalInstruction::MLOAD;
 					break;
 				}
 		}
@@ -2066,7 +2066,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					TypePointers{_indexAccess.indexExpression()->annotation().type},
 					TypePointers{keyType}
 				);
-				m_context << Instruction::SWAP1;
+				m_context << InternalInstruction::SWAP1;
 				utils().storeInMemoryDynamic(*TypeProvider::uint256());
 				utils().toSizeAfterFreeMemoryPointer();
 			}
@@ -2074,12 +2074,12 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			{
 				m_context << u256(0); // memory position
 				appendExpressionCopyToMemory(*keyType, *_indexAccess.indexExpression());
-				m_context << Instruction::SWAP1;
+				m_context << InternalInstruction::SWAP1;
 				solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
 				utils().storeInMemoryDynamic(*TypeProvider::uint256());
 				m_context << u256(0);
 			}
-			m_context << Instruction::KECCAK256;
+			m_context << InternalInstruction::KECCAK256;
 			m_context << u256(0);
 			setLValueToStorageItem(_indexAccess);
 			break;
@@ -2138,11 +2138,11 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			// stack layout: <value> <index>
 			// check out-of-bounds access
 			m_context << u256(fixedBytesType.numBytes());
-			m_context << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
+			m_context << InternalInstruction::DUP2 << InternalInstruction::LT << InternalInstruction::ISZERO;
 			// out-of-bounds access throws exception
 			m_context.appendConditionalPanic(util::PanicCode::ArrayOutOfBounds);
 
-			m_context << Instruction::BYTE;
+			m_context << InternalInstruction::BYTE;
 			utils().leftShiftNumberOnStack(256 - 8);
 			break;
 		}
@@ -2187,16 +2187,16 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 		m_context << u256(0);
 	// stack: offset length sliceStart
 
-	m_context << Instruction::SWAP1;
+	m_context << InternalInstruction::SWAP1;
 	// stack: offset sliceStart length
 
 	if (_indexAccess.endExpression())
 		acceptAndConvert(*_indexAccess.endExpression(), *TypeProvider::uint256());
 	else
-		m_context << Instruction::DUP1;
+		m_context << InternalInstruction::DUP1;
 	// stack: offset sliceStart length sliceEnd
 
-	m_context << Instruction::SWAP3;
+	m_context << InternalInstruction::SWAP3;
 	// stack: sliceEnd sliceStart length offset
 
 	m_context.callYulFunction(m_context.utilFunctions().calldataArrayIndexRangeAccess(*arrayType), 4, 2);
@@ -2216,7 +2216,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 			if (dynamic_cast<ContractType const*>(magicVar->type()))
 			{
 				solAssert(_identifier.name() == "this", "");
-				m_context << Instruction::ADDRESS;
+				m_context << InternalInstruction::ADDRESS;
 			}
 			break;
 		default:
@@ -2294,11 +2294,11 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 	solAssert(c_op == Token::Or || c_op == Token::And, "");
 
 	_binaryOperation.leftExpression().accept(*this);
-	m_context << Instruction::DUP1;
+	m_context << InternalInstruction::DUP1;
 	if (c_op == Token::And)
-		m_context << Instruction::ISZERO;
+		m_context << InternalInstruction::ISZERO;
 	evmasm::AssemblyItem endLabel = m_context.appendConditionalJump();
-	m_context << Instruction::POP;
+	m_context << InternalInstruction::POP;
 	_binaryOperation.rightExpression().accept(*this);
 	m_context << endLabel;
 }
@@ -2311,18 +2311,18 @@ void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& 
 		if (functionType && functionType->kind() == FunctionType::Kind::External)
 		{
 			solUnimplementedAssert(functionType->sizeOnStack() == 2, "");
-			m_context << Instruction::SWAP3;
+			m_context << InternalInstruction::SWAP3;
 
-			m_context << ((u256(1) << 160) - 1) << Instruction::AND;
-			m_context << Instruction::SWAP1;
-			m_context << ((u256(1) << 160) - 1) << Instruction::AND;
-			m_context << Instruction::EQ;
-			m_context << Instruction::SWAP2;
-			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
-			m_context << Instruction::SWAP1;
-			m_context << ((u256(1) << 32) - 1) << Instruction::AND;
-			m_context << Instruction::EQ;
-			m_context << Instruction::AND;
+			m_context << ((u256(1) << 160) - 1) << InternalInstruction::AND;
+			m_context << InternalInstruction::SWAP1;
+			m_context << ((u256(1) << 160) - 1) << InternalInstruction::AND;
+			m_context << InternalInstruction::EQ;
+			m_context << InternalInstruction::SWAP2;
+			m_context << ((u256(1) << 32) - 1) << InternalInstruction::AND;
+			m_context << InternalInstruction::SWAP1;
+			m_context << ((u256(1) << 32) - 1) << InternalInstruction::AND;
+			m_context << InternalInstruction::EQ;
+			m_context << InternalInstruction::AND;
 		}
 		else
 		{
@@ -2331,14 +2331,14 @@ void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& 
 			{
 				// We have to remove the upper bits (construction time value) because they might
 				// be "unknown" in one of the operands and not in the other.
-				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
-				m_context << Instruction::SWAP1;
-				m_context << ((u256(1) << 32) - 1) << Instruction::AND;
+				m_context << ((u256(1) << 32) - 1) << InternalInstruction::AND;
+				m_context << InternalInstruction::SWAP1;
+				m_context << ((u256(1) << 32) - 1) << InternalInstruction::AND;
 			}
-			m_context << Instruction::EQ;
+			m_context << InternalInstruction::EQ;
 		}
 		if (_operator == Token::NotEqual)
-			m_context << Instruction::ISZERO;
+			m_context << InternalInstruction::ISZERO;
 	}
 	else
 	{
@@ -2351,19 +2351,19 @@ void ExpressionCompiler::appendCompareOperatorCode(Token _operator, Type const& 
 		{
 		case Token::GreaterThanOrEqual:
 			m_context <<
-				(isSigned ? Instruction::SLT : Instruction::LT) <<
-				Instruction::ISZERO;
+				(isSigned ? InternalInstruction::SLT : InternalInstruction::LT) <<
+				InternalInstruction::ISZERO;
 			break;
 		case Token::LessThanOrEqual:
 			m_context <<
-				(isSigned ? Instruction::SGT : Instruction::GT) <<
-				Instruction::ISZERO;
+				(isSigned ? InternalInstruction::SGT : InternalInstruction::GT) <<
+				InternalInstruction::ISZERO;
 			break;
 		case Token::GreaterThan:
-			m_context << (isSigned ? Instruction::SGT : Instruction::GT);
+			m_context << (isSigned ? InternalInstruction::SGT : InternalInstruction::GT);
 			break;
 		case Token::LessThan:
-			m_context << (isSigned ? Instruction::SLT : Instruction::LT);
+			m_context << (isSigned ? InternalInstruction::SLT : InternalInstruction::LT);
 			break;
 		default:
 			solAssert(false, "Unknown comparison operator.");
@@ -2422,25 +2422,25 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token _operator, Type cons
 		switch (_operator)
 		{
 		case Token::Add:
-			m_context << Instruction::ADD;
+			m_context << InternalInstruction::ADD;
 			break;
 		case Token::Sub:
-			m_context << Instruction::SUB;
+			m_context << InternalInstruction::SUB;
 			break;
 		case Token::Mul:
-			m_context << Instruction::MUL;
+			m_context << InternalInstruction::MUL;
 			break;
 		case Token::Div:
 		case Token::Mod:
 		{
 			// Test for division by zero
-			m_context << Instruction::DUP2 << Instruction::ISZERO;
+			m_context << InternalInstruction::DUP2 << InternalInstruction::ISZERO;
 			m_context.appendConditionalPanic(util::PanicCode::DivisionByZero);
 
 			if (_operator == Token::Div)
-				m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+				m_context << (c_isSigned ? InternalInstruction::SDIV : InternalInstruction::DIV);
 			else
-				m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+				m_context << (c_isSigned ? InternalInstruction::SMOD : InternalInstruction::MOD);
 			break;
 		}
 		default:
@@ -2454,13 +2454,13 @@ void ExpressionCompiler::appendBitOperatorCode(Token _operator)
 	switch (_operator)
 	{
 	case Token::BitOr:
-		m_context << Instruction::OR;
+		m_context << InternalInstruction::OR;
 		break;
 	case Token::BitAnd:
-		m_context << Instruction::AND;
+		m_context << InternalInstruction::AND;
 		break;
 	case Token::BitXor:
-		m_context << Instruction::XOR;
+		m_context << InternalInstruction::XOR;
 		break;
 	default:
 		solAssert(false, "Unknown bit operator.");
@@ -2489,20 +2489,20 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 	else
 		solAssert(false, "Invalid shift amount type.");
 
-	m_context << Instruction::SWAP1;
+	m_context << InternalInstruction::SWAP1;
 	// stack: value_to_shift shift_amount
 
 	switch (_operator)
 	{
 	case Token::SHL:
 		if (m_context.evmVersion().hasBitwiseShifting())
-			m_context << Instruction::SHL;
+			m_context << InternalInstruction::SHL;
 		else
-			m_context << u256(2) << Instruction::EXP << Instruction::MUL;
+			m_context << u256(2) << InternalInstruction::EXP << InternalInstruction::MUL;
 		break;
 	case Token::SAR:
 		if (m_context.evmVersion().hasBitwiseShifting())
-			m_context << (c_valueSigned ? Instruction::SAR : Instruction::SHR);
+			m_context << (c_valueSigned ? InternalInstruction::SAR : InternalInstruction::SHR);
 		else
 		{
 			if (c_valueSigned)
@@ -2528,7 +2528,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 				m_context.appendInlineAssembly(R"({
 					value_to_shift := div(value_to_shift, exp(2, shift_amount))
 				})", {"value_to_shift", "shift_amount"});
-			m_context << Instruction::POP;
+			m_context << InternalInstruction::POP;
 
 		}
 		break;
@@ -2550,7 +2550,7 @@ void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type cons
 			dynamic_cast<IntegerType const&>(_exponentType)
 		), 2, 1);
 	else
-		m_context << Instruction::EXP;
+		m_context << InternalInstruction::EXP;
 }
 
 void ExpressionCompiler::appendExternalFunctionCall(
@@ -2626,8 +2626,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// zero bytes (which we cannot detect).
 		solAssert(0 < retSize && retSize <= 32, "");
 		utils().fetchFreeMemoryPointer();
-		m_context << u256(0) << Instruction::DUP2 << Instruction::MSTORE;
-		m_context << u256(32) << Instruction::ADD;
+		m_context << u256(0) << InternalInstruction::DUP2 << InternalInstruction::MSTORE;
+		m_context << u256(32) << InternalInstruction::ADD;
 		utils().storeFreeMemoryPointer();
 	}
 
@@ -2642,7 +2642,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			m_context << u256(0);
 			utils().fetchFreeMemoryPointer();
 			// This touches too much, but that way we save some rounding arithmetic
-			m_context << u256(retSize) << Instruction::ADD << Instruction::MSTORE;
+			m_context << u256(retSize) << InternalInstruction::ADD << InternalInstruction::MSTORE;
 		}
 	}
 
@@ -2687,15 +2687,15 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (funKind == FunctionType::Kind::ECRecover)
 	{
 		// In this case, output is 32 bytes before input and has already been cleared.
-		m_context << u256(32) << Instruction::DUP2 << Instruction::SUB << Instruction::SWAP1;
+		m_context << u256(32) << InternalInstruction::DUP2 << InternalInstruction::SUB << InternalInstruction::SWAP1;
 		// Here: <input end> <output size> <outpos> <input pos>
-		m_context << Instruction::DUP1 << Instruction::DUP5 << Instruction::SUB;
-		m_context << Instruction::SWAP1;
+		m_context << InternalInstruction::DUP1 << InternalInstruction::DUP5 << InternalInstruction::SUB;
+		m_context << InternalInstruction::SWAP1;
 	}
 	else
 	{
-		m_context << Instruction::DUP1 << Instruction::DUP4 << Instruction::SUB;
-		m_context << Instruction::DUP2;
+		m_context << InternalInstruction::DUP1 << InternalInstruction::DUP4 << InternalInstruction::SUB;
+		m_context << InternalInstruction::DUP2;
 	}
 
 	// CALL arguments: outSize, outOff, inSize, inOff (already present up to here)
@@ -2725,7 +2725,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			m_context.revertStrings() >= RevertStrings::Debug
 		)
 		{
-			m_context << Instruction::DUP1 << Instruction::EXTCODESIZE << Instruction::ISZERO;
+			m_context << InternalInstruction::DUP1 << InternalInstruction::EXTCODESIZE << InternalInstruction::ISZERO;
 			m_context.appendConditionalRevert(false, "Target contract does not contain code");
 			existenceChecked = true;
 		}
@@ -2735,7 +2735,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else if (m_context.evmVersion().canOverchargeGasForCall())
 		// Send all gas (requires tangerine whistle EVM)
-		m_context << Instruction::GAS;
+		m_context << InternalInstruction::GAS;
 	else
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
@@ -2745,15 +2745,15 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			gasNeededByCaller += evmasm::GasCosts::callValueTransferGas;
 		if (!existenceChecked)
 			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
-		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
+		m_context << gasNeededByCaller << InternalInstruction::GAS << InternalInstruction::SUB;
 	}
 	// Order is important here, STATICCALL might overlap with DELEGATECALL.
 	if (isDelegateCall)
-		m_context << Instruction::DELEGATECALL;
+		m_context << InternalInstruction::DELEGATECALL;
 	else if (useStaticCall)
-		m_context << Instruction::STATICCALL;
+		m_context << InternalInstruction::STATICCALL;
 	else
-		m_context << Instruction::CALL;
+		m_context << InternalInstruction::CALL;
 
 	unsigned remainsSize =
 		2u + // contract address, input_memory_end
@@ -2766,7 +2766,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (!returnSuccessConditionAndReturndata && !_tryCall)
 	{
 		// Propagate error condition (if CALL pushes 0 on stack).
-		m_context << Instruction::ISZERO;
+		m_context << InternalInstruction::ISZERO;
 		m_context.appendConditionalRevert(true);
 	}
 	else
@@ -2777,9 +2777,9 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	if (_tryCall)
 	{
-		m_context << Instruction::DUP1 << Instruction::ISZERO;
+		m_context << InternalInstruction::DUP1 << InternalInstruction::ISZERO;
 		m_context.appendConditionalJumpTo(endTag);
-		m_context << Instruction::POP;
+		m_context << InternalInstruction::POP;
 	}
 
 	if (returnSuccessConditionAndReturndata)
@@ -2804,7 +2804,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// Failing ecrecover cannot be detected, so we clear output before the call.
 		m_context << u256(32);
 		utils().fetchFreeMemoryPointer();
-		m_context << Instruction::SUB << Instruction::MLOAD;
+		m_context << InternalInstruction::SUB << InternalInstruction::MLOAD;
 	}
 	else if (!returnTypes.empty())
 	{
@@ -2832,7 +2832,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			solAssert(retSize > 0, "");
 		// Always use the actual return length, and not our calculated expected length, if returndatacopy is supported.
 		// This ensures it can catch badly formatted input from external calls.
-		m_context << (haveReturndatacopy ? evmasm::AssemblyItem(Instruction::RETURNDATASIZE) : u256(retSize));
+		m_context << (haveReturndatacopy ? evmasm::AssemblyItem(InternalInstruction::RETURNDATASIZE) : u256(retSize));
 		// Stack: return_data_start return_data_size
 		if (needToUpdateFreeMemoryPtr)
 			m_context.appendInlineAssembly(R"({

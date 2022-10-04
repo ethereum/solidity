@@ -58,7 +58,7 @@ protected:
 	/// The encoding for a builtin. The type of encoding determines what we are
 	/// solving for.
 	virtual smtutil::Expression encodeEVMBuiltin(
-		evmasm::Instruction _instruction,
+		evmasm::InternalInstruction _instruction,
 		std::vector<Expression> const& _arguments
 	) = 0;
 

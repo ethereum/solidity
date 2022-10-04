@@ -329,7 +329,7 @@ pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration cons
 
 CompilerContext& CompilerContext::appendJump(evmasm::AssemblyItem::JumpType _jumpType)
 {
-	evmasm::AssemblyItem item(Instruction::JUMP);
+	evmasm::AssemblyItem item(InternalInstruction::JUMP);
 	item.setJumpType(_jumpType);
 	return *this << item;
 }
@@ -342,7 +342,7 @@ CompilerContext& CompilerContext::appendPanic(util::PanicCode _code)
 
 CompilerContext& CompilerContext::appendConditionalPanic(util::PanicCode _code)
 {
-	*this << Instruction::ISZERO;
+	*this << InternalInstruction::ISZERO;
 	evmasm::AssemblyItem afterTag = appendConditionalJump();
 	appendPanic(_code);
 	*this << afterTag;
@@ -366,7 +366,7 @@ CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnDat
 		})", {"condition"});
 	else
 		appendInlineAssembly("{ if condition { " + revertReasonIfDebug(_message) + " } }", {"condition"});
-	*this << Instruction::POP;
+	*this << InternalInstruction::POP;
 	return *this;
 }
 
@@ -430,7 +430,7 @@ void CompilerContext::appendInlineAssembly(
 		else
 		{
 			_assembly.appendInstruction(swapInstruction(static_cast<unsigned>(stackDiff)));
-			_assembly.appendInstruction(Instruction::POP);
+			_assembly.appendInstruction(InternalInstruction::POP);
 		}
 	};
 

@@ -763,7 +763,7 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block)
 					opGas += 1000;
 			}
 		};
-		auto pop = [&]() { opGas += evmasm::GasMeter::runGas(evmasm::Instruction::POP); };
+		auto pop = [&]() { opGas += evmasm::GasMeter::runGas(evmasm::InternalInstruction::POP); };
 		createStackLayout(_source, _target, swap, dupOrPush, pop);
 		return opGas;
 	};

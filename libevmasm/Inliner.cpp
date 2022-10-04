@@ -85,7 +85,7 @@ bool Inliner::isInlineCandidate(size_t _tag, ranges::span<AssemblyItem const> _i
 	if (_items.back().type() != Operation)
 		return false;
 	if (
-		_items.back() != Instruction::JUMP &&
+		_items.back() != InternalInstruction::JUMP &&
 		!SemanticInformation::terminatesControlFlow(_items.back().instruction())
 	)
 		return false;
@@ -150,13 +150,13 @@ bool Inliner::shouldInlineFullFunctionBody(size_t _tag, ranges::span<AssemblyIte
 	static AssemblyItems const uninlinedCallSitePattern = {
 		AssemblyItem{PushTag},
 		AssemblyItem{PushTag},
-		AssemblyItem{Instruction::JUMP},
+		AssemblyItem{InternalInstruction::JUMP},
 		AssemblyItem{Tag}
 	};
 	static AssemblyItems const uninlinedFunctionPattern = {
 		AssemblyItem{Tag},
 		// Actual function body of size functionBodySize. Handled separately below.
-		AssemblyItem{Instruction::JUMP}
+		AssemblyItem{InternalInstruction::JUMP}
 	};
 
 	// Both the call site and jump site pattern is executed for each call.
@@ -201,12 +201,12 @@ bool Inliner::shouldInlineFullFunctionBody(size_t _tag, ranges::span<AssemblyIte
 
 optional<AssemblyItem> Inliner::shouldInline(size_t _tag, AssemblyItem const& _jump, InlinableBlock const& _block) const
 {
-	assertThrow(_jump == Instruction::JUMP, OptimizerException, "");
+	assertThrow(_jump == InternalInstruction::JUMP, OptimizerException, "");
 	AssemblyItem blockExit = _block.items.back();
 
 	if (
 		_jump.getJumpType() == AssemblyItem::JumpType::IntoFunction &&
-		blockExit == Instruction::JUMP &&
+		blockExit == InternalInstruction::JUMP &&
 		blockExit.getJumpType() == AssemblyItem::JumpType::OutOfFunction &&
 		shouldInlineFullFunctionBody(_tag, _block.items, _block.pushTagCount)
 	)
@@ -223,7 +223,7 @@ optional<AssemblyItem> Inliner::shouldInline(size_t _tag, AssemblyItem const& _j
 	{
 		static AssemblyItems const jumpPattern = {
 			AssemblyItem{PushTag},
-			AssemblyItem{Instruction::JUMP},
+			AssemblyItem{InternalInstruction::JUMP},
 		};
 		if (
 			GasMeter::dataGas(codeSize(_block.items), m_isCreation, m_evmVersion) <=
@@ -250,7 +250,7 @@ void Inliner::optimise()
 		if (next(it) != m_items.end())
 		{
 			AssemblyItem const& nextItem = *next(it);
-			if (item.type() == PushTag && nextItem == Instruction::JUMP)
+			if (item.type() == PushTag && nextItem == InternalInstruction::JUMP)
 			{
 				if (optional<size_t> tag = getLocalTag(item))
 					if (auto* inlinableBlock = util::valueOrNullptr(inlinableBlocks, *tag))

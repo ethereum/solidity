@@ -87,12 +87,12 @@ void copyZeroExtended(
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
 u256 EVMInstructionInterpreter::eval(
-	evmasm::Instruction _instruction,
+	evmasm::InternalInstruction _instruction,
 	vector<u256> const& _arguments
 )
 {
 	using namespace solidity::evmasm;
-	using evmasm::Instruction;
+	using evmasm::InternalInstruction;
 
 	auto info = instructionInfo(_instruction);
 	yulAssert(static_cast<size_t>(info.args) == _arguments.size(), "");
@@ -100,53 +100,53 @@ u256 EVMInstructionInterpreter::eval(
 	auto const& arg = _arguments;
 	switch (_instruction)
 	{
-	case Instruction::STOP:
+	case InternalInstruction::STOP:
 		logTrace(_instruction);
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	// --------------- arithmetic ---------------
-	case Instruction::ADD:
+	case InternalInstruction::ADD:
 		return arg[0] + arg[1];
-	case Instruction::MUL:
+	case InternalInstruction::MUL:
 		return arg[0] * arg[1];
-	case Instruction::SUB:
+	case InternalInstruction::SUB:
 		return arg[0] - arg[1];
-	case Instruction::DIV:
+	case InternalInstruction::DIV:
 		return arg[1] == 0 ? 0 : arg[0] / arg[1];
-	case Instruction::SDIV:
+	case InternalInstruction::SDIV:
 		return arg[1] == 0 ? 0 : s2u(u2s(arg[0]) / u2s(arg[1]));
-	case Instruction::MOD:
+	case InternalInstruction::MOD:
 		return arg[1] == 0 ? 0 : arg[0] % arg[1];
-	case Instruction::SMOD:
+	case InternalInstruction::SMOD:
 		return arg[1] == 0 ? 0 : s2u(u2s(arg[0]) % u2s(arg[1]));
-	case Instruction::EXP:
+	case InternalInstruction::EXP:
 		return exp256(arg[0], arg[1]);
-	case Instruction::NOT:
+	case InternalInstruction::NOT:
 		return ~arg[0];
-	case Instruction::LT:
+	case InternalInstruction::LT:
 		return arg[0] < arg[1] ? 1 : 0;
-	case Instruction::GT:
+	case InternalInstruction::GT:
 		return arg[0] > arg[1] ? 1 : 0;
-	case Instruction::SLT:
+	case InternalInstruction::SLT:
 		return u2s(arg[0]) < u2s(arg[1]) ? 1 : 0;
-	case Instruction::SGT:
+	case InternalInstruction::SGT:
 		return u2s(arg[0]) > u2s(arg[1]) ? 1 : 0;
-	case Instruction::EQ:
+	case InternalInstruction::EQ:
 		return arg[0] == arg[1] ? 1 : 0;
-	case Instruction::ISZERO:
+	case InternalInstruction::ISZERO:
 		return arg[0] == 0 ? 1 : 0;
-	case Instruction::AND:
+	case InternalInstruction::AND:
 		return arg[0] & arg[1];
-	case Instruction::OR:
+	case InternalInstruction::OR:
 		return arg[0] | arg[1];
-	case Instruction::XOR:
+	case InternalInstruction::XOR:
 		return arg[0] ^ arg[1];
-	case Instruction::BYTE:
+	case InternalInstruction::BYTE:
 		return arg[0] >= 32 ? 0 : (arg[1] >> unsigned(8 * (31 - arg[0]))) & 0xff;
-	case Instruction::SHL:
+	case InternalInstruction::SHL:
 		return arg[0] > 255 ? 0 : (arg[1] << unsigned(arg[0]));
-	case Instruction::SHR:
+	case InternalInstruction::SHR:
 		return arg[0] > 255 ? 0 : (arg[1] >> unsigned(arg[0]));
-	case Instruction::SAR:
+	case InternalInstruction::SAR:
 	{
 		static u256 const hibit = u256(1) << 255;
 		if (arg[0] >= 256)
@@ -160,11 +160,11 @@ u256 EVMInstructionInterpreter::eval(
 			return v;
 		}
 	}
-	case Instruction::ADDMOD:
+	case InternalInstruction::ADDMOD:
 		return arg[2] == 0 ? 0 : u256((u512(arg[0]) + u512(arg[1])) % arg[2]);
-	case Instruction::MULMOD:
+	case InternalInstruction::MULMOD:
 		return arg[2] == 0 ? 0 : u256((u512(arg[0]) * u512(arg[1])) % arg[2]);
-	case Instruction::SIGNEXTEND:
+	case InternalInstruction::SIGNEXTEND:
 		if (arg[0] >= 31)
 			return arg[1];
 		else
@@ -179,7 +179,7 @@ u256 EVMInstructionInterpreter::eval(
 			return ret;
 		}
 	// --------------- blockchain stuff ---------------
-	case Instruction::KECCAK256:
+	case InternalInstruction::KECCAK256:
 	{
 		if (!accessMemory(arg[0], arg[1]))
 			return u256("0x1234cafe1234cafe1234cafe") + arg[0];
@@ -187,26 +187,26 @@ u256 EVMInstructionInterpreter::eval(
 		uint64_t size = uint64_t(arg[1] & uint64_t(-1));
 		return u256(keccak256(readMemory(offset, size)));
 	}
-	case Instruction::ADDRESS:
+	case InternalInstruction::ADDRESS:
 		return h256(m_state.address, h256::AlignRight);
-	case Instruction::BALANCE:
+	case InternalInstruction::BALANCE:
 		if (arg[0] == h256(m_state.address, h256::AlignRight))
 			return m_state.selfbalance;
 		else
 			return m_state.balance;
-	case Instruction::SELFBALANCE:
+	case InternalInstruction::SELFBALANCE:
 		return m_state.selfbalance;
-	case Instruction::ORIGIN:
+	case InternalInstruction::ORIGIN:
 		return h256(m_state.origin, h256::AlignRight);
-	case Instruction::CALLER:
+	case InternalInstruction::CALLER:
 		return h256(m_state.caller, h256::AlignRight);
-	case Instruction::CALLVALUE:
+	case InternalInstruction::CALLVALUE:
 		return m_state.callvalue;
-	case Instruction::CALLDATALOAD:
+	case InternalInstruction::CALLDATALOAD:
 		return readZeroExtended(m_state.calldata, arg[0]);
-	case Instruction::CALLDATASIZE:
+	case InternalInstruction::CALLDATASIZE:
 		return m_state.calldata.size();
-	case Instruction::CALLDATACOPY:
+	case InternalInstruction::CALLDATACOPY:
 		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
@@ -214,9 +214,9 @@ u256 EVMInstructionInterpreter::eval(
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
 			);
 		return 0;
-	case Instruction::CODESIZE:
+	case InternalInstruction::CODESIZE:
 		return m_state.code.size();
-	case Instruction::CODECOPY:
+	case InternalInstruction::CODECOPY:
 		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
@@ -224,17 +224,17 @@ u256 EVMInstructionInterpreter::eval(
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
 			);
 		return 0;
-	case Instruction::GASPRICE:
+	case InternalInstruction::GASPRICE:
 		return m_state.gasprice;
-	case Instruction::CHAINID:
+	case InternalInstruction::CHAINID:
 		return m_state.chainid;
-	case Instruction::BASEFEE:
+	case InternalInstruction::BASEFEE:
 		return m_state.basefee;
-	case Instruction::EXTCODESIZE:
+	case InternalInstruction::EXTCODESIZE:
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
-	case Instruction::EXTCODEHASH:
+	case InternalInstruction::EXTCODEHASH:
 		return u256(keccak256(h256(arg[0] + 1)));
-	case Instruction::EXTCODECOPY:
+	case InternalInstruction::EXTCODECOPY:
 		logTrace(_instruction, arg);
 		if (accessMemory(arg[1], arg[3]))
 			// TODO this way extcodecopy and codecopy do the same thing.
@@ -243,9 +243,9 @@ u256 EVMInstructionInterpreter::eval(
 				size_t(arg[1]), size_t(arg[2]), size_t(arg[3])
 			);
 		return 0;
-	case Instruction::RETURNDATASIZE:
+	case InternalInstruction::RETURNDATASIZE:
 		return m_state.returndata.size();
-	case Instruction::RETURNDATACOPY:
+	case InternalInstruction::RETURNDATACOPY:
 		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
@@ -253,87 +253,89 @@ u256 EVMInstructionInterpreter::eval(
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
 			);
 		return 0;
-	case Instruction::BLOCKHASH:
+	case InternalInstruction::BLOCKHASH:
 		if (arg[0] >= m_state.blockNumber || arg[0] + 256 < m_state.blockNumber)
 			return 0;
 		else
 			return 0xaaaaaaaa + (arg[0] - m_state.blockNumber - 256);
-	case Instruction::COINBASE:
+	case InternalInstruction::COINBASE:
 		return h256(m_state.coinbase, h256::AlignRight);
-	case Instruction::TIMESTAMP:
+	case InternalInstruction::TIMESTAMP:
 		return m_state.timestamp;
-	case Instruction::NUMBER:
+	case InternalInstruction::NUMBER:
 		return m_state.blockNumber;
-	case Instruction::DIFFICULTY:
+	case InternalInstruction::DIFFICULTY:
+	// TODO should be properly implemented
+	case InternalInstruction::PREVRANDAO:
 		return m_state.difficulty;
-	case Instruction::GASLIMIT:
+	case InternalInstruction::GASLIMIT:
 		return m_state.gaslimit;
 	// --------------- memory / storage / logs ---------------
-	case Instruction::MLOAD:
+	case InternalInstruction::MLOAD:
 		accessMemory(arg[0], 0x20);
 		return readMemoryWord(arg[0]);
-	case Instruction::MSTORE:
+	case InternalInstruction::MSTORE:
 		accessMemory(arg[0], 0x20);
 		writeMemoryWord(arg[0], arg[1]);
 		return 0;
-	case Instruction::MSTORE8:
+	case InternalInstruction::MSTORE8:
 		accessMemory(arg[0], 1);
 		m_state.memory[arg[0]] = uint8_t(arg[1] & 0xff);
 		return 0;
-	case Instruction::SLOAD:
+	case InternalInstruction::SLOAD:
 		return m_state.storage[h256(arg[0])];
-	case Instruction::SSTORE:
+	case InternalInstruction::SSTORE:
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
-	case Instruction::PC:
+	case InternalInstruction::PC:
 		return 0x77;
-	case Instruction::MSIZE:
+	case InternalInstruction::MSIZE:
 		return m_state.msize;
-	case Instruction::GAS:
+	case InternalInstruction::GAS:
 		return 0x99;
-	case Instruction::LOG0:
+	case InternalInstruction::LOG0:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
-	case Instruction::LOG1:
+	case InternalInstruction::LOG1:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
-	case Instruction::LOG2:
+	case InternalInstruction::LOG2:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
-	case Instruction::LOG3:
+	case InternalInstruction::LOG3:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
-	case Instruction::LOG4:
+	case InternalInstruction::LOG4:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		return 0;
 	// --------------- calls ---------------
-	case Instruction::CREATE:
+	case InternalInstruction::CREATE:
 		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
 		return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
-	case Instruction::CREATE2:
+	case InternalInstruction::CREATE2:
 		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
 		return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
+	case InternalInstruction::CALL:
+	case InternalInstruction::CALLCODE:
 		// TODO assign returndata
 		accessMemory(arg[3], arg[4]);
 		accessMemory(arg[5], arg[6]);
 		logTrace(_instruction, arg);
 		return arg[0] & 1;
-	case Instruction::DELEGATECALL:
-	case Instruction::STATICCALL:
+	case InternalInstruction::DELEGATECALL:
+	case InternalInstruction::STATICCALL:
 		accessMemory(arg[2], arg[3]);
 		accessMemory(arg[4], arg[5]);
 		logTrace(_instruction, arg);
 		return 0;
-	case Instruction::RETURN:
+	case InternalInstruction::RETURN:
 	{
 		bytes data;
 		if (accessMemory(arg[0], arg[1]))
@@ -341,92 +343,93 @@ u256 EVMInstructionInterpreter::eval(
 		logTrace(_instruction, arg, data);
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
-	case Instruction::REVERT:
+	case InternalInstruction::REVERT:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
 		m_state.storage.clear();
 		m_state.trace.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
-	case Instruction::INVALID:
+	case InternalInstruction::INVALID:
 		logTrace(_instruction);
 		m_state.storage.clear();
 		m_state.trace.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
-	case Instruction::SELFDESTRUCT:
+	case InternalInstruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
 		m_state.storage.clear();
 		m_state.trace.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
-	case Instruction::POP:
+	case InternalInstruction::POP:
 		break;
 	// --------------- invalid in strict assembly ---------------
-	case Instruction::JUMP:
-	case Instruction::JUMPI:
-	case Instruction::JUMPDEST:
-	case Instruction::PUSH1:
-	case Instruction::PUSH2:
-	case Instruction::PUSH3:
-	case Instruction::PUSH4:
-	case Instruction::PUSH5:
-	case Instruction::PUSH6:
-	case Instruction::PUSH7:
-	case Instruction::PUSH8:
-	case Instruction::PUSH9:
-	case Instruction::PUSH10:
-	case Instruction::PUSH11:
-	case Instruction::PUSH12:
-	case Instruction::PUSH13:
-	case Instruction::PUSH14:
-	case Instruction::PUSH15:
-	case Instruction::PUSH16:
-	case Instruction::PUSH17:
-	case Instruction::PUSH18:
-	case Instruction::PUSH19:
-	case Instruction::PUSH20:
-	case Instruction::PUSH21:
-	case Instruction::PUSH22:
-	case Instruction::PUSH23:
-	case Instruction::PUSH24:
-	case Instruction::PUSH25:
-	case Instruction::PUSH26:
-	case Instruction::PUSH27:
-	case Instruction::PUSH28:
-	case Instruction::PUSH29:
-	case Instruction::PUSH30:
-	case Instruction::PUSH31:
-	case Instruction::PUSH32:
-	case Instruction::DUP1:
-	case Instruction::DUP2:
-	case Instruction::DUP3:
-	case Instruction::DUP4:
-	case Instruction::DUP5:
-	case Instruction::DUP6:
-	case Instruction::DUP7:
-	case Instruction::DUP8:
-	case Instruction::DUP9:
-	case Instruction::DUP10:
-	case Instruction::DUP11:
-	case Instruction::DUP12:
-	case Instruction::DUP13:
-	case Instruction::DUP14:
-	case Instruction::DUP15:
-	case Instruction::DUP16:
-	case Instruction::SWAP1:
-	case Instruction::SWAP2:
-	case Instruction::SWAP3:
-	case Instruction::SWAP4:
-	case Instruction::SWAP5:
-	case Instruction::SWAP6:
-	case Instruction::SWAP7:
-	case Instruction::SWAP8:
-	case Instruction::SWAP9:
-	case Instruction::SWAP10:
-	case Instruction::SWAP11:
-	case Instruction::SWAP12:
-	case Instruction::SWAP13:
-	case Instruction::SWAP14:
-	case Instruction::SWAP15:
-	case Instruction::SWAP16:
+	case InternalInstruction::JUMP:
+	case InternalInstruction::JUMPI:
+	case InternalInstruction::JUMPDEST:
+	case InternalInstruction::PUSH1:
+	case InternalInstruction::PUSH2:
+	case InternalInstruction::PUSH3:
+	case InternalInstruction::PUSH4:
+	case InternalInstruction::PUSH5:
+	case InternalInstruction::PUSH6:
+	case InternalInstruction::PUSH7:
+	case InternalInstruction::PUSH8:
+	case InternalInstruction::PUSH9:
+	case InternalInstruction::PUSH10:
+	case InternalInstruction::PUSH11:
+	case InternalInstruction::PUSH12:
+	case InternalInstruction::PUSH13:
+	case InternalInstruction::PUSH14:
+	case InternalInstruction::PUSH15:
+	case InternalInstruction::PUSH16:
+	case InternalInstruction::PUSH17:
+	case InternalInstruction::PUSH18:
+	case InternalInstruction::PUSH19:
+	case InternalInstruction::PUSH20:
+	case InternalInstruction::PUSH21:
+	case InternalInstruction::PUSH22:
+	case InternalInstruction::PUSH23:
+	case InternalInstruction::PUSH24:
+	case InternalInstruction::PUSH25:
+	case InternalInstruction::PUSH26:
+	case InternalInstruction::PUSH27:
+	case InternalInstruction::PUSH28:
+	case InternalInstruction::PUSH29:
+	case InternalInstruction::PUSH30:
+	case InternalInstruction::PUSH31:
+	case InternalInstruction::PUSH32:
+	case InternalInstruction::DUP1:
+	case InternalInstruction::DUP2:
+	case InternalInstruction::DUP3:
+	case InternalInstruction::DUP4:
+	case InternalInstruction::DUP5:
+	case InternalInstruction::DUP6:
+	case InternalInstruction::DUP7:
+	case InternalInstruction::DUP8:
+	case InternalInstruction::DUP9:
+	case InternalInstruction::DUP10:
+	case InternalInstruction::DUP11:
+	case InternalInstruction::DUP12:
+	case InternalInstruction::DUP13:
+	case InternalInstruction::DUP14:
+	case InternalInstruction::DUP15:
+	case InternalInstruction::DUP16:
+	case InternalInstruction::SWAP1:
+	case InternalInstruction::SWAP2:
+	case InternalInstruction::SWAP3:
+	case InternalInstruction::SWAP4:
+	case InternalInstruction::SWAP5:
+	case InternalInstruction::SWAP6:
+	case InternalInstruction::SWAP7:
+	case InternalInstruction::SWAP8:
+	case InternalInstruction::SWAP9:
+	case InternalInstruction::SWAP10:
+	case InternalInstruction::SWAP11:
+	case InternalInstruction::SWAP12:
+	case InternalInstruction::SWAP13:
+	case InternalInstruction::SWAP14:
+	case InternalInstruction::SWAP15:
+	case InternalInstruction::SWAP16:
+	case InternalInstruction::MAX_INTERNAL_INSTRUCTION:
 	{
 		yulAssert(false, "");
 		return 0;
@@ -519,7 +522,7 @@ void EVMInstructionInterpreter::writeMemoryWord(u256 const& _offset, u256 const&
 
 
 void EVMInstructionInterpreter::logTrace(
-	evmasm::Instruction _instruction,
+	evmasm::InternalInstruction _instruction,
 	std::vector<u256> const& _arguments,
 	bytes const& _data
 )

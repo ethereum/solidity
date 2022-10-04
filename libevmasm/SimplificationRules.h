@@ -103,7 +103,7 @@ public:
 	// Matches a specific assembly item type or anything if not given.
 	Pattern(AssemblyItemType _type = UndefinedItem): m_type(_type) {}
 	// Matches a given instruction with given arguments
-	Pattern(Instruction _instruction, std::initializer_list<Pattern> _arguments = {});
+	Pattern(InternalInstruction _instruction, std::initializer_list<Pattern> _arguments = {});
 	/// Sets this pattern to be part of the match group with the identifier @a _group.
 	/// Inside one rule, all patterns in the same match group have to match expressions from the
 	/// same expression equivalence class.
@@ -122,7 +122,7 @@ public:
 	std::string toString() const;
 
 	AssemblyItemType type() const { return m_type; }
-	Instruction instruction() const
+	InternalInstruction instruction() const
 	{
 		assertThrow(type() == Operation, OptimizerException, "");
 		return m_instruction;
@@ -135,7 +135,7 @@ private:
 
 	AssemblyItemType m_type;
 	bool m_requireDataMatch = false;
-	Instruction m_instruction; ///< Only valid if m_type is Operation
+	InternalInstruction m_instruction; ///< Only valid if m_type is Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type is not Operation
 	std::vector<Pattern> m_arguments;
 	unsigned m_matchGroup = 0;
