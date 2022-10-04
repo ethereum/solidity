@@ -26,7 +26,6 @@ set(sources
 	SourceReferenceFormatter.h
 	Token.cpp
 	Token.h
-	UndefMacros.h
 	UniqueErrorReporter.h
 )
 

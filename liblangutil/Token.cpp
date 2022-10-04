@@ -46,7 +46,6 @@
 
 #include <map>
 
-
 using namespace std;
 
 namespace solidity::langutil
