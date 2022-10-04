@@ -1,76 +1,65 @@
 .. _formal_verification:
 
 ##################################
-SMTChecker and Formal Verification
+SMT检查器和形式化验证
 ##################################
 
-Using formal verification it is possible to perform an automated mathematical
-proof that your source code fulfills a certain formal specification.
-The specification is still formal (just as the source code), but usually much
-simpler.
+使用形式化验证，有可能进行自动数学证明，
+证明您的源代码符合某种形式化规范。
+该规范仍然是正式的（就像源代码一样），但通常要简单得多。
 
-Note that formal verification itself can only help you understand the
-difference between what you did (the specification) and how you did it
-(the actual implementation). You still need to check whether the specification
-is what you wanted and that you did not miss any unintended effects of it.
+请注意，形式化验证本身只能帮助您理解您所做的（规范）和您如何做的（实际实现）之间的区别。
+您仍然需要检查规范是否是您想要的，以及您没有遗漏任何意想不到的效果。
 
-Solidity implements a formal verification approach based on
-`SMT (Satisfiability Modulo Theories) <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_ and
-`Horn <https://en.wikipedia.org/wiki/Horn-satisfiability>`_ solving.
-The SMTChecker module automatically tries to prove that the code satisfies the
-specification given by ``require`` and ``assert`` statements. That is, it considers
-``require`` statements as assumptions and tries to prove that the conditions
-inside ``assert`` statements are always true.  If an assertion failure is
-found, a counterexample may be given to the user showing how the assertion can
-be violated. If no warning is given by the SMTChecker for a property,
-it means that the property is safe.
+Solidity 实现了基于 `SMT（可满足性模型理论（Satisfiability Modulo Theories） <https://en.wikipedia.org/wiki/Satisfiability_modulo_theoris>`_
+和 `Horn <https://en.wikipedia.org/wiki/Horn-satisfiability>`_ 解决的形式验证方法。
+SMT检查器模块自动尝试证明代码满足由 ``require`` 和 ``assert`` 语句给出的规范。
+也就是说，它把 ``require`` 语句视为假设，并试图证明 ``assert`` 语句中的条件总是真的。
+如果发现断言失败，则可以向用户提供一个反例，说明断言是如何被违反的。
+如果 SMT 检查器对某一属性没有给出警告，这意味着该属性是安全的。
 
-The other verification targets that the SMTChecker checks at compile time are:
+SMT 检查器在编译时检查的其他验证目标有：
 
-- Arithmetic underflow and overflow.
-- Division by zero.
-- Trivial conditions and unreachable code.
-- Popping an empty array.
-- Out of bounds index access.
-- Insufficient funds for a transfer.
+- 算术上的下溢和溢出。
+- 除以0的除法。
+- 无用的条件和无法访问的代码。
+- 弹出一个空数组。
+- 超出界限的索引访问。
+- 转账资金不足。
 
-All the targets above are automatically checked by default if all engines are
-enabled, except underflow and overflow for Solidity >=0.8.7.
+如果所有检查引擎都被启用，上述所有目标都被默认为自动检查，
+除了 Solidity >=0.8.7 的下溢和溢出。
 
-The potential warnings that the SMTChecker reports are:
+SMT 检查器所报告的潜在警告是：
 
-- ``<failing  property> happens here.``. This means that the SMTChecker proved that a certain property fails. A counterexample may be given, however in complex situations it may also not show a counterexample. This result may also be a false positive in certain cases, when the SMT encoding adds abstractions for Solidity code that is either hard or impossible to express.
-- ``<failing property> might happen here``. This means that the solver could not prove either case within the given timeout. Since the result is unknown, the SMTChecker reports the potential failure for soundness. This may be solved by increasing the query timeout, but the problem might also simply be too hard for the engine to solve.
+- ``<失败的属性> 发生在这里``。这意味着 SMT 检查器证明了某一属性失败。可能会给出一个反例，但是在复杂的情况下，也可能不会显示反例。在某些情况下，当 SMT 编码为 Solidity 代码添加了难以表达或无法表达的抽象时，这个结果也可能是一个假阳性。
+- ``<失败的属性> 可能发生在这里``。这意味着求解器无法在给定的超时时间内证明两种情况。由于结果是未知的，SMT 检查器会报告潜在的健全性失败。这可以通过增加查询超时时间来解决，但问题也可能只是对引擎来说太难解决。
 
-To enable the SMTChecker, you must select :ref:`which engine should run<smtchecker_engines>`,
-where the default is no engine. Selecting the engine enables the SMTChecker on all files.
+要启用SMT检查器，您必须选择 :ref:`应该运行哪一个引擎 <smtchecker_engines>`，
+其中默认的是没有引擎。选择引擎可以在所有文件上启用SMT检查器。
 
 .. note::
 
-    Prior to Solidity 0.8.4, the default way to enable the SMTChecker was via
-    ``pragma experimental SMTChecker;`` and only the contracts containing the
-    pragma would be analyzed. That pragma has been deprecated, and although it
-    still enables the SMTChecker for backwards compatibility, it will be removed
-    in Solidity 0.9.0. Note also that now using the pragma even in a single file
-    enables the SMTChecker for all files.
+    在 Solidity 0.8.4 之前，启用SMT检查器的默认方式是通过 ``pragma experimental SMTChecker;``
+    并且只有包含 pragma 的合约才会被分析。该 pragma 已被弃用，
+    尽管它仍能使SMT检查器向后兼容，但它将在 Solidity 0.9.0 中被移除。
+    还要注意的是，现在即使在一个文件中使用 pragma，也会对所有文件启用SMT检查器。
 
 .. note::
 
-    The lack of warnings for a verification target represents an undisputed
-    mathematical proof of correctness, assuming no bugs in the SMTChecker and
-    the underlying solver. Keep in mind that these problems are
-    *very hard* and sometimes *impossible* to solve automatically in the
-    general case.  Therefore, several properties might not be solved or might
-    lead to false positives for large contracts. Every proven property should
-    be seen as an important achievement. For advanced users, see :ref:`SMTChecker Tuning <smtchecker_options>`
-    to learn a few options that might help proving more complex
-    properties.
+    假设SMT检查器和底层求解器中没有错误，
+    那么验证目标没有警告就代表了一个无可争议的正确性数学证明。
+    请记住，这些问题在一般情况下是 *很难* 的，有时是 *不可能* 自动解决的。
+    因此，有几个属性可能无法解决，或者可能导致大型合约的假阳性。
+    每一个被证明的属性都应该被看作是一个重要的成就。
+    对于高级用户，请参阅 :ref:`SMT检查器 调优 <smtchecker_options>`
+    来了解一些可能有助于证明更复杂属性的选项。
 
 ********
-Tutorial
+教程
 ********
 
-Overflow
+溢出
 ========
 
 .. code-block:: Solidity
@@ -95,12 +84,11 @@ Overflow
         }
     }
 
-The contract above shows an overflow check example.
-The SMTChecker does not check underflow and overflow by default for Solidity >=0.8.7,
-so we need to use the command line option ``--model-checker-targets "underflow,overflow"``
-or the JSON option ``settings.modelChecker.targets = ["underflow", "overflow"]``.
-See :ref:`this section for targets configuration<smtchecker_targets>`.
-Here, it reports the following:
+上面的合约显示了一个溢出检查的例子。
+对于 Solidity >=0.8.7，SMT检查器默认不检查下溢和溢出，
+所以我们需要使用命令行选项 ``--model-checker-targets "underflow,overflow"``
+或者JSON选项 ``settings.modelChecker.targets = ["underflow", "overflow"]``。
+参见 :ref:`本节的目标配置 <smtchecker_targets>`。此处，它报告如下：
 
 .. code-block:: text
 
@@ -119,8 +107,8 @@ Here, it reports the following:
     9 |             return _x + _y;
       |                    ^^^^^^^
 
-If we add ``require`` statements that filter out overflow cases,
-the SMTChecker proves that no overflow is reachable (by not reporting warnings):
+如果我们添加了过滤掉溢出情况的 ``require`` 语句，
+SMT检查器就会证明没有溢出是可以达到的（会通过不报告警告表现出来）。
 
 .. code-block:: Solidity
 
@@ -147,18 +135,17 @@ the SMTChecker proves that no overflow is reachable (by not reporting warnings):
     }
 
 
-Assert
+断言
 ======
 
-An assertion represents an invariant in your code: a property that must be true
-*for all transactions, including all input and storage values*, otherwise there is a bug.
+断言表示代码中的一个不变量： *对于所有的事务，包括所有的输入和存储值*，
+一个属性必须为真，否则就会出现错误。
 
-The code below defines a function ``f`` that guarantees no overflow.
-Function ``inv`` defines the specification that ``f`` is monotonically increasing:
-for every possible pair ``(_a, _b)``, if ``_b > _a`` then ``f(_b) > f(_a)``.
-Since ``f`` is indeed monotonically increasing, the SMTChecker proves that our
-property is correct. You are encouraged to play with the property and the function
-definition to see what results come out!
+下面的代码定义了一个保证没有溢出的函数 ``f``。
+函数 ``inv`` 定义了 ``f`` 是单调递增的规范：
+对于每个可能的数值对 ``(_a, _b)``，如果 ``_b > _a``，那么 ``f(_b) > f(_a)``。
+由于 ``f`` 确实是单调增长的，SMT检查器证明了我们的属性是正确的。
+我们鼓励您试试这个属性和函数定义，看看会有什么样的结果!
 
 .. code-block:: Solidity
 
@@ -177,10 +164,9 @@ definition to see what results come out!
         }
     }
 
-We can also add assertions inside loops to verify more complicated properties.
-The following code searches for the maximum element of an unrestricted array of
-numbers, and asserts the property that the found element must be greater or
-equal every element in the array.
+我们还可以在循环中添加断言，以验证更多的复杂的属性。
+下面的代码搜索一个不受限制的数字数组的最大元素，
+并断言找到的元素必须大于或等于数组中的每个元素的属性。
 
 .. code-block:: Solidity
 
@@ -201,20 +187,18 @@ equal every element in the array.
         }
     }
 
-Note that in this example the SMTChecker will automatically try to prove three properties:
+注意，在这个例子中，SMT检查器将自动尝试证明三个属性：
 
-1. ``++i`` in the first loop does not overflow.
-2. ``++i`` in the second loop does not overflow.
-3. The assertion is always true.
+1. 第一个循环中的 ``++i`` 不会溢出。
+2. 第二个循环中的 ``++i`` 不会溢出。
+3. 该断言始终是正确的。
 
 .. note::
 
-    The properties involve loops, which makes it *much much* harder than the previous
-    examples, so beware of loops!
+    这些属性涉及到循环，这使得它比前面的例子 *更加* 难了，所以要当心循环的问题！
 
-All the properties are correctly proven safe. Feel free to change the
-properties and/or add restrictions on the array to see different results.
-For example, changing the code to
+所有的属性都被正确证明是安全的。
+可以随意改变属性和/或在数组上添加限制，以看到不同的结果。例如，将代码改为
 
 .. code-block:: Solidity
 
@@ -236,7 +220,7 @@ For example, changing the code to
         }
     }
 
-gives us:
+我们得到的结果：
 
 .. code-block:: text
 
@@ -254,19 +238,17 @@ gives us:
     14 |            assert(m > _a[i]);
 
 
-State Properties
+状态属性
 ================
 
-So far the examples only demonstrated the use of the SMTChecker over pure code,
-proving properties about specific operations or algorithms.
-A common type of properties in smart contracts are properties that involve the
-state of the contract. Multiple transactions might be needed to make an assertion
-fail for such a property.
+到目前为止，这些例子只展示了SMT检查器在纯代码上的使用，
+证明了关于特定操作或算法的属性。
+智能合约中常见的属性类型是涉及合约状态的属性。
+对于这样的属性，可能需要多个交易来使断言失效。
 
-As an example, consider a 2D grid where both axis have coordinates in the range (-2^128, 2^128 - 1).
-Let us place a robot at position (0, 0). The robot can only move diagonally, one step at a time,
-and cannot move outside the grid. The robot's state machine can be represented by the smart contract
-below.
+举一个例子，考虑一个二维网格，其中两个轴的坐标都在（-2^128, 2^128 - 1）范围内。
+让我们在位置（0，0）放置一个机器人。该机器人只能在对角线上移动，一次只能走一步，
+不能在网格外移动。机器人的状态机可以用下面的智能合约来表示。
 
 .. code-block:: Solidity
 
@@ -308,16 +290,13 @@ below.
         }
     }
 
-Function ``inv`` represents an invariant of the state machine that ``x + y``
-must be even.
-The SMTChecker manages to prove that regardless how many commands we give the
-robot, even if infinitely many, the invariant can *never* fail. The interested
-reader may want to prove that fact manually as well.  Hint: this invariant is
-inductive.
+函数 ``inv`` 代表状态机的一个不变量，即 ``x + y`` 必须是偶数。
+SMT检查器设法证明，无论我们给机器人多少条命令，
+即使是无限多的命令，这个不变量都 *不会* 失败。
+有兴趣的读者可能也想手动证明这个事实。 提示：这个不变量是归纳性的。
 
-We can also trick the SMTChecker into giving us a path to a certain position we
-think might be reachable.  We can add the property that (2, 4) is *not*
-reachable, by adding the following function.
+我们也可以欺骗SMT检查器，让它给我们提供一条通往某个我们认为可能是可访问的位置的路径。
+我们可以通过添加以下函数，来增加(2, 4)是 *不* 可访问的属性。
 
 .. code-block:: Solidity
 
@@ -325,8 +304,8 @@ reachable, by adding the following function.
         assert(!(x == 2 && y == 4));
     }
 
-This property is false, and while proving that the property is false,
-the SMTChecker tells us exactly *how* to reach (2, 4):
+这个属性是假的，在证明这个属性是假的同时，
+SMT检查器准确地告诉我们 *如何* 访问到(2, 4)。
 
 .. code-block:: text
 
@@ -351,22 +330,20 @@ the SMTChecker tells us exactly *how* to reach (2, 4):
     35 |            assert(!(x == 2 && y == 4));
        |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Note that the path above is not necessarily deterministic, as there are
-other paths that could reach (2, 4). The choice of which path is shown
-might change depending on the used solver, its version, or just randomly.
+请注意，上面的路径不一定是确定的，
+因为还有其他路径可以访问（2，4）。
+选择哪条路径可能会根据所使用的解算器，其使用版本，或者只是随机地改变。
 
-External Calls and Reentrancy
+外部调用和重入
 =============================
 
-Every external call is treated as a call to unknown code by the SMTChecker.
-The reasoning behind that is that even if the code of the called contract is
-available at compile time, there is no guarantee that the deployed contract
-will indeed be the same as the contract where the interface came from at
-compile time.
+每个外部调用都被SMT检查器视为对未知代码的调用。
+这背后的原因是，即使被调用合约的代码在编译时是可用的，
+也不能保证部署的合约确实与编译时接口所在的合约相同。
 
-In some cases, it is possible to automatically infer properties over state
-variables that are still true even if the externally called code can do
-anything, including reenter the caller contract.
+在某些情况下，有可能在状态变量上自动推断出属性，
+即使外部调用的代码可以做任何事情，包括重新进入调用者合约，
+这些属性仍然是真的。
 
 .. code-block:: Solidity
 
@@ -406,14 +383,12 @@ anything, including reenter the caller contract.
         }
     }
 
-The example above shows a contract that uses a mutex flag to forbid reentrancy.
-The solver is able to infer that when ``unknown.run()`` is called, the contract
-is already "locked", so it would not be possible to change the value of ``x``,
-regardless of what the unknown called code does.
+上面的例子显示了一个使用互斥标志来禁止重入的合约。
+解算器能够推断出，当 ``unknown.run()`` 被调用时，合约已经被 “锁定”，
+所以无论未知的调用代码做什么，都不可能改变 ``x`` 的值。
 
-If we "forget" to use the ``mutex`` modifier on function ``set``, the
-SMTChecker is able to synthesize the behaviour of the externally called code so
-that the assertion fails:
+如果我们 “忘记” 在函数 ``set`` 上使用 ``mutex`` 修饰符，
+SMT检查器就能合成外部调用代码的行为，从而使断言失败。
 
 .. code-block:: text
 
@@ -436,80 +411,74 @@ that the assertion fails:
 .. _smtchecker_options:
 
 *****************************
-SMTChecker Options and Tuning
+SMT检查器选项和调试
 *****************************
 
-Timeout
+超时
 =======
 
-The SMTChecker uses a hardcoded resource limit (``rlimit``) chosen per solver,
-which is not precisely related to time. We chose the ``rlimit`` option as the default
-because it gives more determinism guarantees than time inside the solver.
+SMT检查器使用了一个硬编码的资源限制（ ``rlimit`` ），
+这个限制是根据每个求解器选择的，与时间没有确切的关系。
+我们选择 ``rlimit`` 选项作为默认值，因为它比求解器内部的时间提供了更多的确定性保证。
 
-This options translates roughly to "a few seconds timeout" per query. Of course many properties
-are very complex and need a lot of time to be solved, where determinism does not matter.
-If the SMTChecker does not manage to solve the contract properties with the default ``rlimit``,
-a timeout can be given in milliseconds via the CLI option ``--model-checker-timeout <time>`` or
-the JSON option ``settings.modelChecker.timeout=<time>``, where 0 means no timeout.
+这个选项大致转化为每个查询 “几秒钟超时”。
+当然，许多属性非常复杂，需要大量的时间来解决，而决定并不重要。
+如果SMT检查器不能用默认的 ``rlimit`` 选项处理合约属性，
+则可以通过CLI选项 ``--model-checker-timeout <time>`` 或
+JSON选项 ``settings.modelChecker.timeout=<time>`` 给出以毫秒为单位的超时。
+其中0表示不超时。
 
 .. _smtchecker_targets:
 
-Verification Targets
+验证目标
 ====================
 
-The types of verification targets created by the SMTChecker can also be
-customized via the CLI option ``--model-checker-target <targets>`` or the JSON
-option ``settings.modelChecker.targets=<targets>``.
-In the CLI case, ``<targets>`` is a no-space-comma-separated list of one or
-more verification targets, and an array of one or more targets as strings in
-the JSON input.
-The keywords that represent the targets are:
+SMT检查器创建的验证目标的类型也可以通过CLI选项 ``--model-checker-target <targets>``
+或JSON选项 ``settings.modelChecker.targets=<targets>`` 来定制。
+在CLI情况下， ``<targets>`` 是一个没有空格的逗号分隔的一个或多个验证目标的列表，
+在JSON输入中是一个或多个作为字符串的目标数组。
+代表目标的关键词是：
 
-- Assertions: ``assert``.
-- Arithmetic underflow: ``underflow``.
-- Arithmetic overflow: ``overflow``.
-- Division by zero: ``divByZero``.
-- Trivial conditions and unreachable code: ``constantCondition``.
-- Popping an empty array: ``popEmptyArray``.
-- Out of bounds array/fixed bytes index access: ``outOfBounds``.
-- Insufficient funds for a transfer: ``balance``.
-- All of the above: ``default`` (CLI only).
+- 断言： ``assert``。
+- 算术下溢： ``underflow``。
+- 算术溢出： ``overflow``。
+- 除以零： ``divByZero``。
+- 无用的条件和无法访问的代码： ``constantCondition``。
+- 弹出一个空数组： ``popEmptyArray``。
+- 越界的数组/固定字节索引访问： ``outOfBounds``。
+- 转账资金不足： ``balance``。
+- 以上都是： ``default`` （仅适用CLI）。
 
-A common subset of targets might be, for example:
-``--model-checker-targets assert,overflow``.
+一个常见的目标子集可能是，例如： ``--model-checker-targets assert,overflow``。
 
-All targets are checked by default, except underflow and overflow for Solidity >=0.8.7.
+所有目标都被默认检查，除了Solidity >=0.8.7的下溢和溢出。
 
-There is no precise heuristic on how and when to split verification targets,
-but it can be useful especially when dealing with large contracts.
+关于如何以及何时分割验证目标，没有精确的指导方法。
+但在处理大型合约时，它可能是有用的。
 
-Unproved Targets
+未验证的目标
 ================
 
-If there are any unproved targets, the SMTChecker issues one warning stating
-how many unproved targets there are. If the user wishes to see all the specific
-unproved targets, the CLI option ``--model-checker-show-unproved`` and
-the JSON option ``settings.modelChecker.showUnproved = true`` can be used.
+如果有任何未验证的目标，SMT检查器会发出一个警告，
+说明有多少个未验证的目标。如果用户希望看到所有具体的未验证的目标，
+可以使用CLI选项 ``--model-checker-show-unproved``
+和JSON选项 ``settings.modelChecker.showUnproved = true``。
 
-Verified Contracts
+已验证过的合约
 ==================
 
-By default all the deployable contracts in the given sources are analyzed separately as
-the one that will be deployed. This means that if a contract has many direct
-and indirect inheritance parents, all of them will be analyzed on their own,
-even though only the most derived will be accessed directly on the blockchain.
-This causes an unnecessary burden on the SMTChecker and the solver.  To aid
-cases like this, users can specify which contracts should be analyzed as the
-deployed one. The parent contracts are of course still analyzed, but only in
-the context of the most derived contract, reducing the complexity of the
-encoding and generated queries. Note that abstract contracts are by default
-not analyzed as the most derived by the SMTChecker.
+默认情况下，给定来源中的所有可部署合约都会被单独分析，正如将被部署的那一个合约一样。
+这意味着，如果一个合约有许多直接和间接的继承父类，所有这些都将被单独分析，
+尽管只有最终派生的合约可以在区块链上被直接访问。
+这给SMT检查器和求解器造成了不必要的负担。
+为了帮助缓解这样的情况，用户可以指定哪些合约应该作为部署的合约进行分析。
+当然，基类合约仍然被分析，但只是在分析最终派生的合约的情况下才进行，
+这可以减少编码和生成查询的复杂性。
+请注意，抽象合约在默认情况下不会被SMT检查器分析为最终派生的合约。
 
-The chosen contracts can be given via a comma-separated list (whitespace is not
-allowed) of <source>:<contract> pairs in the CLI:
-``--model-checker-contracts "<source1.sol:contract1>,<source2.sol:contract2>,<source2.sol:contract3>"``,
-and via the object ``settings.modelChecker.contracts`` in the :ref:`JSON input<compiler-api>`,
-which has the following form:
+选择的合约可以通过CLI，用 <source>:<contract> 形式的键值对，以逗号分隔的列表（不允许有空格）给出：
+``--model-checker-contracts "<source1.sol:contract1>,<source2.sol:contract2>,<source2.sol:contract3>"``，
+以及通过 :ref:`JSON 输入<compiler-api>` 中的对象 ``settings.modelChecker.contracts``，它有如下格式：
 
 .. code-block:: json
 
@@ -518,232 +487,213 @@ which has the following form:
         "source2.sol": ["contract2", "contract3"]
     }
 
-Reported Inferred Inductive Invariants
+报告推断的归纳变量
 ======================================
 
-For properties that were proved safe with the CHC engine,
-the SMTChecker can retrieve inductive invariants that were inferred by the Horn
-solver as part of the proof.
-Currently two types of invariants can be reported to the user:
+于那些被CHC引擎证明为安全的属性，
+SMT检查器可以检索由Horn求解器推断出的归纳不变性，作为证明的一部分。
+目前有两种类型的不变量可以报告给用户：
 
-- Contract Invariants: these are properties over the contract's state variables
-  that are true before and after every possible transaction that the contract may ever run. For example, ``x >= y``, where ``x`` and ``y`` are a contract's state variables.
-- Reentrancy Properties: they represent the behavior of the contract
-  in the presence of external calls to unknown code. These properties can express a relation
-  between the value of the state variables before and after the external call, where the external call is free to do anything, including making reentrant calls to the analyzed contract. Primed variables represent the state variables' values after said external call. Example: ``lock -> x = x'``.
+- 合约不变量：这些是合约的状态变量的属性，在合约可能运行的每一个可能的事务之前和之后都是真的。
+  例如， ``x >= y``，其中 ``x`` 和 ``y`` 是一个合约的状态变量。
+- 可重入性属性：它们代表了合约在存在对未知代码的外部调用时的行为。
+  这些属性可以表达外部调用前后状态变量的值之间的关系，
+  其中外部调用可以自由地做任何事情，包括对分析的合约进行可重入调用。
+  导数变量代表所述外部调用后的状态变量的值。例如： ``lock -> x = x'``。
 
-The user can choose the type of invariants to be reported using the CLI option ``--model-checker-invariants "contract,reentrancy"`` or as an array in the field ``settings.modelChecker.invariants`` in the :ref:`JSON input<compiler-api>`.
-By default the SMTChecker does not report invariants.
+用户可以使用CLI选项 ``--model-checker-invariants "contract,reentrancy"`` 来选择要报告的不变量类型，
+或者在 :ref:`JSON 输入<compiler-api>` 中的字段 ``settings.modelChecker.invariants`` 中作为数组。
+默认情况下，SMT检查器不报告不变量。
 
-Division and Modulo With Slack Variables
+有松弛变量的除法和模数运算
 ========================================
 
-Spacer, the default Horn solver used by the SMTChecker, often dislikes division
-and modulo operations inside Horn rules. Because of that, by default the
-Solidity division and modulo operations are encoded using the constraint
-``a = b * d + m`` where ``d = a / b`` and ``m = a % b``.
-However, other solvers, such as Eldarica, prefer the syntactically precise operations.
-The command line flag ``--model-checker-div-mod-no-slacks`` and the JSON option
-``settings.modelChecker.divModNoSlacks`` can be used to toggle the encoding
-depending on the used solver preferences.
+Spacer是SMT检查器使用的默认Horn求解器，它通常不喜欢Horn规则中的除法和模数操作。
+正因为如此，默认情况下，Solidity的除法和模运算是用约束条件 ``a = b * d + m`` 来编码的，
+其中 ``d = a / b`` 和 ``m = a % b``。
+然而，对于其他求解器，如Eldarica，更喜欢语法上的精确操作。
+命令行标志 ``--model-checker-div-mod-no-slacks`` 和
+JSON选项 ``settings.modelChecker.divModNoSlacks`` 可以用来切换编码，
+这取决于所用求解器的偏好。
 
-Natspec Function Abstraction
+Natspec标签函数抽象化
 ============================
 
-Certain functions including common math methods such as ``pow``
-and ``sqrt`` may be too complex to be analyzed in a fully automated way.
-These functions can be annotated with Natspec tags that indicate to the
-SMTChecker that these functions should be abstracted. This means that the
-body of the function is not used, and when called, the function will:
+某些函数包括常见的数学方法，如 ``pow`` 和 ``sqrt``，
+可能它们过于复杂，无法用完全自动化的方式进行分析。
+这些函数可以用Natspec标签进行注释，向SMT检查器表明这些函数应该被抽象化。
+这意味着在调用此函数时，不会使用函数的主体，函数将：
 
-- Return a nondeterministic value, and either keep the state variables unchanged if the abstracted function is view/pure, or also set the state variables to nondeterministic values otherwise. This can be used via the annotation ``/// @custom:smtchecker abstract-function-nondet``.
-- Act as an uninterpreted function. This means that the semantics of the function (given by the body) are ignored, and the only property this function has is that given the same input it guarantees the same output. This is currently under development and will be available via the annotation ``/// @custom:smtchecker abstract-function-uf``.
+- 返回一个非决定性的值，如果抽象函数是 view/pure 类型的，则保持状态变量不变，
+  否则会将状态变量设置为非决定性的值。
+  可以通过注解 ``//@custom:smtchecker abstract-function-nondet`` 来使用。
+- 作为一个未被解释的函数。这意味着函数的语义（由主体给出）会被忽略，
+  这个函数的唯一属性是，给定相同的输入，它保证有相同的输出。
+  这一点目前正在开发中，并将通过注解 ``//@custom:smtchecker abstract-function-uf`` 来使用。
 
 .. _smtchecker_engines:
 
-Model Checking Engines
+模型检查引擎
 ======================
 
-The SMTChecker module implements two different reasoning engines, a Bounded
-Model Checker (BMC) and a system of Constrained Horn Clauses (CHC).  Both
-engines are currently under development, and have different characteristics.
-The engines are independent and every property warning states from which engine
-it came. Note that all the examples above with counterexamples were
-reported by CHC, the more powerful engine.
+SMT检查器模块实现了两个不同的推理引擎，一个是有界模型检查器（Bounded Model Checker， BMC），
+一个是约束角条款（Constrained Horn Clauses， CHC）系统。
+这两个引擎目前都在开发中，并且有不同的特点。
+这两个引擎是独立的，每一个属性警告都说明它来自哪个引擎。
+请注意，上面所有带有反例的例子都是由CHC这个更强大的引擎报告的。
 
-By default both engines are used, where CHC runs first, and every property that
-was not proven is passed over to BMC. You can choose a specific engine via the CLI
-option ``--model-checker-engine {all,bmc,chc,none}`` or the JSON option
-``settings.modelChecker.engine={all,bmc,chc,none}``.
+默认情况下，两个引擎都会被使用，其中首先运行CHC，
+每一个没有被证明的属性都被传递给BMC。
+您可以通过CLI选项 ``--model-checker-engine {all,bmc,chc,none}`` 或
+JSON选项 ``settings.modelChecker.engine {all,bmc,chc,none}`` 来选择一个特定的引擎。
 
-Bounded Model Checker (BMC)
+有界模型检查器 （BMC）
 ---------------------------
 
-The BMC engine analyzes functions in isolation, that is, it does not take the
-overall behavior of the contract over multiple transactions into account when
-analyzing each function.  Loops are also ignored in this engine at the moment.
-Internal function calls are inlined as long as they are not recursive, directly
-or indirectly. External function calls are inlined if possible. Knowledge
-that is potentially affected by reentrancy is erased.
+BMC引擎单独地分析函数，也就是说，它在分析每个函数时不会考虑合约在多个交易中的整体行为。
+目前在这个引擎中循环也会被忽略了。
+只要不是直接或间接的递归，内部函数调用是内联的。
+如果可能的话，外部函数调用是内联的。
+有可能受重入影响的理论在此被忽略。
 
-The characteristics above make BMC prone to reporting false positives,
-but it is also lightweight and should be able to quickly find small local bugs.
+上述特点使BMC容易报告假阳性，
+但它也是轻量级的，应该能够快速找到小的局部bug。
 
-Constrained Horn Clauses (CHC)
-------------------------------
+受约束的角条款（Constrained Horn Clauses， CHC）
+------------------------------------------------
 
-A contract's Control Flow Graph (CFG) is modelled as a system of
-Horn clauses, where the life cycle of the contract is represented by a loop
-that can visit every public/external function non-deterministically. This way,
-the behavior of the entire contract over an unbounded number of transactions
-is taken into account when analyzing any function. Loops are fully supported
-by this engine. Internal function calls are supported, and external function
-calls assume the called code is unknown and can do anything.
+合约的控制流程图（CFG）被建模为一个Horn条款系统，
+其中合约的生命周期由一个可以非确定性地访问每个公共/外部函数的循环表示。
+这样，在分析任何函数时都会考虑到整个合约在无限制数量的事务中的行为。
+这个引擎完全支持循环。
+支持内部函数调用，而外部函数调用假定被调用的代码是未知的，可以做任何事情。
 
-The CHC engine is much more powerful than BMC in terms of what it can prove,
-and might require more computing resources.
+在能够证明的内容方面，CHC引擎要比BMC强大得多，但可能需要更多的计算资源。
 
-SMT and Horn solvers
+SMT和Horn求解器
 ====================
 
-The two engines detailed above use automated theorem provers as their logical
-backends.  BMC uses an SMT solver, whereas CHC uses a Horn solver. Often the
-same tool can act as both, as seen in `z3 <https://github.com/Z3Prover/z3>`_,
-which is primarily an SMT solver and makes `Spacer
-<https://spacer.bitbucket.io/>`_ available as a Horn solver, and `Eldarica
-<https://github.com/uuverifiers/eldarica>`_ which does both.
+上面详述的两个引擎使用自动定理证明器作为其逻辑后端。
+BMC使用一个SMT求解器，而CHC使用一个Horn求解器。
+通常同一个工具可以同时充当这两种工具，如 `z3 <https://github.com/Z3Prover/z3>`_，
+它主要是一个SMT求解器，并将 `Spacer <https://spacer.bitbucket.io/>`_
+作为一个Horn求解器使用，而 `Eldarica <https://github.com/uuverifiers/eldarica>`_
+则同时做这两种工作。
 
-The user can choose which solvers should be used, if available, via the CLI
-option ``--model-checker-solvers {all,cvc4,smtlib2,z3}`` or the JSON option
-``settings.modelChecker.solvers=[smtlib2,z3]``, where:
+如果求解器可用的话，用户可以通过CLI选项 ``--model-checker-solvers {all,cvc4,smtlib2,z3}``
+或JSON选项 ``settings.modelChecker.solvers=[smtlib2,z3]`` 来选择应该使用哪个求解器，
+其中：
 
-- ``cvc4`` is only available if the ``solc`` binary is compiled with it. Only BMC uses ``cvc4``.
-- ``smtlib2`` outputs SMT/Horn queries in the `smtlib2 <http://smtlib.cs.uiowa.edu/>`_ format.
-  These can be used together with the compiler's `callback mechanism <https://github.com/ethereum/solc-js>`_ so that
-  any solver binary from the system can be employed to synchronously return the results of the queries to the compiler.
-  This is currently the only way to use Eldarica, for example, since it does not have a C++ API.
-  This can be used by both BMC and CHC depending on which solvers are called.
-- ``z3`` is available
+- ``cvc4`` 仅在使用 ``solc`` 编译二进制文件时可用。并且只有BMC使用 ``cvc4``。
+- ``smtlib2`` 以 `smtlib2 <http://smtlib.cs.uiowa.edu/>`_ 格式输出 SMT/Horn 查询。
+  这些可以和编译器的 `回调机制 <https://github.com/ethereum/solc-js>`_ 一起使用，
+  这样就可以采用系统中的任何求解器二进制来同步返回查询的结果给编译器。
+  例如，这是目前使用Eldarica的唯一方法，因为它没有C++ API。
+  根据调用哪个求解器，BMC和CHC都可以使用此方法。
+- ``z3`` 是可用的
 
-  - if ``solc`` is compiled with it;
-  - if a dynamic ``z3`` library of version 4.8.x is installed in a Linux system (from Solidity 0.7.6);
-  - statically in ``soljson.js`` (from Solidity 0.6.9), that is, the Javascript binary of the compiler.
+  - 如果 ``solc`` 与它一起被编译的话。
+  - 如果Linux系统中安装了4.8.x版本的动态 ``z3`` 库（从Solidity 0.7.6开始）。
+  - 在 ``soljson.js`` （从Solidity 0.6.9开始）中静态的，也就是编译器的Javascript二进制。
 
-Since both BMC and CHC use ``z3``, and ``z3`` is available in a greater variety
-of environments, including in the browser, most users will almost never need to be
-concerned about this option. More advanced users might apply this option to try
-alternative solvers on more complex problems.
+由于BMC和CHC都使用 ``z3``，而且 ``z3`` 可以在更多的环境中使用，包括在浏览器中，
+大多数用户几乎不需要关心这个选项。更高级的用户可能会应用这个选项，在更复杂的问题上尝试其他求解器。
 
-Please note that certain combinations of chosen engine and solver will lead to
-the SMTChecker doing nothing, for example choosing CHC and ``cvc4``.
+请注意，所选择的引擎和求解器的某些组合将导致SMT检查器不做任何事情，例如选择CHC和 ``cvc4``。
 
 *******************************
-Abstraction and False Positives
+抽象和假阳性结果
 *******************************
 
-The SMTChecker implements abstractions in an incomplete and sound way: If a bug
-is reported, it might be a false positive introduced by abstractions (due to
-erasing knowledge or using a non-precise type). If it determines that a
-verification target is safe, it is indeed safe, that is, there are no false
-negatives (unless there is a bug in the SMTChecker).
+SMT检查器以一种不完整但健全的方式实现了抽象：
+如果报告了一个bug，它可能是由抽象引入的假阳性（由于删除了知识或使用了非精确类型）。
+如果它确定一个验证目标是安全的，那么它确实是安全的，也就是说，
+不存在假阴性（除非SMT检查器中存在一个bug）。
 
-If a target cannot be proven you can try to help the solver by using the tuning
-options in the previous section.
-If you are sure of a false positive, adding ``require`` statements in the code
-with more information may also give some more power to the solver.
+如果一个目标不能被证明，您可以尝试通过使用上一节中的调整选项来帮助求解器。
+如果您确定是假阳性，在代码中加入有更多信息的 ``require`` 语句也可能给求解器带来一些更多的帮助。
 
-SMT Encoding and Types
+SMT的编码和类型
 ======================
 
-The SMTChecker encoding tries to be as precise as possible, mapping Solidity types
-and expressions to their closest `SMT-LIB <http://smtlib.cs.uiowa.edu/>`_
-representation, as shown in the table below.
+SMT检查器编码试图尽可能精确，
+将Solidity类型和表达式映射到它们最接近的 `SMT-LIB <http://smtlib.cs.uiowa.edu/>`_ 表示法上，
+正如下表所示。
 
-+-----------------------+--------------------------------+-----------------------------+
-|Solidity type          |SMT sort                        |Theories                     |
-+=======================+================================+=============================+
-|Boolean                |Bool                            |Bool                         |
-+-----------------------+--------------------------------+-----------------------------+
-|intN, uintN, address,  |Integer                         |LIA, NIA                     |
-|bytesN, enum, contract |                                |                             |
-+-----------------------+--------------------------------+-----------------------------+
-|array, mapping, bytes, |Tuple                           |Datatypes, Arrays, LIA       |
-|string                 |(Array elements, Integer length)|                             |
-+-----------------------+--------------------------------+-----------------------------+
-|struct                 |Tuple                           |Datatypes                    |
-+-----------------------+--------------------------------+-----------------------------+
-|other types            |Integer                         |LIA                          |
-+-----------------------+--------------------------------+-----------------------------+
 
-Types that are not yet supported are abstracted by a single 256-bit unsigned
-integer, where their unsupported operations are ignored.
 
-For more details on how the SMT encoding works internally, see the paper
-`SMT-based Verification of Solidity Smart Contracts <https://github.com/leonardoalt/text/blob/master/solidity_isola_2018/main.pdf>`_.
++------------------------+----------------------------------+------------------------+
+|     Solidity 类型      |             SMT 类别             |         理论值         |
++========================+==================================+========================+
+| Boolean                | Bool                             | Bool                   |
++------------------------+----------------------------------+------------------------+
+| intN, uintN, address,  | Integer                          | LIA, NIA               |
+| bytesN, enum, contract |                                  |                        |
++------------------------+----------------------------------+------------------------+
+| array, mapping, bytes, | Tuple                            | Datatypes, Arrays, LIA |
+| string                 | (Array elements, Integer length) |                        |
++------------------------+----------------------------------+------------------------+
+| struct                 | Tuple                            | Datatypes              |
++------------------------+----------------------------------+------------------------+
+| 其他类型               | Integer                          | LIA                    |
++------------------------+----------------------------------+------------------------+
 
-Function Calls
+尚不支持的类型由一个256位无符号整数抽象出来，其不支持的操作被忽略。
+
+关于SMT编码的内部工作方式的更多细节，请参见论文
+`基于SMT的Solidity智能合约验证 <https://github.com/leonardoalt/text/blob/master/solidity_isola_2018/main.pdf>`_。
+
+函数调用
 ==============
 
-In the BMC engine, function calls to the same contract (or base contracts) are
-inlined when possible, that is, when their implementation is available.  Calls
-to functions in other contracts are not inlined even if their code is
-available, since we cannot guarantee that the actual deployed code is the same.
+在BMC引擎中，当可能时，即当它们的实现可用时，对相同合约（或基础合约）的函数调用被内联。
+对其他合约中的函数的调用不被内联，即使它们的代码是可用的，因为我们不能保证实际部署的代码是相同的。
 
-The CHC engine creates nonlinear Horn clauses that use summaries of the called
-functions to support internal function calls. External function calls are treated
-as calls to unknown code, including potential reentrant calls.
+CHC引擎创建了非线性的Horn选项，使用被调用函数的摘要来支持内部函数调用。
+外部函数调用被视为对未知代码的调用，包括潜在的可重入调用。
 
-Complex pure functions are abstracted by an uninterpreted function (UF) over
-the arguments.
+复杂的纯函数是由参数上的未转译函数（UF）抽象出来的。
 
-+-----------------------------------+--------------------------------------+
-|Functions                          |BMC/CHC behavior                      |
-+===================================+======================================+
-|``assert``                         |Verification target.                  |
-+-----------------------------------+--------------------------------------+
-|``require``                        |Assumption.                           |
-+-----------------------------------+--------------------------------------+
-|internal call                      |BMC: Inline function call.            |
-|                                   |CHC: Function summaries.              |
-+-----------------------------------+--------------------------------------+
-|external call to known code        |BMC: Inline function call or          |
-|                                   |erase knowledge about state variables |
-|                                   |and local storage references.         |
-|                                   |CHC: Assume called code is unknown.   |
-|                                   |Try to infer invariants that hold     |
-|                                   |after the call returns.               |
-+-----------------------------------+--------------------------------------+
-|Storage array push/pop             |Supported precisely.                  |
-|                                   |Checks whether it is popping an       |
-|                                   |empty array.                          |
-+-----------------------------------+--------------------------------------+
-|ABI functions                      |Abstracted with UF.                   |
-+-----------------------------------+--------------------------------------+
-|``addmod``, ``mulmod``             |Supported precisely.                  |
-+-----------------------------------+--------------------------------------+
-|``gasleft``, ``blockhash``,        |Abstracted with UF.                   |
-|``keccak256``, ``ecrecover``       |                                      |
-|``ripemd160``                      |                                      |
-+-----------------------------------+--------------------------------------+
-|pure functions without             |Abstracted with UF                    |
-|implementation (external or        |                                      |
-|complex)                           |                                      |
-+-----------------------------------+--------------------------------------+
-|external functions without         |BMC: Erase state knowledge and assume |
-|implementation                     |result is nondeterminisc.             |
-|                                   |CHC: Nondeterministic summary.        |
-|                                   |Try to infer invariants that hold     |
-|                                   |after the call returns.               |
-+-----------------------------------+--------------------------------------+
-|transfer                           |BMC: Checks whether the contract's    |
-|                                   |balance is sufficient.                |
-|                                   |CHC: does not yet perform the check.  |
-+-----------------------------------+--------------------------------------+
-|others                             |Currently unsupported                 |
-+-----------------------------------+--------------------------------------+
++------------------------------------+------------------------------------------+
+|                方法                |             BMC/CHC 运行方式             |
++====================================+==========================================+
+| ``assert``                         | 验证目标。                               |
++------------------------------------+------------------------------------------+
+| ``require``                        | 假设。                                   |
++------------------------------------+------------------------------------------+
+| 内部调用                           | BMC: 内联函数调用。                      |
+|                                    | CHC：函数摘要。                          |
++------------------------------------+------------------------------------------+
+| 对已知代码的外部调用               | BMC: 内联函数调用或                      |
+|                                    | 抹去关于状态变量的记忆                   |
+|                                    | 和本地存储引用。                         |
+|                                    | CHC: 假设被调用的代码是未知的。          |
+|                                    | 试图推断出在调用返回后仍然成立的不变性。 |
++------------------------------------+------------------------------------------+
+| 存储数组的压栈和出栈               | 精确地支持                               |
+|                                    | 检查是否从一个空数组弹出。               |
++------------------------------------+------------------------------------------+
+| ABI 函数                           | 用UF函数进行抽象                         |
++------------------------------------+------------------------------------------+
+| ``addmod``, ``mulmod``             | 精确地支持                               |
++------------------------------------+------------------------------------------+
+| ``gasleft``, ``blockhash``,        | 用UF函数进行抽象                         |
+| ``keccak256``, ``ecrecover``       |                                          |
+| ``ripemd160``                      |                                          |
++------------------------------------+------------------------------------------+
+| 无执行动作的纯函数（外部或复杂）。 | 用UF函数进行抽象                         |
++------------------------------------+------------------------------------------+
+| 无执行动作的外部函数               | BMC：擦除状态记忆并假定结果是不确定的。  |
+|                                    | CHC：不确定的摘要。                      |
+|                                    | 试图推断出在调用返回后仍然成立的不变性。 |
++------------------------------------+------------------------------------------+
+| transfer                           | BMC：检查合约的余额是否足够。            |
+|                                    | CHC：还不执行检查。                      |
++------------------------------------+------------------------------------------+
+| 其他调用                           | 目前不支持                               |
++------------------------------------+------------------------------------------+
 
-Using abstraction means loss of precise knowledge, but in many cases it does
-not mean loss of proving power.
+使用抽象意味着失去精确的知识，但在许多情况下，这并不意味着失去证明力。
 
 .. code-block:: solidity
 
@@ -768,29 +718,24 @@ not mean loss of proving power.
         }
     }
 
-In the example above, the SMTChecker is not expressive enough to actually
-compute ``ecrecover``, but by modelling the function calls as uninterpreted
-functions we know that the return value is the same when called on equivalent
-parameters. This is enough to prove that the assertion above is always true.
+在上面的例子中，SMT检查器的表达能力不足以实际计算 ``ecrecover``，
+但通过将函数调用建模为未转译的函数，我们知道在同等参数上调用时返回值是相同的。
+这就足以证明上面的断言总是正确的。
 
-Abstracting a function call with an UF can be done for functions known to be
-deterministic, and can be easily done for pure functions.  It is however
-difficult to do this with general external functions, since they might depend
-on state variables.
+对于已知是确定性的函数，可以用UF来抽象一个函数调用，
+对于纯函数也很容易做到。
+然而，对于一般的外部函数来说，这是很难做到的，
+因为它们可能依赖于状态变量。
 
-Reference Types and Aliasing
+引用类型和别名
 ============================
 
-Solidity implements aliasing for reference types with the same :ref:`data
-location<data-location>`.
-That means one variable may be modified through a reference to the same data
-area.
-The SMTChecker does not keep track of which references refer to the same data.
-This implies that whenever a local reference or state variable of reference
-type is assigned, all knowledge regarding variables of the same type and data
-location is erased.
-If the type is nested, the knowledge removal also includes all the prefix base
-types.
+Solidity 为具有相同 :ref:`数据位置 <data-location>` 的引用类型实现了别名。
+这意味着可以通过对同一数据区域的引用来修改一个变量。
+SMT检查器并不跟踪哪些引用是指向相同的数据。
+这意味着每当分配一个局部引用或引用类型的状态变量时，
+所有关于相同类型和数据位置的变量的知识都会被抹去。
+如果类型是嵌套的，知识删除也包括所有的前缀基础类型。
 
 .. code-block:: solidity
 
@@ -811,17 +756,15 @@ types.
             a[0] = 2;
             c[0][0] = 2;
             b[0] = 1;
-            // Erasing knowledge about memory references should not
-            // erase knowledge about state variables.
+            // 删除关于内存引用的记忆不应该删除关于状态变量的记忆。
             assert(array1[0] == 42);
-            // However, an assignment to a storage reference will erase
-            // storage knowledge accordingly.
+            // 但是，对存储引用的赋值将相应地删除存储记忆。
             d[0] = 2;
-            // Fails as false positive because of the assignment above.
+            // 由于上面的分配，失败为假阳性。
             assert(array1[0] == 42);
-            // Fails because `a == b` is possible.
+            // 失败，因为 `a == b` 是可能的。
             assert(a[0] == 2);
-            // Fails because `c[i] == b` is possible.
+            // 失败，因为 `c[i] == b` 是可能的。
             assert(c[0][0] == 2);
             assert(d[0] == 2);
             assert(b[0] == 1);
@@ -836,48 +779,37 @@ types.
         }
     }
 
-After the assignment to ``b[0]``, we need to clear knowledge about ``a`` since
-it has the same type (``uint[]``) and data location (memory).  We also need to
-clear knowledge about ``c``, since its base type is also a ``uint[]`` located
-in memory. This implies that some ``c[i]`` could refer to the same data as
-``b`` or ``a``.
+在对 ``b[0]`` 进行赋值后，我们需要清除关于 ``a`` 的知识，
+因为它有相同的类型（ ``uint[]`` ）和数据位置（内存）。
+我们还需要清除关于 ``c`` 的知识，因为它的基本类型也是一个位于内存中的 ``uint[]``。
+这意味着一些 ``c[i]`` 可能与 ``b`` 或 ``a`` 指的是同一个数据。
 
-Notice that we do not clear knowledge about ``array`` and ``d`` because they
-are located in storage, even though they also have type ``uint[]``.  However,
-if ``d`` was assigned, we would need to clear knowledge about ``array`` and
-vice-versa.
+注意，我们没有清除关于 ``array`` 和 ``d`` 的知识，
+因为它们位于存储区，尽管它们也有 ``uint[]`` 类型。
+然而，如果 ``d`` 被分配，我们就需要清除关于 ``array`` 的知识，反之亦然。
 
-Contract Balance
+合约余额
 ================
 
-A contract may be deployed with funds sent to it, if ``msg.value`` > 0 in the
-deployment transaction.
-However, the contract's address may already have funds before deployment,
-which are kept by the contract.
-Therefore, the SMTChecker assumes that ``address(this).balance >= msg.value``
-in the constructor in order to be consistent with the EVM rules.
-The contract's balance may also increase without triggering any calls to the
-contract, if
+如果在部署交易中 ``msg.value`` > 0，则合约可能在部署时被发送资金。
+然而，合约的地址在部署前可能已经有了资金，
+这些资金由合约保存。
+因此，SMT检查器在构造函数中假定 ``address(this).balance >= msg.value``，
+以便与EVM规则一致。合约的余额也可能在不触发任何对合约的调用的情况下增加，如果
 
-- ``selfdestruct`` is executed by another contract with the analyzed contract
-  as the target of the remaining funds,
-- the contract is the coinbase (i.e., ``block.coinbase``) of some block.
+- ``selfdestruct`` 是由另一个合约执行的，被分析的合约是剩余资金的接收目标。
+- 该合约是某个区块的coinbase（即 ``block.coinbase``）。
 
-To model this properly, the SMTChecker assumes that at every new transaction
-the contract's balance may grow by at least ``msg.value``.
+为了正确建模，SMT检查器假设在每一笔新的交易中，合约的余额可能至少增长 ``msg.value`` 的值。
 
 **********************
-Real World Assumptions
+现实世界的假设
 **********************
 
-Some scenarios can be expressed in Solidity and the EVM, but are expected to
-never occur in practice.
-One of such cases is the length of a dynamic storage array overflowing during a
-push: If the ``push`` operation is applied to an array of length 2^256 - 1, its
-length silently overflows.
-However, this is unlikely to happen in practice, since the operations required
-to grow the array to that point would take billions of years to execute.
-Another similar assumption taken by the SMTChecker is that an address' balance
-can never overflow.
+有些情况可以在Solidity和EVM中可以表达出，但可能在实践中不会发生。
+其中一种情况是动态存储数组的长度在压栈过程中溢出：
+如果 ``push`` 操作被应用于一个长度为 2^256 - 1的数组，它的长度会悄悄溢出。
+然而，这在实践中不太可能发生，因为将数组增长到这一点所需的操作需要数十亿年的时间来执行。
+SMT检查器采取的另一个类似的假设是，一个地址的余额永远不会溢出。
 
-A similar idea was presented in `EIP-1985 <https://eips.ethereum.org/EIPS/eip-1985>`_.
+类似的想法在 `EIP-1985 <https://eips.ethereum.org/EIPS/eip-1985>`_ 中提出过。
