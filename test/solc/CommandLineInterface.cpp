@@ -1006,10 +1006,12 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		canonicalWorkDir / "lib",
 	};
 
+	string expectedContent = "Compiler run successful. No contracts to compile.\n";
+
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
 	BOOST_TEST(result.stderrContent == "");
-	BOOST_TEST(result.stdoutContent == "");
+	BOOST_TEST(result.stdoutContent == expectedContent);
 	BOOST_REQUIRE(result.success);
 	BOOST_TEST(result.options == expectedOptions);
 	BOOST_TEST(result.reader.sourceUnits() == expectedSources);
