@@ -224,6 +224,15 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(no_cbor_metadata)
+{
+	vector<string> commandLine = {"solc", "--no-cbor-metadata", "contract.sol"};
+	CommandLineOptions parsedOptions = parseCommandLine(commandLine);
+	bool assert = parsedOptions.metadata.format == CompilerStack::MetadataFormat::NoMetadata;
+
+	BOOST_TEST(assert);
+}
+
 BOOST_AUTO_TEST_CASE(via_ir_options)
 {
 	BOOST_TEST(!parseCommandLine({"solc", "contract.sol"}).output.viaIR);

@@ -62,6 +62,7 @@ static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strLSP = "lsp";
 static string const g_strMachine = "machine";
+static string const g_strNoCBORMetadata = "no-cbor-metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerContracts = "model-checker-contracts";
@@ -240,6 +241,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		compiler.outputs == _other.compiler.outputs &&
 		compiler.estimateGas == _other.compiler.estimateGas &&
 		compiler.combinedJsonRequests == _other.compiler.combinedJsonRequests &&
+		metadata.format == _other.metadata.format &&
 		metadata.hash == _other.metadata.hash &&
 		metadata.literalSources == _other.metadata.literalSources &&
 		optimizer.enabled == _other.optimizer.enabled &&
@@ -749,6 +751,10 @@ General Information)").c_str(),
 	po::options_description metadataOptions("Metadata Options");
 	metadataOptions.add_options()
 		(
+			g_strNoCBORMetadata.c_str(),
+			"Do not append CBOR metadata to the end of the bytecode."
+		)
+		(
 			g_strMetadataHash.c_str(),
 			po::value<string>()->value_name(util::joinHumanReadable(g_metadataHashArgs, ",")),
 			"Choose hash method for the bytecode metadata or disable it."
@@ -922,6 +928,7 @@ void CommandLineParser::processArgs()
 		{g_strExperimentalViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strNoCBORMetadata, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
@@ -1219,6 +1226,21 @@ void CommandLineParser::processArgs()
 			m_options.metadata.hash = CompilerStack::MetadataHash::None;
 		else
 			solThrow(CommandLineValidationError, "Invalid option for --" + g_strMetadataHash + ": " + hashStr);
+	}
+
+	if (m_args.count(g_strNoCBORMetadata))
+	{
+		if (
+			m_args.count(g_strMetadataHash) &&
+			m_options.metadata.hash != CompilerStack::MetadataHash::None
+		)
+			solThrow(
+				CommandLineValidationError,
+				"Cannot specify a metadata hashing method when --" +
+				g_strNoCBORMetadata + " is set."
+			);
+
+		m_options.metadata.format = CompilerStack::MetadataFormat::NoMetadata;
 	}
 
 	if (m_args.count(g_strModelCheckerContracts))

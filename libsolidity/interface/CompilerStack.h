@@ -345,9 +345,12 @@ public:
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
 	/// Changes the format of the metadata appended at the end of the bytecode.
-	/// This is mostly a workaround to avoid bytecode and gas differences between compiler builds
-	/// caused by differences in metadata. Should only be used for testing.
 	void setMetadataFormat(MetadataFormat _metadataFormat) { m_metadataFormat = _metadataFormat; }
+
+	static MetadataFormat defaultMetadataFormat()
+	{
+		return VersionIsRelease ? MetadataFormat::WithReleaseVersionTag : MetadataFormat::WithPrereleaseVersionTag;
+	}
 
 private:
 	/// The state per source unit. Filled gradually during parsing.
@@ -515,7 +518,7 @@ private:
 	/// Whether or not there has been an error during processing.
 	/// If this is true, the stack will refuse to generate code.
 	bool m_hasError = false;
-	MetadataFormat m_metadataFormat = VersionIsRelease ? MetadataFormat::WithReleaseVersionTag : MetadataFormat::WithPrereleaseVersionTag;
+	MetadataFormat m_metadataFormat = defaultMetadataFormat();
 };
 
 }
