@@ -77,6 +77,7 @@ public:
 
 	FileRepository& fileRepository() noexcept { return m_fileRepository; }
 	Transport& client() noexcept { return m_client; }
+	std::tuple<frontend::ASTNode const*, int> astNodeAndOffsetAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos);
 	frontend::ASTNode const* astNodeAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos);
 	frontend::CompilerStack const& compilerStack() const noexcept { return m_compilerStack; }
 
