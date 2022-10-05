@@ -66,7 +66,6 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/range/adaptor/filtered.hpp>
 #include <boost/algorithm/string.hpp>
 
 #ifdef _WIN32 // windows
