@@ -50,6 +50,9 @@ reporting issues, please mention the following details:
 Reducing the source code that caused the issue to a bare minimum is always
 very helpful, and sometimes even clarifies a misunderstanding.
 
+For technical discussions about language design, a post in the
+`Solidity forum <https://forum.soliditylang.org/>`_ is the correct place (see :ref:`solidity_language_design`).
+
 Workflow for Pull Requests
 ==========================
 
@@ -481,6 +484,8 @@ Running Documentation Tests
 
 Make sure your contributions pass our documentation tests by running ``./docs/docs.sh`` that installs dependencies
 needed for documentation and checks for any problems such as broken links or syntax issues.
+
+.. _solidity_language_design:
 
 Solidity Language Design
 ========================
