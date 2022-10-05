@@ -2,43 +2,37 @@
 .. index: ir breaking changes
 
 *********************************
-Solidity IR-based Codegen Changes
+基于Solidity中间表征的Codegen变化
 *********************************
 
-Solidity can generate EVM bytecode in two different ways:
-Either directly from Solidity to EVM opcodes ("old codegen") or through
-an intermediate representation ("IR") in Yul ("new codegen" or "IR-based codegen").
+Solidity可以通过两种不同的方式生成EVM字节码：
+要么直接从Solidity到EVM操作码（“旧编码”），
+要么通过在Yul中的中间表示法（“IR”）（“新编码” 或 “基于IR的编码”）。
 
-The IR-based code generator was introduced with an aim to not only allow
-code generation to be more transparent and auditable but also
-to enable more powerful optimization passes that span across functions.
+引入基于IR的代码生成器的目的是，不仅使代码生成更加透明和可审计，
+而且能够实现更强大的跨函数的优化通道。
 
-Currently, the IR-based code generator is still marked experimental,
-but it supports all language features and has received a lot of testing,
-so we consider it almost ready for production use.
+目前，基于IR的代码生成器仍被标记为实验性的，
+但它支持所有的语言功能，并得到了大量的测试，
+所以我们认为它几乎可以用于生产。
 
-You can enable it on the command line using ``--experimental-via-ir``
-or with the option ``{"viaIR": true}`` in standard-json and we
-encourage everyone to try it out!
+您可以在命令行中使用 ``--experimental-via-ir``
+或在standard-json中使用 ``{"viaIR": true}`` 选项来启用它，
+我们鼓励大家尝试一下！
 
-For several reasons, there are tiny semantic differences between the old
-and the IR-based code generator, mostly in areas where we would not
-expect people to rely on this behaviour anyway.
-This section highlights the main differences between the old and the IR-based codegen.
+由于一些原因，旧的和基于IR的代码生成器之间存在着微小的语义差异，
+主要是在那些我们无论如何也不会期望人们依赖这种行为的领域。
+本节强调了旧的和基于IR的代码生成器之间的主要区别。
 
-Semantic Only Changes
+仅有语义上的变化
 =====================
 
-This section lists the changes that are semantic-only, thus potentially
-hiding new and different behavior in existing code.
+本节列出了仅有语义的变化，从而有可能在现有的代码中隐藏新的和不同的行为。
 
-- When storage structs are deleted, every storage slot that contains
-  a member of the struct is set to zero entirely. Formerly, padding space
-  was left untouched.
-  Consequently, if the padding space within a struct is used to store data
-  (e.g. in the context of a contract upgrade), you have to be aware that
-  ``delete`` will now also clear the added member (while it wouldn't
-  have been cleared in the past).
+- 当存储结构被删除时，包含该结构成员的每个存储槽都被完全设置为零。
+  以前，填充空间是不被触动的。
+  因此，如果结构中的填充空间被用来存储数据（例如在合约升级的背景下），
+  您必须注意， ``delete`` 现在也会清除添加的成员（而在过去不会被清除）。
 
   .. code-block:: solidity
 
@@ -54,22 +48,21 @@ hiding new and different behavior in existing code.
           function f() public {
               // ...
               delete s;
-              // s occupies only first 16 bytes of the 32 bytes slot
-              // delete will write zero to the full slot
+              // s只占用了32个字节槽的前16个字节
+              // delete 将把零写到完整的插槽中
           }
       }
 
-  We have the same behavior for implicit delete, for example when array of structs is shortened.
+  我们对隐式删除也有同样的行为，例如当结构体的数组被缩短时。
 
-- Function modifiers are implemented in a slightly different way regarding function parameters and return variables.
-  This especially has an effect if the placeholder ``_;`` is evaluated multiple times in a modifier.
-  In the old code generator, each function parameter and return variable has a fixed slot on the stack.
-  If the function is run multiple times because ``_;`` is used multiple times or used in a loop, then a
-  change to the function parameter's or return variable's value is visible in the next execution of the function.
-  The new code generator implements modifiers using actual functions and passes function parameters on.
-  This means that multiple evaluations of a function's body will get the same values for the parameters,
-  and the effect on return variables is that they are reset to their default (zero) value for each
-  execution.
+- 关于函数参数和返回变量，函数修改器的实现方式略有不同。
+  如果占位符 ``_;`` 在一个修饰符中被多次使用，这尤其有影响。
+  在旧的代码生成器中，每个函数参数和返回变量在堆栈中都有一个固定的槽。
+  如果因为多次使用 ``_;`` 而使函数运行多次，或者在一个循环中使用，
+  那么函数参数或返回变量的值的变化在函数的下一次执行中是可见的。
+  新的代码生成器使用实际的函数来实现修改器，并将函数参数传递下去。
+  这意味着对一个函数主体的多次使用将得到相同的参数值，而对返回变量的影响是，
+  它们在每次执行时都被重置为其默认值（零）。
 
   .. code-block:: solidity
 
@@ -82,8 +75,8 @@ hiding new and different behavior in existing code.
           modifier mod() { _; _; }
       }
 
-  If you execute ``f(0)`` in the old code generator, it will return ``2``, while
-  it will return ``1`` when using the new code generator.
+  如果您在旧的代码生成器中执行 ``f(0)``，它将返回 ``2``，
+  而在使用新的代码生成器时，它将返回 ``1``。
 
   .. code-block:: solidity
 
@@ -101,38 +94,36 @@ hiding new and different behavior in existing code.
           function foo() external mod() returns (uint ret)
           {
               if (active)
-                  ret = 1; // Same as ``return 1``
+                  ret = 1; // 与 ``return 1`` 相同
           }
       }
 
-  The function ``C.foo()`` returns the following values:
+  函数 ``C.foo()`` 返回以下值：
 
-  - Old code generator: ``1`` as the return variable is initialized to ``0`` only once before the first ``_;``
-    evaluation and then overwritten by the ``return 1;``. It is not initialized again for the second ``_;``
-    evaluation and ``foo()`` does not explicitly assign it either (due to ``active == false``), thus it keeps
-    its first value.
-  - New code generator: ``0`` as all parameters, including return parameters, will be re-initialized before
-    each ``_;`` evaluation.
+  - 旧的代码生成器： ``1`` 作为返回变量在第一次 ``_;`` 使用前只被初始化为 ``0``，
+    然后被 ``return 1;`` 覆盖。在第二次 ``_;`` 使用时，它没有被再次初始化，
+    而且 ``foo()`` 也没有明确地分配给它（由于 ``active == false``），因此它保持了它的第一个值。
+  - 新的代码生成器： ``0`` 作为所有参数，包括返回参数，将在每次 ``_;`` 使用前被重新初始化。
 
-- The order of contract initialization has changed in case of inheritance.
+- 在继承的情况下，合约初始化的顺序已经改变。
 
-  The order used to be:
+  以前的顺序是：
 
-  - All state variables are zero-initialized at the beginning.
-  - Evaluate base constructor arguments from most derived to most base contract.
-  - Initialize all state variables in the whole inheritance hierarchy from most base to most derived.
-  - Run the constructor, if present, for all contracts in the linearized hierarchy from most base to most derived.
+  - 所有的状态变量在开始时都被零初始化。
+  - 评估基础构造函数参数，从最终派生合约到最基础的合约。
+  - 初始化整个继承层次中从最基础到最终派生的所有状态变量。
+  - 运行构造函数（如果存在），用于线性化层次结构中从最基本到最终派生的所有合约。
 
-  New order:
+  新的顺序：
 
-  - All state variables are zero-initialized at the beginning.
-  - Evaluate base constructor arguments from most derived to most base contract.
-  - For every contract in order from most base to most derived in the linearized hierarchy execute:
+  - 所有的状态变量在开始时都被零初始化。
+  - 评估基础构造函数参数，从最终派生合约到最基础的合约。
+  - 对于每一个合约，按照从最基础到最终派生的线性化层次结构的顺序执行：
 
-      1. If present at declaration, initial values are assigned to state variables.
-      2. Constructor, if present.
+    1. 如果在声明时存在，初始值将被分配给状态变量。
+    2. 运行构造函数，如果存在的话。
 
-This causes differences in some contracts, for example:
+例如，这造成了一些合约的差异：
 
   .. code-block:: solidity
 
@@ -152,14 +143,14 @@ This causes differences in some contracts, for example:
           uint public y = f();
       }
 
-  Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
-  With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
+以前， ``y`` 会被设置为0。这是因为我们首先要初始化状态变量。首先， ``x`` 被设置为0，当初始化 ``y`` 时， ``f()`` 将返回0，导致 ``y`` 也是0。
 
-- Copying ``bytes`` arrays from memory to storage is implemented in a different way.
-  The old code generator always copies full words, while the new one cuts the byte
-  array after its end. The old behaviour can lead to dirty data being copied after
-  the end of the array (but still in the same storage slot).
-  This causes differences in some contracts, for example:
+在新的规则下， ``y`` 将被设置为42。我们首先将 ``x`` 初始化为0，然后调用A的构造函数，将 ``x`` 设置为42。最后，在初始化 ``y`` 时， ``f()`` 返回42，导致 ``y`` 为42。
+
+- 将 ``bytes`` 数组从内存复制到存储空间的实现方式不同。
+  旧的代码生成器总是复制完整的字，而新的代码生成器则在字节数组结束后切割它。
+  旧的行为可能导致脏数据被复制到数组的末端之后（但仍在同一个存储槽中）。
+  这导致了一些合约中的差异，例如：
 
   .. code-block:: solidity
 
@@ -181,18 +172,18 @@ This causes differences in some contracts, for example:
           }
       }
 
-  Previously ``f()`` would return ``0x6465616462656566313564656164000000000000000000000000000000000010``
-  (it has correct length, and correct first 8 elements, but then it contains dirty data which was set via assembly).
-  Now it is returning ``0x6465616462656566000000000000000000000000000000000000000000000010`` (it has
-  correct length, and correct elements, but does not contain superfluous data).
+  以前 ``f()`` 会返回 ``0x64656164626565663135646561640000000000000000000000000010``
+  （它有正确的长度，和正确的前8个元素，但随后它包含通过汇编设置的脏数据）。
+  现在它返回 ``0x6465616462656600000000000000000000000010``
+  （它有正确的长度，和正确的元素，但不包含多余的数据）。
 
   .. index:: ! evaluation order; expression
 
-- For the old code generator, the evaluation order of expressions is unspecified.
-  For the new code generator, we try to evaluate in source order (left to right), but do not guarantee it.
-  This can lead to semantic differences.
+- 对于旧的代码生成器，表达式的评估顺序是没有规定的。
+  对于新的代码生成器，我们试图按照源顺序（从左到右）进行评估，但并不保证这一点。
+  这可能会导致语义上的差异。
 
-  For example:
+  例如：
 
   .. code-block:: solidity
 
@@ -204,16 +195,15 @@ This causes differences in some contracts, for example:
           }
       }
 
-  The function ``preincr_u8(1)`` returns the following values:
+  函数 ``preincr_u8(1)`` 返回以下值：
 
-  - Old code generator: 3 (``1 + 2``) but the return value is unspecified in general
-  - New code generator: 4 (``2 + 2``) but the return value is not guaranteed
+  - 旧的代码生成器：3 ( ``1 + 2`` )，但一般情况下返回值是不指定的
+  - 新的代码生成器：4 ( ``2 + 2`` )，但不能保证返回值
 
   .. index:: ! evaluation order; function arguments
 
-  On the other hand, function argument expressions are evaluated in the same order
-  by both code generators with the exception of the global functions ``addmod`` and ``mulmod``.
-  For example:
+  另一方面，除了全局函数 ``addmod`` 和 ``mulmod`` 外，两个代码生成器对函数参数表达式的评估顺序是一样的。
+  例如：
 
   .. code-block:: solidity
 
@@ -228,14 +218,13 @@ This causes differences in some contracts, for example:
           }
       }
 
-  The function ``g(1, 2)`` returns the following values:
+  函数 ``g(1, 2)`` 返回以下值：
 
-  - Old code generator: ``10`` (``add(2 + 3, 2 + 3)``) but the return value is unspecified in general
-  - New code generator: ``10`` but the return value is not guaranteed
+  - 旧的代码生成器： ``10`` ( ``add(2+3, 2+3)`` )，但返回值一般不指定。
+  - 新的代码生成器： ``10``，但不能保证返回值
 
-  The arguments to the global functions ``addmod`` and ``mulmod`` are evaluated right-to-left by the old code generator
-  and left-to-right by the new code generator.
-  For example:
+  全局函数 ``addmod`` 和 ``mulmod`` 的参数由旧代码生成器从右向左评估，新代码生成器从左向右评估。
+  例如：
 
   .. code-block:: solidity
 
@@ -244,24 +233,23 @@ This causes differences in some contracts, for example:
       contract C {
           function f() public pure returns (uint256 aMod, uint256 mMod) {
               uint256 x = 3;
-              // Old code gen: add/mulmod(5, 4, 3)
-              // New code gen: add/mulmod(4, 5, 5)
+              // 旧的代码生成器： add/mulmod(5, 4, 3)
+              // 新的代码生成器： add/mulmod(4, 5, 5)
               aMod = addmod(++x, ++x, x);
               mMod = mulmod(++x, ++x, x);
           }
       }
 
-  The function ``f()`` returns the following values:
+  函数 ``f()`` 返回以下值：
 
-  - Old code generator: ``aMod = 0`` and ``mMod = 2``
-  - New code generator: ``aMod = 4`` and ``mMod = 0``
+  - 旧的代码生成器： ``aMod = 0`` 和 ``mMod = 2``
+  - 新的代码生成器： ``aMod = 4`` 和 ``mMod = 0``
 
-- The new code generator imposes a hard limit of ``type(uint64).max``
-  (``0xffffffffffffffff``) for the free memory pointer. Allocations that would
-  increase its value beyond this limit revert. The old code generator does not
-  have this limit.
+- 新的代码生成器对自由内存指针施加了一个硬性限制 ``type(uint64).max``
+  （ ``0xffffffffffffffff``）。其增加值超过这个限制的分配会被恢复。
+  旧的代码生成器没有这个限制。
 
-  For example:
+  例如：
 
   .. code-block:: solidity
       :force:
@@ -271,51 +259,51 @@ This causes differences in some contracts, for example:
       contract C {
           function f() public {
               uint[] memory arr;
-              // allocation size: 576460752303423481
-              // assumes freeMemPtr points to 0x80 initially
+              // 分配空间： 576460752303423481
+              // 假设freeMemPtr最初指向0x80
               uint solYulMaxAllocationBeforeMemPtrOverflow = (type(uint64).max - 0x80 - 31) / 32;
-              // freeMemPtr overflows UINT64_MAX
+              // freeMemPtr 因 UINT64_MAX 限制溢出
               arr = new uint[](solYulMaxAllocationBeforeMemPtrOverflow);
           }
       }
 
-  The function `f()` behaves as follows:
+  函数 `f()` 的作用如下：
 
-  - Old code generator: runs out of gas while zeroing the array contents after the large memory allocation
-  - New code generator: reverts due to free memory pointer overflow (does not run out of gas)
+  - 旧的代码生成器：在大内存分配后对数组内容进行清零时耗尽了gas
+  - 新的代码生成器：由于自由内存指针溢出而还原（不会耗尽gas）。
 
 
-Internals
+内部结构
 =========
 
-Internal function pointers
+内部函数指针
 --------------------------
 
 .. index:: function pointers
 
-The old code generator uses code offsets or tags for values of internal function pointers. This is especially complicated since
-these offsets are different at construction time and after deployment and the values can cross this border via storage.
-Because of that, both offsets are encoded at construction time into the same value (into different bytes).
+旧的代码生成器对内部函数指针的值使用代码偏移量或标签。
+这一点特别复杂，因为这些偏移量在构造时和部署后是不同的，而且这些值可以通过存储跨越这个边界。
+正因为如此，这两个偏移量在构造时被编码为同一个值（进入不同的字节）。
 
-In the new code generator, function pointers use internal IDs that are allocated in sequence. Since calls via jumps are not possible,
-calls through function pointers always have to use an internal dispatch function that uses the ``switch`` statement to select
-the right function.
+在新的代码生成器中，函数指针使用依次分配的内部ID。
+由于通过跳转的调用是不可能的，通过函数指针的调用总是要使用内部调度函数，
+使用 ``switch`` 语句来选择正确的函数。
 
-The ID ``0`` is reserved for uninitialized function pointers which then cause a panic in the dispatch function when called.
+ID ``0`` 是为未初始化的函数指针保留的，这些指针在被调用时，会引起调度函数的panic错误。
 
-In the old code generator, internal function pointers are initialized with a special function that always causes a panic.
-This causes a storage write at construction time for internal function pointers in storage.
+在旧的代码生成器中，内部函数指针是用一个特殊的函数初始化的，它总是引起panic错误。
+这导致在构造时对存储中的内部函数指针进行存储写入。
 
-Cleanup
+清理
 -------
 
 .. index:: cleanup, dirty bits
 
-The old code generator only performs cleanup before an operation whose result could be affected by the values of the dirty bits.
-The new code generator performs cleanup after any operation that can result in dirty bits.
-The hope is that the optimizer will be powerful enough to eliminate redundant cleanup operations.
+旧的代码生成器只在操作前执行清理，而操作的结果可能会受到脏位值的影响。
+新的代码生成器在任何可能导致脏位的操作之后执行清理。
+我们希望优化器能够强大到足以消除多余的清理操作。
 
-For example:
+例如：
 
 .. code-block:: solidity
     :force:
@@ -333,11 +321,11 @@ For example:
         }
     }
 
-The function ``f(1)`` returns the following values:
+函数 ``f(1)`` 返回以下值：
 
-- Old code generator: (``fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
-- New code generator: (``00000000000000000000000000000000000000000000000000000000000000fe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
+- 旧的代码生成器：（ ``fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe``, ``00000000000000000000000000000000000000000000000000000000000000fe``）
+- 新的代码生成器：（ ``00000000000000000000000000000000000000000000000000000000000000fe``, ``00000000000000000000000000000000000000000000000000000000000000fe``）
 
-Note that, unlike the new code generator, the old code generator does not perform a cleanup after the bit-not assignment (``_a = ~_a``).
-This results in different values being assigned (within the inline assembly block) to return value ``_r1`` between the old and new code generators.
-However, both code generators perform a cleanup before the new value of ``_a`` is assigned to ``_r2``.
+请注意，与新的代码生成器不同，旧的代码生成器在位取反赋值（ ``_a = ~_a`` ）后没有进行清理。
+这导致新旧代码生成器之间对返回值 ``_r1`` 的赋值（在内联汇编块内）不同。
+然而，两个代码生成器在 ``_a`` 的新值被分配到 ``_r2`` 之前都进行了清理。
