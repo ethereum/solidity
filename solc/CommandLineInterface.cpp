@@ -1122,7 +1122,7 @@ void CommandLineInterface::outputCompilationResults()
 	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)
 	{
-		sout() << "======= " << contract << " =======" << endl;
+		sout() << endl << "======= " << contract << " =======" << endl;
 
 		// do we need EVM assembly?
 		if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
