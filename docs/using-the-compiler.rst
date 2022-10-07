@@ -287,7 +287,7 @@ Input Description
               // Improve allocation of stack slots for variables, can free up stack slots early.
               // Activated by default if the Yul optimizer is activated.
               "stackAllocation": true,
-              // Select optimization steps to be applied. It is also possible to modift the cleanup 
+              // Select optimization steps to be applied. It is also possible to modify the cleanup 
               // sequence with the : delimiter. Further information can be found at: 
               // https://docs.soliditylang.org/en/latest/internals/optimizer.html#selecting-optimizations
               // Optional, the optimizer will use the default sequence if omitted.
