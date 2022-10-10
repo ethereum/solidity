@@ -180,7 +180,7 @@ for (map<ComplexTypeOne, ComplexTypeTwo>::iterator i = l.begin(); i != l.end(); 
 
 ## 9. Naming
 
-1. Avoid unpronouncable names.
+1. Avoid unpronounceable names.
 2. Names should be shortened only if they are extremely common, but shortening should be generally avoided
 3. Avoid prefixes of initials (e.g. do not use `IMyInterface`, `CMyImplementation`)
 4. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments:
