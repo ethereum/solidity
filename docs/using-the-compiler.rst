@@ -287,9 +287,14 @@ Input Description
               // Improve allocation of stack slots for variables, can free up stack slots early.
               // Activated by default if the Yul optimizer is activated.
               "stackAllocation": true,
-              // Select optimization steps to be applied. It is also possible to modify the cleanup
-              // sequence with the : delimiter. For more information see "The Optimizer > Selecting Optimizations".
-              // Optional, the optimizer will use the default sequence if omitted.
+              // Select optimization steps to be applied. It is also possible to modify both the
+              // optmization sequence and the cleanup sequence. Instructions for each sequence
+              // are seperated with the : delimiter. For more information see
+              // "The Optimizer > Selecting Optimizations".
+              // Optional, the optimizer will use the default sequence if omitted. Omitting the
+              // whole field will make the compiler use defaults for both sequences but setting
+              // it to an empty value (":") will not - it will instead make the compiler use
+              // only the default cleanup sequence.
               "optimizerSteps": "dhfoDgvulfnTUtnIf..."
             }
           }
