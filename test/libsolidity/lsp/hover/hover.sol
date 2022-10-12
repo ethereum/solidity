@@ -48,9 +48,18 @@ contract User
 // <- {
 //     "contents": {
 //         "kind": "markdown",
-//         "value": "```solidity\ntype(enum User.SomeEnum)\n```\n\n"
+//         "value": "```solidity\ntype(enum User.SomeEnum)\n```\n\nSome enum value.\n\n"
 //     },
-//     "range": @Cursor1Range
+//     "range": {
+//         "end": {
+//             "character": 12,
+//             "line": 17
+//         },
+//         "start": {
+//             "character": 4,
+//             "line": 17
+//         }
+//     }
 // }
 // -> textDocument/hover {
 //     "position": @Cursor2
@@ -58,9 +67,18 @@ contract User
 // <- {
 //     "contents": {
 //         "kind": "markdown",
-//         "value": "```solidity\ntype(enum User.SomeEnum)\n```\n\n"
+//         "value": "```solidity\ntype(enum User.SomeEnum)\n```\n\nSome enum value.\n\n"
 //     },
-//     "range": @Cursor2Range
+//     "range": {
+//         "end": {
+//             "character": 32,
+//             "line": 22
+//         },
+//         "start": {
+//             "character": 24,
+//             "line": 22
+//         }
+//     }
 // }
 // -> textDocument/hover {
 //     "position": @Cursor3

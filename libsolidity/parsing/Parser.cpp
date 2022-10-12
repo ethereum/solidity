@@ -706,6 +706,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
 	expectToken(Token::Enum);
 	auto [name, nameLocation] = expectIdentifierWithLocation();
 	vector<ASTPointer<EnumValue>> members;
@@ -725,7 +726,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
-	return nodeFactory.createNode<EnumDefinition>(name, nameLocation, members);
+	return nodeFactory.createNode<EnumDefinition>(name, nameLocation, members, documentation);
 }
 
 ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
