@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/GotoDefinition.h>
+#include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Transport.h> // for RequestError
 #include <libsolidity/lsp/Utils.h>
 #include <libsolidity/ast/AST.h>
@@ -31,6 +32,23 @@ using namespace solidity::frontend;
 using namespace solidity::langutil;
 using namespace solidity::lsp;
 using namespace std;
+
+Json::Value GotoDefinition::onReportCapabilities(Json::Value const& _clientCapabilities)
+{
+	Json::Value replyCapabilities = Json::objectValue;
+	if (_clientCapabilities["textDocument"]["definition"])
+	{
+		replyCapabilities["definitionProvider"] = true;
+		m_server.registerHandler("textDocument/definition", *this);
+	}
+
+	if (_clientCapabilities["textDocument"]["implementation"])
+	{
+		replyCapabilities["implementationProvider"] = true;
+		m_server.registerHandler("textDocument/implementation", *this);
+	}
+	return replyCapabilities;
+}
 
 void GotoDefinition::operator()(MessageID _id, Json::Value const& _args)
 {

@@ -927,7 +927,13 @@ class SolidityLSPTestSuite: # {{{
             'trace': 'messages',
             'capabilities': {
                 'textDocument': {
-                    'publishDiagnostics': {'relatedInformation': True}
+                    'definition': {'dynamicRegistration': True},
+                    'documentHighlight': {'dynamicRegistration': True},
+                    'implementation': {'dynamicRegistration': True},
+                    'publishDiagnostics': {'relatedInformation': True},
+                    'references': {'dynamicRegistration': True},
+                    'rename': {'dynamicRegistration': True},
+                    'semanticTokens': {'dynamicRegistration': True}
                 },
                 'workspace': {
                     'applyEdit': True,

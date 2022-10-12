@@ -18,6 +18,7 @@
 #pragma once
 
 #include <libsolidity/lsp/Transport.h>
+#include <libsolidity/lsp/HandlerBase.h>
 #include <libsolidity/lsp/FileRepository.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
@@ -26,6 +27,7 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -80,6 +82,13 @@ public:
 	frontend::ASTNode const* astNodeAtSourceLocation(std::string const& _sourceUnitName, langutil::LineColumn const& _filePos);
 	frontend::CompilerStack const& compilerStack() const noexcept { return m_compilerStack; }
 
+	using MessageHandler = std::function<void(MessageID, Json::Value const&)>;
+
+	void registerHandler(std::string name, MessageHandler handler);
+
+	/// Compile everything until after analysis phase.
+	void compile();
+
 private:
 	/// Checks if the server is initialized (to be used by messages that need it to be initialized).
 	/// Reports an error and returns false if not.
@@ -93,17 +102,11 @@ private:
 	void handleTextDocumentDidClose(Json::Value const& _args);
 	void handleRename(Json::Value const& _args);
 	void handleGotoDefinition(MessageID _id, Json::Value const& _args);
-	void semanticTokensFull(MessageID _id, Json::Value const& _args);
 
 	/// Invoked when the server user-supplied configuration changes (initiated by the client).
 	void changeConfiguration(Json::Value const&);
 
-	/// Compile everything until after analysis phase.
-	void compile();
-
 	std::vector<boost::filesystem::path> allSolidityFilesFromProject() const;
-
-	using MessageHandler = std::function<void(MessageID, Json::Value const&)>;
 
 	Json::Value toRange(langutil::SourceLocation const& _location);
 	Json::Value toJson(langutil::SourceLocation const& _location);
@@ -112,6 +115,11 @@ private:
 
 	enum class State { Started, Initialized, ShutdownRequested, ExitRequested, ExitWithoutShutdown };
 	State m_state = State::Started;
+
+	// Contains the list of features that are only advertised if advertised by the client
+	// during initialization stage.
+	std::array<std::unique_ptr<HandlerBase>, 3> m_onDemandHandlers;
+	std::map<std::string, MessageHandler> m_coreHandlers;
 
 	Transport& m_client;
 	std::map<std::string, MessageHandler> m_handlers;

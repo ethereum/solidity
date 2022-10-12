@@ -128,11 +128,57 @@ Json::Value semanticTokensLegend()
 	return legend;
 }
 
+class SemanticTokensHandler: public HandlerBase
+{
+public:
+	using HandlerBase::HandlerBase;
+	Json::Value onReportCapabilities(Json::Value const& _clientCapabilities) override;
+	void operator()(MessageID _id, Json::Value const& _args);
+};
+
+Json::Value SemanticTokensHandler::onReportCapabilities(Json::Value const& _clientCapabilities)
+{
+	Json::Value replyCapabilities = Json::objectValue;
+
+	if (_clientCapabilities["textDocument"]["semanticTokens"])
+	{
+		replyCapabilities["semanticTokensProvider"]["legend"] = semanticTokensLegend();
+		replyCapabilities["semanticTokensProvider"]["range"] = false;
+		replyCapabilities["semanticTokensProvider"]["full"] = true; // XOR requests.full.delta = true
+
+		m_server.registerHandler("textDocument/semanticTokens/full", *this);
+	}
+
+	return replyCapabilities;
+}
+
+void SemanticTokensHandler::operator()(MessageID _id, Json::Value const& _args)
+{
+	auto const uri = _args["textDocument"]["uri"];
+
+	m_server.compile();
+
+	auto const sourceName = fileRepository().uriToSourceUnitName(uri.as<string>());
+	SourceUnit const& ast = m_server.compilerStack().ast(sourceName);
+	charStreamProvider().charStream(sourceName);
+
+	Json::Value data = SemanticTokensBuilder().build(ast, charStreamProvider().charStream(sourceName));
+
+	Json::Value reply = Json::objectValue;
+	reply["data"] = data;
+
+	client().reply(_id, std::move(reply));
+}
+
 }
 
 LanguageServer::LanguageServer(Transport& _transport):
-	m_client{_transport},
-	m_handlers{
+	m_onDemandHandlers{
+		make_unique<GotoDefinition>(*this),
+		make_unique<RenameSymbol>(*this),
+		make_unique<SemanticTokensHandler>(*this),
+	},
+	m_coreHandlers{
 		{"$/cancelRequest", [](auto, auto) {/*nothing for now as we are synchronous */}},
 		{"cancelRequest", [](auto, auto) {/*nothing for now as we are synchronous */}},
 		{"exit", [this](auto, auto) { m_state = (m_state == State::ShutdownRequested ? State::ExitRequested : State::ExitWithoutShutdown); }},
@@ -146,12 +192,18 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _2)},
 		{"textDocument/rename", RenameSymbol(*this) },
 		{"textDocument/implementation", GotoDefinition(*this) },
-		{"textDocument/semanticTokens/full", bind(&LanguageServer::semanticTokensFull, this, _1, _2)},
 		{"workspace/didChangeConfiguration", bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2)},
 	},
+	m_client{_transport},
+	m_handlers{m_coreHandlers},
 	m_fileRepository("/" /* basePath */, {} /* no search paths */),
 	m_compilerStack{m_fileRepository.reader()}
 {
+}
+
+void LanguageServer::registerHandler(std::string _name, MessageHandler _handler)
+{
+	m_handlers[std::move(_name)] = std::move(_handler);
 }
 
 Json::Value LanguageServer::toRange(SourceLocation const& _location)
@@ -409,14 +461,23 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	Json::Value replyArgs;
 	replyArgs["serverInfo"]["name"] = "solc";
 	replyArgs["serverInfo"]["version"] = string(VersionNumber);
-	replyArgs["capabilities"]["definitionProvider"] = true;
-	replyArgs["capabilities"]["implementationProvider"] = true;
 	replyArgs["capabilities"]["textDocumentSync"]["change"] = 2; // 0=none, 1=full, 2=incremental
 	replyArgs["capabilities"]["textDocumentSync"]["openClose"] = true;
-	replyArgs["capabilities"]["semanticTokensProvider"]["legend"] = semanticTokensLegend();
-	replyArgs["capabilities"]["semanticTokensProvider"]["range"] = false;
-	replyArgs["capabilities"]["semanticTokensProvider"]["full"] = true; // XOR requests.full.delta = true
-	replyArgs["capabilities"]["renameProvider"] = true;
+
+	m_handlers = m_coreHandlers;
+	m_handlers["textDocument/didOpen"] = bind(&LanguageServer::handleTextDocumentDidOpen, this, _2);
+	m_handlers["textDocument/didChange"] = bind(&LanguageServer::handleTextDocumentDidChange, this, _2);
+	m_handlers["textDocument/didClose"] = bind(&LanguageServer::handleTextDocumentDidClose, this, _2);
+	m_handlers["workspace/didChangeConfiguration"] = bind(&LanguageServer::handleWorkspaceDidChangeConfiguration, this, _2);
+
+	for (unique_ptr<HandlerBase>& handler: m_onDemandHandlers)
+	{
+		Json::Value replyCapabilities = handler->onReportCapabilities(_args["capabilities"]);
+		if (!replyCapabilities.isObject())
+			continue;
+		for (Json::String const& memberName: replyCapabilities.getMemberNames())
+			replyArgs["capabilities"][memberName] = replyCapabilities[memberName];
+	}
 
 	m_client.reply(_id, std::move(replyArgs));
 }
@@ -425,23 +486,6 @@ void LanguageServer::handleInitialized(MessageID, Json::Value const&)
 {
 	if (m_fileLoadStrategy == FileLoadStrategy::ProjectDirectory)
 		compileAndUpdateDiagnostics();
-}
-
-void LanguageServer::semanticTokensFull(MessageID _id, Json::Value const& _args)
-{
-	auto uri = _args["textDocument"]["uri"];
-
-	compile();
-
-	auto const sourceName = m_fileRepository.uriToSourceUnitName(uri.as<string>());
-	SourceUnit const& ast = m_compilerStack.ast(sourceName);
-	m_compilerStack.charStream(sourceName);
-	Json::Value data = SemanticTokensBuilder().build(ast, m_compilerStack.charStream(sourceName));
-
-	Json::Value reply = Json::objectValue;
-	reply["data"] = data;
-
-	m_client.reply(_id, std::move(reply));
 }
 
 void LanguageServer::handleWorkspaceDidChangeConfiguration(Json::Value const& _args)

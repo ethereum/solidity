@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/HandlerBase.h>
+#include <libsolidity/lsp/Transport.h>
 
 namespace solidity::lsp
 {
@@ -24,6 +25,8 @@ class GotoDefinition: public HandlerBase
 {
 public:
 	explicit GotoDefinition(LanguageServer& _server): HandlerBase(_server) {}
+
+	Json::Value onReportCapabilities(Json::Value const& _clientCapabilities) override;
 
 	void operator()(MessageID, Json::Value const&);
 };

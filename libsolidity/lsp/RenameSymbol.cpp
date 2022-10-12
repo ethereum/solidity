@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/lsp/RenameSymbol.h>
+#include <libsolidity/lsp/LanguageServer.h>
 #include <libsolidity/lsp/Utils.h>
 
 #include <libyul/AST.h>
@@ -46,6 +47,19 @@ CallableDeclaration const* extractCallableDeclaration(FunctionCall const& _funct
 	return nullptr;
 }
 
+}
+
+Json::Value RenameSymbol::onReportCapabilities(Json::Value const& _clientCapabilities)
+{
+	Json::Value replyCapabilities = Json::objectValue;
+
+	if (_clientCapabilities["textDocument"]["rename"])
+	{
+		replyCapabilities["renameProvider"] = true;
+		m_server.registerHandler("textDocument/rename", *this);
+	}
+
+	return replyCapabilities;
 }
 
 void RenameSymbol::operator()(MessageID _id, Json::Value const& _args)

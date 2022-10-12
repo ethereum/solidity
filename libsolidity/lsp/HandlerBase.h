@@ -18,10 +18,11 @@
 #pragma once
 
 #include <libsolidity/lsp/FileRepository.h>
-#include <libsolidity/lsp/LanguageServer.h>
 
 #include <liblangutil/SourceLocation.h>
 #include <liblangutil/CharStreamProvider.h>
+
+#include <libsolutil/JSON.h>
 
 #include <optional>
 
@@ -29,6 +30,7 @@ namespace solidity::lsp
 {
 
 class Transport;
+class LanguageServer;
 
 /**
  * Helper base class for implementing handlers.
@@ -37,6 +39,16 @@ class HandlerBase
 {
 public:
 	explicit HandlerBase(LanguageServer& _server): m_server{_server} {}
+	virtual ~HandlerBase() = default;
+
+	/// Callback to be invoked on every custom handler that can be used to decide whether to enable
+	/// or disable this feature on the server side.
+	///
+	/// @param _clientCapabilities JSON node to the root of the client advertised capabilities to be used
+	///                            to decide if the implemented feature should be enabled or not.
+	/// @returns JSON object, with mapping to the capabilities to reply back with.
+	///          Use this to write the capabilities-reply with respect the implementation.
+	virtual Json::Value onReportCapabilities(Json::Value const& /*_clientCapabilities*/) { return Json::objectValue; }
 
 	Json::Value toRange(langutil::SourceLocation const& _location) const;
 	Json::Value toJson(langutil::SourceLocation const& _location) const;
@@ -45,9 +57,9 @@ public:
 	/// from the JSON-RPC parameters.
 	std::pair<std::string, langutil::LineColumn> extractSourceUnitNameAndLineColumn(Json::Value const& _params) const;
 
-	langutil::CharStreamProvider const& charStreamProvider() const noexcept { return m_server.compilerStack(); }
-	FileRepository& fileRepository() const noexcept { return m_server.fileRepository(); }
-	Transport& client() const noexcept { return m_server.client(); }
+	langutil::CharStreamProvider const& charStreamProvider() const noexcept;
+	FileRepository& fileRepository() const noexcept;
+	Transport& client() const noexcept;
 
 protected:
 	LanguageServer& m_server;

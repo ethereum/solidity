@@ -31,6 +31,21 @@ using namespace solidity::lsp;
 using namespace solidity::util;
 using namespace std;
 
+CharStreamProvider const& HandlerBase::charStreamProvider() const noexcept
+{
+	return m_server.compilerStack();
+}
+
+FileRepository& HandlerBase::fileRepository() const noexcept
+{
+	return m_server.fileRepository();
+}
+
+Transport& HandlerBase::client() const noexcept
+{
+	return m_server.client();
+}
+
 Json::Value HandlerBase::toRange(SourceLocation const& _location) const
 {
 	if (!_location.hasText())
