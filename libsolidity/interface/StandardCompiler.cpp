@@ -929,6 +929,13 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 				metadataHash == "bzzr1" ?
 				CompilerStack::MetadataHash::Bzzr1 :
 				CompilerStack::MetadataHash::None;
+		if (ret.metadataFormat == CompilerStack::MetadataFormat::NoMetadata && ret.metadataHash != CompilerStack::MetadataHash::None)
+			return formatFatalError(
+				Error::Type::JSONError,
+				"When the parameter \"appendCBOR\" is set to false, the parameter \"bytecodeHash\" cannot be set to \"" +
+				metadataHash +
+				"\". The parameter \"bytecodeHash\" should either be skipped, or set to \"none\"."
+			);
 	}
 
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
