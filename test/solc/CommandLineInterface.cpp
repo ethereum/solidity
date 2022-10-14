@@ -1006,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		canonicalWorkDir / "lib",
 	};
 
-	string expectedContent = "Compiler run successful. No contracts to compile.\n";
+	string expectedContent = "Compiler run successful, no contracts to compile.\n";
 
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
