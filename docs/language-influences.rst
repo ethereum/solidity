@@ -1,25 +1,20 @@
 ###################
-Language Influences
+语言的影响因素
 ###################
 
-Solidity is a `curly-bracket language <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_
-that has been influenced and inspired by several well-known programming languages.
+Solidity是一种 `花括号语言 <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_，
+受到几种著名编程语言的影响和启发。
 
-Solidity is most profoundly influenced by C++, but also borrowed concepts from languages like
-Python, JavaScript, and others.
+Solidity受C++的影响最深，但也借用了Python，JavaScript等语言的概念。
 
-The influence from C++ can be seen in the syntax for variable declarations, for loops, the concept
-of overloading functions, implicit and explicit type conversions and many other details.
+从变量声明的语法，for循环，重载函数的概念，隐式和显式类型转换以及许多其他细节中可以看出C++的影响。
 
-In the early days of the language, Solidity used to be partly influenced by JavaScript.
-This was due to function-level scoping of variables and the use of the keyword ``var``.
-The JavaScript influence was reduced starting from version 0.4.0.
-Now, the main remaining similarity to JavaScript is that functions are defined using the keyword
-``function``. Solidity also supports import syntax and semantics that
-are similar to those available in JavaScript. Besides those points, Solidity looks like
-most other curly-bracket languages and has no major JavaScript influence anymore.
+这是由于变量的函数级范围和关键字 ``var`` 的使用。
+从0.4.0版本开始，JavaScript的影响已经减少。
+现在，剩下的与JavaScript的主要相似之处是，使用关键字 ``function`` 来定义函数。
+Solidity还支持导入语法和语义，这些都与JavaScript中的相似。
+除了这些点，Solidity看起来和其他大多数花括号语言一样，不再有主要的JavaScript影响。
 
-Another influence to Solidity was Python. Solidity's modifiers were added trying to model
-Python's decorators with a much more restricted functionality. Furthermore, multiple inheritance, C3 linearization,
-and the ``super`` keyword are taken from Python as well as the general assignment and copy semantics of value
-and reference types.
+对Solidity的另一个影响是Python。
+Solidity的修改器是为了模拟Python的装饰器而添加的，但其功能受到很大限制。
+此外，多重继承，C3线性化和 ``super`` 关键字以及值和引用类型的一般赋值和复制语义都来自Python。
