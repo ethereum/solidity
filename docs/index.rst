@@ -5,7 +5,7 @@ Solidity是一门为实现智能合约而创建的面向对象的高级编程语
 
 Solidity是一种 `带花括号的语言 <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_.
 这门语言受到了 C++，Python 和 Javascript 的影响，并且旨在针对以太坊虚拟机（EVM）。
-您可以在 :doc:`语言的影响 <language-influences>` 这一章节中找到更多关于 Solidity 受到哪些语言启发的细节。
+您可以在 :doc:`语言的影响因素 <language-influences>` 这一章节中找到更多关于 Solidity 受到哪些语言启发的细节。
 
 Solidity 是静态类型语言，支持继承，库和复杂的用户自定义的类型以及其他特性。
 
