@@ -175,7 +175,7 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 			{
 				boost::filesystem::path p(argv[i+1]);
 				boost::filesystem::path newPath = solidity::test::testPath().lexically_normal();
-				newPath /= "/libsolidity/"; 
+				newPath /= "/libsolidity/";
 				newPath /= importPath;
 				if (!boost::filesystem::exists(newPath.lexically_normal()))
 				{
@@ -183,11 +183,11 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 				}
 				if (boost::filesystem::is_regular_file(argv[i+1]))
 				{
-					
+
 					if(boost::filesystem::create_directory(newPath.lexically_normal()))
 					{
 						newPath /= p.filename();
-				
+
 						if(boost::filesystem::extension(newPath) == ".sol" || boost::filesystem::extension(newPath) == ".yul")
 						{
 							boost::filesystem::copy_file(argv[i+1], newPath.c_str());
@@ -198,7 +198,7 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 						importPath += p.filename().string();
 						auto importIndex = importPath.find_last_of(".");
 						importPath = importPath.substr(0, importIndex);
-						args.push_back(importPath.c_str()); 
+						args.push_back(importPath.c_str());
 						i++;
 					}
 					else
@@ -218,14 +218,14 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 								boost::filesystem::path fn(entry.path().c_str());
 								boost::filesystem::path newFilePath (newPath.string());
 								newFilePath /= fn.filename();
-								
+
 								boost::filesystem::copy_file(entry.path().c_str(), newFilePath.c_str());
 							}
 						}
 
 						args.push_back(argv[i]);
 						importPath += "/*";
-						args.push_back(importPath.c_str()); 
+						args.push_back(importPath.c_str());
 						i++;
 					}
 					else
