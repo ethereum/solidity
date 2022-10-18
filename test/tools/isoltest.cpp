@@ -482,7 +482,7 @@ int main(int argc, char const *argv[])
 				return EXIT_FAILURE;
 		}
 
-		string importPath = options.testPath.lexically_normal().string() + "/libsolidity/semanticTests/importedTests";	
+		string importPath = options.testPath.lexically_normal().string() + "/libsolidity/semanticTests/importedTests";
 		if (boost::filesystem::exists(importPath))
 		{
 			boost::filesystem::remove_all(importPath);
