@@ -181,12 +181,6 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	else if (_pragma.literals()[0] == "stdlib")
 	{
 		solAssert(m_sourceUnit, "");
-		if (m_evmVersion < EVMVersion::constantinople())
-			m_errorReporter.syntaxError(
-				6634_error,
-				_pragma.location(),
-				"\"pragma stdlib\" requires Constantinople EVM version at the minimum."
-			);
 		m_sourceUnit->annotation().useStdlib = true;
 	}
 	else

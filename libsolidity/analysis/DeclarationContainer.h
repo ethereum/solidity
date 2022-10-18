@@ -108,7 +108,7 @@ public:
 	void populateHomonyms(std::back_insert_iterator<Homonyms> _it) const;
 
 private:
-	/// Disables autoPopulateStdlib in _settinsg if "pragma stdlib" is active in m_selfNode.
+	/// Disables autoPopulateStdlib in _settings if "pragma stdlib" is active in m_selfNode.
 	void updateSettingsBasedOnStdlibPragma(ResolvingSettings& _settings) const;
 
 	ASTNode const* m_selfNode = nullptr;

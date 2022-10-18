@@ -309,8 +309,13 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<Token> _tokens,
-		std::vector<ASTString> _literals
-	): ASTNode(_id, _location), m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
+		std::vector<ASTString> _literals,
+		bool useStdLib = false
+	):
+		ASTNode(_id, _location),
+		m_tokens(std::move(_tokens)),
+		m_literals(std::move(_literals)),
+		m_useStdLib(useStdLib)
 	{}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -319,12 +324,16 @@ public:
 	std::vector<Token> const& tokens() const { return m_tokens; }
 	std::vector<ASTString> const& literals() const { return m_literals; }
 
+	bool useStdLib() const { return m_useStdLib; }
+
 private:
 
 	/// Sequence of tokens following the "pragma" keyword.
 	std::vector<Token> m_tokens;
 	/// Sequence of literals following the "pragma" keyword.
 	std::vector<ASTString> m_literals;
+	/// Indicates whether the standard library has been activated via this pragma
+	bool const m_useStdLib;
 };
 
 /**

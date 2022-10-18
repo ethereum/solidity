@@ -84,6 +84,7 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <range/v3/view/concat.hpp>
+#include <range/v3/algorithm/any_of.hpp>
 
 #include <utility>
 #include <map>
@@ -374,6 +375,20 @@ bool CompilerStack::parse()
 				auto it = solidity::solstdlib::sources.find(import->path());
 				if (it != solidity::solstdlib::sources.end())
 				{
+					auto useStdLib = [&]() {
+						auto const pragmas = ASTNode::filteredNodes<PragmaDirective>(source.ast->nodes());
+						return ranges::any_of(pragmas, [](PragmaDirective const* pragma) {
+							return pragma->useStdLib();
+						});
+					};
+
+					if (!useStdLib())
+						solThrow(
+							CompilerError,
+							"Given source file not found: " + import->path() + ". " +
+							"If you want to enable the standard library, you may do so with 'pragma stdlib;'."
+						);
+
 					auto [name, content] = *it;
 					m_sources[name].charStream = make_unique<CharStream>(content, name);
 					sourcesToParse.push_back(name);
