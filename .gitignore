@@ -1,5 +1,6 @@
 /commit_hash.txt
 /prerelease.txt
+/test/libsolidity/semanticTests/importedTests/
 
 # Auth config for ppa release
 /.release_ppa_auth

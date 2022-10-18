@@ -163,9 +163,92 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 	po::variables_map arguments;
 	addOptions();
 
+	std::vector<const char*> args;
+	string importPath = "semanticTests/importedTests";
+
+	for(uint i = 0; i < (uint)argc; i++)
+	{
+		if(((string)argv[i] == "-t" || (string)argv[i] == "--test") && (uint) argc - 1 > i)
+		{
+			string testPath = solidity::test::testPath().lexically_normal().string();
+			if (boost::filesystem::exists(argv[i+1]) && !strstr(argv[i+1], testPath.c_str()))
+			{
+				boost::filesystem::path p(argv[i+1]);
+				boost::filesystem::path newPath = solidity::test::testPath().lexically_normal();
+				newPath /= "/libsolidity/"; 
+				newPath /= importPath;
+				if (!boost::filesystem::exists(newPath.lexically_normal()))
+				{
+					boost::filesystem::remove_all(newPath);
+				}
+				if (boost::filesystem::is_regular_file(argv[i+1]))
+				{
+					
+					if(boost::filesystem::create_directory(newPath.lexically_normal()))
+					{
+						newPath /= p.filename();
+				
+						if(boost::filesystem::extension(newPath) == ".sol" || boost::filesystem::extension(newPath) == ".yul")
+						{
+							boost::filesystem::copy_file(argv[i+1], newPath.c_str());
+						}
+
+						args.push_back(argv[i]);
+						importPath += "/";
+						importPath += p.filename().string();
+						auto importIndex = importPath.find_last_of(".");
+						importPath = importPath.substr(0, importIndex);
+						args.push_back(importPath.c_str()); 
+						i++;
+					}
+					else
+					{
+						cout << "An error occurred creating the import directory for specified tests at " << newPath << endl;
+						args.push_back(argv[i]);
+					}
+				}
+				else
+				{
+					if(boost::filesystem::create_directory(newPath.lexically_normal()))
+					{
+						for (const auto & entry : fs::directory_iterator(argv[i+1]))
+						{
+							if (boost::filesystem::extension(entry.path()) == ".sol" || boost::filesystem::extension(entry.path()) == ".yul" )
+							{
+								boost::filesystem::path fn(entry.path().c_str());
+								boost::filesystem::path newFilePath (newPath.string());
+								newFilePath /= fn.filename();
+								
+								boost::filesystem::copy_file(entry.path().c_str(), newFilePath.c_str());
+							}
+						}
+
+						args.push_back(argv[i]);
+						importPath += "/*";
+						args.push_back(importPath.c_str()); 
+						i++;
+					}
+					else
+					{
+						cout << "An error occurred creating the import directory for specified tests at " << newPath << endl;
+						args.push_back(argv[i]);
+					}
+				}
+			}
+			else
+			{
+				args.push_back(argv[i]);
+			}
+		}
+		else
+		{
+			args.push_back(argv[i]);
+		}
+	}
+
 	try
 	{
-		po::command_line_parser cmdLineParser(argc, argv);
+		po::command_line_parser cmdLineParser(argc, args.data());
 		cmdLineParser.options(options);
 		auto parsedOptions = cmdLineParser.run();
 		po::store(parsedOptions, arguments);

@@ -482,6 +482,12 @@ int main(int argc, char const *argv[])
 				return EXIT_FAILURE;
 		}
 
+		string importPath = options.testPath.lexically_normal().string() + "/libsolidity/semanticTests/importedTests";	
+		if (boost::filesystem::exists(importPath))
+		{
+			boost::filesystem::remove_all(importPath);
+		}
+
 		cout << endl << "Summary: ";
 		AnsiColorized(cout, !options.noColor, {BOLD, global_stats ? GREEN : RED}) <<
 			 global_stats.successCount << "/" << global_stats.testCount;
