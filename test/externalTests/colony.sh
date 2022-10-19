@@ -38,7 +38,7 @@ function colony_test
 {
     local repo="https://github.com/solidity-external-tests/colonyNetwork.git"
     local ref_type=branch
-    local ref="develop_080"
+    local ref="removing_usage_of_code_as_identifier"
     local config_file="truffle.js"
 
     local compile_only_presets=(
@@ -67,7 +67,7 @@ function colony_test
 
     cd lib
     rm -Rf dappsys
-    git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_080 dappsys
+    git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b remove_usage_of_code_as_identifier dappsys
     cd ..
 
     replace_version_pragmas

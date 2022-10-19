@@ -36,9 +36,9 @@ function test_fn { npm run test; }
 
 function elementfi_test
 {
-    local repo="https://github.com/element-fi/elf-contracts"
+    local repo="https://github.com/solidity-external-tests/elf-contracts"
     local ref_type=branch
-    local ref=main
+    local ref=develop_090
     local config_file="hardhat.config.ts"
     local config_var=config
 

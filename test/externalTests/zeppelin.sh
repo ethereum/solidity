@@ -39,9 +39,9 @@ function test_fn { npm test; }
 
 function zeppelin_test
 {
-    local repo="https://github.com/OpenZeppelin/openzeppelin-contracts.git"
+    local repo="https://github.com/solidity-external-tests/openzeppelin-contracts"
     local ref_type=branch
-    local ref="master"
+    local ref="update_create2impl.sol"
     local config_file="hardhat.config.js"
 
     local compile_only_presets=()

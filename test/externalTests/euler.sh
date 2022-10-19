@@ -39,9 +39,9 @@ function test_fn {
 
 function euler_test
 {
-    local repo="https://github.com/euler-xyz/euler-contracts"
+    local repo="https://github.com/solidity-external-tests/euler-contracts"
     local ref_type=branch
-    local ref="master"
+    local ref="master_090"
     local config_file="hardhat.config.js"
 
     local compile_only_presets=()
