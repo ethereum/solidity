@@ -508,17 +508,27 @@ TestCase::TestResult SemanticTest::runTest(
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		_stream << endl;
+
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			_stream << test.format(
+			std::string outputString =
+			test.format(
 				errorReporter,
 				_linePrefix,
 				m_gasCostFailure ? TestFunctionCall::RenderMode::ExpectedValuesActualGas : TestFunctionCall::RenderMode::ActualValuesExpectedGas,
 				_formatted,
-				/* _interactivePrint */ true
-			) << endl;
+				true
+			);
+
+			auto pos = outputString.find("  // ~");
+			while ((pos=outputString.find("  // ~", pos+6)) != std::string::npos) {
+				outputString.replace(pos, 6, "\n  // ~");
+			}
+
+			_stream << outputString << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
