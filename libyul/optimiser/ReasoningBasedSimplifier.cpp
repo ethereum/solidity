@@ -28,6 +28,8 @@
 
 #include <libsolutil/CommonData.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <utility>
 #include <memory>
 

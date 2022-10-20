@@ -23,6 +23,8 @@
 
 #include <libyul/Utilities.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <libsolutil/Visitor.h>
 #include <libsolutil/cxx20.h>
 
