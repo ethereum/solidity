@@ -242,8 +242,6 @@ vector<string> SemanticTest::eventSideEffectHook(FunctionCall const&) const
 		if (m_contractAddress != log.creator)
 			sideEffect << " from 0x" << log.creator;
 
-		sideEffect << endl;
-
 		vector<string> eventStrings;
 		size_t index{0};
 		for (h256 const& topic: log.topics)
@@ -263,7 +261,7 @@ vector<string> SemanticTest::eventSideEffectHook(FunctionCall const&) const
 
 		if (!eventStrings.empty())
 			sideEffect << ": ";
-		sideEffect << joinHumanReadable(eventStrings);
+		sideEffect << joinHumanReadable(eventStrings) << endl;
 		sideEffects.emplace_back(sideEffect.str());
 	}
 	return sideEffects;
