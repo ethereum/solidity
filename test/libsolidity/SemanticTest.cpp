@@ -514,7 +514,7 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			std::string outputString =
+			string outputString =
 			test.format(
 				errorReporter,
 				_linePrefix,
