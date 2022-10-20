@@ -242,6 +242,8 @@ vector<string> SemanticTest::eventSideEffectHook(FunctionCall const&) const
 		if (m_contractAddress != log.creator)
 			sideEffect << " from 0x" << log.creator;
 
+		sideEffect << endl;
+
 		vector<string> eventStrings;
 		size_t index{0};
 		for (h256 const& topic: log.topics)
@@ -514,22 +516,14 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			string outputString = test.format(
-			    ...
-			)
+			_stream << test.format(
 				errorReporter,
 				_linePrefix,
 				m_gasCostFailure ? TestFunctionCall::RenderMode::ExpectedValuesActualGas : TestFunctionCall::RenderMode::ActualValuesExpectedGas,
 				_formatted,
-				true
+				/* _interactivePrint */ true
 			);
 
-			auto pos = outputString.find("  // ~");
-			while ((pos = outputString.find("  // ~", pos + 6)) != std::string::npos) {
-				outputString.replace(pos, 6, "\n  // ~");
-			}
-
-			_stream << outputString << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
