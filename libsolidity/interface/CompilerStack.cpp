@@ -411,7 +411,7 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 		m_sources[path] = std::move(source);
 	}
 	m_stackState = ParsedAndImported;
-	m_importedSources = true;
+	m_compilationSourceType = CompilationSourceType::SolidityAST;
 
 	storeContractDefinitions();
 }
@@ -1483,7 +1483,17 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 {
 	Json::Value meta{Json::objectValue};
 	meta["version"] = 1;
-	meta["language"] = m_importedSources ? "SolidityAST" : "Solidity";
+	string sourceType;
+	switch (m_compilationSourceType)
+	{
+	case CompilationSourceType::Solidity:
+		sourceType = "Solidity";
+		break;
+	case CompilationSourceType::SolidityAST:
+		sourceType = "SolidityAST";
+		break;
+	}
+	meta["language"] = sourceType;
 	meta["compiler"]["version"] = VersionStringStrict;
 
 	/// All the source files (including self), which should be included in the metadata.
