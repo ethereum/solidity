@@ -514,8 +514,9 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			string outputString =
-			test.format(
+			string outputString = test.format(
+			    ...
+			)
 				errorReporter,
 				_linePrefix,
 				m_gasCostFailure ? TestFunctionCall::RenderMode::ExpectedValuesActualGas : TestFunctionCall::RenderMode::ActualValuesExpectedGas,
