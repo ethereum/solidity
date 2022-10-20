@@ -17,7 +17,7 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v5
+      - uses: actions/stale@v6
         with:
           debug-only: true
           # disable issues
@@ -32,8 +32,8 @@ jobs:
           close-pr-label: closed-due-inactivity
           days-before-pr-stale: ${{ env.BEFORE_STALE }}
           days-before-pr-close: ${{ env.BEFORE_CLOSE }}
-          exempt-pr-labels: 'external contribution'
+          exempt-pr-labels: 'external contribution :star:'
           exempt-draft-pr: true
           exempt-all-milestones: true
           remove-stale-when-updated: true
-          operations-per-run: 60
+          operations-per-run: 100
