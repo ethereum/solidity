@@ -524,7 +524,7 @@ TestCase::TestResult SemanticTest::runTest(
 			);
 
 			auto pos = outputString.find("  // ~");
-			while ((pos=outputString.find("  // ~", pos+6)) != std::string::npos) {
+			while ((pos = outputString.find("  // ~", pos + 6)) != std::string::npos) {
 				outputString.replace(pos, 6, "\n  // ~");
 			}
 
