@@ -83,7 +83,7 @@ clone_repo element-fi        elf-contracts
 clone_repo ensdomains        ens
 clone_repo ensdomains        ens-contracts
 clone_repo euler-xyz         euler-contracts
-clone_repo gnosis            gp-v2-contracts
+clone_repo cowprotocol       contracts                 gp2-contracts
 clone_repo gnosis            mock-contract
 clone_repo gnosis            util-contracts
 clone_repo JoinColony        colonyNetwork
@@ -105,7 +105,7 @@ sync_branch elf-contracts             main
 sync_branch ens                       master
 sync_branch ens-contracts             master
 sync_branch euler-contracts           master
-sync_branch gp-v2-contracts           main
+sync_branch gp2-contracts             main
 sync_branch mock-contract             master
 sync_branch util-contracts            main
 sync_branch colonyNetwork             develop
