@@ -82,7 +82,7 @@ public:
 		tx_context.block_number++;
 		tx_context.block_timestamp += 15;
 		recorded_logs.clear();
-		resetWarmAccess();
+		newTransactionFrame();
 	}
 
 	/// @returns contents of storage at @param _addr.
@@ -98,8 +98,9 @@ private:
 	/// Transfer value between accounts. Checks for sufficient balance.
 	void transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept;
 
-	/// Clears EIP-2929 account and storage access indicator
-	void resetWarmAccess();
+	/// Start a new transaction frame.
+	/// This will perform selfdestructs and clear account/storage access indicator for EIP-2929.
+	void newTransactionFrame();
 
 	/// Records calls made via @param _message.
 	void recordCalls(evmc_message const& _message) noexcept;
