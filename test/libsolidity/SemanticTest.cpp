@@ -261,9 +261,10 @@ vector<string> SemanticTest::eventSideEffectHook(FunctionCall const&) const
 
 		if (!eventStrings.empty())
 			sideEffect << ": ";
-		sideEffect << joinHumanReadable(eventStrings) << endl;
+		sideEffect << joinHumanReadable(eventStrings);
 		sideEffects.emplace_back(sideEffect.str());
 	}
+	sideEffects[0] += " ";
 	return sideEffects;
 }
 
