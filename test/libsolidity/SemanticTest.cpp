@@ -264,15 +264,17 @@ vector<string> SemanticTest::eventSideEffectHook(FunctionCall const&) const
 		sideEffect << joinHumanReadable(eventStrings);
 		sideEffects.emplace_back(sideEffect.str());
 	}
-	for(long unsigned int i = 0; i < sideEffects.size() - 1; i++)
-	{
-		if(i == 0)
+	if(sideEffects.size() > 0){
+		for(long unsigned int i = 0; i < sideEffects.size() - 1; i++)
 		{
-			sideEffects[i] += " ";
-		}
-		else
-		{
-			sideEffects[i] += "\n";
+			if(i == 0)
+			{
+				sideEffects[i] += " ";
+			}
+			else
+			{
+				sideEffects[i] += "\n";
+			}
 		}
 	}
 	return sideEffects;
