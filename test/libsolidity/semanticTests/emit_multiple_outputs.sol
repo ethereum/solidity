@@ -8,5 +8,5 @@ contract C {
 }
 // ----
 // terminate() ->
-// ~ emit Terminated()
+// ~ emit Terminated() 
 // ~ emit Terminated()
