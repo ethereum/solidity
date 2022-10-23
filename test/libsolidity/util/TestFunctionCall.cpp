@@ -210,8 +210,15 @@ string TestFunctionCall::format(
 			stream << std::endl;
 			for (string const& effect: sideEffects)
 			{
-				stream << _linePrefix << "// ~ " << effect;
-				if (effect != *sideEffects.rbegin())
+				string outputString = effect;
+				auto pos = outputString.find("  // ~");
+				while ((pos = outputString.find("  // ~", pos + 6)) != std::string::npos) {
+					outputString.replace(pos, 6, "\n  // ~");
+				}
+
+				stream << _linePrefix << "// ~ " << outputString;
+
+				if (outputString != *sideEffects.rbegin())
 					stream << std::endl;
 			}
 		}
