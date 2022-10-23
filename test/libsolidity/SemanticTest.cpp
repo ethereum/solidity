@@ -264,6 +264,19 @@ vector<string> SemanticTest::eventSideEffectHook(FunctionCall const&) const
 		sideEffect << joinHumanReadable(eventStrings);
 		sideEffects.emplace_back(sideEffect.str());
 	}
+	if(sideEffects.size() > 0){
+		for(long unsigned int i = 0; i < sideEffects.size() - 1; i++)
+		{
+			if(i == 0)
+			{
+				sideEffects[i] += " ";
+			}
+			else
+			{
+				sideEffects[i] += "\n";
+			}
+		}
+	}
 	return sideEffects;
 }
 
@@ -508,7 +521,9 @@ TestCase::TestResult SemanticTest::runTest(
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		_stream << endl;
+
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
@@ -518,7 +533,8 @@ TestCase::TestResult SemanticTest::runTest(
 				m_gasCostFailure ? TestFunctionCall::RenderMode::ExpectedValuesActualGas : TestFunctionCall::RenderMode::ActualValuesExpectedGas,
 				_formatted,
 				/* _interactivePrint */ true
-			) << endl;
+			);
+
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
