@@ -80,7 +80,6 @@ cd "$target_dir"
 clone_repo brinktrade        brink-core
 clone_repo dapphub           dappsys-monolithic
 clone_repo element-fi        elf-contracts
-clone_repo ensdomains        ens
 clone_repo ensdomains        ens-contracts
 clone_repo euler-xyz         euler-contracts
 clone_repo cowprotocol       contracts                 gp2-contracts
@@ -102,7 +101,6 @@ clone_repo yieldprotocol     yield-liquidator-v2
 sync_branch brink-core                master
 sync_branch dappsys-monolithic        master
 sync_branch elf-contracts             main
-sync_branch ens                       master
 sync_branch ens-contracts             master
 sync_branch euler-contracts           master
 sync_branch gp2-contracts             main
