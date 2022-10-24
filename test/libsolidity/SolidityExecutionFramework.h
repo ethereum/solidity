@@ -40,8 +40,14 @@ class SolidityExecutionFramework: public solidity::test::ExecutionFramework
 
 public:
 	SolidityExecutionFramework(): m_showMetadata(solidity::test::CommonOptions::get().showMetadata) {}
-	explicit SolidityExecutionFramework(langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _vmPaths):
-		ExecutionFramework(_evmVersion, _vmPaths), m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
+	explicit SolidityExecutionFramework(
+		langutil::EVMVersion _evmVersion,
+		std::vector<boost::filesystem::path> const& _vmPaths,
+		bool _appendCBORMetadata = true
+	):
+		ExecutionFramework(_evmVersion, _vmPaths),
+		m_showMetadata(solidity::test::CommonOptions::get().showMetadata),
+		m_appendCBORMetadata(_appendCBORMetadata)
 	{}
 
 	bytes const& compileAndRunWithoutCheck(
@@ -80,6 +86,7 @@ protected:
 	bool m_compileViaYul = false;
 	bool m_compileToEwasm = false;
 	bool m_showMetadata = false;
+	bool m_appendCBORMetadata = true;
 	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
 	RevertStrings m_revertStrings = RevertStrings::Default;
 };

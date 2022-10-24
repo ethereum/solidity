@@ -35,6 +35,8 @@
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <boost/algorithm/string.hpp>
 
 #include <fmt/format.h>

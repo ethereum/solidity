@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "When the parameter \"appendCBOR\" is set to false, the parameter \"bytecodeHash\" cannot be set to \"ipfs\". The parameter \"bytecodeHash\" should either be skipped, or set to \"none\".",
+            "message": "When the parameter \"appendCBOR\" is set to false, the parameter \"bytecodeHash\" cannot be set to \"ipfs\". The parameter \"bytecodeHash\" should either be skipped, or set to \"none\".",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

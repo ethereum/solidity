@@ -197,7 +197,7 @@ source unit name.
 
     A source unit name is just an identifier and even if its value happens to look like a path, it
     is not subject to the normalization rules you would typically expect in a shell.
-    Any ``/./`` or ``/../`` seguments or sequences of multiple slashes remain a part of it.
+    Any ``/./`` or ``/../`` segments or sequences of multiple slashes remain a part of it.
     When the source is provided via Standard JSON interface it is entirely possible to associate
     different content with source unit names that would refer to the same file on disk.
 
@@ -248,19 +248,14 @@ and is bounded by two path separators.
 A separator is a forward slash or the beginning/end of the string.
 For example in ``./abc/..//`` there are three path segments: ``.``, ``abc`` and ``..``.
 
-The compiler computes a source unit name from the import path in the following way:
+The compiler resolves the import into a source unit name based on the import path, in the following way:
 
-1. First a prefix is computed
-
-    - Prefix is initialized with the source unit name of the importing source unit.
-    - The last path segment with preceding slashes is removed from the prefix.
-    - Then, the leading part of the normalized import path, consisting only of ``/`` and ``.``
-      characters is considered.
-      For every ``..`` segment found in this part the last path segment with preceding slashes is
-      removed from the prefix.
-
-2. Then the prefix is prepended to the normalized import path.
-   If the prefix is non-empty, a single slash is inserted between it and the import path.
+#. We start with the source unit name of the importing source unit.
+#. The last path segment with preceding slashes is removed from the resolved name.
+#. Then, for every segment in the import path, starting from the leftmost one:
+    - If the segment is ``.``, it is skipped.
+    - If the segment is ``..``, the last path segment with preceding slashes is removed from the resolved name.
+    - Otherwise, the segment (preceded by a single slash if the resolved name is not empty), is appended to the resolved name.
 
 The removal of the last path segment with preceding slashes is understood to
 work as follows:
@@ -268,14 +263,10 @@ work as follows:
 1. Everything past the last slash is removed (i.e. ``a/b//c.sol`` becomes ``a/b//``).
 2. All trailing slashes are removed (i.e. ``a/b//`` becomes ``a/b``).
 
-The normalization rules are the same as for UNIX paths, namely:
-
-- All the internal ``.`` segments are removed.
-- Every internal ``..`` segment backtracks one level up in the hierarchy.
-- Multiple slashes are squashed into a single one.
-
-Note that normalization is performed only on the import path.
-The source unit name of the importing module that is used for the prefix remains unnormalized.
+Note that the process normalizes the part of the resolved source unit name that comes from the import path according
+to the usual rules for UNIX paths, i.e. all ``.`` and ``..`` are removed and multiple slashes are
+squashed into a single one.
+On the other hand, the part that comes from the source unit name of the importing module remains unnormalized.
 This ensures that the ``protocol://`` part does not turn into ``protocol:/`` if the importing file
 is identified with a URL.
 

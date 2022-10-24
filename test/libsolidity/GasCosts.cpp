@@ -92,6 +92,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		}
 	)";
 	m_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
+	m_appendCBORMetadata = false;
 	compileAndRun(sourceCode);
 
 	auto evmVersion = solidity::test::CommonOptions::get().evmVersion();
