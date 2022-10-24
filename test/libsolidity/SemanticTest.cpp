@@ -520,7 +520,7 @@ TestCase::TestResult SemanticTest::runTest(
 				m_gasCostFailure ? TestFunctionCall::RenderMode::ExpectedValuesActualGas : TestFunctionCall::RenderMode::ActualValuesExpectedGas,
 				_formatted,
 				/* _interactivePrint */ true
-			);
+			) << endl;
 
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
