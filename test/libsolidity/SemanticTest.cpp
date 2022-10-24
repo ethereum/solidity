@@ -520,7 +520,6 @@ TestCase::TestResult SemanticTest::runTest(
 				_formatted,
 				/* _interactivePrint */ true
 			);
-
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
