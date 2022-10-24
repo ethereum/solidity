@@ -10,7 +10,7 @@ env:
   ORGANIZATION: ethereum
   REPOSITORY: solidity
   PROJECT_NUMBER: 43
-  DRY_RUN: true
+  DRY_RUN: false
 
 jobs:
   triage_issues:
