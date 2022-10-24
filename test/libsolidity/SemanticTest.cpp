@@ -510,7 +510,6 @@ TestCase::TestResult SemanticTest::runTest(
 		_stream << endl;
 
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
-
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
@@ -521,7 +520,6 @@ TestCase::TestResult SemanticTest::runTest(
 				_formatted,
 				/* _interactivePrint */ true
 			) << endl;
-
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
