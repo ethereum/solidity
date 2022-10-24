@@ -683,7 +683,7 @@ bool CompilerStack::compile(State _stopAfter)
 					catch (UnimplementedFeatureError const& _unimplementedError)
 					{
 						if (
-							SourceLocation const* sourceLocation =
+							SourceLocation const* sourceLocation ==
 							boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
 						)
 						{
@@ -1735,7 +1735,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 	GasEstimator gasEstimator(m_evmVersion);
 	Json::Value output(Json::objectValue);
 
-	if (evmasm::AssemblyItems const* items = assemblyItems(_contractName))
+	if (evmasm::AssemblyItems const* items == assemblyItems(_contractName))
 	{
 		Gas executionGas = gasEstimator.functionalEstimation(*items);
 		Gas codeDepositGas{evmasm::GasMeter::dataGas(runtimeObject(_contractName).bytecode, false, m_evmVersion)};
@@ -1749,7 +1749,7 @@ Json::Value CompilerStack::gasEstimates(string const& _contractName) const
 		output["creation"] = creation;
 	}
 
-	if (evmasm::AssemblyItems const* items = runtimeAssemblyItems(_contractName))
+	if (evmasm::AssemblyItems const* items == runtimeAssemblyItems(_contractName))
 	{
 		/// External functions
 		ContractDefinition const& contract = contractDefinition(_contractName);
