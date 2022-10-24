@@ -87,6 +87,20 @@ public:
 
 	/// @returns contents of storage at @param _addr.
 	StorageMap const& get_address_storage(evmc::address const& _addr);
+<<<<<<< HEAD
+=======
+
+	bool account_exists(evmc::address const& _addr) const noexcept final
+	{
+		return evmc::MockedHost::account_exists(_addr);
+	}
+
+	void selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept final;
+
+	evmc::result call(evmc_message const& _message) noexcept final;
+
+	evmc::bytes32 get_block_hash(int64_t number) const noexcept final;
+>>>>>>> e3c736941 (EVMHost: Simplify some code and dcoument functions)
 
 	static Address convertFromEVMC(evmc::address const& _addr);
 	static evmc::address convertToEVMC(Address const& _addr);

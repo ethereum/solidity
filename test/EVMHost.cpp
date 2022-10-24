@@ -439,7 +439,16 @@ evmc::result EVMHost::precompileSha256(evmc_message const& _message) noexcept
 		_message.input_data + _message.input_size
 	));
 
+<<<<<<< HEAD
 	return resultWithGas(_message, hash);
+=======
+	evmc::result result({});
+	result.status_code = EVMC_SUCCESS;
+	result.gas_left = _message.gas;
+	result.output_data = hash.data();
+	result.output_size = hash.size();
+	return result;
+>>>>>>> e3c736941 (EVMHost: Simplify some code and dcoument functions)
 }
 
 evmc::result EVMHost::precompileRipeMD160(evmc_message const& _message) noexcept
@@ -514,7 +523,16 @@ evmc::result EVMHost::precompileIdentity(evmc_message const& _message) noexcept
 	bytes static data;
 	data = bytes(_message.input_data, _message.input_data + _message.input_size);
 
+<<<<<<< HEAD
 	return resultWithGas(_message, data);
+=======
+	evmc::result result({});
+	result.status_code = EVMC_SUCCESS;
+	result.gas_left = _message.gas;
+	result.output_data = data.data();
+	result.output_size = data.size();
+	return result;
+>>>>>>> e3c736941 (EVMHost: Simplify some code and dcoument functions)
 }
 
 evmc::result EVMHost::precompileModExp(evmc_message const&) noexcept
