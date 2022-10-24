@@ -735,7 +735,7 @@ jobs:
           name: Install Java
           command: |
             sudo apt -q update
-            sudo apt install -y openjdk-16-jdk
+            sudo apt install -y openjdk-17-jdk
       - run:
           name: Run tests
           command: ./scripts/test_antlr_grammar.sh
