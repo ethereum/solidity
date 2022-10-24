@@ -217,7 +217,7 @@ override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DTESTS=OFF ${CMAKE_OPTIONS}
+	dh_auto_configure -- -DTESTS=OFF -DFETCHCONTENT_FULLY_DISCONNECTED=OFF ${CMAKE_OPTIONS}
 EOF
 cat <<EOF > debian/copyright
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/

@@ -170,7 +170,7 @@ void EVMHost::reset()
 	}
 }
 
-void EVMHost::resetWarmAccess()
+void EVMHost::newTransactionFrame()
 {
 	// Clear EIP-2929 account access indicator
 	recorded_account_accesses.clear();
@@ -178,6 +178,10 @@ void EVMHost::resetWarmAccess()
 	for (auto& [address, account]: accounts)
 		for (auto& [slot, value]: account.storage)
 			value.access_status = EVMC_ACCESS_COLD;
+	// Process selfdestruct list
+	for (auto& [address, _]: recorded_selfdestructs)
+		accounts.erase(address);
+	recorded_selfdestructs.clear();
 }
 
 void EVMHost::transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept
@@ -190,12 +194,11 @@ void EVMHost::transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recip
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	// TODO reuse MockedHost::selfdestruct.
 
 	transfer(accounts[_addr], accounts[_beneficiary], convertFromEVMC(accounts[_addr].balance));
-	accounts.erase(_addr);
-	// Record self destructs
-	recorded_selfdestructs.push_back({_addr, _beneficiary});
+
+	// Record self destructs. Clearing will be done in newTransactionFrame().
+	MockedHost::selfdestruct(_addr, _beneficiary);
 }
 
 void EVMHost::recordCalls(evmc_message const& _message) noexcept

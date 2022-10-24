@@ -21,13 +21,17 @@
 
 #pragma once
 
-#include <libevmasm/Instruction.h>
-
 #include <optional>
 #include <string>
 
 #include <boost/operators.hpp>
 
+
+namespace solidity::evmasm
+{
+/// Virtual machine bytecode instruction. Forward declared from libevmasm/Instruction.h
+enum class Instruction: uint8_t;
+}
 
 namespace solidity::langutil
 {

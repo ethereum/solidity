@@ -60,7 +60,7 @@
     },
     {
         "uid": "SOL-2022-2",
-        "name": "NestedCallataArrayAbiReencodingSizeValidation",
+        "name": "NestedCalldataArrayAbiReencodingSizeValidation",
         "summary": "ABI-reencoding of nested dynamic calldata arrays did not always perform proper size checks against the size of calldata and could read beyond ``calldatasize()``.",
         "description": "Calldata validation for nested dynamic types is deferred until the first access to the nested values. Such an access may for example be a copy to memory or an index or member access to the outer type. While in most such accesses calldata validation correctly checks that the data area of the nested array is completely contained in the passed calldata (i.e. in the range [0, calldatasize()]), this check may not be performed, when ABI encoding such nested types again directly from calldata. For instance, this can happen, if a value in calldata with a nested dynamic array is passed to an external call, used in ``abi.encode`` or emitted as event. In such cases, if the data area of the nested array extends beyond ``calldatasize()``, ABI encoding it did not revert, but continued reading values from beyond ``calldatasize()`` (i.e. zero values).",
         "link": "https://blog.soliditylang.org/2022/05/17/calldata-reencode-size-check-bug/",

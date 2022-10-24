@@ -30,6 +30,8 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <libevmasm/Instruction.h>
+
 #include <range/v3/view/reverse.hpp>
 
 #include <range/v3/algorithm/max.hpp>

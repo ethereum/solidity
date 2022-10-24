@@ -509,6 +509,8 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 {
 	if (_input.isObject())
 	{
+		if (_input.isMember("appendCBOR") && !_input["appendCBOR"].isBool())
+			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.appendCBOR\" must be Boolean");
 		if (_input.isMember("useLiteralContent") && !_input["useLiteralContent"].isBool())
 			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.useLiteralContent\" must be Boolean");
 
@@ -516,7 +518,7 @@ std::optional<Json::Value> checkMetadataKeys(Json::Value const& _input)
 		if (_input.isMember("bytecodeHash") && !hashes.count(_input["bytecodeHash"].asString()))
 			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"");
 	}
-	static set<string> keys{"useLiteralContent", "bytecodeHash"};
+	static set<string> keys{"appendCBOR", "useLiteralContent", "bytecodeHash"};
 	return checkKeys(_input, keys, "settings.metadata");
 }
 
@@ -911,6 +913,12 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	if (auto result = checkMetadataKeys(metadataSettings))
 		return *result;
 
+	solAssert(CompilerStack::defaultMetadataFormat() != CompilerStack::MetadataFormat::NoMetadata, "");
+	ret.metadataFormat =
+		metadataSettings.get("appendCBOR", Json::Value(true)).asBool() ?
+		CompilerStack::defaultMetadataFormat() :
+		CompilerStack::MetadataFormat::NoMetadata;
+
 	ret.metadataLiteralSources = metadataSettings.get("useLiteralContent", Json::Value(false)).asBool();
 	if (metadataSettings.isMember("bytecodeHash"))
 	{
@@ -921,6 +929,13 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 				metadataHash == "bzzr1" ?
 				CompilerStack::MetadataHash::Bzzr1 :
 				CompilerStack::MetadataHash::None;
+		if (ret.metadataFormat == CompilerStack::MetadataFormat::NoMetadata && ret.metadataHash != CompilerStack::MetadataHash::None)
+			return formatFatalError(
+				Error::Type::JSONError,
+				"When the parameter \"appendCBOR\" is set to false, the parameter \"bytecodeHash\" cannot be set to \"" +
+				metadataHash +
+				"\". The parameter \"bytecodeHash\" should either be skipped, or set to \"none\"."
+			);
 	}
 
 	Json::Value outputSelection = settings.get("outputSelection", Json::Value());
@@ -1086,6 +1101,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		compilerStack.selectDebugInfo(_inputsAndSettings.debugInfoSelection.value());
 	compilerStack.setLibraries(_inputsAndSettings.libraries);
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
+	compilerStack.setMetadataFormat(_inputsAndSettings.metadataFormat);
 	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
 	compilerStack.setModelCheckerSettings(_inputsAndSettings.modelCheckerSettings);
