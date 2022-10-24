@@ -472,10 +472,10 @@ defaults:
       requires:
         - b_ubu_clang
 
-  - workflow_ubuntu2004_release: &workflow_ubuntu2004_release
+  - workflow_ubuntu2004_force_release: &workflow_ubuntu2004_force_release
       <<: *workflow_trigger_on_tags
       requires:
-        - b_ubu_release
+        - b_ubu_force_release
 
   - workflow_ubuntu2004_static: &workflow_ubuntu2004_static
       <<: *workflow_trigger_on_tags
@@ -847,7 +847,7 @@ jobs:
       CMAKE_OPTIONS: << parameters.cmake_options >>
     <<: *steps_build
 
-  b_ubu_release: &b_ubu_release
+  b_ubu_force_release: &b_ubu_force_release
     <<: *b_ubu
     environment:
       FORCE_RELEASE: ON
@@ -1093,16 +1093,16 @@ jobs:
       SOLTEST_FLAGS: --no-smt
     <<: *steps_soltest
 
-  t_ubu_release_soltest_all: &t_ubu_release_soltest_all
+  t_ubu_force_release_soltest_all: &t_ubu_force_release_soltest_all
     # NOTE: This definition is identical to t_ubu_soltest_all but in the workflow we make it depend on
-    # a different job (b_ubu_release) so the workspace it attaches contains a different executable.
+    # a different job (b_ubu_force_release) so the workspace it attaches contains a different executable.
     <<: *t_ubu_soltest_all
 
   t_ubu_cli: &t_ubu_cli
     <<: *base_ubuntu2004_small
     <<: *steps_cmdline_tests
 
-  t_ubu_release_cli: &t_ubu_release_cli
+  t_ubu_force_release_cli: &t_ubu_force_release_cli
     <<: *t_ubu_cli
 
   t_ubu_locale:
@@ -1590,9 +1590,9 @@ workflows:
       - t_ubu_lsp: *workflow_ubuntu2004
 
       # Ubuntu fake release build and tests
-      - b_ubu_release: *workflow_trigger_on_tags
-      - t_ubu_release_cli: *workflow_ubuntu2004_release
-      - t_ubu_release_soltest_all: *workflow_ubuntu2004_release
+      - b_ubu_force_release: *workflow_trigger_on_tags
+      - t_ubu_force_release_cli: *workflow_ubuntu2004_force_release
+      - t_ubu_force_release_soltest_all: *workflow_ubuntu2004_force_release
 
       # Emscripten build and tests that take 15 minutes or less
       - b_ems: *workflow_trigger_on_tags
