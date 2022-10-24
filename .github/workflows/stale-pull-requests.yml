@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/stale@v6
         with:
-          debug-only: true
+          debug-only: false
           # disable issues
           days-before-issue-stale: -1
           days-before-issue-close: -1
@@ -32,8 +32,8 @@ jobs:
           close-pr-label: closed-due-inactivity
           days-before-pr-stale: ${{ env.BEFORE_STALE }}
           days-before-pr-close: ${{ env.BEFORE_CLOSE }}
-          exempt-pr-labels: 'external contribution :star:'
+          exempt-pr-labels: 'external contribution :star:,roadmap,epic'
           exempt-draft-pr: true
           exempt-all-milestones: true
           remove-stale-when-updated: true
-          operations-per-run: 100
+          operations-per-run: 128
