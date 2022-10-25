@@ -1200,7 +1200,10 @@ jobs:
       - run:
           name: Run hardhat-core test suite
           command: |
-            HARDHAT_TESTS_SOLC_VERSION=$(scripts/get_version.sh)
+            # Since a recent release, Hardhat no longer accepts unreleased versions in this variable.
+            # TODO: Remove the hack when https://github.com/NomicFoundation/hardhat/issues/3295 is fixed.
+            #HARDHAT_TESTS_SOLC_VERSION=$(scripts/get_version.sh)
+            HARDHAT_TESTS_SOLC_VERSION=0.8.16
             export HARDHAT_TESTS_SOLC_VERSION
 
             # NOTE: This is expected to work without running `yarn build` first.
