@@ -1,4 +1,4 @@
-name: Report stale triaged issues
+name: Report stale issues
 
 on:
   workflow_dispatch:
@@ -7,38 +7,47 @@ on:
 
 env:
   PERIOD: 14 # in days
-  WAIT_FOR_INFO: "waiting for more info"
+  REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
+  WAIT_FOR_INFO: "waiting for more input"
   DRY_RUN: true
 
 jobs:
-  check-status:
-    name: Retrieve all open issues that are inactive for more than ${{ env.PERIOD }} days
+  check-issue-status:
+    name: Retrieve all open issues that are inactive
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2.5.0
       - name: Get period date
         id: date
         run: |
-          period_date=$(date -d "${{ env.PERIOD }} days ago" -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "::set-output name=period::$period_date"
+          period_date=$(date -d "$PERIOD days ago" -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "period=$period_date" >> $GITHUB_OUTPUT
       - name: Get inactive open issues
         if: ${{ success() }}
-        id: stale-issues
-        uses: lee-dohm/select-matching-issues@v1
+        id: stale_issues
+        uses: ./.github/actions/query-issues
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          query: 'is:issue is:open updated:<${{ steps.date.outputs.period }}'
+          query: 'repo:${{ env.REPO }} is:issue is:open updated:<${{ steps.date.outputs.period }}'
       - name: Comment on found issues
         if: ${{ success() }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for issue_url in $(cat ${{ steps.stale-issues.outputs.path }}); do
-            # Filter issues that were triaged and are not waiting for more info
+          query_result=$(
+            jq --raw-output \
+               --null-input \
+               --argjson result '${{ steps.stale_issues.outputs.query_result }}' \
+               '[$result.data.search.nodes[].url] | @sh' \
+               | tr -d \'
+          )
+          for issue_url in $query_result; do
+            # Filter issues that were triaged and are not waiting for more information
             stale_triaged=$(gh issue view $issue_url \
                                     --json labels \
-                                    --jq '.labels | map(.name != "${{ env.WAIT_FOR_INFO }}") | all and length > 0')
-            if [[ "$stale_triaged" == "true" ]]; then
-              if [[ "${{ env.DRY_RUN }}" == "true" ]]; then
+                                    --jq '.labels | map(.name != "$WAIT_FOR_INFO") | all and length > 0')
+            if [[ $stale_triaged == 'true' ]]; then
+              if [[ $DRY_RUN == 'true' ]]; then
                 echo "Commenting on issue: $issue_url"
               else
                 gh issue comment $issue_url --body "Hey, devs! I have been waiting for too long. Please give me some attention! :-)"

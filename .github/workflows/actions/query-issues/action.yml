@@ -1,0 +1,40 @@
+name: Query issues using GraphQL API
+inputs:
+  token:
+    description: 'The GITHUB_TOKEN secret'
+    required: true
+  query:
+    description: "The GraphQL search query to be executed"
+    required: true
+    type: string
+outputs:
+  query_result:
+    description: "The result of the query"
+    value: ${{ steps.get_issues.outputs.query_result }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: get_issues
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        result="$(gh api graphql \
+          --field search_query="${{ inputs.query }}" \
+          --raw-field query='
+            query($search_query: String!, $cursor: String) {
+              search(first: 100, query: $search_query, type: ISSUE, after: $cursor) {
+                pageInfo {
+                  hasNextPage,
+                  endCursor
+                }
+                nodes {
+                  ... on Issue {
+                    title
+                    url
+                  }
+                }
+              }
+            }')"
+        echo "query_result=$result" >> $GITHUB_OUTPUT
