@@ -1,4 +1,4 @@
-name: Report stale issues
+name: Check stale issues
 
 on:
   workflow_dispatch:
