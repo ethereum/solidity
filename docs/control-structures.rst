@@ -258,7 +258,7 @@ Solidity使用 ``extcodesize`` 操作码来检查即将被调用的合约是否�
                 salt,
                 keccak256(abi.encodePacked(
                     type(D).creationCode,
-                    arg
+                    abi.encode(arg)
                 ))
             )))));
 

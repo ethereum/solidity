@@ -3,9 +3,14 @@ Solidity
 
 Solidity是一门为实现智能合约而创建的面向对象的高级编程语言。 智能合约是管理以太坊中账户行为的程序。
 
+<<<<<<< HEAD
 Solidity是一种 `带花括号的语言 <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_.
 这门语言受到了 C++，Python 和 Javascript 的影响，并且旨在针对以太坊虚拟机（EVM）。
 您可以在 :doc:`语言的影响因素 <language-influences>` 这一章节中找到更多关于 Solidity 受到哪些语言启发的细节。
+=======
+Solidity is a `curly-bracket language <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_ designed to target the Ethereum Virtual Machine (EVM).
+It is influenced by C++, Python and JavaScript. You can find more details about which languages Solidity has been inspired by in the :doc:`language influences <language-influences>` section.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 Solidity 是静态类型语言，支持继承，库和复杂的用户自定义的类型以及其他特性。
 
@@ -20,15 +25,99 @@ Solidity 是静态类型语言，支持继承，库和复杂的用户自定义�
 
   Solidity最近发布了0.8.x版本，该版本引入了许多重大更新。 清务必阅读 :doc:`完整列表 <080-breaking-changes>`。
 
+<<<<<<< HEAD
 始终欢迎改进 Solidity 或此文档的想法,
 请阅读我们的 :doc:`贡献者指南 <contributing>` 以了解更多细节。
+=======
+Ideas for improving Solidity or this documentation are always welcome,
+read our :doc:`contributors guide <contributing>` for more details.
+
+.. Hint::
+
+  You can download this documentation as PDF, HTML or Epub by clicking on the versions
+  flyout menu in the bottom-left corner and selecting the preferred download format.
+
+
+Getting Started
+---------------
+
+**1. Understand the Smart Contract Basics**
+
+If you are new to the concept of smart contracts we recommend you to get started by digging
+into the "Introduction to Smart Contracts" section, which covers:
+
+* :ref:`A simple example smart contract <simple-smart-contract>` written in Solidity.
+* :ref:`Blockchain Basics <blockchain-basics>`.
+* :ref:`The Ethereum Virtual Machine <the-ethereum-virtual-machine>`.
+
+**2. Get to Know Solidity**
+
+Once you are accustomed to the basics, we recommend you read the :doc:`"Solidity by Example" <solidity-by-example>`
+and “Language Description” sections to understand the core concepts of the language.
+
+**3. Install the Solidity Compiler**
+
+There are various ways to install the Solidity compiler,
+simply choose your preferred option and follow the steps outlined on the :ref:`installation page <installing-solidity>`.
+
+.. hint::
+  You can try out code examples directly in your browser with the
+  `Remix IDE <https://remix.ethereum.org>`_. Remix is a web browser based IDE
+  that allows you to write, deploy and administer Solidity smart contracts, without
+  the need to install Solidity locally.
+
+.. warning::
+    As humans write software, it can have bugs. You should follow established
+    software development best-practices when writing your smart contracts. This
+    includes code review, testing, audits, and correctness proofs. Smart contract
+    users are sometimes more confident with code than their authors, and
+    blockchains and smart contracts have their own unique issues to
+    watch out for, so before working on production code, make sure you read the
+    :ref:`security_considerations` section.
+
+**4. Learn More**
+
+If you want to learn more about building decentralized applications on Ethereum, the
+`Ethereum Developer Resources <https://ethereum.org/en/developers/>`_
+can help you with further general documentation around Ethereum, and a wide selection of tutorials,
+tools and development frameworks.
+
+If you have any questions, you can try searching for answers or asking on the
+`Ethereum StackExchange <https://ethereum.stackexchange.com/>`_, or
+our `Gitter channel <https://gitter.im/ethereum/solidity/>`_.
+
+.. _translations:
+
+Translations
+------------
+
+Community contributors help translate this documentation into several languages.
+Note that they have varying degrees of completeness and up-to-dateness. The English
+version stands as a reference.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+
+You can switch between languages by clicking on the flyout menu in the bottom-left corner
+and selecting the preferred language.
+
+* `French <https://docs.soliditylang.org/fr/latest/>`_
+* `Indonesian <https://github.com/solidity-docs/id-indonesian>`_
+* `Persian <https://github.com/solidity-docs/fa-persian>`_
+* `Japanese <https://github.com/solidity-docs/ja-japanese>`_
+* `Korean <https://github.com/solidity-docs/ko-korean>`_
+* `Chinese <https://github.com/solidity-docs/zh-cn-chinese/>`_
 
 .. note::
 
+<<<<<<< HEAD
   您可以通过点击左下角的版本号弹出的菜单来选择首选的下载格式来下载该文档的 PDF、HTML 或 Epub 格式。
 
 开始入门
 ---------------
+=======
+   We recently set up a new GitHub organization and translation workflow to help streamline the
+   community efforts. Please refer to the `translation guide <https://github.com/solidity-docs/translation-guide>`_
+   for information on how to start a new language or contribute to the community translations.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 **1. 理解合约基础概念**
 

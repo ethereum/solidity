@@ -65,8 +65,14 @@ Solidity支持多重继承，包括多态性。
     }
 
 
+<<<<<<< HEAD
     // 可以多重继承。请注意， `owned` 也是 `Destructible` 的基类，
     // 但只有一个 `owned` 实例（就像 C++ 中的虚拟继承）。
+=======
+    // Multiple inheritance is possible. Note that `Owned` is
+    // also a base class of `Destructible`, yet there is only a single
+    // instance of `Owned` (as for virtual inheritance in C++).
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
     contract Named is Owned, Destructible {
         constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
@@ -377,8 +383,8 @@ Solidity支持多重继承，包括多态性。
     abstract contract A {
         uint public a;
 
-        constructor(uint _a) {
-            a = _a;
+        constructor(uint a_) {
+            a = a_;
         }
     }
 
@@ -399,7 +405,7 @@ Solidity支持多重继承，包括多态性。
     在0.7.0版本之前，您必须指定构造函数的可见性为 ``internal`` 或 ``public``。
 
 
-.. index:: ! base;constructor
+.. index:: ! base;constructor, inheritance list, contract;abstract, abstract contract
 
 基本构造函数的参数
 ===============================
@@ -415,7 +421,7 @@ Solidity支持多重继承，包括多态性。
 
     contract Base {
         uint x;
-        constructor(uint _x) { x = _x; }
+        constructor(uint x_) { x = x_; }
     }
 
     // 要么直接在继承列表中指定...
@@ -423,11 +429,25 @@ Solidity支持多重继承，包括多态性。
         constructor() {}
     }
 
+<<<<<<< HEAD
     // 或者通过派生构造函数的一个 "修改器"。
+=======
+    // or through a "modifier" of the derived constructor...
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
     contract Derived2 is Base {
-        constructor(uint _y) Base(_y * _y) {}
+        constructor(uint y) Base(y * y) {}
     }
 
+    // or declare abstract...
+    abstract contract Derived3 is Base {
+    }
+
+    // and have the next concrete derived contract initialize it.
+    contract DerivedFromDerived is Derived3 {
+        constructor() Base(10 + 10) {}
+    }
+
+<<<<<<< HEAD
 一种方式是直接在继承列表中给出（ ``is Base(7)`` ）。
 另一种是通过修改器作为派生构造函数的一部分被调用的方式（ ``Base(_y * _y)`` ）。
 如果构造函数参数是一个常量，并且定义了合约的行为或描述了它，那么第一种方式更方便。
@@ -436,6 +456,26 @@ Solidity支持多重继承，包括多态性。
 在两个地方都指定参数是一个错误。
 
 如果一个派生合约没有指定其所有基类合约的构造函数的参数，它将是抽象的合约。
+=======
+One way is directly in the inheritance list (``is Base(7)``).  The other is in
+the way a modifier is invoked as part of
+the derived constructor (``Base(y * y)``). The first way to
+do it is more convenient if the constructor argument is a
+constant and defines the behaviour of the contract or
+describes it. The second way has to be used if the
+constructor arguments of the base depend on those of the
+derived contract. Arguments have to be given either in the
+inheritance list or in modifier-style in the derived constructor.
+Specifying arguments in both places is an error.
+
+If a derived contract does not specify the arguments to all of its base
+contracts' constructors, it must be declared abstract. In that case, when
+another contract derives from it, that other contract's inheritance list
+or constructor must provide the necessary parameters
+for all base classes that haven't had their parameters specified (otherwise,
+that other contract must be declared abstract as well). For example, in the above
+code snippet, see ``Derived3`` and ``DerivedFromDerived``.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. index:: ! inheritance;multiple, ! linearization, ! C3 linearization
 

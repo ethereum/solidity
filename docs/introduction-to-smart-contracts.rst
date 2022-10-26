@@ -152,8 +152,8 @@ Solidity意义上的合约是代码（其 *函数*）和数据（其 *状态*）
 
 .. code-block:: solidity
 
-    function balances(address _account) external view returns (uint) {
-        return balances[_account];
+    function balances(address account) external view returns (uint) {
+        return balances[account];
     }
 
 您可以用这个函数来查询单个账户的余额。
@@ -342,6 +342,7 @@ Solidity意义上的合约是代码（其 *函数*）和数据（其 *状态*）
 Gas
 ===
 
+<<<<<<< HEAD
 一经创建，每笔交易都收取一定数量的 **gas** ，
 目的是限制执行交易所需要的工作量和为交易支付手续费。
 当EVM 执行交易时，gas 将按特定规则逐渐耗尽。
@@ -352,13 +353,40 @@ Gas
 
 如果gas在任何时候都用完了（即会是负值），
 就会触发gas不足的异常，从而恢复在当前调用帧中对状态进行的所有修改。
+=======
+Upon creation, each transaction is charged with a certain amount of **gas**
+that has to be paid for by the originator of the transaction (``tx.origin``).
+While the EVM executes the
+transaction, the gas is gradually depleted according to specific rules.
+If the gas is used up at any point (i.e. it would be negative),
+an out-of-gas exception is triggered, which ends execution and reverts all modifications
+made to the state in the current call frame.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+
+This mechanism incentivizes economical use of EVM execution time
+and also compensates EVM executors (i.e. miners / stakers) for their work.
+Since each block has a maximum amount of gas, it also limits the amount
+of work needed to validate a block.
+
+The **gas price** is a value set by the originator of the transaction, who
+has to pay ``gas_price * gas`` up front to the EVM executor.
+If some gas is left after execution, it is refunded to the transaction originator.
+In case of an exception that reverts changes, already used up gas is not refunded.
+
+Since EVM executors can choose to include a transaction or not,
+transaction senders cannot abuse the system by setting a low gas price.
 
 .. index:: ! storage, ! memory, ! stack
 
 存储，内存和栈
 =============================
 
+<<<<<<< HEAD
 以太坊虚拟机有三个可以存储数据的区域-存储器，内存和堆栈，这将在以下段落中解释。
+=======
+The Ethereum Virtual Machine has three areas where it can store data:
+storage, memory and the stack.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 每个账户都有一个称为 **存储** 的数据区，在函数调用和交易之间是持久的。
 存储是一个键值存储，将256位的字映射到256位的字。
@@ -419,9 +447,16 @@ EVM的指令集应尽量保持最小，以避免不正确或不一致的实现�
 委托调用/代码调用和库
 =====================================
 
+<<<<<<< HEAD
 消息调用有一个特殊的变体，被称为 **委托调用（delegatecall）**，
 除了目标地址的代码是在调用合约的上下文中执行，
 ``msg.sender`` 和 ``msg.value`` 不改变它们的值之外，其他与消息调用相同。
+=======
+There exists a special variant of a message call, named **delegatecall**
+which is identical to a message call apart from the fact that
+the code at the target address is executed in the context (i.e. at the address) of the calling
+contract and ``msg.sender`` and ``msg.value`` do not change their values.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 这意味着合约可以在运行时动态地从不同的地址加载代码。
 存储，当前地址和余额仍然指的是调用合约，只是代码取自被调用的地址。
@@ -449,7 +484,7 @@ EVM的指令集应尽量保持最小，以避免不正确或不一致的实现�
 创建合约的调用 **create calls** 和普通消息调用的唯一区别在于，负载会被执行，
 执行的结果被存储为合约代码，调用者/创建者在栈上得到新合约的地址。
 
-.. index:: selfdestruct, self-destruct, deactivate
+.. index:: ! selfdestruct, deactivate
 
 停用和自毁
 ============================

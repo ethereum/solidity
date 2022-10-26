@@ -4,15 +4,16 @@ document.addEventListener('DOMContentLoaded', function() {
         var mode = (isDay ? "Day" : "Night");
         localStorage.setItem("css-mode", mode);
 
-        var daysheet = $('link[href="_static/pygments.css"]')[0].sheet;
+        var url_root = DOCUMENTATION_OPTIONS.URL_ROOT == "./" ? "" : DOCUMENTATION_OPTIONS.URL_ROOT;
+        var daysheet = $(`link[href="${url_root}_static/pygments.css"]`)[0].sheet;
         daysheet.disabled = !isDay;
 
-        var nightsheet = $('link[href="_static/css/dark.css"]')[0];
+        var nightsheet = $(`link[href="${url_root}_static/css/dark.css"]`)[0];
         if (!isDay && nightsheet === undefined) {
             var element = document.createElement("link");
             element.setAttribute("rel", "stylesheet");
             element.setAttribute("type", "text/css");
-            element.setAttribute("href", "_static/css/dark.css");
+            element.setAttribute("href", `${url_root}_static/css/dark.css`);
             document.getElementsByTagName("head")[0].appendChild(element);
             return;
         }

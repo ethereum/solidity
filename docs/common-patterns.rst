@@ -137,6 +137,7 @@
         /// 函数调用时没有发送足够的以太。
         error NotEnoughEther();
 
+<<<<<<< HEAD
         // 修饰器可以用来更改
         // 一个函数的函数体。
         // 如果使用这个修饰器，
@@ -144,8 +145,17 @@
         // 来自特定地址的
         // 函数调用。
         modifier onlyBy(address _account)
+=======
+        // Modifiers can be used to change
+        // the body of a function.
+        // If this modifier is used, it will
+        // prepend a check that only passes
+        // if the function is called from
+        // a certain address.
+        modifier onlyBy(address account)
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
         {
-            if (msg.sender != _account)
+            if (msg.sender != account)
                 revert Unauthorized();
             // 不要忘记写 “_;”！
             // 它会被实际使用这个修饰器的
@@ -153,16 +163,22 @@
             _;
         }
 
+<<<<<<< HEAD
         /// 使 `_newOwner` 成为这个合约的新所有者。
         function changeOwner(address _newOwner)
+=======
+        /// Make `newOwner` the new owner of this
+        /// contract.
+        function changeOwner(address newOwner)
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             public
             onlyBy(owner)
         {
-            owner = _newOwner;
+            owner = newOwner;
         }
 
-        modifier onlyAfter(uint _time) {
-            if (block.timestamp < _time)
+        modifier onlyAfter(uint time) {
+            if (block.timestamp < time)
                 revert TooEarly();
             _;
         }
@@ -178,6 +194,7 @@
             delete owner;
         }
 
+<<<<<<< HEAD
         // 这个修饰器要求对函数调用
         // 绑定一定的费用。
         // 如果调用方发送了过多的费用，
@@ -186,20 +203,35 @@
         // 因为很可能会跳过 `_;` 之后的代码。
         modifier costs(uint _amount) {
             if (msg.value < _amount)
+=======
+        // This modifier requires a certain
+        // fee being associated with a function call.
+        // If the caller sent too much, he or she is
+        // refunded, but only after the function body.
+        // This was dangerous before Solidity version 0.4.0,
+        // where it was possible to skip the part after `_;`.
+        modifier costs(uint amount) {
+            if (msg.value < amount)
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
                 revert NotEnoughEther();
 
             _;
-            if (msg.value > _amount)
-                payable(msg.sender).transfer(msg.value - _amount);
+            if (msg.value > amount)
+                payable(msg.sender).transfer(msg.value - amount);
         }
 
-        function forceOwnerChange(address _newOwner)
+        function forceOwnerChange(address newOwner)
             public
             payable
             costs(200 ether)
         {
+<<<<<<< HEAD
             owner = _newOwner;
             // 这只是示例条件
+=======
+            owner = newOwner;
+            // just some example condition
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             if (uint160(owner) & 0 == 1)
                 // 这无法在 0.4.0 版本之前的
                 // Solidity 上进行退还。
@@ -277,8 +309,8 @@
 
         uint public creationTime = block.timestamp;
 
-        modifier atStage(Stages _stage) {
-            if (stage != _stage)
+        modifier atStage(Stages stage_) {
+            if (stage != stage_)
                 revert FunctionInvalidAtThisStage();
             _;
         }

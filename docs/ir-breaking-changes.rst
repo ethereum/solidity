@@ -1,6 +1,8 @@
 
 .. index: ir breaking changes
 
+.. _ir-breaking-changes:
+
 *********************************
 基于Solidity中间表征的Codegen变化
 *********************************
@@ -12,6 +14,7 @@ Solidity可以通过两种不同的方式生成EVM字节码：
 引入基于IR的代码生成器的目的是，不仅使代码生成更加透明和可审计，
 而且能够实现更强大的跨函数的优化通道。
 
+<<<<<<< HEAD
 目前，基于IR的代码生成器仍被标记为实验性的，
 但它支持所有的语言功能，并得到了大量的测试，
 所以我们认为它几乎可以用于生产。
@@ -19,6 +22,11 @@ Solidity可以通过两种不同的方式生成EVM字节码：
 您可以在命令行中使用 ``--experimental-via-ir``
 或在standard-json中使用 ``{"viaIR": true}`` 选项来启用它，
 我们鼓励大家尝试一下！
+=======
+You can enable it on the command line using ``--via-ir``
+or with the option ``{"viaIR": true}`` in standard-json and we
+encourage everyone to try it out!
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 由于一些原因，旧的和基于IR的代码生成器之间存在着微小的语义差异，
 主要是在那些我们无论如何也不会期望人们依赖这种行为的领域。
@@ -29,10 +37,62 @@ Solidity可以通过两种不同的方式生成EVM字节码：
 
 本节列出了仅有语义的变化，从而有可能在现有的代码中隐藏新的和不同的行为。
 
+<<<<<<< HEAD
 - 当存储结构被删除时，包含该结构成员的每个存储槽都被完全设置为零。
   以前，填充空间是不被触动的。
   因此，如果结构中的填充空间被用来存储数据（例如在合约升级的背景下），
   您必须注意， ``delete`` 现在也会清除添加的成员（而在过去不会被清除）。
+=======
+- The order of state variable initialization has changed in case of inheritance.
+
+  The order used to be:
+
+  - All state variables are zero-initialized at the beginning.
+  - Evaluate base constructor arguments from most derived to most base contract.
+  - Initialize all state variables in the whole inheritance hierarchy from most base to most derived.
+  - Run the constructor, if present, for all contracts in the linearized hierarchy from most base to most derived.
+
+  New order:
+
+  - All state variables are zero-initialized at the beginning.
+  - Evaluate base constructor arguments from most derived to most base contract.
+  - For every contract in order from most base to most derived in the linearized hierarchy:
+
+      1. Initialize state variables.
+      2. Run the constructor (if present).
+
+  This causes differences in contracts where the initial value of a state
+  variable relies on the result of the constructor in another contract:
+
+  .. code-block:: solidity
+
+      // SPDX-License-Identifier: GPL-3.0
+      pragma solidity >=0.7.1;
+
+      contract A {
+          uint x;
+          constructor() {
+              x = 42;
+          }
+          function f() public view returns(uint256) {
+              return x;
+          }
+      }
+      contract B is A {
+          uint public y = f();
+      }
+
+  Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
+  With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
+
+- When storage structs are deleted, every storage slot that contains
+  a member of the struct is set to zero entirely. Formerly, padding space
+  was left untouched.
+  Consequently, if the padding space within a struct is used to store data
+  (e.g. in the context of a contract upgrade), you have to be aware that
+  ``delete`` will now also clear the added member (while it wouldn't
+  have been cleared in the past).
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
   .. code-block:: solidity
 
@@ -69,8 +129,8 @@ Solidity可以通过两种不同的方式生成EVM字节码：
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.7.0;
       contract C {
-          function f(uint _a) public pure mod() returns (uint _r) {
-              _r = _a++;
+          function f(uint a) public pure mod() returns (uint r) {
+              r = a++;
           }
           modifier mod() { _; _; }
       }
@@ -105,6 +165,7 @@ Solidity可以通过两种不同的方式生成EVM字节码：
     而且 ``foo()`` 也没有明确地分配给它（由于 ``active == false``），因此它保持了它的第一个值。
   - 新的代码生成器： ``0`` 作为所有参数，包括返回参数，将在每次 ``_;`` 使用前被重新初始化。
 
+<<<<<<< HEAD
 - 在继承的情况下，合约初始化的顺序已经改变。
 
   以前的顺序是：
@@ -177,6 +238,8 @@ Solidity可以通过两种不同的方式生成EVM字节码：
   现在它返回 ``0x6465616462656600000000000000000000000010``
   （它有正确的长度，和正确的元素，但不包含多余的数据）。
 
+=======
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
   .. index:: ! evaluation order; expression
 
 - 对于旧的代码生成器，表达式的评估顺序是没有规定的。
@@ -190,8 +253,8 @@ Solidity可以通过两种不同的方式生成EVM字节码：
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function preincr_u8(uint8 _a) public pure returns (uint8) {
-              return ++_a + _a;
+          function preincr_u8(uint8 a) public pure returns (uint8) {
+              return ++a + a;
           }
       }
 
@@ -210,11 +273,11 @@ Solidity可以通过两种不同的方式生成EVM字节码：
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function add(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return _a + _b;
+          function add(uint8 a, uint8 b) public pure returns (uint8) {
+              return a + b;
           }
-          function g(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return add(++_a + ++_b, _a + _b);
+          function g(uint8 a, uint8 b) public pure returns (uint8) {
+              return add(++a + ++b, a + b);
           }
       }
 
@@ -311,13 +374,13 @@ ID ``0`` 是为未初始化的函数指针保留的，这些指针在被调用�
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.1;
     contract C {
-        function f(uint8 _a) public pure returns (uint _r1, uint _r2)
+        function f(uint8 a) public pure returns (uint r1, uint r2)
         {
-            _a = ~_a;
+            a = ~a;
             assembly {
-                _r1 := _a
+                r1 := a
             }
-            _r2 = _a;
+            r2 = a;
         }
     }
 
@@ -326,6 +389,12 @@ ID ``0`` 是为未初始化的函数指针保留的，这些指针在被调用�
 - 旧的代码生成器：（ ``fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe``, ``00000000000000000000000000000000000000000000000000000000000000fe``）
 - 新的代码生成器：（ ``00000000000000000000000000000000000000000000000000000000000000fe``, ``00000000000000000000000000000000000000000000000000000000000000fe``）
 
+<<<<<<< HEAD
 请注意，与新的代码生成器不同，旧的代码生成器在位取反赋值（ ``_a = ~_a`` ）后没有进行清理。
 这导致新旧代码生成器之间对返回值 ``_r1`` 的赋值（在内联汇编块内）不同。
 然而，两个代码生成器在 ``_a`` 的新值被分配到 ``_r2`` 之前都进行了清理。
+=======
+Note that, unlike the new code generator, the old code generator does not perform a cleanup after the bit-not assignment (``a = ~a``).
+This results in different values being assigned (within the inline assembly block) to return value ``r1`` between the old and new code generators.
+However, both code generators perform a cleanup before the new value of ``a`` is assigned to ``r2``.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692

@@ -574,11 +574,16 @@ Yul中的作用域是与块联系在一起的（函数和for循环是例外，�
     E(G, L, <var_1, ..., var_n := rhs>: Assignment) =
         let G1, L1, v1, ..., vn = E(G, L, rhs)
         let L2 be a copy of L1 where L2[$var_i] = vi for i = 1, ..., n
-        G, L2, regular
+        G1, L2, regular
     E(G, L, <for { i1, ..., in } condition post body>: ForLoop) =
         if n >= 1:
+<<<<<<< HEAD
             let G1, L, mode = E(G, L, i1, ..., in)
             // 由于语法限制，mode 必须是规则的
+=======
+            let G1, L1, mode = E(G, L, i1, ..., in)
+            // mode has to be regular or leave due to the syntactic restrictions
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             if mode is leave then
                 G1, L1 restricted to variables of L, leave
             otherwise
@@ -597,7 +602,7 @@ Yul中的作用域是与块联系在一起的（函数和for循环是例外，�
                 else:
                     G3, L3, mode = E(G2, L2, post)
                     if mode is leave:
-                        G2, L3, leave
+                        G3, L3, leave
                     otherwise
                         E(G3, L3, for {} condition post body)
     E(G, L, break: BreakContinue) =
@@ -1004,9 +1009,21 @@ Yul对象被用来分组命名代码和数据部分。
 
 .. note::
 
+<<<<<<< HEAD
     可以定义名称中包含 ``.`` 的数据对象或子对象，
     但不可能通过 ``datasize``， ``dataoffset`` 或 ``datacopy`` 访问它们，
     因为 ``.`` 是作为分隔符用来访问另一个对象内的对象。
+=======
+    An object with a name that ends in ``_deployed`` is treated as deployed code by the Yul optimizer.
+    The only consequence of this is a different gas cost heuristic in the optimizer.
+
+.. note::
+
+    Data objects or sub-objects whose names contain a ``.`` can be defined
+    but it is not possible to access them through ``datasize``,
+    ``dataoffset`` or ``datacopy`` because ``.`` is used as a separator
+    to access objects inside another object.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. note::
 
@@ -1046,6 +1063,7 @@ Yul对象被用来分组命名代码和数据部分。
             mstore(add(offset, size), 0x1234)
             pop(create(offset, add(size, 32), 0))
 
+<<<<<<< HEAD
             // 现在返回运行时对象
             //（当前执行的代码是构造函数代码）。
             size := datasize("runtime")
@@ -1053,12 +1071,21 @@ Yul对象被用来分组命名代码和数据部分。
             // 这将变成 Ewasm 的 内存->内存 拷贝
             // 和EVM的代码拷贝。
             datacopy(offset, dataoffset("runtime"), size)
+=======
+            // now return the runtime object (the currently
+            // executing code is the constructor code)
+            size := datasize("Contract1_deployed")
+            offset := allocate(size)
+            // This will turn into a memory->memory copy for Ewasm and
+            // a codecopy for EVM
+            datacopy(offset, dataoffset("Contract1_deployed"), size)
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             return(offset, size)
         }
 
         data "Table2" hex"4123"
 
-        object "runtime" {
+        object "Contract1_deployed" {
             code {
                 function allocate(size) -> ptr {
                     ptr := mload(0x40)
@@ -1080,7 +1107,7 @@ Yul对象被用来分组命名代码和数据部分。
                 // 此处是代码 ...
             }
 
-            object "runtime" {
+            object "Contract2_deployed" {
                 code {
                     // 此处是代码 ...
                 }
@@ -1106,7 +1133,13 @@ Yul优化器对Yul代码进行操作，并对输入、输出和中间状态使�
 
 在Solidity模式下，Yul优化器与常规优化器一起被激活。
 
+<<<<<<< HEAD
 优化步骤顺序
+=======
+.. _optimization-step-sequence:
+
+Optimization Step Sequence
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 --------------------------
 
 默认情况下，Yul优化器将其预定义的优化步骤序列应用于生成的程序集。

@@ -178,18 +178,18 @@ gas 限制和循环
     contract ProxyWithMoreFunctionality {
         PermissionlessProxy proxy;
 
-        function callOther(address _addr, bytes memory _payload) public
+        function callOther(address addr, bytes memory payload) public
                 returns (bool, bytes memory) {
-            return proxy.callOther(_addr, _payload);
+            return proxy.callOther(addr, payload);
         }
         // 其他函数和其他功能
     }
 
     // 这是完整的合约，它没有其他功能，不需要任何权限就可以工作。
     contract PermissionlessProxy {
-        function callOther(address _addr, bytes memory _payload) public
+        function callOther(address addr, bytes memory payload) public
                 returns (bool, bytes memory) {
-            return _addr.call(_payload);
+            return addr.call(payload);
         }
     }
 
@@ -294,17 +294,17 @@ Solidity ``mapping`` 类型（见 :ref:`mapping-types`）是一个仅有存储�
     contract Map {
         mapping (uint => uint)[] array;
 
-        function allocate(uint _newMaps) public {
-            for (uint i = 0; i < _newMaps; i++)
+        function allocate(uint newMaps) public {
+            for (uint i = 0; i < newMaps; i++)
                 array.push();
         }
 
-        function writeMap(uint _map, uint _key, uint _value) public {
-            array[_map][_key] = _value;
+        function writeMap(uint map, uint key, uint value) public {
+            array[map][key] = value;
         }
 
-        function readMap(uint _map, uint _key) public view returns (uint) {
-            return array[_map][_key];
+        function readMap(uint map, uint key) public view returns (uint) {
+            return array[map][key];
         }
 
         function eraseMaps() public {

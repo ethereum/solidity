@@ -12,6 +12,7 @@ options { tokenVocab=SolidityLexer; }
 sourceUnit: (
 	pragmaDirective
 	| importDirective
+	| usingDirective
 	| contractDefinition
 	| interfaceDefinition
 	| libraryDefinition
@@ -310,10 +311,15 @@ errorDefinition:
 	Semicolon;
 
 /**
+<<<<<<< HEAD
  * 使用指令将库函数与类型绑定。
  * 可以在合约和库中出现。
+=======
+ * Using directive to bind library functions and free functions to types.
+ * Can occur within contracts and libraries and at the file level.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
  */
-usingDirective: Using identifierPath For (Mul | typeName) Semicolon;
+usingDirective: Using (identifierPath | (LBrace identifierPath (Comma identifierPath)* RBrace)) For (Mul | typeName) Global? Semicolon;
 /**
  * 一个类型名称可以是一个基本类型，一个函数类型，一个映射类型，
  * 一个用户定义的类型（如合约类型或结构体类型）或一个数组类型。
@@ -387,7 +393,7 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * 除了常规的非关键字标识符，一些关键字如 ‘from‘ 和 ‘error‘ 也可以作为标识符。
  */
-identifier: Identifier | From | Error | Revert;
+identifier: Identifier | From | Error | Revert | Global;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 booleanLiteral: True | False;
@@ -474,7 +480,13 @@ revertStatement: Revert expression callArgumentList Semicolon;
  * 一个内联汇编代码块。
  * 内联汇编块的内容使用一个单独的扫描器/读取器，也就是说，内联汇编块内的关键字和允许的标识符集是不同的。
  */
-assemblyStatement: Assembly AssemblyDialect? AssemblyLBrace yulStatement* YulRBrace;
+assemblyStatement: Assembly AssemblyDialect? assemblyFlags? AssemblyLBrace yulStatement* YulRBrace;
+
+/**
+ * Assembly flags.
+ * Comma-separated list of double-quoted strings as flags.
+ */
+assemblyFlags: AssemblyBlockLParen AssemblyFlagString (AssemblyBlockComma AssemblyFlagString)* AssemblyBlockRParen;
 
 //@doc:inline
 variableDeclarationList: variableDeclarations+=variableDeclaration (Comma variableDeclarations+=variableDeclaration)*;

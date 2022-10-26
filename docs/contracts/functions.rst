@@ -16,26 +16,42 @@
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.1 <0.9.0;
 
-    function sum(uint[] memory _arr) pure returns (uint s) {
-        for (uint i = 0; i < _arr.length; i++)
-            s += _arr[i];
+    function sum(uint[] memory arr) pure returns (uint s) {
+        for (uint i = 0; i < arr.length; i++)
+            s += arr[i];
     }
 
     contract ArrayExample {
         bool found;
+<<<<<<< HEAD
         function f(uint[] memory _arr) public {
             // 这在内部调用自由函数。
             // 编译器会将其代码添加到合约中。
             uint s = sum(_arr);
+=======
+        function f(uint[] memory arr) public {
+            // This calls the free function internally.
+            // The compiler will add its code to the contract.
+            uint s = sum(arr);
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             require(s >= 10);
             found = true;
         }
     }
 
 .. note::
+<<<<<<< HEAD
     在合约之外定义的函数，仍然总是在合约的背景下执行。它们仍然可以访问变量 ``this``，
     可以调用其他合约，向它们发送以太，并销毁调用它们的合约，以及其他事项。
     与合约内定义的函数的主要区别是，自由函数不能直接访问不在其范围内的存储变量和函数。
+=======
+    Functions defined outside a contract are still always executed
+    in the context of a contract.
+    They still can call other contracts, send them Ether and destroy the contract that called them,
+    among other things. The main difference to functions defined inside a contract
+    is that free functions do not have direct access to the variable ``this``, storage variables and functions
+    not in their scope.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. _function-parameters-return-variables:
 
@@ -59,8 +75,8 @@
 
     contract Simple {
         uint sum;
-        function taker(uint _a, uint _b) public {
-            sum = _a + _b;
+        function taker(uint a, uint b) public {
+            sum = a + b;
         }
     }
 
@@ -88,13 +104,13 @@
     pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
-        function arithmetic(uint _a, uint _b)
+        function arithmetic(uint a, uint b)
             public
             pure
             returns (uint sum, uint product)
         {
-            sum = _a + _b;
-            product = _a * _b;
+            sum = a + b;
+            product = a * b;
         }
     }
 
@@ -111,12 +127,12 @@
     pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
-        function arithmetic(uint _a, uint _b)
+        function arithmetic(uint a, uint b)
             public
             pure
             returns (uint sum, uint product)
         {
-            return (_a + _b, _a * _b);
+            return (a + b, a * b);
         }
     }
 
@@ -283,11 +299,21 @@ receive 函数是在调用合约时执行的，并带有空的 calldata。
 - 发送以太币
 
 .. warning::
+<<<<<<< HEAD
     直接接收以太的合约（没有函数调用，即使用 ``send`` 或 ``transfer``），
     但没有定义接收以太的函数或 payable 类型的 fallback 函数，会抛出一个异常，
     将以太送回（这在Solidity v0.4.0之前是不同的）。因此，如果您想让您的合约接收以太，
     您必须实现一个 receive 函数（不建议使用 payable 类型的 fallback 函数来接收以太，
     因为它不会因为接口混乱而失败）。
+=======
+    When Ether is sent directly to a contract (without a function call, i.e. sender uses ``send`` or ``transfer``)
+    but the receiving contract does not define a receive Ether function or a payable fallback function,
+    an exception will be thrown, sending back the Ether (this was different
+    before Solidity v0.4.0). If you want your contract to receive Ether,
+    you have to implement a receive Ether function (using payable fallback functions for receiving Ether is
+    not recommended, since the fallback is invoked and would not fail for interface confusions
+    on the part of the sender).
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 
 .. warning::
@@ -322,19 +348,33 @@ receive 函数是在调用合约时执行的，并带有空的 calldata。
 Fallback 函数
 -----------------
 
+<<<<<<< HEAD
 一个合约最多可以有一个 ``fallback`` 函数，使用 ``fallback () external [payable]``
 或 ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
 来声明（都没有 ``function`` 关键字）。
 这个函数必须具有 ``external`` 的函数可见性。
 一个fallback函数可以是虚拟的，可以重载，也可以有修饰器。
+=======
+A contract can have at most one ``fallback`` function, declared using either ``fallback () external [payable]``
+or ``fallback (bytes calldata input) external [payable] returns (bytes memory output)``
+(both without the ``function`` keyword).
+This function must have ``external`` visibility. A fallback function can be virtual, can override
+and can have modifiers.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 如果其他函数都不符合给定的函数签名，或者根本没有提供数据，
 也没有 :ref:`接收以太的函数 <receive-ether-function>`，那么fallback函数将在调用合约时执行。
 fallback函数总是接收数据，但为了同时接收以太，它必须被标记为 ``payable``。
 
+<<<<<<< HEAD
 如果使用带参数的版本， ``_input``  将包含发送给合约的全部数据（等于 ``msg.data``），
 并可以在 ``_output`` 中返回数据。返回的数据将不会被ABI编码。
 相反，它将在没有修改的情况下返回（甚至没有填充）。
+=======
+If the version with parameters is used, ``input`` will contain the full data sent to the contract
+(equal to ``msg.data``) and can return data in ``output``. The returned data will not be
+ABI-encoded. Instead it will be returned without modifications (not even padding).
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 在最坏的情况下，如果一个可接收以太的fallback函数也被用来代替接收功能，
 那么它只有2300气体是可用的
@@ -349,10 +389,20 @@ fallback函数总是接收数据，但为了同时接收以太，它必须被标
     我们仍建议您也定义一个 receive 函数接收以太，以区分以太传输和接口混淆的情况。
 
 .. note::
+<<<<<<< HEAD
     如果您想对输入数据进行解码，您可以检查前四个字节的函数选择器，
     然后您可以使用 ``abi.decode`` 与数组切片语法一起对ABI编码的数据进行解码。
     ``(c, d) = abi.decode(_input[4:], (uint256, uint256));``
     注意，这只能作为最后的手段，应该使用适当的函数来代替。
+=======
+    If you want to decode the input data, you can check the first four bytes
+    for the function selector and then
+    you can use ``abi.decode`` together with the array slice syntax to
+    decode ABI-encoded data:
+    ``(c, d) = abi.decode(input[4:], (uint256, uint256));``
+    Note that this should only be used as a last resort and
+    proper functions should be used instead.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 
 .. code-block:: solidity
@@ -432,13 +482,13 @@ fallback函数总是接收数据，但为了同时接收以太，它必须被标
     pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
-        function f(uint _in) public pure returns (uint out) {
-            out = _in;
+        function f(uint value) public pure returns (uint out) {
+            out = value;
         }
 
-        function f(uint _in, bool _really) public pure returns (uint out) {
-            if (_really)
-                out = _in;
+        function f(uint value, bool really) public pure returns (uint out) {
+            if (really)
+                out = value;
         }
     }
 
@@ -451,12 +501,12 @@ fallback函数总是接收数据，但为了同时接收以太，它必须被标
 
     // 这段代码不会编译
     contract A {
-        function f(B _in) public pure returns (B out) {
-            out = _in;
+        function f(B value) public pure returns (B out) {
+            out = value;
         }
 
-        function f(address _in) public pure returns (address out) {
-            out = _in;
+        function f(address value) public pure returns (address out) {
+            out = value;
         }
     }
 
@@ -482,12 +532,12 @@ fallback函数总是接收数据，但为了同时接收以太，它必须被标
     pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
-        function f(uint8 _in) public pure returns (uint8 out) {
-            out = _in;
+        function f(uint8 val) public pure returns (uint8 out) {
+            out = val;
         }
 
-        function f(uint256 _in) public pure returns (uint256 out) {
-            out = _in;
+        function f(uint256 val) public pure returns (uint256 out) {
+            out = val;
         }
     }
 

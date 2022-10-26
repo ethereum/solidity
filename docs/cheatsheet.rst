@@ -2,12 +2,11 @@
 速查表
 **********
 
-.. index:: precedence
-
-.. _order:
+.. index:: operator; precedence
 
 操作符的优先顺序
 ================================
+<<<<<<< HEAD
 
 以下是按评估顺序列出的操作符优先级。
 
@@ -66,6 +65,9 @@
 | *15*   | 逗号           | ``,``                                                                                   |
 +--------+----------------+-----------------------------------------------------------------------------------------+
 
+=======
+.. include:: types/operator-precedence-table.rst
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
 
@@ -126,6 +128,7 @@
 - ``type(T).min`` (``T``)： 整数类型 ``T`` 所能代表的最小值，参见 :ref:`类型信息 <meta-type>`。
 - ``type(T).max`` (``T``)： 整数类型 ``T`` 所能代表的最大值，参见 :ref:`类型信息 <meta-type>`。
 
+<<<<<<< HEAD
 .. note::
     当合约在链下而不是在区块中包含的交易的背景下被计算时，
     您不应该认为 ``block.*`` 和 ``tx.*`` 是指任何特定区块或交易的值。
@@ -151,6 +154,8 @@
     ``sha3`` 是 ``keccak256`` 的别名。
 .. note::
     在0.7.0版本中，删除了别名 ``now`` （用于 ``block.timestamp``）。
+=======
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. index:: visibility, public, private, external, internal
 
@@ -185,6 +190,7 @@
 - ``virtual`` 修饰函数和修改时：允许在派生合约中改变函数或修改器的行为。
 - ``override`` 表示该函数、修改器或公共状态变量改变了基类合约中的函数或修改器的行为。
 
+<<<<<<< HEAD
 保留字
 =================
 
@@ -195,3 +201,5 @@
 ``mutable``， ``null``， ``of``， ``partial``， ``promise``， ``reference``， ``relocatable``，
 ``sealed``， ``sizeof``， ``static``， ``supports``， ``switch``， ``typedef``， ``typeof``，
 ``var``。
+=======
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692

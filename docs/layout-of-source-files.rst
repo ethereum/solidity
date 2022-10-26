@@ -2,11 +2,19 @@
 Solidity 源文件结构
 **********************
 
+<<<<<<< HEAD
 源文件可以包含任意数量的
 :ref:`contract 定义<contract_structure>`, import_ 指令,
 :ref:`pragma 指令<pragma>` 和 :ref:`struct<structs>`,
 :ref:`enum<enums>`, :ref:`function<functions>`, :ref:`error<errors>`
 以及 :ref:`constant 变量<constants>` 的定义。
+=======
+Source files can contain an arbitrary number of
+:ref:`contract definitions<contract_structure>`, import_ ,
+:ref:`pragma<pragma>` and :ref:`using for<using-for>` directives and
+:ref:`struct<structs>`, :ref:`enum<enums>`, :ref:`function<functions>`, :ref:`error<errors>`
+and :ref:`constant variable<constants>` definitions.
+>>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. index:: ! license, spdx
 
