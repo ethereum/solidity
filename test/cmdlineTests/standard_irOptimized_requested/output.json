@@ -1,4 +1,11 @@
-{"contracts":{"A":{"C":{"irOptimized":"/// @use-src 0:\"A\"
+{
+    "contracts":
+    {
+        "A":
+        {
+            "C":
+            {
+                "irOptimized": "/// @use-src 0:\"A\"
 object \"C_7\" {
     code {
         /// @src 0:79:121  \"contract C { function f() public pure {} }\"
@@ -69,4 +76,15 @@ object \"C_7\" {
         data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 }
-"}}},"sources":{"A":{"id":0}}}
+"
+            }
+        }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

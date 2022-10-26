@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x5953b22204605efc775a59974aec3ddf9f831e46e30a65e149873e6f48887590":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0x5953b22204605efc775a59974aec3ddf9f831e46e30a65e149873e6f48887590": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -20,7 +25,8 @@
 
 (assert (and (and (and true true) (and (= expr_15_0 b_9_0) (and true (and true (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.basefee| tx_0) 0) (<= (|block.basefee| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|msg.value| tx_0) 0) (<= (|msg.value| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.gasprice| tx_0) 0) (<= (|tx.gasprice| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (and (and (and (and (and (= (|msg.value| tx_0) 0) (= (|msg.sig| tx_0) 2562959041)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 152)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 195)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 166)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 193)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4))) true))))) (not expr_15_0)))
 (check-sat)
-","0x84635fcc37e5318fb46619945199a333750ee247769e97445a2f89b98b54fef9":"(set-option :produce-models true)
+",
+            "0x84635fcc37e5318fb46619945199a333750ee247769e97445a2f89b98b54fef9": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -61,7 +67,8 @@
 (assert (= |EVALEXPR_0| b_9_0))
 (check-sat)
 (get-value (|EVALEXPR_0| ))
-","0xd55ef003dcd6e8ebbd55fce4adaa36b4d898204d649e5426179dea4b7450a9f5":"(set-option :produce-models true)
+",
+            "0xd55ef003dcd6e8ebbd55fce4adaa36b4d898204d649e5426179dea4b7450a9f5": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -83,11 +90,44 @@
 
 (assert (and (and (and true true) (and (= expr_15_0 b_9_0) (and true (and true (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.basefee| tx_0) 0) (<= (|block.basefee| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|msg.value| tx_0) 0) (<= (|msg.value| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.gasprice| tx_0) 0) (<= (|tx.gasprice| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (and (and (and (and (and (= (|msg.value| tx_0) 0) (= (|msg.sig| tx_0) 2562959041)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 152)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 195)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 166)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 193)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4))) true))))) expr_15_0))
 (check-sat)
-"}},"errors":[{"component":"general","errorCode":"7812","formattedMessage":"Warning: BMC: Assertion violation might happen here.
+"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "7812",
+            "formattedMessage": "Warning: BMC: Assertion violation might happen here.
   --> A:11:7:
    |
 11 | \t\t\t\t\t\tassert(s.x > 0);
    | \t\t\t\t\t\t^^^^^^^^^^^^^^^
 Note:
 
-","message":"BMC: Assertion violation might happen here.","secondarySourceLocations":[{"message":""}],"severity":"warning","sourceLocation":{"end":201,"file":"A","start":186},"type":"Warning"}],"sources":{"A":{"id":0}}}
+",
+            "message": "BMC: Assertion violation might happen here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 201,
+                "file": "A",
+                "start": 186
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

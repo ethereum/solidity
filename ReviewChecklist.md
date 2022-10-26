@@ -26,6 +26,13 @@ It is also meant to serve as a final checklist for reviewers to go through befor
     - [ ] Avoid basing PRs from forks on branches other than `develop` or `breaking` because
         GitHub closes them when the base branch gets merged.
         Do this only for PRs created directly in the main repo.
+- [ ] **Does the PR update test expectations to match the modified code?** If not, your PR will not pass some of the `_soltest_`,  jobs in CI.
+    In many cases the expectations can be updated automatically:
+    - `cmdlineTests.sh --update` for command-line tests.
+    - `isoltest --enforce-gas-cost --accept-updates` for soltest-based tests.
+        - If your PR affects gas costs, an extra run of `isoltest --enforce-gas-cost --optimize --accept-updates` is needed to update gas expectations with optimizer enabled.
+    - Review updated files before committing them.
+        **Are expectations correct and do updated tests still serve their purpose?**
 
 ## Coding Style and Good Practices
 - [ ] Does the PR follow our [coding style](CODING_STYLE.md)?
@@ -127,8 +134,6 @@ The following points are all covered by the coding style but come up so often th
 - [ ] **Do not include version pragma and the SPDX comment in semantic and syntax test cases**.
     In other test types include them if necessary to suppress warnings.
 - [ ] **If you have to use a version pragma, avoid hard-coding version.** Use `pragma solidity *`.
-- [ ] **Add `--pretty-print --pretty-json 4` to the `args` file of in command-line tests** to get
-    readable, indented output.
 - [ ] **When writing StandardJSON command-line tests, use `urls` instead of `content`** and put
     the Solidity or Yul code in a separate file.
 

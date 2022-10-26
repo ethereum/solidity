@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x6bfae35e234137f12dfe7bc10a8cd34cfa8f3cf1a3439e2e99418358e7bad911":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0x6bfae35e234137f12dfe7bc10a8cd34cfa8f3cf1a3439e2e99418358e7bad911": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -55,7 +60,15 @@
 (assert (= |EVALEXPR_2| (- expr_17_0 1)))
 (check-sat)
 (get-value (|EVALEXPR_0| |EVALEXPR_1| |EVALEXPR_2| ))
-"}},"errors":[{"component":"general","errorCode":"4144","formattedMessage":"Warning: BMC: Underflow (resulting value less than 0) happens here.
+"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "4144",
+            "formattedMessage": "Warning: BMC: Underflow (resulting value less than 0) happens here.
  --> A:8:7:
   |
 8 | \t\t\t\t\t\t--x;
@@ -68,8 +81,39 @@ Note: Counterexample:
 Note: Callstack:
 Note:
 
-","message":"BMC: Underflow (resulting value less than 0) happens here.","secondarySourceLocations":[{"message":"Counterexample:
+",
+            "message": "BMC: Underflow (resulting value less than 0) happens here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Counterexample:
   <result> = (- 1)
   a = 0
   x = 0
-"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":177,"file":"A","start":174},"type":"Warning"}],"sources":{"A":{"id":0}}}
+"
+                },
+                {
+                    "message": "Callstack:"
+                },
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 177,
+                "file": "A",
+                "start": 174
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

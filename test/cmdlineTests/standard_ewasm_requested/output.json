@@ -1,4 +1,14 @@
-{"contracts":{"A":{"C":{"ewasm":{"wasm":"<BYTECODE REMOVED>","wast":"(module
+{
+    "contracts":
+    {
+        "A":
+        {
+            "C":
+            {
+                "ewasm":
+                {
+                    "wasm": "<BYTECODE REMOVED>",
+                    "wast": "(module
     ;; custom section for sub-module
     ;; The Keccak-256 hash of the text representation of <REMOVED>
     ;; (@custom \"C_3_deployed\" \"<BYTECODE REMOVED>\")
@@ -151,4 +161,16 @@
 )
 
 )
-"}}}},"sources":{"A":{"id":0}}}
+"
+                }
+            }
+        }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

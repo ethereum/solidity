@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x7fe5be7672be6bc9bc2b750f3170bfa08ecd79fc95afb084539b74294c2dd24d":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0x7fe5be7672be6bc9bc2b750f3170bfa08ecd79fc95afb084539b74294c2dd24d": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -22,7 +27,15 @@
 (assert (= |EVALEXPR_0| x_3_0))
 (check-sat)
 (get-value (|EVALEXPR_0| ))
-"}},"errors":[{"component":"general","errorCode":"4661","formattedMessage":"Warning: BMC: Assertion violation happens here.
+"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "4661",
+            "formattedMessage": "Warning: BMC: Assertion violation happens here.
  --> A:4:47:
   |
 4 | contract C { function f(uint x) public pure { assert(x > 0); } }
@@ -33,6 +46,37 @@ Note: Counterexample:
 Note: Callstack:
 Note:
 
-","message":"BMC: Assertion violation happens here.","secondarySourceLocations":[{"message":"Counterexample:
+",
+            "message": "BMC: Assertion violation happens here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Counterexample:
   x = 0
-"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":119,"file":"A","start":106},"type":"Warning"}],"sources":{"A":{"id":0}}}
+"
+                },
+                {
+                    "message": "Callstack:"
+                },
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 119,
+                "file": "A",
+                "start": 106
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

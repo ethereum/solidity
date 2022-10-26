@@ -1,4 +1,11 @@
-{"contracts":{"C":{"C":{"ir":"
+{
+    "contracts":
+    {
+        "C":
+        {
+            "C":
+            {
+                "ir": "
 /// @use-src 0:\"C\"
 object \"C_54\" {
     code {
@@ -604,7 +611,8 @@ object \"C_54\" {
 
 }
 
-","irOptimized":"/// @use-src 0:\"C\"
+",
+                "irOptimized": "/// @use-src 0:\"C\"
 object \"C_54\" {
     code {
         {
@@ -759,7 +767,14 @@ object \"C_54\" {
         data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 }
-"}},"D":{"D":{"ir":"
+"
+            }
+        },
+        "D":
+        {
+            "D":
+            {
+                "ir": "
 /// @use-src 0:\"C\", 1:\"D\"
 object \"D_72\" {
     code {
@@ -1435,7 +1450,8 @@ object \"D_72\" {
 
 }
 
-","irOptimized":"/// @use-src 0:\"C\", 1:\"D\"
+",
+                "irOptimized": "/// @use-src 0:\"C\", 1:\"D\"
 object \"D_72\" {
     code {
         {
@@ -1597,4 +1613,19 @@ object \"D_72\" {
         data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 }
-"}}},"sources":{"C":{"id":0},"D":{"id":1}}}
+"
+            }
+        }
+    },
+    "sources":
+    {
+        "C":
+        {
+            "id": 0
+        },
+        "D":
+        {
+            "id": 1
+        }
+    }
+}

@@ -1,10 +1,30 @@
-{"errors":[{"component":"general","errorCode":"9302","formattedMessage":"Warning: Return value of low-level calls not used.
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "9302",
+            "formattedMessage": "Warning: Return value of low-level calls not used.
  --> A:7:7:
   |
 7 | \t\t\t\t\t\t_a.call(\"\");
   | \t\t\t\t\t\t^^^^^^^^^^^
 
-","message":"Return value of low-level calls not used.","severity":"warning","sourceLocation":{"end":143,"file":"A","start":132},"type":"Warning"},{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation happens here.
+",
+            "message": "Return value of low-level calls not used.",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 143,
+                "file": "A",
+                "start": 132
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "6328",
+            "formattedMessage": "Warning: CHC: Assertion violation happens here.
 Counterexample:
 x = 0
 _a = 0x0
@@ -19,7 +39,8 @@ test.f(0x0)
 8 | \t\t\t\t\t\tassert(x == 10);
   | \t\t\t\t\t\t^^^^^^^^^^^^^^^
 
-","message":"CHC: Assertion violation happens here.
+",
+            "message": "CHC: Assertion violation happens here.
 Counterexample:
 x = 0
 _a = 0x0
@@ -28,4 +49,22 @@ Transaction trace:
 test.constructor()
 State: x = 0
 test.f(0x0)
-    _a.call(\"\") -- untrusted external call","severity":"warning","sourceLocation":{"end":166,"file":"A","start":151},"type":"Warning"}],"sources":{"A":{"id":0}}}
+    _a.call(\"\") -- untrusted external call",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 166,
+                "file": "A",
+                "start": 151
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

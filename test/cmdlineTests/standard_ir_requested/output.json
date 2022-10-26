@@ -1,4 +1,11 @@
-{"contracts":{"A":{"C":{"ir":"
+{
+    "contracts":
+    {
+        "A":
+        {
+            "C":
+            {
+                "ir": "
 /// @use-src 0:\"A\"
 object \"C_7\" {
     code {
@@ -111,4 +118,15 @@ object \"C_7\" {
 
 }
 
-"}}},"sources":{"A":{"id":0}}}
+"
+            }
+        }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

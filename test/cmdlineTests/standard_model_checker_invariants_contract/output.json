@@ -1,7 +1,26 @@
-{"errors":[{"component":"general","errorCode":"1180","formattedMessage":"Info: Contract invariant(s) for A:test:
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "1180",
+            "formattedMessage": "Info: Contract invariant(s) for A:test:
 ((x <= 0) || true)
 
 
-","message":"Contract invariant(s) for A:test:
+",
+            "message": "Contract invariant(s) for A:test:
 ((x <= 0) || true)
-","severity":"info","type":"Info"}],"sources":{"A":{"id":0}}}
+",
+            "severity": "info",
+            "type": "Info"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

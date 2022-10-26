@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x540d6a4b18ea4181713b8f0e9b4b272f762e142ba1716a3960cfdbed3f1ae64e":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0x540d6a4b18ea4181713b8f0e9b4b272f762e142ba1716a3960cfdbed3f1ae64e": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -55,7 +60,15 @@
 (assert (= |EVALEXPR_2| expr_29_0))
 (check-sat)
 (get-value (|EVALEXPR_0| |EVALEXPR_1| |EVALEXPR_2| ))
-"}},"errors":[{"component":"general","errorCode":"3046","formattedMessage":"Warning: BMC: Division by zero happens here.
+"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "3046",
+            "formattedMessage": "Warning: BMC: Division by zero happens here.
   --> A:10:7:
    |
 10 | \t\t\t\t\t\t2 / x;
@@ -68,8 +81,39 @@ Note: Counterexample:
 Note: Callstack:
 Note:
 
-","message":"BMC: Division by zero happens here.","secondarySourceLocations":[{"message":"Counterexample:
+",
+            "message": "BMC: Division by zero happens here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Counterexample:
   <result> = 0
   a = 0
   x = 0
-"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":216,"file":"A","start":211},"type":"Warning"}],"sources":{"A":{"id":0}}}
+"
+                },
+                {
+                    "message": "Callstack:"
+                },
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 216,
+                "file": "A",
+                "start": 211
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0xb91b28779c6db8b1a6ceecabfa97788476fbb427474cd132376917103e4bc9d9":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0xb91b28779c6db8b1a6ceecabfa97788476fbb427474cd132376917103e4bc9d9": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -55,7 +60,15 @@
 (assert (= |EVALEXPR_2| (+ expr_20_0 expr_25_1)))
 (check-sat)
 (get-value (|EVALEXPR_0| |EVALEXPR_1| |EVALEXPR_2| ))
-"}},"errors":[{"component":"general","errorCode":"2661","formattedMessage":"Warning: BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "2661",
+            "formattedMessage": "Warning: BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
  --> A:9:7:
   |
 9 | \t\t\t\t\t\tx + type(uint).max;
@@ -68,8 +81,39 @@ Note: Counterexample:
 Note: Callstack:
 Note:
 
-","message":"BMC: Overflow (resulting value larger than 2**256 - 1) happens here.","secondarySourceLocations":[{"message":"Counterexample:
+",
+            "message": "BMC: Overflow (resulting value larger than 2**256 - 1) happens here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Counterexample:
   <result> = 2**256
   a = 0
   x = 1
-"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":203,"file":"A","start":185},"type":"Warning"}],"sources":{"A":{"id":0}}}
+"
+                },
+                {
+                    "message": "Callstack:"
+                },
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 203,
+                "file": "A",
+                "start": 185
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}
