@@ -1,42 +1,42 @@
 {
-  "contracts":
-  {
-    "A":
+    "contracts":
     {
-      "YulTest":
-      {
-        "evm":
+        "A":
         {
-          "bytecode":
-          {
-            "functionDebugData": {},
-            "generatedSources": [],
-            "linkReferences": {},
-            "object": "60298060156000396001600060010152806000f3fe7f000000000000000000000000000000000000000000000000000000000000000060005260206000f3",
-            "opcodes": "PUSH1 0x29 DUP1 PUSH1 0x15 PUSH1 0x0 CODECOPY PUSH1 0x1 PUSH1 0x0 PUSH1 0x1 ADD MSTORE DUP1 PUSH1 0x0 RETURN INVALID PUSH32 0x0 PUSH1 0x0 MSTORE PUSH1 0x20 PUSH1 0x0 RETURN ",
-            "sourceMap": "42:19:0:-:0;100:4;77:21;74:1;65:40;133:1;122;109:26;;;149:4;146:1;139:15"
-          },
-          "deployedBytecode":
-          {
-            "functionDebugData": {},
-            "generatedSources": [],
-            "immutableReferences":
+            "YulTest":
             {
-              "test":
-              [
+                "evm":
                 {
-                  "length": 32,
-                  "start": 1
+                    "bytecode":
+                    {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>",
+                        "opcodes":"<OPCODES REMOVED>",
+                        "sourceMap":"<SOURCEMAP REMOVED>"
+                    },
+                    "deployedBytecode":
+                    {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "immutableReferences":
+                        {
+                            "test":
+                            [
+                                {
+                                    "length": 32,
+                                    "start": 1
+                                }
+                            ]
+                        },
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>",
+                        "opcodes":"<OPCODES REMOVED>",
+                        "sourceMap":"<SOURCEMAP REMOVED>"
+                    }
                 }
-              ]
-            },
-            "linkReferences": {},
-            "object": "7f000000000000000000000000000000000000000000000000000000000000000060005260206000f3",
-            "opcodes": "PUSH32 0x0 PUSH1 0x0 MSTORE PUSH1 0x20 PUSH1 0x0 RETURN ",
-            "sourceMap": "203:21:0:-:0;200:1;193:32;241:4;238:1;231:15"
-          }
+            }
         }
-      }
     }
-  },
-  }
+}

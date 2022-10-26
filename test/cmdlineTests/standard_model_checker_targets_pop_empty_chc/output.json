@@ -1,4 +1,10 @@
-{"errors":[{"component":"general","errorCode":"2529","formattedMessage":"Warning: CHC: Empty array \"pop\" happens here.
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "2529",
+            "formattedMessage": "Warning: CHC: Empty array \"pop\" happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -13,7 +19,8 @@ test.f(0x0, 1)
 13 | \t\t\t\t\t\tarr.pop();
    | \t\t\t\t\t\t^^^^^^^^^
 
-","message":"CHC: Empty array \"pop\" happens here.
+",
+            "message": "CHC: Empty array \"pop\" happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -22,4 +29,22 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 1)","severity":"warning","sourceLocation":{"end":275,"file":"A","start":266},"type":"Warning"}],"sources":{"A":{"id":0}}}
+test.f(0x0, 1)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 275,
+                "file": "A",
+                "start": 266
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

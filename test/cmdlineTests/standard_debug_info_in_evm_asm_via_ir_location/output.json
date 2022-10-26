@@ -1,4 +1,13 @@
-{"contracts":{"C":{"C":{"evm":{"assembly":"    /* \"C\":79:428  contract C... */
+{
+    "contracts":
+    {
+        "C":
+        {
+            "C":
+            {
+                "evm":
+                {
+                    "assembly": "    /* \"C\":79:428  contract C... */
   0xa0
   jumpi(tag_5, callvalue)
   0x1f
@@ -361,7 +370,17 @@ sub_0: assembly {
 
     auxdata: <AUXDATA REMOVED>
 }
-"}}},"D":{"D":{"evm":{"assembly":"    /* \"D\":91:166  contract D is C(3)... */
+"
+                }
+            }
+        },
+        "D":
+        {
+            "D":
+            {
+                "evm":
+                {
+                    "assembly": "    /* \"D\":91:166  contract D is C(3)... */
   0xa0
   jumpi(tag_5, callvalue)
   0x1f
@@ -740,4 +759,20 @@ sub_0: assembly {
 
     auxdata: <AUXDATA REMOVED>
 }
-"}}}},"sources":{"C":{"id":0},"D":{"id":1}}}
+"
+                }
+            }
+        }
+    },
+    "sources":
+    {
+        "C":
+        {
+            "id": 0
+        },
+        "D":
+        {
+            "id": 1
+        }
+    }
+}

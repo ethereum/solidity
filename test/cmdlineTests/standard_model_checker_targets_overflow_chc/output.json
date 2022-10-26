@@ -1,4 +1,10 @@
-{"errors":[{"component":"general","errorCode":"4984","formattedMessage":"Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "4984",
+            "formattedMessage": "Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -13,7 +19,8 @@ test.f(0x0, 2)
 9 | \t\t\t\t\t\tx + type(uint).max;
   | \t\t\t\t\t\t^^^^^^^^^^^^^^^^^^
 
-","message":"CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+",
+            "message": "CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -22,4 +29,22 @@ x = 1
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 2)","severity":"warning","sourceLocation":{"end":203,"file":"A","start":185},"type":"Warning"}],"sources":{"A":{"id":0}}}
+test.f(0x0, 2)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 203,
+                "file": "A",
+                "start": 185
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

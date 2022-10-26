@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x03d0edb825a4f6251a71019a2075e51c5d4fce6236dfaa9b24ed56309b4cb52e":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0x03d0edb825a4f6251a71019a2075e51c5d4fce6236dfaa9b24ed56309b4cb52e": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-datatypes ((|uint_array_tuple| 0)) (((|uint_array_tuple| (|uint_array_tuple_accessor_array| (Array Int Int)) (|uint_array_tuple_accessor_length| Int)))))
 (declare-fun |arr_4_length_pair_2| () |uint_array_tuple|)
@@ -30,7 +35,8 @@
 
 (assert (and (and (and true true) (and (= expr_14_1 (>= expr_12_0 expr_13_0)) (and (=> (and true true) true) (and (= expr_13_0 0) (and (=> (and true true) (and (>= expr_12_0 0) (<= expr_12_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_12_0 x_8_0) (and (and (>= x_8_0 0) (<= x_8_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (>= a_6_0 0) (<= a_6_0 1461501637330902918203684832716283019655932542975)) (and (>= (|uint_array_tuple_accessor_length| arr_4_length_pair_1) 0) (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.basefee| tx_0) 0) (<= (|block.basefee| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|msg.value| tx_0) 0) (<= (|msg.value| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.gasprice| tx_0) 0) (<= (|tx.gasprice| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (and (and (and (and (and (= (|msg.value| tx_0) 0) (= (|msg.sig| tx_0) 1917212865)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 114)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 70)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 88)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 193)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4))) true)))))))))) (not expr_14_1)))
 (check-sat)
-","0xa7b2de16abc4c0f0f9e2c540a576178d99cb73a01cf0d0d1d62d51735c6d3b44":"(set-option :produce-models true)
+",
+            "0xa7b2de16abc4c0f0f9e2c540a576178d99cb73a01cf0d0d1d62d51735c6d3b44": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-datatypes ((|uint_array_tuple| 0)) (((|uint_array_tuple| (|uint_array_tuple_accessor_array| (Array Int Int)) (|uint_array_tuple_accessor_length| Int)))))
 (declare-fun |arr_4_length_pair_2| () |uint_array_tuple|)
@@ -91,7 +97,8 @@
 (assert (= |EVALEXPR_1| x_8_1))
 (check-sat)
 (get-value (|EVALEXPR_0| |EVALEXPR_1| ))
-","0xd43cc6edbb2db7e490ff38b099043a3d3f17f85031b33673e76cb1eaf0598122":"(set-option :produce-models true)
+",
+            "0xd43cc6edbb2db7e490ff38b099043a3d3f17f85031b33673e76cb1eaf0598122": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-datatypes ((|uint_array_tuple| 0)) (((|uint_array_tuple| (|uint_array_tuple_accessor_array| (Array Int Int)) (|uint_array_tuple_accessor_length| Int)))))
 (declare-fun |arr_4_length_pair_2| () |uint_array_tuple|)
@@ -123,7 +130,15 @@
 
 (assert (and (and (and true true) (and (= expr_14_1 (>= expr_12_0 expr_13_0)) (and (=> (and true true) true) (and (= expr_13_0 0) (and (=> (and true true) (and (>= expr_12_0 0) (<= expr_12_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_12_0 x_8_0) (and (and (>= x_8_0 0) (<= x_8_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (>= a_6_0 0) (<= a_6_0 1461501637330902918203684832716283019655932542975)) (and (>= (|uint_array_tuple_accessor_length| arr_4_length_pair_1) 0) (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.basefee| tx_0) 0) (<= (|block.basefee| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|msg.value| tx_0) 0) (<= (|msg.value| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.gasprice| tx_0) 0) (<= (|tx.gasprice| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (and (and (and (and (and (= (|msg.value| tx_0) 0) (= (|msg.sig| tx_0) 1917212865)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 114)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 70)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 88)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 193)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4))) true)))))))))) expr_14_1))
 (check-sat)
-"}},"errors":[{"component":"general","errorCode":"4281","formattedMessage":"Warning: CHC: Division by zero happens here.
+"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "4281",
+            "formattedMessage": "Warning: CHC: Division by zero happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -138,7 +153,8 @@ test.f(0x0, 1)
 10 | \t\t\t\t\t\t2 / x;
    | \t\t\t\t\t\t^^^^^
 
-","message":"CHC: Division by zero happens here.
+",
+            "message": "CHC: Division by zero happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -147,7 +163,20 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 1)","severity":"warning","sourceLocation":{"end":216,"file":"A","start":211},"type":"Warning"},{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation happens here.
+test.f(0x0, 1)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 216,
+                "file": "A",
+                "start": 211
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "6328",
+            "formattedMessage": "Warning: CHC: Assertion violation happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -162,7 +191,8 @@ test.f(0x0, 1)
 12 | \t\t\t\t\t\tassert(x > 0);
    | \t\t\t\t\t\t^^^^^^^^^^^^^
 
-","message":"CHC: Assertion violation happens here.
+",
+            "message": "CHC: Assertion violation happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -171,7 +201,20 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 1)","severity":"warning","sourceLocation":{"end":258,"file":"A","start":245},"type":"Warning"},{"component":"general","errorCode":"2529","formattedMessage":"Warning: CHC: Empty array \"pop\" happens here.
+test.f(0x0, 1)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 258,
+                "file": "A",
+                "start": 245
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "2529",
+            "formattedMessage": "Warning: CHC: Empty array \"pop\" happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -186,7 +229,8 @@ test.f(0x0, 1)
 13 | \t\t\t\t\t\tarr.pop();
    | \t\t\t\t\t\t^^^^^^^^^
 
-","message":"CHC: Empty array \"pop\" happens here.
+",
+            "message": "CHC: Empty array \"pop\" happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -195,7 +239,20 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 1)","severity":"warning","sourceLocation":{"end":275,"file":"A","start":266},"type":"Warning"},{"component":"general","errorCode":"6368","formattedMessage":"Warning: CHC: Out of bounds access happens here.
+test.f(0x0, 1)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 275,
+                "file": "A",
+                "start": 266
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "6368",
+            "formattedMessage": "Warning: CHC: Out of bounds access happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -210,7 +267,8 @@ test.f(0x0, 1)
 14 | \t\t\t\t\t\tarr[x];
    | \t\t\t\t\t\t^^^^^^
 
-","message":"CHC: Out of bounds access happens here.
+",
+            "message": "CHC: Out of bounds access happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -219,14 +277,47 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 1)","severity":"warning","sourceLocation":{"end":289,"file":"A","start":283},"type":"Warning"},{"component":"general","errorCode":"6838","formattedMessage":"Warning: BMC: Condition is always true.
+test.f(0x0, 1)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 289,
+                "file": "A",
+                "start": 283
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "6838",
+            "formattedMessage": "Warning: BMC: Condition is always true.
  --> A:7:15:
   |
 7 | \t\t\t\t\t\trequire(x >= 0);
   | \t\t\t\t\t\t        ^^^^^^
 Note: Callstack:
 
-","message":"BMC: Condition is always true.","secondarySourceLocations":[{"message":"Callstack:"}],"severity":"warning","sourceLocation":{"end":165,"file":"A","start":159},"type":"Warning"},{"component":"general","errorCode":"1236","formattedMessage":"Warning: BMC: Insufficient funds happens here.
+",
+            "message": "BMC: Condition is always true.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Callstack:"
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 165,
+                "file": "A",
+                "start": 159
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "1236",
+            "formattedMessage": "Warning: BMC: Insufficient funds happens here.
   --> A:11:7:
    |
 11 | \t\t\t\t\t\ta.transfer(x);
@@ -238,7 +329,38 @@ Note: Counterexample:
 Note: Callstack:
 Note:
 
-","message":"BMC: Insufficient funds happens here.","secondarySourceLocations":[{"message":"Counterexample:
+",
+            "message": "BMC: Insufficient funds happens here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Counterexample:
   a = 0
   x = 0
-"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":237,"file":"A","start":224},"type":"Warning"}],"sources":{"A":{"id":0}}}
+"
+                },
+                {
+                    "message": "Callstack:"
+                },
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 237,
+                "file": "A",
+                "start": 224
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

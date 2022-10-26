@@ -1,4 +1,13 @@
-{"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":16:17   */
+{
+    "contracts":
+    {
+        "A":
+        {
+            "object":
+            {
+                "evm":
+                {
+                    "assembly": "    /* \"A\":16:17   */
   0x01
     /* \"A\":27:28   */
   0x00
@@ -12,4 +21,9 @@
   sstore
     /* \"A\":0:72   */
   stop
-"}}}},}
+"
+                }
+            }
+        }
+    }
+}

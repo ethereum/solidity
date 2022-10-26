@@ -1,4 +1,10 @@
-{"errors":[{"component":"general","errorCode":"4281","formattedMessage":"Warning: CHC: Division by zero happens here.
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "4281",
+            "formattedMessage": "Warning: CHC: Division by zero happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -13,7 +19,8 @@ test.f(0x0, 1)
 10 | \t\t\t\t\t\t2 / x;
    | \t\t\t\t\t\t^^^^^
 
-","message":"CHC: Division by zero happens here.
+",
+            "message": "CHC: Division by zero happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -22,4 +29,22 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 1)","severity":"warning","sourceLocation":{"end":216,"file":"A","start":211},"type":"Warning"}],"sources":{"A":{"id":0}}}
+test.f(0x0, 1)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 216,
+                "file": "A",
+                "start": 211
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

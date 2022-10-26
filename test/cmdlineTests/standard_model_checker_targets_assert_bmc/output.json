@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x67f6235b42fbb5cc636b1d18ccd5622020b45eef0c634965f9adf8b4bb923a64":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0x67f6235b42fbb5cc636b1d18ccd5622020b45eef0c634965f9adf8b4bb923a64": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -53,7 +58,15 @@
 (assert (= |EVALEXPR_1| x_8_1))
 (check-sat)
 (get-value (|EVALEXPR_0| |EVALEXPR_1| ))
-"}},"errors":[{"component":"general","errorCode":"4661","formattedMessage":"Warning: BMC: Assertion violation happens here.
+"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "4661",
+            "formattedMessage": "Warning: BMC: Assertion violation happens here.
   --> A:12:7:
    |
 12 | \t\t\t\t\t\tassert(x > 0);
@@ -65,7 +78,38 @@ Note: Counterexample:
 Note: Callstack:
 Note:
 
-","message":"BMC: Assertion violation happens here.","secondarySourceLocations":[{"message":"Counterexample:
+",
+            "message": "BMC: Assertion violation happens here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Counterexample:
   a = 0
   x = 0
-"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":258,"file":"A","start":245},"type":"Warning"}],"sources":{"A":{"id":0}}}
+"
+                },
+                {
+                    "message": "Callstack:"
+                },
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 258,
+                "file": "A",
+                "start": 245
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

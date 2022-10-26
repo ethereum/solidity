@@ -1,1 +1,22 @@
-{"contracts":{"A":{"C":{"evm":{"methodIdentifiers":{}}}}},"sources":{"A":{"id":0}}}
+{
+    "contracts":
+    {
+        "A":
+        {
+            "C":
+            {
+                "evm":
+                {
+                    "methodIdentifiers": {}
+                }
+            }
+        }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

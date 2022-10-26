@@ -1,4 +1,9 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x2bcd3328dc8d31e869efd5e0dfdb16a6fa26f0a9c2829ea55670262be485e401":"(set-option :produce-models true)
+{
+    "auxiliaryInputRequested":
+    {
+        "smtlib2queries":
+        {
+            "0x2bcd3328dc8d31e869efd5e0dfdb16a6fa26f0a9c2829ea55670262be485e401": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |x_3_3| () Int)
 (declare-fun |error_0| () Int)
@@ -24,7 +29,8 @@
 (assert (= |EVALEXPR_0| x_3_0))
 (check-sat)
 (get-value (|EVALEXPR_0| ))
-","0x4e70784a8a93c7429a716aa8b778f3de5d1f63b30158452534da5d44e5967d2b":"(set-logic HORN)
+",
+            "0x4e70784a8a93c7429a716aa8b778f3de5d1f63b30158452534da5d44e5967d2b": "(set-logic HORN)
 
 (declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
 (declare-datatypes ((|bytes_tuple| 0)) (((|bytes_tuple| (|bytes_tuple_accessor_array| (Array Int Int)) (|bytes_tuple_accessor_length| Int)))))
@@ -145,12 +151,57 @@
 (assert
 (forall ( (abi_0 |abi_type|) (crypto_0 |crypto_type|) (error_0 Int) (error_1 Int) (expr_7_0 Int) (expr_8_0 Int) (expr_9_1 Bool) (funds_2_0 Int) (state_0 |state_type|) (state_1 |state_type|) (state_2 |state_type|) (state_3 |state_type|) (this_0 Int) (tx_0 |tx_type|) (x_3_0 Int) (x_3_1 Int) (x_3_2 Int))
 (=> error_target_3_0 false)))
-(check-sat)"}},"errors":[{"component":"general","errorCode":"5840","formattedMessage":"Warning: CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
+(check-sat)"
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "5840",
+            "formattedMessage": "Warning: CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
 
-","message":"CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"3996","formattedMessage":"Warning: CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.
+",
+            "message": "CHC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.",
+            "severity": "warning",
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "3996",
+            "formattedMessage": "Warning: CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.
 
-","message":"CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"2788","formattedMessage":"Warning: BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
+",
+            "message": "CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.",
+            "severity": "warning",
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "2788",
+            "formattedMessage": "Warning: BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
 
-","message":"BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.","severity":"warning","type":"Warning"},{"component":"general","errorCode":"8084","formattedMessage":"Warning: BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.
+",
+            "message": "BMC: 1 verification condition(s) could not be proved. Enable the model checker option \"show unproved\" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.",
+            "severity": "warning",
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "8084",
+            "formattedMessage": "Warning: BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.
 
-","message":"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.","severity":"warning","type":"Warning"}],"sources":{"A":{"id":0}}}
+",
+            "message": "BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.",
+            "severity": "warning",
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}
