@@ -25,6 +25,7 @@
 #include <libsolidity/lsp/Utils.h>
 
 // LSP feature implementations
+#include <libsolidity/lsp/DocumentHoverHandler.h>
 #include <libsolidity/lsp/GotoDefinition.h>
 #include <libsolidity/lsp/RenameSymbol.h>
 #include <libsolidity/lsp/SemanticTokensBuilder.h>
@@ -144,6 +145,7 @@ LanguageServer::LanguageServer(Transport& _transport):
 		{"textDocument/didOpen", bind(&LanguageServer::handleTextDocumentDidOpen, this, _2)},
 		{"textDocument/didChange", bind(&LanguageServer::handleTextDocumentDidChange, this, _2)},
 		{"textDocument/didClose", bind(&LanguageServer::handleTextDocumentDidClose, this, _2)},
+		{"textDocument/hover", DocumentHoverHandler(*this) },
 		{"textDocument/rename", RenameSymbol(*this) },
 		{"textDocument/implementation", GotoDefinition(*this) },
 		{"textDocument/semanticTokens/full", bind(&LanguageServer::semanticTokensFull, this, _1, _2)},
@@ -417,6 +419,7 @@ void LanguageServer::handleInitialize(MessageID _id, Json::Value const& _args)
 	replyArgs["capabilities"]["semanticTokensProvider"]["range"] = false;
 	replyArgs["capabilities"]["semanticTokensProvider"]["full"] = true; // XOR requests.full.delta = true
 	replyArgs["capabilities"]["renameProvider"] = true;
+	replyArgs["capabilities"]["hoverProvider"] = true;
 
 	m_client.reply(_id, std::move(replyArgs));
 }
@@ -541,19 +544,21 @@ void LanguageServer::handleTextDocumentDidClose(Json::Value const& _args)
 	compileAndUpdateDiagnostics();
 }
 
-
 ASTNode const* LanguageServer::astNodeAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
 {
-	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
-		return nullptr;
-
-	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
-		return nullptr;
-
-	if (optional<int> sourcePos =
-		m_compilerStack.charStream(_sourceUnitName).translateLineColumnToPosition(_filePos))
-		return locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName));
-	else
-		return nullptr;
+	return get<ASTNode const*>(astNodeAndOffsetAtSourceLocation(_sourceUnitName, _filePos));
 }
 
+tuple<ASTNode const*, int> LanguageServer::astNodeAndOffsetAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
+{
+	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
+		return {nullptr, -1};
+	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
+		return {nullptr, -1};
+
+	optional<int> sourcePos = m_compilerStack.charStream(_sourceUnitName).translateLineColumnToPosition(_filePos);
+	if (!sourcePos)
+		return {nullptr, -1};
+
+	return {locateInnermostASTNode(*sourcePos, m_compilerStack.ast(_sourceUnitName)), *sourcePos};
+}
