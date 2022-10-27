@@ -66,7 +66,7 @@ browser-based IDE. Here are some example contracts:
 
 ## Documentation
 
-The Solidity documentation is hosted [here](https://docs.soliditylang.org) using **Read the Docs**.
+The Solidity documentation is hosted using [Read the Docs](https://docs.soliditylang.org).
 
 ## Development
 
