@@ -66,7 +66,7 @@ browser-based IDE. Here are some example contracts:
 
 ## Documentation
 
-The Solidity documentation is hosted at [Read the docs](https://docs.soliditylang.org).
+The Solidity documentation is hosted [here](https://docs.soliditylang.org).
 
 ## Development
 
