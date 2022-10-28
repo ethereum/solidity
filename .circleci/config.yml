@@ -310,15 +310,6 @@ defaults:
         CXX: clang++
         MAKEFLAGS: -j 3
 
-  - base_ubuntu2004_clang_small: &base_ubuntu2004_clang_small
-      <<: *base_ubuntu2004_clang
-      resource_class: small
-      environment:
-        TERM: xterm
-        CC: clang
-        CXX: clang++
-        MAKEFLAGS: -j 2
-
   - base_ubuntu2004_clang_large: &base_ubuntu2004_clang_large
       <<: *base_ubuntu2004_clang
       resource_class: large
@@ -1156,7 +1147,7 @@ jobs:
     <<: *steps_soltest
 
   t_ubu_ubsan_clang_cli:
-    <<: *base_ubuntu2004_clang_small
+    <<: *base_ubuntu2004_clang
     <<: *steps_cmdline_tests
 
   t_ems_solcjs:
