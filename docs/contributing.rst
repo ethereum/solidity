@@ -12,7 +12,7 @@ In particular, we appreciate support in the following areas:
   `"good first issue" <https://github.com/ethereum/solidity/labels/good%20first%20issue>`_ which are
   meant as introductory issues for external contributors.
 * Improving the documentation.
-* Translating the documentation into more languages.
+* `Translating <https://github.com/solidity-docs>`_ the documentation into more languages.
 * Responding to questions from other users on `StackExchange
   <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter Chat
   <https://gitter.im/ethereum/solidity>`_.
@@ -416,7 +416,7 @@ local slang and references, making your language as clear to all readers as poss
 .. note::
 
     While the official Solidity documentation is written in English, there are community contributed :ref:`translations`
-    in other languages available. Please refer to the `translation guide <https://github.com/solidity-docs/translation-guide>`_
+    in other languages available. Please refer to the `translation guide <https://github.com/solidity-docs#solidity-documentation-translation-guide>`_
     for information on how to contribute to the community translations.
 
 Title Case for Headings
