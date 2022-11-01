@@ -1,0 +1,49 @@
+name: Filter stale issues
+inputs:
+  token:
+    description: 'The GITHUB_TOKEN secret'
+    required: true
+  period:
+    description: "The stale period in days"
+    required: false
+    type: number
+    default: 14
+  repo:
+    description: "The target repository"
+    required: false
+    type: string
+    default: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
+outputs:
+  result:
+    description: "The result of the query"
+    value: ${{ steps.found_issues.outputs.result }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get period date
+      id: date
+      shell: bash
+      run: |
+        period_date=$(date --date "${{ inputs.period }} days ago" --utc +"%Y-%m-%dT%H:%M:%SZ")
+        echo "period=$period_date" >> $GITHUB_OUTPUT
+    - name: Get inactive open issues
+      id: stale_issues
+      if: ${{ success() }}
+      uses: ethereum/solidity/.github/actions/query_issues@develop
+      with:
+        token: ${{ inputs.token }}
+        query: 'repo:${{ inputs.repo }} is:issue is:open updated:<${{ steps.date.outputs.period }}'
+    - name: Collect query result
+      id: found_issues
+      if: ${{ success() }}
+      shell: bash
+      run: |
+        filter_result=$(
+          jq --raw-output \
+              --null-input \
+              --argjson result '${{ steps.stale_issues.outputs.query_result }}' \
+              '[$result.data.search.nodes[].url] | @sh' \
+              | tr --delete \'
+        )
+        echo "result=$filter_result" >> $GITHUB_OUTPUT

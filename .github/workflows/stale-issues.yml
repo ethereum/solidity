@@ -1,12 +1,12 @@
 name: Check stale issues
 
 on:
+  workflow_dispatch: # FIXME: remove
   schedule:
     - cron: '0 12 * * *'
 
 env:
   PERIOD: 14 # in days
-  REPO: "${{ github.repository_owner }}/${{ github.event.repository.name }}"
   WAIT_FOR_INFO: "waiting for more input"
   DRY_RUN: true
 
@@ -15,33 +15,20 @@ jobs:
     name: Retrieve all open issues that are inactive
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.5.0
-      - name: Get period date
-        id: date
-        run: |
-          period_date=$(date --date "$PERIOD days ago" --utc +"%Y-%m-%dT%H:%M:%SZ")
-          echo "period=$period_date" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v3
       - name: Get inactive open issues
-        if: ${{ success() }}
         id: stale_issues
-        uses: ./.github/actions/query_issues
+        uses: ./.github/actions/stale_issues
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          query: 'repo:${{ env.REPO }} is:issue is:open updated:<${{ steps.date.outputs.period }}'
+          period: ${{ env.PERIOD }}
       - name: Comment on found issues
         if: ${{ success() }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          query_result=$(
-            jq --raw-output \
-               --null-input \
-               --argjson result '${{ steps.stale_issues.outputs.query_result }}' \
-               '[$result.data.search.nodes[].url] | @sh' \
-               | tr --delete \'
-          )
-          for issue_url in $query_result; do
-            # Filter issues that were triaged and are not waiting for more information
+          for issue_url in ${{ steps.stale_issues.outputs.result }}; do
+            # Filter stale issues that were triaged and are not waiting for more information
             stale_triaged=$(gh issue view $issue_url \
                                     --json labels \
                                     --jq '.labels | map(.name != "$WAIT_FOR_INFO") | all and length > 0')
