@@ -25,7 +25,7 @@ jobs:
       - name: Get inactive open issues
         if: ${{ success() }}
         id: stale_issues
-        uses: ./.github/actions/query-issues
+        uses: ./.github/actions/query_issues
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           query: 'repo:${{ env.REPO }} is:issue is:open updated:<${{ steps.date.outputs.period }}'
