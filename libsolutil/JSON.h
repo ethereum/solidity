@@ -73,36 +73,33 @@ namespace detail
 template<typename T>
 struct helper;
 
-#define DEFINE_JSON_CONVERSION_HELPERS(TYPE, CHECK_TYPE_MEMBER, CONVERT_TYPE_MEMBER) \
-	template<>                                                                       \
-	struct helper<TYPE>                                                              \
-	{                                                                                \
-		static bool isOfType(Json::Value const& _input)                              \
-		{                                                                            \
-			return _input.CHECK_TYPE_MEMBER();                                       \
-		}                                                                            \
-		static TYPE get(Json::Value const& _input)                                   \
-		{                                                                            \
-			return _input.CONVERT_TYPE_MEMBER();                                     \
-		}                                                                            \
-		static TYPE getOrDefault(Json::Value const& _input, TYPE _default = {})      \
-		{                                                                            \
-			TYPE result = _default;                                                  \
-			if (helper::isOfType(_input))                                            \
-				result = _input.CONVERT_TYPE_MEMBER();                               \
-			return result;                                                           \
-		}                                                                            \
-	};
+template<typename T, bool(Json::Value::*checkMember)() const, T(Json::Value::*convertMember)() const>
+struct helper_impl
+{
+	static bool isOfType(Json::Value const& _input)
+	{
+		return (_input.*checkMember)();
+	}
+	static T get(Json::Value const& _input)
+	{
+		return (_input.*convertMember)();
+	}
+	static T getOrDefault(Json::Value const& _input, T _default = {})
+	{
+		T result = _default;
+		if (isOfType(_input))
+			result = (_input.*convertMember)();
+		return result;
+	}
+};
 
-DEFINE_JSON_CONVERSION_HELPERS(float, isDouble, asFloat)
-DEFINE_JSON_CONVERSION_HELPERS(double, isDouble, asDouble)
-DEFINE_JSON_CONVERSION_HELPERS(std::string, isString, asString)
-DEFINE_JSON_CONVERSION_HELPERS(Json::Int, isInt, asInt)
-DEFINE_JSON_CONVERSION_HELPERS(Json::Int64, isInt64, asInt64)
-DEFINE_JSON_CONVERSION_HELPERS(Json::UInt, isUInt, asUInt)
-DEFINE_JSON_CONVERSION_HELPERS(Json::UInt64, isUInt64, asUInt64)
-
-#undef DEFINE_JSON_CONVERSION_HELPERS
+template<> struct helper<float>: helper_impl<float, &Json::Value::isDouble, &Json::Value::asFloat> {};
+template<> struct helper<double>: helper_impl<double, &Json::Value::isDouble, &Json::Value::asDouble> {};
+template<> struct helper<std::string>: helper_impl<std::string, &Json::Value::isString, &Json::Value::asString> {};
+template<> struct helper<Json::Int>: helper_impl<Json::Int, &Json::Value::isInt, &Json::Value::asInt> {};
+template<> struct helper<Json::Int64>: helper_impl<Json::Int64, &Json::Value::isInt64, &Json::Value::asInt64> {};
+template<> struct helper<Json::UInt>: helper_impl<Json::UInt, &Json::Value::isUInt, &Json::Value::asUInt> {};
+template<> struct helper<Json::UInt64>: helper_impl<Json::UInt64, &Json::Value::isUInt64, &Json::Value::asUInt64> {};
 
 } // namespace detail
 
