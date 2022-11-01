@@ -20,7 +20,7 @@ jobs:
       - name: Get period date
         id: date
         run: |
-          period_date=$(date -d "$PERIOD days ago" -u +"%Y-%m-%dT%H:%M:%SZ")
+          period_date=$(date --date "$PERIOD days ago" --utc +"%Y-%m-%dT%H:%M:%SZ")
           echo "period=$period_date" >> $GITHUB_OUTPUT
       - name: Get inactive open issues
         if: ${{ success() }}
@@ -39,7 +39,7 @@ jobs:
                --null-input \
                --argjson result '${{ steps.stale_issues.outputs.query_result }}' \
                '[$result.data.search.nodes[].url] | @sh' \
-               | tr -d \'
+               | tr --delete \'
           )
           for issue_url in $query_result; do
             # Filter issues that were triaged and are not waiting for more information
