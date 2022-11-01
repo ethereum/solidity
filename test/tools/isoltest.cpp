@@ -502,22 +502,22 @@ int main(int argc, char const *argv[])
 	catch (boost::program_options::error const& exception)
 	{
 		cerr << exception.what() << endl;
-		return EXIT_FAILURE;
+		return 2;
 	}
 	catch (std::runtime_error const& exception)
 	{
 		cerr << exception.what() << endl;
-		return EXIT_FAILURE;
+		return 2;
 	}
 	catch (solidity::test::ConfigException const& exception)
 	{
 		cerr << exception.what() << endl;
-		return EXIT_FAILURE;
+		return 2;
 	}
 	catch (...)
 	{
 		cerr << "Unhandled exception caught." << endl;
 		cerr << boost::current_exception_diagnostic_information() << endl;
-		return EXIT_FAILURE;
+		return 2;
 	}
 }

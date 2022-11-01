@@ -44,36 +44,24 @@ int main(int argc, char** argv)
 	{
 		cerr << "SMT logic error:" << endl;
 		cerr << boost::diagnostic_information(_exception);
-		return 1;
+		return 2;
 	}
 	catch (langutil::UnimplementedFeatureError const& _exception)
 	{
 		cerr << "Unimplemented feature:" << endl;
 		cerr << boost::diagnostic_information(_exception);
-		return 1;
+		return 2;
 	}
 	catch (langutil::InternalCompilerError const& _exception)
 	{
 		cerr << "Internal compiler error:" << endl;
 		cerr << boost::diagnostic_information(_exception);
-		return 1;
-	}
-	catch (boost::exception const& _exception)
-	{
-		cerr << "Uncaught exception:" << endl;
-		cerr << boost::diagnostic_information(_exception) << endl;
-		return 1;
-	}
-	catch (std::exception const& _exception)
-	{
-		cerr << "Uncaught exception:" << endl;
-		cerr << boost::diagnostic_information(_exception) << endl;
-		return 1;
+		return 2;
 	}
 	catch (...)
 	{
-		cerr << "Uncaught exception" << endl;
+		cerr << "Uncaught exception:" << endl;
 		cerr << boost::current_exception_diagnostic_information() << endl;
-		return 1;
+		return 2;
 	}
 }
