@@ -154,10 +154,6 @@ to the end-user as:
 
 if a function is being called and the input ``a`` is assigned a value of 10.
 
-Specifying these dynamic expressions is outside the scope of the Solidity
-documentation and you may read more at
-`the radspec project <https://github.com/aragon/radspec>`__.
-
 .. _header-inheritance:
 
 Inheritance Notes
