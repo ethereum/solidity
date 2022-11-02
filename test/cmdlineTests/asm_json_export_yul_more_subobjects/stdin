@@ -1,0 +1,43 @@
+object "L0" {
+  code {
+    sstore(0, datasize("L0"))
+    sstore(1, datasize("L1"))
+    sstore(2, datasize("L1.L2"))
+    sstore(3, datasize("L1.L2.L2_0"))
+    sstore(4, datasize("L1.L2.L2_1"))
+    sstore(5, datasize("L1.L2.L2_2"))
+  }
+
+  object "L1" {
+    code {
+      sstore(6, datasize("L1"))
+      sstore(7, datasize("L2"))
+      sstore(8, datasize("L2.L2_0"))
+      sstore(9, datasize("L2.L2_1"))
+      sstore(10, datasize("L2.L2_2"))
+    }
+    object "L2" {
+      code {
+        sstore(11, datasize("L2"))
+        sstore(12, datasize("L2_0"))
+        sstore(13, datasize("L2_1"))
+        sstore(14, datasize("L2_2"))
+      }
+      object "L2_0" {
+        code {
+          invalid()
+        }
+      }
+      object "L2_1" {
+        code {
+          invalid()
+        }
+      }
+      object "L2_2" {
+        code {
+          invalid()
+        }
+      }
+    }
+  }
+}

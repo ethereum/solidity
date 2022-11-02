@@ -55,11 +55,6 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
-	std::map<std::string, unsigned> indices = {
-		{ "root.asm", 0 },
-		{ "sub.asm", 1 },
-		{ "verbatim.asm", 2 }
-	};
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	Assembly _assembly{evmVersion, false, {}};
 	auto root_asm = std::make_shared<std::string>("root.asm");
@@ -203,16 +198,16 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSH [ErrorTag]\",\"source\":1},"
 		"{\"begin\":6,\"end\":8,\"name\":\"INVALID\",\"source\":1}"
-		"]},"
+		"],\"index\":0},"
 		"\"1\":{\".code\":["
 		"{\"begin\":8,\"end\":18,\"name\":\"VERBATIM\",\"source\":2,\"value\":\"ffff\"},"
 		"{\"begin\":8,\"end\":18,\"name\":\"VERBATIM\",\"source\":2,\"value\":\"74657374\"},"
 		"{\"begin\":8,\"end\":18,\"name\":\"MSTORE\",\"source\":2}"
-		"]},\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"},\"sourceList\":[\"root.asm\",\"sub.asm\",\"verbatim.asm\"]}"
+		"],\"index\":1},\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"},\"sourceList\":[\"root.asm\",\"sub.asm\",\"verbatim.asm\"]}"
 	};
 	Json::Value jsonValue;
 	BOOST_CHECK(util::jsonParseStrict(json, jsonValue));
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assembly.assemblyJSON(indices)), util::jsonCompactPrint(jsonValue));
+	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assembly.assemblyJSON({"root.asm", "sub.asm", "verbatim.asm"})), util::jsonCompactPrint(jsonValue));
 }
 
 BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
@@ -301,10 +296,6 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 
 BOOST_AUTO_TEST_CASE(immutable)
 {
-	std::map<std::string, unsigned> indices = {
-		{ "root.asm", 0 },
-		{ "sub.asm", 1 }
-	};
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	Assembly _assembly{evmVersion, true, {}};
 	auto root_asm = std::make_shared<std::string>("root.asm");
@@ -383,7 +374,7 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"}\n"
 	);
 	BOOST_CHECK_EQUAL(
-		util::jsonCompactPrint(_assembly.assemblyJSON(indices)),
+		util::jsonCompactPrint(_assembly.assemblyJSON({"root.asm", "sub.asm"})),
 		"{\".code\":["
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"2A\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"0\"},"
@@ -397,7 +388,7 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someOtherImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"}"
-		"]}},\"sourceList\":[\"root.asm\",\"sub.asm\"]}"
+		"],\"index\":0}},\"sourceList\":[\"root.asm\",\"sub.asm\"]}"
 	);
 }
 

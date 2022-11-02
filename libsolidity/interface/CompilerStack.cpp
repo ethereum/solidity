@@ -74,7 +74,6 @@
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libevmasm/Exceptions.h>
 
 #include <libsolutil/SwarmHash.h>
 #include <libsolutil/IpfsHash.h>
@@ -702,6 +701,7 @@ bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) con
 
 bool CompilerStack::compile(State _stopAfter)
 {
+	solAssert(m_compilationSourceType != CompilationSourceType::EvmAssemblyJSON);
 	m_stopAfter = _stopAfter;
 	if (m_stackState < AnalysisSuccessful)
 		if (!parseAndAnalyze(_stopAfter))
@@ -986,7 +986,12 @@ Json::Value CompilerStack::assemblyJSON(std::string const& _contractName) const
 
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
-		return currentContract.evmAssembly->assemblyJSON(sourceIndices());
+	{
+		std::vector<std::string> sources = sourceNames();
+		if (find(sources.begin(), sources.end(), CompilerContext::yulUtilityFileName()) == sources.end())
+			sources.emplace_back(CompilerContext::yulUtilityFileName());
+		return currentContract.evmAssembly->assemblyJSON(sources);
+	}
 	else
 		return Json::Value();
 }
@@ -1001,9 +1006,11 @@ std::map<std::string, unsigned> CompilerStack::sourceIndices() const
 	std::map<std::string, unsigned> indices;
 	unsigned index = 0;
 	for (auto const& s: m_sources)
-		indices[s.first] = index++;
-	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
-	indices[CompilerContext::yulUtilityFileName()] = index++;
+		if (s.first != CompilerContext::yulUtilityFileName())
+			indices[s.first] = index++;
+
+	if (indices.find(CompilerContext::yulUtilityFileName()) == indices.end())
+		indices[CompilerContext::yulUtilityFileName()] = index++;
 	return indices;
 }
 
@@ -1611,6 +1618,11 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 	case CompilationSourceType::SolidityAST:
 		sourceType = "SolidityAST";
 		break;
+	case CompilationSourceType::EvmAssemblyJSON:
+		sourceType = "EvmAssemblyJson";
+		break;
+	default:
+		solAssert(false);
 	}
 	meta["language"] = sourceType;
 	meta["compiler"]["version"] = VersionStringStrict;

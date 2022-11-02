@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(version)
 
 BOOST_AUTO_TEST_CASE(multiple_input_modes)
 {
-	array<string, 9> inputModeOptions = {
+	array<string, 10> inputModeOptions = {
 		"--help",
 		"--license",
 		"--version",
@@ -159,10 +159,11 @@ BOOST_AUTO_TEST_CASE(multiple_input_modes)
 		"--strict-assembly",
 		"--yul",
 		"--import-ast",
+		"--import-asm-json",
 	};
 	string expectedMessage =
 		"The following options are mutually exclusive: "
-		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast, --lsp. "
+		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast, --lsp, --import-asm-json. "
 		"Select at most one.";
 
 	for (string const& mode1: inputModeOptions)

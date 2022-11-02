@@ -1,0 +1,58 @@
+Opcodes:
+PUSH0 CALLDATALOAD PUSH1 0x14 DUP1 DUP3 SSTORE PUSH1 0x20 CALLDATALOAD ISZERO PUSH1 0x1C JUMPI DUP1 DUP3 SSTORE PUSH0 DUP1 PUSH0 DUP1 PUSH0 DUP1 STATICCALL POP PUSH25 0x797A5B80825550500000000000000000000000000000000000 
+EVM assembly:
+    /* "<stdin>":28:29  b */
+  0x00
+    /* "<stdin>":15:30      {... */
+  calldataload
+    /* "<stdin>":44:46     */
+  0x14
+    /* "<stdin>":61:62    */
+  dup1
+    /* "<stdin>":58:59    */
+  dup3
+    /* "<stdin>":51:63  : 29,... */
+  sstore
+    /* "<stdin>":84:86   " */
+  0x20
+    /* "<stdin>":71:87  "PUSH",... */
+  calldataload
+    /* "<stdin>":68:188  ": "PUSH",... */
+  iszero
+  tag_1
+  jumpi
+    /* "<stdin>":108:109  u */
+  dup1
+    /* "<stdin>":105:106  v */
+  dup3
+    /* "<stdin>":98:110        "value */
+  sstore
+    /* "<stdin>":149:150    */
+  0x00
+    /* "<stdin>":146:147  5 */
+  dup1
+    /* "<stdin>":143:144  : */
+  0x00
+    /* "<stdin>":140:141  i */
+  dup1
+    /* "<stdin>":137:138  b */
+  0x00
+    /* "<stdin>":134:135    */
+  dup1
+    /* "<stdin>":123:151  ... */
+  staticcall
+    /* "<stdin>":119:152    },... */
+  pop
+    /* "<stdin>":161:182   30,... */
+  verbatimbytecode_78797a
+    /* "<stdin>":68:188  ": "PUSH",... */
+tag_1:
+    /* "<stdin>":203:204  s */
+  dup1
+    /* "<stdin>":200:201    */
+  dup3
+    /* "<stdin>":193:205  ",... */
+  sstore
+    /* "<stdin>":0:207  {... */
+  pop
+  pop

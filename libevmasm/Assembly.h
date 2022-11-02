@@ -150,10 +150,18 @@ public:
 	) const;
 
 	/// Create a JSON representation of the assembly.
-	Json::Value assemblyJSON(
-		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>(),
-		bool _includeSourceList = true
-	) const;
+	Json::Value assemblyJSON(std::vector<std::string> const& _sources, bool _includeSourceList = true) const;
+
+	/// Loads the JSON representation of assembly.
+	/// @param _json JSON object containing assembly in the format produced by assemblyJSON().
+	/// @param _sourceList list of source names (used to supply the source-list from the root-assembly object to sub-assemblies).
+	/// @param _level this function might be called recursively, _level reflects the nesting level.
+	/// @returns Resulting Assembly object loaded from given json.
+	static std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> fromJSON(
+		Json::Value const& _json,
+		std::vector<std::string> const& _sourceList = {},
+		int _level = 0
+	);
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }
@@ -171,10 +179,24 @@ protected:
 
 	unsigned codeSize(unsigned subTagSize) const;
 
+	/// Add all assembly items from given JSON array. This function imports the items by iterating through
+	/// the code array. This method only works on clean Assembly objects that don't have any items defined yet.
+	/// @param _json JSON array that contains assembly items (e.g. json['.code'])
+	/// @param _sourceList list of source names.
+	void importAssemblyItemsFromJSON(Json::Value const& _code, std::vector<std::string> const& _sourceList);
+
+	/// Creates an AssemblyItem from a given JSON representation.
+	/// @param _json JSON object that consists a single assembly item
+	/// @param _sourceList list of source names.
+	/// @returns AssemblyItem of _json argument.
+	AssemblyItem createAssemblyItemFromJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList);
+
 private:
 	bool m_invalid = false;
 
 	Assembly const* subAssemblyById(size_t _subId) const;
+
+	void updatePaths(std::vector<Assembly *> const& _parents = {}, std::vector<size_t> const& _absolutePathFromRoot = {});
 
 protected:
 	/// 0 is reserved for exception
@@ -217,7 +239,6 @@ protected:
 	/// Internal name of the assembly object, only used with the Yul backend
 	/// currently
 	std::string m_name;
-
 	langutil::SourceLocation m_currentSourceLocation;
 
 public:
