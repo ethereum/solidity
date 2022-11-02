@@ -55,13 +55,9 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
-	map<string, unsigned> indices = {
-		{ "root.asm", 0 },
-		{ "sub.asm", 1 },
-		{ "verbatim.asm", 2 }
-	};
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	Assembly _assembly{evmVersion, false, {}};
+	_assembly.setSourceList({"root.asm", "sub.asm", "verbatim.asm"});
 	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
@@ -212,7 +208,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	};
 	Json::Value jsonValue;
 	BOOST_CHECK(util::jsonParseStrict(json, jsonValue));
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assembly.assemblyJSON(indices)), util::jsonCompactPrint(jsonValue));
+	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assembly.assemblyJSON()), util::jsonCompactPrint(jsonValue));
 }
 
 BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
@@ -301,12 +297,9 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 
 BOOST_AUTO_TEST_CASE(immutable)
 {
-	map<string, unsigned> indices = {
-		{ "root.asm", 0 },
-		{ "sub.asm", 1 }
-	};
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	Assembly _assembly{evmVersion, true, {}};
+	_assembly.setSourceList({"root.asm", "sub.asm"});
 	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
@@ -383,7 +376,7 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"}\n"
 	);
 	BOOST_CHECK_EQUAL(
-		util::jsonCompactPrint(_assembly.assemblyJSON(indices)),
+		util::jsonCompactPrint(_assembly.assemblyJSON()),
 		"{\".code\":["
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"2A\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"PUSH\",\"source\":0,\"value\":\"0\"},"
