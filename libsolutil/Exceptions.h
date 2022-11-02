@@ -54,6 +54,15 @@ struct Exception: virtual std::exception, virtual boost::exception
 		::boost::throw_line(__LINE__) \
 	)
 
+/// Throws an exception if condition is not met with a given description and extra information about the location the
+/// exception was thrown from.
+/// @param _condition if condition is not met, specified exception will be thrown.
+/// @param _exceptionType The type of the exception to throw (not an instance).
+/// @param _description The message that describes the error.
+#define solRequire(_condition, _exceptionType, _description) \
+	if (!(_condition)) \
+		solThrow(_exceptionType, (_description))
+
 /// Defines an exception type that's meant to signal a specific condition and be caught rather than
 /// unwind the stack all the way to the top-level exception handler and interrupt the program.
 /// As such it does not carry a message - the code catching it is expected to handle it without
