@@ -84,4 +84,4 @@
  - [ ] Share the announcement on Reddit in [``/r/ethdev``](https://reddit.com/r/ethdev/), cross-posted to [``/r/ethereum``](https://reddit.com/r/ethereum/).
  - [ ] Share the announcement the [Solidity forum](https://forum.soliditylang.org) in the ``Announcements`` category.
  - [ ] Update the release information section on [soliditylang.org](https://github.com/ethereum/solidity-portal).
- - [ ] Lean back, wait for bug reports and repeat from step 1 :)
+ - [ ] Lean back, wait for bug reports and repeat from step 1 :).
