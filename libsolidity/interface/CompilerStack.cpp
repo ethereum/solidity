@@ -1284,7 +1284,7 @@ bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& featu
 }
 }
 
-void CompilerStack::assemble(
+void CompilerStack::assembleYul(
 	ContractDefinition const& _contract,
 	shared_ptr<evmasm::Assembly> _assembly,
 	shared_ptr<evmasm::Assembly> _runtimeAssembly
@@ -1397,7 +1397,7 @@ void CompilerStack::compileContract(
 
 	_otherCompilers[compiledContract.contract] = compiler;
 
-	assemble(_contract, compiler->assemblyPtr(), compiler->runtimeAssemblyPtr());
+	assembleYul(_contract, compiler->assemblyPtr(), compiler->runtimeAssemblyPtr());
 }
 
 void CompilerStack::generateIR(ContractDefinition const& _contract)
@@ -1475,7 +1475,7 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	string deployedName = IRNames::deployedObject(_contract);
 	solAssert(!deployedName.empty(), "");
 	tie(compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly) = stack.assembleEVMWithDeployed(deployedName);
-	assemble(_contract, compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly);
+	assembleYul(_contract, compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly);
 }
 
 void CompilerStack::generateEwasm(ContractDefinition const& _contract)

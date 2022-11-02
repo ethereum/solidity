@@ -426,7 +426,7 @@ private:
 
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
-	void assemble(
+	void assembleYul(
 		ContractDefinition const& _contract,
 		std::shared_ptr<evmasm::Assembly> _assembly,
 		std::shared_ptr<evmasm::Assembly> _runtimeAssembly
