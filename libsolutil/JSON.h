@@ -67,4 +67,66 @@ std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format);
 /// \return \c true if the document was successfully parsed, \c false if an error occurred.
 bool jsonParseStrict(std::string const& _input, Json::Value& _json, std::string* _errs = nullptr);
 
+namespace detail
+{
+
+template<typename T>
+struct helper;
+
+template<typename T, bool(Json::Value::*checkMember)() const, T(Json::Value::*convertMember)() const>
+struct helper_impl
+{
+	static bool isOfType(Json::Value const& _input)
+	{
+		return (_input.*checkMember)();
+	}
+	static T get(Json::Value const& _input)
+	{
+		return (_input.*convertMember)();
+	}
+	static T getOrDefault(Json::Value const& _input, T _default = {})
+	{
+		T result = _default;
+		if (isOfType(_input))
+			result = (_input.*convertMember)();
+		return result;
+	}
+};
+
+template<> struct helper<float>: helper_impl<float, &Json::Value::isDouble, &Json::Value::asFloat> {};
+template<> struct helper<double>: helper_impl<double, &Json::Value::isDouble, &Json::Value::asDouble> {};
+template<> struct helper<std::string>: helper_impl<std::string, &Json::Value::isString, &Json::Value::asString> {};
+template<> struct helper<Json::Int>: helper_impl<Json::Int, &Json::Value::isInt, &Json::Value::asInt> {};
+template<> struct helper<Json::Int64>: helper_impl<Json::Int64, &Json::Value::isInt64, &Json::Value::asInt64> {};
+template<> struct helper<Json::UInt>: helper_impl<Json::UInt, &Json::Value::isUInt, &Json::Value::asUInt> {};
+template<> struct helper<Json::UInt64>: helper_impl<Json::UInt64, &Json::Value::isUInt64, &Json::Value::asUInt64> {};
+
+} // namespace detail
+
+template<typename T>
+bool isOfType(Json::Value const& _input)
+{
+	return detail::helper<T>::isOfType(_input);
 }
+
+template<typename T>
+bool isOfTypeIfExists(Json::Value const& _input, std::string const& _name)
+{
+	if (_input.isMember(_name))
+		return isOfType<T>(_input[_name]);
+	return true;
+}
+
+template<typename T>
+T get(Json::Value const& _input)
+{
+	return detail::helper<T>::get(_input);
+}
+
+template<typename T>
+T getOrDefault(Json::Value const& _input, T _default = {})
+{
+	return detail::helper<T>::getOrDefault(_input, _default);
+}
+
+} // namespace solidity::util
