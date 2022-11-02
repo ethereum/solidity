@@ -72,6 +72,9 @@ function gp2_test
     # New hardhat release breaks GP2 tests, and since GP2 repository has been archived, we are pinning hardhat
     # to the previous stable version. See https://github.com/ethereum/solidity/pull/13485
     yarn add hardhat@2.10.2
+    # hardhat-tenderly@1.2.0 and upwards break the build, hence we are pinning the version to the last stable one.
+    # See https://github.com/cowprotocol/contracts/issues/32
+    yarn add @tenderly/hardhat-tenderly@1.1.6
 
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
     rm -r node_modules/@gnosis.pm/safe-contracts/build/
