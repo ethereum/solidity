@@ -1123,7 +1123,7 @@ jobs:
 
   t_osx_cli:
     <<: *base_osx
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - checkout
       - install_dependencies_osx
@@ -1218,7 +1218,7 @@ jobs:
 
   t_ubu_cli: &t_ubu_cli
     <<: *base_ubuntu2204_small
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - cmdline_tests
 
@@ -1237,7 +1237,7 @@ jobs:
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
     <<: *base_ubuntu2204
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     environment:
       <<: *base_ubuntu2204_env
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
@@ -1286,7 +1286,7 @@ jobs:
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2204_clang
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - cmdline_tests
 
