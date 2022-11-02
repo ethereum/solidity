@@ -92,7 +92,7 @@ do
 done
 
 # wait for individual processes to get their exit status
-for pid in ${PIDs[*]}
+for pid in "${PIDs[@]}"
 do
     wait "$pid"
 done
