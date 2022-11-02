@@ -25,6 +25,7 @@
 #include <solc/CommandLineParser.h>
 
 #include <libevmasm/AbstractAssemblyStack.h>
+#include <libevmasm/EVMAssemblyStack.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
@@ -85,6 +86,7 @@ private:
 	void printVersion();
 	void printLicense();
 	void compile();
+	void assembleFromEVMAssemblyJSON();
 	void serveLSP();
 	void link();
 	void writeLinkedFiles();
@@ -149,6 +151,7 @@ private:
 	UniversalCallback m_universalCallback{&m_fileReader, m_solverCommand};
 	std::optional<std::string> m_standardJsonInput;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;
+	std::unique_ptr<evmasm::EVMAssemblyStack> m_evmAssemblyStack;
 	evmasm::AbstractAssemblyStack* m_assemblyStack = nullptr;
 	CommandLineOptions m_options;
 };
