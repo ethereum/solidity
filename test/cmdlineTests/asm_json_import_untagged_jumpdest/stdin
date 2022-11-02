@@ -1,0 +1,10 @@
+{
+  ".code": [
+    {
+      "name": "tag",
+      "value": "0x00"
+    },
+    { "name": "JUMPDEST" },
+    { "name": "JUMPDEST" }
+  ]
+}

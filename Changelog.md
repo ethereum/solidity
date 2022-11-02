@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Assembler: Use ``push0`` for placing ``0`` in the stack for EVM versions starting from "Shanghai". This decreases the deployment costs.
+ * Commandline Interface: Add new input mode ``--import-asm-json`` that can import EVM assembly in the format used by ``--asm-json``.
  * EVM: Support for the EVM Version "Shanghai".
  * NatSpec: Add support for NatSpec documentation in ``enum`` definitions.
  * NatSpec: Add support for NatSpec documentation in ``struct`` definitions.

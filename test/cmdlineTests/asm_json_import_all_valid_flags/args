@@ -1,0 +1,1 @@
+--pretty-json --json-indent 4 --combined-json bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime --asm --bin --bin-runtime --asm-json --import-asm-json -

@@ -42,6 +42,7 @@
 #include <liblangutil/SourceLocation.h>
 
 #include <libevmasm/LinkerObject.h>
+#include <libevmasm/EVMAssemblyStack.h>
 
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
@@ -121,7 +122,9 @@ public:
 		/// Regular compilation from Solidity source files.
 		Solidity,
 		/// Compilation from an imported Solidity AST.
-		SolidityAST
+		SolidityAST,
+		/// Compilation from an imported EVM Assembly JSON.
+		EvmAssemblyJSON
 	};
 
 	/// Creates a new compiler stack.
@@ -232,6 +235,8 @@ public:
 	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse().
 	/// Will throw errors if the import fails
 	void importASTs(std::map<std::string, Json::Value> const& _sources);
+
+	void importFromEVMAssemblyStack(std::string const& _sourceName, std::string const& _source);
 
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
 	///  typechecking, staticAnalysis) on previously parsed sources.
@@ -532,6 +537,7 @@ private:
 	/// If this is true, the stack will refuse to generate code.
 	bool m_hasError = false;
 	MetadataFormat m_metadataFormat = defaultMetadataFormat();
+	std::unique_ptr<evmasm::EVMAssemblyStack> m_evmAssemblyStack;
 };
 
 }

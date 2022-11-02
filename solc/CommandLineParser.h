@@ -57,6 +57,7 @@ enum class InputMode
 	Linker,
 	Assembler,
 	LanguageServer,
+	EVMAssemblerJSON
 };
 
 struct CompilerOutputs

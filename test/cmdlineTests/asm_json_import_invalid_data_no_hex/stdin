@@ -1,0 +1,11 @@
+{
+  ".code": [
+    {
+      "name": "PUSH",
+      "value": "0"
+    }
+  ],
+  ".data": {
+    "0": "no-hex-string"
+  }
+}

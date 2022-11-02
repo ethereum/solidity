@@ -1,0 +1,9 @@
+{
+  ".code": [
+    {
+      "name": "PUSH",
+      "value": "0",
+      "jumpType": "[in]"
+    }
+  ]
+}

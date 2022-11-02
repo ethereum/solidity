@@ -24,6 +24,7 @@
 
 #include <solc/CommandLineParser.h>
 
+#include <libevmasm/EVMAssemblyStack.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
@@ -84,6 +85,7 @@ private:
 	void printVersion();
 	void printLicense();
 	void compile();
+	void assembleFromEvmAssemblyJson();
 	void serveLSP();
 	void link();
 	void writeLinkedFiles();
@@ -98,6 +100,7 @@ private:
 
 	void handleCombinedJSON();
 	void handleAst();
+	void handleEVMAssembly(std::string const& _contract);
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
 	void handleIR(std::string const& _contract);

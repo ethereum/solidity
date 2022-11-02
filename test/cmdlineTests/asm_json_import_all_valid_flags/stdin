@@ -1,0 +1,22 @@
+{
+  ".code": [
+    {
+      "name": "PUSH",
+      "value": "0"
+    }
+  ],
+  ".data": {
+    "0": {
+      ".code": [
+        {
+          "name": "PUSH",
+          "value": "1"
+        }
+      ]
+    }
+  },
+  "sourceList": [
+    "contract.sol",
+    "#utility.yul"
+  ]
+}
