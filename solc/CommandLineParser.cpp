@@ -926,7 +926,7 @@ void CommandLineParser::processArgs()
 		g_strStrictAssembly,
 		g_strYul,
 		g_strImportAst,
-		g_strLSP
+		g_strLSP,
 	});
 
 	if (m_args.count(g_strHelp) > 0)
@@ -1048,7 +1048,7 @@ void CommandLineParser::processArgs()
 	if (m_args.count(g_strRevertStrings))
 	{
 		string revertStringsString = m_args[g_strRevertStrings].as<string>();
-		std::optional<RevertStrings> revertStrings = revertStringsFromString(revertStringsString);
+		optional<RevertStrings> revertStrings = revertStringsFromString(revertStringsString);
 		if (!revertStrings)
 			solThrow(
 				CommandLineValidationError,
@@ -1142,7 +1142,7 @@ void CommandLineParser::processArgs()
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
-		std::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
+		optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
 		if (!versionOption)
 			solThrow(CommandLineValidationError, "Invalid option for --" + g_strEVMVersion + ": " + versionOptionStr);
 		m_options.output.evmVersion = *versionOption;

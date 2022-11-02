@@ -94,7 +94,6 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 
 using solidity::util::errinfo_comment;
-using solidity::util::toHex;
 
 static int g_compilerStackCounts = 0;
 
@@ -241,7 +240,7 @@ void CompilerStack::setModelCheckerSettings(ModelCheckerSettings _settings)
 	m_modelCheckerSettings = _settings;
 }
 
-void CompilerStack::setLibraries(std::map<std::string, util::h160> const& _libraries)
+void CompilerStack::setLibraries(map<string, util::h160> const& _libraries)
 {
 	if (m_stackState >= ParsedAndImported)
 		solThrow(CompilerError, "Must set libraries before parsing.");
@@ -814,7 +813,6 @@ Json::Value CompilerStack::generatedSources(string const& _contractName, bool _r
 				sources[0]["id"] = sourceIndex;
 				sources[0]["language"] = "Yul";
 				sources[0]["contents"] = std::move(source);
-
 			}
 		}
 		return sources;
@@ -851,7 +849,7 @@ string const* CompilerStack::runtimeSourceMapping(string const& _contractName) c
 	return c.runtimeSourceMapping ? &*c.runtimeSourceMapping : nullptr;
 }
 
-std::string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
+string const CompilerStack::filesystemFriendlyName(string const& _contractName) const
 {
 	if (m_stackState < AnalysisPerformed)
 		solThrow(CompilerError, "No compiled contracts found.");
@@ -865,7 +863,7 @@ std::string const CompilerStack::filesystemFriendlyName(string const& _contractN
 				contract.second.contract != matchContract.contract)
 		{
 			// If it does, then return its fully-qualified name, made fs-friendly
-			std::string friendlyName = boost::algorithm::replace_all_copy(_contractName, "/", "_");
+			string friendlyName = boost::algorithm::replace_all_copy(_contractName, "/", "_");
 			boost::algorithm::replace_all(friendlyName, ":", "_");
 			boost::algorithm::replace_all(friendlyName, ".", "_");
 			return friendlyName;
@@ -1117,7 +1115,7 @@ ContractDefinition const& CompilerStack::contractDefinition(string const& _contr
 }
 
 size_t CompilerStack::functionEntryPoint(
-	std::string const& _contractName,
+	string const& _contractName,
 	FunctionDefinition const& _function
 ) const
 {
@@ -1287,8 +1285,8 @@ bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& featu
 
 void CompilerStack::assemble(
 	ContractDefinition const& _contract,
-	std::shared_ptr<evmasm::Assembly> _assembly,
-	std::shared_ptr<evmasm::Assembly> _runtimeAssembly
+	shared_ptr<evmasm::Assembly> _assembly,
+	shared_ptr<evmasm::Assembly> _runtimeAssembly
 )
 {
 	solAssert(m_stackState >= AnalysisPerformed, "");
@@ -1599,7 +1597,7 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 	}
 
 	static_assert(sizeof(m_optimiserSettings.expectedExecutionsPerDeployment) <= sizeof(Json::LargestUInt), "Invalid word size.");
-	solAssert(static_cast<Json::LargestUInt>(m_optimiserSettings.expectedExecutionsPerDeployment) < std::numeric_limits<Json::LargestUInt>::max(), "");
+	solAssert(static_cast<Json::LargestUInt>(m_optimiserSettings.expectedExecutionsPerDeployment) < numeric_limits<Json::LargestUInt>::max(), "");
 	meta["settings"]["optimizer"]["runs"] = Json::Value(Json::LargestUInt(m_optimiserSettings.expectedExecutionsPerDeployment));
 
 	/// Backwards compatibility: If set to one of the default settings, do not provide details.
