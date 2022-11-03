@@ -23,15 +23,13 @@ jobs:
           gh api graphql \
             --raw-field organization="$ORGANIZATION" \
             --raw-field query='
-              query($organization: String!, $cursor: String) {
+              query($organization: String!) {
                 organization(login: $organization) {
-                  membersWithRole(first: 100, after: $cursor) {
-                    pageInfo {
-                      hasNextPage,
-                      endCursor
-                    }
-                    nodes {
-                      login
+                  team(slug: "Solidity") {
+                    members(first: 100) {
+                      nodes {
+                        login
+                      }
                     }
                   }
                 }
@@ -39,7 +37,7 @@ jobs:
           echo "CONTRIBUTOR_IS_ORG_MEMBER=$(
             jq \
               --arg contributor $CONTRIBUTOR \
-              '.data.organization.membersWithRole | any(.nodes[].login; . == $contributor)' \
+              '.data.organization.team.members | any(.nodes[].login; . == $contributor)' \
               org_members.json
           )" >> $GITHUB_OUTPUT
 
