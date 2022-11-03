@@ -509,7 +509,7 @@ std::optional<Json> checkMetadataKeys(Json const& _input)
 {
 	if (_input.is_object())
 	{
-		if (_input.contains("appendCBOR") && !_input["appendCBOR"].is_boolean))
+		if (_input.contains("appendCBOR") && !_input["appendCBOR"].is_boolean())
 			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.appendCBOR\" must be Boolean");
 		if (_input.contains("useLiteralContent") && !_input["useLiteralContent"].is_boolean())
 			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.useLiteralContent\" must be Boolean");
@@ -585,7 +585,8 @@ std::variant<OptimiserSettings, Json> parseOptimizerSettings(Json const& _jsonIn
 	{
 		if (!_jsonInput["runs"].is_number_unsigned())
 			return formatFatalError(Error::Type::JSONError, "The \"runs\" setting must be an unsigned number.");
-		settings.expectedExecutionsPerDeployment = _jsonInput["runs"].get<Json::number_unsigned_t>();
+		// TODO: check size
+		settings.expectedExecutionsPerDeployment = static_cast<size_t>(_jsonInput["runs"].get<Json::number_unsigned_t>());
 	}
 
 	if (_jsonInput.contains("details"))

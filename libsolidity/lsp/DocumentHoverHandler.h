@@ -26,7 +26,7 @@ class DocumentHoverHandler: public HandlerBase
 public:
 	using HandlerBase::HandlerBase;
 
-	void operator()(MessageID, Json::Value const&);
+	void operator()(MessageID, Json const&);
 };
 
 }
