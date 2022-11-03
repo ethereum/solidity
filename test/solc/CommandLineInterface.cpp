@@ -25,6 +25,7 @@
 
 #include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
+#include <liblangutil/SemVerHandler.h>
 #include <test/FilesystemUtils.h>
 
 #include <libsolutil/JSON.h>
@@ -44,6 +45,7 @@ using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::test;
 using namespace solidity::util;
+using namespace solidity::langutil;
 
 using PathSet = set<boost::filesystem::path>;
 
@@ -1006,16 +1008,57 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		canonicalWorkDir / "lib",
 	};
 
+	string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
 	BOOST_TEST(result.stderrContent == "");
-	BOOST_TEST(result.stdoutContent == "");
+	if (SemVerVersion{string(VersionString)}.isPrerelease())
+		BOOST_TEST(result.stdoutContent == "");
+	else
+		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
 	BOOST_REQUIRE(result.success);
 	BOOST_TEST(result.options == expectedOptions);
 	BOOST_TEST(result.reader.sourceUnits() == expectedSources);
 	BOOST_TEST(result.reader.includePaths() == expectedIncludePaths);
 	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
 	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "base/");
+}
+
+BOOST_AUTO_TEST_CASE(cli_no_contracts_to_compile)
+{
+	string const contractSource = R"(
+		// SPDX-License-Identifier: GPL-3.0
+		pragma solidity >=0.0;
+		enum Status { test }
+	)";
+
+	string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
+	OptionsReaderAndMessages result = runCLI({"solc", "-"}, contractSource);
+
+	if (SemVerVersion{string(VersionString)}.isPrerelease())
+		BOOST_TEST(result.stdoutContent == "");
+	else
+		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
+	BOOST_REQUIRE(result.success);
+}
+
+BOOST_AUTO_TEST_CASE(cli_no_output)
+{
+	string const contractSource = R"(
+		// SPDX-License-Identifier: GPL-3.0
+		pragma solidity >=0.0;
+		abstract contract A {
+			function B() public virtual returns(uint);
+		})";
+
+	string const expectedStdoutContent = "Compiler run successful. No output generated.\n";
+	OptionsReaderAndMessages result = runCLI({"solc", "-"}, contractSource);
+
+	if (SemVerVersion{string(VersionString)}.isPrerelease())
+		BOOST_TEST(result.stdoutContent == "");
+	else
+		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
+	BOOST_REQUIRE(result.success);
 }
 
 BOOST_AUTO_TEST_CASE(standard_json_include_paths)
