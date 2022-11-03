@@ -25,6 +25,8 @@
 
 #include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
+#include <liblangutil/SemVerHandler.h>
+#include <liblangutil/Scanner.h>
 #include <test/FilesystemUtils.h>
 #include <test/TemporaryDirectory.h>
 
@@ -44,6 +46,7 @@ using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::test;
 using namespace solidity::util;
+using namespace solidity::langutil;
 
 using PathSet = set<boost::filesystem::path>;
 
@@ -1006,10 +1009,14 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		canonicalWorkDir / "lib",
 	};
 
+	string const expectedStdoutContent = "Compiler run successful, no contracts to compile.\n";
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
 	BOOST_TEST(result.stderrContent == "");
-	BOOST_TEST(result.stdoutContent == "");
+	if (SemVerVersion{string(VersionString)}.isPrerelease())
+		BOOST_TEST(result.stdoutContent == "");
+	else
+		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
 	BOOST_REQUIRE(result.success);
 	BOOST_TEST(result.options == expectedOptions);
 	BOOST_TEST(result.reader.sourceUnits() == expectedSources);

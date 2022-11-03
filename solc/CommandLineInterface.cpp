@@ -50,6 +50,7 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SemVerHandler.h>
 
 #include <libsmtutil/Exceptions.h>
 
@@ -1191,8 +1192,11 @@ void CommandLineInterface::outputCompilationResults()
 	{
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
-		else
-			serr() << "Compiler run successful, no output requested." << endl;
+		else if (contracts.empty())
+			sout() << "Compiler run successful, no contracts to compile." << endl;
+		else if (contracts.size() > 0)
+			if (SemVerVersion{string(solidity::frontend::VersionString)}.isPrerelease())
+				sout() << "Compiler run successful. No output requested." << endl;
 	}
 }
 
