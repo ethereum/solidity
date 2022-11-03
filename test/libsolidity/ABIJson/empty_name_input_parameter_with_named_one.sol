@@ -9,8 +9,7 @@ contract test {
 //     :test
 // [
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "",
@@ -23,8 +22,7 @@ contract test {
 //       }
 //     ],
 //     "name": "f",
-//     "outputs":
-//     [
+//     "outputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "ret_k",

@@ -9,19 +9,16 @@ library L {
 //     :L
 // [
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
-//         "components":
-//         [
+//         "components": [
 //           {
 //             "internalType": "uint256",
 //             "name": "a",
 //             "type": "uint256"
 //           },
 //           {
-//             "components":
-//             [
+//             "components": [
 //               {
 //                 "internalType": "uint256[2]",
 //                 "name": "x",
