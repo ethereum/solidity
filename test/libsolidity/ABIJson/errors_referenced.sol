@@ -34,8 +34,7 @@ contract X is C {
 //     :D
 // [
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "",
@@ -61,8 +60,7 @@ contract X is C {
 //     "type": "error"
 //   },
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "",
@@ -78,8 +76,7 @@ contract X is C {
 //     "type": "error"
 //   },
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "x",
