@@ -408,7 +408,7 @@ Json collectEVMObject(
 
 std::optional<Json> checkKeys(Json const& _input, set<string> const& _keys, string const& _name)
 {
-	if (!!_input && !_input.is_object())
+	if (!_input.empty() && !_input.is_object())
 		return formatFatalError(Error::Type::JSONError, "\"" + _name + "\" must be an object");
 
 	for (auto const& [member, _]: _input.items())
@@ -524,7 +524,7 @@ std::optional<Json> checkMetadataKeys(Json const& _input)
 
 std::optional<Json> checkOutputSelection(Json const& _outputSelection)
 {
-	if (!!_outputSelection && !_outputSelection.is_object())
+	if (!_outputSelection.empty() && !_outputSelection.is_object())
 		return formatFatalError(Error::Type::JSONError, "\"settings.outputSelection\" must be an object");
 
 	for (auto const& [sourceName, sourceVal]: _outputSelection.items())
@@ -652,18 +652,18 @@ std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseI
 		return formatFatalError(Error::Type::JSONError, "No input sources specified.");
 
 	ret.errors = Json::array();
+	ret.sources = Json::object();
 
 	for (auto const& [sourceName, _]: sources.items())
 	{
 		string hash;
-
 		if (auto result = checkSourceKeys(sources[sourceName], sourceName))
 			return *result;
 
-		if (sources[sourceName]["keccak256"].is_string())
+		if (sources[sourceName].contains("keccak256") && sources[sourceName]["keccak256"].is_string())
 			hash = sources[sourceName]["keccak256"].get<string>();
 
-		if (sources[sourceName]["content"].is_string())
+		if (sources[sourceName].contains("content") && sources[sourceName]["content"].is_string())
 		{
 			string content = sources[sourceName]["content"].get<string>();
 			if (!hash.empty() && !hashMatchesContent(hash, content))
@@ -675,7 +675,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseI
 			else
 				ret.sources[sourceName] = content;
 		}
-		else if (sources[sourceName]["urls"].is_array())
+		else if (sources[sourceName].contains("urls") && sources[sourceName]["urls"].is_array())
 		{
 			if (!m_readFile)
 				return formatFatalError(Error::Type::JSONError, "No import callback supplied, but URL is requested.");
@@ -721,15 +721,15 @@ std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseI
 			return formatFatalError(Error::Type::JSONError, "Invalid input source specified.");
 	}
 
-	Json const& auxInputs = _input["auxiliaryInput"];
+	Json const& auxInputs = _input.value("auxiliaryInput", Json::object());
 
 	if (auto result = checkAuxiliaryInputKeys(auxInputs))
 		return *result;
 
-	if (!!auxInputs)
+	if (!auxInputs.empty())
 	{
 		Json const& smtlib2Responses = auxInputs["smtlib2responses"];
-		if (!!smtlib2Responses)
+		if (!smtlib2Responses.empty())
 		{
 			if (!smtlib2Responses.is_object())
 				return formatFatalError(Error::Type::JSONError, "\"auxiliaryInput.smtlib2responses\" must be an object.");
