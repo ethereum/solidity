@@ -394,7 +394,7 @@ Json::Value collectEVMObject(
 
 std::optional<Json::Value> checkKeys(Json::Value const& _input, std::set<std::string> const& _keys, std::string const& _name)
 {
-	if (!!_input && !_input.is_object())
+	if (!_input.empty() && !_input.is_object())
 		return formatFatalError(Error::Type::JSONError, "\"" + _name + "\" must be an object");
 
 	for (auto const& [member, _]: _input.items())
@@ -513,7 +513,7 @@ std::optional<Json> checkMetadataKeys(Json const& _input)
 
 std::optional<Json> checkOutputSelection(Json const& _outputSelection)
 {
-	if (!!_outputSelection && !_outputSelection.is_object())
+	if (!_outputSelection.empty() && !_outputSelection.is_object())
 		return formatFatalError(Error::Type::JSONError, "\"settings.outputSelection\" must be an object");
 
 	for (auto const& [sourceName, sourceVal]: _outputSelection.items())
@@ -648,6 +648,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		return formatFatalError(Error::Type::JSONError, "No input sources specified.");
 
 	ret.errors = Json::array();
+	ret.sources = Json::object();
 
 	if (ret.language == "Solidity" || ret.language == "Yul")
 	{
@@ -756,10 +757,10 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	if (auto result = checkAuxiliaryInputKeys(auxInputs))
 		return *result;
 
-	if (!!auxInputs)
+	if (!auxInputs.empty())
 	{
 		Json const& smtlib2Responses = auxInputs["smtlib2responses"];
-		if (!!smtlib2Responses)
+		if (!smtlib2Responses.empty())
 		{
 			if (!smtlib2Responses.is_object())
 				return formatFatalError(Error::Type::JSONError, "\"auxiliaryInput.smtlib2responses\" must be an object.");
