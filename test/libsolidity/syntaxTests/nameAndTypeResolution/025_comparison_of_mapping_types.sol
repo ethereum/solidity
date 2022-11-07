@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (147-153): Operator == not compatible with types mapping(uint256 => uint256) and mapping(uint256 => uint256).
+// TypeError 2271: (147-153): Built-in binary operator == cannot be applied to types mapping(uint256 => uint256) and mapping(uint256 => uint256).

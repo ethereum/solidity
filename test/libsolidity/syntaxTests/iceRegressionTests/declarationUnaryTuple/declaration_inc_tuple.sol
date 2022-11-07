@@ -6,4 +6,4 @@ contract C
     }
 }
 // ----
-// TypeError 9767: (61-66): Unary operator ++ cannot be applied to type tuple(,).
+// TypeError 9767: (61-66): Built-in unary operator ++ cannot be applied to type tuple(,).

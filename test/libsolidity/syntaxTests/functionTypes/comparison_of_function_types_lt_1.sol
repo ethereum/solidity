@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (73-88): Operator < not compatible with types function () external returns (bool) and function () external returns (bool).
+// TypeError 2271: (73-88): Built-in binary operator < cannot be applied to types function () external returns (bool) and function () external returns (bool).
