@@ -85,4 +85,13 @@ private:
 	std::map<YulString, std::size_t> m_identifiersRHS;
 };
 
+/**
+ * Does the same as SyntacticallyEqual just that the operator() function is const.
+ */
+struct SyntacticallyEqualExpression
+{
+	bool operator()(Expression const& _lhs, Expression const& _rhs) const;
+};
+
+
 }

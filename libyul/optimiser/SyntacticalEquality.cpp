@@ -165,3 +165,9 @@ bool SyntacticallyEqual::visitDeclaration(TypedName const& _lhs, TypedName const
 	m_identifiersRHS[_rhs.name] = id;
 	return true;
 }
+
+bool SyntacticallyEqualExpression::operator()(Expression const& _lhs, Expression const& _rhs) const
+{
+	return SyntacticallyEqual{}(_lhs, _rhs);
+}
+

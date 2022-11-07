@@ -24,6 +24,8 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/SyntacticalEquality.h>
+#include <libyul/optimiser/BlockHasher.h>
 
 #include <set>
 
@@ -58,8 +60,16 @@ protected:
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;
 
+	void assignValue(YulString _variable, Expression const* _value) override;
 private:
 	std::set<YulString> m_returnVariables;
+	std::unordered_map<
+		std::reference_wrapper<Expression const>,
+		std::set<YulString>,
+		ExpressionHash,
+		SyntacticallyEqualExpression
+	> m_replacementCandidates;
 };
+
 
 }
