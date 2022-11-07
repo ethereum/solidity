@@ -58,8 +58,21 @@ protected:
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;
 
+	void assignValue(YulString _variable, Expression const* _value) override;
 private:
+	struct ExpressionHash {
+		uint64_t operator()(Expression const*) const;
+	};
+	struct ExpressionEqual {
+		bool operator()(Expression const*, Expression const*) const;
+	};
 	std::set<YulString> m_returnVariables;
+	std::unordered_map<
+		Expression const*,
+		std::set<YulString>,
+		ExpressionHash,
+		ExpressionEqual
+	> m_replacementCandidates;
 };
 
 }
