@@ -40,6 +40,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <fmt/format.h>
+
 #include <range/v3/algorithm/count_if.hpp>
 #include <range/v3/view/drop_exactly.hpp>
 #include <range/v3/view/enumerate.hpp>
@@ -1731,7 +1733,13 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	TypeResult result = type(_operation.subExpression())->unaryOperatorResult(op);
 	if (!result)
 	{
-		string description = "Built-in unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->humanReadableName() + "." + (!result.message().empty() ? " " + result.message() : "");
+		string description = fmt::format(
+			"Built-in unary operator {} cannot be applied to type {}.{}",
+			TokenTraits::toString(op),
+			subExprType->humanReadableName(),
+			!result.message().empty() ? " " + result.message() : ""
+		);
+
 		if (modifying)
 			// Cannot just report the error, ignore the unary operator, and continue,
 			// because the sub-expression was already processed with requireLValue()
@@ -3796,9 +3804,11 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			m_errorReporter.fatalTypeError(
 				4731_error,
 				path->location(),
-				"The function \"" + joinHumanReadable(path->path(), ".") + "\" " +
-				"does not have any parameters, and therefore cannot be bound to the type \"" +
-				(normalizedType ? normalizedType->toString(true /* withoutDataLocation */) : "*") + "\"."
+				fmt::format(
+					"The function \"{}\" does not have any parameters, and therefore cannot be bound to the type \"{}\".",
+					joinHumanReadable(path->path(), "."),
+					normalizedType ? normalizedType->toString(true /* withoutDataLocation */) : "*"
+				)
 			);
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const&>(*functionDefinition.type()).asBoundFunction();
@@ -3810,14 +3820,13 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			m_errorReporter.typeError(
 				3100_error,
 				path->location(),
-				"The function \"" + joinHumanReadable(path->path(), ".") + "\" "+
-				"cannot be bound to the type \"" + _usingFor.typeName()->annotation().type->toString(true /* withoutDataLocation */) +
-				"\" because the type cannot be implicitly converted to the first argument" +
-				" of the function (\"" + functionType->selfType()->humanReadableName() + "\")" +
-				(
-					result.message().empty() ?
-					"." :
-					": " +  result.message()
+				fmt::format(
+					"The function \"{}\" cannot be bound to the type \"{}\" because the type cannot "
+					"be implicitly converted to the first argument of the function (\"{}\"){}",
+					joinHumanReadable(path->path(), "."),
+					_usingFor.typeName()->annotation().type->toString(true /* withoutDataLocation */),
+					functionType->selfType()->humanReadableName(),
+					result.message().empty() ? "." : ": " +  result.message()
 				)
 			);
 	}
