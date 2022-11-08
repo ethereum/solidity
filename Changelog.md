@@ -13,6 +13,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Yul Optimizer: Hash hex and decimal literals according to their value instead of their representation, improving the detection of equivalent functions.
  * Solidity Upgrade Tool ``solidity-upgrade``: Fix the tool returning success code on uncaught exceptions.
 
 
