@@ -192,14 +192,21 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	if (_isCreation)
 		m_contractAddress = EVMHost::convertFromEVMC(result.create_address);
 
-	m_gasUsed = InitialGas - result.gas_left;
+	unsigned const refundRatio = (m_evmVersion >= langutil::EVMVersion::london() ? 5 : 2);
+	auto const totalGasUsed = InitialGas - result.gas_left;
+	auto const gasRefund = min(u256(result.gas_refund), totalGasUsed / refundRatio);
+
+	m_gasUsed = totalGasUsed - gasRefund;
 	m_transactionSuccessful = (result.status_code == EVMC_SUCCESS);
 
 	if (m_showMessages)
 	{
-		cout << " out:     " << util::toHex(m_output) << endl;
-		cout << " result: " << static_cast<size_t>(result.status_code) << endl;
-		cout << " gas used: " << m_gasUsed.str() << endl;
+		cout << " out:                       " << util::toHex(m_output) << endl;
+		cout << " result:                    " << static_cast<size_t>(result.status_code) << endl;
+		cout << " gas used:                  " << m_gasUsed.str() << endl;
+		cout << " gas used (without refund): " << totalGasUsed.str() << endl;
+		cout << " gas refund (total):        " << result.gas_refund << endl;
+		cout << " gas refund (bound):        " << gasRefund.str() << endl;
 	}
 }
 
