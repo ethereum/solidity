@@ -282,7 +282,7 @@ bool ExecutionFramework::storageEmpty(h160 const& _addr) const
 	if (it != m_evmcHost->accounts.end())
 	{
 		for (auto const& entry: it->second.storage)
-			if (!(entry.second.value == evmc::bytes32{}))
+			if (entry.second.current != evmc::bytes32{})
 				return false;
 	}
 	return true;

@@ -179,7 +179,7 @@ void EVMHost::newTransactionFrame()
 		for (auto& [slot, value]: account.storage)
 		{
 			value.access_status = EVMC_ACCESS_COLD; // Clear EIP-2929 storage access indicator
-			value.dirty = false;					// Clear EIP-2200 dirty slot flag
+			value.original = value.current;			// Clear EIP-2200 dirty slot
 		}
 	// Process selfdestruct list
 	for (auto& [address, _]: recorded_selfdestructs)
@@ -1195,7 +1195,7 @@ void EVMHostPrinter::storage()
 			m_stateStream << "  "
 				<< m_host.convertFromEVMC(slot)
 				<< ": "
-				<< m_host.convertFromEVMC(value.value)
+				<< m_host.convertFromEVMC(value.current)
 				<< endl;
 }
 
