@@ -79,8 +79,8 @@ You can find our current feature and bug priorities for forthcoming
 releases in the [projects section](https://github.com/ethereum/solidity/projects).
 
 ## Maintainers
-* [@axic](https://github.com/axic)
-* [@chriseth](https://github.com/chriseth)
+The Solidity programming language and compiler are open-source community projects governed by a core team.
+The core team is sponsored by the [Ethereum Foundation](https://ethereum.foundation/).
 
 ## License
 Solidity is licensed under [GNU General Public License v3.0](LICENSE.txt).
