@@ -485,6 +485,64 @@ BOOST_AUTO_TEST_CASE(event)
 	checkNatspec(sourceCode, "ERC20", userDoc, true);
 }
 
+BOOST_AUTO_TEST_CASE(event_inheritance)
+{
+	char const* sourceCode = R"(
+		contract ERC20 {
+			/// @notice This event is emitted when a transfer occurs.
+			/// @param from The source account.
+			/// @param to The destination account.
+			/// @param amount The amount.
+			/// @dev A test case!
+			event Transfer(address indexed from, address indexed to, uint amount);
+		}
+
+		contract A is ERC20 {
+		}
+
+		contract B is A {
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"details": "A test case!",
+				"params":
+				{
+					"amount": "The amount.",
+					"from": "The source account.",
+					"to": "The destination account."
+				}
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", devDoc, false);
+	checkNatspec(sourceCode, "A", devDoc, false);
+	checkNatspec(sourceCode, "B", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"notice": "This event is emitted when a transfer occurs."
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", userDoc, true);
+	checkNatspec(sourceCode, "A", userDoc, true);
+	checkNatspec(sourceCode, "B", userDoc, true);
+}
+
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 {
 	char const* sourceCode = R"(
