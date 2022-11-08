@@ -37,6 +37,11 @@ namespace solidity::test
 using Address = util::h160;
 using StorageMap = std::map<evmc::bytes32, evmc::storage_value>;
 
+struct EVMPrecompileOutput {
+	bytes const output;
+	int64_t gas_used;
+};
+
 class EVMHost: public evmc::MockedHost
 {
 public:
@@ -110,13 +115,17 @@ private:
 	static evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
 	static evmc::result precompileIdentity(evmc_message const& _message) noexcept;
 	static evmc::result precompileModExp(evmc_message const& _message) noexcept;
+	template <evmc_revision Revision>
 	static evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
+	template <evmc_revision Revision>
 	static evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
+	template <evmc_revision Revision>
 	static evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
-	static evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
-	/// @returns a result object with no gas usage and result data taken from @a _data.
+	static evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, EVMPrecompileOutput> const& _inOut) noexcept;
+	/// @returns a result object with gas usage and result data taken from @a _data.
+	/// The outcome will be a failure if the limit < required.
 	/// @note The return value is only valid as long as @a _data is alive!
-	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;
+	static evmc::result resultWithGas(int64_t gas_limit, int64_t gas_required, bytes const& _data) noexcept;
 	static evmc::result resultWithFailure() noexcept;
 
 	evmc::VM& m_vm;
