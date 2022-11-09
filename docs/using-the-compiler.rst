@@ -172,7 +172,8 @@ at each version. Backward compatibility is not guaranteed between each version.
      the optimizer.
 - ``london`` (**default**)
    - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
-
+- ``paris``
+   - No changes.
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
@@ -305,7 +306,7 @@ Input Description
         },
         // Version of the EVM to compile for.
         // Affects type checking and code generation. Can be homestead,
-        // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
+        // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul, berlin, london or paris
         "evmVersion": "byzantium",
         // Optional: Change compilation pipeline to go through the Yul intermediate representation.
         // This is false by default.
