@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/BlockHasher.h>
 
 #include <set>
@@ -61,15 +62,12 @@ protected:
 
 	void assignValue(YulString _variable, Expression const* _value) override;
 private:
-	struct ExpressionEqual {
-		bool operator()(Expression const&, Expression const&) const;
-	};
 	std::set<YulString> m_returnVariables;
 	std::unordered_map<
 		std::reference_wrapper<Expression const>,
 		std::set<YulString>,
 		ExpressionHash,
-		ExpressionEqual
+		SyntacticallyEqualCallable
 	> m_replacementCandidates;
 };
 
