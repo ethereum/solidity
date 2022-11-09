@@ -15,30 +15,20 @@ namespace evmc
 /// The string of bytes.
 using bytes = std::basic_string<uint8_t>;
 
-/// Extended value (by dirty flag) for account storage.
+/// Extended value (with original value and access flag) for account storage.
 struct storage_value
 {
-    /// The storage value.
-    bytes32 value;
+    /// The current storage value.
+    bytes32 current;
 
-    /// True means this value has been modified already by the current transaction.
-    bool dirty{false};
+    /// The original storage value.
+    bytes32 original;
 
     /// Is the storage key cold or warm.
-    evmc_access_status access_status{EVMC_ACCESS_COLD};
+    evmc_access_status access_status = EVMC_ACCESS_COLD;
 
     /// Default constructor.
     storage_value() noexcept = default;
-
-    /// Constructor.
-    storage_value(const bytes32& _value, bool _dirty = false) noexcept  // NOLINT
-      : value{_value}, dirty{_dirty}
-    {}
-
-    /// Constructor with initial access status.
-    storage_value(const bytes32& _value, evmc_access_status _access_status) noexcept
-      : value{_value}, access_status{_access_status}
-    {}
 };
 
 /// Mocked account.
@@ -176,7 +166,7 @@ public:
 
         const auto storage_iter = account_iter->second.storage.find(key);
         if (storage_iter != account_iter->second.storage.end())
-            return storage_iter->second.value;
+            return storage_iter->second.current;
         return {};
     }
 
@@ -195,14 +185,13 @@ public:
         // Follow https://eips.ethereum.org/EIPS/eip-1283 specification.
         // WARNING! This is not complete implementation as refund is not handled here.
 
-        if (old.value == value)
+        if (old.current == value)
             return EVMC_STORAGE_UNCHANGED;
 
         evmc_storage_status status{};
-        if (!old.dirty)
+        if (old.original == old.current)  // Storage slot not dirty
         {
-            old.dirty = true;
-            if (!old.value)
+            if (!old.current)
                 status = EVMC_STORAGE_ADDED;
             else if (value)
                 status = EVMC_STORAGE_MODIFIED;
@@ -212,7 +201,7 @@ public:
         else
             status = EVMC_STORAGE_MODIFIED_AGAIN;
 
-        old.value = value;
+        old.current = value;
         return status;
     }
 
