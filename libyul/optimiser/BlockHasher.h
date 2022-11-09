@@ -138,7 +138,7 @@ struct ExpressionHash
 {
 	uint64_t operator()(Expression const& _expression) const
 	{
-		return ExpressionHasher{}.run(_expression);
+		return ExpressionHasher::run(_expression);
 	}
 };
 

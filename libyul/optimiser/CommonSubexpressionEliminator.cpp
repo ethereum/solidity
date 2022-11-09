@@ -134,11 +134,6 @@ void CommonSubexpressionEliminator::assignValue(YulString _variable, Expression 
 	DataFlowAnalyzer::assignValue(_variable, _value);
 }
 
-uint64_t CommonSubexpressionEliminator::ExpressionHash::operator()(Expression const& _e) const
-{
-	return ExpressionHasher::run(_e);
-}
-
 bool CommonSubexpressionEliminator::ExpressionEqual::operator()(Expression const& _a, Expression const& _b) const
 {
 	return SyntacticallyEqual{}(_a, _b);

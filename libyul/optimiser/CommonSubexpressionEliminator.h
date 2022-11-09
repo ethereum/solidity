@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/BlockHasher.h>
 
 #include <set>
 
@@ -60,9 +61,6 @@ protected:
 
 	void assignValue(YulString _variable, Expression const* _value) override;
 private:
-	struct ExpressionHash {
-		uint64_t operator()(Expression const&) const;
-	};
 	struct ExpressionEqual {
 		bool operator()(Expression const&, Expression const&) const;
 	};
