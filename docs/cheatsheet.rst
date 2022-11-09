@@ -66,7 +66,7 @@ Global Variables
      - ``uint``
      - Current block timestamp in seconds since Unix epoch
    * - ``gasleft()``
-     - ``(uint256)``
+     - ``uint256``
      - Remaining gas
    * - ``msg.data``
      - ``bytes``
@@ -122,8 +122,8 @@ Global Variables
    * - ``mulmod(uint x, uint y, uint k)``
      - ``uint``
      - Compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
-   * - ``this`` (current contract's type)
-     -
+   * - ``this``
+     - current contract's type
      - The current contract, explicitly convertible to ``address`` or ``address payable``
    * - ``super``
      -
