@@ -105,11 +105,8 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 					_e = Identifier{debugDataOf(_e), value->name};
 		}
 	}
-	else if (
-		auto it = m_replacementCandidates.find(&_e);
-		it != m_replacementCandidates.end()
-	)
-		for (auto const& variable: it->second)
+	else if (auto const* candidates = util::valueOrNullptr(m_replacementCandidates, _e))
+		for (auto const& variable: *candidates)
 			if (AssignedValue const* value = variableValue(variable))
 			{
 				assertThrow(value->value, OptimizerException, "");
@@ -133,16 +130,16 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 void CommonSubexpressionEliminator::assignValue(YulString _variable, Expression const* _value)
 {
 	if (_value)
-		m_replacementCandidates[_value].insert(_variable);
+		m_replacementCandidates[*_value].insert(_variable);
 	DataFlowAnalyzer::assignValue(_variable, _value);
 }
 
-uint64_t CommonSubexpressionEliminator::ExpressionHash::operator()(Expression const* _e) const
+uint64_t CommonSubexpressionEliminator::ExpressionHash::operator()(Expression const& _e) const
 {
-	return ExpressionHasher::run(*_e);
+	return ExpressionHasher::run(_e);
 }
 
-bool CommonSubexpressionEliminator::ExpressionEqual::operator()(Expression const* _a, Expression const* _b) const
+bool CommonSubexpressionEliminator::ExpressionEqual::operator()(Expression const& _a, Expression const& _b) const
 {
-	return SyntacticallyEqual{}(*_a, *_b);
+	return SyntacticallyEqual{}(_a, _b);
 }

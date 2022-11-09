@@ -61,14 +61,14 @@ protected:
 	void assignValue(YulString _variable, Expression const* _value) override;
 private:
 	struct ExpressionHash {
-		uint64_t operator()(Expression const*) const;
+		uint64_t operator()(Expression const&) const;
 	};
 	struct ExpressionEqual {
-		bool operator()(Expression const*, Expression const*) const;
+		bool operator()(Expression const&, Expression const&) const;
 	};
 	std::set<YulString> m_returnVariables;
 	std::unordered_map<
-		Expression const*,
+		std::reference_wrapper<Expression const>,
 		std::set<YulString>,
 		ExpressionHash,
 		ExpressionEqual
