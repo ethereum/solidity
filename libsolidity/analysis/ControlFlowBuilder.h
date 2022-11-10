@@ -38,14 +38,14 @@ public:
 	static std::unique_ptr<FunctionFlow> createFunctionFlow(
 		CFG::NodeContainer& _nodeContainer,
 		FunctionDefinition const& _function,
-		ContractDefinition const* _contract = nullptr
+		ContractDefinition const* _contract
 	);
 
 private:
 	explicit ControlFlowBuilder(
 		CFG::NodeContainer& _nodeContainer,
 		FunctionFlow const& _functionFlow,
-		ContractDefinition const* _contract = nullptr
+		ContractDefinition const* _contract
 	);
 
 	// Visits for constructing the control flow.
