@@ -153,3 +153,26 @@ Third-Party Solidity Parsers and Grammars
 
 * `Solidity Parser for JavaScript <https://github.com/solidity-parser/parser>`_
     A Solidity parser for JS built on top of a robust ANTLR4 grammar.
+
+Blockchain API Providers
+=========================================
+When deploying smart contracts to either the Ethereum testnet (Goerli) or mainnet, most developers prefer to use a blockchain developer platform. These platforms provide not only a suite of tooling and abstractions like SDK and NFT APIs, but also, they provide an API endpoint that acts as a wrapper around the underlying JSON RPC API. This API endpoint makes writing to the blockchain easier and faster.
+
+* `Alchemy <https://alchemy.com>`_
+    A blockchain platform that powers projects like OpenSea, The Graph, Meta, and Shopify.
+
+* `Ankr <https://www.ankr.com/>`_
+
+* `Moralis <https://moralis.io/>`_
+
+* `Quicknode <https://www.quicknode.com/>`_
+
+Goerli Faucet
+=========================================
+Deploying your smart contract to Ethereum mainnet costs real money, aka real ETH. Therefore, it's smart to deploy them first to a testnet. In Ethereum's case, their supported testnet is the Goerli testnet. In order to deploy on the Goerli testnet, you need to first get Goerli testETH (not real money). You get Goerli testETH from a Goerli faucet.
+
+* `goerlifaucet.com <https://goerlifaucet.com>`_
+    Alchemy maintains this free Goerli faucet.
+
+* `faucet.paradigm.xyz <https://faucet.paradigm.xyz>`_
+    This is another popular Goerli faucet by Paradigm.
