@@ -50,7 +50,7 @@ DataFlowAnalyzer::DataFlowAnalyzer(
 ):
 	m_dialect(_dialect),
 	m_functionSideEffects(std::move(_functionSideEffects)),
-	m_knowledgeBase(_dialect, [this](YulString _var) { return variableValue(_var); }),
+	m_knowledgeBase([this](YulString _var) { return variableValue(_var); }),
 	m_analyzeStores(_analyzeStores == MemoryAndStorage::Analyze)
 {
 	if (m_analyzeStores)
@@ -76,7 +76,7 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 			cxx20::erase_if(m_state.environment.storage, mapTuple([&](auto&& key, auto&& value) {
 				return
 					!m_knowledgeBase.knownToBeDifferent(vars->first, key) &&
-					!m_knowledgeBase.knownToBeEqual(vars->second, value);
+					vars->second != value;
 			}));
 			m_state.environment.storage[vars->first] = vars->second;
 			return;
