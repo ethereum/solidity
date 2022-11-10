@@ -1,20 +1,28 @@
-/* EVMC: Ethereum Client-VM Connector API.
- * Copyright 2018-2020 The EVMC Authors.
- * Licensed under the Apache License, Version 2.0.
- */
+// EVMC: Ethereum Client-VM Connector API.
+// Copyright 2018 The EVMC Authors.
+// Licensed under the Apache License, Version 2.0.
 #pragma once
 
 #include <evmc/evmc.h>
 #include <evmc/helpers.h>
+#include <evmc/hex.hpp>
 
 #include <functional>
 #include <initializer_list>
+#include <ostream>
+#include <string_view>
 #include <utility>
+
+static_assert(EVMC_LATEST_STABLE_REVISION <= EVMC_MAX_REVISION,
+              "latest stable revision ill-defined");
 
 /// EVMC C++ API - wrappers and bindings for C++
 /// @ingroup cpp
 namespace evmc
 {
+/// String view of uint8_t chars.
+using bytes_view = std::basic_string_view<uint8_t>;
+
 /// The big-endian 160-bit hash suitable for keeping an Ethereum address.
 ///
 /// This type wraps C ::evmc_address to make sure objects of this type are always initialized.
@@ -54,6 +62,9 @@ struct address : evmc_address
 
     /// Explicit operator converting to bool.
     inline constexpr explicit operator bool() const noexcept;
+
+    /// Implicit operator converting to bytes_view.
+    inline constexpr operator bytes_view() const noexcept { return {bytes, sizeof(bytes)}; }
 };
 
 /// The fixed size array of 32 bytes for storing 256-bit EVM values.
@@ -106,7 +117,10 @@ struct bytes32 : evmc_bytes32
     {}
 
     /// Explicit operator converting to bool.
-    constexpr inline explicit operator bool() const noexcept;
+    inline constexpr explicit operator bool() const noexcept;
+
+    /// Implicit operator converting to bytes_view.
+    inline constexpr operator bytes_view() const noexcept { return {bytes, sizeof(bytes)}; }
 };
 
 /// The alias for evmc::bytes32 to represent a big-endian 256-bit integer.
@@ -267,74 +281,45 @@ inline constexpr bytes32::operator bool() const noexcept
 
 namespace literals
 {
-namespace internal
-{
-constexpr int from_hex(char c) noexcept
-{
-    return (c >= 'a' && c <= 'f') ? c - ('a' - 10) :
-                                    (c >= 'A' && c <= 'F') ? c - ('A' - 10) : c - '0';
-}
-
-constexpr uint8_t byte(const char* s, size_t i) noexcept
-{
-    return static_cast<uint8_t>((from_hex(s[2 * i]) << 4) | from_hex(s[2 * i + 1]));
-}
-
+/// Converts a raw literal into value of type T.
+///
+/// This function is expected to be used on literals in constexpr context only.
+/// In case the input is invalid the std::terminate() is called.
+/// TODO(c++20): Use consteval.
 template <typename T>
-T from_hex(const char*) noexcept;
-
-template <>
-constexpr bytes32 from_hex<bytes32>(const char* s) noexcept
+constexpr T parse(std::string_view s) noexcept
 {
-    return {
-        {{byte(s, 0),  byte(s, 1),  byte(s, 2),  byte(s, 3),  byte(s, 4),  byte(s, 5),  byte(s, 6),
-          byte(s, 7),  byte(s, 8),  byte(s, 9),  byte(s, 10), byte(s, 11), byte(s, 12), byte(s, 13),
-          byte(s, 14), byte(s, 15), byte(s, 16), byte(s, 17), byte(s, 18), byte(s, 19), byte(s, 20),
-          byte(s, 21), byte(s, 22), byte(s, 23), byte(s, 24), byte(s, 25), byte(s, 26), byte(s, 27),
-          byte(s, 28), byte(s, 29), byte(s, 30), byte(s, 31)}}};
+    return from_hex<T>(s).value();
 }
-
-template <>
-constexpr address from_hex<address>(const char* s) noexcept
-{
-    return {
-        {{byte(s, 0),  byte(s, 1),  byte(s, 2),  byte(s, 3),  byte(s, 4),  byte(s, 5),  byte(s, 6),
-          byte(s, 7),  byte(s, 8),  byte(s, 9),  byte(s, 10), byte(s, 11), byte(s, 12), byte(s, 13),
-          byte(s, 14), byte(s, 15), byte(s, 16), byte(s, 17), byte(s, 18), byte(s, 19)}}};
-}
-
-template <typename T, char... c>
-constexpr T from_literal() noexcept
-{
-    constexpr auto size = sizeof...(c);
-    constexpr char literal[] = {c...};
-    constexpr bool is_simple_zero = size == 1 && literal[0] == '0';
-
-    static_assert(is_simple_zero || (literal[0] == '0' && literal[1] == 'x'),
-                  "literal must be in hexadecimal notation");
-    static_assert(is_simple_zero || size == 2 * sizeof(T) + 2,
-                  "literal must match the result type size");
-
-    return is_simple_zero ? T{} : from_hex<T>(&literal[2]);
-}
-}  // namespace internal
 
 /// Literal for evmc::address.
-template <char... c>
-constexpr address operator""_address() noexcept
+constexpr address operator""_address(const char* s) noexcept
 {
-    return internal::from_literal<address, c...>();
+    return parse<address>(s);
 }
 
 /// Literal for evmc::bytes32.
-template <char... c>
-constexpr bytes32 operator""_bytes32() noexcept
+constexpr bytes32 operator""_bytes32(const char* s) noexcept
 {
-    return internal::from_literal<bytes32, c...>();
+    return parse<bytes32>(s);
 }
 }  // namespace literals
 
 using namespace literals;
+
+
+/// @copydoc evmc_status_code_to_string
+inline const char* to_string(evmc_status_code status_code) noexcept
+{
+    return evmc_status_code_to_string(status_code);
+}
+
+/// @copydoc evmc_revision_to_string
+inline const char* to_string(evmc_revision rev) noexcept
+{
+    return evmc_revision_to_string(rev);
+}
+
 
 /// Alias for evmc_make_result().
 constexpr auto make_result = evmc_make_result;
@@ -343,11 +328,12 @@ constexpr auto make_result = evmc_make_result;
 ///
 /// This is a RAII wrapper for evmc_result and objects of this type
 /// automatically release attached resources.
-class result : private evmc_result
+class Result : private evmc_result
 {
 public:
     using evmc_result::create_address;
     using evmc_result::gas_left;
+    using evmc_result::gas_refund;
     using evmc_result::output_data;
     using evmc_result::output_size;
     using evmc_result::status_code;
@@ -359,40 +345,70 @@ public:
     ///
     /// @param _status_code  The status code.
     /// @param _gas_left     The amount of gas left.
+    /// @param _gas_refund   The amount of refunded gas.
     /// @param _output_data  The pointer to the output.
     /// @param _output_size  The output size.
-    result(evmc_status_code _status_code,
-           int64_t _gas_left,
-           const uint8_t* _output_data,
-           size_t _output_size) noexcept
-      : evmc_result{make_result(_status_code, _gas_left, _output_data, _output_size)}
+    explicit Result(evmc_status_code _status_code,
+                    int64_t _gas_left,
+                    int64_t _gas_refund,
+                    const uint8_t* _output_data,
+                    size_t _output_size) noexcept
+      : evmc_result{make_result(_status_code, _gas_left, _gas_refund, _output_data, _output_size)}
     {}
 
+    /// Creates the result without output.
+    ///
+    /// @param _status_code  The status code.
+    /// @param _gas_left     The amount of gas left.
+    /// @param _gas_refund   The amount of refunded gas.
+    explicit Result(evmc_status_code _status_code = EVMC_INTERNAL_ERROR,
+                    int64_t _gas_left = 0,
+                    int64_t _gas_refund = 0) noexcept
+      : evmc_result{make_result(_status_code, _gas_left, _gas_refund, nullptr, 0)}
+    {}
+
+    /// Creates the result of contract creation.
+    ///
+    /// @param _status_code     The status code.
+    /// @param _gas_left        The amount of gas left.
+    /// @param _gas_refund      The amount of refunded gas.
+    /// @param _create_address  The address of the possibly created account.
+    explicit Result(evmc_status_code _status_code,
+                    int64_t _gas_left,
+                    int64_t _gas_refund,
+                    const evmc_address& _create_address) noexcept
+      : evmc_result{make_result(_status_code, _gas_left, _gas_refund, nullptr, 0)}
+    {
+        create_address = _create_address;
+    }
+
     /// Converting constructor from raw evmc_result.
-    explicit result(evmc_result const& res) noexcept : evmc_result{res} {}
+    ///
+    /// This object takes ownership of the resources of @p res.
+    explicit Result(const evmc_result& res) noexcept : evmc_result{res} {}
 
     /// Destructor responsible for automatically releasing attached resources.
-    ~result() noexcept
+    ~Result() noexcept
     {
         if (release != nullptr)
             release(this);
     }
 
     /// Move constructor.
-    result(result&& other) noexcept : evmc_result{other}
+    Result(Result&& other) noexcept : evmc_result{other}
     {
         other.release = nullptr;  // Disable releasing of the rvalue object.
     }
 
     /// Move assignment operator.
     ///
-    /// The self-assigment MUST never happen.
+    /// The self-assignment MUST never happen.
     ///
     /// @param other The other result object.
     /// @return      The reference to the left-hand side object.
-    result& operator=(result&& other) noexcept
+    Result& operator=(Result&& other) noexcept
     {
-        this->~result();                           // Release this object.
+        this->~Result();                           // Release this object.
         static_cast<evmc_result&>(*this) = other;  // Copy data.
         other.release = nullptr;                   // Disable releasing of the rvalue object.
         return *this;
@@ -448,10 +464,10 @@ public:
                              size_t buffer_size) const noexcept = 0;
 
     /// @copydoc evmc_host_interface::selfdestruct
-    virtual void selfdestruct(const address& addr, const address& beneficiary) noexcept = 0;
+    virtual bool selfdestruct(const address& addr, const address& beneficiary) noexcept = 0;
 
     /// @copydoc evmc_host_interface::call
-    virtual result call(const evmc_message& msg) noexcept = 0;
+    virtual Result call(const evmc_message& msg) noexcept = 0;
 
     /// @copydoc evmc_host_interface::get_tx_context
     virtual evmc_tx_context get_tx_context() const noexcept = 0;
@@ -481,7 +497,6 @@ class HostContext : public HostInterface
 {
     const evmc_host_interface* host = nullptr;
     evmc_host_context* context = nullptr;
-    mutable evmc_tx_context tx_context = {};
 
 public:
     /// Default constructor for null Host context.
@@ -534,28 +549,18 @@ public:
         return host->copy_code(context, &address, code_offset, buffer_data, buffer_size);
     }
 
-    void selfdestruct(const address& addr, const address& beneficiary) noexcept final
+    bool selfdestruct(const address& addr, const address& beneficiary) noexcept final
     {
-        host->selfdestruct(context, &addr, &beneficiary);
+        return host->selfdestruct(context, &addr, &beneficiary);
     }
 
-    result call(const evmc_message& message) noexcept final
+    Result call(const evmc_message& message) noexcept final
     {
-        return result{host->call(context, &message)};
+        return Result{host->call(context, &message)};
     }
 
     /// @copydoc HostInterface::get_tx_context()
-    ///
-    /// The implementation caches the received transaction context
-    /// by assuming that the block timestamp should never be zero.
-    ///
-    /// @return The cached transaction context.
-    evmc_tx_context get_tx_context() const noexcept final
-    {
-        if (tx_context.block_timestamp == 0)
-            tx_context = host->get_tx_context(context);
-        return tx_context;
-    }
+    evmc_tx_context get_tx_context() const noexcept final { return host->get_tx_context(context); }
 
     bytes32 get_block_hash(int64_t number) const noexcept final
     {
@@ -685,18 +690,18 @@ public:
     }
 
     /// @copydoc evmc_execute()
-    result execute(const evmc_host_interface& host,
+    Result execute(const evmc_host_interface& host,
                    evmc_host_context* ctx,
                    evmc_revision rev,
                    const evmc_message& msg,
                    const uint8_t* code,
                    size_t code_size) noexcept
     {
-        return result{m_instance->execute(m_instance, &host, ctx, rev, &msg, code, code_size)};
+        return Result{m_instance->execute(m_instance, &host, ctx, rev, &msg, code, code_size)};
     }
 
     /// Convenient variant of the VM::execute() that takes reference to evmc::Host class.
-    result execute(Host& host,
+    Result execute(Host& host,
                    evmc_revision rev,
                    const evmc_message& msg,
                    const uint8_t* code,
@@ -713,12 +718,12 @@ public:
     /// but without providing the Host context and interface.
     /// This method is for experimental precompiles support where execution is
     /// guaranteed not to require any Host access.
-    result execute(evmc_revision rev,
+    Result execute(evmc_revision rev,
                    const evmc_message& msg,
                    const uint8_t* code,
                    size_t code_size) noexcept
     {
-        return result{
+        return Result{
             m_instance->execute(m_instance, nullptr, nullptr, rev, &msg, code, code_size)};
     }
 
@@ -789,11 +794,11 @@ inline size_t copy_code(evmc_host_context* h,
     return Host::from_context(h)->copy_code(*addr, code_offset, buffer_data, buffer_size);
 }
 
-inline void selfdestruct(evmc_host_context* h,
+inline bool selfdestruct(evmc_host_context* h,
                          const evmc_address* addr,
                          const evmc_address* beneficiary) noexcept
 {
-    Host::from_context(h)->selfdestruct(*addr, *beneficiary);
+    return Host::from_context(h)->selfdestruct(*addr, *beneficiary);
 }
 
 inline evmc_result call(evmc_host_context* h, const evmc_message* msg) noexcept
@@ -837,7 +842,7 @@ inline evmc_access_status access_storage(evmc_host_context* h,
 
 inline const evmc_host_interface& Host::get_interface() noexcept
 {
-    static constexpr evmc_host_interface interface{
+    static constexpr evmc_host_interface interface = {
         ::evmc::internal::account_exists, ::evmc::internal::get_storage,
         ::evmc::internal::set_storage,    ::evmc::internal::get_balance,
         ::evmc::internal::get_code_size,  ::evmc::internal::get_code_hash,
@@ -850,6 +855,24 @@ inline const evmc_host_interface& Host::get_interface() noexcept
 }
 }  // namespace evmc
 
+
+/// "Stream out" operator implementation for ::evmc_status_code.
+///
+/// @note This is defined in global namespace to match ::evmc_status_code definition and allow
+///       convenient operator overloading usage.
+inline std::ostream& operator<<(std::ostream& os, evmc_status_code status_code)
+{
+    return os << evmc::to_string(status_code);
+}
+
+/// "Stream out" operator implementation for ::evmc_revision.
+///
+/// @note This is defined in global namespace to match ::evmc_revision definition and allow
+///       convenient operator overloading usage.
+inline std::ostream& operator<<(std::ostream& os, evmc_revision rev)
+{
+    return os << evmc::to_string(rev);
+}
 
 namespace std
 {

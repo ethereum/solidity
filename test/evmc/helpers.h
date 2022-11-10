@@ -1,7 +1,6 @@
-/* EVMC: Ethereum Client-VM Connector API.
- * Copyright 2018-2019 The EVMC Authors.
- * Licensed under the Apache License, Version 2.0.
- */
+// EVMC: Ethereum Client-VM Connector API.
+// Copyright 2018 The EVMC Authors.
+// Licensed under the Apache License, Version 2.0.
 
 /**
  * EVMC Helpers
@@ -9,8 +8,6 @@
  * A collection of C helper functions for invoking a VM instance methods.
  * These are convenient for languages where invoking function pointers
  * is "ugly" or impossible (such as Go).
- *
- * It also contains helpers (overloaded operators) for using EVMC types effectively in C++.
  *
  * @defgroup helpers EVMC Helpers
  * @{
@@ -20,6 +17,12 @@
 #include <evmc/evmc.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef __cplusplus
+extern "C" {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 
 /**
  * Returns true if the VM has a compatible ABI version.
@@ -116,10 +119,12 @@ static void evmc_free_result_memory(const struct evmc_result* result)
 ///
 /// @param status_code  The status code.
 /// @param gas_left     The amount of gas left.
+/// @param gas_refund   The amount of refunded gas.
 /// @param output_data  The pointer to the output.
 /// @param output_size  The output size.
 static inline struct evmc_result evmc_make_result(enum evmc_status_code status_code,
                                                   int64_t gas_left,
+                                                  int64_t gas_refund,
                                                   const uint8_t* output_data,
                                                   size_t output_size)
 {
@@ -144,6 +149,7 @@ static inline struct evmc_result evmc_make_result(enum evmc_status_code status_c
 
     result.status_code = status_code;
     result.gas_left = gas_left;
+    result.gas_refund = gas_refund;
     return result;
 }
 
@@ -209,4 +215,95 @@ static inline const union evmc_result_optional_storage* evmc_get_const_optional_
 
 /** @} */
 
+/** Returns text representation of the ::evmc_status_code. */
+static inline const char* evmc_status_code_to_string(enum evmc_status_code status_code)
+{
+    switch (status_code)
+    {
+    case EVMC_SUCCESS:
+        return "success";
+    case EVMC_FAILURE:
+        return "failure";
+    case EVMC_REVERT:
+        return "revert";
+    case EVMC_OUT_OF_GAS:
+        return "out of gas";
+    case EVMC_INVALID_INSTRUCTION:
+        return "invalid instruction";
+    case EVMC_UNDEFINED_INSTRUCTION:
+        return "undefined instruction";
+    case EVMC_STACK_OVERFLOW:
+        return "stack overflow";
+    case EVMC_STACK_UNDERFLOW:
+        return "stack underflow";
+    case EVMC_BAD_JUMP_DESTINATION:
+        return "bad jump destination";
+    case EVMC_INVALID_MEMORY_ACCESS:
+        return "invalid memory access";
+    case EVMC_CALL_DEPTH_EXCEEDED:
+        return "call depth exceeded";
+    case EVMC_STATIC_MODE_VIOLATION:
+        return "static mode violation";
+    case EVMC_PRECOMPILE_FAILURE:
+        return "precompile failure";
+    case EVMC_CONTRACT_VALIDATION_FAILURE:
+        return "contract validation failure";
+    case EVMC_ARGUMENT_OUT_OF_RANGE:
+        return "argument out of range";
+    case EVMC_WASM_UNREACHABLE_INSTRUCTION:
+        return "wasm unreachable instruction";
+    case EVMC_WASM_TRAP:
+        return "wasm trap";
+    case EVMC_INSUFFICIENT_BALANCE:
+        return "insufficient balance";
+    case EVMC_INTERNAL_ERROR:
+        return "internal error";
+    case EVMC_REJECTED:
+        return "rejected";
+    case EVMC_OUT_OF_MEMORY:
+        return "out of memory";
+    }
+    return "<unknown>";
+}
+
+/** Returns the name of the ::evmc_revision. */
+static inline const char* evmc_revision_to_string(enum evmc_revision rev)
+{
+    switch (rev)
+    {
+    case EVMC_FRONTIER:
+        return "Frontier";
+    case EVMC_HOMESTEAD:
+        return "Homestead";
+    case EVMC_TANGERINE_WHISTLE:
+        return "Tangerine Whistle";
+    case EVMC_SPURIOUS_DRAGON:
+        return "Spurious Dragon";
+    case EVMC_BYZANTIUM:
+        return "Byzantium";
+    case EVMC_CONSTANTINOPLE:
+        return "Constantinople";
+    case EVMC_PETERSBURG:
+        return "Petersburg";
+    case EVMC_ISTANBUL:
+        return "Istanbul";
+    case EVMC_BERLIN:
+        return "Berlin";
+    case EVMC_LONDON:
+        return "London";
+    case EVMC_PARIS:
+        return "Paris";
+    case EVMC_SHANGHAI:
+        return "Shanghai";
+    case EVMC_CANCUN:
+        return "Cancun";
+    }
+    return "<unknown>";
+}
+
 /** @} */
+
+#ifdef __cplusplus
+#pragma GCC diagnostic pop
+}  // extern "C"
+#endif

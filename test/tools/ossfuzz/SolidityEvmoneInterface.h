@@ -122,7 +122,7 @@ public:
 	/// and executing test configuration.
 	/// @param _isabelleData contains encoding data to be passed to the
 	/// isabelle test entry point.
-	evmc::result compileDeployAndExecute(std::string _isabelleData = {});
+	evmc::Result compileDeployAndExecute(std::string _isabelleData = {});
 	/// Compares the contents of the memory address pointed to
 	/// by `_result` of `_length` bytes to u256 zero.
 	/// @returns true if `_result` is zero, false
@@ -138,17 +138,17 @@ private:
 	/// @returns the result of the execution of the function whose
 	/// keccak256 hash is @param _functionHash that is deployed at
 	/// @param _deployedAddress in @param _hostContext.
-	evmc::result executeContract(
+	evmc::Result executeContract(
 		bytes const& _functionHash,
 		evmc_address _deployedAddress
 	);
 	/// @returns the result of deployment of @param _code on @param _hostContext.
-	evmc::result deployContract(bytes const& _code);
+	evmc::Result deployContract(bytes const& _code);
 	/// Deploys and executes EVM byte code in @param _byteCode on
 	/// EVM Host referenced by @param _hostContext. Input passed
 	/// to execution context is @param _hexEncodedInput.
 	/// @returns result returning by @param _hostContext.
-	evmc::result deployAndExecute(
+	evmc::Result deployAndExecute(
 		bytes const& _byteCode,
 		std::string const& _hexEncodedInput
 	);
