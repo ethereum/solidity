@@ -174,7 +174,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 			initialState = State::Used;
 			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
 			auto length = identifierNameIfSSA(funCall->arguments.at(2));
-			KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
+			KnowledgeBase knowledge([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
 			if (length && startOffset)
 			{
 				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
@@ -267,7 +267,7 @@ bool UnusedStoreEliminator::knownUnrelated(
 	UnusedStoreEliminator::Operation const& _op2
 ) const
 {
-	KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
+	KnowledgeBase knowledge([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
 
 	if (_op1.location != _op2.location)
 		return true;
@@ -348,7 +348,7 @@ bool UnusedStoreEliminator::knownCovered(
 		return true;
 	if (_covered.location == Location::Memory)
 	{
-		KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
+		KnowledgeBase knowledge([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
 
 		if (_covered.length && knowledge.knownToBeZero(*_covered.length))
 			return true;
@@ -359,7 +359,7 @@ bool UnusedStoreEliminator::knownCovered(
 			return false;
 		optional<u256> coveredLength = knowledge.valueIfKnownConstant(*_covered.length);
 		optional<u256> coveringLength = knowledge.valueIfKnownConstant(*_covering.length);
-		if (knowledge.knownToBeEqual(*_covered.start, *_covering.start))
+		if (*_covered.start == *_covering.start)
 			if (coveredLength && coveringLength && *coveredLength <= *coveringLength)
 				return true;
 		optional<u256> coveredStart = knowledge.valueIfKnownConstant(*_covered.start);

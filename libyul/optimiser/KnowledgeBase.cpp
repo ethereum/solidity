@@ -23,7 +23,6 @@
 
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
-#include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
 #include <libsolutil/CommonData.h>
@@ -36,37 +35,24 @@ using namespace solidity::yul;
 
 bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 {
-	// Try to use the simplification rules together with the
-	// current values to turn `sub(_a, _b)` into a nonzero constant.
-	// If that fails, try `eq(_a, _b)`.
-
 	if (optional<u256> difference = differenceIfKnownConstant(_a, _b))
 		return difference != 0;
-
-	Expression expr2 = simplify(FunctionCall{{}, {{}, "eq"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
-	if (holds_alternative<Literal>(expr2))
-		return valueOfLiteral(std::get<Literal>(expr2)) == 0;
-
 	return false;
 }
 
 optional<u256> KnowledgeBase::differenceIfKnownConstant(YulString _a, YulString _b)
 {
-	// Try to use the simplification rules together with the
-	// current values to turn `sub(_a, _b)` into a constant.
-
-	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
-	if (Literal const* value = get_if<Literal>(&expr1))
-		return valueOfLiteral(*value);
-
-	return {};
+	VariableOffset offA = explore(_a);
+	VariableOffset offB = explore(_b);
+	if (offA.reference == offB.reference)
+		return offA.offset - offB.offset;
+	else
+		return {};
 }
+
 
 bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 {
-	// Try to use the simplification rules together with the
-	// current values to turn `sub(_a, _b)` into a constant whose absolute value is at least 32.
-
 	if (optional<u256> difference = differenceIfKnownConstant(_a, _b))
 		return difference >= 32 && difference <= u256(0) - 32;
 
@@ -80,29 +66,113 @@ bool KnowledgeBase::knownToBeZero(YulString _a)
 
 optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
 {
-	if (AssignedValue const* value = m_variableValues(_a))
-		if (Literal const* literal = get_if<Literal>(value->value))
-			return valueOfLiteral(*literal);
+	VariableOffset offset = explore(_a);
+	if (offset.reference == YulString{})
+		return offset.offset;
+	else
+		return nullopt;
+}
+
+optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expression)
+{
+	if (Identifier const* ident = get_if<Identifier>(&_expression))
+		return valueIfKnownConstant(ident->name);
+	else if (Literal const* lit = get_if<Literal>(&_expression))
+		return valueOfLiteral(*lit);
+	else
+		return {};
+}
+
+KnowledgeBase::VariableOffset KnowledgeBase::explore(YulString _var)
+{
+	// We query the value first so that the variable is reset if it has changed
+	// since the last call.
+	Expression const* value = valueOf(_var);
+	if (VariableOffset const* varOff = util::valueOrNullptr(m_offsets, _var))
+		return *varOff;
+
+	if (value)
+		if (optional<VariableOffset> offset = explore(*value))
+			return setOffset(_var, *offset);
+	return setOffset(_var, VariableOffset{_var, 0});
+
+}
+
+optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const& _value)
+{
+	if (Literal const* literal = std::get_if<Literal>(&_value))
+		return VariableOffset{YulString{}, valueOfLiteral(*literal)};
+	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
+		return explore(identifier->name);
+	else if (FunctionCall const* f = get_if<FunctionCall>(&_value))
+		if (f->functionName.name == "add"_yulstring || f->functionName.name == "sub"_yulstring)
+			if (optional<VariableOffset> a = explore(f->arguments[0]))
+				if (optional<VariableOffset> b = explore(f->arguments[1]))
+				{
+					u256 offset =
+						f->functionName.name == "add"_yulstring ?
+						a->offset + b->offset :
+						a->offset - b->offset;
+					if (a->reference == b->reference)
+						// Offsets relative to the same reference variable
+						return VariableOffset{a->reference, offset};
+					else if (a->reference == YulString{})
+						// a is constant
+						return VariableOffset{b->reference, offset};
+					else if (b->reference == YulString{})
+						// b is constant
+						return VariableOffset{a->reference, offset};
+				}
+
 	return {};
 }
 
-Expression KnowledgeBase::simplify(Expression _expression)
+Expression const* KnowledgeBase::valueOf(YulString _var)
 {
-	m_counter = 0;
-	return simplifyRecursively(std::move(_expression));
+	Expression const* lastValue = m_lastKnownValue[_var];
+	AssignedValue const* assignedValue = m_variableValues(_var);
+	Expression const* currentValue = assignedValue ? assignedValue->value : nullptr;
+	if (lastValue != currentValue)
+		reset(_var);
+	m_lastKnownValue[_var] = currentValue;
+	return currentValue;
 }
 
-Expression KnowledgeBase::simplifyRecursively(Expression _expression)
+void KnowledgeBase::reset(YulString _var)
 {
-	if (m_counter++ > 100)
-		return _expression;
+	m_lastKnownValue.erase(_var);
+	if (VariableOffset const* offset = util::valueOrNullptr(m_offsets, _var))
+	{
+		// Remove var from its group
+		if (offset->reference != YulString{})
+			m_groupMembers[offset->reference].erase(_var);
+		m_offsets.erase(_var);
+	}
+	if (set<YulString>* group = util::valueOrNullptr(m_groupMembers, _var))
+	{
+		// _var was a representative, we might have to find a new one.
+		if (group->empty())
+			m_groupMembers.erase(_var);
+		else
+		{
+			YulString newRepresentative = *group->begin();
+			u256 newOffset = m_offsets[newRepresentative].offset;
+			for (YulString groupMember: *group)
+			{
+				yulAssert(m_offsets[groupMember].reference == _var);
+				m_offsets[groupMember].reference = newRepresentative;
+				m_offsets[newRepresentative].offset -= newOffset;
+			}
+		}
+	}
+}
 
-	if (holds_alternative<FunctionCall>(_expression))
-		for (Expression& arg: std::get<FunctionCall>(_expression).arguments)
-			arg = simplifyRecursively(arg);
-
-	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
-		return simplifyRecursively(match->action().toExpression(debugDataOf(_expression)));
-
-	return _expression;
+KnowledgeBase::VariableOffset KnowledgeBase::setOffset(YulString _variable, VariableOffset _value)
+{
+	m_offsets[_variable] = _value;
+	// Constants are not tracked in m_groupMembers because
+	// the "representative" can never be reset.
+	if (_value.reference != YulString{})
+		m_groupMembers[_value.reference].insert(_variable);
+	return _value;
 }
