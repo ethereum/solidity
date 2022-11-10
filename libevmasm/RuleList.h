@@ -440,7 +440,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	Pattern B,
 	Pattern,
 	Pattern X,
-	Pattern Y
+	Pattern Y,
+	Pattern Z
 )
 {
 	using Word = typename Pattern::Word;
@@ -627,6 +628,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		Builtins::AND(Builtins::SHR(B, X), A),
 		[=]() -> Pattern { return Builtins::SHR(B, X); },
 		feasibilityFunction
+	});
+
+	rules.push_back({
+		// AND(SHL(Z, X), SHL(Z, Y)) -> SHL(Z, AND(X, Y))
+		Builtins::AND(Builtins::SHL(Z, X), Builtins::SHL(Z, Y)),
+		[=]() -> Pattern { return Builtins::SHL(Z, Builtins::AND(X, Y)); }
 	});
 
 	rules.push_back({
@@ -823,7 +830,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	rules += simplificationRuleListPart4_5(A, B, C, W, X);
 	rules += simplificationRuleListPart5(_evmVersion.has_value(), A, B, C, W, X);
 	rules += simplificationRuleListPart6(A, B, C, W, X);
-	rules += simplificationRuleListPart7(A, B, C, W, X);
+	rules += simplificationRuleListPart7(A, B, C, W, X, Y);
 	rules += simplificationRuleListPart8(A, B, C, W, X);
 
 	if (_evmVersion.has_value())
