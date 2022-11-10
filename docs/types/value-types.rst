@@ -770,6 +770,16 @@ confusing, but in essence, if a function is ``payable``, this means that it
 also accepts a payment of zero Ether, so it also is ``non-payable``.
 On the other hand, a ``non-payable`` function will reject Ether sent to it,
 so ``non-payable`` functions cannot be converted to ``payable`` functions.
+To clarify, rejecting ether is more restrictive than not rejecting ether.
+This means you can override a payable function with a non-payable but not the
+other way around.
+
+Additionally, When you define a ``non-payable`` function pointer,
+the compiler does not enforce that the pointed function will actually reject ether.
+Instead, it enforces that the function pointer is never used to send ether.
+Which makes it possible to assign a ``payable`` function pointer to a ``non-payable``
+function pointer ensuring both types behave the same way, i.e, both cannot be used
+to send ether.
 
 If a function type variable is not initialised, calling it results
 in a :ref:`Panic error<assert-and-require>`. The same happens if you call a function after using ``delete``
