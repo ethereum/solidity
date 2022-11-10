@@ -92,6 +92,21 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	remover(_ast);
 }
 
+UnusedStoreEliminator::UnusedStoreEliminator(
+	Dialect const& _dialect,
+	map<YulString, SideEffects> const& _functionSideEffects,
+	map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
+	map<YulString, AssignedValue> const& _ssaValues,
+	bool _ignoreMemory
+):
+	UnusedStoreBase(_dialect),
+	m_ignoreMemory(_ignoreMemory),
+	m_functionSideEffects(_functionSideEffects),
+	m_controlFlowSideEffects(_controlFlowSideEffects),
+	m_ssaValues(_ssaValues),
+	m_knowledgeBase([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); })
+{}
+
 void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 {
 	UnusedStoreBase::operator()(_functionCall);
@@ -174,12 +189,11 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 			initialState = State::Used;
 			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
 			auto length = identifierNameIfSSA(funCall->arguments.at(2));
-			KnowledgeBase knowledge([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
 			if (length && startOffset)
 			{
 				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
 				if (
-					knowledge.knownToBeZero(*startOffset) &&
+					m_knowledgeBase.knownToBeZero(*startOffset) &&
 					lengthCall &&
 					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
 				)
@@ -267,8 +281,6 @@ bool UnusedStoreEliminator::knownUnrelated(
 	UnusedStoreEliminator::Operation const& _op2
 ) const
 {
-	KnowledgeBase knowledge([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
-
 	if (_op1.location != _op2.location)
 		return true;
 	if (_op1.location == Location::Storage)
@@ -278,26 +290,26 @@ bool UnusedStoreEliminator::knownUnrelated(
 			yulAssert(
 				_op1.length &&
 				_op2.length &&
-				knowledge.valueIfKnownConstant(*_op1.length) == 1 &&
-				knowledge.valueIfKnownConstant(*_op2.length) == 1
+				m_knowledgeBase.valueIfKnownConstant(*_op1.length) == 1 &&
+				m_knowledgeBase.valueIfKnownConstant(*_op2.length) == 1
 			);
-			return knowledge.knownToBeDifferent(*_op1.start, *_op2.start);
+			return m_knowledgeBase.knownToBeDifferent(*_op1.start, *_op2.start);
 		}
 	}
 	else
 	{
 		yulAssert(_op1.location == Location::Memory, "");
 		if (
-			(_op1.length && knowledge.knownToBeZero(*_op1.length)) ||
-			(_op2.length && knowledge.knownToBeZero(*_op2.length))
+			(_op1.length && m_knowledgeBase.knownToBeZero(*_op1.length)) ||
+			(_op2.length && m_knowledgeBase.knownToBeZero(*_op2.length))
 		)
 			return true;
 
 		if (_op1.start && _op1.length && _op2.start)
 		{
-			optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
-			optional<u256> start1 = knowledge.valueIfKnownConstant(*_op1.start);
-			optional<u256> start2 = knowledge.valueIfKnownConstant(*_op2.start);
+			optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
+			optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
+			optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
 			if (
 				(length1 && start1 && start2) &&
 				*start1 + *length1 >= *start1 && // no overflow
@@ -307,9 +319,9 @@ bool UnusedStoreEliminator::knownUnrelated(
 		}
 		if (_op2.start && _op2.length && _op1.start)
 		{
-			optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
-			optional<u256> start2 = knowledge.valueIfKnownConstant(*_op2.start);
-			optional<u256> start1 = knowledge.valueIfKnownConstant(*_op1.start);
+			optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
+			optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
+			optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
 			if (
 				(length2 && start2 && start1) &&
 				*start2 + *length2 >= *start2 && // no overflow
@@ -320,12 +332,12 @@ bool UnusedStoreEliminator::knownUnrelated(
 
 		if (_op1.start && _op1.length && _op2.start && _op2.length)
 		{
-			optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
-			optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
+			optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
+			optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
 			if (
 				(length1 && *length1 <= 32) &&
 				(length2 && *length2 <= 32) &&
-				knowledge.knownToBeDifferentByAtLeast32(*_op1.start, *_op2.start)
+				m_knowledgeBase.knownToBeDifferentByAtLeast32(*_op1.start, *_op2.start)
 			)
 				return true;
 		}
@@ -348,22 +360,20 @@ bool UnusedStoreEliminator::knownCovered(
 		return true;
 	if (_covered.location == Location::Memory)
 	{
-		KnowledgeBase knowledge([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
-
-		if (_covered.length && knowledge.knownToBeZero(*_covered.length))
+		if (_covered.length && m_knowledgeBase.knownToBeZero(*_covered.length))
 			return true;
 
 		// Condition (i = cover_i_ng, e = cover_e_d):
 		// i.start <= e.start && e.start + e.length <= i.start + i.length
 		if (!_covered.start || !_covering.start || !_covered.length || !_covering.length)
 			return false;
-		optional<u256> coveredLength = knowledge.valueIfKnownConstant(*_covered.length);
-		optional<u256> coveringLength = knowledge.valueIfKnownConstant(*_covering.length);
+		optional<u256> coveredLength = m_knowledgeBase.valueIfKnownConstant(*_covered.length);
+		optional<u256> coveringLength = m_knowledgeBase.valueIfKnownConstant(*_covering.length);
 		if (*_covered.start == *_covering.start)
 			if (coveredLength && coveringLength && *coveredLength <= *coveringLength)
 				return true;
-		optional<u256> coveredStart = knowledge.valueIfKnownConstant(*_covered.start);
-		optional<u256> coveringStart = knowledge.valueIfKnownConstant(*_covering.start);
+		optional<u256> coveredStart = m_knowledgeBase.valueIfKnownConstant(*_covered.start);
+		optional<u256> coveringStart = m_knowledgeBase.valueIfKnownConstant(*_covering.start);
 		if (coveredStart && coveringStart && coveredLength && coveringLength)
 			if (
 				*coveringStart <= *coveredStart &&
