@@ -66,13 +66,13 @@ bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 
 bool KnowledgeBase::knownToBeZero(YulString _a)
 {
-	return valueIfKnownConstant(_a) == u256{};
+	return valueIfKnownConstant(_a) == 0;
 }
 
 optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
 {
 	VariableOffset offset = explore(_a);
-	if (offset.reference == YulString{})
+	if (offset.reference.empty())
 		return offset.offset;
 	else
 		return nullopt;
@@ -85,7 +85,7 @@ optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expression
 	else if (Literal const* lit = get_if<Literal>(&_expression))
 		return valueOfLiteral(*lit);
 	else
-		return {};
+		return nullopt;
 }
 
 KnowledgeBase::VariableOffset KnowledgeBase::explore(YulString _var)
@@ -150,7 +150,7 @@ optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const&
 				}
 	}
 
-	return {};
+	return nullopt;
 }
 
 Expression const* KnowledgeBase::valueOf(YulString _var)
@@ -175,7 +175,7 @@ void KnowledgeBase::reset(YulString _var)
 	if (VariableOffset const* offset = util::valueOrNullptr(m_offsets, _var))
 	{
 		// Remove var from its group
-		if (offset->reference != YulString{})
+		if (!offset->reference.empty())
 			m_groupMembers[offset->reference].erase(_var);
 		m_offsets.erase(_var);
 	}
@@ -203,7 +203,7 @@ KnowledgeBase::VariableOffset KnowledgeBase::setOffset(YulString _variable, Vari
 	m_offsets[_variable] = _value;
 	// Constants are not tracked in m_groupMembers because
 	// the "representative" can never be reset.
-	if (_value.reference != YulString{})
+	if (!_value.reference.empty())
 		m_groupMembers[_value.reference].insert(_variable);
 	return _value;
 }
