@@ -1673,7 +1673,7 @@ BOOST_AUTO_TEST_CASE(using_for)
 		contract C {
 			using L for S;
 
-			function test() public {
+			function pub() public {
 				S memory s = S(42);
 
 				s.ext();
@@ -1693,8 +1693,8 @@ BOOST_AUTO_TEST_CASE(using_for)
 			{"Entry", "function L.ext(struct S)"},
 		}},
 		{"C", {
-			{"Entry", "function C.test()"},
-			{"function C.test()", "function L.inr(struct S)"},
+			{"Entry", "function C.pub()"},
+			{"function C.pub()", "function L.inr(struct S)"},
 		}},
 	};
 

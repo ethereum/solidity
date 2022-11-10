@@ -1,3 +1,15 @@
+table {
+    /* Without this the :widths: directive on list-table has no effect (at least in RTD style). */
+    width: 100%;
+    table-layout: fixed;
+}
+
+table td {
+    /* With how narrow the page is in RTD, the default padding of 8px 16px is excessive and
+     * makes things wrap more than necessary. */
+    padding: 4px !important;
+}
+
 pre {
     white-space: pre-wrap;       /* css-3 */
     white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */

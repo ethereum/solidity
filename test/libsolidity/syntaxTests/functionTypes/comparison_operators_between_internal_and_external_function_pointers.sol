@@ -19,5 +19,5 @@ contract C {
     }
 }
 // ----
-// TypeError 2271: (606-672): Operator != not compatible with types function () and function () external.
-// TypeError 2271: (688-741): Operator != not compatible with types function () and function () external.
+// TypeError 2271: (606-672): Built-in binary operator != cannot be applied to types function () and function () external.
+// TypeError 2271: (688-741): Built-in binary operator != cannot be applied to types function () and function () external.

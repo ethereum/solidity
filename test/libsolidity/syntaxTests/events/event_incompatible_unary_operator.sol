@@ -7,4 +7,4 @@ contract C {
 
 // ----
 // TypeError 4247: (83-96): Expression has to be an lvalue.
-// TypeError 9767: (83-98): Unary operator ++ cannot be applied to type event MyCustomEvent(uint256).
+// TypeError 9767: (83-98): Built-in unary operator ++ cannot be applied to type event MyCustomEvent(uint256).
