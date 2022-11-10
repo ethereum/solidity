@@ -43,7 +43,7 @@ using namespace solidity::yul::unusedFunctionsCommon;
 
 void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _ast)
 {
-	map<YulString, size_t> references = ReferencesCounter::countReferences(_ast);
+	map<YulString, size_t> references = VariableReferencesCounter::countReferences(_ast);
 	auto used = [&](auto v) -> bool { return references.count(v.name); };
 
 	// Function name and a pair of boolean masks, the first corresponds to parameters and the second

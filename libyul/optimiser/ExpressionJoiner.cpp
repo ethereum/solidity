@@ -86,7 +86,7 @@ void ExpressionJoiner::visit(Expression& _e)
 
 ExpressionJoiner::ExpressionJoiner(Block& _ast)
 {
-	m_references = ReferencesCounter::countReferences(_ast);
+	m_references = VariableReferencesCounter::countReferences(_ast);
 }
 
 void ExpressionJoiner::handleArguments(vector<Expression>& _arguments)

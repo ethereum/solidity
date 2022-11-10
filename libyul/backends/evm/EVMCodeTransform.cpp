@@ -668,10 +668,9 @@ bool statementNeedsReturnVariableSetup(Statement const& _statement, vector<Typed
 		holds_alternative<Assignment>(_statement)
 	)
 	{
-		ReferencesCounter referencesCounter{ReferencesCounter::CountWhat::OnlyVariables};
-		referencesCounter.visit(_statement);
-		auto isReferenced = [&referencesCounter](TypedName const& _returnVariable) {
-			return referencesCounter.references().count(_returnVariable.name);
+		map<YulString, size_t> references = VariableReferencesCounter::countReferences(_statement);
+		auto isReferenced = [&references](TypedName const& _returnVariable) {
+			return references.count(_returnVariable.name);
 		};
 		if (ranges::none_of(_returnVariables, isReferenced))
 			return false;
