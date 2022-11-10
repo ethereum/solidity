@@ -122,24 +122,33 @@ optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const&
 	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
 		return explore(identifier->name);
 	else if (FunctionCall const* f = get_if<FunctionCall>(&_value))
-		if (f->functionName.name == "add"_yulstring || f->functionName.name == "sub"_yulstring)
+	{
+		if (f->functionName.name == "add"_yulstring)
+		{
 			if (optional<VariableOffset> a = explore(f->arguments[0]))
 				if (optional<VariableOffset> b = explore(f->arguments[1]))
 				{
-					u256 offset =
-						f->functionName.name == "add"_yulstring ?
-						a->offset + b->offset :
-						a->offset - b->offset;
-					if (a->reference == b->reference)
-						// Offsets relative to the same reference variable
-						return VariableOffset{a->reference, offset};
-					else if (a->reference == YulString{})
+					u256 offset = a->offset + b->offset;
+					if (a->reference.empty())
 						// a is constant
 						return VariableOffset{b->reference, offset};
-					else if (b->reference == YulString{})
+					else if (b->reference.empty())
 						// b is constant
 						return VariableOffset{a->reference, offset};
 				}
+		}
+		else if (f->functionName.name == "sub"_yulstring)
+			if (optional<VariableOffset> a = explore(f->arguments[0]))
+				if (optional<VariableOffset> b = explore(f->arguments[1]))
+				{
+					u256 offset = a->offset - b->offset;
+					if (a->reference == b->reference)
+						return VariableOffset{YulString{}, offset};
+					else if (b->reference.empty())
+						// b is constant
+						return VariableOffset{a->reference, offset};
+				}
+	}
 
 	return {};
 }
