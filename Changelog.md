@@ -10,6 +10,7 @@ Compiler Features:
  * Standard JSON: Add a boolean field `settings.metadata.appendCBOR` that skips CBOR metadata from getting appended at the end of the bytecode.
  * Yul Optimizer: Allow replacing the previously hard-coded cleanup sequence by specifying custom steps after a colon delimiter (``:``) in the sequence string.
  * Language Server: Add basic document hover support.
+ * Optimizer: Added optimization rule ``and(shl(X, Y), shl(X, Z)) => shl(X, and(Y, Z))``.
 
 
 Bugfixes:
