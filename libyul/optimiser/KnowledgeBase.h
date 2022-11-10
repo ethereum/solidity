@@ -47,6 +47,9 @@ struct AssignedValue;
  * form.
  * The only requirement is that the assigned values are movable expressions.
  *
+ * There is a constructor to provide all SSA values right at the beginning.
+ * If you use this, the KnowledgeBase will be slightly more efficient.
+ *
  * Internally, tries to find groups of variables that have a mutual constant
  * difference and stores these differences always relative to a specific
  * representative variable of the group.
@@ -57,9 +60,13 @@ struct AssignedValue;
 class KnowledgeBase
 {
 public:
+	/// Constructor for arbitrary value callback that allows for variable values
+	/// to change in between calls to functions of this class.
 	KnowledgeBase(std::function<AssignedValue const*(YulString)> _variableValues):
 		m_variableValues(std::move(_variableValues))
 	{}
+	/// Constructor to use if source code is in SSA form and values are constant.
+	KnowledgeBase(std::map<YulString, AssignedValue> const& _ssaValues);
 
 	bool knownToBeDifferent(YulString _a, YulString _b);
 	std::optional<u256> differenceIfKnownConstant(YulString _a, YulString _b);
@@ -91,6 +98,8 @@ private:
 
 	VariableOffset setOffset(YulString _variable, VariableOffset _value);
 
+	/// If true, we can assume that variable values never change and skip some steps.
+	bool m_valuesAreSSA = false;
 	/// Callback to retrieve the current value of a variable.
 	std::function<AssignedValue const*(YulString)> m_variableValues;
 

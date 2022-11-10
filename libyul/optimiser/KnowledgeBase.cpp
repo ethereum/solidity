@@ -33,6 +33,11 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
+KnowledgeBase::KnowledgeBase(map<YulString, AssignedValue> const& _ssaValues):
+	m_valuesAreSSA(true),
+	m_variableValues([_ssaValues](YulString _var) { return util::valueOrNullptr(_ssaValues, _var); })
+{}
+
 bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 {
 	if (optional<u256> difference = differenceIfKnownConstant(_a, _b))
@@ -85,11 +90,23 @@ optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expression
 
 KnowledgeBase::VariableOffset KnowledgeBase::explore(YulString _var)
 {
-	// We query the value first so that the variable is reset if it has changed
-	// since the last call.
-	Expression const* value = valueOf(_var);
-	if (VariableOffset const* varOff = util::valueOrNullptr(m_offsets, _var))
-		return *varOff;
+	Expression const* value = nullptr;
+	if (m_valuesAreSSA)
+	{
+		// In SSA, a once determined offset is always valid, so we first see
+		// if we already computed it.
+		if (VariableOffset const* varOff = util::valueOrNullptr(m_offsets, _var))
+			return *varOff;
+		value = valueOf(_var);
+	}
+	else
+	{
+		// For non-SSA, we query the value first so that the variable is reset if it has changed
+		// since the last call.
+		value = valueOf(_var);
+		if (VariableOffset const* varOff = util::valueOrNullptr(m_offsets, _var))
+			return *varOff;
+	}
 
 	if (value)
 		if (optional<VariableOffset> offset = explore(*value))
@@ -129,9 +146,12 @@ optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const&
 
 Expression const* KnowledgeBase::valueOf(YulString _var)
 {
-	Expression const* lastValue = m_lastKnownValue[_var];
 	AssignedValue const* assignedValue = m_variableValues(_var);
 	Expression const* currentValue = assignedValue ? assignedValue->value : nullptr;
+	if (m_valuesAreSSA)
+		return currentValue;
+
+	Expression const* lastValue = m_lastKnownValue[_var];
 	if (lastValue != currentValue)
 		reset(_var);
 	m_lastKnownValue[_var] = currentValue;
@@ -140,6 +160,8 @@ Expression const* KnowledgeBase::valueOf(YulString _var)
 
 void KnowledgeBase::reset(YulString _var)
 {
+	yulAssert(!m_valuesAreSSA);
+
 	m_lastKnownValue.erase(_var);
 	if (VariableOffset const* offset = util::valueOrNullptr(m_offsets, _var))
 	{
