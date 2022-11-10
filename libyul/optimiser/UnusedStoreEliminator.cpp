@@ -104,7 +104,7 @@ UnusedStoreEliminator::UnusedStoreEliminator(
 	m_functionSideEffects(_functionSideEffects),
 	m_controlFlowSideEffects(_controlFlowSideEffects),
 	m_ssaValues(_ssaValues),
-	m_knowledgeBase([this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); })
+	m_knowledgeBase(_ssaValues)
 {}
 
 void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
