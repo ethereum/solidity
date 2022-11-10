@@ -70,6 +70,10 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 	}
 }
 
+}
+
+namespace solidity::yul::test
+{
 /// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
 /// @a _target at offset @a _targetOffset. Behaves as if @a _source would
 /// continue with an infinite sequence of zero bytes beyond its end.
@@ -185,7 +189,7 @@ u256 EVMInstructionInterpreter::eval(
 			return u256("0x1234cafe1234cafe1234cafe") + arg[0];
 		uint64_t offset = uint64_t(arg[0] & uint64_t(-1));
 		uint64_t size = uint64_t(arg[1] & uint64_t(-1));
-		return u256(keccak256(readMemory(offset, size)));
+		return u256(keccak256(m_state.readMemory(offset, size)));
 	}
 	case Instruction::ADDRESS:
 		return h256(m_state.address, h256::AlignRight);
@@ -322,24 +326,34 @@ u256 EVMInstructionInterpreter::eval(
 		return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
-		// TODO assign returndata
 		accessMemory(arg[3], arg[4]);
 		accessMemory(arg[5], arg[6]);
 		logTrace(_instruction, arg);
-		return arg[0] & 1;
+		// Randomly fail based on the called address if it isn't a call to self.
+		// Used for fuzzing.
+		return (
+			(arg[0] > 0) &&
+			(arg[1] == util::h160::Arith(m_state.address) || (arg[1] & 1))
+		) ? 1 : 0;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
 		accessMemory(arg[2], arg[3]);
 		accessMemory(arg[4], arg[5]);
 		logTrace(_instruction, arg);
-		return 0;
+
+		// Randomly fail based on the called address if it isn't a call to self.
+		// Used for fuzzing.
+		return (
+			(arg[0] > 0) &&
+			(arg[1] == util::h160::Arith(m_state.address) || (arg[1] & 1))
+		) ? 1 : 0;
 	case Instruction::RETURN:
 	{
-		bytes data;
+		m_state.returndata = {};
 		if (accessMemory(arg[0], arg[1]))
-			data = readMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg, data);
-		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
+			m_state.returndata = m_state.readMemory(arg[0], arg[1]);
+		logTrace(_instruction, arg, m_state.returndata);
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminatedWithReturn());
 	}
 	case Instruction::REVERT:
 		accessMemory(arg[0], arg[1]);
@@ -475,6 +489,8 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 			);
 		return 0;
 	}
+	else if (fun == "memoryguard")
+		return _evaluatedArguments.at(0);
 	else
 		yulAssert(false, "Unknown builtin: " + fun);
 	return 0;
@@ -497,18 +513,9 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 	return false;
 }
 
-bytes EVMInstructionInterpreter::readMemory(u256 const& _offset, u256 const& _size)
-{
-	yulAssert(_size <= 0xffff, "Too large read.");
-	bytes data(size_t(_size), uint8_t(0));
-	for (size_t i = 0; i < data.size(); ++i)
-		data[i] = m_state.memory[_offset + i];
-	return data;
-}
-
 u256 EVMInstructionInterpreter::readMemoryWord(u256 const& _offset)
 {
-	return u256(h256(readMemory(_offset, 32)));
+	return u256(h256(m_state.readMemory(_offset, 32)));
 }
 
 void EVMInstructionInterpreter::writeMemoryWord(u256 const& _offset, u256 const& _value)

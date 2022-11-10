@@ -300,8 +300,7 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 				_functionCall.expression().accept(*this);
 				ASTNode::listAccept(_functionCall.arguments(), *this);
 
-				solAssert(!m_currentNode->functionCall);
-				m_currentNode->functionCall = &_functionCall;
+				m_currentNode->functionDefinition = ASTNode::resolveFunctionCall(_functionCall, m_contract);
 
 				auto nextNode = newLabel();
 
@@ -318,6 +317,8 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 
 bool ControlFlowBuilder::visit(ModifierInvocation const& _modifierInvocation)
 {
+	solAssert(m_contract, "Free functions cannot have modifiers");
+
 	if (auto arguments = _modifierInvocation.arguments())
 		for (auto& argument: *arguments)
 			appendControlFlow(*argument);

@@ -12,7 +12,7 @@ In particular, we appreciate support in the following areas:
   `"good first issue" <https://github.com/ethereum/solidity/labels/good%20first%20issue>`_ which are
   meant as introductory issues for external contributors.
 * Improving the documentation.
-* Translating the documentation into more languages.
+* `Translating <https://github.com/solidity-docs>`_ the documentation into more languages.
 * Responding to questions from other users on `StackExchange
   <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter Chat
   <https://gitter.im/ethereum/solidity>`_.
@@ -50,6 +50,9 @@ reporting issues, please mention the following details:
 Reducing the source code that caused the issue to a bare minimum is always
 very helpful, and sometimes even clarifies a misunderstanding.
 
+For technical discussions about language design, a post in the
+`Solidity forum <https://forum.soliditylang.org/>`_ is the correct place (see :ref:`solidity_language_design`).
+
 Workflow for Pull Requests
 ==========================
 
@@ -76,6 +79,9 @@ Finally, please make sure you respect the `coding style
 <https://github.com/ethereum/solidity/blob/develop/CODING_STYLE.md>`_
 for this project. Also, even though we do CI testing, please test your code and
 ensure that it builds locally before submitting a pull request.
+
+We highly recommend going through our `review checklist <https://github.com/ethereum/solidity/blob/develop/ReviewChecklist.md>`_ before submitting the pull request.
+We thoroughly review every PR and will help you get it right, but there are many common problems that can be easily avoided, making the review much smoother.
 
 Thank you for your help!
 
@@ -408,7 +414,7 @@ local slang and references, making your language as clear to all readers as poss
 .. note::
 
     While the official Solidity documentation is written in English, there are community contributed :ref:`translations`
-    in other languages available. Please refer to the `translation guide <https://github.com/solidity-docs/translation-guide>`_
+    in other languages available. Please refer to the `translation guide <https://github.com/solidity-docs#solidity-documentation-translation-guide>`_
     for information on how to contribute to the community translations.
 
 Title Case for Headings
@@ -476,6 +482,8 @@ Running Documentation Tests
 
 Make sure your contributions pass our documentation tests by running ``./docs/docs.sh`` that installs dependencies
 needed for documentation and checks for any problems such as broken links or syntax issues.
+
+.. _solidity_language_design:
 
 Solidity Language Design
 ========================

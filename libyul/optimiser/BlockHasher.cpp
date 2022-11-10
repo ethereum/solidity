@@ -20,7 +20,6 @@
  */
 
 #include <libyul/optimiser/BlockHasher.h>
-#include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
@@ -54,7 +53,10 @@ std::map<Block const*, uint64_t> BlockHasher::run(Block const& _block)
 void BlockHasher::operator()(Literal const& _literal)
 {
 	hash64(compileTimeLiteralHash("Literal"));
-	hash64(_literal.value.hash());
+	if (_literal.kind == LiteralKind::Number)
+		hash64(std::hash<u256>{}(valueOfNumberLiteral(_literal)));
+	else
+		hash64(_literal.value.hash());
 	hash64(_literal.type.hash());
 	hash8(static_cast<uint8_t>(_literal.kind));
 }
@@ -191,4 +193,36 @@ void BlockHasher::operator()(Block const& _block)
 
 	for (auto& externalReference: subBlockHasher.m_externalReferences)
 		(*this)(Identifier{{}, externalReference});
+}
+
+uint64_t ExpressionHasher::run(Expression const& _e)
+{
+	ExpressionHasher expressionHasher;
+	expressionHasher.visit(_e);
+	return expressionHasher.m_hash;
+}
+
+void ExpressionHasher::operator()(Literal const& _literal)
+{
+	hash64(compileTimeLiteralHash("Literal"));
+	if (_literal.kind == LiteralKind::Number)
+		hash64(std::hash<u256>{}(valueOfNumberLiteral(_literal)));
+	else
+		hash64(_literal.value.hash());
+	hash64(_literal.type.hash());
+	hash8(static_cast<uint8_t>(_literal.kind));
+}
+
+void ExpressionHasher::operator()(Identifier const& _identifier)
+{
+	hash64(compileTimeLiteralHash("Identifier"));
+	hash64(_identifier.name.hash());
+}
+
+void ExpressionHasher::operator()(FunctionCall const& _funCall)
+{
+	hash64(compileTimeLiteralHash("FunctionCall"));
+	hash64(_funCall.functionName.name.hash());
+	hash64(_funCall.arguments.size());
+	ASTWalker::operator()(_funCall);
 }

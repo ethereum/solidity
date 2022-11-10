@@ -155,6 +155,8 @@ set(sources
 	interface/StorageLayout.h
 	interface/Version.cpp
 	interface/Version.h
+	lsp/DocumentHoverHandler.cpp
+	lsp/DocumentHoverHandler.h
 	lsp/FileRepository.cpp
 	lsp/FileRepository.h
 	lsp/GotoDefinition.cpp

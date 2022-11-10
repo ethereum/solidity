@@ -5,6 +5,8 @@ set(sources
 	EwasmBuiltinInterpreter.cpp
 	Interpreter.h
 	Interpreter.cpp
+	Inspector.h
+	Inspector.cpp
 )
 
 add_library(yulInterpreter ${sources})

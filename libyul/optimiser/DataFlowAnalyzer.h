@@ -123,7 +123,7 @@ protected:
 	/// for example at points where control flow is merged.
 	void clearValues(std::set<YulString> _names);
 
-	void assignValue(YulString _variable, Expression const* _value);
+	virtual void assignValue(YulString _variable, Expression const* _value);
 
 	/// Clears knowledge about storage or memory if they may be modified inside the block.
 	void clearKnowledgeIfInvalidated(Block const& _block);

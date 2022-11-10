@@ -1,4 +1,23 @@
-{"contracts":{"A":{"C":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":"<BYTECODE REMOVED>"}},"ir":"
+{
+    "contracts":
+    {
+        "A":
+        {
+            "C":
+            {
+                "evm":
+                {
+                    "bytecode":
+                    {
+                        "generatedSources": [],
+                        "object": "<BYTECODE REMOVED>"
+                    },
+                    "deployedBytecode":
+                    {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                },
+                "ir": "
 /// @use-src 0:\"A\"
 object \"C_3\" {
     code {
@@ -60,7 +79,23 @@ object \"C_3\" {
 
 }
 
-"},"D":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":"<BYTECODE REMOVED>"}},"ir":"
+"
+            },
+            "D":
+            {
+                "evm":
+                {
+                    "bytecode":
+                    {
+                        "generatedSources": [],
+                        "object": "<BYTECODE REMOVED>"
+                    },
+                    "deployedBytecode":
+                    {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                },
+                "ir": "
 /// @use-src 0:\"A\"
 object \"D_16\" {
     code {
@@ -260,10 +295,38 @@ object \"D_16\" {
 
 }
 
-"}}},"errors":[{"component":"general","errorCode":"2072","formattedMessage":"Warning: Unused local variable.
+"
+            }
+        }
+    },
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "2072",
+            "formattedMessage": "Warning: Unused local variable.
  --> A:2:93:
   |
 2 | pragma solidity >=0.0; pragma abicoder v2; contract C {} contract D { function f() public { C c = new C(); } }
   |                                                                                             ^^^
 
-","message":"Unused local variable.","severity":"warning","sourceLocation":{"end":131,"file":"A","start":128},"type":"Warning"}],"sources":{"A":{"id":0}}}
+",
+            "message": "Unused local variable.",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 131,
+                "file": "A",
+                "start": 128
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

@@ -1,1 +1,29 @@
-{"contracts":{"a.sol":{"A2":{"evm":{"bytecode":{"object":"<BYTECODE REMOVED>"}}}}},"sources":{"a.sol":{"id":0},"b.sol":{"id":1}}}
+{
+    "contracts":
+    {
+        "a.sol":
+        {
+            "A2":
+            {
+                "evm":
+                {
+                    "bytecode":
+                    {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        }
+    },
+    "sources":
+    {
+        "a.sol":
+        {
+            "id": 0
+        },
+        "b.sol":
+        {
+            "id": 1
+        }
+    }
+}

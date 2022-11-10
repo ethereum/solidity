@@ -8,4 +8,4 @@ contract C {
 
 // ----
 // TypeError 4247: (86-99): Expression has to be an lvalue.
-// TypeError 9767: (86-101): Unary operator ++ cannot be applied to type error MyCustomError(uint256,bool).
+// TypeError 9767: (86-101): Built-in unary operator ++ cannot be applied to type error MyCustomError(uint256,bool).

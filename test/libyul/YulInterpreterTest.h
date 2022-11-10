@@ -47,6 +47,7 @@ private:
 
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
+	bool m_simulateExternalCallsToSelf = false;
 };
 
 }

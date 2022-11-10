@@ -39,8 +39,15 @@ struct Dialect;
 struct AssignedValue;
 
 /**
- * Optimizer component that removes sstore statements if they
- * are overwritten in all code paths or never read from.
+ * Optimizer component that removes sstore and memory store statements if conditions are met for their removal.
+ * In case of an sstore, if all outgoing code paths revert (due to an explicit revert(), invalid(),
+ * or infinite recursion) or lead to another ``sstore`` for which the optimizer can tell that it will overwrite the first store,
+ * the statement will be removed.
+ *
+ * For memory store operations, things are generally simpler, at least in the outermost yul block as all such statements
+ * will be removed if they are never read from in any code path. At function analysis level however, the approach is similar
+ * to sstore, as we don't know whether the memory location will be read once we leave the function's scope,
+ * so the statement will be removed only if all code code paths lead to a memory overwrite.
  *
  * The m_store member of UnusedStoreBase is only used with the empty yul string
  * as key in the first dimension.

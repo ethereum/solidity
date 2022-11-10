@@ -1,0 +1,64 @@
+name: External contributor greeter
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+
+env:
+  ORGANIZATION: Ethereum
+  DRY_RUN: false
+
+jobs:
+  comment-external-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get organization members
+        id: get_members
+        env:
+          GH_TOKEN: ${{ secrets.READ_ORG }}
+          CONTRIBUTOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          gh api graphql \
+            --raw-field organization="$ORGANIZATION" \
+            --raw-field query='
+              query($organization: String!) {
+                organization(login: $organization) {
+                  team(slug: "Solidity") {
+                    members(first: 100) {
+                      nodes {
+                        login
+                      }
+                    }
+                  }
+                }
+              }' > org_members.json
+          echo "CONTRIBUTOR_IS_ORG_MEMBER=$(
+            jq \
+              --arg contributor $CONTRIBUTOR \
+              '.data.organization.team.members | any(.nodes[].login; . == $contributor)' \
+              org_members.json
+          )" >> $GITHUB_OUTPUT
+
+      - name: Comment on external contribution PR
+        if: ${{ steps.get_members.outputs.CONTRIBUTOR_IS_ORG_MEMBER == 'false' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: |
+          echo "Commenting in a newly submitted or reopened external PR: $PR"
+          if [[ $DRY_RUN == 'false' ]]; then
+            gh pr edit "$PR" --add-label "external contribution :star:"
+            comment_body=(
+              "Thank you for your contribution to the Solidity compiler! A team member will follow up shortly."
+              "\n\n"
+              "If you haven't read our [contributing guidelines](https://docs.soliditylang.org/en/latest/contributing.html) and our "
+              "[review checklist](https://github.com/ethereum/solidity/blob/develop/ReviewChecklist.md) before, "
+              "please do it now, this makes the reviewing process and accepting your contribution smoother."
+              "\n\n"
+              "If you have any questions or need our help, feel free to post them in the PR or talk to us directly on the "
+              "[#solidity-dev](https://matrix.to/#/#ethereum_solidity-dev:gitter.im) channel on Matrix."
+            )
+            gh pr comment $PR --body "$(IFS='' ; echo -e "${comment_body[*]}")"
+          fi

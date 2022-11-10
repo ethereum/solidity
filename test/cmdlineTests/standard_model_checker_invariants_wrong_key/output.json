@@ -1,1 +1,12 @@
-{"errors":[{"component":"general","formattedMessage":"Invalid model checker invariants requested.","message":"Invalid model checker invariants requested.","severity":"error","type":"JSONError"}]}
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Invalid model checker invariants requested.",
+            "message": "Invalid model checker invariants requested.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

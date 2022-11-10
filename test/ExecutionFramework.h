@@ -272,7 +272,6 @@ private:
 	}
 
 protected:
-	u256 const GasPrice = 10 * gwei;
 	u256 const InitialGas = 100000000;
 
 	void selectVM(evmc_capabilities _cap = evmc_capabilities::EVMC_CAPABILITY_EVM1);

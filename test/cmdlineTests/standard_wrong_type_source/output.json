@@ -1,1 +1,12 @@
-{"errors":[{"component":"general","formattedMessage":"\"sources.A\" must be an object","message":"\"sources.A\" must be an object","severity":"error","type":"JSONError"}]}
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "\"sources.A\" must be an object",
+            "message": "\"sources.A\" must be an object",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

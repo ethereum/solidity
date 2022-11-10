@@ -7,4 +7,4 @@ contract test {
     }
 }
 // ----
-// TypeError 5172: (85-88): Name has to refer to a struct, enum or contract.
+// TypeError 5172: (85-88): Name has to refer to a user-defined type.

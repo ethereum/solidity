@@ -83,31 +83,32 @@ evmc_message EvmoneUtility::initializeMessage(bytes const& _input)
 	return msg;
 }
 
-evmc::result EvmoneUtility::executeContract(
+evmc::Result EvmoneUtility::executeContract(
 	bytes const& _functionHash,
 	evmc_address _deployedAddress
 )
 {
 	evmc_message message = initializeMessage(_functionHash);
-	message.destination = _deployedAddress;
+	message.recipient = _deployedAddress;
+	message.code_address = _deployedAddress;
 	message.kind = EVMC_CALL;
 	return m_evmHost.call(message);
 }
 
-evmc::result EvmoneUtility::deployContract(bytes const& _code)
+evmc::Result EvmoneUtility::deployContract(bytes const& _code)
 {
 	evmc_message message = initializeMessage(_code);
 	message.kind = EVMC_CREATE;
 	return m_evmHost.call(message);
 }
 
-evmc::result EvmoneUtility::deployAndExecute(
+evmc::Result EvmoneUtility::deployAndExecute(
 	bytes const& _byteCode,
 	string const& _hexEncodedInput
 )
 {
 	// Deploy contract and signal failure if deploy failed
-	evmc::result createResult = deployContract(_byteCode);
+	evmc::Result createResult = deployContract(_byteCode);
 	solAssert(
 		createResult.status_code == EVMC_SUCCESS,
 		"SolidityEvmoneInterface: Contract creation failed"
@@ -115,7 +116,7 @@ evmc::result EvmoneUtility::deployAndExecute(
 
 	// Execute test function and signal failure if EVM reverted or
 	// did not return expected output on successful execution.
-	evmc::result callResult = executeContract(
+	evmc::Result callResult = executeContract(
 		util::fromHex(_hexEncodedInput),
 		createResult.create_address
 	);
@@ -128,7 +129,7 @@ evmc::result EvmoneUtility::deployAndExecute(
 	return callResult;
 }
 
-evmc::result EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
+evmc::Result EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
 {
 	map<string, h160> libraryAddressMap;
 	// Stage 1: Compile and deploy library if present.
@@ -139,7 +140,7 @@ evmc::result EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
 		solAssert(compilationOutput.has_value(), "Compiling library failed");
 		CompilerOutput cOutput = compilationOutput.value();
 		// Deploy contract and signal failure if deploy failed
-		evmc::result createResult = deployContract(cOutput.byteCode);
+		evmc::Result createResult = deployContract(cOutput.byteCode);
 		solAssert(
 			createResult.status_code == EVMC_SUCCESS,
 			"SolidityEvmoneInterface: Library deployment failed"

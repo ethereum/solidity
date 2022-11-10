@@ -1,4 +1,13 @@
-{"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":38:39   */
+{
+    "contracts":
+    {
+        "A":
+        {
+            "object":
+            {
+                "evm":
+                {
+                    "assembly": "    /* \"A\":38:39   */
   0x00
     /* \"A\":11:19   */
   dup1
@@ -7,13 +16,25 @@
   sstore
     /* \"A\":0:42   */
   stop
-","bytecode":{"functionDebugData":{},"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"object\" {
+",
+                    "bytecode":
+                    {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>",
+                        "opcodes":"<OPCODES REMOVED>",
+                        "sourceMap":"<SOURCEMAP REMOVED>"
+                    }
+                },
+                "ir": "object \"object\" {
     code {
         let x := mload(0)
         sstore(add(x, 0), 0)
     }
 }
-","irOptimized":"object \"object\" {
+",
+                "irOptimized": "object \"object\" {
     code {
         {
             let x := mload(0)
@@ -21,4 +42,8 @@
         }
     }
 }
-"}}},}
+"
+            }
+        }
+    }
+}

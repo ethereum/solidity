@@ -38,7 +38,7 @@ bytes YulAssembler::assemble()
 	return m_stack.assemble(YulStack::Machine::EVM).bytecode->bytecode;
 }
 
-evmc::result YulEvmoneUtility::deployCode(bytes const& _input, EVMHost& _host)
+evmc::Result YulEvmoneUtility::deployCode(bytes const& _input, EVMHost& _host)
 {
 	// Zero initialize all message fields
 	evmc_message msg = {};
@@ -74,7 +74,8 @@ evmc_message YulEvmoneUtility::callMessage(evmc_address _address)
 {
 	evmc_message call = {};
 	call.gas = std::numeric_limits<int64_t>::max();
-	call.destination = _address;
+	call.recipient = _address;
+	call.code_address = _address;
 	call.kind = EVMC_CALL;
 	return call;
 }

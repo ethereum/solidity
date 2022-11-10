@@ -22,6 +22,7 @@
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 
 #include <libyul/optimiser/SyntacticalEquality.h>
+#include <libyul/optimiser/BlockHasher.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/SideEffects.h>
@@ -55,6 +56,7 @@ CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 void CommonSubexpressionEliminator::operator()(FunctionDefinition& _fun)
 {
 	ScopedSaveAndRestore returnVariables(m_returnVariables, {});
+	ScopedSaveAndRestore replacementCandidates(m_replacementCandidates, {});
 
 	for (auto const& v: _fun.returnVariables)
 		m_returnVariables.insert(v.name);
@@ -103,25 +105,31 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 					_e = Identifier{debugDataOf(_e), value->name};
 		}
 	}
-	else
-	{
-		// TODO this search is rather inefficient.
-		for (auto const& [variable, value]: allValues())
-		{
-			assertThrow(value.value, OptimizerException, "");
-			// Prevent using the default value of return variables
-			// instead of literal zeros.
-			if (
-				m_returnVariables.count(variable) &&
-				holds_alternative<Literal>(*value.value) &&
-				valueOfLiteral(get<Literal>(*value.value)) == 0
-			)
-				continue;
-			if (SyntacticallyEqual{}(_e, *value.value) && inScope(variable))
+	else if (auto const* candidates = util::valueOrNullptr(m_replacementCandidates, _e))
+		for (auto const& variable: *candidates)
+			if (AssignedValue const* value = variableValue(variable))
 			{
-				_e = Identifier{debugDataOf(_e), variable};
-				break;
+				assertThrow(value->value, OptimizerException, "");
+				// Prevent using the default value of return variables
+				// instead of literal zeros.
+				if (
+					m_returnVariables.count(variable) &&
+					holds_alternative<Literal>(*value->value) &&
+					valueOfLiteral(get<Literal>(*value->value)) == 0
+				)
+					continue;
+				// We check for syntactic equality again because the value might have changed.
+				if (inScope(variable) && SyntacticallyEqual{}(_e, *value->value))
+				{
+					_e = Identifier{debugDataOf(_e), variable};
+					break;
+				}
 			}
-		}
-	}
+}
+
+void CommonSubexpressionEliminator::assignValue(YulString _variable, Expression const* _value)
+{
+	if (_value)
+		m_replacementCandidates[*_value].insert(_variable);
+	DataFlowAnalyzer::assignValue(_variable, _value);
 }

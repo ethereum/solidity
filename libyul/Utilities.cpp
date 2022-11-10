@@ -91,9 +91,17 @@ u256 solidity::yul::valueOfNumberLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::Number, "Expected number literal!");
 
-	std::string const& literalString = _literal.value.str();
-	yulAssert(isValidDecimal(literalString) || isValidHex(literalString), "Invalid number literal!");
-	return u256(literalString);
+	static map<YulString, u256> numberCache;
+	static YulStringRepository::ResetCallback callback{[&] { numberCache.clear(); }};
+
+	auto&& [it, isNew] = numberCache.try_emplace(_literal.value, 0);
+	if (isNew)
+	{
+		std::string const& literalString = _literal.value.str();
+		yulAssert(isValidDecimal(literalString) || isValidHex(literalString), "Invalid number literal!");
+		it->second = u256(literalString);
+	}
+	return it->second;
 }
 
 u256 solidity::yul::valueOfStringLiteral(Literal const& _literal)

@@ -1,4 +1,10 @@
-{"errors":[{"component":"general","errorCode":"6368","formattedMessage":"Warning: CHC: Out of bounds access happens here.
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "6368",
+            "formattedMessage": "Warning: CHC: Out of bounds access happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -13,7 +19,8 @@ test.f(0x0, 1)
 14 | \t\t\t\t\t\tarr[x];
    | \t\t\t\t\t\t^^^^^^
 
-","message":"CHC: Out of bounds access happens here.
+",
+            "message": "CHC: Out of bounds access happens here.
 Counterexample:
 arr = []
 a = 0x0
@@ -22,4 +29,22 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0x0, 1)","severity":"warning","sourceLocation":{"end":289,"file":"A","start":283},"type":"Warning"}],"sources":{"A":{"id":0}}}
+test.f(0x0, 1)",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 289,
+                "file": "A",
+                "start": 283
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}
