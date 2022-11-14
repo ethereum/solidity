@@ -131,19 +131,6 @@ protected:
 	/// Clears knowledge about storage or memory if they may be modified inside the expression.
 	void clearKnowledgeIfInvalidated(Expression const& _expression);
 
-	/// Joins knowledge about storage and memory with an older point in the control-flow.
-	/// This only works if the current state is a direct successor of the older point,
-	/// i.e. `_otherStorage` and `_otherMemory` cannot have additional changes.
-	void joinKnowledge(
-		std::unordered_map<YulString, YulString> const& _olderStorage,
-		std::unordered_map<YulString, YulString> const& _olderMemory
-	);
-
-	static void joinKnowledgeHelper(
-		std::unordered_map<YulString, YulString>& _thisData,
-		std::unordered_map<YulString, YulString> const& _olderData
-	);
-
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
 
@@ -176,6 +163,11 @@ protected:
 	std::map<YulString, SideEffects> m_functionSideEffects;
 
 private:
+	struct Environment
+	{
+		std::unordered_map<YulString, YulString> storage;
+		std::unordered_map<YulString, YulString> memory;
+	};
 	struct State
 	{
 		/// Current values of variables, always movable.
@@ -183,9 +175,20 @@ private:
 		/// m_references[a].contains(b) <=> the current expression assigned to a references b
 		std::unordered_map<YulString, std::set<YulString>> references;
 
-		std::unordered_map<YulString, YulString> storage;
-		std::unordered_map<YulString, YulString> memory;
+		Environment environment;
 	};
+
+	/// Joins knowledge about storage and memory with an older point in the control-flow.
+	/// This only works if the current state is a direct successor of the older point,
+	/// i.e. `_olderState.storage` and `_olderState.memory` cannot have additional changes.
+	/// Does nothing if memory and storage analysis is disabled / ignored.
+	void joinKnowledge(Environment const& _olderEnvironment);
+
+	static void joinKnowledgeHelper(
+		std::unordered_map<YulString, YulString>& _thisData,
+		std::unordered_map<YulString, YulString> const& _olderData
+	);
+
 	State m_state;
 
 protected:
