@@ -51,9 +51,15 @@ void ControlFlowBuilder::operator()(If const& _if)
 {
 	visit(*_if.condition);
 	ControlFlowNode* node = m_currentNode;
-	(*this)(_if.body);
+
+	ControlFlowNode* ifEnd = newNode();
+	node->successors.emplace_back(ifEnd);
+
 	newConnectedNode();
-	node->successors.emplace_back(m_currentNode);
+	(*this)(_if.body);
+
+	m_currentNode->successors.emplace_back(ifEnd);
+	m_currentNode = ifEnd;
 }
 
 void ControlFlowBuilder::operator()(Switch const& _switch)
@@ -68,8 +74,8 @@ void ControlFlowBuilder::operator()(Switch const& _switch)
 	for (Case const& case_: _switch.cases)
 	{
 		m_currentNode = initialNode;
-		(*this)(case_.body);
 		newConnectedNode();
+		(*this)(case_.body);
 		m_currentNode->successors.emplace_back(finalNode);
 	}
 	m_currentNode = finalNode;
@@ -282,4 +288,3 @@ void ControlFlowSideEffectsCollector::recordReachabilityAndQueue(
 	if (m_processedNodes[&_function].insert(_node).second)
 		m_pendingNodes.at(&_function).push_front(_node);
 }
-
