@@ -16,6 +16,8 @@ Compiler Features:
 Bugfixes:
  * Yul Optimizer: Hash hex and decimal literals according to their value instead of their representation, improving the detection of equivalent functions.
  * Solidity Upgrade Tool ``solidity-upgrade``: Fix the tool returning success code on uncaught exceptions.
+ * SMTChecker: Fix display error for negative integers that are one more than powers of two.
+ * SMTChecker: Improved readability for large integers that are powers of two or almost powers of two in error messages.
 
 
 ### 0.8.17 (2022-09-08)

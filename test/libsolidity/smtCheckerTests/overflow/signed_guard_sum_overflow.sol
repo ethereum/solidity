@@ -8,5 +8,5 @@ contract C  {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 3944: (78-83): CHC: Underflow (resulting value less than -0x80 * 2**248) happens here.
-// Warning 4984: (78-83): CHC: Overflow (resulting value larger than 0x80 * 2**248 - 1) happens here.
+// Warning 3944: (78-83): CHC: Underflow (resulting value less than -2**255) happens here.
+// Warning 4984: (78-83): CHC: Overflow (resulting value larger than 2**255 - 1) happens here.
