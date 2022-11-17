@@ -1174,7 +1174,7 @@ An example Yul Object is shown below:
             datacopy(offset, dataoffset("Contract2"), size)
             // constructor parameter is a single number 0x1234
             mstore(add(offset, size), 0x1234)
-            pop(create(offset, add(size, 32), 0))
+            pop(create(0, offset, add(size, 32)))
 
             // now return the runtime object (the currently
             // executing code is the constructor code)
