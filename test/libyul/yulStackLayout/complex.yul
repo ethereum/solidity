@@ -115,17 +115,14 @@
 // mload\l\
 // [ c RET a b x TMP[mload, 0] ]\l\
 // [ c RET a b x TMP[mload, 0] ]\l\
-// Assignment(GHOST[0])\l\
-// [ c RET a b x GHOST[0] ]\l\
-// [ c RET a b x GHOST[0] GHOST[0] 0x00 ]\l\
-// eq\l\
-// [ c RET a b x GHOST[0] TMP[eq, 0] ]\l\
-// [ c RET a b x GHOST[0] TMP[eq, 0] ]\l\
 // "];
 // Block4 -> Block4Exit;
-// Block4Exit [label="{ TMP[eq, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
-// Block4Exit:0 -> Block7;
-// Block4Exit:1 -> Block8;
+// Block4Exit [label="{ TMP[mload, 0]| { <Default> Default | <0> 0 | <1> 1 | <2> 2 | <3> 3 }}" shape=Mrecord];
+// Block4Exit:Default -> Block7;
+// Block4Exit:0 -> Block8;
+// Block4Exit:1 -> Block9;
+// Block4Exit:2 -> Block10;
+// Block4Exit:3 -> Block11;
 //
 // Block5 [label="\
 // [ c RET ]\l\
@@ -146,16 +143,16 @@
 // Block6Exit -> Block5;
 //
 // Block7 [label="\
-// [ c RET a b x GHOST[0] ]\l\
-// [ c RET a b x GHOST[0] GHOST[0] 0x01 ]\l\
-// eq\l\
-// [ c RET a b x GHOST[0] TMP[eq, 0] ]\l\
-// [ c RET a b x GHOST[0] TMP[eq, 0] ]\l\
+// [ c RET a b x JUNK ]\l\
+// [ c RET a b x b ]\l\
+// mload\l\
+// [ c RET a b x TMP[mload, 0] ]\l\
+// [ c RET a b x TMP[mload, 0] ]\l\
 // "];
 // Block7 -> Block7Exit;
-// Block7Exit [label="{ TMP[eq, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
-// Block7Exit:0 -> Block9;
-// Block7Exit:1 -> Block10;
+// Block7Exit [label="{ TMP[mload, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
+// Block7Exit:0 -> Block12;
+// Block7Exit:1 -> Block13;
 //
 // Block8 [label="\
 // [ c RET a b JUNK JUNK ]\l\
@@ -169,111 +166,75 @@
 // Block8Exit -> Block3;
 //
 // Block9 [label="\
-// [ c RET a b x GHOST[0] ]\l\
-// [ c RET a b x GHOST[0] GHOST[0] 0x02 ]\l\
-// eq\l\
-// [ c RET a b x GHOST[0] TMP[eq, 0] ]\l\
-// [ c RET a b x GHOST[0] TMP[eq, 0] ]\l\
-// "];
-// Block9 -> Block9Exit;
-// Block9Exit [label="{ TMP[eq, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
-// Block9Exit:0 -> Block11;
-// Block9Exit:1 -> Block12;
-//
-// Block10 [label="\
 // [ c RET JUNK JUNK x JUNK ]\l\
 // [ c RET x 0x04 ]\l\
 // sstore\l\
 // [ c RET ]\l\
 // [ c RET ]\l\
 // "];
-// Block10Exit [label="FunctionReturn[f]"];
+// Block9Exit [label="FunctionReturn[f]"];
+// Block9 -> Block9Exit;
+//
+// Block10 [label="\
+// [ JUNK JUNK JUNK JUNK x JUNK ]\l\
+// [ 0x06 x ]\l\
+// sstore\l\
+// [ ]\l\
+// [ 0x2a ]\l\
+// Assignment(c)\l\
+// [ c ]\l\
+// [ 0x00 0x00 ]\l\
+// revert\l\
+// [ ]\l\
+// [ ]\l\
+// "];
+// Block10Exit [label="Terminated"];
 // Block10 -> Block10Exit;
 //
 // Block11 [label="\
-// [ c RET a b x GHOST[0] ]\l\
-// [ c RET a b x GHOST[0] 0x03 ]\l\
-// eq\l\
-// [ c RET a b x TMP[eq, 0] ]\l\
-// [ c RET a b x TMP[eq, 0] ]\l\
-// "];
-// Block11 -> Block11Exit;
-// Block11Exit [label="{ TMP[eq, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
-// Block11Exit:0 -> Block13;
-// Block11Exit:1 -> Block14;
-//
-// Block12 [label="\
-// [ JUNK JUNK JUNK JUNK x JUNK ]\l\
-// [ JUNK JUNK JUNK JUNK JUNK JUNK 0x06 x ]\l\
-// sstore\l\
-// [ JUNK JUNK JUNK JUNK JUNK JUNK ]\l\
-// [ JUNK JUNK JUNK JUNK JUNK JUNK 0x2a ]\l\
-// Assignment(c)\l\
-// [ JUNK JUNK JUNK JUNK JUNK JUNK c ]\l\
-// [ JUNK JUNK JUNK JUNK JUNK JUNK 0x00 0x00 ]\l\
-// revert\l\
-// [ JUNK JUNK JUNK JUNK JUNK JUNK ]\l\
-// [ JUNK JUNK JUNK JUNK JUNK JUNK ]\l\
-// "];
-// Block12Exit [label="Terminated"];
-// Block12 -> Block12Exit;
-//
-// Block13 [label="\
-// [ c RET a b x ]\l\
-// [ c RET a b x b ]\l\
-// mload\l\
-// [ c RET a b x TMP[mload, 0] ]\l\
-// [ c RET a b x TMP[mload, 0] ]\l\
-// "];
-// Block13 -> Block13Exit;
-// Block13Exit [label="{ TMP[mload, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
-// Block13Exit:0 -> Block15;
-// Block13Exit:1 -> Block16;
-//
-// Block14 [label="\
-// [ c RET a b x ]\l\
+// [ c RET a b x JUNK ]\l\
 // [ c RET a b 0x01 x 0x0808 0x08 ]\l\
 // sstore\l\
 // [ c RET a b 0x01 x ]\l\
 // [ c RET a b 0x01 x ]\l\
 // "];
-// Block14 -> Block14Exit [arrowhead=none];
-// Block14Exit [label="Jump" shape=oval];
-// Block14Exit -> Block17;
+// Block11 -> Block11Exit [arrowhead=none];
+// Block11Exit [label="Jump" shape=oval];
+// Block11Exit -> Block14;
 //
-// Block15 [label="\
+// Block12 [label="\
 // [ c RET a b x ]\l\
 // [ c RET a b 0x01 x 0x0a0a 0x0a ]\l\
 // sstore\l\
 // [ c RET a b 0x01 x ]\l\
 // [ c RET a b 0x01 x ]\l\
 // "];
-// Block15 -> Block15Exit [arrowhead=none];
-// Block15Exit [label="Jump" shape=oval];
-// Block15Exit -> Block17;
+// Block12 -> Block12Exit [arrowhead=none];
+// Block12Exit [label="Jump" shape=oval];
+// Block12Exit -> Block14;
 //
-// Block16 [label="\
+// Block13 [label="\
 // [ JUNK JUNK JUNK JUNK JUNK ]\l\
 // [ JUNK JUNK JUNK JUNK JUNK 0x00 0x00 ]\l\
 // return\l\
 // [ JUNK JUNK JUNK JUNK JUNK ]\l\
 // [ JUNK JUNK JUNK JUNK JUNK ]\l\
 // "];
-// Block16Exit [label="Terminated"];
-// Block16 -> Block16Exit;
+// Block13Exit [label="Terminated"];
+// Block13 -> Block13Exit;
 //
-// Block17 [label="\
+// Block14 [label="\
 // [ c RET a b 0x01 x ]\l\
 // [ c RET a b 0x01 x 0x0b0b 0x0b ]\l\
 // sstore\l\
 // [ c RET a b 0x01 x ]\l\
 // [ c RET a b 0x01 x ]\l\
 // "];
-// Block17 -> Block17Exit [arrowhead=none];
-// Block17Exit [label="Jump" shape=oval];
-// Block17Exit -> Block18;
+// Block14 -> Block14Exit [arrowhead=none];
+// Block14Exit [label="Jump" shape=oval];
+// Block14Exit -> Block15;
 //
-// Block18 [label="\
+// Block15 [label="\
 // [ c RET a b 0x01 x ]\l\
 // [ c RET a b 0x01 x ]\l\
 // add\l\
@@ -286,23 +247,23 @@
 // [ c RET x b a TMP[calldataload, 0] ]\l\
 // [ c RET x b a TMP[calldataload, 0] ]\l\
 // "];
-// Block18 -> Block18Exit;
-// Block18Exit [label="{ TMP[calldataload, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
-// Block18Exit:0 -> Block19;
-// Block18Exit:1 -> Block20;
+// Block15 -> Block15Exit;
+// Block15Exit [label="{ TMP[calldataload, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
+// Block15Exit:0 -> Block16;
+// Block15Exit:1 -> Block17;
 //
-// Block19 [label="\
+// Block16 [label="\
 // [ c RET x b a ]\l\
 // [ c RET x b a 0xffff 0xff ]\l\
 // sstore\l\
 // [ c RET x b a ]\l\
 // [ c RET x b a ]\l\
 // "];
-// Block19 -> Block19Exit [arrowhead=none];
-// Block19Exit [label="BackwardsJump" shape=oval];
-// Block19Exit -> Block2;
+// Block16 -> Block16Exit [arrowhead=none];
+// Block16Exit [label="BackwardsJump" shape=oval];
+// Block16Exit -> Block2;
 //
-// Block20 [label="\
+// Block17 [label="\
 // [ JUNK RET x JUNK JUNK ]\l\
 // [ RET x 0x00 ]\l\
 // sstore\l\
@@ -312,7 +273,7 @@
 // [ RET c ]\l\
 // [ c RET ]\l\
 // "];
-// Block20Exit [label="FunctionReturn[f]"];
-// Block20 -> Block20Exit;
+// Block17Exit [label="FunctionReturn[f]"];
+// Block17 -> Block17Exit;
 //
 // }

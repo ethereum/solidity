@@ -24,6 +24,7 @@
 #include <libyul/backends/evm/ControlFlowGraph.h>
 
 #include <map>
+#include <numeric>
 
 namespace solidity::yul
 {

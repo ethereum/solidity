@@ -35,6 +35,11 @@ u256 valueOfStringLiteral(Literal const& _literal);
 u256 valueOfBoolLiteral(Literal const& _literal);
 u256 valueOfLiteral(Literal const& _literal);
 
+/// Returns the range of case values a switch statement has
+std::optional<std::pair<u256, u256>> getSwitchRange(Switch const& _switch);
+/// Returns if a switch statement operates on an enum-like set of values 0,1,...,n
+bool isSwitchEnumLike(Switch const& _switch);
+
 /**
  * Linear order on Yul AST nodes.
  *

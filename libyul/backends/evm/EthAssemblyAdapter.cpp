@@ -79,6 +79,13 @@ void EthAssemblyAdapter::appendLabelReference(LabelID _labelId)
 	m_assembly.append(evmasm::AssemblyItem(evmasm::PushTag, _labelId));
 }
 
+void EthAssemblyAdapter::appendJumpTablePush(std::vector<LabelID> labels, bool isRelative, LabelID defaultLabel)
+{
+	evmasm::AssemblyItem item = evmasm::AssemblyItem(evmasm::JumpTablePushTag);
+	item.setJumpTableTags(labels, isRelative, defaultLabel);
+	m_assembly.append(std::move(item));
+}
+
 size_t EthAssemblyAdapter::newLabelId()
 {
 	return assemblyTagToIdentifier(m_assembly.newTag());

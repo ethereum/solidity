@@ -313,11 +313,153 @@ void CodeTransform::operator()(If const& _if)
 	m_assembly.appendLabel(end);
 }
 
+void CodeTransform::handleEnumLikeSwitch(Switch const& _switch, bool relativeToDefaultCase) {
+	// Map case numbers to <case, block>
+	map<u256, pair<Case const*, AbstractAssembly::LabelID>> caseMap;
+	yulAssert(isSwitchEnumLike(_switch), "Switch not enum-like");
+
+	optional<pair<u256, u256>> switchRange = getSwitchRange(_switch);
+	optional<Case const*> defaultCase;
+	for (Case const& c: _switch.cases)
+	{
+		if (c.value)
+		{
+			u256 virtualLiteralVal = valueOfLiteral(*c.value);
+			caseMap[virtualLiteralVal] = make_pair(&c, m_assembly.newLabelId());
+		}
+		else
+			defaultCase = &c;
+	}
+
+	// Make label for default case
+	AbstractAssembly::LabelID defaultCaseLabel = m_assembly.newLabelId();
+
+	// Find label tags
+	std::vector<u256> cases;
+	std::vector<AbstractAssembly::LabelID> labelTags;
+	bool needSubtract = false;
+	if (switchRange.has_value())
+	{
+		u256 minCaseVal, maxCaseVal;
+		tie(minCaseVal, maxCaseVal) = switchRange.value();
+		if (maxCaseVal < 16)
+			// Prefer starting from 0 where possible
+			minCaseVal = u256(0);
+		else
+			needSubtract = true;
+		for (u256 i = minCaseVal; i <= maxCaseVal; ++i)
+		{
+			cases.push_back(i);
+			auto currentCase = caseMap.find(i);
+			if (currentCase != caseMap.end())
+				labelTags.push_back(currentCase->second.second);
+			else
+				// Case does not exist, so jump to the default case (tag 0 is reserved)
+				labelTags.push_back(0);
+		}
+	}
+	yulAssert(labelTags.size() <= 16, "Too many cases");
+
+	m_assembly.setSourceLocation(originLocationOf(_switch));
+	// Mask
+	m_assembly.appendConstant(u256(0xffff));
+	// Jump offsets
+	m_assembly.appendJumpTablePush(labelTags, relativeToDefaultCase,
+		relativeToDefaultCase ? defaultCaseLabel : 0);
+	// Subtract from minimum case value, if necessary, to get the value in range
+	if (needSubtract)
+	{
+		m_assembly.appendConstant(switchRange.value().first);
+		m_assembly.appendInstruction(evmasm::dupInstruction(4));
+		m_assembly.appendInstruction(evmasm::Instruction::SUB);
+	}
+	else
+		// Get switch value
+		m_assembly.appendInstruction(evmasm::dupInstruction(3));
+	// Apply two-byte mask
+	if (m_dialect.evmVersion() >= langutil::EVMVersion::fromString("constantinople").value())
+	{
+		m_assembly.appendConstant(u256(0x04));
+		m_assembly.appendInstruction(evmasm::Instruction::SHL);
+		m_assembly.appendInstruction(evmasm::Instruction::SHR);
+	}
+	else
+	{
+		// Shift operators not present pre-Constantinople
+		m_assembly.appendConstant(16);
+		m_assembly.appendInstruction(evmasm::Instruction::MUL);
+		m_assembly.appendConstant(2);
+		m_assembly.appendInstruction(evmasm::Instruction::EXP);
+		m_assembly.appendInstruction(evmasm::swapInstruction(1));
+		m_assembly.appendInstruction(evmasm::Instruction::DIV);
+	}
+	m_assembly.appendInstruction(evmasm::Instruction::AND);
+
+	if (relativeToDefaultCase)
+	{
+		// Make a jump table relative to the default case. The default case address
+		// must be less than the jump destinations for the cases.
+		m_assembly.appendLabelReference(defaultCaseLabel);
+		m_assembly.appendInstruction(evmasm::Instruction::ADD);
+	}
+	else
+	{
+		// Make no assumption about default case
+		m_assembly.appendInstruction(evmasm::dupInstruction(1));
+		m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
+		m_assembly.appendJumpToIf(defaultCaseLabel);
+	}
+	m_assembly.appendJump(1, AbstractAssembly::JumpType::Ordinary);
+
+	AbstractAssembly::LabelID end = m_assembly.newLabelId();
+
+	// Default case
+	m_assembly.appendLabel(defaultCaseLabel);
+	// Pop off 0x00
+	m_assembly.appendInstruction(evmasm::Instruction::POP);
+	if (defaultCase.has_value())
+	{
+		Case const* c = defaultCase.value();
+		m_assembly.setSourceLocation(originLocationOf(*c));
+		(*this)(c->body);
+	}
+	m_assembly.appendJumpTo(end);
+
+	// Add other cases
+	for (unsigned i = 0; i < cases.size(); ++i)
+	{
+		u256 caseVal = cases[i];
+		auto currentCase = caseMap.find(caseVal);
+		if (currentCase != caseMap.end())
+		{
+			m_assembly.appendLabel(currentCase->second.second);
+			Case const* c = currentCase->second.first;
+			m_assembly.setSourceLocation(originLocationOf(*c));
+			(*this)(c->body);
+
+			// Avoid useless jump in the last case
+			if (i != labelTags.size() - 1)
+				m_assembly.appendJumpTo(end);
+		}
+	}
+
+	m_assembly.appendLabel(end);
+}
+
 void CodeTransform::operator()(Switch const& _switch)
 {
 	visitExpression(*_switch.expression);
 	int expressionHeight = m_assembly.stackHeight();
 	map<Case const*, AbstractAssembly::LabelID> caseBodies;
+
+	if (isSwitchEnumLike(_switch))
+	{
+		// We assume the default case comes before the other cases
+		handleEnumLikeSwitch(_switch, true);
+		m_assembly.appendInstruction(evmasm::Instruction::POP);
+		return;
+	}
+
 	AbstractAssembly::LabelID end = m_assembly.newLabelId();
 	for (Case const& c: _switch.cases)
 	{

@@ -191,6 +191,11 @@ private:
 		return m_functionExitLabel.has_value();
 	}
 
+	/// Creates a switch for enums using a jump table
+	/// @param relativeToDefaultCase use a more efficient jump table; requires
+	///     all jump destinations for cases to have an address >= default case address
+	void handleEnumLikeSwitch(Switch const& _switch, bool relativeToDefaultCase);
+
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;

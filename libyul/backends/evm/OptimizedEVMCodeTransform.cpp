@@ -56,7 +56,8 @@ vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 		_builtinContext,
 		_useNamedLabelsForFunctions,
 		*dfg,
-		stackLayout
+		stackLayout,
+		_dialect
 	);
 	// Create initial entry layout.
 	optimizedCodeTransform.createStackLayout(debugDataOf(*dfg->entry), stackLayout.blockInfos.at(dfg->entry).entryLayout);
@@ -174,7 +175,8 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 	BuiltinContext& _builtinContext,
 	UseNamedLabels _useNamedLabelsForFunctions,
 	CFG const& _dfg,
-	StackLayout const& _stackLayout
+	StackLayout const& _stackLayout,
+	EVMDialect const& _dialect
 ):
 	m_assembly(_assembly),
 	m_builtinContext(_builtinContext),
@@ -200,7 +202,8 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 				m_assembly.newLabelId();
 		}
 		return functionLabels;
-	}())
+	}()),
+	m_dialect(_dialect)
 {
 }
 
@@ -499,7 +502,190 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 			CFG::BuiltinCall const* builtinCall = get_if<CFG::BuiltinCall>(&_block.operations.back().operation);
 			yulAssert(builtinCall, "");
 			yulAssert(builtinCall->builtin.get().controlFlowSideEffects.terminatesOrReverts(), "");
-		}
+		},
+		[&](CFG::BasicBlock::Switch const& _switch)
+		{
+			createStackLayout(debugDataOf(_switch), blockInfo.exitLayout);
+
+			// Create labels for the targets, if not already present.
+			if (!m_blockLabels.count(_switch.defaultCase))
+				m_blockLabels[_switch.defaultCase] = m_assembly.newLabelId();
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+				if (!m_blockLabels.count(caseBlock))
+					m_blockLabels[caseBlock] = m_assembly.newLabelId();
+
+			// Assert that we have the correct condition on stack.
+			yulAssert(!m_stack.empty(), "");
+			yulAssert(m_stack.back() == _switch.switchExpr, "");
+			yulAssert(_switch.cases.size() > 0, "");
+
+			// Get switch range
+			optional<u256> minCase;
+			optional<u256> maxCase;
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+			{
+				if (!minCase.has_value() || !maxCase.has_value())
+				{
+					minCase = caseValue;
+					maxCase = caseValue;
+				}
+				if (caseValue < minCase)
+					minCase = caseValue;
+				if (caseValue > maxCase)
+					maxCase = caseValue;
+			}
+
+			bool needSubtract = false;
+			if (maxCase.value() < 16)
+				// Prefer starting from 0 where possible
+				minCase = u256(0);
+			else
+				needSubtract = true;
+
+			yulAssert(maxCase.value() - minCase.value() <= 16, "Too many cases");
+
+			// Find label tags
+			std::vector<u256> cases;
+			std::vector<AbstractAssembly::LabelID> labelTags;
+			for (u256 i = minCase.value(); i <= maxCase.value(); ++i)
+			{
+				cases.push_back(i);
+				auto currentCase = _switch.cases.find(i);
+				if (currentCase != _switch.cases.end())
+					labelTags.push_back(m_blockLabels[currentCase->second]);
+				else
+					// Case does not exist, so jump to the default case (tag 0 is reserved)
+					labelTags.push_back(0);
+			}
+
+			// Mask
+			m_assembly.appendConstant(u256(0xffff));
+			// Jump offsets
+			bool relativeToDefaultCase = true;
+			m_assembly.appendJumpTablePush(labelTags, relativeToDefaultCase,
+				relativeToDefaultCase ? m_blockLabels[_switch.defaultCase] : 0);
+
+			// Subtract from minimum case value, if necessary, to get the value in range
+			if (needSubtract)
+			{
+				m_assembly.appendConstant(minCase.value());
+				m_assembly.appendInstruction(evmasm::dupInstruction(4));
+				m_assembly.appendInstruction(evmasm::Instruction::SUB);
+			}
+			else
+				// Get switch value
+				m_assembly.appendInstruction(evmasm::dupInstruction(3));
+
+			// Apply two-byte mask
+			if (m_dialect.evmVersion() >= langutil::EVMVersion::fromString("constantinople").value())
+			{
+				m_assembly.appendConstant(u256(0x04));
+				m_assembly.appendInstruction(evmasm::Instruction::SHL);
+				m_assembly.appendInstruction(evmasm::Instruction::SHR);
+			}
+			else
+			{
+				// Shift operators not present pre-Constantinople
+				m_assembly.appendConstant(16);
+				m_assembly.appendInstruction(evmasm::Instruction::MUL);
+				m_assembly.appendConstant(2);
+				m_assembly.appendInstruction(evmasm::Instruction::EXP);
+				m_assembly.appendInstruction(evmasm::swapInstruction(1));
+				m_assembly.appendInstruction(evmasm::Instruction::DIV);
+			}
+
+			m_assembly.appendInstruction(evmasm::Instruction::AND);
+
+			if (relativeToDefaultCase)
+			{
+				// Make a jump table relative to the default case. The default case address
+				// must be less than the jump destinations for the cases.
+				m_assembly.appendLabelReference(m_blockLabels[_switch.defaultCase]);
+				m_assembly.appendInstruction(evmasm::Instruction::ADD);
+			}
+			else
+			{
+				// Make no assumption about default case
+				m_assembly.appendInstruction(evmasm::dupInstruction(1));
+				m_assembly.appendInstruction(evmasm::Instruction::ISZERO);
+				m_assembly.appendJumpToIf(m_blockLabels[_switch.defaultCase]);
+			}
+			m_assembly.appendJump(1, AbstractAssembly::JumpType::Ordinary);
+
+			// Default case
+			// Pop off 0x00
+			m_assembly.appendInstruction(evmasm::Instruction::POP);
+			{
+				// Restore the stack afterwards for the non-zero case below.
+				ScopeGuard stackRestore([storedStack = m_stack, this]() {
+					m_stack = move(storedStack);
+					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+				});
+				(*this)(*_switch.defaultCase);
+			}
+
+			// Add other cases
+			for (unsigned i = 0; i < cases.size(); ++i)
+			{
+				u256 caseVal = cases[i];
+				auto currentCase = _switch.cases.find(caseVal);
+				if (currentCase != _switch.cases.end())
+				{
+					{
+						// Restore the stack afterwards for the non-zero case below.
+						ScopeGuard stackRestore([storedStack = m_stack, this]() {
+							m_stack = move(storedStack);
+							m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+						});
+						(*this)(*currentCase->second);
+					}
+				}
+			}
+
+			/*
+			size_t casesLeft = _switch.cases.size();
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+			{
+				m_assembly.appendConstant(caseValue);
+				casesLeft--;
+				if (casesLeft > 0)
+					m_assembly.appendInstruction(evmasm::dupInstruction(2));
+				m_assembly.appendInstruction(evmasm::Instruction::EQ);
+				m_assembly.appendJumpToIf(m_blockLabels[caseBlock]);
+			}
+			Stack stackSwitchExpr = m_stack;
+			if (_switch.cases.size() > 0)
+				// Should always be true; pop switch expression
+				m_stack.pop_back();
+			Stack stackNoSwitchExpr = m_stack;
+
+			{
+				// Restore the stack afterwards for the non-zero case below.
+				ScopeGuard stackRestore([storedStack = m_stack, this]() {
+					m_stack = move(storedStack);
+					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+				});
+				(*this)(*_switch.defaultCase);
+			}
+
+			casesLeft = _switch.cases.size();
+			for (auto const& [caseValue, caseBlock]: _switch.cases)
+			{
+				{
+					// Restore the stack afterwards for the non-zero case below.
+					ScopeGuard stackRestore([storedStack = m_stack, this]() {
+						m_stack = move(storedStack);
+						m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+					});
+
+					casesLeft--;
+					m_stack = (casesLeft > 0 ? stackSwitchExpr : stackNoSwitchExpr);
+					m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
+					(*this)(*caseBlock);
+				}
+			}
+			*/
+		},
 	}, _block.exit);
 	// TODO: We could assert that the last emitted assembly item terminated or was an (unconditional) jump.
 	//       But currently AbstractAssembly does not allow peeking at the last emitted assembly item.

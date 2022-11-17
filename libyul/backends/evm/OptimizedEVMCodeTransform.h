@@ -68,7 +68,8 @@ private:
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions,
 		CFG const& _dfg,
-		StackLayout const& _stackLayout
+		StackLayout const& _stackLayout,
+		EVMDialect const& _dialect
 	);
 
 	/// Assert that it is valid to transition from @a _currentStack to @a _desiredStack.
@@ -105,6 +106,7 @@ private:
 	std::map<yul::FunctionCall const*, AbstractAssembly::LabelID> m_returnLabels;
 	std::map<CFG::BasicBlock const*, AbstractAssembly::LabelID> m_blockLabels;
 	std::map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> const m_functionLabels;
+	EVMDialect const& m_dialect;
 	/// Set of blocks already generated. If any of the contained blocks is ever jumped to, m_blockLabels should
 	/// contain a jump label for it.
 	std::set<CFG::BasicBlock const*> m_generated;

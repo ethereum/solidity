@@ -82,6 +82,8 @@ pair<string, string> AssemblyItem::nameAndData() const
 			return {"PUSH [ErrorTag]", ""};
 		else
 			return {"PUSH [tag]", util::toString(data())};
+	case JumpTablePushTag:
+		return {"JUMPTABLEPUSHTAG [defaultTag]", util::toString(util::h256(data()))};
 	case PushSub:
 		return {"PUSH [$]", toString(util::h256(data()))};
 	case PushSubSize:
@@ -116,6 +118,28 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(data);
 }
 
+pair<bool, size_t> AssemblyItem::getJumpTableBaseTag() const
+{
+	assertThrow(m_type == JumpTablePushTag, util::Exception, "");
+	u256 combined = u256(data());
+	bool isRelative = static_cast<bool>(combined >> 64);
+	size_t tag = 0;
+	if (isRelative)
+		tag = static_cast<size_t>(combined & 0xffffffffffffffffULL);
+	return make_pair(isRelative, tag);
+}
+
+void AssemblyItem::setJumpTableTags(std::vector<size_t> tags, bool isRelative, size_t baseTag)
+{
+	assertThrow(m_type == JumpTablePushTag, util::Exception, "");
+	assertThrow(tags.size() > 0, util::Exception, "");
+	m_jumpTableTags = tags;
+	u256 data = baseTag;
+	if (isRelative)
+		data |= u256(1) << 64;
+	setData(data);
+}
+
 size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) const
 {
 	switch (m_type)
@@ -132,6 +156,8 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 	case PushData:
 	case PushSub:
 		return 1 + _addressLength;
+	case JumpTablePushTag:
+		return 1 + (m_jumpTableTags.size() > 0 ? m_jumpTableTags.size() * 2 : 1);
 	case PushLibraryAddress:
 	case PushDeployTimeAddress:
 		return 1 + 20;
@@ -185,6 +211,7 @@ size_t AssemblyItem::returnValues() const
 		return static_cast<size_t>(instructionInfo(instruction()).ret);
 	case Push:
 	case PushTag:
+	case JumpTablePushTag:
 	case PushData:
 	case PushSub:
 	case PushSubSize:
@@ -213,6 +240,7 @@ bool AssemblyItem::canBeFunctional() const
 		return !isDupInstruction(instruction()) && !isSwapInstruction(instruction());
 	case Push:
 	case PushTag:
+	case JumpTablePushTag:
 	case PushData:
 	case PushSub:
 	case PushSubSize:
@@ -266,6 +294,14 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 			text = string("tag_") + to_string(tag);
 		else
 			text = string("tag_") + to_string(sub) + "_" + to_string(tag);
+		break;
+	}
+	case JumpTablePushTag:
+	{
+		string tag_list = "";
+		for (size_t tag: m_jumpTableTags)
+			tag_list += "_" + to_string(tag);
+		text = string("jump_table") + tag_list;
 		break;
 	}
 	case Tag:
@@ -342,6 +378,14 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 			_out << " PushTag " << _item.splitForeignPushTag().second;
 		else
 			_out << " PushTag " << subId << ":" << _item.splitForeignPushTag().second;
+		break;
+	}
+	case JumpTablePushTag:
+	{
+		string tag_list = "";
+		for (size_t tag: _item.jumpTableTags())
+			tag_list += "_" + to_string(tag);
+		_out << " JumpTablePushTag " << tag_list;
 		break;
 	}
 	case Tag:

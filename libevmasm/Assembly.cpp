@@ -533,6 +533,7 @@ LinkerObject const& Assembly::assemble() const
 	unsigned bytesRequiredForCode = codeSize(static_cast<unsigned>(subTagSize));
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
 	map<size_t, pair<size_t, size_t>> tagRef;
+	map<pair<size_t, size_t>, pair<pair<bool, size_t>, vector<size_t>>> jumpTableRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
@@ -544,6 +545,7 @@ LinkerObject const& Assembly::assemble() const
 		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
 
 	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingData);
+	unsigned bytesPerJumpTableTag = 2;
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
@@ -572,6 +574,23 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back(tagPush);
 			tagRef[ret.bytecode.size()] = i.splitForeignPushTag();
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerTag);
+			break;
+		}
+		case JumpTablePushTag:
+		{
+			assertThrow(i.jumpTableTags().size() > 0, AssemblyException,
+				"At least one tag expected in jump table");
+			unsigned pushSize = (unsigned) i.jumpTableTags().size() * bytesPerJumpTableTag;
+			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(pushSize)));
+			if (i.jumpTableTags().size() > 0)
+			{
+				jumpTableRef[make_pair(ret.bytecode.size(), ret.bytecode.size() + pushSize)]
+					= make_pair(i.getJumpTableBaseTag(), i.jumpTableTags());
+			}
+			assertThrow(i.jumpTableTags().size() * bytesPerJumpTableTag <= 32, AssemblyException,
+				to_string(i.jumpTableTags().size()) + " jump table tags, each "
+				+ to_string(bytesPerJumpTableTag) + " bytes in size, cannot fit in a single u256");
+			ret.bytecode.resize(ret.bytecode.size() + pushSize);
 			break;
 		}
 		case PushData:
@@ -720,6 +739,40 @@ LinkerObject const& Assembly::assemble() const
 			tagInfo.params,
 			tagInfo.returns
 		};
+	}
+
+	for (auto const& [location, jumpPair] : jumpTableRef)
+	{
+		auto const [baseTagInfo, tags] = jumpPair;
+		bool isRelative = baseTagInfo.first;
+		size_t baseTagAddress = 0;
+		if (isRelative)
+			baseTagAddress = m_tagPositionsInBytecode.at(baseTagInfo.second);
+		assertThrow(tags.size() * bytesPerJumpTableTag == (location.second - location.first),
+			AssemblyException, "Jump table tag count does not match expected size of push");
+		size_t pos = location.second - 1;
+		for (unsigned i = 0; i < tags.size(); i++)
+		{
+			size_t tagLoc = 0;
+			// A tag of 0 jumps to the default case (non-existent case)
+			if (tags[i] > 0)
+			{
+				tagLoc = m_tagPositionsInBytecode.at(tags[i]);
+				if (isRelative)
+				{
+					assertThrow(baseTagAddress <= tagLoc, AssemblyException,
+						"Case jump address comes before base address in jump table");
+					tagLoc -= baseTagAddress;
+				}
+			}
+			assertThrow(tagLoc < ((size_t) 0x1 << (bytesPerJumpTableTag * 8)), AssemblyException,
+				"Destination address too large to fit in jump table");
+			for (size_t bi = 0; bi < bytesPerJumpTableTag; ++bi)
+			{
+				ret.bytecode[pos] = (unsigned char) ((tagLoc & ((size_t) 0xff << (bi * 8))) >> (bi * 8));
+				--pos;
+			}
+		}
 	}
 
 	for (auto const& dataItem: m_data)
