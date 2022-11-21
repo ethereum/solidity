@@ -112,10 +112,6 @@ EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 		return EVMVersion::istanbul();
 	case Program::BERLIN:
 		return EVMVersion::berlin();
-	case Program::LONDON:
-		return EVMVersion::london();
-	case Program::PARIS:
-		return EVMVersion::paris();
 	}
 }
 
