@@ -293,13 +293,8 @@ Solidity 支持上面介绍的除了元祖之外的所有同名类型。
 动态类型的使用
 ====================
 
-<<<<<<< HEAD
 用值为 ``(0x123, [0x456, 0x789], "1234567890", "Hello, world!")`` 的签名参数调用
-函数 ``f(uint,uint32[],bytes10,bytes)``，其的编码方式如下：
-=======
-A call to a function with the signature ``f(uint256,uint32[],bytes10,bytes)`` with values
-``(0x123, [0x456, 0x789], "1234567890", "Hello, world!")`` is encoded in the following way:
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+函数 ``f(uint256,uint32[],bytes10,bytes)``，其的编码方式如下：
 
 取得 ``sha3("f(uint256,uint32[],bytes10,bytes)")`` 的前 4 字节，也就是 ``0x8be65246``。
 然后我们对所有 4 个参数的头部进行编码。 对静态类型 ``uint256`` 和 ``bytes10``，
@@ -338,13 +333,8 @@ A call to a function with the signature ``f(uint256,uint32[],bytes10,bytes)`` wi
       000000000000000000000000000000000000000000000000000000000000000d
       48656c6c6f2c20776f726c642100000000000000000000000000000000000000
 
-<<<<<<< HEAD
-让我们使用相同的原理来对一个签名为 ``g(uint[][],string[])`` ，参数值为
+让我们使用相同的原理来对一个签名为 ``g(uint256[][],string[])`` ，参数值为
 ``([[1, 2], [3]], ["one", "two", "three"])`` 的函数来进行编码；但从最原子的部分开始：
-=======
-Let us apply the same principle to encode the data for a function with a signature ``g(uint256[][],string[])``
-with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most atomic parts of the encoding:
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 首先我们将第一个根数组 ``[[1, 2], [3]]`` 的第一个嵌入的动态数组 ``[1, 2]`` 的长度和数据进行编码：
 
@@ -411,12 +401,7 @@ with values ``([[1, 2], [3]], ["one", "two", "three"])`` but start from the most
 所以 ``e = 0x00000000000000000000000000000000000000000000000000000000000000e0``。
 
 
-<<<<<<< HEAD
-注意，根数组的嵌入元素的编码并不互相依赖，且具有对于函数签名 ``g(string[],uint[][])`` 所相同的编码。
-=======
-Note that the encodings of the embedded elements of the root arrays are not dependent on each other
-and have the same encodings for a function with a signature ``g(string[],uint256[][])``.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+注意，根数组的嵌入元素的编码并不互相依赖，且具有对于函数签名 ``g(string[],uint256[][])`` 所相同的编码。
 
 然后我们对第一个根数组的长度进行编码：
 
