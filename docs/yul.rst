@@ -933,7 +933,7 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | number()                |     | F | current block number                                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| difficulty()            |     | F | difficulty of the current block                                 |
+| difficulty()            |     | F | difficulty of the current block (see note below)                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | gaslimit()              |     | F | block gas limit of the current block                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -948,6 +948,13 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
   You need to use the ``returndatasize`` opcode to check which part of this memory area contains the return data.
   The remaining bytes will retain their values as of before the call.
 
+.. note::
+  With the Paris network upgrade the semantics of ``difficulty`` have been changed.
+  It returns the value of ``prevrandao``, which is a 256-bit value, whereas the highest recorded
+  difficulty value within Ethash was ~54 bits.
+  This change is described in `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_.
+  Please note that irrelevant to which EVM version is selected in the compiler, the semantics of
+  instructions depend on the final chain of deployment.
 
 In some internal dialects, there are additional functions:
 
