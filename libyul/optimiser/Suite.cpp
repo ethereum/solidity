@@ -83,9 +83,55 @@
 #include <limits>
 #include <tuple>
 
+#ifdef PROFILE_OPTIMIZER_STEPS
+#include <chrono>
+#include <fmt/format.h>
+#endif
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
+#ifdef PROFILE_OPTIMIZER_STEPS
+using namespace std::chrono;
+#endif
+
+namespace
+{
+
+#ifdef PROFILE_OPTIMIZER_STEPS
+void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
+{
+	vector<pair<string, int64_t>> durations(_metrics.begin(), _metrics.end());
+	sort(
+		durations.begin(),
+		durations.end(),
+		[](pair<string, int64_t> const& _lhs, pair<string, int64_t> const& _rhs) -> bool
+		{
+			return _lhs.second < _rhs.second;
+		}
+	);
+
+	int64_t totalDurationInMicroseconds = 0;
+	for (auto&& [step, durationInMicroseconds]: durations)
+		totalDurationInMicroseconds += durationInMicroseconds;
+
+	cerr << "Performance metrics of optimizer steps" << endl;
+	cerr << "======================================" << endl;
+	constexpr double microsecondsInSecond = 1000000;
+	for (auto&& [step, durationInMicroseconds]: durations)
+	{
+		double percentage = 100.0 * static_cast<double>(durationInMicroseconds) / static_cast<double>(totalDurationInMicroseconds);
+		double sec = static_cast<double>(durationInMicroseconds) / microsecondsInSecond;
+		cerr << fmt::format("{:>7.3f}% ({} s): {}", percentage, sec, step) << endl;
+	}
+	double totalDurationInSeconds = static_cast<double>(totalDurationInMicroseconds) / microsecondsInSecond;
+	cerr << "--------------------------------------" << endl;
+	cerr << fmt::format("{:>7}% ({:.3f} s)", 100, totalDurationInSeconds) << endl;
+}
+#endif
+
+}
+
 
 void OptimiserSuite::run(
 	Dialect const& _dialect,
@@ -178,12 +224,15 @@ void OptimiserSuite::run(
 	NameSimplifier::run(suite.m_context, ast);
 	VarNameCleaner::run(suite.m_context, ast);
 
+#ifdef PROFILE_OPTIMIZER_STEPS
+	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
+#endif
+
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
 }
 
 namespace
 {
-
 
 template <class... Step>
 map<string, unique_ptr<OptimiserStep>> optimiserStepCollection()
@@ -445,7 +494,14 @@ void OptimiserSuite::runSequence(std::vector<string> const& _steps, Block& _ast)
 	{
 		if (m_debug == Debug::PrintStep)
 			cout << "Running " << step << endl;
+#ifdef PROFILE_OPTIMIZER_STEPS
+		steady_clock::time_point startTime = steady_clock::now();
+#endif
 		allSteps().at(step)->run(m_context, _ast);
+#ifdef PROFILE_OPTIMIZER_STEPS
+		steady_clock::time_point endTime = steady_clock::now();
+		m_durationPerStepInMicroseconds[step] += duration_cast<microseconds>(endTime - startTime).count();
+#endif
 		if (m_debug == Debug::PrintChanges)
 		{
 			// TODO should add switch to also compare variable names!
