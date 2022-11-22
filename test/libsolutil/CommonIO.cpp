@@ -19,10 +19,10 @@
 /// Unit tests for the CommonIO routines.
 
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/TemporaryDirectory.h>
 
 #include <test/Common.h>
 #include <test/FilesystemUtils.h>
-#include <test/TemporaryDirectory.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
 #include <boost/test/unit_test.hpp>

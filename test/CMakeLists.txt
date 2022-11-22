@@ -13,9 +13,6 @@ set(sources
     InteractiveTests.h
     Metadata.cpp
     Metadata.h
-    TemporaryDirectory.cpp
-    TemporaryDirectory.h
-    TemporaryDirectoryTest.cpp
     TestCase.cpp
     TestCase.h
     TestCaseReader.cpp
@@ -45,6 +42,7 @@ set(libsolutil_sources
     libsolutil/LEB128.cpp
     libsolutil/StringUtils.cpp
     libsolutil/SwarmHash.cpp
+    libsolutil/TemporaryDirectoryTest.cpp
     libsolutil/UTF8.cpp
     libsolutil/Whiskers.cpp
 )

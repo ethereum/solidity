@@ -828,7 +828,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strModelCheckerSolvers.c_str(),
-			po::value<string>()->value_name("all,cvc4,z3,smtlib2")->default_value("all"),
+			po::value<string>()->value_name("cvc4,eld,z3,smtlib2")->default_value("z3"),
 			"Select model checker solvers."
 		)
 		(

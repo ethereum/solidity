@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace solidity::test
+namespace solidity::util
 {
 
 /**
@@ -41,10 +41,10 @@ namespace solidity::test
 class TemporaryDirectory
 {
 public:
-	TemporaryDirectory(std::string const& _prefix = "solidity-test");
+	TemporaryDirectory(std::string const& _prefix = "solidity");
 	TemporaryDirectory(
 		std::vector<boost::filesystem::path> const& _subdirectories,
-		std::string const& _prefix = "solidity-test"
+		std::string const& _prefix = "solidity"
 	);
 	~TemporaryDirectory();
 

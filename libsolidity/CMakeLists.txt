@@ -149,10 +149,13 @@ set(sources
 	interface/Natspec.h
 	interface/OptimiserSettings.h
 	interface/ReadFile.h
+	interface/SMTSolverCommand.cpp
+	interface/SMTSolverCommand.h
 	interface/StandardCompiler.cpp
 	interface/StandardCompiler.h
 	interface/StorageLayout.cpp
 	interface/StorageLayout.h
+	interface/UniversalCallback.h
 	interface/Version.cpp
 	interface/Version.h
 	lsp/DocumentHoverHandler.cpp
@@ -181,5 +184,5 @@ set(sources
 )
 
 add_library(solidity ${sources})
-target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost fmt::fmt-header-only)
+target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost fmt::fmt-header-only Threads::Threads)
 
