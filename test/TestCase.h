@@ -39,6 +39,7 @@ public:
 	{
 		std::string filename;
 		langutil::EVMVersion evmVersion;
+		std::optional<uint8_t> eofVersion;
 		std::vector<boost::filesystem::path> vmPaths;
 		bool enforceCompileToEwasm = false;
 		bool enforceGasCost = false;

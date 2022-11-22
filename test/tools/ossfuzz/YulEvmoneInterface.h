@@ -31,12 +31,14 @@ class YulAssembler
 {
 public:
 	YulAssembler(
-		langutil::EVMVersion _version,
+		langutil::EVMVersion _evmVersion,
+		std::optional<uint8_t> _eofVersion,
 		solidity::frontend::OptimiserSettings _optSettings,
 		std::string const& _yulSource
 	):
 		m_stack(
-			_version,
+			_evmVersion,
+			_eofVersion,
 			solidity::yul::YulStack::Language::StrictAssembly,
 			_optSettings,
 			langutil::DebugInfoSelection::All()
