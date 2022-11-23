@@ -24,11 +24,15 @@
 
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
+#include <libyul/AsmPrinter.h>
 
 #include <libsolutil/CommonData.h>
 
 #include <range/v3/action/remove_if.hpp>
+
+#include <iostream>
 
 using namespace std;
 using namespace solidity;
@@ -36,36 +40,33 @@ using namespace solidity::yul;
 
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	UnusedAssignEliminator rae{_context.dialect};
-	rae(_ast);
+	UnusedAssignEliminator uae{
+		_context.dialect,
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+	};
+	uae(_ast);
 
-	StatementRemover remover{rae.m_pendingRemovals};
+	uae.m_storesToRemove += uae.m_allStores - uae.m_usedStores;
+
+	set<Statement const*> toRemove{uae.m_storesToRemove.begin(), uae.m_storesToRemove.end()};
+	StatementRemover remover{toRemove};
 	remover(_ast);
 }
 
 void UnusedAssignEliminator::operator()(Identifier const& _identifier)
 {
-	changeUndecidedTo(_identifier.name, State::Used);
-}
-
-void UnusedAssignEliminator::operator()(VariableDeclaration const& _variableDeclaration)
-{
-	UnusedStoreBase::operator()(_variableDeclaration);
-
-	for (auto const& var: _variableDeclaration.variables)
-		m_declaredVariables.emplace(var.name);
+	markUsed(_identifier.name);
 }
 
 void UnusedAssignEliminator::operator()(Assignment const& _assignment)
 {
 	visit(*_assignment.value);
-	for (auto const& var: _assignment.variableNames)
-		changeUndecidedTo(var.name, State::Unused);
+	// Do not visit the variables because they are Identifiers
 }
+
 
 void UnusedAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
 {
-	ScopedSaveAndRestore outerDeclaredVariables(m_declaredVariables, {});
 	ScopedSaveAndRestore outerReturnVariables(m_returnVariables, {});
 
 	for (auto const& retParam: _functionDefinition.returnVariables)
@@ -74,20 +75,37 @@ void UnusedAssignEliminator::operator()(FunctionDefinition const& _functionDefin
 	UnusedStoreBase::operator()(_functionDefinition);
 }
 
+void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
+{
+	UnusedStoreBase::operator()(_functionCall);
+
+	ControlFlowSideEffects sideEffects;
+	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
+		sideEffects = builtin->controlFlowSideEffects;
+	else
+		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
+
+	if (!sideEffects.canContinue)
+		// We do not return from the current function, so it is OK to also
+		// clear the return variables.
+		m_activeStores.clear();
+}
+
 void UnusedAssignEliminator::operator()(Leave const&)
 {
 	for (YulString name: m_returnVariables)
-		changeUndecidedTo(name, State::Used);
+		markUsed(name);
+	m_activeStores.clear();
 }
 
 void UnusedAssignEliminator::operator()(Block const& _block)
 {
-	ScopedSaveAndRestore outerDeclaredVariables(m_declaredVariables, {});
-
 	UnusedStoreBase::operator()(_block);
 
-	for (auto const& var: m_declaredVariables)
-		finalize(var, State::Unused);
+	for (auto const& statement: _block.statements)
+		if (auto const* varDecl = get_if<VariableDeclaration>(&statement))
+			for (auto const& var: varDecl->variables)
+				m_activeStores.erase(var.name);
 }
 
 void UnusedAssignEliminator::visit(Statement const& _statement)
@@ -95,63 +113,49 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 	UnusedStoreBase::visit(_statement);
 
 	if (auto const* assignment = get_if<Assignment>(&_statement))
-		if (assignment->variableNames.size() == 1)
-			// Default-construct it in "Undecided" state if it does not yet exist.
-			m_stores[assignment->variableNames.front().name][&_statement];
+	{
+		// We do not remove assignments whose values might have side-effects,
+		// but clear the active stores to the assigned variables in any case.
+		if (SideEffectsCollector{m_dialect, *assignment->value}.movable())
+		{
+			m_allStores.insert(&_statement);
+			for (auto const& var: assignment->variableNames)
+				m_activeStores[var.name] = {&_statement};
+		}
+		else
+			for (auto const& var: assignment->variableNames)
+				m_activeStores[var.name].clear();
+	}
 }
 
-void UnusedAssignEliminator::shortcutNestedLoop(TrackedStores const& _zeroRuns)
+void UnusedAssignEliminator::shortcutNestedLoop(ActiveStores const& _zeroRuns)
 {
 	// Shortcut to avoid horrible runtime:
 	// Change all assignments that were newly introduced in the for loop to "used".
 	// We do not have to do that with the "break" or "continue" paths, because
 	// they will be joined later anyway.
-	// TODO parallel traversal might be more efficient here.
-	for (auto& [variable, stores]: m_stores)
+
+	for (auto& [variable, stores]: m_activeStores)
+	{
+		auto zeroIt = _zeroRuns.find(variable);
 		for (auto& assignment: stores)
 		{
-			auto zeroIt = _zeroRuns.find(variable);
-			if (zeroIt != _zeroRuns.end() && zeroIt->second.count(assignment.first))
+			if (zeroIt != _zeroRuns.end() && zeroIt->second.count(assignment))
 				continue;
-			assignment.second = State::Value::Used;
+			m_usedStores.insert(assignment);
 		}
+	}
 }
 
 void UnusedAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const& _functionDefinition)
 {
-	for (auto const& param: _functionDefinition.parameters)
-		finalize(param.name, State::Unused);
 	for (auto const& retParam: _functionDefinition.returnVariables)
-		finalize(retParam.name, State::Used);
+		markUsed(retParam.name);
 }
 
-void UnusedAssignEliminator::changeUndecidedTo(YulString _variable, UnusedAssignEliminator::State _newState)
+void UnusedAssignEliminator::markUsed(YulString _variable)
 {
-	for (auto& assignment: m_stores[_variable])
-		if (assignment.second == State::Undecided)
-			assignment.second = _newState;
-}
-
-void UnusedAssignEliminator::finalize(YulString _variable, UnusedAssignEliminator::State _finalState)
-{
-	std::map<Statement const*, State> stores = std::move(m_stores[_variable]);
-	m_stores.erase(_variable);
-
-	for (auto& breakAssignments: m_forLoopInfo.pendingBreakStmts)
-	{
-		util::joinMap(stores, std::move(breakAssignments[_variable]), State::join);
-		breakAssignments.erase(_variable);
-	}
-	for (auto& continueAssignments: m_forLoopInfo.pendingContinueStmts)
-	{
-		util::joinMap(stores, std::move(continueAssignments[_variable]), State::join);
-		continueAssignments.erase(_variable);
-	}
-
-	for (auto&& [statement, state]: stores)
-		if (
-			(state == State::Unused || (state == State::Undecided && _finalState == State::Unused)) &&
-			SideEffectsCollector{m_dialect, *std::get<Assignment>(*statement).value}.movable()
-		)
-			m_pendingRemovals.insert(statement);
+	for (auto& assignment: m_activeStores[_variable])
+		m_usedStores.insert(assignment);
+	m_activeStores.erase(_variable);
 }
