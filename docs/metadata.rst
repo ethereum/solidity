@@ -100,6 +100,8 @@ explanatory purposes.
           }
         },
         "metadata": {
+          // Reflects the setting used in the input json, defaults to "true"
+          "appendCBOR": true,
           // Reflects the setting used in the input json, defaults to "false"
           "useLiteralContent": true,
           // Reflects the setting used in the input json, defaults to "ipfs"
