@@ -25,27 +25,40 @@
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
+#include <libyul/AsmPrinter.h>
 
 #include <libsolutil/CommonData.h>
 
 #include <range/v3/action/remove_if.hpp>
 
+#include <iostream>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
+
+// TODO this component does not handle reverting function calls specially. Is that OK?
+// We should set m_activeStores to empty set for a reverting function call, like wo do with `leave`.
 
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	UnusedAssignEliminator rae{_context.dialect};
 	rae(_ast);
 
-	StatementRemover remover{rae.m_pendingRemovals};
+	set<Statement const*> toRemove;
+	for (Statement const* unusedStore: rae.m_allStores - rae.m_usedStores)
+		if (SideEffectsCollector{_context.dialect, *std::get<Assignment>(*unusedStore).value}.movable())
+			toRemove.insert(unusedStore);
+		else
+			cerr << "not used because not movable" << endl;
+
+	StatementRemover remover{toRemove};
 	remover(_ast);
 }
 
 void UnusedAssignEliminator::operator()(Identifier const& _identifier)
 {
-	changeUndecidedTo(_identifier.name, State::Used);
+	markUsed(_identifier.name);
 }
 
 void UnusedAssignEliminator::operator()(VariableDeclaration const& _variableDeclaration)
@@ -59,9 +72,9 @@ void UnusedAssignEliminator::operator()(VariableDeclaration const& _variableDecl
 void UnusedAssignEliminator::operator()(Assignment const& _assignment)
 {
 	visit(*_assignment.value);
-	for (auto const& var: _assignment.variableNames)
-		changeUndecidedTo(var.name, State::Unused);
+	// Do not visit the variables because they are Identifiers
 }
+
 
 void UnusedAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
 {
@@ -77,7 +90,7 @@ void UnusedAssignEliminator::operator()(FunctionDefinition const& _functionDefin
 void UnusedAssignEliminator::operator()(Leave const&)
 {
 	for (YulString name: m_returnVariables)
-		changeUndecidedTo(name, State::Used);
+		markUsed(name);
 }
 
 void UnusedAssignEliminator::operator()(Block const& _block)
@@ -86,8 +99,10 @@ void UnusedAssignEliminator::operator()(Block const& _block)
 
 	UnusedStoreBase::operator()(_block);
 
-	for (auto const& var: m_declaredVariables)
-		finalize(var, State::Unused);
+	for (auto const& statement: _block.statements)
+		if (auto const* varDecl = get_if<VariableDeclaration>(&statement))
+			for (auto const& var: varDecl->variables)
+				m_activeStores.erase(var.name);
 }
 
 void UnusedAssignEliminator::visit(Statement const& _statement)
@@ -95,63 +110,53 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 	UnusedStoreBase::visit(_statement);
 
 	if (auto const* assignment = get_if<Assignment>(&_statement))
-		if (assignment->variableNames.size() == 1)
-			// Default-construct it in "Undecided" state if it does not yet exist.
-			m_stores[assignment->variableNames.front().name][&_statement];
+	{
+		// TODO is it OK to do this for multi-assignments? I guess so because it is enough if
+		// one of them is used.
+		m_allStores.insert(&_statement);
+		for (auto const& var: assignment->variableNames)
+			m_activeStores[var.name] = {&_statement};
+	}
+
+//	cerr << "After " << std::visit(AsmPrinter{}, _statement) << endl;
+//	for (auto&& [var, assigns]: m_activeStores)
+//	{
+//		cerr << "  " << var.str() << ":" << endl;
+//		for (auto const& assign: assigns)
+//			cerr << "    " << std::visit(AsmPrinter{}, *assign) << endl;
+//	}
 }
 
-void UnusedAssignEliminator::shortcutNestedLoop(TrackedStores const& _zeroRuns)
+void UnusedAssignEliminator::shortcutNestedLoop(ActiveStores const& _zeroRuns)
 {
 	// Shortcut to avoid horrible runtime:
 	// Change all assignments that were newly introduced in the for loop to "used".
 	// We do not have to do that with the "break" or "continue" paths, because
 	// they will be joined later anyway.
 	// TODO parallel traversal might be more efficient here.
-	for (auto& [variable, stores]: m_stores)
+
+	// TODO is this correct?
+
+	for (auto& [variable, stores]: m_activeStores)
 		for (auto& assignment: stores)
 		{
 			auto zeroIt = _zeroRuns.find(variable);
-			if (zeroIt != _zeroRuns.end() && zeroIt->second.count(assignment.first))
+			if (zeroIt != _zeroRuns.end() && zeroIt->second.count(assignment))
 				continue;
-			assignment.second = State::Value::Used;
+			m_usedStores.insert(assignment);
 		}
 }
 
 void UnusedAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const& _functionDefinition)
 {
-	for (auto const& param: _functionDefinition.parameters)
-		finalize(param.name, State::Unused);
 	for (auto const& retParam: _functionDefinition.returnVariables)
-		finalize(retParam.name, State::Used);
+		markUsed(retParam.name);
 }
 
-void UnusedAssignEliminator::changeUndecidedTo(YulString _variable, UnusedAssignEliminator::State _newState)
+void UnusedAssignEliminator::markUsed(YulString _variable)
 {
-	for (auto& assignment: m_stores[_variable])
-		if (assignment.second == State::Undecided)
-			assignment.second = _newState;
-}
-
-void UnusedAssignEliminator::finalize(YulString _variable, UnusedAssignEliminator::State _finalState)
-{
-	std::map<Statement const*, State> stores = std::move(m_stores[_variable]);
-	m_stores.erase(_variable);
-
-	for (auto& breakAssignments: m_forLoopInfo.pendingBreakStmts)
-	{
-		util::joinMap(stores, std::move(breakAssignments[_variable]), State::join);
-		breakAssignments.erase(_variable);
-	}
-	for (auto& continueAssignments: m_forLoopInfo.pendingContinueStmts)
-	{
-		util::joinMap(stores, std::move(continueAssignments[_variable]), State::join);
-		continueAssignments.erase(_variable);
-	}
-
-	for (auto&& [statement, state]: stores)
-		if (
-			(state == State::Unused || (state == State::Undecided && _finalState == State::Unused)) &&
-			SideEffectsCollector{m_dialect, *std::get<Assignment>(*statement).value}.movable()
-		)
-			m_pendingRemovals.insert(statement);
+	for (auto& assignment: m_activeStores[_variable])
+		m_usedStores.insert(assignment);
+	// TODO is this correct?
+	m_activeStores.erase(_variable);
 }

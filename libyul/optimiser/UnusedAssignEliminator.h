@@ -126,15 +126,10 @@ public:
 	void visit(Statement const& _statement) override;
 
 private:
-	void shortcutNestedLoop(TrackedStores const& _beforeLoop) override;
+	void shortcutNestedLoop(ActiveStores const& _beforeLoop) override;
 	void finalizeFunctionDefinition(FunctionDefinition const& _functionDefinition) override;
 
-	void changeUndecidedTo(YulString _variable, State _newState);
-	/// Called when a variable goes out of scope. Sets the state of all still undecided
-	/// assignments to the final state. In this case, this also applies to pending
-	/// break and continue TrackedStores.
-	void finalize(YulString _variable, State _finalState);
-
+	void markUsed(YulString _variable);
 
 	std::set<YulString> m_declaredVariables;
 	std::set<YulString> m_returnVariables;
