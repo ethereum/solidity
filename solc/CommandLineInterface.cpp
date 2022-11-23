@@ -708,6 +708,7 @@ void CommandLineInterface::compile()
 		m_compiler->setLibraries(m_options.linker.libraries);
 		m_compiler->setViaIR(m_options.output.viaIR);
 		m_compiler->setEVMVersion(m_options.output.evmVersion);
+		m_compiler->setEOFVersion(m_options.output.eofVersion);
 		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
 		if (m_options.output.debugInfoSelection.has_value())
 			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
@@ -1042,6 +1043,7 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 
 		auto& stack = yulStacks[src.first] = yul::YulStack(
 			m_options.output.evmVersion,
+			m_options.output.eofVersion,
 			_language,
 			m_options.optimiserSettings(),
 			m_options.output.debugInfoSelection.has_value() ?

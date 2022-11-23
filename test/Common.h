@@ -72,6 +72,7 @@ struct CommonOptions
 	size_t selectedBatch = 0;
 
 	langutil::EVMVersion evmVersion() const;
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 
 	virtual void addOptions();
 	// @returns true if the program should continue, false if it should exit immediately without
@@ -98,6 +99,7 @@ protected:
 
 private:
 	std::string evmVersionString;
+	std::optional<uint8_t> m_eofVersion;
 	static std::unique_ptr<CommonOptions const> m_singleton;
 };
 

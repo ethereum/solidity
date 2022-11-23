@@ -186,6 +186,7 @@ struct CommandLineOptions
 		RevertStrings revertStrings = RevertStrings::Default;
 		std::optional<langutil::DebugInfoSelection> debugInfoSelection;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
+		std::optional<uint8_t> eofVersion;
 	} output;
 
 	struct
@@ -247,12 +248,12 @@ public:
 
 	CommandLineOptions const& options() const { return m_options; }
 
-	static void printHelp(std::ostream& _out) { _out << optionsDescription(); }
+	static void printHelp(std::ostream& _out) { _out << optionsDescription(true /* _forHelp */); }
 
 private:
 	/// @returns a specification of all named command-line options accepted by the compiler.
 	/// The object can be used to parse command-line arguments or to generate the help screen.
-	static boost::program_options::options_description optionsDescription();
+	static boost::program_options::options_description optionsDescription(bool _forHelp = false);
 
 	/// @returns a specification of all positional command-line arguments accepted by the compiler.
 	/// The object can be used to parse command-line arguments or to generate the help screen.

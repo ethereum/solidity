@@ -47,6 +47,7 @@ static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
+static string const g_strEOFVersion = "experimental-eof-version";
 static string const g_strViaIR = "via-ir";
 static string const g_strExperimentalViaIR = "experimental-via-ir";
 static string const g_strGas = "gas";
@@ -231,6 +232,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		output.revertStrings == _other.output.revertStrings &&
 		output.debugInfoSelection == _other.output.debugInfoSelection &&
 		output.stopAfter == _other.output.stopAfter &&
+		output.eofVersion == _other.output.eofVersion &&
 		input.mode == _other.input.mode &&
 		assembly.targetMachine == _other.assembly.targetMachine &&
 		assembly.inputLanguage == _other.assembly.inputLanguage &&
@@ -509,9 +511,11 @@ void CommandLineParser::parseOutputSelection()
 			"The following outputs are not supported in " + g_inputModeName.at(m_options.input.mode) + " mode: " +
 			joinOptionNames(unsupportedOutputs) + "."
 		);
+
+	// TODO: restrict EOF version to correct EVM version.
 }
 
-po::options_description CommandLineParser::optionsDescription()
+po::options_description CommandLineParser::optionsDescription(bool _forHelp)
 {
 	// Declare the supported options.
 	po::options_description desc((R"(solc, the Solidity commandline compiler.
@@ -588,6 +592,18 @@ General Information)").c_str(),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
 			"byzantium, constantinople, petersburg, istanbul, berlin, london or paris."
 		)
+	;
+	if (!_forHelp) // Note: We intentionally keep this undocumented for now.
+		outputOptions.add_options()
+			(
+				g_strEOFVersion.c_str(),
+				// Declared as uint64_t, since uint8_t will be parsed as character by boost.
+				po::value<uint64_t>()->value_name("version")->implicit_value(1),
+				"Select desired EOF version. Currently the only valid value is 1. "
+				"If not specified, legacy non-EOF bytecode will be generated."
+			)
+		;
+	outputOptions.add_options()
 		(
 			g_strExperimentalViaIR.c_str(),
 			"Deprecated synonym of --via-ir."
@@ -1111,6 +1127,15 @@ void CommandLineParser::processArgs()
 		if (!versionOption)
 			solThrow(CommandLineValidationError, "Invalid option for --" + g_strEVMVersion + ": " + versionOptionStr);
 		m_options.output.evmVersion = *versionOption;
+	}
+
+	if (m_args.count(g_strEOFVersion))
+	{
+		// Request as uint64_t, since uint8_t will be parsed as character by boost.
+		uint64_t versionOption = m_args[g_strEOFVersion].as<uint64_t>();
+		if (versionOption != 1)
+			solThrow(CommandLineValidationError, "Invalid option for --" + g_strEOFVersion + ": " + to_string(versionOption));
+		m_options.output.eofVersion = 1;
 	}
 
 	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);

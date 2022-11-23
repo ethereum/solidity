@@ -97,6 +97,7 @@ pair<string, string> IRGenerator::run(
 
 	yul::YulStack asmStack(
 		m_evmVersion,
+		m_eofVersion,
 		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_context.debugInfoSelection()

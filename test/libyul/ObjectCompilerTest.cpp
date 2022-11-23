@@ -65,6 +65,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 {
 	YulStack stack(
 		EVMVersion(),
+		nullopt,
 		m_wasm ? YulStack::Language::Ewasm : YulStack::Language::StrictAssembly,
 		OptimiserSettings::preset(m_optimisationPreset),
 		DebugInfoSelection::All()
