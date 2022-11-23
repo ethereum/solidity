@@ -26,5 +26,6 @@ contract C {
 // ====
 // SMTEngine: all
 // SMTIgnoreInv: yes
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (302-333): CHC: Assertion violation happens here.\nCounterexample:\nkec = 0x0\n_kec = 0x0\n\nTransaction trace:\nC.constructor(_data)\nState: kec = 0x0\nC.check(_data)
+// Warning 6328: (302-333): CHC: Assertion violation happens here.

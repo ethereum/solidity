@@ -8,6 +8,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 6328: (294-324): CHC: Assertion violation might happen here.
 // Warning 7812: (294-324): BMC: Assertion violation might happen here.

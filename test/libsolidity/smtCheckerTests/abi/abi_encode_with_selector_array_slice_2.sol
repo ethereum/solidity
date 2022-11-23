@@ -24,8 +24,9 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (326-356): CHC: Assertion violation happens here.\nCounterexample:\n\nsel = 0x0\ndata = [55]\nb2 = [0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32, 0x32]\nb3 = []\nb4 = []\nx = 0\ny = 0\nb5 = []\nb6 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSlice(0x0, [55])
+// Warning 6328: (326-356): CHC: Assertion violation happens here.
 // Warning 6328: (579-609): CHC: Assertion violation happens here.
 // Warning 6328: (1080-1110): CHC: Assertion violation might happen here.
 // Warning 4661: (1080-1110): BMC: Assertion violation happens here.

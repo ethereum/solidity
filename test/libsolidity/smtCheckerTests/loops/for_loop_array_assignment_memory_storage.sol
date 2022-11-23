@@ -25,4 +25,5 @@ contract LoopFor2 {
 // ====
 // SMTEngine: all
 // SMTSolvers: z3
+// SMTIgnoreOS: macos
 // ----

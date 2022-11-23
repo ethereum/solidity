@@ -22,6 +22,7 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
 // Warning 5667: (107-122): Unused function parameter. Remove or comment out the variable name to silence this warning.
 // Warning 6328: (543-573): CHC: Assertion violation happens here.\nCounterexample:\n\nt = false\nx = 0\ny = 0\nz = 0\nb5 = []\nb6 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSimple(sig, false, 0, 0, 0, a, b)
