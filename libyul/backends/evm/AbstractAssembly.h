@@ -28,6 +28,7 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <functional>
 #include <memory>

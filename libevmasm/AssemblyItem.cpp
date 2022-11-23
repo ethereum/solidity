@@ -69,12 +69,12 @@ pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 	return make_pair(subId, tag);
 }
 
-pair<string, string> AssemblyItem::nameAndData() const
+pair<string, string> AssemblyItem::nameAndData(langutil::EVMVersion _evmVersion) const
 {
 	switch (type())
 	{
 	case Operation:
-		return {instructionInfo(instruction()).name, m_data != nullptr ? toStringInHex(*m_data) : ""};
+		return {instructionInfo(instruction(), _evmVersion).name, m_data != nullptr ? toStringInHex(*m_data) : ""};
 	case Push:
 		return {"PUSH", toStringInHex(data())};
 	case PushTag:
@@ -168,7 +168,9 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 size_t AssemblyItem::arguments() const
 {
 	if (type() == Operation)
-		return static_cast<size_t>(instructionInfo(instruction()).args);
+		// The latest EVMVersion is used here, since the InstructionInfo is assumed to be
+		// the same across all EVM versions except for the instruction name.
+		return static_cast<size_t>(instructionInfo(instruction(), EVMVersion()).args);
 	else if (type() == VerbatimBytecode)
 		return get<0>(*m_verbatimBytecode);
 	else if (type() == AssignImmutable)
@@ -182,7 +184,9 @@ size_t AssemblyItem::returnValues() const
 	switch (m_type)
 	{
 	case Operation:
-		return static_cast<size_t>(instructionInfo(instruction()).ret);
+		// The latest EVMVersion is used here, since the InstructionInfo is assumed to be
+		// the same across all EVM versions except for the instruction name.
+		return static_cast<size_t>(instructionInfo(instruction(), EVMVersion()).ret);
 	case Push:
 	case PushTag:
 	case PushData:
@@ -251,7 +255,7 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	case Operation:
 	{
 		assertThrow(isValidInstruction(instruction()), AssemblyException, "Invalid instruction.");
-		text = util::toLower(instructionInfo(instruction()).name);
+		text = util::toLower(instructionInfo(instruction(), _assembly.evmVersion()).name);
 		break;
 	}
 	case Push:
@@ -323,12 +327,13 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	return text;
 }
 
+// Note: This method is exclusively used for debugging.
 ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 {
 	switch (_item.type())
 	{
 	case Operation:
-		_out << " " << instructionInfo(_item.instruction()).name;
+		_out << " " << instructionInfo(_item.instruction(), EVMVersion()).name;
 		if (_item.instruction() == Instruction::JUMP || _item.instruction() == Instruction::JUMPI)
 			_out << "\t" << _item.getJumpTypeAsString();
 		break;

@@ -264,7 +264,7 @@ YulStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 	yulAssert(m_parserResult->code, "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
-	evmasm::Assembly assembly(true, {});
+	evmasm::Assembly assembly(m_evmVersion, true, {});
 	EthAssemblyAdapter adapter(assembly);
 	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
 

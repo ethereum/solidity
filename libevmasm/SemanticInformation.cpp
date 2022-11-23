@@ -110,7 +110,7 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	{
-		size_t paramCount = static_cast<size_t>(instructionInfo(_instruction).args);
+		size_t paramCount = static_cast<size_t>(instructionInfo(_instruction, langutil::EVMVersion()).args);
 		vector<Operation> operations{
 			Operation{Location::Memory, Effect::Read, paramCount - 4, paramCount - 3, {}},
 			Operation{Location::Storage, Effect::Read, {}, {}, {}}
@@ -178,7 +178,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 			return true; // GAS and PC assume a specific order of opcodes
 		if (_item.instruction() == Instruction::MSIZE)
 			return true; // msize is modified already by memory access, avoid that for now
-		InstructionInfo info = instructionInfo(_item.instruction());
+		InstructionInfo info = instructionInfo(_item.instruction(), langutil::EVMVersion());
 		if (_item.instruction() == Instruction::SSTORE)
 			return false;
 		if (_item.instruction() == Instruction::MSTORE)
@@ -318,7 +318,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	// These are not really functional.
 	if (isDupInstruction(_instruction) || isSwapInstruction(_instruction))
 		return false;
-	InstructionInfo info = instructionInfo(_instruction);
+	InstructionInfo info = instructionInfo(_instruction, langutil::EVMVersion());
 	if (info.sideEffects)
 		return false;
 	switch (_instruction)
@@ -345,7 +345,7 @@ bool SemanticInformation::canBeRemoved(Instruction _instruction)
 	// These are not really functional.
 	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
 
-	return !instructionInfo(_instruction).sideEffects;
+	return !instructionInfo(_instruction, langutil::EVMVersion()).sideEffects;
 }
 
 bool SemanticInformation::canBeRemovedIfNoMSize(Instruction _instruction)
@@ -483,7 +483,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::COINBASE:
 	case Instruction::TIMESTAMP:
 	case Instruction::NUMBER:
-	case Instruction::DIFFICULTY:
+	case Instruction::PREVRANDAO:
 	case Instruction::GASLIMIT:
 	case Instruction::STATICCALL:
 	case Instruction::SLOAD:

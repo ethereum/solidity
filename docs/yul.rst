@@ -751,8 +751,8 @@ This document does not want to be a full description of the Ethereum virtual mac
 Please refer to a different document if you are interested in the precise semantics.
 
 Opcodes marked with ``-`` do not return a result and all others return exactly one value.
-Opcodes marked with ``F``, ``H``, ``B``, ``C``, ``I`` and ``L`` are present since Frontier, Homestead,
-Byzantium, Constantinople, Istanbul or London respectively.
+Opcodes marked with ``F``, ``H``, ``B``, ``C``, ``I``, ``L`` and ``P`` are present since Frontier,
+Homestead, Byzantium, Constantinople, Istanbul, London or Paris respectively.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
 but not including position ``b`` and ``storage[p]`` signifies the storage contents at slot ``p``.
@@ -931,6 +931,8 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | difficulty()            |     | F | difficulty of the current block (see note below)                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
+| prevrandao()            |     | P | randomness provided by the beacon chain (see note below)        |
++-------------------------+-----+---+-----------------------------------------------------------------+
 | gaslimit()              |     | F | block gas limit of the current block                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 
@@ -945,8 +947,10 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
   The remaining bytes will retain their values as of before the call.
 
 .. note::
-  With the Paris network upgrade the semantics of ``difficulty`` have been changed.
-  It returns the value of ``prevrandao``, which is a 256-bit value, whereas the highest recorded
+  The `difficulty()` instruction is disallowed in EVM version >= Paris.
+  With the Paris network upgrade the semantics of the instruction that was previously called
+  ``difficulty`` have been changed and the instruction was renamed to ``prevrandao``.
+  It can now return arbitrary values in the full 256-bit range, whereas the highest recorded
   difficulty value within Ethash was ~54 bits.
   This change is described in `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_.
   Please note that irrelevant to which EVM version is selected in the compiler, the semantics of

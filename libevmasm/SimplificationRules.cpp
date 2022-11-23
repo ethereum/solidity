@@ -141,7 +141,8 @@ string Pattern::toString() const
 	switch (m_type)
 	{
 	case Operation:
-		s << instructionInfo(m_instruction).name;
+		// Note: This function is exclusively used for debugging.
+		s << instructionInfo(m_instruction, EVMVersion()).name;
 		break;
 	case Push:
 		if (m_data)

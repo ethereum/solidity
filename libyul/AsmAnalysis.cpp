@@ -119,7 +119,6 @@ vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 			"Invalid type \"" + _literal.type.str() + "\" for literal \"" + _literal.value.str() + "\"."
 		);
 
-
 	return {_literal.type};
 }
 
@@ -619,7 +618,6 @@ Scope& AsmAnalyzer::scope(Block const* _block)
 void AsmAnalyzer::expectValidIdentifier(YulString _identifier, SourceLocation const& _location)
 {
 	// NOTE: the leading dot case is handled by the parser not allowing it.
-
 	if (boost::ends_with(_identifier.str(), "."))
 		m_errorReporter.syntaxError(
 			3384_error,
@@ -692,7 +690,7 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 			_location,
 			fmt::format(
 				"The \"{instruction}\" instruction is {kind} VMs (you are currently compiling for \"{version}\").",
-				fmt::arg("instruction", boost::to_lower_copy(instructionInfo(_instr).name)),
+				fmt::arg("instruction", boost::to_lower_copy(instructionInfo(_instr, m_evmVersion).name)),
 				fmt::arg("kind", vmKindMessage),
 				fmt::arg("version", m_evmVersion.name())
 			)

@@ -96,6 +96,7 @@ public:
 	bool hasChainID() const { return *this >= istanbul(); }
 	bool hasSelfBalance() const { return *this >= istanbul(); }
 	bool hasBaseFee() const { return *this >= london(); }
+	bool hasPrevRandao() const { return *this >= paris(); }
 
 	bool hasOpcode(evmasm::Instruction _opcode) const;
 

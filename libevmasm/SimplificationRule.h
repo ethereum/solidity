@@ -122,7 +122,7 @@ struct EVMBuiltins
 	static auto constexpr COINBASE = PatternGenerator<Instruction::COINBASE>{};
 	static auto constexpr TIMESTAMP = PatternGenerator<Instruction::TIMESTAMP>{};
 	static auto constexpr NUMBER = PatternGenerator<Instruction::NUMBER>{};
-	static auto constexpr DIFFICULTY = PatternGenerator<Instruction::DIFFICULTY>{};
+	static auto constexpr PREVRANDAO = PatternGenerator<Instruction::PREVRANDAO>{};
 	static auto constexpr GASLIMIT = PatternGenerator<Instruction::GASLIMIT>{};
 	static auto constexpr CHAINID = PatternGenerator<Instruction::CHAINID>{};
 	static auto constexpr SELFBALANCE = PatternGenerator<Instruction::SELFBALANCE>{};

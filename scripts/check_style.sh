@@ -5,9 +5,10 @@ set -eu
 ERROR_LOG="$(mktemp -t check_style_XXXXXX.log)"
 
 EXCLUDE_FILES=(
+    # The line below is left unquoted to allow the shell globbing path expansion
+    test/cmdlineTests/*/{err,output}
     "libsolutil/picosha2.h"
     "test/cmdlineTests/strict_asm_only_cr/input.yul"
-    "test/cmdlineTests/strict_asm_only_cr/err"
     "test/libsolutil/UTF8.cpp"
     "test/libsolidity/syntaxTests/license/license_cr_endings.sol"
     "test/libsolidity/syntaxTests/license/license_crlf_endings.sol"
