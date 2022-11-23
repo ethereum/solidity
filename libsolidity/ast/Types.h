@@ -221,6 +221,15 @@ public:
 	virtual bool operator==(Type const& _other) const { return category() == _other.category(); }
 	virtual bool operator!=(Type const& _other) const { return !this->operator ==(_other); }
 
+	/// Compares types, accepting both exact matches and pointers. The comparison is not
+	/// symmetric, i.e.. the type may be a pointer to the target type but not the other way around.
+	/// You can think of the target as the left-hand side of an assignment - you can assign a value
+	/// to a pointer (without making a copy) but not a pointer to a value.
+	/// @param _excludeLocation Compare reference types as if both had identical locations.
+	/// @returns true if both types are equal or the object is a reference type that can point at
+	/// values of @a _targetType.
+	bool sameTypeOrPointerTo(Type const& _targetType, bool _excludeLocation = false) const;
+
 	/// @returns number of bytes used by this type when encoded for CALL. Cannot be used for
 	/// dynamically encoded types.
 	/// Always returns a value greater than zero and throws if the type cannot be encoded in calldata

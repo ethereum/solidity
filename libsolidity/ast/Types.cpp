@@ -282,6 +282,30 @@ string Type::identifier() const
 	return ret;
 }
 
+bool Type::sameTypeOrPointerTo(Type const& _targetType, bool _excludeLocation) const
+{
+	auto const* thisAsReference = dynamic_cast<ReferenceType const*>(this);
+	auto const* targetAsReference = dynamic_cast<ReferenceType const*>(&_targetType);
+
+	auto thisLocation = DataLocation::Storage;
+	auto targetLocation = DataLocation::Storage;
+	if (thisAsReference && !_excludeLocation)
+		thisLocation = thisAsReference->location();
+	if (targetAsReference && !_excludeLocation)
+		targetLocation = targetAsReference->location();
+
+	if (
+		(!targetAsReference || !targetAsReference->isPointer()) &&
+		(thisAsReference && thisAsReference->isPointer())
+	)
+		return false; // The target is a pointer to our type. We only accept the reverse.
+
+	return
+		// Compare as if both were pointers.
+		*TypeProvider::withLocationIfReference(thisLocation, this, true /* _isPointer */) ==
+		*TypeProvider::withLocationIfReference(targetLocation, &_targetType, true /* _isPointer */);
+}
+
 Type const* Type::commonType(Type const* _a, Type const* _b)
 {
 	if (!_a || !_b)
@@ -361,23 +385,19 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 				if (usingFor->global() && usingFor->typeName())
 					usingForDirectives.emplace_back(usingFor);
 
-	// Normalise data location of type.
-	DataLocation typeLocation = DataLocation::Storage;
-	if (auto refType = dynamic_cast<ReferenceType const*>(&_type))
-		typeLocation = refType->location();
-
 	return usingForDirectives | ranges::views::filter([&](UsingForDirective const* _directive) -> bool {
-		// Convert both types to pointers for comparison to see if the `using for` directive applies.
+		if (!_directive->typeName())
+			return true;
+
+		Type const& usingForType = *_directive->typeName()->annotation().type;
+		if (auto const* referenceType = dynamic_cast<ReferenceType const*>(&usingForType))
+			// NOTE: We want the type in 'using for' to represent both pointers and values.
+			// sameTypeOrPointerTo() gives us that behavior as long as usingForType.isPointer() is true.
+			solAssert(referenceType->isPointer());
+
 		// Note that at this point we don't yet know if the functions are actually usable with the type.
 		// `_type` may not be convertible to the function parameter type.
-		return
-			!_directive->typeName() ||
-			*TypeProvider::withLocationIfReference(typeLocation, &_type, true) ==
-			*TypeProvider::withLocationIfReference(
-				typeLocation,
-				_directive->typeName()->annotation().type,
-				true
-			);
+		return _type.sameTypeOrPointerTo(usingForType, true /* _excludeLocation */);
 	}) | ranges::to<vector<UsingForDirective const*>>;
 }
 
@@ -1636,7 +1656,7 @@ BoolResult ArrayType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	}
 	else
 	{
-		// Conversion to storage pointer or to memory, we de not copy element-for-element here, so
+		// Conversion to storage pointer or to memory, we do not copy element-for-element here, so
 		// require that the base type is the same, not only convertible.
 		// This disallows assignment of nested dynamic arrays from storage to memory for now.
 		if (
