@@ -33,6 +33,4 @@ contract C {
 // Warning 2072: (435-445): Unused local variable.
 // Warning 2072: (656-666): Unused local variable.
 // Warning 2072: (698-708): Unused local variable.
-// Warning 1218: (135-151): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (135-151): CHC: Assertion violation might happen here.
-// Warning 4661: (135-151): BMC: Assertion violation happens here.
+// Warning 6328: (135-151): CHC: Assertion violation happens here.

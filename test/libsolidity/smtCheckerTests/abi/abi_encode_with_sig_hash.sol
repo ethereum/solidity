@@ -13,5 +13,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (337-375): CHC: Assertion violation happens here.
-// Warning 6328: (394-432): CHC: Assertion violation happens here.
+// Warning 6328: (337-375): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\nb = 0\nb1 = [0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d]\nb2 = [0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d, 0x1d]\n\nTransaction trace:\nC.constructor()\nC.abiEncodeHash(sig, 0, 0)
+// Warning 6328: (394-432): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\nb = 0\n\nTransaction trace:\nC.constructor()\nC.abiEncodeHash(sig, 0, 0)

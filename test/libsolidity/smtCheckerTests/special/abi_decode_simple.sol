@@ -13,4 +13,4 @@ contract C {
 // Warning 2072: (82-86): Unused local variable.
 // Warning 2072: (140-150): Unused local variable.
 // Warning 2072: (152-156): Unused local variable.
-// Warning 6328: (220-236): CHC: Assertion violation happens here.
+// Warning 6328: (220-236): CHC: Assertion violation happens here.\nCounterexample:\n\na1 = 2437\nb1 = 0x0b\nc1 = 10\na2 = 2437\nb2 = 0x0b\nc2 = 10\n\nTransaction trace:\nC.constructor()\nC.f(data)

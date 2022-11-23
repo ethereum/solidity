@@ -38,10 +38,8 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unproved\" choice."));
 
 	m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
-	auto const& choice = m_reader.stringSetting("SMTSolvers", "any");
-	if (choice == "any")
-		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::All();
-	else if (choice == "none")
+	auto const& choice = m_reader.stringSetting("SMTSolvers", "z3");
+	if (choice == "none")
 		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	else if (!m_modelCheckerSettings.solvers.setSolver(choice))
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT solver choice."));
