@@ -34,7 +34,7 @@ else
     BUILD_DIR="$1"
 fi
 
-# solbuildpackpusher/solidity-buildpack-deps:emscripten-13
+# solbuildpackpusher/solidity-buildpack-deps:emscripten-14
 # NOTE: Without `safe.directory` git would assume it's not safe to operate on /root/project since it's owned by a different user.
 # See https://github.blog/2022-04-12-git-security-vulnerability-announced/
 docker run -v "$(pwd):/root/project" -w /root/project \

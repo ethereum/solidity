@@ -44,7 +44,5 @@ contract C {
 // SMTIgnoreCex: yes
 // SMTIgnoreOS: macos
 // ----
-// Warning 1218: (437-463): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (419-433): CHC: Assertion violation happens here.
-// Warning 6328: (437-463): CHC: Assertion violation might happen here.
-// Warning 4661: (437-463): BMC: Assertion violation happens here.
+// Warning 6328: (437-463): CHC: Assertion violation happens here.

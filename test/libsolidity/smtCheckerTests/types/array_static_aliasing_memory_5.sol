@@ -16,4 +16,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (385-402): CHC: Assertion violation happens here.
+// Warning 6328: (385-402): CHC: Assertion violation happens here.\nCounterexample:\n\na = [2440, 11]\nb = [1, 8]\nc = [15, 15]\n\nTransaction trace:\nC.constructor()\nC.f([2, 13], [0, 8], [42, 12])

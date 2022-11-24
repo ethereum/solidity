@@ -13,6 +13,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Warning 1218: (157-191): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (157-191): CHC: Assertion violation might happen here.
-// Warning 4661: (157-191): BMC: Assertion violation happens here.
+// Warning 6328: (157-191): CHC: Assertion violation happens here.\nCounterexample:\n\n_i = 0\nx = 101\n\nTransaction trace:\nC.constructor()\nC.g(0){ msg.value: 83 }\n    _i.f{ value: 100 }() -- untrusted external call
