@@ -4,7 +4,6 @@ on:
   pull_request_target:
     types:
       - opened
-      - reopened
 
 env:
   ORGANIZATION: Ethereum
