@@ -71,7 +71,7 @@ function print_stderr_stdout
 
 function check_import_test_type_unset
 {
-    [ -z "$IMPORT_TEST_TYPE" ] || fail "ERROR: Import test type can only be set once. Aborting."
+    [[ -z "$IMPORT_TEST_TYPE" ]] || fail "ERROR: Import test type can only be set once. Aborting."
 }
 
 IMPORT_TEST_TYPE=
