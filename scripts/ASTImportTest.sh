@@ -1,105 +1,200 @@
 #!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# vim:ts=4:et
+# This file is part of solidity.
+#
+# solidity is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# solidity is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with solidity.  If not, see <http://www.gnu.org/licenses/>
+#
+# (c) solidity contributors.
+# ------------------------------------------------------------------------------
+# Bash script to test the import/exports.
+# ast import/export tests:
+#   - first exporting a .sol file to JSON, then loading it into the compiler
+#     and exporting it again. The second JSON should be identical to the first.
 
-set -e
+set -euo pipefail
 
-# Bash script to test the ast-import option of the compiler by
-# first exporting a .sol file to JSON, then loading it into the compiler
-# and exporting it again. The second JSON should be identical to the first
 READLINK=readlink
 if [[ "$OSTYPE" == "darwin"* ]]; then
     READLINK=greadlink
 fi
 REPO_ROOT=$(${READLINK} -f "$(dirname "$0")"/..)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
-SOLC=${SOLIDITY_BUILD_DIR}/solc/solc
-SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
+SOLC="${SOLIDITY_BUILD_DIR}/solc/solc"
+SPLITSOURCES="${REPO_ROOT}/scripts/splitSources.py"
+
+# shellcheck source=scripts/common.sh
+source "${REPO_ROOT}/scripts/common.sh"
+
+function print_usage
+{
+    echo "Usage: ${0} ast [--exit-on-error|--help]."
+}
+
+function print_used_commands
+{
+    local test_directory="$1"
+    local export_command="$2"
+    local import_command="$3"
+    printError "You can find the files used for this test here: ${test_directory}"
+    printError "Used commands for test:"
+    printError "# export"
+    echo "$ ${export_command}" >&2
+    printError "# import"
+    echo "$ ${import_command}" >&2
+}
+
+function print_stderr_stdout
+{
+    local error_message="$1"
+    local stderr_file="$2"
+    local stdout_file="$3"
+    printError "$error_message"
+    printError ""
+    printError "stderr:"
+    cat "$stderr_file" >&2
+    printError ""
+    printError "stdout:"
+    cat "$stdout_file" >&2
+}
+
+function check_import_test_type_unset
+{
+    [[ -z "$IMPORT_TEST_TYPE" ]] || fail "ERROR: Import test type can only be set once. Aborting."
+}
+
+IMPORT_TEST_TYPE=
+EXIT_ON_ERROR=0
+for PARAM in "$@"
+do
+    case "$PARAM" in
+        ast) check_import_test_type_unset ; IMPORT_TEST_TYPE="ast" ;;
+        --help) print_usage ; exit 0 ;;
+        --exit-on-error) EXIT_ON_ERROR=1 ;;
+        *) fail "Unknown option '$PARAM'. Aborting. $(print_usage)" ;;
+    esac
+done
 
 SYNTAXTESTS_DIR="${REPO_ROOT}/test/libsolidity/syntaxTests"
 ASTJSONTESTS_DIR="${REPO_ROOT}/test/libsolidity/ASTJSON"
-NSOURCES="$(find "$SYNTAXTESTS_DIR" -type f | wc -l)"
-
-# DEV_DIR="${REPO_ROOT}/../tmp/contracts/"
-# NSOURCES="$(find $DEV_DIR -type f | wc -l)" #TODO use find command
 
 FAILED=0
 UNCOMPILABLE=0
 TESTED=0
 
-if [[ "$(find . -maxdepth 0 -type d -empty)" == "" ]]; then
-    echo "Test directory not empty. Skipping!"
-    exit 1
-fi
+function test_ast_import_export_equivalence
+{
+    local sol_file="$1"
+    local input_files=( "${@:2}" )
 
-# function tests whether exporting and importing again leaves the JSON ast unchanged
-# Results are recorded by adding to FAILED or UNCOMPILABLE.
-# Also, in case of a mismatch a diff and the respective ASTs are printed
+    local export_command=("$SOLC" --combined-json ast --pretty-json --json-indent 4 "${input_files[@]}")
+    local import_command=("$SOLC" --import-ast --combined-json ast --pretty-json --json-indent 4 expected.json)
+
+    # export ast - save ast json as expected result (silently)
+    if ! "${export_command[@]}" > expected.json 2> stderr_export.txt
+    then
+        print_stderr_stdout "ERROR: AST reimport failed (export) for input file ${sol_file}." ./stderr_export.txt ./expected.json
+        print_used_commands "$(pwd)" "${export_command[*]} > expected.json" "${import_command[*]}"
+        return 1
+    fi
+
+    # (re)import ast - and export it again as obtained result (silently)
+    if ! "${import_command[@]}" > obtained.json 2> stderr_import.txt
+    then
+        print_stderr_stdout "ERROR: AST reimport failed (import) for input file ${sol_file}." ./stderr_import.txt ./obtained.json
+        print_used_commands "$(pwd)" "${export_command[*]} > expected.json" "${import_command[*]}"
+        return 1
+    fi
+
+    # compare expected and obtained ASTs
+    if ! diff_files expected.json obtained.json
+    then
+        printError "ERROR: AST reimport failed for ${sol_file}"
+        if (( EXIT_ON_ERROR == 1 ))
+        then
+            print_used_commands "$(pwd)" "${export_command[*]}" "${import_command[*]}"
+            return 1
+        fi
+        FAILED=$((FAILED + 1))
+    fi
+    TESTED=$((TESTED + 1))
+}
+
+# function tests whether exporting and importing again is equivalent.
+# Results are recorded by incrementing the FAILED or UNCOMPILABLE global variable.
+# Also, in case of a mismatch a diff is printed
 # Expected parameters:
 # $1 name of the file to be exported and imported
 # $2 any files needed to do so that might be in parent directories
-function testImportExportEquivalence {
-    local nth_input_file="$1"
-    IFS=" " read -r -a all_input_files <<< "$2"
+function test_import_export_equivalence {
+    local sol_file="$1"
+    local input_files=( "${@:2}" )
+    local output
+    local solc_return_code
+    local compile_test
 
-    if $SOLC "$nth_input_file" "${all_input_files[@]}" > /dev/null 2>&1
+    case "$IMPORT_TEST_TYPE" in
+        ast) compile_test="--ast-compact-json" ;;
+        *) assertFail "Unknown import test type '${IMPORT_TEST_TYPE}'. Aborting." ;;
+    esac
+
+    set +e
+    output=$("$SOLC" "${compile_test}" "${input_files[@]}" 2>&1)
+    solc_return_code=$?
+    set -e
+
+    # if input files where compilable with success
+    if (( solc_return_code == 0 ))
     then
-        ! [[ -e stderr.txt ]] || { echo "stderr.txt already exists. Refusing to overwrite."; exit 1; }
-
-        # save exported json as expected result (silently)
-        $SOLC --combined-json ast --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> /dev/null
-        # import it, and export it again as obtained result (silently)
-        if ! $SOLC --import-ast --combined-json ast --pretty-json expected.json > obtained.json 2> stderr.txt
-        then
-            # For investigating, use exit 1 here so the script stops at the
-            # first failing test
-            # exit 1
-            FAILED=$((FAILED + 1))
-            echo -e "ERROR: AST reimport failed for input file $nth_input_file"
-            echo
-            echo "Compiler stderr:"
-            cat ./stderr.txt
-            echo
-            echo "Compiler stdout:"
-            cat ./obtained.json
-            return 1
-        fi
-        DIFF="$(diff expected.json obtained.json)"
-        if [ "$DIFF" != "" ]
-        then
-            if [ "$DIFFVIEW" == "" ]
-            then
-                echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
-                echo "Expected:"
-                cat ./expected.json
-                echo "Obtained:"
-                cat ./obtained.json
-            else
-                # Use user supplied diff view binary
-                $DIFFVIEW expected.json obtained.json
-            fi
-            FAILED=$((FAILED + 1))
-            return 2
-        fi
-        TESTED=$((TESTED + 1))
-        rm expected.json obtained.json
-        rm -f stderr.txt
+        case "$IMPORT_TEST_TYPE" in
+            ast) test_ast_import_export_equivalence "${sol_file}" "${input_files[@]}" ;;
+            *) assertFail "Unknown import test type '${IMPORT_TEST_TYPE}'. Aborting." ;;
+        esac
     else
-        # echo "contract $solfile could not be compiled "
         UNCOMPILABLE=$((UNCOMPILABLE + 1))
+
+        # solc will return exit code 2, if it was terminated by an uncaught exception.
+        # This should normally not happen, so we terminate the test execution here
+        # and print some details about the corresponding solc invocation.
+        if (( solc_return_code == 2 ))
+        then
+            fail "\n\nERROR: Uncaught Exception while executing '$SOLC ${compile_test} ${input_files[*]}':\n${output}\n"
+        fi
     fi
-    # return 0
 }
-echo "Looking at $NSOURCES .sol files..."
 
 WORKINGDIR=$PWD
 
-# for solfile in $(find $DEV_DIR -name *.sol)
+command_available "$SOLC" --version
+command_available jq --version
+
+case "$IMPORT_TEST_TYPE" in
+    ast) TEST_DIRS=("${SYNTAXTESTS_DIR}" "${ASTJSONTESTS_DIR}") ;;
+    *) assertFail "Import test type not defined. $(print_usage)" ;;
+esac
+
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
 # bug. Since the test involves a malformed path, there is no point in running
-# AST tests on it. See https://github.com/boostorg/filesystem/issues/176
-# shellcheck disable=SC2044
-for solfile in $(find "$SYNTAXTESTS_DIR" "$ASTJSONTESTS_DIR" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
+# tests on it. See https://github.com/boostorg/filesystem/issues/176
+IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
+
+NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
+echo "Looking at ${NSOURCES} .sol files..."
+
+for solfile in $IMPORT_TEST_FILES
 do
-    echo -n "."
+    echo -n "·"
     # create a temporary sub-directory
     FILETMP=$(mktemp -d)
     cd "$FILETMP"
@@ -108,29 +203,25 @@ do
     OUTPUT=$("$SPLITSOURCES" "$solfile")
     SPLITSOURCES_RC=$?
     set -e
-    if [ ${SPLITSOURCES_RC} == 0 ]
+
+    if (( SPLITSOURCES_RC == 0 ))
     then
-        # echo $OUTPUT
-        NSOURCES=$((NSOURCES - 1))
-        for i in $OUTPUT;
-        do
-            testImportExportEquivalence "$i" "$OUTPUT"
-            NSOURCES=$((NSOURCES + 1))
-        done
-    elif [ ${SPLITSOURCES_RC} == 1 ]
+        IFS=' ' read -ra OUTPUT_ARRAY <<< "$OUTPUT"
+        test_import_export_equivalence "$solfile" "${OUTPUT_ARRAY[@]}"
+    elif (( SPLITSOURCES_RC == 1 ))
     then
-        testImportExportEquivalence "$solfile"
-    elif [ ${SPLITSOURCES_RC} == 2 ]
+        test_import_export_equivalence "$solfile" "$solfile"
+    elif (( SPLITSOURCES_RC == 2 ))
     then
         # The script will exit with return code 2, if an UnicodeDecodeError occurred.
         # This is the case if e.g. some tests are using invalid utf-8 sequences. We will ignore
         # these errors, but print the actual output of the script.
-        echo -e "\n${OUTPUT}\n"
-        testImportExportEquivalence "$solfile"
+        printError "\n\n${OUTPUT}\n\n"
+        test_import_export_equivalence "$solfile" "$solfile"
     else
         # All other return codes will be treated as critical errors. The script will exit.
-        echo -e "\nGot unexpected return code ${SPLITSOURCES_RC} from ${SPLITSOURCES}. Aborting."
-        echo -e "\n${OUTPUT}\n"
+        printError "\n\nGot unexpected return code ${SPLITSOURCES_RC} from '${SPLITSOURCES} ${solfile}'. Aborting."
+        printError "\n\n${OUTPUT}\n\n"
 
         cd "$WORKINGDIR"
         # Delete temporary files
@@ -144,12 +235,11 @@ do
     rm -rf "$FILETMP"
 done
 
-echo ""
+echo
 
-if [ "$FAILED" = 0 ]
+if (( FAILED == 0 ))
 then
-    echo "SUCCESS: $TESTED syntaxTests passed, $FAILED failed, $UNCOMPILABLE could not be compiled ($NSOURCES sources total)."
+    echo "SUCCESS: ${TESTED} tests passed, ${FAILED} failed, ${UNCOMPILABLE} could not be compiled (${NSOURCES} sources total)."
 else
-    echo "FAILURE: Out of $NSOURCES sources, $FAILED failed, ($UNCOMPILABLE could not be compiled)."
-    exit 1
+    fail "FAILURE: Out of ${NSOURCES} sources, ${FAILED} failed, (${UNCOMPILABLE} could not be compiled)."
 fi
