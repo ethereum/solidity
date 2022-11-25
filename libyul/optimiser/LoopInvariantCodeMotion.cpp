@@ -71,7 +71,7 @@ bool LoopInvariantCodeMotion::canBePromoted(
 			return false;
 	if (_varDecl.value)
 	{
-		for (auto const& ref: ReferencesCounter::countReferences(*_varDecl.value, ReferencesCounter::OnlyVariables))
+		for (auto const& ref: VariableReferencesCounter::countReferences(*_varDecl.value))
 			if (_varsDefinedInCurrentScope.count(ref.first) || !m_ssaVariables.count(ref.first))
 				return false;
 		SideEffectsCollector sideEffects{m_dialect, *_varDecl.value, &m_functionSideEffects};
