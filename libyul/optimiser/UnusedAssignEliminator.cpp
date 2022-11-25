@@ -47,6 +47,9 @@ void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 
 	set<Statement const*> toRemove;
 	for (Statement const* unusedStore: rae.m_allStores - rae.m_usedStores)
+		// TODO this should also use user function side effects.
+		// Then we have to modify the multi-assign test (or verify that it is fine after all
+		// by adding a test where one var is used but not the other)
 		if (SideEffectsCollector{_context.dialect, *std::get<Assignment>(*unusedStore).value}.movable())
 			toRemove.insert(unusedStore);
 		else
@@ -111,8 +114,6 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 
 	if (auto const* assignment = get_if<Assignment>(&_statement))
 	{
-		// TODO is it OK to do this for multi-assignments? I guess so because it is enough if
-		// one of them is used.
 		m_allStores.insert(&_statement);
 		for (auto const& var: assignment->variableNames)
 			m_activeStores[var.name] = {&_statement};

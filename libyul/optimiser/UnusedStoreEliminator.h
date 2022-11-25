@@ -70,57 +70,58 @@ public:
 		bool// _ignoreMemory
 	):
 		UnusedStoreBase(_dialect)//,
-//		m_ignoreMemory(_ignoreMemory),
-//		m_functionSideEffects(_functionSideEffects),
-//		m_controlFlowSideEffects(_controlFlowSideEffects),
-//		m_ssaValues(_ssaValues)
+		m_ignoreMemory(_ignoreMemory),
+		m_functionSideEffects(_functionSideEffects),
+		m_controlFlowSideEffects(_controlFlowSideEffects),
+		m_ssaValues(_ssaValues)
 	{}
 
-//	using UnusedStoreBase::operator();
-//	void operator()(FunctionCall const& _functionCall) override;
-//	void operator()(FunctionDefinition const&) override;
-//	void operator()(Leave const&) override;
+	using UnusedStoreBase::operator();
+	void operator()(FunctionCall const& _functionCall) override;
+	void operator()(FunctionDefinition const&) override;
+	void operator()(Leave const&) override;
 
-//	using UnusedStoreBase::visit;
-//	void visit(Statement const& _statement) override;
+	using UnusedStoreBase::visit;
+	void visit(Statement const& _statement) override;
 
-//	using Location = evmasm::SemanticInformation::Location;
-//	using Effect = evmasm::SemanticInformation::Effect;
-//	struct Operation
-//	{
-//		Location location;
-//		Effect effect;
-//		/// Start of affected area. Unknown if not provided.
-//		std::optional<YulString> start;
-//		/// Length of affected area, unknown if not provided.
-//		/// Unused for storage.
-//		std::optional<YulString> length;
-//	};
+	using Location = evmasm::SemanticInformation::Location;
+	using Effect = evmasm::SemanticInformation::Effect;
+	struct Operation
+	{
+		Location location;
+		Effect effect;
+		/// Start of affected area. Unknown if not provided.
+		std::optional<YulString> start;
+		/// Length of affected area, unknown if not provided.
+		/// Unused for storage.
+		std::optional<YulString> length;
+	};
 
 private:
 	void shortcutNestedLoop(ActiveStores const&) override
 	{
 		// We might only need to do this for newly introduced stores in the loop.
-//		changeUndecidedTo(State::Used);
+		changeUndecidedTo(State::Used);
 	}
-//	void finalizeFunctionDefinition(FunctionDefinition const&) override;
+	void finalizeFunctionDefinition(FunctionDefinition const&) override;
 
-//	std::vector<Operation> operationsFromFunctionCall(FunctionCall const& _functionCall) const;
-//	void applyOperation(Operation const& _operation);
-//	bool knownUnrelated(Operation const& _op1, Operation const& _op2) const;
-//	bool knownCovered(Operation const& _covered, Operation const& _covering) const;
+	std::vector<Operation> operationsFromFunctionCall(FunctionCall const& _functionCall) const;
+	void applyOperation(Operation const& _operation);
+	bool knownUnrelated(Operation const& _op1, Operation const& _op2) const;
+	bool knownCovered(Operation const& _covered, Operation const& _covering) const;
 
-//	void changeUndecidedTo(State _newState, std::optional<Location> _onlyLocation = std::nullopt);
-//	void scheduleUnusedForDeletion();
+	void markActiveAsUsed(std::optional<Location> _onlyLocation = std::nullopt);
+	void clearActive(std::optional<Location> _onlyLocation = std::nullopt);
+	void scheduleUnusedForDeletion();
 
-//	std::optional<YulString> identifierNameIfSSA(Expression const& _expression) const;
+	std::optional<YulString> identifierNameIfSSA(Expression const& _expression) const;
 
-//	bool const m_ignoreMemory;
-//	std::map<YulString, SideEffects> const& m_functionSideEffects;
-//	std::map<YulString, ControlFlowSideEffects> m_controlFlowSideEffects;
-//	std::map<YulString, AssignedValue> const& m_ssaValues;
+	bool const m_ignoreMemory;
+	std::map<YulString, SideEffects> const& m_functionSideEffects;
+	std::map<YulString, ControlFlowSideEffects> m_controlFlowSideEffects;
+	std::map<YulString, AssignedValue> const& m_ssaValues;
 
-//	std::map<Statement const*, Operation> m_storeOperations;
+	std::map<Statement const*, Operation> m_storeOperations;
 };
 
 }
