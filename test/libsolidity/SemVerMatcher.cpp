@@ -27,6 +27,7 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
 #include <test/Common.h>
+#include <test/libsolidity/util/SoltestErrors.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -58,15 +59,39 @@ SemVerMatchExpression parseExpression(string const& _input)
 		scanner.next();
 	}
 
-	auto expression = SemVerMatchExpressionParser(tokens, literals).parse();
-	BOOST_REQUIRE(expression.has_value());
-	BOOST_CHECK_MESSAGE(
-		expression->isValid(),
-		"Expression \"" + _input + "\" did not parse properly."
-	);
-	return *expression;
+	try
+	{
+		auto matchExpression = SemVerMatchExpressionParser(tokens, literals).parse();
+
+		BOOST_CHECK_MESSAGE(
+			matchExpression.isValid(),
+			"Expression \"" + _input + "\" did not parse properly."
+		);
+
+		return matchExpression;
+	}
+	catch (SemVerError const&)
+	{
+		// Ignored, since a test case should have a parsable version
+		soltestAssert(false);
+	}
 }
 
+}
+
+BOOST_AUTO_TEST_CASE(exception_on_invalid_version_in_semverversion_constructor)
+{
+	BOOST_CHECK_EXCEPTION(
+		SemVerVersion version("1.2"),
+		SemVerError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == "Invalid versionString: 1.2"); return true; }
+	);
+
+	BOOST_CHECK_EXCEPTION(
+		SemVerVersion version("-1.2.0"),
+		SemVerError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == "Invalid versionString: -1.2.0"); return true; }
+	);
 }
 
 BOOST_AUTO_TEST_CASE(positive_range)
@@ -159,9 +184,9 @@ BOOST_AUTO_TEST_CASE(positive_range)
 	for (auto const& t: tests)
 	{
 		SemVerVersion version(t.second);
-		SemVerMatchExpression expression = parseExpression(t.first);
+		SemVerMatchExpression matchExpression = parseExpression(t.first);
 		BOOST_CHECK_MESSAGE(
-			expression.matches(version),
+			matchExpression.matches(version),
 			"Version \"" + t.second + "\" did not satisfy expression \"" + t.first + "\""
 		);
 	}
@@ -235,9 +260,9 @@ BOOST_AUTO_TEST_CASE(negative_range)
 	for (auto const& t: tests)
 	{
 		SemVerVersion version(t.second);
-		SemVerMatchExpression expression = parseExpression(t.first);
+		auto matchExpression = parseExpression(t.first);
 		BOOST_CHECK_MESSAGE(
-			!expression.matches(version),
+			!matchExpression.matches(version),
 			"Version \"" + t.second + "\" did satisfy expression \"" + t.first + "\" " +
 			"(although it should not)"
 		);
