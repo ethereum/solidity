@@ -1,4 +1,4 @@
-name: Check stale issues
+name: Ping and close stale issues
 
 on:
   workflow_dispatch: # FIXME: remove
@@ -6,8 +6,8 @@ on:
     - cron: '0 12 * * *'
 
 env:
-  PERIOD: 14 # in days
-  WAIT_FOR_INFO: "waiting for more input"
+  INACTIVITY_PERIOD: 14 # in days
+  WAIT_FOR_INFO_LABEL: "waiting for more input"
   DRY_RUN: true
 
 jobs:
@@ -16,12 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Get inactive open issues
         id: stale_issues
         uses: ./.github/actions/stale_issues
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          period: ${{ env.PERIOD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          inactivity_period: ${{ env.INACTIVITY_PERIOD }}
+
       - name: Comment on found issues
         if: ${{ success() }}
         env:
@@ -29,10 +31,12 @@ jobs:
         run: |
           for issue_url in ${{ steps.stale_issues.outputs.result }}; do
             # Filter stale issues that were triaged and are not waiting for more information
-            stale_triaged=$(gh issue view $issue_url \
-                                    --json labels \
-                                    --jq '.labels | map(.name != "$WAIT_FOR_INFO") | all and length > 0')
-            if [[ $stale_triaged == 'true' ]]; then
+            is_stale=$(
+              gh issue view $issue_url \
+                --json labels \
+                --jq '.labels | map(.name != "$WAIT_FOR_INFO_LABEL") | all and length > 0'
+              )
+            if [[ $is_stale == 'true' ]]; then
               if [[ $DRY_RUN == 'true' ]]; then
                 echo "Commenting on issue: $issue_url"
               else

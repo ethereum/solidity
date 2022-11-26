@@ -1,15 +1,16 @@
 name: Query issues using GraphQL API
 inputs:
-  token:
-    description: 'The GITHUB_TOKEN secret'
+  github_token:
+    description: 'GitHub API token'
     required: true
-  query:
-    description: "The GraphQL search query to be executed"
+  filter:
+    # Filter syntax: https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests
+    description: "The search filter for issues."
     required: true
     type: string
 outputs:
   query_result:
-    description: "The result of the query"
+    description: "The result of the query (JSON)"
     value: ${{ steps.get_issues.outputs.query_result }}
 
 runs:
@@ -18,23 +19,25 @@ runs:
     - id: get_issues
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GH_TOKEN: ${{ inputs.github_token }}
       run: |
-        result="$(gh api graphql \
-          --field search_query="${{ inputs.query }}" \
-          --raw-field query='
-            query($search_query: String!, $cursor: String) {
-              search(first: 100, query: $search_query, type: ISSUE, after: $cursor) {
-                pageInfo {
-                  hasNextPage,
-                  endCursor
-                }
-                nodes {
-                  ... on Issue {
-                    title
-                    url
+        result="$(
+          gh api graphql \
+            --field search_query="${{ inputs.query }}" \
+            --raw-field query='
+              query($search_query: String!, $cursor: String) {
+                search(first: 100, query: $search_query, type: ISSUE, after: $cursor) {
+                  pageInfo {
+                    hasNextPage,
+                    endCursor
+                  }
+                  nodes {
+                    ... on Issue {
+                      title
+                      url
+                    }
                   }
                 }
-              }
-            }')"
+              }'
+            )"
         echo "query_result=$result" >> $GITHUB_OUTPUT
