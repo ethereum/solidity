@@ -25,7 +25,6 @@ jobs:
           inactivity_period: ${{ env.INACTIVITY_PERIOD }}
 
       - name: Comment on found issues
-        if: ${{ success() }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

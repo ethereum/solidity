@@ -29,7 +29,6 @@ runs:
 
     - name: Get inactive open issues
       id: stale_issues
-      if: ${{ success() }}
       uses: ethereum/solidity/.github/actions/query_issues@develop
       with:
         github_token: ${{ inputs.github_token }}
@@ -37,7 +36,6 @@ runs:
 
     - name: Collect query result
       id: found_issues
-      if: ${{ success() }}
       shell: bash
       run: |
         filter_result=$(
