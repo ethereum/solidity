@@ -6,24 +6,16 @@
 抽象合约
 ******************
 
-<<<<<<< HEAD
-当合约中至少有一个功能没有被实现时，需要将其标记为抽象的。
-即使所有的功能都实现了，合约也可以被标记为抽象的。
+当合约中至少有一个函数没有被实现，或者合约没有为其所有的基本合约构造函数提供参数时，
+合约必须被标记为 abstract。
+即使不是这种情况，合约仍然可以被标记为 abstract，
+例如，当您不打算直接创建合约时。
+抽象（abstract）合约类似于 :ref:`interface`，
+但是接口（interface）合约可以声明的内容更加有限。
 
-这可以通过使用 ``abstract`` 关键字来实现，如下例所示。
-注意，这个合约需要被定义为抽象的，因为定义了函数 ``utterance()``，
+如下例所示，使用 ``abstract`` 关键字来声明一个抽象合约。
+注意，这个合约需要被定义为 abstract，因为函数 ``utterance()`` 被声明了，
 但没有提供实现（没有给出实现体 ``{ }``）。
-=======
-Contracts must be marked as abstract when at least one of their functions is not implemented or when
-they do not provide arguments for all of their base contract constructors.
-Even if this is not the case, a contract may still be marked abstract, such as when you do not intend
-for the contract to be created directly. Abstract contracts are similar to :ref:`interfaces` but an
-interface is more limited in what it can declare.
-
-An abstract contract is declared using the ``abstract`` keyword as shown in the following example.
-Note that this contract needs to be defined as abstract, because the function ``utterance()`` is declared,
-but no implementation was provided (no implementation body ``{ }`` was given).
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. code-block:: solidity
 
