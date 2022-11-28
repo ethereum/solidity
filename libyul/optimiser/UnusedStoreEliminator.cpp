@@ -253,27 +253,29 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 
 void UnusedStoreEliminator::applyOperation(UnusedStoreEliminator::Operation const& _operation)
 {
-	set<Statement const*> toRemove;
 	set<Statement const*>& active =
 		_operation.location == Location::Storage ?
 		activeStorageStores() :
 		activeMemoryStores();
 
-	// TODO this loop could be done more efficiently - removing while iterating.
-	for (Statement const* statement: active)
+	auto it = active.begin();
+	auto end = active.end();
+	for (; it != end;)
 	{
+		Statement const* statement = *it;
 		Operation const& storeOperation = m_storeOperations.at(statement);
 		if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
 		{
 			// This store is read from, mark it as used and remove it from the active set.
 			m_usedStores.insert(statement);
-			toRemove.insert(statement);
+			it = active.erase(it);
 		}
 		else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
 			// This store is overwritten before being read, remove it from the active set.
-			toRemove.insert(statement);
+			it = active.erase(it);
+		else
+			++it;
 	}
-	active -= toRemove;
 }
 
 bool UnusedStoreEliminator::knownUnrelated(
