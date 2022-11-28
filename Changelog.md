@@ -25,6 +25,7 @@ Bugfixes:
  * SMTChecker: Improved readability for large integers that are powers of two or almost powers of two in error messages.
  * SMTChecker: Fix internal error when a public library function is called internally.
  * SMTChecker: Fix internal error on multiple wrong SMTChecker natspec entries.
+ * SMTChecker: Fix internal error on chain assignments using static fully specified state variables.
 
 
 ### 0.8.17 (2022-09-08)

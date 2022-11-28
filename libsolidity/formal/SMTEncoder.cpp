@@ -2757,7 +2757,9 @@ VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _e
 		}
 	// But we are interested in "contract.var", because that is the same as just "var".
 	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expr))
-		if (dynamic_cast<ContractDefinition const*>(expressionToDeclaration(memberAccess->expression())))
+		if (dynamic_cast<ContractDefinition const*>(expressionToDeclaration(
+			*cleanExpression(memberAccess->expression())
+		)))
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration))
 			{
 				solAssert(m_context.knownVariable(*varDecl), "");
