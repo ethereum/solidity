@@ -1102,14 +1102,18 @@ set<CHC::CHCNatspecOption> CHC::smtNatspecTags(FunctionDefinition const& _functi
 {
 	set<CHC::CHCNatspecOption> options;
 	string smtStr = "custom:smtchecker";
+	bool errorSeen = false;
 	for (auto const& [tag, value]: _function.annotation().docTags)
 		if (tag == smtStr)
 		{
 			string const& content = value.content;
 			if (auto option = natspecOptionFromString(content))
 				options.insert(*option);
-			else
+			else if (!errorSeen)
+			{
+				errorSeen = true;
 				m_errorReporter.warning(3130_error, _function.location(), "Unknown option for \"" + smtStr + "\": \"" + content + "\"");
+			}
 		}
 	return options;
 }
