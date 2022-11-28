@@ -1172,7 +1172,14 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 
 				m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
 
-				if (!function->isConstructor() && function->isPublic() && resolved.count(function))
+				if (
+					!function->isConstructor() &&
+					function->isPublic() &&
+					// Public library functions should have interfaces only for the libraries
+					// they're declared in.
+					(!function->libraryFunction() || (function->scope() == contract)) &&
+					resolved.count(function)
+				)
 				{
 					m_externalSummaries[contract].emplace(function, createSummaryBlock(*function, *contract));
 

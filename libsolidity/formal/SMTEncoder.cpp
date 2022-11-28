@@ -3162,11 +3162,10 @@ void SMTEncoder::collectFreeFunctions(set<SourceUnit const*, ASTNode::CompareByI
 				auto contract = dynamic_cast<ContractDefinition const*>(node.get());
 				contract && contract->isLibrary()
 			)
-			{
 				for (auto function: contract->definedFunctions())
-					if (!function->isPublic())
-						m_freeFunctions.insert(function);
-			}
+					// We need to add public library functions too because they can be called
+					// internally by internal library functions that are considered free functions.
+					m_freeFunctions.insert(function);
 }
 
 void SMTEncoder::createFreeConstants(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)

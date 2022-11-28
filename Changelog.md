@@ -23,6 +23,7 @@ Bugfixes:
  * Solidity Upgrade Tool ``solidity-upgrade``: Fix the tool returning success code on uncaught exceptions.
  * SMTChecker: Fix display error for negative integers that are one more than powers of two.
  * SMTChecker: Improved readability for large integers that are powers of two or almost powers of two in error messages.
+ * SMTChecker: Fix internal error when a public library function is called internally.
 
 
 ### 0.8.17 (2022-09-08)
