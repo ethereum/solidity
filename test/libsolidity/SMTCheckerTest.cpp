@@ -29,6 +29,10 @@ using namespace solidity::frontend::test;
 
 SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, EVMVersion{})
 {
+	auto contract = m_reader.stringSetting("SMTContract", "");
+	if (!contract.empty())
+		m_modelCheckerSettings.contracts.contracts[""] = {contract};
+
 	auto const& showUnproved = m_reader.stringSetting("SMTShowUnproved", "yes");
 	if (showUnproved == "no")
 		m_modelCheckerSettings.showUnproved = false;
