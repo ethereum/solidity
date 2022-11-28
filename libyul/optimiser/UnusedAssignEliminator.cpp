@@ -45,9 +45,9 @@ void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	UnusedAssignEliminator rae{_context.dialect};
 	rae(_ast);
 
-	rae.m_storesToRemove += move(rae.m_potentiallyUnusedStores);
+	rae.m_storesToRemove += rae.m_allStores - rae.m_usedStores;
 
-	StatementRemover remover{rae.m_storesToRemove};
+	StatementRemover remover{std::set<Statement const*>{rae.m_storesToRemove.begin(), rae.m_storesToRemove.end()}};
 	remover(_ast);
 }
 
@@ -101,7 +101,7 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 		// by adding a test where one var is used but not the other)
 		if (SideEffectsCollector{m_dialect, *assignment->value}.movable())
 		{
-			m_potentiallyUnusedStores.insert(&_statement);
+			m_allStores.insert(&_statement);
 			for (auto const& var: assignment->variableNames)
 				m_activeStores[var.name] = {&_statement};
 		}
@@ -135,7 +135,7 @@ void UnusedAssignEliminator::shortcutNestedLoop(ActiveStores const& _zeroRuns)
 			auto zeroIt = _zeroRuns.find(variable);
 			if (zeroIt != _zeroRuns.end() && zeroIt->second.count(assignment))
 				continue;
-			m_potentiallyUnusedStores.erase(assignment);
+			m_usedStores.insert(assignment);
 		}
 }
 
@@ -148,6 +148,6 @@ void UnusedAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const
 void UnusedAssignEliminator::markUsed(YulString _variable)
 {
 	for (auto& assignment: m_activeStores[_variable])
-		m_potentiallyUnusedStores.erase(assignment);
+		m_usedStores.insert(assignment);
 	m_activeStores.erase(_variable);
 }

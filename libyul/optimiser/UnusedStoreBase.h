@@ -74,11 +74,12 @@ protected:
 	static void merge(ActiveStores& _target, std::vector<ActiveStores>&& _source);
 
 	Dialect const& m_dialect;
-	/// Set of stores that unused. Once a store is deemed used, it is removed from here.
-	std::set<Statement const*> m_potentiallyUnusedStores;
-	/// Statements are moved from m_potentiallUnusedStores to m_storesToRemove at the
-	/// end of each function.
-	std::set<Statement const*> m_storesToRemove;
+	/// Set of all stores encountered during the traversal (in the current function).
+	std::set<Statement const*> m_allStores;
+	/// Set of stores that are marked as being used (in the current function).
+	std::set<Statement const*> m_usedStores;
+	/// List of stores that can be removed (globally).
+	std::vector<Statement const*> m_storesToRemove;
 	/// Active (undecided) stores in the current branch.
 	ActiveStores m_activeStores;
 
