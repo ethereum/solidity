@@ -85,8 +85,9 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	else
 		rse.markActiveAsUsed(Location::Memory);
 	rse.markActiveAsUsed(Location::Storage);
+	rse.m_storesToRemove += move(rse.m_potentiallyUnusedStores);
 
-	StatementRemover remover{rse.m_allStores - rse.m_usedStores};
+	StatementRemover remover{rse.m_storesToRemove};
 	remover(_ast);
 }
 
@@ -190,7 +191,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 			if (!allowReturndatacopyToBeRemoved)
 				return;
 		}
-		m_allStores.insert(&_statement);
+		m_potentiallyUnusedStores.insert(&_statement);
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
 		if (operations.front().location == Location::Storage)
@@ -267,7 +268,7 @@ void UnusedStoreEliminator::applyOperation(UnusedStoreEliminator::Operation cons
 		if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
 		{
 			// This store is read from, mark it as used and remove it from the active set.
-			m_usedStores.insert(statement);
+			m_potentiallyUnusedStores.erase(statement);
 			it = active.erase(it);
 		}
 		else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
@@ -402,10 +403,10 @@ void UnusedStoreEliminator::markActiveAsUsed(
 {
 	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
 		for (Statement const* statement: activeMemoryStores())
-			m_usedStores.insert(statement);
+			m_potentiallyUnusedStores.erase(statement);
 	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
 		for (Statement const* statement: activeStorageStores())
-			m_usedStores.insert(statement);
+			m_potentiallyUnusedStores.erase(statement);
 	clearActive(_onlyLocation);
 }
 

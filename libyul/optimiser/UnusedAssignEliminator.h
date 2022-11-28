@@ -116,7 +116,6 @@ public:
 	explicit UnusedAssignEliminator(Dialect const& _dialect): UnusedStoreBase(_dialect) {}
 
 	void operator()(Identifier const& _identifier) override;
-	void operator()(VariableDeclaration const& _variableDeclaration) override;
 	void operator()(Assignment const& _assignment) override;
 	void operator()(FunctionDefinition const&) override;
 	void operator()(Leave const&) override;
@@ -131,7 +130,6 @@ private:
 
 	void markUsed(YulString _variable);
 
-	std::set<YulString> m_declaredVariables;
 	std::set<YulString> m_returnVariables;
 };
 

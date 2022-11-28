@@ -45,31 +45,15 @@ void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	UnusedAssignEliminator rae{_context.dialect};
 	rae(_ast);
 
-	set<Statement const*> toRemove;
-	for (Statement const* unusedStore: rae.m_allStores - rae.m_usedStores)
-		// TODO this should also use user function side effects.
-		// Then we have to modify the multi-assign test (or verify that it is fine after all
-		// by adding a test where one var is used but not the other)
-		if (SideEffectsCollector{_context.dialect, *std::get<Assignment>(*unusedStore).value}.movable())
-			toRemove.insert(unusedStore);
-		else
-			cerr << "not used because not movable" << endl;
+	rae.m_storesToRemove += move(rae.m_potentiallyUnusedStores);
 
-	StatementRemover remover{toRemove};
+	StatementRemover remover{rae.m_storesToRemove};
 	remover(_ast);
 }
 
 void UnusedAssignEliminator::operator()(Identifier const& _identifier)
 {
 	markUsed(_identifier.name);
-}
-
-void UnusedAssignEliminator::operator()(VariableDeclaration const& _variableDeclaration)
-{
-	UnusedStoreBase::operator()(_variableDeclaration);
-
-	for (auto const& var: _variableDeclaration.variables)
-		m_declaredVariables.emplace(var.name);
 }
 
 void UnusedAssignEliminator::operator()(Assignment const& _assignment)
@@ -81,7 +65,6 @@ void UnusedAssignEliminator::operator()(Assignment const& _assignment)
 
 void UnusedAssignEliminator::operator()(FunctionDefinition const& _functionDefinition)
 {
-	ScopedSaveAndRestore outerDeclaredVariables(m_declaredVariables, {});
 	ScopedSaveAndRestore outerReturnVariables(m_returnVariables, {});
 
 	for (auto const& retParam: _functionDefinition.returnVariables)
@@ -98,10 +81,9 @@ void UnusedAssignEliminator::operator()(Leave const&)
 
 void UnusedAssignEliminator::operator()(Block const& _block)
 {
-	ScopedSaveAndRestore outerDeclaredVariables(m_declaredVariables, {});
-
 	UnusedStoreBase::operator()(_block);
 
+	// TODO we could also move some statements from "potentially" to "toRemove".
 	for (auto const& statement: _block.statements)
 		if (auto const* varDecl = get_if<VariableDeclaration>(&statement))
 			for (auto const& var: varDecl->variables)
@@ -114,9 +96,18 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 
 	if (auto const* assignment = get_if<Assignment>(&_statement))
 	{
-		m_allStores.insert(&_statement);
-		for (auto const& var: assignment->variableNames)
-			m_activeStores[var.name] = {&_statement};
+		// TODO this should also use user function side effects.
+		// Then we have to modify the multi-assign test (or verify that it is fine after all
+		// by adding a test where one var is used but not the other)
+		if (SideEffectsCollector{m_dialect, *assignment->value}.movable())
+		{
+			m_potentiallyUnusedStores.insert(&_statement);
+			for (auto const& var: assignment->variableNames)
+				m_activeStores[var.name] = {&_statement};
+		}
+		else
+			for (auto const& var: assignment->variableNames)
+				m_activeStores[var.name].clear();
 	}
 
 //	cerr << "After " << std::visit(AsmPrinter{}, _statement) << endl;
@@ -144,7 +135,7 @@ void UnusedAssignEliminator::shortcutNestedLoop(ActiveStores const& _zeroRuns)
 			auto zeroIt = _zeroRuns.find(variable);
 			if (zeroIt != _zeroRuns.end() && zeroIt->second.count(assignment))
 				continue;
-			m_usedStores.insert(assignment);
+			m_potentiallyUnusedStores.erase(assignment);
 		}
 }
 
@@ -157,7 +148,6 @@ void UnusedAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const
 void UnusedAssignEliminator::markUsed(YulString _variable)
 {
 	for (auto& assignment: m_activeStores[_variable])
-		m_usedStores.insert(assignment);
-	// TODO is this correct?
+		m_potentiallyUnusedStores.erase(assignment);
 	m_activeStores.erase(_variable);
 }
