@@ -78,12 +78,10 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 		ignoreMemory
 	};
 	rse(_ast);
-	if (
-		auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
-		evmDialect && evmDialect->providesObjectAccess()
-	)
-	{
-	}
+
+	auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
+	if (evmDialect && evmDialect->providesObjectAccess())
+		rse.clearActive(Location::Memory);
 	else
 		rse.markActiveAsUsed(Location::Memory);
 	rse.markActiveAsUsed(Location::Storage);
@@ -168,25 +166,30 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	yulAssert(isCandidateForRemoval == (isStorageWrite || (!m_ignoreMemory && isMemoryWrite)));
 	if (isCandidateForRemoval)
 	{
-		// TODO what is this special case?
-		//State initialState = State::Undecided;
-//		if (*instruction == Instruction::RETURNDATACOPY)
-//		{
-//			initialState = State::Used;
-//			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
-//			auto length = identifierNameIfSSA(funCall->arguments.at(2));
-//			KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
-//			if (length && startOffset)
-//			{
-//				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
-//				if (
-//					knowledge.knownToBeZero(*startOffset) &&
-//					lengthCall &&
-//					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
-//				)
-//					initialState = State::Undecided;
-//			}
-//		}
+		if (*instruction == Instruction::RETURNDATACOPY)
+		{
+			// Out-of-bounds access to the returndata buffer results in a revert,
+			// so we are careful not to remove a potentially reverting call to a builtin.
+			// The only way the Solidity compiler uses `returndatacopy` is
+			// `returndatacopy(X, 0, returndatasize())`, so we only allow to remove this pattern
+			// (which is guaranteed to never cause an out-of-bounds revert).
+			bool allowReturndatacopyToBeRemoved = false;
+			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
+			auto length = identifierNameIfSSA(funCall->arguments.at(2));
+			KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
+			if (length && startOffset)
+			{
+				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
+				if (
+					knowledge.knownToBeZero(*startOffset) &&
+					lengthCall &&
+					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
+				)
+					allowReturndatacopyToBeRemoved = true;
+			}
+			if (!allowReturndatacopyToBeRemoved)
+				return;
+		}
 		m_allStores.insert(&_statement);
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
@@ -196,11 +199,6 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 			activeMemoryStores().insert(&_statement);
 		m_storeOperations[&_statement] = std::move(operations.front());
 	}
-}
-
-void UnusedStoreEliminator::finalizeFunctionDefinition(FunctionDefinition const&)
-{
-	markActiveAsUsed();
 }
 
 vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFunctionCall(

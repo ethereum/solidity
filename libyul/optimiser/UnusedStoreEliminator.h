@@ -98,14 +98,17 @@ public:
 
 private:
 	std::set<Statement const*>& activeMemoryStores() { return m_activeStores["m"_yulstring]; }
-	std::set<Statement const*>& activeStorageStores() { return m_activeStores["m"_yulstring]; }
+	std::set<Statement const*>& activeStorageStores() { return m_activeStores["s"_yulstring]; }
 
 	void shortcutNestedLoop(ActiveStores const&) override
 	{
 		// We might only need to do this for newly introduced stores in the loop.
 		markActiveAsUsed();
 	}
-	void finalizeFunctionDefinition(FunctionDefinition const&) override;
+	void finalizeFunctionDefinition(FunctionDefinition const&) override
+	{
+		markActiveAsUsed();
+	}
 
 	std::vector<Operation> operationsFromFunctionCall(FunctionCall const& _functionCall) const;
 	void applyOperation(Operation const& _operation);
