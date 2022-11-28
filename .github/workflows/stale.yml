@@ -10,7 +10,7 @@ permissions:
   pull-requests: write
 
 env:
-  BEFORE_ISSUE_STALE: 180
+  BEFORE_ISSUE_STALE: 334
   BEFORE_ISSUE_CLOSE: 0 #FIXME: change to 14 days
   BEFORE_PR_STALE: 14
   BEFORE_PR_CLOSE: 7
@@ -31,6 +31,8 @@ jobs:
             Hi everyone! This issue has been closed due to inactivity.
             If you think this issue is still relevant in the latest Solidity version and you have something to [contribute](https://docs.soliditylang.org/en/latest/contributing.html), feel free to reopen.
             However, unless the issue is a concrete proposal that can be implemented, we recommend starting a language discussion on the [forum](https://forum.soliditylang.org) instead.
+          any-of-issue-labels: stale # TODO: remove this when we're done with closing ancient issues
+          ascending: true # TODO: remove this when we're done with closing ancient issues
           stale-issue-label: stale
           close-issue-label: closed-due-inactivity
           exempt-issue-labels: 'bug :bug:,roadmap,selected-for-development,must have'
