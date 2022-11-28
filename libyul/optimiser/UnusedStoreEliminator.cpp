@@ -87,7 +87,8 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	rse.markActiveAsUsed(Location::Storage);
 	rse.m_storesToRemove += rse.m_allStores - rse.m_usedStores;
 
-	StatementRemover remover{std::set<Statement const*>{rse.m_storesToRemove.begin(), rse.m_storesToRemove.end()}};
+	set<Statement const*> toRemove{rse.m_storesToRemove.begin(), rse.m_storesToRemove.end()};
+	StatementRemover remover{toRemove};
 	remover(_ast);
 }
 

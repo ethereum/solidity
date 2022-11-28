@@ -47,7 +47,8 @@ void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 
 	rae.m_storesToRemove += rae.m_allStores - rae.m_usedStores;
 
-	StatementRemover remover{std::set<Statement const*>{rae.m_storesToRemove.begin(), rae.m_storesToRemove.end()}};
+	set<Statement const*> toRemove{rae.m_storesToRemove.begin(), rae.m_storesToRemove.end()};
+	StatementRemover remover{toRemove};
 	remover(_ast);
 }
 
