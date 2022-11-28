@@ -63,7 +63,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	if (m_modelCheckerSettings.solvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
 
-	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "no");
+	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "yes");
 	if (ignoreCex == "no")
 		m_ignoreCex = false;
 	else if (ignoreCex == "yes")
@@ -129,5 +129,8 @@ void SMTCheckerTest::filterObtainedErrors()
 	};
 
 	if (m_ignoreCex)
+	{
+		removeCex(m_expectations);
 		removeCex(m_errorList);
+	}
 }
