@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-.. index:: ! error, revert
-=======
 .. index:: ! error, revert, ! selector; of an error
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 .. _errors:
 
 *******************************
