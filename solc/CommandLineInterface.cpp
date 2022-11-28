@@ -1195,7 +1195,6 @@ void CommandLineInterface::outputCompilationResults()
 		else if (contracts.empty())
 			sout() << "Compiler run successful, no contracts to compile." << endl;
 		else if (contracts.size() > 0)
-			//if (SemVerVersion{string(solidity::frontend::VersionString)}.isPrerelease())
 			sout() << "Compiler run successful. No output requested." << endl;
 	}
 }
