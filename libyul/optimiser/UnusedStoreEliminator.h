@@ -49,8 +49,7 @@ struct AssignedValue;
  * to sstore, as we don't know whether the memory location will be read once we leave the function's scope,
  * so the statement will be removed only if all code code paths lead to a memory overwrite.
  *
- * The m_store member of UnusedStoreBase is only used with the empty yul string
- * as key in the first dimension.
+ * The m_store member of UnusedStoreBase uses the key "m" for memory ond "s" for storage stores.
  *
  * Best run in SSA form.
  *
@@ -64,12 +63,12 @@ public:
 
 	explicit UnusedStoreEliminator(
 		Dialect const& _dialect,
-		std::map<YulString, SideEffects> const& ,//_functionSideEffects,
-		std::map<YulString, ControlFlowSideEffects>,// _controlFlowSideEffects,
-		std::map<YulString, AssignedValue> const&,// _ssaValues,
-		bool// _ignoreMemory
+		std::map<YulString, SideEffects> const& _functionSideEffects,
+		std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
+		std::map<YulString, AssignedValue> const& _ssaValues,
+		bool _ignoreMemory
 	):
-		UnusedStoreBase(_dialect)//,
+		UnusedStoreBase(_dialect),
 		m_ignoreMemory(_ignoreMemory),
 		m_functionSideEffects(_functionSideEffects),
 		m_controlFlowSideEffects(_controlFlowSideEffects),
@@ -98,10 +97,13 @@ public:
 	};
 
 private:
+	std::set<Statement const*>& activeMemoryStores() { return m_activeStores["m"_yulstring]; }
+	std::set<Statement const*>& activeStorageStores() { return m_activeStores["m"_yulstring]; }
+
 	void shortcutNestedLoop(ActiveStores const&) override
 	{
 		// We might only need to do this for newly introduced stores in the loop.
-		changeUndecidedTo(State::Used);
+		markActiveAsUsed();
 	}
 	void finalizeFunctionDefinition(FunctionDefinition const&) override;
 
@@ -112,7 +114,6 @@ private:
 
 	void markActiveAsUsed(std::optional<Location> _onlyLocation = std::nullopt);
 	void clearActive(std::optional<Location> _onlyLocation = std::nullopt);
-	void scheduleUnusedForDeletion();
 
 	std::optional<YulString> identifierNameIfSSA(Expression const& _expression) const;
 

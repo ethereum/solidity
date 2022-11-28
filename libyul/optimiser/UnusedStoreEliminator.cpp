@@ -50,7 +50,7 @@ static string const one{"@ 1"};
 static string const thirtyTwo{"@ 32"};
 
 
-void UnusedStoreEliminator::run(OptimiserStepContext& /*_context*/, Block& /*_ast*/)
+void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		_context.dialect,
@@ -87,9 +87,8 @@ void UnusedStoreEliminator::run(OptimiserStepContext& /*_context*/, Block& /*_as
 	else
 		rse.markActiveAsUsed(Location::Memory);
 	rse.markActiveAsUsed(Location::Storage);
-	rse.scheduleUnusedForDeletion();
 
-	StatementRemover remover(rse.m_pendingRemovals);
+	StatementRemover remover{rse.m_allStores - rse.m_usedStores};
 	remover(_ast);
 }
 
@@ -192,9 +191,9 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
 		if (operations.front().location == Location::Storage)
-			m_activeStores["s"_yulstring].insert(&_statement);
+			activeStorageStores().insert(&_statement);
 		else
-			m_activeStores["m"_yulstring].insert(&_statement);
+			activeMemoryStores().insert(&_statement);
 		m_storeOperations[&_statement] = std::move(operations.front());
 	}
 }
@@ -202,7 +201,6 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 void UnusedStoreEliminator::finalizeFunctionDefinition(FunctionDefinition const&)
 {
 	markActiveAsUsed();
-	scheduleUnusedForDeletion();
 }
 
 vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFunctionCall(
@@ -257,31 +255,27 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 
 void UnusedStoreEliminator::applyOperation(UnusedStoreEliminator::Operation const& _operation)
 {
-	// TODO only one will be relevant, depending on _operation.location
-	for (Statement const* statement: m_activeStores["s"_yulstring])
+	set<Statement const*> toRemove;
+	set<Statement const*>& active =
+		_operation.location == Location::Storage ?
+		activeStorageStores() :
+		activeMemoryStores();
+
+	// TODO this loop could be done more efficiently - removing while iterating.
+	for (Statement const* statement: active)
 	{
 		Operation const& storeOperation = m_storeOperations.at(statement);
 		if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
-			// TODO remove from active!
-			m_usedStores.insert(statement);
-		else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
 		{
-			// TODO remove from active
-//			state = State::Unused;
-		}
-	}
-	for (Statement const* statement: m_activeStores["m"_yulstring])
-	{
-		Operation const& storeOperation = m_storeOperations.at(statement);
-		if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
-			// TODO remove from active!
+			// This store is read from, mark it as used and remove it from the active set.
 			m_usedStores.insert(statement);
-		else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
-		{
-			// TODO remove from active
-//			state = State::Unused;
+			toRemove.insert(statement);
 		}
+		else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
+			// This store is overwritten before being read, remove it from the active set.
+			toRemove.insert(statement);
 	}
+	active -= toRemove;
 }
 
 bool UnusedStoreEliminator::knownUnrelated(
@@ -403,26 +397,26 @@ bool UnusedStoreEliminator::knownCovered(
 }
 
 void UnusedStoreEliminator::markActiveAsUsed(
-	optional<UnusedStoreEliminator::Location> _onlyLocation)
+	optional<UnusedStoreEliminator::Location> _onlyLocation
+)
 {
-	// TODO it might make sense to use YulString{"m"} and YulString{"s"} for memory and storage.
-	// BUT: Could be both!
-	for (Statement const* statement: m_activeStores[YulString{}])
-		if (_onlyLocation == nullopt || *_onlyLocation == m_storeOperations.at(statement).location)
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+		for (Statement const* statement: activeMemoryStores())
 			m_usedStores.insert(statement);
-			// TODO and remove from active
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+		for (Statement const* statement: activeStorageStores())
+			m_usedStores.insert(statement);
+	clearActive(_onlyLocation);
 }
 
-void UnusedStoreEliminator::changeUndecidedTo(
-	State _newState,
-	optional<UnusedStoreEliminator::Location> _onlyLocation)
+void UnusedStoreEliminator::clearActive(
+	optional<UnusedStoreEliminator::Location> _onlyLocation
+)
 {
-	for (auto& [statement, state]: m_activeStores[YulString{}])
-		if (
-			state == State::Undecided &&
-			(_onlyLocation == nullopt || *_onlyLocation == m_storeOperations.at(statement).location)
-		)
-			state = _newState;
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+		activeMemoryStores() = {};
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+		activeStorageStores() = {};
 }
 
 optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const& _expression) const
@@ -431,11 +425,4 @@ optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const&
 		if (m_ssaValues.count(identifier->name))
 			return {identifier->name};
 	return nullopt;
-}
-
-void UnusedStoreEliminator::scheduleUnusedForDeletion()
-{
-	for (auto const& [statement, state]: m_activeStores[YulString{}])
-		if (state == State::Unused)
-			m_pendingRemovals.insert(statement);
 }
