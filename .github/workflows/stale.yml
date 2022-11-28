@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/stale@v6
         with:
-          debug-only: true
+          debug-only: false
           days-before-issue-stale: ${{ env.BEFORE_ISSUE_STALE }}
           days-before-issue-close: ${{ env.BEFORE_ISSUE_CLOSE }}
           stale-issue-message: |
