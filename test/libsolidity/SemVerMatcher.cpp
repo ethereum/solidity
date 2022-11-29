@@ -75,6 +75,9 @@ SemVerMatchExpression parseExpression(string const& _input)
 		// Ignored, since a test case should have a parsable version
 		soltestAssert(false);
 	}
+
+	// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
+	util::unreachable();
 }
 
 }
