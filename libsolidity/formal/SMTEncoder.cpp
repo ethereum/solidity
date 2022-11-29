@@ -1403,7 +1403,10 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		{
 			if (auto const* var = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 			{
-				defineExpr(_memberAccess, currentValue(*var));
+				if (var->isConstant())
+					defineExpr(_memberAccess, constantExpr(_memberAccess, *var));
+				else
+					defineExpr(_memberAccess, currentValue(*var));
 				return false;
 			}
 		}

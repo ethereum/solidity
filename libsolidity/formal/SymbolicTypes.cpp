@@ -35,6 +35,9 @@ namespace solidity::frontend::smt
 
 SortPointer smtSort(frontend::Type const& _type)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(&_type))
+		return smtSort(userType->underlyingType());
+
 	switch (smtKind(_type))
 	{
 	case Kind::Int:
@@ -194,6 +197,9 @@ vector<SortPointer> smtSortAbstractFunction(vector<frontend::Type const*> const&
 
 Kind smtKind(frontend::Type const& _type)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(&_type))
+		return smtKind(userType->underlyingType());
+
 	if (isNumber(_type))
 		return Kind::Int;
 	else if (isBool(_type))
@@ -210,6 +216,9 @@ Kind smtKind(frontend::Type const& _type)
 
 bool isSupportedType(frontend::Type const& _type)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(&_type))
+		return isSupportedType(userType->underlyingType());
+
 	return isNumber(_type) ||
 		isBool(_type) ||
 		isMapping(_type) ||
@@ -402,6 +411,9 @@ smtutil::Expression minValue(frontend::IntegerType const& _type)
 
 smtutil::Expression minValue(frontend::Type const* _type)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+		return minValue(&userType->underlyingType());
+
 	solAssert(isNumber(*_type), "");
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
 		return intType->minValue();
@@ -424,6 +436,9 @@ smtutil::Expression maxValue(frontend::IntegerType const& _type)
 
 smtutil::Expression maxValue(frontend::Type const* _type)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+		return maxValue(&userType->underlyingType());
+
 	solAssert(isNumber(*_type), "");
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
 		return intType->maxValue();
@@ -455,6 +470,10 @@ void setSymbolicZeroValue(smtutil::Expression _expr, frontend::Type const* _type
 smtutil::Expression zeroValue(frontend::Type const* _type)
 {
 	solAssert(_type, "");
+
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+		return zeroValue(&userType->underlyingType());
+
 	if (isSupportedType(*_type))
 	{
 		if (isNumber(*_type))
@@ -507,6 +526,9 @@ smtutil::Expression zeroValue(frontend::Type const* _type)
 
 bool isSigned(frontend::Type const* _type)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+		return isSigned(&userType->underlyingType());
+
 	solAssert(smt::isNumber(*_type), "");
 	bool isSigned = false;
 	if (auto const* numberType = dynamic_cast<RationalNumberType const*>(_type))
@@ -530,6 +552,9 @@ bool isSigned(frontend::Type const* _type)
 
 pair<unsigned, bool> typeBvSizeAndSignedness(frontend::Type const* _type)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+		return typeBvSizeAndSignedness(&userType->underlyingType());
+
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
 		return {intType->numBits(), intType->isSigned()};
 	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
@@ -553,6 +578,10 @@ void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::Type const* _t
 smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::Type const* _type)
 {
 	solAssert(_type, "");
+
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_type))
+		return symbolicUnknownConstraints(std::move(_expr), &userType->underlyingType());
+
 	if (isEnum(*_type) || isInteger(*_type) || isAddress(*_type) || isFixedBytes(*_type))
 		return _expr >= minValue(_type) && _expr <= maxValue(_type);
 	else if (
@@ -569,6 +598,9 @@ smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, fronte
 
 optional<smtutil::Expression> symbolicTypeConversion(frontend::Type const* _from, frontend::Type const* _to)
 {
+	if (auto userType = dynamic_cast<UserDefinedValueType const*>(_to))
+		return symbolicTypeConversion(_from, &userType->underlyingType());
+
 	if (_to && _from)
 		// StringLiterals are encoded as SMT arrays in the generic case,
 		// but they can also be compared/assigned to fixed bytes, in which
