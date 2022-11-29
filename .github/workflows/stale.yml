@@ -48,5 +48,6 @@ jobs:
           exempt-pr-labels: 'external contribution :star:,roadmap,epic'
           exempt-draft-pr: true
           exempt-all-milestones: true
-          remove-stale-when-updated: true
+          # remove-stale-when-updated: true # TODO: uncomment and remove the line below when we're done with closing ancient issues
+          remove-issue-stale-when-updated: false
           operations-per-run: 128
