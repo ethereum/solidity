@@ -586,15 +586,6 @@ bool SMTEncoder::visit(FunctionCall const& _funCall)
 			arg->accept(*this);
 		return false;
 	}
-	else if (funType.kind() == FunctionType::Kind::ABIEncodeCall)
-	{
-		auto fun = _funCall.arguments().front();
-		createExpr(*fun);
-		auto const* functionType = dynamic_cast<FunctionType const*>(fun->annotation().type);
-		if (functionType->hasDeclaration())
-			defineExpr(*fun, functionType->externalIdentifier());
-		return true;
-	}
 
 	// We do not really need to visit the expression in a wrap/unwrap no-op call,
 	// so we just ignore the function call expression to avoid "unsupported" warnings.
@@ -1323,11 +1314,17 @@ void SMTEncoder::endVisit(Return const& _return)
 
 bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 {
+	createExpr(_memberAccess);
+
 	auto const& accessType = _memberAccess.annotation().type;
 	if (accessType->category() == Type::Category::Function)
-		return true;
+	{
+		auto const* functionType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+		if (functionType && functionType->hasDeclaration())
+			defineExpr(_memberAccess, functionType->externalIdentifier());
 
-	createExpr(_memberAccess);
+		return true;
+	}
 
 	Expression const* memberExpr = innermostTuple(_memberAccess.expression());
 

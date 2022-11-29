@@ -27,6 +27,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on multiple wrong SMTChecker natspec entries.
  * SMTChecker: Fix internal error on chain assignments using static fully specified state variables.
  * SMTChecker: Fix internal error when using user defined types as mapping indices or struct members.
+ * SMTChecker: Fix internal error when deleting struct member of function type.
 
 
 ### 0.8.17 (2022-09-08)
