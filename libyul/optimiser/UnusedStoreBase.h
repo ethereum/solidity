@@ -38,8 +38,11 @@ struct Dialect;
  *
  * The class tracks the state of abstract "stores" (assignments or mstore/sstore
  * statements) across the control-flow. It is the job of the derived class to create
- * the stores and track references, but the base class adjusts their "used state" at
- * control-flow splits and joins.
+ * the stores and track references, but the base class manages control-flow splits and joins.
+ *
+ * In general, active stores are those where it has not yet been determined if they are used
+ * or not. Those are split and joined at control-flow forks. Once a store has been deemed
+ * used, it is removed from the active set and marked as used and this will never change.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
