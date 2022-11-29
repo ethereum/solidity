@@ -344,7 +344,7 @@ library NFTSVG {
             '<g font-family="\'Courier New\', monospace" font-size="12" fill="#fff">'
             '<g style="transform:translate(29px, 384px)">' '<rect width="',
             LibString.toString(uint256(7 * (str1length + 4))),
-            '" height="26" rx="8" ry="8" fill="rgba(0,0,0,0.6)"/>' '<text x="12" y="17"><tspan fill="#999">ID: </tspan>',
+            string.concat('" height="26" rx="8" ry="8" fill="rgba(0,0,0,0.6)"/>' '<text x="12" y="17"><tspan fill="#999">ID: </tspan>'),
             tokenId,
             "</text></g>" '<g style="transform:translate(29px, 414px)">' '<rect width="',
             LibString.toString(uint256(7 * (str2length + 4))),

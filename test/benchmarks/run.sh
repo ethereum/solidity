@@ -26,41 +26,50 @@ set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "$0")/../../" && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 
-result_legacy_file=$(mktemp -t benchmark-legacy-XXXXXX.txt)
-result_via_ir_file=$(mktemp -t benchmark-via-ir-XXXXXX.txt)
+output_dir=$(mktemp -d -t solc-benchmark-XXXXXX)
+result_legacy_file="${output_dir}/benchmark-legacy.txt"
+result_via_ir_file="${output_dir}/benchmark-via-ir.txt"
+warnings_and_errors_file="${output_dir}/benchmark-warn-err.txt"
 
 function cleanup() {
-  rm "${result_legacy_file}"
-  rm "${result_via_ir_file}"
-  exit
+    rm -r "${output_dir}"
+    exit
 }
 
 trap cleanup SIGINT SIGTERM
 
 solc="${SOLIDITY_BUILD_DIR}/solc/solc"
 benchmarks_dir="${REPO_ROOT}/test/benchmarks"
+benchmarks=("chains.sol" "OptimizorClub.sol")
 time_bin_path=$(type -P time)
 
-for input_file in "chains.sol" "OptimizorClub.sol"
+for input_file in "${benchmarks[@]}"
 do
-  input_path="${benchmarks_dir}/${input_file}"
+    input_path="${benchmarks_dir}/${input_file}"
 
-  solc_command_legacy=("${solc}" --optimize --bin "${input_path}")
-  solc_command_via_ir=("${solc}" --via-ir --optimize --bin "${input_path}")
+    solc_command_legacy=("${solc}" --optimize --bin --color "${input_path}")
+    solc_command_via_ir=("${solc}" --via-ir --optimize --bin --color "${input_path}")
 
-  "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null
-  "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >/dev/null
+    # Legacy can fail.
+    "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null 2>>"${warnings_and_errors_file}"
+    "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >/dev/null 2>>"${warnings_and_errors_file}"
 
-  time_legacy=$(<"${result_legacy_file}")
-  time_via_ir=$(<"${result_via_ir_file}")
+    time_legacy=$(<"${result_legacy_file}")
+    time_via_ir=$(<"${result_via_ir_file}")
 
-  echo "======================================================="
-  echo "            ${input_file}"
-  echo "-------------------------------------------------------"
-  echo "legacy pipeline took ${time_legacy} seconds to execute."
-  echo "via-ir pipeline took ${time_via_ir} seconds to execute."
-  echo "======================================================="
+    echo "======================================================="
+    echo "            ${input_file}"
+    echo "-------------------------------------------------------"
+    echo "legacy pipeline took ${time_legacy} seconds to execute."
+    echo "via-ir pipeline took ${time_via_ir} seconds to execute."
+    echo "======================================================="
 done
+
+echo
+echo "======================================================="
+echo "Warnings and errors generated during run:"
+echo "======================================================="
+echo "$(<"${warnings_and_errors_file}")"
 
 cleanup
 
