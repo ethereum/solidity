@@ -49,7 +49,7 @@ struct AssignedValue;
  * to sstore, as we don't know whether the memory location will be read once we leave the function's scope,
  * so the statement will be removed only if all code code paths lead to a memory overwrite.
  *
- * The m_store member of UnusedStoreBase uses the key "m" for memory ond "s" for storage stores.
+ * The m_store member of UnusedStoreBase uses the key "m" for memory and "s" for storage stores.
  *
  * Best run in SSA form.
  *
