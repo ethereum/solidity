@@ -12,10 +12,6 @@
 //
 // {
 //     let a := calldataload(0)
-//     if calldataload(1)
-//     {
-//         a := 2
-//         revert(0, 0)
-//     }
+//     if calldataload(1) { revert(0, 0) }
 //     sstore(0, a)
 // }

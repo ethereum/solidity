@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
+#include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/AST.h>
 #include <libyul/AsmPrinter.h>
 
@@ -42,7 +43,10 @@ using namespace solidity::yul;
 
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	UnusedAssignEliminator rae{_context.dialect};
+	UnusedAssignEliminator rae{
+		_context.dialect,
+		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+	};
 	rae(_ast);
 
 	rae.m_storesToRemove += rae.m_allStores - rae.m_usedStores;
@@ -74,10 +78,27 @@ void UnusedAssignEliminator::operator()(FunctionDefinition const& _functionDefin
 	UnusedStoreBase::operator()(_functionDefinition);
 }
 
+void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
+{
+	UnusedStoreBase::operator()(_functionCall);
+
+	ControlFlowSideEffects sideEffects;
+	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
+		sideEffects = builtin->controlFlowSideEffects;
+	else
+		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
+
+	if (!sideEffects.canContinue)
+		// We do not return from the current function, so it is OK to also
+		// clear the return variables.
+		m_activeStores.clear();
+}
+
 void UnusedAssignEliminator::operator()(Leave const&)
 {
 	for (YulString name: m_returnVariables)
 		markUsed(name);
+	m_activeStores.clear();
 }
 
 void UnusedAssignEliminator::operator()(Block const& _block)

@@ -26,6 +26,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/UnusedStoreBase.h>
+#include <libyul/optimiser/Semantics.h>
 
 #include <map>
 #include <vector>
@@ -99,7 +100,11 @@ struct Dialect;
  * For switch statements that have a "default"-case, there is no control-flow
  * part that skips the switch.
  *
- * At ``leave`` statements, all return variables are set to "used".
+ * At ``leave`` statements, all return variables are set to "used" and the set of active statements
+ * is cleared.
+ *
+ * If a function or builtin is called that does not continue, the set of active statements is
+ * cleared for all variables.
  *
  * In the second traversal, all assignments that are not marked as "used" are removed.
  *
@@ -114,11 +119,18 @@ public:
 	static constexpr char const* name{"UnusedAssignEliminator"};
 	static void run(OptimiserStepContext&, Block& _ast);
 
-	explicit UnusedAssignEliminator(Dialect const& _dialect): UnusedStoreBase(_dialect) {}
+	explicit UnusedAssignEliminator(
+		Dialect const& _dialect,
+		std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects
+	):
+		UnusedStoreBase(_dialect),
+		m_controlFlowSideEffects(_controlFlowSideEffects)
+	{}
 
 	void operator()(Identifier const& _identifier) override;
 	void operator()(Assignment const& _assignment) override;
 	void operator()(FunctionDefinition const&) override;
+	void operator()(FunctionCall const& _functionCall) override;
 	void operator()(Leave const&) override;
 	void operator()(Block const& _block) override;
 
@@ -132,6 +144,7 @@ private:
 	void markUsed(YulString _variable);
 
 	std::set<YulString> m_returnVariables;
+	std::map<YulString, ControlFlowSideEffects> m_controlFlowSideEffects;
 };
 
 }
