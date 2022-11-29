@@ -39,22 +39,28 @@ trap cleanup SIGINT SIGTERM
 
 solc="${SOLIDITY_BUILD_DIR}/solc/solc"
 benchmarks_dir="${REPO_ROOT}/test/benchmarks"
-chains_sol="${benchmarks_dir}/chains.sol"
 time_bin_path=$(type -P time)
 
-solc_command_legacy=("${solc}" --optimize --bin "${chains_sol}")
-solc_command_via_ir=("${solc}" --via-ir --optimize --bin "${chains_sol}")
+for input_file in "chains.sol" "OptimizorClub.sol"
+do
+  input_path="${benchmarks_dir}/${input_file}"
 
-"${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null
-"${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >/dev/null
+  solc_command_legacy=("${solc}" --optimize --bin "${input_path}")
+  solc_command_via_ir=("${solc}" --via-ir --optimize --bin "${input_path}")
 
-time_legacy=$(<"${result_legacy_file}")
-time_via_ir=$(<"${result_via_ir_file}")
+  "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null
+  "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >/dev/null
 
-echo "======================================================="
-echo "legacy pipeline took ${time_legacy} seconds to execute."
-echo "via-ir pipeline took ${time_via_ir} seconds to execute."
-echo "======================================================="
+  time_legacy=$(<"${result_legacy_file}")
+  time_via_ir=$(<"${result_via_ir_file}")
+
+  echo "======================================================="
+  echo "            ${input_file}"
+  echo "======================================================="
+  echo "legacy pipeline took ${time_legacy} seconds to execute."
+  echo "via-ir pipeline took ${time_via_ir} seconds to execute."
+  echo "======================================================="
+done
 
 cleanup
 
