@@ -1030,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(enum_only)
 	TemporaryDirectory tempDir({"base/"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
-	string const mainContractSource = 
+	string const mainContractSource =
 		"// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n\nenum Status {\n		test\n}\n";
 
 	createFilesWithParentDirs({tempDir.path() / "base/main.sol"}, mainContractSource);
