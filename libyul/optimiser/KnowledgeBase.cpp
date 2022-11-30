@@ -52,7 +52,7 @@ optional<u256> KnowledgeBase::differenceIfKnownConstant(YulString _a, YulString 
 	if (offA.reference == offB.reference)
 		return offA.offset - offB.offset;
 	else
-		return {};
+		return nullopt;
 }
 
 
