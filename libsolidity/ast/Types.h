@@ -793,10 +793,12 @@ public:
 
 	Type const* withLocation(DataLocation _location, bool _isPointer) const;
 
+	/// @returns a human-readable description of the reference part of the type.
+	/// @param _showIndirection If true, the description indicates whether it's a pointer or not.
+	std::string stringForReferencePart(bool _showIndirection = true) const;
+
 protected:
 	Type const* copyForLocationIfReference(Type const* _type) const;
-	/// @returns a human-readable description of the reference part of the type.
-	std::string stringForReferencePart() const;
 	/// @returns the suffix computed from the reference part to be used by identifier();
 	std::string identifierLocationSuffix() const;
 

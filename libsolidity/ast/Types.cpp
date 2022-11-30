@@ -1561,19 +1561,21 @@ Type const* ReferenceType::copyForLocationIfReference(Type const* _type) const
 	return TypeProvider::withLocationIfReference(m_location, _type);
 }
 
-string ReferenceType::stringForReferencePart() const
+string ReferenceType::stringForReferencePart(bool _showIndirection) const
 {
 	switch (m_location)
 	{
 	case DataLocation::Storage:
-		return string("storage ") + (isPointer() ? "pointer" : "ref");
+		if (_showIndirection)
+			return string("storage ") + (_showIndirection && isPointer() ? "pointer" : "ref");
+		else
+			return string("storage");
 	case DataLocation::CallData:
 		return "calldata";
 	case DataLocation::Memory:
 		return "memory";
 	}
-	solAssert(false, "");
-	return "";
+	solAssert(false);
 }
 
 string ReferenceType::identifierLocationSuffix() const
