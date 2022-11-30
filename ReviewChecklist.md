@@ -7,6 +7,12 @@ and solve common issues before they are pointed out in the review.
 It is also meant to serve as a final checklist for reviewers to go through before approving a PR.
 
 ## Before You Submit a PR
+- [ ] **Do you have any other open PRs?**
+    Work on a PR is not done until it is merged or closed.
+    Our reviewing capacity is limited, so we require that external contributors work on **no more than one PR at a time**.
+    - If your PR is not getting reviewed, feel free to bring it to our attention on the [#solidity-dev](https://gitter.im/ethereum/solidity-dev) channel.
+    - Unless they were requested, we are going to close any excess PRs, leaving only the earliest one open.
+        You may reopen them, one at a time, when your current PR is done.
 - [ ] **Is the issue ready to be worked on?**
     - If the issue does not have a desirability label (`nice to have`, `should have`,
         `must have eventually`, `must have`, `roadmap`) we have not yet decided whether to implement it.
@@ -33,6 +39,26 @@ It is also meant to serve as a final checklist for reviewers to go through befor
         - If your PR affects gas costs, an extra run of `isoltest --enforce-gas-cost --optimize --accept-updates` is needed to update gas expectations with optimizer enabled.
     - Review updated files before committing them.
         **Are expectations correct and do updated tests still serve their purpose?**
+
+## Abandoned PRs
+- [ ] **Is the submitter still responsive?**
+    - If the PR had no activity from the submitter in the last 2 weeks (despite receiving reviews and our prompts) we consider it abandoned.
+- [ ] **Is the abandoned PR easy to finish or relevant?**
+    - Apply the `takeover` label if the PR can be finished without significant effort or is something that actually needs to be done right now.
+        Otherwise close it.
+        It can still be taken over later or reopened by the submitter but until then we should not be getting sidetracked by it.
+
+## Light Review
+Before an in-depth review, it is recommended to give new PRs a quick, superficial review, which
+is not meant to provide complete and detailed feedback, but instead give the submitter a rough idea
+if the PR is even on the right track and let them solve the obvious problems on their own.
+
+Light review should focus on the following three areas:
+- [ ] **Are there any obvious mistakes?** Style issues, bad practices, easy to identify bugs, etc.
+- [ ] **Is there anything missing?** Tests (of the right kind), documentation, etc. Does it address the whole issue?
+- [ ] **Is it the right solution?** Are there better ways to do this? Is the change even necessary?
+
+If the answers above are "Yes, Yes, No", thank the contributor for their effort and **close the PR**.
 
 ## Coding Style and Good Practices
 - [ ] Does the PR follow our [coding style](CODING_STYLE.md)?
