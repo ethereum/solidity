@@ -1025,6 +1025,39 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 	BOOST_TEST(result.reader.basePath() == expectedWorkDir / "base/");
 }
 
+BOOST_AUTO_TEST_CASE(enum_only)
+{
+	TemporaryDirectory tempDir({"base/"}, TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir);
+
+	string const mainContractSource = 
+		"// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n\nenum Status {\n		test\n}\n";
+
+	createFilesWithParentDirs({tempDir.path() / "base/main.sol"}, mainContractSource);
+
+	boost::filesystem::path canonicalWorkDir = boost::filesystem::canonical(tempDir);
+	boost::filesystem::path expectedWorkDir = "/" / canonicalWorkDir.relative_path();
+
+	vector<string> commandLine = {
+		"solc",
+		"--no-color",
+		"--base-path=base/",
+		"base/main.sol",
+	};
+
+	CommandLineOptions expectedOptions;
+
+	string const expectedStdoutContent = "Compiler run successful, no contracts to compile.\n";
+	OptionsReaderAndMessages result = runCLI(commandLine, "");
+
+	BOOST_TEST(result.stderrContent == "");
+	if (SemVerVersion{string(VersionString)}.isPrerelease())
+		BOOST_TEST(result.stdoutContent == "");
+	else
+		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
+	BOOST_REQUIRE(result.success);
+}
+
 BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 {
 	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
