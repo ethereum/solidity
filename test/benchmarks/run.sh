@@ -56,7 +56,7 @@ do
 
   echo "======================================================="
   echo "            ${input_file}"
-  echo "======================================================="
+  echo "-------------------------------------------------------"
   echo "legacy pipeline took ${time_legacy} seconds to execute."
   echo "via-ir pipeline took ${time_via_ir} seconds to execute."
   echo "======================================================="
