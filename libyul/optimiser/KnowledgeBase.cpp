@@ -182,19 +182,26 @@ void KnowledgeBase::reset(YulString _var)
 	if (set<YulString>* group = util::valueOrNullptr(m_groupMembers, _var))
 	{
 		// _var was a representative, we might have to find a new one.
-		if (group->empty())
-			m_groupMembers.erase(_var);
-		else
+		if (!group->empty())
 		{
 			YulString newRepresentative = *group->begin();
+			yulAssert(newRepresentative != _var);
 			u256 newOffset = m_offsets[newRepresentative].offset;
+			// newOffset = newRepresentative - _var
 			for (YulString groupMember: *group)
 			{
 				yulAssert(m_offsets[groupMember].reference == _var);
 				m_offsets[groupMember].reference = newRepresentative;
-				m_offsets[newRepresentative].offset -= newOffset;
+				// groupMember = _var + m_offsets[groupMember].offset (old)
+				//             = newRepresentative - newOffset + m_offsets[groupMember].offset (old)
+				// so subtracting newOffset from .offset yields the original relation again,
+				// just with _var replaced by newRepresentative
+				m_offsets[groupMember].offset -= newOffset;
 			}
+			m_groupMembers[newRepresentative] = std::move(*group);
+
 		}
+		m_groupMembers.erase(_var);
 	}
 }
 
