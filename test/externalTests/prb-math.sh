@@ -39,7 +39,9 @@ function prb_math_test
 {
     local repo="https://github.com/paulrberg/prb-math"
     local ref_type=branch
-    local ref=main
+    # We currently pin the prb-math version to the latest version that support hardhat
+    # Please see here for details: https://github.com/ethereum/solidity/issues/13767
+    local ref=v2.5.0
     local config_file="hardhat.config.ts"
     local config_var="config"
 
