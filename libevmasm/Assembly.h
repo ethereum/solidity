@@ -114,7 +114,8 @@ public:
 	langutil::SourceLocation const& currentSourceLocation() const { return m_currentSourceLocation; }
 
 	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
-	LinkerObject const& assemble() const;
+	/// @param eof If true, assemble for EOF, otherwise for legacy EVM output.
+	LinkerObject const& assemble(bool eof = false) const;
 
 	struct OptimiserSettings
 	{
