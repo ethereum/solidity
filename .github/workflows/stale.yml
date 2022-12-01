@@ -46,7 +46,7 @@ jobs:
           days-before-pr-stale: ${{ env.BEFORE_PR_STALE }}
           days-before-pr-close: ${{ env.BEFORE_PR_CLOSE }}
           exempt-pr-labels: 'external contribution :star:,roadmap,epic'
-          exempt-draft-pr: true
+          exempt-draft-pr: false
           exempt-all-milestones: true
           # remove-stale-when-updated: true # TODO: uncomment and remove the line below when we're done with closing ancient issues
           remove-issue-stale-when-updated: false
