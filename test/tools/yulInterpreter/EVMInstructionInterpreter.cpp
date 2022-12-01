@@ -499,18 +499,29 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 
 bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _size)
 {
-	if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
+	if (_size == 0)
+		return true;
+	else if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
 	{
 		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
 		m_state.msize = max(m_state.msize, newSize);
-		// We only record accesses to contiguous memory chunks that are at most 0xffff bytes
-		// in size and at an offset of at most numeric_limits<size_t>::max() - 0xffff
-		return _size <= 0xffff && _offset <= u256(numeric_limits<size_t>::max() - 0xffff);
+		// We only record accesses to contiguous memory chunks that are at most s_maxRangeSize bytes
+		// in size and at an offset of at most numeric_limits<size_t>::max() - s_maxRangeSize
+		return _size <= s_maxRangeSize && _offset <= u256(numeric_limits<size_t>::max() - s_maxRangeSize);
 	}
 	else
 		m_state.msize = u256(-1);
 
 	return false;
+}
+
+bytes EVMInstructionInterpreter::readMemory(u256 const& _offset, u256 const& _size)
+{
+	yulAssert(_size <= s_maxRangeSize, "Too large read.");
+	bytes data(size_t(_size), uint8_t(0));
+	for (size_t i = 0; i < data.size(); ++i)
+		data[i] = m_state.memory[_offset + i];
+	return data;
 }
 
 u256 EVMInstructionInterpreter::readMemoryWord(u256 const& _offset)
