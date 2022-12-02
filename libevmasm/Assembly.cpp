@@ -558,6 +558,26 @@ LinkerObject const& Assembly::assemble() const
 		case Operation:
 			ret.bytecode.push_back(static_cast<uint8_t>(i.instruction()));
 			break;
+		case Swap:
+			assertThrow(i.data() > 0 && i.data() <= maxSwap(), AssemblyException, "Invalid swap.");
+			if (i.data() <= 16)
+				ret.bytecode.push_back(static_cast<uint8_t>(evmasm::Instruction::SWAP1 + (i.data() - 1)));
+			else
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(evmasm::Instruction::SWAP_N));
+				ret.bytecode.push_back(static_cast<uint8_t>(i.data() - 1));
+			}
+			break;
+		case Dup:
+			assertThrow(i.data() > 0 && i.data() <= maxDup(), AssemblyException, "Invalid dup.");
+			if (i.data() <= 16)
+				ret.bytecode.push_back(static_cast<uint8_t>(evmasm::Instruction::DUP1 + (i.data() - 1)));
+			else
+			{
+				ret.bytecode.push_back(static_cast<uint8_t>(evmasm::Instruction::DUP_N));
+				ret.bytecode.push_back(static_cast<uint8_t>(i.data() - 1));
+			}
+			break;
 		case Push:
 		{
 			unsigned b = max<unsigned>(1, numberEncodingSize(i.data()));

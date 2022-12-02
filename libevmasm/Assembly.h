@@ -83,6 +83,23 @@ public:
 		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
 	}
 
+	void appendSwap(unsigned _height)
+	{
+		append(AssemblyItem(AssemblyItemType::Swap, _height));
+	}
+	void appendDup(unsigned _height)
+	{
+		append(AssemblyItem(AssemblyItemType::Dup, _height));
+	}
+	unsigned maxDup() const
+	{
+		return 16;
+	}
+	unsigned maxSwap() const
+	{
+		return 16;
+	}
+
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }

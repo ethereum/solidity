@@ -95,7 +95,7 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 		Id condition = m_state.stackElement(m_state.stackHeight() - 1, itemLocation);
 		if (classes.knownNonZero(condition))
 		{
-			feedItem(AssemblyItem(Instruction::SWAP1, itemLocation), true);
+			feedItem(AssemblyItem(AssemblyItemType::Swap, 1, itemLocation), true);
 			feedItem(AssemblyItem(Instruction::POP, itemLocation), true);
 
 			AssemblyItem item(Instruction::JUMP, itemLocation);
@@ -397,7 +397,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 
 	while (SemanticInformation::isCommutativeOperation(*expr.item) &&
 			!m_generatedItems.empty() &&
-			m_generatedItems.back() == AssemblyItem(Instruction::SWAP1))
+			m_generatedItems.back() == AssemblyItem(AssemblyItemType::Swap, 1))
 		// this will not append a swap but remove the one that is already there
 		appendOrRemoveSwap(m_stackHeight - 1, itemLocation);
 	for (size_t i = 0; i < arguments.size(); ++i)
@@ -474,7 +474,7 @@ void CSECodeGenerator::appendDup(int _fromPosition, SourceLocation const& _locat
 	int instructionNum = 1 + m_stackHeight - _fromPosition;
 	assertThrow(instructionNum <= 16, StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(dupInstruction(static_cast<unsigned>(instructionNum)), _location));
+	appendItem(AssemblyItem(AssemblyItemType::Dup, instructionNum, _location));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
 	m_classPositions[m_stack[m_stackHeight]].insert(m_stackHeight);
 }
@@ -487,7 +487,7 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 	int instructionNum = m_stackHeight - _fromPosition;
 	assertThrow(instructionNum <= 16, StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(swapInstruction(static_cast<unsigned>(instructionNum)), _location));
+	appendItem(AssemblyItem(AssemblyItemType::Swap, instructionNum, _location));
 
 	if (m_stack[m_stackHeight] != m_stack[_fromPosition])
 	{

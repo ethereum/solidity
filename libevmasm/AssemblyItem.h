@@ -39,6 +39,8 @@ enum AssemblyItemType
 {
 	UndefinedItem,
 	Operation,
+	Swap,
+	Dup,
 	Push,
 	PushTag,
 	PushSub,
@@ -70,7 +72,21 @@ public:
 		m_type(Operation),
 		m_instruction(_i),
 		m_location(std::move(_location))
-	{}
+	{
+		// TODO: avoid this on call sites instead
+		if (_i >= Instruction::SWAP1 && _i <= Instruction::SWAP16)
+		{
+			m_type = Swap;
+			m_data = std::make_shared<u256>(static_cast<unsigned>(_i) - static_cast<unsigned>(Instruction::SWAP1) + 1);
+			m_instruction = {};
+		}
+		else if (_i >= Instruction::DUP1 && _i <= Instruction::DUP16)
+		{
+			m_type = Dup;
+			m_data = std::make_shared<u256>(static_cast<unsigned>(_i) - static_cast<unsigned>(Instruction::DUP1) + 1);
+			m_instruction = {};
+		}
+	}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::SourceLocation _location = langutil::SourceLocation()):
 		m_type(_type),
 		m_location(std::move(_location))
@@ -144,10 +160,9 @@ public:
 			return data() < _other.data();
 	}
 
-	/// Shortcut that avoids constructing an AssemblyItem just to perform the comparison.
 	bool operator==(Instruction _instr) const
 	{
-		return type() == Operation && instruction() == _instr;
+		return (*this) == AssemblyItem(_instr);
 	}
 	bool operator!=(Instruction _instr) const { return !operator==(_instr); }
 

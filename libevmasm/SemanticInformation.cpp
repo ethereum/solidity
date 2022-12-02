@@ -169,6 +169,8 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	case PushData:
 	case PushLibraryAddress:
 	case PushImmutable:
+	case Swap:
+	case Dup:
 		return false;
 	case evmasm::Operation:
 	{
@@ -218,16 +220,27 @@ bool SemanticInformation::isCommutativeOperation(AssemblyItem const& _item)
 
 bool SemanticInformation::isDupInstruction(AssemblyItem const& _item)
 {
-	if (_item.type() != evmasm::Operation)
-		return false;
-	return evmasm::isDupInstruction(_item.instruction());
+	return _item.type() == evmasm::Dup ||
+			(_item.type() == evmasm::Operation &&
+				(
+					(_item.instruction() >= Instruction::DUP1 && _item.instruction() <= Instruction::DUP16) ||
+					(_item.instruction() == Instruction::DUP_N)
+				)
+		   )
+		;
+
 }
 
 bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 {
-	if (_item.type() != evmasm::Operation)
-		return false;
-	return evmasm::isSwapInstruction(_item.instruction());
+	return _item.type() == evmasm::Swap ||
+		   (_item.type() == evmasm::Operation &&
+			(
+				(_item.instruction() >= Instruction::SWAP1 && _item.instruction() <= Instruction::SWAP16) ||
+				(_item.instruction() == Instruction::SWAP_N)
+					)
+		   )
+		;
 }
 
 bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)

@@ -40,6 +40,22 @@ void NoOutputAssembly::appendInstruction(evmasm::Instruction _instr)
 	m_stackHeight += instructionInfo(_instr).ret - instructionInfo(_instr).args;
 }
 
+void NoOutputAssembly::appendSwap(unsigned)
+{
+}
+
+void NoOutputAssembly::appendDup(unsigned)
+{
+	m_stackHeight++;
+}
+unsigned NoOutputAssembly::maxDup() const
+{
+	return 16;
+}
+unsigned NoOutputAssembly::maxSwap() const
+{
+	return 16;
+}
 void NoOutputAssembly::appendConstant(u256 const&)
 {
 	appendInstruction(evmasm::pushInstruction(1));

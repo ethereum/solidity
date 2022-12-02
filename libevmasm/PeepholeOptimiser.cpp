@@ -159,11 +159,13 @@ struct OpReturnRevert: SimplePeepholeOptimizerMethod<OpReturnRevert>
 		if (
 			(_returnRevert == Instruction::RETURN || _returnRevert == Instruction::REVERT) &&
 			_push.type() == Push &&
-			(_pushOrDup.type() == Push || _pushOrDup == dupInstruction(1))
+			(_pushOrDup.type() == Push || ((_pushOrDup.type() == Dup && _pushOrDup.data() == 1) || _pushOrDup == Instruction::DUP1))
 		)
 			if (
 				(_op.type() == Operation && !instructionInfo(_op.instruction()).sideEffects) ||
-				_op.type() == Push
+				_op.type() == Push ||
+				_op.type() == Swap ||
+				_op.type() == Dup
 			)
 			{
 					*_out = _push;
@@ -190,7 +192,7 @@ struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush>
 		if (_push1.type() == Push && _push2.type() == Push && _push1.data() == _push2.data())
 		{
 			*_out = _push1;
-			*_out = {Instruction::DUP1, _push2.location()};
+			*_out = AssemblyItem(Dup, 1, _push2.location());
 			return true;
 		}
 		else
@@ -204,7 +206,10 @@ struct CommutativeSwap: SimplePeepholeOptimizerMethod<CommutativeSwap>
 	{
 		// Remove SWAP1 if following instruction is commutative
 		if (
-			_swap == Instruction::SWAP1 &&
+			(
+				_swap == Instruction::SWAP1 ||
+				_swap == AssemblyItem(Swap, 1)
+			) &&
 			SemanticInformation::isCommutativeOperation(_op)
 		)
 		{
@@ -228,7 +233,10 @@ struct SwapComparison: SimplePeepholeOptimizerMethod<SwapComparison>
 		};
 
 		if (
-			_swap == Instruction::SWAP1 &&
+			(
+				_swap == Instruction::SWAP1 ||
+				_swap == AssemblyItem(Swap, 1)
+			) &&
 			_op.type() == Operation &&
 			swappableOps.count(_op.instruction())
 		)
@@ -250,10 +258,33 @@ struct DupSwap: SimplePeepholeOptimizerMethod<DupSwap>
 		std::back_insert_iterator<AssemblyItems> _out
 	)
 	{
+		auto dupNum = [](AssemblyItem const& _item) -> std::optional<unsigned> {
+			if (_item.type() == AssemblyItemType::Dup)
+				return static_cast<unsigned>(_item.data());
+			else if (
+					_item.type() == AssemblyItemType::Operation &&
+					 _item.instruction() >= Instruction::DUP1 &&
+					 _item.instruction() <= Instruction::DUP16
+				 )
+				return static_cast<unsigned>(_item.instruction()) - static_cast<unsigned>(Instruction::DUP1) + 1;
+			return nullopt;
+		};
+		auto swapNum = [](AssemblyItem const& _item) -> std::optional<unsigned> {
+			if (_item.type() == AssemblyItemType::Swap)
+				return static_cast<unsigned>(_item.data());
+			else if (
+				_item.type() == AssemblyItemType::Operation &&
+				_item.instruction() >= Instruction::SWAP1 &&
+				_item.instruction() <= Instruction::SWAP16
+			)
+				return static_cast<unsigned>(_item.instruction()) - static_cast<unsigned>(Instruction::SWAP1) + 1;
+			return nullopt;
+		};
 		if (
-			SemanticInformation::isDupInstruction(_dupN) &&
-			SemanticInformation::isSwapInstruction(_swapN) &&
-			getDupNumber(_dupN.instruction()) == getSwapNumber(_swapN.instruction())
+			dupNum(_dupN).has_value() && swapNum(_swapN).has_value() && dupNum(_dupN) == swapNum(_swapN)
+/*			_dupN.type() == AssemblyItemType::Dup &&
+			_swapN.type() == AssemblyItemType::Swap &&
+			_dupN.data() == _swapN.data()*/
 		)
 		{
 			*_out = _dupN;

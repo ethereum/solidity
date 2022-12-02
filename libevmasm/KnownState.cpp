@@ -118,6 +118,27 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				m_expressionClasses->newClass(_item.location())
 			);
 	}
+	else if (_item.type() == Dup)
+	{
+		// TODO: check
+		setStackElement(
+			m_stackHeight + 1,
+			stackElement(
+				m_stackHeight - static_cast<int>(_item.data() - 1),
+				_item.location()
+					)
+		);
+		m_stackHeight++;
+	}
+	else if (_item.type() == Swap)
+	{
+		// TODO: check
+		swapStackElements(
+			m_stackHeight,
+			m_stackHeight - 1 - static_cast<int>(_item.data() - 1),
+			_item.location()
+		);
+	}
 	else if (_item.type() != Operation)
 	{
 		assertThrow(_item.deposit() == 1, InvalidDeposit, "");

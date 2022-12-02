@@ -251,7 +251,15 @@ public:
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(evmasm::AssemblyItem const& _item) { m_asm->append(_item); return *this; }
-	CompilerContext& operator<<(evmasm::Instruction _instruction) { m_asm->append(_instruction); return *this; }
+	CompilerContext& operator<<(evmasm::Instruction _instruction) {
+		if (_instruction >= evmasm::Instruction::SWAP1 && _instruction <= evmasm::Instruction::SWAP16)
+			m_asm->append(evmasm::AssemblyItem(evmasm::Swap, static_cast<unsigned>(_instruction) - static_cast<unsigned>(evmasm::Instruction::SWAP1) + 1));
+		else if (_instruction >= evmasm::Instruction::DUP1 && _instruction <= evmasm::Instruction::DUP16)
+			m_asm->append(evmasm::AssemblyItem(evmasm::Dup, static_cast<unsigned>(_instruction) - static_cast<unsigned>(evmasm::Instruction::DUP1) + 1));
+		else
+			m_asm->append(_instruction);
+		return *this;
+	}
 	CompilerContext& operator<<(u256 const& _value) { m_asm->append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
 

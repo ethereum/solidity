@@ -145,9 +145,16 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 		string name = toLower(instr.first);
 		auto const opcode = instr.second;
 
+		auto isSwapInstruction = [](auto i) {
+			return (i >= evmasm::Instruction::SWAP1 && i <= evmasm::Instruction::SWAP16) || i == evmasm::Instruction::SWAP_N;
+		};
+		auto isDupInstruction = [](auto i) {
+			return (i >= evmasm::Instruction::DUP1 && i <= evmasm::Instruction::DUP16) || i == evmasm::Instruction::DUP_N;
+		};
+
 		if (
-			!evmasm::isDupInstruction(opcode) &&
-			!evmasm::isSwapInstruction(opcode) &&
+			!isDupInstruction(opcode) &&
+			!isSwapInstruction(opcode) &&
 			!evmasm::isPushInstruction(opcode) &&
 			opcode != evmasm::Instruction::JUMP &&
 			opcode != evmasm::Instruction::JUMPI &&

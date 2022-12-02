@@ -67,6 +67,13 @@ public:
 	virtual void setStackHeight(int height) = 0;
 	/// Append an EVM instruction.
 	virtual void appendInstruction(evmasm::Instruction _instruction) = 0;
+	/// Append a swap.
+	virtual void appendSwap(unsigned _height) = 0;
+	/// Append a dup.
+	virtual void appendDup(unsigned _height) = 0;
+
+	virtual unsigned maxSwap() const = 0;
+	virtual unsigned maxDup() const = 0;
 	/// Append a constant.
 	virtual void appendConstant(u256 const& _constant) = 0;
 	/// Append a label.

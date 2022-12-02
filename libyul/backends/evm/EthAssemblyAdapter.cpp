@@ -64,6 +64,28 @@ void EthAssemblyAdapter::appendInstruction(evmasm::Instruction _instruction)
 	m_assembly.append(_instruction);
 }
 
+
+void EthAssemblyAdapter::appendSwap(unsigned _height)
+{
+	m_assembly.append(evmasm::AssemblyItem(evmasm::AssemblyItemType::Swap, _height));
+}
+
+
+void EthAssemblyAdapter::appendDup(unsigned _height)
+{
+	m_assembly.append(evmasm::AssemblyItem(evmasm::AssemblyItemType::Dup, _height));
+}
+
+unsigned EthAssemblyAdapter::maxDup() const
+{
+	return m_assembly.maxDup();
+}
+
+unsigned EthAssemblyAdapter::maxSwap() const
+{
+	return m_assembly.maxSwap();
+}
+
 void EthAssemblyAdapter::appendConstant(u256 const& _constant)
 {
 	m_assembly.append(_constant);

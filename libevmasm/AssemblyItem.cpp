@@ -123,6 +123,12 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 	case Operation:
 	case Tag: // 1 byte for the JUMPDEST
 		return 1;
+	case Swap:
+	case Dup:
+		if (data() <= 16)
+			return 1;
+		else
+			return 2;
 	case Push:
 		return 1 + max<size_t>(1, numberEncodingSize(data()));
 	case PushSubSize:
@@ -173,6 +179,10 @@ size_t AssemblyItem::arguments() const
 		return get<0>(*m_verbatimBytecode);
 	else if (type() == AssignImmutable)
 		return 2;
+	else if (type() == Swap)
+		return static_cast<size_t>(data());
+	else if (type() == Dup)
+		return static_cast<size_t>(data());
 	else
 		return 0;
 }
@@ -183,6 +193,10 @@ size_t AssemblyItem::returnValues() const
 	{
 	case Operation:
 		return static_cast<size_t>(instructionInfo(instruction()).ret);
+	case Swap:
+		return static_cast<size_t>(data());
+	case Dup:
+		return static_cast<size_t>(data()) + 1;
 	case Push:
 	case PushTag:
 	case PushData:
@@ -210,7 +224,11 @@ bool AssemblyItem::canBeFunctional() const
 	switch (m_type)
 	{
 	case Operation:
-		return !isDupInstruction(instruction()) && !isSwapInstruction(instruction());
+		return !(m_instruction >= Instruction::SWAP1 && m_instruction <= Instruction::SWAP16) &&
+			   !(m_instruction >= Instruction::DUP1 && m_instruction <= Instruction::DUP16) &&
+			   m_instruction != Instruction::SWAP_N &&
+			   m_instruction != Instruction::DUP_N
+			;
 	case Push:
 	case PushTag:
 	case PushData:
@@ -252,6 +270,16 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	{
 		assertThrow(isValidInstruction(instruction()), AssemblyException, "Invalid instruction.");
 		text = util::toLower(instructionInfo(instruction()).name);
+		break;
+	}
+	case Swap:
+	{
+		text = "swap" + to_string(data());
+		break;
+	}
+	case Dup:
+	{
+		text = "dup" + to_string(data());
 		break;
 	}
 	case Push:
@@ -331,6 +359,12 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " " << instructionInfo(_item.instruction()).name;
 		if (_item.instruction() == Instruction::JUMP || _item.instruction() == Instruction::JUMPI)
 			_out << "\t" << _item.getJumpTypeAsString();
+		break;
+	case Swap:
+		_out << "SWAP" << dec << _item.data();
+		break;
+	case Dup:
+		_out << "DUP" << dec << _item.data();
 		break;
 	case Push:
 		_out << " PUSH " << hex << _item.data() << dec;

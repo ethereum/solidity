@@ -115,6 +115,10 @@ private:
 	void fillInJunk(CFG::BasicBlock const& _block, CFG::FunctionInfo const* _functionInfo = nullptr);
 
 	StackLayout& m_layout;
+
+	// TODO
+	unsigned maxSwap() const { return 16; }
+	unsigned maxDup() const { return 16; }
 };
 
 }

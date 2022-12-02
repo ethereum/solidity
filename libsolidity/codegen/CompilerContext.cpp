@@ -419,17 +419,17 @@ void CompilerContext::appendInlineAssembly(
 		size_t stackDiff = static_cast<size_t>(_assembly.stackHeight()) - startStackHeight + stackDepth;
 		if (_context == yul::IdentifierContext::LValue)
 			stackDiff -= 1;
-		if (stackDiff < 1 || stackDiff > 16)
+		if (stackDiff < 1 || stackDiff > _assembly.maxDup() || stackDiff > _assembly.maxSwap())
 			BOOST_THROW_EXCEPTION(
 				StackTooDeepError() <<
 				errinfo_sourceLocation(nativeLocationOf(_identifier)) <<
 				util::errinfo_comment(util::stackTooDeepString)
 			);
 		if (_context == yul::IdentifierContext::RValue)
-			_assembly.appendInstruction(dupInstruction(static_cast<unsigned>(stackDiff)));
+			_assembly.appendDup(static_cast<unsigned>(stackDiff));
 		else
 		{
-			_assembly.appendInstruction(swapInstruction(static_cast<unsigned>(stackDiff)));
+			_assembly.appendSwap(static_cast<unsigned>(stackDiff));
 			_assembly.appendInstruction(Instruction::POP);
 		}
 	};

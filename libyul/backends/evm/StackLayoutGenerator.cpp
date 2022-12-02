@@ -740,14 +740,15 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 		});
 	};
 	/// @returns the number of operations required to transform @a _source to @a _target.
-	auto evaluateTransform = [](Stack _source, Stack const& _target) -> size_t {
+	auto evaluateTransform = [&](Stack _source, Stack const& _target) -> size_t {
 		size_t opGas = 0;
 		auto swap = [&](unsigned _swapDepth)
 		{
-			if (_swapDepth > 16)
+			if (_swapDepth > maxSwap())
 				opGas += 1000;
 			else
-				opGas += evmasm::GasMeter::runGas(evmasm::swapInstruction(_swapDepth));
+				// TODO
+				opGas += evmasm::GasMeter::runGas(evmasm::Instruction::SWAP1);
 		};
 		auto dupOrPush = [&](StackSlot const& _slot)
 		{
@@ -757,8 +758,9 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 			{
 				auto depth = util::findOffset(_source | ranges::views::reverse, _slot);
 				yulAssert(depth);
-				if (*depth < 16)
-					opGas += evmasm::GasMeter::runGas(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)));
+				if (*depth < maxDup())
+					// TODO
+					opGas += evmasm::GasMeter::runGas(evmasm::Instruction::DUP1);
 				else
 					opGas += 1000;
 			}

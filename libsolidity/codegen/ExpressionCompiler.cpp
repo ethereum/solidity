@@ -118,7 +118,7 @@ void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration co
 	acceptAndConvert(*_varDecl.value(), *_varDecl.annotation().type);
 
 	// append return
-	m_context << dupInstruction(_varDecl.annotation().type->sizeOnStack() + 1);
+	m_context << AssemblyItem(AssemblyItemType::Dup, _varDecl.annotation().type->sizeOnStack() + 1);
 	m_context.appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
 }
 
@@ -220,9 +220,9 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		m_context << Instruction::SWAP2 << Instruction::POP << Instruction::SWAP1;
 	else if (paramTypes.size() >= 2)
 	{
-		m_context << swapInstruction(static_cast<unsigned>(paramTypes.size()));
+		m_context << AssemblyItem(AssemblyItemType::Swap, static_cast<unsigned>(paramTypes.size()));
 		m_context << Instruction::POP;
-		m_context << swapInstruction(static_cast<unsigned>(paramTypes.size()));
+		m_context << AssemblyItem(AssemblyItemType::Swap, static_cast<unsigned>(paramTypes.size()));
 		utils().popStackSlots(paramTypes.size() - 1);
 	}
 	unsigned retSizeOnStack = 0;
@@ -265,13 +265,13 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		retSizeOnStack = returnTypes.front()->sizeOnStack();
 	}
 	solAssert(retSizeOnStack == utils().sizeOnStack(returnTypes), "");
-	if (retSizeOnStack > 15)
+	if (retSizeOnStack + 1 > m_context.assembly().maxDup())
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_varDecl.location()) <<
 			util::errinfo_comment(util::stackTooDeepString)
 		);
-	m_context << dupInstruction(retSizeOnStack + 1);
+	m_context << AssemblyItem(AssemblyItemType::Dup, retSizeOnStack + 1);
 	m_context.appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
 }
 
@@ -347,7 +347,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		}
 		if (lvalueSize > 0)
 		{
-			if (itemSize + lvalueSize > 16)
+			if (itemSize + lvalueSize > m_context.assembly().maxSwap())
 				BOOST_THROW_EXCEPTION(
 					StackTooDeepError() <<
 					errinfo_sourceLocation(_assignment.location()) <<
@@ -355,7 +355,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				);
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
-				m_context << swapInstruction(itemSize + lvalueSize) << Instruction::POP;
+				m_context << AssemblyItem(AssemblyItemType::Swap, itemSize + lvalueSize) << Instruction::POP;
 		}
 		m_currentLValue->storeValue(*_assignment.annotation().type, _assignment.location());
 	}
@@ -447,7 +447,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			m_context << Instruction::DUP1;
 			if (m_currentLValue->sizeOnStack() > 0)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
-					m_context << swapInstruction(i);
+					m_context << AssemblyItem(AssemblyItemType::Swap, i);
 		}
 		if (_unaryOperation.getOperator() == Token::Inc)
 		{
@@ -472,7 +472,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		// Stack for prefix: [ref...] (*ref)+-1
 		// Stack for postfix: *ref [ref...] (*ref)+-1
 		for (unsigned i = m_currentLValue->sizeOnStack(); i > 0; --i)
-			m_context << swapInstruction(i);
+			m_context << AssemblyItem(AssemblyItemType::Swap, i);
 		m_currentLValue->storeValue(
 			*_unaryOperation.annotation().type, _unaryOperation.location(),
 			!_unaryOperation.isPrefixOperation());
@@ -715,7 +715,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			if (function.saltSet())
 			{
-				m_context << dupInstruction(2 + (function.valueSet() ? 1 : 0));
+				m_context << AssemblyItem(AssemblyItemType::Dup, 2 + (function.valueSet() ? 1 : 0));
 				m_context << Instruction::SWAP1;
 			}
 
@@ -724,7 +724,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			// now: [salt], [value], [salt], size, offset
 			if (function.valueSet())
-				m_context << dupInstruction(3 + (function.saltSet() ? 1 : 0));
+				m_context << AssemblyItem(AssemblyItemType::Dup, 3 + (function.saltSet() ? 1 : 0));
 			else
 				m_context << u256(0);
 
@@ -737,9 +737,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// now: [salt], [value], address
 
 			if (function.valueSet())
-				m_context << swapInstruction(1) << Instruction::POP;
+				m_context << AssemblyItem(AssemblyItemType::Swap, 1) << Instruction::POP;
 			if (function.saltSet())
-				m_context << swapInstruction(1) << Instruction::POP;
+				m_context << AssemblyItem(AssemblyItemType::Swap, 1) << Instruction::POP;
 
 			// Check if zero (reverted)
 			m_context << Instruction::DUP1 << Instruction::ISZERO;
@@ -765,7 +765,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Its values of gasSet and valueSet is equal to the original function's though.
 			unsigned stackDepth = (function.gasSet() ? 1u : 0u) + (function.valueSet() ? 1u : 0u);
 			if (stackDepth > 0)
-				m_context << swapInstruction(stackDepth);
+				m_context << AssemblyItem(AssemblyItemType::Swap, stackDepth);
 			if (function.gasSet())
 				m_context << Instruction::POP;
 			break;
@@ -1022,7 +1022,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			};
 			m_context << contractAddresses.at(function.kind());
 			for (unsigned i = function.sizeOnStack(); i > 0; --i)
-				m_context << swapInstruction(i);
+				m_context << AssemblyItem(AssemblyItemType::Swap, i);
 			solAssert(!_functionCall.annotation().tryCall, "");
 			appendExternalFunctionCall(function, arguments, false);
 			break;
@@ -2648,7 +2648,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	utils().fetchFreeMemoryPointer();
 	if (!_functionType.isBareCall())
 	{
-		m_context << dupInstruction(2 + gasValueSize + CompilerUtils::sizeOnStack(argumentTypes));
+		m_context << AssemblyItem(AssemblyItemType::Dup, 2 + gasValueSize + CompilerUtils::sizeOnStack(argumentTypes));
 		utils().storeInMemoryDynamic(IntegerType(8 * CompilerUtils::dataStartOffset), false);
 	}
 
@@ -2703,10 +2703,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	else if (useStaticCall)
 		solAssert(!_functionType.valueSet(), "Value set for staticcall");
 	else if (_functionType.valueSet())
-		m_context << dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
+		m_context << AssemblyItem(AssemblyItemType::Dup, m_context.baseToCurrentStackOffset(valueStackPos));
 	else
 		m_context << u256(0);
-	m_context << dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
+	m_context << AssemblyItem(AssemblyItemType::Dup, m_context.baseToCurrentStackOffset(contractStackPos));
 
 	bool existenceChecked = false;
 	// Check the target contract exists (has code) for non-low-level calls.
@@ -2730,7 +2730,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	}
 
 	if (_functionType.gasSet())
-		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
+		m_context << AssemblyItem(AssemblyItemType::Dup, m_context.baseToCurrentStackOffset(gasStackPos));
 	else if (m_context.evmVersion().canOverchargeGasForCall())
 		// Send all gas (requires tangerine whistle EVM)
 		m_context << Instruction::GAS;
@@ -2768,7 +2768,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context.appendConditionalRevert(true);
 	}
 	else
-		m_context << swapInstruction(remainsSize);
+		m_context << AssemblyItem(AssemblyItemType::Swap, remainsSize);
 	utils().popStackSlots(remainsSize);
 
 	// Only success flag is remaining on stack.

@@ -85,6 +85,12 @@ bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
 			gas += GasMeter::runGas(Instruction::PUSH1);
+		else if (item.type() == Swap)
+			// TODO
+			gas += GasMeter::runGas(Instruction::SWAP1);
+		else if (item.type() == Dup)
+			// TODO
+			gas += GasMeter::runGas(Instruction::DUP1);
 		else if (item.type() == Operation)
 		{
 			if (item.instruction() == Instruction::EXP)
@@ -167,21 +173,21 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 
 		// back up memory
 		// mload(0)
-		Instruction::DUP1,
+		AssemblyItem(Dup, 1),
 		Instruction::MLOAD,
 
 		// codecopy(0, <offset>, 32)
 		u256(32),
 		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[4]
-		Instruction::DUP4,
+		AssemblyItem(Dup, 4),
 		Instruction::CODECOPY,
 
 		// mload(0)
-		Instruction::DUP2,
+		AssemblyItem(Dup, 2),
 		Instruction::MLOAD,
 
 		// restore original memory
-		Instruction::SWAP2,
+		AssemblyItem(Swap, 2),
 		Instruction::MSTORE
 	};
 	return copyRoutine;

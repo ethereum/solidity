@@ -175,6 +175,9 @@ enum class Instruction: uint8_t
 	LOG3,				///< Makes a log entry; 3 topics.
 	LOG4,				///< Makes a log entry; 4 topics.
 
+	SWAP_N = 0xB0,
+	DUP_N,
+
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account
 	CALLCODE,			///< message-call with another account's code only
@@ -209,34 +212,10 @@ inline bool isPushInstruction(Instruction _inst)
 	return Instruction::PUSH1 <= _inst && _inst <= Instruction::PUSH32;
 }
 
-/// @returns true if the instruction is a DUP
-inline bool isDupInstruction(Instruction _inst)
-{
-	return Instruction::DUP1 <= _inst && _inst <= Instruction::DUP16;
-}
-
-/// @returns true if the instruction is a SWAP
-inline bool isSwapInstruction(Instruction _inst)
-{
-	return Instruction::SWAP1 <= _inst && _inst <= Instruction::SWAP16;
-}
-
 /// @returns true if the instruction is a LOG
 inline bool isLogInstruction(Instruction _inst)
 {
 	return Instruction::LOG0 <= _inst && _inst <= Instruction::LOG4;
-}
-
-/// @returns the number of PUSH Instruction _inst
-inline unsigned getPushNumber(Instruction _inst)
-{
-	return static_cast<uint8_t>(_inst) - unsigned(Instruction::PUSH1) + 1;
-}
-
-/// @returns the number of DUP Instruction _inst
-inline unsigned getDupNumber(Instruction _inst)
-{
-	return static_cast<uint8_t>(_inst) - unsigned(Instruction::DUP1) + 1;
 }
 
 /// @returns the number of SWAP Instruction _inst
@@ -256,20 +235,6 @@ inline Instruction pushInstruction(unsigned _number)
 {
 	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, std::string("Invalid PUSH instruction requested (") + std::to_string(_number) + ").");
 	return Instruction(unsigned(Instruction::PUSH1) + _number - 1);
-}
-
-/// @returns the DUP<_number> instruction
-inline Instruction dupInstruction(unsigned _number)
-{
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, std::string("Invalid DUP instruction requested (") + std::to_string(_number) + ").");
-	return Instruction(unsigned(Instruction::DUP1) + _number - 1);
-}
-
-/// @returns the SWAP<_number> instruction
-inline Instruction swapInstruction(unsigned _number)
-{
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, std::string("Invalid SWAP instruction requested (") + std::to_string(_number) + ").");
-	return Instruction(unsigned(Instruction::SWAP1) + _number - 1);
 }
 
 /// @returns the LOG<_number> instruction

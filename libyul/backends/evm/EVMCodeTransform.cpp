@@ -187,7 +187,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 				m_unusedStackSlots.erase(it);
 				m_context->variableStackHeights[&var] = slot;
 				if (size_t heightDiff = variableHeightDiff(var, varName, true))
-					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
+					m_assembly.appendSwap(static_cast<unsigned>(heightDiff - 1));
 				m_assembly.appendInstruction(evmasm::Instruction::POP);
 				break;
 			}
@@ -274,7 +274,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 			// TODO: opportunity for optimization: Do not DUP if this is the last reference
 			// to the top most element of the stack
 			if (size_t heightDiff = variableHeightDiff(_var, _identifier.name, false))
-				m_assembly.appendInstruction(evmasm::dupInstruction(static_cast<unsigned>(heightDiff)));
+				m_assembly.appendDup(static_cast<unsigned>(heightDiff));
 			else
 				// Store something to balance the stack
 				m_assembly.appendConstant(u256(0));
@@ -328,7 +328,7 @@ void CodeTransform::operator()(Switch const& _switch)
 			AbstractAssembly::LabelID bodyLabel = m_assembly.newLabelId();
 			caseBodies[&c] = bodyLabel;
 			yulAssert(m_assembly.stackHeight() == expressionHeight + 1, "");
-			m_assembly.appendInstruction(evmasm::dupInstruction(2));
+			m_assembly.appendDup(2);
 			m_assembly.appendInstruction(evmasm::Instruction::EQ);
 			m_assembly.appendJumpToIf(bodyLabel);
 		}
@@ -478,7 +478,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 				}
 				else
 				{
-					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u));
+					m_assembly.appendSwap(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u);
 					swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
 				}
 			for (size_t i = 0; i < stackLayout.size(); ++i)
@@ -758,7 +758,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	{
 		Scope::Variable const& _var = std::get<Scope::Variable>(*var);
 		if (size_t heightDiff = variableHeightDiff(_var, _variableName.name, true))
-			m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
+			m_assembly.appendSwap(static_cast<unsigned>(heightDiff - 1));
 		m_assembly.appendInstruction(evmasm::Instruction::POP);
 		decreaseReference(_variableName.name, _var);
 	}
