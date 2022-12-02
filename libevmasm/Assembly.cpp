@@ -777,7 +777,7 @@ LinkerObject const& Assembly::assemble(bool eof) const
 	auto const dataLength = ret.bytecode.size() - dataStart;
 	if (eof)
 	{
-		assertThrow(dataLength >= 0 && dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
+		assertThrow(/*dataLength >= 0 && */ dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
 		toBigEndian(uint16_t(dataLength), eofDataLength);
 	}
 
