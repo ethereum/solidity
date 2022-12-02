@@ -16,14 +16,14 @@ at contract level.
 
 The first part, ``A``, can be one of:
 
-- A list of file-level or library functions (``using {f, g, h, L.t} for uint;``) -
+- A list of file-level or library functions (e.g. ``using {f, g, h, L.t} for uint;``) -
   only those functions will be attached to the type as member functions.
   Note that private library functions can only be specified when ``using for`` is inside the library.
-- The name of a library (``using L for uint;``) -
+- The name of a library (e.g. ``using L for uint;``) -
   all non-private functions of the library are attached to the type.
 
 At file level, the second part, ``B``, has to be an explicit type (without data location specifier).
-Inside contracts, you can also use ``using L for *;``,
+Inside contracts, you can also use ``*`` in place of the type (e.g. ``using L for *;``),
 which has the effect that all functions of the library ``L``
 are attached to *all* types.
 
@@ -33,7 +33,7 @@ match the type of the object. The type is checked at the
 point the function is called and function overload
 resolution is performed.
 
-If you use a list of functions (``using {f, g, h, L.t} for uint;``),
+If you use a list of functions (e.g. ``using {f, g, h, L.t} for uint;``),
 then the type (``uint``) has to be implicitly convertible to the
 first parameter of each of these functions. This check is
 performed even if none of these functions are called.
