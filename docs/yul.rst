@@ -9,13 +9,9 @@ Yul
 Yul (previously also called JULIA or IULIA) is an intermediate language that can be
 compiled to bytecode for different backends.
 
-Support for EVM 1.0, EVM 1.5 and Ewasm is planned, and it is designed to
-be a usable common denominator of all three
-platforms. It can already be used in stand-alone mode and
-for "inline assembly" inside Solidity
-and there is an experimental implementation of the Solidity compiler
-that uses Yul as an intermediate language. Yul is a good target for
-high-level optimisation stages that can benefit all target platforms equally.
+It can be used in stand-alone mode and for "inline assembly" inside Solidity.
+The compiler uses Yul as an intermediate language in the IR-based code generator ("new codegen" or "IR-based codegen").
+Yul is a good target for high-level optimisation stages that can benefit all target platforms equally.
 
 Motivation and High-level Description
 =====================================
@@ -933,7 +929,7 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | number()                |     | F | current block number                                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| difficulty()            |     | F | difficulty of the current block                                 |
+| difficulty()            |     | F | difficulty of the current block (see note below)                |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | gaslimit()              |     | F | block gas limit of the current block                            |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -948,6 +944,13 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
   You need to use the ``returndatasize`` opcode to check which part of this memory area contains the return data.
   The remaining bytes will retain their values as of before the call.
 
+.. note::
+  With the Paris network upgrade the semantics of ``difficulty`` have been changed.
+  It returns the value of ``prevrandao``, which is a 256-bit value, whereas the highest recorded
+  difficulty value within Ethash was ~54 bits.
+  This change is described in `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_.
+  Please note that irrelevant to which EVM version is selected in the compiler, the semantics of
+  instructions depend on the final chain of deployment.
 
 In some internal dialects, there are additional functions:
 
@@ -1174,7 +1177,7 @@ An example Yul Object is shown below:
             datacopy(offset, dataoffset("Contract2"), size)
             // constructor parameter is a single number 0x1234
             mstore(add(offset, size), 0x1234)
-            pop(create(offset, add(size, 32), 0))
+            pop(create(0, offset, add(size, 32)))
 
             // now return the runtime object (the currently
             // executing code is the constructor code)

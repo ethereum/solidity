@@ -653,7 +653,7 @@ void CommandLineInterface::processInput()
 	{
 		solAssert(m_standardJsonInput.has_value());
 
-		StandardCompiler compiler(m_fileReader.reader(), m_options.formatting.json);
+		StandardCompiler compiler(m_universalCallback.callback(), m_options.formatting.json);
 		sout() << compiler.compile(std::move(m_standardJsonInput.value())) << endl;
 		m_standardJsonInput.reset();
 		break;
@@ -692,7 +692,7 @@ void CommandLineInterface::compile()
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
-	m_compiler = make_unique<CompilerStack>(m_fileReader.reader());
+	m_compiler = make_unique<CompilerStack>(m_universalCallback.callback());
 
 	SourceReferenceFormatter formatter(serr(false), *m_compiler, coloredOutput(m_options), m_options.formatting.withErrorIds);
 
@@ -708,6 +708,7 @@ void CommandLineInterface::compile()
 		m_compiler->setLibraries(m_options.linker.libraries);
 		m_compiler->setViaIR(m_options.output.viaIR);
 		m_compiler->setEVMVersion(m_options.output.evmVersion);
+		m_compiler->setEOFVersion(m_options.output.eofVersion);
 		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
 		if (m_options.output.debugInfoSelection.has_value())
 			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
@@ -1042,6 +1043,7 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 
 		auto& stack = yulStacks[src.first] = yul::YulStack(
 			m_options.output.evmVersion,
+			m_options.output.eofVersion,
 			_language,
 			m_options.optimiserSettings(),
 			m_options.output.debugInfoSelection.has_value() ?

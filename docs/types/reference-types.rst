@@ -133,8 +133,12 @@ It is possible to mark state variable arrays ``public`` and have Solidity create
 The numeric index becomes a required parameter for the getter.
 
 Accessing an array past its end causes a failing assertion. Methods ``.push()`` and ``.push(value)`` can be used
-to append a new element at the end of the array, where ``.push()`` appends a zero-initialized element and returns
+to append a new element at the end of a dynamically-sized array, where ``.push()`` appends a zero-initialized element and returns
 a reference to it.
+
+.. note::
+    Dynamically-sized arrays can only be resized in storage.
+    In memory, such arrays can be of arbitrary size but the size cannot be changed once an array is allocated.
 
 .. index:: ! string, ! bytes
 

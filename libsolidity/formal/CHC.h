@@ -59,7 +59,7 @@ public:
 		langutil::UniqueErrorReporter& _errorReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		ModelCheckerSettings const& _settings,
+		ModelCheckerSettings _settings,
 		langutil::CharStreamProvider const& _charStreamProvider
 	);
 

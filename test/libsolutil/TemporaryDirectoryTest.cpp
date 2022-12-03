@@ -16,9 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <test/TemporaryDirectory.h>
+#include <libsolutil/TemporaryDirectory.h>
 
-#include <test/libsolidity/util/SoltestErrors.h>
+#include <libsolidity/util/SoltestErrors.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -28,7 +28,7 @@
 using namespace std;
 using namespace boost::test_tools;
 
-namespace solidity::test
+namespace solidity::util::test
 {
 
 BOOST_AUTO_TEST_SUITE(TemporaryDirectoryTest)

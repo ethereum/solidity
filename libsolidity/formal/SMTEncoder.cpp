@@ -47,13 +47,13 @@ using namespace solidity::frontend;
 
 SMTEncoder::SMTEncoder(
 	smt::EncodingContext& _context,
-	ModelCheckerSettings const& _settings,
+	ModelCheckerSettings _settings,
 	UniqueErrorReporter& _errorReporter,
 	langutil::CharStreamProvider const& _charStreamProvider
 ):
 	m_errorReporter(_errorReporter),
 	m_context(_context),
-	m_settings(_settings),
+	m_settings(std::move(_settings)),
 	m_charStreamProvider(_charStreamProvider)
 {
 }
@@ -585,15 +585,6 @@ bool SMTEncoder::visit(FunctionCall const& _funCall)
 		if (auto arg = _funCall.arguments().front())
 			arg->accept(*this);
 		return false;
-	}
-	else if (funType.kind() == FunctionType::Kind::ABIEncodeCall)
-	{
-		auto fun = _funCall.arguments().front();
-		createExpr(*fun);
-		auto const* functionType = dynamic_cast<FunctionType const*>(fun->annotation().type);
-		if (functionType->hasDeclaration())
-			defineExpr(*fun, functionType->externalIdentifier());
-		return true;
 	}
 
 	// We do not really need to visit the expression in a wrap/unwrap no-op call,
@@ -1323,11 +1314,17 @@ void SMTEncoder::endVisit(Return const& _return)
 
 bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 {
+	createExpr(_memberAccess);
+
 	auto const& accessType = _memberAccess.annotation().type;
 	if (accessType->category() == Type::Category::Function)
-		return true;
+	{
+		auto const* functionType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+		if (functionType && functionType->hasDeclaration())
+			defineExpr(_memberAccess, functionType->externalIdentifier());
 
-	createExpr(_memberAccess);
+		return true;
+	}
 
 	Expression const* memberExpr = innermostTuple(_memberAccess.expression());
 
@@ -1403,7 +1400,10 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		{
 			if (auto const* var = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 			{
-				defineExpr(_memberAccess, currentValue(*var));
+				if (var->isConstant())
+					defineExpr(_memberAccess, constantExpr(_memberAccess, *var));
+				else
+					defineExpr(_memberAccess, currentValue(*var));
 				return false;
 			}
 		}
@@ -2757,7 +2757,9 @@ VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _e
 		}
 	// But we are interested in "contract.var", because that is the same as just "var".
 	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expr))
-		if (dynamic_cast<ContractDefinition const*>(expressionToDeclaration(memberAccess->expression())))
+		if (dynamic_cast<ContractDefinition const*>(expressionToDeclaration(
+			*cleanExpression(memberAccess->expression())
+		)))
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration))
 			{
 				solAssert(m_context.knownVariable(*varDecl), "");
@@ -3162,11 +3164,10 @@ void SMTEncoder::collectFreeFunctions(set<SourceUnit const*, ASTNode::CompareByI
 				auto contract = dynamic_cast<ContractDefinition const*>(node.get());
 				contract && contract->isLibrary()
 			)
-			{
 				for (auto function: contract->definedFunctions())
-					if (!function->isPublic())
-						m_freeFunctions.insert(function);
-			}
+					// We need to add public library functions too because they can be called
+					// internally by internal library functions that are considered free functions.
+					m_freeFunctions.insert(function);
 }
 
 void SMTEncoder::createFreeConstants(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)

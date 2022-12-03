@@ -27,6 +27,7 @@
 #include <vector>
 
 using namespace std;
+using namespace solidity;
 using namespace solidity::util;
 
 bool solidity::util::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance, size_t _lenThreshold)
@@ -113,3 +114,80 @@ string solidity::util::suffixedVariableNameList(string const& _baseName, size_t 
 	}
 	return result;
 }
+
+namespace
+{
+
+/// Try to format as N * 2**x
+optional<string> tryFormatPowerOfTwo(bigint const& _value)
+{
+	bigint prefix = _value;
+
+	// when multiple trailing zero bytes, format as N * 2**x
+	int i = 0;
+	for (; (prefix & 0xff) == 0; prefix >>= 8)
+		++i;
+	if (i <= 2)
+		return nullopt;
+
+	// 0x100 yields 2**8 (N is 1 and redundant)
+	if (prefix == 1)
+		return {fmt::format("2**{}", i * 8)};
+	else if ((prefix & (prefix - 1)) == 0)
+	{
+		int j = 0;
+		for (; (prefix & 0x1) == 0; prefix >>= 1)
+			j++;
+		return {fmt::format("2**{}", i * 8 + j)};
+	}
+	else
+		return {fmt::format(
+			"{} * 2**{}",
+			toHex(toCompactBigEndian(prefix), HexPrefix::Add, HexCase::Mixed),
+			i * 8
+		)};
+}
+
+}
+
+string solidity::util::formatNumberReadable(bigint const& _value, bool _useTruncation)
+{
+	bool const isNegative = _value < 0;
+	bigint const absValue = isNegative ? (bigint(-1) * _value) : bigint(_value);
+	string const sign = isNegative ? "-" : "";
+
+	// smaller numbers return as decimal
+	if (absValue <= 0x1000000)
+		return sign + absValue.str();
+
+	if (auto result = tryFormatPowerOfTwo(absValue))
+		return {sign + *result};
+	else if (auto result = tryFormatPowerOfTwo(absValue + 1))
+		return {sign + *result + (isNegative ? " + 1" : " - 1")};
+
+	string str = toHex(toCompactBigEndian(absValue), HexPrefix::Add, HexCase::Mixed);
+
+	if (_useTruncation)
+	{
+		// return as interior-truncated hex.
+		size_t len = str.size();
+
+		if (len < 24)
+			return sign + str;
+
+		size_t const initialChars = 6;
+		size_t const finalChars = 4;
+		size_t numSkipped = len - initialChars - finalChars;
+
+		return fmt::format(
+			"{}{}...{{+{} more}}...{}",
+			sign,
+			str.substr(0, initialChars),
+			numSkipped,
+			str.substr(len-finalChars, len)
+		);
+	}
+
+	return sign + str;
+}
+

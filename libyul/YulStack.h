@@ -72,6 +72,7 @@ public:
 	YulStack():
 		YulStack(
 			langutil::EVMVersion{},
+			std::nullopt,
 			Language::Assembly,
 			solidity::frontend::OptimiserSettings::none(),
 			langutil::DebugInfoSelection::Default()
@@ -80,12 +81,14 @@ public:
 
 	YulStack(
 		langutil::EVMVersion _evmVersion,
+		std::optional<uint8_t> _eofVersion,
 		Language _language,
 		solidity::frontend::OptimiserSettings _optimiserSettings,
 		langutil::DebugInfoSelection const& _debugInfoSelection
 	):
 		m_language(_language),
 		m_evmVersion(_evmVersion),
+		m_eofVersion(_eofVersion),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_errorReporter(m_errors)
@@ -146,6 +149,7 @@ private:
 
 	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;
+	std::optional<uint8_t> m_eofVersion;
 	solidity::frontend::OptimiserSettings m_optimiserSettings;
 	langutil::DebugInfoSelection m_debugInfoSelection{};
 

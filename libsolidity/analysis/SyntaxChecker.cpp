@@ -153,22 +153,28 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	}
 	else if (_pragma.literals()[0] == "solidity")
 	{
-		vector<Token> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
-		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
-		SemVerMatchExpressionParser parser(tokens, literals);
-		auto matchExpression = parser.parse();
-		// An unparsable version pragma is an unrecoverable fatal error in the parser.
-		solAssert(matchExpression.has_value(), "");
-		static SemVerVersion const currentVersion{string(VersionString)};
-		if (!matchExpression->matches(currentVersion))
-			m_errorReporter.syntaxError(
-				3997_error,
-				_pragma.location(),
-				"Source file requires different compiler version (current compiler is " +
-				string(VersionString) + ") - note that nightly builds are considered to be "
-				"strictly less than the released version"
-			);
-		m_versionPragmaFound = true;
+		try
+		{
+			vector<Token> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
+			vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
+			SemVerMatchExpressionParser parser(tokens, literals);
+			SemVerMatchExpression matchExpression = parser.parse();
+			static SemVerVersion const currentVersion{string(VersionString)};
+			if (!matchExpression.matches(currentVersion))
+				m_errorReporter.syntaxError(
+					3997_error,
+					_pragma.location(),
+					"Source file requires different compiler version (current compiler is " +
+					string(VersionString) + ") - note that nightly builds are considered to be "
+					"strictly less than the released version"
+				);
+			m_versionPragmaFound = true;
+		}
+		catch (SemVerError const&)
+		{
+			// An unparsable version pragma is an unrecoverable fatal error in the parser.
+			solAssert(false);
+		}
 	}
 	else
 		m_errorReporter.syntaxError(4936_error, _pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");

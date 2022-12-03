@@ -614,19 +614,19 @@ which is primarily an SMT solver and makes `Spacer
 <https://github.com/uuverifiers/eldarica>`_ which does both.
 
 The user can choose which solvers should be used, if available, via the CLI
-option ``--model-checker-solvers {all,cvc4,smtlib2,z3}`` or the JSON option
+option ``--model-checker-solvers {all,cvc4,eld,smtlib2,z3}`` or the JSON option
 ``settings.modelChecker.solvers=[smtlib2,z3]``, where:
 
 - ``cvc4`` is only available if the ``solc`` binary is compiled with it. Only BMC uses ``cvc4``.
+- ``eld`` is used via its binary which must be installed in the system. Only CHC uses ``eld``, and only if ``z3`` is not enabled.
 - ``smtlib2`` outputs SMT/Horn queries in the `smtlib2 <http://smtlib.cs.uiowa.edu/>`_ format.
   These can be used together with the compiler's `callback mechanism <https://github.com/ethereum/solc-js>`_ so that
   any solver binary from the system can be employed to synchronously return the results of the queries to the compiler.
-  This is currently the only way to use Eldarica, for example, since it does not have a C++ API.
   This can be used by both BMC and CHC depending on which solvers are called.
 - ``z3`` is available
 
   - if ``solc`` is compiled with it;
-  - if a dynamic ``z3`` library of version 4.8.x is installed in a Linux system (from Solidity 0.7.6);
+  - if a dynamic ``z3`` library of version >=4.8.x is installed in a Linux system (from Solidity 0.7.6);
   - statically in ``soljson.js`` (from Solidity 0.6.9), that is, the Javascript binary of the compiler.
 
 .. note::

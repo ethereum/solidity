@@ -35,6 +35,7 @@ public:
 	explicit CHCSmtLib2Interface(
 		std::map<util::h256, std::string> const& _queryResponses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
+		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
 		std::optional<unsigned> _queryTimeout = {}
 	);
 
@@ -78,6 +79,7 @@ private:
 	std::vector<std::string> m_unhandledQueries;
 
 	frontend::ReadCallback::Callback m_smtCallback;
+	SMTSolverChoice m_enabledSolvers;
 
 	std::map<Sort const*, std::string> m_sortNames;
 };

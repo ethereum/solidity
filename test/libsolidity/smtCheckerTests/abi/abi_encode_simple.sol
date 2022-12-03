@@ -19,13 +19,8 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
-// Warning 1218: (298-328): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (389-419): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (492-522): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (298-328): CHC: Assertion violation might happen here.
-// Warning 6328: (389-419): CHC: Assertion violation might happen here.
-// Warning 6328: (492-522): CHC: Assertion violation might happen here.
-// Warning 4661: (298-328): BMC: Assertion violation happens here.
-// Warning 4661: (389-419): BMC: Assertion violation happens here.
-// Warning 4661: (492-522): BMC: Assertion violation happens here.
+// Warning 6328: (298-328): CHC: Assertion violation happens here.\nCounterexample:\n\nt = false\nx = 0\ny = 0\nz = 0\nb4 = []\nb5 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSimple(false, 0, 0, 0, a, b)
+// Warning 6328: (389-419): CHC: Assertion violation happens here.\nCounterexample:\n\nt = false\nx = 0\ny = 0\nz = 0\nb5 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSimple(false, 0, 0, 0, a, b)
+// Warning 6328: (492-522): CHC: Assertion violation happens here.\nCounterexample:\n\nt = false\nx = 0\ny = 0\nz = 0\nb1 = []\nb2 = []\nb5 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSimple(false, 0, 0, 0, a, b)

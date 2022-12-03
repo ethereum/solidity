@@ -87,6 +87,9 @@ public:
 private:
 	OptimiserStepContext& m_context;
 	Debug m_debug;
+#ifdef PROFILE_OPTIMIZER_STEPS
+	std::map<std::string, int64_t> m_durationPerStepInMicroseconds;
+#endif
 };
 
 }

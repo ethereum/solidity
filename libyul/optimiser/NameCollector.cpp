@@ -56,30 +56,62 @@ void ReferencesCounter::operator()(Identifier const& _identifier)
 
 void ReferencesCounter::operator()(FunctionCall const& _funCall)
 {
-	if (m_countWhat == VariablesAndFunctions)
-		++m_references[_funCall.functionName.name];
+	++m_references[_funCall.functionName.name];
 	ASTWalker::operator()(_funCall);
 }
 
-map<YulString, size_t> ReferencesCounter::countReferences(Block const& _block, CountWhat _countWhat)
+map<YulString, size_t> ReferencesCounter::countReferences(Block const& _block)
 {
-	ReferencesCounter counter(_countWhat);
+	ReferencesCounter counter;
 	counter(_block);
-	return counter.references();
+	return std::move(counter.m_references);
 }
 
-map<YulString, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function, CountWhat _countWhat)
+map<YulString, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function)
 {
-	ReferencesCounter counter(_countWhat);
+	ReferencesCounter counter;
 	counter(_function);
-	return counter.references();
+	return std::move(counter.m_references);
 }
 
-map<YulString, size_t> ReferencesCounter::countReferences(Expression const& _expression, CountWhat _countWhat)
+map<YulString, size_t> ReferencesCounter::countReferences(Expression const& _expression)
 {
-	ReferencesCounter counter(_countWhat);
+	ReferencesCounter counter;
 	counter.visit(_expression);
-	return counter.references();
+	return std::move(counter.m_references);
+}
+
+void VariableReferencesCounter::operator()(Identifier const& _identifier)
+{
+	++m_references[_identifier.name];
+}
+
+map<YulString, size_t> VariableReferencesCounter::countReferences(Block const& _block)
+{
+	VariableReferencesCounter counter;
+	counter(_block);
+	return std::move(counter.m_references);
+}
+
+map<YulString, size_t> VariableReferencesCounter::countReferences(FunctionDefinition const& _function)
+{
+	VariableReferencesCounter counter;
+	counter(_function);
+	return std::move(counter.m_references);
+}
+
+map<YulString, size_t> VariableReferencesCounter::countReferences(Expression const& _expression)
+{
+	VariableReferencesCounter counter;
+	counter.visit(_expression);
+	return std::move(counter.m_references);
+}
+
+map<YulString, size_t> VariableReferencesCounter::countReferences(Statement const& _statement)
+{
+	VariableReferencesCounter counter;
+	counter.visit(_statement);
+	return std::move(counter.m_references);
 }
 
 void AssignmentsSinceContinue::operator()(ForLoop const& _forLoop)

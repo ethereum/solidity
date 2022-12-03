@@ -14,7 +14,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Warning 1218: (131-165): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (131-165): CHC: Assertion violation might happen here.
-// Info 1180: Reentrancy property(ies) for :C:\n(!(<errorCode> >= 2) && (((:var 0).balances[address(this)] + ((- 1) * (:var 1).balances[address(this)])) >= 0))\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(address(this).balance == x)\n<errorCode> = 2 -> Assertion failed at assert(address(this).balance >= x)\n
-// Warning 4661: (131-165): BMC: Assertion violation happens here.
+// Warning 6328: (131-165): CHC: Assertion violation happens here.\nCounterexample:\n\n_i = 0\nx = 282\n\nTransaction trace:\nC.constructor()\nC.f(0)\n    _i.ext() -- untrusted external call, synthesized as:\n        C.f(0) -- reentrant call\n            _i.ext() -- untrusted external call

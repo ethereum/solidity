@@ -44,7 +44,7 @@ Rematerialiser::Rematerialiser(
 	bool _onlySelectedVariables
 ):
 	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore),
-	m_referenceCounts(ReferencesCounter::countReferences(_ast)),
+	m_referenceCounts(VariableReferencesCounter::countReferences(_ast)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
 	m_onlySelectedVariables(_onlySelectedVariables)
 {
@@ -77,7 +77,9 @@ void Rematerialiser::visit(Expression& _e)
 				{
 					// update reference counts
 					m_referenceCounts[name]--;
-					for (auto const& ref: ReferencesCounter::countReferences(*value->value))
+					for (auto const& ref: VariableReferencesCounter::countReferences(
+						*value->value
+					))
 						m_referenceCounts[ref.first] += ref.second;
 					_e = (ASTCopier{}).translate(*value->value);
 				}

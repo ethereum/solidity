@@ -6,15 +6,28 @@ Language Features:
 Compiler Features:
  * Commandline Interface: Return exit code ``2`` on uncaught exceptions.
  * Commandline Interface: Add `--no-cbor-metadata` that skips CBOR metadata from getting appended at the end of the bytecode.
+ * EVM: Basic support for the EVM version "Paris".
  * Natspec: Add event Natspec inheritance for devdoc.
  * Standard JSON: Add a boolean field `settings.metadata.appendCBOR` that skips CBOR metadata from getting appended at the end of the bytecode.
+ * Yul EVM Code Transform: Generate more optimal code for user-defined functions that always terminate a transaction. No return labels will be pushed for calls to functions that always terminate.
  * Yul Optimizer: Allow replacing the previously hard-coded cleanup sequence by specifying custom steps after a colon delimiter (``:``) in the sequence string.
  * Language Server: Add basic document hover support.
+ * Optimizer: Added optimization rule ``and(shl(X, Y), shl(X, Z)) => shl(X, and(Y, Z))``.
+ * SMTChecker: Support Eldarica as a Horn solver for the CHC engine when using the CLI option ``--model-checker-solvers eld``. The binary `eld` must be available in the system.
+ * SMTChecker: Make ``z3`` the default solver for the BMC and CHC engines instead of all solvers.
+ * Parser: More detailed error messages about invalid version pragmas.
 
 
 Bugfixes:
  * Yul Optimizer: Hash hex and decimal literals according to their value instead of their representation, improving the detection of equivalent functions.
  * Solidity Upgrade Tool ``solidity-upgrade``: Fix the tool returning success code on uncaught exceptions.
+ * SMTChecker: Fix display error for negative integers that are one more than powers of two.
+ * SMTChecker: Improved readability for large integers that are powers of two or almost powers of two in error messages.
+ * SMTChecker: Fix internal error when a public library function is called internally.
+ * SMTChecker: Fix internal error on multiple wrong SMTChecker natspec entries.
+ * SMTChecker: Fix internal error on chain assignments using static fully specified state variables.
+ * SMTChecker: Fix internal error when using user defined types as mapping indices or struct members.
+ * SMTChecker: Fix internal error when deleting struct member of function type.
 
 
 ### 0.8.17 (2022-09-08)

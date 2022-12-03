@@ -61,11 +61,11 @@ then
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3
-  z3_version="4.11.0"
+  z3_version="4.11.2"
   z3_dir="z3-${z3_version}-x64-osx-10.16"
   z3_package="${z3_dir}.zip"
   wget "https://github.com/Z3Prover/z3/releases/download/z3-${z3_version}/${z3_package}"
-  validate_checksum "$z3_package" b6a4a6d587e4bfb0643db81129f0f447692fae13d4bd1bd4d93f1c0301b75ffc
+  validate_checksum "$z3_package" a56b6c40d9251a963aabe1f15731dd88ad1cb801d0e7b16e45f8b232175e165c
   unzip "$z3_package"
   rm "$z3_package"
   cp "${z3_dir}/bin/libz3.a" /usr/local/lib

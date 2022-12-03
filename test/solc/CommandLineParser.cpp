@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			{true, false},
 			{{InvariantType::Contract, InvariantType::Reentrancy}},
 			true,
-			{false, true, true},
+			{false, false, true, true},
 			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
 			5,
 		};

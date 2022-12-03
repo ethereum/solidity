@@ -34,55 +34,93 @@
 
 set -ev
 
-if test -z "$1"; then
-	BUILD_DIR="emscripten_build"
-else
-	BUILD_DIR="$1"
-fi
+SCRIPT_DIR="$(realpath "$(dirname "$0")/..")"
+# shellcheck source=scripts/common.sh
+source "${SCRIPT_DIR}/common.sh"
 
-WORKSPACE=/root/project
+function build() {
+    local build_dir="$1"
+    local prerelease_source="${2:-ci}"
 
-cd "$WORKSPACE"
+    cd /root/project
 
-# shellcheck disable=SC2166
-if [[ "$CIRCLE_BRANCH" = release || -n "$CIRCLE_TAG" || -n "$FORCE_RELEASE" || "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]
-then
-	echo -n >prerelease.txt
-else
-	# Use last commit date rather than build date to avoid ending up with builds for
-	# different platforms having different version strings (and therefore producing different bytecode)
-	# if the CI is triggered just before midnight.
-	TZ=UTC git show --quiet --date="format-local:%Y.%-m.%-d" --format="ci.%cd" >prerelease.txt
-fi
-if [ -n "$CIRCLE_SHA1" ]
-then
-	echo -n "$CIRCLE_SHA1" >commit_hash.txt
-fi
+    # shellcheck disable=SC2166
+    if [[ "$CIRCLE_BRANCH" = release || -n "$CIRCLE_TAG" || -n "$FORCE_RELEASE" || "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]
+    then
+        echo -n >prerelease.txt
+    else
+        # Use last commit date rather than build date to avoid ending up with builds for
+        # different platforms having different version strings (and therefore producing different bytecode)
+        # if the CI is triggered just before midnight.
+        TZ=UTC git show --quiet --date="format-local:%Y.%-m.%-d" --format="${prerelease_source}.%cd" >prerelease.txt
+    fi
+    if [ -n "$CIRCLE_SHA1" ]
+    then
+        echo -n "$CIRCLE_SHA1" >commit_hash.txt
+    fi
 
-# Disable warnings for unqualified `move()` calls, introduced and enabled by
-# default in clang-16 which is what the emscripten docker image uses.
-# Additionally, disable the warning for unknown warnings here, as this script is
-# also used with earlier clang versions.
-# TODO: This can be removed if and when all usages of `move()` in our codebase use the `std::` qualifier.
-CMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call"
+    # Disable warnings for unqualified `move()` calls, introduced and enabled by
+    # default in clang-16 which is what the emscripten docker image uses.
+    # Additionally, disable the warning for unknown warnings here, as this script is
+    # also used with earlier clang versions.
+    # TODO: This can be removed if and when all usages of `move()` in our codebase use the `std::` qualifier.
+    CMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call"
 
+    mkdir -p "$build_dir"
+    cd "$build_dir"
+    emcmake cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBoost_USE_STATIC_LIBS=1 \
+        -DBoost_USE_STATIC_RUNTIME=1 \
+        -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
+        -DTESTS=0 \
+    ..
+    make soljson
 
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
-emcmake cmake \
-	-DCMAKE_BUILD_TYPE=Release \
-	-DBoost_USE_STATIC_LIBS=1 \
-	-DBoost_USE_STATIC_RUNTIME=1 \
-	-DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
-	-DTESTS=0 \
-  ..
-make soljson
+    cd ..
+    mkdir -p upload
+    scripts/ci/pack_soljson.sh "$build_dir/libsolc/soljson.js" "$build_dir/libsolc/soljson.wasm" upload/soljson.js
+    cp upload/soljson.js ./
 
-cd ..
-mkdir -p upload
-scripts/ci/pack_soljson.sh "$BUILD_DIR/libsolc/soljson.js" "$BUILD_DIR/libsolc/soljson.wasm" upload/soljson.js
-cp upload/soljson.js ./
+    OUTPUT_SIZE=$(ls -la soljson.js)
 
-OUTPUT_SIZE=$(ls -la soljson.js)
+    echo "Emscripten output size: $OUTPUT_SIZE"
+}
 
-echo "Emscripten output size: $OUTPUT_SIZE"
+function show_help() {
+cat << EOF
+Usage: ${0##*/} [-h|--help] [--build-dir DIR] [--prerelease-source prerelease_source]
+Build Solidity emscripten binary
+    -h | --help          Display this help message
+    --build-dir          The emscripten build directory
+    --prerelease-source  The prerelease source string. E.g. 'nightly' or 'ci'.
+EOF
+}
+
+function main() {
+    local build_dir="emscripten_build"
+    local prerelease_source=""
+
+    while (( $# > 0 )); do
+        case "$1" in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            --build-dir)
+                [[ -n "$2" ]] || fail "Option --build-dir cannot be empty"
+                build_dir="$2"
+                shift 2
+                ;;
+            --prerelease-source)
+                [[ -n "$2" ]] || fail "Option --prerelease-source cannot be empty"
+                prerelease_source="$2"
+                shift 2
+                ;;
+            *) fail "Invalid option: $1" ;;
+        esac
+    done
+    build "$build_dir" "$prerelease_source"
+}
+
+main "$@"

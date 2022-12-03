@@ -225,6 +225,15 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	m_evmVersion = _version;
 }
 
+void CompilerStack::setEOFVersion(std::optional<uint8_t> _version)
+{
+	if (m_stackState >= CompilationSuccessful)
+		solThrow(CompilerError, "Must set EOF version before compiling.");
+	if (_version && _version != 1)
+		solThrow(CompilerError, "Invalid EOF version.");
+	m_eofVersion = _version;
+}
+
 void CompilerStack::setModelCheckerSettings(ModelCheckerSettings _settings)
 {
 	if (m_stackState >= ParsedAndImported)
@@ -577,9 +586,18 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
+			// Run SMTChecker
+
 			auto allSources = util::applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
-			modelChecker.enableAllEnginesIfPragmaPresent(allSources);
+			if (ModelChecker::isPragmaPresent(allSources))
+				m_modelCheckerSettings.engine = ModelCheckerEngine::All();
+
+			// m_modelCheckerSettings is spread to engines and solver interfaces,
+			// so we need to check whether the enabled ones are available before building the classes.
+			if (m_modelCheckerSettings.engine.any())
+				m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
+
+			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
 			modelChecker.checkRequestedSourcesAndContracts(allSources);
 			for (Source const* source: m_sourceOrder)
 				if (source->ast)
@@ -1299,6 +1317,7 @@ void CompilerStack::compileContract(
 )
 {
 	solAssert(!m_viaIR, "");
+	solUnimplementedAssert(!m_eofVersion.has_value(), "Experimental EOF support is only available for via-IR compilation.");
 	solAssert(m_stackState >= AnalysisPerformed, "");
 	if (m_hasError)
 		solThrow(CompilerError, "Called compile with errors.");
@@ -1364,7 +1383,15 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings, sourceIndices(), m_debugInfoSelection, this);
+	IRGenerator generator(
+		m_evmVersion,
+		m_eofVersion,
+		m_revertStrings,
+		m_optimiserSettings,
+		sourceIndices(),
+		m_debugInfoSelection,
+		this
+	);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(
 		_contract,
 		createCBORMetadata(compiledContract, /* _forIR */ true),
@@ -1389,6 +1416,7 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	// Re-parse the Yul IR in EVM dialect
 	yul::YulStack stack(
 		m_evmVersion,
+		m_eofVersion,
 		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_debugInfoSelection
@@ -1421,6 +1449,7 @@ void CompilerStack::generateEwasm(ContractDefinition const& _contract)
 	// Re-parse the Yul IR in EVM dialect
 	yul::YulStack stack(
 		m_evmVersion,
+		m_eofVersion,
 		yul::YulStack::Language::StrictAssembly,
 		m_optimiserSettings,
 		m_debugInfoSelection
@@ -1571,6 +1600,8 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 	if (_forIR)
 		meta["settings"]["viaIR"] = _forIR;
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
+	if (m_eofVersion.has_value())
+		meta["settings"]["eofVersion"] = *m_eofVersion;
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		*_contract.contract->annotation().canonicalName;
 
@@ -1695,7 +1726,7 @@ bytes CompilerStack::createCBORMetadata(Contract const& _contract, bool _forIR) 
 	else
 		solAssert(m_metadataHash == MetadataHash::None, "Invalid metadata hash");
 
-	if (experimentalMode)
+	if (experimentalMode || m_eofVersion.has_value())
 		encoder.pushBool("experimental", true);
 	if (m_metadataFormat == MetadataFormat::WithReleaseVersionTag)
 		encoder.pushBytes("solc", VersionCompactBytes);

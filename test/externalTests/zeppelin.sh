@@ -69,6 +69,9 @@ function zeppelin_test
     sed -i "s|it(\('reverts \)|it.skip(\1|g" math/SignedSafeMath.test.js
     sed -i "s|it(\('reverts \)|it.skip(\1|g" structs/EnumerableSet.behavior.js
     popd
+    pushd test/proxy/
+    sed -i "s|it(\('proxy admin cannot call delegated functions',\)|it.skip(\1|g" transparent/TransparentUpgradeableProxy.behaviour.js
+    popd
 
 
     # In some cases Hardhat does not detect revert reasons properly via IR.

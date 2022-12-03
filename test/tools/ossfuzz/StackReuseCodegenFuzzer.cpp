@@ -80,7 +80,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bytes unoptimisedByteCode;
 	try
 	{
-		unoptimisedByteCode = YulAssembler{version, settings, yul_source}.assemble();
+		unoptimisedByteCode = YulAssembler{version, nullopt, settings, yul_source}.assemble();
 	}
 	catch (solidity::yul::StackTooDeepError const&)
 	{
@@ -123,7 +123,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bytes optimisedByteCode;
 	try
 	{
-		optimisedByteCode = YulAssembler{version, settings, yul_source}.assemble();
+		optimisedByteCode = YulAssembler{version, nullopt, settings, yul_source}.assemble();
 	}
 	catch (solidity::yul::StackTooDeepError const&)
 	{

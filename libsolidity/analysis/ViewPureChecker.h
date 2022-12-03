@@ -73,6 +73,8 @@ private:
 		std::optional<langutil::SourceLocation> const& _nestedLocation = {}
 	);
 
+	void reportFunctionCallMutability(StateMutability _mutability, langutil::SourceLocation const& _location);
+
 	/// Determines the mutability of modifier if not already cached.
 	MutabilityAndLocation const& modifierMutability(ModifierDefinition const& _modifier);
 

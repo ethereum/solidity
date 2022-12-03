@@ -48,12 +48,13 @@ namespace fs = boost::filesystem;
 SemanticTest::SemanticTest(
 	string const& _filename,
 	langutil::EVMVersion _evmVersion,
+	optional<uint8_t> _eofVersion,
 	vector<boost::filesystem::path> const& _vmPaths,
 	bool _enforceCompileToEwasm,
 	bool _enforceGasCost,
 	u256 _enforceGasCostMinValue
 ):
-	SolidityExecutionFramework(_evmVersion, _vmPaths, false),
+	SolidityExecutionFramework(_evmVersion, _eofVersion, _vmPaths, false),
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),
@@ -296,13 +297,13 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 {
 	TestResult result = TestResult::Success;
 
-	if (m_testCaseWantsLegacyRun)
+	if (m_testCaseWantsLegacyRun && !m_eofVersion.has_value())
 		result = runTest(_stream, _linePrefix, _formatted, false, false);
 
 	if (m_testCaseWantsYulRun && result == TestResult::Success)
 		result = runTest(_stream, _linePrefix, _formatted, true, false);
 
-	if ((m_testCaseWantsEwasmRun || m_enforceCompileToEwasm) && result == TestResult::Success)
+	if (!m_eofVersion.has_value() && (m_testCaseWantsEwasmRun || m_enforceCompileToEwasm) && result == TestResult::Success)
 	{
 		// TODO: Once we have full Ewasm support, we could remove try/catch here.
 		try

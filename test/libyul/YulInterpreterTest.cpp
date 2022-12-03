@@ -68,6 +68,7 @@ bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion(),
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::All()

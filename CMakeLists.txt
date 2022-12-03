@@ -36,6 +36,7 @@ option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms"
 option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
+option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
 
 # Setup cccache.
 include(EthCcache)
@@ -52,6 +53,11 @@ find_package(Threads)
 if(NOT PEDANTIC)
   message(WARNING "-- Pedantic build flags turned off. Warnings will not make compilation fail. This is NOT recommended in development builds.")
 endif()
+
+if (PROFILE_OPTIMIZER_STEPS)
+    add_definitions(-DPROFILE_OPTIMIZER_STEPS)
+endif()
+
 # Figure out what compiler and system are we using
 include(EthCompilerSettings)
 
@@ -69,7 +75,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 
 include(EthOptions)
 configure_project(TESTS)
-set(LATEST_Z3_VERSION "4.11.0")
+set(LATEST_Z3_VERSION "4.11.2")
 set(MINIMUM_Z3_VERSION "4.8.0")
 find_package(Z3)
 if (${Z3_FOUND})

@@ -26,9 +26,9 @@
 #include <test/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/FilesystemUtils.h>
-#include <test/TemporaryDirectory.h>
 
 #include <libsolutil/JSON.h>
+#include <libsolutil/TemporaryDirectory.h>
 
 #include <boost/algorithm/string.hpp>
 

@@ -82,6 +82,7 @@ bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bo
 {
 	m_stack = YulStack(
 		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion(),
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::All()
