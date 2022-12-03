@@ -173,11 +173,6 @@ defaults:
   - artifact_solc_windows: &artifact_solc_windows
       path: upload/
 
-  # compiled tool executable target
-  - artifact_solidity_upgrade: &artifact_solidity_upgrade
-      path: build/tools/solidity-upgrade
-      destination: solidity-upgrade
-
   - artifact_yul_phaser: &artifact_yul_phaser
       path: build/tools/yul-phaser
       destination: yul-phaser
