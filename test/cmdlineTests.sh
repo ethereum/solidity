@@ -225,6 +225,11 @@ EOF
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
         sed -i.bak -e 's/\(Unimplemented feature error.* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
         sed -i.bak -e 's/"version":[ ]*"[^"]*"/"version": "<VERSION REMOVED>"/' "$stdout_path"
+    if [[ $stdout_expectation_file != "" &&  $stdout_expectation_file != "" ]]
+    then
+        sed -i.bak -e '/^Compiler run successful. No output requested\.$/d' "$stdout_path"
+        sed -i.bak -e '/^Compiler run successful. No output generated\.$/d' "$stdout_path"
+    fi
 
         # Remove bytecode (but not linker references). Since non-JSON output is unstructured,
         # use metadata markers for detection to have some confidence that it's actually bytecode
