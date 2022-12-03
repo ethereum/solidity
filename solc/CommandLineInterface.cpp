@@ -1191,7 +1191,7 @@ void CommandLineInterface::outputCompilationResults()
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
 		else if (contracts.empty())
-			sout() << "Compiler run successful, no contracts to compile." << endl;
+			sout() << "Compiler run successful. No contracts to compile." << endl;
 		else
 			sout() << "Compiler run successful. No output generated." << endl;
 	}
