@@ -1009,7 +1009,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		canonicalWorkDir / "lib",
 	};
 
-	string const expectedStdoutContent = "Compiler run successful, no contracts to compile.\n";
+	string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
 	BOOST_TEST(result.stderrContent == "");
@@ -1047,7 +1047,7 @@ BOOST_AUTO_TEST_CASE(enum_only)
 
 	CommandLineOptions expectedOptions;
 
-	string const expectedStdoutContent = "Compiler run successful, no contracts to compile.\n";
+	string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
 	BOOST_TEST(result.stderrContent == "");
@@ -1080,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(abstract_only)
 
 	CommandLineOptions expectedOptions;
 
-	string const expectedStdoutContent = "Compiler run successful, no output generated.\n";
+	string const expectedStdoutContent = "Compiler run successful. No output generated.\n";
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
 	BOOST_TEST(result.stderrContent == "");
