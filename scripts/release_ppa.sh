@@ -156,15 +156,15 @@ cp "/tmp/${packagename}_${debversion}.orig.tar.gz" ../
 # Create debian package information
 
 mkdir debian
-echo 9 > debian/compat
+echo 13 > debian/compat
 cat <<EOF > debian/control
 Source: solc
 Section: science
 Priority: extra
 Maintainer: Christian (Buildserver key) <builds@ethereum.org>
-Build-Depends: ${SMTDEPENDENCY}debhelper (>= 9.0.0),
+Build-Depends: ${SMTDEPENDENCY}debhelper (>= 13.0.0),
                cmake,
-               g++ (>= 5.0),
+               g++ (>= 9.0),
                git,
                libgmp-dev,
                libboost-all-dev,
