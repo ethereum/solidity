@@ -64,14 +64,13 @@ Topics允许您用来搜索事件，例如为特定的事件来过滤一系列�
 
 .. index:: ! selector; of an event
 
-Members of Events
-=================
+事件类型的成员方法
+===================
 
-- ``event.selector``: For non-anonymous events, this is a ``bytes32`` value
-  containing the ``keccak256`` hash of the event signature, as used in the default topic.
+- ``event.selector``： 对于非匿名事件，这是一个 ``bytes32`` 值，
+  包含事件签名的 ``keccak256`` 哈希值，在默认topic中使用。
 
-
-Example
+示例
 =======
 
 .. code-block:: solidity
@@ -86,21 +85,11 @@ Example
             uint value
         );
 
-<<<<<<< HEAD
-        function deposit(bytes32 _id) public payable {
+        function deposit(bytes32 id) public payable {
             // 事件是用 `emit` 发出的，后面是事件的名称和括号里的参数（如果有）。
             // 任何这样的调用（甚至是深度嵌套）都可以通过过滤 `Deposit`
             // 从JavaScript API中检测出来。
-            emit Deposit(msg.sender, _id, msg.value);
-=======
-        function deposit(bytes32 id) public payable {
-            // Events are emitted using `emit`, followed by
-            // the name of the event and the arguments
-            // (if any) in parentheses. Any such invocation
-            // (even deeply nested) can be detected from
-            // the JavaScript API by filtering for `Deposit`.
             emit Deposit(msg.sender, id, msg.value);
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
         }
     }
 
@@ -144,13 +133,8 @@ Example
        }
     }
 
-<<<<<<< HEAD
-了解事件的其他资源
-==============================================
-=======
-Additional Resources for Understanding Events
-=============================================
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+了解事件类型的其他资料
+======================
 
 - `Javascript 文档 <https://github.com/ethereum/web3.js/blob/1.x/docs/web3-eth-contract.rst#events>`_
 - `事件的使用实例 <https://github.com/ethchange/smart-exchange/blob/master/lib/contracts/SmartExchange.sol>`_
