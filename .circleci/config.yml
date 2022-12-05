@@ -1048,6 +1048,7 @@ jobs:
     <<: *eof_ubuntu2204_small
     environment:
       CMAKE_OPTIONS: -DUSE_CVC4=OFF
+      EVM: "shanghai"
     parallelism: 50
     steps:
       - run:
