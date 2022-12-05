@@ -1044,6 +1044,8 @@ jobs:
 
   t_ubu_soltest_eof: &t_ubu_soltest_eof
     <<: *eof_ubuntu2204_small
+    environment:
+      CMAKE_OPTIONS: -DUSE_CVC4=OFF
     parallelism: 50
     steps:
       - run:
