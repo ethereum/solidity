@@ -1333,7 +1333,7 @@ void CompilerStack::compileContract(
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
-	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_revertStrings, m_optimiserSettings);
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_eofVersion, m_revertStrings, m_optimiserSettings);
 	compiledContract.compiler = compiler;
 
 	solAssert(!m_viaIR, "");

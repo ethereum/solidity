@@ -50,7 +50,9 @@ public:
 		Dialect const& _dialect,
 		Object& _object,
 		bool _optimizeStackAllocation,
-		size_t _maxIterations
+		size_t _maxIterations,
+		unsigned _maxSwap,
+		unsigned _maxDup
 	);
 };
 

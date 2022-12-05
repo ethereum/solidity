@@ -48,28 +48,28 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace std;
 
-StackLayout StackLayoutGenerator::run(CFG const& _cfg)
+StackLayout StackLayoutGenerator::run(CFG const& _cfg, unsigned _maxSwap, unsigned _maxDup)
 {
 	StackLayout stackLayout;
-	StackLayoutGenerator{stackLayout}.processEntryPoint(*_cfg.entry);
+	StackLayoutGenerator{stackLayout, _maxSwap, _maxDup}.processEntryPoint(*_cfg.entry);
 
 	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
-		StackLayoutGenerator{stackLayout}.processEntryPoint(*functionInfo.entry, &functionInfo);
+		StackLayoutGenerator{stackLayout, _maxSwap, _maxDup}.processEntryPoint(*functionInfo.entry, &functionInfo);
 
 	return stackLayout;
 }
 
-map<YulString, vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg)
+map<YulString, vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, unsigned _maxSwap, unsigned _maxDup)
 {
 	map<YulString, vector<StackLayoutGenerator::StackTooDeep>> stackTooDeepErrors;
-	stackTooDeepErrors[YulString{}] = reportStackTooDeep(_cfg, YulString{});
+	stackTooDeepErrors[YulString{}] = reportStackTooDeep(_cfg, YulString{}, _maxSwap, _maxDup);
 	for (auto const& function: _cfg.functions)
-		if (auto errors = reportStackTooDeep(_cfg, function->name); !errors.empty())
+		if (auto errors = reportStackTooDeep(_cfg, function->name, _maxSwap, _maxDup); !errors.empty())
 			stackTooDeepErrors[function->name] = std::move(errors);
 	return stackTooDeepErrors;
 }
 
-vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulString _functionName)
+vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulString _functionName, unsigned _maxSwap, unsigned _maxDup)
 {
 	StackLayout stackLayout;
 	CFG::FunctionInfo const* functionInfo = nullptr;
@@ -83,13 +83,13 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 		yulAssert(functionInfo, "Function not found.");
 	}
 
-	StackLayoutGenerator generator{stackLayout};
+	StackLayoutGenerator generator{stackLayout, _maxSwap, _maxDup};
 	CFG::BasicBlock const* entry = functionInfo ? functionInfo->entry : _cfg.entry;
 	generator.processEntryPoint(*entry);
 	return generator.reportStackTooDeep(*entry);
 }
 
-StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout): m_layout(_layout)
+StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout, unsigned _maxSwap, unsigned _maxDup): m_layout(_layout), m_maxSwap(_maxSwap), m_maxDup(_maxDup)
 {
 }
 

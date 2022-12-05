@@ -49,7 +49,7 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
-	Assembly(bool _creation, std::string _name): m_creation(_creation), m_name(std::move(_name)) { }
+	Assembly(langutil::EVMVersion _evmVersion, std::optional<uint8_t> _eofVersion, bool _creation, std::string _name): m_creation(_creation), m_name(std::move(_name)), m_evmVersion(_evmVersion), m_eofVersion(_eofVersion) { }
 
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
@@ -93,11 +93,11 @@ public:
 	}
 	unsigned maxDup() const
 	{
-		return 16;
+		return m_eofVersion.has_value() ? 256 : 16;
 	}
 	unsigned maxSwap() const
 	{
-		return 16;
+		return m_eofVersion.has_value() ? 256 : 16;
 	}
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
@@ -234,8 +234,13 @@ protected:
 
 	langutil::SourceLocation m_currentSourceLocation;
 
+	langutil::EVMVersion const m_evmVersion;
+	std::optional<uint8_t> const m_eofVersion;
 public:
 	size_t m_currentModifierDepth = 0;
+
+	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 };
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)

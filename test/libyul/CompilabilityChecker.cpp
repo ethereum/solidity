@@ -39,7 +39,8 @@ string check(string const& _input)
 	Object obj;
 	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(_input, false);
 	BOOST_REQUIRE(obj.code);
-	auto functions = CompilabilityChecker(EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()), obj, true).stackDeficit;
+	// TODO: maxSwap, maxDup
+	auto functions = CompilabilityChecker(EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()), obj, true, 16u, 16u).stackDeficit;
 	string out;
 	for (auto const& function: functions)
 		out += function.first.str() + ": " + to_string(function.second) + " ";

@@ -39,6 +39,9 @@ struct OptimiserStepContext
 	std::set<YulString> const& reservedIdentifiers;
 	/// The value nullopt represents creation code
 	std::optional<size_t> expectedExecutionsPerDeployment;
+
+	unsigned maxSwap = 16;
+	unsigned maxDup = 16;
 };
 
 

@@ -226,7 +226,8 @@ TestCase::TestResult StackLayoutGeneratorTest::run(ostream& _stream, string cons
 	std::ostringstream output;
 
 	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, *object->code);
-	StackLayout stackLayout = StackLayoutGenerator::run(*cfg);
+	// TODO maxSwap, maxDup
+	StackLayout stackLayout = StackLayoutGenerator::run(*cfg, 16u, 16u);
 
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
 	StackLayoutPrinter printer{output, stackLayout};

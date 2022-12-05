@@ -240,7 +240,9 @@ bool StackCompressor::run(
 	Dialect const& _dialect,
 	Object& _object,
 	bool _optimizeStackAllocation,
-	size_t _maxIterations
+	size_t _maxIterations,
+	unsigned _maxSwap,
+	unsigned _maxDup
 )
 {
 	yulAssert(
@@ -262,14 +264,14 @@ bool StackCompressor::run(
 		eliminateVariablesOptimizedCodegen(
 			_dialect,
 			*_object.code,
-			StackLayoutGenerator::reportStackTooDeep(*cfg),
+			StackLayoutGenerator::reportStackTooDeep(*cfg, _maxSwap, _maxDup),
 			allowMSizeOptimzation
 		);
 	}
 	else
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
+			map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation, _maxSwap, _maxDup).stackDeficit;
 			if (stackSurplus.empty())
 				return true;
 			eliminateVariables(

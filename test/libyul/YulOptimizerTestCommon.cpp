@@ -323,7 +323,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionHoister::run(*m_context, *m_ast);
 			FunctionGrouper::run(*m_context, *m_ast);
 			size_t maxIterations = 16;
-			StackCompressor::run(*m_dialect, *m_object, true, maxIterations);
+			// TODO: maxSwap, maxDup
+			StackCompressor::run(*m_dialect, *m_object, true, maxIterations, 16u, 16u);
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
 		{"wordSizeTransform", [&]() {
@@ -333,6 +334,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"fullSuite", [&]() {
 			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+			// TODO: maxSwap, maxDup
 			OptimiserSuite::run(
 				*m_dialect,
 				&meter,
@@ -340,15 +342,21 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				true,
 				frontend::OptimiserSettings::DefaultYulOptimiserSteps,
 				frontend::OptimiserSettings::DefaultYulOptimiserCleanupSteps,
-				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment,
+				{},
+				16u,
+				16u
 			);
 		}},
 		{"stackLimitEvader", [&]() {
 			disambiguate();
+			// TODO: maxSwap, maxDup
 			StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
 				*m_dialect,
 				*m_object,
-				true
+				true,
+				16u,
+				16u
 			}.unreachableVariables);
 		}},
 		{"fakeStackLimitEvader", [&]() {

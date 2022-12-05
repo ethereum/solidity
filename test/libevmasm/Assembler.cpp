@@ -59,15 +59,16 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		{ "sub.asm", 1 },
 		{ "verbatim.asm", 2 }
 	};
-	Assembly _assembly{false, {}};
+	// TODO: versions
+	Assembly _assembly{{}, {}, false, {}};
 	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
-	Assembly _subAsm{false, {}};
+	Assembly _subAsm{{}, {}, false, {}};
 	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 
-	Assembly _verbatimAsm(true, "");
+	Assembly _verbatimAsm({}, {}, true, "");
 	auto verbatim_asm = make_shared<string>("verbatim.asm");
 	_verbatimAsm.setSourceLocation({8, 18, verbatim_asm});
 
@@ -243,7 +244,7 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				{ *subName, 1 }
 			};
 
-			auto subAsm = make_shared<Assembly>(false, string{});
+			auto subAsm = make_shared<Assembly>(langutil::EVMVersion{}, std::nullopt, false, string{});
 			for (char i = 0; i < numImmutables; ++i)
 			{
 				for (int r = 0; r < numActualRefs; ++r)
@@ -253,7 +254,7 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				}
 			}
 
-			Assembly assembly{true, {}};
+			Assembly assembly{{}, {}, true, {}};
 			for (char i = 1; i <= numImmutables; ++i)
 			{
 				assembly.setSourceLocation({10*i, 10*i + 3+i, assemblyName});
@@ -302,11 +303,11 @@ BOOST_AUTO_TEST_CASE(immutable)
 		{ "root.asm", 0 },
 		{ "sub.asm", 1 }
 	};
-	Assembly _assembly{true, {}};
+	Assembly _assembly{{}, {}, true, {}};
 	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
-	Assembly _subAsm{false, {}};
+	Assembly _subAsm{{}, {}, false, {}};
 	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 	_subAsm.appendImmutable("someImmutable");
@@ -395,10 +396,10 @@ BOOST_AUTO_TEST_CASE(immutable)
 
 BOOST_AUTO_TEST_CASE(subobject_encode_decode)
 {
-	Assembly assembly{true, {}};
+	Assembly assembly{{}, {}, true, {}};
 
-	shared_ptr<Assembly> subAsmPtr = make_shared<Assembly>(false, string{});
-	shared_ptr<Assembly> subSubAsmPtr = make_shared<Assembly>(false, string{});
+	shared_ptr<Assembly> subAsmPtr = make_shared<Assembly>(langutil::EVMVersion{}, std::nullopt, false, string{});
+	shared_ptr<Assembly> subSubAsmPtr = make_shared<Assembly>(langutil::EVMVersion{}, std::nullopt, false, string{});
 
 	assembly.appendSubroutine(subAsmPtr);
 	subAsmPtr->appendSubroutine(subSubAsmPtr);

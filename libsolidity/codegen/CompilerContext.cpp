@@ -549,7 +549,9 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 		_optimiserSettings.yulOptimiserSteps,
 		_optimiserSettings.yulOptimiserCleanupSteps,
 		isCreation? nullopt : make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
-		_externalIdentifiers
+		_externalIdentifiers,
+		m_asm->maxSwap(),
+		m_asm->maxDup()
 	);
 
 #ifdef SOL_OUTPUT_ASM

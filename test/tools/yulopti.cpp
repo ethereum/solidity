@@ -222,7 +222,8 @@ public:
 					{
 						Object obj;
 						obj.code = m_ast;
-						StackCompressor::run(m_dialect, obj, true, 16);
+						// TODO maxSwap maxDup
+						StackCompressor::run(m_dialect, obj, true, 16, 16u, 16u);
 						break;
 					}
 					default:

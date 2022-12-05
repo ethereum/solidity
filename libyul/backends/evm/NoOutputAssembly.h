@@ -45,7 +45,7 @@ namespace solidity::yul
 class NoOutputAssembly: public AbstractAssembly
 {
 public:
-	explicit NoOutputAssembly() { }
+	explicit NoOutputAssembly(unsigned _maxSwap, unsigned _maxDup): m_maxSwap(_maxSwap), m_maxDup(_maxDup) { }
 	~NoOutputAssembly() override = default;
 
 	void setSourceLocation(langutil::SourceLocation const&) override {}
@@ -83,6 +83,8 @@ public:
 
 private:
 	int m_stackHeight = 0;
+	unsigned m_maxSwap = 16;
+	unsigned m_maxDup = 16;
 };
 
 

@@ -189,7 +189,8 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 
 	for (bool isCreation: {false, true})
 	{
-		Assembly assembly{isCreation, {}};
+		// TODO: versions
+		Assembly assembly{{}, {}, isCreation, {}};
 		for (u256 const& n: numbers)
 		{
 			if (!_quiet)

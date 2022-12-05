@@ -50,11 +50,11 @@ void NoOutputAssembly::appendDup(unsigned)
 }
 unsigned NoOutputAssembly::maxDup() const
 {
-	return 16;
+	return m_maxDup;
 }
 unsigned NoOutputAssembly::maxSwap() const
 {
-	return 16;
+	return m_maxSwap;
 }
 void NoOutputAssembly::appendConstant(u256 const&)
 {

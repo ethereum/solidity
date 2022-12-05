@@ -132,13 +132,15 @@ void StackLimitEvader::run(
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _object);
 		unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, *_object.code);
-		run(_context, _object, StackLayoutGenerator::reportStackTooDeep(*cfg));
+		run(_context, _object, StackLayoutGenerator::reportStackTooDeep(*cfg, _context.maxSwap, _context.maxDup));
 	}
 	else
 		run(_context, _object, CompilabilityChecker{
 			_context.dialect,
 			_object,
-			true
+			true,
+			_context.maxSwap,
+			_context.maxDup
 		}.unreachableVariables);
 
 }

@@ -55,18 +55,18 @@ public:
 		std::vector<YulString> variableChoices;
 	};
 
-	static StackLayout run(CFG const& _cfg);
+	static StackLayout run(CFG const& _cfg, unsigned _maxSwap, unsigned _maxDup);
 	/// @returns a map from function names to the stack too deep errors occurring in that function.
 	/// Requires @a _cfg to be a control flow graph generated from disambiguated Yul.
 	/// The empty string is mapped to the stack too deep errors of the main entry point.
-	static std::map<YulString, std::vector<StackTooDeep>> reportStackTooDeep(CFG const& _cfg);
+	static std::map<YulString, std::vector<StackTooDeep>> reportStackTooDeep(CFG const& _cfg, unsigned _maxSwap, unsigned _maxDup);
 	/// @returns all stack too deep errors in the function named @a _functionName.
 	/// Requires @a _cfg to be a control flow graph generated from disambiguated Yul.
 	/// If @a _functionName is empty, the stack too deep errors of the main entry point are reported instead.
-	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulString _functionName);
+	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulString _functionName, unsigned _maxSwap, unsigned _maxDup);
 
 private:
-	StackLayoutGenerator(StackLayout& _context);
+	StackLayoutGenerator(StackLayout& _context, unsigned _maxSwap, unsigned _maxDup);
 
 	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
 	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
@@ -116,9 +116,10 @@ private:
 
 	StackLayout& m_layout;
 
-	// TODO
-	unsigned maxSwap() const { return 16; }
-	unsigned maxDup() const { return 16; }
+	unsigned maxSwap() const { return m_maxSwap; }
+	unsigned maxDup() const { return m_maxDup; }
+	unsigned const m_maxSwap = 16;
+	unsigned const m_maxDup = 16;
 };
 
 }

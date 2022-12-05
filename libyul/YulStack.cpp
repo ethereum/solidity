@@ -179,6 +179,11 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		}
 
 	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
+
+	// TODO
+	unsigned maxSwap = m_eofVersion.has_value() ? 256 : 16;
+	unsigned maxDup = m_eofVersion.has_value() ? 256 : 16;
+
 	unique_ptr<GasMeter> meter;
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
 		meter = make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
@@ -190,7 +195,9 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		m_optimiserSettings.yulOptimiserSteps,
 		m_optimiserSettings.yulOptimiserCleanupSteps,
 		_isCreation ? nullopt : make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
-		{}
+		{},
+		maxSwap,
+		maxDup
 	);
 }
 
@@ -264,7 +271,7 @@ YulStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 	yulAssert(m_parserResult->code, "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
-	evmasm::Assembly assembly(true, {});
+	evmasm::Assembly assembly(m_evmVersion, m_eofVersion, true, {});
 	EthAssemblyAdapter adapter(assembly);
 	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
 

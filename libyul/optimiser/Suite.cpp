@@ -141,7 +141,9 @@ void OptimiserSuite::run(
 	string_view _optimisationSequence,
 	string_view _optimisationCleanupSequence,
 	optional<size_t> _expectedExecutionsPerDeployment,
-	set<YulString> const& _externallyUsedIdentifiers
+	set<YulString> const& _externallyUsedIdentifiers,
+	unsigned _maxSwap,
+	unsigned _maxDup
 )
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
@@ -161,7 +163,7 @@ void OptimiserSuite::run(
 	Block& ast = *_object.code;
 
 	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
-	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment, _maxSwap, _maxDup};
 
 	OptimiserSuite suite(context, Debug::None);
 
@@ -184,7 +186,9 @@ void OptimiserSuite::run(
 			_dialect,
 			_object,
 			_optimizeStackAllocation,
-			stackCompressorMaxIterations
+			stackCompressorMaxIterations,
+			context.maxSwap,
+			context.maxDup
 		);
 
 	// Run the user-supplied clean up sequence
@@ -204,7 +208,9 @@ void OptimiserSuite::run(
 				_dialect,
 				_object,
 				_optimizeStackAllocation,
-				stackCompressorMaxIterations
+				stackCompressorMaxIterations,
+				context.maxSwap,
+				context.maxDup
 			);
 			if (evmDialect->providesObjectAccess())
 				StackLimitEvader::run(suite.m_context, _object);

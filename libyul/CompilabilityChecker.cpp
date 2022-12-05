@@ -34,7 +34,9 @@ using namespace solidity::util;
 CompilabilityChecker::CompilabilityChecker(
 	Dialect const& _dialect,
 	Object const& _object,
-	bool _optimizeStackAllocation
+	bool _optimizeStackAllocation,
+	unsigned _maxDup,
+	unsigned _maxSwap
 )
 {
 	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
@@ -50,7 +52,7 @@ CompilabilityChecker::CompilabilityChecker(
 			builtinContext.subIDs[_object.name] = 1;
 		for (auto const& subNode: _object.subObjects)
 			builtinContext.subIDs[subNode->name] = 1;
-		NoOutputAssembly assembly;
+		NoOutputAssembly assembly(_maxSwap, _maxDup);
 		CodeTransform transform(
 			assembly,
 			analysisInfo,
