@@ -425,14 +425,6 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_ubuntu2204_large: &base_ubuntu2204_large
-      docker:
-        - image: cimg/base:current
-      resource_class: large
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 5
-
   # --------------------------------------------------------------------------
   # Workflow Templates
 
@@ -1046,43 +1038,26 @@ jobs:
     <<: *steps_soltest_all
 
   t_ubu_soltest_eof: &t_ubu_soltest_eof
-    <<: *base_ubuntu2204_large
+    <<: *base_ubuntu2004_large
     environment:
-      CMAKE_OPTIONS: -DUSE_CVC4=OFF
       EVM: "shanghai"
       SOLTEST_FLAGS: "--eof-version 1"
-    parallelism: 50
     steps:
-      - run:
-          name: Install build dependencies
-          command: |
-            dist=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2); \
-            echo "deb http://ppa.launchpad.net/ethereum/cpp-build-deps/ubuntu $dist main" | sudo tee -a /etc/apt/sources.list > /dev/null
-
-            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9
-            sudo apt-get update
-            sudo apt-get install -qqy --no-install-recommends \
-                build-essential \
-                software-properties-common \
-                cmake ninja-build \
-                libboost-filesystem-dev libboost-test-dev libboost-system-dev \
-                libboost-program-options-dev \
-                libcvc4-dev libz3-static-dev z3-static jq
-            sudo rm -rf /var/lib/apt/lists/*
       - run:
           name: Build evmone based on EOF branch
           command: |
             ( cd /usr/src; \
-            sudo git clone --branch="eof" --recurse-submodules https://github.com/ethereum/evmone.git; \
+            git clone --branch="eof" --recurse-submodules https://github.com/ethereum/evmone.git; \
             cd evmone; \
-            sudo mkdir build; \
+            mkdir build; \
             cd build; \
-            sudo cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="/usr" ..; \
-            sudo ninja; \
-            sudo ninja install/strip; \
-            sudo rm -rf /usr/src/evmone )
+            cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+            ninja; \
+            ninja install/strip; \
+            rm -rf /usr/src/evmone )
       - checkout
-      - run: *run_build
+      - attach_workspace:
+          at: build
       - run: *run_soltest
 
   t_ubu_lsp: &t_ubu_lsp
@@ -1631,7 +1606,7 @@ workflows:
       - b_ubu_clang: *workflow_trigger_on_tags
       - t_ubu_clang_soltest: *workflow_ubuntu2004_clang
       - t_ubu_lsp: *workflow_ubuntu2004
-      - t_ubu_soltest_eof: *workflow_trigger_on_tags
+      - t_ubu_soltest_eof: *workflow_ubuntu2004
 
       # Ubuntu fake release build and tests
       - b_ubu_force_release: *workflow_trigger_on_tags
