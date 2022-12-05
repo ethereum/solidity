@@ -82,6 +82,7 @@ void StackToMemoryMover::run(
 	Block& _block
 )
 {
+	yulAssert(_numRequiredSlots == 0, "NEEDED STACK TO MEMORY AFTER ALL???");
 	VariableMemoryOffsetTracker memoryOffsetTracker(_reservedMemory, _memorySlots, _numRequiredSlots);
 	StackToMemoryMover stackToMemoryMover(
 		_context,

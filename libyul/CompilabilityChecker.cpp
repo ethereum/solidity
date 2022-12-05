@@ -65,6 +65,7 @@ CompilabilityChecker::CompilabilityChecker(
 
 		for (StackTooDeepError const& error: transform.stackErrors())
 		{
+			yulAssert(false, "Still stack too deeps??");
 			unreachableVariables[error.functionName].emplace(error.variable);
 			int& deficit = stackDeficit[error.functionName];
 			deficit = std::max(error.depth, deficit);
