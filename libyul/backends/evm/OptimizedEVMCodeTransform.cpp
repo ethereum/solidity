@@ -359,7 +359,9 @@ void OptimizedEVMCodeTransform::createStackLayout(std::shared_ptr<DebugData cons
 		[&]()
 		{
 			m_assembly.appendInstruction(evmasm::Instruction::POP);
-		}
+		},
+		m_assembly.maxSwap(),
+		m_assembly.maxDup()
 	);
 	yulAssert(m_assembly.stackHeight() == static_cast<int>(m_stack.size()), "");
 }

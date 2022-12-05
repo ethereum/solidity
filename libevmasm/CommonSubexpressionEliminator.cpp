@@ -62,7 +62,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	for (int height = minHeight; height <= m_state.stackHeight(); ++height)
 		targetStackContents[height] = m_state.stackElement(height, SourceLocation());
 
-	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations).generateCode(
+	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations, m_maxSwap, m_maxDup).generateCode(
 		m_initialState.sequenceNumber(),
 		m_initialState.stackHeight(),
 		initialStackContents,
@@ -125,9 +125,11 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 
 CSECodeGenerator::CSECodeGenerator(
 	ExpressionClasses& _expressionClasses,
-	vector<CSECodeGenerator::StoreOperation> const& _storeOperations
+	vector<CSECodeGenerator::StoreOperation> const& _storeOperations,
+	unsigned _maxSwap,
+	unsigned _maxDup
 ):
-	m_expressionClasses(_expressionClasses)
+	m_expressionClasses(_expressionClasses), m_maxSwap(_maxSwap), m_maxDup(_maxDup)
 {
 	for (auto const& store: _storeOperations)
 		m_storeOperations[make_pair(store.target, store.slot)].push_back(store);
@@ -472,7 +474,7 @@ void CSECodeGenerator::appendDup(int _fromPosition, SourceLocation const& _locat
 {
 	assertThrow(_fromPosition != c_invalidPosition, OptimizerException, "");
 	int instructionNum = 1 + m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, util::stackTooDeepString);
+	assertThrow(instructionNum <= static_cast<int>(m_maxDup), StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(AssemblyItemType::Dup, instructionNum, _location));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
@@ -485,7 +487,7 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 	if (_fromPosition == m_stackHeight)
 		return;
 	int instructionNum = m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, util::stackTooDeepString);
+	assertThrow(instructionNum <= static_cast<int>(m_maxSwap), StackTooDeepException, util::stackTooDeepString);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(AssemblyItemType::Swap, instructionNum, _location));
 

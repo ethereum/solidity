@@ -127,10 +127,10 @@ private:
 	static bool dupDeepSlotIfRequired(ShuffleOperations& _ops)
 	{
 		// Check if the stack is large enough for anything to potentially become unreachable.
-		if (_ops.sourceSize() < 15)
+		if (_ops.sourceSize() < (_ops.maxDup() - 1))
 			return false;
 		// Check whether any deep slot might still be needed later (i.e. we still need to reach it with a DUP or SWAP).
-		for (size_t sourceOffset: ranges::views::iota(0u, _ops.sourceSize() - 15))
+		for (size_t sourceOffset: ranges::views::iota(0u, _ops.sourceSize() - (_ops.maxDup() - 1)))
 		{
 			// This slot needs to be moved.
 			if (!_ops.isCompatible(sourceOffset, sourceOffset))
@@ -255,10 +255,10 @@ private:
 				)
 				{
 					// We cannot swap that deep.
-					if (ops.sourceSize() - offset - 1 > 16)
+					if (ops.sourceSize() - offset - 1 > ops.maxSwap())
 					{
 						// If there is a reachable slot to be removed, park the current top there.
-						for (size_t swapDepth: ranges::views::iota(1u, 17u) | ranges::views::reverse)
+						for (size_t swapDepth: ranges::views::iota(1u, ops.maxSwap() + 1) | ranges::views::reverse)
 							if (ops.sourceMultiplicity(ops.sourceSize() - 1 - swapDepth) < 0)
 							{
 								ops.swap(swapDepth);
@@ -326,7 +326,7 @@ private:
 			yulAssert(ops.sourceMultiplicity(i) == 0 && (ops.targetIsArbitrary(i) || ops.targetMultiplicity(i) == 0), "");
 		yulAssert(ops.isCompatible(sourceTop, sourceTop), "");
 
-		auto swappableOffsets = ranges::views::iota(size > 17 ? size - 17 : 0u, size);
+		auto swappableOffsets = ranges::views::iota(size > (ops.maxSwap() + 1) ? size - (ops.maxSwap() + 1) : 0u, size);
 
 		// If we find a lower slot that is out of position, but also compatible with the top, swap that up.
 		for (size_t offset: swappableOffsets)
@@ -386,7 +386,7 @@ private:
 /// its argument to the stack top.
 /// @a _pop is a function with signature void() that is called when the top most slot is popped.
 template<typename Swap, typename PushOrDup, typename Pop>
-void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _swap, PushOrDup _pushOrDup, Pop _pop)
+void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _swap, PushOrDup _pushOrDup, Pop _pop, size_t _maxSwap, size_t _maxDup)
 {
 	struct ShuffleOperations
 	{
@@ -396,18 +396,24 @@ void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _sw
 		PushOrDup pushOrDupCallback;
 		Pop popCallback;
 		std::map<StackSlot, int> multiplicity;
+		size_t const m_maxSwap = 16;
+		size_t const m_maxDup = 16;
 		ShuffleOperations(
 			Stack& _currentStack,
 			Stack const& _targetStack,
 			Swap _swap,
 			PushOrDup _pushOrDup,
-			Pop _pop
+			Pop _pop,
+			size_t _maxSwap,
+			size_t _maxDup
 		):
 			currentStack(_currentStack),
 			targetStack(_targetStack),
 			swapCallback(_swap),
 			pushOrDupCallback(_pushOrDup),
-			popCallback(_pop)
+			popCallback(_pop),
+			m_maxSwap(_maxSwap),
+			m_maxDup(_maxDup)
 		{
 			for (auto const& slot: currentStack)
 				--multiplicity[slot];
@@ -417,6 +423,8 @@ void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _sw
 				else
 					++multiplicity[slot];
 		}
+		size_t maxSwap() const { return m_maxSwap; }
+		size_t maxDup() const { return m_maxDup; }
 		bool isCompatible(size_t _source, size_t _target)
 		{
 			return
@@ -454,7 +462,7 @@ void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _sw
 		}
 	};
 
-	Shuffler<ShuffleOperations>::shuffle(_currentStack, _targetStack, _swap, _pushOrDup, _pop);
+	Shuffler<ShuffleOperations>::shuffle(_currentStack, _targetStack, _swap, _pushOrDup, _pop, _maxSwap, _maxDup);
 
 	yulAssert(_currentStack.size() == _targetStack.size(), "");
 	for (auto&& [current, target]: ranges::zip_view(_currentStack, _targetStack))

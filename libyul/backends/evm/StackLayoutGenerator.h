@@ -100,7 +100,7 @@ private:
 
 	/// Calculates the ideal stack layout, s.t. both @a _stack1 and @a _stack2 can be achieved with minimal
 	/// stack shuffling when starting from the returned layout.
-	static Stack combineStack(Stack const& _stack1, Stack const& _stack2);
+	Stack combineStack(Stack const& _stack1, Stack const& _stack2) const;
 
 	/// Walks through the CFG and reports any stack too deep errors that would occur when generating code for it
 	/// without countermeasures.
@@ -109,7 +109,7 @@ private:
 	/// @returns a copy of @a _stack stripped of all duplicates and slots that can be freely generated.
 	/// Attempts to create a layout that requires a minimal amount of operations to reconstruct the original
 	/// stack @a _stack.
-	static Stack compressStack(Stack _stack);
+	Stack compressStack(Stack _stack) const;
 
 	//// Fills in junk when entering branches that do not need a clean stack in case the result is cheaper.
 	void fillInJunk(CFG::BasicBlock const& _block, CFG::FunctionInfo const* _functionInfo = nullptr);

@@ -475,7 +475,7 @@ void CompilerUtils::encodeToMemory(
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			dynPointers++;
 			assertThrow(
-				(argSize + dynPointers) < 16,
+				(argSize + dynPointers) < m_context.assembly().maxSwap(),
 				StackTooDeepError,
 				util::stackTooDeepString
 			);
@@ -536,7 +536,7 @@ void CompilerUtils::encodeToMemory(
 		{
 			// copy tail pointer (=mem_end - mem_start) to memory
 			assertThrow(
-				(2 + dynPointers) <= 16,
+				(2 + dynPointers) <= m_context.assembly().maxDup(),
 				StackTooDeepError,
 				util::stackTooDeepString
 			);
@@ -1415,7 +1415,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 	unsigned const size = _variable.annotation().type->sizeOnStack();
 	solAssert(stackPosition >= size, "Variable size and position mismatch.");
 	// move variable starting from its top end in the stack
-	if (stackPosition - size + 1 > 16)
+	if (stackPosition - size + 1 > m_context.assembly().maxSwap())
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_variable.location()) <<
@@ -1428,7 +1428,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 {
 	assertThrow(
-		_stackDepth <= 16,
+		_stackDepth <= m_context.assembly().maxDup(),
 		StackTooDeepError,
 		util::stackTooDeepString
 	);
@@ -1454,7 +1454,7 @@ void CompilerUtils::moveIntoStack(unsigned _stackDepth, unsigned _itemSize)
 void CompilerUtils::rotateStackUp(unsigned _items)
 {
 	assertThrow(
-		_items - 1 <= 16,
+		_items - 1 <= m_context.assembly().maxSwap(),
 		StackTooDeepError,
 		util::stackTooDeepString
 	);
@@ -1465,7 +1465,7 @@ void CompilerUtils::rotateStackUp(unsigned _items)
 void CompilerUtils::rotateStackDown(unsigned _items)
 {
 	assertThrow(
-		_items - 1 <= 16,
+		_items - 1 <= m_context.assembly().maxSwap(),
 		StackTooDeepError,
 		util::stackTooDeepString
 	);

@@ -48,7 +48,7 @@ StackVariable::StackVariable(CompilerContext& _compilerContext, VariableDeclarat
 void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 {
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
-	if (stackPos + 1 > 16) //@todo correct this by fetching earlier or moving to memory
+	if (stackPos + 1 > m_context.assembly().maxDup()) //@todo correct this by fetching earlier or moving to memory
 		BOOST_THROW_EXCEPTION(
 			StackTooDeepError() <<
 			errinfo_sourceLocation(_location) <<
@@ -62,15 +62,17 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 void StackVariable::storeValue(Type const&, SourceLocation const& _location, bool _move) const
 {
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset) - m_size + 1;
-	if (stackDiff > 16)
-		BOOST_THROW_EXCEPTION(
-			StackTooDeepError() <<
-			errinfo_sourceLocation(_location) <<
-			util::errinfo_comment(util::stackTooDeepString)
-		);
-	else if (stackDiff > 0)
+	if (stackDiff > 0)
+	{
+		if (stackDiff > m_context.assembly().maxSwap())
+			BOOST_THROW_EXCEPTION(
+				StackTooDeepError() <<
+				errinfo_sourceLocation(_location) <<
+				util::errinfo_comment(util::stackTooDeepString)
+			);
 		for (unsigned i = 0; i < m_size; ++i)
 			m_context << AssemblyItem(AssemblyItemType::Swap, stackDiff) << Instruction::POP;
+	}
 	if (!_move)
 		retrieveValue(_location);
 }

@@ -96,7 +96,7 @@ StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout): m_layout(_layo
 namespace
 {
 /// @returns all stack too deep errors that would occur when shuffling @a _source to @a _target.
-vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source, Stack const& _target)
+vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source, Stack const& _target, size_t _maxSwap, size_t _maxDup)
 {
 	Stack currentStack = _source;
 	vector<StackLayoutGenerator::StackTooDeep> stackTooDeepErrors;
@@ -113,9 +113,9 @@ vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source
 		_target,
 		[&](unsigned _i)
 		{
-			if (_i > 16)
+			if (_i > _maxSwap)
 				stackTooDeepErrors.emplace_back(StackLayoutGenerator::StackTooDeep{
-					_i - 16,
+					_i - _maxSwap,
 					getVariableChoices(currentStack | ranges::views::take_last(_i + 1))
 				});
 		},
@@ -125,14 +125,16 @@ vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source
 				return;
 			if (
 				auto depth = util::findOffset(currentStack | ranges::views::reverse, _slot);
-				depth && *depth >= 16
+				depth && *depth >= _maxDup
 			)
 				stackTooDeepErrors.emplace_back(StackLayoutGenerator::StackTooDeep{
-					*depth - 15,
+					*depth - (_maxDup - 1),
 					getVariableChoices(currentStack | ranges::views::take_last(*depth + 1))
 				});
 		},
-		[&]() {}
+		[&]() {},
+		_maxSwap,
+		_maxDup
 	);
 	return stackTooDeepErrors;
 }
@@ -142,7 +144,7 @@ vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source
 /// If @a _generateSlotOnTheFly returns true for a slot, this slot should not occur in the ideal stack, but
 /// rather be generated on the fly during shuffling.
 template<typename Callable>
-Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Callable _generateSlotOnTheFly)
+Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Callable _generateSlotOnTheFly, size_t _maxSwap, size_t _maxDup)
 {
 	struct PreviousSlot { size_t slot; };
 
@@ -174,11 +176,15 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		std::set<StackSlot> outputs;
 		std::map<StackSlot, int> multiplicity;
 		Callable generateSlotOnTheFly;
+		size_t m_maxSwap = 16;
+		size_t m_maxDup = 16;
 		ShuffleOperations(
 			vector<variant<PreviousSlot, StackSlot>>& _layout,
 			Stack const& _post,
-			Callable _generateSlotOnTheFly
-		): layout(_layout), post(_post), generateSlotOnTheFly(_generateSlotOnTheFly)
+			Callable _generateSlotOnTheFly,
+			size_t _maxSwap,
+			size_t _maxDup
+		): layout(_layout), post(_post), generateSlotOnTheFly(_generateSlotOnTheFly), m_maxSwap(_maxSwap), m_maxDup(_maxDup)
 		{
 			for (auto const& layoutSlot: layout)
 				if (StackSlot const* slot = get_if<StackSlot>(&layoutSlot))
@@ -191,6 +197,8 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 				if (outputs.count(slot) || generateSlotOnTheFly(slot))
 					++multiplicity[slot];
 		}
+		size_t maxSwap() const { return m_maxSwap; }
+		size_t maxDup() const { return m_maxDup; }
 		bool isCompatible(size_t _source, size_t _target)
 		{
 			return
@@ -241,7 +249,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		void pop() { layout.pop_back(); }
 		void pushOrDupTarget(size_t _offset) { layout.push_back(post.at(_offset)); }
 	};
-	Shuffler<ShuffleOperations>::shuffle(layout, _post, _generateSlotOnTheFly);
+	Shuffler<ShuffleOperations>::shuffle(layout, _post, _generateSlotOnTheFly, _maxSwap, _maxDup);
 
 	// Now we can construct the ideal layout before the operation.
 	// "layout" has shuffled the PreviousSlot{x} to new places using minimal operations to move the operation
@@ -280,7 +288,7 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 
 	// Determine the ideal permutation of the slots in _exitLayout that are not operation outputs (and not to be
 	// generated on the fly), s.t. shuffling the `stack + _operation.output` to _exitLayout is cheap.
-	Stack stack = createIdealLayout(_operation.output, _exitStack, generateSlotOnTheFly);
+	Stack stack = createIdealLayout(_operation.output, _exitStack, generateSlotOnTheFly, maxSwap(), maxDup());
 
 	// Make sure the resulting previous slots do not overlap with any assignmed variables.
 	if (auto const* assignment = get_if<CFG::Assignment>(&_operation.operation))
@@ -304,7 +312,7 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 			stack.pop_back();
 		else if (auto offset = util::findOffset(stack | ranges::views::reverse | ranges::views::drop(1), stack.back()))
 		{
-			if (*offset + 2 < 16)
+			if (*offset + 2 < maxDup())
 				stack.pop_back();
 			else
 				break;
@@ -322,7 +330,7 @@ Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::Ba
 	for (auto&& [idx, operation]: _block.operations | ranges::views::enumerate | ranges::views::reverse)
 	{
 		Stack newStack = propagateStackThroughOperation(stack, operation, _aggressiveStackCompression);
-		if (!_aggressiveStackCompression && !findStackTooDeep(newStack, stack).empty())
+		if (!_aggressiveStackCompression && !findStackTooDeep(newStack, stack, maxSwap(), maxDup()).empty())
 			// If we had stack errors, run again with aggressive stack compression.
 			return propagateStackThroughBlock(std::move(_exitStack), _block, true);
 		stack = std::move(newStack);
@@ -544,7 +552,7 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 	});
 }
 
-Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _stack2)
+Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _stack2) const
 {
 	// TODO: it would be nicer to replace this by a constructive algorithm.
 	// Currently it uses a reduced version of the Heap Algorithm to partly brute-force, which seems
@@ -580,18 +588,18 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 	auto evaluate = [&](Stack const& _candidate) -> size_t {
 		size_t numOps = 0;
 		Stack testStack = _candidate;
-		auto swap = [&](unsigned _swapDepth) { ++numOps; if (_swapDepth > 16) numOps += 1000; };
+		auto swap = [&](unsigned _swapDepth) { ++numOps; if (_swapDepth > maxSwap()) numOps += 1000; };
 		auto dupOrPush = [&](StackSlot const& _slot)
 		{
 			if (canBeFreelyGenerated(_slot))
 				return;
 			auto depth = util::findOffset(ranges::concat_view(commonPrefix, testStack) | ranges::views::reverse, _slot);
-			if (depth && *depth >= 16)
+			if (depth && *depth >= maxDup())
 				numOps += 1000;
 		};
-		createStackLayout(testStack, stack1Tail, swap, dupOrPush, [&](){});
+		createStackLayout(testStack, stack1Tail, swap, dupOrPush, [&](){}, maxSwap(), maxDup());
 		testStack = _candidate;
-		createStackLayout(testStack, stack2Tail, swap, dupOrPush, [&](){});
+		createStackLayout(testStack, stack2Tail, swap, dupOrPush, [&](){}, maxSwap(), maxDup());
 		return numOps;
 	};
 
@@ -642,7 +650,7 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 		{
 			Stack& operationEntry = m_layout.operationEntryLayout.at(&operation);
 
-			stackTooDeepErrors += findStackTooDeep(currentStack, operationEntry);
+			stackTooDeepErrors += findStackTooDeep(currentStack, operationEntry, maxSwap(), maxDup());
 			currentStack = operationEntry;
 			for (size_t i = 0; i < operation.input.size(); i++)
 				currentStack.pop_back();
@@ -656,7 +664,7 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 			[&](CFG::BasicBlock::Jump const& _jump)
 			{
 				Stack const& targetLayout = m_layout.blockInfos.at(_jump.target).entryLayout;
-				stackTooDeepErrors += findStackTooDeep(currentStack, targetLayout);
+				stackTooDeepErrors += findStackTooDeep(currentStack, targetLayout, maxSwap(), maxDup());
 
 				if (!_jump.backwards)
 					_addChild(_jump.target);
@@ -667,7 +675,7 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 					m_layout.blockInfos.at(_conditionalJump.zero).entryLayout,
 					m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout
 				})
-					stackTooDeepErrors += findStackTooDeep(currentStack, targetLayout);
+					stackTooDeepErrors += findStackTooDeep(currentStack, targetLayout, maxSwap(), maxDup());
 
 				_addChild(_conditionalJump.zero);
 				_addChild(_conditionalJump.nonZero);
@@ -679,7 +687,7 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 	return stackTooDeepErrors;
 }
 
-Stack StackLayoutGenerator::compressStack(Stack _stack)
+Stack StackLayoutGenerator::compressStack(Stack _stack) const
 {
 	optional<size_t> firstDupOffset;
 	do
@@ -697,7 +705,7 @@ Stack StackLayoutGenerator::compressStack(Stack _stack)
 				break;
 			}
 			else if (auto dupDepth = util::findOffset(_stack | ranges::views::reverse | ranges::views::drop(depth + 1), slot))
-				if (depth + *dupDepth <= 16)
+				if (depth + *dupDepth <= maxDup())
 				{
 					firstDupOffset = _stack.size() - depth - 1;
 					break;
@@ -766,7 +774,7 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 			}
 		};
 		auto pop = [&]() { opGas += evmasm::GasMeter::runGas(evmasm::Instruction::POP); };
-		createStackLayout(_source, _target, swap, dupOrPush, pop);
+		createStackLayout(_source, _target, swap, dupOrPush, pop, maxSwap(), maxDup());
 		return opGas;
 	};
 	/// @returns the number of junk slots to be prepended to @a _targetLayout for an optimal transition from

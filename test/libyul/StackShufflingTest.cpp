@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(swap_cycle)
 		FunctionReturnLabelSlot{function}, JunkSlot{}, JunkSlot{}
 	};
 	// Used to hit a swapping cycle.
-	createStackLayout(sourceStack, targetStack, [](auto){}, [](auto){}, [](){});
+	createStackLayout(sourceStack, targetStack, [](auto){}, [](auto){}, [](){}, 16u, 16u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

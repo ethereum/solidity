@@ -72,7 +72,7 @@ namespace
 		bool usesMsize = ranges::any_of(_input, [](AssemblyItem const& _i) {
 			return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
 		});
-		evmasm::CommonSubexpressionEliminator cse(_state);
+		evmasm::CommonSubexpressionEliminator cse(_state, 16u, 16u);
 		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
 
@@ -107,7 +107,7 @@ namespace
 		while (iter != _input.end())
 		{
 			KnownState emptyState;
-			CommonSubexpressionEliminator eliminator{emptyState};
+			CommonSubexpressionEliminator eliminator{emptyState, 16u, 16u};
 			auto orig = iter;
 			iter = eliminator.feedItems(iter, _input.end(), usesMSize);
 			bool shouldReplace = false;
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(cse_assign_immutable_breaks)
 		Instruction::ORIGIN
 	});
 
-	evmasm::CommonSubexpressionEliminator cse{evmasm::KnownState()};
+	evmasm::CommonSubexpressionEliminator cse{evmasm::KnownState(), 16u, 16u};
 	// Make sure CSE breaks after AssignImmutable.
 	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), false) == input.begin() + 2);
 }
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(cse_assign_immutable_breaks)
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
 	evmasm::KnownState state;
-	evmasm::CommonSubexpressionEliminator cse(state);
+	evmasm::CommonSubexpressionEliminator cse(state, 16u, 16u);
 	AssemblyItems input{
 		Instruction::SWAP1, Instruction::POP, Instruction::ADD, u256(0), Instruction::SWAP1,
 		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,

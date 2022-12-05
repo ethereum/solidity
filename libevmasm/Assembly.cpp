@@ -433,7 +433,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 			while (iter != m_items.end())
 			{
 				KnownState emptyState;
-				CommonSubexpressionEliminator eliminator{emptyState};
+				CommonSubexpressionEliminator eliminator{emptyState, maxSwap(), maxDup()};
 				auto orig = iter;
 				iter = eliminator.feedItems(iter, m_items.end(), usesMSize);
 				bool shouldReplace = false;
