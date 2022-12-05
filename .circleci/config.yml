@@ -1048,6 +1048,7 @@ jobs:
     environment:
       CMAKE_OPTIONS: -DUSE_CVC4=OFF
       EVM: "shanghai"
+      SOLTEST_FLAGS: "--eof-version 1"
     parallelism: 50
     steps:
       - run:
