@@ -777,6 +777,7 @@ LinkerObject const& Assembly::assemble() const
 	auto dataLength = ret.bytecode.size() - dataStart;
 	if (m_eofVersion.has_value())
 	{
+		// Note: Temporary solution to current evmone requirement of non-empty data section.
 		if (dataLength == 0)
 		{
 			ret.bytecode.push_back(0);
