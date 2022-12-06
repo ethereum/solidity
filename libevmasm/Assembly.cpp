@@ -774,10 +774,15 @@ LinkerObject const& Assembly::assemble() const
 		toBigEndian(ret.bytecode.size(), r);
 	}
 
-	auto const dataLength = ret.bytecode.size() - dataStart;
+	auto dataLength = ret.bytecode.size() - dataStart;
 	if (m_eofVersion.has_value())
 	{
-		assertThrow(/*dataLength >= 0 && */ dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
+		if (dataLength == 0)
+		{
+			ret.bytecode.push_back(0);
+			dataLength++;
+		}
+		assertThrow(dataLength > 0u && dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
 		toBigEndian(dataLength, eofDataLength);
 	}
 
