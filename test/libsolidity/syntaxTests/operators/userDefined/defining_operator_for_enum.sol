@@ -7,4 +7,4 @@ enum E {
 
 function add(E, E) pure returns (E) {}
 // ----
-// TypeError 5332: (7-10): Operators can only be implemented for user-defined value types.
+// TypeError 5332: (7-10): Operators can only be implemented for user-defined value types and structs.

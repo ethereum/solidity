@@ -8,7 +8,7 @@ Using For
 
 The directive ``using A for B;`` can be used to attach
 functions (``A``) as operators to user-defined value types
-or as member functions to any type (``B``).
+and structs or as member functions to any type (``B``).
 The member functions receive the object they are called on
 as their first parameter (like the ``self`` variable in Python).
 The operator functions receive operands as parameters.
@@ -44,10 +44,12 @@ performed even if none of these functions are called.
 Note that private library functions can only be specified when ``using for`` is inside a library.
 
 If you define an operator (e.g. ``using {f as +} for T``), then the type (``T``) must be a
-:ref:`user-defined value type <user-defined-value-types>`.
+:ref:`user-defined value type <user-defined-value-types>` or a struct.
 The definition of an operator must be a ``pure`` function with the types of all parameters and
 the return value matching ``T``, except for comparison operators, where the return value must
 be of type ``bool``.
+``T`` does not include data location.
+The locations of the parameters and the return value of the definition do and must be the same.
 
 The following operators can be defined this way:
 

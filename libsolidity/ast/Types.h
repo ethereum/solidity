@@ -388,17 +388,20 @@ public:
 
 	/// Scans all "using for" directives in the @a _scope for functions implementing
 	/// the operator represented by @a _token. Returns the set of all definitions where the type
-	/// of the first argument matches this type object.
+	/// of the first argument matches this type object. Accepts both pointer and non-pointer types.
 	///
-	/// @note: If the AST has passed analysis without errors,
+	/// @note: If the AST has passed analysis without errors and @a _anyDataLocation is false,
 	/// the function will find at most one definition for an operator.
 	///
 	/// @param _unary If true, only definitions that accept exactly one argument are included.
 	/// Otherwise only definitions that accept exactly two arguments.
+	/// @param _anyDataLocation If true, ignores data location when comparing types.
+	/// Use this if you want to get all the overloads of the operator.
 	std::set<FunctionDefinition const*> operatorDefinitions(
 		Token _token,
 		ASTNode const& _scope,
-		bool _unary
+		bool _unary,
+		bool _anyDataLocation = false
 	) const;
 
 private:

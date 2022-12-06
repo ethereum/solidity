@@ -1773,22 +1773,55 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	}
 	else
 	{
-		string description = fmt::format(
-			"Built-in unary operator {} cannot be applied to type {}.",
-			TokenTraits::toString(op),
-			operandType->humanReadableName()
+		set<FunctionDefinition const*> definitionsWithDifferentLocation = operandType->operatorDefinitions(
+			_operation.getOperator(),
+			*currentDefinitionScope(),
+			true, // _unary
+			true  // _anyDataLocation
 		);
-		if (!builtinResult.message().empty())
-			description += " " + builtinResult.message();
-		if (operandType->typeDefinition() && util::contains(userDefinableOperators, op))
-			description += " No matching user-defined operator found.";
 
-		if (modifying)
-			// Cannot just report the error, ignore the unary operator, and continue,
-			// because the sub-expression was already processed with requireLValue()
-			m_errorReporter.fatalTypeError(9767_error, _operation.location(), description);
+		if (!definitionsWithDifferentLocation.empty())
+		{
+			auto const* referenceType = dynamic_cast<ReferenceType const*>(operandType);
+			solAssert(referenceType);
+			solAssert(!modifying);
+
+			SecondarySourceLocation secondaryLocation;
+			for (FunctionDefinition const* definition: definitionsWithDifferentLocation)
+				secondaryLocation.append("Candidate definition:", definition->location());
+
+			m_errorReporter.typeError(
+				5652_error,
+				_operation.location(),
+				secondaryLocation,
+				fmt::format(
+					"User-defined unary operator {} cannot be applied to type {}. "
+					"None of the available definitions accepts {} arguments.",
+					TokenTraits::toString(op),
+					operandType->humanReadableName(),
+					referenceType->stringForReferencePart(false /* _showIndirection */)
+				)
+			);
+		}
 		else
-			m_errorReporter.typeError(4907_error, _operation.location(), description);
+		{
+			string description = fmt::format(
+				"Built-in unary operator {} cannot be applied to type {}.",
+				TokenTraits::toString(op),
+				operandType->humanReadableName()
+			);
+			if (!builtinResult.message().empty())
+				description += " " + builtinResult.message();
+			if (operandType->typeDefinition() && util::contains(userDefinableOperators, op))
+				description += " No matching user-defined operator found.";
+
+			if (modifying)
+				// Cannot just report the error, ignore the unary operator, and continue,
+				// because the sub-expression was already processed with requireLValue()
+				m_errorReporter.fatalTypeError(9767_error, _operation.location(), description);
+			else
+				m_errorReporter.typeError(4907_error, _operation.location(), description);
+		}
 	}
 
 	_operation.annotation().userDefinedFunction = operatorDefinition;
@@ -1797,6 +1830,8 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	if (operatorDefinition && !returnParameterTypes.empty())
 		// Use the actual result type from operator definition. Ignore all values but the
 		// first one - in valid code there will be only one anyway.
+		// NOTE: Watch out for the difference between storage ref and ptr. Even in valid code the
+		// types will differ when the argument is a ref and the result is a ptr.
 		resultType = returnParameterTypes[0];
 	_operation.annotation().type = resultType;
 	_operation.annotation().isConstant = false;
@@ -1855,18 +1890,50 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	}
 	else
 	{
-		string description = fmt::format(
-			"Built-in binary operator {} cannot be applied to types {} and {}.",
-			TokenTraits::toString(_operation.getOperator()),
-			leftType->humanReadableName(),
-			rightType->humanReadableName()
+		set<FunctionDefinition const*> definitionsWithDifferentLocation = leftType->operatorDefinitions(
+			_operation.getOperator(),
+			*currentDefinitionScope(),
+			false, // _unary
+			true   // _anyDataLocation
 		);
-		if (!builtinResult.message().empty())
-			description += " " + builtinResult.message();
-		if (leftType->typeDefinition() && util::contains(userDefinableOperators, _operation.getOperator()))
-			description += " No matching user-defined operator found.";
 
-		m_errorReporter.typeError(2271_error, _operation.location(), description);
+		if (!definitionsWithDifferentLocation.empty())
+		{
+			auto const* referenceType = dynamic_cast<ReferenceType const*>(leftType);
+			solAssert(referenceType);
+
+			SecondarySourceLocation secondaryLocation;
+			for (FunctionDefinition const* definition: definitionsWithDifferentLocation)
+				secondaryLocation.append("Candidate definition:", definition->location());
+
+			m_errorReporter.typeError(
+				1349_error,
+				_operation.location(),
+				secondaryLocation,
+				fmt::format(
+					"User-defined binary operator {} cannot be applied to type {}. "
+					"None of the available definitions accepts {} arguments.",
+					TokenTraits::toString(_operation.getOperator()),
+					leftType->humanReadableName(),
+					referenceType->stringForReferencePart(false /* _showIndirection */)
+				)
+			);
+		}
+		else
+		{
+			string description = fmt::format(
+				"Built-in binary operator {} cannot be applied to types {} and {}.",
+				TokenTraits::toString(_operation.getOperator()),
+				leftType->humanReadableName(),
+				rightType->humanReadableName()
+			);
+			if (!builtinResult.message().empty())
+				description += " " + builtinResult.message();
+			if (leftType->typeDefinition() && util::contains(userDefinableOperators, _operation.getOperator()))
+				description += " No matching user-defined operator found.";
+
+			m_errorReporter.typeError(2271_error, _operation.location(), description);
+		}
 
 		// Set common type to something we'd expect from correct code just so that we can continue analysis.
 		commonType = leftType;
@@ -1890,9 +1957,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 
 		// operatorDefinitions() filters out definitions with non-matching first argument.
 		solAssert(parameterTypes.size() == 2);
-		solAssert(parameterTypes[0] && *leftType == *parameterTypes[0]);
+		solAssert(parameterTypes[0] && leftType->sameTypeOrPointerTo(*parameterTypes[0]));
 
-		if (*rightType != *parameterTypes[0])
+		if (!rightType->sameTypeOrPointerTo(*parameterTypes[0]))
 			m_errorReporter.typeError(
 				5653_error,
 				_operation.location(),
@@ -1907,6 +1974,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		if (!returnParameterTypes.empty())
 			// Use the actual result type from operator definition. Ignore all values but the
 			// first one - in valid code there will be only one anyway.
+			// NOTE: Watch out for the difference between storage ref and ptr. Even in valid code the
+			// types will differ when the argument is a ref and the result is a ptr.
 			resultType = returnParameterTypes[0];
 	}
 
@@ -3990,12 +4059,15 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		{
 			TypePointers const& parameterTypes = functionType->parameterTypesIncludingSelf();
 			size_t const parameterCount = parameterTypes.size();
-			if (usingForType->category() != Type::Category::UserDefinedValueType)
+			if (
+				usingForType->category() != Type::Category::UserDefinedValueType &&
+				usingForType->category() != Type::Category::Struct
+			)
 			{
 				m_errorReporter.typeError(
 					5332_error,
 					path->location(),
-					"Operators can only be implemented for user-defined value types."
+					"Operators can only be implemented for user-defined value types and structs."
 				);
 				continue;
 			}
@@ -4013,7 +4085,9 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			bool isBinaryOnlyOperator =
 				(TokenTraits::isBinaryOp(*operator_) && !TokenTraits::isUnaryOp(*operator_)) ||
 				*operator_ == Token::Add;
-			bool firstParameterMatchesUsingFor = parameterCount == 0 || *usingForType == *parameterTypes.front();
+			bool firstParameterMatchesUsingFor =
+				parameterCount == 0 ||
+				usingForType->sameTypeOrPointerTo(*parameterTypes.front(), true /* _excludeLocation */);
 
 			optional<string> wrongParametersMessage;
 			if (isBinaryOnlyOperator && (parameterCount != 2 || !identicalFirstTwoParameters))
@@ -4049,7 +4123,10 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			optional<string> wrongReturnParametersMessage;
 			if (!TokenTraits::isCompareOp(*operator_) && *operator_ != Token::Not)
 			{
-				if (returnParameterCount != 1 || *usingForType != *returnParameterTypes.front())
+				if (
+					returnParameterCount != 1 ||
+					!usingForType->sameTypeOrPointerTo(*returnParameterTypes.front(), true /* _excludeLocation */)
+				)
 					wrongReturnParametersMessage = "exactly one value of type " + usingForType->canonicalName();
 				else if (*returnParameterTypes.front() != *parameterTypes.front())
 					wrongReturnParametersMessage = "a value of the same type and data location as its parameters";
