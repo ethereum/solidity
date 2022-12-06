@@ -489,8 +489,8 @@ bool PeepholeOptimiser::optimise()
 		applyMethods(
 			state,
 			PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
-			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
-			TagConjunctions(), TruthyAnd(), Identity()
+			DupSwap(), /*IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
+			TagConjunctions(),*/ TruthyAnd(), Identity()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
