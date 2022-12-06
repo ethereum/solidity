@@ -62,6 +62,37 @@ public:
 	) override
 	{
 		bytes bytecode = multiSourceCompileContract(_sourceCode, _sourceName, _contractName, _libraryAddresses);
+
+		if (bytecode.size() > 0)
+		{
+			if (bytecode[0] == uint8_t(0xef)) // is EOF
+			{
+				const auto firstSectionOffset = 3; // magic + version
+				bool stop = false;
+				for (size_t i = firstSectionOffset; i < bytecode.size(); ++i)
+				{
+					switch (bytecode[i])
+					{
+					case uint8_t(0x00): // terminator
+						stop = true;
+						break;
+					case uint8_t(0x01): // code section
+						i += 2; // skip code size section
+						break;
+					case uint8_t(0x02): // data section
+						auto dataSizeOffset = i + 1;
+						bytesRef dataSizeRef(&bytecode[dataSizeOffset], 2);
+						size_t dataSize = fromBigEndian<size_t>(dataSizeRef);
+						toBigEndian(dataSize + _arguments.size(), dataSizeRef);
+						i += 2; // skip data size section
+						break;
+					}
+					if (stop)
+						break;
+				}
+			}
+		}
+
 		sendMessage(bytecode + _arguments, true, _value);
 		return m_output;
 	}
