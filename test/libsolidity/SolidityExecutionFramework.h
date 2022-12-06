@@ -65,7 +65,7 @@ public:
 
 		if (bytecode.size() > 0)
 		{
-			if (bytecode[0] == uint8_t(0xef)) // is EOF
+			if (bytecode[0] == uint8_t(0xef) && bytecode[1] == uint8_t(00)) // is EOF
 			{
 				const auto firstSectionOffset = 3; // magic + version
 				bool stop = false;
