@@ -148,7 +148,7 @@ void CommonOptions::validate() const
 	if (enforceGasTest)
 	{
 		assertThrow(
-			evmVersion() == langutil::EVMVersion{},
+			evmVersion() >= langutil::EVMVersion{},
 			ConfigException,
 			"Gas costs can only be enforced on latest evm version."
 		);
