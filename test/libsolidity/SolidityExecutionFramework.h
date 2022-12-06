@@ -63,7 +63,9 @@ public:
 	{
 		bytes bytecode = multiSourceCompileContract(_sourceCode, _sourceName, _contractName, _libraryAddresses);
 
-		if (bytecode.size() > 0)
+		// Note: Temporary solution that adds arguments size in the EOF data_section_size header to validate evmone implementation.
+		// TODO: Validate header and version.
+		if (bytecode.size() > 3)
 		{
 			if (bytecode[0] == uint8_t(0xef) && bytecode[1] == uint8_t(00)) // is EOF
 			{
