@@ -59,25 +59,21 @@ if __name__ == '__main__':
     filePath = sys.argv[1]
     sys.excepthook = uncaught_exception_hook
 
+    # decide if file has multiple sources
     try:
-        # decide if file has multiple sources
         with open(filePath, mode='r', encoding='utf8', newline='') as f:
             lines = f.read().splitlines()
-        if len(lines) >= 1 and lines[0][:12] == "==== Source:":
-            hasMultipleSources = True
-            writeSourceToFile(lines)
+    except UnicodeDecodeError as error:
+        print(f'Found UnicodeDecodeError: {error.reason}. Will now attempt to read file using "latin-1" encoding.')
+        with open(filePath, mode='r', encoding='latin-1', newline='') as f:
+            lines = f.read().splitlines()
+    if len(lines) > 0 and lines[0][:12] == "==== Source:":
+        hasMultipleSources = True
+        writeSourceToFile(lines)
 
-        if hasMultipleSources:
-            srcString = ""
-            for src in createdSources:
-                srcString += src + ' '
-            print(srcString)
-            sys.exit(0)
-        else:
-            sys.exit(1)
-
-    except UnicodeDecodeError as ude:
-        print("UnicodeDecodeError in '" + filePath + "': " + str(ude))
-        print("This is expected for some tests containing invalid utf8 sequences. "
-              "Exception will be ignored.")
-        sys.exit(2)
+    if hasMultipleSources:
+        srcString = ' '.join(createdSources)
+        print(srcString)
+        sys.exit(0)
+    else:
+        sys.exit(1)
