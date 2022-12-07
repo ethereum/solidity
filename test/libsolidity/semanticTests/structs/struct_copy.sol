@@ -36,7 +36,7 @@ contract c {
 
 // ----
 // set(uint256): 7 -> true
-// gas irOptimized: 110032
+// gas irOptimized: 109897
 // gas legacy: 110616
 // gas legacyOptimized: 110006
 // retrieve(uint256): 7 -> 1, 3, 4, 2
