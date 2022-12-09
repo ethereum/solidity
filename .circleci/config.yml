@@ -862,7 +862,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   t_ubu_codecov:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2004_large
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
@@ -1099,7 +1099,7 @@ jobs:
 
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2004
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
