@@ -632,7 +632,8 @@ option ``--model-checker-solvers {all,cvc4,eld,smtlib2,z3}`` or the JSON option
 .. note::
   z3 version 4.8.16 broke ABI compatibility with previous versions and cannot
   be used with solc <=0.8.13. If you are using z3 >=4.8.16 please use solc
-  >=0.8.14.
+  >=0.8.14, and conversely, only use older z3 with older solc releases.
+  We also recommend using the latest z3 release which is what SMTChecker also does.
 
 Since both BMC and CHC use ``z3``, and ``z3`` is available in a greater variety
 of environments, including in the browser, most users will almost never need to be
