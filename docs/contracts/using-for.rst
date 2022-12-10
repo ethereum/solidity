@@ -6,110 +6,55 @@
 Using For
 *********
 
-<<<<<<< HEAD
-指令 ``use A for B;`` 可以用来将库函数（来自库 ``A``）附加到合约背景下的任何类型（ ``B``）。
+指令 ``use A for B;`` 可以用来将函数（ ``A``）作为成员函数附加到任何类型（ ``B``）。
 这些函数将接收它们被调用的对象作为其第一个参数（就像Python中的 ``self`` 变量）。
 
-``using A for *;`` 的效果是，库合约 ``A`` 中的函数被附加在 *任意* 的类型上。
+它可以在文件级别或者在合约级别的合约内部有效。
 
-在这两种情况下， *所有* 函数都会被附加一个参数，
-即使它们的第一个参数类型与对象的类型不匹配。 函数调用和重载解析时才会做类型检查。
+第一部分， ``A``，可以是以下之一：
 
-``using A for B;`` 指令只在当前的合约内有效，包括其所有的功能，在使用该指令的合约之外没有效果。
-该指令只能在合约内使用，不能在其任何函数内使用。
+- 文件级别或库函数的列表（ ``using {f, g, h, L.t} for uint;``）-
+  只有这些函数才会被附加到类型上。
+- 一个库合约的名字（ ``using L for uint;``）-
+  库合约的所有函数（公共函数和内部函数）都被附加到了该类型上。
 
-让我们用这种方式将 :ref:`libraries` 中的 set 例子重写:
-=======
-The directive ``using A for B;`` can be used to attach
-functions (``A``) as member functions to any type (``B``).
-These functions will receive the object they are called on
-as their first parameter (like the ``self`` variable in Python).
+在文件级别，第二部分， ``B``， 必须是一个显式类型（没有数据位置指定符）。
+在合约内部，您还可以使用 ``using L for *;``，
+这会使库合约 ``L`` 的所有函数都被附加到 *所有* 类型上。
 
-It is valid either at file level or inside a contract,
-at contract level.
+如果您指定了一个库合约，那么库合约中的 *所有* 函数都会被附加上，
+即使那些第一个参数的类型与对象的类型不匹配的函数也是如此。
+类型会在函数被调用的时候检查，并执行函数重载解析。
 
-The first part, ``A``, can be one of:
+如果您使用函数列表（ ``using {f, g, h, L.t} for uint;``），
+那么类型（ ``uint``）必须隐式可转换为这些函数的第一个参数。
+即使这些函数都没有被调用，这个检查也会执行。
 
-- a list of file-level or library functions (``using {f, g, h, L.t} for uint;``) -
-  only those functions will be attached to the type.
-- the name of a library (``using L for uint;``) -
-  all functions (both public and internal ones) of the library are attached to the type
+``using A for B;`` 指令只在当前作用域（合约或当前模块/源单元）内有效，
+包括其中所有的函数，在使用它的合约或模块之外没有任何效果。
 
-At file level, the second part, ``B``, has to be an explicit type (without data location specifier).
-Inside contracts, you can also use ``using L for *;``,
-which has the effect that all functions of the library ``L``
-are attached to *all* types.
+当在文件级别使用该指令并应用于在同一文件中用户定义类型时，
+可以在末尾添加 ``global`` 关键字。
+这将产生的效果是，函数将附加到类型的每个地方（包括其他文件），
+而不仅仅是在 using 语句的作用域内。
 
-If you specify a library, *all* functions in the library are attached,
-even those where the type of the first parameter does not
-match the type of the object. The type is checked at the
-point the function is called and function overload
-resolution is performed.
-
-If you use a list of functions (``using {f, g, h, L.t} for uint;``),
-then the type (``uint``) has to be implicitly convertible to the
-first parameter of each of these functions. This check is
-performed even if none of these functions are called.
-
-The ``using A for B;`` directive is active only within the current
-scope (either the contract or the current module/source unit),
-including within all of its functions, and has no effect
-outside of the contract or module in which it is used.
-
-When the directive is used at file level and applied to a
-user-defined type which was defined at file level in the same file,
-the word ``global`` can be added at the end. This will have the
-effect that the functions are attached to the type everywhere
-the type is available (including other files), not only in the
-scope of the using statement.
-
-Let us rewrite the set example from the
-:ref:`libraries` section in this way, using file-level functions
-instead of library functions.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+下面我们将使用文件级函数来重写 :ref:`libraries` 部分中的 set 示例。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.13;
 
-<<<<<<< HEAD
-
-    // 这是和之前一样的代码，只是没有注释。
-=======
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
     struct Data { mapping(uint => bool) flags; }
-    // Now we attach functions to the type.
-    // The attached functions can be used throughout the rest of the module.
-    // If you import the module, you have to
-    // repeat the using directive there, for example as
+    // 现在我们给这个类型附加上函数。
+    // 附加的函数可以在模块的其他部分使用。
+    // 如果您导入了该模块，
+    // 您必须在那里重复using指令，例如
     //   import "flags.sol" as Flags;
     //   using {Flags.insert, Flags.remove, Flags.contains}
     //     for Flags.Data;
     using {insert, remove, contains} for Data;
 
-<<<<<<< HEAD
-    library Set {
-        function insert(Data storage self, uint value)
-            public
-            returns (bool)
-        {
-            if (self.flags[value])
-                return false; // 已经存在
-            self.flags[value] = true;
-            return true;
-        }
-
-        function remove(Data storage self, uint value)
-            public
-            returns (bool)
-        {
-            if (!self.flags[value])
-                return false; // 不存在
-            self.flags[value] = false;
-            return true;
-        }
-=======
     function insert(Data storage self, uint value)
         returns (bool)
     {
@@ -127,7 +72,6 @@ instead of library functions.
         self.flags[value] = false;
         return true;
     }
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
     function contains(Data storage self, uint value)
         view
@@ -138,10 +82,6 @@ instead of library functions.
 
 
     contract C {
-<<<<<<< HEAD
-        using Set for Data; // 这里是关键的修改
-=======
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
         Data knownValues;
 
         function register(uint value) public {
@@ -151,12 +91,8 @@ instead of library functions.
         }
     }
 
-<<<<<<< HEAD
-也可以像这样扩展基本类型:
-=======
-It is also possible to extend built-in types in that way.
-In this example, we will use a library.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+也可以通过这种方式来扩展内置类型。
+在这个例子中，我们将使用一个库合约。
 
 .. code-block:: solidity
 
@@ -183,15 +119,9 @@ In this example, we will use a library.
             data.push(value);
         }
 
-<<<<<<< HEAD
-        function replace(uint _old, uint _new) public {
-            // 执行库函数调用
-            uint index = data.indexOf(_old);
-=======
         function replace(uint from, uint to) public {
-            // This performs the library function call
+            // 这将执行库合约中的函数调用
             uint index = data.indexOf(from);
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             if (index == type(uint).max)
                 data.push(to);
             else
@@ -200,5 +130,5 @@ In this example, we will use a library.
     }
 
 注意，所有的外部库调用实际都是EVM函数调用。
-这意味着，如果你传递内存或值类型，将进行拷贝，即使是在 ``self`` 变量的情况下。
+这意味着，如果您传递内存或值类型，将进行拷贝，即使是在 ``self`` 变量的情况下。
 唯一不进行拷贝的情况是当使用存储引用变量或调用内部库函数时。
