@@ -107,20 +107,13 @@
                 require(to != msg.sender, "Found loop in delegation.");
             }
 
-<<<<<<< HEAD
-            // `sender` 是一个引用, 相当于对 `voters[msg.sender].voted` 进行修改
             Voter storage delegate_ = voters[to];
 
-            // 选民不能委托给不能投票的钱包。
-=======
-            Voter storage delegate_ = voters[to];
-
-            // Voters cannot delegate to accounts that cannot vote.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+            // 投票者不能将投票权委托给不能投票的账户。
             require(delegate_.weight >= 1);
 
-            // Since `sender` is a reference, this
-            // modifies `voters[msg.sender]`.
+            // 由于 `sender` 是一个引用，
+            // 因此这会修改 `voters[msg.sender]`。
             sender.voted = true;
             sender.delegate = to;
 
