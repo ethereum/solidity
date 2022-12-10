@@ -311,13 +311,8 @@ errorDefinition:
 	Semicolon;
 
 /**
-<<<<<<< HEAD
- * 使用指令将库函数与类型绑定。
- * 可以在合约和库中出现。
-=======
- * Using directive to bind library functions and free functions to types.
- * Can occur within contracts and libraries and at the file level.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+ * 使用指令将库函数和自由函数与类型绑定。
+ * 可以在合同和库中以及文件层面中出现。
  */
 usingDirective: Using (identifierPath | (LBrace identifierPath (Comma identifierPath)* RBrace)) For (Mul | typeName) Global? Semicolon;
 /**
@@ -483,8 +478,8 @@ revertStatement: Revert expression callArgumentList Semicolon;
 assemblyStatement: Assembly AssemblyDialect? assemblyFlags? AssemblyLBrace yulStatement* YulRBrace;
 
 /**
- * Assembly flags.
- * Comma-separated list of double-quoted strings as flags.
+ * 内联标志。
+ * 逗号分隔的双引号字符串列表作为标志。
  */
 assemblyFlags: AssemblyBlockLParen AssemblyFlagString (AssemblyBlockComma AssemblyFlagString)* AssemblyBlockRParen;
 
