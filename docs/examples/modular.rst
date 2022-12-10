@@ -4,7 +4,6 @@
 模块化合约
 ***********
 
-<<<<<<< HEAD
 用模块化的方法来构建您的合约，可以帮助减少复杂性，提高可读性，
 这将有助于在开发和代码审查中发现错误和漏洞。
 如果您单独指定且控制每个模块的行为，您必须考虑的相互作用只是模块之间的相互作用，
@@ -14,20 +13,6 @@
 可以正确地跟踪账户的余额。
 很容易验证 ``Balances`` 库永远不会产生负的余额或溢出，
 所有余额的总和在合约的有效期内是一个不变的量。
-=======
-A modular approach to building your contracts helps you reduce the complexity
-and improve the readability which will help to identify bugs and vulnerabilities
-during development and code review.
-If you specify and control the behaviour of each module in isolation, the
-interactions you have to consider are only those between the module specifications
-and not every other moving part of the contract.
-In the example below, the contract uses the ``move`` method
-of the ``Balances`` :ref:`library <libraries>` to check that balances sent between
-addresses match what you expect. In this way, the ``Balances`` library
-provides an isolated component that properly tracks balances of accounts.
-It is easy to verify that the ``Balances`` library never produces negative balances or overflows
-and the sum of all balances is an invariant across the lifetime of the contract.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. code-block:: solidity
 
