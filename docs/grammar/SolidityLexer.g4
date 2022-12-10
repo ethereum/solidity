@@ -28,21 +28,12 @@ Do: 'do';
 Else: 'else';
 Emit: 'emit';
 Enum: 'enum';
-<<<<<<< HEAD
 Error: 'error'; // 不是真正的关键字
-Revert: 'revert'; // 不是真正的关键字
-=======
-Error: 'error'; // not a real keyword
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 Event: 'event';
 External: 'external';
 Fallback: 'fallback';
 False: 'false';
 Fixed: 'fixed' | ('fixed' [1-9][0-9]* 'x' [1-9][0-9]*);
-<<<<<<< HEAD
-From: 'from'; // 不是真正的关键字
-=======
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 /**
  * 固定长度的字节类型。
  */
