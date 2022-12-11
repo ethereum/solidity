@@ -47,9 +47,9 @@
 
 .. warning::
 
-  Solidity中的整数被限制在一个特定的范围内。例如，对于 ``uint32``，这是 ``0`` 到 ``2**32 - 1``。
-  有两种模式在这些类型上进行算术。"包装" 或 "未检查" 模式和 "检查" 模式。
-  默认情况下，算术总是 "检查" 模式的，这意味着如果一个操作的结果超出了该类型的值范围，
+  Solidity 中的整数被限制在一个特定的范围内。例如，对于 ``uint32``，这是 ``0`` 到 ``2**32 - 1``。
+  有两种模式在这些类型上进行算术。“包装” 或 “未检查” 模式和 “检查” 模式。
+  默认情况下，算术总是 “检查” 模式的，这意味着如果一个操作的结果超出了该类型的值范围，
   调用将通过一个 :ref:`失败的断言 <assert-and-require>` 而被恢复。
   您可以用 ``unchecked { ... }``。 更多的细节可以在关于 :ref:`未检查 <unchecked>` 的章节中找到。
 
@@ -104,7 +104,7 @@
 ^^^^^^^^
 
 由于运算结果的类型总是操作数之一的类型，整数除法的结果总是一个整数。
-在Solidity中，除法是向零进位的。这意味着 ``int256(-5) / int256(2) == int256(-2)``。
+在 Solidity 中，除法是向零进位的。这意味着 ``int256(-5) / int256(2) == int256(-2)``。
 
 请注意，与此相反，在 :ref:`字面上 <rational_literals>` 的除法会产生任意精度的分数值。
 
@@ -144,7 +144,7 @@
   在任何情况下，气体成本测试和使用优化器都是可取的。
 
 .. note::
-  请注意，``0**0`` 被EVM定义为 ``1``。
+  请注意， ``0**0`` 被EVM定义为 ``1``。
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
@@ -208,7 +208,7 @@
 
 .. warning::
     如果您使用较大字节的类型转换为 ``address``，例如 ``bytes32``，那么 ``address`` 就被截断了。
-    为了减少转换的模糊性，0.4.24及以上版本的编译器强迫你在转换中明确截断。以32字节的值
+    为了减少转换的模糊性，0.4.24及以上版本的编译器强迫您在转换中明确截断。以32字节的值
     ``0x111122333344556677888899AAAABBBBCCCCDDDDEEFFFFCCCC`` 为例。
 
     您可以使用 ``address(uint160(bytes20(b)))``，结果是 ``0x111122223333444455556666777788889999aAaa``，
@@ -310,9 +310,9 @@ Send是 ``transfer`` 的低级对应部分。如果执行失败，当前的合�
 
 .. note::
     在 homestead 版本之前，只有一个功能类似但作用有限的 ``callcode`` 的函数可用，
-    但它不能获取委托方的 ``msg.sender`` 和 ``msg.value``。这个功能在0.5.0版本中被移除。
+    但它不能获取委托方的 ``msg.sender`` 和 ``msg.value``。这个功能在 0.5.0 版本中被移除。
 
-从byzantium开始，也可以使用 ``staticcall``。这基本上与 ``call`` 相同，
+从 byzantium 开始，也可以使用 ``staticcall``。这基本上与 ``call`` 相同，
 但如果被调用的函数以任何方式修改了状态，则会恢复。
 
 这三个函数 ``call``， ``delegatecall`` 和 ``staticcall`` 都是非常低级的函数，
@@ -344,14 +344,14 @@ Send是 ``transfer`` 的低级对应部分。如果执行失败，当前的合�
 您可以隐式地将一个合约转换为它们所继承的另一个合约。
 合约可以显式地转换为 ``address`` 类型，也可以从 ``address`` 类型中转换。
 
-只有在合约类型具有receive或 payable 类型的 fallback 函数的情况下，
+只有在合约类型具有 receive 或 payable 类型的 fallback 函数的情况下，
 才有可能明确转换为 ``address payable`` 类型和从该类型转换。
 这种转换仍然使用 ``address(x)`` 进行转换。如果合约类型没有一个 receive 或 payable 类型的 fallback 函数，
 可以使用 ``payable(address(x))`` 来转换为 ``address payable`` 。
 您可以在 :ref:`地址类型 <address>` 一节中找到更多信息。
 
 .. note::
-    在0.5.0版本之前，合约直接从地址类型派生出来，
+    在 0.5.0 版本之前，合约直接从地址类型派生出来，
     并且在 ``address`` 和 ``address payable`` 之间没有区别。
 
 如果您声明了一个本地类型的变量（ ``MyContract c`` ），您可以调用该合约上的函数。
@@ -397,7 +397,7 @@ Send是 ``transfer`` 的低级对应部分。如果执行失败，当前的合�
     因此最好使用 ``bytes`` 类型来代替。
 
 .. note::
-    在0.8.0版本之前， ``byte`` 曾经是 ``bytes1`` 的别名。
+    在 0.8.0 版本之前， ``byte`` 曾经是 ``bytes1`` 的别名。
 
 变长字节数组
 ------------
@@ -432,12 +432,7 @@ Send是 ``transfer`` 的低级对应部分。如果执行失败，当前的合�
 整数字面常数由范围在 0-9 的一串数字组成，表现成十进制。
 例如， ``69`` 表示十进制数字 69。 Solidity 中是没有八进制的，因此前置 0 是无效的。
 
-<<<<<<< HEAD
-十进制小数字面常数带有一个 ``.``，至少在其一边会有一个数字。 比如： ``1.``, ``.1`` 和 ``1.3``。
-=======
-Decimal fractional literals are formed by a ``.`` with at least one number after the decimal point.
-Examples include ``.1`` and ``1.3`` (but not ``1.``).
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+小数字面常数由 ``.`` 和小数点后的至少一个数字组成。例如， ``.1`` 和 ``1.3``（但不是 ``1.``）。
 
 也支持 ``2e10`` 形式的科学符号，其中尾数可以是小数，但指数必须是一个整数。
 字面的 ``MeE`` 相当于 ``M * 10**E``。
@@ -448,46 +443,32 @@ Examples include ``.1`` and ``1.3`` (but not ``1.``).
 下划线只允许在两个数字之间，并且只允许一个连续的下划线。
 含有下划线的数字字面没有额外的语义，下划线被忽略。
 
-<<<<<<< HEAD
 数值字面常数表达式保留任意精度，直到它们被转换为非字面常数类型
-（即通过与非字面常数类型一起使用或通过显式转换）。
+（即通过与数字字面常数表达式以外的任何东西一起使用（如布尔字面常数）或通过显式转换）。
 这意味着在数值常量表达式中，计算不会溢出，除法不会截断。
-=======
-Number literal expressions retain arbitrary precision until they are converted to a non-literal type (i.e. by
-using them together with anything other than a number literal expression (like boolean literals) or by explicit conversion).
-This means that computations do not overflow and divisions do not truncate
-in number literal expressions.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 例如， ``(2**800 + 1) - 2**800`` 的结果是常数 ``1`` （类型 ``uint8``），
 尽管中间的结果甚至不符合机器字的大小。此外， ``.5 * 8`` 的结果是整数 ``4`` （尽管中间使用了非整数）。
 
-<<<<<<< HEAD
+.. warning::
+    虽然大多数运算符在应用于字面常数时都会产生一个字面常数表达式，但有一些运算符并不遵循这种模式：
+
+    - 三元运算符（ ``...？ ...：...``）。
+    - 数组下标（ ``<array>[<index>]``）。
+
+    您可能期望像 ``255 + (true ? 1 : 0)`` 或 ``255 + [1, 2, 3][0]`` 这样的表达式等同于直接使用字面常数256，
+    但实际上它们是在 ``uint8`` 类型中计算的，可能会溢出。
+
 只要操作数是整数，任何可以应用于整数的操作数也可以应用于数值字面常数表达式。
 如果两者中的任何一个是小数，则不允许进行位操作，
 如果指数是小数，则不允许进行幂运算（因为这可能导致无理数）。
-=======
-.. warning::
-    While most operators produce a literal expression when applied to literals, there are certain operators that do not follow this pattern:
-
-    - Ternary operator (``... ? ... : ...``),
-    - Array subscript (``<array>[<index>]``).
-
-    You might expect expressions like ``255 + (true ? 1 : 0)`` or ``255 + [1, 2, 3][0]`` to be equivalent to using the literal 256
-    directly, but in fact they are computed within the type ``uint8`` and can overflow.
-
-Any operator that can be applied to integers can also be applied to number literal expressions as
-long as the operands are integers. If any of the two is fractional, bit operations are disallowed
-and exponentiation is disallowed if the exponent is fractional (because that might result in
-a non-rational number).
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 以数值字面常数表达式为左（或基数）操作数，以整数类型为右（指数）操作数的移位和幂运算，
 总是在 ``uint256`` （非负数数值字面常数）或 ``int256`` （负数数值字面常数）类型中进行。
 无论右（指数）操作数的类型如何。
 
 .. warning::
-    在0.4.0版本之前，Solidity中整数字的除法会被截断，但现在它转换为一个有理数，即 ``5 / 2`` 不等于 ``2``，而是 ``2.5``。
+    在 0.4.0 版本之前，Solidity 中整数字的除法会被截断，但现在它转换为一个有理数，即 ``5 / 2`` 不等于 ``2``，而是 ``2.5``。
 
 .. note::
     Solidity 对每个有理数都有对应的数值字面常数类型。
@@ -539,7 +520,7 @@ a non-rational number).
 
 .. note::
 
-    在0.8.0版本之前，有三个额外的转义序列。 ``\b``， ``\f`` 和 ``v``。
+    在 0.8.0 版本之前，有三个额外的转义序列。 ``\b``， ``\f`` 和 ``v``。
     它们在其他语言中通常是可用的，但在实践中很少需要。
     如果您确实需要它们，仍然可以通过十六进制转义插入，
     即分别为 ``\x08``， ``x0c`` 和 ``\x0b``，就像其他ASCII字符一样。
@@ -554,13 +535,13 @@ a non-rational number).
     "\n\"\'\\abc\
     def"
 
-任何非换行的Unicode行结束符（即LF, VF, FF, CR, NEL, LS, PS）都被认为是字符串字面的结束。
+任何非换行的 Unicode 行结束符（即LF, VF, FF, CR, NEL, LS, PS）都被认为是字符串字面的结束。
 换行只在字符串字面内容前面没有 ``\`` 的情况下终止。
 
 Unicode 字面常数
 ----------------
 
-普通字符串字面常数只能包含ASCII码，而Unicode字面常数--以关键字 ``unicode`` 为前缀--可以包含任何有效的UTF-8序列。
+普通字符串字面常数只能包含ASCII码，而 Unicode 字面常数 - 以关键字 ``unicode`` 为前缀 - 可以包含任何有效的UTF-8序列。
 它们也支持与普通字符串字面意义相同的转义序列。
 
 .. code-block:: solidity
@@ -595,7 +576,7 @@ Unicode 字面常数
 枚举要求至少有一个成员，其声明时的默认值是第一个成员。
 枚举不能有超过256个成员。
 
-数据表示与C语言中的枚举相同。选项由后续的从 ``0`` 开始无符号整数值表示。
+数据表示与 C 语言中的枚举相同。选项由后续的从 ``0`` 开始无符号整数值表示。
 
 使用 ``type(NameOfEnum).min`` 和 ``type(NameOfEnum).max``
 您可以得到给定枚举的最小值和最大值。
@@ -647,7 +628,7 @@ Unicode 字面常数
 这类似于一个别名，但有更严格的类型要求。
 
 一个用户定义的值类型是用 ``type C is V`` 定义的，其中 ``C`` 是新引入的类型的名称，
-``V`` 必须是一个内置的值类型（"底层类型"）。
+``V`` 必须是一个内置的值类型（“底层类型”）。
 函数 ``C.wrap`` 被用来从底层类型转换到自定义类型。同样地，
 函数 ``C.unwrap`` 用于从自定义类型转换到底层类型。
 
@@ -686,7 +667,7 @@ Unicode 字面常数
             return UFixed256x18.unwrap(a) / multiplier;
         }
         /// 将一个uint256转化为相同值的UFixed256x18。
-        /// 如果整数太大，则恢复。
+        /// 如果整数太大，则恢复计算。
         function toUFixed256x18(uint256 a) internal pure returns (UFixed256x18) {
             return UFixed256x18.wrap(a * multiplier);
         }
@@ -748,10 +729,10 @@ Unicode 字面常数
 所以 ``non-payable`` 的函数不能被转换为 ``payable`` 的函数。
 
 如果一个函数类型的变量没有被初始化，调用它将导致
-会出现 :ref:`异常<assert-and-require>`。如果你在一个函数上使用了 ``delete`` 之后再调用它，
+会出现 :ref:`异常<assert-and-require>`。如果您在一个函数上使用了 ``delete`` 之后再调用它，
 也会发生同样的情况。
 
-如果外部函数类型在Solidity的上下文中被使用，
+如果外部函数类型在 Solidity 的上下文中被使用，
 它们将被视为 ``function`` 类型，它将地址和函数标识符一起编码为一个 ``bytes24`` 类型。
 
 请注意，当前合约的公开函数既可以被当作内部函数也可以被当作外部函数使用。
@@ -762,7 +743,7 @@ Unicode 字面常数
 这包括合约和库合约的隐私、内部和公共函数，以及自由函数。
 另一方面，外部函数类型只与公共和外部合约函数兼容。
 库合约被排除在外，因为它们需要一个 ``delegatecall``，
-并且 :ref:`对它们的选择器使用不同的ABI约定 <library-selectors>`。
+并且 :ref:`对它们的选择器使用不同的 ABI 约定 <library-selectors>`。
 在接口中声明的函数没有定义，所以指向它们也没有意义。
 
 成员：
@@ -773,7 +754,7 @@ Unicode 字面常数
 
 .. note::
   外部（或公共）函数曾经有额外的成员 ``.gas(uint)`` 和 ``.value(uint)``。
-  这些在Solidity 0.6.2中被废弃，并在Solidity 0.7.0中被移除。取而代之的是
+  这些在 Solidity 0.6.2 中被废弃，并在 Solidity 0.7.0 中被移除。取而代之的是
   使用 ``{gas: ...}`` 和 ``{value: ...}`` 来分别指定发送到函数的气体量或以太（wei为单位）量。
   参见 :ref:`外部函数调用 <external-function-calls>` 以获得更多信息。
 
@@ -901,4 +882,4 @@ Unicode 字面常数
     }
 
 .. note::
-    Lambda或内联函数是计划中的，但还不支持。
+    Lambda 或内联函数是计划中的，但还不支持。
