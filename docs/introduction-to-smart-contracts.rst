@@ -328,7 +328,7 @@ Solidity意义上的合约是代码（其 *函数*）和数据（其 *状态*）
 如果目标账户没有设置（交易没有接收者或接收者被设置为 ``null``），
 交易会创建一个 **新合约**。
 正如已经提到的，该合约的地址不是零地址，
-而是从发送者和其发送的交易数量（“nonce“）中得出的地址。
+而是从发送者和其发送的交易数量（“nonce”）中得出的地址。
 这种合约创建交易的有效负载被认为是EVM字节码并被执行。
 该执行的输出数据被永久地存储为合约的代码。
 这意味着，为创建一个合约，您不需要发送实际的合约代码，而是发送能够产生合约代码的代码。
@@ -342,51 +342,31 @@ Solidity意义上的合约是代码（其 *函数*）和数据（其 *状态*）
 Gas
 ===
 
-<<<<<<< HEAD
-一经创建，每笔交易都收取一定数量的 **gas** ，
-目的是限制执行交易所需要的工作量和为交易支付手续费。
-当EVM 执行交易时，gas 将按特定规则逐渐耗尽。
+一经创建，每笔交易都会被收取一定数量的 **gas**，
+这些 gas 必须由交易的发起人 （ ``tx.origin``）支付。
+在 EVM 执行交易时，gas 根据特定规则逐渐耗尽。
+如果 gas 在某一点被用完（即它会为负），
+将触发一个 gas 耗尽异常，
+这将结束执行并撤销当前调用栈中对状态所做的所有修改。
 
-**gas price** 是交易的创建者设置的一个值，
-他必须从发送账户中预先支付 ``gas_price * gas``。
-如果交易执行后还有剩余， gas 会原路返还。
+此机制激励了对 EVM 执行时间的经济利用，
+并为 EVM 执行器（即矿工/持币者）的工作提供补偿。
+由于每个区块都有最大 gas 量，因此还限制了验证块所需的工作量。
 
-如果gas在任何时候都用完了（即会是负值），
-就会触发gas不足的异常，从而恢复在当前调用帧中对状态进行的所有修改。
-=======
-Upon creation, each transaction is charged with a certain amount of **gas**
-that has to be paid for by the originator of the transaction (``tx.origin``).
-While the EVM executes the
-transaction, the gas is gradually depleted according to specific rules.
-If the gas is used up at any point (i.e. it would be negative),
-an out-of-gas exception is triggered, which ends execution and reverts all modifications
-made to the state in the current call frame.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+**gas price** 是交易发起人设定的值，
+他必须提前向 EVM 执行器支付 ``gas_price * gas``。
+如果执行后还剩下一些 gas，则退还给交易发起人。
+如果发生撤销更改的异常，已经使用的 gas 不会退还。
 
-This mechanism incentivizes economical use of EVM execution time
-and also compensates EVM executors (i.e. miners / stakers) for their work.
-Since each block has a maximum amount of gas, it also limits the amount
-of work needed to validate a block.
-
-The **gas price** is a value set by the originator of the transaction, who
-has to pay ``gas_price * gas`` up front to the EVM executor.
-If some gas is left after execution, it is refunded to the transaction originator.
-In case of an exception that reverts changes, already used up gas is not refunded.
-
-Since EVM executors can choose to include a transaction or not,
-transaction senders cannot abuse the system by setting a low gas price.
+由于 EVM 执行器可以选择包含一笔交易，
+因此交易发送者无法通过设置低 gas 价格滥用系统。
 
 .. index:: ! storage, ! memory, ! stack
 
 存储，内存和栈
 =============================
 
-<<<<<<< HEAD
-以太坊虚拟机有三个可以存储数据的区域-存储器，内存和堆栈，这将在以下段落中解释。
-=======
-The Ethereum Virtual Machine has three areas where it can store data:
-storage, memory and the stack.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+以太坊虚拟机有三个存储数据的区域：存储器，内存和堆栈。
 
 每个账户都有一个称为 **存储** 的数据区，在函数调用和交易之间是持久的。
 存储是一个键值存储，将256位的字映射到256位的字。
@@ -447,21 +427,14 @@ EVM的指令集应尽量保持最小，以避免不正确或不一致的实现�
 委托调用/代码调用和库
 =====================================
 
-<<<<<<< HEAD
-消息调用有一个特殊的变体，被称为 **委托调用（delegatecall）**，
-除了目标地址的代码是在调用合约的上下文中执行，
-``msg.sender`` 和 ``msg.value`` 不改变它们的值之外，其他与消息调用相同。
-=======
-There exists a special variant of a message call, named **delegatecall**
-which is identical to a message call apart from the fact that
-the code at the target address is executed in the context (i.e. at the address) of the calling
-contract and ``msg.sender`` and ``msg.value`` do not change their values.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+存在一种特殊的消息调用，被称为 **委托调用（delegatecall）**，
+除了目标地址的代码是在调用合约的上下文（即地址）中执行，
+``msg.sender`` 和 ``msg.value`` 的值不会更改之外，其他与消息调用相同。
 
 这意味着合约可以在运行时动态地从不同的地址加载代码。
 存储，当前地址和余额仍然指的是调用合约，只是代码取自被调用的地址。
 
-这使得在Solidity中实现 "库 "的功能成为可能：
+这使得在Solidity中实现 “库” 的功能成为可能：
 可重复使用的库代码，可以放在一个合约的存储上，例如，用来实现复杂的数据结构的库。
 
 .. index:: log
