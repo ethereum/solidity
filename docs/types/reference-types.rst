@@ -269,7 +269,7 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
 
-    // This will not compile.
+    // 这不会被编译。
     contract C {
         function f() public {
             // 下一行会产生一个类型错误，因为uint[3]内存不能被转换为uint[]内存。
@@ -313,14 +313,9 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
     动态存储数组和 ``bytes`` （不是 ``string`` ）有一个叫 ``push(x)`` 的成员函数，
     您可以用它在数组的末端追加一个指定的元素。该函数不返回任何东西。
 **pop()**:
-<<<<<<< HEAD
     动态存储数组和 ``bytes`` （不是 ``string`` ）有一个叫 ``pop()`` 的成员函数，
-    您可以用它来从数组的末端移除一个元素。这也隐含地在被删除的元素上调用 :ref:`delete <delete>`。
-=======
-     Dynamic storage arrays and ``bytes`` (not ``string``) have a member
-     function called ``pop()`` that you can use to remove an element from the
-     end of the array. This also implicitly calls :ref:`delete<delete>` on the removed element. The function returns nothing.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+    您可以用它来从数组的末端移除一个元素。
+    这也隐含地在被删除的元素上调用 :ref:`delete <delete>`。该函数不返回任何东西。
 
 .. note::
     通过调用 ``push()`` 增加存储数组的长度有恒定的气体成本，因为存储是零初始化的，
@@ -352,7 +347,7 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
         // newPairs被存储在memory中--这是公开合约函数参数的唯一可能性。
         function setAllFlagPairs(bool[2][] memory newPairs) public {
             // 赋值到一个存储数组会执行 ``newPairs`` 的拷贝，
-            // 并替换完整的阵列 ``pairsOfFlags``。
+            // 并替换完整的数组 ``pairsOfFlags``。
             pairsOfFlags = newPairs;
         }
 
@@ -431,13 +426,13 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
 
 .. index:: ! array;dangling storage references
 
-Dangling References to Storage Array Elements
+对存储数组元素的悬空引用（Dangling References）
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When working with storage arrays, you need to take care to avoid dangling references.
-A dangling reference is a reference that points to something that no longer exists or has been
-moved without updating the reference. A dangling reference can for example occur, if you store a
-reference to an array element in a local variable and then ``.pop()`` from the containing array:
+当使用存储数组时，您需要注意避免悬空引用。
+悬空引用是指一个指向不再存在的或已经被移动而未更新引用的内容的引用。
+例如，如果您将一个数组元素的引用存储在一个局部变量中，
+然后从包含数组中使用 ``.pop()``，就可能发生悬空引用：
 
 .. code-block:: solidity
 
@@ -448,28 +443,28 @@ reference to an array element in a local variable and then ``.pop()`` from the c
         uint[][] s;
 
         function f() public {
-            // Stores a pointer to the last array element of s.
+            // 存储一个指向s的最后一个数组元素的指针。
             uint[] storage ptr = s[s.length - 1];
-            // Removes the last array element of s.
+            // 删除s的最后一个数组元素。
             s.pop();
-            // Writes to the array element that is no longer within the array.
+            // 写入已不在数组内的数组元素。
             ptr.push(0x42);
-            // Adding a new element to ``s`` now will not add an empty array, but
-            // will result in an array of length 1 with ``0x42`` as element.
+            // 现在向 ``s`` 添加一个新元素不会添加一个空数组，
+            // 而是会产生一个长度为1的数组，元素为 ``0x42``。
             s.push();
             assert(s[s.length - 1][0] == 0x42);
         }
     }
 
-The write in ``ptr.push(0x42)`` will **not** revert, despite the fact that ``ptr`` no
-longer refers to a valid element of ``s``. Since the compiler assumes that unused storage
-is always zeroed, a subsequent ``s.push()`` will not explicitly write zeroes to storage,
-so the last element of ``s`` after that ``push()`` will have length ``1`` and contain
-``0x42`` as its first element.
+``ptr.push(0x42)`` 中的写法 **不会** 恢复操作，尽管 ``ptr`` 不再指向 ``s`` 的一个有效元素。
+由于编译器假定未使用的存储空间总是被清零，
+随后的 ``s.push()`` 不会明确地将零写入存储空间，
+所以在 ``push()`` 之后， ``s`` 的最后一个元素的长度是 ``1``，
+并且包含 ``0x42`` 作为其第一个元素。
 
-Note that Solidity does not allow to declare references to value types in storage. These kinds
-of explicit dangling references are restricted to nested reference types. However, dangling references
-can also occur temporarily when using complex expressions in tuple assignments:
+注意，Solidity 不允许在存储中声明对值类型的引用。
+这类显式的悬空引用被限制在嵌套引用类型中。然而，
+当在数组赋值中使用复杂表达式时，悬空引用也会短暂发生：
 
 .. code-block:: solidity
 
@@ -480,7 +475,7 @@ can also occur temporarily when using complex expressions in tuple assignments:
         uint[] s;
         uint[] t;
         constructor() {
-            // Push some initial values to the storage arrays.
+            // 向存储数组推送一些初始值。
             s.push(0x07);
             t.push(0x03);
         }
@@ -491,32 +486,29 @@ can also occur temporarily when using complex expressions in tuple assignments:
         }
 
         function f() public returns (uint[] memory) {
-            // The following will first evaluate ``s.push()`` to a reference to a new element
-            // at index 1. Afterwards, the call to ``g`` pops this new element, resulting in
-            // the left-most tuple element to become a dangling reference. The assignment still
-            // takes place and will write outside the data area of ``s``.
+            // 下面将首先评估 ``s.push()` 到一个索引为1的新元素的引用。
+            // 之后，调用 ``g`` 弹出这个新元素，
+            // 导致最左边的元组元素成为一个悬空的引用。
+            // 赋值仍然发生，并将写入 ``s`` 的数据区域之外。
             (s.push(), g()[0]) = (0x42, 0x17);
-            // A subsequent push to ``s`` will reveal the value written by the previous
-            // statement, i.e. the last element of ``s`` at the end of this function will have
-            // the value ``0x42``.
+            // 随后对 ``s`` 的推送将显示前一个语句写入的值，
+            // 即在这个函数结束时 ``s`` 的最后一个元素将有 ``0x42`` 的值。
             s.push();
             return s;
         }
     }
 
-It is always safer to only assign to storage once per statement and to avoid
-complex expressions on the left-hand-side of an assignment.
+每条语句只对存储进行一次赋值，并避免在赋值的左侧使用复杂的表达式，这样做总是比较安全的。
 
-You need to take particular care when dealing with references to elements of
-``bytes`` arrays, since a ``.push()`` on a bytes array may switch :ref:`from short
-to long layout in storage<bytes-and-string>`.
+您需要特别小心处理对 ``bytes`` 数组元素的引用，
+因为 bytes 数组的  ``.push()`` 操作可能会 :ref:`在存储中从短布局切换到长布局 <bytes-and-string>`。
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0 <0.9.0;
 
-    // This will report a warning
+    // 这将报告一个警告
     contract C {
         bytes x = "012345678901234567890123456789";
 
@@ -526,22 +518,20 @@ to long layout in storage<bytes-and-string>`.
         }
     }
 
-Here, when the first ``x.push()`` is evaluated, ``x`` is still stored in short
-layout, thereby ``x.push()`` returns a reference to an element in the first storage slot of
-``x``. However, the second ``x.push()`` switches the bytes array to large layout.
-Now the element that ``x.push()`` referred to is in the data area of the array while
-the reference still points at its original location, which is now a part of the length field
-and the assignment will effectively garble the length of ``x``.
-To be safe, only enlarge bytes arrays by at most one element during a single
-assignment and do not simultaneously index-access the array in the same statement.
+这里，当第一个 ``x.push()`` 被运算时， ``x`` 仍然被存储在短布局中，
+因此 ``x.push()`` 返回对 ``x`` 的第一个存储槽中元素的引用。
+然而，第二个 ``x.push()`` 将字节数组切换为长布局。
+现在 ``x.push()`` 所指的元素在数组的数据区，
+而引用仍然指向它原来的位置，现在它是长度字段的一部分，
+赋值将有效地扰乱 ``x`` 的长度。
+为了安全起见，在一次赋值中最多只放大字节数组中的一个元素，
+不要在同一语句中同时对数组进行索引存取。
 
-While the above describes the behaviour of dangling storage references in the
-current version of the compiler, any code with dangling references should be
-considered to have *undefined behaviour*. In particular, this means that
-any future version of the compiler may change the behaviour of code that
-involves dangling references.
+虽然上面描述了当前版本的编译器中悬空存储引用的行为，
+但任何带有悬空引用的代码都应被视为具有 *未定义行为*。
+特别的是，这意味着任何未来版本的编译器都可能改变涉及悬空引用的代码的行为。
 
-Be sure to avoid dangling references in your code!
+请确保避免在您的代码中出现悬空引用。
 
 .. index:: ! array;slice
 
@@ -585,21 +575,12 @@ Be sure to avoid dangling references in your code!
             client = client_;
         }
 
-<<<<<<< HEAD
         /// 转发对 "setOwner(address)" 的调用，
         /// 该调用在对地址参数进行基本验证后由客户端执行。
-        function forward(bytes calldata _payload) external {
-            bytes4 sig = bytes4(_payload[:4]);
-            // 由于截断行为，bytes4(_payload)的表现是相同的。
-            // bytes4 sig = bytes4(_payload);
-=======
-        /// Forward call to "setOwner(address)" that is implemented by client
-        /// after doing basic validation on the address argument.
         function forward(bytes calldata payload) external {
             bytes4 sig = bytes4(payload[:4]);
-            // Due to truncating behaviour, bytes4(payload) performs identically.
+            // 由于截断行为，bytes4(payload)的表现是相同的。
             // bytes4 sig = bytes4(payload);
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             if (sig == bytes4(keccak256("setOwner(address)"))) {
                 address owner = abi.decode(payload[4:], (address));
                 require(owner != address(0), "Address of owner cannot be zero.");
