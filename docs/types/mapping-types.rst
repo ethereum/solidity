@@ -4,20 +4,11 @@
 映射类型
 =============
 
-<<<<<<< HEAD
-映射类型使用语法 ``mapping(_KeyType => _ValueType)``，
-映射类型的变量使用语法 ``mapping(_KeyType => _ValueType) _VariableName`` 声明。
-``_KeyType`` 可以是任何内置的值类型， ``bytes``， ``string``，或任何合约或枚举类型。
-其他用户定义的或复杂的类型，如映射、结构体或数组类型是不允许的。
-``_ValueType`` 可以是任何类型，包括映射、数组和结构体。
-=======
-Mapping types use the syntax ``mapping(KeyType => ValueType)`` and variables
-of mapping type are declared using the syntax ``mapping(KeyType => ValueType) VariableName``.
-The ``KeyType`` can be any
-built-in value type, ``bytes``, ``string``, or any contract or enum type. Other user-defined
-or complex types, such as mappings, structs or array types are not allowed.
-``ValueType`` can be any type, including mappings, arrays and structs.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+映射类型使用语法 ``mapping(KeyType => ValueType)``，
+映射类型的变量使用语法 ``mapping(KeyType => ValueType) VariableName`` 声明。
+``KeyType`` 可以是任何内置的值类型， ``bytes``， ``string``，或任何合约或枚举类型。
+其他用户定义的或复杂的类型，如映射，结构体或数组类型是不允许的。
+``ValueType`` 可以是任何类型，包括映射，数组和结构体。
 
 您可以把映射想象成 `哈希表 <https://en.wikipedia.org/wiki/Hash_table>`_，
 它实际上被初始化了，使每一个可能的键都存在，
@@ -32,19 +23,11 @@ or complex types, such as mappings, structs or array types are not allowed.
 但它们不能被用作公开可见的合约函数的参数或返回参数。
 这些限制对于包含映射的数组和结构也是如此。
 
-<<<<<<< HEAD
 您可以把映射类型的状态变量标记为 ``public``，
-Solidity会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
-``_KeyType`` 将成为getter的参数。
-如果 ``_ValueType`` 是一个值类型或一个结构，getter返回 ``_ValueType``。
-如果 ``_ValueType`` 是一个数组或映射，getter对每个 ``_KeyType`` 递归出一个参数。
-=======
-You can mark state variables of mapping type as ``public`` and Solidity creates a
-:ref:`getter <visibility-and-getters>` for you. The ``KeyType`` becomes a parameter for the getter.
-If ``ValueType`` is a value type or a struct, the getter returns ``ValueType``.
-If ``ValueType`` is an array or a mapping, the getter has one parameter for
-each ``KeyType``, recursively.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+Solidit y会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
+``KeyType`` 将成为 getter 函数的参数。
+如果 ``ValueType`` 是一个值类型或一个结构，getter 返回 ``ValueType``。
+如果 ``ValueType`` 是一个数组或映射，getter 对每个 ``KeyType`` 递归出一个参数。
 
 在下面的例子中， ``MappingExample`` 合约定义了一个公共的 ``balances`` 映射，
 键类型是 ``address``，值类型是 ``uint``，将一个Ethereum地址映射到一个无符号整数值。
@@ -128,18 +111,10 @@ each ``KeyType``, recursively.
 递归映射
 -----------------
 
-<<<<<<< HEAD
 您不能对映射进行递归调用，也就是说，您不能列举它们的键。
 不过，可以在它们上层实现一个数据结构，并对其进行递归。例如，
-下面的代码实现了一个 ``IterableMapping`` 库， ``User`` 合约也添加了数据，
+下面的代码实现了一个 ``IterableMapping`` 库， 然后 ``User`` 合约将数据添加到该库中，
 ``sum`` 函数对所有的值进行递归调用去累加这些值。
-=======
-You cannot iterate over mappings, i.e. you cannot enumerate their keys.
-It is possible, though, to implement a data structure on
-top of them and iterate over that. For example, the code below implements an
-``IterableMapping`` library that the ``User`` contract then adds data to, and
-the ``sum`` function iterates over to sum all the values.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. code-block:: solidity
     :force:
