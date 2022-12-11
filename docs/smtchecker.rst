@@ -141,20 +141,11 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
 断言表示代码中的一个不变量： *对于所有的事务，包括所有的输入和存储值*，
 一个属性必须为真，否则就会出现错误。
 
-<<<<<<< HEAD
 下面的代码定义了一个保证没有溢出的函数 ``f``。
 函数 ``inv`` 定义了 ``f`` 是单调递增的规范：
-对于每个可能的数值对 ``(_a, _b)``，如果 ``_b > _a``，那么 ``f(_b) > f(_a)``。
+对于每个可能的数值对 ``(a, b)``，如果 ``b > a``，那么 ``f(b) > f(a)``。
 由于 ``f`` 确实是单调增长的，SMT检查器证明了我们的属性是正确的。
 我们鼓励您试试这个属性和函数定义，看看会有什么样的结果!
-=======
-The code below defines a function ``f`` that guarantees no overflow.
-Function ``inv`` defines the specification that ``f`` is monotonically increasing:
-for every possible pair ``(a, b)``, if ``b > a`` then ``f(b) > f(a)``.
-Since ``f`` is indeed monotonically increasing, the SMTChecker proves that our
-property is correct. You are encouraged to play with the property and the function
-definition to see what results come out!
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
 
 .. code-block:: Solidity
 
@@ -605,20 +596,13 @@ BMC使用一个SMT求解器，而CHC使用一个Horn求解器。
   - 如果Linux系统中安装了4.8.x版本的动态 ``z3`` 库（从Solidity 0.7.6开始）。
   - 在 ``soljson.js`` （从Solidity 0.6.9开始）中静态的，也就是编译器的Javascript二进制。
 
-<<<<<<< HEAD
-由于BMC和CHC都使用 ``z3``，而且 ``z3`` 可以在更多的环境中使用，包括在浏览器中，
-大多数用户几乎不需要关心这个选项。更高级的用户可能会应用这个选项，在更复杂的问题上尝试其他求解器。
-=======
 .. note::
-  z3 version 4.8.16 broke ABI compatibility with previous versions and cannot
-  be used with solc <=0.8.13. If you are using z3 >=4.8.16 please use solc
-  >=0.8.14.
+  z3 4.8.16 版本破坏了与以前版本的 ABI 兼容性，
+  不能与 solc <=0.8.13 一起使用。
+  如果您正在使用 z3 >=4.8.16，请使用 solc >=0.8.14 的版本。
 
-Since both BMC and CHC use ``z3``, and ``z3`` is available in a greater variety
-of environments, including in the browser, most users will almost never need to be
-concerned about this option. More advanced users might apply this option to try
-alternative solvers on more complex problems.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+由于 BMC 和 CHC 都使用 ``z3``，而且 ``z3`` 可以在更多的环境中使用，包括在浏览器中，
+大多数用户几乎不需要关心这个选项。更高级的用户可能会应用这个选项，在更复杂的问题上尝试其他求解器。
 
 请注意，所选择的引擎和求解器的某些组合将导致SMT检查器不做任何事情，例如选择CHC和 ``cvc4``。
 
