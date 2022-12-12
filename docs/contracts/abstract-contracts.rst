@@ -10,7 +10,7 @@
 合约必须被标记为 abstract。
 即使不是这种情况，合约仍然可以被标记为 abstract，
 例如，当您不打算直接创建合约时。
-抽象（abstract）合约类似于 :ref:`interface`，
+抽象（abstract）合约类似于 :ref:`interfaces`，
 但是接口（interface）合约可以声明的内容更加有限。
 
 如下例所示，使用 ``abstract`` 关键字来声明一个抽象合约。
