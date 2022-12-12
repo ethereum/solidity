@@ -577,13 +577,8 @@ Yul中的作用域是与块联系在一起的（函数和for循环是例外，�
         G1, L2, regular
     E(G, L, <for { i1, ..., in } condition post body>: ForLoop) =
         if n >= 1:
-<<<<<<< HEAD
-            let G1, L, mode = E(G, L, i1, ..., in)
-            // 由于语法限制，mode 必须是规则的
-=======
             let G1, L1, mode = E(G, L, i1, ..., in)
-            // mode has to be regular or leave due to the syntactic restrictions
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+            // 由于语法限制，mode 必须是规则的
             if mode is leave then
                 G1, L1 restricted to variables of L, leave
             otherwise
@@ -1009,21 +1004,14 @@ Yul对象被用来分组命名代码和数据部分。
 
 .. note::
 
-<<<<<<< HEAD
-    可以定义名称中包含 ``.`` 的数据对象或子对象，
-    但不可能通过 ``datasize``， ``dataoffset`` 或 ``datacopy`` 访问它们，
-    因为 ``.`` 是作为分隔符用来访问另一个对象内的对象。
-=======
-    An object with a name that ends in ``_deployed`` is treated as deployed code by the Yul optimizer.
-    The only consequence of this is a different gas cost heuristic in the optimizer.
+    当一个对象的名称以 ``_deployed`` 结尾时，Yul 优化器将其视为部署的代码。
+    这样做的唯一后果是优化器中的不同 gas 成本启发式算法。
 
 .. note::
 
-    Data objects or sub-objects whose names contain a ``.`` can be defined
-    but it is not possible to access them through ``datasize``,
-    ``dataoffset`` or ``datacopy`` because ``.`` is used as a separator
-    to access objects inside another object.
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+    可以定义名称中包含 ``.`` 的数据对象或子对象，
+    但不可能通过 ``datasize``， ``dataoffset`` 或 ``datacopy`` 访问它们，
+    因为 ``.`` 是作为分隔符用来访问另一个对象内的对象。
 
 .. note::
 
@@ -1063,23 +1051,13 @@ Yul对象被用来分组命名代码和数据部分。
             mstore(add(offset, size), 0x1234)
             pop(create(offset, add(size, 32), 0))
 
-<<<<<<< HEAD
             // 现在返回运行时对象
-            //（当前执行的代码是构造函数代码）。
-            size := datasize("runtime")
-            offset := allocate(size)
-            // 这将变成 Ewasm 的 内存->内存 拷贝
-            // 和EVM的代码拷贝。
-            datacopy(offset, dataoffset("runtime"), size)
-=======
-            // now return the runtime object (the currently
-            // executing code is the constructor code)
+            // 当前执行的代码是构造函数代码）。
             size := datasize("Contract1_deployed")
             offset := allocate(size)
-            // This will turn into a memory->memory copy for Ewasm and
-            // a codecopy for EVM
+            // 这将变成 Ewasm 的 内存->内存 复制
+            // 和 EVM 的代码复制。
             datacopy(offset, dataoffset("Contract1_deployed"), size)
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
             return(offset, size)
         }
 
@@ -1133,13 +1111,9 @@ Yul优化器对Yul代码进行操作，并对输入、输出和中间状态使�
 
 在Solidity模式下，Yul优化器与常规优化器一起被激活。
 
-<<<<<<< HEAD
-优化步骤顺序
-=======
 .. _optimization-step-sequence:
 
-Optimization Step Sequence
->>>>>>> 07a7930e73f57ce6ed1c6f0b8dd9aad99e5c3692
+优化步骤顺序
 --------------------------
 
 默认情况下，Yul优化器将其预定义的优化步骤序列应用于生成的程序集。
@@ -1202,8 +1176,8 @@ Optimization Step Sequence
 
 .. _erc20yul:
 
-Complete ERC20 Example
-======================
+完整的ERC20示例（基于yul）
+==========================
 
 .. code-block:: yul
 
