@@ -9,10 +9,9 @@ ReservedKeywords:
 	| 'partial' | 'promise' | 'reference' | 'relocatable' | 'sealed' | 'sizeof' | 'static'
 	| 'supports' | 'switch' | 'typedef' | 'typeof' | 'var';
 
-Pragma: 'pragma' -> pushMode(PragmaMode);
 Abstract: 'abstract';
-Anonymous: 'anonymous';
 Address: 'address';
+Anonymous: 'anonymous';
 As: 'as';
 Assembly: 'assembly' -> pushMode(AssemblyBlockMode);
 Bool: 'bool';
@@ -30,13 +29,11 @@ Else: 'else';
 Emit: 'emit';
 Enum: 'enum';
 Error: 'error'; // 不是真正的关键字
-Revert: 'revert'; // 不是真正的关键字
 Event: 'event';
 External: 'external';
 Fallback: 'fallback';
 False: 'false';
 Fixed: 'fixed' | ('fixed' [1-9][0-9]* 'x' [1-9][0-9]*);
-From: 'from'; // 不是真正的关键字
 /**
  * 固定长度的字节类型。
  */
@@ -46,7 +43,9 @@ FixedBytes:
 	'bytes17' | 'bytes18' | 'bytes19' | 'bytes20' | 'bytes21' | 'bytes22' | 'bytes23' | 'bytes24' |
 	'bytes25' | 'bytes26' | 'bytes27' | 'bytes28' | 'bytes29' | 'bytes30' | 'bytes31' | 'bytes32';
 For: 'for';
+From: 'from'; // not a real keyword
 Function: 'function';
+Global: 'global'; // not a real keyword
 Hex: 'hex';
 If: 'if';
 Immutable: 'immutable';
@@ -66,12 +65,14 @@ New: 'new';
 NumberUnit: 'wei' | 'gwei' | 'ether' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years';
 Override: 'override';
 Payable: 'payable';
+Pragma: 'pragma' -> pushMode(PragmaMode);
 Private: 'private';
 Public: 'public';
 Pure: 'pure';
 Receive: 'receive';
 Return: 'return';
 Returns: 'returns';
+Revert: 'revert'; // not a real keyword
 /**
  * 有符号的整数类型。
  * int是int256的一个别名。
@@ -248,6 +249,12 @@ mode AssemblyBlockMode;
 //@doc:inline
 AssemblyDialect: '"evmasm"';
 AssemblyLBrace: '{' -> popMode, pushMode(YulMode);
+
+AssemblyFlagString: '"' DoubleQuotedStringCharacter+ '"';
+
+AssemblyBlockLParen: '(';
+AssemblyBlockRParen: ')';
+AssemblyBlockComma: ',';
 
 AssemblyBlockWS: [ \t\r\n\u000C]+ -> skip ;
 AssemblyBlockCOMMENT: '/*' .*? '*/' -> channel(HIDDEN) ;

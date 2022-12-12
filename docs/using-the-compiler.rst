@@ -287,7 +287,7 @@ EVM版本选项
         // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
         "evmVersion": "byzantium",
         // 可选：改变编译管道以通过Yul的中间表示法。
-        // 这是一个高度试验性的功能，不能用于生产。这在默认情况下是假的。
+        // 这在默认情况下是假的。
         "viaIR": true,
         // 可选： 调试设置
         "debug": {
@@ -394,10 +394,12 @@ EVM版本选项
             "source1.sol": ["contract1"],
             "source2.sol": ["contract2", "contract3"]
           },
-          // 选择除法和模数操作是否应该用松弛变量的乘法来代替。默认为 `true`。
-          // 如果您使用CHC引擎而不使用Spacer作为Horn求解器（例如使用Eldarica），建议在这里使用 `false`。
-          // 关于这个选项的更详细解释，请参见形式化验证部分。
-          "divModWithSlacks": true,
+          // 选择除法和模数运算的编码方式。
+          // 当使用 `false` 时，它们被替换为与松弛变量的乘法。这是默认的。
+          // 如果您使用CHC引擎而不使用Spacer作为Horn求解器（例如使用Eldarica），
+          // 建议在这里使用 `true`。
+          // 关于这个选项的更详细的解释，请参见形式验证部分。
+          "divModWithSlacks": false,
           // 选择要使用的模型检查器引擎：所有（默认）， bmc， chc， 无。
           "engine": "chc",
           // 选择哪些类型的不变性应该报告给用户：合约，重入。

@@ -43,13 +43,14 @@
         bytes32 name;
 
         // 这是注册 creator 和设置名称的构造函数。
-        constructor(bytes32 _name) {
+        constructor(bytes32 name_) {
             // 状态变量通过其名称访问，
             // 而不是通过例如 `this.owner` 的方式访问。
             // 函数可以直接或通过 `this.f` 访问。
             // 但后者提供了一个对函数的外部可视方法。
             // 特别是在构造函数中，您不应该从外部访问函数，
-            // 因为该函数还不存在。详见下一节。
+            // 因为该函数还不存在。
+            // 详见下一节。
             owner = msg.sender;
 
             // 我们进行了从 `address` 到 `TokenCreator` 的显式类型转换，
@@ -57,7 +58,7 @@
             // 没有真正的方法来验证，
             // 这并没有创建一个新的合约。
             creator = TokenCreator(msg.sender);
-            name = _name;
+            name = name_;
         }
 
         function changeName(bytes32 newName) public {

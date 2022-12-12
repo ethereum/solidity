@@ -143,9 +143,9 @@
         // 它会预置一个检查，仅允许
         // 来自特定地址的
         // 函数调用。
-        modifier onlyBy(address _account)
+        modifier onlyBy(address account)
         {
-            if (msg.sender != _account)
+            if (msg.sender != account)
                 revert Unauthorized();
             // 不要忘记写 “_;”！
             // 它会被实际使用这个修饰器的
@@ -153,16 +153,16 @@
             _;
         }
 
-        /// 使 `_newOwner` 成为这个合约的新所有者。
-        function changeOwner(address _newOwner)
+        /// 使 `newOwner` 成为这个合约的新所有者。
+        function changeOwner(address newOwner)
             public
             onlyBy(owner)
         {
-            owner = _newOwner;
+            owner = newOwner;
         }
 
-        modifier onlyAfter(uint _time) {
-            if (block.timestamp < _time)
+        modifier onlyAfter(uint time) {
+            if (block.timestamp < time)
                 revert TooEarly();
             _;
         }
@@ -184,21 +184,21 @@
         // 他/她会得到退款，但需要先执行函数体。
         // 这在 0.4.0 版本以前的 Solidity 中很危险，
         // 因为很可能会跳过 `_;` 之后的代码。
-        modifier costs(uint _amount) {
-            if (msg.value < _amount)
+        modifier costs(uint amount) {
+            if (msg.value < amount)
                 revert NotEnoughEther();
 
             _;
-            if (msg.value > _amount)
-                payable(msg.sender).transfer(msg.value - _amount);
+            if (msg.value > amount)
+                payable(msg.sender).transfer(msg.value - amount);
         }
 
-        function forceOwnerChange(address _newOwner)
+        function forceOwnerChange(address newOwner)
             public
             payable
             costs(200 ether)
         {
-            owner = _newOwner;
+            owner = newOwner;
             // 这只是示例条件
             if (uint160(owner) & 0 == 1)
                 // 这无法在 0.4.0 版本之前的
@@ -277,8 +277,8 @@
 
         uint public creationTime = block.timestamp;
 
-        modifier atStage(Stages _stage) {
-            if (stage != _stage)
+        modifier atStage(Stages stage_) {
+            if (stage != stage_)
                 revert FunctionInvalidAtThisStage();
             _;
         }

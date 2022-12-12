@@ -269,7 +269,7 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
 
-    // This will not compile.
+    // 这不会被编译。
     contract C {
         function f() public {
             // 下一行会产生一个类型错误，因为uint[3]内存不能被转换为uint[]内存。
@@ -314,7 +314,8 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
     您可以用它在数组的末端追加一个指定的元素。该函数不返回任何东西。
 **pop()**:
     动态存储数组和 ``bytes`` （不是 ``string`` ）有一个叫 ``pop()`` 的成员函数，
-    您可以用它来从数组的末端移除一个元素。这也隐含地在被删除的元素上调用 :ref:`delete <delete>`。
+    您可以用它来从数组的末端移除一个元素。
+    这也隐含地在被删除的元素上调用 :ref:`delete <delete>`。该函数不返回任何东西。
 
 .. note::
     通过调用 ``push()`` 增加存储数组的长度有恒定的气体成本，因为存储是零初始化的，
@@ -346,7 +347,7 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
         // newPairs被存储在memory中--这是公开合约函数参数的唯一可能性。
         function setAllFlagPairs(bool[2][] memory newPairs) public {
             // 赋值到一个存储数组会执行 ``newPairs`` 的拷贝，
-            // 并替换完整的阵列 ``pairsOfFlags``。
+            // 并替换完整的数组 ``pairsOfFlags``。
             pairsOfFlags = newPairs;
         }
 
@@ -423,6 +424,115 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
         }
     }
 
+.. index:: ! array;dangling storage references
+
+对存储数组元素的悬空引用（Dangling References）
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+当使用存储数组时，您需要注意避免悬空引用。
+悬空引用是指一个指向不再存在的或已经被移动而未更新引用的内容的引用。
+例如，如果您将一个数组元素的引用存储在一个局部变量中，
+然后从包含数组中使用 ``.pop()``，就可能发生悬空引用：
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0 <0.9.0;
+
+    contract C {
+        uint[][] s;
+
+        function f() public {
+            // 存储一个指向s的最后一个数组元素的指针。
+            uint[] storage ptr = s[s.length - 1];
+            // 删除s的最后一个数组元素。
+            s.pop();
+            // 写入已不在数组内的数组元素。
+            ptr.push(0x42);
+            // 现在向 ``s`` 添加一个新元素不会添加一个空数组，
+            // 而是会产生一个长度为1的数组，元素为 ``0x42``。
+            s.push();
+            assert(s[s.length - 1][0] == 0x42);
+        }
+    }
+
+``ptr.push(0x42)`` 中的写法 **不会** 恢复操作，尽管 ``ptr`` 不再指向 ``s`` 的一个有效元素。
+由于编译器假定未使用的存储空间总是被清零，
+随后的 ``s.push()`` 不会明确地将零写入存储空间，
+所以在 ``push()`` 之后， ``s`` 的最后一个元素的长度是 ``1``，
+并且包含 ``0x42`` 作为其第一个元素。
+
+注意，Solidity 不允许在存储中声明对值类型的引用。
+这类显式的悬空引用被限制在嵌套引用类型中。然而，
+当在数组赋值中使用复杂表达式时，悬空引用也会短暂发生：
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0 <0.9.0;
+
+    contract C {
+        uint[] s;
+        uint[] t;
+        constructor() {
+            // 向存储数组推送一些初始值。
+            s.push(0x07);
+            t.push(0x03);
+        }
+
+        function g() internal returns (uint[] storage) {
+            s.pop();
+            return t;
+        }
+
+        function f() public returns (uint[] memory) {
+            // 下面将首先评估 ``s.push()` 到一个索引为1的新元素的引用。
+            // 之后，调用 ``g`` 弹出这个新元素，
+            // 导致最左边的元组元素成为一个悬空的引用。
+            // 赋值仍然发生，并将写入 ``s`` 的数据区域之外。
+            (s.push(), g()[0]) = (0x42, 0x17);
+            // 随后对 ``s`` 的推送将显示前一个语句写入的值，
+            // 即在这个函数结束时 ``s`` 的最后一个元素将有 ``0x42`` 的值。
+            s.push();
+            return s;
+        }
+    }
+
+每条语句只对存储进行一次赋值，并避免在赋值的左侧使用复杂的表达式，这样做总是比较安全的。
+
+您需要特别小心处理对 ``bytes`` 数组元素的引用，
+因为 bytes 数组的  ``.push()`` 操作可能会 :ref:`在存储中从短布局切换到长布局 <bytes-and-string>`。
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0 <0.9.0;
+
+    // 这将报告一个警告
+    contract C {
+        bytes x = "012345678901234567890123456789";
+
+        function test() external returns(uint) {
+            (x.push(), x.push()) = (0x01, 0x02);
+            return x.length;
+        }
+    }
+
+这里，当第一个 ``x.push()`` 被运算时， ``x`` 仍然被存储在短布局中，
+因此 ``x.push()`` 返回对 ``x`` 的第一个存储槽中元素的引用。
+然而，第二个 ``x.push()`` 将字节数组切换为长布局。
+现在 ``x.push()`` 所指的元素在数组的数据区，
+而引用仍然指向它原来的位置，现在它是长度字段的一部分，
+赋值将有效地扰乱 ``x`` 的长度。
+为了安全起见，在一次赋值中最多只放大字节数组中的一个元素，
+不要在同一语句中同时对数组进行索引存取。
+
+虽然上面描述了当前版本的编译器中悬空存储引用的行为，
+但任何带有悬空引用的代码都应被视为具有 *未定义行为*。
+特别的是，这意味着任何未来版本的编译器都可能改变涉及悬空引用的代码的行为。
+
+请确保避免在您的代码中出现悬空引用。
+
 .. index:: ! array;slice
 
 .. _array-slices:
@@ -461,21 +571,21 @@ Solidity没有字符串操作函数，但有第三方的字符串库。
         /// @dev 由代理管理的客户合约的地址，即本合约的地址
         address client;
 
-        constructor(address _client) {
-            client = _client;
+        constructor(address client_) {
+            client = client_;
         }
 
         /// 转发对 "setOwner(address)" 的调用，
         /// 该调用在对地址参数进行基本验证后由客户端执行。
-        function forward(bytes calldata _payload) external {
-            bytes4 sig = bytes4(_payload[:4]);
-            // 由于截断行为，bytes4(_payload)的表现是相同的。
-            // bytes4 sig = bytes4(_payload);
+        function forward(bytes calldata payload) external {
+            bytes4 sig = bytes4(payload[:4]);
+            // 由于截断行为，bytes4(payload)的表现是相同的。
+            // bytes4 sig = bytes4(payload);
             if (sig == bytes4(keccak256("setOwner(address)"))) {
-                address owner = abi.decode(_payload[4:], (address));
+                address owner = abi.decode(payload[4:], (address));
                 require(owner != address(0), "Address of owner cannot be zero.");
             }
-            (bool status,) = client.delegatecall(_payload);
+            (bool status,) = client.delegatecall(payload);
             require(status, "Forwarded call failed.");
         }
     }

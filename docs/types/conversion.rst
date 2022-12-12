@@ -174,6 +174,10 @@
 正如在 :ref:`address_literals` 中所描述的那样，正确大小并通过校验测试的十六进制字是 ``address`` 类型。
 其他字面常数不能隐含地转换为 ``address`` 类型。
 
-从 ``bytes20`` 或任何整数类型转换到 ``address`` 的结果是 ``address payable``。
+只允许从 ``bytes20`` 和 ``uint160`` 显式转换到 ``address``。
 
-一个 ``address a`` 可以通过 ``payable(a)`` 转换为 ``address payable``。
+``address a`` 可以通过 ``payable(a)`` 显式转换为 ``address payable``。
+
+.. note::
+    在 0.8.0 版本之前，可以显式地从任何整数类型（任何大小，有符号或无符号）转换为 ``address`` 或 ``address payable`` 类型。
+    从 0.8.0 开始，只允许从 ``uint160`` 转换。

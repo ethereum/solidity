@@ -71,12 +71,12 @@ SMT 检查器所报告的潜在警告是：
         uint immutable x;
         uint immutable y;
 
-        function add(uint _x, uint _y) internal pure returns (uint) {
-            return _x + _y;
+        function add(uint x_, uint y_) internal pure returns (uint) {
+            return x_ + y_;
         }
 
-        constructor(uint _x, uint _y) {
-            (x, y) = (_x, _y);
+        constructor(uint x_, uint y_) {
+            (x, y) = (x_, y_);
         }
 
         function stateAdd() public view returns (uint) {
@@ -104,7 +104,7 @@ SMT 检查器所报告的潜在警告是：
         Overflow.add(1, 115792089237316195423570985008687907853269984665640564039457584007913129639935) -- internal call
      --> o.sol:9:20:
       |
-    9 |             return _x + _y;
+    9 |             return x_ + y_;
       |                    ^^^^^^^
 
 如果我们添加了过滤掉溢出情况的 ``require`` 语句，
@@ -119,12 +119,12 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
         uint immutable x;
         uint immutable y;
 
-        function add(uint _x, uint _y) internal pure returns (uint) {
-            return _x + _y;
+        function add(uint x_, uint y_) internal pure returns (uint) {
+            return x_ + y_;
         }
 
-        constructor(uint _x, uint _y) {
-            (x, y) = (_x, _y);
+        constructor(uint x_, uint y_) {
+            (x, y) = (x_, y_);
         }
 
         function stateAdd() public view returns (uint) {
@@ -143,7 +143,7 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
 
 下面的代码定义了一个保证没有溢出的函数 ``f``。
 函数 ``inv`` 定义了 ``f`` 是单调递增的规范：
-对于每个可能的数值对 ``(_a, _b)``，如果 ``_b > _a``，那么 ``f(_b) > f(_a)``。
+对于每个可能的数值对 ``(a, b)``，如果 ``b > a``，那么 ``f(b) > f(a)``。
 由于 ``f`` 确实是单调增长的，SMT检查器证明了我们的属性是正确的。
 我们鼓励您试试这个属性和函数定义，看看会有什么样的结果!
 
@@ -153,14 +153,14 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
     pragma solidity >=0.8.0;
 
     contract Monotonic {
-        function f(uint _x) internal pure returns (uint) {
-            require(_x < type(uint128).max);
-            return _x * 42;
+        function f(uint x) internal pure returns (uint) {
+            require(x < type(uint128).max);
+            return x * 42;
         }
 
-        function inv(uint _a, uint _b) public pure {
-            require(_b > _a);
-            assert(f(_b) > f(_a));
+        function inv(uint a, uint b) public pure {
+            require(b > a);
+            assert(f(b) > f(a));
         }
     }
 
@@ -174,14 +174,14 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
     pragma solidity >=0.8.0;
 
     contract Max {
-        function max(uint[] memory _a) public pure returns (uint) {
+        function max(uint[] memory a) public pure returns (uint) {
             uint m = 0;
-            for (uint i = 0; i < _a.length; ++i)
-                if (_a[i] > m)
-                    m = _a[i];
+            for (uint i = 0; i < a.length; ++i)
+                if (a[i] > m)
+                    m = a[i];
 
-            for (uint i = 0; i < _a.length; ++i)
-                assert(m >= _a[i]);
+            for (uint i = 0; i < a.length; ++i)
+                assert(m >= a[i]);
 
             return m;
         }
@@ -206,15 +206,15 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
     pragma solidity >=0.8.0;
 
     contract Max {
-        function max(uint[] memory _a) public pure returns (uint) {
-            require(_a.length >= 5);
+        function max(uint[] memory a) public pure returns (uint) {
+            require(a.length >= 5);
             uint m = 0;
-            for (uint i = 0; i < _a.length; ++i)
-                if (_a[i] > m)
-                    m = _a[i];
+            for (uint i = 0; i < a.length; ++i)
+                if (a[i] > m)
+                    m = a[i];
 
-            for (uint i = 0; i < _a.length; ++i)
-                assert(m > _a[i]);
+            for (uint i = 0; i < a.length; ++i)
+                assert(m > a[i]);
 
             return m;
         }
@@ -227,7 +227,7 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
     Warning: CHC: Assertion violation happens here.
     Counterexample:
 
-    _a = [0, 0, 0, 0, 0]
+    a = [0, 0, 0, 0, 0]
      = 0
 
     Transaction trace:
@@ -235,7 +235,7 @@ SMT检查器就会证明没有溢出是可以达到的（会通过不报告警�
     Test.max([0, 0, 0, 0, 0])
       --> max.sol:14:4:
        |
-    14 |            assert(m > _a[i]);
+    14 |            assert(m > a[i]);
 
 
 状态属性
@@ -360,9 +360,9 @@ SMT检查器准确地告诉我们 *如何* 访问到(2, 4)。
 
         Unknown immutable unknown;
 
-        constructor(Unknown _u) {
-            require(address(_u) != address(0));
-            unknown = _u;
+        constructor(Unknown u) {
+            require(address(u) != address(0));
+            unknown = u;
         }
 
         modifier mutex {
@@ -372,8 +372,8 @@ SMT检查器准确地告诉我们 *如何* 访问到(2, 4)。
             lock = false;
         }
 
-        function set(uint _x) mutex public {
-            x = _x;
+        function set(uint x_) mutex public {
+            x = x_;
         }
 
         function run() mutex public {
@@ -596,7 +596,12 @@ BMC使用一个SMT求解器，而CHC使用一个Horn求解器。
   - 如果Linux系统中安装了4.8.x版本的动态 ``z3`` 库（从Solidity 0.7.6开始）。
   - 在 ``soljson.js`` （从Solidity 0.6.9开始）中静态的，也就是编译器的Javascript二进制。
 
-由于BMC和CHC都使用 ``z3``，而且 ``z3`` 可以在更多的环境中使用，包括在浏览器中，
+.. note::
+  z3 4.8.16 版本破坏了与以前版本的 ABI 兼容性，
+  不能与 solc <=0.8.13 一起使用。
+  如果您正在使用 z3 >=4.8.16，请使用 solc >=0.8.14 的版本。
+
+由于 BMC 和 CHC 都使用 ``z3``，而且 ``z3`` 可以在更多的环境中使用，包括在浏览器中，
 大多数用户几乎不需要关心这个选项。更高级的用户可能会应用这个选项，在更复杂的问题上尝试其他求解器。
 
 请注意，所选择的引擎和求解器的某些组合将导致SMT检查器不做任何事情，例如选择CHC和 ``cvc4``。
@@ -704,15 +709,15 @@ CHC引擎创建了非线性的Horn选项，使用被调用函数的摘要来支�
     {
         function f(
             bytes32 hash,
-            uint8 _v1, uint8 _v2,
-            bytes32 _r1, bytes32 _r2,
-            bytes32 _s1, bytes32 _s2
+            uint8 v1, uint8 v2,
+            bytes32 r1, bytes32 r2,
+            bytes32 s1, bytes32 s2
         ) public pure returns (address) {
-            address a1 = ecrecover(hash, _v1, _r1, _s1);
-            require(_v1 == _v2);
-            require(_r1 == _r2);
-            require(_s1 == _s2);
-            address a2 = ecrecover(hash, _v2, _r2, _s2);
+            address a1 = ecrecover(hash, v1, r1, s1);
+            require(v1 == v2);
+            require(r1 == r2);
+            require(s1 == s2);
+            address a2 = ecrecover(hash, v2, r2, s2);
             assert(a1 == a2);
             return a1;
         }

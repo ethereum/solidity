@@ -90,6 +90,7 @@
         function delegate(address to) external {
             // 指定引用
             Voter storage sender = voters[msg.sender];
+            require(sender.weight != 0, "You have no right to vote");
             require(!sender.voted, "You already voted.");
 
             require(to != msg.sender, "Self-delegation is disallowed.");
@@ -106,13 +107,16 @@
                 require(to != msg.sender, "Found loop in delegation.");
             }
 
-            // `sender` 是一个引用, 相当于对 `voters[msg.sender].voted` 进行修改
             Voter storage delegate_ = voters[to];
 
-            // 选民不能委托给不能投票的钱包。
+            // 投票者不能将投票权委托给不能投票的账户。
             require(delegate_.weight >= 1);
+
+            // 由于 `sender` 是一个引用，
+            // 因此这会修改 `voters[msg.sender]`。
             sender.voted = true;
             sender.delegate = to;
+
             if (delegate_.voted) {
                 // 若被委托者已经投过票了，直接增加得票数。
                 proposals[delegate_.vote].voteCount += sender.weight;

@@ -18,10 +18,10 @@ Solidity编译器使用两种不同的优化器模块。在操作码水平上操
 如果它们的参数和返回值不相互依赖，我们就可以对函数调用重新排序。
 同样地，如果一个函数是没有副作用的，而且其结果是乘以0的，就可以完全删除该函数调用。
 
-目前，参数 ``--optimize`` 为生成的字节码激活基于操作码的优化器，
-为内部生成的Yul代码激活Yul优化器，例如当使用ABI coder v2时。
-我们可以使用 ``solc --ir optimized --optimize`` 来为Solidity源码产生一个优化的实验性Yul IR。
-同样地，我们可以使用 ``solc --strict-assembly --optimize`` 来产生一个独立的Yul模式。
+目前，参数 ``--optimize`` 会为生成的字节码激活基于操作码的优化器，
+并为内部生成的 Yul 代码激活 Yul 优化器，例如当使用 ABI coder v2 时。
+您可以使用 ``solc --ir optimized --optimize`` 来为 Solidity 源码产生一个优化的 Yul IR。
+同样地，您可以使用 ``solc --strict-assembly --optimize`` 来产生一个独立的 Yul 模式。
 
 您可以在下面找到关于这两个优化器模块及其优化步骤的更多细节。
 
@@ -300,7 +300,7 @@ Solidity编译器使用两种不同的优化器模块。在操作码水平上操
 
 ``[...]`` 里面的序列将被循环应用多次，直到Yul代码保持不变或达到最大轮数（目前为12）。
 
-可用的缩写列在 `Yul优化器文档 <yul.rst#optimization-step-sequence>`_。
+可用的缩写列在 `Yul 优化器文档 <optimization-step-sequence>`_ 中。
 
 预处理
 -------------

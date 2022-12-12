@@ -1,26 +1,24 @@
 
 .. index: ir breaking changes
 
+.. _ir-breaking-changes:
+
 *********************************
-基于Solidity中间表征的Codegen变化
+基于 Solidity 中间表征的 Codegen 变化
 *********************************
 
-Solidity可以通过两种不同的方式生成EVM字节码：
-要么直接从Solidity到EVM操作码（“旧编码”），
-要么通过在Yul中的中间表示法（“IR”）（“新编码” 或 “基于IR的编码”）。
+Solidity 可以通过两种不同的方式生成 EVM 字节码：
+要么直接从 Solidity 到 EVM 操作码（“旧编码”），
+要么通过在 Yul 中的中间表示法（“IR”）（“新编码” 或 “基于IR的编码”）。
 
-引入基于IR的代码生成器的目的是，不仅使代码生成更加透明和可审计，
+引入基于 IR 的代码生成器的目的是，不仅使代码生成更加透明和可审计，
 而且能够实现更强大的跨函数的优化通道。
 
-目前，基于IR的代码生成器仍被标记为实验性的，
-但它支持所有的语言功能，并得到了大量的测试，
-所以我们认为它几乎可以用于生产。
-
-您可以在命令行中使用 ``--experimental-via-ir``
-或在standard-json中使用 ``{"viaIR": true}`` 选项来启用它，
+您可以在命令行中使用 ``--via-ir``
+或在 standard-json 中使用 ``{"viaIR": true}`` 选项来启用它，
 我们鼓励大家尝试一下！
 
-由于一些原因，旧的和基于IR的代码生成器之间存在着微小的语义差异，
+由于一些原因，旧的和基于 IR 的代码生成器之间存在着微小的语义差异，
 主要是在那些我们无论如何也不会期望人们依赖这种行为的领域。
 本节强调了旧的和基于IR的代码生成器之间的主要区别。
 
@@ -28,6 +26,47 @@ Solidity可以通过两种不同的方式生成EVM字节码：
 =====================
 
 本节列出了仅有语义的变化，从而有可能在现有的代码中隐藏新的和不同的行为。
+
+- 在继承的情况下，状态变量初始化的顺序已经改变。
+
+  以前的顺序是：
+
+  - 所有的状态变量在开始时都被零初始化。
+  - 从最终派生合约到最基础的合约评估基础构造函数参数。
+  - 从最基础的继承关系到最终派生的继承关系初始化整个继承层次结构中的所有状态变量。
+  - 如果存在，在线性化层次结构中从最基础的合约到最终派生的合约依次运行构造函数。
+
+  新的顺序：
+
+  - 所有的状态变量在开始时都被零初始化。
+  - 从最终派生合约到最基础的合约评估基础构造函数参数。
+  - 对于每一个合约，按照从最基础到最终派生的合约的线性化层次结构的顺序执行：
+
+    1. 初始化状态变量。
+    2. 运行构造函数（如果存在）。
+
+  这导致了合约中的差异，即一个状态变量的初始值依赖于另一个合约中构造函数的结果：
+
+  .. code-block:: solidity
+
+      // SPDX-License-Identifier: GPL-3.0
+      pragma solidity >=0.7.1;
+
+      contract A {
+          uint x;
+          constructor() {
+              x = 42;
+          }
+          function f() public view returns(uint256) {
+              return x;
+          }
+      }
+      contract B is A {
+          uint public y = f();
+      }
+
+  以前， ``y`` 会被设置为0。这是由于我们会先初始化状态变量：首先， ``x`` 被设置为0，当初始化 ``y`` 时， ``f()`` 将返回0，导致 ``y`` 也为0。
+  在新的规则下， ``y`` 将被设置为42。我们首先将 ``x`` 初始化为0，然后调用 A 的构造函数，将 ``x`` 设置为42。最后，在初始化 ``y`` 时， ``f()`` 返回42，导致 ``y`` 为42。
 
 - 当存储结构被删除时，包含该结构成员的每个存储槽都被完全设置为零。
   以前，填充空间是不被触动的。
@@ -69,8 +108,8 @@ Solidity可以通过两种不同的方式生成EVM字节码：
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.7.0;
       contract C {
-          function f(uint _a) public pure mod() returns (uint _r) {
-              _r = _a++;
+          function f(uint a) public pure mod() returns (uint r) {
+              r = a++;
           }
           modifier mod() { _; _; }
       }
@@ -105,78 +144,6 @@ Solidity可以通过两种不同的方式生成EVM字节码：
     而且 ``foo()`` 也没有明确地分配给它（由于 ``active == false``），因此它保持了它的第一个值。
   - 新的代码生成器： ``0`` 作为所有参数，包括返回参数，将在每次 ``_;`` 使用前被重新初始化。
 
-- 在继承的情况下，合约初始化的顺序已经改变。
-
-  以前的顺序是：
-
-  - 所有的状态变量在开始时都被零初始化。
-  - 评估基础构造函数参数，从最终派生合约到最基础的合约。
-  - 初始化整个继承层次中从最基础到最终派生的所有状态变量。
-  - 运行构造函数（如果存在），用于线性化层次结构中从最基本到最终派生的所有合约。
-
-  新的顺序：
-
-  - 所有的状态变量在开始时都被零初始化。
-  - 评估基础构造函数参数，从最终派生合约到最基础的合约。
-  - 对于每一个合约，按照从最基础到最终派生的线性化层次结构的顺序执行：
-
-    1. 如果在声明时存在，初始值将被分配给状态变量。
-    2. 运行构造函数，如果存在的话。
-
-例如，这造成了一些合约的差异：
-
-  .. code-block:: solidity
-
-      // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >=0.7.1;
-
-      contract A {
-          uint x;
-          constructor() {
-              x = 42;
-          }
-          function f() public view returns(uint256) {
-              return x;
-          }
-      }
-      contract B is A {
-          uint public y = f();
-      }
-
-以前， ``y`` 会被设置为0。这是因为我们首先要初始化状态变量。首先， ``x`` 被设置为0，当初始化 ``y`` 时， ``f()`` 将返回0，导致 ``y`` 也是0。
-
-在新的规则下， ``y`` 将被设置为42。我们首先将 ``x`` 初始化为0，然后调用A的构造函数，将 ``x`` 设置为42。最后，在初始化 ``y`` 时， ``f()`` 返回42，导致 ``y`` 为42。
-
-- 将 ``bytes`` 数组从内存复制到存储空间的实现方式不同。
-  旧的代码生成器总是复制完整的字，而新的代码生成器则在字节数组结束后切割它。
-  旧的行为可能导致脏数据被复制到数组的末端之后（但仍在同一个存储槽中）。
-  这导致了一些合约中的差异，例如：
-
-  .. code-block:: solidity
-
-      // SPDX-License-Identifier: GPL-3.0
-      pragma solidity >=0.8.1;
-
-      contract C {
-          bytes x;
-          function f() public returns (uint _r) {
-              bytes memory m = "tmp";
-              assembly {
-                  mstore(m, 8)
-                  mstore(add(m, 32), "deadbeef15dead")
-              }
-              x = m;
-              assembly {
-                  _r := sload(x.slot)
-              }
-          }
-      }
-
-  以前 ``f()`` 会返回 ``0x64656164626565663135646561640000000000000000000000000010``
-  （它有正确的长度，和正确的前8个元素，但随后它包含通过汇编设置的脏数据）。
-  现在它返回 ``0x6465616462656600000000000000000000000010``
-  （它有正确的长度，和正确的元素，但不包含多余的数据）。
-
   .. index:: ! evaluation order; expression
 
 - 对于旧的代码生成器，表达式的评估顺序是没有规定的。
@@ -190,8 +157,8 @@ Solidity可以通过两种不同的方式生成EVM字节码：
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function preincr_u8(uint8 _a) public pure returns (uint8) {
-              return ++_a + _a;
+          function preincr_u8(uint8 a) public pure returns (uint8) {
+              return ++a + a;
           }
       }
 
@@ -210,11 +177,11 @@ Solidity可以通过两种不同的方式生成EVM字节码：
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >=0.8.1;
       contract C {
-          function add(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return _a + _b;
+          function add(uint8 a, uint8 b) public pure returns (uint8) {
+              return a + b;
           }
-          function g(uint8 _a, uint8 _b) public pure returns (uint8) {
-              return add(++_a + ++_b, _a + _b);
+          function g(uint8 a, uint8 b) public pure returns (uint8) {
+              return add(++a + ++b, a + b);
           }
       }
 
@@ -311,13 +278,13 @@ ID ``0`` 是为未初始化的函数指针保留的，这些指针在被调用�
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.1;
     contract C {
-        function f(uint8 _a) public pure returns (uint _r1, uint _r2)
+        function f(uint8 a) public pure returns (uint r1, uint r2)
         {
-            _a = ~_a;
+            a = ~a;
             assembly {
-                _r1 := _a
+                r1 := a
             }
-            _r2 = _a;
+            r2 = a;
         }
     }
 
@@ -326,6 +293,6 @@ ID ``0`` 是为未初始化的函数指针保留的，这些指针在被调用�
 - 旧的代码生成器：（ ``fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe``, ``00000000000000000000000000000000000000000000000000000000000000fe``）
 - 新的代码生成器：（ ``00000000000000000000000000000000000000000000000000000000000000fe``, ``00000000000000000000000000000000000000000000000000000000000000fe``）
 
-请注意，与新的代码生成器不同，旧的代码生成器在位取反赋值（ ``_a = ~_a`` ）后没有进行清理。
-这导致新旧代码生成器之间对返回值 ``_r1`` 的赋值（在内联汇编块内）不同。
-然而，两个代码生成器在 ``_a`` 的新值被分配到 ``_r2`` 之前都进行了清理。
+请注意，与新的代码生成器不同，旧的代码生成器在位取反赋值（ ``a = ~a`` ）后没有进行清理。
+这导致新旧代码生成器之间对返回值 ``r1`` 的赋值（在内联汇编块内）不同。
+然而，两个代码生成器在 ``a`` 的新值被分配到 ``r2`` 之前都进行了清理。

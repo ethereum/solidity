@@ -4,11 +4,11 @@
 映射类型
 =============
 
-映射类型使用语法 ``mapping(_KeyType => _ValueType)``，
-映射类型的变量使用语法 ``mapping(_KeyType => _ValueType) _VariableName`` 声明。
-``_KeyType`` 可以是任何内置的值类型， ``bytes``， ``string``，或任何合约或枚举类型。
-其他用户定义的或复杂的类型，如映射、结构体或数组类型是不允许的。
-``_ValueType`` 可以是任何类型，包括映射、数组和结构体。
+映射类型使用语法 ``mapping(KeyType => ValueType)``，
+映射类型的变量使用语法 ``mapping(KeyType => ValueType) VariableName`` 声明。
+``KeyType`` 可以是任何内置的值类型， ``bytes``， ``string``，或任何合约或枚举类型。
+其他用户定义的或复杂的类型，如映射，结构体或数组类型是不允许的。
+``ValueType`` 可以是任何类型，包括映射，数组和结构体。
 
 您可以把映射想象成 `哈希表 <https://en.wikipedia.org/wiki/Hash_table>`_，
 它实际上被初始化了，使每一个可能的键都存在，
@@ -24,10 +24,10 @@
 这些限制对于包含映射的数组和结构也是如此。
 
 您可以把映射类型的状态变量标记为 ``public``，
-Solidity会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
-``_KeyType`` 将成为getter的参数。
-如果 ``_ValueType`` 是一个值类型或一个结构，getter返回 ``_ValueType``。
-如果 ``_ValueType`` 是一个数组或映射，getter对每个 ``_KeyType`` 递归出一个参数。
+Solidit y会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
+``KeyType`` 将成为 getter 函数的参数。
+如果 ``ValueType`` 是一个值类型或一个结构，getter 返回 ``ValueType``。
+如果 ``ValueType`` 是一个数组或映射，getter 对每个 ``KeyType`` 递归出一个参数。
 
 在下面的例子中， ``MappingExample`` 合约定义了一个公共的 ``balances`` 映射，
 键类型是 ``address``，值类型是 ``uint``，将一个Ethereum地址映射到一个无符号整数值。
@@ -113,14 +113,14 @@ Solidity会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
 
 您不能对映射进行递归调用，也就是说，您不能列举它们的键。
 不过，可以在它们上层实现一个数据结构，并对其进行递归。例如，
-下面的代码实现了一个 ``IterableMapping`` 库， ``User`` 合约也添加了数据，
+下面的代码实现了一个 ``IterableMapping`` 库， 然后 ``User`` 合约将数据添加到该库中，
 ``sum`` 函数对所有的值进行递归调用去累加这些值。
 
 .. code-block:: solidity
     :force:
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.8 <0.9.0;
+    pragma solidity ^0.8.8;
 
     struct IndexValue { uint keyIndex; uint value; }
     struct KeyFlag { uint key; bool deleted; }
@@ -130,6 +130,8 @@ Solidity会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
         KeyFlag[] keys;
         uint size;
     }
+
+    type Iterator is uint;
 
     library IterableMapping {
         function insert(itmap storage self, uint key, uint value) internal returns (bool replaced) {
@@ -160,24 +162,28 @@ Solidity会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
             return self.data[key].keyIndex > 0;
         }
 
-        function iterateStart(itmap storage self) internal view returns (uint keyIndex) {
-            return iterateNext(self, type(uint).max);
+        function iterateStart(itmap storage self) internal view returns (Iterator) {
+            return iteratorSkipDeleted(self, 0);
         }
 
-        function iterateValid(itmap storage self, uint keyIndex) internal view returns (bool) {
-            return keyIndex < self.keys.length;
+        function iterateValid(itmap storage self, Iterator iterator) internal view returns (bool) {
+            return Iterator.unwrap(iterator) < self.keys.length;
         }
 
-        function iterateNext(itmap storage self, uint keyIndex) internal view returns (uint r_keyIndex) {
-            keyIndex++;
-            while (keyIndex < self.keys.length && self.keys[keyIndex].deleted)
-                keyIndex++;
-            return keyIndex;
+        function iterateNext(itmap storage self, Iterator iterator) internal view returns (Iterator) {
+            return iteratorSkipDeleted(self, Iterator.unwrap(iterator) + 1);
         }
 
-        function iterateGet(itmap storage self, uint keyIndex) internal view returns (uint key, uint value) {
+        function iterateGet(itmap storage self, Iterator iterator) internal view returns (uint key, uint value) {
+            uint keyIndex = Iterator.unwrap(iterator);
             key = self.keys[keyIndex].key;
             value = self.data[key].value;
+        }
+
+        function iteratorSkipDeleted(itmap storage self, uint keyIndex) private view returns (Iterator) {
+            while (keyIndex < self.keys.length && self.keys[keyIndex].deleted)
+                keyIndex++;
+            return Iterator.wrap(keyIndex);
         }
     }
 
@@ -200,7 +206,7 @@ Solidity会为您创建一个 :ref:`getter <visibility-and-getters>` 函数。
         // 计算所有存储数据的总和。
         function sum() public view returns (uint s) {
             for (
-                uint i = data.iterateStart();
+                Iterator i = data.iterateStart();
                 data.iterateValid(i);
                 i = data.iterateNext(i)
             ) {

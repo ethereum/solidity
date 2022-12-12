@@ -37,14 +37,14 @@ Constant 和 Immutable 状态变量
         uint immutable maxBalance;
         address immutable owner = msg.sender;
 
-        constructor(uint _decimals, address _reference) {
-            decimals = _decimals;
+        constructor(uint decimals_, address ref) {
+            decimals = decimals_;
             // 对不可变量的赋值甚至可以访问一些全局属性。
-            maxBalance = _reference.balance;
+            maxBalance = ref.balance;
         }
 
-        function isBalanceTooHigh(address _other) public view returns (bool) {
-            return _other.balance > maxBalance;
+        function isBalanceTooHigh(address other) public view returns (bool) {
+            return other.balance > maxBalance;
         }
     }
 
@@ -72,7 +72,7 @@ Immutable
 
 编译器生成的合约创建代码将在其返回之前修改合约的运行时代码，
 用分配给它们的值替换所有对不可变量的引用。
-当您将编译器生成的运行时代码与实际存储在区块链中的代码进行比较，这一点很重要。
+当您将编译器生成的运行时代码与实际存储在区块链中的代码进行比较时，这一点很重要。
 
 .. note::
   在声明时被分配的不可变量只有在合约的构造函数执行时才会被视为初始化。

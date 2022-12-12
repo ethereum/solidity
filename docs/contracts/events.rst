@@ -1,4 +1,4 @@
-.. index:: ! event
+.. index:: ! event, ! event; anonymous, ! event; indexed, ! event; topic
 
 .. _events:
 
@@ -62,6 +62,17 @@ Topics允许您用来搜索事件，例如为特定的事件来过滤一系列�
     包括哪个参数被索引以及事件是否是匿名的，以便正确解析数据。
     特别的是，有可能用一个匿名事件 “伪造“ 另一个事件的签名。
 
+.. index:: ! selector; of an event
+
+事件类型的成员方法
+===================
+
+- ``event.selector``： 对于非匿名事件，这是一个 ``bytes32`` 值，
+  包含事件签名的 ``keccak256`` 哈希值，在默认topic中使用。
+
+示例
+=======
+
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
@@ -69,16 +80,16 @@ Topics允许您用来搜索事件，例如为特定的事件来过滤一系列�
 
     contract ClientReceipt {
         event Deposit(
-            address indexed _from,
-            bytes32 indexed _id,
-            uint _value
+            address indexed from,
+            bytes32 indexed id,
+            uint value
         );
 
-        function deposit(bytes32 _id) public payable {
+        function deposit(bytes32 id) public payable {
             // 事件是用 `emit` 发出的，后面是事件的名称和括号里的参数（如果有）。
             // 任何这样的调用（甚至是深度嵌套）都可以通过过滤 `Deposit`
             // 从JavaScript API中检测出来。
-            emit Deposit(msg.sender, _id, msg.value);
+            emit Deposit(msg.sender, id, msg.value);
         }
     }
 
@@ -112,9 +123,9 @@ Topics允许您用来搜索事件，例如为特定的事件来过滤一系列�
 
     {
        "returnValues": {
-           "_from": "0x1111…FFFFCCCC",
-           "_id": "0x50…sd5adb20",
-           "_value": "0x420042"
+           "from": "0x1111…FFFFCCCC",
+           "id": "0x50…sd5adb20",
+           "value": "0x420042"
        },
        "raw": {
            "data": "0x7f…91385",
@@ -122,8 +133,8 @@ Topics允许您用来搜索事件，例如为特定的事件来过滤一系列�
        }
     }
 
-了解事件的其他资源
-==============================================
+了解事件类型的其他资料
+======================
 
 - `Javascript 文档 <https://github.com/ethereum/web3.js/blob/1.x/docs/web3-eth-contract.rst#events>`_
 - `事件的使用实例 <https://github.com/ethchange/smart-exchange/blob/master/lib/contracts/SmartExchange.sol>`_

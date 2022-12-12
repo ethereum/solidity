@@ -20,7 +20,7 @@
 单位后缀的唯一作用是乘以10的幂次方。
 
 .. note::
-    0.7.0版本中删除了 ``finney`` 和 ``szabo`` 这两个单位。
+    0.7.0 版本中删除了 ``finney`` 和 ``szabo`` 这两个单位。
 
 .. index:: time, seconds, minutes, hours, days, weeks, years
 
@@ -41,7 +41,7 @@
 所以需要借助外部的预言机（oracle，是一种链外数据服务，译者注）来对一个确定的日期代码库进行时间矫正。
 
 .. note::
-    由于上述原因，在0.5.0版本中删除了后缀 ``years``。
+    由于上述原因，在 0.5.0 版本中删除了后缀 ``years``。
 
 这些后缀单位不能应用于变量。例如，
 如果您想用时间单位（例如 days）来将输入变量换算为时间，您可以用以下方式：
@@ -109,14 +109,14 @@
 
 .. note::
     函数 ``blockhash`` 以前被称为 ``block.blockhash``，
-    在0.4.22版本中被废弃，在0.5.0版本中被删除。
+    在 0.4.22 版本中被废弃，在 0.5.0 版本中被删除。
 
 .. note::
     函数 ``gasleft`` 的前身是 ``msg.gas``，
-    在0.4.21版本中被弃用，在0.5.0版本中被删除。
+    在 0.4.21 版本中被弃用，在 0.5.0 版本中被删除。
 
 .. note::
-    在0.7.0版本中，删除了别名 ``now``（用于 ``block.timestamp``）。
+    在 0.7.0 版本中，删除了别名 ``now``（用于 ``block.timestamp``）。
 
 .. index:: abi, encoding, packed
 
@@ -193,7 +193,7 @@ ABI编码和解码函数
 
 .. note::
 
-    以前 ``keccak256`` 的别名叫 ``sha3`` ，在0.5.0版本中被删除。
+    以前 ``keccak256`` 的别名叫 ``sha3`` ，在 0.5.0 版本中被删除。
 
 ``sha256(bytes memory) returns (bytes32)``
     计算输入的 SHA-256 哈希值。
@@ -203,7 +203,7 @@ ABI编码和解码函数
 
 ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``
     利用椭圆曲线签名恢复与公钥相关的地址，错误返回零值。
-    函数参数对应于签名的ECDSA值：
+    函数参数对应于签名的 ECDSA 值：
 
     * ``r`` = 签名的前32字节
     * ``s`` = 签名的第二个32字节
@@ -217,17 +217,17 @@ ABI编码和解码函数
 .. warning::
 
     如果您使用 ``ecrecover``，请注意，一个有效的签名可以变成另一个有效的签名，而不需要知道相应的私钥。
-    在Homestead硬分叉中，这个问题对 _transaction_ 签名进行了修复
+    在 Homestead 硬分叉中，这个问题对 _transaction_ 签名进行了修复
     （见 `EIP-2 <https://eips.ethereum.org/EIPS/eip-2#specification>`_），
-    但ecrecover函数仍然没有改变。
+    但 ecrecover 函数仍然没有改变。
 
     这通常不是一个问题，除非您要求签名是唯一的，或者用它们来识别个体。
-    OpenZeppelin有一个 `ECDSA辅助库 <https://docs.openzeppelin.com/contracts/2.x/api/cryptography#ECDSA>`_，
+    OpenZeppelin 有一个 `ECDSA 辅助库 <https://docs.openzeppelin.com/contracts/2.x/api/cryptography#ECDSA>`_，
     您可以用它作为 ``ecrecover`` 的包装，那样就没有这个问题。
 
 .. note::
 
-    当在 *私有区块链* 上运行 ``sha256``， ``ripemd160`` 或 ``ecrecover`` 时，您可能会遇到超出gas（Out-of-Gas）的错误。这是因为这些功能是作为 "预编译合约" 实现的，只有在它们收到第一个消息后才真正存在（尽管它们的合约代码是硬编码的）。向不存在的合约发送消息的成本较高，因此执行时可能会遇到Out-of-Gas错误。这个问题的一个变通方法是，在您的实际合约中使用它们之前，先向每个合约发送Wei（例如1）。这在主网和测试网上都没有问题。
+    当在 *私有区块链* 上运行 ``sha256``， ``ripemd160`` 或 ``ecrecover`` 时，您可能会遇到超出 gas（Out-of-Gas）的错误。这是因为这些功能是作为 “预编译合约” 实现的，只有在它们收到第一个消息后才真正存在（尽管它们的合约代码是硬编码的）。向不存在的合约发送消息的成本较高，因此执行时可能会遇到 Out-of-Gas 错误。这个问题的一个变通方法是，在您的实际合约中使用它们之前，先向每个合约发送 Wei（例如1）。这在主网和测试网上都没有问题。
 
 .. index:: balance, codehash, send, transfer, call, callcode, delegatecall, staticcall
 
@@ -271,8 +271,8 @@ ABI编码和解码函数
     总是检查 ``send`` 的返回值，使用 ``transfer`` 或者下面更好的方式： 用接收者提款的模式。
 
 .. warning::
-    由于EVM认为对一个不存在的合约的调用总是成功的，
-    Solidity在执行外部调用时使用 ``extcodesize`` 操作码进行额外的检查。
+    由于 EVM 认为对一个不存在的合约的调用总是成功的，
+    Solidity 在执行外部调用时使用 ``extcodesize`` 操作码进行额外的检查。
     这确保了即将被调用的合约要么实际存在（它包含代码），要么就会产生一个异常。
 
     对地址而不是合约实例进行低级调用
@@ -280,7 +280,7 @@ ABI编码和解码函数
     **不包括** 这种检查，这使得它们在gas方面更便宜，但也更不安全。
 
 .. note::
-   在0.5.0版本之前，Solidity允许地址成员被合约实例访问，例如 ``this.balance``。
+   在 0.5.0 版本之前，Solidity 允许地址成员被合约实例访问，例如 ``this.balance``。
    现在这被禁止了，必须做一个明确的地址转换。 ``address(this).balance``。
 
 .. note::
@@ -289,11 +289,11 @@ ABI编码和解码函数
    当然，如果存储指针作为函数参数被传递的话，情况就不是这样了，就像高层库的情况一样。
 
 .. note::
-    在0.5.0版本之前， ``.call``, ``.delegatecall`` 和 ``.staticcall`` 只返回成功状况，
+    在 0.5.0 版本之前， ``.call``, ``.delegatecall`` 和 ``.staticcall`` 只返回成功状况，
     不返回数据。
 
 .. note::
-    在0.5.0版本之前，有一个名为 ``callcode`` 的成员，其语义与 ``delegatecall`` 相似但略有不同。
+    在 0.5.0 版本之前，有一个名为 ``callcode`` 的成员，其语义与 ``delegatecall`` 相似但略有不同。
 
 
 .. index:: this, selfdestruct
@@ -315,7 +315,7 @@ ABI编码和解码函数
 此外，当前合约的所有函数都可以直接调用，包括当前函数。
 
 .. note::
-    在0.5.0版本之前，有一个叫做 ``suicide`` 的函数，其语义与 ``selfdestruct`` 相同。
+    在 0.5.0 版本之前，有一个叫做 ``suicide`` 的函数，其语义与 ``selfdestruct`` 相同。
 
 .. index:: type, creationCode, runtimeCode
 
@@ -359,3 +359,14 @@ ABI编码和解码函数
 
 ``type(T).max``
     类型 ``T`` 所能代表的最大值。
+
+保留关键词
+=================
+
+这些关键字在 Solidity 中是保留的。它们在将来可能成为语法的一部分：
+
+``after``， ``alias``， ``apply``， ``auto``， ``byte``， ``case``， ``copyof``， ``default``，
+``define``， ``final``， ``implements``， ``in``， ``inline``， ``let``， ``macro``， ``match``，
+``mutable``， ``null``， ``of``， ``partial``， ``promise``， ``reference``， ``relocatable``，
+``sealed``， ``sizeof``， ``static``， ``supports``， ``switch``， ``typedef``， ``typeof``，
+``var``。
