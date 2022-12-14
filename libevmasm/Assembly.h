@@ -146,18 +146,6 @@ public:
 	/// Appends @a _data literally to the very end of the bytecode.
 	void appendToAuxiliaryData(bytes const& _data) { m_auxiliaryData += _data; }
 
-	/// Returns the assembly items.
-	AssemblyItems const& items() const
-	{
-		return m_codeSections.at(m_currentCodeSection).items;
-	}
-
-	/// Returns the mutable assembly items. Use with care!
-	AssemblyItems& items()
-	{
-		return m_codeSections.at(m_currentCodeSection).items;
-	}
-
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
@@ -217,6 +205,23 @@ public:
 
 	bool isCreation() const { return m_creation; }
 
+	struct CodeSection
+	{
+		uint8_t inputs = 0;
+		uint8_t outputs = 0;
+		AssemblyItems items{};
+	};
+
+	std::vector<CodeSection>& codeSections()
+	{
+		return m_codeSections;
+	}
+
+	std::vector<CodeSection> const& codeSections() const
+	{
+		return m_codeSections;
+	}
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -247,12 +252,6 @@ protected:
 	/// Data that is appended to the very end of the contract.
 	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
-	struct CodeSection
-	{
-		uint8_t inputs = 0;
-		uint8_t outputs = 0;
-		AssemblyItems items{};
-	};
 	std::vector<CodeSection> m_codeSections;
 	uint16_t m_currentCodeSection = 0;
 	std::map<util::h256, std::string> m_strings;
