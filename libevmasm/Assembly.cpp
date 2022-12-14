@@ -541,15 +541,23 @@ LinkerObject const& Assembly::assemble() const
 	// TODO: assert zero inputs/outputs on code section zero
 	// TODO: assert one code section being present and *only* one being present unless EOF
 
+	unsigned bytesRequiredForDataUpperBound = static_cast<unsigned>(m_auxiliaryData.size());
+	for (auto const& sub: m_subs)
+		bytesRequiredForDataUpperBound += static_cast<unsigned>(sub->assemble().bytecode.size());
+	// Some of these may be unreferenced and not actually end up in data.
+	for (auto const& dataItem: m_data)
+		bytesRequiredForDataUpperBound += static_cast<unsigned>(dataItem.second.size());
+
 	// Insert EOF1 header.
 	vector<size_t> codeSectionSizeOffsets;
 	auto setCodeSectionSize = [&](size_t _section, size_t _size) {
 		bytesRef length(ret.bytecode.data() + codeSectionSizeOffsets.at(_section), 2);
 		toBigEndian(_size, length);
 	};
-	size_t dataSectionSizeOffset = 0;
+	std::optional<size_t> dataSectionSizeOffset;
 	auto setDataSectionSize = [&](size_t _size) {
-		bytesRef length(ret.bytecode.data() + dataSectionSizeOffset, 2);
+		assertThrow(dataSectionSizeOffset.has_value(), AssemblyException, "");
+		bytesRef length(ret.bytecode.data() + *dataSectionSizeOffset, 2);
 		toBigEndian(_size, length);
 	};
 	if (needsEOFContainer)
@@ -575,10 +583,13 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back(0x00); // placeholder for length of code
 			ret.bytecode.push_back(0x00);
 		}
-		ret.bytecode.push_back(0x02); // kind=data
-		dataSectionSizeOffset = ret.bytecode.size();
-		ret.bytecode.push_back(0x00); // length of data
-		ret.bytecode.push_back(0x00);
+		if (bytesRequiredForDataUpperBound > 0)
+		{
+			ret.bytecode.push_back(0x02); // kind=data
+			dataSectionSizeOffset = ret.bytecode.size();
+			ret.bytecode.push_back(0x00); // length of data
+			ret.bytecode.push_back(0x00);
+		}
 		ret.bytecode.push_back(0x00); // terminator
 
 		if (needsTypeSection)
@@ -597,21 +608,16 @@ LinkerObject const& Assembly::assemble() const
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
-	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
+	unsigned bytesPerTag = numberEncodingSize(headerSize + bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
 	if (!needsEOFContainer)
 		++bytesRequiredForCode; ///< Additional INVALID marker.
 
-	// TODO: all of this is a bit off
-	unsigned bytesRequiredForData = static_cast<unsigned>(m_auxiliaryData.size());
-	for (auto const& sub: m_subs)
-		bytesRequiredForData += static_cast<unsigned>(sub->assemble().bytecode.size());
-
-	unsigned bytesRequiredIncludingData = headerSize + bytesRequiredForCode + bytesRequiredForData;
-	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingData);
+	unsigned bytesRequiredIncludingDataUpperBound = headerSize + bytesRequiredForCode + bytesRequiredForDataUpperBound;
+	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingDataUpperBound);
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
-	ret.bytecode.reserve(bytesRequiredIncludingData);
+	ret.bytecode.reserve(bytesRequiredIncludingDataUpperBound);
 
 	auto const codeStart = ret.bytecode.size();
 
@@ -839,14 +845,18 @@ LinkerObject const& Assembly::assemble() const
 	auto dataLength = ret.bytecode.size() - dataStart;
 	if (needsEOFContainer)
 	{
-		// Note: Temporary solution to current evmone requirement of non-empty data section.
-		if (dataLength == 0)
+		assertThrow(bytesRequiredForDataUpperBound >= dataLength, AssemblyException, "Unexpected data size.");
+		if (bytesRequiredForDataUpperBound > 0)
 		{
-			ret.bytecode.push_back(0);
-			dataLength++;
+			if (dataLength == 0)
+			{
+				// We have commited to a data section, but not actually needed it, so create a fake one.
+				++dataLength;
+				ret.bytecode.push_back(0);
+			}
+			setDataSectionSize(dataLength);
+			assertThrow(dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
 		}
-		assertThrow(dataLength > 0u && dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
-		setDataSectionSize(dataLength);
 	}
 
 	return ret;
