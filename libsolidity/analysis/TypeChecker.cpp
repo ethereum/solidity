@@ -3167,7 +3167,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	if (auto funType = dynamic_cast<FunctionType const*>(annotation.type))
 	{
 		solAssert(
-			!funType->bound() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
+			!funType->hasBoundFirstArgument() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
 			"Function \"" + memberName + "\" cannot be called on an object of type " +
 			exprType->humanReadableName() + " (expected " + funType->selfType()->humanReadableName() + ")."
 		);
@@ -3194,7 +3194,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				"Storage arrays with nested mappings do not support .push(<arg>)."
 			);
 
-		if (!funType->bound())
+		if (!funType->hasBoundFirstArgument())
 			if (auto typeType = dynamic_cast<TypeType const*>(exprType))
 			{
 				auto contractType = dynamic_cast<ContractType const*>(typeType->actualType());
@@ -3810,13 +3810,13 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				4731_error,
 				path->location(),
 				fmt::format(
-					"The function \"{}\" does not have any parameters, and therefore cannot be bound to the type \"{}\".",
+					"The function \"{}\" does not have any parameters, and therefore cannot be attached to the type \"{}\".",
 					joinHumanReadable(path->path(), "."),
 					normalizedType ? normalizedType->toString(true /* withoutDataLocation */) : "*"
 				)
 			);
 
-		FunctionType const* functionType = dynamic_cast<FunctionType const&>(*functionDefinition.type()).asBoundFunction();
+		FunctionType const* functionType = dynamic_cast<FunctionType const&>(*functionDefinition.type()).withBoundFirstArgument();
 		solAssert(functionType && functionType->selfType(), "");
 		BoolResult result = normalizedType->isImplicitlyConvertibleTo(
 			*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->selfType())
@@ -3826,7 +3826,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				3100_error,
 				path->location(),
 				fmt::format(
-					"The function \"{}\" cannot be bound to the type \"{}\" because the type cannot "
+					"The function \"{}\" cannot be attached to the type \"{}\" because the type cannot "
 					"be implicitly converted to the first argument of the function (\"{}\"){}",
 					joinHumanReadable(path->path(), "."),
 					usingForType->toString(true /* withoutDataLocation */),

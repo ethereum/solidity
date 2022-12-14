@@ -312,7 +312,7 @@ errorDefinition:
 	Semicolon;
 
 /**
- * Using directive to bind library functions and free functions to types.
+ * Using directive to attach library functions and free functions to types.
  * Can occur within contracts and libraries and at the file level.
  */
 usingDirective: Using (identifierPath | (LBrace identifierPath (Comma identifierPath)* RBrace)) For (Mul | typeName) Global? Semicolon;

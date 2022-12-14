@@ -12,4 +12,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9574: (209-280): Type function (uint256,uint256) pure returns (uint256) is not implicitly convertible to expected type function (uint256,uint256) pure returns (uint256). Bound functions can not be converted to non-bound functions.
+// TypeError 9574: (209-280): Type function (uint256,uint256) pure returns (uint256) is not implicitly convertible to expected type function (uint256,uint256) pure returns (uint256). Attached functions cannot be converted into unattached functions.

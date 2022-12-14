@@ -2811,7 +2811,7 @@ BOOST_AUTO_TEST_CASE(return_external_function_type)
 	);
 }
 
-// TODO: store bound internal library functions
+// TODO: store attached internal library functions
 
 BOOST_AUTO_TEST_CASE(shift_bytes)
 {
