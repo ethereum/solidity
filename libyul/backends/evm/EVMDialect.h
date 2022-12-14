@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/Dialect.h>
+#include <libyul/Scope.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/ASTForward.h>
@@ -46,6 +47,8 @@ struct BuiltinContext
 	Object const* currentObject = nullptr;
 	/// Mapping from named objects to abstract assembly sub IDs.
 	std::map<YulString, AbstractAssembly::SubID> subIDs;
+
+	std::map<Scope::Function const*, AbstractAssembly::FunctionID> functionIDs;
 };
 
 struct BuiltinFunctionForEVM: public BuiltinFunction

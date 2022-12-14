@@ -135,6 +135,7 @@ void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
 
 void OptimiserSuite::run(
 	Dialect const& _dialect,
+	std::optional<uint8_t> _eofVersion,
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
@@ -161,7 +162,7 @@ void OptimiserSuite::run(
 	Block& ast = *_object.code;
 
 	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
-	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{_dialect, _eofVersion, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 
@@ -182,6 +183,7 @@ void OptimiserSuite::run(
 	if (!usesOptimizedCodeGenerator)
 		StackCompressor::run(
 			_dialect,
+			_eofVersion,
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
@@ -202,6 +204,7 @@ void OptimiserSuite::run(
 		{
 			StackCompressor::run(
 				_dialect,
+				_eofVersion,
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations

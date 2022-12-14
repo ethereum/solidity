@@ -35,6 +35,7 @@ class NameDispenser;
 struct OptimiserStepContext
 {
 	Dialect const& dialect;
+	std::optional<uint8_t> eofVersion;
 	NameDispenser& dispenser;
 	std::set<YulString> const& reservedIdentifiers;
 	/// The value nullopt represents creation code

@@ -52,11 +52,11 @@ AssemblyItem const& Assembly::append(AssemblyItem _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += static_cast<int>(_i.deposit());
-	m_items.emplace_back(std::move(_i));
-	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
-		m_items.back().setLocation(m_currentSourceLocation);
-	m_items.back().m_modifierDepth = m_currentModifierDepth;
-	return m_items.back();
+	items().emplace_back(std::move(_i));
+	if (!items().back().location().isValid() && m_currentSourceLocation.isValid())
+		items().back().setLocation(m_currentSourceLocation);
+	items().back().m_modifierDepth = m_currentModifierDepth;
+	return items().back();
 }
 
 unsigned Assembly::codeSize(unsigned subTagSize) const
@@ -67,7 +67,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 		for (auto const& i: m_data)
 			ret += i.second.size();
 
-		for (AssemblyItem const& i: m_items)
+		for (AssemblyItem const& i: items())
 			ret += i.bytesRequired(tagSize, Precision::Approximate);
 		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
@@ -189,7 +189,7 @@ void Assembly::assemblyStream(
 {
 	Functionalizer f(_out, _prefix, _sourceCodes, *this);
 
-	for (auto const& i: m_items)
+	for (auto const& i: items())
 		f.feed(i, _debugInfoSelection);
 	f.flush();
 
@@ -227,7 +227,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 	Json::Value root;
 	root[".code"] = Json::arrayValue;
 	Json::Value& code = root[".code"];
-	for (AssemblyItem const& item: m_items)
+	for (AssemblyItem const& item: items())
 	{
 		int sourceIndex = -1;
 		if (item.location().sourceName)
@@ -344,6 +344,10 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	std::set<size_t> _tagsReferencedFromOutside
 )
 {
+	if (m_eofVersion.has_value())
+		// TODO
+		return *m_tagReplacements;
+
 	if (m_tagReplacements)
 		return *m_tagReplacements;
 
@@ -354,10 +358,10 @@ map<u256, u256> const& Assembly::optimiseInternal(
 		Assembly& sub = *m_subs[subId];
 		map<u256, u256> const& subTagReplacements = sub.optimiseInternal(
 			settings,
-			JumpdestRemover::referencedTags(m_items, subId)
+			JumpdestRemover::referencedTags(items(), subId)
 		);
 		// Apply the replacements (can be empty).
-		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
+		BlockDeduplicator::applyTagReplacement(items(), subTagReplacements, subId);
 	}
 
 	map<u256, u256> tagReplacements;
@@ -368,7 +372,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 
 		if (_settings.runInliner)
 			Inliner{
-				m_items,
+				items(),
 				_tagsReferencedFromOutside,
 				_settings.expectedExecutionsPerDeployment,
 				isCreation(),
@@ -377,14 +381,14 @@ map<u256, u256> const& Assembly::optimiseInternal(
 
 		if (_settings.runJumpdestRemover)
 		{
-			JumpdestRemover jumpdestOpt{m_items};
+			JumpdestRemover jumpdestOpt{items()};
 			if (jumpdestOpt.optimise(_tagsReferencedFromOutside))
 				count++;
 		}
 
 		if (_settings.runPeephole)
 		{
-			PeepholeOptimiser peepOpt{m_items};
+			PeepholeOptimiser peepOpt{items()};
 			while (peepOpt.optimise())
 			{
 				count++;
@@ -395,7 +399,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 		// This only modifies PushTags, we have to run again to actually remove code.
 		if (_settings.runDeduplicate)
 		{
-			BlockDeduplicator deduplicator{m_items};
+			BlockDeduplicator deduplicator{items()};
 			if (deduplicator.deduplicate())
 			{
 				for (auto const& replacement: deduplicator.replacedTags())
@@ -425,17 +429,17 @@ map<u256, u256> const& Assembly::optimiseInternal(
 			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
 
-			bool usesMSize = ranges::any_of(m_items, [](AssemblyItem const& _i) {
+			bool usesMSize = ranges::any_of(items(), [](AssemblyItem const& _i) {
 				return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
 			});
 
-			auto iter = m_items.begin();
-			while (iter != m_items.end())
+			auto iter = items().begin();
+			while (iter != items().end())
 			{
 				KnownState emptyState;
 				CommonSubexpressionEliminator eliminator{emptyState};
 				auto orig = iter;
-				iter = eliminator.feedItems(iter, m_items.end(), usesMSize);
+				iter = eliminator.feedItems(iter, items().end(), usesMSize);
 				bool shouldReplace = false;
 				AssemblyItems optimisedChunk;
 				try
@@ -462,9 +466,9 @@ map<u256, u256> const& Assembly::optimiseInternal(
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
-			if (optimisedItems.size() < m_items.size())
+			if (optimisedItems.size() < items().size())
 			{
-				m_items = std::move(optimisedItems);
+				items() = std::move(optimisedItems);
 				count++;
 			}
 		}
@@ -493,6 +497,8 @@ LinkerObject const& Assembly::assemble() const
 
 	LinkerObject& ret = m_assembledObject;
 
+	bool const needsEOFContainer = m_eofVersion.has_value();
+
 	size_t subTagSize = 1;
 	map<u256, pair<string, vector<size_t>>> immutableReferencesBySub;
 	for (auto const& sub: m_subs)
@@ -515,7 +521,7 @@ LinkerObject const& Assembly::assemble() const
 	bool setsImmutables = false;
 	bool pushesImmutables = false;
 
-	for (auto const& i: m_items)
+	for (auto const& i: items())
 		if (i.type() == AssignImmutable)
 		{
 			i.setImmutableOccurrences(immutableReferencesBySub[i.data()].second.size());
@@ -539,6 +545,7 @@ LinkerObject const& Assembly::assemble() const
 	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
+	// TODO: all of this is a bit off
 	unsigned bytesRequiredIncludingData = (m_eofVersion.has_value() ? 10 : 0) + bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
@@ -549,27 +556,55 @@ LinkerObject const& Assembly::assemble() const
 
 	// Insert EOF1 header.
 	bytesRef eofCodeLength(&ret.bytecode.back(), 0);
+	vector<bytesRef> eofFunctionLengths;
 	bytesRef eofDataLength(&ret.bytecode.back(), 0);
-	if (m_eofVersion.has_value())
+	if (needsEOFContainer)
 	{
 		// TODO: empty data is disallowed
 		ret.bytecode.push_back(0xef);
 		ret.bytecode.push_back(0x00);
 		ret.bytecode.push_back(0x01); // version 1
+		if (!m_functions.empty())
+		{
+			ret.bytecode.push_back(0x03); // kind=type
+			ret.bytecode.push_back(0x00); // length of type section
+			ret.bytecode.push_back(0x00);
+			bytesRef length(&ret.bytecode.back() + 1 - 2, 2);
+			toBigEndian((m_functions.size() + 1) * 2, length);
+		}
 		ret.bytecode.push_back(0x01); // kind=code
 		ret.bytecode.push_back(0x00); // length of code
 		ret.bytecode.push_back(0x00);
 		eofCodeLength = bytesRef(&ret.bytecode.back() + 1 - 2, 2);
+		for (size_t i = 0; i < m_functions.size(); ++i)
+		{
+			ret.bytecode.push_back(0x01); // kind=code
+			ret.bytecode.push_back(0x00); // length of code
+			ret.bytecode.push_back(0x00);
+			eofFunctionLengths.emplace_back(&ret.bytecode.back() + 1 - 2, 2);
+		}
 		ret.bytecode.push_back(0x02); // kind=data
 		ret.bytecode.push_back(0x00); // length of data
 		ret.bytecode.push_back(0x00);
 		eofDataLength = bytesRef(&ret.bytecode.back() + 1 - 2, 2);
 		ret.bytecode.push_back(0x00); // terminator
+		if (!m_functions.empty())
+		{
+			ret.bytecode.push_back(0);
+			ret.bytecode.push_back(0);
+			for (auto const& [args, rets, functionAssembly]: m_functions)
+			{
+				(void)functionAssembly;
+				ret.bytecode.push_back(args);
+				ret.bytecode.push_back(rets);
+			}
+		}
 	}
 
 	auto const codeStart = ret.bytecode.size();
 
-	for (AssemblyItem const& i: m_items)
+	auto assembleItems = [&](AssemblyItems const& _items) {
+	for (AssemblyItem const& i: _items)
 	{
 		// store position of the invalid jump destination
 		if (i.type() != Tag && m_tagPositionsInBytecode[0] == numeric_limits<size_t>::max())
@@ -684,10 +719,25 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::JUMPDEST));
 			break;
 		}
+		case CallF:
+		{
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::CALLF));
+			ret.bytecode.resize(ret.bytecode.size() + 2);
+			bytesRef byr(&ret.bytecode.back() + 1 - 2, 2);
+			toBigEndian(i.data(), byr);
+			break;
+		}
+		case RetF:
+		{
+			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::RETF));
+			break;
+		}
 		default:
 			assertThrow(false, InvalidOpcode, "Unexpected opcode while assembling.");
 		}
 	}
+	};
+	assembleItems(items());
 
 	if (!immutableReferencesBySub.empty())
 		throw
@@ -697,15 +747,24 @@ LinkerObject const& Assembly::assemble() const
 				"Some immutables were read from but never assigned, possibly because of optimization."
 			);
 
-	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
+	if (!needsEOFContainer && (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty()))
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 
 	auto const codeLength = ret.bytecode.size() - codeStart;
-	if (m_eofVersion.has_value())
+	if (needsEOFContainer)
 	{
 		assertThrow(codeLength > 0 && codeLength <= 0xffff, AssemblyException, "Invalid code section size.");
 		toBigEndian(codeLength, eofCodeLength);
+	}
+
+
+	for (size_t i = 0; i < m_functions.size(); ++i)
+	{
+		size_t start = ret.bytecode.size();
+		assembleItems(std::get<2>(m_functions[i]));
+		size_t size = ret.bytecode.size() - start;
+		toBigEndian(size, eofFunctionLengths.at(i));
 	}
 
 	auto const dataStart = ret.bytecode.size();
@@ -738,7 +797,7 @@ LinkerObject const& Assembly::assemble() const
 	{
 		size_t position = m_tagPositionsInBytecode.at(tagInfo.id);
 		optional<size_t> tagIndex;
-		for (auto&& [index, item]: m_items | ranges::views::enumerate)
+		for (auto&& [index, item]: items() | ranges::views::enumerate)
 			if (item.type() == Tag && static_cast<size_t>(item.data()) == tagInfo.id)
 			{
 				tagIndex = index;
@@ -775,7 +834,7 @@ LinkerObject const& Assembly::assemble() const
 	}
 
 	auto dataLength = ret.bytecode.size() - dataStart;
-	if (m_eofVersion.has_value())
+	if (needsEOFContainer)
 	{
 		// Note: Temporary solution to current evmone requirement of non-empty data section.
 		if (dataLength == 0)

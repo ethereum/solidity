@@ -64,6 +64,7 @@ public:
 	/// The value nullopt for `_expectedExecutionsPerDeployment` represents creation code.
 	static void run(
 		Dialect const& _dialect,
+		std::optional<uint8_t> _eofVersion,
 		GasMeter const* _meter,
 		Object& _object,
 		bool _optimizeStackAllocation,

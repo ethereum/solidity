@@ -209,10 +209,11 @@ void markNeedsCleanStack(CFG& _cfg)
 std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 	AsmAnalysisInfo const& _analysisInfo,
 	Dialect const& _dialect,
+	std::optional<uint8_t> _eofVersion,
 	Block const& _block
 )
 {
-	auto result = std::make_unique<CFG>();
+	auto result = std::make_unique<CFG>(_eofVersion.has_value());
 	result->entry = &result->makeBlock(debugDataOf(_block));
 
 	ControlFlowSideEffectsCollector sideEffects(_dialect, _block);
@@ -541,7 +542,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 		Scope::Function const& function = lookupFunction(_call.functionName.name);
 		canContinue = m_graph.functionInfo.at(&function).canContinue;
 		Stack inputs;
-		if (canContinue)
+		if (!m_graph.useFunctions && canContinue)
 			inputs.emplace_back(FunctionCallReturnLabelSlot{_call});
 		for (auto const& arg: _call.arguments | ranges::views::reverse)
 			inputs.emplace_back(std::visit(*this, arg));

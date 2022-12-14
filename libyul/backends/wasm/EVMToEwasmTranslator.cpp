@@ -74,6 +74,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 	// expectedExecutionsPerDeployment is currently unused.
 	OptimiserStepContext context{
 		m_dialect,
+		nullopt,
 		nameDispenser,
 		reservedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment

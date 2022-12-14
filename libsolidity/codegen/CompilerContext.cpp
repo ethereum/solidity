@@ -543,6 +543,7 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 	yul::GasMeter meter(_dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 	yul::OptimiserSuite::run(
 		_dialect,
+		assembly().eofVersion(),
 		&meter,
 		_object,
 		_optimiserSettings.optimizeStackAllocation,
