@@ -765,7 +765,8 @@ evmasm::AssemblyItems const* CompilerStack::assemblyItems(string const& _contrac
 		solThrow(CompilerError, "Compilation was not successful.");
 
 	Contract const& currentContract = contract(_contractName);
-	return currentContract.evmAssembly ? &currentContract.evmAssembly->items() : nullptr;
+	solAssert(currentContract.evmAssembly->codeSections().size() == 1, "Expected a single code section in legacy codegen.");
+	return currentContract.evmAssembly ? &currentContract.evmAssembly->codeSections().front().items : nullptr;
 }
 
 evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(string const& _contractName) const
@@ -774,7 +775,8 @@ evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(string const& _
 		solThrow(CompilerError, "Compilation was not successful.");
 
 	Contract const& currentContract = contract(_contractName);
-	return currentContract.evmRuntimeAssembly ? &currentContract.evmRuntimeAssembly->items() : nullptr;
+	solAssert(currentContract.evmRuntimeAssembly->codeSections().size() == 1, "Expected a single code section in legacy codegen.");
+	return currentContract.evmRuntimeAssembly ? &currentContract.evmRuntimeAssembly->codeSections().front().items : nullptr;
 }
 
 Json::Value CompilerStack::generatedSources(string const& _contractName, bool _runtime) const
