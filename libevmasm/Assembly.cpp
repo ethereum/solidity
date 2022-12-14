@@ -408,31 +408,31 @@ map<u256, u256> const& Assembly::optimiseInternal(
 		}
 
 		// This only modifies PushTags, we have to run again to actually remove code.
-		// TODO: investigate options for EOF.
-		if (_settings.runDeduplicate && !m_eofVersion.has_value())
-		{
-			BlockDeduplicator deduplicator{m_codeSections.front().items};
-			if (deduplicator.deduplicate())
+		if (_settings.runDeduplicate)
+			for (auto& section: m_codeSections)
 			{
-				for (auto const& replacement: deduplicator.replacedTags())
+				BlockDeduplicator deduplicator{section.items};
+				if (deduplicator.deduplicate())
 				{
-					assertThrow(
-						replacement.first <= numeric_limits<size_t>::max() && replacement.second <= numeric_limits<size_t>::max(),
-						OptimizerException,
-						"Invalid tag replacement."
-					);
-					assertThrow(
-						!tagReplacements.count(replacement.first),
-						OptimizerException,
-						"Replacement already known."
-					);
-					tagReplacements[replacement.first] = replacement.second;
-					if (_tagsReferencedFromOutside.erase(static_cast<size_t>(replacement.first)))
-						_tagsReferencedFromOutside.insert(static_cast<size_t>(replacement.second));
+					for (auto const& replacement: deduplicator.replacedTags())
+					{
+						assertThrow(
+							replacement.first <= numeric_limits<size_t>::max() && replacement.second <= numeric_limits<size_t>::max(),
+							OptimizerException,
+							"Invalid tag replacement."
+						);
+						assertThrow(
+							!tagReplacements.count(replacement.first),
+							OptimizerException,
+							"Replacement already known."
+						);
+						tagReplacements[replacement.first] = replacement.second;
+						if (_tagsReferencedFromOutside.erase(static_cast<size_t>(replacement.first)))
+							_tagsReferencedFromOutside.insert(static_cast<size_t>(replacement.second));
+					}
+					count++;
 				}
-				count++;
 			}
-		}
 
 		// TODO: investigate for EOF
 		if (_settings.runCSE && !m_eofVersion.has_value())
