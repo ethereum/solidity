@@ -48,6 +48,7 @@ public:
 	/// @returns true if it was successful.
 	static bool run(
 		Dialect const& _dialect,
+		std::optional<uint8_t> _eofVersion,
 		Object& _object,
 		bool _optimizeStackAllocation,
 		size_t _maxIterations

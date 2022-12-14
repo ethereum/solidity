@@ -52,6 +52,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		EVMDialect const& _dialect,
+		std::optional<uint8_t> _eofVersion,
 		BuiltinContext& _builtinContext,
 		UseNamedLabels _useNamedLabelsForFunctions
 	);

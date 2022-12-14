@@ -51,13 +51,46 @@ class Assembly
 public:
 	Assembly(bool _creation, std::optional<uint8_t> _eofVersion, std::string _name): m_creation(_creation), m_eofVersion(_eofVersion), m_name(std::move(_name)) { }
 
+	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
+	bool supportsFunctions() const { return m_eofVersion.has_value(); }
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
+	AssemblyItem newFunctionCall(uint16_t _functionID)
+	{
+		auto&& [args, rets, functionItems] = m_functions.at(_functionID);
+		(void)functionItems;
+		return AssemblyItem::functionCall(_functionID, args, rets);
+	}
+	AssemblyItem newFunctionReturn()
+	{
+		assertThrow(m_currentFunctionID.has_value(), AssemblyException, "");
+		return AssemblyItem::functionReturn(std::get<1>(m_functions.at(*m_currentFunctionID)));
+	}
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
 	AssemblyItem namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID);
 	AssemblyItem newData(bytes const& _data) { util::h256 h(util::keccak256(util::asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	bytes const& data(util::h256 const& _i) const { return m_data.at(_i); }
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
+	uint16_t createFunction(uint8_t _args, uint8_t _rets)
+	{
+		size_t functionID = m_functions.size();
+		assertThrow(functionID <= 0xFFFF, AssemblyException, "Too many functions");
+		assertThrow(!m_currentFunctionID.has_value(), AssemblyException, "Nested createFunction");
+		m_functions.emplace_back(_args, _rets, AssemblyItems{});
+		return static_cast<uint16_t>(functionID);
+	}
+	void beginFunction(uint16_t _functionID)
+	{
+		auto& function = m_functions.at(_functionID);
+		assertThrow(!m_currentFunctionID.has_value(), AssemblyException, "Nested beginFunction");
+		assertThrow(std::get<2>(function).empty(), AssemblyException, "Function already defined.");
+		m_currentFunctionID = _functionID;
+	}
+	void endFunction()
+	{
+		assertThrow(m_currentFunctionID.has_value(), AssemblyException, "");
+		m_currentFunctionID.reset();
+	}
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
 	Assembly& sub(size_t _sub) { return *m_subs.at(_sub); }
 	size_t numSubs() const { return m_subs.size(); }
@@ -83,6 +116,15 @@ public:
 		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
 	}
 
+	AssemblyItem appendFunctionCall(uint16_t _functionID)
+	{
+		return append(newFunctionCall(_functionID));
+	}
+	AssemblyItem appendFunctionReturn()
+	{
+		return append(newFunctionReturn());
+	}
+
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
@@ -99,10 +141,22 @@ public:
 	void appendToAuxiliaryData(bytes const& _data) { m_auxiliaryData += _data; }
 
 	/// Returns the assembly items.
-	AssemblyItems const& items() const { return m_items; }
+	AssemblyItems const& items() const
+	{
+		if (m_currentFunctionID.has_value())
+			return std::get<2>(m_functions.at(*m_currentFunctionID));
+		else
+			return m_mainItems;
+	}
 
 	/// Returns the mutable assembly items. Use with care!
-	AssemblyItems& items() { return m_items; }
+	AssemblyItems& items()
+	{
+		if (m_currentFunctionID.has_value())
+			return std::get<2>(m_functions.at(*m_currentFunctionID));
+		else
+			return m_mainItems;
+	}
 
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
@@ -189,11 +243,12 @@ protected:
 	};
 
 	std::map<std::string, NamedTagInfo> m_namedTags;
-	AssemblyItems m_items;
+	AssemblyItems m_mainItems;
 	std::map<util::h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
 	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
+	std::vector<std::tuple<uint8_t, uint8_t, AssemblyItems>> m_functions;
 	std::map<util::h256, std::string> m_strings;
 	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 	std::map<util::h256, std::string> m_immutables; ///< Identifiers of immutables.
@@ -213,6 +268,7 @@ protected:
 	/// True, if the assembly contains contract creation code.
 	bool const m_creation = false;
 	std::optional<uint8_t> m_eofVersion;
+	std::optional<uint16_t> m_currentFunctionID;
 	/// Internal name of the assembly object, only used with the Yul backend
 	/// currently
 	std::string m_name;

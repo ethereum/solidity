@@ -31,7 +31,12 @@ class ControlFlowGraphBuilder
 public:
 	ControlFlowGraphBuilder(ControlFlowGraphBuilder const&) = delete;
 	ControlFlowGraphBuilder& operator=(ControlFlowGraphBuilder const&) = delete;
-	static std::unique_ptr<CFG> build(AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect, Block const& _block);
+	static std::unique_ptr<CFG> build(
+		AsmAnalysisInfo const& _analysisInfo,
+		Dialect const& _dialect,
+		std::optional<uint8_t> _eofVersion,
+		Block const& _block
+	);
 
 	StackSlot operator()(Expression const& _literal);
 	StackSlot operator()(Literal const& _literal);
@@ -81,6 +86,7 @@ private:
 	AsmAnalysisInfo const& m_info;
 	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& m_functionSideEffects;
 	Dialect const& m_dialect;
+	std::optional<uint8_t> m_eofVersion;
 	CFG::BasicBlock* m_currentBlock = nullptr;
 	Scope* m_scope = nullptr;
 	struct ForLoopInfo

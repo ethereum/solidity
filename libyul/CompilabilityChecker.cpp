@@ -33,6 +33,7 @@ using namespace solidity::util;
 
 CompilabilityChecker::CompilabilityChecker(
 	Dialect const& _dialect,
+	std::optional<uint8_t> _eofVersion,
 	Object const& _object,
 	bool _optimizeStackAllocation
 )
@@ -50,7 +51,7 @@ CompilabilityChecker::CompilabilityChecker(
 			builtinContext.subIDs[_object.name] = 1;
 		for (auto const& subNode: _object.subObjects)
 			builtinContext.subIDs[subNode->name] = 1;
-		NoOutputAssembly assembly;
+		NoOutputAssembly assembly(_eofVersion.has_value());
 		CodeTransform transform(
 			assembly,
 			analysisInfo,

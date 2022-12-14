@@ -225,7 +225,7 @@ TestCase::TestResult StackLayoutGeneratorTest::run(ostream& _stream, string cons
 
 	std::ostringstream output;
 
-	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, *object->code);
+	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, nullopt /* TODO */, *object->code);
 	StackLayout stackLayout = StackLayoutGenerator::run(*cfg);
 
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
