@@ -52,11 +52,12 @@ AssemblyItem const& Assembly::append(AssemblyItem _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
 	m_deposit += static_cast<int>(_i.deposit());
-	items().emplace_back(std::move(_i));
-	if (!items().back().location().isValid() && m_currentSourceLocation.isValid())
-		items().back().setLocation(m_currentSourceLocation);
-	items().back().m_modifierDepth = m_currentModifierDepth;
-	return items().back();
+	auto& currentItems = m_codeSections.at(m_currentCodeSection).items;
+	currentItems.emplace_back(std::move(_i));
+	if (!currentItems.back().location().isValid() && m_currentSourceLocation.isValid())
+		currentItems.back().setLocation(m_currentSourceLocation);
+	currentItems.back().m_modifierDepth = m_currentModifierDepth;
+	return currentItems.back();
 }
 
 unsigned Assembly::codeSize(unsigned subTagSize) const
@@ -64,8 +65,6 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 	for (unsigned tagSize = subTagSize; true; ++tagSize)
 	{
 		size_t ret = 1;
-		for (auto const& i: m_data)
-			ret += i.second.size();
 
 		for (auto const& codeSection: m_codeSections)
 			for (AssemblyItem const& i: codeSection.items)
@@ -190,7 +189,8 @@ void Assembly::assemblyStream(
 {
 	Functionalizer f(_out, _prefix, _sourceCodes, *this);
 
-	for (auto const& i: items())
+	// TODO: support EOF
+	for (auto const& i: m_codeSections.front().items)
 		f.feed(i, _debugInfoSelection);
 	f.flush();
 
@@ -228,7 +228,8 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 	Json::Value root;
 	root[".code"] = Json::arrayValue;
 	Json::Value& code = root[".code"];
-	for (AssemblyItem const& item: items())
+	// TODO: support EOF
+	for (AssemblyItem const& item: m_codeSections.front().items)
 	{
 		int sourceIndex = -1;
 		if (item.location().sourceName)
@@ -345,24 +346,25 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	std::set<size_t> _tagsReferencedFromOutside
 )
 {
-	if (m_eofVersion.has_value())
-		// TODO
-		return *m_tagReplacements;
-
 	if (m_tagReplacements)
 		return *m_tagReplacements;
 
 	// Run optimisation for sub-assemblies.
+	// TODO: verify and double-check this for EOF.
 	for (size_t subId = 0; subId < m_subs.size(); ++subId)
 	{
 		OptimiserSettings settings = _settings;
 		Assembly& sub = *m_subs[subId];
+		std::set<size_t> referencedTags;
+		for (auto& codeSection: m_codeSections)
+			referencedTags += JumpdestRemover::referencedTags(codeSection.items, subId);
 		map<u256, u256> const& subTagReplacements = sub.optimiseInternal(
 			settings,
-			JumpdestRemover::referencedTags(items(), subId)
+			referencedTags
 		);
 		// Apply the replacements (can be empty).
-		BlockDeduplicator::applyTagReplacement(items(), subTagReplacements, subId);
+		for (auto& codeSection: m_codeSections)
+			BlockDeduplicator::applyTagReplacement(codeSection.items, subTagReplacements, subId);
 	}
 
 	map<u256, u256> tagReplacements;
@@ -371,9 +373,9 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	{
 		count = 0;
 
-		if (_settings.runInliner)
+		if (_settings.runInliner && !m_eofVersion.has_value())
 			Inliner{
-				items(),
+				m_codeSections.front().items,
 				_tagsReferencedFromOutside,
 				_settings.expectedExecutionsPerDeployment,
 				isCreation(),
@@ -382,25 +384,34 @@ map<u256, u256> const& Assembly::optimiseInternal(
 
 		if (_settings.runJumpdestRemover)
 		{
-			JumpdestRemover jumpdestOpt{items()};
-			if (jumpdestOpt.optimise(_tagsReferencedFromOutside))
-				count++;
+			// TODO: verify this for EOF.
+			for (auto& codeSection: m_codeSections)
+			{
+				JumpdestRemover jumpdestOpt{codeSection.items};
+				if (jumpdestOpt.optimise(_tagsReferencedFromOutside))
+					count++;
+			}
 		}
 
 		if (_settings.runPeephole)
 		{
-			PeepholeOptimiser peepOpt{items()};
-			while (peepOpt.optimise())
+			// TODO: verify this for EOF.
+			for (auto& codeSection: m_codeSections)
 			{
-				count++;
-				assertThrow(count < 64000, OptimizerException, "Peephole optimizer seems to be stuck.");
+				PeepholeOptimiser peepOpt{codeSection.items};
+				while (peepOpt.optimise())
+				{
+					count++;
+					assertThrow(count < 64000, OptimizerException, "Peephole optimizer seems to be stuck.");
+				}
 			}
 		}
 
 		// This only modifies PushTags, we have to run again to actually remove code.
-		if (_settings.runDeduplicate)
+		// TODO: investigate options for EOF.
+		if (_settings.runDeduplicate && !m_eofVersion.has_value())
 		{
-			BlockDeduplicator deduplicator{items()};
+			BlockDeduplicator deduplicator{m_codeSections.front().items};
 			if (deduplicator.deduplicate())
 			{
 				for (auto const& replacement: deduplicator.replacedTags())
@@ -423,24 +434,26 @@ map<u256, u256> const& Assembly::optimiseInternal(
 			}
 		}
 
-		if (_settings.runCSE)
+		// TODO: investigate for EOF
+		if (_settings.runCSE && !m_eofVersion.has_value())
 		{
 			// Control flow graph optimization has been here before but is disabled because it
 			// assumes we only jump to tags that are pushed. This is not the case anymore with
 			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
 
-			bool usesMSize = ranges::any_of(items(), [](AssemblyItem const& _i) {
+			auto& items = m_codeSections.front().items;
+			bool usesMSize = ranges::any_of(items, [](AssemblyItem const& _i) {
 				return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
 			});
 
-			auto iter = items().begin();
-			while (iter != items().end())
+			auto iter = items.begin();
+			while (iter != items.end())
 			{
 				KnownState emptyState;
 				CommonSubexpressionEliminator eliminator{emptyState};
 				auto orig = iter;
-				iter = eliminator.feedItems(iter, items().end(), usesMSize);
+				iter = eliminator.feedItems(iter, items.end(), usesMSize);
 				bool shouldReplace = false;
 				AssemblyItems optimisedChunk;
 				try
@@ -467,9 +480,9 @@ map<u256, u256> const& Assembly::optimiseInternal(
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
-			if (optimisedItems.size() < items().size())
+			if (optimisedItems.size() < items.size())
 			{
-				items() = std::move(optimisedItems);
+				items = std::move(optimisedItems);
 				count++;
 			}
 		}
@@ -541,12 +554,17 @@ LinkerObject const& Assembly::assemble() const
 	// TODO: assert zero inputs/outputs on code section zero
 	// TODO: assert one code section being present and *only* one being present unless EOF
 
+	unsigned bytesRequiredForSubs = 0;
+	// TODO: consider fully producing all sub and data refs in this pass already.
+	for (auto&& codeSection: m_codeSections)
+		for (AssemblyItem const& i: codeSection.items)
+			if (i.type() == PushSub)
+				bytesRequiredForSubs += static_cast<unsigned>(subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size());
 	unsigned bytesRequiredForDataUpperBound = static_cast<unsigned>(m_auxiliaryData.size());
-	for (auto const& sub: m_subs)
-		bytesRequiredForDataUpperBound += static_cast<unsigned>(sub->assemble().bytecode.size());
 	// Some of these may be unreferenced and not actually end up in data.
 	for (auto const& dataItem: m_data)
 		bytesRequiredForDataUpperBound += static_cast<unsigned>(dataItem.second.size());
+	unsigned bytesRequiredForDataAndSubsUpperBound = bytesRequiredForDataUpperBound + bytesRequiredForSubs;
 
 	// Insert EOF1 header.
 	vector<size_t> codeSectionSizeOffsets;
@@ -583,7 +601,7 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back(0x00); // placeholder for length of code
 			ret.bytecode.push_back(0x00);
 		}
-		if (bytesRequiredForDataUpperBound > 0)
+		if (bytesRequiredForDataAndSubsUpperBound > 0)
 		{
 			ret.bytecode.push_back(0x02); // kind=data
 			dataSectionSizeOffset = ret.bytecode.size();
@@ -600,7 +618,6 @@ LinkerObject const& Assembly::assemble() const
 			}
 	}
 
-
 	unsigned headerSize = static_cast<unsigned>(ret.bytecode.size());
 	unsigned bytesRequiredForCode = codeSize(static_cast<unsigned>(subTagSize));
 	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
@@ -608,18 +625,20 @@ LinkerObject const& Assembly::assemble() const
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
-	unsigned bytesPerTag = numberEncodingSize(headerSize + bytesRequiredForCode);
+	unsigned bytesPerTag = numberEncodingSize(headerSize + bytesRequiredForCode + bytesRequiredForDataUpperBound);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
 	if (!needsEOFContainer)
 		++bytesRequiredForCode; ///< Additional INVALID marker.
 
-	unsigned bytesRequiredIncludingDataUpperBound = headerSize + bytesRequiredForCode + bytesRequiredForDataUpperBound;
-	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingDataUpperBound);
+	unsigned bytesRequiredIncludingDataAndSubsUpperBound = headerSize + bytesRequiredForCode + bytesRequiredForDataAndSubsUpperBound;
+	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingDataAndSubsUpperBound);
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
-	ret.bytecode.reserve(bytesRequiredIncludingDataUpperBound);
+	ret.bytecode.reserve(bytesRequiredIncludingDataAndSubsUpperBound);
 
 	auto const codeStart = ret.bytecode.size();
+
+
 
 	for (auto&& [codeSectionIndex, codeSection]: m_codeSections | ranges::views::enumerate)
 	{
@@ -778,11 +797,26 @@ LinkerObject const& Assembly::assemble() const
 
 	auto const dataStart = ret.bytecode.size();
 
-	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{
-		bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerDataRef);
-		toBigEndian(ret.bytecode.size(), r);
-		ret.append(subAssemblyById(subIdPath)->assemble());
+		std::map<h256, size_t> subAssemblyOffsets;
+		for (auto const& [subIdPath, bytecodeOffset]: subRef)
+		{
+			LinkerObject subObject = subAssemblyById(subIdPath)->assemble();
+			util::h256 h(util::keccak256(util::asString(subObject.bytecode)));
+			bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerDataRef);
+			if (size_t* subAssemblyOffset = util::valueOrNullptr(subAssemblyOffsets, h))
+				toBigEndian(*subAssemblyOffset, r);
+			else
+			{
+				toBigEndian(ret.bytecode.size(), r);
+				subAssemblyOffsets[h] = ret.bytecode.size();
+				ret.bytecode += subObject.bytecode;
+			}
+			// TODO: double-check this.
+			for (auto const& ref: subObject.linkReferences)
+				ret.linkReferences[ref.first + subAssemblyOffsets[h]] = ref.second;
+
+		}
 	}
 
 	for (auto const& i: tagRef)
@@ -806,12 +840,13 @@ LinkerObject const& Assembly::assemble() const
 	{
 		size_t position = m_tagPositionsInBytecode.at(tagInfo.id);
 		optional<size_t> tagIndex;
-		for (auto&& [index, item]: items() | ranges::views::enumerate)
-			if (item.type() == Tag && static_cast<size_t>(item.data()) == tagInfo.id)
-			{
-				tagIndex = index;
-				break;
-			}
+		for (auto& codeSection: m_codeSections)
+			for (auto&& [index, item]: codeSection.items | ranges::views::enumerate)
+				if (item.type() == Tag && static_cast<size_t>(item.data()) == tagInfo.id)
+				{
+					tagIndex = index;
+					break;
+				}
 		ret.functionDebugData[name] = {
 			position == numeric_limits<size_t>::max() ? nullopt : optional<size_t>{position},
 			tagIndex,
@@ -836,6 +871,12 @@ LinkerObject const& Assembly::assemble() const
 
 	ret.bytecode += m_auxiliaryData;
 
+	if (needsEOFContainer && bytesRequiredForDataAndSubsUpperBound > 0 && ret.bytecode.size() == dataStart)
+	{
+		// We have commited to a data section, but not actually needed it, so create a fake one.
+		ret.bytecode.push_back(0);
+	}
+
 	for (unsigned pos: sizeRef)
 	{
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
@@ -845,17 +886,27 @@ LinkerObject const& Assembly::assemble() const
 	auto dataLength = ret.bytecode.size() - dataStart;
 	if (needsEOFContainer)
 	{
-		assertThrow(bytesRequiredForDataUpperBound >= dataLength, AssemblyException, "Unexpected data size.");
-		if (bytesRequiredForDataUpperBound > 0)
+		if (bytesRequiredForDataAndSubsUpperBound < dataLength)
 		{
-			if (dataLength == 0)
+			std::cout << "Auxdata: " << m_auxiliaryData.size() << std::endl;
+			std::cout << "m_data: " << m_data.size() << std::endl;
+			std::cout << "subRef: " << subRef.size() << std::endl;
+			for (auto&& [subIdPath, offset]: subRef)
 			{
-				// We have commited to a data section, but not actually needed it, so create a fake one.
-				++dataLength;
-				ret.bytecode.push_back(0);
+				(void)offset;
+				std::cout << "R: " << subAssemblyById(subIdPath) << std::endl;
 			}
+			std::cout << "m_subs: " << m_subs.size() << std::endl;
+			for (auto const& sub: m_subs)
+			{
+				std::cout << "sub: " << sub.get() << std::endl;
+			}
+		}
+		assertThrow(bytesRequiredForDataAndSubsUpperBound >= dataLength, AssemblyException, "More data than expected. " + to_string(dataLength) + " > " + to_string(bytesRequiredForDataUpperBound));
+		if (bytesRequiredForDataAndSubsUpperBound > 0)
+		{
+			assertThrow(0 < dataLength && dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
 			setDataSectionSize(dataLength);
-			assertThrow(dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
 		}
 	}
 
