@@ -79,7 +79,7 @@ public:
 	uint16_t createFunction(uint8_t _args, uint8_t _rets)
 	{
 		size_t functionID = m_codeSections.size();
-		assertThrow(functionID <= 0xFFFF, AssemblyException, "Too many functions.");
+		assertThrow(functionID < 1024, AssemblyException, "Too many functions.");
 		assertThrow(m_currentCodeSection == 0, AssemblyException, "Functions need to be declared from the main block.");
 		m_codeSections.emplace_back(CodeSection{_args, _rets, {}});
 		return static_cast<uint16_t>(functionID);
