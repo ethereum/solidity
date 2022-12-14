@@ -50,7 +50,7 @@ using namespace std;
 
 StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 {
-	StackLayout stackLayout;
+	StackLayout stackLayout{_cfg.useFunctions, {}, {}};
 	StackLayoutGenerator{stackLayout}.processEntryPoint(*_cfg.entry);
 
 	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
@@ -71,7 +71,7 @@ map<YulString, vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator:
 
 vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulString _functionName)
 {
-	StackLayout stackLayout;
+	StackLayout stackLayout{_cfg.useFunctions, {}, {}};
 	CFG::FunctionInfo const* functionInfo = nullptr;
 	if (!_functionName.empty())
 	{
@@ -463,7 +463,9 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
 				return StackSlot{_varSlot};
 			}) | ranges::to<Stack>;
-			stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
+
+			if (!m_layout.useFunctions)
+				stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
 			return stack;
 		},
 		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>

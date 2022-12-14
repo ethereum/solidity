@@ -208,7 +208,7 @@ TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _
 
 	std::ostringstream output;
 
-	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, *object->code);
+	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, nullopt /* TODO */, *object->code);
 
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
 	ControlFlowGraphPrinter printer{output};

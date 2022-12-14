@@ -40,6 +40,7 @@ class EthAssemblyAdapter: public AbstractAssembly
 {
 public:
 	explicit EthAssemblyAdapter(evmasm::Assembly& _assembly);
+	bool supportsFunctions() const override;
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	int stackHeight() const override;
 	void setStackHeight(int height) override;
@@ -56,6 +57,11 @@ public:
 	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 	void appendAssemblySize() override;
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::optional<uint8_t> _eofVersion, std::string _name = {}) override;
+	AbstractAssembly::FunctionID createFunction(uint8_t _args, uint8_t _rets) override;
+	void beginFunction(AbstractAssembly::FunctionID _functionID) override;
+	void endFunction() override;
+	void appendFunctionCall(FunctionID _functionID) override;
+	void appendFunctionReturn() override;
 	void appendDataOffset(std::vector<SubID> const& _subPath) override;
 	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;

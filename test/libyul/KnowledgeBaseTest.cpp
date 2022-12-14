@@ -51,7 +51,7 @@ protected:
 
 		NameDispenser dispenser(m_dialect, *m_object->code);
 		std::set<YulString> reserved;
-		OptimiserStepContext context{m_dialect, dispenser, reserved, 0};
+		OptimiserStepContext context{m_dialect, nullopt /* TODO */, dispenser, reserved, 0};
 		CommonSubexpressionEliminator::run(context, *m_object->code);
 
 		m_ssaValues(*m_object->code);

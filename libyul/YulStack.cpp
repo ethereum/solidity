@@ -184,6 +184,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		meter = make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
 	OptimiserSuite::run(
 		dialect,
+		m_eofVersion,
 		meter.get(),
 		_object,
 		m_optimiserSettings.optimizeStackAllocation,

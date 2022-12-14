@@ -50,7 +50,9 @@ enum AssemblyItemType
 	PushDeployTimeAddress, ///< Push an address to be filled at deploy time. Should not be touched by the optimizer.
 	PushImmutable, ///< Push the currently unknown value of an immutable variable. The actual value will be filled in by the constructor.
 	AssignImmutable, ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
-	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
+	VerbatimBytecode, ///< Contains data that is inserted into the bytecode code section without modification.
+	CallF,
+	RetF
 };
 
 enum class Precision { Precise , Approximate };
@@ -85,6 +87,16 @@ public:
 		m_instruction{},
 		m_verbatimBytecode{{_arguments, _returnVariables, std::move(_verbatimData)}}
 	{}
+	static AssemblyItem functionCall(uint16_t _functionID, uint8_t _args, uint8_t _rets, langutil::SourceLocation _location = langutil::SourceLocation())
+	{
+		AssemblyItem result(CallF, _functionID, _location);
+		result.m_functionSignature = std::make_tuple(_args, _rets);
+		return result;
+	}
+	static AssemblyItem functionReturn(uint8_t _rets, langutil::SourceLocation _location = langutil::SourceLocation())
+	{
+		return AssemblyItem(RetF, _rets, _location);
+	}
 
 	AssemblyItem(AssemblyItem const&) = default;
 	AssemblyItem(AssemblyItem&&) = default;
@@ -191,6 +203,7 @@ private:
 	AssemblyItemType m_type;
 	Instruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
+	std::optional<std::tuple<uint8_t, uint8_t>> m_functionSignature;
 	/// If m_type == VerbatimBytecode, this holds number of arguments, number of
 	/// return variables and verbatim bytecode.
 	std::optional<std::tuple<size_t, size_t, bytes>> m_verbatimBytecode;
