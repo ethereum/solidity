@@ -802,14 +802,14 @@ public:
 	/// Constructor for a byte array ("bytes") and string.
 	explicit ArrayType(DataLocation _location, bool _isString = false);
 
-	/// Constructor for a dynamically sized array type ("type[]")
+	/// Constructor for a dynamically sized array type ("<type>[]")
 	ArrayType(DataLocation _location, Type const* _baseType):
 		ReferenceType(_location),
 		m_baseType(copyForLocationIfReference(_baseType))
 	{
 	}
 
-	/// Constructor for a fixed-size array type ("type[20]")
+	/// Constructor for a fixed-size array type ("<type>[<length>]")
 	ArrayType(DataLocation _location, Type const* _baseType, u256 _length):
 		ReferenceType(_location),
 		m_baseType(copyForLocationIfReference(_baseType)),
