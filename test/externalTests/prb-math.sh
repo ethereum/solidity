@@ -71,7 +71,7 @@ function prb_math_test
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
     pushd test/contracts/prbMathUd60x18/pure/
     sed -i 's|context(\("when the sum overflows"\)|context.skip(\1|g' add.test.ts
     sed -i 's|context(\("when the sum does not overflow"\)|context.skip(\1|g' add.test.ts

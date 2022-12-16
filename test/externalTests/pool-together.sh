@@ -59,7 +59,7 @@ function pool_together_test
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
     download_project "$repo" "$ref_type" "$ref" "$DIR"
 
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "s|it\(('should fail to return value if value passed does not fit in [0-9]\+ bits'\)|it.skip\1|g" test/libraries/ExtendedSafeCast.test.ts
     sed -i "s|it\(('should require an rng to be requested'\)|it.skip\1|g" test/DrawBeacon.test.ts
 
