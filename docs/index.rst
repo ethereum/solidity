@@ -1,6 +1,14 @@
 Solidity
 ========
 
+.. warning::
+
+  You are reading a community translation of the Solidity documentation. The Solidity team
+  can give no guarantees on the quality and accuracy of the translations provided.
+  The English reference version is and will remain the only officially supported version
+  by the Solidity team and will always be the most accurate and most up-to-date one.
+  When in doubt, please always refer to the `English (original) documentation <https://docs.soliditylang.org/en/latest/>`_.
+
 Solidity是一门为实现智能合约而创建的面向对象的高级编程语言。 智能合约是管理以太坊中账户行为的程序。
 
 Solidity 是一种面向以太坊虚拟机 (EVM) 的 `带花括号的语言 <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_。
