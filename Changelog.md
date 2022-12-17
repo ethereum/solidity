@@ -22,6 +22,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Parser: Disallow several ``indexed`` attributes for the same event parameter.
  * Yul Optimizer: Hash hex and decimal literals according to their value instead of their representation, improving the detection of equivalent functions.
  * Solidity Upgrade Tool ``solidity-upgrade``: Fix the tool returning success code on uncaught exceptions.
  * SMTChecker: Fix display error for negative integers that are one more than powers of two.
