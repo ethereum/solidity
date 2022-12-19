@@ -239,6 +239,8 @@ bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 {
+	if (_item.type() == evmasm::RetF)
+		return true;
 	if (_item.type() != evmasm::Operation)
 		return false;
 	switch (_item.instruction())
