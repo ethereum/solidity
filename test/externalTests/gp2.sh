@@ -99,7 +99,7 @@ function gp2_test
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
     sed -i 's|it\(("should revert when encoding invalid flags"\)|it.skip\1|g' test/GPv2Trade.test.ts
 
     replace_version_pragmas

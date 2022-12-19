@@ -953,7 +953,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		solAssert(!functionType->takesArbitraryParameters());
 
 		vector<string> args;
-		if (functionType->bound())
+		if (functionType->hasBoundFirstArgument())
 			args += IRVariable(_functionCall.expression()).part("self").stackSlots();
 
 		for (size_t i = 0; i < arguments.size(); ++i)
@@ -1024,7 +1024,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 					solAssert(
 						IRVariable(arg).type() == *functionType &&
 						functionType->kind() == FunctionType::Kind::External &&
-						!functionType->bound(),
+						!functionType->hasBoundFirstArgument(),
 						""
 					);
 					define(indexedArgs.emplace_back(m_context.newYulVariable(), *TypeProvider::fixedBytes(32))) <<
@@ -1353,7 +1353,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 	case FunctionType::Kind::ArrayPop:
 	{
-		solAssert(functionType->bound());
+		solAssert(functionType->hasBoundFirstArgument());
 		solAssert(functionType->parameterTypes().empty());
 		ArrayType const* arrayType = dynamic_cast<ArrayType const*>(functionType->selfType());
 		solAssert(arrayType);
@@ -1557,7 +1557,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		solAssert(!_functionCall.annotation().tryCall);
 		solAssert(!functionType->valueSet());
 		solAssert(!functionType->gasSet());
-		solAssert(!functionType->bound());
+		solAssert(!functionType->hasBoundFirstArgument());
 
 		static map<FunctionType::Kind, std::tuple<unsigned, size_t>> precompiles = {
 			{FunctionType::Kind::ECRecover, std::make_tuple(1, 0)},
@@ -1623,7 +1623,7 @@ void IRGeneratorForStatements::endVisit(FunctionCallOptions const& _options)
 	setLocation(_options);
 	FunctionType const& previousType = dynamic_cast<FunctionType const&>(*_options.expression().annotation().type);
 
-	solUnimplementedAssert(!previousType.bound());
+	solUnimplementedAssert(!previousType.hasBoundFirstArgument());
 
 	// Copy over existing values.
 	for (auto const& item: previousType.stackItems())
@@ -1668,7 +1668,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	auto memberFunctionType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
 	Type::Category objectCategory = _memberAccess.expression().annotation().type->category();
 
-	if (memberFunctionType && memberFunctionType->bound())
+	if (memberFunctionType && memberFunctionType->hasBoundFirstArgument())
 	{
 		define(IRVariable(_memberAccess).part("self"), _memberAccess.expression());
 		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static);
@@ -2506,7 +2506,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	TypePointers parameterTypes = funType.parameterTypes();
 	TypePointers argumentTypes;
 	vector<string> argumentStrings;
-	if (funType.bound())
+	if (funType.hasBoundFirstArgument())
 	{
 		parameterTypes.insert(parameterTypes.begin(), funType.selfType());
 		argumentTypes.emplace_back(funType.selfType());
@@ -2655,7 +2655,7 @@ void IRGeneratorForStatements::appendBareCall(
 {
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(type(_functionCall.expression()));
 	solAssert(
-		!funType.bound() &&
+		!funType.hasBoundFirstArgument() &&
 		!funType.takesArbitraryParameters() &&
 		_arguments.size() == 1 &&
 		funType.parameterTypes().size() == 1, ""

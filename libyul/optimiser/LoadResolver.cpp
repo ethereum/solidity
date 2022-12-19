@@ -26,6 +26,7 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/SideEffects.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
@@ -58,15 +59,23 @@ void LoadResolver::visit(Expression& _e)
 
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_e))
 	{
-		for (auto location: { StoreLoadLocation::Memory, StoreLoadLocation::Storage })
-			if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(location)])
-			{
-				tryResolve(_e, location, funCall->arguments);
-				break;
-			}
-
-		if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction({}))
+		if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)])
+			tryResolve(_e, StoreLoadLocation::Memory, funCall->arguments);
+		else if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)])
+			tryResolve(_e, StoreLoadLocation::Storage, funCall->arguments);
+		else if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction({}))
+		{
+			Identifier const* start = get_if<Identifier>(&funCall->arguments.at(0));
+			Identifier const* length = get_if<Identifier>(&funCall->arguments.at(1));
+			if (start && length)
+				if (auto const& value = keccakValue(start->name, length->name))
+					if (inScope(*value))
+					{
+						_e = Identifier{debugDataOf(_e), *value};
+						return;
+					}
 			tryEvaluateKeccak(_e, funCall->arguments);
+		}
 	}
 }
 

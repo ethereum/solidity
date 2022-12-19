@@ -63,7 +63,7 @@ function zeppelin_test
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
     pushd test/utils/
     sed -i "s|it(\('reverts \)|it.skip(\1|g" math/SafeMath.test.js
     sed -i "s|it(\('reverts \)|it.skip(\1|g" math/SignedSafeMath.test.js
@@ -75,7 +75,7 @@ function zeppelin_test
 
 
     # In some cases Hardhat does not detect revert reasons properly via IR.
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "s|it(\('reverts if the current value is 0'\)|it.skip(\1|g" test/utils/Counters.test.js
     sed -i "s|it(\('prevent unauthorized maintenance'\)|it.skip(\1|g" test/governance/TimelockController.test.js
     sed -i "s|it(\('cannot cancel invalid operation'\)|it.skip(\1|g" test/governance/TimelockController.test.js
@@ -123,7 +123,7 @@ function zeppelin_test
 
 
 
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2115 gets fixed.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "s|describe\(('Polygon-Child'\)|describe.skip\1|g" test/crosschain/CrossChainEnabled.test.js
     sed -i "s|it(\('revert with invalid multi proof #2'\)|it.skip(\1|g" test/utils/cryptography/MerkleProof.test.js
     sed -i "s|describe(\('to a receiver contract that panics'\)|describe.skip(\1|g" test/token/ERC721/ERC721.behavior.js

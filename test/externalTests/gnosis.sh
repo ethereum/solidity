@@ -71,9 +71,9 @@ function gnosis_safe_test
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
     sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/GnosisSafe.Setup.spec.ts
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i 's|\(it\)\(("changes the expected storage slot without touching the most important ones"\)|\1.skip\2|g' test/libraries/SignMessageLib.spec.ts
     sed -i "s|\(it\)\(('can be used only via DELEGATECALL opcode'\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
     sed -i 's|\(describe\)\(("Upgrade from Safe 1.1.1"\)|\1.skip\2|g' test/migration/UpgradeFromSafe111.spec.ts
@@ -82,7 +82,7 @@ function gnosis_safe_test
     # TODO: Remove this when Gnosis merges https://github.com/gnosis/safe-contracts/pull/394
     sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" contracts/handler/CompatibilityFallbackHandler.sol
 
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "s|it\(('should enforce delegatecall'\)|it.skip\1|g" test/accessors/SimulateTxAccessor.spec.ts
     sed -i "s|it\(('can only be called from Safe itself'\)|it.skip\1|g" test/libraries/Migration.spec.ts
     sed -i "s|it\(('should enforce delegatecall to MultiSend'\)|it.skip\1|g" test/libraries/MultiSend.spec.ts
@@ -121,10 +121,6 @@ function gnosis_safe_test
     # in https://github.com/NomicFoundation/hardhat/pull/2916, and so to avoid errors, the package is now pegged.
     # TODO: Remove when https://github.com/safe-global/safe-contracts/issues/436 is resolved.
     npx npm install @nomiclabs/hardhat-ethers@2.1.0
-
-    # Hardhat 2.9.5 introduced a bug with handling padded arguments to getStorageAt().
-    # TODO: Remove when https://github.com/NomicFoundation/hardhat/issues/2709 is fixed.
-    npx npm install hardhat@2.9.4
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"

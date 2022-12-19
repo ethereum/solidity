@@ -108,6 +108,7 @@ public:
 	std::map<YulString, AssignedValue> const& allValues() const { return m_state.value; }
 	std::optional<YulString> storageValue(YulString _key) const;
 	std::optional<YulString> memoryValue(YulString _key) const;
+	std::optional<YulString> keccakValue(YulString _start, YulString _length) const;
 
 protected:
 	/// Registers the assignment.
@@ -157,6 +158,10 @@ protected:
 		Expression const& _expression
 	) const;
 
+	/// Checks if the expression is keccak256(s, l)
+	/// where s and l are variables and returns these variables in that case.
+	std::optional<std::pair<YulString, YulString>> isKeccak(Expression const& _expression) const;
+
 	Dialect const& m_dialect;
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
 	/// if this is not provided or the function is not found.
@@ -167,6 +172,8 @@ private:
 	{
 		std::unordered_map<YulString, YulString> storage;
 		std::unordered_map<YulString, YulString> memory;
+		/// If keccak[s, l] = y then y := keccak256(s, l) occurs in the code.
+		std::map<std::pair<YulString, YulString>, YulString> keccak;
 	};
 	struct State
 	{

@@ -470,7 +470,7 @@ bool DeclarationTypeChecker::visit(UsingForDirective const& _usingFor)
 					m_errorReporter.typeError(
 						4167_error,
 						function->location(),
-						"Only file-level functions and library functions can be bound to a type in a \"using\" statement"
+						"Only file-level functions and library functions can be attached to a type in a \"using\" statement"
 					);
 			}
 			else

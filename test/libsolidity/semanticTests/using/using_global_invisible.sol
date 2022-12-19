@@ -29,7 +29,7 @@ import {C} from "B";
 contract D {
     function test() public returns (uint) {
         C c = new C();
-        // This tests that bound functions are available
+        // This tests that attached functions are available
         // even if the type is not available by name.
         // This is a regular function call, a
         // public and an internal library call

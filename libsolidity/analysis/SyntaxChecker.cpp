@@ -427,7 +427,7 @@ bool SyntaxChecker::visit(UsingForDirective const& _usingFor)
 		m_errorReporter.syntaxError(
 			2854_error,
 			_usingFor.location(),
-			"Can only globally bind functions to specific types."
+			"Can only globally attach functions to specific types."
 		);
 	if (_usingFor.global() && m_currentContractKind)
 		m_errorReporter.syntaxError(
