@@ -40,15 +40,15 @@ using namespace solidity::yul;
 
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	UnusedAssignEliminator rae{
+	UnusedAssignEliminator uae{
 		_context.dialect,
 		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
 	};
-	rae(_ast);
+	uae(_ast);
 
-	rae.m_storesToRemove += rae.m_allStores - rae.m_usedStores;
+	uae.m_storesToRemove += uae.m_allStores - uae.m_usedStores;
 
-	set<Statement const*> toRemove{rae.m_storesToRemove.begin(), rae.m_storesToRemove.end()};
+	set<Statement const*> toRemove{uae.m_storesToRemove.begin(), uae.m_storesToRemove.end()};
 	StatementRemover remover{toRemove};
 	remover(_ast);
 }
