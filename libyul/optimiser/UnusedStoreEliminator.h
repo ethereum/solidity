@@ -27,6 +27,7 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/UnusedStoreBase.h>
+#include <libyul/optimiser/KnowledgeBase.h>
 
 #include <libevmasm/SemanticInformation.h>
 
@@ -67,13 +68,7 @@ public:
 		std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
 		std::map<YulString, AssignedValue> const& _ssaValues,
 		bool _ignoreMemory
-	):
-		UnusedStoreBase(_dialect),
-		m_ignoreMemory(_ignoreMemory),
-		m_functionSideEffects(_functionSideEffects),
-		m_controlFlowSideEffects(_controlFlowSideEffects),
-		m_ssaValues(_ssaValues)
-	{}
+	);
 
 	using UnusedStoreBase::operator();
 	void operator()(FunctionCall const& _functionCall) override;
@@ -126,6 +121,8 @@ private:
 	std::map<YulString, AssignedValue> const& m_ssaValues;
 
 	std::map<Statement const*, Operation> m_storeOperations;
+
+	KnowledgeBase mutable m_knowledgeBase;
 };
 
 }
