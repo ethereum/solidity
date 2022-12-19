@@ -736,7 +736,7 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 					_addChild(_conditionalJump.zero);
 					_addChild(_conditionalJump.nonZero);
 				},
-				[&](CFG::BasicBlock::FunctionReturn const&) { yulAssert(false); },
+				[&](CFG::BasicBlock::FunctionReturn const&) { yulAssert(m_layout.useFunctions); },
 				[&](CFG::BasicBlock::Terminated const&) {},
 			}, _block->exit);
 		});
