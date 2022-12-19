@@ -38,9 +38,6 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-// TODO this component does not handle reverting function calls specially. Is that OK?
-// We should set m_activeStores to empty set for a reverting function call, like wo do with `leave`.
-
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	UnusedAssignEliminator rae{
@@ -105,7 +102,6 @@ void UnusedAssignEliminator::operator()(Block const& _block)
 {
 	UnusedStoreBase::operator()(_block);
 
-	// TODO we could also move some statements from "potentially" to "toRemove".
 	for (auto const& statement: _block.statements)
 		if (auto const* varDecl = get_if<VariableDeclaration>(&statement))
 			for (auto const& var: varDecl->variables)
@@ -118,9 +114,6 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 
 	if (auto const* assignment = get_if<Assignment>(&_statement))
 	{
-		// TODO this should also use user function side effects.
-		// Then we have to modify the multi-assign test (or verify that it is fine after all
-		// by adding a test where one var is used but not the other)
 		if (SideEffectsCollector{m_dialect, *assignment->value}.movable())
 		{
 			m_allStores.insert(&_statement);
@@ -131,14 +124,6 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 			for (auto const& var: assignment->variableNames)
 				m_activeStores[var.name].clear();
 	}
-
-//	cerr << "After " << std::visit(AsmPrinter{}, _statement) << endl;
-//	for (auto&& [var, assigns]: m_activeStores)
-//	{
-//		cerr << "  " << var.str() << ":" << endl;
-//		for (auto const& assign: assigns)
-//			cerr << "    " << std::visit(AsmPrinter{}, *assign) << endl;
-//	}
 }
 
 void UnusedAssignEliminator::shortcutNestedLoop(ActiveStores const& _zeroRuns)
@@ -147,9 +132,6 @@ void UnusedAssignEliminator::shortcutNestedLoop(ActiveStores const& _zeroRuns)
 	// Change all assignments that were newly introduced in the for loop to "used".
 	// We do not have to do that with the "break" or "continue" paths, because
 	// they will be joined later anyway.
-	// TODO parallel traversal might be more efficient here.
-
-	// TODO is this correct?
 
 	for (auto& [variable, stores]: m_activeStores)
 		for (auto& assignment: stores)
