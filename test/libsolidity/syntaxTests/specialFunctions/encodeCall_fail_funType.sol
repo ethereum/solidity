@@ -43,7 +43,7 @@ contract C is Base {
 		abi.encodeCall(L.fInternal, (1, "123"));
 		abi.encodeCall(L.fExternal, (1, "123"));
 	}
-	function failBoundLibraryPointerCall() public returns (bytes memory) {
+	function failAttachedLibraryPointerCall() public returns (bytes memory) {
 		uint256 x = 1;
 		return abi.encodeCall(x.fExternal, (1, "123"));
 	}
@@ -70,9 +70,9 @@ contract C is Base {
 // TypeError 3509: (1187-1207): Expected regular external function type, or external view on public function. Provided internal function.
 // TypeError 3509: (1286-1297): Expected regular external function type, or external view on public function. Provided internal function.
 // TypeError 3509: (1329-1340): Expected regular external function type, or external view on public function. Cannot use library functions for abi.encodeCall.
-// TypeError 3509: (1471-1482): Expected regular external function type, or external view on public function. Cannot use library functions for abi.encodeCall.
-// TypeError 3509: (1592-1601): Expected regular external function type, or external view on public function. Provided internal function. Did you forget to prefix "this."?
-// TypeError 3509: (1722-1745): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
-// TypeError 3509: (1771-1796): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
-// TypeError 3509: (1902-1911): Expected regular external function type, or external view on public function. Provided internal function.
-// TypeError 3509: (2010-2019): Expected regular external function type, or external view on public function. Provided creation function.
+// TypeError 3509: (1474-1485): Expected regular external function type, or external view on public function. Cannot use library functions for abi.encodeCall.
+// TypeError 3509: (1595-1604): Expected regular external function type, or external view on public function. Provided internal function. Did you forget to prefix "this."?
+// TypeError 3509: (1725-1748): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
+// TypeError 3509: (1774-1799): Expected regular external function type, or external view on public function. Provided internal function. Functions from base contracts have to be external.
+// TypeError 3509: (1905-1914): Expected regular external function type, or external view on public function. Provided internal function.
+// TypeError 3509: (2013-2022): Expected regular external function type, or external view on public function. Provided creation function.

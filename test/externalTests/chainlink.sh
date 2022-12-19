@@ -64,7 +64,7 @@ function chainlink_test
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
     sed -i "s|\(it\)\(('reverts'\)|\1.skip\2|g" test/v0.6/BasicConsumer.test.ts
     sed -i "s|\(it\)\(('has a reasonable gas cost \[ @skip-coverage \]'\)|\1.skip\2|g" test/v0.6/BasicConsumer.test.ts
     sed -i "s|\(describe\)\(('#add[^']*'\)|\1.skip\2|g" test/v0.6/Chainlink.test.ts
@@ -78,7 +78,7 @@ function chainlink_test
     sed -i "s|\(context\)\(('when permissions are not set'\)|\1.skip\2|g" test/v0.8/KeeperRegistry.test.ts
 
     # In some cases Hardhat does not detect revert reasons properly via IR.
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "s|\(it\)\(('does not allow the specified address to start new rounds'\)|\1.skip\2|g" test/v0.6/FluxAggregator.test.ts
     sed -i "s|\(describe\)\(('when called by a stranger'\)|\1.skip\2|g" test/v0.6/FluxAggregator.test.ts
     sed -i "s|\(describe\)\(('if the access control is turned on'\)|\1.skip\2|g" test/v0.*/Flags.test.ts

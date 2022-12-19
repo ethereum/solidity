@@ -143,7 +143,7 @@ The following points are all covered by the coding style but come up so often th
         Values of types that cannot be named: literals, tuples, array slices, storage references?
     - [ ] If it accepts a function, does it also accept an event or an error? These have function types but are not functions.
     - [ ] If it affects free functions, what about internal library functions?
-    - [ ] Bound library functions? Functions bound with `using for`?
+    - [ ] Attached library functions? Functions attached with `using for`?
     - [ ] Possible combinations of `storage`, `memory`, `calldata`, `immutable`, `constant`?
         Remember that internal functions can take `storage` arguments.
     - [ ] Does it work at construction time as well? What if you store it at construction time and read after deployment?

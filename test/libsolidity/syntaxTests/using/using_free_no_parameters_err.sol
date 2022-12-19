@@ -4,4 +4,4 @@ function one() pure returns(uint) {
 
 using {one} for uint;
 // ----
-// TypeError 4731: (60-63): The function "one" does not have any parameters, and therefore cannot be bound to the type "uint256".
+// TypeError 4731: (60-63): The function "one" does not have any parameters, and therefore cannot be attached to the type "uint256".

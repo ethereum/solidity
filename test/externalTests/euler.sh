@@ -63,7 +63,7 @@ function euler_test
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/2453 gets fixed.
+    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "/expectError: 'JUNK_UPGRADE_TEST_FAILURE'/d" test/moduleUpgrade.js
     sed -i "/et\.expect(errMsg)\.to\.contain('e\/collateral-violation');/d" test/flashLoanNative.js
 
@@ -73,10 +73,6 @@ function euler_test
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     force_hardhat_unlimited_contract_size "$config_file"
     npm install
-
-    # TODO: Remove this when https://github.com/Uniswap/v3-periphery/issues/313 gets fixed.
-    npm install @uniswap/v3-periphery@1.4.1
-
     replace_version_pragmas
     neutralize_packaged_contracts
 

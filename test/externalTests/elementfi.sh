@@ -87,13 +87,9 @@ function elementfi_test
     sed -i 's|bytes32(uint256(pool))|bytes32(uint256(uint160(pool)))|g' vault/PoolRegistry.sol
     popd
 
-    # The test suite uses forked Mainnet and an expiration period that's too short.
-    # TODO: Remove when https://github.com/element-fi/elf-contracts/issues/243 is fixed.
-    sed -i 's|^\s*require(_expiration - block\.timestamp < _unitSeconds);\s*$||g' contracts/ConvergentCurvePool.sol
-
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/2115).
+    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
     sed -i 's|it(\("fails to withdraw more shares than in balance"\)|it.skip(\1|g' test/compoundAssetProxyTest.ts
     sed -i 's|it(\("should prevent withdrawal of Principal Tokens and Interest Tokens before the tranche expires "\)|it.skip(\1|g' test/trancheTest.ts
     sed -i 's|it(\("should prevent withdrawal of more Principal Tokens and Interest Tokens than the user has"\)|it.skip(\1|g' test/trancheTest.ts
