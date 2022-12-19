@@ -134,13 +134,15 @@ void UnusedAssignEliminator::shortcutNestedLoop(ActiveStores const& _zeroRuns)
 	// they will be joined later anyway.
 
 	for (auto& [variable, stores]: m_activeStores)
+	{
+		auto zeroIt = _zeroRuns.find(variable);
 		for (auto& assignment: stores)
 		{
-			auto zeroIt = _zeroRuns.find(variable);
 			if (zeroIt != _zeroRuns.end() && zeroIt->second.count(assignment))
 				continue;
 			m_usedStores.insert(assignment);
 		}
+	}
 }
 
 void UnusedAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const& _functionDefinition)
