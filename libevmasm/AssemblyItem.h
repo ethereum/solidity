@@ -52,7 +52,9 @@ enum AssemblyItemType
 	AssignImmutable, ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
 	VerbatimBytecode, ///< Contains data that is inserted into the bytecode code section without modification.
 	CallF,
-	RetF
+	RetF,
+	RelativeJump,
+	ConditionalRelativeJump
 };
 
 enum class Precision { Precise , Approximate };
@@ -96,6 +98,14 @@ public:
 	static AssemblyItem functionReturn(uint8_t _rets, langutil::SourceLocation _location = langutil::SourceLocation())
 	{
 		return AssemblyItem(RetF, _rets, _location);
+	}
+	static AssemblyItem jumpTo(AssemblyItem _tag, langutil::SourceLocation _location = langutil::SourceLocation())
+	{
+		return AssemblyItem(RelativeJump, _tag.data(), _location);
+	}
+	static AssemblyItem conditionalJumpTo(AssemblyItem _tag, langutil::SourceLocation _location = langutil::SourceLocation())
+	{
+		return AssemblyItem(ConditionalRelativeJump, _tag.data(), _location);
 	}
 
 	AssemblyItem(AssemblyItem const&) = default;

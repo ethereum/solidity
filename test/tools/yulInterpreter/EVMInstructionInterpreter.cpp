@@ -444,6 +444,9 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CALLF:
 	case Instruction::RETF:
 	case Instruction::JUMPF:
+	case Instruction::RJUMP:
+	case Instruction::RJUMPI:
+	case Instruction::RJUMPV:
 	{
 		yulAssert(false, "");
 		return 0;

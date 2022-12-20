@@ -107,7 +107,7 @@ bool BlockDeduplicator::applyTagReplacement(
 {
 	bool changed = false;
 	for (AssemblyItem& item: _items)
-		if (item.type() == PushTag)
+		if (item.type() == PushTag || item.type() == RelativeJump || item.type() == ConditionalRelativeJump)
 		{
 			size_t subId;
 			size_t tagId;

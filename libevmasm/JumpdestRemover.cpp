@@ -59,7 +59,7 @@ set<size_t> JumpdestRemover::referencedTags(AssemblyItems const& _items, size_t 
 {
 	set<size_t> ret;
 	for (auto const& item: _items)
-		if (item.type() == PushTag)
+		if (item.type() == PushTag || item.type() == RelativeJump || item.type() == ConditionalRelativeJump)
 		{
 			auto subAndTag = item.splitForeignPushTag();
 			if (subAndTag.first == _subId)
