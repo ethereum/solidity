@@ -271,7 +271,17 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 	auto const& referencedVariables = movableChecker.referencedVariables();
 	for (auto const& name: _variables)
 	{
+		// TODO these might be interdependent and it could matter which order we
+		// run this loop!
+		if (!_isDeclaration)
+		{
+			for (YulString v: m_state.references[name])
+				m_state.referencedBy[v].erase(name);
+		}
+		for (YulString v: referencedVariables)
+			m_state.referencedBy[v].insert(name);
 		m_state.references[name] = referencedVariables;
+
 		if (!_isDeclaration)
 		{
 			// assignment to slot denoted by "name"
@@ -316,6 +326,8 @@ void DataFlowAnalyzer::popScope()
 	for (auto const& name: m_variableScopes.back().variables)
 	{
 		m_state.value.erase(name);
+		for (YulString v: m_state.references[name])
+			m_state.referencedBy[v].erase(name);
 		m_state.references.erase(name);
 	}
 	m_variableScopes.pop_back();
@@ -351,16 +363,17 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 			_variables.count(_item.second);
 	});
 
+	// Use referencedBy
 	// Also clear variables that reference variables to be cleared.
 	for (auto const& variableToClear: _variables)
-		for (auto const& [ref, names]: m_state.references)
-			if (names.count(variableToClear))
-				_variables.emplace(ref);
+		_variables += m_state.referencedBy[variableToClear];
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)
 	{
 		m_state.value.erase(name);
+		for (YulString v: m_state.references[name])
+			m_state.referencedBy[v].erase(name);
 		m_state.references.erase(name);
 	}
 }

@@ -179,8 +179,10 @@ private:
 	{
 		/// Current values of variables, always movable.
 		std::map<YulString, AssignedValue> value;
-		/// m_references[a].contains(b) <=> the current expression assigned to a references b
+		/// references[a].contains(b) <=> the current expression assigned to a references b
 		std::unordered_map<YulString, std::set<YulString>> references;
+		/// The inverse of references.
+		std::unordered_map<YulString, std::set<YulString>> referencedBy;
 
 		Environment environment;
 	};
