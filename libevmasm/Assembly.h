@@ -59,6 +59,7 @@ public:
 
 	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 	bool supportsFunctions() const { return m_eofVersion.has_value(); }
+	bool supportsRelativeJumps() const { return m_eofVersion.has_value(); }
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
 	AssemblyItem newFunctionCall(uint16_t _functionID)

@@ -62,7 +62,7 @@ AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 
 pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 {
-	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+	assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump, util::Exception, "");
 	u256 combined = u256(data());
 	size_t subId = static_cast<size_t>((combined >> 64) - 1);
 	size_t tag = static_cast<size_t>(combined & 0xffffffffffffffffULL);
@@ -109,7 +109,7 @@ pair<string, string> AssemblyItem::nameAndData() const
 
 void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 {
-	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+	assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump	, util::Exception, "");
 	u256 data = _tag;
 	if (_subId != numeric_limits<size_t>::max())
 		data |= (u256(_subId) + 1) << 64;
@@ -163,6 +163,10 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 		return 3;
 	case RetF:
 		return 1;
+	case RelativeJump:
+		return 3;
+	case ConditionalRelativeJump:
+		return 3;
 	default:
 		break;
 	}
@@ -183,9 +187,9 @@ size_t AssemblyItem::arguments() const
 		return std::get<0>(*m_functionSignature);
 	}
 	else if (type() == RetF)
-	{
 		return static_cast<size_t>(data());
-	}
+	else if (type() == ConditionalRelativeJump)
+		return 1;
 	else
 		return 0;
 }
@@ -333,6 +337,12 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	case RetF:
 		text = "retf";
 		break;
+	case RelativeJump:
+		text = "rjump(" + string("tag_") + to_string(static_cast<size_t>(data())) + ")";
+		break;
+	case ConditionalRelativeJump:
+		text = "rjumpi(" + string("tag_") + to_string(static_cast<size_t>(data())) + ")";
+		break;
 	default:
 		assertThrow(false, InvalidOpcode, "");
 	}
@@ -372,6 +382,24 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 			_out << " PushTag " << _item.splitForeignPushTag().second;
 		else
 			_out << " PushTag " << subId << ":" << _item.splitForeignPushTag().second;
+		break;
+	}
+	case RelativeJump:
+	{
+		size_t subId = _item.splitForeignPushTag().first;
+		if (subId == numeric_limits<size_t>::max())
+			_out << " RelativeJump " << _item.splitForeignPushTag().second;
+		else
+			_out << " RelativeJump " << subId << ":" << _item.splitForeignPushTag().second;
+		break;
+	}
+	case ConditionalRelativeJump:
+	{
+		size_t subId = _item.splitForeignPushTag().first;
+		if (subId == numeric_limits<size_t>::max())
+			_out << " ConditionalRelativeJump " << _item.splitForeignPushTag().second;
+		else
+			_out << " ConditionalRelativeJump " << subId << ":" << _item.splitForeignPushTag().second;
 		break;
 	}
 	case Tag:
