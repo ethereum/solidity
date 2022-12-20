@@ -40,6 +40,54 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace std;
 
+namespace {
+
+uint16_t getMaxStackHeight(CFG::BasicBlock const& _block, StackLayout const& _stackLayout)
+{
+	size_t maxStackHeight = 0;
+
+	std::list<CFG::BasicBlock const*> toVisit;
+	std::set<CFG::BasicBlock const*> visited;
+	toVisit.push_back(&_block);
+
+	while(!toVisit.empty())
+	{
+		CFG::BasicBlock const* block = toVisit.back();
+		toVisit.pop_back();
+		if (!visited.insert(block).second)
+			continue;
+
+		auto& blockInfo = _stackLayout.blockInfos.at(block);
+
+		maxStackHeight = std::max(maxStackHeight, blockInfo.entryLayout.size());
+		for (auto const& operation: block->operations)
+		{
+			size_t entryLayout = _stackLayout.operationEntryLayout.at(&operation).size();
+			maxStackHeight = std::max(maxStackHeight, entryLayout);
+			size_t exitLayout = entryLayout - operation.input.size() + operation.output.size();
+			maxStackHeight = std::max(maxStackHeight, exitLayout);
+		}
+		maxStackHeight = std::max(maxStackHeight, blockInfo.exitLayout.size());
+
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump) { toVisit.emplace_back(_jump.target); },
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				toVisit.emplace_back(_conditionalJump.zero);
+				toVisit.emplace_back(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&) {},
+			[&](CFG::BasicBlock::Terminated const&) {}
+		}, block->exit);
+	}
+
+	yulAssert(maxStackHeight <= 0xFFFF);
+	return static_cast<uint16_t>(maxStackHeight);
+}
+
+}
+
 vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 	AbstractAssembly& _assembly,
 	AsmAnalysisInfo& _analysisInfo,
@@ -55,6 +103,8 @@ vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 	StackLayout stackLayout = StackLayoutGenerator::run(*dfg);
 
 	if (dfg->useFunctions)
+	{
+		_assembly.setMaxStackHeight(0, getMaxStackHeight(*dfg->entry, stackLayout));
 		for (Scope::Function const* function: dfg->functions)
 		{
 			auto const& info = dfg->functionInfo.at(function);
@@ -62,10 +112,12 @@ vector<StackTooDeepError> OptimizedEVMCodeTransform::run(
 			yulAssert(info.returnVariables.size() <= 0xFF);
 			auto functionID = _assembly.createFunction(
 				static_cast<uint8_t>(info.parameters.size()),
-				static_cast<uint8_t>(info.returnVariables.size())
+				static_cast<uint8_t>(info.returnVariables.size()),
+				getMaxStackHeight(*info.entry, stackLayout)
 			);
 			_builtinContext.functionIDs[function] = functionID;
 		}
+	}
 
 	OptimizedEVMCodeTransform optimizedCodeTransform(
 		_assembly,

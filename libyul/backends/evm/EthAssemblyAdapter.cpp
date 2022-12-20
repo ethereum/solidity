@@ -146,9 +146,14 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::
 	return {make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 
-AbstractAssembly::FunctionID EthAssemblyAdapter::createFunction(uint8_t _args, uint8_t _rets)
+AbstractAssembly::FunctionID EthAssemblyAdapter::createFunction(uint8_t _args, uint8_t _rets, uint16_t _maxStackArgs)
 {
-	return m_assembly.createFunction(_args, _rets);
+	return m_assembly.createFunction(_args, _rets, _maxStackArgs);
+}
+
+void EthAssemblyAdapter::setMaxStackHeight(FunctionID _functionID, uint16_t _maxStackHeight)
+{
+	m_assembly.setMaxStackHeight(_functionID, _maxStackHeight);
 }
 
 void EthAssemblyAdapter::beginFunction(AbstractAssembly::FunctionID _functionID)

@@ -78,16 +78,25 @@ public:
 					case uint8_t(0x00): // terminator
 						stop = true;
 						break;
-					case uint8_t(0x01): // code section
-						i += 2; // skip code size section
+					case uint8_t(0x01): // type section
+						i += 2;			// skip type size section
 						break;
-					case uint8_t(0x02): // data section
+					case uint8_t(0x02): // code section
+					{
+						bytesRef numCodeSectionsRef(&bytecode[i + 1], 2);
+						size_t numCodeSections = fromBigEndian<size_t>(numCodeSectionsRef);
+						i += numCodeSections * 2 + 2; // skip code section header
+						break;
+					}
+					case uint8_t(0x03): // data section
+					{
 						auto dataSizeOffset = i + 1;
 						bytesRef dataSizeRef(&bytecode[dataSizeOffset], 2);
 						size_t dataSize = fromBigEndian<size_t>(dataSizeRef);
 						toBigEndian(dataSize + _arguments.size(), dataSizeRef);
 						i += 2; // skip data size section
 						break;
+					}
 					}
 					if (stop)
 						break;

@@ -101,7 +101,8 @@ public:
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
 	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::optional<uint8_t> _eofVersion, std::string _name = "") = 0;
 
-	virtual FunctionID createFunction(uint8_t _args, uint8_t _rets) = 0;
+	virtual FunctionID createFunction(uint8_t _args, uint8_t _rets, uint16_t _maxStackHeight) = 0;
+	virtual void setMaxStackHeight(FunctionID _functionID, uint16_t _maxStackHeight) = 0;
 	virtual void beginFunction(FunctionID _functionID) = 0;
 	virtual void endFunction() = 0;
 
