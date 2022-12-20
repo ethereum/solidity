@@ -583,29 +583,34 @@ LinkerObject const& Assembly::assemble() const
 	};
 	if (eof)
 	{
-		bool needsTypeSection = m_codeSections.size() > 1;
+		bool needsTypeSection = true; // m_codeSections.size() > 1;
 		// TODO: empty data is disallowed
 		ret.bytecode.push_back(0xef);
 		ret.bytecode.push_back(0x00);
 		ret.bytecode.push_back(0x01); // version 1
 		if (needsTypeSection)
 		{
-			ret.bytecode.push_back(0x03); // kind=type
+			ret.bytecode.push_back(0x01); // kind=type
 			ret.bytecode.push_back(0x00); // length of type section
 			ret.bytecode.push_back(0x00);
-			toBigEndian(m_codeSections.size() * 2, bytesRef(&ret.bytecode.back() + 1 - 2, 2));
+			toBigEndian(m_codeSections.size() * 4, bytesRef(&ret.bytecode.back() + 1 - 2, 2));
+		}
+		ret.bytecode.push_back(0x02); // kind=code
+		ret.bytecode.push_back(0x00); // placeholder for number of code sections
+		ret.bytecode.push_back(0x00);
+		{
+			bytesRef numCodeSections(&ret.bytecode.back() + 1 - 2, 2);
+			toBigEndian(m_codeSections.size(), numCodeSections);
 		}
 		for (auto const& codeSection: m_codeSections)
 		{
 			(void) codeSection;
-			ret.bytecode.push_back(0x01); // kind=code
 			codeSectionSizeOffsets.emplace_back(ret.bytecode.size());
 			ret.bytecode.push_back(0x00); // placeholder for length of code
 			ret.bytecode.push_back(0x00);
 		}
-		if (bytesRequiredForDataAndSubsUpperBound > 0)
 		{
-			ret.bytecode.push_back(0x02); // kind=data
+			ret.bytecode.push_back(0x03); // kind=data
 			dataSectionSizeOffset = ret.bytecode.size();
 			ret.bytecode.push_back(0x00); // length of data
 			ret.bytecode.push_back(0x00);
@@ -617,6 +622,10 @@ LinkerObject const& Assembly::assemble() const
 			{
 				ret.bytecode.push_back(codeSection.inputs);
 				ret.bytecode.push_back(codeSection.outputs);
+				ret.bytecode.push_back(0x00); // placeholder for max stack height
+				ret.bytecode.push_back(0x00);
+				// TODO: check why cast is necessary.
+				toBigEndian(size_t(codeSection.maxStackHeight), bytesRef(&ret.bytecode.back() + 1 - 2, 2));
 			}
 	}
 
@@ -903,13 +912,6 @@ LinkerObject const& Assembly::assemble() const
 
 	ret.bytecode += m_auxiliaryData;
 
-	// TODO: remove this when transitioning to unified spec headers
-	if (eof && bytesRequiredForDataAndSubsUpperBound > 0 && ret.bytecode.size() == dataStart)
-	{
-		// We have committed to a data section, but not actually needed it, so create a fake one.
-		ret.bytecode.push_back(0);
-	}
-
 	for (unsigned pos: sizeRef)
 	{
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
@@ -919,16 +921,9 @@ LinkerObject const& Assembly::assemble() const
 	auto dataLength = ret.bytecode.size() - dataStart;
 	if (eof)
 	{
-		assertThrow(
-			bytesRequiredForDataAndSubsUpperBound >= dataLength,
-			AssemblyException,
-			"More data than expected. " + to_string(dataLength) + " > " + to_string(bytesRequiredForDataUpperBound)
-		);
-		if (bytesRequiredForDataAndSubsUpperBound > 0)
-		{
-			assertThrow(0 < dataLength && dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
-			setDataSectionSize(dataLength);
-		}
+		assertThrow(bytesRequiredForDataAndSubsUpperBound >= dataLength, AssemblyException, "More data than expected. " + to_string(dataLength) + " > " + to_string(bytesRequiredForDataUpperBound));
+		assertThrow(dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
+		setDataSectionSize(dataLength);
 	}
 
 	return ret;

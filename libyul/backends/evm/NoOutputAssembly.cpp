@@ -104,7 +104,7 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::cr
 	return {};
 }
 
-AbstractAssembly::FunctionID NoOutputAssembly::createFunction(uint8_t _args, uint8_t _rets)
+AbstractAssembly::FunctionID NoOutputAssembly::createFunction(uint8_t _args, uint8_t _rets, uint16_t)
 {
 	yulAssert(m_context->numFunctions <= std::numeric_limits<AbstractAssembly::FunctionID>::max());
 	AbstractAssembly::FunctionID id = static_cast<AbstractAssembly::FunctionID>(m_context->numFunctions++);

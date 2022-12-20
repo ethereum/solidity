@@ -77,13 +77,18 @@ public:
 	AssemblyItem newData(bytes const& _data) { util::h256 h(util::keccak256(util::asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	bytes const& data(util::h256 const& _i) const { return m_data.at(_i); }
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
-	uint16_t createFunction(uint8_t _args, uint8_t _rets)
+	uint16_t createFunction(uint8_t _args, uint8_t _rets, uint16_t _maxStackHeight)
 	{
 		size_t functionID = m_codeSections.size();
 		assertThrow(functionID < 1024, AssemblyException, "Too many functions.");
 		assertThrow(m_currentCodeSection == 0, AssemblyException, "Functions need to be declared from the main block.");
-		m_codeSections.emplace_back(CodeSection{_args, _rets, {}});
+		m_codeSections.emplace_back(CodeSection{_args, _rets, _maxStackHeight, {}});
 		return static_cast<uint16_t>(functionID);
+	}
+	void setMaxStackHeight(uint16_t _functionID, uint16_t _maxStackHeight)
+	{
+		assertThrow(_functionID < m_codeSections.size(), AssemblyException, "Attempt to set the maximum stack height of an undeclared function.");
+		m_codeSections.at(_functionID).maxStackHeight = _maxStackHeight;
 	}
 	void beginFunction(uint16_t _functionID)
 	{
@@ -209,6 +214,7 @@ public:
 	{
 		uint8_t inputs = 0;
 		uint8_t outputs = 0;
+		uint16_t maxStackHeight = 0;
 		AssemblyItems items{};
 	};
 

@@ -74,7 +74,8 @@ public:
 
 	void appendAssemblySize() override;
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::optional<uint8_t> _eofVersion, std::string _name = "") override;
-	FunctionID createFunction(uint8_t _args, uint8_t rets) override;
+	FunctionID createFunction(uint8_t _args, uint8_t rets, uint16_t _maxStackHeight) override;
+	void setMaxStackHeight(AbstractAssembly::FunctionID, uint16_t) override {}
 	void beginFunction(FunctionID) override;
 	void endFunction() override;
 	void appendFunctionCall(FunctionID _functionID) override;
