@@ -291,6 +291,29 @@ struct IsZeroIsZeroJumpI: SimplePeepholeOptimizerMethod<IsZeroIsZeroJumpI>
 	}
 };
 
+struct IsZeroIsZeroRJumpI: SimplePeepholeOptimizerMethod<IsZeroIsZeroJumpI>
+{
+	static size_t applySimple(
+		AssemblyItem const& _iszero1,
+		AssemblyItem const& _iszero2,
+		AssemblyItem const& _rjumpi,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_iszero1 == Instruction::ISZERO &&
+			_iszero2 == Instruction::ISZERO &&
+			_rjumpi.type() == ConditionalRelativeJump
+		)
+		{
+			*_out = _rjumpi;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
 struct EqIsZeroJumpI: SimplePeepholeOptimizerMethod<EqIsZeroJumpI>
 {
 	static size_t applySimple(
@@ -311,6 +334,30 @@ struct EqIsZeroJumpI: SimplePeepholeOptimizerMethod<EqIsZeroJumpI>
 			*_out = AssemblyItem(Instruction::SUB, _eq.location());
 			*_out = _pushTag;
 			*_out = _jumpi;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
+struct EqIsZeroRJumpI: SimplePeepholeOptimizerMethod<EqIsZeroJumpI>
+{
+	static size_t applySimple(
+		AssemblyItem const& _eq,
+		AssemblyItem const& _iszero,
+		AssemblyItem const& _rjumpi,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_eq == Instruction::EQ &&
+			_iszero == Instruction::ISZERO &&
+			_rjumpi.type() == ConditionalRelativeJump
+		)
+		{
+			*_out = AssemblyItem(Instruction::SUB, _eq.location());
+			*_out = _rjumpi;
 			return true;
 		}
 		else
@@ -350,6 +397,33 @@ struct DoubleJump: SimplePeepholeOptimizerMethod<DoubleJump>
 	}
 };
 
+// rjumpi(tag_1) rjump(tag_2) tag_1: -> iszero rjumpi(tag_2) tag_1:
+struct DoubleRJump: SimplePeepholeOptimizerMethod<DoubleJump>
+{
+	static size_t applySimple(
+		AssemblyItem const& _rjumpi,
+		AssemblyItem const& _rjump,
+		AssemblyItem const& _tag1,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_rjumpi.type() == ConditionalRelativeJump &&
+			_rjump.type() == RelativeJump &&
+			_tag1.type() == Tag &&
+			_rjumpi.data() == _tag1.data()
+		)
+		{
+			*_out = AssemblyItem(Instruction::ISZERO, _rjumpi.location());
+			*_out = AssemblyItem::conditionalJumpTo(_rjump.tag(), _rjump.location());
+			*_out = _tag1;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
 struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext>
 {
 	static size_t applySimple(
@@ -368,6 +442,30 @@ struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext>
 		{
 			if (_jump == Instruction::JUMPI)
 				*_out = AssemblyItem(Instruction::POP, _jump.location());
+			*_out = _tag;
+			return true;
+		}
+		else
+			return false;
+	}
+};
+
+struct RJumpToNext: SimplePeepholeOptimizerMethod<JumpToNext>
+{
+	static size_t applySimple(
+		AssemblyItem const& _rjump,
+		AssemblyItem const& _tag,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			(_rjump.type() == ConditionalRelativeJump || _rjump.type() == RelativeJump) &&
+			_tag.type() == Tag &&
+			_rjump.data() == _tag.data()
+		)
+		{
+			if (_rjump.type() == ConditionalRelativeJump)
+				*_out = AssemblyItem(Instruction::POP, _rjump.location());
 			*_out = _tag;
 			return true;
 		}
@@ -439,6 +537,7 @@ struct UnreachableCode
 			return false;
 		if (
 			it[0] != Instruction::JUMP &&
+			it[0] != Instruction::RJUMP &&
 			it[0] != Instruction::RETURN &&
 			it[0] != Instruction::STOP &&
 			it[0] != Instruction::INVALID &&
@@ -489,8 +588,8 @@ bool PeepholeOptimiser::optimise()
 		applyMethods(
 			state,
 			PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
-			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
-			TagConjunctions(), TruthyAnd(), Identity()
+			DupSwap(), IsZeroIsZeroJumpI(), IsZeroIsZeroRJumpI{}, EqIsZeroJumpI(), DoubleJump(), DoubleRJump(),
+			JumpToNext(), RJumpToNext(), UnreachableCode(), TagConjunctions(), TruthyAnd(), Identity()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
