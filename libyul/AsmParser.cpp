@@ -512,6 +512,8 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 	case Token::FalseLiteral:
 	{
 		LiteralKind kind = LiteralKind::Number;
+		string currLiteral = currentLiteral();
+
 		switch (currentToken())
 		{
 		case Token::StringLiteral:
@@ -519,7 +521,15 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 			kind = LiteralKind::String;
 			break;
 		case Token::Number:
-			if (!isValidNumberLiteral(currentLiteral()))
+			currLiteral.erase(std::remove(currLiteral.begin(), currLiteral.end(), '_'), currLiteral.end());
+			if (currLiteral.find("e") != string::npos || currLiteral.find("E") != string::npos)
+			{
+				istringstream os(currLiteral);
+				double d;
+				os >> d;
+				currLiteral = to_string(d).substr(0, to_string(d).find('.'));
+			}
+			if (!isValidNumberLiteral(currLiteral))
 				fatalParserError(4828_error, "Invalid number literal.");
 			kind = LiteralKind::Number;
 			break;
@@ -534,7 +544,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		Literal literal{
 			createDebugData(),
 			kind,
-			YulString{currentLiteral()},
+			YulString{currLiteral},
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
 		};
 		advance();
