@@ -58,6 +58,7 @@ public:
 		m_optimiserSettings(_optimiserSettings),
 		m_context(
 			_evmVersion,
+			_eofVersion,
 			ExecutionContext::Creation,
 			_revertStrings,
 			std::move(_optimiserSettings),
