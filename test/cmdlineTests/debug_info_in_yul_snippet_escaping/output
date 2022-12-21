@@ -318,22 +318,22 @@ object "D_27" {
                 let _3 := add(_2, datasize("C_2"))
                 if or(gt(_3, 0xffffffffffffffff), lt(_3, _2)) { panic_error_0x41() }
                 datacopy(_2, dataoffset("C_2"), datasize("C_2"))
-                _3 := abi_encode_tuple__to__fromStack(_3)
+                let _4 := abi_encode_tuple__to__fromStack(_3)
 
-                let expr_13_address := create(0, _2, sub(_3, _2))
+                let expr_13_address := create(0, _2, sub(_4, _2))
 
                 if iszero(expr_13_address) { revert_forward_1() }
 
                 /// @src 0:440:491  "C c = new /// @src 0:149:156  \"new C()\"..."
                 let var_c_9_address := expr_13_address
                 /// @src 0:493:494  "c"
-                let _4_address := var_c_9_address
-                let expr_15_address := _4_address
+                let _5_address := var_c_9_address
+                let expr_15_address := _5_address
                 /// @src 0:504:526  "string memory s = \"/*\""
                 let var_s_18_mpos := convert_t_stringliteral_c077635d0709aa1fd7cea2045028c270f982d687d1647e48e759eec32ec54a50_to_t_string_memory_ptr()
                 /// @src 0:528:529  "s"
-                let _5_mpos := var_s_18_mpos
-                let expr_21_mpos := _5_mpos
+                let _6_mpos := var_s_18_mpos
+                let expr_21_mpos := _6_mpos
                 /// @src 0:531:581  "return \"/** @src 0:96:165  \\\"contract D {...\\\" *\/\""
                 var__5_mpos := convert_t_stringliteral_5bde9a896e3f09acac1496d16642fcdd887d2a000bf1ab18bdff3f17b91e320b_to_t_string_memory_ptr()
                 leave
