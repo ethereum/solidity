@@ -1,0 +1,36 @@
+{
+    "sourceList":
+    [
+        "no_contract_combined_json/input.sol"
+    ],
+    "sources":
+    {
+        "no_contract_combined_json/input.sol":
+        {
+            "AST":
+            {
+                "absolutePath": "no_contract_combined_json/input.sol",
+                "exportedSymbols": {},
+                "id": 2,
+                "license": "GPL-3.0",
+                "nodeType": "SourceUnit",
+                "nodes":
+                [
+                    {
+                        "id": 1,
+                        "literals":
+                        [
+                            "solidity",
+                            ">=",
+                            "0.0"
+                        ],
+                        "nodeType": "PragmaDirective",
+                        "src": "36:22:0"
+                    }
+                ],
+                "src": "36:22:0"
+            }
+        }
+    },
+    "version": "<VERSION REMOVED>"
+}

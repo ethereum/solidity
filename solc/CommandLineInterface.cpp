@@ -48,7 +48,6 @@
 #include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsmtutil/Exceptions.h>
@@ -1193,8 +1192,10 @@ void CommandLineInterface::outputCompilationResults()
 	{
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
+		else if (contracts.empty())
+			sout() << "Compiler run successful. No contracts to compile." << endl;
 		else
-			serr() << "Compiler run successful, no output requested." << endl;
+			sout() << "Compiler run successful. No output generated." << endl;
 	}
 }
 
