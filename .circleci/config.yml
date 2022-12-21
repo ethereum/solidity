@@ -1047,7 +1047,7 @@ jobs:
           name: Build evmone based on EOF branch
           command: |
             ( cd /usr/src; \
-            git clone --branch="eof-functions-bak3" --recurse-submodules https://github.com/ethereum/evmone.git; \
+            git clone --branch="eof-functions" --recurse-submodules https://github.com/ethereum/evmone.git; \
             cd evmone; \
             sed -i -e 's/GNULIKE TRUE/GNULIKE FALSE/g' cmake/cable/CableCompilerSettings.cmake; \
             mkdir build; \
