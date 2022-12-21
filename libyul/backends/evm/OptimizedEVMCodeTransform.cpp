@@ -40,7 +40,8 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace std;
 
-namespace {
+namespace
+{
 
 uint16_t getMaxStackHeight(CFG::BasicBlock const& _block, StackLayout const& _stackLayout)
 {
@@ -50,7 +51,7 @@ uint16_t getMaxStackHeight(CFG::BasicBlock const& _block, StackLayout const& _st
 	std::set<CFG::BasicBlock const*> visited;
 	toVisit.push_back(&_block);
 
-	while(!toVisit.empty())
+	while (!toVisit.empty())
 	{
 		CFG::BasicBlock const* block = toVisit.back();
 		toVisit.pop_back();
