@@ -40,7 +40,6 @@ class EthAssemblyAdapter: public AbstractAssembly
 {
 public:
 	explicit EthAssemblyAdapter(evmasm::Assembly& _assembly);
-	bool supportsFunctions() const override;
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
 	int stackHeight() const override;
 	void setStackHeight(int height) override;

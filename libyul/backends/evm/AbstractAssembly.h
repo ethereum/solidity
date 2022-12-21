@@ -60,7 +60,6 @@ public:
 
 	virtual ~AbstractAssembly() = default;
 
-	virtual bool supportsFunctions() const = 0;
 	/// Set a new source location valid starting from the next instruction.
 	virtual void setSourceLocation(langutil::SourceLocation const& _location) = 0;
 	/// Retrieve the current height of the stack. This does not have to be zero

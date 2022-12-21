@@ -44,11 +44,6 @@ EthAssemblyAdapter::EthAssemblyAdapter(evmasm::Assembly& _assembly):
 {
 }
 
-bool EthAssemblyAdapter::supportsFunctions() const
-{
-	return m_assembly.supportsFunctions();
-}
-
 void EthAssemblyAdapter::setSourceLocation(SourceLocation const& _location)
 {
 	m_assembly.setSourceLocation(_location);
