@@ -906,7 +906,7 @@ LinkerObject const& Assembly::assemble() const
 	// TODO: remove this when transitioning to unified spec headers
 	if (eof && bytesRequiredForDataAndSubsUpperBound > 0 && ret.bytecode.size() == dataStart)
 	{
-		// We have commited to a data section, but not actually needed it, so create a fake one.
+		// We have committed to a data section, but not actually needed it, so create a fake one.
 		ret.bytecode.push_back(0);
 	}
 
