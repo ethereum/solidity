@@ -570,63 +570,65 @@ LinkerObject const& Assembly::assemble() const
 		bytesRequiredForDataUpperBound += static_cast<unsigned>(dataItem.second.size());
 	unsigned bytesRequiredForDataAndSubsUpperBound = bytesRequiredForDataUpperBound + bytesRequiredForSubs;
 
-	// Insert EOF1 header.
+	static auto setBigEndian = [](bytes& _dest, size_t _offset, size_t _size, auto _value) {
+		assertThrow(numberEncodingSize(_value) <= _size, AssemblyException, "");
+		toBigEndian(_value, bytesRef(_dest.data() + _offset, _size));
+	};
+	static auto appendBigEndian = [](bytes& _dest, size_t _size, auto _value) {
+		_dest.resize(_dest.size() + _size);
+		setBigEndian(_dest, _dest.size() - _size, _size, _value);
+	};
+	static auto appendBigEndianUint16 = [](bytes& _dest, auto _value) {
+		static_assert(!std::numeric_limits<decltype(_value)>::is_signed, "only unsigned types or bigint supported");
+		assertThrow(_value <= 0xFFFF, AssemblyException, "");
+		appendBigEndian(_dest, 2, _value);
+	};
 	vector<size_t> codeSectionSizeOffsets;
 	auto setCodeSectionSize = [&](size_t _section, size_t _size) {
-		toBigEndian(_size, bytesRef(ret.bytecode.data() + codeSectionSizeOffsets.at(_section), 2));
+		if (eof)
+			setBigEndian(ret.bytecode, codeSectionSizeOffsets.at(_section), 2, _size);
 	};
 	std::optional<size_t> dataSectionSizeOffset;
 	auto setDataSectionSize = [&](size_t _size) {
-		assertThrow(dataSectionSizeOffset.has_value(), AssemblyException, "");
-		assertThrow(_size <= 0xFFFF, AssemblyException, "");
-		toBigEndian(_size, bytesRef(ret.bytecode.data() + *dataSectionSizeOffset, 2));
+		if (eof)
+		{
+			assertThrow(dataSectionSizeOffset.has_value(), AssemblyException, "");
+			assertThrow(_size <= 0xFFFF, AssemblyException, "Invalid data section size.");
+			setBigEndian(ret.bytecode, *dataSectionSizeOffset, 2, _size);
+		}
 	};
+	// Insert EOF1 header.
 	if (eof)
 	{
-		bool needsTypeSection = true; // m_codeSections.size() > 1;
-		// TODO: empty data is disallowed
 		ret.bytecode.push_back(0xef);
 		ret.bytecode.push_back(0x00);
 		ret.bytecode.push_back(0x01); // version 1
-		if (needsTypeSection)
-		{
-			ret.bytecode.push_back(0x01); // kind=type
-			ret.bytecode.push_back(0x00); // length of type section
-			ret.bytecode.push_back(0x00);
-			toBigEndian(m_codeSections.size() * 4, bytesRef(&ret.bytecode.back() + 1 - 2, 2));
-		}
+
+		ret.bytecode.push_back(0x01); // kind=type
+		appendBigEndianUint16(ret.bytecode, m_codeSections.size() * 4u); // length of type section
+
 		ret.bytecode.push_back(0x02); // kind=code
-		ret.bytecode.push_back(0x00); // placeholder for number of code sections
-		ret.bytecode.push_back(0x00);
-		{
-			bytesRef numCodeSections(&ret.bytecode.back() + 1 - 2, 2);
-			toBigEndian(m_codeSections.size(), numCodeSections);
-		}
+		appendBigEndianUint16(ret.bytecode, m_codeSections.size()); // placeholder for number of code sections
+
 		for (auto const& codeSection: m_codeSections)
 		{
-			(void) codeSection;
+			(void)codeSection;
 			codeSectionSizeOffsets.emplace_back(ret.bytecode.size());
-			ret.bytecode.push_back(0x00); // placeholder for length of code
-			ret.bytecode.push_back(0x00);
+			appendBigEndianUint16(ret.bytecode, 0u); // placeholder for length of code
 		}
-		{
-			ret.bytecode.push_back(0x03); // kind=data
-			dataSectionSizeOffset = ret.bytecode.size();
-			ret.bytecode.push_back(0x00); // length of data
-			ret.bytecode.push_back(0x00);
-		}
+
+		ret.bytecode.push_back(0x03); // kind=data
+		dataSectionSizeOffset = ret.bytecode.size();
+		appendBigEndianUint16(ret.bytecode, 0u); // length of data
+
 		ret.bytecode.push_back(0x00); // terminator
 
-		if (needsTypeSection)
-			for (auto const& codeSection: m_codeSections)
-			{
-				ret.bytecode.push_back(codeSection.inputs);
-				ret.bytecode.push_back(codeSection.outputs);
-				ret.bytecode.push_back(0x00); // placeholder for max stack height
-				ret.bytecode.push_back(0x00);
-				// TODO: check why cast is necessary.
-				toBigEndian(size_t(codeSection.maxStackHeight), bytesRef(&ret.bytecode.back() + 1 - 2, 2));
-			}
+		for (auto const& codeSection: m_codeSections)
+		{
+			ret.bytecode.push_back(codeSection.inputs);
+			ret.bytecode.push_back(codeSection.outputs);
+			appendBigEndianUint16(ret.bytecode, codeSection.maxStackHeight);
+		}
 	}
 
 	unsigned headerSize = static_cast<unsigned>(ret.bytecode.size());
@@ -645,7 +647,12 @@ LinkerObject const& Assembly::assemble() const
 	unsigned bytesPerTag = numberEncodingSize(headerSize + bytesRequiredForCode + bytesRequiredForDataUpperBound);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
-	if (!eof)
+	if (eof)
+	{
+		bytesPerTag = 2;
+		tagPush = static_cast<uint8_t>(Instruction::INVALID);
+	}
+	else
 		++bytesRequiredForCode; ///< Additional INVALID marker.
 
 	unsigned bytesRequiredIncludingDataAndSubsUpperBound = headerSize + bytesRequiredForCode + bytesRequiredForDataAndSubsUpperBound;
@@ -672,9 +679,7 @@ LinkerObject const& Assembly::assemble() const
 			{
 				unsigned b = max<unsigned>(1, numberEncodingSize(i.data()));
 				ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
-				ret.bytecode.resize(ret.bytecode.size() + b);
-				bytesRef byr(&ret.bytecode.back() + 1 - b, b);
-				toBigEndian(i.data(), byr);
+				appendBigEndian(ret.bytecode, b, i.data());
 				break;
 			}
 			case PushTag:
@@ -704,9 +709,7 @@ LinkerObject const& Assembly::assemble() const
 				i.setPushedValue(u256(s));
 				unsigned b = max<unsigned>(1, numberEncodingSize(s));
 				ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
-				ret.bytecode.resize(ret.bytecode.size() + b);
-				bytesRef byr(&ret.bytecode.back() + 1 - b, b);
-				toBigEndian(s, byr);
+				appendBigEndian(ret.bytecode, b, s);
 				break;
 			}
 			case PushProgramSize:
@@ -737,15 +740,15 @@ LinkerObject const& Assembly::assemble() const
 			{
 				// Expect 2 elements on stack (source, dest_base)
 				auto const& offsets = immutableReferencesBySub[i.data()].second;
-				for (size_t i = 0u; i < offsets.size(); ++i)
+				for (auto [j, offset]: offsets | ranges::views::enumerate)
 				{
-					if (i != offsets.size() - 1)
+					if (j != offsets.size() - 1)
 					{
 						ret.bytecode.push_back(uint8_t(Instruction::DUP2));
 						ret.bytecode.push_back(uint8_t(Instruction::DUP2));
 					}
 					// TODO: should we make use of the constant optimizer methods for pushing the offsets?
-					bytes offsetBytes = toCompactBigEndian(u256(offsets[i]));
+					bytes offsetBytes = toCompactBigEndian(u256(offset));
 					ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(static_cast<unsigned>(offsetBytes.size()))));
 					ret.bytecode += offsetBytes;
 					ret.bytecode.push_back(uint8_t(Instruction::ADD));
@@ -779,9 +782,7 @@ LinkerObject const& Assembly::assemble() const
 			{
 				assertThrow(eof, AssemblyException, "Function call (CALLF) in non-EOF code");
 				ret.bytecode.push_back(static_cast<uint8_t>(Instruction::CALLF));
-				ret.bytecode.resize(ret.bytecode.size() + 2);
-				bytesRef byr(&ret.bytecode.back() + 1 - 2, 2);
-				toBigEndian(i.data(), byr);
+				appendBigEndianUint16(ret.bytecode, i.data());
 				break;
 			}
 			case RetF:
@@ -797,8 +798,7 @@ LinkerObject const& Assembly::assemble() const
 				ret.bytecode.push_back(static_cast<uint8_t>(i.type() == RelativeJump ? Instruction::RJUMP : Instruction::RJUMPI));
 				auto [subId, tagId] = i.splitForeignPushTag();
 				tagRef[ret.bytecode.size()] = TagRef{subId, tagId, true};
-				ret.bytecode.push_back(0x00);
-				ret.bytecode.push_back(0x00);
+				appendBigEndianUint16(ret.bytecode, 0u);
 				break;
 			}
 			default:
@@ -808,8 +808,7 @@ LinkerObject const& Assembly::assemble() const
 
 		auto sectionEnd = ret.bytecode.size();
 
-		if (eof)
-			setCodeSectionSize(codeSectionIndex, sectionEnd - sectionStart);
+		setCodeSectionSize(codeSectionIndex, sectionEnd - sectionStart);
 	}
 
 	if (!immutableReferencesBySub.empty())
@@ -826,8 +825,9 @@ LinkerObject const& Assembly::assemble() const
 
 	auto const dataStart = ret.bytecode.size();
 
+	// TODO: this should better be done separately on develop.
 	{
-		std::map<h256, size_t> subAssemblyOffsets;
+		map<h256, size_t> subAssemblyOffsets;
 		for (auto const& [subIdPath, bytecodeOffset]: subRef)
 		{
 			LinkerObject subObject = subAssemblyById(subIdPath)->assemble();
@@ -844,7 +844,6 @@ LinkerObject const& Assembly::assemble() const
 			// TODO: double-check this.
 			for (auto const& ref: subObject.linkReferences)
 				ret.linkReferences[ref.first + subAssemblyOffsets[h]] = ref.second;
-
 		}
 	}
 
@@ -913,18 +912,15 @@ LinkerObject const& Assembly::assemble() const
 	ret.bytecode += m_auxiliaryData;
 
 	for (unsigned pos: sizeRef)
-	{
-		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
-		toBigEndian(ret.bytecode.size(), r);
-	}
+		setBigEndian(ret.bytecode, pos, bytesPerDataRef, ret.bytecode.size());
 
 	auto dataLength = ret.bytecode.size() - dataStart;
-	if (eof)
-	{
-		assertThrow(bytesRequiredForDataAndSubsUpperBound >= dataLength, AssemblyException, "More data than expected. " + to_string(dataLength) + " > " + to_string(bytesRequiredForDataUpperBound));
-		assertThrow(dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
-		setDataSectionSize(dataLength);
-	}
+	assertThrow(
+		bytesRequiredForDataAndSubsUpperBound >= dataLength,
+		AssemblyException,
+		"More data than expected. " + to_string(dataLength) + " > " + to_string(bytesRequiredForDataUpperBound)
+	);
+	setDataSectionSize(dataLength);
 
 	return ret;
 }
