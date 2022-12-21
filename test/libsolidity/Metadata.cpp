@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(metadata_eof_experimental)
 		CompilerStack compilerStack;
 		compilerStack.setMetadataFormat(metadataFormat);
 		compilerStack.setSources({{"", sourceCode}});
-		compilerStack.setEVMVersion({});
+		compilerStack.setEVMVersion(langutil::EVMVersion::shanghai());
 		compilerStack.setViaIR(true);
 		compilerStack.setEOFVersion(1);
 		compilerStack.setOptimiserSettings(true);
