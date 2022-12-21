@@ -581,12 +581,12 @@ LinkerObject const& Assembly::assemble() const
 	static auto appendBigEndianUint16 = [](bytes& _dest, auto _value) {
 		static_assert(!std::numeric_limits<decltype(_value)>::is_signed, "only unsigned types or bigint supported");
 		assertThrow(_value <= 0xFFFF, AssemblyException, "");
-		appendBigEndian(_dest, 2, _value);
+		appendBigEndian(_dest, 2, static_cast<size_t>(_value));
 	};
 	vector<size_t> codeSectionSizeOffsets;
 	auto setCodeSectionSize = [&](size_t _section, size_t _size) {
 		if (eof)
-			setBigEndian(ret.bytecode, codeSectionSizeOffsets.at(_section), 2, _size);
+			toBigEndian(_size, bytesRef(ret.bytecode.data() + codeSectionSizeOffsets.at(_section), 2));
 	};
 	std::optional<size_t> dataSectionSizeOffset;
 	auto setDataSectionSize = [&](size_t _size) {
@@ -594,7 +594,7 @@ LinkerObject const& Assembly::assemble() const
 		{
 			assertThrow(dataSectionSizeOffset.has_value(), AssemblyException, "");
 			assertThrow(_size <= 0xFFFF, AssemblyException, "Invalid data section size.");
-			setBigEndian(ret.bytecode, *dataSectionSizeOffset, 2, _size);
+			toBigEndian(_size, bytesRef(ret.bytecode.data() + *dataSectionSizeOffset, 2));
 		}
 	};
 	// Insert EOF1 header.
