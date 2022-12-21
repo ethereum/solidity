@@ -551,8 +551,12 @@ LinkerObject const& Assembly::assemble() const
 			"Cannot push and assign immutables in the same assembly subroutine."
 		);
 
-	// TODO: assert zero inputs/outputs on code section zero
-	// TODO: assert one code section being present and *only* one being present unless EOF
+	assertThrow(!m_codeSections.empty(), AssemblyException, "Expected at least one code section.");
+	assertThrow(eof || m_codeSections.size() > 1, AssemblyException, "Expected exactly one code section in non-EOF code.");
+	assertThrow(
+		m_codeSections.front().inputs == 0 && m_codeSections.front().outputs == 0, AssemblyException,
+		"Expected the first code section to have zero inputs and outputs."
+	);
 
 	unsigned bytesRequiredForSubs = 0;
 	// TODO: consider fully producing all sub and data refs in this pass already.
@@ -569,15 +573,13 @@ LinkerObject const& Assembly::assemble() const
 	// Insert EOF1 header.
 	vector<size_t> codeSectionSizeOffsets;
 	auto setCodeSectionSize = [&](size_t _section, size_t _size) {
-		bytesRef length(ret.bytecode.data() + codeSectionSizeOffsets.at(_section), 2);
-		toBigEndian(_size, length);
+		toBigEndian(_size, bytesRef(ret.bytecode.data() + codeSectionSizeOffsets.at(_section), 2));
 	};
 	std::optional<size_t> dataSectionSizeOffset;
 	auto setDataSectionSize = [&](size_t _size) {
 		assertThrow(dataSectionSizeOffset.has_value(), AssemblyException, "");
 		assertThrow(_size <= 0xFFFF, AssemblyException, "");
-		bytesRef length(ret.bytecode.data() + *dataSectionSizeOffset, 2);
-		toBigEndian(static_cast<uint16_t>(_size), length);
+		toBigEndian(static_cast<uint16_t>(_size), bytesRef(ret.bytecode.data() + *dataSectionSizeOffset, 2));
 	};
 	if (eof)
 	{
@@ -591,8 +593,7 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.push_back(0x03); // kind=type
 			ret.bytecode.push_back(0x00); // length of type section
 			ret.bytecode.push_back(0x00);
-			bytesRef length(&ret.bytecode.back() + 1 - 2, 2);
-			toBigEndian(m_codeSections.size() * 2, length);
+			toBigEndian(m_codeSections.size() * 2, bytesRef(&ret.bytecode.back() + 1 - 2, 2));
 		}
 		for (auto const& codeSection: m_codeSections)
 		{
@@ -856,7 +857,6 @@ LinkerObject const& Assembly::assemble() const
 		{
 			assertThrow(m_eofVersion.has_value(), AssemblyException, "Relative jump outside EOF");
 			assertThrow(subId == numeric_limits<size_t>::max(), AssemblyException, "Relative jump to sub");
-			bytesRef r(ret.bytecode.data() + bytecodeOffset, 2);
 			assertThrow(
 				static_cast<ssize_t>(pos) - static_cast<ssize_t>(bytecodeOffset + 2u) < 0x7FFF &&
 				static_cast<ssize_t>(pos) - static_cast<ssize_t>(bytecodeOffset + 2u) >= -0x8000,
@@ -864,13 +864,12 @@ LinkerObject const& Assembly::assemble() const
 				"Relative jump too far"
 			);
 			uint16_t relativeOffset = static_cast<uint16_t>(pos - (bytecodeOffset + 2u));
-			toBigEndian(relativeOffset, r);
+			toBigEndian(relativeOffset, bytesRef(ret.bytecode.data() + bytecodeOffset, 2));
 		}
 		else
 		{
 			assertThrow(!m_eofVersion.has_value(), AssemblyException, "Dynamic tag reference within EOF");
-			bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerTag);
-			toBigEndian(pos, r);
+			toBigEndian(pos, bytesRef(ret.bytecode.data() + bytecodeOffset, bytesPerTag));
 		}
 	}
 	for (auto const& [name, tagInfo]: m_namedTags)
@@ -899,15 +898,13 @@ LinkerObject const& Assembly::assemble() const
 		if (references.first == references.second)
 			continue;
 		for (auto ref = references.first; ref != references.second; ++ref)
-		{
-			bytesRef r(ret.bytecode.data() + ref->second, bytesPerDataRef);
-			toBigEndian(ret.bytecode.size(), r);
-		}
+			toBigEndian(ret.bytecode.size(), bytesRef(ret.bytecode.data() + ref->second, bytesPerDataRef));
 		ret.bytecode += dataItem.second;
 	}
 
 	ret.bytecode += m_auxiliaryData;
 
+	// TODO: remove this when transitioning to unified spec headers
 	if (eof && bytesRequiredForDataAndSubsUpperBound > 0 && ret.bytecode.size() == dataStart)
 	{
 		// We have commited to a data section, but not actually needed it, so create a fake one.

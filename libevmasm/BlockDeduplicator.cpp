@@ -132,7 +132,7 @@ BlockDeduplicator::BlockIterator& BlockDeduplicator::BlockIterator::operator++()
 {
 	if (it == end)
 		return *this;
-	if (SemanticInformation::altersControlFlow(*it) && *it != AssemblyItem{Instruction::JUMPI})
+	if (SemanticInformation::altersControlFlow(*it) && *it != AssemblyItem{Instruction::JUMPI} && it->type() != ConditionalRelativeJump)
 		it = end;
 	else
 	{

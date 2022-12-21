@@ -239,7 +239,7 @@ bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 {
-	if (_item.type() == evmasm::RetF)
+	if (_item.type() == evmasm::RetF || _item.type() == evmasm::RelativeJump || _item.type() == evmasm::ConditionalRelativeJump)
 		return true;
 	if (_item.type() != evmasm::Operation)
 		return false;
@@ -249,6 +249,9 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	// continue on the next instruction
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
+	case Instruction::RJUMP:
+	case Instruction::RJUMPI:
+	case Instruction::RJUMPV:
 	case Instruction::RETURN:
 	case Instruction::SELFDESTRUCT:
 	case Instruction::STOP:
