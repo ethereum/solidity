@@ -1483,10 +1483,21 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		m_context.subObjectsCreated().insert(contract);
 
 		Whiskers t(R"(let <memPos> := <allocateUnbounded>()
-			let <memEnd> := add(<memPos>, datasize("<object>"))
-			if or(gt(<memEnd>, 0xffffffffffffffff), lt(<memEnd>, <memPos>)) { <panic>() }
+			let <argPos> := add(<memPos>, datasize("<object>"))
+			if or(gt(<argPos>, 0xffffffffffffffff), lt(<argPos>, <memPos>)) { <panic>() }
 			datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
-			<memEnd> := <abiEncode>(<memEnd><constructorParams>)
+			let <memEnd> := <abiEncode>(<argPos><constructorParams>)
+			<?eof>
+				// TODO: this is horrible and hopefully avoided at the spec level
+				let <argSize> := sub(<memEnd>, <argPos>)
+				let <numCodeSections> := shr(240, mload(add(<memPos>, 7)))
+				let <dataSectionOffset> := add(<memPos>, add(10, mul(<numCodeSections>, 2)))
+				let <tmp> := mload(<dataSectionOffset>)
+				let <dataSectionSize> := shr(240, <tmp>)
+				<dataSectionSize> := add(<dataSectionSize>, <argSize>)
+				if gt(<dataSectionSize>, 0xFFFF) { <panic>() }
+				mstore(<dataSectionOffset>, or(shr(16, shl(16, <tmp>)), shl(240, <dataSectionSize>)))
+			</eof>
 			<?saltSet>
 				let <address> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
 			<!saltSet>
@@ -1498,7 +1509,17 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				if iszero(<address>) { <forwardingRevert>() }
 			</isTryCall>
 		)");
+		t("eof", m_context.eofVersion().has_value());
+		if (m_context.eofVersion().has_value())
+		{
+			t("argSize", m_context.newYulVariable());
+			t("numCodeSections", m_context.newYulVariable());
+			t("dataSectionOffset", m_context.newYulVariable());
+			t("dataSectionSize", m_context.newYulVariable());
+			t("tmp", m_context.newYulVariable());
+		}
 		t("memPos", m_context.newYulVariable());
+		t("argPos", m_context.newYulVariable());
 		t("memEnd", m_context.newYulVariable());
 		t("allocateUnbounded", m_utils.allocateUnboundedFunction());
 		t("object", IRNames::creationObject(*contract));

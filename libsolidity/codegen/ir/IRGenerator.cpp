@@ -1110,6 +1110,7 @@ void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionCon
 	);
 	IRGenerationContext newContext(
 		m_evmVersion,
+		m_eofVersion,
 		_context,
 		m_context.revertStrings(),
 		m_optimiserSettings,
