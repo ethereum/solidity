@@ -137,7 +137,6 @@ void StackLimitEvader::run(
 	else
 		run(_context, _object, CompilabilityChecker{
 			_context.dialect,
-			_context.eofVersion,
 			_object,
 			true
 		}.unreachableVariables);

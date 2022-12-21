@@ -41,7 +41,6 @@ string check(string const& _input)
 	BOOST_REQUIRE(obj.code);
 	auto functions = CompilabilityChecker(
 		EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()),
-		solidity::test::CommonOptions::get().eofVersion(),
 		obj,
 		true
 	).stackDeficit;
