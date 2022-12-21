@@ -215,9 +215,9 @@ object \"D_16\" {
                 let _2 := add(_1, datasize(\"C_3\"))
                 if or(gt(_2, 0xffffffffffffffff), lt(_2, _1)) { panic_error_0x41() }
                 datacopy(_1, dataoffset(\"C_3\"), datasize(\"C_3\"))
-                _2 := abi_encode_tuple__to__fromStack(_2)
+                let _3 := abi_encode_tuple__to__fromStack(_2)
 
-                let expr_12_address := create(0, _1, sub(_2, _1))
+                let expr_12_address := create(0, _1, sub(_3, _1))
 
                 if iszero(expr_12_address) { revert_forward_1() }
 
