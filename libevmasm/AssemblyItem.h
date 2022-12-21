@@ -113,8 +113,8 @@ public:
 	AssemblyItem& operator=(AssemblyItem const&) = default;
 	AssemblyItem& operator=(AssemblyItem&&) = default;
 
-	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(Tag, data()); }
-	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(PushTag, data()); }
+	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump, util::Exception, ""); return AssemblyItem(Tag, data()); }
+	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump, util::Exception, ""); return AssemblyItem(PushTag, data()); }
 	/// Converts the tag to a subassembly tag. This has to be called in order to move a tag across assemblies.
 	/// @param _subId the identifier of the subassembly the tag is taken from.
 	AssemblyItem toSubAssemblyTag(size_t _subId) const;
