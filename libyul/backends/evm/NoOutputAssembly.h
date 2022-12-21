@@ -52,8 +52,7 @@ struct NoOutputAssemblyContext
 class NoOutputAssembly: public AbstractAssembly
 {
 public:
-	explicit NoOutputAssembly(bool _hasFunctions): m_hasFunctions(_hasFunctions), m_context(std::make_shared<NoOutputAssemblyContext>()) { }
-	NoOutputAssembly(bool _hasFunctions, std::shared_ptr<NoOutputAssemblyContext> _context): m_hasFunctions(_hasFunctions), m_context(_context) {}
+	explicit NoOutputAssembly(): m_context(std::make_shared<NoOutputAssemblyContext>()) { }
 
 	~NoOutputAssembly() override = default;
 
@@ -92,7 +91,6 @@ public:
 	void markAsInvalid() override {}
 
 private:
-	bool m_hasFunctions = false;
 	std::shared_ptr<NoOutputAssemblyContext> m_context;
 	int m_stackHeight = 0;
 };
