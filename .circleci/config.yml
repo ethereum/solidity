@@ -1041,7 +1041,7 @@ jobs:
     <<: *base_ubuntu2004_large
     environment:
       EVM: "shanghai"
-      SOLTEST_FLAGS: "--eof-version 1"
+      SOLTEST_FLAGS: "--eof-version 1 --optimize"
       BOOST_TEST_ARGS: "-t sem*"
     steps:
       - run:
