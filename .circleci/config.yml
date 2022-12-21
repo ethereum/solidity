@@ -1042,6 +1042,7 @@ jobs:
     environment:
       EVM: "shanghai"
       SOLTEST_FLAGS: "--eof-version 1"
+      BOOST_TEST_ARGS: "-t sem*"
     steps:
       - run:
           name: Build evmone based on EOF branch

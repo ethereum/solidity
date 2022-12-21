@@ -10,13 +10,15 @@ function adjustContractCodeForArgSize(bytes memory x, uint16 argSize)
 {
   assembly {
 	let memPos := add(x, 32)
-	let numCodeSections := shr(240, mload(add(memPos, 7)))
-	let dataSectionSizeOffset := add(memPos, add(10, mul(numCodeSections, 2)))
-	let tmp := mload(dataSectionSizeOffset)
-	let dataSectionSize := shr(240, tmp)
-	dataSectionSize := add(dataSectionSize, argSize)
-	if gt(dataSectionSize, 0xFFFF) { revert(0,0) }
-	mstore(dataSectionSizeOffset, or(shr(16, shl(16, tmp)), shl(240, dataSectionSize)))
+        if eq(shr(232, mload(memPos)), 0xef0001) {
+		let numCodeSections := shr(240, mload(add(memPos, 7)))
+		let dataSectionSizeOffset := add(memPos, add(10, mul(numCodeSections, 2)))
+		let tmp := mload(dataSectionSizeOffset)
+		let dataSectionSize := shr(240, tmp)
+		dataSectionSize := add(dataSectionSize, argSize)
+		if gt(dataSectionSize, 0xFFFF) { revert(0,0) }
+		mstore(dataSectionSizeOffset, or(shr(16, shl(16, tmp)), shl(240, dataSectionSize)))
+	}
   }
 }
 
@@ -43,4 +45,5 @@ contract C {
 // compileViaYul: also
 // ----
 // createDSalted(bytes32,uint256): 42, 64 ->
-// gas legacy: 104365
+// gas irOptimized: 100021
+// gas legacy: 104455
