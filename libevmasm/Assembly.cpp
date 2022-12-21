@@ -552,7 +552,7 @@ LinkerObject const& Assembly::assemble() const
 		);
 
 	assertThrow(!m_codeSections.empty(), AssemblyException, "Expected at least one code section.");
-	assertThrow(eof || m_codeSections.size() > 1, AssemblyException, "Expected exactly one code section in non-EOF code.");
+	assertThrow(eof || m_codeSections.size() == 1, AssemblyException, "Expected exactly one code section in non-EOF code.");
 	assertThrow(
 		m_codeSections.front().inputs == 0 && m_codeSections.front().outputs == 0, AssemblyException,
 		"Expected the first code section to have zero inputs and outputs."
@@ -858,8 +858,8 @@ LinkerObject const& Assembly::assemble() const
 			assertThrow(m_eofVersion.has_value(), AssemblyException, "Relative jump outside EOF");
 			assertThrow(subId == numeric_limits<size_t>::max(), AssemblyException, "Relative jump to sub");
 			assertThrow(
-				static_cast<ssize_t>(pos) - static_cast<ssize_t>(bytecodeOffset + 2u) < 0x7FFF &&
-				static_cast<ssize_t>(pos) - static_cast<ssize_t>(bytecodeOffset + 2u) >= -0x8000,
+				static_cast<ptrdiff_t>(pos) - static_cast<ptrdiff_t>(bytecodeOffset + 2u) < 0x7FFF &&
+				static_cast<ptrdiff_t>(pos) - static_cast<ptrdiff_t>(bytecodeOffset + 2u) >= -0x8000,
 				AssemblyException,
 				"Relative jump too far"
 			);
