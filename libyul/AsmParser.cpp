@@ -522,7 +522,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 			break;
 		case Token::Number:
 			currLiteral.erase(std::remove(currLiteral.begin(), currLiteral.end(), '_'), currLiteral.end());
-			if (currLiteral.find("e") != string::npos || currLiteral.find("E") != string::npos)
+			if (currLiteral.find("e") != string::npos && !(boost::starts_with(currLiteral, "0x") || boost::starts_with(currLiteral, "0X")))
 			{
 				istringstream os(currLiteral);
 				double d;
