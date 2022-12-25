@@ -879,7 +879,6 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 	if (m_scanner->currentToken() == Token::LParen)
 	{
 		VarDeclParserOptions options;
-		options.allowIndexed = true;
 		options.allowLocationSpecifier = true;
 		parameters = parseParameterList(options);
 	}
