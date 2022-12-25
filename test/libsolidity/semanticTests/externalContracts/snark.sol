@@ -164,10 +164,10 @@ contract Test {
 		Pairing.G1Point memory p2;
 		p1.X = 1; p1.Y = 2;
 		p2.X = 1; p2.Y = 2;
-		Pairing.G1Point memory explict_sum = Pairing.add(p1, p2);
+		Pairing.G1Point memory explicit_sum = Pairing.add(p1, p2);
 		Pairing.G1Point memory scalar_prod = Pairing.mul(p1, 2);
-		return (explict_sum.X == scalar_prod.X &&
-			explict_sum.Y == scalar_prod.Y);
+		return (explicit_sum.X == scalar_prod.X &&
+			explicit_sum.Y == scalar_prod.Y);
 	}
 	function g() public returns (bool) {
 		Pairing.G1Point memory x = Pairing.add(Pairing.P1(), Pairing.negate(Pairing.P1()));

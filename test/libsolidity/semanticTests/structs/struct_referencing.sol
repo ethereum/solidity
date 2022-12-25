@@ -15,7 +15,7 @@ library L {
         s.a = 4;
         return s;
     }
-    // argument-dependant lookup tests
+    // argument-dependent lookup tests
     function a(I.S memory) public pure returns (uint) { return 1; }
     function a(S memory) public pure returns (uint) { return 2; }
 }
