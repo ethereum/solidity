@@ -150,7 +150,7 @@ class TraceAnalyser:
             print(mismatch[0])
             print(mismatch[1])
 
-        print(len(intersection), "test-cases - ", len(mismatches), " mismatche(s)")
+        print(f"{len(intersection)} test-cases - {len(mismatches)} mismatche(s)")
 
     @classmethod
     def check_traces(cls, test_name, left, right, mismatches):
@@ -197,11 +197,11 @@ def main(argv):
 
     for f in [extracted_tests_trace_file, end_to_end_trace_file]:
         if not os.path.isfile(f):
-            print("trace file '" + f + "' not found. aborting.")
+            print(f"trace file '{f}' not found. Aborting.")
             sys.exit(1)
 
     if not os.path.isfile(extracted_tests_trace_file):
-        print("semantic trace file '" + extracted_tests_trace_file + "' not found. aborting.")
+        print(f"semantic trace file '{extracted_tests_trace_file}' not found. Aborting.")
         sys.exit(1)
 
     semantic_trace = TraceAnalyser(extracted_tests_trace_file)
