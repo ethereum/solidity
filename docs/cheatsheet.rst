@@ -122,7 +122,7 @@ Modifiers
 | For functions and    | Allows the function’s or modifier’s behaviour to be    | ``virtual``   |
 | modifiers            | changed in derived contracts                           |               |
 +------------+-------------------------------------+--------------------------------------------+
-| For function,modifier| function, modifier or public state-variable changes the| ``override``  |
+| Function, modifier   | Function, modifier or public state-variable changes the| ``override``  |
 | and state varaible   | behaviour of a function or modifier in a base contract |               |
 +------------+-------------------------------------+--------------------------------------------+
 
