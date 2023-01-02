@@ -100,15 +100,32 @@ Function Visibility Specifiers
 Modifiers
 =========
 
-- ``pure`` for functions: Disallows modification or access of state.
-- ``view`` for functions: Disallows modification of state.
-- ``payable`` for functions: Allows them to receive Ether together with a call.
-- ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
-- ``immutable`` for state variables: Allows exactly one assignment at construction time and is constant afterwards. Is stored in code.
-- ``anonymous`` for events: Does not store event signature as topic.
-- ``indexed`` for event parameters: Stores the parameter as topic.
-- ``virtual`` for functions and modifiers: Allows the function's or modifier's
-  behaviour to be changed in derived contracts.
-- ``override``: States that this function, modifier or public state variable changes
-  the behaviour of a function or modifier in a base contract.
++------------+-------------------------------------+--------------------------------------------+
+| Use                  | Description                                            | Modifier      |
++============+=====================================+============================================+
+| For functions        | Disallows modification or access of state              | ``pure``      |
++------------+-------------------------------------+--------------------------------------------+
+| For functions        | Disallows modification of state                        | ``view``      |
++------------+-------------------------------------+--------------------------------------------+
+| For functions        | Allows them to receive Ether together with a call      | ``payable``   |
++------------+-------------------------------------+--------------------------------------------+
+| For state variables  | Disallows assignment (except initialisation), does not | ``contant``   |
+|                      | occupy storage slot                                    |               |
++------------+-------------------------------------+--------------------------------------------+
+| For state variables  | Allows exactly one assignment at construction time and | ``immutable`` |
+|                      | is constant afterwards. Is stored in code              |               |
++------------+-------------------------------------+--------------------------------------------+
+| For events           | Does not store event signature as topic                | ``anonymous`` |
++------------+-------------------------------------+--------------------------------------------+
+| For event parameters | Stores the parameter as topic                          | ``indexed``   |
++------------+-------------------------------------+--------------------------------------------+
+| For functions and    | Allows the function’s or modifier’s behaviour to be    | ``virtual``   |
+| modifiers            | changed in derived contracts                           |               |
++------------+-------------------------------------+--------------------------------------------+
+| For function,modifier| function, modifier or public state-variable changes the| ``override``  |
+| and state varaible   | behaviour of a function or modifier in a base contract |               |
++------------+-------------------------------------+--------------------------------------------+
+
+
+
 
