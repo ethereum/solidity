@@ -187,6 +187,7 @@ public:
 	size_t arguments() const;
 	size_t returnValues() const;
 	size_t deposit() const { return returnValues() - arguments(); }
+	size_t maxStackHeightDelta() const;
 
 	/// @returns true if the assembly item can be used in a functional context.
 	bool canBeFunctional() const;

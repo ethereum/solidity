@@ -408,7 +408,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 		}
 
 		// This only modifies PushTags, we have to run again to actually remove code.
-		if (_settings.runDeduplicate)
+		if (_settings.runDeduplicate && !m_eofVersion.has_value())
 			for (auto& section: m_codeSections)
 			{
 				BlockDeduplicator deduplicator{section.items};
@@ -498,6 +498,61 @@ map<u256, u256> const& Assembly::optimiseInternal(
 
 	m_tagReplacements = std::move(tagReplacements);
 	return *m_tagReplacements;
+}
+
+namespace
+{
+uint16_t calcMaxStackHeight(vector<AssemblyItem> const& _items, uint16_t _args)
+{
+	uint16_t maxStackHeight = 0;
+	std::stack<size_t> worklist;
+	std::vector<int32_t> stack_heights(_items.size(), -1);
+	stack_heights[0] = _args;
+	worklist.push(0u);
+	while (!worklist.empty())
+	{
+		size_t i = worklist.top();
+		worklist.pop();
+		AssemblyItem const& item = _items.at(i);
+		size_t stack_height_change = item.deposit();
+		ptrdiff_t stackHeight = stack_heights.at(i);
+		assertThrow(stackHeight != -1, AssemblyException, "");
+
+		std::vector<size_t> successors;
+
+		if (
+			item.type() != RelativeJump &&
+			!(item.type() == Operation && SemanticInformation::terminatesControlFlow(item.instruction())) &&
+			item.type() != RetF
+		)
+		{
+			assertThrow(i < _items.size() - 1, AssemblyException, "No terminating instruction.");
+			successors.emplace_back(i + 1);
+		}
+
+		if (item.type() == RelativeJump || item.type() == ConditionalRelativeJump)
+		{
+			auto it = std::find(_items.begin(), _items.end(), item.tag());
+			assertThrow(it != _items.end(), AssemblyException, "Tag not found.");
+			successors.emplace_back(static_cast<size_t>(std::distance(_items.begin(), it)));
+		}
+
+		maxStackHeight = std::max(maxStackHeight, static_cast<uint16_t>(stackHeight + static_cast<ptrdiff_t>(item.maxStackHeightDelta())));
+		stackHeight += static_cast<ptrdiff_t>(stack_height_change);
+
+		for (size_t s: successors)
+		{
+			if (stack_heights.at(s) == -1)
+			{
+				stack_heights[s] = static_cast<int32_t>(stackHeight);
+				worklist.push(s);
+			}
+			else
+				assertThrow(stack_heights.at(s) == stackHeight, AssemblyException, "Stack height mismatch.");
+		}
+	}
+	return maxStackHeight;
+}
 }
 
 LinkerObject const& Assembly::assemble() const
@@ -627,7 +682,7 @@ LinkerObject const& Assembly::assemble() const
 		{
 			ret.bytecode.push_back(codeSection.inputs);
 			ret.bytecode.push_back(codeSection.outputs);
-			appendBigEndianUint16(ret.bytecode, codeSection.maxStackHeight);
+			appendBigEndianUint16(ret.bytecode, calcMaxStackHeight(codeSection.items, codeSection.inputs));
 		}
 	}
 
