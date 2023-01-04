@@ -116,6 +116,21 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 	setData(data);
 }
 
+size_t AssemblyItem::maxStackHeightDelta() const
+{
+	if (m_type == AssignImmutable)
+	{
+		assertThrow(m_immutableOccurrences.has_value(), util::Exception, "");
+		if (*m_immutableOccurrences == 0)
+			return 0;
+		else
+			return (*m_immutableOccurrences - 1) * 2 + 1;
+	}
+	else
+		return deposit();
+}
+
+
 size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) const
 {
 	switch (m_type)
