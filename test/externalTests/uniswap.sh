@@ -36,9 +36,9 @@ function test_fn { UPDATE_SNAPSHOT=1 npx hardhat test; }
 
 function uniswap_test
 {
-    local repo="https://github.com/solidity-external-tests/uniswap-v3-core.git"
+    local repo="https://github.com/ekpyron/v3-core-eof.git"
     local ref_type=branch
-    local ref=main_080
+    local ref=eof-testing
     local config_file="hardhat.config.ts"
     local config_var=config
 
@@ -48,8 +48,8 @@ function uniswap_test
         #ir-no-optimize           # Compilation fails with: "YulException: Variable ret_0 is 1 slot(s) too deep inside the stack."
         #ir-optimize-evm-only     # Compilation fails with: "YulException: Variable ret_0 is 1 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
-        legacy-no-optimize
-        legacy-optimize-evm-only
+        #legacy-no-optimize
+        #legacy-optimize-evm-only
         legacy-optimize-evm+yul
     )
 
