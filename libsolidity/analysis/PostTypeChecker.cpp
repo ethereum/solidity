@@ -77,6 +77,7 @@ void PostTypeChecker::endVisit(ErrorDefinition const& _error)
 
 bool PostTypeChecker::visit(EmitStatement const& _emit)
 {
+        
 	return callVisit(_emit);
 }
 
