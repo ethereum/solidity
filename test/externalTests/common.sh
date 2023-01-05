@@ -31,6 +31,7 @@ AVAILABLE_PRESETS=(
     ir-optimize-evm-only
     legacy-optimize-evm+yul
     ir-optimize-evm+yul
+    eof
 )
 
 function print_presets_or_exit
@@ -392,6 +393,7 @@ function settings_from_preset
         ir-optimize-evm-only)     echo "{${extra_settings}evmVersion: '${evm_version}', viaIR: true,  optimizer: {${extra_optimizer_settings}enabled: true, details: {yul: false}}}" ;;
         legacy-optimize-evm+yul)  echo "{${extra_settings}evmVersion: '${evm_version}', viaIR: false, optimizer: {${extra_optimizer_settings}enabled: true, details: {yul: true}}}" ;;
         ir-optimize-evm+yul)      echo "{${extra_settings}evmVersion: '${evm_version}', viaIR: true,  optimizer: {${extra_optimizer_settings}enabled: true, details: {yul: true}}}" ;;
+        eof)      echo "{${extra_settings}evmVersion: 'shanghai', eofVersion: 1, viaIR: true,  optimizer: {${extra_optimizer_settings}enabled: true, details: {yul: true}}}" ;;
         *)
             fail "Unknown settings preset: '${preset}'."
             ;;

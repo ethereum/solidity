@@ -42,7 +42,7 @@ function uniswap_test
     local config_file="hardhat.config.ts"
     local config_var=config
 
-    local compile_only_presets=()
+    local compile_only_presets=(eof)
     local settings_presets=(
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with: "YulException: Variable ret_0 is 1 slot(s) too deep inside the stack."
