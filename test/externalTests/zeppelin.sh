@@ -23,6 +23,8 @@
 # shellcheck disable=SC2016
 
 set -e
+# Temporary(?) fix to up the heap limit for node in order to prevent 'out of heap errors'
+export NODE_OPTIONS="--max-old-space-size=4096"
 
 source scripts/common.sh
 source test/externalTests/common.sh

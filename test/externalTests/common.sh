@@ -345,7 +345,7 @@ function truffle_verify_compiler_version
     local full_solc_version="$2"
 
     printLog "Verify that the correct version (${solc_version}/${full_solc_version}) of the compiler was used to compile the contracts..."
-    grep "$full_solc_version" --with-filename --recursive build/contracts || fail "Wrong compiler version detected."
+    grep "$full_solc_version" --recursive --quiet build/contracts || fail "Wrong compiler version detected."
 }
 
 function hardhat_verify_compiler_version
@@ -357,8 +357,8 @@ function hardhat_verify_compiler_version
     local build_info_files
     build_info_files=$(find . -path '*artifacts/build-info/*.json')
     for build_info_file in $build_info_files; do
-        grep '"solcVersion":[[:blank:]]*"'"${solc_version}"'"' --with-filename "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
-        grep '"solcLongVersion":[[:blank:]]*"'"${full_solc_version}"'"' --with-filename "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
+        grep '"solcVersion":[[:blank:]]*"'"${solc_version}"'"' --quiet "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
+        grep '"solcLongVersion":[[:blank:]]*"'"${full_solc_version}"'"' --quiet "$build_info_file" || fail "Wrong compiler version detected in ${build_info_file}."
     done
 }
 
