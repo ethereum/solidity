@@ -69,15 +69,13 @@ function pool_together_test
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     yarn install
 
-    # TODO: Remove this when https://github.com/pooltogether/v4-core/issues/287 gets fixed.
-    npm install @pooltogether/pooltogether-rng-contracts@1.4.0
-
     # These come with already compiled artifacts. We want them recompiled with latest compiler.
     rm -r node_modules/@pooltogether/yield-source-interface/artifacts/
     rm -r node_modules/@pooltogether/uniform-random-number/artifacts/
     rm -r node_modules/@pooltogether/owner-manager-contracts/artifacts/
 
     replace_version_pragmas
+    neutralize_packaged_contracts
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
