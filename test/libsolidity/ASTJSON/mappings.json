@@ -79,6 +79,7 @@
           "typeName":
           {
             "id": 8,
+            "keyName": "",
             "keyType":
             {
               "id": 6,
@@ -110,6 +111,7 @@
               "typeIdentifier": "t_mapping$_t_contract$_C_$19_$_t_bool_$",
               "typeString": "mapping(contract C => bool)"
             },
+            "valueName": "",
             "valueType":
             {
               "id": 7,
@@ -144,6 +146,7 @@
           "typeName":
           {
             "id": 12,
+            "keyName": "",
             "keyType":
             {
               "id": 10,
@@ -163,6 +166,7 @@
               "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
               "typeString": "mapping(address => bool)"
             },
+            "valueName": "",
             "valueType":
             {
               "id": 11,
@@ -197,6 +201,7 @@
           "typeName":
           {
             "id": 17,
+            "keyName": "",
             "keyType":
             {
               "id": 15,
@@ -228,6 +233,7 @@
               "typeIdentifier": "t_mapping$_t_enum$_E_$4_$_t_bool_$",
               "typeString": "mapping(enum C.E => bool)"
             },
+            "valueName": "",
             "valueType":
             {
               "id": 16,

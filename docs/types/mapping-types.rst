@@ -4,12 +4,13 @@
 Mapping Types
 =============
 
-Mapping types use the syntax ``mapping(KeyType => ValueType)`` and variables
-of mapping type are declared using the syntax ``mapping(KeyType => ValueType) VariableName``.
-The ``KeyType`` can be any
-built-in value type, ``bytes``, ``string``, or any contract or enum type. Other user-defined
-or complex types, such as mappings, structs or array types are not allowed.
-``ValueType`` can be any type, including mappings, arrays and structs.
+Mapping types use the syntax ``mapping(KeyType KeyName? => ValueType ValueName?)`` and variables of
+mapping type are declared using the syntax ``mapping(KeyType KeyName? => ValueType ValueName?)
+VariableName``. The ``KeyType`` can be any built-in value type, ``bytes``, ``string``, or any
+contract or enum type. Other user-defined or complex types, such as mappings, structs or array types
+are not allowed. ``ValueType`` can be any type, including mappings, arrays and structs. ``KeyName``
+and ``ValueName`` are optional (so ``mapping(KeyType => ValueType)`` works as well) and can be any
+valid identifier that is not a type.
 
 You can think of mappings as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_, which are virtually initialised
 such that every possible key exists and is mapped to a value whose
@@ -29,8 +30,10 @@ of contract functions that are publicly visible.
 These restrictions are also true for arrays and structs that contain mappings.
 
 You can mark state variables of mapping type as ``public`` and Solidity creates a
-:ref:`getter <visibility-and-getters>` for you. The ``KeyType`` becomes a parameter for the getter.
-If ``ValueType`` is a value type or a struct, the getter returns ``ValueType``.
+:ref:`getter <visibility-and-getters>` for you. The ``KeyType`` becomes a parameter
+with name ``KeyName`` (if specified) for the getter.
+If ``ValueType`` is a value type or a struct, the getter returns ``ValueType`` with
+name ``ValueName`` (if specified).
 If ``ValueType`` is an array or a mapping, the getter has one parameter for
 each ``KeyType``, recursively.
 
@@ -64,6 +67,25 @@ contract that returns the value at the specified address.
 The example below is a simplified version of an
 `ERC20 token <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol>`_.
 ``_allowances`` is an example of a mapping type inside another mapping type.
+
+In the example below, the optional ``KeyName`` and ``ValueName`` are provided for the mapping.
+It does not affect any contract functionality or bytecode, it only sets the ``name`` field
+for the inputs and outputs in the ABI for the mapping's getter.
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.18;
+
+    contract MappingExampleWithNames {
+        mapping(address user => uint balance) public balances;
+
+        function update(uint newBalance) public {
+            balances[msg.sender] = newBalance;
+        }
+    }
+
+
 The example below uses ``_allowances`` to record the amount someone else is allowed to withdraw from your account.
 
 .. code-block:: solidity

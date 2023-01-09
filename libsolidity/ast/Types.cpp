@@ -2788,14 +2788,16 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	m_declaration(&_varDecl)
 {
 	auto returnType = _varDecl.annotation().type;
+	ASTString returnName;
 
 	while (true)
 	{
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType))
 		{
 			m_parameterTypes.push_back(mappingType->keyType());
-			m_parameterNames.emplace_back("");
+			m_parameterNames.push_back(mappingType->keyName());
 			returnType = mappingType->valueType();
+			returnName = mappingType->valueName();
 		}
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType))
 		{
@@ -2834,7 +2836,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 			DataLocation::Memory,
 			returnType
 		));
-		m_returnParameterNames.emplace_back("");
+		m_returnParameterNames.emplace_back(returnName);
 	}
 
 	solAssert(
