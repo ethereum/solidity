@@ -96,7 +96,7 @@ public:
 	/// Resolves a path starting from the "current" scope, but also searches parent scopes.
 	/// Should only be called during the initial resolving phase.
 	/// @note Returns an empty vector if any component in the path was non-unique or not found. Otherwise, all declarations along the path are returned.
-	std::vector<Declaration const*> pathFromCurrentScopeWithAllDeclarations(std::vector<ASTString> const& _path) const;
+	std::vector<Declaration const*> pathFromCurrentScopeWithAllDeclarations(std::vector<ASTString> const& _path, bool _includeInvisibles = false) const;
 
 	/// Generate and store warnings about declarations with the same name.
 	void warnHomonymDeclarations() const;

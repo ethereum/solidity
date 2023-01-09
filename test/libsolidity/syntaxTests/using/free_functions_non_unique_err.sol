@@ -9,4 +9,4 @@ contract C {
     using {id} for uint256;
 }
 // ----
-// DeclarationError 7920: (145-147): Identifier not found or not unique.
+// DeclarationError 9589: (145-147): Identifier is not a function name or not unique.
