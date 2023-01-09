@@ -919,8 +919,6 @@ jobs:
             scripts/regressions.py -o test_results
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
-      - gitter_notify_failure_unless_pr
-      - gitter_notify_success_unless_pr
 
   b_archlinux:
     <<: *base_archlinux_large

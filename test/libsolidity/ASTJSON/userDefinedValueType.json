@@ -287,6 +287,7 @@
           "typeName":
           {
             "id": 25,
+            "keyName": "",
             "keyType":
             {
               "id": 22,
@@ -318,6 +319,7 @@
               "typeIdentifier": "t_mapping$_t_userDefinedValueType$_MyAddress_$18_$_t_userDefinedValueType$_MyUInt_$20_$",
               "typeString": "mapping(C.MyAddress => C.MyUInt)"
             },
+            "valueName": "",
             "valueType":
             {
               "id": 24,

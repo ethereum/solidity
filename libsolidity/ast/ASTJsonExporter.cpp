@@ -598,7 +598,9 @@ bool ASTJsonExporter::visit(Mapping const& _node)
 {
 	setJsonNode(_node, "Mapping", {
 		make_pair("keyType", toJson(_node.keyType())),
+		make_pair("keyName", _node.keyName()),
 		make_pair("valueType", toJson(_node.valueType())),
+		make_pair("valueName", _node.valueName()),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
 	});
 	return false;

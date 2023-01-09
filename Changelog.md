@@ -1,6 +1,7 @@
 ### 0.8.18 (unreleased)
 
 Language Features:
+* Allow named parameters in mapping types.
 
 
 Compiler Features:

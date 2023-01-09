@@ -17,7 +17,8 @@ contract SendCoin {
 }
 
 // ----
-// ParserError 6635: (212-220): Expected ')' but got identifier
-// ParserError 6635: (220-221): Expected ';' but got ')'
-// ParserError 9182: (220-221): Function, variable, struct or modifier declaration expected.
-// Warning 3796: (235-236): Recovered in ContractDefinition at '}'.
+// ParserError 6635: (235-236): Expected identifier but got '}'
+// ParserError 6635: (276-284): Expected ';' but got 'contract'
+// ParserError 9182: (276-284): Function, variable, struct or modifier declaration expected.
+// Warning 3796: (572-573): Recovered in ContractDefinition at '}'.
+// ParserError 7858: (574-575): Expected pragma, import directive or contract/interface/library/struct/enum/constant/function/error definition.

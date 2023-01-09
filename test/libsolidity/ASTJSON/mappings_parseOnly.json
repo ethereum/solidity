@@ -60,6 +60,7 @@
           "typeName":
           {
             "id": 8,
+            "keyName": "",
             "keyType":
             {
               "id": 6,
@@ -81,6 +82,7 @@
             "nodeType": "Mapping",
             "src": "40:18:1",
             "typeDescriptions": {},
+            "valueName": "",
             "valueType":
             {
               "id": 7,
@@ -106,6 +108,7 @@
           "typeName":
           {
             "id": 12,
+            "keyName": "",
             "keyType":
             {
               "id": 10,
@@ -117,6 +120,7 @@
             "nodeType": "Mapping",
             "src": "66:24:1",
             "typeDescriptions": {},
+            "valueName": "",
             "valueType":
             {
               "id": 11,
@@ -142,6 +146,7 @@
           "typeName":
           {
             "id": 17,
+            "keyName": "",
             "keyType":
             {
               "id": 15,
@@ -163,6 +168,7 @@
             "nodeType": "Mapping",
             "src": "98:18:1",
             "typeDescriptions": {},
+            "valueName": "",
             "valueType":
             {
               "id": 16,
