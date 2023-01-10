@@ -3809,12 +3809,37 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			m_errorReporter.fatalTypeError(
 				4731_error,
 				path->location(),
+				SecondarySourceLocation().append(
+						"Function defined here:",
+						functionDefinition.location()
+				),
 				fmt::format(
 					"The function \"{}\" does not have any parameters, and therefore cannot be attached to the type \"{}\".",
 					joinHumanReadable(path->path(), "."),
 					normalizedType ? normalizedType->toString(true /* withoutDataLocation */) : "*"
 				)
 			);
+
+		if (
+			functionDefinition.visibility() == Visibility::Private &&
+			functionDefinition.scope() != m_currentContract
+		)
+		{
+			solAssert(functionDefinition.libraryFunction());
+			m_errorReporter.typeError(
+				6772_error,
+				path->location(),
+				SecondarySourceLocation().append(
+						"Function defined here:",
+						functionDefinition.location()
+				),
+				fmt::format(
+					"Function \"{}\" is private and therefore cannot be attached"
+					" to a type outside of the library where it is defined.",
+					joinHumanReadable(path->path(), ".")
+				)
+			);
+		}
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const&>(*functionDefinition.type()).withBoundFirstArgument();
 		solAssert(functionType && functionType->selfType(), "");
