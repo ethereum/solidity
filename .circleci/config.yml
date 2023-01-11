@@ -1558,7 +1558,8 @@ workflows:
 
       # build-only
       - b_docs: *workflow_trigger_on_tags
-      - b_ubu_cxx20: *workflow_trigger_on_tags
+      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *workflow_trigger_on_tags
+      # Issue: https://github.com/ethereum/solidity/issues/13868
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
 
       # OS/X build and tests
