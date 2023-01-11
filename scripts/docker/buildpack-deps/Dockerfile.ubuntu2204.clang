@@ -39,7 +39,7 @@ RUN set -ex; \
 		libboost-program-options-dev \
 		clang \
 		libz3-static-dev z3-static jq \
-		; \
+		libcln-dev; \
 	rm -rf /var/lib/apt/lists/*
 
 FROM base AS libraries
