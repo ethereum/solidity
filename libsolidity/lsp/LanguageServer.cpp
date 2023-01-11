@@ -221,7 +221,7 @@ vector<boost::filesystem::path> LanguageServer::allSolidityFilesFromProject() co
 	// We explicitly decided against including all files from include paths but leave the possibility
 	// open for a future PR to enable such a feature to be optionally enabled (default disabled).
 
-	auto directoryIterator = fs::recursive_directory_iterator(m_fileRepository.basePath(), fs::symlink_option::recurse);
+	auto directoryIterator = fs::recursive_directory_iterator(m_fileRepository.basePath(), fs::directory_options::follow_directory_symlink);
 	for (fs::directory_entry const& dirEntry: directoryIterator)
 		if (
 			dirEntry.path().extension() == ".sol" &&
