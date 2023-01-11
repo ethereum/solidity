@@ -7,18 +7,18 @@
 #     - ems: Emscripten
 version: 2.1
 parameters:
-  ubuntu-2004-docker-image:
+  ubuntu-2204-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-16
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:ee1def5806f40c35d583234e172ec5769bb9a08b6f5bbc713c1a2658846dbced"
-  ubuntu-2004-clang-docker-image:
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-1
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:07419ed58537cbca9d4c30701fb84f6bb517ce2fce7f3b5dccb3db8bf1c30183"
+  ubuntu-2204-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-16
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:8f635529a10e0ddf955d6d72360261966e5fee0b5c5211070370ca2fc4e0ab7c"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-1
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:e515710752bfb38ee0e9b2f92ca71612c03ed85290c36c3b3c0a3d9f90187aef"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-21
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:ae6b695fb8a0806702bb6a1a9616fbb33ac3288f25990fa799aab2c045c80ea1"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-22
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:baf46ad78b131eb6b0bf98d50e9330437a338c6893b53af3853b36f6f4ab18ae"
   emscripten-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:emscripten-14
@@ -301,17 +301,17 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_ubuntu2004_clang: &base_ubuntu2004_clang
+  - base_ubuntu2204_clang: &base_ubuntu2204_clang
       docker:
-        - image: << pipeline.parameters.ubuntu-2004-clang-docker-image >>
+        - image: << pipeline.parameters.ubuntu-2204-clang-docker-image >>
       environment:
         TERM: xterm
         CC: clang
         CXX: clang++
         MAKEFLAGS: -j 3
 
-  - base_ubuntu2004_clang_large: &base_ubuntu2004_clang_large
-      <<: *base_ubuntu2004_clang
+  - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
+      <<: *base_ubuntu2204_clang
       resource_class: large
       environment:
         TERM: xterm
@@ -319,29 +319,29 @@ defaults:
         CXX: clang++
         MAKEFLAGS: -j 5
 
-  - base_ubuntu2004: &base_ubuntu2004
+  - base_ubuntu2204: &base_ubuntu2204
       docker:
-        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+        - image: << pipeline.parameters.ubuntu-2204-docker-image >>
       environment:
         TERM: xterm
         MAKEFLAGS: -j 3
 
-  - base_ubuntu2004_small: &base_ubuntu2004_small
-      <<: *base_ubuntu2004
+  - base_ubuntu2204_small: &base_ubuntu2204_small
+      <<: *base_ubuntu2204
       resource_class: small
       environment:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_ubuntu2004_large: &base_ubuntu2004_large
-      <<: *base_ubuntu2004
+  - base_ubuntu2204_large: &base_ubuntu2204_large
+      <<: *base_ubuntu2204
       resource_class: large
       environment:
         TERM: xterm
         MAKEFLAGS: -j 5
 
-  - base_ubuntu2004_xlarge: &base_ubuntu2004_xlarge
-      <<: *base_ubuntu2004
+  - base_ubuntu2204_xlarge: &base_ubuntu2204_xlarge
+      <<: *base_ubuntu2204
       resource_class: xlarge
       environment:
         TERM: xterm
@@ -440,7 +440,7 @@ defaults:
         branches:
           ignore: /.*/
 
-  - workflow_ubuntu2004: &workflow_ubuntu2004
+  - workflow_ubuntu2204: &workflow_ubuntu2204
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu
@@ -450,17 +450,17 @@ defaults:
       requires:
         - b_ubu_ossfuzz
 
-  - workflow_ubuntu2004_clang: &workflow_ubuntu2004_clang
+  - workflow_ubuntu2204_clang: &workflow_ubuntu2204_clang
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_clang
 
-  - workflow_ubuntu2004_force_release: &workflow_ubuntu2004_force_release
+  - workflow_ubuntu2204_force_release: &workflow_ubuntu2204_force_release
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_force_release
 
-  - workflow_ubuntu2004_static: &workflow_ubuntu2004_static
+  - workflow_ubuntu2204_static: &workflow_ubuntu2204_static
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_static
@@ -470,7 +470,7 @@ defaults:
       requires:
         - b_archlinux
 
-  - workflow_ubuntu2004_codecov: &workflow_ubuntu2004_codecov
+  - workflow_ubuntu2204_codecov: &workflow_ubuntu2204_codecov
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_codecov
@@ -480,17 +480,17 @@ defaults:
       requires:
         - b_osx
 
-  - workflow_ubuntu2004_asan: &workflow_ubuntu2004_asan
+  - workflow_ubuntu2204_asan: &workflow_ubuntu2204_asan
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_asan
 
-  - workflow_ubuntu2004_asan_clang: &workflow_ubuntu2004_asan_clang
+  - workflow_ubuntu2204_asan_clang: &workflow_ubuntu2204_asan_clang
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_asan_clang
 
-  - workflow_ubuntu2004_ubsan_clang: &workflow_ubuntu2004_ubsan_clang
+  - workflow_ubuntu2204_ubsan_clang: &workflow_ubuntu2204_ubsan_clang
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_ubsan_clang
@@ -524,91 +524,91 @@ defaults:
       python2: true
 
   - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_gnosis
       project: gnosis
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_zeppelin
       project: zeppelin
       binary_type: native
       resource_class: large
   - job_native_test_ext_ens: &job_native_test_ext_ens
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_ens
       project: ens
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_trident: &job_native_test_ext_trident
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_trident
       project: trident
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_euler: &job_native_test_ext_euler
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_euler
       project: euler
       binary_type: native
       resource_class: medium
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_yield_liquidator
       project: yield-liquidator
       binary_type: native
   - job_native_test_ext_bleeps: &job_native_test_ext_bleeps
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_bleeps
       project: bleeps
       binary_type: native
       resource_class: medium
   - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_pool_together
       project: pool-together
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_perpetual_pools
       project: perpetual-pools
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_uniswap: &job_native_test_ext_uniswap
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_uniswap
       project: uniswap
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_prb_math: &job_native_test_ext_prb_math
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_elementfi
       project: elementfi
       binary_type: native
       resource_class: medium
   - job_native_test_ext_brink: &job_native_test_ext_brink
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_brink
       project: brink
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_chainlink: &job_native_test_ext_chainlink
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_chainlink
       project: chainlink
       binary_type: native
       nodejs_version: '16.18'
       resource_class: large # Tests run out of memory on a smaller machine
   - job_native_test_ext_gp2: &job_native_test_ext_gp2
-      <<: *workflow_ubuntu2004_static
+      <<: *workflow_ubuntu2204_static
       name: t_native_test_ext_gp2
       project: gp2
       binary_type: native
@@ -761,14 +761,14 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   chk_docs_pragma_min_version:
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     steps:
       - checkout
       - run: *run_docs_pragma_min_version
       - gitter_notify_failure_unless_pr
 
   t_ubu_pyscripts:
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     steps:
       - checkout
       - run:
@@ -789,13 +789,13 @@ jobs:
   b_ubu: &b_ubu
     # this runs 2x faster on xlarge but takes 4x more resources (compared to medium).
     # Enough other jobs depend on it that it's worth it though.
-    <<: *base_ubuntu2004_xlarge
+    <<: *base_ubuntu2204_xlarge
     <<: *steps_build
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
     # Runs slightly faster on large and xlarge but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2204
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
       MAKEFLAGS: -j 3
@@ -803,7 +803,7 @@ jobs:
     <<: *steps_build
 
   b_ubu_clang: &b_ubu_clang
-    <<: *base_ubuntu2004_clang_large
+    <<: *base_ubuntu2204_clang_large
     environment:
       TERM: xterm
       CC: clang
@@ -816,7 +816,7 @@ jobs:
     parameters:
       cmake_options:
         type: string
-    <<: *base_ubuntu2004_clang
+    <<: *base_ubuntu2204_clang
     environment:
       TERM: xterm
       CC: clang
@@ -833,7 +833,7 @@ jobs:
 
   b_ubu_static:
     # On large runs 2x faster than on medium. 3x on xlarge.
-    <<: *base_ubuntu2004_xlarge
+    <<: *base_ubuntu2204_xlarge
     environment:
       TERM: xterm
       MAKEFLAGS: -j 10
@@ -850,7 +850,7 @@ jobs:
 
   b_ubu_codecov:
     # Runs ~30% faster on large but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2204
     environment:
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
@@ -862,7 +862,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   t_ubu_codecov:
-    <<: *base_ubuntu2004_large
+    <<: *base_ubuntu2204_large
     environment:
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
@@ -886,7 +886,7 @@ jobs:
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
   b_ubu_cxx20:
-    <<: *base_ubuntu2004_large
+    <<: *base_ubuntu2204_large
     environment:
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
@@ -1018,7 +1018,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   b_docs:
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -1031,12 +1031,12 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   t_ubu_soltest_all: &t_ubu_soltest_all
-    <<: *base_ubuntu2004_large
+    <<: *base_ubuntu2204_large
     parallelism: 50
     <<: *steps_soltest_all
 
   t_ubu_lsp: &t_ubu_lsp
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     <<: *steps_test_lsp
 
   t_archlinux_soltest: &t_archlinux_soltest
@@ -1059,7 +1059,7 @@ jobs:
           <<: *steps_soltest
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
-    <<: *base_ubuntu2004_clang
+    <<: *base_ubuntu2204_clang
     parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -1075,14 +1075,14 @@ jobs:
     <<: *t_ubu_soltest_all
 
   t_ubu_cli: &t_ubu_cli
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     <<: *steps_cmdline_tests
 
   t_ubu_force_release_cli: &t_ubu_force_release_cli
     <<: *t_ubu_cli
 
   t_ubu_locale:
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     steps:
       - checkout
       - attach_workspace:
@@ -1097,14 +1097,14 @@ jobs:
 
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2204
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
     <<: *steps_cmdline_tests
 
   t_ubu_asan_soltest:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2204
     parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -1114,7 +1114,7 @@ jobs:
     <<: *steps_soltest
 
   t_ubu_asan_clang_soltest:
-    <<: *base_ubuntu2004_clang
+    <<: *base_ubuntu2204_clang
     parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -1124,7 +1124,7 @@ jobs:
     <<: *steps_soltest
 
   t_ubu_ubsan_clang_soltest:
-    <<: *base_ubuntu2004_clang
+    <<: *base_ubuntu2204_clang
     parallelism: 20
     environment:
       EVM: << pipeline.parameters.evm-version >>
@@ -1132,12 +1132,12 @@ jobs:
     <<: *steps_soltest
 
   t_ubu_ubsan_clang_cli:
-    <<: *base_ubuntu2004_clang
+    <<: *base_ubuntu2204_clang
     <<: *steps_cmdline_tests
 
   t_ems_solcjs:
     # Unlike other t_ems jobs this one actually runs 2x faster on medium (compared to small).
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2204
     steps:
       - checkout
       - attach_workspace:
@@ -1391,7 +1391,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   b_bytecode_ubu:
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     environment:
       TERM: xterm
       MAKEFLAGS: -j 2
@@ -1461,7 +1461,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   t_bytecode_compare:
-    <<: *base_ubuntu2004_small
+    <<: *base_ubuntu2204_small
     environment:
       REPORT_FILES: |
         bytecode-report-emscripten.txt
@@ -1498,7 +1498,7 @@ jobs:
       - gitter_notify_failure_unless_pr
 
   c_release_binaries:
-    <<: *base_ubuntu2004
+    <<: *base_ubuntu2204
     steps:
       - checkout
       - attach_workspace:
@@ -1575,17 +1575,17 @@ workflows:
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
-      - t_ubu_cli: *workflow_ubuntu2004
-      - t_ubu_locale: *workflow_ubuntu2004
-      - t_ubu_soltest_all: *workflow_ubuntu2004
+      - t_ubu_cli: *workflow_ubuntu2204
+      - t_ubu_locale: *workflow_ubuntu2204
+      - t_ubu_soltest_all: *workflow_ubuntu2204
       - b_ubu_clang: *workflow_trigger_on_tags
-      - t_ubu_clang_soltest: *workflow_ubuntu2004_clang
-      - t_ubu_lsp: *workflow_ubuntu2004
+      - t_ubu_clang_soltest: *workflow_ubuntu2204_clang
+      - t_ubu_lsp: *workflow_ubuntu2204
 
       # Ubuntu fake release build and tests
       - b_ubu_force_release: *workflow_trigger_on_tags
-      - t_ubu_force_release_cli: *workflow_ubuntu2004_force_release
-      - t_ubu_force_release_soltest_all: *workflow_ubuntu2004_force_release
+      - t_ubu_force_release_cli: *workflow_ubuntu2204_force_release
+      - t_ubu_force_release_soltest_all: *workflow_ubuntu2204_force_release
 
       # Emscripten build and tests that take 15 minutes or less
       - b_ems: *workflow_trigger_on_tags
@@ -1685,19 +1685,19 @@ workflows:
 
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
-      - t_ubu_codecov: *workflow_ubuntu2004_codecov
+      - t_ubu_codecov: *workflow_ubuntu2204_codecov
 
       # ASan build and tests
       - b_ubu_asan: *workflow_trigger_on_tags
       - b_ubu_san_clang: *job_b_ubu_asan_clang
-      - t_ubu_asan_soltest: *workflow_ubuntu2004_asan
-      - t_ubu_asan_clang_soltest: *workflow_ubuntu2004_asan_clang
-      - t_ubu_asan_cli: *workflow_ubuntu2004_asan
+      - t_ubu_asan_soltest: *workflow_ubuntu2204_asan
+      - t_ubu_asan_clang_soltest: *workflow_ubuntu2204_asan_clang
+      - t_ubu_asan_cli: *workflow_ubuntu2204_asan
 
       # UBSan build and tests
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
-      - t_ubu_ubsan_clang_soltest: *workflow_ubuntu2004_ubsan_clang
-      - t_ubu_ubsan_clang_cli: *workflow_ubuntu2004_ubsan_clang
+      - t_ubu_ubsan_clang_soltest: *workflow_ubuntu2204_ubsan_clang
+      - t_ubu_ubsan_clang_cli: *workflow_ubuntu2204_ubsan_clang
 
       # Emscripten build and tests that take more than 15 minutes to execute
       - b_ems: *workflow_trigger_on_tags
