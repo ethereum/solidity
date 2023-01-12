@@ -139,11 +139,8 @@ do
                 fi
             fi
 
-            EWASM_ARGS=""
-            [ "${vm}" = "byzantium" ] && [ "${optimize}" = "" ] && EWASM_ARGS="--ewasm"
-
             set +e
-            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress "${log[@]}" -- ${EWASM_ARGS} --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" "${SMT_FLAGS[@]}" "${force_abiv1_flag[@]}"
+            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress "${log[@]}" -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" "${SMT_FLAGS[@]}" "${force_abiv1_flag[@]}"
 
             if test "0" -ne "$?"; then
                 exit 1
