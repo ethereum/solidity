@@ -81,11 +81,4 @@ then
   tar xzpf "$evmone_package" -C /usr/local
   rm "$evmone_package"
 
-  # hera
-  hera_version="0.6.0"
-  hera_package="hera-${hera_version}-darwin-x86_64.tar.gz"
-  wget "https://github.com/ewasm/hera/releases/download/v${hera_version}/${hera_package}"
-  validate_checksum "$hera_package" 82ee57404862705ab314f7a4d04bf2cf29d71e8d209850d66c125527cd287f37
-  tar xzpf "$hera_package" -C /usr/local
-  rm "$hera_package"
 fi
