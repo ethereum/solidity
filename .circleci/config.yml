@@ -691,7 +691,7 @@ defaults:
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
-      image: cimg/node:18.16
+      image: cimg/rust:1.70
 
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
       <<: *requires_b_ubu_static
@@ -1724,11 +1724,13 @@ workflows:
             - t_native_test_ext_yield_liquidator
             - t_native_test_ext_perpetual_pools
             - t_native_test_ext_uniswap
-            - t_native_test_ext_prb_math
             - t_native_test_ext_elementfi
             - t_native_test_ext_brink
             # NOTE: We are disabling gp2 tests due to constant failures.
             #- t_native_test_ext_gp2
+            # TODO: Dropping prb-math from the benchmarks since it is not implemented yet
+            # in the new Foundry external testing infrastructure.
+            # - t_native_test_ext_prb_math
             # NOTE: The external tests below were commented because they
             # depend on a specific version of hardhat which does not support shanghai EVM.
             #- t_native_test_ext_trident
