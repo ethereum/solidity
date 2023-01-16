@@ -25,9 +25,6 @@
 #include <libsolutil/CommonData.h>
 
 #include <boost/version.hpp>
-#if (BOOST_VERSION < 106500)
-#error "Unsupported Boost version. At least 1.65 required."
-#endif
 
 // TODO: do this only conditionally as soon as a boost version with gcc 12 support is released.
 #if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ >= 12)

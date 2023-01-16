@@ -34,10 +34,11 @@ set(BOOST_COMPONENTS "filesystem;unit_test_framework;program_options;system")
 if (WIN32)
 	# Boost 1.77 fixes a bug that causes crashes on Windows for some relative paths in --allow-paths.
 	# See https://github.com/boostorg/filesystem/issues/201
-	find_package(Boost 1.77.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+	# Boost 1.78 requires upgrading to MSVC2022, and causes issues with boost::filesystem calls.
+	find_package(Boost 1.77.0 EXACT QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 else()
-	# Boost 1.65 is the first to also provide boost::get for rvalue-references (#5787).
-	find_package(Boost 1.65.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+
+	find_package(Boost 1.74.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 endif()
 
 # If cmake is older than boost and boost is older than 1.70,
