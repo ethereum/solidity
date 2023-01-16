@@ -72,7 +72,7 @@ function gnosis_safe_test
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
     # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
-    sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/GnosisSafe.Setup.spec.ts
+    sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/Safe.Setup.spec.ts
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i 's|\(it\)\(("changes the expected storage slot without touching the most important ones"\)|\1.skip\2|g' test/libraries/SignMessageLib.spec.ts
     sed -i "s|\(it\)\(('can be used only via DELEGATECALL opcode'\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
