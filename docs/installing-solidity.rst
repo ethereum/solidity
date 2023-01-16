@@ -321,8 +321,8 @@ The following are dependencies for all builds of Solidity:
 +===================================+=======================================================+
 | `CMake`_ (version 3.13+)          | Cross-platform build file generator.                  |
 +-----------------------------------+-------------------------------------------------------+
-| `Boost`_ (version 1.77+ on        | C++ libraries.                                        |
-| Windows, 1.65+ otherwise)         |                                                       |
+| `Boost`_ (version 1.77 on         | C++ libraries.                                        |
+| Windows, 1.74+ otherwise)         |                                                       |
 +-----------------------------------+-------------------------------------------------------+
 | `Git`_                            | Command-line tool for retrieving source code.         |
 +-----------------------------------+-------------------------------------------------------+
@@ -336,13 +336,6 @@ The following are dependencies for all builds of Solidity:
 .. _Boost: https://www.boost.org
 .. _CMake: https://cmake.org/download/
 .. _z3: https://github.com/Z3Prover/z3
-
-.. note::
-    Solidity versions prior to 0.5.10 can fail to correctly link against Boost versions 1.70+.
-    A possible workaround is to temporarily rename ``<Boost install path>/lib/cmake/Boost-1.70.0``
-    prior to running the cmake command to configure solidity.
-
-    Starting from 0.5.10 linking against Boost 1.70+ should work without manual intervention.
 
 .. note::
     The default build configuration requires a specific Z3 version (the latest one at the time the
@@ -408,7 +401,7 @@ You need to install the following dependencies for Windows builds of Solidity:
 +-----------------------------------+-------------------------------------------------------+
 | `Visual Studio 2019`_  (Optional) | C++ compiler and dev environment.                     |
 +-----------------------------------+-------------------------------------------------------+
-| `Boost`_ (version 1.77+)          | C++ libraries.                                        |
+| `Boost`_ (version 1.77)           | C++ libraries.                                        |
 +-----------------------------------+-------------------------------------------------------+
 
 If you already have one IDE and only need the compiler and libraries,
