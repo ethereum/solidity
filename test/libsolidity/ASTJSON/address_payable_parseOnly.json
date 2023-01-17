@@ -30,6 +30,7 @@
           {
             "id": 3,
             "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 1,
@@ -42,6 +43,7 @@
             "src": "17:35:1",
             "typeDescriptions": {},
             "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 2,

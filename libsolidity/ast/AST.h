@@ -1428,28 +1428,36 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<TypeName> _keyType,
 		ASTPointer<ASTString> _keyName,
+		SourceLocation _keyNameLocation,
 		ASTPointer<TypeName> _valueType,
-		ASTPointer<ASTString> _valueName
+		ASTPointer<ASTString> _valueName,
+		SourceLocation _valueNameLocation
 	):
 		TypeName(_id, _location),
 		m_keyType(std::move(_keyType)),
 		m_keyName(std::move(_keyName)),
+		m_keyNameLocation(std::move(_keyNameLocation)),
 		m_valueType(std::move(_valueType)),
-		m_valueName(std::move(_valueName))
+		m_valueName(std::move(_valueName)),
+		m_valueNameLocation(std::move(_valueNameLocation))
 	{}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	TypeName const& keyType() const { return *m_keyType; }
 	ASTString keyName() const { return *m_keyName; }
+	SourceLocation keyNameLocation() const { return m_keyNameLocation; }
 	TypeName const& valueType() const { return *m_valueType; }
 	ASTString valueName() const { return *m_valueName; }
+	SourceLocation valueNameLocation() const { return m_valueNameLocation; }
 
 private:
 	ASTPointer<TypeName> m_keyType;
 	ASTPointer<ASTString> m_keyName;
+	SourceLocation m_keyNameLocation;
 	ASTPointer<TypeName> m_valueType;
 	ASTPointer<ASTString> m_valueName;
+	SourceLocation m_valueNameLocation;
 };
 
 /**

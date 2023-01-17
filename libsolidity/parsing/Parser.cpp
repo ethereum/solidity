@@ -1187,21 +1187,19 @@ ASTPointer<Mapping> Parser::parseMapping()
 	}
 	else
 		fatalParserError(1005_error, "Expected elementary type name or identifier for mapping key type");
-	ASTPointer<ASTString> keyName;
+	ASTPointer<ASTString> keyName = make_shared<ASTString>("");
+	SourceLocation keyNameLocation{};
 	if (m_scanner->currentToken() == Token::Identifier)
-		keyName = getLiteralAndAdvance();
-	else
-		keyName = make_shared<ASTString>("");
+		tie(keyName, keyNameLocation) = expectIdentifierWithLocation();
 	expectToken(Token::DoubleArrow);
 	ASTPointer<TypeName> valueType = parseTypeName();
-	ASTPointer<ASTString> valueName;
+	ASTPointer<ASTString> valueName = make_shared<ASTString>("");
+	SourceLocation valueNameLocation{};
 	if (m_scanner->currentToken() == Token::Identifier)
-		valueName = getLiteralAndAdvance();
-	else
-		valueName = make_shared<ASTString>("");
+		tie(valueName, valueNameLocation) = expectIdentifierWithLocation();
 	nodeFactory.markEndPosition();
 	expectToken(Token::RParen);
-	return nodeFactory.createNode<Mapping>(keyType, keyName, valueType, valueName);
+	return nodeFactory.createNode<Mapping>(keyType, keyName, keyNameLocation, valueType, valueName, valueNameLocation);
 }
 
 ASTPointer<ParameterList> Parser::parseParameterList(
