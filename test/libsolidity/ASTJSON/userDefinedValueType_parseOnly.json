@@ -213,6 +213,8 @@
           "typeName":
           {
             "id": 25,
+            "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 22,
@@ -234,6 +236,8 @@
             "nodeType": "Mapping",
             "src": "169:28:1",
             "typeDescriptions": {},
+            "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 24,

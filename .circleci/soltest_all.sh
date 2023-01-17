@@ -50,9 +50,6 @@ for OPTIMIZE in "${OPTIMIZE_VALUES[@]}"
 do
     for EVM in "${EVM_VALUES[@]}"
     do
-        # run tests against hera ewasm evmc vm, only if OPTIMIZE == 0 and evm version is byzantium
-        EWASM_ARGS=""
-        [ "${EVM}" = "byzantium" ] && [ "${OPTIMIZE}" = "0" ] && EWASM_ARGS="--ewasm"
         ENFORCE_GAS_ARGS=""
         [ "${EVM}" = "${DEFAULT_EVM}" ] && ENFORCE_GAS_ARGS="--enforce-gas-cost"
         # Run SMTChecker tests only when OPTIMIZE == 0
@@ -61,7 +58,7 @@ do
 
         EVM="$EVM" \
         OPTIMIZE="$OPTIMIZE" \
-        SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS $EWASM_ARGS" \
+        SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS" \
         BOOST_TEST_ARGS="-t !@nooptions $DISABLE_SMTCHECKER" \
         INDEX_SHIFT="$INDEX_SHIFT" \
         "${REPODIR}/.circleci/soltest.sh"

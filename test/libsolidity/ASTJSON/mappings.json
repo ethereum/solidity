@@ -4,10 +4,10 @@
   {
     "C":
     [
-      19
+      23
     ]
   },
-  "id": 20,
+  "id": 24,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -18,10 +18,10 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 19,
+      "id": 23,
       "linearizedBaseContracts":
       [
-        19
+        23
       ],
       "name": "C",
       "nameLocation": "9:1:1",
@@ -67,18 +67,20 @@
           "name": "a",
           "nameLocation": "59:1:1",
           "nodeType": "VariableDeclaration",
-          "scope": 19,
+          "scope": 23,
           "src": "40:20:1",
           "stateVariable": true,
           "storageLocation": "default",
           "typeDescriptions":
           {
-            "typeIdentifier": "t_mapping$_t_contract$_C_$19_$_t_bool_$",
+            "typeIdentifier": "t_mapping$_t_contract$_C_$23_$_t_bool_$",
             "typeString": "mapping(contract C => bool)"
           },
           "typeName":
           {
             "id": 8,
+            "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 6,
@@ -92,14 +94,14 @@
                   "48:1:1"
                 ],
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 19,
+                "referencedDeclaration": 23,
                 "src": "48:1:1"
               },
-              "referencedDeclaration": 19,
+              "referencedDeclaration": 23,
               "src": "48:1:1",
               "typeDescriptions":
               {
-                "typeIdentifier": "t_contract$_C_$19",
+                "typeIdentifier": "t_contract$_C_$23",
                 "typeString": "contract C"
               }
             },
@@ -107,9 +109,11 @@
             "src": "40:18:1",
             "typeDescriptions":
             {
-              "typeIdentifier": "t_mapping$_t_contract$_C_$19_$_t_bool_$",
+              "typeIdentifier": "t_mapping$_t_contract$_C_$23_$_t_bool_$",
               "typeString": "mapping(contract C => bool)"
             },
+            "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 7,
@@ -132,7 +136,7 @@
           "name": "b",
           "nameLocation": "91:1:1",
           "nodeType": "VariableDeclaration",
-          "scope": 19,
+          "scope": 23,
           "src": "66:26:1",
           "stateVariable": true,
           "storageLocation": "default",
@@ -144,6 +148,8 @@
           "typeName":
           {
             "id": 12,
+            "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 10,
@@ -163,6 +169,8 @@
               "typeIdentifier": "t_mapping$_t_address_$_t_bool_$",
               "typeString": "mapping(address => bool)"
             },
+            "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 11,
@@ -185,7 +193,7 @@
           "name": "c",
           "nameLocation": "117:1:1",
           "nodeType": "VariableDeclaration",
-          "scope": 19,
+          "scope": 23,
           "src": "98:20:1",
           "stateVariable": true,
           "storageLocation": "default",
@@ -197,6 +205,8 @@
           "typeName":
           {
             "id": 17,
+            "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 15,
@@ -228,6 +238,8 @@
               "typeIdentifier": "t_mapping$_t_enum$_E_$4_$_t_bool_$",
               "typeString": "mapping(enum C.E => bool)"
             },
+            "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 16,
@@ -242,12 +254,69 @@
             }
           },
           "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 22,
+          "mutability": "mutable",
+          "name": "d",
+          "nameLocation": "169:1:1",
+          "nodeType": "VariableDeclaration",
+          "scope": 23,
+          "src": "124:46:1",
+          "stateVariable": true,
+          "storageLocation": "default",
+          "typeDescriptions":
+          {
+            "typeIdentifier": "t_mapping$_t_address_$_t_uint256_$",
+            "typeString": "mapping(address => uint256)"
+          },
+          "typeName":
+          {
+            "id": 21,
+            "keyName": "keyAddress",
+            "keyNameLocation": "140:10:1",
+            "keyType":
+            {
+              "id": 19,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "132:7:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_address",
+                "typeString": "address"
+              }
+            },
+            "nodeType": "Mapping",
+            "src": "124:44:1",
+            "typeDescriptions":
+            {
+              "typeIdentifier": "t_mapping$_t_address_$_t_uint256_$",
+              "typeString": "mapping(address => uint256)"
+            },
+            "valueName": "value",
+            "valueNameLocation": "162:5:1",
+            "valueType":
+            {
+              "id": 20,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "154:7:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            }
+          },
+          "visibility": "internal"
         }
       ],
-      "scope": 20,
-      "src": "0:121:1",
+      "scope": 24,
+      "src": "0:173:1",
       "usedErrors": []
     }
   ],
-  "src": "0:122:1"
+  "src": "0:174:1"
 }

@@ -1,6 +1,6 @@
 {
   "absolutePath": "a",
-  "id": 20,
+  "id": 24,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -9,7 +9,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "id": 19,
+      "id": 23,
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
@@ -60,6 +60,8 @@
           "typeName":
           {
             "id": 8,
+            "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 6,
@@ -81,6 +83,8 @@
             "nodeType": "Mapping",
             "src": "40:18:1",
             "typeDescriptions": {},
+            "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 7,
@@ -106,6 +110,8 @@
           "typeName":
           {
             "id": 12,
+            "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 10,
@@ -117,6 +123,8 @@
             "nodeType": "Mapping",
             "src": "66:24:1",
             "typeDescriptions": {},
+            "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 11,
@@ -142,6 +150,8 @@
           "typeName":
           {
             "id": 17,
+            "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 15,
@@ -163,6 +173,8 @@
             "nodeType": "Mapping",
             "src": "98:18:1",
             "typeDescriptions": {},
+            "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 16,
@@ -173,11 +185,51 @@
             }
           },
           "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 22,
+          "mutability": "mutable",
+          "name": "d",
+          "nameLocation": "169:1:1",
+          "nodeType": "VariableDeclaration",
+          "src": "124:46:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 21,
+            "keyName": "keyAddress",
+            "keyNameLocation": "140:10:1",
+            "keyType":
+            {
+              "id": 19,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "132:7:1",
+              "typeDescriptions": {}
+            },
+            "nodeType": "Mapping",
+            "src": "124:44:1",
+            "typeDescriptions": {},
+            "valueName": "value",
+            "valueNameLocation": "162:5:1",
+            "valueType":
+            {
+              "id": 20,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "154:7:1",
+              "typeDescriptions": {}
+            }
+          },
+          "visibility": "internal"
         }
       ],
-      "src": "0:121:1",
+      "src": "0:173:1",
       "usedErrors": []
     }
   ],
-  "src": "0:122:1"
+  "src": "0:174:1"
 }

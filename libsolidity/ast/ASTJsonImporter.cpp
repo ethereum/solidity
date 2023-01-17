@@ -116,6 +116,20 @@ SourceLocation ASTJsonImporter::createNameSourceLocation(Json::Value const& _nod
 	return solidity::langutil::parseSourceLocation(_node["nameLocation"].asString(), m_sourceNames);
 }
 
+SourceLocation ASTJsonImporter::createKeyNameSourceLocation(Json::Value const& _node)
+{
+	astAssert(member(_node, "keyNameLocation").isString(), "'keyNameLocation' must be a string");
+
+	return solidity::langutil::parseSourceLocation(_node["keyNameLocation"].asString(), m_sourceNames);
+}
+
+SourceLocation ASTJsonImporter::createValueNameSourceLocation(Json::Value const& _node)
+{
+	astAssert(member(_node, "valueNameLocation").isString(), "'valueNameLocation' must be a string");
+
+	return solidity::langutil::parseSourceLocation(_node["valueNameLocation"].asString(), m_sourceNames);
+}
+
 template<class T>
 ASTPointer<T> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _node)
 {
@@ -648,7 +662,11 @@ ASTPointer<Mapping> ASTJsonImporter::createMapping(Json::Value const&  _node)
 	return createASTNode<Mapping>(
 		_node,
 		convertJsonToASTNode<TypeName>(member(_node, "keyType")),
-		convertJsonToASTNode<TypeName>(member(_node, "valueType"))
+		memberAsASTString(_node, "keyName"),
+		createKeyNameSourceLocation(_node),
+		convertJsonToASTNode<TypeName>(member(_node, "valueType")),
+		memberAsASTString(_node, "valueName"),
+		createValueNameSourceLocation(_node)
 	);
 }
 

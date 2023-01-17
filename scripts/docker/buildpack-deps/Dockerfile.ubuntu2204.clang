@@ -21,8 +21,8 @@
 #
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
-FROM buildpack-deps:focal AS base
-LABEL version="16"
+FROM buildpack-deps:jammy AS base
+LABEL version="1"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -39,7 +39,7 @@ RUN set -ex; \
 		libboost-program-options-dev \
 		clang \
 		libz3-static-dev z3-static jq \
-		; \
+		libcln-dev; \
 	rm -rf /var/lib/apt/lists/*
 
 FROM base AS libraries
@@ -58,18 +58,6 @@ RUN set -ex; \
 	ninja; \
 	ninja install/strip; \
 	rm -rf /usr/src/evmone
-
-# HERA
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.6.0" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
-	cd hera; \
-	mkdir build; \
-	cd build; \
-	cmake -G Ninja -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="/usr" ..; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/hera
 
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
