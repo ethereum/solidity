@@ -49,6 +49,7 @@
           {
             "id": 3,
             "keyName": "",
+            "keyNameLocation": "-1:-1:-1",
             "keyType":
             {
               "id": 1,
@@ -69,6 +70,7 @@
               "typeString": "mapping(address => address payable)"
             },
             "valueName": "",
+            "valueNameLocation": "-1:-1:-1",
             "valueType":
             {
               "id": 2,
