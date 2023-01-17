@@ -38,7 +38,7 @@ if (WIN32)
 	find_package(Boost 1.77.0 EXACT QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 else()
 
-	find_package(Boost 1.74.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+	find_package(Boost 1.71.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 endif()
 
 # If cmake is older than boost and boost is older than 1.70,
