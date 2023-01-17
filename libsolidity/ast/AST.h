@@ -653,7 +653,7 @@ private:
  * all functions, and this is checked at the point of the using statement. For versions 1 and
  * 2, this check is only done when a function is called.
  *
- * For version 4, T has to be user-defined value type.
+ * For version 4, T has to be user-defined value type and the function must be pure.
  * All parameters and return value of all the functions have to be of type T.
  * This version can be combined with version 3 - a single directive may attach functions to the
  * type and define operators on it at the same time.

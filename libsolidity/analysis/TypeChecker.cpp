@@ -4001,6 +4001,13 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			}
 			solAssert(usingForType->typeDefinition());
 
+			if (functionType->stateMutability() != StateMutability::Pure)
+				m_errorReporter.typeError(
+					7775_error,
+					path->location(),
+					"Only pure functions can be used to define operators."
+				);
+
 			bool identicalFirstTwoParameters = (parameterCount < 2 || *parameterTypes.at(0) == *parameterTypes.at(1));
 			bool isUnaryOnlyOperator = (!TokenTraits::isBinaryOp(*operator_) && TokenTraits::isUnaryOp(*operator_));
 			bool isBinaryOnlyOperator =

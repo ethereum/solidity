@@ -21,5 +21,4 @@ contract C {
     }
 }
 // ----
-// test() -> 3
-// gas legacy: 119695
+// TypeError 7775: (27-30): Only pure functions can be used to define operators.

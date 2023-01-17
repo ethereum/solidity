@@ -45,7 +45,7 @@ Note that private library functions can only be specified when ``using for`` is 
 
 If you define an operator (e.g. ``using {f as +} for T``), then the type (``T``) must be a
 :ref:`user-defined value type <user-defined-value-types>`.
-The definition of an operator must be a function with the types of all parameters and
+The definition of an operator must be a ``pure`` function with the types of all parameters and
 the return value matching ``T``, except for comparison operators, where the return value must
 be of type ``bool``.
 
