@@ -22,7 +22,7 @@ set -e
 
 # Requires $REPO_ROOT to be defined and "${REPO_ROOT}/scripts/common.sh" to be included before.
 
-CURRENT_EVM_VERSION=london
+CURRENT_EVM_VERSION=paris
 
 AVAILABLE_PRESETS=(
     legacy-no-optimize

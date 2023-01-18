@@ -170,10 +170,10 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
      compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
      the optimizer.
-- ``london`` (**default**)
+- ``london``
    - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
-- ``paris``
-   - No changes, however the semantics of the ``difficulty`` value have changed (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
+- ``paris`` (**default**)
+   - Introduces ``prevrandao()`` and ``block.prevrandao``, and changes the semantics of the ``block.difficulty``, disallowing ``difficulty()`` in inline assembly (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
