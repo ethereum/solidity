@@ -173,11 +173,6 @@ defaults:
   - artifact_solc_windows: &artifact_solc_windows
       path: upload/
 
-  # compiled tool executable target
-  - artifact_solidity_upgrade: &artifact_solidity_upgrade
-      path: build/tools/solidity-upgrade
-      destination: solidity-upgrade
-
   - artifact_yul_phaser: &artifact_yul_phaser
       path: build/tools/yul-phaser
       destination: yul-phaser
@@ -251,7 +246,6 @@ defaults:
         - checkout
         - run: *run_build
         - store_artifacts: *artifacts_solc
-        - store_artifacts: *artifact_solidity_upgrade
         - store_artifacts: *artifact_yul_phaser
         - persist_to_workspace: *artifacts_executables
         - gitter_notify_failure_unless_pr
@@ -952,7 +946,6 @@ jobs:
           <<: *steps_install_dependencies_osx
       - run: *run_build
       - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifact_solidity_upgrade
       - store_artifacts: *artifact_yul_phaser
       - persist_to_workspace:
           root: .
