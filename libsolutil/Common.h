@@ -41,9 +41,6 @@
 #include <libsolutil/vector_ref.h>
 
 #include <boost/version.hpp>
-#if (BOOST_VERSION < 106500)
-#error "Unsupported Boost version. At least 1.65 required."
-#endif
 
 #include <map>
 #include <utility>
