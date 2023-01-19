@@ -144,6 +144,7 @@ The full contract
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
+    // This will report a warning due to deprecated selfdestruct
     contract ReceiverPays {
         address owner = msg.sender;
 
@@ -341,6 +342,7 @@ The full contract
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
+    // This will report a warning due to deprecated selfdestruct
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.
         address payable public recipient;   // The account receiving the payments.
