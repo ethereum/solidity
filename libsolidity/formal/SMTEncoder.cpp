@@ -1337,7 +1337,13 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		{
 			auto const& name = identifier->name();
 			solAssert(name == "block" || name == "msg" || name == "tx", "");
-			defineExpr(_memberAccess, state().txMember(name + "." + _memberAccess.memberName()));
+			auto memberName = _memberAccess.memberName();
+
+			// TODO remove this for 0.9.0
+			if (name == "block" && memberName == "difficulty")
+				memberName = "prevrandao";
+
+			defineExpr(_memberAccess, state().txMember(name + "." + memberName));
 		}
 		else if (auto magicType = dynamic_cast<MagicType const*>(exprType))
 		{

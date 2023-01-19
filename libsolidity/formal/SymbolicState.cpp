@@ -142,13 +142,20 @@ smtutil::Expression SymbolicState::txMember(string const& _member) const
 	return m_tx.member(_member);
 }
 
+smtutil::Expression SymbolicState::evmParisConstraints() const
+{
+	// Ensure prevrandao range as defined by EIP-4399.
+	return txMember("block.prevrandao") > (u256(1) << 64);
+}
+
 smtutil::Expression SymbolicState::txTypeConstraints() const
 {
 	return
+		evmParisConstraints() &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.basefee"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.chainid"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.coinbase"), TypeProvider::address()) &&
-		smt::symbolicUnknownConstraints(m_tx.member("block.difficulty"), TypeProvider::uint256()) &&
+		smt::symbolicUnknownConstraints(m_tx.member("block.prevrandao"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.gaslimit"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.number"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.timestamp"), TypeProvider::uint256()) &&

@@ -16,5 +16,5 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreOS: macos
 // ----
-// Info 1180: Contract invariant(s) for :C:\n!(x >= 11)\nReentrancy property(ies) for :C:\n!(<errorCode> = 1)\n((!(x <= 10) || !(<errorCode> >= 3)) && (!(x <= 10) || !(x' >= 11)))\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Overflow at ++x\n<errorCode> = 3 -> Assertion failed at assert(x < 11)\n

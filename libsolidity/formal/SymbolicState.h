@@ -68,9 +68,9 @@ private:
  *   - block basefee
  *   - block chainid
  *   - block coinbase
- *   - block difficulty
  *   - block gaslimit
  *   - block number
+ *   - block prevrandao
  *   - block timestamp
  *   - TODO gasleft
  *   - msg data
@@ -136,6 +136,7 @@ public:
 	smtutil::Expression txTypeConstraints() const;
 	smtutil::Expression txNonPayableConstraint() const;
 	smtutil::Expression blockhash(smtutil::Expression _blockNumber) const;
+	smtutil::Expression evmParisConstraints() const;
 	//@}
 
 	/// Crypto functions.
@@ -197,7 +198,7 @@ private:
 			{"block.basefee", smtutil::SortProvider::uintSort},
 			{"block.chainid", smtutil::SortProvider::uintSort},
 			{"block.coinbase", smt::smtSort(*TypeProvider::address())},
-			{"block.difficulty", smtutil::SortProvider::uintSort},
+			{"block.prevrandao", smtutil::SortProvider::uintSort},
 			{"block.gaslimit", smtutil::SortProvider::uintSort},
 			{"block.number", smtutil::SortProvider::uintSort},
 			{"block.timestamp", smtutil::SortProvider::uintSort},

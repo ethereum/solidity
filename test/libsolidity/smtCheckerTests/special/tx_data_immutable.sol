@@ -2,6 +2,7 @@ contract C {
 	bytes32 bhash;
 	address coin;
 	uint dif;
+	uint prevrandao;
 	uint glimit;
 	uint number;
 	uint tstamp;
@@ -16,6 +17,7 @@ contract C {
 		bhash = blockhash(12);
 		coin = block.coinbase;
 		dif = block.difficulty;
+		prevrandao = block.prevrandao;
 		glimit = block.gaslimit;
 		number = block.number;
 		tstamp = block.timestamp;
@@ -31,6 +33,7 @@ contract C {
 		assert(bhash == blockhash(12));
 		assert(coin == block.coinbase);
 		assert(dif == block.difficulty);
+		assert(prevrandao == block.prevrandao);
 		assert(glimit == block.gaslimit);
 		assert(number == block.number);
 		assert(tstamp == block.timestamp);
@@ -46,6 +49,7 @@ contract C {
 		assert(bhash == blockhash(12));
 		assert(coin == block.coinbase);
 		assert(dif == block.difficulty);
+		assert(prevrandao == block.prevrandao);
 		assert(glimit == block.gaslimit);
 		assert(number == block.number);
 		assert(tstamp == block.timestamp);
@@ -60,3 +64,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 8417: (293-309): Since the VM version paris, "difficulty" was replaced by "prevrandao", which now returns a random number based on the beacon chain.
+// Warning 8417: (645-661): Since the VM version paris, "difficulty" was replaced by "prevrandao", which now returns a random number based on the beacon chain.
+// Warning 8417: (1127-1143): Since the VM version paris, "difficulty" was replaced by "prevrandao", which now returns a random number based on the beacon chain.
