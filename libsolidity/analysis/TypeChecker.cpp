@@ -1735,7 +1735,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	// Check if the operator is built-in or user-defined.
 	TypeResult builtinResult = operandType->unaryOperatorResult(op);
 	set<FunctionDefinition const*> matchingDefinitions = operandType->operatorDefinitions(
-		_operation.getOperator(),
+		op,
 		*currentDefinitionScope(),
 		true // _unary
 	);
@@ -1831,11 +1831,12 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		commonType = builtinResult.get();
 	else if (!matchingDefinitions.empty())
 	{
-		SecondarySourceLocation secondaryLocation;
-		for (FunctionDefinition const* definition: matchingDefinitions)
-			secondaryLocation.append("Candidate definition:", definition->location());
-
 		if (matchingDefinitions.size() >= 2)
+		{
+			SecondarySourceLocation secondaryLocation;
+			for (FunctionDefinition const* definition: matchingDefinitions)
+				secondaryLocation.append("Candidate definition:", definition->location());
+
 			m_errorReporter.typeError(
 				5583_error,
 				_operation.location(),
@@ -1845,6 +1846,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 					TokenTraits::toString(_operation.getOperator())
 				)
 			);
+		}
 		else
 			operatorDefinition = *matchingDefinitions.begin();
 
