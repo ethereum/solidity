@@ -522,13 +522,6 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 			break;
 		case Token::Number:
 			currLiteral.erase(std::remove(currLiteral.begin(), currLiteral.end(), '_'), currLiteral.end());
-			if (currLiteral.find("e") != string::npos && !(boost::starts_with(currLiteral, "0x") || boost::starts_with(currLiteral, "0X")))
-			{
-				istringstream os(currLiteral);
-				double d;
-				os >> d;
-				currLiteral = to_string(d).substr(0, to_string(d).find('.'));
-			}
 			if (!isValidNumberLiteral(currLiteral))
 				fatalParserError(4828_error, "Invalid number literal.");
 			kind = LiteralKind::Number;
