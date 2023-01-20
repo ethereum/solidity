@@ -3,7 +3,7 @@ type Int is int;
 using {C.add as +} for Int;
 
 contract C {
-    function add(Int, Int) public returns (Int) {
+    function add(Int, Int) public pure returns (Int) {
         return 0;
     }
 }

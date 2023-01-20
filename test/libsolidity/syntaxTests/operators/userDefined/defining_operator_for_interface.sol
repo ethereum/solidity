@@ -1,6 +1,6 @@
 using {f as +} for I;
 
-function f(I, I) returns (I) {}
+function f(I, I) pure returns (I) {}
 
 interface I {}
 // ----

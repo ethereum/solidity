@@ -1,8 +1,8 @@
 using {fc as +} for C;
 using {fa as +} for A;
 
-function fc(C, C) returns (C) {}
-function fa(A, A) returns (A) {}
+function fc(C, C) pure returns (C) {}
+function fa(A, A) pure returns (A) {}
 
 contract C {}
 abstract contract A {}

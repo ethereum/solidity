@@ -2,17 +2,12 @@ type Int is int16;
 
 using {add as +} for Int;
 
-function add(Int, Int) returns (Int) {
-    B b = new B();
+function add(Int, Int) pure returns (Int) {
     return b.f();
 }
 
 contract B {
-    Int s;
-    function f() external returns (Int) {
-        s = Int.wrap(3);
-        return s;
-    }
+    function f() external pure returns (Int) {}
 }
 
 contract C {
@@ -21,5 +16,4 @@ contract C {
     }
 }
 // ----
-// test() -> 3
-// gas legacy: 119695
+// DeclarationError 7576: (102-103): Undeclared identifier.
