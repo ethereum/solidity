@@ -1,13 +1,13 @@
 ==== Source: s1.sol ====
-type Bool is bool;
+type Int is int;
 
 ==== Source: s2.sol ====
 import "s1.sol";
 
-function not(Bool) pure returns (bool) {}
+function bitnot(Int) pure returns (Int) {}
 
 contract C {
-    using {not as !} for Bool global;
+    using {bitnot as ~} for Int global;
 }
 // ----
-// SyntaxError 3367: (s2.sol:78-111): "global" can only be used at file level.
+// SyntaxError 3367: (s2.sol:79-114): "global" can only be used at file level.

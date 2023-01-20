@@ -46,7 +46,7 @@ Note that private library functions can only be specified when ``using for`` is 
 If you define an operator (e.g. ``using {f as +} for T``), then the type (``T``) must be a
 :ref:`user-defined value type <user-defined-value-types>`.
 The definition of an operator must be a ``pure`` function with the types of all parameters and
-the return value matching ``T``, except for comparison and boolean operators, where the return value must
+the return value matching ``T``, except for comparison operators, where the return value must
 be of type ``bool``.
 
 The following operators can be defined this way:
@@ -54,17 +54,15 @@ The following operators can be defined this way:
 +------------+---------+----------------------------------------------+
 | Category   | Arity   | Operators                                    |
 +============+=========+==============================================+
-| Bitwise    | binary  | ``&``, ``|``, ``^``, ``<<``, ``>>``          |
+| Bitwise    | binary  | ``&``, ``|``, ``^``                          |
 |            +---------+----------------------------------------------+
 |            | unary   | ``~``                                        |
 +------------+---------+----------------------------------------------+
-| Arithmetic | binary  | ``+``, ``-``, ``*``, ``/``, ``%``, ``**``    |
+| Arithmetic | binary  | ``+``, ``-``, ``*``, ``/``, ``%``            |
 |            +---------+----------------------------------------------+
 |            | unary   | ``-``                                        |
 +------------+---------+----------------------------------------------+
 | Comparison | binary  | ``==``, ``!=``, ``<``, ``<=``, ``>``, ``>=`` |
-+------------+---------+----------------------------------------------+
-| Boolean    | unary   | ``!``                                        |
 +------------+---------+----------------------------------------------+
 
 Note that ``-`` is both binary and unary.

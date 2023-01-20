@@ -319,11 +319,8 @@ userDefinableOperator:
 	| BitNot
 	| BitOr
 	| BitXor
-	| Sar
-	| Shl
 	| Add
 	| Div
-	| Exp
 	| Mod
 	| Mul
 	| Sub
@@ -332,8 +329,7 @@ userDefinableOperator:
 	| GreaterThanOrEqual
 	| LessThan
 	| LessThanOrEqual
-	| NotEqual
-	| Not;
+	| NotEqual;
 
 /**
  * Using directive to attach library functions and free functions to types.

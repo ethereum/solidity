@@ -1,17 +1,14 @@
 type Int is int8;
 using {
-    bitor as |, bitand as &, bitxor as ^, bitnot as ~, shl as <<, sar as >>,
-    add as +, sub as -, unsub as -, mul as *, div as /, mod as %, exp as **,
-    eq as ==, noteq as !=, lt as <, gt as >, leq as <=, geq as >=,
-    not as !
+    bitor as |, bitand as &, bitxor as ^, bitnot as ~,
+    add as +, sub as -, unsub as -, mul as *, div as /, mod as %,
+    eq as ==, noteq as !=, lt as <, gt as >, leq as <=, geq as >=
 } for Int;
 
 function bitor(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) | Int.unwrap(y)); }
 function bitand(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) & Int.unwrap(y)); }
 function bitxor(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) ^ Int.unwrap(y)); }
 function bitnot(Int x) pure returns (Int) { return Int.wrap(~Int.unwrap(x)); }
-function shl(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) << uint8(Int.unwrap(y))); }
-function sar(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) >> uint8(Int.unwrap(y))); }
 
 function add(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) + Int.unwrap(y)); }
 function sub(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) - Int.unwrap(y)); }
@@ -19,7 +16,6 @@ function unsub(Int x) pure returns (Int) { return Int.wrap(-Int.unwrap(x)); }
 function mul(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) * Int.unwrap(y)); }
 function div(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) / Int.unwrap(y)); }
 function mod(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) % Int.unwrap(y)); }
-function exp(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) ** uint8(Int.unwrap(y))); }
 
 function eq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) == Int.unwrap(y); }
 function noteq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) != Int.unwrap(y); }
@@ -28,14 +24,11 @@ function gt(Int x, Int y) pure returns (bool) { return Int.unwrap(x) > Int.unwra
 function leq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) <= Int.unwrap(y); }
 function geq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) >= Int.unwrap(y); }
 
-function not(Int x) pure returns (bool) { return Int.unwrap(x) == 0; }
-
 contract C {
     Int constant ZERO = Int.wrap(0);
     Int constant ONE = Int.wrap(1);
     Int constant TWO = Int.wrap(2);
     Int constant THREE = Int.wrap(3);
-    Int constant FOUR = Int.wrap(4);
     Int constant SIX = Int.wrap(6);
 
     function test_bitwise() public pure {
@@ -51,12 +44,6 @@ contract C {
         assert(Int.unwrap(~ZERO) == -1);
         assert(Int.unwrap(~ONE) == -2);
         assert(Int.unwrap(~TWO) == -3);
-
-        assert(Int.unwrap(ONE << ONE) == 2);
-        assert(Int.unwrap(ONE << TWO) == 4);
-
-        assert(Int.unwrap(TWO >> ONE) == 1);
-        assert(Int.unwrap(FOUR >> TWO) == 1);
     }
 
     function test_arithmetic() public pure {
@@ -77,9 +64,6 @@ contract C {
 
         assert(Int.unwrap(SIX % TWO) == 0);
         assert(Int.unwrap(THREE % TWO) == 1);
-
-        assert(Int.unwrap(ONE ** SIX) == 1);
-        assert(Int.unwrap(TWO ** TWO) == 4);
     }
 
     function test_comparison() public pure {
@@ -101,15 +85,8 @@ contract C {
         assert((ONE >= TWO) == false);
         assert((TWO >= ONE) == true);
     }
-
-    function test_boolean() public pure {
-        assert(!ZERO == true);
-        assert(!ONE == false);
-        assert(!TWO == false);
-    }
 }
 // ----
 // test_bitwise() ->
 // test_arithmetic() ->
 // test_comparison() ->
-// test_boolean() ->

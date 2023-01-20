@@ -13,15 +13,12 @@ std::vector<langutil::Token> const userDefinableOperators = {
 	langutil::Token::BitAnd,
 	langutil::Token::BitXor,
 	langutil::Token::BitNot,
-	langutil::Token::SHL,
-	langutil::Token::SAR,
 	// Arithmetic
 	langutil::Token::Add,
 	langutil::Token::Sub,
 	langutil::Token::Mul,
 	langutil::Token::Div,
 	langutil::Token::Mod,
-	langutil::Token::Exp,
 	// Comparison
 	langutil::Token::Equal,
 	langutil::Token::NotEqual,
@@ -29,8 +26,6 @@ std::vector<langutil::Token> const userDefinableOperators = {
 	langutil::Token::GreaterThan,
 	langutil::Token::LessThanOrEqual,
 	langutil::Token::GreaterThanOrEqual,
-	// Boolean
-	langutil::Token::Not
 };
 
 }
