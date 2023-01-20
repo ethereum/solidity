@@ -785,7 +785,12 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		else
 		{
 			if (_options.allowIndexed && token == Token::Indexed)
+			{
+				if (isIndexed)
+					parserError(5399_error, "Indexed already specified.");
+
 				isIndexed = true;
+			}
 			else if (token == Token::Constant || token == Token::Immutable)
 			{
 				if (mutability != VariableDeclaration::Mutability::Mutable)
@@ -874,7 +879,6 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 	if (m_scanner->currentToken() == Token::LParen)
 	{
 		VarDeclParserOptions options;
-		options.allowIndexed = true;
 		options.allowLocationSpecifier = true;
 		parameters = parseParameterList(options);
 	}
