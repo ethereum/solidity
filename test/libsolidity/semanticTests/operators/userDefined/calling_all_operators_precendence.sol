@@ -1,9 +1,7 @@
 type Int is int64;
 using {
     bitor as |, bitand as &, bitxor as ^, bitnot as ~, shl as <<, sar as >>,
-    add as +, sub as -, unsub as -, mul as *, div as /, mod as %, exp as **,
-    eq as ==, noteq as !=,
-    not as !
+    add as +, sub as -, unsub as -, mul as *, div as /, mod as %, exp as **
 } for Int;
 
 function bitor(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) | Int.unwrap(y)); }
@@ -20,11 +18,6 @@ function mul(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) * 
 function div(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) / Int.unwrap(y)); }
 function mod(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) % Int.unwrap(y)); }
 function exp(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) ** uint64(Int.unwrap(y))); }
-
-function eq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) == Int.unwrap(y); }
-function noteq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) != Int.unwrap(y); }
-
-function not(Int x) pure returns (Int) { return Int.unwrap(x) == 0 ? Int.wrap(1) : Int.wrap(0); }
 
 contract C {
     Int constant I0 = Int.wrap(0);
@@ -56,15 +49,6 @@ contract C {
         assert(Int.unwrap(I1 + I2 ** I3 / I4 - I5 % I6 * I7) == ((1 + ((2 ** 3) / 4)) - ((5 % 6) * 7)));
     }
 
-    function test_not() public pure {
-        assert((!I0 + I1) == I2);
-        assert((!I0 * I1) != I2);
-
-        assert((!I0 << I2) == I4);
-        assert((!I0 | I3) == I3);
-        assert((!~-I1 + I1) == I2);
-    }
-
     function test_all() public pure {
         assert(
             Int.unwrap(I128 + I1 - I10 + I4 & ~I1 ^ ~I1 >> I1 + I1 << I3 ** I2 | -I15 % -I10 * I20 / I2 + I13 & ~I3) ==
@@ -86,5 +70,4 @@ contract C {
 // test_bitwise() ->
 // test_bitwise_arithmetic() ->
 // test_arithmetic() ->
-// test_not() ->
 // test_all() ->

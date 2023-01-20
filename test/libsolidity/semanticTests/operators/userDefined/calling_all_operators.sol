@@ -28,7 +28,7 @@ function gt(Int x, Int y) pure returns (bool) { return Int.unwrap(x) > Int.unwra
 function leq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) <= Int.unwrap(y); }
 function geq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) >= Int.unwrap(y); }
 
-function not(Int x) pure returns (Int) { return Int.unwrap(x) == 0 ? Int.wrap(1) : Int.wrap(0); }
+function not(Int x) pure returns (bool) { return Int.unwrap(x) == 0; }
 
 contract C {
     Int constant ZERO = Int.wrap(0);
@@ -103,9 +103,9 @@ contract C {
     }
 
     function test_boolean() public pure {
-        assert(Int.unwrap(!ZERO) == 1);
-        assert(Int.unwrap(!ONE) == 0);
-        assert(Int.unwrap(!TWO) == 0);
+        assert(!ZERO == true);
+        assert(!ONE == false);
+        assert(!TWO == false);
     }
 }
 // ----

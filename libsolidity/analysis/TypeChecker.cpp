@@ -4047,7 +4047,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			size_t const returnParameterCount = returnParameterTypes.size();
 
 			optional<string> wrongReturnParametersMessage;
-			if (!TokenTraits::isCompareOp(*operator_))
+			if (!TokenTraits::isCompareOp(*operator_) && *operator_ != Token::Not)
 			{
 				if (returnParameterCount != 1 || *usingForType != *returnParameterTypes.front())
 					wrongReturnParametersMessage = "exactly one value of type " + usingForType->canonicalName();

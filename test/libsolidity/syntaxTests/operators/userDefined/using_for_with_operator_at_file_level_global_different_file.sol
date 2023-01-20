@@ -4,7 +4,7 @@ type Bool is bool;
 ==== Source: s2.sol ====
 import "s1.sol";
 
-function not(Bool) pure returns (Bool) {}
+function not(Bool) pure returns (bool) {}
 
 using {not as !} for Bool global;
 // ----
