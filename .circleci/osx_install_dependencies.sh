@@ -35,20 +35,9 @@
 
 set -eu
 
-function validate_checksum {
-  local package="$1"
-  local expected_checksum="$2"
-
-  local actual_checksum
-  actual_checksum=$(sha256sum "$package")
-  if [[ $actual_checksum != "${expected_checksum}  ${package}" ]]
-  then
-    >&2 echo "ERROR: Wrong checksum for package $package."
-    >&2 echo "Actual:   $actual_checksum"
-    >&2 echo "Expected: $expected_checksum"
-    exit 1
-  fi
-}
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# shellcheck source=scripts/common.sh
+source "${REPO_ROOT}/scripts/common.sh"
 
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
