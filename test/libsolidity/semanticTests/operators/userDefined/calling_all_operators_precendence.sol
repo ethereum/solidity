@@ -6,28 +6,25 @@ using {
     not as !
 } for Int;
 
-function uw(Int x) pure returns (int64) { return Int.unwrap(x); }
-function w(int64 x) pure returns (Int) { return Int.wrap(x); }
+function bitor(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) | Int.unwrap(y)); }
+function bitand(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) & Int.unwrap(y)); }
+function bitxor(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) ^ Int.unwrap(y)); }
+function bitnot(Int x) pure returns (Int) { return Int.wrap(~Int.unwrap(x)); }
+function shl(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) << uint64(Int.unwrap(y))); }
+function sar(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) >> uint64(Int.unwrap(y))); }
 
-function bitor(Int x, Int y) pure returns (Int) { return w(uw(x) | uw(y)); }
-function bitand(Int x, Int y) pure returns (Int) { return w(uw(x) & uw(y)); }
-function bitxor(Int x, Int y) pure returns (Int) { return w(uw(x) ^ uw(y)); }
-function bitnot(Int x) pure returns (Int) { return w(~uw(x)); }
-function shl(Int x, Int y) pure returns (Int) { return w(uw(x) << uint64(uw(y))); }
-function sar(Int x, Int y) pure returns (Int) { return w(uw(x) >> uint64(uw(y))); }
+function add(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) + Int.unwrap(y)); }
+function sub(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) - Int.unwrap(y)); }
+function unsub(Int x) pure returns (Int) { return Int.wrap(-Int.unwrap(x)); }
+function mul(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) * Int.unwrap(y)); }
+function div(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) / Int.unwrap(y)); }
+function mod(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) % Int.unwrap(y)); }
+function exp(Int x, Int y) pure returns (Int) { return Int.wrap(Int.unwrap(x) ** uint64(Int.unwrap(y))); }
 
-function add(Int x, Int y) pure returns (Int) { return w(uw(x) + uw(y)); }
-function sub(Int x, Int y) pure returns (Int) { return w(uw(x) - uw(y)); }
-function unsub(Int x) pure returns (Int) { return w(-uw(x)); }
-function mul(Int x, Int y) pure returns (Int) { return w(uw(x) * uw(y)); }
-function div(Int x, Int y) pure returns (Int) { return w(uw(x) / uw(y)); }
-function mod(Int x, Int y) pure returns (Int) { return w(uw(x) % uw(y)); }
-function exp(Int x, Int y) pure returns (Int) { return w(uw(x) ** uint64(uw(y))); }
+function eq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) == Int.unwrap(y); }
+function noteq(Int x, Int y) pure returns (bool) { return Int.unwrap(x) != Int.unwrap(y); }
 
-function eq(Int x, Int y) pure returns (bool) { return uw(x) == uw(y); }
-function noteq(Int x, Int y) pure returns (bool) { return uw(x) != uw(y); }
-
-function not(Int x) pure returns (Int) { return w((uw(x) == 0 ? int64(1) : int64(0))); }
+function not(Int x) pure returns (Int) { return Int.unwrap(x) == 0 ? Int.wrap(1) : Int.wrap(0); }
 
 contract C {
     Int constant I0 = Int.wrap(0);
