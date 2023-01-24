@@ -653,8 +653,10 @@ private:
  * all functions, and this is checked at the point of the using statement. For versions 1 and
  * 2, this check is only done when a function is called.
  *
- * For version 4, T has to be user-defined value type. All parameters and
- * return value of all the functions have to be of type T.
+ * For version 4, T has to be user-defined value type.
+ * All parameters and return value of all the functions have to be of type T.
+ * This version can be combined with version 3 - a single directive may attach functions to the
+ * type and define operators on it at the same time.
  *
  * Finally, `using {f1, f2, ..., fn} for T global` is also valid at file level, as long as T is
  * a user-defined type defined in the same file at file level. In this case, the methods are
