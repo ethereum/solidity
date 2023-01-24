@@ -311,7 +311,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 
 	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
 	{
-		if (_funCall.functionName.name.str() == "selfdestruct")
+		if (_funCall.functionName.name == "selfdestruct"_yulstring)
 			m_errorReporter.warning(
 				1699_error,
 				nativeLocationOf(_funCall.functionName),
