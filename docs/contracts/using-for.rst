@@ -50,10 +50,8 @@ performed even if none of these functions are called.
 
 If you define an operator for a user-defined type (``using {f as +} for T``), then
 the type (``T``), types of function parameters and the type of the function return value
-have to be the same. The type (``T``) does not include data location.
-But, data location of the function parameters and function return value must be
-the same. There is an exception for comparison operators for which, the return value
-type is always ``bool``.
+have to be the same. One exception from this is the result type of comparison operators
+for which it is always ``bool``.
 
 The ``using A for B;`` directive is active only within the current
 scope (either the contract or the current module/source unit),
