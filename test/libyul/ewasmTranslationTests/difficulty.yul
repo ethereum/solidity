@@ -1,6 +1,8 @@
 {
   sstore(0, difficulty())
 }
+// ====
+// EVMVersion: <paris
 // ----
 // Trace:
 // Memory dump:

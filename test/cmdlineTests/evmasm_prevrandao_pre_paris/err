@@ -1,0 +1,5 @@
+Warning: "prevrandao" is not supported by the VM version and will be treated as "difficulty".
+ --> evmasm_prevrandao_pre_paris/input.sol:6:21:
+  |
+6 |         uint256 x = block.prevrandao;
+  |                     ^^^^^^^^^^^^^^^^

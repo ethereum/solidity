@@ -79,18 +79,18 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 	return optimisations;
 }
 
-bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
+bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items, langutil::EVMVersion _evmVersion)
 {
 	bigint gas = 0;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
-			gas += GasMeter::runGas(Instruction::PUSH1);
+			gas += GasMeter::runGas(Instruction::PUSH1, _evmVersion);
 		else if (item.type() == Operation)
 		{
 			if (item.instruction() == Instruction::EXP)
 				gas += GasCosts::expGas;
 			else
-				gas += GasMeter::runGas(item.instruction());
+				gas += GasMeter::runGas(item.instruction(), _evmVersion);
 		}
 	return gas;
 }
@@ -131,7 +131,7 @@ void ConstantOptimisationMethod::replaceConstants(
 bigint LiteralMethod::gasNeeded() const
 {
 	return combineGas(
-		simpleRunGas({Instruction::PUSH1}),
+		simpleRunGas({Instruction::PUSH1}, m_params.evmVersion),
 		// PUSHX plus data
 		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas) + dataGas(toCompactBigEndian(m_value, 1)),
 		0
@@ -142,7 +142,7 @@ bigint CodeCopyMethod::gasNeeded() const
 {
 	return combineGas(
 		// Run gas: we ignore memory increase costs
-		simpleRunGas(copyRoutine()) + GasCosts::copyGas,
+		simpleRunGas(copyRoutine(), m_params.evmVersion) + GasCosts::copyGas,
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
 		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		// Data gas for data itself
@@ -322,7 +322,7 @@ bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 {
 	auto numExps = static_cast<size_t>(count(_routine.begin(), _routine.end(), Instruction::EXP));
 	return combineGas(
-		simpleRunGas(_routine) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
+		simpleRunGas(_routine, m_params.evmVersion) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
 		bytesRequired(_routine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		0

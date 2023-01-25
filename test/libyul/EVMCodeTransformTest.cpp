@@ -19,6 +19,8 @@
 #include <test/libyul/EVMCodeTransformTest.h>
 #include <test/libyul/Common.h>
 
+#include <test/Common.h>
+
 #include <libyul/YulStack.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
@@ -66,7 +68,7 @@ TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _
 		return TestResult::FatalError;
 	}
 
-	evmasm::Assembly assembly{false, {}};
+	evmasm::Assembly assembly{solidity::test::CommonOptions::get().evmVersion(), false, {}};
 	EthAssemblyAdapter adapter(assembly);
 	EVMObjectCompiler::compile(
 		*stack.parserResult(),

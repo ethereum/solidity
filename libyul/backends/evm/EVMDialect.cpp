@@ -47,11 +47,12 @@ namespace
 {
 
 pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
+	langutil::EVMVersion _evmVersion,
 	string const& _name,
 	evmasm::Instruction _instruction
 )
 {
-	evmasm::InstructionInfo info = evmasm::instructionInfo(_instruction);
+	evmasm::InstructionInfo info = evmasm::instructionInfo(_instruction, _evmVersion);
 	BuiltinFunctionForEVM f;
 	f.name = YulString{_name};
 	f.parameters.resize(static_cast<size_t>(info.args));
@@ -119,11 +120,19 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 		return _instr == evmasm::Instruction::BASEFEE && _evmVersion < langutil::EVMVersion::london();
 	};
 
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// prevrandao for VMs before paris.
+	auto prevRandaoException = [&](string const& _instrName) -> bool
+	{
+		// Using string comparison as the opcode is the same as for "difficulty"
+		return _instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris();
+	};
+
 	set<YulString> reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
 		string name = toLower(instr.first);
-		if (!baseFeeException(instr.second))
+		if (!baseFeeException(instr.second) && !prevRandaoException(name))
 			reserved.emplace(name);
 	}
 	reserved += vector<YulString>{
@@ -139,6 +148,13 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 
 map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
+
+	// Exclude prevrandao as builtin for VMs before paris and difficulty for VMs after paris.
+	auto prevRandaoException = [&](string const& _instrName) -> bool
+	{
+		return (_instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris()) || (_instrName == "difficulty" && _evmVersion >= langutil::EVMVersion::paris());
+	};
+
 	map<YulString, BuiltinFunctionForEVM> builtins;
 	for (auto const& instr: evmasm::c_instructions)
 	{
@@ -152,9 +168,10 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			opcode != evmasm::Instruction::JUMP &&
 			opcode != evmasm::Instruction::JUMPI &&
 			opcode != evmasm::Instruction::JUMPDEST &&
-			_evmVersion.hasOpcode(opcode)
+			_evmVersion.hasOpcode(opcode) &&
+			!prevRandaoException(name)
 		)
-			builtins.emplace(createEVMFunction(name, opcode));
+			builtins.emplace(createEVMFunction(_evmVersion, name, opcode));
 	}
 
 	if (_objectAccess)

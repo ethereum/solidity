@@ -4067,6 +4067,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			{"timestamp", TypeProvider::uint256()},
 			{"blockhash", TypeProvider::function(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, StateMutability::View)},
 			{"difficulty", TypeProvider::uint256()},
+			{"prevrandao", TypeProvider::uint256()},
 			{"number", TypeProvider::uint256()},
 			{"gaslimit", TypeProvider::uint256()},
 			{"chainid", TypeProvider::uint256()},

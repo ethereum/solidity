@@ -1860,6 +1860,7 @@ BOOST_AUTO_TEST_CASE(builtins)
 				block.chainid;
 				block.coinbase;
 				block.difficulty;
+				block.prevrandao;
 				block.gaslimit;
 				block.number;
 				block.timestamp;

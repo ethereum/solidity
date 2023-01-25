@@ -26,6 +26,8 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
 
+#include <liblangutil/EVMVersion.h>
+
 #include <vector>
 
 namespace solidity::evmasm
@@ -74,7 +76,8 @@ struct InterpreterState;
 class EVMInstructionInterpreter
 {
 public:
-	explicit EVMInstructionInterpreter(InterpreterState& _state, bool _disableMemWriteTrace):
+	explicit EVMInstructionInterpreter(langutil::EVMVersion _evmVersion, InterpreterState& _state, bool _disableMemWriteTrace):
+		m_evmVersion(_evmVersion),
 		m_state(_state),
 		m_disableMemoryWriteInstructions(_disableMemWriteTrace)
 	{}
@@ -128,6 +131,7 @@ private:
 		return m_disableMemoryWriteInstructions;
 	}
 
+	langutil::EVMVersion m_evmVersion;
 	InterpreterState& m_state;
 	/// Flag to disable trace of instructions that write to memory.
 	bool m_disableMemoryWriteInstructions;

@@ -1,0 +1,13 @@
+
+======= evmasm_difficulty_pre_paris/input.sol:C =======
+EVM assembly:
+  sstore(0x00, difficulty)
+  stop
+stop
+
+sub_0: assembly {
+      stop
+}
+
+Opcodes:
+DIFFICULTY PUSH1 0x0 SSTORE STOP INVALID 

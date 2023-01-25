@@ -1250,8 +1250,18 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	// tag unifications (due to block deduplication) is also
 	// visible at the super-assembly.
 
-	Assembly main{false, {}};
-	AssemblyPointer sub = make_shared<Assembly>(true, string{});
+	Assembly::OptimiserSettings settings;
+	settings.runInliner = false;
+	settings.runJumpdestRemover = true;
+	settings.runPeephole = true;
+	settings.runDeduplicate = true;
+	settings.runCSE = true;
+	settings.runConstantOptimiser = true;
+	settings.evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	settings.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
+
+	Assembly main{settings.evmVersion, false, {}};
+	AssemblyPointer sub = make_shared<Assembly>(settings.evmVersion, true, string{});
 
 	sub->append(u256(1));
 	auto t1 = sub->newTag();
@@ -1276,16 +1286,6 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
-
-	Assembly::OptimiserSettings settings;
-	settings.runInliner = false;
-	settings.runJumpdestRemover = true;
-	settings.runPeephole = true;
-	settings.runDeduplicate = true;
-	settings.runCSE = true;
-	settings.runConstantOptimiser = true;
-	settings.evmVersion = solidity::test::CommonOptions::get().evmVersion();
-	settings.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
 
 	main.optimise(settings);
 

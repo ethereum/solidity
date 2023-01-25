@@ -1808,8 +1808,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context << Instruction::COINBASE;
 		else if (member == "timestamp")
 			m_context << Instruction::TIMESTAMP;
-		else if (member == "difficulty")
-			m_context << Instruction::DIFFICULTY;
+		else if (member == "difficulty" || member == "prevrandao")
+			m_context << Instruction::PREVRANDAO;
 		else if (member == "number")
 			m_context << Instruction::NUMBER;
 		else if (member == "gaslimit")

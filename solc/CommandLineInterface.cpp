@@ -198,11 +198,11 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	if (!m_options.output.dir.empty())
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion));
 	else
 	{
 		sout() << "Opcodes:" << endl;
-		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion);
 		sout() << endl;
 	}
 }
@@ -825,7 +825,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (m_options.compiler.combinedJsonRequests->binaryRuntime && m_compiler->compilationSuccessful())
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
 		if (m_options.compiler.combinedJsonRequests->opcodes && m_compiler->compilationSuccessful())
-			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
+			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode, m_options.output.evmVersion);
 		if (m_options.compiler.combinedJsonRequests->asm_ && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (m_options.compiler.combinedJsonRequests->storageLayout && m_compiler->compilationSuccessful())

@@ -8,6 +8,6 @@ contract C {
     }
 }
 // ====
-// EVMVersion: <byzantium
+// EVMVersion: =homestead
 // ----
 // TypeError 9908: (73-106): This catch clause type cannot be used on the selected EVM version (homestead). You need at least a Byzantium-compatible EVM or use `catch { ... }`.

@@ -65,7 +65,7 @@ There are special variables and functions which always exist in the global
 namespace and are mainly used to provide information about the blockchain
 or are general-use utility functions.
 
-.. index:: abi, block, coinbase, difficulty, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin
+.. index:: abi, block, coinbase, difficulty, prevrandao, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin
 
 
 Block and Transaction Properties
@@ -75,9 +75,10 @@ Block and Transaction Properties
 - ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
 - ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
-- ``block.difficulty`` (``uint``): current block difficulty
+- ``block.difficulty`` (``uint``): current block difficulty (``EVM < Paris``). For other EVM versions it behaves as a deprecated alias for ``block.prevrandao`` (`EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_ )
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
+- ``block.prevrandao`` (``uint``): random number provided by the beacon chain (``EVM >= Paris``)
 - ``block.timestamp`` (``uint``): current block timestamp as seconds since unix epoch
 - ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes calldata``): complete calldata

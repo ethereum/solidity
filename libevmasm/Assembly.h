@@ -49,7 +49,7 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
-	Assembly(bool _creation, std::string _name): m_creation(_creation), m_name(std::move(_name)) { }
+	Assembly(langutil::EVMVersion _evmVersion, bool _creation, std::string _name): m_evmVersion(_evmVersion), m_creation(_creation), m_name(std::move(_name)) { }
 
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
@@ -112,6 +112,7 @@ public:
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
 	langutil::SourceLocation const& currentSourceLocation() const { return m_currentSourceLocation; }
+	langutil::EVMVersion const& evmVersion() const { return m_evmVersion; }
 
 	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
 	LinkerObject const& assemble() const;
@@ -207,6 +208,8 @@ protected:
 
 	mutable LinkerObject m_assembledObject;
 	mutable std::vector<size_t> m_tagPositionsInBytecode;
+
+	langutil::EVMVersion m_evmVersion;
 
 	int m_deposit = 0;
 	/// True, if the assembly contains contract creation code.

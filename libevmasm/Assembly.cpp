@@ -237,7 +237,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 				sourceIndex = static_cast<int>(iter->second);
 		}
 
-		auto [name, data] = item.nameAndData();
+		auto [name, data] = item.nameAndData(m_evmVersion);
 		Json::Value jsonItem;
 		jsonItem["name"] = name;
 		jsonItem["begin"] = item.location().start;

@@ -747,23 +747,23 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 			if (_swapDepth > 16)
 				opGas += 1000;
 			else
-				opGas += evmasm::GasMeter::runGas(evmasm::swapInstruction(_swapDepth));
+				opGas += evmasm::GasMeter::runGas(evmasm::swapInstruction(_swapDepth), langutil::EVMVersion());
 		};
 		auto dupOrPush = [&](StackSlot const& _slot)
 		{
 			if (canBeFreelyGenerated(_slot))
-				opGas += evmasm::GasMeter::runGas(evmasm::pushInstruction(32));
+				opGas += evmasm::GasMeter::runGas(evmasm::pushInstruction(32), langutil::EVMVersion());
 			else
 			{
 				auto depth = util::findOffset(_source | ranges::views::reverse, _slot);
 				yulAssert(depth);
 				if (*depth < 16)
-					opGas += evmasm::GasMeter::runGas(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)));
+					opGas += evmasm::GasMeter::runGas(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)), langutil::EVMVersion());
 				else
 					opGas += 1000;
 			}
 		};
-		auto pop = [&]() { opGas += evmasm::GasMeter::runGas(evmasm::Instruction::POP); };
+		auto pop = [&]() { opGas += evmasm::GasMeter::runGas(evmasm::Instruction::POP,langutil::EVMVersion()); };
 		createStackLayout(_source, _target, swap, dupOrPush, pop);
 		return opGas;
 	};

@@ -76,7 +76,7 @@ protected:
 
 protected:
 	/// @returns the run gas for the given items ignoring special gas costs
-	static bigint simpleRunGas(AssemblyItems const& _items);
+	static bigint simpleRunGas(AssemblyItems const& _items, langutil::EVMVersion _evmVersion);
 	/// @returns the gas needed to store the given data literally
 	bigint dataGas(bytes const& _data) const;
 	static size_t bytesRequired(AssemblyItems const& _items);
