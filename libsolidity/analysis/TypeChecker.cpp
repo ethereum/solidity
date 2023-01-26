@@ -547,7 +547,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 		if (_function.isConstructor())
 			m_errorReporter.typeError(6482_error, _function.location(), "Constructor cannot be defined in interfaces.");
-		else if (_function.visibility() != Visibility::External || _function.visibility() != Visibility::Public)
+		else if (_function.visibility() != Visibility::External && _function.visibility() != Visibility::Public)
 			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external or public.");
 	}
 	else if (m_currentContract->contractKind() == ContractKind::Library)
