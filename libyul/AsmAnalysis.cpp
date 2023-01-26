@@ -311,6 +311,14 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 
 	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
 	{
+		if (_funCall.functionName.name == "selfdestruct"_yulstring)
+			m_errorReporter.warning(
+				1699_error,
+				nativeLocationOf(_funCall.functionName),
+				"\"selfdestruct\" has been deprecated. "
+				"The underlying opcode will eventually undergo breaking changes, "
+				"and its use is not recommended."
+			);
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;
 		if (!f->literalArguments.empty())

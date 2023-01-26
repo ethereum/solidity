@@ -3657,6 +3657,14 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				_identifier.location(),
 				"\"suicide\" has been deprecated in favour of \"selfdestruct\"."
 			);
+		else if (_identifier.name() == "selfdestruct" && fType->kind() == FunctionType::Kind::Selfdestruct)
+			m_errorReporter.warning(
+				5159_error,
+				_identifier.location(),
+				"\"selfdestruct\" has been deprecated. "
+				"The underlying opcode will eventually undergo breaking changes, "
+				"and its use is not recommended."
+			);
 	}
 
 	if (

@@ -899,6 +899,7 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | revert(p, s)            | `-` | B | end execution, revert state changes, return data mem[p...(p+s)) |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | selfdestruct(a)         | `-` | F | end execution, destroy current contract and send funds to a     |
+|                         |     |   | (deprecated)                                                    |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | invalid()               | `-` | F | end execution with invalid instruction                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
@@ -955,6 +956,11 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
   This change is described in `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_.
   Please note that irrelevant to which EVM version is selected in the compiler, the semantics of
   instructions depend on the final chain of deployment.
+
+.. warning::
+    From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
 
 In some internal dialects, there are additional functions:
 

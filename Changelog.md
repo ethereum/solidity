@@ -21,6 +21,7 @@ Compiler Features:
  * SMTChecker: Make ``z3`` the default solver for the BMC and CHC engines instead of all solvers.
  * Parser: More detailed error messages about invalid version pragmas.
  * Removed support for the ``solidity-upgrade`` tool.
+ * TypeChecker: Warn when using deprecated builtin ``selfdestruct``.
 
 
 Bugfixes:

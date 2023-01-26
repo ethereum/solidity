@@ -23,6 +23,7 @@ contract C {
 // ====
 // EVMVersion: >=london
 // ----
+// Warning 1699: (308-320): "selfdestruct" has been deprecated. The underlying opcode will eventually undergo breaking changes, and its use is not recommended.
 // Warning 5740: (336-468): Unreachable code.
 // TypeError 8961: (75-87): Function cannot be declared as view because this expression (potentially) modifies the state.
 // TypeError 8961: (104-119): Function cannot be declared as view because this expression (potentially) modifies the state.

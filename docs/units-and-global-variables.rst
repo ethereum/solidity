@@ -327,10 +327,12 @@ Contract Related
     - the receiving contract's receive function is not executed.
     - the contract is only really destroyed at the end of the transaction and ``revert`` s might "undo" the destruction.
 
-
-
-
 Furthermore, all functions of the current contract are callable directly including the current function.
+
+.. warning::
+    From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
 
 .. note::
     Prior to version 0.5.0, there was a function called ``suicide`` with the same
