@@ -2,6 +2,7 @@
 
 Language Features:
 * Allow named parameters in mapping types.
+* Allow functions to be declared as public in interfaces.
 
 
 Compiler Features:
