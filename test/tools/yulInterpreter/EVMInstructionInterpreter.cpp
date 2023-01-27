@@ -98,7 +98,7 @@ u256 EVMInstructionInterpreter::eval(
 	using namespace solidity::evmasm;
 	using evmasm::Instruction;
 
-	auto info = instructionInfo(_instruction);
+	auto info = instructionInfo(_instruction, m_evmVersion);
 	yulAssert(static_cast<size_t>(info.args) == _arguments.size(), "");
 
 	auto const& arg = _arguments;
@@ -268,8 +268,8 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.timestamp;
 	case Instruction::NUMBER:
 		return m_state.blockNumber;
-	case Instruction::DIFFICULTY:
-		return m_state.difficulty;
+	case Instruction::PREVRANDAO:
+		return (m_evmVersion < langutil::EVMVersion::paris()) ? m_state.difficulty : m_state.prevrandao;
 	case Instruction::GASLIMIT:
 		return m_state.gaslimit;
 	// --------------- memory / storage / logs ---------------
@@ -543,7 +543,7 @@ void EVMInstructionInterpreter::logTrace(
 )
 {
 	logTrace(
-		evmasm::instructionInfo(_instruction).name,
+		evmasm::instructionInfo(_instruction, m_evmVersion).name,
 		SemanticInformation::memory(_instruction) == SemanticInformation::Effect::Write,
 		_arguments,
 		_data

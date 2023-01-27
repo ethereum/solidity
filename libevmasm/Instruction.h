@@ -25,6 +25,7 @@
 #include <libevmasm/Exceptions.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
+#include <liblangutil/EVMVersion.h>
 
 namespace solidity::evmasm
 {
@@ -83,7 +84,7 @@ enum class Instruction: uint8_t
 	COINBASE,			///< get the block's coinbase address
 	TIMESTAMP,			///< get the block's timestamp
 	NUMBER,				///< get the block's number
-	DIFFICULTY,			///< get the block's difficulty
+	PREVRANDAO,			///< get randomness provided by the beacon chain
 	GASLIMIT,			///< get the block's gas limit
 	CHAINID,			///< get the config's chainid param
 	SELFBALANCE,		///< get balance of the current account
@@ -306,7 +307,7 @@ struct InstructionInfo
 };
 
 /// Information on all the instructions.
-InstructionInfo instructionInfo(Instruction _inst);
+InstructionInfo instructionInfo(Instruction _inst, langutil::EVMVersion _evmVersion);
 
 /// check whether instructions exists.
 bool isValidInstruction(Instruction _inst);

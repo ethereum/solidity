@@ -102,7 +102,7 @@ Expression KnowledgeBase::simplifyRecursively(Expression _expression)
 			arg = simplifyRecursively(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
-		return simplifyRecursively(match->action().toExpression(debugDataOf(_expression)));
+		return simplifyRecursively(match->action().toExpression(debugDataOf(_expression), langutil::EVMVersion()));
 
 	return _expression;
 }

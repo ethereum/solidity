@@ -130,7 +130,9 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 	else
 	{
 		Instruction instruction = _item.instruction();
-		InstructionInfo info = instructionInfo(instruction);
+		// The latest EVMVersion is used here, since the InstructionInfo is assumed to be
+		// the same across all EVM versions except for the instruction name.
+		InstructionInfo info = instructionInfo(instruction, EVMVersion());
 		if (SemanticInformation::isDupInstruction(_item))
 			setStackElement(
 				m_stackHeight + 1,

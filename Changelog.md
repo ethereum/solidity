@@ -7,7 +7,9 @@ Language Features:
 Compiler Features:
  * Commandline Interface: Return exit code ``2`` on uncaught exceptions.
  * Commandline Interface: Add `--no-cbor-metadata` that skips CBOR metadata from getting appended at the end of the bytecode.
- * EVM: Basic support for the EVM version "Paris".
+ * EVM: Deprecate ``block.difficulty`` and disallow ``difficulty()`` in inline assembly for EVM versions >= paris. The change is due to the renaming introduced by [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399).
+ * EVM: Introduce ``block.prevrandao`` in Solidity and ``prevrandao()`` in inline assembly for EVM versions >= paris.
+ * EVM: Support for the EVM version "Paris".
  * Natspec: Add event Natspec inheritance for devdoc.
  * Standard JSON: Add a boolean field `settings.metadata.appendCBOR` that skips CBOR metadata from getting appended at the end of the bytecode.
  * Yul EVM Code Transform: Generate more optimal code for user-defined functions that always terminate a transaction. No return labels will be pushed for calls to functions that always terminate.
@@ -18,9 +20,13 @@ Compiler Features:
  * SMTChecker: Support Eldarica as a Horn solver for the CHC engine when using the CLI option ``--model-checker-solvers eld``. The binary `eld` must be available in the system.
  * SMTChecker: Make ``z3`` the default solver for the BMC and CHC engines instead of all solvers.
  * Parser: More detailed error messages about invalid version pragmas.
+ * Removed support for the ``solidity-upgrade`` tool.
+ * TypeChecker: Warn when using deprecated builtin ``selfdestruct``.
 
 
 Bugfixes:
+ * Parser: Disallow several ``indexed`` attributes for the same event parameter.
+ * Parser: Disallow usage of the ``indexed`` attribute for modifier parameters.
  * Yul Optimizer: Hash hex and decimal literals according to their value instead of their representation, improving the detection of equivalent functions.
  * Solidity Upgrade Tool ``solidity-upgrade``: Fix the tool returning success code on uncaught exceptions.
  * SMTChecker: Fix display error for negative integers that are one more than powers of two.

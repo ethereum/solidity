@@ -30,9 +30,9 @@ namespace solidity::evmasm
 {
 
 /// Iterate through EVM code and call a function on each instruction.
-void eachInstruction(bytes const& _mem, std::function<void(Instruction, u256 const&)> const& _onInstruction);
+void eachInstruction(bytes const& _mem, langutil::EVMVersion _evmVersion, std::function<void(Instruction, u256 const&)> const& _onInstruction);
 
 /// Convert from EVM code to simple EVM assembly language.
-std::string disassemble(bytes const& _mem, std::string const& _delimiter = " ");
+std::string disassemble(bytes const& _mem, langutil::EVMVersion _evmVersion, std::string const& _delimiter = " ");
 
 }

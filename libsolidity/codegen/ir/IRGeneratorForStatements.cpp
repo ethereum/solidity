@@ -1822,8 +1822,13 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			define(_memberAccess) << "coinbase()\n";
 		else if (member == "timestamp")
 			define(_memberAccess) << "timestamp()\n";
-		else if (member == "difficulty")
-			define(_memberAccess) << "difficulty()\n";
+		else if (member == "difficulty" || member == "prevrandao")
+		{
+			if (m_context.evmVersion().hasPrevRandao())
+				define(_memberAccess) << "prevrandao()\n";
+			else
+				define(_memberAccess) << "difficulty()\n";
+		}
 		else if (member == "number")
 			define(_memberAccess) << "number()\n";
 		else if (member == "gaslimit")

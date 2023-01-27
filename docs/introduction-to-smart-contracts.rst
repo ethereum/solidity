@@ -563,6 +563,11 @@ idea, but it is potentially dangerous, as if someone sends Ether to removed
 contracts, the Ether is forever lost.
 
 .. warning::
+    From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
+
+.. warning::
     Even if a contract is removed by ``selfdestruct``, it is still part of the
     history of the blockchain and probably retained by most Ethereum nodes.
     So using ``selfdestruct`` is not the same as deleting data from a hard disk.
