@@ -715,7 +715,10 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		m_output << "number()";
 		break;
 	case NullaryOp::DIFFICULTY:
-		m_output << "difficulty()";
+		if (m_evmVersion >= EVMVersion::paris())
+			m_output << "prevrandao()";
+		else
+			m_output << "difficulty()";
 		break;
 	case NullaryOp::GASLIMIT:
 		m_output << "gaslimit()";
