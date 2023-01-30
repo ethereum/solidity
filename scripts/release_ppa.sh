@@ -61,6 +61,56 @@ is_release() {
     [[ "${branch}" =~ ^v[0-9]+(\.[0-9]+)*$ ]]
 }
 
+# Declare dependencies
+# shellcheck disable=SC2034
+declare -A dependencies0=(
+    [package]="jsoncpp-1.9.3"
+    [sha256]="8593c1d69e703563d94d8c12244e2e18893eeb9a8a9f8aa3d09a327aa45c8f7d"
+    [url]="https://github.com/open-source-parsers/jsoncpp/archive/1.9.3.tar.gz"
+)
+
+# shellcheck disable=SC2034
+declare -A dependencies1=(
+    [package]="range-v3-0.12.0"
+    [sha256]="015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb"
+    [url]="https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz"
+)
+
+# shellcheck disable=SC2034
+declare -A dependencies2=(
+    [package]="fmt-8.0.1"
+    [sha256]="b06ca3130158c625848f3fb7418f235155a4d389b2abc3a6245fb01cb0eb1e01"
+    [url]="https://github.com/fmtlib/fmt/archive/8.0.1.tar.gz"
+)
+
+declare -n dependencies
+try_download_dependencies() {
+    output_dir="./solc/deps/downloads"
+    mkdir -p $output_dir 2>/dev/null || true
+
+    for dependencies in ${!dependencies@}
+    do
+        for (( i=0;; i++ ))
+        do
+            echo "Attempt $i to download ${dependencies[package]}..."
+            filename="${output_dir}/${dependencies[package]}.tar.gz"
+            wget --no-verbose --output-document "$filename" "${dependencies[url]}"
+            actual_checksum=$(sha256sum "$filename" | cut -d ' ' -f 1)
+            if [[ "$actual_checksum" == "${dependencies[sha256]}" ]]
+            then
+                echo "Successfully downloaded correct ${dependencies[package]} after $i attempts!"
+                break
+            else
+                echo "Checksum does not match for ${dependencies[package]} in attempt $i"
+                echo "Want: ${dependencies[sha256]}"
+                echo "Got: ${actual_checksum}"
+                echo "Retrying..."
+                rm -f "$filename"
+            fi
+        done
+    done
+}
+
 sourcePPAConfig
 
 packagename=solc
@@ -124,10 +174,7 @@ git clone --depth 2 --recursive https://github.com/ethereum/solidity.git -b "$br
 mv solidity solc
 
 # Fetch dependencies
-mkdir -p ./solc/deps/downloads/ 2>/dev/null || true
-wget -O ./solc/deps/downloads/jsoncpp-1.9.3.tar.gz https://github.com/open-source-parsers/jsoncpp/archive/1.9.3.tar.gz
-wget -O ./solc/deps/downloads/range-v3-0.12.0.tar.gz https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz
-wget -O ./solc/deps/downloads/fmt-8.0.1.tar.gz https://github.com/fmtlib/fmt/archive/8.0.1.tar.gz
+try_download_dependencies
 
 # Determine version
 cd solc
