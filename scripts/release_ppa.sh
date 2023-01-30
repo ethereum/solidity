@@ -84,13 +84,14 @@ declare -A dependencies2=(
 )
 
 declare -n dependencies
+max_attempts=30
 try_download_dependencies() {
     output_dir="./solc/deps/downloads"
-    mkdir -p $output_dir 2>/dev/null || true
+    mkdir -p "$output_dir" 2>/dev/null || true
 
     for dependencies in ${!dependencies@}
     do
-        for (( i=0;; i++ ))
+        for (( i=1;; i++ ))
         do
             echo "Attempt $i to download ${dependencies[package]}..."
             filename="${output_dir}/${dependencies[package]}.tar.gz"
@@ -107,6 +108,12 @@ try_download_dependencies() {
                 echo "Retrying..."
                 rm -f "$filename"
             fi
+            if (( max_attempts == i ))
+            then
+                fail "Maximum number of download attemps reached (max=${max_attempts}). Giving up..."
+                exit 1
+            fi
+            sleep 1
         done
     done
 }
