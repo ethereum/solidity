@@ -1162,7 +1162,7 @@ will be transformed into the code below after the Unused Store Eliminator step i
 For memory store operations, things are generally simpler, at least in the outermost yul block as all such
 statements will be removed if they are never read from in any code path.
 At function analysis level, however, the approach is similar to ``sstore``, as we do not know whether the memory location will
-be read once we leave the function's scope, so the statement will be removed only if all code code paths lead to a memory overwrite.
+be read once we leave the function's scope, so the statement will be removed only if all code paths lead to a memory overwrite.
 
 Best run in SSA form.
 
