@@ -95,7 +95,7 @@ version stands as a reference.
 You can switch between languages by clicking on the flyout menu in the bottom-left corner
 and selecting the preferred language.
 
-* `Chinese <https://github.com/solidity-docs/zh-cn-chinese/>`_
+* `Chinese <https://docs.soliditylang.org/zh/latest/>`_
 * `French <https://docs.soliditylang.org/fr/latest/>`_
 * `Indonesian <https://github.com/solidity-docs/id-indonesian>`_
 * `Japanese <https://github.com/solidity-docs/ja-japanese>`_
@@ -103,7 +103,7 @@ and selecting the preferred language.
 * `Persian <https://github.com/solidity-docs/fa-persian>`_
 * `Russian <https://github.com/solidity-docs/ru-russian>`_
 * `Spanish <https://github.com/solidity-docs/es-spanish>`_
-* `Turkish <https://github.com/solidity-docs/tr-turkish>`_
+* `Turkish <https://docs.soliditylang.org/tr/latest/>`_
 
 .. note::
 

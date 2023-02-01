@@ -28,7 +28,7 @@ Integrated (Ethereum) Development Environments
     * `Embark <https://framework.embarklabs.io/>`_
         Developer platform for building and deploying decentralized applications.
 
-    * `Foundry <https://github.com/gakonst/foundry>`_
+    * `Foundry <https://github.com/foundry-rs/foundry>`_
         Fast, portable and modular toolkit for Ethereum application development written in Rust.
 
     * `Hardhat <https://hardhat.org/>`_
@@ -37,7 +37,7 @@ Integrated (Ethereum) Development Environments
     * `Remix <https://remix.ethereum.org/>`_
         Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
-    * `Truffle <https://www.trufflesuite.com/truffle>`_
+    * `Truffle <https://trufflesuite.com/truffle/>`_
         Ethereum development framework.
 
 Editor Integrations
@@ -50,7 +50,7 @@ Editor Integrations
 
 * IntelliJ
 
-    * `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-intellij-solidity>`_
+    * `IntelliJ IDEA plugin <https://plugins.jetbrains.com/plugin/9475-solidity/>`_
         Solidity plugin for IntelliJ IDEA (and all other JetBrains IDEs).
 
 * Sublime Text
