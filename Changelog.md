@@ -1,43 +1,42 @@
-### 0.8.18 (unreleased)
+### 0.8.18 (2023-02-01)
 
 Language Features:
-* Allow named parameters in mapping types.
+ * Allow named parameters in mapping types.
 
 
 Compiler Features:
+ * Commandline Interface: Add ``--no-cbor-metadata`` that skips CBOR metadata from getting appended at the end of the bytecode.
  * Commandline Interface: Return exit code ``2`` on uncaught exceptions.
- * Commandline Interface: Add `--no-cbor-metadata` that skips CBOR metadata from getting appended at the end of the bytecode.
  * EVM: Deprecate ``block.difficulty`` and disallow ``difficulty()`` in inline assembly for EVM versions >= paris. The change is due to the renaming introduced by [EIP-4399](https://eips.ethereum.org/EIPS/eip-4399).
  * EVM: Introduce ``block.prevrandao`` in Solidity and ``prevrandao()`` in inline assembly for EVM versions >= paris.
  * EVM: Set the default EVM version to "Paris".
  * EVM: Support for the EVM version "Paris".
+ * Language Server: Add basic document hover support.
  * Natspec: Add event Natspec inheritance for devdoc.
- * Standard JSON: Add a boolean field `settings.metadata.appendCBOR` that skips CBOR metadata from getting appended at the end of the bytecode.
+ * Optimizer: Added optimization rule ``and(shl(X, Y), shl(X, Z)) => shl(X, and(Y, Z))``.
+ * Parser: More detailed error messages about invalid version pragmas.
+ * SMTChecker: Make ``z3`` the default solver for the BMC and CHC engines instead of all solvers.
+ * SMTChecker: Support Eldarica as a Horn solver for the CHC engine when using the CLI option ``--model-checker-solvers eld``. The binary ``eld`` must be available in the system.
+ * Solidity Upgrade Tool: Remove ``solidity-upgrade`` tool.
+ * Standard JSON: Add a boolean field ``settings.metadata.appendCBOR`` that skips CBOR metadata from getting appended at the end of the bytecode.
+ * TypeChecker: Warn when using deprecated builtin ``selfdestruct``.
  * Yul EVM Code Transform: Generate more optimal code for user-defined functions that always terminate a transaction. No return labels will be pushed for calls to functions that always terminate.
  * Yul Optimizer: Allow replacing the previously hard-coded cleanup sequence by specifying custom steps after a colon delimiter (``:``) in the sequence string.
  * Yul Optimizer: Eliminate ``keccak256`` calls if the value was already calculated by a previous call and can be reused.
- * Language Server: Add basic document hover support.
- * Optimizer: Added optimization rule ``and(shl(X, Y), shl(X, Z)) => shl(X, and(Y, Z))``.
- * SMTChecker: Support Eldarica as a Horn solver for the CHC engine when using the CLI option ``--model-checker-solvers eld``. The binary `eld` must be available in the system.
- * SMTChecker: Make ``z3`` the default solver for the BMC and CHC engines instead of all solvers.
- * Parser: More detailed error messages about invalid version pragmas.
- * Removed support for the ``solidity-upgrade`` tool.
- * TypeChecker: Warn when using deprecated builtin ``selfdestruct``.
 
 
 Bugfixes:
  * Parser: Disallow several ``indexed`` attributes for the same event parameter.
  * Parser: Disallow usage of the ``indexed`` attribute for modifier parameters.
- * Yul Optimizer: Hash hex and decimal literals according to their value instead of their representation, improving the detection of equivalent functions.
- * Solidity Upgrade Tool ``solidity-upgrade``: Fix the tool returning success code on uncaught exceptions.
  * SMTChecker: Fix display error for negative integers that are one more than powers of two.
- * SMTChecker: Improved readability for large integers that are powers of two or almost powers of two in error messages.
- * SMTChecker: Fix internal error when a public library function is called internally.
- * SMTChecker: Fix internal error on multiple wrong SMTChecker natspec entries.
  * SMTChecker: Fix internal error on chain assignments using static fully specified state variables.
- * SMTChecker: Fix internal error when using user defined types as mapping indices or struct members.
+ * SMTChecker: Fix internal error on multiple wrong SMTChecker natspec entries.
+ * SMTChecker: Fix internal error when a public library function is called internally.
  * SMTChecker: Fix internal error when deleting struct member of function type.
+ * SMTChecker: Fix internal error when using user-defined types as mapping indices or struct members.
+ * SMTChecker: Improved readability for large integers that are powers of two or almost powers of two in error messages.
  * TypeChecker: Fix bug where private library functions could be attached with ``using for`` outside of their declaration scope.
+ * Yul Optimizer: Hash hex and decimal literals according to their value instead of their representation, improving the detection of equivalent functions.
 
 
 ### 0.8.17 (2022-09-08)
