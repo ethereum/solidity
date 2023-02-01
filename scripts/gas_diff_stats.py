@@ -75,7 +75,7 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
 
     """
     if not lines:
-        raise Exception("Empty list")
+        raise RuntimeError("Empty list")
 
     def try_parse(line):
         try:
