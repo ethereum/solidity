@@ -17,11 +17,11 @@ conflicts, project specific style guides take precedence.
 
 The structure and many of the recommendations within this style guide were
 taken from python's
-`pep8 style guide <https://www.python.org/dev/peps/pep-0008/>`_.
+`pep8 style guide <https://peps.python.org/pep-0008/>`_.
 
 The goal of this guide is *not* to be the right way or the best way to write
 Solidity code.  The goal of this guide is *consistency*.  A quote from python's
-`pep8 <https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_
+`pep8 <https://peps.python.org/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_
 captures this concept well.
 
 .. note::
