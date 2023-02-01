@@ -34,7 +34,7 @@ you receive the funds of the person who is now the richest.
         address public richest;
         uint public mostSent;
 
-        mapping (address => uint) pendingWithdrawals;
+        mapping(address => uint) pendingWithdrawals;
 
         /// The amount of Ether sent was not higher than
         /// the currently highest amount.

@@ -34,7 +34,7 @@ and the sum of all balances is an invariant across the lifetime of the contract.
     contract Token {
         mapping(address => uint256) balances;
         using Balances for *;
-        mapping(address => mapping (address => uint256)) allowed;
+        mapping(address => mapping(address => uint256)) allowed;
 
         event Transfer(address from, address to, uint amount);
         event Approval(address owner, address spender, uint amount);

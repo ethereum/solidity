@@ -91,7 +91,7 @@ registering with a username and password, all you need is an Ethereum keypair.
         // The keyword "public" makes variables
         // accessible from other contracts
         address public minter;
-        mapping (address => uint) public balances;
+        mapping(address => uint) public balances;
 
         // Events allow clients to react to specific
         // contract changes you declare
@@ -151,7 +151,7 @@ You do not need to do this, the compiler figures it out for you.
 
 .. index:: mapping
 
-The next line, ``mapping (address => uint) public balances;`` also
+The next line, ``mapping(address => uint) public balances;`` also
 creates a public state variable, but it is a more complex datatype.
 The :ref:`mapping <mapping-types>` type maps addresses to :ref:`unsigned integers <integers>`.
 

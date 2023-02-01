@@ -336,7 +336,7 @@ field of a ``struct`` that is the base type of a dynamic storage array.  The
     pragma solidity >=0.6.0 <0.9.0;
 
     contract Map {
-        mapping (uint => uint)[] array;
+        mapping(uint => uint)[] array;
 
         function allocate(uint newMaps) public {
             for (uint i = 0; i < newMaps; i++)
