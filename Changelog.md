@@ -1,4 +1,4 @@
-### 0.8.18 (unreleased)
+### 0.8.18 (2023-02-01)
 
 Language Features:
  * Allow named parameters in mapping types.
