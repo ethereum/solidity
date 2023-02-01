@@ -408,7 +408,7 @@ local slang and references, making your language as clear to all readers as poss
 
 * `Simplified technical English <https://en.wikipedia.org/wiki/Simplified_Technical_English>`_
 * `International English <https://en.wikipedia.org/wiki/International_English>`_
-* `British English spelling <https://en.oxforddictionaries.com/spelling/british-and-spelling>`_
+* `British English spelling <https://web.archive.org/web/20220324094038/https://www.lexico.com/grammar/british-and-spelling>`_
 
 
 .. note::
