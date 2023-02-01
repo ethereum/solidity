@@ -7,6 +7,38 @@
 }
 // ----
 // Trace:
-//   Interpreter execution step limit reached.
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   LOG0(0, 0)
+//   Trace size limit reached.
 // Memory dump:
 // Storage dump:
