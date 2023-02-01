@@ -57,6 +57,7 @@ struct IntSort: public Sort
 		isSigned(_signed)
 	{}
 
+	using Sort::operator==;
 	bool operator==(IntSort const& _other) const
 	{
 		return Sort::operator==(_other) && isSigned == _other.isSigned;
@@ -72,6 +73,7 @@ struct BitVectorSort: public Sort
 		size(_size)
 	{}
 
+	using Sort::operator==;
 	bool operator==(BitVectorSort const& _other) const
 	{
 		return Sort::operator==(_other) && size == _other.size;
