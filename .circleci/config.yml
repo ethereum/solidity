@@ -1096,7 +1096,7 @@ jobs:
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
       # Suppress CLN memory leak.
       # See: https://github.com/ethereum/solidity/issues/13891 for details.
-      LSAN_OPTIONS: suppressions=.circleci/cln-asan.supp
+      LSAN_OPTIONS: suppressions=.circleci/cln-asan.supp:print_suppressions=0
     <<: *steps_cmdline_tests
 
   t_ubu_asan_soltest:
