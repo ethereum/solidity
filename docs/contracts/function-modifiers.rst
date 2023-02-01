@@ -61,7 +61,7 @@ if they are marked ``virtual``. For details, please see
     }
 
     contract Register is priced, destructible {
-        mapping (address => bool) registeredAddresses;
+        mapping(address => bool) registeredAddresses;
         uint price;
 
         constructor(uint initialPrice) { price = initialPrice; }
