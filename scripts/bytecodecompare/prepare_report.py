@@ -251,7 +251,7 @@ def detect_metadata_cli_option_support(compiler_path: Path):
             f"Compiler output:\n{process.stderr}\n",
             file=sys.stderr
         )
-        raise Exception("Failed to determine if the compiler supports the --metadata option.")
+        raise RuntimeError("Failed to determine if the compiler supports the --metadata option.")
 
     return process.returncode == 0
 
