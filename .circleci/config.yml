@@ -833,8 +833,15 @@ jobs:
       MAKEFLAGS: -j 10
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
-      - checkout
-      - run: *run_build
+      - run: git clone -b "v0.8.18" https://github.com/ethereum/solidity.git .
+      - run:
+          name: Release Rebuild
+          command: |
+            echo -n >prerelease.txt
+            mkdir -p build
+            cd build
+            cmake .. -DCMAKE_BUILD_TYPE=Release $CMAKE_OPTIONS -G "Unix Makefiles"
+            make
       - run:
           name: strip binary
           command: strip build/solc/solc
