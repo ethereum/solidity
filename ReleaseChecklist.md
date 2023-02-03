@@ -81,11 +81,15 @@ At least a day before the release:
  - [ ] Create ``.release_ppa_auth`` at the root of your local Solidity checkout and set ``LAUNCHPAD_EMAIL`` and ``LAUNCHPAD_KEYID`` to your key's email and key id.
  - [ ] Double-check that the ``DISTRIBUTIONS`` list in ``scripts/release_ppa.sh`` and ``scripts/deps-ppa/static_z3.sh`` contains the most recent versions of Ubuntu.
  - [ ] Make sure the [``~ethereum/cpp-build-deps`` PPA repository](https://launchpad.net/~ethereum/+archive/ubuntu/cpp-build-deps) contains ``libz3-static-dev builds`` for all current versions of Ubuntu.
-       If not, run ``scripts/deps-ppa/static_z3.sh`` and wait for the builds to succeed before continuing.
+       Note that it may be included in the ``z3-static`` multipackage (follow the ``View package details`` link to check).
+       If not present, run ``scripts/deps-ppa/static_z3.sh`` and wait for the builds to succeed before continuing.
  - [ ] Run ``scripts/release_ppa.sh v$VERSION`` to create the PPA release.
- - [ ] Wait for the [``~ethereum/ethereum-static`` PPA](https://launchpad.net/~ethereum/+archive/ubuntu/ethereum-static) build to be finished and published for *all platforms*.
+       This will create a single package containing static binary for older Ubuntu versions in the [``~ethereum/ethereum-static`` PPA](https://launchpad.net/~ethereum/+archive/ubuntu/ethereum-static)
+       and separate packages with dynamically-linked binaries for recent versions (those listed in ``DISTRIBUTIONS``) in the [``~ethereum/ethereum`` PPA](https://launchpad.net/~ethereum/+archive/ubuntu/ethereum).
+ - [ ] Wait for the build to be finished and published for *all architectures* (currently we only build for ``amd64``, but we may add ``arm`` in the future).
        **SERIOUSLY: DO NOT PROCEED EARLIER!!!**
-       *After* the static builds are *published*, copy the static package to the [``~ethereum/ethereum`` PPA](https://launchpad.net/~ethereum/+archive/ubuntu/ethereum)
+ - [ ] *After* the package with the static build is *published*, use it to create packages for older Ubuntu versions.
+       Copy the static package to the [``~ethereum/ethereum`` PPA](https://launchpad.net/~ethereum/+archive/ubuntu/ethereum)
        for the destination series ``Trusty``, ``Xenial`` and ``Bionic`` while selecting ``Copy existing binaries``.
 
 ### Release solc-js
