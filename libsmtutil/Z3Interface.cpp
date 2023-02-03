@@ -344,6 +344,12 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		return arguments[0] % arguments[1];
 	else if (kind == Z3_OP_XOR)
 		return arguments[0] ^ arguments[1];
+	else if (kind == Z3_OP_BOR)
+		return arguments[0] | arguments[1];
+	else if (kind == Z3_OP_BAND)
+		return arguments[0] & arguments[1];
+	else if (kind == Z3_OP_BXOR)
+		return arguments[0] ^ arguments[1];
 	else if (kind == Z3_OP_BNOT)
 		return !arguments[0];
 	else if (kind == Z3_OP_BSHL)
