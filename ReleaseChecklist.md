@@ -12,15 +12,34 @@
  - [ ] Access to the [solidity_lang Twitter account](https://twitter.com/solidity_lang).
  - [ ] [Reddit](https://www.reddit.com) account that is at least 10 days old with a minimum of 20 comment karma (``/r/ethereum`` requirements).
 
+### Pre-flight checks
+At least a day before the release:
+ - [ ] Run ``make linkcheck`` from within ``docs/`` and fix any broken links it finds.
+       Ignore false positives caused by ``href`` anchors and dummy links not meant to work.
+ - [ ] Make sure that all merged PRs that should have changelog entries do have them.
+ - [ ] Rerun CI on the top commits of main branches in all repositories that do not have daily activity by creating a test branch or PR:
+      - [ ] ``solc-js``
+      - [ ] ``solc-bin`` (make sure the bytecode comparison check did run)
+      - [ ] ``homebrew-ethereum``
+ - [ ] (Optional) Create a prerelease in our Ubuntu PPA by following the steps in the PPA section below on ``develop`` rather than on a tag.
+       This is recommended especially when dealing with PPA for the first time, when we add a new Ubuntu version or when the PPA scripts were modified in this release cycle.
+ - [ ] Verify that the release tarball of ``solc-js`` works.
+       Bump version locally, add ``soljson.js`` from CI, build it, compare the file structure with the previous version, install it locally and try to use it.
+
+### Drafts
+At least a day before the release:
+ - [ ] Create a draft PR to sort the changelog.
+ - [ ] Create draft PRs to bump version in ``solidity`` and ``solc-js``.
+ - [ ] Create a draft of the release on github.
+ - [ ] Create a draft PR to update soliditylang.org.
+ - [ ] Create drafts of blog posts.
+ - [ ] Prepare drafts of Twitter, Reddit and Solidity Forum announcements.
+
 ### Blog Post
  - [ ] Create a post on [solidity-blog](https://github.com/ethereum/solidity-blog) in the ``Releases`` category and explain some of the new features or concepts.
  - [ ] Create a post on [solidity-blog](https://github.com/ethereum/solidity-blog) in the ``Security Alerts`` category in case of important bug(s).
 
-### Documentation check
- - [ ] Run ``make linkcheck`` from within ``docs/`` and fix any broken links it finds. Ignore false positives caused by ``href`` anchors and dummy links not meant to work.
-
 ### Changelog
- - [ ] Make sure that all merged PRs that should have changelog entries do have them.
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice. Commit it.
  - [ ] Update the changelog to include a release date.
  - [ ] Run ``scripts/update_bugs_by_version.py`` to regenerate ``bugs_by_version.json`` from the changelog and ``bugs.json``.
