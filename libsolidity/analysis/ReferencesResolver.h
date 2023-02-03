@@ -84,6 +84,7 @@ private:
 	void endVisit(IdentifierPath const& _path) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(Return const& _return) override;
+	bool visit(UsingForDirective const& _usingFor) override;
 
 	void operator()(yul::FunctionDefinition const& _function) override;
 	void operator()(yul::Identifier const& _identifier) override;

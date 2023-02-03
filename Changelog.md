@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * TypeChecker: Also allow external library functions in ``using for``.
 
 
 ### 0.8.18 (2023-02-01)

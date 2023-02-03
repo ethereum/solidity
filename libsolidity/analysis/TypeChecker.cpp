@@ -3826,7 +3826,13 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 		FunctionDefinition const& functionDefinition =
 			dynamic_cast<FunctionDefinition const&>(*path->annotation().referencedDeclaration);
 
-		solAssert(functionDefinition.type());
+		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
+			functionDefinition.libraryFunction() ?
+				functionDefinition.typeViaContractName() :
+				functionDefinition.type()
+			);
+
+		solAssert(functionType);
 
 		if (functionDefinition.parameters().empty())
 			m_errorReporter.fatalTypeError(
@@ -3864,21 +3870,25 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			);
 		}
 
-		FunctionType const* functionType = dynamic_cast<FunctionType const&>(*functionDefinition.type()).withBoundFirstArgument();
-		solAssert(functionType && functionType->selfType(), "");
+		FunctionType const* functionTypeWithBoundFirstArgument = functionType->withBoundFirstArgument();
+		solAssert(functionTypeWithBoundFirstArgument && functionTypeWithBoundFirstArgument->selfType(), "");
 		BoolResult result = normalizedType->isImplicitlyConvertibleTo(
-			*TypeProvider::withLocationIfReference(DataLocation::Storage, functionType->selfType())
+			*TypeProvider::withLocationIfReference(DataLocation::Storage, functionTypeWithBoundFirstArgument->selfType())
 		);
 		if (!result)
 			m_errorReporter.typeError(
 				3100_error,
 				path->location(),
+				SecondarySourceLocation().append(
+						"Function defined here:",
+						functionDefinition.location()
+				),
 				fmt::format(
 					"The function \"{}\" cannot be attached to the type \"{}\" because the type cannot "
 					"be implicitly converted to the first argument of the function (\"{}\"){}",
 					joinHumanReadable(path->path(), "."),
 					usingForType->toString(true /* withoutDataLocation */),
-					functionType->selfType()->humanReadableName(),
+					functionTypeWithBoundFirstArgument->selfType()->humanReadableName(),
 					result.message().empty() ? "." : ": " +  result.message()
 				)
 			);
