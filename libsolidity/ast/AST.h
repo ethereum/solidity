@@ -851,6 +851,7 @@ public:
 	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	ParameterList const& parameterList() const { return *m_parameters; }
+	SourceLocation const prototypeLocation();
 	ASTPointer<ParameterList> const& returnParameterList() const { return m_returnParameters; }
 	bool markedVirtual() const { return m_isVirtual; }
 	virtual bool virtualSemantics() const { return markedVirtual(); }
