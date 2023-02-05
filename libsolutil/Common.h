@@ -42,11 +42,12 @@
 
 #include <boost/version.hpp>
 
+#include <cstdint>
+#include <functional>
 #include <map>
+#include <string>
 #include <utility>
 #include <vector>
-#include <functional>
-#include <string>
 
 namespace solidity
 {
