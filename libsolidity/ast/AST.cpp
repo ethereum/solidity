@@ -602,13 +602,6 @@ SourceUnit const& Scopable::sourceUnit() const
 	return dynamic_cast<SourceUnit const&>(*s);
 }
 
-SourceLocation const CallableDeclaration::prototypeLocation(){
-	SourceLocation sourceLocation = location();
-	SourceLocation functionLocation = parameterList().location();
-	sourceLocation.end = functionLocation.end;
-	return sourceLocation;
-}
-
 CallableDeclaration const* Scopable::functionOrModifierDefinition() const
 {
 	ASTNode const* s = scope();
