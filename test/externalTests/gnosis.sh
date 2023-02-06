@@ -72,9 +72,10 @@ function gnosis_safe_test
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
     # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
-    sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/Safe.Setup.spec.ts
-    sed -i "s|\(it\)\(('can be used only via DELEGATECALL opcode'\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
-    sed -i "s|it\(('can only be called from Safe itself'\)|it.skip\1|g" test/libraries/Migration.spec.ts
+    sed -i "s|\(it\)\((\"should not allow to call setup on singleton\"\)|\1.skip\2|g" test/core/Safe.Setup.spec.ts
+    sed -i "s|\(it\)\((\"can be used only via DELEGATECALL opcode\"\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
+    sed -i "s|it\((\"can only be called from Safe itself\"\)|it.skip\1|g" test/libraries/Migration.spec.ts
+    sed -i "s|\(it\)\((\"should revert if called directly\"\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
 
     neutralize_package_lock
     neutralize_package_json_hooks
