@@ -46,7 +46,7 @@ access the minimum and maximum value representable by the type.
 
   Integers in Solidity are restricted to a certain range. For example, with ``uint32``, this is ``0`` up to ``2**32 - 1``.
   There are two modes in which arithmetic is performed on these types: The "wrapping" or "unchecked" mode and the "checked" mode.
-  By default, arithmetic is always "checked", meaning that if an operation's result falls outside the value range 
+  By default, arithmetic is always "checked", meaning that if an operation's result falls outside the value range
   of the type, the call is reverted through a :ref:`failing assertion<assert-and-require>`. You can switch to "unchecked" mode
   using ``unchecked { ... }``. More details can be found in the section about :ref:`unchecked <unchecked>`.
 
