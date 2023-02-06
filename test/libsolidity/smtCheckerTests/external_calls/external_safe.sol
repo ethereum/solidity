@@ -18,3 +18,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
+// Warning 6328: (167-181): CHC: Assertion violation might happen here.
+// Warning 4661: (167-181): BMC: Assertion violation happens here.

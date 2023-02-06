@@ -445,7 +445,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"contracts", "divModNoSlacks", "engine", "invariants", "showUnproved", "solvers", "targets", "timeout"};
+	static set<string> keys{"contracts", "divModNoSlacks", "engine", "extCalls", "invariants", "showUnproved", "solvers", "targets", "timeout"};
 	return checkKeys(_input, keys, "modelChecker");
 }
 
@@ -1014,6 +1014,16 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		if (!engine)
 			return formatFatalError(Error::Type::JSONError, "Invalid model checker engine requested.");
 		ret.modelCheckerSettings.engine = *engine;
+	}
+
+	if (modelCheckerSettings.isMember("extCalls"))
+	{
+		if (!modelCheckerSettings["extCalls"].isString())
+			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.extCalls must be a string.");
+		std::optional<ModelCheckerExtCalls> extCalls = ModelCheckerExtCalls::fromString(modelCheckerSettings["extCalls"].asString());
+		if (!extCalls)
+			return formatFatalError(Error::Type::JSONError, "Invalid model checker extCalls requested.");
+		ret.modelCheckerSettings.externalCalls = *extCalls;
 	}
 
 	if (modelCheckerSettings.isMember("invariants"))

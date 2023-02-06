@@ -637,7 +637,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		visitGasLeft(_funCall);
 		break;
 	case FunctionType::Kind::External:
-		if (isPublicGetter(_funCall.expression()))
+		if (publicGetter(_funCall.expression()))
 			visitPublicGetter(_funCall);
 		break;
 	case FunctionType::Kind::ABIDecode:
@@ -696,10 +696,18 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::ObjectCreation:
 		visitObjectCreation(_funCall);
 		return;
+	case FunctionType::Kind::Creation:
+		if (!m_settings.engine.chc || !m_settings.externalCalls.isTrusted())
+			m_errorReporter.warning(
+				8729_error,
+				_funCall.location(),
+				"Contract deployment is only supported in the trusted mode for external calls"
+				" with the CHC engine."
+			);
+		break;
 	case FunctionType::Kind::DelegateCall:
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
-	case FunctionType::Kind::Creation:
 	default:
 		m_errorReporter.warning(
 			4588_error,
@@ -978,9 +986,8 @@ vector<string> structGetterReturnedMembers(StructType const& _structType)
 
 void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 {
-	MemberAccess const& access = dynamic_cast<MemberAccess const&>(_funCall.expression());
-	auto var = dynamic_cast<VariableDeclaration const*>(access.annotation().referencedDeclaration);
-	solAssert(var, "");
+	auto var = publicGetter(_funCall.expression());
+	solAssert(var && var->isStateVariable(), "");
 	solAssert(m_context.knownExpression(_funCall), "");
 	auto paramExpectedTypes = replaceUserTypes(FunctionType(*var).parameterTypes());
 	auto actualArguments = _funCall.arguments();
@@ -1054,7 +1061,7 @@ bool SMTEncoder::shouldAnalyze(ContractDefinition const& _contract) const
 		return false;
 
 	return m_settings.contracts.isDefault() ||
-		m_settings.contracts.has(_contract.sourceUnitName(), _contract.name());
+		m_settings.contracts.has(_contract.sourceUnitName());
 }
 
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
@@ -2789,16 +2796,24 @@ MemberAccess const* SMTEncoder::isEmptyPush(Expression const& _expr) const
 	return nullptr;
 }
 
-bool SMTEncoder::isPublicGetter(Expression const& _expr) {
-	if (!isTrustedExternalCall(&_expr))
-		return false;
-	auto varDecl = dynamic_cast<VariableDeclaration const*>(
-		dynamic_cast<MemberAccess const&>(_expr).annotation().referencedDeclaration
-	);
-	return varDecl != nullptr;
+smtutil::Expression SMTEncoder::contractAddressValue(FunctionCall const& _f)
+{
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_f.expression().annotation().type);
+	if (funType.kind() == FunctionType::Kind::Internal)
+		return state().thisAddress();
+	auto [funExpr, funOptions] = functionCallExpression(_f);
+	if (MemberAccess const* callBase = dynamic_cast<MemberAccess const*>(funExpr))
+		return expr(callBase->expression());
+	solAssert(false, "Unreachable!");
 }
 
-bool SMTEncoder::isTrustedExternalCall(Expression const* _expr) {
+VariableDeclaration const* SMTEncoder::publicGetter(Expression const& _expr) const {
+	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expr))
+		return dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration);
+	return nullptr;
+}
+
+bool SMTEncoder::isExternalCallToThis(Expression const* _expr) {
 	auto memberAccess = dynamic_cast<MemberAccess const*>(_expr);
 	if (!memberAccess)
 		return false;
@@ -3060,7 +3075,7 @@ RationalNumberType const* SMTEncoder::isConstant(Expression const& _expr)
 	return nullptr;
 }
 
-set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
+set<FunctionCall const*, ASTCompareByID<FunctionCall>> SMTEncoder::collectABICalls(ASTNode const* _node)
 {
 	struct ABIFunctions: public ASTConstVisitor
 	{
@@ -3082,7 +3097,7 @@ set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
 				}
 		}
 
-		set<FunctionCall const*> abiCalls;
+		set<FunctionCall const*, ASTCompareByID<FunctionCall>> abiCalls;
 	};
 
 	return ABIFunctions(_node).abiCalls;

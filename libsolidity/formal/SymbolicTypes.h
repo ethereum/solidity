@@ -82,4 +82,8 @@ void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::Type const* _t
 smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::Type const* _type);
 
 std::optional<smtutil::Expression> symbolicTypeConversion(frontend::Type const* _from, frontend::Type const* _to);
+
+smtutil::Expression member(smtutil::Expression const& _tuple, std::string const& _member);
+smtutil::Expression assignMember(smtutil::Expression const _tuple, std::map<std::string, smtutil::Expression> const& _values);
+
 }
