@@ -66,8 +66,8 @@ function gnosis_safe_test
     sed -i 's|"@openzeppelin/contracts": "\^3\.4\.0"|"@openzeppelin/contracts": "^4.0.0"|g' package.json
 
     # Disable two tests failing due to Hardhat's heuristics not yet updated to handle solc 0.8.10.
-    # TODO: Remove this when Hardhat implements them (https://github.com/nomiclabs/hardhat/issues/2051).
-    sed -i "s|\(it\)\(('should revert if called directly', async () => {\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
+    # TODO: Remove this when Hardhat implements them (https://github.com/nomiclabs/hardhat/issues/2451).
+    sed -i "s|\(it\)\((\"should revert if called directly\"\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
@@ -75,7 +75,6 @@ function gnosis_safe_test
     sed -i "s|\(it\)\((\"should not allow to call setup on singleton\"\)|\1.skip\2|g" test/core/Safe.Setup.spec.ts
     sed -i "s|\(it\)\((\"can be used only via DELEGATECALL opcode\"\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
     sed -i "s|it\((\"can only be called from Safe itself\"\)|it.skip\1|g" test/libraries/Migration.spec.ts
-    sed -i "s|\(it\)\((\"should revert if called directly\"\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
 
     neutralize_package_lock
     neutralize_package_json_hooks
