@@ -923,7 +923,7 @@ public:
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body
 	):
-		CallableDeclaration(_id, _location, _name, std::move(_nameLocation), _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
+		CallableDeclaration(_id, _location, _name, _nameLocation, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
 		StructurallyDocumented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
