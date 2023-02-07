@@ -5,6 +5,6 @@
 }
 // ----
 // Trace:
-//   CALLDATACOPY(32, 0, 0)
+//   CALLDATACOPY(0, 0, 0)
 // Memory dump:
 // Storage dump:

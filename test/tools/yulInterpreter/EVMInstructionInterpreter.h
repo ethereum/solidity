@@ -125,6 +125,19 @@ private:
 		std::vector<u256> const& _arguments = {},
 		bytes const& _data = {}
 	);
+
+	/// @returns a pair of boolean and size_t whose first value is true if @param _pseudoInstruction
+	/// is a Yul instruction that the Yul optimizer's loadResolver step rewrites the input
+	/// memory pointer value to zero if that instruction's read length (contained within @param
+	// _arguments) is zero, and whose second value is the positional index of the input memory
+	// pointer argument.
+	/// If the Yul instruction is unaffected or affected but read length is non-zero, the first
+	/// value is false.
+	std::pair<bool, size_t> isInputMemoryPtrModified(
+		std::string const& _pseudoInstruction,
+		std::vector<u256> const& _arguments
+	);
+
 	/// @returns disable trace flag.
 	bool memWriteTracingDisabled()
 	{
