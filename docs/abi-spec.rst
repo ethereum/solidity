@@ -563,7 +563,7 @@ A function description is a JSON object with the fields:
   blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain
   state <view-functions>`), ``nonpayable`` (function does not accept Ether - the default) and ``payable`` (function accepts Ether).
 
-Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
+Constructor, receive, and fallback never have ``name`` or ``outputs``. Receive and fallback don't have ``inputs`` either.
 
 .. note::
     Sending non-zero Ether to non-payable function will revert the transaction.
