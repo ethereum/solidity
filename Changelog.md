@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix internal error when using the custom NatSpec annotation to abstract free functions.
  * TypeChecker: Also allow external library functions in ``using for``.
 
 

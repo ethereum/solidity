@@ -2897,7 +2897,9 @@ vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedA
 
 vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
 {
-	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+	if (auto contract = dynamic_cast<ContractDefinition const*>(_function.scope()))
+		return stateVariablesIncludingInheritedAndPrivate(*contract);
+	return {};
 }
 
 vector<VariableDeclaration const*> SMTEncoder::localVariablesIncludingModifiers(FunctionDefinition const& _function, ContractDefinition const* _contract)
@@ -3018,14 +3020,6 @@ set<FunctionDefinition const*, ASTNode::CompareByID> const& SMTEncoder::contract
 
 	}
 	return m_contractFunctionsWithoutVirtual.at(&_contract);
-}
-
-SourceUnit const* SMTEncoder::sourceUnitContaining(Scopable const& _scopable)
-{
-	for (auto const* s = &_scopable; s; s = dynamic_cast<Scopable const*>(s->scope()))
-		if (auto const* source = dynamic_cast<SourceUnit const*>(s->scope()))
-			return source;
-	solAssert(false, "");
 }
 
 map<ContractDefinition const*, vector<ASTPointer<frontend::Expression>>> SMTEncoder::baseArguments(ContractDefinition const& _contract)
