@@ -45,6 +45,7 @@
 #include <range/v3/view/map.hpp>
 
 using namespace std;
+using namespace std::string_literals;
 using namespace solidity::langutil;
 
 namespace
@@ -138,7 +139,7 @@ Json::Value ASTJsonExporter::sourceLocationsToJson(vector<SourceLocation> const&
 
 string ASTJsonExporter::namePathToString(std::vector<ASTString> const& _namePath)
 {
-	return boost::algorithm::join(_namePath, ".");
+	return boost::algorithm::join(_namePath, "."s);
 }
 
 Json::Value ASTJsonExporter::typePointerToJson(Type const* _tp, bool _withoutDataLocation)
