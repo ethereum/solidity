@@ -113,9 +113,6 @@ public:
 	/// @returns the ModifierDefinition of a ModifierInvocation if possible, or nullptr.
 	static ModifierDefinition const* resolveModifierInvocation(ModifierInvocation const& _invocation, ContractDefinition const* _contract);
 
-	/// @returns the SourceUnit that contains _scopable.
-	static SourceUnit const* sourceUnitContaining(Scopable const& _scopable);
-
 	/// @returns the arguments for each base constructor call in the hierarchy of @a _contract.
 	std::map<ContractDefinition const*, std::vector<ASTPointer<frontend::Expression>>> baseArguments(ContractDefinition const& _contract);
 
