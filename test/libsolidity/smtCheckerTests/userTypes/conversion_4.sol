@@ -21,4 +21,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (407-457): CHC: Assertion violation happens here.
-// Info 1180: Contract invariant(s) for :C:\n(true || true || true)\nReentrancy property(ies) for :C:\n(((<errorCode> = 0) && ((:var 0) = (:var 1))) || true || true || true || true)\n(true || true || ((<errorCode> = 0) && ((:var 0) = (:var 1))) || true || true)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(MyUInt8.unwrap(m(MyUInt16.wrap(1))) == 1)\n<errorCode> = 2 -> Assertion failed at assert(MyUInt8.unwrap(m(MyUInt16.wrap(2))) == 2)\n<errorCode> = 3 -> Assertion failed at assert(MyUInt8.unwrap(m(MyUInt16.wrap(255))) == 0xff)\n<errorCode> = 4 -> Assertion failed at assert(MyUInt8.unwrap(m(MyUInt16.wrap(255))) == 1)\n
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

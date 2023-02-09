@@ -43,3 +43,4 @@ contract C {
 // Warning 4661: (752-781): BMC: Assertion violation happens here.
 // Warning 4661: (809-839): BMC: Assertion violation happens here.
 // Warning 4661: (867-903): BMC: Assertion violation happens here.
+// Info 6002: BMC: 12 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

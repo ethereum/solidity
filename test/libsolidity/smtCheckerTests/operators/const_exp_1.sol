@@ -12,4 +12,5 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 2018: (65-173): Function state mutability can be restricted to pure
-// Warning 6328: (139-154): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 1024\n\nTransaction trace:\nC.constructor()\nState: x = 2, y = 1024\nC.f()
+// Warning 6328: (139-154): CHC: Assertion violation happens here.
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

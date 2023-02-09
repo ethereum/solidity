@@ -40,3 +40,4 @@ contract C {
 // Warning 8417: (155-171): Since the VM version paris, "difficulty" was replaced by "prevrandao", which now returns a random number based on the beacon chain.
 // Warning 8417: (641-657): Since the VM version paris, "difficulty" was replaced by "prevrandao", which now returns a random number based on the beacon chain.
 // Warning 6328: (932-961): CHC: Assertion violation happens here.
+// Info 1391: CHC: 12 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -15,3 +15,4 @@ contract C {
 // SMTIgnoreOS: macos
 // ----
 // Warning 6328: (203-244): CHC: Assertion violation happens here.
+// Info 1391: CHC: 11 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

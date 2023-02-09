@@ -13,4 +13,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2529: (49-56): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()
+// Warning 2529: (49-56): CHC: Empty array "pop" happens here.
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

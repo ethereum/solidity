@@ -10,3 +10,4 @@ contract C {
 // SMTEngine: bmc
 // ----
 // Warning 9302: (88-105): Return value of low-level calls not used.
+// Info 6002: BMC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

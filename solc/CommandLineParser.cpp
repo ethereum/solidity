@@ -71,6 +71,7 @@ static string const g_strModelCheckerDivModNoSlacks = "model-checker-div-mod-no-
 static string const g_strModelCheckerEngine = "model-checker-engine";
 static string const g_strModelCheckerExtCalls = "model-checker-ext-calls";
 static string const g_strModelCheckerInvariants = "model-checker-invariants";
+static string const g_strModelCheckerShowProvedSafe = "model-checker-show-proved-safe";
 static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved";
 static string const g_strModelCheckerSolvers = "model-checker-solvers";
 static string const g_strModelCheckerTargets = "model-checker-targets";
@@ -846,6 +847,10 @@ General Information)").c_str(),
 			" By default no invariants are reported."
 		)
 		(
+			g_strModelCheckerShowProvedSafe.c_str(),
+			"Show all targets that were proved safe separately."
+		)
+		(
 			g_strModelCheckerShowUnproved.c_str(),
 			"Show all unproved targets separately."
 		)
@@ -953,6 +958,7 @@ void CommandLineParser::processArgs()
 		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strNoCBORMetadata, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowProvedSafe, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
@@ -1314,6 +1320,9 @@ void CommandLineParser::processArgs()
 		m_options.modelChecker.settings.invariants = *invs;
 	}
 
+	if (m_args.count(g_strModelCheckerShowProvedSafe))
+		m_options.modelChecker.settings.showProvedSafe = true;
+
 	if (m_args.count(g_strModelCheckerShowUnproved))
 		m_options.modelChecker.settings.showUnproved = true;
 
@@ -1345,6 +1354,7 @@ void CommandLineParser::processArgs()
 		m_args.count(g_strModelCheckerEngine) ||
 		m_args.count(g_strModelCheckerExtCalls) ||
 		m_args.count(g_strModelCheckerInvariants) ||
+		m_args.count(g_strModelCheckerShowProvedSafe) ||
 		m_args.count(g_strModelCheckerShowUnproved) ||
 		m_args.count(g_strModelCheckerSolvers) ||
 		m_args.count(g_strModelCheckerTargets) ||

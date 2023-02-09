@@ -43,4 +43,5 @@ contract Homer is ERC165, Simpson {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (1340-1395): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nHomer.constructor()\nHomer.check()\n    Homer.supportsInterface(0x73b6b492) -- internal call\n    Homer.supportsInterface(0x01ffc9a7) -- internal call\n    Homer.supportsInterface(0x8b9eb9ca) -- internal call
+// Warning 6328: (1340-1395): CHC: Assertion violation happens here.
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

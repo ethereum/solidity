@@ -16,4 +16,4 @@ contract C {
 // SMTEngine: all
 // SMTExtCalls: trusted
 // ----
-// Info 1180: Contract invariant(s) for :C:\n(:var 0).isActive[address(this)]\n
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

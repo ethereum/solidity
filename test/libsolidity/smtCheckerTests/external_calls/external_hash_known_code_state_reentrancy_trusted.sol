@@ -35,4 +35,4 @@ contract C {
 // SMTExtCalls: trusted
 // ----
 // Warning 6328: (314-328): CHC: Assertion violation might happen here.
-// Info 1180: Reentrancy property(ies) for :State:\n(<errorCode> = 0)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(z == y)\n<errorCode> = 2 -> Assertion failed at assert(prevOwner == owner)\n
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

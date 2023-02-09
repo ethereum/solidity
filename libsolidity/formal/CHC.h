@@ -65,13 +65,25 @@ public:
 
 	void analyze(SourceUnit const& _sources);
 
+	struct CHCVerificationTarget: VerificationTarget
+	{
+		unsigned const errorId;
+		ASTNode const* const errorNode;
+
+		friend bool operator<(CHCVerificationTarget const& _a, CHCVerificationTarget const& _b)
+		{
+			return _a.errorId < _b.errorId;
+		}
+	};
+
 	struct ReportTargetInfo
 	{
 		langutil::ErrorId error;
 		langutil::SourceLocation location;
 		std::string message;
 	};
-	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> const& safeTargets() const { return m_safeTargets; }
+
+	std::map<ASTNode const*, std::set<CHCVerificationTarget>, smt::EncodingContext::IdCompare> const& safeTargets() const { return m_safeTargets; }
 	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> const& unsafeTargets() const { return m_unsafeTargets; }
 
 	/// This is used if the Horn solver is not directly linked into this binary.
@@ -261,8 +273,6 @@ private:
 	void verificationTargetEncountered(ASTNode const* const _errorNode, VerificationTargetType _type, smtutil::Expression const& _errorCondition);
 
 	void checkVerificationTargets();
-	// Forward declarations. Definitions are below.
-	struct CHCVerificationTarget;
 	struct CHCQueryPlaceholder;
 	void checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& _target);
 	void checkAndReportTarget(
@@ -272,6 +282,8 @@ private:
 		std::string _satMsg,
 		std::string _unknownMsg = ""
 	);
+
+	std::pair<std::string, langutil::ErrorId> targetDescription(CHCVerificationTarget const& _target);
 
 	std::optional<std::string> generateCounterexample(smtutil::CHCSolverInterface::CexGraph const& _graph, std::string const& _root);
 
@@ -370,12 +382,6 @@ private:
 
 	/// Verification targets.
 	//@{
-	struct CHCVerificationTarget: VerificationTarget
-	{
-		unsigned const errorId;
-		ASTNode const* const errorNode;
-	};
-
 	/// Query placeholder stores information necessary to create the final query edge in the CHC system.
 	/// It is combined with the unique error id (and error type) to create a complete Verification Target.
 	struct CHCQueryPlaceholder
@@ -398,7 +404,7 @@ private:
 	std::map<unsigned, CHCVerificationTarget> m_verificationTargets;
 
 	/// Targets proved safe.
-	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> m_safeTargets;
+	std::map<ASTNode const*, std::set<CHCVerificationTarget>, smt::EncodingContext::IdCompare> m_safeTargets;
 	/// Targets proved unsafe.
 	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> m_unsafeTargets;
 	/// Targets not proved.

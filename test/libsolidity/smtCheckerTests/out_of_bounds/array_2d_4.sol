@@ -16,10 +16,12 @@ contract C {
 // ----
 // Warning 4984: (184-197): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 4984: (199-202): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6368: (228-232): CHC: Out of bounds access happens here.\nCounterexample:\na = []\ni = 0\nj = 0\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.r()
+// Warning 6368: (228-232): CHC: Out of bounds access happens here.
 // Warning 4984: (228-244): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 4984: (246-249): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6368: (255-259): CHC: Out of bounds access happens here.\nCounterexample:\na = []\ni = 0\nj = 0\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.r()
+// Warning 6368: (255-259): CHC: Out of bounds access happens here.
 // Warning 6368: (255-262): CHC: Out of bounds access happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
 // Warning 2661: (184-197): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 2661: (228-244): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Info 6002: BMC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -27,3 +27,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 2018: (203-322): Function state mutability can be restricted to view
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

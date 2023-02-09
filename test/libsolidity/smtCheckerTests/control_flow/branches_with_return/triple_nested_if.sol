@@ -19,4 +19,4 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Info 1180: Contract invariant(s) for :C:\n((c <= 0) && (a <= 0) && (b <= 0))\n
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

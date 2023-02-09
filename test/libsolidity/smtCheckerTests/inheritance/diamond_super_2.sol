@@ -30,5 +30,6 @@ contract D is B, C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (443-458): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
-// Warning 6328: (477-492): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
+// Warning 6328: (443-458): CHC: Assertion violation happens here.
+// Warning 6328: (477-492): CHC: Assertion violation happens here.
+// Info 1391: CHC: 5 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

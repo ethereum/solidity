@@ -12,3 +12,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 9302: (94-109): Return value of low-level calls not used.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

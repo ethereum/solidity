@@ -11,4 +11,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (157-192): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()\n    C.h() -- trusted external call
+// Warning 6328: (157-192): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

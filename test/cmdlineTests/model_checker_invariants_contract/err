@@ -1,2 +1,4 @@
+Info: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+
 Info: Contract invariant(s) for model_checker_invariants_contract/input.sol:test:
 (!(x >= 1) || true)

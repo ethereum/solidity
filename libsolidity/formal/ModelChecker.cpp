@@ -125,7 +125,12 @@ void ModelChecker::analyze(SourceUnit const& _source)
 	if (m_settings.engine.chc)
 		m_chc.analyze(_source);
 
-	auto solvedTargets = m_chc.safeTargets();
+	map<ASTNode const*, set<VerificationTargetType>, smt::EncodingContext::IdCompare> solvedTargets;
+
+	for (auto const& [node, targets]: m_chc.safeTargets())
+		for (auto const& target: targets)
+			solvedTargets[node].insert(target.type);
+
 	for (auto const& [node, targets]: m_chc.unsafeTargets())
 		solvedTargets[node] += targets | ranges::views::keys;
 

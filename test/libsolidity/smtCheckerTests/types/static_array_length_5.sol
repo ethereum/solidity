@@ -9,6 +9,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (95-115): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\n\nTransaction trace:\nC.constructor()\nState: a = [0, 0]\nC.f()
-// Warning 6328: (134-154): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\n\nTransaction trace:\nC.constructor()\nState: a = [0, 0]\nC.f()
-// Info 1180: Contract invariant(s) for :C:\n(!(a.length <= 1) && !(a.length >= 3))\n
+// Warning 6328: (95-115): CHC: Assertion violation happens here.
+// Warning 6328: (134-154): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
