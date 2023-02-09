@@ -71,11 +71,7 @@ bool KnowledgeBase::knownToBeZero(YulString _a)
 
 optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
 {
-	VariableOffset offset = explore(_a);
-	if (offset.reference.empty())
-		return offset.offset;
-	else
-		return nullopt;
+	return explore(_a).absoluteValue();
 }
 
 optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expression)
@@ -129,10 +125,10 @@ optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const&
 				if (optional<VariableOffset> b = explore(f->arguments[1]))
 				{
 					u256 offset = a->offset + b->offset;
-					if (a->reference.empty())
+					if (a->isAbsolute())
 						// a is constant
 						return VariableOffset{b->reference, offset};
-					else if (b->reference.empty())
+					else if (b->isAbsolute())
 						// b is constant
 						return VariableOffset{a->reference, offset};
 				}
@@ -144,7 +140,7 @@ optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const&
 					u256 offset = a->offset - b->offset;
 					if (a->reference == b->reference)
 						return VariableOffset{YulString{}, offset};
-					else if (b->reference.empty())
+					else if (b->isAbsolute())
 						// b is constant
 						return VariableOffset{a->reference, offset};
 				}
@@ -175,7 +171,7 @@ void KnowledgeBase::reset(YulString _var)
 	if (VariableOffset const* offset = util::valueOrNullptr(m_offsets, _var))
 	{
 		// Remove var from its group
-		if (!offset->reference.empty())
+		if (!offset->isAbsolute())
 			m_groupMembers[offset->reference].erase(_var);
 		m_offsets.erase(_var);
 	}

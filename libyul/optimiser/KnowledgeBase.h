@@ -84,6 +84,19 @@ private:
 	{
 		YulString reference;
 		u256 offset;
+
+		bool isAbsolute() const
+		{
+			return reference.empty();
+		}
+
+		std::optional<u256> absoluteValue() const
+		{
+			if (isAbsolute())
+				return offset;
+			else
+				return std::nullopt;
+		}
 	};
 
 	VariableOffset explore(YulString _var);
