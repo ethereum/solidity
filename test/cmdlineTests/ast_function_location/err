@@ -1,0 +1,15 @@
+Error: No matching declaration found after argument-dependent lookup.
+  --> ast_function_location/input.sol:65:44:
+   |
+65 |         (int xS, int yS, int xE, int yE) = checkPattern(_x, _y,i, i); // error here
+   |                                            ^^^^^^^^^^^^
+Note: Candidate:
+  --> ast_function_location/input.sol:43:1:
+   |
+43 | function checkPattern(int _x, int _y,int _xStep, int _yStep)  returns(int startX, int startY, int endX, int endY)
+   | ^ (Relevant source part starts here and spans across multiple lines).
+Note: Candidate:
+  --> ast_function_location/input.sol:55:1:
+   |
+55 | function checkPattern(int _x, int _y)  returns(bool)
+   | ^ (Relevant source part starts here and spans across multiple lines).
