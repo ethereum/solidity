@@ -839,9 +839,10 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 	connectBlocks(
 		m_currentBlock,
 		predicate(*m_errorDest),
-		errorFlag().currentValue() > 0
+		errorFlag().currentValue() > 0 && currentPathConditions()
 	);
-	m_context.addAssertion(errorFlag().currentValue() == 0);
+	m_context.addAssertion(smtutil::Expression::implies(currentPathConditions(), errorFlag().currentValue() == 0));
+	m_context.addAssertion(errorFlag().increaseIndex() == 0);
 }
 
 void CHC::addNondetCalls(ContractDefinition const& _contract)
@@ -970,7 +971,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 
 	m_context.addAssertion(nondetCall);
 	solAssert(m_errorDest, "");
-	connectBlocks(m_currentBlock, predicate(*m_errorDest), errorFlag().currentValue() > 0);
+	connectBlocks(m_currentBlock, predicate(*m_errorDest), errorFlag().currentValue() > 0 && currentPathConditions());
 
 	// To capture the possibility of a reentrant call, we record in the call graph that the  current function
 	// can call any of the external methods of the current contract.
@@ -1866,6 +1867,7 @@ void CHC::verificationTargetEncountered(
 		m_functionTargetIds[m_currentContract].push_back(errorId);
 	auto previousError = errorFlag().currentValue();
 	errorFlag().increaseIndex();
+	auto extendedErrorCondition = currentPathConditions() && _errorCondition;
 
 	Predicate const* localBlock = m_currentFunction ?
 		createBlock(m_currentFunction, PredicateType::FunctionErrorBlock) :
@@ -1875,7 +1877,7 @@ void CHC::verificationTargetEncountered(
 	connectBlocks(
 		m_currentBlock,
 		pred,
-		_errorCondition && errorFlag().currentValue() == errorId
+		extendedErrorCondition && errorFlag().currentValue() == errorId
 	);
 	solAssert(m_errorDest, "");
 	addRule(smtutil::Expression::implies(pred, predicate(*m_errorDest)), pred.name);
