@@ -235,8 +235,7 @@ function force_truffle_compiler_settings
 function name_hardhat_default_export
 {
     local config_file="$1"
-
-    local import="import {HardhatUserConfig} from 'hardhat/types';"
+    local import="import {HardhatUserConfig} from 'hardhat/types/config';"
     local config="const config: HardhatUserConfig = {"
     sed -i "s|^\s*export\s*default\s*{|${import}\n${config}|g" "$config_file"
     echo "export default config;" >> "$config_file"

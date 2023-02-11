@@ -76,6 +76,9 @@ function gp2_test
     # See https://github.com/cowprotocol/contracts/issues/32
     yarn add @tenderly/hardhat-tenderly@1.1.6
 
+    # Add missing sinon type definitions
+    yarn add @types/sinon
+
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
     rm -r node_modules/@gnosis.pm/safe-contracts/build/
 
