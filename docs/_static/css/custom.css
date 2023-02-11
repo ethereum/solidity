@@ -51,41 +51,45 @@ pre {
 p.remix-link-container {
     position: relative;
     font-size: 12px;        /* Positioned next to the the top-right corner of the code block following it. */
-    top: -30px;
+    top: 22px;
+    margin-top: -15px;
+    margin-bottom: 10px;
 }
 
 a.remix-link {
-    position: absolute;  /* Remove it from normal flow not to affect the original position of the snippet. */
-    top: -0.1em;
-    width: 2.1em;      /* Size of the margin (= right-side padding in .wy-nav-content in the current theme). */
-    right: 3px;
-    background: darkgray;
+    position: relative;  /* Remove it from normal flow not to affect the original position of the snippet. */
+    top: -2.1em;
+    width: 5.6em;      /* Size of the margin (= right-side padding in .wy-nav-content in the current theme). */
+    background: #1899d6;
+    margin-top: 1px;
     border-radius: 4px;
-    padding: 5px;
+    font-family: monospace;
+    padding: 4px;
+    box-shadow: rgba(45, 35, 66, 40%) 0 2px 4px, rgba(45, 35, 66, 30%) 0 7px 13px -3px, #2980b9 0 -3px 0 inset;
+    box-sizing: border-box;
+    color: #36395a;
+    display: inline-flex;
+    line-height: 1;
 }
 
 a.remix-link .link-icon {
     background: url("../img/solid-share-arrow.svg") no-repeat;
-    display: block;
+    display: none;
     width: 1.5em;
     height: 1.5em;
     margin: auto;
 }
 
 a.remix-link .link-text {
-    display: none;       /* Visible only on hover. */
-    width: 3.3em;        /* Narrow enough to get two lines of text. */
-    margin: auto;
+    display: block;       /* Visible only on hover. */
+    width: 6.3em;        /* Narrow enough to get two lines of text. */
+    margin: 0;
     text-align: center;
-    font-size: 0.8em;
+    font-size: 0.75em;
     line-height: normal;
-    color: black;
+    color: #fcfcfd;
 }
 
 a.remix-link:hover {
-    opacity: 0.5;
-}
-
-a.remix-link:hover .link-text {
-    display: block;
+    box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
 }
