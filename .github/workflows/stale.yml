@@ -10,8 +10,8 @@ permissions:
   pull-requests: write
 
 env:
-  BEFORE_ISSUE_STALE: 334
-  BEFORE_ISSUE_CLOSE: 0 #FIXME: change to 14 days
+  BEFORE_ISSUE_STALE: 90
+  BEFORE_ISSUE_CLOSE: 7
   BEFORE_PR_STALE: 14
   BEFORE_PR_CLOSE: 7
 
@@ -28,14 +28,13 @@ jobs:
             This issue has been marked as stale due to inactivity for the last ${{ env.BEFORE_ISSUE_STALE }} days.
             It will be automatically closed in ${{ env.BEFORE_ISSUE_CLOSE }} days.
           close-issue-message: |
-            Hi everyone! This issue has been closed due to inactivity.
+            Hi everyone! This issue has been automatically closed due to inactivity.
             If you think this issue is still relevant in the latest Solidity version and you have something to [contribute](https://docs.soliditylang.org/en/latest/contributing.html), feel free to reopen.
             However, unless the issue is a concrete proposal that can be implemented, we recommend starting a language discussion on the [forum](https://forum.soliditylang.org) instead.
-          any-of-issue-labels: stale # TODO: remove this when we're done with closing ancient issues
-          ascending: true # TODO: remove this when we're done with closing ancient issues
+          ascending: true
           stale-issue-label: stale
           close-issue-label: closed-due-inactivity
-          exempt-issue-labels: 'bug :bug:,roadmap,selected-for-development,must have'
+          exempt-issue-labels: 'bug :bug:,epic,roadmap,selected-for-development,must have,must have eventually,SMT'
           stale-pr-message: |
             This pull request is stale because it has been open for ${{ env.BEFORE_PR_STALE }} days with no activity.
             It will be closed in ${{ env.BEFORE_PR_CLOSE }} days unless the `stale` label is removed.
@@ -48,6 +47,5 @@ jobs:
           exempt-pr-labels: 'external contribution :star:,roadmap,epic'
           exempt-draft-pr: false
           exempt-all-milestones: true
-          # remove-stale-when-updated: true # TODO: uncomment and remove the line below when we're done with closing ancient issues
-          remove-issue-stale-when-updated: false
+          remove-stale-when-updated: true
           operations-per-run: 128
