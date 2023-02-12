@@ -1284,6 +1284,21 @@ Avoiding Naming Collisions
 This convention is suggested when the desired name collides with that of
 an existing state variable, function, built-in or otherwise reserved name.
 
+Underscore Prefix for Non-external Functions and Variables
+==========================================================
+
+* ``_singleLeadingUnderscore``
+
+This convention is suggested for non-external functions and state variables (``private`` or ``internal``). State variables without a specified visibility are ``internal`` by default.
+
+When designing a smart contract, the public-facing API (functions that can be called by any account)
+is an important consideration.
+Leading underscores allow you to immediately recognize the intent of such functions,
+but more importantly, if you change a function from non-external to external (including ``public``)
+and rename it accordingly, this forces you to review every call site while renaming.
+This can be an important manual check against unintended external functions
+and a common source of security vulnerabilities (avoid find-replace-all tooling for this change).
+
 .. _style_guide_natspec:
 
 *******
