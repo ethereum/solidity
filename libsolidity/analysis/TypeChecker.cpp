@@ -3605,10 +3605,10 @@ bool TypeChecker::visit(Identifier const& _identifier)
 							description += (description.empty() ? "" : ", ") + param->humanReadableName();
 						description = "function " + _identifier.name() + "(" + description + ")";
 
-						ssl.append("Candidate: " + description, declaration->location());
+						ssl.append("Candidate: " + description, declaration->prototypeLocation());
 					}
 					else
-						ssl.append("Candidate:", declaration->location());
+						ssl.append("Candidate:", declaration->prototypeLocation());
 				if (candidates.empty())
 					m_errorReporter.fatalTypeError(9322_error, _identifier.location(), ssl, "No matching declaration found after argument-dependent lookup.");
 				else

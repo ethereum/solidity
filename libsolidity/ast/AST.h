@@ -283,6 +283,8 @@ public:
 	/// This can only be called once types of variable declarations have already been resolved.
 	virtual Type const* typeViaContractName() const { return type(); }
 
+	virtual SourceLocation const  prototypeLocation () const { return location(); }
+
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
 	virtual FunctionTypePointer functionType(bool /*_internal*/) const { return {}; }
@@ -851,11 +853,11 @@ public:
 	ASTPointer<OverrideSpecifier> const& overrides() const { return m_overrides; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
 	ParameterList const& parameterList() const { return *m_parameters; }
-	SourceLocation const prototypeLocation(){
-		SourceLocation source = location();
+	SourceLocation const  prototypeLocation  () const override {
+		SourceLocation const& source = location();
 		SourceLocation functionLocation = parameterList().location();
-		source.end = functionLocation.end;
-		return source;
+		functionLocation.start = source.start;
+		return functionLocation;
 	}
 	ASTPointer<ParameterList> const& returnParameterList() const { return m_returnParameters; }
 	bool markedVirtual() const { return m_isVirtual; }
@@ -2321,7 +2323,6 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTString const& name() const { return *m_name; }
-
 	IdentifierAnnotation& annotation() const override;
 
 private:
