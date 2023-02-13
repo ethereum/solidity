@@ -365,7 +365,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 				toString(arguments->size()) +
 				" arguments given but expected " +
 				toString(parameterTypes.size()) +
-				". Remove parentheses if you do not want to provide arguments here."
+				(arguments->size() == 0 ? ". Remove parentheses if you do not want to provide arguments here." : "")
 			);
 		}
 		for (size_t i = 0; i < std::min(arguments->size(), parameterTypes.size()); ++i)
