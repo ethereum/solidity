@@ -9,5 +9,5 @@ contract B is A {
   }
 }
 // ----
-// TypeError 3656: (124-303): Contract "B" should be marked as abstract.
+// TypeError 3415: (124-303): No arguments passed to the base constructor. Specify the arguments or mark "B" as abstract.
 // TypeError 9640: (252-256): Explicit type conversion not allowed from "string memory" to "contract A".
