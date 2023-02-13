@@ -113,8 +113,13 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 	size_t storageByteArrayPushes = 0;
 	size_t storageByteAccesses = 0;
 	auto count = [&](TupleExpression const& _lhs, TupleType const& _rhs, auto _recurse) -> void {
-		TupleType const& lhsType = dynamic_cast<TupleType const&>(*type(_lhs));
-		TupleExpression const* lhsResolved = dynamic_cast<TupleExpression const*>(resolveOuterUnaryTuples(&_lhs));
+		auto& lhsType = dynamic_cast<TupleType const&>(*type(_lhs));
+		auto* lhsResolved = dynamic_cast<TupleExpression const*>(resolveOuterUnaryTuples(&_lhs));
+
+		if (!lhsResolved) {
+			m_errorReporter.reportErrors("lhsResolved is null");
+			return;
+		}
 
 		if (lhsType.components().size() != _rhs.components().size() || lhsResolved->components().size() != _rhs.components().size())
 		{
@@ -122,9 +127,10 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 			return;
 		}
 
+
 		for (auto&& [index, componentType]: lhsType.components() | ranges::views::enumerate)
 		{
-			if (ReferenceType const* ref = dynamic_cast<ReferenceType const*>(componentType))
+			if (auto* ref = dynamic_cast<ReferenceType const*>(componentType))
 			{
 				if (ref && ref->dataStoredIn(DataLocation::Storage) && !ref->isPointer())
 				{
@@ -137,12 +143,12 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 			{
 				if (bytesType && bytesType->numBytes() == 1)
 				{
-					if (FunctionCall const* lhsCall = dynamic_cast<FunctionCall const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
+					if (auto* lhsCall = dynamic_cast<FunctionCall const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
 					{
-						FunctionType const& callType = dynamic_cast<FunctionType const&>(*type(lhsCall->expression()));
+						auto& callType = dynamic_cast<FunctionType const&>(*type(lhsCall->expression()));
 						if (callType.kind() == FunctionType::Kind::ArrayPush)
 						{
-							ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*callType.selfType());
+							auto& arrayType = dynamic_cast<ArrayType const&>(*callType.selfType());
 							if (arrayType.isByteArray() && arrayType.dataStoredIn(DataLocation::Storage))
 							{
 								++storageByteAccesses;
@@ -150,15 +156,15 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 							}
 						}
 					}
-					else if (IndexAccess const* indexAccess = dynamic_cast<IndexAccess const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
+					else if (auto* indexAccess = dynamic_cast<IndexAccess const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
 					{
-						if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
+						if (auto* arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
 							if (arrayType->isByteArray() && arrayType->dataStoredIn(DataLocation::Storage))
 								++storageByteAccesses;
 					}
 				}
 			}
-			else if (TupleType const* tupleType = dynamic_cast<TupleType const*>(componentType))
+			else if (auto* tupleType = dynamic_cast<TupleType const*>(componentType))
 				if (auto const* lhsNested = dynamic_cast<TupleExpression const*>(lhsResolved->components().at(index).get()))
 					if (auto const* rhsNestedType = dynamic_cast<TupleType const*>(_rhs.components().at(index)))
 						_recurse(
@@ -169,7 +175,7 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 		}
 	};
 
-	TupleExpression const* lhsTupleExpression = dynamic_cast<TupleExpression const*>(&_assignment.leftHandSide());
+	auto* lhsTupleExpression = dynamic_cast<TupleExpression const*>(&_assignment.leftHandSide());
 	if (!lhsTupleExpression)
 	{
 		solAssert(m_errorReporter.hasErrors());
