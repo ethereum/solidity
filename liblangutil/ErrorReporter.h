@@ -127,6 +127,12 @@ public:
 	{
 		return m_errorCount > 0;
 	}
+	
+	void reportErrors(const std::string& errorMessage)
+	{
+		m_errorCount++;
+		m_errorMessages.push_back(errorMessage);
+	}
 
 	/// @returns the number of errors (ignores warnings and infos).
 	unsigned errorCount() const
@@ -184,6 +190,8 @@ private:
 	bool checkForExcessiveErrors(Error::Type _type);
 
 	ErrorList& m_errorList;
+	
+	std::vector<std::string> m_errorMessages;
 
 	unsigned m_errorCount = 0;
 	unsigned m_warningCount = 0;
