@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * ContractLevelChecker: Properly distinguish the case of missing base constructor arguments from having an unimplemented base function.
  * SMTChecker: Fix internal error when using the custom NatSpec annotation to abstract free functions.
  * TypeChecker: Also allow external library functions in ``using for``.
  * SMTChecker: Fix internal error caused by unhandled ``z3`` expressions that come from the solver when bitwise operators are used.
