@@ -842,7 +842,7 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 {
 	bool lvalueAccessToMemoryVariable = false;
-	// External references have already been resolved in a prior stage and stored in the annotation.
+	// External references to have already been resolved in a prior stage and stored in the annotation.
 	// We run the resolve step again regardless.
 	yul::ExternalIdentifierAccess::Resolver identifierAccess = [&](
 		yul::Identifier const& _identifier,
@@ -1648,7 +1648,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			_tuple.annotation().type = type(*components[0]);
 		else
 			_tuple.annotation().type = TypeProvider::tuple(std::move(types));
-		// If some of the components are not LValues, the error is reported above.
+		// If some components are not LValues, the error is reported above.
 		_tuple.annotation().isLValue = true;
 		_tuple.annotation().isPure = false;
 	}
@@ -2611,7 +2611,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	bool isLibraryCall = (_functionType->kind() == FunctionType::Kind::DelegateCall);
 	bool callRequiresABIEncoding =
 		// ABIEncode/ABIDecode calls not included because they should have been already validated
-		// at this point and they have variadic arguments so they need special handling.
+		// at this point and, they have variadic arguments, so they need special handling.
 		_functionType->kind() == FunctionType::Kind::DelegateCall ||
 		_functionType->kind() == FunctionType::Kind::External ||
 		_functionType->kind() == FunctionType::Kind::Creation ||
