@@ -113,8 +113,8 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 	size_t storageByteArrayPushes = 0;
 	size_t storageByteAccesses = 0;
 	auto count = [&](TupleExpression const& _lhs, TupleType const& _rhs, auto _recurse) -> void {
-		auto& lhsType = dynamic_cast<TupleType const&>(*type(_lhs));
-		auto* lhsResolved = dynamic_cast<TupleExpression const*>(resolveOuterUnaryTuples(&_lhs));
+		auto const& lhsType = dynamic_cast<TupleType const&>(*type(_lhs));
+		auto const* lhsResolved = dynamic_cast<TupleExpression const*>(resolveOuterUnaryTuples(&_lhs));
 
 		if (!lhsResolved) {
 			m_errorReporter.reportErrors("lhsResolved is null");
