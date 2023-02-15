@@ -130,7 +130,7 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 
 		for (auto&& [index, componentType]: lhsType.components() | ranges::views::enumerate)
 		{
-			if (auto* ref = dynamic_cast<ReferenceType const*>(componentType))
+			if (auto const* ref = dynamic_cast<ReferenceType const*>(componentType))
 			{
 				if (ref && ref->dataStoredIn(DataLocation::Storage) && !ref->isPointer())
 				{
