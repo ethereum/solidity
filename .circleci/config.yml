@@ -281,6 +281,68 @@ defaults:
   # --------------------------------------------------------------------------
   # Base Image Templates
 
+  - base_archlinux: &base_archlinux
+      docker:
+        - image: archlinux:base
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 3
+
+  - base_archlinux_large: &base_archlinux_large
+      docker:
+        - image: archlinux:base
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 5
+
+  - base_cimg_small: &base_cimg_small
+      docker:
+        - image: cimg/base:current
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
+
+  - base_ems_large: &base_ems_large
+      docker:
+        - image: << pipeline.parameters.emscripten-docker-image >>
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 5
+
+  - base_node_small: &base_node_small
+      docker:
+        - image: cimg/node:current
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
+
+  - base_osx: &base_osx
+      macos:
+        xcode: "13.2.0"
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j5
+
+  - base_osx_large: &base_osx_large
+      macos:
+        xcode: "13.2.0"
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j10
+
+  - base_python_small: &base_python_small
+      docker:
+        - image: cimg/python:3.6
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
+
   - base_ubuntu1604_clang: &base_ubuntu1604_clang
       docker:
         - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
@@ -295,30 +357,12 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_ubuntu2204_clang: &base_ubuntu2204_clang
-      docker:
-        - image: << pipeline.parameters.ubuntu-2204-clang-docker-image >>
-      environment:
-        TERM: xterm
-        CC: clang
-        CXX: clang++
-        MAKEFLAGS: -j 3
-
-  - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
-      <<: *base_ubuntu2204_clang
-      resource_class: large
-      environment:
-        TERM: xterm
-        CC: clang
-        CXX: clang++
-        MAKEFLAGS: -j 5
-
   - base_ubuntu2004: &base_ubuntu2004
       docker:
-        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+          - image: << pipeline.parameters.ubuntu-2004-docker-image >>
       environment:
-        TERM: xterm
-        MAKEFLAGS: -j 3
+          TERM: xterm
+          MAKEFLAGS: -j 3
 
   - base_ubuntu2004_small: &base_ubuntu2004_small
       <<: *base_ubuntu2004
@@ -341,6 +385,24 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 3
 
+  - base_ubuntu2204_clang: &base_ubuntu2204_clang
+      docker:
+        - image: << pipeline.parameters.ubuntu-2204-clang-docker-image >>
+      environment:
+        TERM: xterm
+        CC: clang
+        CXX: clang++
+        MAKEFLAGS: -j 3
+
+  - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
+      <<: *base_ubuntu2204_clang
+      resource_class: large
+      environment:
+        TERM: xterm
+        CC: clang
+        CXX: clang++
+        MAKEFLAGS: -j 5
+
   - base_ubuntu2204_small: &base_ubuntu2204_small
       <<: *base_ubuntu2204
       resource_class: small
@@ -362,28 +424,10 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 10
 
-  - base_cimg_small: &base_cimg_small
-      docker:
-        - image: cimg/base:current
-      resource_class: small
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 2
-
-  - base_archlinux: &base_archlinux
-      docker:
-        - image: archlinux:base
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 3
-
-  - base_archlinux_large: &base_archlinux_large
-      docker:
-        - image: archlinux:base
-      resource_class: large
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 5
+  - base_win_bash: &base_win_bash
+      executor:
+        name: win/default
+        shell: bash.exe
 
   - base_win_powershell: &base_win_powershell
       executor:
@@ -395,50 +439,6 @@ defaults:
         name: win/default
         shell: powershell.exe
         size: large
-
-  - base_win_bash: &base_win_bash
-      executor:
-        name: win/default
-        shell: bash.exe
-
-  - base_osx: &base_osx
-      macos:
-        xcode: "13.2.0"
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j5
-
-  - base_osx_large: &base_osx_large
-      macos:
-        xcode: "13.2.0"
-      resource_class: large
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j10
-
-  - base_ems_large: &base_ems_large
-      docker:
-        - image: << pipeline.parameters.emscripten-docker-image >>
-      resource_class: large
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 5
-
-  - base_python_small: &base_python_small
-      docker:
-        - image: cimg/python:3.6
-      resource_class: small
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 2
-
-  - base_node_small: &base_node_small
-      docker:
-        - image: cimg/node:current
-      resource_class: small
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 2
 
   # --------------------------------------------------------------------------
   # Workflow Templates
