@@ -466,11 +466,6 @@ defaults:
       requires:
         - b_ubu
 
-  - workflow_ubuntu1604_clang: &workflow_ubuntu1604_clang
-      <<: *workflow_trigger_on_tags
-      requires:
-        - b_ubu_ossfuzz
-
   - workflow_ubuntu2204_clang: &workflow_ubuntu2204_clang
       <<: *workflow_trigger_on_tags
       requires:
