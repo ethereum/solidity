@@ -164,12 +164,6 @@ defaults:
   # --------------------------------------------------------------------------
   # Artifacts Templates
 
-  # the whole build directory
-  - artifacts_build_dir: &artifacts_build_dir
-      root: build
-      paths:
-        - "*"
-
   # compiled solc executable target
   - artifacts_solc: &artifacts_solc
       path: build/solc/solc
