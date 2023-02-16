@@ -208,6 +208,13 @@ void SemVerMatchExpressionParser::parseMatchExpression()
 	range.components.push_back(parseMatchComponent());
 	if (currentToken() == Token::Sub)
 	{
+		if(containPrefixingToken()) {
+			solThrow(
+				SemVerError,
+				"You cannot use operators (<, <=, >=, >, ^) with verison ranges (-)."
+			);
+		}
+
 		range.components[0].prefix = Token::GreaterThanOrEqual;
 		nextToken();
 		range.components.push_back(parseMatchComponent());
@@ -323,4 +330,12 @@ void SemVerMatchExpressionParser::nextToken()
 {
 	++m_pos;
 	m_posInside = 0;
+}
+
+bool SemVerMatchExpressionParser::containPrefixingToken() const
+{
+	if (std::find_if(m_tokens.begin(), m_tokens.end(), TokenTraits::isPragmaOp) != m_tokens.end())
+		return true;
+	else
+		return false;
 }

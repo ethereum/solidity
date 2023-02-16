@@ -102,6 +102,7 @@ private:
 	char nextChar();
 	Token currentToken() const;
 	void nextToken();
+	bool containPrefixingToken() const;
 
 	std::vector<Token> m_tokens;
 	std::vector<std::string> m_literals;
