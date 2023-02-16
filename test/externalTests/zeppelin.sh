@@ -138,10 +138,6 @@ function zeppelin_test
     sed -i "s|describe(\('reverting initialization'\)|describe.skip(\1|g" test/proxy/Proxy.behaviour.js
     sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/security/ReentrancyGuard.test.js
 
-    # TODO: Remove this when https://github.com/OpenZeppelin/openzeppelin-contracts/issues/4049 gets fixed
-    sed -i "s|it(\('Succeeded'\)|it.skip(\1|g" test/governance/Governor.test.js
-    sed -i "s|it(\('Delay is extended to prevent last minute take-over'\)|it.skip(\1|g" test/governance/extensions/GovernorPreventLateQuorum.test.js
-
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
