@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Avoid including references to the deployed label of referenced functions if they are called right away.
  * ContractLevelChecker: Properly distinguish the case of missing base constructor arguments from having an unimplemented base function.
  * SMTChecker: Fix internal error when using the custom NatSpec annotation to abstract free functions.
  * TypeChecker: Also allow external library functions in ``using for``.
