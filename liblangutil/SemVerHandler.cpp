@@ -208,10 +208,11 @@ void SemVerMatchExpressionParser::parseMatchExpression()
 	range.components.push_back(parseMatchComponent());
 	if (currentToken() == Token::Sub)
 	{
-		if(containPrefixingToken()) {
+		if (containPrefixingToken())
+		{
 			solThrow(
 				SemVerError,
-				"You cannot use operators (<, <=, >=, >, ^) with verison ranges (-)."
+				"You cannot use operators (<, <=, >=, >, ^) with version ranges (-)."
 			);
 		}
 
