@@ -38,7 +38,7 @@ RUN set -ex; \
 		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
 		libcvc4-dev libz3-static-dev z3-static jq \
-		libcln-dev; \
+		libcln-dev zip locales-all; \
 	apt-get install -qy python3-pip python3-sphinx; \
 	pip3 install codecov; \
 	rm -rf /var/lib/apt/lists/*

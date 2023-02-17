@@ -1104,11 +1104,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: build
-      - run:
-          name: Install all locales
-          command: |
-            apt update --assume-yes
-            apt install locales-all --assume-yes --no-install-recommends
       - run: test/localeTest.sh build/solc/solc
       - matrix_notify_failure_unless_pr
 
@@ -1516,12 +1511,6 @@ jobs:
           name: Print diff
           when: on_fail
           command: diff --unified=0 --report-identical-files --from-file $REPORT_FILES | head --lines 50
-      - run:
-          name: Install zip
-          when: on_fail
-          command: |
-            apt update --quiet
-            apt install zip --assume-yes
       - run:
           name: Bundle reports into a single package
           when: on_fail
