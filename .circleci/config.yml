@@ -475,7 +475,7 @@ defaults:
       requires:
         - b_ubu_static
 
-  - workflow_archlinux: &workflow_archlinux
+  - requires_b_archlinux: &requires_b_archlinux
       <<: *on_all_tags_and_branches
       requires:
         - b_archlinux
@@ -1593,7 +1593,7 @@ workflows:
 
       # ArchLinux build and tests
       - b_archlinux: *on_all_tags_and_branches
-      - t_archlinux_soltest: *workflow_archlinux
+      - t_archlinux_soltest: *requires_b_archlinux
 
       # Static build
       - b_ubu_static: *on_all_tags_and_branches
