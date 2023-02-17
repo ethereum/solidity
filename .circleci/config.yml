@@ -17,11 +17,11 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7f0b62da2aa0920660e67cd17fb3a7f6c57d7da72454003056f3bd27bbda2075"
   ubuntu-2204-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:0d4fa1da806f9b3daabd2d1dc0842899af794a838e475c14045c3fb289cc8103"
-  ubuntu-1604-clang-ossfuzz-docker-image:
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-1
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:e515710752bfb38ee0e9b2f92ca71612c03ed85290c36c3b3c0a3d9f90187aef"
+  ubuntu-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-23
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-23
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7a84f67829ec2fdcfc8a61ebf22f9dc27b04a9edeb1531565ab3e0ebb1cbc4a0"
   emscripten-docker-image:
     type: string
@@ -343,15 +343,15 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_ubuntu1604_clang: &base_ubuntu1604_clang
+  - base_ubuntu_clang: &base_ubuntu_clang
       docker:
-        - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
+        - image: << pipeline.parameters.ubuntu-clang-ossfuzz-docker-image >>
       environment:
         TERM: xterm
         MAKEFLAGS: -j 3
 
-  - base_ubuntu1604_clang_small: &base_ubuntu1604_clang_small
-      <<: *base_ubuntu1604_clang
+  - base_ubuntu_clang_small: &base_ubuntu_clang_small
+      <<: *base_ubuntu_clang
       resource_class: small
       environment:
         TERM: xterm
@@ -510,7 +510,7 @@ defaults:
       requires:
         - b_ems
 
-  - workflow_ubuntu1604_ossfuzz: &workflow_ubuntu1604_ossfuzz
+  - workflow_ubuntu_ossfuzz: &workflow_ubuntu_ossfuzz
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_ossfuzz
@@ -916,7 +916,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
-    <<: *base_ubuntu1604_clang
+    <<: *base_ubuntu_clang
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -925,7 +925,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *base_ubuntu1604_clang_small
+    <<: *base_ubuntu_clang_small
     steps:
       - checkout
       - attach_workspace:
@@ -1711,7 +1711,7 @@ workflows:
     jobs:
       # OSSFUZZ builds and (regression) tests
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
-      - t_ubu_ossfuzz: *workflow_ubuntu1604_ossfuzz
+      - t_ubu_ossfuzz: *workflow_ubuntu_ossfuzz
 
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags

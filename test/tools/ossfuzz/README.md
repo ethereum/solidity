@@ -6,11 +6,11 @@
 
 We have multiple fuzzers, some based on string input and others on protobuf input. To build them, please do the following:
 
-- Create a local docker image from `Dockerfile.ubuntu1604.clang.ossfuzz` in the `.circleci/docker` sub-directory. Please note that this step is likely to take at least an hour to complete. Therefore, it is recommended to do it when you are away from the computer (and the computer is plugged to power since we do not want a battery drain).
+- Create a local docker image from `Dockerfile.ubuntu.clang.ossfuzz` in the `.circleci/docker` sub-directory. Please note that this step is likely to take at least an hour to complete. Therefore, it is recommended to do it when you are away from the computer (and the computer is plugged to power since we do not want a battery drain).
 
 ```
 $ cd .circleci/docker
-$ docker build -t solidity-ossfuzz-local -f Dockerfile.ubuntu1604.clang.ossfuzz .
+$ docker build -t solidity-ossfuzz-local -f Dockerfile.ubuntu.clang.ossfuzz .
 ```
 
 - Login to the docker container sourced from the image built in the previous step from the solidity parent directory
