@@ -505,7 +505,7 @@ defaults:
       requires:
         - b_ubu_ubsan_clang
 
-  - workflow_emscripten: &workflow_emscripten
+  - requires_emscripten: &requires_emscripten
       <<: *on_all_tags_and_branches
       requires:
         - b_ems
@@ -525,7 +525,7 @@ defaults:
 
   # Separate compile-only runs of those external tests where a full run takes much longer.
   - job_ems_compile_ext_colony: &job_ems_compile_ext_colony
-      <<: *workflow_emscripten
+      <<: *requires_emscripten
       name: t_ems_compile_ext_colony
       project: colony
       binary_type: solcjs
@@ -624,7 +624,7 @@ defaults:
       binary_type: native
       nodejs_version: '18.11'
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
-      <<: *workflow_emscripten
+      <<: *requires_emscripten
       name: t_ems_test_ext_colony
       project: colony
       binary_type: solcjs
@@ -1614,8 +1614,8 @@ workflows:
 
       # Emscripten build and tests that take 15 minutes or less
       - b_ems: *on_all_tags_and_branches
-      - t_ems_solcjs: *workflow_emscripten
-      - t_ems_ext_hardhat: *workflow_emscripten
+      - t_ems_solcjs: *requires_emscripten
+      - t_ems_ext_hardhat: *requires_emscripten
 
       - t_ems_ext: *job_ems_compile_ext_colony
 
