@@ -515,7 +515,7 @@ defaults:
       requires:
         - b_ubu_ossfuzz
 
-  - workflow_win: &workflow_win
+  - requires_b_win: &requires_b_win
       <<: *on_all_tags_and_branches
       requires:
         - b_win
@@ -1657,7 +1657,7 @@ workflows:
 
       # Windows build and tests
       - b_win: *on_all_tags_and_branches
-      - t_win_soltest: *workflow_win
+      - t_win_soltest: *requires_b_win
 
       # Bytecode comparison:
       - b_bytecode_ubu_static:
