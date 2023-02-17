@@ -443,7 +443,7 @@ defaults:
   # --------------------------------------------------------------------------
   # Workflow Templates
 
-  - workflow_trigger_on_tags: &workflow_trigger_on_tags
+  - on_all_tags_and_branches: &on_all_tags_and_branches
       filters:
         tags:
           only: /.*/
@@ -456,67 +456,67 @@ defaults:
           ignore: /.*/
 
   - workflow_ubuntu2204: &workflow_ubuntu2204
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu
 
   - workflow_ubuntu2204_clang: &workflow_ubuntu2204_clang
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_clang
 
   - workflow_ubuntu2204_force_release: &workflow_ubuntu2204_force_release
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_force_release
 
   - workflow_ubuntu2004_static: &workflow_ubuntu2004_static
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_static
 
   - workflow_archlinux: &workflow_archlinux
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_archlinux
 
   - workflow_ubuntu2204_codecov: &workflow_ubuntu2204_codecov
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_codecov
 
   - workflow_osx: &workflow_osx
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_osx
 
   - workflow_ubuntu2204_asan: &workflow_ubuntu2204_asan
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_asan
 
   - workflow_ubuntu2204_asan_clang: &workflow_ubuntu2204_asan_clang
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_asan_clang
 
   - workflow_ubuntu2204_ubsan_clang: &workflow_ubuntu2204_ubsan_clang
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_ubsan_clang
 
   - workflow_emscripten: &workflow_emscripten
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ems
 
   - workflow_ubuntu_ossfuzz: &workflow_ubuntu_ossfuzz
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_ossfuzz
 
   - workflow_win: &workflow_win
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       requires:
         - b_win
 
@@ -633,11 +633,11 @@ defaults:
       python2: true
 
   - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       name: b_ubu_asan_clang
       cmake_options: -DSANITIZE=address
   - job_b_ubu_ubsan_clang: &job_b_ubu_ubsan_clang
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       name: b_ubu_ubsan_clang
       cmake_options: -DSANITIZE=undefined
 
@@ -1568,52 +1568,52 @@ workflows:
   main:
     jobs:
       # basic checks
-      - chk_spelling: *workflow_trigger_on_tags
-      - chk_coding_style: *workflow_trigger_on_tags
-      # DISABLED FOR 0.6.0 - chk_docs_examples: *workflow_trigger_on_tags
-      - chk_buglist: *workflow_trigger_on_tags
-      - chk_proofs: *workflow_trigger_on_tags
-      - chk_pylint: *workflow_trigger_on_tags
-      - chk_errorcodes: *workflow_trigger_on_tags
-      - chk_antlr_grammar: *workflow_trigger_on_tags
-      - chk_docs_pragma_min_version: *workflow_trigger_on_tags
-      - t_ubu_pyscripts: *workflow_trigger_on_tags
-      - t_win_pyscripts: *workflow_trigger_on_tags
+      - chk_spelling: *on_all_tags_and_branches
+      - chk_coding_style: *on_all_tags_and_branches
+      # DISABLED FOR 0.6.0 - chk_docs_examples: *on_all_tags_and_branches
+      - chk_buglist: *on_all_tags_and_branches
+      - chk_proofs: *on_all_tags_and_branches
+      - chk_pylint: *on_all_tags_and_branches
+      - chk_errorcodes: *on_all_tags_and_branches
+      - chk_antlr_grammar: *on_all_tags_and_branches
+      - chk_docs_pragma_min_version: *on_all_tags_and_branches
+      - t_ubu_pyscripts: *on_all_tags_and_branches
+      - t_win_pyscripts: *on_all_tags_and_branches
 
       # build-only
-      - b_docs: *workflow_trigger_on_tags
-      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *workflow_trigger_on_tags
+      - b_docs: *on_all_tags_and_branches
+      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *on_all_tags_and_branches
       # Issue: https://github.com/ethereum/solidity/issues/13868
-      - b_ubu_ossfuzz: *workflow_trigger_on_tags
+      - b_ubu_ossfuzz: *on_all_tags_and_branches
 
       # OS/X build and tests
-      - b_osx: *workflow_trigger_on_tags
+      - b_osx: *on_all_tags_and_branches
       - t_osx_cli: *workflow_osx
       - t_osx_soltest: *workflow_osx
 
       # ArchLinux build and tests
-      - b_archlinux: *workflow_trigger_on_tags
+      - b_archlinux: *on_all_tags_and_branches
       - t_archlinux_soltest: *workflow_archlinux
 
       # Static build
-      - b_ubu_static: *workflow_trigger_on_tags
+      - b_ubu_static: *on_all_tags_and_branches
 
       # Ubuntu build and tests
-      - b_ubu: *workflow_trigger_on_tags
+      - b_ubu: *on_all_tags_and_branches
       - t_ubu_cli: *workflow_ubuntu2204
       - t_ubu_locale: *workflow_ubuntu2204
       - t_ubu_soltest_all: *workflow_ubuntu2204
-      - b_ubu_clang: *workflow_trigger_on_tags
+      - b_ubu_clang: *on_all_tags_and_branches
       - t_ubu_clang_soltest: *workflow_ubuntu2204_clang
       - t_ubu_lsp: *workflow_ubuntu2204
 
       # Ubuntu fake release build and tests
-      - b_ubu_force_release: *workflow_trigger_on_tags
+      - b_ubu_force_release: *on_all_tags_and_branches
       - t_ubu_force_release_cli: *workflow_ubuntu2204_force_release
       - t_ubu_force_release_soltest_all: *workflow_ubuntu2204_force_release
 
       # Emscripten build and tests that take 15 minutes or less
-      - b_ems: *workflow_trigger_on_tags
+      - b_ems: *on_all_tags_and_branches
       - t_ems_solcjs: *workflow_emscripten
       - t_ems_ext_hardhat: *workflow_emscripten
 
@@ -1636,7 +1636,7 @@ workflows:
       - t_ems_ext: *job_native_test_ext_gp2
 
       - c_ext_benchmarks:
-          <<: *workflow_trigger_on_tags
+          <<: *on_all_tags_and_branches
           requires:
             - t_ems_compile_ext_colony
             - t_native_test_ext_gnosis
@@ -1656,32 +1656,32 @@ workflows:
             - t_native_test_ext_gp2
 
       # Windows build and tests
-      - b_win: *workflow_trigger_on_tags
+      - b_win: *on_all_tags_and_branches
       - t_win_soltest: *workflow_win
 
       # Bytecode comparison:
       - b_bytecode_ubu_static:
-          <<: *workflow_trigger_on_tags
+          <<: *on_all_tags_and_branches
           requires:
             - b_ubu_static
       - b_bytecode_ubu:
-          <<: *workflow_trigger_on_tags
+          <<: *on_all_tags_and_branches
           requires:
             - b_ubu
       - b_bytecode_win:
-          <<: *workflow_trigger_on_tags
+          <<: *on_all_tags_and_branches
           requires:
             - b_win
       - b_bytecode_osx:
-          <<: *workflow_trigger_on_tags
+          <<: *on_all_tags_and_branches
           requires:
             - b_osx
       - b_bytecode_ems:
-          <<: *workflow_trigger_on_tags
+          <<: *on_all_tags_and_branches
           requires:
             - b_ems
       - t_bytecode_compare:
-          <<: *workflow_trigger_on_tags
+          <<: *on_all_tags_and_branches
           requires:
             - b_bytecode_ubu_static
             - b_bytecode_ubu
@@ -1710,15 +1710,15 @@ workflows:
 
     jobs:
       # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *workflow_trigger_on_tags
+      - b_ubu_ossfuzz: *on_all_tags_and_branches
       - t_ubu_ossfuzz: *workflow_ubuntu_ossfuzz
 
       # Code Coverage enabled build and tests
-      - b_ubu_codecov: *workflow_trigger_on_tags
+      - b_ubu_codecov: *on_all_tags_and_branches
       - t_ubu_codecov: *workflow_ubuntu2204_codecov
 
       # ASan build and tests
-      - b_ubu_asan: *workflow_trigger_on_tags
+      - b_ubu_asan: *on_all_tags_and_branches
       - b_ubu_san_clang: *job_b_ubu_asan_clang
       - t_ubu_asan_soltest: *workflow_ubuntu2204_asan
       - t_ubu_asan_clang_soltest: *workflow_ubuntu2204_asan_clang
@@ -1730,5 +1730,5 @@ workflows:
       - t_ubu_ubsan_clang_cli: *workflow_ubuntu2204_ubsan_clang
 
       # Emscripten build and tests that take more than 15 minutes to execute
-      - b_ems: *workflow_trigger_on_tags
+      - b_ems: *on_all_tags_and_branches
       - t_ems_ext: *job_ems_test_ext_colony
