@@ -485,7 +485,7 @@ defaults:
       requires:
         - b_ubu_codecov
 
-  - workflow_osx: &workflow_osx
+  - requires_b_osx: &requires_b_osx
       <<: *on_all_tags_and_branches
       requires:
         - b_osx
@@ -1588,8 +1588,8 @@ workflows:
 
       # OS/X build and tests
       - b_osx: *on_all_tags_and_branches
-      - t_osx_cli: *workflow_osx
-      - t_osx_soltest: *workflow_osx
+      - t_osx_cli: *requires_b_osx
+      - t_osx_soltest: *requires_b_osx
 
       # ArchLinux build and tests
       - b_archlinux: *on_all_tags_and_branches
