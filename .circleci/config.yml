@@ -455,17 +455,17 @@ defaults:
         branches:
           ignore: /.*/
 
-  - workflow_ubuntu2204: &workflow_ubuntu2204
+  - requires_b_ubu: &requires_b_ubu
       <<: *on_all_tags_and_branches
       requires:
         - b_ubu
 
-  - workflow_ubuntu2204_clang: &workflow_ubuntu2204_clang
+  - requires_b_ubu_clang: &requires_b_ubu_clang
       <<: *on_all_tags_and_branches
       requires:
         - b_ubu_clang
 
-  - workflow_ubuntu2204_force_release: &workflow_ubuntu2204_force_release
+  - requires_b_ubu_force_release: &requires_b_ubu_force_release
       <<: *on_all_tags_and_branches
       requires:
         - b_ubu_force_release
@@ -480,7 +480,7 @@ defaults:
       requires:
         - b_archlinux
 
-  - workflow_ubuntu2204_codecov: &workflow_ubuntu2204_codecov
+  - requires_b_ubu_codecov: &requires_b_ubu_codecov
       <<: *on_all_tags_and_branches
       requires:
         - b_ubu_codecov
@@ -490,17 +490,17 @@ defaults:
       requires:
         - b_osx
 
-  - workflow_ubuntu2204_asan: &workflow_ubuntu2204_asan
+  - requires_b_ubu_asan: &requires_b_ubu_asan
       <<: *on_all_tags_and_branches
       requires:
         - b_ubu_asan
 
-  - workflow_ubuntu2204_asan_clang: &workflow_ubuntu2204_asan_clang
+  - requires_b_ubu_asan_clang: &requires_b_ubu_asan_clang
       <<: *on_all_tags_and_branches
       requires:
         - b_ubu_asan_clang
 
-  - workflow_ubuntu2204_ubsan_clang: &workflow_ubuntu2204_ubsan_clang
+  - requires_b_ubu_ubsan_clang: &requires_b_ubu_ubsan_clang
       <<: *on_all_tags_and_branches
       requires:
         - b_ubu_ubsan_clang
@@ -1600,17 +1600,17 @@ workflows:
 
       # Ubuntu build and tests
       - b_ubu: *on_all_tags_and_branches
-      - t_ubu_cli: *workflow_ubuntu2204
-      - t_ubu_locale: *workflow_ubuntu2204
-      - t_ubu_soltest_all: *workflow_ubuntu2204
+      - t_ubu_cli: *requires_b_ubu
+      - t_ubu_locale: *requires_b_ubu
+      - t_ubu_soltest_all: *requires_b_ubu
       - b_ubu_clang: *on_all_tags_and_branches
-      - t_ubu_clang_soltest: *workflow_ubuntu2204_clang
-      - t_ubu_lsp: *workflow_ubuntu2204
+      - t_ubu_clang_soltest: *requires_b_ubu_clang
+      - t_ubu_lsp: *requires_b_ubu
 
       # Ubuntu fake release build and tests
       - b_ubu_force_release: *on_all_tags_and_branches
-      - t_ubu_force_release_cli: *workflow_ubuntu2204_force_release
-      - t_ubu_force_release_soltest_all: *workflow_ubuntu2204_force_release
+      - t_ubu_force_release_cli: *requires_b_ubu_force_release
+      - t_ubu_force_release_soltest_all: *requires_b_ubu_force_release
 
       # Emscripten build and tests that take 15 minutes or less
       - b_ems: *on_all_tags_and_branches
@@ -1715,19 +1715,19 @@ workflows:
 
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *on_all_tags_and_branches
-      - t_ubu_codecov: *workflow_ubuntu2204_codecov
+      - t_ubu_codecov: *requires_b_ubu_codecov
 
       # ASan build and tests
       - b_ubu_asan: *on_all_tags_and_branches
       - b_ubu_san_clang: *job_b_ubu_asan_clang
-      - t_ubu_asan_soltest: *workflow_ubuntu2204_asan
-      - t_ubu_asan_clang_soltest: *workflow_ubuntu2204_asan_clang
-      - t_ubu_asan_cli: *workflow_ubuntu2204_asan
+      - t_ubu_asan_soltest: *requires_b_ubu_asan
+      - t_ubu_asan_clang_soltest: *requires_b_ubu_asan_clang
+      - t_ubu_asan_cli: *requires_b_ubu_asan
 
       # UBSan build and tests
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
-      - t_ubu_ubsan_clang_soltest: *workflow_ubuntu2204_ubsan_clang
-      - t_ubu_ubsan_clang_cli: *workflow_ubuntu2204_ubsan_clang
+      - t_ubu_ubsan_clang_soltest: *requires_b_ubu_ubsan_clang
+      - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
 
       # Emscripten build and tests that take more than 15 minutes to execute
       - b_ems: *on_all_tags_and_branches
