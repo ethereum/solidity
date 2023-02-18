@@ -455,6 +455,12 @@ defaults:
         branches:
           ignore: /.*/
 
+  - on_develop: &on_develop
+      filters:
+        branches:
+          only:
+            - develop
+
   - requires_b_ubu: &requires_b_ubu
       <<: *on_all_tags_and_branches
       requires:
@@ -1703,10 +1709,7 @@ workflows:
     triggers:
       - schedule:
           cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - develop
+          <<: *on_develop
 
     jobs:
       # OSSFUZZ builds and (regression) tests
