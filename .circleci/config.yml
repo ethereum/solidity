@@ -7,6 +7,10 @@
 #     - ems: Emscripten
 version: 2.1
 parameters:
+  ubuntu-2004-docker-image:
+    type: string
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-16
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:ee1def5806f40c35d583234e172ec5769bb9a08b6f5bbc713c1a2658846dbced"
   ubuntu-2204-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-1
@@ -97,11 +101,13 @@ commands:
     parameters:
       label:
         type: string
+      binary_path:
+        type: string
     steps:
       - run: mkdir test-cases/
-      - run: cd test-cases && ../scripts/isolate_tests.py ../test/
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json --report-file "../bytecode-report-<< parameters.label >>-json.txt"
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli --report-file "../bytecode-report-<< parameters.label >>-cli.txt"
+      - run: cd test-cases && python3 ../scripts/isolate_tests.py ../test/
+      - run: cd test-cases && python3 ../scripts/bytecodecompare/prepare_report.py << parameters.binary_path >> --interface standard-json --report-file "../bytecode-report-<< parameters.label >>-json.txt"
+      - run: cd test-cases && python3 ../scripts/bytecodecompare/prepare_report.py << parameters.binary_path >> --interface cli --report-file "../bytecode-report-<< parameters.label >>-cli.txt"
       - store_artifacts:
           path: bytecode-report-<< parameters.label >>-json.txt
       - store_artifacts:
@@ -313,6 +319,27 @@ defaults:
         CXX: clang++
         MAKEFLAGS: -j 5
 
+  - base_ubuntu2004: &base_ubuntu2004
+      docker:
+        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 3
+
+  - base_ubuntu2004_small: &base_ubuntu2004_small
+      <<: *base_ubuntu2004
+      resource_class: small
+      environment:
+          TERM: xterm
+          MAKEFLAGS: -j 2
+
+  - base_ubuntu2004_xlarge: &base_ubuntu2004_xlarge
+      <<: *base_ubuntu2004
+      resource_class: xlarge
+      environment:
+          TERM: xterm
+          MAKEFLAGS: -j 10
+
   - base_ubuntu2204: &base_ubuntu2204
       docker:
         - image: << pipeline.parameters.ubuntu-2204-docker-image >>
@@ -454,7 +481,7 @@ defaults:
       requires:
         - b_ubu_force_release
 
-  - workflow_ubuntu2204_static: &workflow_ubuntu2204_static
+  - workflow_ubuntu2004_static: &workflow_ubuntu2004_static
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_static
@@ -518,91 +545,91 @@ defaults:
       python2: true
 
   - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_gnosis
       project: gnosis
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_zeppelin
       project: zeppelin
       binary_type: native
       resource_class: large
   - job_native_test_ext_ens: &job_native_test_ext_ens
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_ens
       project: ens
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_trident: &job_native_test_ext_trident
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_trident
       project: trident
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_euler: &job_native_test_ext_euler
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_euler
       project: euler
       binary_type: native
       resource_class: medium
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_yield_liquidator
       project: yield-liquidator
       binary_type: native
   - job_native_test_ext_bleeps: &job_native_test_ext_bleeps
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_bleeps
       project: bleeps
       binary_type: native
       resource_class: medium
   - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_pool_together
       project: pool-together
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_perpetual_pools
       project: perpetual-pools
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_uniswap: &job_native_test_ext_uniswap
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_uniswap
       project: uniswap
       binary_type: native
       nodejs_version: '16.18'
   - job_native_test_ext_prb_math: &job_native_test_ext_prb_math
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_elementfi
       project: elementfi
       binary_type: native
       resource_class: medium
   - job_native_test_ext_brink: &job_native_test_ext_brink
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_brink
       project: brink
       binary_type: native
       nodejs_version: '18.11'
   - job_native_test_ext_chainlink: &job_native_test_ext_chainlink
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_chainlink
       project: chainlink
       binary_type: native
       nodejs_version: '16.18'
       resource_class: large # Tests run out of memory on a smaller machine
   - job_native_test_ext_gp2: &job_native_test_ext_gp2
-      <<: *workflow_ubuntu2204_static
+      <<: *workflow_ubuntu2004_static
       name: t_native_test_ext_gp2
       project: gp2
       binary_type: native
@@ -826,8 +853,11 @@ jobs:
       MAKEFLAGS: -j 10
 
   b_ubu_static:
+    # We temporarily keep building static release binaries on ubuntu 20.04
+    # to avoid glibc incompatibilities.
+    # See: https://github.com/ethereum/solidity/issues/13954
     # On large runs 2x faster than on medium. 3x on xlarge.
-    <<: *base_ubuntu2204_xlarge
+    <<: *base_ubuntu2004_xlarge
     environment:
       TERM: xterm
       MAKEFLAGS: -j 10
@@ -838,8 +868,14 @@ jobs:
       - run:
           name: strip binary
           command: strip build/solc/solc
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
+      - store_artifacts:
+          path: build/solc/solc
+          destination: solc-static-linux
+      - run: mv build/solc/solc build/solc/solc-static-linux
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc-static-linux
       - gitter_notify_failure_unless_pr
 
   b_ubu_codecov:
@@ -1248,7 +1284,7 @@ jobs:
             - run:
                 name: External <<parameters.project>> tests (native)
                 command: |
-                  test/externalTests/<<parameters.project>>.sh native /tmp/workspace/solc/solc
+                  test/externalTests/<<parameters.project>>.sh native /tmp/workspace/solc/solc-static-linux
       - store_artifacts:
           path: reports/externalTests/
       # persist_to_workspace fails if the directory does not exist and the test script will create
@@ -1389,6 +1425,23 @@ jobs:
       - store_artifacts: *artifacts_test_results
       - gitter_notify_failure_unless_pr
 
+  # Note: b_bytecode_ubu_static is required because b_ubu_static and b_ubu
+  # are currently built on different Ubuntu base images.
+  # It can be safely removed once we move both to the same Ubuntu version.
+  b_bytecode_ubu_static:
+    <<: *base_ubuntu2004_small
+    environment:
+      TERM: xterm
+      MAKEFLAGS: -j 2
+      LC_ALL: C
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - prepare_bytecode_report:
+          label: "ubuntu2004-static"
+          binary_path: "../build/solc/solc-static-linux"
+
   b_bytecode_ubu:
     <<: *base_ubuntu2204_small
     environment:
@@ -1401,6 +1454,7 @@ jobs:
           at: build
       - prepare_bytecode_report:
           label: "ubuntu"
+          binary_path: "../build/solc/solc"
 
   b_bytecode_osx:
     <<: *base_osx
@@ -1414,6 +1468,7 @@ jobs:
           at: .
       - prepare_bytecode_report:
           label: "osx"
+          binary_path: "../build/solc/solc"
 
   b_bytecode_win:
     <<: *base_win_bash
@@ -1424,22 +1479,13 @@ jobs:
       # platforms so line ending conversions must absolutely be disabled.
       - run: git config --global core.autocrlf false
       - checkout
+      # Ensure windows has python3 alias required by prepare_bytecode_report
+      - run: ln -s /c/tools/miniconda3/python /c/tools/miniconda3/python3
       - attach_workspace:
           at: build
-      - run: mkdir test-cases/
-      - run: cd test-cases/ && python ../scripts/isolate_tests.py ../test/
-      - run: cd test-cases/ && python ../scripts/bytecodecompare/prepare_report.py ../build/solc/Release/solc.exe --interface standard-json --report-file ../bytecode-report-windows-json.txt
-      - run: cd test-cases/ && python ../scripts/bytecodecompare/prepare_report.py ../build/solc/Release/solc.exe --interface cli --report-file ../bytecode-report-windows-cli.txt
-      - store_artifacts:
-          path: bytecode-report-windows-json.txt
-      - store_artifacts:
-          path: bytecode-report-windows-cli.txt
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bytecode-report-windows-json.txt
-            - bytecode-report-windows-cli.txt
-      - gitter_notify_failure_unless_pr
+      - prepare_bytecode_report:
+          label: "windows"
+          binary_path: "../build/solc/Release/solc.exe"
 
   b_bytecode_ems:
     <<: *base_node_small
@@ -1464,6 +1510,8 @@ jobs:
     environment:
       REPORT_FILES: |
         bytecode-report-emscripten.txt
+        bytecode-report-ubuntu2004-static-json.txt
+        bytecode-report-ubuntu2004-static-cli.txt
         bytecode-report-ubuntu-json.txt
         bytecode-report-ubuntu-cli.txt
         bytecode-report-osx-json.txt
@@ -1506,10 +1554,10 @@ jobs:
           name: Gather and rename binaries from dependent jobs
           command: |
             mkdir github/
-            cp workspace/solc/solc             github/solc-static-linux
-            cp workspace/build/solc/solc       github/solc-macos
-            cp workspace/solc/Release/solc.exe github/solc-windows.exe
-            cp workspace/soljson.js            github/soljson.js
+            cp workspace/solc/solc-static-linux github/solc-static-linux
+            cp workspace/build/solc/solc        github/solc-macos
+            cp workspace/solc/Release/solc.exe  github/solc-windows.exe
+            cp workspace/soljson.js             github/soljson.js
 
             cd github/
             tar --create --file ../github-binaries.tar *
@@ -1635,6 +1683,10 @@ workflows:
       - t_win_soltest: *workflow_win
 
       # Bytecode comparison:
+      - b_bytecode_ubu_static:
+          <<: *workflow_trigger_on_tags
+          requires:
+            - b_ubu_static
       - b_bytecode_ubu:
           <<: *workflow_trigger_on_tags
           requires:
@@ -1654,6 +1706,7 @@ workflows:
       - t_bytecode_compare:
           <<: *workflow_trigger_on_tags
           requires:
+            - b_bytecode_ubu_static
             - b_bytecode_ubu
             - b_bytecode_win
             - b_bytecode_osx
