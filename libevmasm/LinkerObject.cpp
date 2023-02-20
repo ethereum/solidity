@@ -77,3 +77,15 @@ LinkerObject::matchLibrary(
 		return &it->second;
 	return nullptr;
 }
+
+bool LinkerObject::operator==(LinkerObject const& _other) const
+{
+	return this->bytecode == _other.bytecode &&
+		this->linkReferences == _other.linkReferences &&
+		this->immutableReferences == _other.immutableReferences;
+}
+
+bool LinkerObject::operator!=(LinkerObject const& _other) const
+{
+	return !(*this == _other);
+}

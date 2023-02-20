@@ -679,11 +679,29 @@ LinkerObject const& Assembly::assemble() const
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 
+	map<h256, size_t> subAssemblyOffsets;
+	map<h256, LinkerObject> subAssemblyLinkerObjects;
 	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{
+		LinkerObject subObject = subAssemblyById(subIdPath)->assemble();
+		util::h256 h(util::keccak256(util::asString(subObject.bytecode)));
 		bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerDataRef);
-		toBigEndian(ret.bytecode.size(), r);
-		ret.append(subAssemblyById(subIdPath)->assemble());
+		size_t* subAssemblyOffset = util::valueOrNullptr(subAssemblyOffsets, h);
+		LinkerObject* subAssemblyLinkerObject = util::valueOrNullptr(subAssemblyLinkerObjects, h);
+
+		// In order for de-duplication to kick in, the bytecode must not only already be present in the
+		// subAssemblyOffset map, but the LinkerObjects must match as well (linker references, immutable references, etc.)
+		if (subAssemblyOffset && *subAssemblyLinkerObject == subObject)
+			toBigEndian(*subAssemblyOffset, r);
+		else
+		{
+			toBigEndian(ret.bytecode.size(), r);
+			subAssemblyOffsets[h] = ret.bytecode.size();
+			subAssemblyLinkerObjects[h] = subObject;
+			ret.bytecode += subObject.bytecode;
+		}
+		for (auto const& ref: subObject.linkReferences)
+			ret.linkReferences[ref.first + subAssemblyOffsets[h]] = ref.second;
 	}
 
 	for (auto const& i: tagRef)
