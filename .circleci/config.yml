@@ -461,6 +461,9 @@ defaults:
           only:
             - develop
 
+  - requires_nothing: &requires_nothing
+      <<: *on_all_tags_and_branches
+
   - requires_b_ubu: &requires_b_ubu
       <<: *on_all_tags_and_branches
       requires:
@@ -511,7 +514,7 @@ defaults:
       requires:
         - b_ubu_ubsan_clang
 
-  - requires_emscripten: &requires_emscripten
+  - requires_b_ems: &requires_b_ems
       <<: *on_all_tags_and_branches
       requires:
         - b_ems
@@ -531,7 +534,7 @@ defaults:
 
   # Separate compile-only runs of those external tests where a full run takes much longer.
   - job_ems_compile_ext_colony: &job_ems_compile_ext_colony
-      <<: *requires_emscripten
+      <<: *requires_b_ems
       name: t_ems_compile_ext_colony
       project: colony
       binary_type: solcjs
@@ -630,7 +633,7 @@ defaults:
       binary_type: native
       nodejs_version: '18.11'
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
-      <<: *requires_emscripten
+      <<: *requires_b_ems
       name: t_ems_test_ext_colony
       project: colony
       binary_type: solcjs
@@ -1574,54 +1577,54 @@ workflows:
   main:
     jobs:
       # basic checks
-      - chk_spelling: *on_all_tags_and_branches
-      - chk_coding_style: *on_all_tags_and_branches
-      # DISABLED FOR 0.6.0 - chk_docs_examples: *on_all_tags_and_branches
-      - chk_buglist: *on_all_tags_and_branches
-      - chk_proofs: *on_all_tags_and_branches
-      - chk_pylint: *on_all_tags_and_branches
-      - chk_errorcodes: *on_all_tags_and_branches
-      - chk_antlr_grammar: *on_all_tags_and_branches
-      - chk_docs_pragma_min_version: *on_all_tags_and_branches
-      - t_ubu_pyscripts: *on_all_tags_and_branches
-      - t_win_pyscripts: *on_all_tags_and_branches
+      - chk_spelling: *requires_nothing
+      - chk_coding_style: *requires_nothing
+      # DISABLED FOR 0.6.0 - chk_docs_examples: *requires_nothing
+      - chk_buglist: *requires_nothing
+      - chk_proofs: *requires_nothing
+      - chk_pylint: *requires_nothing
+      - chk_errorcodes: *requires_nothing
+      - chk_antlr_grammar: *requires_nothing
+      - chk_docs_pragma_min_version: *requires_nothing
+      - t_ubu_pyscripts: *requires_nothing
+      - t_win_pyscripts: *requires_nothing
 
       # build-only
-      - b_docs: *on_all_tags_and_branches
-      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *on_all_tags_and_branches
+      - b_docs: *requires_nothing
+      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *requires_nothing
       # Issue: https://github.com/ethereum/solidity/issues/13868
-      - b_ubu_ossfuzz: *on_all_tags_and_branches
+      - b_ubu_ossfuzz: *requires_nothing
 
       # OS/X build and tests
-      - b_osx: *on_all_tags_and_branches
+      - b_osx: *requires_nothing
       - t_osx_cli: *requires_b_osx
       - t_osx_soltest: *requires_b_osx
 
       # ArchLinux build and tests
-      - b_archlinux: *on_all_tags_and_branches
+      - b_archlinux: *requires_nothing
       - t_archlinux_soltest: *requires_b_archlinux
 
       # Static build
-      - b_ubu_static: *on_all_tags_and_branches
+      - b_ubu_static: *requires_nothing
 
       # Ubuntu build and tests
-      - b_ubu: *on_all_tags_and_branches
+      - b_ubu: *requires_nothing
       - t_ubu_cli: *requires_b_ubu
       - t_ubu_locale: *requires_b_ubu
       - t_ubu_soltest_all: *requires_b_ubu
-      - b_ubu_clang: *on_all_tags_and_branches
+      - b_ubu_clang: *requires_nothing
       - t_ubu_clang_soltest: *requires_b_ubu_clang
       - t_ubu_lsp: *requires_b_ubu
 
       # Ubuntu fake release build and tests
-      - b_ubu_force_release: *on_all_tags_and_branches
+      - b_ubu_force_release: *requires_nothing
       - t_ubu_force_release_cli: *requires_b_ubu_force_release
       - t_ubu_force_release_soltest_all: *requires_b_ubu_force_release
 
       # Emscripten build and tests that take 15 minutes or less
-      - b_ems: *on_all_tags_and_branches
-      - t_ems_solcjs: *requires_emscripten
-      - t_ems_ext_hardhat: *requires_emscripten
+      - b_ems: *requires_nothing
+      - t_ems_solcjs: *requires_b_ems
+      - t_ems_ext_hardhat: *requires_b_ems
 
       - t_ems_ext: *job_ems_compile_ext_colony
 
@@ -1642,7 +1645,7 @@ workflows:
       - t_ems_ext: *job_native_test_ext_gp2
 
       - c_ext_benchmarks:
-          <<: *on_all_tags_and_branches
+          <<: *requires_nothing
           requires:
             - t_ems_compile_ext_colony
             - t_native_test_ext_gnosis
@@ -1662,32 +1665,32 @@ workflows:
             - t_native_test_ext_gp2
 
       # Windows build and tests
-      - b_win: *on_all_tags_and_branches
+      - b_win: *requires_nothing
       - t_win_soltest: *requires_b_win
 
       # Bytecode comparison:
       - b_bytecode_ubu_static:
-          <<: *on_all_tags_and_branches
+          <<: *requires_nothing
           requires:
             - b_ubu_static
       - b_bytecode_ubu:
-          <<: *on_all_tags_and_branches
+          <<: *requires_nothing
           requires:
             - b_ubu
       - b_bytecode_win:
-          <<: *on_all_tags_and_branches
+          <<: *requires_nothing
           requires:
             - b_win
       - b_bytecode_osx:
-          <<: *on_all_tags_and_branches
+          <<: *requires_nothing
           requires:
             - b_osx
       - b_bytecode_ems:
-          <<: *on_all_tags_and_branches
+          <<: *requires_nothing
           requires:
             - b_ems
       - t_bytecode_compare:
-          <<: *on_all_tags_and_branches
+          <<: *requires_nothing
           requires:
             - b_bytecode_ubu_static
             - b_bytecode_ubu
@@ -1713,15 +1716,15 @@ workflows:
 
     jobs:
       # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *on_all_tags_and_branches
+      - b_ubu_ossfuzz: *requires_nothing
       - t_ubu_ossfuzz: *requires_b_ubu_ossfuzz
 
       # Code Coverage enabled build and tests
-      - b_ubu_codecov: *on_all_tags_and_branches
+      - b_ubu_codecov: *requires_nothing
       - t_ubu_codecov: *requires_b_ubu_codecov
 
       # ASan build and tests
-      - b_ubu_asan: *on_all_tags_and_branches
+      - b_ubu_asan: *requires_nothing
       - b_ubu_san_clang: *job_b_ubu_asan_clang
       - t_ubu_asan_soltest: *requires_b_ubu_asan
       - t_ubu_asan_clang_soltest: *requires_b_ubu_asan_clang
@@ -1733,5 +1736,5 @@ workflows:
       - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
 
       # Emscripten build and tests that take more than 15 minutes to execute
-      - b_ems: *on_all_tags_and_branches
+      - b_ems: *requires_nothing
       - t_ems_ext: *job_ems_test_ext_colony
