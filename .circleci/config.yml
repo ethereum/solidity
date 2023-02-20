@@ -548,77 +548,90 @@ defaults:
       project: gnosis
       binary_type: native
       nodejs_version: '16.18'
+
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
       <<: *requires_b_ubu_static
       name: t_native_test_ext_zeppelin
       project: zeppelin
       binary_type: native
       resource_class: large
+
   - job_native_test_ext_ens: &job_native_test_ext_ens
       <<: *requires_b_ubu_static
       name: t_native_test_ext_ens
       project: ens
       binary_type: native
       nodejs_version: '18.11'
+
   - job_native_test_ext_trident: &job_native_test_ext_trident
       <<: *requires_b_ubu_static
       name: t_native_test_ext_trident
       project: trident
       binary_type: native
       nodejs_version: '16.18'
+
   - job_native_test_ext_euler: &job_native_test_ext_euler
       <<: *requires_b_ubu_static
       name: t_native_test_ext_euler
       project: euler
       binary_type: native
       resource_class: medium
+
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
       <<: *requires_b_ubu_static
       name: t_native_test_ext_yield_liquidator
       project: yield-liquidator
       binary_type: native
+
   - job_native_test_ext_bleeps: &job_native_test_ext_bleeps
       <<: *requires_b_ubu_static
       name: t_native_test_ext_bleeps
       project: bleeps
       binary_type: native
       resource_class: medium
+
   - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
       <<: *requires_b_ubu_static
       name: t_native_test_ext_pool_together
       project: pool-together
       binary_type: native
       nodejs_version: '16.18'
+
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
       <<: *requires_b_ubu_static
       name: t_native_test_ext_perpetual_pools
       project: perpetual-pools
       binary_type: native
       nodejs_version: '18.11'
+
   - job_native_test_ext_uniswap: &job_native_test_ext_uniswap
       <<: *requires_b_ubu_static
       name: t_native_test_ext_uniswap
       project: uniswap
       binary_type: native
       nodejs_version: '16.18'
+
   - job_native_test_ext_prb_math: &job_native_test_ext_prb_math
       <<: *requires_b_ubu_static
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
       nodejs_version: '18.11'
+
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
       <<: *requires_b_ubu_static
       name: t_native_test_ext_elementfi
       project: elementfi
       binary_type: native
       resource_class: medium
+
   - job_native_test_ext_brink: &job_native_test_ext_brink
       <<: *requires_b_ubu_static
       name: t_native_test_ext_brink
       project: brink
       binary_type: native
       nodejs_version: '18.11'
+
   - job_native_test_ext_chainlink: &job_native_test_ext_chainlink
       <<: *requires_b_ubu_static
       name: t_native_test_ext_chainlink
@@ -626,12 +639,14 @@ defaults:
       binary_type: native
       nodejs_version: '16.18'
       resource_class: large # Tests run out of memory on a smaller machine
+
   - job_native_test_ext_gp2: &job_native_test_ext_gp2
       <<: *requires_b_ubu_static
       name: t_native_test_ext_gp2
       project: gp2
       binary_type: native
       nodejs_version: '18.11'
+
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
       <<: *requires_b_ems
       name: t_ems_test_ext_colony
@@ -645,6 +660,7 @@ defaults:
       <<: *on_all_tags_and_branches
       name: b_ubu_asan_clang
       cmake_options: -DSANITIZE=address
+
   - job_b_ubu_ubsan_clang: &job_b_ubu_ubsan_clang
       <<: *on_all_tags_and_branches
       name: b_ubu_ubsan_clang
