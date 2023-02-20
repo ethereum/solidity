@@ -85,7 +85,6 @@ It can be compiled using ``solc --strict-assembly``. The builtin functions
 
 It is also possible to implement the same function using a for-loop
 instead of with recursion. Here, ``lt(a, b)`` computes whether ``a`` is less than ``b``.
-less-than comparison.
 
 .. code-block:: yul
 
