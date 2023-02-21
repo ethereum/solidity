@@ -300,9 +300,9 @@ and then they will be executed and distributed among all participating nodes.
 If two transactions contradict each other, the one that ends up being second will
 be rejected and not become part of the block.
 
-These blocks form a linear sequence in time and that is where the word "blockchain"
-derives from. Blocks are added to the chain in rather regular intervals - for
-Ethereum this is roughly every 17 seconds.
+These blocks form a linear sequence in time, and that is where the word "blockchain" derives from.
+Blocks are added to the chain at regular intervals, although these intervals may be subject to change in the future.
+For the most up-to-date information, it is recommended to monitor the network, for example, on `Etherscan <https://etherscan.io/chart/blocktime>`_.
 
 As part of the "order selection mechanism" (which is called "mining") it may happen that
 blocks are reverted from time to time, but only at the "tip" of the chain. The more

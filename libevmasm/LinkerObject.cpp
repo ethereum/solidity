@@ -77,3 +77,9 @@ LinkerObject::matchLibrary(
 		return &it->second;
 	return nullptr;
 }
+
+bool LinkerObject::operator<(LinkerObject const& _other) const
+{
+	return tie(this->bytecode, this->linkReferences, this->immutableReferences) <
+			tie(_other.bytecode, _other.linkReferences, _other.immutableReferences);
+}
