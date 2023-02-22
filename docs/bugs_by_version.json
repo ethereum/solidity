@@ -1776,6 +1776,10 @@
         "bugs": [],
         "released": "2023-02-01"
     },
+    "0.8.19": {
+        "bugs": [],
+        "released": "2023-02-22"
+    },
     "0.8.2": {
         "bugs": [
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
