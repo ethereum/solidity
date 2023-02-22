@@ -312,7 +312,12 @@ struct MemberAccessAnnotation: ExpressionAnnotation
 	util::SetOnce<VirtualLookup> requiredLookup;
 };
 
-struct BinaryOperationAnnotation: ExpressionAnnotation
+struct OperationAnnotation: ExpressionAnnotation
+{
+	util::SetOnce<FunctionDefinition const*> userDefinedFunction;
+};
+
+struct BinaryOperationAnnotation: OperationAnnotation
 {
 	/// The common type that is used for the operation, not necessarily the result type (which
 	/// e.g. for comparisons is bool).

@@ -330,19 +330,31 @@ bool ASTJsonExporter::visit(UsingForDirective const& _node)
 	vector<pair<string, Json::Value>> attributes = {
 		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::nullValue)
 	};
+
 	if (_node.usesBraces())
 	{
 		Json::Value functionList;
-		for (auto const& function: _node.functionsOrLibrary())
+		for (auto&& [function, op]: _node.functionsAndOperators())
 		{
 			Json::Value functionNode;
-			functionNode["function"] = toJson(*function);
+			if (!op.has_value())
+				functionNode["function"] = toJson(*function);
+			else
+			{
+				functionNode["definition"] = toJson(*function);
+				functionNode["operator"] = string(TokenTraits::toString(*op));
+			}
 			functionList.append(std::move(functionNode));
 		}
 		attributes.emplace_back("functionList", std::move(functionList));
 	}
 	else
-		attributes.emplace_back("libraryName", toJson(*_node.functionsOrLibrary().front()));
+	{
+		auto const& functionAndOperators = _node.functionsAndOperators();
+		solAssert(_node.functionsAndOperators().size() == 1);
+		solAssert(!functionAndOperators.front().second.has_value());
+		attributes.emplace_back("libraryName", toJson(*(functionAndOperators.front().first)));
+	}
 	attributes.emplace_back("global", _node.global());
 
 	setJsonNode(_node, "UsingForDirective", std::move(attributes));
@@ -830,6 +842,9 @@ bool ASTJsonExporter::visit(UnaryOperation const& _node)
 		make_pair("operator", TokenTraits::toString(_node.getOperator())),
 		make_pair("subExpression", toJson(_node.subExpression()))
 	};
+	// NOTE: This annotation is guaranteed to be set but only if we didn't stop at the parsing stage.
+	if (_node.annotation().userDefinedFunction.set() && *_node.annotation().userDefinedFunction != nullptr)
+		attributes.emplace_back("function", nodeId(**_node.annotation().userDefinedFunction));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "UnaryOperation", std::move(attributes));
 	return false;
@@ -843,6 +858,9 @@ bool ASTJsonExporter::visit(BinaryOperation const& _node)
 		make_pair("rightExpression", toJson(_node.rightExpression())),
 		make_pair("commonType", typePointerToJson(_node.annotation().commonType)),
 	};
+	// NOTE: This annotation is guaranteed to be set but only if we didn't stop at the parsing stage.
+	if (_node.annotation().userDefinedFunction.set() && *_node.annotation().userDefinedFunction != nullptr)
+		attributes.emplace_back("function", nodeId(**_node.annotation().userDefinedFunction));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "BinaryOperation", std::move(attributes));
 	return false;

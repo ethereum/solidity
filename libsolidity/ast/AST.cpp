@@ -30,7 +30,9 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/tail.hpp>
+#include <range/v3/view/zip.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -365,6 +367,11 @@ Type const* UserDefinedValueTypeDefinition::type() const
 TypeDeclarationAnnotation& UserDefinedValueTypeDefinition::annotation() const
 {
 	return initAnnotation<TypeDeclarationAnnotation>();
+}
+
+std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingForDirective::functionsAndOperators() const
+{
+	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<vector>;
 }
 
 Type const* StructDefinition::type() const
@@ -893,6 +900,37 @@ ExpressionAnnotation& Expression::annotation() const
 MemberAccessAnnotation& MemberAccess::annotation() const
 {
 	return initAnnotation<MemberAccessAnnotation>();
+}
+
+OperationAnnotation& UnaryOperation::annotation() const
+{
+	return initAnnotation<OperationAnnotation>();
+}
+
+FunctionType const* UnaryOperation::userDefinedFunctionType() const
+{
+	if (*annotation().userDefinedFunction == nullptr)
+		return nullptr;
+
+	FunctionDefinition const* userDefinedFunction = *annotation().userDefinedFunction;
+	return dynamic_cast<FunctionType const*>(
+		userDefinedFunction->libraryFunction() ?
+		userDefinedFunction->typeViaContractName() :
+		userDefinedFunction->type()
+	);
+}
+
+FunctionType const* BinaryOperation::userDefinedFunctionType() const
+{
+	if (*annotation().userDefinedFunction == nullptr)
+		return nullptr;
+
+	FunctionDefinition const* userDefinedFunction = *annotation().userDefinedFunction;
+	return dynamic_cast<FunctionType const*>(
+		userDefinedFunction->libraryFunction() ?
+		userDefinedFunction->typeViaContractName() :
+		userDefinedFunction->type()
+	);
 }
 
 BinaryOperationAnnotation& BinaryOperation::annotation() const

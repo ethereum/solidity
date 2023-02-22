@@ -410,6 +410,38 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
+
+	FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction;
+	if (function)
+	{
+		solAssert(function->isFree());
+
+		FunctionType const* functionType = _unaryOperation.userDefinedFunctionType();
+		solAssert(functionType);
+		solAssert(functionType->parameterTypes().size() == 1);
+		solAssert(functionType->returnParameterTypes().size() == 1);
+		solAssert(functionType->kind() == FunctionType::Kind::Internal);
+
+		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+		acceptAndConvert(
+			_unaryOperation.subExpression(),
+			*functionType->parameterTypes()[0],
+			false // _cleanupNeeded
+		);
+
+		m_context << m_context.functionEntryLabel(*function).pushTag();
+		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+		m_context << returnLabel;
+
+		unsigned parameterSize = CompilerUtils::sizeOnStack(functionType->parameterTypes());
+		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
+
+		// callee adds return parameters, but removes arguments and return label
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+
+		return false;
+	}
+
 	Type const& type = *_unaryOperation.annotation().type;
 	if (type.category() == Type::Category::RationalNumber)
 	{
@@ -502,7 +534,42 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.leftExpression();
 	Expression const& rightExpression = _binaryOperation.rightExpression();
-	solAssert(!!_binaryOperation.annotation().commonType, "");
+	FunctionDefinition const* function = *_binaryOperation.annotation().userDefinedFunction;
+	if (function)
+	{
+		solAssert(function->isFree());
+
+		FunctionType const* functionType = _binaryOperation.userDefinedFunctionType();
+		solAssert(functionType);
+		solAssert(functionType->parameterTypes().size() == 2);
+		solAssert(functionType->returnParameterTypes().size() == 1);
+		solAssert(functionType->kind() == FunctionType::Kind::Internal);
+
+		evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
+		acceptAndConvert(
+			leftExpression,
+			*functionType->parameterTypes()[0],
+			false // _cleanupNeeded
+		);
+		acceptAndConvert(
+			rightExpression,
+			*functionType->parameterTypes()[1],
+			false // _cleanupNeeded
+		);
+
+		m_context << m_context.functionEntryLabel(*function).pushTag();
+		m_context.appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
+		m_context << returnLabel;
+
+		unsigned parameterSize = CompilerUtils::sizeOnStack(functionType->parameterTypes());
+		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
+
+		// callee adds return parameters, but removes arguments and return label
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+		return false;
+	}
+
+	solAssert(!!_binaryOperation.annotation().commonType);
 	Type const* commonType = _binaryOperation.annotation().commonType;
 	Token const c_op = _binaryOperation.getOperator();
 

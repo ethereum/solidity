@@ -647,10 +647,16 @@ private:
  * 1. `using LibraryName for T` attaches all functions from the library `LibraryName` to the type `T`.
  * 2. `using LibraryName for *` attaches to all types.
  * 3. `using {f1, f2, ..., fn} for T` attaches the functions `f1`, `f2`, ..., `fn`, respectively to `T`.
+ * 4. `using {f1 as op1, f2 as op2, ..., fn as opn} for T` implements operator `opn` for type `T` with function `fn`.
  *
  * For version 3, T has to be implicitly convertible to the first parameter type of
  * all functions, and this is checked at the point of the using statement. For versions 1 and
  * 2, this check is only done when a function is called.
+ *
+ * For version 4, T has to be user-defined value type and the function must be pure.
+ * All parameters and return value of all the functions have to be of type T.
+ * This version can be combined with version 3 - a single directive may attach functions to the
+ * type and define operators on it at the same time.
  *
  * Finally, `using {f1, f2, ..., fn} for T global` is also valid at file level, as long as T is
  * a user-defined type defined in the same file at file level. In this case, the methods are
@@ -663,16 +669,19 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		std::vector<ASTPointer<IdentifierPath>> _functionsOrLibrary,
+		std::vector<std::optional<Token>> _operators,
 		bool _usesBraces,
 		ASTPointer<TypeName> _typeName,
 		bool _global
 	):
 		ASTNode(_id, _location),
 		m_functionsOrLibrary(std::move(_functionsOrLibrary)),
+		m_operators(std::move(_operators)),
 		m_usesBraces(_usesBraces),
 		m_typeName(std::move(_typeName)),
 		m_global{_global}
 	{
+		solAssert(m_functionsOrLibrary.size() == m_operators.size());
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -683,12 +692,18 @@ public:
 
 	/// @returns a list of functions or the single library.
 	std::vector<ASTPointer<IdentifierPath>> const& functionsOrLibrary() const { return m_functionsOrLibrary; }
+	std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> functionsAndOperators() const;
 	bool usesBraces() const { return m_usesBraces; }
 	bool global() const { return m_global; }
 
 private:
 	/// Either the single library or a list of functions.
 	std::vector<ASTPointer<IdentifierPath>> m_functionsOrLibrary;
+	/// Operators, the functions from @a m_functionsOrLibrary implement.
+	/// A token if the corresponding element in m_functionsOrLibrary
+	/// defines an operator, nullptr otherwise.
+	/// Note that this vector size must be equal to m_functionsOrLibrary size.
+	std::vector<std::optional<Token>> m_operators;
 	bool m_usesBraces;
 	ASTPointer<TypeName> m_typeName;
 	bool m_global = false;
@@ -2073,6 +2088,10 @@ public:
 	bool isPrefixOperation() const { return m_isPrefix; }
 	Expression const& subExpression() const { return *m_subExpression; }
 
+	FunctionType const* userDefinedFunctionType() const;
+
+	OperationAnnotation& annotation() const override;
+
 private:
 	Token m_operator;
 	ASTPointer<Expression> m_subExpression;
@@ -2103,6 +2122,8 @@ public:
 	Expression const& leftExpression() const { return *m_left; }
 	Expression const& rightExpression() const { return *m_right; }
 	Token getOperator() const { return m_operator; }
+
+	FunctionType const* userDefinedFunctionType() const;
 
 	BinaryOperationAnnotation& annotation() const override;
 

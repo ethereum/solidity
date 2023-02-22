@@ -449,10 +449,24 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
 
-	if (TokenTraits::isBitOp(_op.getOperator()))
+	if (TokenTraits::isBitOp(_op.getOperator()) && !*_op.annotation().userDefinedFunction)
 		return bitwiseNotOperation(_op);
 
 	createExpr(_op);
+
+	// User-defined operators are essentially function calls.
+	if (*_op.annotation().userDefinedFunction)
+	{
+		// TODO: Implement user-defined operators properly.
+		m_errorReporter.warning(
+			6156_error,
+			_op.location(),
+			"User-defined operators are not yet supported by SMTChecker. "s +
+			"This invocation of operator " + TokenTraits::friendlyName(_op.getOperator()) +
+			" has been ignored, which may lead to incorrect results."
+		);
+		return;
+	}
 
 	auto const* subExpr = innermostTuple(_op.subExpression());
 	auto type = _op.annotation().type;
@@ -524,7 +538,7 @@ bool SMTEncoder::visit(BinaryOperation const& _op)
 {
 	if (shortcutRationalNumber(_op))
 		return false;
-	if (TokenTraits::isBooleanOp(_op.getOperator()))
+	if (TokenTraits::isBooleanOp(_op.getOperator()) && !*_op.annotation().userDefinedFunction)
 	{
 		booleanOperation(_op);
 		return false;
@@ -537,10 +551,24 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 	/// If _op is const evaluated the RationalNumber shortcut was taken.
 	if (isConstant(_op))
 		return;
-	if (TokenTraits::isBooleanOp(_op.getOperator()))
+	if (TokenTraits::isBooleanOp(_op.getOperator()) && !*_op.annotation().userDefinedFunction)
 		return;
 
 	createExpr(_op);
+
+	// User-defined operators are essentially function calls.
+	if (*_op.annotation().userDefinedFunction)
+	{
+		// TODO: Implement user-defined operators properly.
+		m_errorReporter.warning(
+			6756_error,
+			_op.location(),
+			"User-defined operators are not yet supported by SMTChecker. "s +
+			"This invocation of operator " + TokenTraits::friendlyName(_op.getOperator()) +
+			" has been ignored, which may lead to incorrect results."
+		);
+		return;
+	}
 
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
