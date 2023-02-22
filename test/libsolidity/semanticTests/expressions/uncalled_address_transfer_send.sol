@@ -6,7 +6,5 @@ contract TransferTest {
 
 	function f() pure public {}
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() ->

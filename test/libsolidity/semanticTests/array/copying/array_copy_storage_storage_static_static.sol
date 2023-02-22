@@ -12,9 +12,6 @@ contract c {
         y = data1[30]; // should be cleared
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 8, 0
 // gas irOptimized: 196278

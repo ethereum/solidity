@@ -46,7 +46,6 @@ contract C is Base {
     }
 
 }
-
 // ====
 // EVMVersion: >=byzantium
 // ----

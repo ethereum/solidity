@@ -13,8 +13,5 @@ contract C {
         _ret = _arg * 2;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> true

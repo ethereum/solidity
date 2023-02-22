@@ -16,6 +16,5 @@ contract C {
         return (m.a, m.b[0], m.b[1], m.c);
     }
 }
-
 // ----
 // f((uint256,bytes,uint256)): 0x20, 42, 0x60, 23, 2, "ab" -> 42, "a", "b", 23

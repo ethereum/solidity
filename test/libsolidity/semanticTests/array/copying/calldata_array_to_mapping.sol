@@ -10,7 +10,6 @@ contract C {
         return m[0];
     }
 }
-
 // ====
 // compileViaYul: true
 // ----

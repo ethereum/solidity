@@ -22,7 +22,6 @@ contract C {
         return C1(address(9));
     }
 }
-
 // ----
 // test() -> 9, 7
 // gas legacy: 127514

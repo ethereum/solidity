@@ -5,8 +5,5 @@ contract c {
         return uint256(Truth(uint8(0x1)));
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 1

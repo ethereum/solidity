@@ -14,8 +14,6 @@ contract Derived is Base {
         return m_derived;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // getBMember() -> 5
 // getDMember() -> 6

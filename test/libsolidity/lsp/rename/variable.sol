@@ -24,7 +24,6 @@ function freeFunction(C _contract) view returns(int)
     //               ^^^^^^^^ @VariableInFreeFunction
     //                 ^ @CursorOnVariableInFreeFunction
 }
-
 // ----
 // -> textDocument/rename {
 //     "newName": "Renamed",

@@ -4,7 +4,5 @@ contract A {
 		return x;
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 7

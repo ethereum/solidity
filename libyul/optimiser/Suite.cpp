@@ -70,7 +70,6 @@
 #include <libyul/AST.h>
 #include <libyul/Object.h>
 
-#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/evm/NoOutputAssembly.h>
 
 #include <libsolutil/CommonData.h>
@@ -211,13 +210,6 @@ void OptimiserSuite::run(
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 			StackLimitEvader::run(suite.m_context, _object);
-	}
-	else if (dynamic_cast<WasmDialect const*>(&_dialect))
-	{
-		// If the first statement is an empty block, remove it.
-		// We should only have function definitions after that.
-		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
-			ast.statements.erase(ast.statements.begin());
 	}
 
 	dispenser.reset(ast);

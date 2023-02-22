@@ -14,6 +14,5 @@ contract C {
         return e.foo();
     }
 }
-
 // ----
 // test() -> 42

@@ -17,7 +17,6 @@ function getColorEnum() pure returns (Color result)
 {
     result = Color.Red;
 }
-
 // ----
 // -> textDocument/semanticTokens/full {
 // }

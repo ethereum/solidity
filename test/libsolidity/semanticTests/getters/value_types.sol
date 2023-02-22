@@ -20,8 +20,6 @@ contract C {
         i = address(type(uint160).max / 3);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // a() -> 3
 // b() -> 4

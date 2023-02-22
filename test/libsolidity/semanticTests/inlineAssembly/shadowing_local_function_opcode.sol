@@ -7,7 +7,5 @@ contract C {
         }
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // g() -> 7, 3

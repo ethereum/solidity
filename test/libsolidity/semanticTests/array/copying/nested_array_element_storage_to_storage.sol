@@ -68,7 +68,6 @@ contract C {
         require(dst4[1][1] == src4[0][1][1]);
     }
 }
-
 // ----
 // test1() ->
 // gas irOptimized: 150508

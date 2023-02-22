@@ -38,7 +38,6 @@ contract C {
         return 8;
     }
 }
-
 // ----
 // set() ->
 // t1() -> 7

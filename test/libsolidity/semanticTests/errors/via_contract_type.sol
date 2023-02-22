@@ -10,8 +10,6 @@ contract B is A {
   function h() public pure { revert X.E("abc"); }
 
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000001"
 // g() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000001"

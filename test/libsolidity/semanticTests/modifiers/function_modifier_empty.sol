@@ -12,8 +12,5 @@ contract C is A {
         if (false) _;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> false

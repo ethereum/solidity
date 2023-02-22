@@ -26,7 +26,6 @@ contract C {
 	require(a2[1].length == 0);
     }
 }
-
 // ====
 // compileViaYul: true
 // ----

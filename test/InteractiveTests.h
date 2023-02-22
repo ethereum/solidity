@@ -28,7 +28,6 @@
 #include <test/libsolidity/SMTCheckerTest.h>
 #include <test/libyul/ControlFlowGraphTest.h>
 #include <test/libyul/EVMCodeTransformTest.h>
-#include <test/libyul/EwasmTranslationTest.h>
 #include <test/libyul/YulOptimizerTest.h>
 #include <test/libyul/YulInterpreterTest.h>
 #include <test/libyul/ObjectCompilerTest.h>
@@ -78,7 +77,6 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"SMT Checker",            "libsolidity", "smtCheckerTests",       true,  false, &SMTCheckerTest::create},
 	{"Gas Estimates",          "libsolidity", "gasTests",              false, false, &GasTest::create},
 	{"Memory Guard Tests",     "libsolidity", "memoryGuardTests",     false, false, &MemoryGuardTest::create},
-	{"Ewasm Translation",      "libyul",      "ewasmTranslationTests", false, false, &yul::test::EwasmTranslationTest::create}
 };
 
 }

@@ -21,9 +21,6 @@ contract C is A, B {
         return f(1);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // g() -> 10
 // h() -> 2

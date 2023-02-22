@@ -39,7 +39,6 @@ contract C {
         return (a[which], b[0]);
     }
 }
-
 // ----
 // f_memory(uint256[]): 0x80, 9, 9, 9, 0 -> 0x20, 0
 // f_memory(uint256[]): 0x80, 9, 9, 9, 1, 7 -> 0x20, 1, 7

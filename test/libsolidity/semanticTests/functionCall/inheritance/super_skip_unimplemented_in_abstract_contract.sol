@@ -15,7 +15,5 @@ contract B is A, I {
         return super.f();
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 42

@@ -7,5 +7,4 @@ contract Sample {
         }
     }
 }
-
 // ----

@@ -4,7 +4,5 @@ contract C {
         x = b;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256): 6 -> 6

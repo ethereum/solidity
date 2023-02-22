@@ -19,8 +19,6 @@ contract Test {
         b = Lib.find(data["abc"], 3);
     }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: Lib
 // f() -> 4, 0x11

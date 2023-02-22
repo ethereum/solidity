@@ -17,7 +17,5 @@ contract Test {
 		return decoded[1][0];
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // test() -> FAILURE

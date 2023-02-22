@@ -1,19 +1,3 @@
-# This will re-generate the polyfill headers, if any file within libyul/backends/wasm/polyfill/ was modified.
-set_directory_properties(PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/libyul/backends/wasm/polyfill/)
-
-set(POLYFILLS Arithmetic Bitwise Comparison Conversion Interface Keccak Logical Memory)
-set(GENERATED_POLYFILL_HEADERS)
-foreach(polyfill IN LISTS POLYFILLS)
-	set(POLYFILL_FILE ${CMAKE_SOURCE_DIR}/libyul/backends/wasm/polyfill/${polyfill}.yul)
-	file(READ ${POLYFILL_FILE} EWASM_POLYFILL_CONTENT HEX)
-	string(REGEX MATCHALL ".." EWASM_POLYFILL_CONTENT "${EWASM_POLYFILL_CONTENT}")
-	string(REGEX REPLACE ";" ",\n\t0x" EWASM_POLYFILL_CONTENT "${EWASM_POLYFILL_CONTENT}")
-	set(EWASM_POLYFILL_CONTENT "0x${EWASM_POLYFILL_CONTENT}")
-	set(EWASM_POLYFILL_NAME ${polyfill})
-	configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/ewasm_polyfill.in" ${CMAKE_BINARY_DIR}/include/ewasmPolyfills/${polyfill}.h @ONLY)
-	list(APPEND GENERATED_POLYFILL_HEADERS ${CMAKE_BINARY_DIR}/include/ewasmPolyfills/${polyfill}.h)
-endforeach()
-
 add_library(yul
 	${GENERATED_POLYFILL_HEADERS}
 
@@ -80,20 +64,6 @@ add_library(yul
 	backends/evm/StackLayoutGenerator.h
 	backends/evm/VariableReferenceCounter.h
 	backends/evm/VariableReferenceCounter.cpp
-	backends/wasm/EVMToEwasmTranslator.cpp
-	backends/wasm/EVMToEwasmTranslator.h
-	backends/wasm/BinaryTransform.cpp
-	backends/wasm/BinaryTransform.h
-	backends/wasm/TextTransform.cpp
-	backends/wasm/TextTransform.h
-	backends/wasm/WasmCodeTransform.cpp
-	backends/wasm/WasmCodeTransform.h
-	backends/wasm/WasmDialect.cpp
-	backends/wasm/WasmDialect.h
-	backends/wasm/WasmObjectCompiler.cpp
-	backends/wasm/WasmObjectCompiler.h
-	backends/wasm/WordSizeTransform.cpp
-	backends/wasm/WordSizeTransform.h
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp

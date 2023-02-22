@@ -12,5 +12,4 @@ contract C {
         return x;
     }
 }
-
 // ----

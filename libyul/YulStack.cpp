@@ -16,8 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
- * Ewasm as output.
+ * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5
  */
 
 
@@ -30,9 +29,6 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/evm/EVMMetrics.h>
-#include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/wasm/WasmObjectCompiler.h>
-#include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
 
@@ -57,8 +53,6 @@ Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _versi
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case YulStack::Language::Yul:
 		return EVMDialectTyped::instance(_version);
-	case YulStack::Language::Ewasm:
-		return WasmDialect::instance();
 	}
 	yulAssert(false, "");
 	return Dialect::yulDeprecated();
@@ -100,24 +94,6 @@ void YulStack::optimize()
 	yulAssert(m_parserResult, "");
 	optimize(*m_parserResult, true);
 	yulAssert(analyzeParsed(), "Invalid source code after optimization.");
-}
-
-void YulStack::translate(YulStack::Language _targetLanguage)
-{
-	if (m_language == _targetLanguage)
-		return;
-
-	yulAssert(
-		m_language == Language::StrictAssembly && _targetLanguage == Language::Ewasm,
-		"Invalid language combination"
-	);
-
-	*m_parserResult = EVMToEwasmTranslator(
-		languageToDialect(m_language, m_evmVersion),
-		*this
-	).run(*parserResult());
-
-	m_language = _targetLanguage;
 }
 
 bool YulStack::analyzeParsed()
@@ -205,18 +181,6 @@ MachineAssemblyObject YulStack::assemble(Machine _machine) const
 	{
 	case Machine::EVM:
 		return assembleWithDeployed().first;
-	case Machine::Ewasm:
-	{
-		yulAssert(m_language == Language::Ewasm, "");
-		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
-
-		MachineAssemblyObject object;
-		auto result = WasmObjectCompiler::compile(*m_parserResult, dialect);
-		object.assembly = std::move(result.first);
-		object.bytecode = make_shared<evmasm::LinkerObject>();
-		object.bytecode->bytecode = std::move(result.second);
-		return object;
-	}
 	}
 	// unreachable
 	return MachineAssemblyObject();

@@ -20,6 +20,5 @@ contract C {
         return x.data[3];
     }
 }
-
 // ----
 // f() -> 0x0a

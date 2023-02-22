@@ -17,8 +17,6 @@ contract C {
         return (get_ptr(foo))();
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // associated() -> 42
 // unassociated() -> 42

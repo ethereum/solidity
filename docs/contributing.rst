@@ -93,8 +93,7 @@ Prerequisites
 
 For running all compiler tests you may want to optionally install a few
 dependencies (`evmone <https://github.com/ethereum/evmone/releases>`_,
-`libz3 <https://github.com/Z3Prover/z3>`_, and
-`libhera <https://github.com/ewasm/hera>`_).
+`libz3 <https://github.com/Z3Prover/z3>`_).
 
 On macOS systems, some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.
@@ -129,13 +128,7 @@ for the ``evmone`` shared object can be specified via the ``ETH_EVMONE`` environ
 If you do not have it installed, you can skip these tests by passing the ``--no-semantic-tests``
 flag to ``scripts/soltest.sh``.
 
-Running Ewasm tests is disabled by default and can be explicitly enabled
-via ``./scripts/soltest.sh --ewasm`` and requires `hera <https://github.com/ewasm/hera>`_
-to be found by ``soltest``.
-The mechanism for locating the ``hera`` library is the same as for ``evmone``, except that the
-variable for specifying an explicit location is called ``ETH_HERA``.
-
-The ``evmone`` and ``hera`` libraries should both end with the file name
+The ``evmone`` library should both end with the file name
 extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
 
 For running SMT tests, the ``libz3`` library must be installed and locatable

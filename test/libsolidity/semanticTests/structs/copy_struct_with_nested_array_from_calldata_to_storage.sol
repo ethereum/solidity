@@ -17,6 +17,5 @@ contract C {
         require(s.y[1] == 11);
     }
 }
-
 // ----
 // test((uint8[1],uint8[])): 0x20, 3, 0x40, 2, 7, 11

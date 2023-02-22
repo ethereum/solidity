@@ -15,6 +15,5 @@ contract C {
         return (a, s.a, s.b, b);
     }
 }
-
 // ----
 // f(uint256,(uint256,uint256),uint256): 1, 2, 3, 4 -> 1, 2, 3, 4

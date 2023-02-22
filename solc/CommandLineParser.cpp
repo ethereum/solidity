@@ -46,7 +46,6 @@ static string const g_strCombinedJson = "combined-json";
 static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVMVersion = "evm-version";
-static string const g_strEwasm = "ewasm";
 static string const g_strEOFVersion = "experimental-eof-version";
 static string const g_strViaIR = "via-ir";
 static string const g_strExperimentalViaIR = "experimental-via-ir";
@@ -114,15 +113,13 @@ static string const g_strErrorIds = "error-codes";
 /// Possible arguments to for --machine
 static set<string> const g_machineArgs
 {
-	g_strEVM,
-	g_strEwasm
+	g_strEVM
 };
 
 /// Possible arguments to for --yul-dialect
 static set<string> const g_yulDialectArgs
 {
-	g_strEVM,
-	g_strEwasm
+	g_strEVM
 };
 
 /// Possible arguments to for --metadata-hash
@@ -460,13 +457,11 @@ void CommandLineParser::parseOutputSelection()
 			CompilerOutputs::componentMap() |
 			ranges::views::keys |
 			ranges::to<set>()
-		) - set<string>{CompilerOutputs::componentName(&CompilerOutputs::ewasmIR)};
+		);
 		static set<string> const assemblerModeOutputs = {
 			CompilerOutputs::componentName(&CompilerOutputs::asm_),
 			CompilerOutputs::componentName(&CompilerOutputs::binary),
-			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
-			CompilerOutputs::componentName(&CompilerOutputs::ewasm),
-			CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
+			CompilerOutputs::componentName(&CompilerOutputs::irOptimized)
 		};
 
 		switch (_mode)
@@ -499,8 +494,6 @@ void CommandLineParser::parseOutputSelection()
 		m_options.compiler.outputs.asm_ = true;
 		m_options.compiler.outputs.binary = true;
 		m_options.compiler.outputs.irOptimized = true;
-		m_options.compiler.outputs.ewasm = true;
-		m_options.compiler.outputs.ewasmIR = true;
 	}
 
 	vector<string> unsupportedOutputs;
@@ -743,8 +736,6 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::abi).c_str(), "ABI specification of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::ewasm).c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
-		(CompilerOutputs::componentName(&CompilerOutputs::ewasmIR).c_str(), "Intermediate representation (IR) converted to a form that can be translated directly into Ewasm text representation (EXPERIMENTAL).")
 		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
@@ -1001,8 +992,6 @@ void CommandLineParser::processArgs()
 		CompilerOutputs::componentName(&CompilerOutputs::binary),
 		CompilerOutputs::componentName(&CompilerOutputs::ir),
 		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
-		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
-		CompilerOutputs::componentName(&CompilerOutputs::ewasmIR),
 		g_strGas,
 		CompilerOutputs::componentName(&CompilerOutputs::asm_),
 		CompilerOutputs::componentName(&CompilerOutputs::asmJson),
@@ -1215,41 +1204,21 @@ void CommandLineParser::processArgs()
 			string machine = m_args[g_strMachine].as<string>();
 			if (machine == g_strEVM)
 				m_options.assembly.targetMachine = Machine::EVM;
-			else if (machine == g_strEwasm)
-				m_options.assembly.targetMachine = Machine::Ewasm;
 			else
 				solThrow(CommandLineValidationError, "Invalid option for --" + g_strMachine + ": " + machine);
 		}
-		if (m_options.assembly.targetMachine == Machine::Ewasm && m_options.assembly.inputLanguage == Input::StrictAssembly)
-			m_options.assembly.inputLanguage = Input::Ewasm;
 		if (m_args.count(g_strYulDialect))
 		{
 			string dialect = m_args[g_strYulDialect].as<string>();
 			if (dialect == g_strEVM)
 				m_options.assembly.inputLanguage = Input::StrictAssembly;
-			else if (dialect == g_strEwasm)
-			{
-				m_options.assembly.inputLanguage = Input::Ewasm;
-				if (m_options.assembly.targetMachine != Machine::Ewasm)
-					solThrow(
-						CommandLineValidationError,
-						"If you select Ewasm as --" + g_strYulDialect + ", "
-						"--" + g_strMachine + " has to be Ewasm as well."
-					);
-			}
 			else
 				solThrow(CommandLineValidationError, "Invalid option for --" + g_strYulDialect + ": " + dialect);
 		}
-		if (m_options.optimizer.enabled && (m_options.assembly.inputLanguage != Input::StrictAssembly && m_options.assembly.inputLanguage != Input::Ewasm))
+		if (m_options.optimizer.enabled && (m_options.assembly.inputLanguage != Input::StrictAssembly))
 			solThrow(
 				CommandLineValidationError,
 				"Optimizer can only be used for strict assembly. Use --"  + g_strStrictAssembly + "."
-			);
-		if (m_options.assembly.targetMachine == Machine::Ewasm && m_options.assembly.inputLanguage != Input::StrictAssembly && m_options.assembly.inputLanguage != Input::Ewasm)
-			solThrow(
-				CommandLineValidationError,
-				"The selected input language is not directly supported when targeting the Ewasm machine "
-				"and automatic translation is not available."
 			);
 		return;
 	}

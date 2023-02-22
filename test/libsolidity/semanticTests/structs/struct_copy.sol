@@ -33,7 +33,6 @@ contract c {
         c = data[k].c;
     }
 }
-
 // ----
 // set(uint256): 7 -> true
 // gas irOptimized: 109896

@@ -38,8 +38,6 @@ contract Homer is ERC165, Simpson {
         assert(supportsInterface(type(PeaceMaker).interfaceId));
     }
 }
-
-
 // ====
 // SMTEngine: all
 // ----

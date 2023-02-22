@@ -59,7 +59,6 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename):
 		},
 		"minimal"
 	);
-	m_wasm = m_reader.boolSetting("wasm", false);
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -68,7 +67,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	YulStack stack(
 		EVMVersion(),
 		nullopt,
-		m_wasm ? YulStack::Language::Ewasm : YulStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		OptimiserSettings::preset(m_optimisationPreset),
 		DebugInfoSelection::All()
 	);
@@ -81,33 +80,22 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	}
 	stack.optimize();
 
-	if (m_wasm)
-	{
-		MachineAssemblyObject obj = stack.assemble(YulStack::Machine::Ewasm);
-		solAssert(obj.bytecode, "");
+	MachineAssemblyObject obj = stack.assemble(YulStack::Machine::EVM);
+	solAssert(obj.bytecode, "");
+	solAssert(obj.sourceMappings, "");
 
-		m_obtainedResult = "Text:\n" + obj.assembly + "\n";
-		m_obtainedResult += "Binary:\n" + util::toHex(obj.bytecode->bytecode) + "\n";
-	}
+	m_obtainedResult = "Assembly:\n" + obj.assembly;
+	if (obj.bytecode->bytecode.empty())
+		m_obtainedResult += "-- empty bytecode --\n";
 	else
-	{
-		MachineAssemblyObject obj = stack.assemble(YulStack::Machine::EVM);
-		solAssert(obj.bytecode, "");
-		solAssert(obj.sourceMappings, "");
-
-		m_obtainedResult = "Assembly:\n" + obj.assembly;
-		if (obj.bytecode->bytecode.empty())
-			m_obtainedResult += "-- empty bytecode --\n";
-		else
-			m_obtainedResult +=
-				"Bytecode: " +
-				util::toHex(obj.bytecode->bytecode) +
-				"\nOpcodes: " +
-				boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode, solidity::test::CommonOptions::get().evmVersion())) +
-				"\nSourceMappings:" +
-				(obj.sourceMappings->empty() ? "" : " " + *obj.sourceMappings) +
-				"\n";
-	}
+		m_obtainedResult +=
+			"Bytecode: " +
+			util::toHex(obj.bytecode->bytecode) +
+			"\nOpcodes: " +
+			boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode, solidity::test::CommonOptions::get().evmVersion())) +
+			"\nSourceMappings:" +
+			(obj.sourceMappings->empty() ? "" : " " + *obj.sourceMappings) +
+			"\n";
 
 	return checkResult(_stream, _linePrefix, _formatted);
 }

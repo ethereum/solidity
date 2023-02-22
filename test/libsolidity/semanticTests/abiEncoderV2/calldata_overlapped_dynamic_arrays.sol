@@ -22,7 +22,6 @@ contract C {
         return abi.encode(s);
     }
 }
-
 // ----
 // f_memory(uint256[],uint256[2]): 0x20, 1, 2 -> 0x60, 0x01, 0x02, 1, 2
 // f_memory(uint256[],uint256[2]): 0x40, 1, 2, 5, 6 -> 0x60, 1, 2, 2, 5, 6

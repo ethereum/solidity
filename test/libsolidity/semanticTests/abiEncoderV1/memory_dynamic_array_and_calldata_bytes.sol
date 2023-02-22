@@ -9,7 +9,6 @@ contract C {
         return f(a, b);
     }
 }
-
 // ====
 // EVMVersion: >homestead
 // ----

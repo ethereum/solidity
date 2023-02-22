@@ -13,9 +13,6 @@ contract Main {
         return payable(r).send(0);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // constructor(), 20 wei ->
 // gas irOptimized: 100264

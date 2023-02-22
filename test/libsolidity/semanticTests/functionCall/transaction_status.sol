@@ -3,8 +3,6 @@ contract test {
 	function g() public { revert(); }
 	function h() public { assert(false); }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() ->
 // g() -> FAILURE

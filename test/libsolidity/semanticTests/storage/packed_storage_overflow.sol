@@ -11,7 +11,5 @@ contract C {
         return (x, c, b, a);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0x1234, 0x0, 0x0, 0xfffe

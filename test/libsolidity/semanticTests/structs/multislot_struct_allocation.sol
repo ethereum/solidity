@@ -15,8 +15,5 @@ contract C {
     return s.a.x(1);
   }
 }
-
-
-
 // ----
 // f() -> 2

@@ -19,7 +19,6 @@ contract D {
         }
     }
 }
-
 // ----
 // testUncheckedOperator() -> 4
 // testUncheckedOperatorInUncheckedBlock() -> 4

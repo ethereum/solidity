@@ -6,7 +6,6 @@ contract C {
     }
 }
 // ====
-// compileToEwasm: also
 // EVMVersion: <paris
 // ----
 // f() -> 200000000

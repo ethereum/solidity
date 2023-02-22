@@ -23,6 +23,5 @@ contract Test {
         return s.v;
     }
 }
-
 // ----
 // f() -> 0x202

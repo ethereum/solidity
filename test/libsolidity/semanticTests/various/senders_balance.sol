@@ -14,7 +14,6 @@ contract D {
         return c.f();
     }
 }
-
 // ----
 // constructor(), 27 wei ->
 // gas irOptimized: 169377

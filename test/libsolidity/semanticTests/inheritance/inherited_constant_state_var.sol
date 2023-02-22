@@ -8,8 +8,5 @@ contract B is A {
         return A.x;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 7

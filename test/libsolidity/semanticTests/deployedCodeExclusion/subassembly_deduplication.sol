@@ -37,6 +37,5 @@ contract C {
             x < 2 * type(A).creationCode.length;
     }
 }
-
 // ----
 // test() -> true

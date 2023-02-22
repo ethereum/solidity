@@ -11,6 +11,5 @@ interface I {
         uint calldata c = 123.4;
     }
 }
-
 // ----
 // failAfter: Parsed

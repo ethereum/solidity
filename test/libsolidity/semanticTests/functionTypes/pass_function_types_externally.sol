@@ -15,7 +15,6 @@ contract C {
         return x + 1;
     }
 }
-
 // ----
 // f(uint256): 7 -> 8
 // f2(uint256): 7 -> 8

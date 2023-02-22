@@ -7,5 +7,4 @@ contract C {
         m[c] = payable(0);
     }
 }
-
 // ----

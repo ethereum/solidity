@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
 			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
+			"--ir", "--ir-optimized", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 			"--gas",
 			"--combined-json="
 				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
@@ -192,10 +192,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.compiler.outputs = {
 			true, true, true, true, true,
 			true, true, true, true, true,
-			true, true, true, true, true,
-			true,
+			true, true, true, true,
 		};
-		expectedOptions.compiler.outputs.ewasmIR = false;
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
 			true, true, true, true, true,
@@ -249,13 +247,6 @@ BOOST_AUTO_TEST_CASE(via_ir_options)
 BOOST_AUTO_TEST_CASE(assembly_mode_options)
 {
 	static vector<tuple<vector<string>, YulStack::Machine, YulStack::Language>> const allowedCombinations = {
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--assemble"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--yul"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--strict-assembly"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--assemble"}, YulStack::Machine::Ewasm, YulStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--yul"}, YulStack::Machine::Ewasm, YulStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--strict-assembly"}, YulStack::Machine::Ewasm, YulStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--strict-assembly"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
 		{{"--machine=evm", "--yul-dialect=evm", "--assemble"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--yul-dialect=evm", "--yul"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--yul-dialect=evm", "--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
@@ -299,11 +290,9 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--asm",
 			"--bin",
 			"--ir-optimized",
-			"--ewasm",
-			"--ewasm-ir",
 		};
 		commandLine += assemblyOptions;
-		if (expectedLanguage == YulStack::Language::StrictAssembly || expectedLanguage == YulStack::Language::Ewasm)
+		if (expectedLanguage == YulStack::Language::StrictAssembly)
 			commandLine += vector<string>{
 				"--optimize",
 				"--optimize-runs=1000",
@@ -340,9 +329,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.asm_ = true;
 		expectedOptions.compiler.outputs.binary = true;
 		expectedOptions.compiler.outputs.irOptimized = true;
-		expectedOptions.compiler.outputs.ewasm = true;
-		expectedOptions.compiler.outputs.ewasmIR = true;
-		if (expectedLanguage == YulStack::Language::StrictAssembly || expectedLanguage == YulStack::Language::Ewasm)
+		if (expectedLanguage == YulStack::Language::StrictAssembly)
 		{
 			expectedOptions.optimizer.enabled = true;
 			expectedOptions.optimizer.yulSteps = "agf";

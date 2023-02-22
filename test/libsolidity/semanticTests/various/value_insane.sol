@@ -16,7 +16,6 @@ contract test {
         return h.getBalance{value: amount + 3, gas: 1000}();
     }
 }
-
 // ----
 // constructor(), 20 wei ->
 // gas irOptimized: 175215

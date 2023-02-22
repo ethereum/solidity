@@ -14,7 +14,5 @@ contract C {
     two = data.x;
   }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256): 7 -> 7, 8

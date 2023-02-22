@@ -26,7 +26,6 @@ contract C
 //  ^^^^ @UserInPublicVariable
 //     ^ @CursorOnUserInPublicVariable
 }
-
 // ----
 // contract:
 // -> textDocument/rename {

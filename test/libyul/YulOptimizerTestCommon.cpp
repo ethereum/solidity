@@ -61,8 +61,6 @@
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
-#include <libyul/backends/wasm/WordSizeTransform.h>
-#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/CompilabilityChecker.h>
 
@@ -325,11 +323,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			size_t maxIterations = 16;
 			StackCompressor::run(*m_dialect, *m_object, true, maxIterations);
 			BlockFlattener::run(*m_context, *m_ast);
-		}},
-		{"wordSizeTransform", [&]() {
-			disambiguate();
-			ExpressionSplitter::run(*m_context, *m_ast);
-			WordSizeTransform::run(*m_dialect, *m_dialect, *m_ast, *m_nameDispenser);
 		}},
 		{"fullSuite", [&]() {
 			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);

@@ -14,7 +14,5 @@ contract test {
         c = m_c;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // get() -> 5, 6, 8

@@ -17,9 +17,6 @@ contract C {
         return true;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true
 // a() -> 7

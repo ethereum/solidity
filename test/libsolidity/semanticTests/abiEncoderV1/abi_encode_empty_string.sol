@@ -19,7 +19,6 @@ contract C {
         return abi.encodeWithSelector(0x00000001, msg);
     }
 }
-
 // ====
 // ABIEncoderV1Only: true
 // compileViaYul: false

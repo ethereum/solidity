@@ -16,8 +16,6 @@ contract C {
         x += 3;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f1() ->
 // x() -> 0x08

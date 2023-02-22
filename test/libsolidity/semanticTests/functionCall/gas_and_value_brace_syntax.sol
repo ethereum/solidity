@@ -35,7 +35,6 @@ contract test {
         myBal = address(this).balance;
     }
 }
-
 // ----
 // constructor(), 20 wei ->
 // gas irOptimized: 260052

@@ -6,8 +6,6 @@ contract test {
                     x > 50 ? 50 : 10;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256): 1001 -> 1000
 // f(uint256): 500 -> 100

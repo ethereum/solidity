@@ -53,7 +53,6 @@ public:
 			_options.evmVersion,
 			_options.eofVersion,
 			_options.vmPaths,
-			_options.enforceCompileToEwasm,
 			_options.enforceGasCost,
 			_options.enforceGasCostMinValue
 		);
@@ -64,7 +63,6 @@ public:
 		langutil::EVMVersion _evmVersion,
 		std::optional<uint8_t> _eofVersion,
 		std::vector<boost::filesystem::path> const& _vmPaths,
-		bool _enforceCompileToEwasm = false,
 		bool _enforceGasCost = false,
 		u256 _enforceGasCostMinValue = 100000
 	);
@@ -85,7 +83,7 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
-	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun, bool _isEwasmRun);
+	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
 	std::map<std::string, Builtin> makeBuiltins();
 	std::vector<SideEffectHook> makeSideEffectHooks() const;
@@ -98,12 +96,9 @@ private:
 	std::map<std::string, Builtin> const m_builtins;
 	std::vector<SideEffectHook> const m_sideEffectHooks;
 	bool m_testCaseWantsYulRun = true;
-	bool m_testCaseWantsEwasmRun = false;
 	bool m_testCaseWantsLegacyRun = true;
-	bool m_enforceCompileToEwasm = false;
 	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
-	bool m_canEnableEwasmRun = false;
 	bool m_gasCostFailure = false;
 	bool m_enforceGasCost = false;
 	u256 m_enforceGasCostMinValue;

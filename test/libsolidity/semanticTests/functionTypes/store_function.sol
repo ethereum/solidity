@@ -23,7 +23,6 @@ contract C {
         return ev(x);
     }
 }
-
 // ----
 // t() -> 9
 // gas irOptimized: 99064

@@ -20,7 +20,6 @@ contract C {
         return 1 + c;
     }
 }
-
 // ----
 // constructor(), 1 ether ->
 // gas irOptimized: 265110

@@ -135,8 +135,6 @@ set(libyul_sources
     libyul/ControlFlowSideEffectsTest.h
     libyul/EVMCodeTransformTest.cpp
     libyul/EVMCodeTransformTest.h
-    libyul/EwasmTranslationTest.cpp
-    libyul/EwasmTranslationTest.h
     libyul/FunctionSideEffects.cpp
     libyul/FunctionSideEffects.h
     libyul/Inliner.cpp

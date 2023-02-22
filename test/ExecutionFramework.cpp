@@ -60,11 +60,6 @@ ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion, vector<
 {
 	if (solidity::test::CommonOptions::get().optimize)
 		m_optimiserSettings = solidity::frontend::OptimiserSettings::standard();
-
-	for (auto const& path: m_vmPaths)
-		if (EVMHost::getVM(path.string()).has_capability(EVMC_CAPABILITY_EWASM))
-			m_supportsEwasm = true;
-
 	selectVM(evmc_capabilities::EVMC_CAPABILITY_EVM1);
 }
 

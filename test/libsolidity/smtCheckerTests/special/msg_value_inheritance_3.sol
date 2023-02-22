@@ -15,7 +15,6 @@ contract C is A, B {
 		assert(msg.value >= 0); // should hold
 	}
 }
-
 // ====
 // SMTEngine: all
 // ----

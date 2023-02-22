@@ -59,7 +59,6 @@ contract C {
         require(dst3[1][0].y == src3[1][0].y);
     }
 }
-
 // ====
 // compileViaYul: true
 // ----

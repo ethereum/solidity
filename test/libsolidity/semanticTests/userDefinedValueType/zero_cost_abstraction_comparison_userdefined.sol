@@ -16,7 +16,6 @@ contract C {
         return MyInt.wrap(MyInt.unwrap(a) + MyInt.unwrap(b));
     }
 }
-
 // ----
 // getX() -> 0
 // gas irOptimized: 23379

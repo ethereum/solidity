@@ -13,7 +13,6 @@ contract C {
 	}
 }
 // ====
-// compileToEwasm: also
 // compileViaYul: true
 // ----
 // l(uint8): 64 -> 0x3930313233343536373839300000000000000000000000000000000000000000

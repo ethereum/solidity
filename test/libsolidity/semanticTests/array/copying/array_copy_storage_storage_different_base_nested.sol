@@ -19,8 +19,6 @@ contract c {
         y = data2[0][4];
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 3, 4
 // gas irOptimized: 169602

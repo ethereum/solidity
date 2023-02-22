@@ -8,7 +8,5 @@ contract test is base {
         _ret = Choice.B;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // answer() -> 1

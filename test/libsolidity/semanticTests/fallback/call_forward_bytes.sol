@@ -14,7 +14,6 @@ contract sender {
 }
 // ====
 // allowNonExistingFunctions: true
-// compileToEwasm: false
 // ----
 // recv(uint256): 7 ->
 // val() -> 0

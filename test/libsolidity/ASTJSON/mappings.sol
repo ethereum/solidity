@@ -5,5 +5,4 @@ contract C {
     mapping(E => bool) c;
     mapping(address keyAddress => uint256 value) d;
 }
-
 // ----

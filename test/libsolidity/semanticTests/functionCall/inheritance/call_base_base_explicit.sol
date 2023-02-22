@@ -25,8 +25,6 @@ contract Child is Base {
 		return BaseBase.s(n);
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // g(uint256): 4 -> 8
 // k(uint256): 4 -> 16

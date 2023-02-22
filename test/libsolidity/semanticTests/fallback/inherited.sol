@@ -4,8 +4,6 @@ contract A {
     function getData() public returns (uint r) { return data; }
 }
 contract B is A {}
-// ====
-// compileToEwasm: also
 // ----
 // getData() -> 0
 // (): 42 ->

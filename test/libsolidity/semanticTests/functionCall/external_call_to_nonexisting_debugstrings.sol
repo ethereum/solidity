@@ -20,7 +20,6 @@ contract C {
         return 1 + c;
     }
 }
-
 // ====
 // EVMVersion: >=byzantium
 // revertStrings: debug

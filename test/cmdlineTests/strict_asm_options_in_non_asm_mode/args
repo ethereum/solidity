@@ -1,1 +1,1 @@
---yul-dialect evm --machine ewasm
+--yul-dialect evm --machine evm

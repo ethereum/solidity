@@ -16,9 +16,6 @@ contract C {
         return 2;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // one() -> 3
 // gas legacy: 140253

@@ -179,7 +179,7 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 
 bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact, bool _wildcardMatchesExperimental)
 {
-	static set<string> experimental{"ir", "irOptimized", "wast", "ewasm", "ewasm.wast"};
+	static set<string> experimental{"ir", "irOptimized"};
 	for (auto const& selectedArtifactJson: _outputSelection)
 	{
 		string const& selectedArtifact = selectedArtifactJson.asString();
@@ -190,7 +190,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _art
 			return true;
 		else if (selectedArtifact == "*")
 		{
-			// "ir", "irOptimized", "wast" and "ewasm.wast" can only be matched by "*" if activated.
+			// "ir", "irOptimized" can only be matched by "*" if activated.
 			if (experimental.count(_artifact) == 0 || _wildcardMatchesExperimental)
 				return true;
 		}
@@ -264,7 +264,6 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	static vector<string> const outputsThatRequireBinaries = vector<string>{
 		"*",
 		"ir", "irOptimized",
-		"wast", "wasm", "ewasm.wast", "ewasm.wasm",
 		"evm.gasEstimates", "evm.legacyAssembly", "evm.assembly"
 	} + evmObjectComponents("bytecode") + evmObjectComponents("deployedBytecode");
 
@@ -295,29 +294,10 @@ bool isEvmBytecodeRequested(Json::Value const& _outputSelection)
 	return false;
 }
 
-/// @returns true if any Ewasm code was requested. Note that as an exception, '*' does not
-/// yet match "ewasm.wast" or "ewasm"
-bool isEwasmRequested(Json::Value const& _outputSelection)
-{
-	if (!_outputSelection.isObject())
-		return false;
-
-	for (auto const& fileRequests: _outputSelection)
-		for (auto const& requests: fileRequests)
-			for (auto const& request: requests)
-				if (request == "ewasm" || request == "ewasm.wast")
-					return true;
-
-	return false;
-}
-
 /// @returns true if any Yul IR was requested. Note that as an exception, '*' does not
 /// yet match "ir" or "irOptimized"
 bool isIRRequested(Json::Value const& _outputSelection)
 {
-	if (isEwasmRequested(_outputSelection))
-		return true;
-
 	if (!_outputSelection.isObject())
 		return false;
 
@@ -1175,7 +1155,6 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
-	compilerStack.enableEwasmGeneration(isEwasmRequested(_inputsAndSettings.outputSelection));
 
 	Json::Value errors = std::move(_inputsAndSettings.errors);
 
@@ -1373,12 +1352,6 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			contractData["ir"] = compilerStack.yulIR(contractName);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized", wildcardMatchesExperimental))
 			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
-
-		// Ewasm
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ewasm.wast", wildcardMatchesExperimental))
-			contractData["ewasm"]["wast"] = compilerStack.ewasm(contractName);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ewasm.wasm", wildcardMatchesExperimental))
-			contractData["ewasm"]["wasm"] = compilerStack.ewasmObject(contractName).toHex();
 
 		// EVM
 		Json::Value evmData(Json::objectValue);
