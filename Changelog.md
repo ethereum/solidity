@@ -1,4 +1,15 @@
-### 0.8.19 (unreleased)
+### 0.8.20 (unreleased)
+
+Language Features:
+
+
+Compiler Features:
+
+
+Bugfixes:
+
+
+### 0.8.19 (2023-02-22)
 
 Language Features:
 * Allow defining custom operators for user-defined value types via ``using {f as +} for T global`` syntax.
