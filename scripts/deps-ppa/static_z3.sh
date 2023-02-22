@@ -73,16 +73,16 @@ cp "/tmp/${packagename}_${debversion}.orig.tar.gz" ../
 # Create debian package information
 
 mkdir debian
-echo 13 > debian/compat
+echo 9 > debian/compat
 # TODO: the Z3 packages have different build dependencies
 cat <<EOF > debian/control
 Source: z3-static
 Section: science
 Priority: extra
 Maintainer: Daniel Kirchner <daniel@ekpyron.org>
-Build-Depends: debhelper (>= 13.0.0),
+Build-Depends: debhelper (>= 9.0.0),
                cmake,
-               g++ (>= 9.0),
+               g++ (>= 5.0),
                git,
                libgmp-dev,
                dh-python,
