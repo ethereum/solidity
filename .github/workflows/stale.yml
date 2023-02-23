@@ -33,8 +33,8 @@ jobs:
             However, unless the issue is a concrete proposal that can be implemented, we recommend starting a language discussion on the [forum](https://forum.soliditylang.org) instead.
           ascending: true
           stale-issue-label: stale
-          close-issue-label: closed-due-inactivity
-          exempt-issue-labels: 'bug :bug:,epic,roadmap,selected-for-development,must have,must have eventually,SMT'
+          close-issue-label: 'closed due inactivity'
+          exempt-issue-labels: 'bug :bug:,epic,roadmap,selected for development,must have,must have eventually,smt'
           stale-pr-message: |
             This pull request is stale because it has been open for ${{ env.BEFORE_PR_STALE }} days with no activity.
             It will be closed in ${{ env.BEFORE_PR_CLOSE }} days unless the `stale` label is removed.
