@@ -105,7 +105,7 @@ At least a day before the release:
  - [ ] Remove "still in progress" warning from the [release notes](https://github.com/ethereum/solidity/releases).
  - [ ] Merge the [blog posts](https://github.com/ethereum/solidity-blog/pulls) related to the release.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
- - [ ] Update the release information section on [soliditylang.org](https://github.com/ethereum/solidity-portal](https://github.com/ethereum/solidity-portal/blob/master/index.html#L22).
+ - [ ] Update the release information section [in the source of soliditylang.org](https://github.com/ethereum/solidity-portal/blob/master/index.html).
  - [ ] Announce on [Twitter](https://twitter.com/solidity_lang), including links to the release and the blog post.
  - [ ] Announce on [Fosstodon]([https://twitter.com/solidity_lang](https://fosstodon.org/@solidity/), including links to the release and the blog post.
  - [ ] Share the announcement on Reddit in [``/r/ethdev``](https://reddit.com/r/ethdev/), cross-posted to [``/r/ethereum``](https://reddit.com/r/ethereum/).
