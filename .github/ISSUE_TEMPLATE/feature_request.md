@@ -3,7 +3,7 @@ name: Feature Request
 about: Ideas, comments or messages asking for a particular functionality to be added
   to Solidity.
 title: ''
-labels: Feature Request
+labels: feature
 assignees: ''
 
 ---
