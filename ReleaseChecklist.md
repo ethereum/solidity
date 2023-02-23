@@ -111,6 +111,6 @@ At least a day before the release:
  - [ ] Share the announcement on Reddit in [``/r/ethdev``](https://reddit.com/r/ethdev/), cross-posted to [``/r/ethereum``](https://reddit.com/r/ethereum/).
  - [ ] Share the announcement on the [Solidity forum](https://forum.soliditylang.org) in the ``Announcements`` category.
  - [ ] Share the announcement on [Project Updates](https://discord.com/channels/420394352083337236/798974456704925696)
- - [ ] Share the announcement on [Matrix](https://matrix.to/#/#ethereum_solidity:gitter.im)
+ - [ ] Share the announcement on [`#solidity` channel on Matrix](https://matrix.to/#/#ethereum_solidity:gitter.im)
  - [ ] Share the announcement on [solc-tooling](https://matrix.to/#/#solc-tooling:matrix.org)
  - [ ] Lean back, wait for bug reports and repeat from step 1 :).
