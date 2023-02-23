@@ -15,7 +15,6 @@ env:
 jobs:
   triage_issues:
     runs-on: ubuntu-latest
-    if: join(github.event.issue.labels) == ''
     steps:
       - name: Retrieve the content of all columns on the board
         run: |
