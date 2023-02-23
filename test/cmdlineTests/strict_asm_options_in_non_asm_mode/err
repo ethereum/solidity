@@ -1,1 +1,1 @@
---yul-dialect and --machine are only valid in assembly mode.
+--yul-dialect is only valid in assembly mode.

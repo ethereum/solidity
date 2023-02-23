@@ -109,7 +109,7 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			try
 			{
 				asmStack.optimize();
-				obj = std::move(*asmStack.assemble(yul::YulStack::Machine::EVM).bytecode);
+				obj = std::move(*asmStack.assemble().bytecode);
 				obj.link(_libraryAddresses);
 				break;
 			}

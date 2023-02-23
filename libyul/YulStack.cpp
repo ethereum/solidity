@@ -171,20 +171,14 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	);
 }
 
-MachineAssemblyObject YulStack::assemble(Machine _machine) const
+MachineAssemblyObject YulStack::assemble() const
 {
 	yulAssert(m_analysisSuccessful, "");
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
-	switch (_machine)
-	{
-	case Machine::EVM:
-		return assembleWithDeployed().first;
-	}
-	// unreachable
-	return MachineAssemblyObject();
+	return assembleWithDeployed().first;
 }
 
 std::pair<MachineAssemblyObject, MachineAssemblyObject>

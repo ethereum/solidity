@@ -247,19 +247,16 @@ BOOST_AUTO_TEST_CASE(via_ir_options)
 
 BOOST_AUTO_TEST_CASE(assembly_mode_options)
 {
-	static vector<tuple<vector<string>, YulStack::Machine, YulStack::Language>> const allowedCombinations = {
-		{{"--machine=evm", "--yul-dialect=evm", "--assemble"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
-		{{"--machine=evm", "--yul-dialect=evm", "--yul"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
-		{{"--machine=evm", "--yul-dialect=evm", "--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
-		{{"--machine=evm", "--assemble"}, YulStack::Machine::EVM, YulStack::Language::Assembly},
-		{{"--machine=evm", "--yul"}, YulStack::Machine::EVM, YulStack::Language::Yul},
-		{{"--machine=evm", "--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
-		{{"--assemble"}, YulStack::Machine::EVM, YulStack::Language::Assembly},
-		{{"--yul"}, YulStack::Machine::EVM, YulStack::Language::Yul},
-		{{"--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
+	static vector<tuple<vector<string>, YulStack::Language>> const allowedCombinations = {
+		{{"--yul-dialect=evm", "--assemble"}, YulStack::Language::StrictAssembly},
+		{{"--yul-dialect=evm", "--yul"}, YulStack::Language::StrictAssembly},
+		{{"--yul-dialect=evm", "--strict-assembly"}, YulStack::Language::StrictAssembly},
+		{{"--assemble"}, YulStack::Language::Assembly},
+		{{"--yul"}, YulStack::Language::Yul},
+		{{"--strict-assembly"}, YulStack::Language::StrictAssembly},
 	};
 
-	for (auto const& [assemblyOptions, expectedMachine, expectedLanguage]: allowedCombinations)
+	for (auto const& [assemblyOptions, expectedLanguage]: allowedCombinations)
 	{
 		vector<string> commandLine = {
 			"solc",
@@ -320,7 +317,6 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
 		expectedOptions.output.debugInfoSelection = DebugInfoSelection::fromString("location");
 		expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 1};
-		expectedOptions.assembly.targetMachine = expectedMachine;
 		expectedOptions.assembly.inputLanguage = expectedLanguage;
 		expectedOptions.linker.libraries = {
 			{"dir1/file1.sol:L", h160("1234567890123456789012345678901234567890")},

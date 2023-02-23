@@ -61,7 +61,6 @@ static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strLSP = "lsp";
-static string const g_strMachine = "machine";
 static string const g_strNoCBORMetadata = "no-cbor-metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
@@ -109,12 +108,6 @@ static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
 static string const g_strErrorIds = "error-codes";
-
-/// Possible arguments to for --machine
-static set<string> const g_machineArgs
-{
-	g_strEVM
-};
 
 /// Possible arguments to for --yul-dialect
 static set<string> const g_yulDialectArgs
@@ -234,7 +227,6 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		output.stopAfter == _other.output.stopAfter &&
 		output.eofVersion == _other.output.eofVersion &&
 		input.mode == _other.input.mode &&
-		assembly.targetMachine == _other.assembly.targetMachine &&
 		assembly.inputLanguage == _other.assembly.inputLanguage &&
 		linker.libraries == _other.linker.libraries &&
 		formatting.json == _other.formatting.json &&
@@ -644,19 +636,19 @@ General Information)").c_str(),
 		(
 			g_strAssemble.c_str(),
 			("Switch to assembly mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
+			"--" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
 			"and assumes input is assembly.").c_str()
 		)
 		(
 			g_strYul.c_str(),
 			("Switch to Yul mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
+			"--" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
 			"and assumes input is Yul.").c_str()
 		)
 		(
 			g_strStrictAssembly.c_str(),
 			("Switch to strict assembly mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
+			"--" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
 			"and assumes input is strict assembly.").c_str()
 		)
 		(
@@ -675,11 +667,6 @@ General Information)").c_str(),
 
 	po::options_description assemblyModeOptions("Assembly Mode Options");
 	assemblyModeOptions.add_options()
-		(
-			g_strMachine.c_str(),
-			po::value<string>()->value_name(util::joinHumanReadable(g_machineArgs, ",")),
-			"Target machine in assembly or Yul mode."
-		)
 		(
 			g_strYulDialect.c_str(),
 			po::value<string>()->value_name(util::joinHumanReadable(g_yulDialectArgs, ",")),
@@ -1208,17 +1195,8 @@ void CommandLineParser::processArgs()
 
 		// switch to assembly mode
 		using Input = yul::YulStack::Language;
-		using Machine = yul::YulStack::Machine;
 		m_options.assembly.inputLanguage = m_args.count(g_strYul) ? Input::Yul : (m_args.count(g_strStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 
-		if (m_args.count(g_strMachine))
-		{
-			string machine = m_args[g_strMachine].as<string>();
-			if (machine == g_strEVM)
-				m_options.assembly.targetMachine = Machine::EVM;
-			else
-				solThrow(CommandLineValidationError, "Invalid option for --" + g_strMachine + ": " + machine);
-		}
 		if (m_args.count(g_strYulDialect))
 		{
 			string dialect = m_args[g_strYulDialect].as<string>();
@@ -1234,10 +1212,10 @@ void CommandLineParser::processArgs()
 			);
 		return;
 	}
-	else if (countEnabledOptions({g_strYulDialect, g_strMachine}) >= 1)
+	else if (countEnabledOptions({g_strYulDialect}) >= 1)
 		solThrow(
 			CommandLineValidationError,
-			"--" + g_strYulDialect + " and --" + g_strMachine + " are only valid in assembly mode."
+			"--" + g_strYulDialect + " is only valid in assembly mode."
 		);
 
 	if (m_args.count(g_strMetadataHash))

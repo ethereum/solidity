@@ -80,7 +80,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	}
 	stack.optimize();
 
-	MachineAssemblyObject obj = stack.assemble(YulStack::Machine::EVM);
+	MachineAssemblyObject obj = stack.assemble();
 	solAssert(obj.bytecode, "");
 	solAssert(obj.sourceMappings, "");
 
