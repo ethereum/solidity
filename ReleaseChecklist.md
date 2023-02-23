@@ -107,7 +107,7 @@ At least a day before the release:
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
  - [ ] Update the release information section [in the source of soliditylang.org](https://github.com/ethereum/solidity-portal/blob/master/index.html).
  - [ ] Announce on [Twitter](https://twitter.com/solidity_lang), including links to the release and the blog post.
- - [ ] Announce on [Fosstodon]([https://twitter.com/solidity_lang](https://fosstodon.org/@solidity/), including links to the release and the blog post.
+ - [ ] Announce on [Fosstodon](https://fosstodon.org/@solidity/), including links to the release and the blog post.
  - [ ] Share the announcement on Reddit in [``/r/ethdev``](https://reddit.com/r/ethdev/), cross-posted to [``/r/ethereum``](https://reddit.com/r/ethereum/).
  - [ ] Share the announcement on the [Solidity forum](https://forum.soliditylang.org) in the ``Announcements`` category.
  - [ ] Share the announcement on [Project Updates](https://discord.com/channels/420394352083337236/798974456704925696)
