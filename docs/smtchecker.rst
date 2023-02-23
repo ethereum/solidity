@@ -706,7 +706,7 @@ Reported Inferred Inductive Invariants
 For properties that were proved safe with the CHC engine,
 the SMTChecker can retrieve inductive invariants that were inferred by the Horn
 solver as part of the proof.
-Currently two types of invariants can be reported to the user:
+Currently only two types of invariants can be reported to the user:
 
 - Contract Invariants: these are properties over the contract's state variables
   that are true before and after every possible transaction that the contract may ever run. For example, ``x >= y``, where ``x`` and ``y`` are a contract's state variables.
