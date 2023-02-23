@@ -32,6 +32,7 @@ Compiler Features:
  * NatSpec: Include NatSpec from events that are emitted by a contract but defined outside of it in userdoc and devdoc output.
  * Optimizer: Re-implement simplified version of ``UnusedAssignEliminator`` and ``UnusedStoreEliminator``. It can correctly remove some unused assignments in deeply nested loops that were ignored by the old version.
  * Parser: Unary plus is no longer recognized as a unary operator in the AST and triggers an error at the parsing stage (rather than later during the analysis).
+ * SMTChecker: Add CLI option ``--model-checker-bmc-loop-iterations`` and a JSON option ``settings.modelChecker.bmcLoopIterations`` that specify how many loop iterations the BMC engine should unroll. Note that false negatives are possible when unrolling loops. This is due to the possibility that bmc loop iteration setting is less than actual number of iterations needed to complete a loop.
  * SMTChecker: Group all messages about unsupported language features in a single warning. The CLI option ``--model-checker-show-unsupported`` and the JSON option ``settings.modelChecker.showUnsupported`` can be enabled to show the full list.
  * SMTChecker: Properties that are proved safe are now reported explicitly at the end of analysis. By default, only the number of safe properties is shown. The CLI option ``--model-checker-show-proved-safe`` and the JSON option ``settings.modelChecker.showProvedSafe`` can be enabled to show the full list of safe properties.
  * Standard JSON Interface: Add experimental support for importing ASTs via Standard JSON.

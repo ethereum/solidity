@@ -55,6 +55,8 @@ protected:
 		Set in m_modelCheckerSettings.
 	SMTSolvers: `all`, `cvc4`, `z3`, `none`, where the default is `all`.
 		Set in m_modelCheckerSettings.
+	BMCLoopIterations: number of loop iterations for BMC engine, the default is 1.
+		Set in m_modelCheckerSettings.
 	*/
 
 	ModelCheckerSettings m_modelCheckerSettings;

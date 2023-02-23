@@ -157,6 +157,7 @@ struct ModelCheckerExtCalls
 
 struct ModelCheckerSettings
 {
+	std::optional<unsigned> bmcLoopIterations;
 	ModelCheckerContracts contracts = ModelCheckerContracts::Default();
 	/// Currently division and modulo are replaced by multiplication with slack vars, such that
 	/// a / b <=> a = b * k + m
@@ -179,6 +180,7 @@ struct ModelCheckerSettings
 	bool operator==(ModelCheckerSettings const& _other) const noexcept
 	{
 		return
+			bmcLoopIterations == _other.bmcLoopIterations &&
 			contracts == _other.contracts &&
 			divModNoSlacks == _other.divModNoSlacks &&
 			engine == _other.engine &&

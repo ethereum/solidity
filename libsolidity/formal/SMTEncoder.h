@@ -168,7 +168,9 @@ protected:
 	void endVisit(IndexAccess const& _node) override;
 	void endVisit(IndexRangeAccess const& _node) override;
 	bool visit(InlineAssembly const& _node) override;
+	bool visit(Break const&) override { return false; }
 	void endVisit(Break const&) override {}
+	bool visit(Continue const&) override { return false; }
 	void endVisit(Continue const&) override {}
 	bool visit(TryCatchClause const&) override { return true; }
 	void endVisit(TryCatchClause const&) override {}
