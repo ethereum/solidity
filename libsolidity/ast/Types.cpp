@@ -997,35 +997,35 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 	{
 		return make_tuple(false, rational(0));
 	}
+
 	switch (_literal.subDenomination())
 	{
-		case Literal::SubDenomination::None:
-		case Literal::SubDenomination::Wei:
-		case Literal::SubDenomination::Second:
-			break;
-		case Literal::SubDenomination::Gwei:
-			value *= bigint("1000000000");
-			break;
-		case Literal::SubDenomination::Ether:
-			value *= bigint("1000000000000000000");
-			break;
-		case Literal::SubDenomination::Minute:
-			value *= bigint("60");
-			break;
-		case Literal::SubDenomination::Hour:
-			value *= bigint("3600");
-			break;
-		case Literal::SubDenomination::Day:
-			value *= bigint("86400");
-			break;
-		case Literal::SubDenomination::Week:
-			value *= bigint("604800");
-			break;
-		case Literal::SubDenomination::Year:
-			value *= bigint("31536000");
-			break;
+	case Literal::SubDenomination::None:
+	case Literal::SubDenomination::Wei:
+	case Literal::SubDenomination::Second:
+		break;
+	case Literal::SubDenomination::Gwei:
+		value *= bigint("1000000000");
+		break;
+	case Literal::SubDenomination::Ether:
+		value *= bigint("1000000000000000000");
+		break;
+	case Literal::SubDenomination::Minute:
+		value *= bigint("60");
+		break;
+	case Literal::SubDenomination::Hour:
+		value *= bigint("3600");
+		break;
+	case Literal::SubDenomination::Day:
+		value *= bigint("86400");
+		break;
+	case Literal::SubDenomination::Week:
+		value *= bigint("604800");
+		break;
+	case Literal::SubDenomination::Year:
+		value *= bigint("31536000");
+		break;
 	}
-
 
 	return make_tuple(true, value);
 }
@@ -1290,6 +1290,36 @@ FixedPointType const* RationalNumberType::fixedPointType() const
 		totalBits, fractionalDigits,
 		negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
 	);
+}
+
+pair<RationalNumberType const*, RationalNumberType const*> RationalNumberType::mantissaExponent() const
+{
+	rational const maxUint = rational((bigint(1) << 256) - 1);
+	rational const minInt = -rational(bigint(1) << 255);
+
+	bool negative = (m_value < 0);
+	rational const maxMantissa = (negative ? -minInt : maxUint);
+
+	rational exponent = 0;
+	rational unsignedMantissa = abs(m_value);
+
+	if (unsignedMantissa > maxMantissa)
+		return {nullptr, nullptr};
+
+	while (unsignedMantissa.denominator() != 1)
+	{
+		unsignedMantissa *= 10;
+		--exponent;
+
+		// FIXME: What happens when exponent in scientific notation is max uint?
+		if (unsignedMantissa > maxMantissa || exponent > maxUint)
+			return {nullptr, nullptr};
+	}
+
+	return {
+		TypeProvider::rationalNumber(unsignedMantissa),
+		TypeProvider::rationalNumber(-exponent),
+	};
 }
 
 StringLiteralType::StringLiteralType(Literal const& _literal):

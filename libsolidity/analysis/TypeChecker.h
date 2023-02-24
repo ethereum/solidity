@@ -95,6 +95,13 @@ private:
 		FunctionTypePointer _functionType
 	);
 
+	/// Performs type checks on function calls performed via the suffix syntax.
+	/// Must not be called before the suffixed literal is visited.
+	void typeCheckSuffixFunctionCall(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
+
 	void typeCheckFallbackFunction(FunctionDefinition const& _function);
 	void typeCheckConstructor(FunctionDefinition const& _function);
 
@@ -164,7 +171,7 @@ private:
 	void endVisit(IdentifierPath const& _identifierPath) override;
 	void endVisit(UserDefinedTypeName const& _userDefinedTypeName) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
-	void endVisit(Literal const& _literal) override;
+	bool visit(Literal const& _literal) override;
 	void endVisit(UsingForDirective const& _usingForDirective) override;
 
 	void checkErrorAndEventParameters(CallableDeclaration const& _callable);
@@ -199,6 +206,7 @@ private:
 
 	SourceUnit const* m_currentSourceUnit = nullptr;
 	ContractDefinition const* m_currentContract = nullptr;
+	FunctionCall const* m_currentSuffixCall = nullptr;
 
 	langutil::EVMVersion m_evmVersion;
 

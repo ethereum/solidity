@@ -47,6 +47,7 @@
 #include <range/v3/view/drop_exactly.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/zip.hpp>
+#include <range/v3/algorithm/any_of.hpp>
 
 #include <memory>
 #include <vector>
@@ -2146,8 +2147,128 @@ void TypeChecker::typeCheckFunctionCall(
 			"\"staticcall\" is not supported by the VM version."
 		);
 
-	// Perform standard function call type checking
-	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+	if (_functionCall.isSuffixCall())
+		typeCheckSuffixFunctionCall(_functionCall, _functionType);
+	else
+		// Perform standard function call type checking
+		typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+}
+
+/// Performs type checks on function calls performed via the suffix syntax.
+void TypeChecker::typeCheckSuffixFunctionCall(
+	FunctionCall const& _functionCall,
+	FunctionTypePointer _functionType
+)
+{
+	solAssert(_functionCall.isSuffixCall());
+
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
+	solAssert(arguments.size() == 1 && arguments[0]);
+
+	auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
+	solAssert(literal);
+
+	Type const* literalType = type(*literal);
+	solAssert(literalType);
+
+	auto const* literalRationalType = dynamic_cast<RationalNumberType const*>(literalType);
+
+	if (literalRationalType)
+	{
+		auto&& [mantissa, exponent] = literalRationalType->mantissaExponent();
+		solAssert((mantissa && exponent) || (!mantissa && !exponent));
+		if (!mantissa)
+			m_errorReporter.typeError(
+				5503_error,
+				literal->location(),
+				"This fractional number cannot be decomposed into a mantissa and decimal exponent "
+				"that fit the range of parameters of any possible suffix function."
+			);
+	}
+
+	// TMP: Check if we can turn some of these into assertions now
+	if (
+		!_functionType ||                                                          // Rejects variables
+		!_functionType->hasDeclaration() ||                                        // Rejects function pointers
+		_functionType->hasBoundFirstArgument() ||
+		!dynamic_cast<FunctionDefinition const*>(&_functionType->declaration()) || // Rejects events and errors
+		!dynamic_cast<FunctionDefinition const*>(&_functionType->declaration())->usableAsSuffix()
+	)
+	{
+		auto suffixDefinitionLocation = SecondarySourceLocation{};
+		if (
+			_functionType &&
+			_functionType->hasDeclaration() &&
+			dynamic_cast<Declaration const*>(&_functionType->declaration())
+		)
+			suffixDefinitionLocation.append(
+				"Suffix defined here:",
+				dynamic_cast<Declaration const*>(&_functionType->declaration())->location()
+			);
+
+		m_errorReporter.typeError(
+			4438_error,
+			// TMP: This should point just at the suffix
+			_functionCall.location(),
+			suffixDefinitionLocation,
+			"The literal suffix must be either a subdenomination or a file-level suffix function."
+		);
+	}
+	else
+	{
+		auto const* suffixDefinition = dynamic_cast<FunctionDefinition const*>(&_functionType->declaration());
+		solAssert(suffixDefinition);
+		solAssert(!suffixDefinition->virtualSemantics());
+		solAssert(!_functionType->takesArbitraryParameters());
+		solAssert(_functionType->kind() == FunctionType::Kind::Internal);
+
+		optional<string> parameterTypeMessage;
+		if (_functionType->parameterTypes().size() == 2)
+		{
+			if (!literalRationalType)
+				m_errorReporter.typeError(
+					2505_error,
+					_functionCall.expression().location(),
+					SecondarySourceLocation().append(
+						"Suffix function defined here:",
+						dynamic_cast<FunctionDefinition const*>(&_functionType->declaration())->parameterList().location()
+					),
+					"Functions that take 2 arguments can only be used as literal suffixes for rational numbers."
+				);
+			else
+			{
+				// TMP: Reuse the result of mantissaExponent() call above.
+				auto&& [mantissa, exponent] = literalRationalType->mantissaExponent();
+				// This was already validated in visit(Literal) but the error is not fatal.
+				if (!mantissa || !exponent)
+					solAssert(!m_errorReporter.errors().empty());
+				else if (
+					!mantissa->isImplicitlyConvertibleTo(*_functionType->parameterTypes().at(0)) ||
+					!exponent->isImplicitlyConvertibleTo(*_functionType->parameterTypes().at(1))
+				)
+					// TODO: Is this triggered when the argument is out of range? Test.
+					parameterTypeMessage = "The type of the literal cannot be converted to the parameters of the suffix function.";
+			}
+		}
+		else if (_functionType->parameterTypes().size() == 1)
+		{
+			if (!literalType->isImplicitlyConvertibleTo(*_functionType->parameterTypes().at(0)))
+				parameterTypeMessage = "The type of the literal cannot be converted to the parameter of the suffix function.";
+		}
+		else
+			solAssert(m_errorReporter.hasErrors());
+
+		if (parameterTypeMessage.has_value())
+			m_errorReporter.typeError(
+				8838_error,
+				literal->location(),
+				SecondarySourceLocation().append(
+					"Suffix function defined here:",
+					dynamic_cast<FunctionDefinition const*>(&_functionType->declaration())->parameterList().location()
+				),
+				parameterTypeMessage.value()
+			);
+	}
 }
 
 void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
@@ -2803,6 +2924,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 
 bool TypeChecker::visit(FunctionCall const& _functionCall)
 {
+	solAssert(!m_currentSuffixCall);
+	if (_functionCall.isSuffixCall())
+		m_currentSuffixCall = &_functionCall;
+
 	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
 	bool argumentsArePure = true;
 
@@ -2902,7 +3027,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		m_errorReporter.fatalTypeError(
 			5704_error,
 			_functionCall.location(),
-			capitalized(Type::categoryName(expressionType->category())) + " is not callable."
+			capitalized(Type::categoryName(expressionType->category())) +
+			(_functionCall.isSuffixCall() ? " cannot be used as a literal suffix." : " is not callable.")
 		);
 		// Unreachable, because fatalTypeError throws. We don't set kind, but that's okay because the switch below
 		// is never reached. And, even if it was, SetOnce would trigger an assertion violation and not UB.
@@ -2991,6 +3117,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		break;
 	}
 
+	m_currentSuffixCall = nullptr;
 	return false;
 }
 
@@ -3711,6 +3838,10 @@ bool TypeChecker::visit(Identifier const& _identifier)
 {
 	IdentifierAnnotation& annotation = _identifier.annotation();
 
+	// NOTE: referencedDeclaration is already be set at this point if the reference resolver found
+	// exactly one candidate. We do not put this candidate through the filters below so make sure
+	// other parts of type checker actually validate these things too.
+	// E.g. it might be a non-suffix function used as a suffix.
 	if (!annotation.referencedDeclaration)
 	{
 		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);
@@ -3741,9 +3872,37 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
-				FunctionTypePointer functionType = declaration->functionType(true);
+				FunctionTypePointer functionType = declaration->functionType(true /* _internal */);
 				solAssert(!!functionType, "Requested type not present.");
-				if (functionType->canTakeArguments(*annotation.arguments))
+
+				auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(declaration);
+
+				bool argumentsMatch = false;
+				if (!m_currentSuffixCall)
+					argumentsMatch = functionType->canTakeArguments(*annotation.arguments);
+				else
+				{
+					if (!functionDefinition || !functionDefinition->usableAsSuffix())
+						argumentsMatch = false;
+					else if (functionType->parameterTypes().size() == 2)
+					{
+						solAssert(annotation.arguments->types.size() == 1 && annotation.arguments->types[0]);
+						auto const* literalRationalType = dynamic_cast<RationalNumberType const*>(annotation.arguments->types[0]);
+						if (literalRationalType)
+						{
+							auto&& [mantissa, exponent] = literalRationalType->mantissaExponent();
+							// This was already validated in visit(Literal) but the error is not fatal.
+							if (!mantissa || !exponent)
+								solAssert(!m_errorReporter.errors().empty());
+							else
+								argumentsMatch = functionType->canTakeArguments({{mantissa, exponent}, {}});
+						}
+					}
+					else
+						argumentsMatch = functionType->canTakeArguments(*annotation.arguments);
+				}
+
+				if (argumentsMatch)
 					candidates.push_back(declaration);
 			}
 			if (candidates.size() == 1)
@@ -3865,12 +4024,13 @@ void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 	_expr.annotation().isConstant = false;
 }
 
-void TypeChecker::endVisit(Literal const& _literal)
+bool TypeChecker::visit(Literal const& _literal)
 {
+	Type const* literalType = nullptr;
 	if (_literal.looksLikeAddress())
 	{
 		// Assign type here if it even looks like an address. This prevents double errors for invalid addresses
-		_literal.annotation().type = TypeProvider::address();
+		literalType = TypeProvider::address();
 
 		string msg;
 		if (_literal.valueWithoutUnderscores().length() != 42) // "0x" + 40 hex digits
@@ -3911,15 +4071,18 @@ void TypeChecker::endVisit(Literal const& _literal)
 			"Using \"years\" as a unit denomination is deprecated."
 		);
 
-	if (!_literal.annotation().type)
-		_literal.annotation().type = TypeProvider::forLiteral(_literal);
+	if (!literalType)
+		literalType = TypeProvider::forLiteral(_literal);
 
-	if (!_literal.annotation().type)
+	if (!literalType)
 		m_errorReporter.fatalTypeError(2826_error, _literal.location(), "Invalid literal value.");
 
+	_literal.annotation().type = literalType;
 	_literal.annotation().isPure = true;
 	_literal.annotation().isLValue = false;
 	_literal.annotation().isConstant = false;
+
+	return true;
 }
 
 void TypeChecker::endVisit(UsingForDirective const& _usingFor)
