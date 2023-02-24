@@ -378,6 +378,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 
 void ConstantEvaluator::endVisit(Literal const& _literal)
 {
+	// TODO handle user suffix
 	if (Type const* literalType = TypeProvider::forLiteral(_literal))
 		m_values[&_literal] = constantToTypedValue(*literalType);
 }
