@@ -36,10 +36,12 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+
 #include <cctype>
-#include <vector>
+#include <memory>
 #include <regex>
 #include <tuple>
+#include <vector>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -2001,6 +2003,85 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	}
 }
 
+ASTPointer<Expression> Parser::parseLiteral()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+	Token initialToken = m_scanner->currentToken();
+	ASTPointer<ASTString> value = make_shared<string>(m_scanner->currentLiteral());
+
+	switch (initialToken)
+	{
+	case Token::TrueLiteral:
+	case Token::FalseLiteral:
+	case Token::Number:
+	{
+		nodeFactory.markEndPosition();
+		advance();
+		break;
+	}
+	case Token::StringLiteral:
+	case Token::UnicodeStringLiteral:
+	case Token::HexStringLiteral:
+	{
+		while (m_scanner->peekNextToken() == initialToken)
+		{
+			advance();
+			*value += m_scanner->currentLiteral();
+		}
+		nodeFactory.markEndPosition();
+		advance();
+		if (m_scanner->currentToken() == Token::Illegal)
+			fatalParserError(5428_error, to_string(m_scanner->currentError()));
+		break;
+	}
+	default:
+		solAssert(false);
+		break;
+	}
+
+	if (initialToken == Token::Number && (
+		TokenTraits::isEtherSubdenomination(m_scanner->currentToken()) ||
+		TokenTraits::isTimeSubdenomination(m_scanner->currentToken())
+	))
+	{
+		nodeFactory.markEndPosition();
+		Literal::SubDenomination subDenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
+		advance();
+		return nodeFactory.createNode<Literal>(initialToken, std::move(value), subDenomination);
+	}
+	else if (m_scanner->currentToken() != Token::Identifier)
+		// TODO: Don't we need markEndPosition() here?
+		return nodeFactory.createNode<Literal>(initialToken, std::move(value), Literal::SubDenomination::None);
+
+	// TODO: Make sure locations are set correctly
+	ASTPointer<ASTString> suffixName = make_shared<ASTString>(m_scanner->currentLiteral());
+	nodeFactory.markEndPosition();
+
+	ASTPointer<Expression> callExpression = nodeFactory.createNode<Identifier>(suffixName);
+	advance();
+
+	while (m_scanner->currentToken() == Token::Period)
+	{
+		// FIXME: This grabs the semicolon
+		advance();
+		nodeFactory.markEndPosition();
+		SourceLocation memberLocation = currentLocation();
+		ASTPointer<ASTString> memberName = expectIdentifierToken();
+		callExpression = nodeFactory.createNode<MemberAccess>(std::move(callExpression), std::move(memberName), std::move(memberLocation));
+	}
+
+	return nodeFactory.createNode<FunctionCall>(
+		std::move(callExpression),
+		std::vector<ASTPointer<Expression>>{
+			nodeFactory.createNode<Literal>(initialToken, std::move(value), Literal::SubDenomination::None)
+		},
+		vector<ASTPointer<ASTString>>{},
+		vector<SourceLocation>{},
+		true /* _isSuffixCall */
+	);
+}
+
 ASTPointer<Expression> Parser::parsePrimaryExpression()
 {
 	RecursionGuard recursionGuard(*this);
@@ -2012,50 +2093,12 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	{
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
-		nodeFactory.markEndPosition();
-		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
-		break;
 	case Token::Number:
-		if (TokenTraits::isEtherSubdenomination(m_scanner->peekNextToken()))
-		{
-			ASTPointer<ASTString> literal = getLiteralAndAdvance();
-			nodeFactory.markEndPosition();
-			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
-			advance();
-			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
-		}
-		else if (TokenTraits::isTimeSubdenomination(m_scanner->peekNextToken()))
-		{
-			ASTPointer<ASTString> literal = getLiteralAndAdvance();
-			nodeFactory.markEndPosition();
-			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
-			advance();
-			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
-		}
-		else
-		{
-			nodeFactory.markEndPosition();
-			expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
-		}
-		break;
 	case Token::StringLiteral:
 	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
-	{
-		string literal = m_scanner->currentLiteral();
-		Token firstToken = m_scanner->currentToken();
-		while (m_scanner->peekNextToken() == firstToken)
-		{
-			advance();
-			literal += m_scanner->currentLiteral();
-		}
-		nodeFactory.markEndPosition();
-		advance();
-		if (m_scanner->currentToken() == Token::Illegal)
-			fatalParserError(5428_error, to_string(m_scanner->currentError()));
-		expression = nodeFactory.createNode<Literal>(token, make_shared<ASTString>(literal));
+		expression = parseLiteral();
 		break;
-	}
 	case Token::Identifier:
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
