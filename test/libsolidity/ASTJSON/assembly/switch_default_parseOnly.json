@@ -107,6 +107,7 @@
           },
           "src": "17:83:1",
           "stateMutability": "view",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

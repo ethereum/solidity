@@ -46,6 +46,7 @@
           },
           "src": "14:32:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         }
@@ -106,6 +107,7 @@
           },
           "src": "77:30:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         },
@@ -147,6 +149,7 @@
           },
           "src": "109:41:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         }
@@ -221,6 +224,7 @@
           },
           "src": "172:34:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         },
@@ -262,6 +266,7 @@
           },
           "src": "208:34:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

@@ -253,6 +253,7 @@
           "scope": 23,
           "src": "188:23:3",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

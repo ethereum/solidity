@@ -12,6 +12,10 @@ Compiler Features:
 Bugfixes:
 
 
+AST Changes:
+ * AST: Add ``suffix`` field to ``FunctionDefinition`` AST node.
+
+
 ### 0.8.19 (2023-02-22)
 
 Language Features:
