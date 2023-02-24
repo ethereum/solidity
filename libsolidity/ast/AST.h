@@ -2151,9 +2151,15 @@ public:
 		ASTPointer<Expression> _expression,
 		std::vector<ASTPointer<Expression>> _arguments,
 		std::vector<ASTPointer<ASTString>> _names,
-		std::vector<SourceLocation> _nameLocations
+		std::vector<SourceLocation> _nameLocations,
+		bool _isSuffixCall = false
 	):
-		Expression(_id, _location), m_expression(std::move(_expression)), m_arguments(std::move(_arguments)), m_names(std::move(_names)), m_nameLocations(std::move(_nameLocations))
+		Expression(_id, _location),
+		m_expression(std::move(_expression)),
+		m_arguments(std::move(_arguments)),
+		m_names(std::move(_names)),
+		m_nameLocations(std::move(_nameLocations)),
+		m_isSuffixCall(_isSuffixCall)
 	{
 		solAssert(m_nameLocations.size() == m_names.size());
 	}
@@ -2171,6 +2177,7 @@ public:
 	/// If this is not a named call, this is empty.
 	std::vector<ASTPointer<ASTString>> const& names() const { return m_names; }
 	std::vector<SourceLocation> const& nameLocations() const { return m_nameLocations; }
+	bool isSuffixCall() const { return m_isSuffixCall; }
 
 	FunctionCallAnnotation& annotation() const override;
 
@@ -2179,6 +2186,7 @@ private:
 	std::vector<ASTPointer<Expression>> m_arguments;
 	std::vector<ASTPointer<ASTString>> m_names;
 	std::vector<SourceLocation> m_nameLocations;
+	bool m_isSuffixCall;
 };
 
 /**
@@ -2377,6 +2385,8 @@ private:
 
 /**
  * A literal string or number. @see ExpressionCompiler::endVisit() is used to actually parse its value.
+ *
+ * It can have a suffix that can lead to a function call.
  */
 class Literal: public PrimaryExpression
 {
@@ -2394,24 +2404,41 @@ public:
 		Week = static_cast<int>(Token::SubWeek),
 		Year = static_cast<int>(Token::SubYear)
 	};
+	using Suffix = std::variant<SubDenomination, ASTPointer<Identifier>, ASTPointer<MemberAccess>>;
 	Literal(
 		int64_t _id,
 		SourceLocation const& _location,
 		Token _token,
 		ASTPointer<ASTString> _value,
-		SubDenomination _sub = SubDenomination::None
+		Suffix _suffix = SubDenomination::None
 	):
-		PrimaryExpression(_id, _location), m_token(_token), m_value(std::move(_value)), m_subDenomination(_sub) {}
+		PrimaryExpression(_id, _location), m_token(_token), m_value(std::move(_value)), m_suffix(std::move(_suffix)) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	Token token() const { return m_token; }
 	/// @returns the non-parsed value of the literal
 	ASTString const& value() const { return *m_value; }
+	Type const& typeOfValue() const;
 
 	ASTString valueWithoutUnderscores() const;
 
-	SubDenomination subDenomination() const { return m_subDenomination; }
+	/// @returns The subdenomination represented by the suffix.
+	/// Must not be called if the suffix is not a subdenomination.
+	SubDenomination subDenomination() const;
+	/// @returns The suffix of the literal. Does not check whether the suffix is present or is a
+	/// subdenomination.
+	/// @note Missing suffix is represented by SubDenomination::None.
+	Suffix const& suffix() const { return m_suffix; }
+	/// @returns Function definition associated with the suffix if the suffix is not a subdenomination.
+	/// nullptr otherwise.
+	FunctionDefinition const* suffixFunction() const;
+	FunctionType const* suffixFunctionType() const;
+
+	/// @returns true if the literal is suffixed with either a subdenomination or a suffix function.
+	bool isSuffixed() const;
+	/// @returns true if the literal is suffixed a subdenomination.
+	bool hasSubDenomination() const;
 
 	/// @returns true if this is a number with a hex prefix.
 	bool isHexNumber() const;
@@ -2426,7 +2453,7 @@ public:
 private:
 	Token m_token;
 	ASTPointer<ASTString> m_value;
-	SubDenomination m_subDenomination;
+	Suffix m_suffix;
 };
 
 /// @}
