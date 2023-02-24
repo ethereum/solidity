@@ -302,6 +302,8 @@ struct IdentifierAnnotation: ExpressionAnnotation
 	std::vector<Declaration const*> candidateDeclarations;
 	/// List of possible declarations it could refer to.
 	std::vector<Declaration const*> overloadedDeclarations;
+	/// If the identifier is used as a literal suffix, this points at the literal.
+	Literal const* suffixedLiteral = nullptr;
 };
 
 struct MemberAccessAnnotation: ExpressionAnnotation
@@ -310,6 +312,8 @@ struct MemberAccessAnnotation: ExpressionAnnotation
 	Declaration const* referencedDeclaration = nullptr;
 	/// What kind of lookup needs to be done (static, virtual, super) find the declaration.
 	util::SetOnce<VirtualLookup> requiredLookup;
+	/// If the expression is used as a literal suffix, this points at the literal.
+	Literal const* suffixedLiteral = nullptr;
 };
 
 struct OperationAnnotation: ExpressionAnnotation

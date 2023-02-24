@@ -29,6 +29,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/Visitor.h>
 
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/tail.hpp>
@@ -986,9 +987,83 @@ IdentifierAnnotation& Identifier::annotation() const
 	return initAnnotation<IdentifierAnnotation>();
 }
 
+Type const& Literal::typeOfValue() const
+{
+	// no suffix/denomination -> literal is the whole expression and types match.
+	// suffix -> type comes from return value of suffix function.
+	return std::visit(util::GenericVisitor{
+		[](ASTPointer<Identifier> const& _identifier)-> Type const& {
+			solAssert(_identifier->annotation().arguments.has_value());
+			solAssert(_identifier->annotation().arguments->numArguments() == 1);
+			solAssert(_identifier->annotation().arguments->types[0]);
+			return *_identifier->annotation().arguments->types[0];
+		},
+		[](ASTPointer<MemberAccess> const& _memberAccess)-> Type const& {
+			solAssert(_memberAccess->annotation().arguments.has_value());
+			solAssert(_memberAccess->annotation().arguments->numArguments() == 1);
+			solAssert(_memberAccess->annotation().arguments->types[0]);
+			return *_memberAccess->annotation().arguments->types[0];
+		},
+		[&](Literal::SubDenomination) -> Type const& {
+			solAssert(annotation().type);
+			return *annotation().type;
+		},
+	}, m_suffix);
+}
+
 ASTString Literal::valueWithoutUnderscores() const
 {
 	return boost::erase_all_copy(value(), "_");
+}
+
+Literal::SubDenomination Literal::subDenomination() const
+{
+	solAssert(holds_alternative<SubDenomination>(m_suffix));
+	return get<SubDenomination>(m_suffix);
+}
+
+FunctionDefinition const* Literal::suffixFunction() const
+{
+	if (holds_alternative<SubDenomination>(m_suffix))
+		return nullptr;
+
+	Declaration const* referencedDeclaration = visit(util::GenericVisitor{
+		[&](ASTPointer<Identifier> const& _identifier) { return _identifier->annotation().referencedDeclaration; },
+		[&](ASTPointer<MemberAccess> const& _memberAccess) { return _memberAccess->annotation().referencedDeclaration; },
+		[&](SubDenomination) -> Declaration const* { solAssert(false); },
+	}, m_suffix);
+
+	solAssert(referencedDeclaration, "Literal suffix must have a definition.");
+	auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(referencedDeclaration);
+	solAssert(functionDefinition, "Non-denomination literal suffix must be a function.");
+	return functionDefinition;
+}
+
+FunctionType const* Literal::suffixFunctionType() const
+{
+	return dynamic_cast<FunctionType const*>(visit(util::GenericVisitor{
+		[&](ASTPointer<Identifier> const& _identifier) { return _identifier->annotation().type; },
+		[&](ASTPointer<MemberAccess> const& _memberAccess) { return _memberAccess->annotation().type; },
+		[&](Literal::SubDenomination) -> Type const* { return nullptr; },
+	}, suffix()));
+}
+
+bool Literal::isSuffixed() const
+{
+	return visit(util::GenericVisitor{
+		[&](ASTPointer<Identifier> const&) { return true; },
+		[&](ASTPointer<MemberAccess> const&) { return true; },
+		[&](Literal::SubDenomination) { return hasSubDenomination(); },
+	}, suffix());
+}
+
+bool Literal::hasSubDenomination() const
+{
+	return visit(util::GenericVisitor{
+		[&](ASTPointer<Identifier> const&) { return false; },
+		[&](ASTPointer<MemberAccess> const&) { return false; },
+		[&](Literal::SubDenomination _subDenomination) { return _subDenomination != SubDenomination::None; },
+	}, suffix());
 }
 
 bool Literal::isHexNumber() const
@@ -1000,7 +1075,8 @@ bool Literal::isHexNumber() const
 
 bool Literal::looksLikeAddress() const
 {
-	if (subDenomination() != SubDenomination::None)
+	// User suffixes are fine.
+	if (hasSubDenomination())
 		return false;
 
 	if (!isHexNumber())
