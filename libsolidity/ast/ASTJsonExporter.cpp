@@ -878,7 +878,8 @@ bool ASTJsonExporter::visit(FunctionCall const& _node)
 		make_pair("names", std::move(names)),
 		make_pair("nameLocations", sourceLocationsToJson(_node.nameLocations())),
 		make_pair("arguments", toJson(_node.arguments())),
-		make_pair("tryCall", _node.annotation().tryCall)
+		make_pair("tryCall", _node.annotation().tryCall),
+		make_pair("isSuffixCall", _node.isSuffixCall())
 	};
 
 	if (_node.annotation().kind.set())
