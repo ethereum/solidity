@@ -2171,9 +2171,15 @@ public:
 		ASTPointer<Expression> _expression,
 		std::vector<ASTPointer<Expression>> _arguments,
 		std::vector<ASTPointer<ASTString>> _names,
-		std::vector<SourceLocation> _nameLocations
+		std::vector<SourceLocation> _nameLocations,
+		bool _isSuffixCall = false
 	):
-		Expression(_id, _location), m_expression(std::move(_expression)), m_arguments(std::move(_arguments)), m_names(std::move(_names)), m_nameLocations(std::move(_nameLocations))
+		Expression(_id, _location),
+		m_expression(std::move(_expression)),
+		m_arguments(std::move(_arguments)),
+		m_names(std::move(_names)),
+		m_nameLocations(std::move(_nameLocations)),
+		m_isSuffixCall(_isSuffixCall)
 	{
 		solAssert(m_nameLocations.size() == m_names.size());
 	}
@@ -2191,6 +2197,7 @@ public:
 	/// If this is not a named call, this is empty.
 	std::vector<ASTPointer<ASTString>> const& names() const { return m_names; }
 	std::vector<SourceLocation> const& nameLocations() const { return m_nameLocations; }
+	bool isSuffixCall() const { return m_isSuffixCall; }
 
 	FunctionCallAnnotation& annotation() const override;
 
@@ -2199,6 +2206,7 @@ private:
 	std::vector<ASTPointer<Expression>> m_arguments;
 	std::vector<ASTPointer<ASTString>> m_names;
 	std::vector<SourceLocation> m_nameLocations;
+	bool m_isSuffixCall{};
 };
 
 /**

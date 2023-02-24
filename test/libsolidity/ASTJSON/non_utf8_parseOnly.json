@@ -85,6 +85,7 @@
                         }
                       },
                       "id": 10,
+                      "isSuffixCall": false,
                       "nameLocations": [],
                       "names": [],
                       "nodeType": "FunctionCall",
@@ -109,6 +110,7 @@
                     }
                   },
                   "id": 11,
+                  "isSuffixCall": false,
                   "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
