@@ -701,7 +701,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			appendInternalFunctionCall(
 				function,
 				_functionCall.expression(),
-				arguments | ranges::views::indirect | ranges::views::addressof | ranges::to<vector>()
+				arguments
 			);
 			break;
 		}
@@ -2310,23 +2310,47 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	}
 }
 
-void ExpressionCompiler::endVisit(Literal const& _literal)
+bool ExpressionCompiler::visit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
-	Type const* type = _literal.annotation().type;
 
-	switch (type->category())
+	if (_literal.suffixFunction())
 	{
-	case Type::Category::RationalNumber:
-	case Type::Category::Bool:
-	case Type::Category::Address:
-		m_context << type->literalValue(&_literal);
-		break;
-	case Type::Category::StringLiteral:
-		break; // will be done during conversion
-	default:
-		solUnimplemented("Only integer, boolean and string literals implemented for now.");
+		FunctionType const& functionType = *_literal.suffixFunction()->functionType(true);
+
+		Expression const* callExpression = std::visit(GenericVisitor{
+			[&](ASTPointer<Identifier> const& _identifier) -> Expression const* { return _identifier.get(); },
+			[&](ASTPointer<MemberAccess> const& _memberAccess) -> Expression const* { return _memberAccess.get(); },
+			[&](Literal::SubDenomination) -> Expression const* { return nullptr; },
+		}, _literal.suffix());
+		solAssert(callExpression);
+
+		appendInternalFunctionCall(functionType, *callExpression, _literal);
 	}
+	else
+	{
+		solAssert(_literal.hasSubDenomination() || !_literal.isSuffixed());
+
+		Type const* type = _literal.annotation().type;
+
+		switch (type->category())
+		{
+		case Type::Category::RationalNumber:
+		case Type::Category::Bool:
+		case Type::Category::Address:
+			m_context << type->literalValue(&_literal);
+			break;
+		case Type::Category::StringLiteral:
+			break; // will be done during conversion
+		default:
+			solUnimplemented("Only integer, boolean and string literals implemented for now.");
+		}
+	}
+
+	// Do not visit the suffix just like we do not visit the expression of a normal function call
+	// that is being called right away. Returning true would run endVisit(Identifier) and push the
+	// return label again.
+	return false;
 }
 
 void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryOperation)
@@ -2597,7 +2621,10 @@ void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type cons
 void ExpressionCompiler::appendInternalFunctionCall(
 	FunctionType const& _functionType,
 	Expression const& _callExpression,
-	vector<Expression const*> const& _arguments
+	variant<
+		reference_wrapper<vector<ASTPointer<Expression const>> const>,
+		reference_wrapper<Literal const>
+	> _arguments
 )
 {
 	solAssert(_functionType.kind() == FunctionType::Kind::Internal);
@@ -2605,12 +2632,49 @@ void ExpressionCompiler::appendInternalFunctionCall(
 	// Calling convention: Caller pushes return address and arguments
 	// Callee removes them and pushes return values
 
+	TypePointers parameterTypes = _functionType.parameterTypes();
+
 	evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
-	for (unsigned i = 0; i < _arguments.size(); ++i)
-		acceptAndConvert(*_arguments[i], *_functionType.parameterTypes()[i]);
+
+	std::visit(GenericVisitor{
+		[&](vector<ASTPointer<Expression const>> const& _argumentExpressions)
+		{
+			for (unsigned i = 0; i < _argumentExpressions.size(); ++i)
+				acceptAndConvert(*_argumentExpressions[i], *parameterTypes[i]);
+		},
+		[&](Literal const& _literal) {
+			solAssert(_literal.suffixFunction());
+
+			// TODO this is actually not always the right one.
+			Type const* literalType = TypeProvider::forLiteral(_literal);
+
+			if (parameterTypes.size() == 1)
+			{
+				// TODO: We still need to do something for strings, don't we?
+				// The original TODO said 'reuse the code below', back when this part was in endVisit(Literal)
+				if (literalType->category() != Type::Category::StringLiteral)
+					m_context << literalType->literalValue(&_literal);
+				utils().convertType(*literalType, *parameterTypes.at(0));
+			}
+			else
+			{
+				solAssert(parameterTypes.size() == 2);
+
+				auto const* rationalNumberType = dynamic_cast<RationalNumberType const*>(literalType);
+				assert(rationalNumberType);
+
+				auto&& [mantissa, exponent] = rationalNumberType->mantissaExponent();
+				m_context << mantissa->literalValue(nullptr);
+				utils().convertType(*mantissa, *parameterTypes.at(0));
+				m_context << exponent->literalValue(nullptr);
+				utils().convertType(*exponent, *parameterTypes.at(1));
+			}
+		},
+	}, _arguments);
+
 	_callExpression.accept(*this);
 
-	unsigned parameterSize = CompilerUtils::sizeOnStack(_functionType.parameterTypes());
+	unsigned parameterSize = CompilerUtils::sizeOnStack(parameterTypes);
 	if (_functionType.hasBoundFirstArgument())
 	{
 		// stack: arg2, ..., argn, label, arg1

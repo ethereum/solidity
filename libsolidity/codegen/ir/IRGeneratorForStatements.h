@@ -155,9 +155,12 @@ private:
 	/// Appends code to call an internal function with the given arguments.
 	/// All involved expressions have already been visited.
 	void appendInternalFunctionCall(
-		FunctionCall const& _functionCall,
+		Expression const& _callExpression,
 		FunctionType const& _functionType,
-		std::vector<Expression const *> const& _arguments
+		std::variant<
+			std::reference_wrapper<std::vector<ASTPointer<Expression const>> const>,
+			std::reference_wrapper<Literal const>
+		> _arguments
 	);
 	/// Appends code to call an external function with the given arguments.
 	/// All involved expressions have already been visited.
