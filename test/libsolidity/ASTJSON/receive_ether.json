@@ -60,6 +60,7 @@
           "scope": 5,
           "src": "15:32:1",
           "stateMutability": "payable",
+          "suffix": false,
           "virtual": false,
           "visibility": "external"
         }
