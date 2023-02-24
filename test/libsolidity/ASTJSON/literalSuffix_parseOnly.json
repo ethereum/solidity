@@ -1,0 +1,179 @@
+{
+  "absolutePath": "a",
+  "id": 17,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "body":
+      {
+        "id": 9,
+        "nodeType": "Block",
+        "src": "63:2:1",
+        "statements": []
+      },
+      "id": 10,
+      "implemented": true,
+      "kind": "freeFunction",
+      "modifiers": [],
+      "name": "str",
+      "nameLocation": "9:3:1",
+      "nodeType": "FunctionDefinition",
+      "parameters":
+      {
+        "id": 5,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 2,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "src": "13:6:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions": {},
+            "typeName":
+            {
+              "id": 1,
+              "name": "uint32",
+              "nodeType": "ElementaryTypeName",
+              "src": "13:6:1",
+              "typeDescriptions": {}
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": false,
+            "id": 4,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "src": "21:4:1",
+            "stateVariable": false,
+            "storageLocation": "default",
+            "typeDescriptions": {},
+            "typeName":
+            {
+              "id": 3,
+              "name": "uint",
+              "nodeType": "ElementaryTypeName",
+              "src": "21:4:1",
+              "typeDescriptions": {}
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "12:14:1"
+      },
+      "returnParameters":
+      {
+        "id": 8,
+        "nodeType": "ParameterList",
+        "parameters":
+        [
+          {
+            "constant": false,
+            "id": 7,
+            "mutability": "mutable",
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "VariableDeclaration",
+            "src": "48:13:1",
+            "stateVariable": false,
+            "storageLocation": "memory",
+            "typeDescriptions": {},
+            "typeName":
+            {
+              "id": 6,
+              "name": "string",
+              "nodeType": "ElementaryTypeName",
+              "src": "48:6:1",
+              "typeDescriptions": {}
+            },
+            "visibility": "internal"
+          }
+        ],
+        "src": "47:15:1"
+      },
+      "src": "0:65:1",
+      "stateMutability": "pure",
+      "suffix": true,
+      "virtual": false,
+      "visibility": "internal"
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 16,
+      "name": "C",
+      "nameLocation": "75:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "constant": false,
+          "id": 15,
+          "mutability": "mutable",
+          "name": "s",
+          "nameLocation": "90:1:1",
+          "nodeType": "VariableDeclaration",
+          "src": "83:26:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 11,
+            "name": "string",
+            "nodeType": "ElementaryTypeName",
+            "src": "83:6:1",
+            "typeDescriptions": {}
+          },
+          "value":
+          {
+            "arguments":
+            [
+              {
+                "hexValue": "3132332e3334355f373839",
+                "id": 12,
+                "kind": "number",
+                "nodeType": "Literal",
+                "src": "94:11:1",
+                "typeDescriptions": {},
+                "value": "123.345_789"
+              }
+            ],
+            "expression":
+            {
+              "id": 13,
+              "name": "str",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "src": "106:3:1",
+              "typeDescriptions": {}
+            },
+            "id": 14,
+            "isSuffixCall": true,
+            "nameLocations": [],
+            "names": [],
+            "nodeType": "FunctionCall",
+            "src": "94:15:1",
+            "tryCall": false,
+            "typeDescriptions": {}
+          },
+          "visibility": "internal"
+        }
+      ],
+      "src": "66:46:1",
+      "usedErrors": []
+    }
+  ],
+  "src": "0:113:1"
+}
