@@ -696,12 +696,53 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Calling convention: Caller pushes return address and arguments
 			// Callee removes them and pushes return values
 
+			TypePointers parameterTypes = function.parameterTypes();
+
 			evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
-			for (unsigned i = 0; i < arguments.size(); ++i)
-				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
+
+			if (!_functionCall.isSuffixCall())
+			{
+				for (unsigned i = 0; i < arguments.size(); ++i)
+					acceptAndConvert(*arguments[i], *parameterTypes[i]);
+			}
+			else
+			{
+				solAssert(_functionCall.expression().annotation().arguments->types.size() == 1);
+				solAssert(_functionCall.expression().annotation().arguments->types[0]);
+				// TODO this is actually not always the right one.
+				Type const* literalType = _functionCall.expression().annotation().arguments->types[0];
+
+				solAssert(arguments.size() == 1);
+				solAssert(arguments[0]);
+				auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
+				solAssert(literal);
+
+				if (parameterTypes.size() == 1)
+				{
+					// TODO: We still need to do something for strings, don't we?
+					// The original TODO said 'reuse the code below', back when this part was in endVisit(Literal)
+					if (literalType->category() != Type::Category::StringLiteral)
+						m_context << literalType->literalValue(literal);
+					utils().convertType(*literalType, *parameterTypes.at(0));
+				}
+				else
+				{
+					solAssert(parameterTypes.size() == 2);
+
+					auto const* rationalNumberType = dynamic_cast<RationalNumberType const*>(literalType);
+					solAssert(rationalNumberType);
+
+					auto&& [mantissa, exponent] = rationalNumberType->mantissaExponent();
+					m_context << mantissa->literalValue(nullptr);
+					utils().convertType(*mantissa, *parameterTypes.at(0));
+					m_context << exponent->literalValue(nullptr);
+					utils().convertType(*exponent, *parameterTypes.at(1));
+				}
+			}
+
 			_functionCall.expression().accept(*this);
 
-			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
+			unsigned parameterSize = CompilerUtils::sizeOnStack(parameterTypes);
 			if (function.hasBoundFirstArgument())
 			{
 				// stack: arg2, ..., argn, label, arg1
