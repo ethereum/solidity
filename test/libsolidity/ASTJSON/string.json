@@ -123,6 +123,7 @@
           "scope": 9,
           "src": "13:56:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

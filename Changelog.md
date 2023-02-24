@@ -1,6 +1,7 @@
 ## 0.8.20 (unreleased)
 
 Language Features:
+* General: Introduce literal suffix functions. Free functions can now be marked as suffixes and applied to literals using a new suffix call syntax.
 
 
 Compiler Features:
@@ -16,6 +17,11 @@ Bugfixes:
  * Antlr Grammar: Fix discrepancy with the parser, which allowed octal numbers.
  * Antlr Grammar: Fix of a discrepancy with the parser, which allowed numbers followed by an identifier with no whitespace.
  * Antlr Grammar: Stricter rules for function definitions. The grammar will no longer accept as valid free functions having specifiers which are exclusive to contract functions.
+
+
+AST Changes:
+ * AST: Add ``suffix`` field to ``FunctionDefinition`` AST node, which is ``true`` for free function definitions using the ``suffix`` modifier.
+ * AST: Add ``isSuffixCall`` field to ``FunctionCall`` AST node, which is ``true`` for calls resulting from applying a literal suffix.
 
 
 ### 0.8.19 (2023-02-22)

@@ -528,7 +528,7 @@ StateMutability Parser::parseStateMutability()
 	return stateMutability;
 }
 
-Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVariable)
+Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVariable, bool _freeFunction)
 {
 	RecursionGuard recursionGuard(*this);
 	FunctionHeaderParserResult result;
@@ -540,7 +540,18 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 	{
 		Token token = m_scanner->currentToken();
 		if (!_isStateVariable && token == Token::Identifier)
-			result.modifiers.push_back(parseModifierInvocation());
+		{
+			if (_freeFunction && currentLiteral() == "suffix")
+			{
+				if (result.usableAsSuffix)
+					parserError(2878_error, "Suffix already specified.");
+				else
+					result.usableAsSuffix = true;
+				advance();
+			}
+			else
+				result.modifiers.push_back(parseModifierInvocation());
+		}
 		else if (TokenTraits::isVisibilitySpecifier(token))
 		{
 			if (result.visibility != Visibility::Default)
@@ -650,7 +661,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction)
 		name = make_shared<ASTString>();
 	}
 
-	FunctionHeaderParserResult header = parseFunctionHeader(false);
+	FunctionHeaderParserResult header = parseFunctionHeader(false /* _isStateVariable */, _freeFunction);
 
 	ASTPointer<Block> block;
 	nodeFactory.markEndPosition();
@@ -669,6 +680,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction)
 		_freeFunction,
 		kind,
 		header.isVirtual,
+		header.usableAsSuffix,
 		header.overrides,
 		documentation,
 		header.parameters,
@@ -1188,7 +1200,7 @@ ASTPointer<FunctionTypeName> Parser::parseFunctionType()
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Function);
-	FunctionHeaderParserResult header = parseFunctionHeader(true);
+	FunctionHeaderParserResult header = parseFunctionHeader(true /* _isStateVariable */, false /* _freeFunction */);
 	return nodeFactory.createNode<FunctionTypeName>(
 		header.parameters,
 		header.returnParameters,

@@ -936,6 +936,7 @@ public:
 		bool _free,
 		Token _kind,
 		bool _isVirtual,
+		bool _usableAsSuffix,
 		ASTPointer<OverrideSpecifier> const& _overrides,
 		ASTPointer<StructuredDocumentation> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
@@ -949,11 +950,14 @@ public:
 		m_stateMutability(_stateMutability),
 		m_free(_free),
 		m_kind(_kind),
+		m_usableAsSuffix(_usableAsSuffix),
 		m_functionModifiers(std::move(_modifiers)),
 		m_body(_body)
 	{
 		solAssert(_kind == Token::Constructor || _kind == Token::Function || _kind == Token::Fallback || _kind == Token::Receive, "");
 		solAssert(isOrdinary() == !name().empty(), "");
+		if (_usableAsSuffix)
+			solAssert(_free);
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -966,6 +970,7 @@ public:
 	bool isFallback() const { return m_kind == Token::Fallback; }
 	bool isReceive() const { return m_kind == Token::Receive; }
 	bool isFree() const { return m_free; }
+	bool usableAsSuffix() const { return m_usableAsSuffix; }
 	Token kind() const { return m_kind; }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
@@ -1015,6 +1020,7 @@ private:
 	StateMutability m_stateMutability;
 	bool m_free;
 	Token const m_kind;
+	bool m_usableAsSuffix;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
 };
