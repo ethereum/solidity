@@ -160,6 +160,7 @@ private:
 	ASTPointer<Expression> parseLeftHandSideExpression(
 		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
+	ASTPointer<Expression> parseLiteral();
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 
