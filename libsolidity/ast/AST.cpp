@@ -29,6 +29,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/Visitor.h>
 
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/tail.hpp>
@@ -1000,6 +1001,7 @@ bool Literal::isHexNumber() const
 
 bool Literal::looksLikeAddress() const
 {
+	// User suffixes are fine.
 	if (subDenomination() != SubDenomination::None)
 		return false;
 

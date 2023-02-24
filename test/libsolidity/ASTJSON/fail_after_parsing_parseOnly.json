@@ -150,6 +150,7 @@
                     "typeDescriptions": {}
                   },
                   "id": 18,
+                  "isSuffixCall": false,
                   "nameLocations": [],
                   "names": [],
                   "nodeType": "FunctionCall",
