@@ -141,6 +141,8 @@ bool FunctionCallGraphBuilder::visit(EmitStatement const& _emitStatement)
 	return true;
 }
 
+// TODO why don't we handle IdentifierPath here?
+
 bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 {
 	if (auto const* variable = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
