@@ -8,7 +8,7 @@ function uncheckedAdd(U8 x, U8 y) pure returns (U8) {
 
 using {uncheckedAdd as +} for U8 global;
 
-contract D {
+contract C {
     function testUncheckedOperator() public pure returns (U8) {
         return U8.wrap(250) + U8.wrap(10);
     }
@@ -19,7 +19,6 @@ contract D {
         }
     }
 }
-
 // ----
 // testUncheckedOperator() -> 4
 // testUncheckedOperatorInUncheckedBlock() -> 4
