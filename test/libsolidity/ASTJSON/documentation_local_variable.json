@@ -350,6 +350,7 @@
           "scope": 41,
           "src": "17:355:1",
           "stateMutability": "pure",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         },
@@ -478,6 +479,7 @@
           "scope": 41,
           "src": "377:287:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

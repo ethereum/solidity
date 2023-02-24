@@ -158,6 +158,7 @@
           "scope": 6,
           "src": "17:99:1",
           "stateMutability": "view",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

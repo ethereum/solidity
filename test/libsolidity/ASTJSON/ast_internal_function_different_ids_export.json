@@ -52,6 +52,7 @@
       "scope": 79,
       "src": "0:19:1",
       "stateMutability": "nonpayable",
+      "suffix": false,
       "virtual": false,
       "visibility": "internal"
     },
@@ -87,6 +88,7 @@
       "scope": 79,
       "src": "20:19:1",
       "stateMutability": "nonpayable",
+      "suffix": false,
       "virtual": false,
       "visibility": "internal"
     },
@@ -139,6 +141,7 @@
           "scope": 78,
           "src": "56:24:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "internal"
         },
@@ -174,6 +177,7 @@
           "scope": 78,
           "src": "85:24:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "internal"
         }
@@ -495,6 +499,7 @@
           "scope": 22,
           "src": "29:80:2",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }
@@ -695,6 +700,7 @@
           "scope": 37,
           "src": "129:63:2",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }
@@ -1012,6 +1018,7 @@
           "scope": 60,
           "src": "29:80:3",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

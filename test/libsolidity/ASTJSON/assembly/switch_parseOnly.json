@@ -176,6 +176,7 @@
           },
           "src": "17:179:1",
           "stateMutability": "pure",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

@@ -46,6 +46,7 @@
           },
           "src": "15:32:1",
           "stateMutability": "payable",
+          "suffix": false,
           "virtual": false,
           "visibility": "external"
         },
@@ -80,6 +81,7 @@
           },
           "src": "50:33:1",
           "stateMutability": "payable",
+          "suffix": false,
           "virtual": false,
           "visibility": "external"
         }

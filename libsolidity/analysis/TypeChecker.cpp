@@ -426,6 +426,104 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else if (_function.libraryFunction())
 			m_errorReporter.typeError(7801_error, _function.location(), "Library functions cannot be \"virtual\".");
 	}
+	if (_function.usableAsSuffix())
+	{
+		if (_function.stateMutability() != StateMutability::Pure)
+			m_errorReporter.typeError(
+				1716_error,
+				_function.location(),
+				"Only pure functions can be used as literal suffixes"
+			);
+
+		optional<string> parameterCountMessage;
+		if (_function.parameterList().parameters().size() == 0)
+			parameterCountMessage = "Functions that take no arguments cannot be used as literal suffixes.";
+		else if (_function.parameterList().parameters().size() >= 3)
+			parameterCountMessage = "Functions that take 3 or more arguments cannot be used as literal suffixes.";
+
+		if (parameterCountMessage.has_value())
+			m_errorReporter.typeError(9128_error, _function.parameterList().location(), parameterCountMessage.value());
+		else if (_function.parameterList().parameters().size() == 2)
+		{
+			auto const* mantissaType = dynamic_cast<IntegerType const*>(_function.parameterList().parameters()[0]->type());
+			auto const* exponentType = dynamic_cast<IntegerType const*>(_function.parameterList().parameters()[1]->type());
+
+			vector<string> mantissaOrExponentTypeErrorMessages;
+			if (!mantissaType)
+				mantissaOrExponentTypeErrorMessages.emplace_back("The mantissa parameter must be an integer.");
+			if (!exponentType)
+				mantissaOrExponentTypeErrorMessages.emplace_back("The exponent parameter must be an unsigned integer.");
+
+			if (!mantissaOrExponentTypeErrorMessages.empty())
+				m_errorReporter.typeError(
+					1587_error,
+					_function.parameterList().location(),
+					"Literal suffix function has invalid parameter types. " +
+					joinHumanReadable(mantissaOrExponentTypeErrorMessages, " ")
+				);
+
+			if (exponentType && exponentType->isSigned())
+				m_errorReporter.typeError(
+					3123_error,
+					_function.parameterList().parameters()[1]->typeName().location(),
+					"The exponent parameter of a literal suffix function must be unsigned. "
+					"Exponent is always either zero or a negative power of 10 but the parameter represents its absolute value."
+				);
+		}
+		else if (_function.parameterList().parameters().size() == 1)
+		{
+			auto const* parameterType = _function.parameterList().parameters()[0]->type();
+
+			if (dynamic_cast<FixedPointType const*>(parameterType))
+				m_errorReporter.typeError(
+					2699_error,
+					_function.parameterList().parameters()[0]->location(),
+					"Parameters of fixed-point types are not allowed in literal suffix functions. "
+					"To support fractional literals the suffix function must accept two integer arguments "
+					"(mantissa and exponent) that such literals can be decomposed into."
+				);
+
+			if (
+				!TypeProvider::boolean()->isImplicitlyConvertibleTo(*parameterType) &&
+				// ASSUMPTION: There are no address payable literals.
+				!TypeProvider::address()->isImplicitlyConvertibleTo(*parameterType) &&
+				// ASSUMPTION: Literal 1 is implicitly convertible to any integer type.
+				!TypeProvider::rationalNumber(1)->isImplicitlyConvertibleTo(*parameterType) &&
+				// ASSUMPTION: bytes1 is implicitly convertible to any fixed-bytes type.
+				!TypeProvider::fixedBytes(1)->isImplicitlyConvertibleTo(*parameterType) &&
+				!TypeProvider::stringLiteral("a")->isImplicitlyConvertibleTo(*parameterType)
+			)
+				m_errorReporter.typeError(
+					2998_error,
+					_function.parameterList().parameters()[0]->location(),
+					"This literal suffix function is not usable as a suffix because no literal is "
+					"implicitly convertible to its parameter type."
+				);
+		}
+
+		solAssert(_function.returnParameterList());
+		if (_function.returnParameterList()->parameters().size() != 1)
+		{
+			m_errorReporter.typeError(
+				7848_error,
+				_function.returnParameterList()->location(),
+				"Literal suffix functions must return exactly one value."
+			);
+		}
+
+		for (ASTPointer<VariableDeclaration const> returnParameter: _function.returnParameterList()->parameters())
+		{
+			solAssert(returnParameter);
+			auto referenceType = dynamic_cast<ReferenceType const*>(returnParameter->type());
+			auto mappingType = dynamic_cast<MappingType const*>(returnParameter->type());
+			if (mappingType || (referenceType && !referenceType->dataStoredIn(DataLocation::Memory)))
+				m_errorReporter.typeError(
+					7251_error,
+					returnParameter->location(),
+					"Literal suffix functions can only return value types and reference types stored in memory."
+				);
+		}
+	}
 	if (_function.overrides() && _function.isFree())
 		m_errorReporter.syntaxError(1750_error, _function.location(), "Free functions cannot override.");
 

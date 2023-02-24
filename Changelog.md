@@ -1,6 +1,7 @@
 ### 0.8.21 (unreleased)
 
 Language Features:
+ * General: Introduce literal suffix functions. Free functions can now be marked as suffixes and applied to literals using a new suffix call syntax.
 
 
 Compiler Features:
@@ -13,6 +14,8 @@ Bugfixes:
 
 
 AST Changes:
+ * AST: Add ``isSuffixCall`` field to ``FunctionCall`` AST node, which is ``true`` for calls resulting from applying a literal suffix.
+ * AST: Add ``suffix`` field to ``FunctionDefinition`` AST node, which is ``true`` for free function definitions using the ``suffix`` modifier.
  * AST: Add the ``experimentalSolidity`` field to the ``SourceUnit`` nodes, which indicate whether the experimental parsing mode has been enabled via ``pragma experimental solidity``.
 
 

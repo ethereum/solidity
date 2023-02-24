@@ -224,6 +224,7 @@
           "scope": 15,
           "src": "13:65:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

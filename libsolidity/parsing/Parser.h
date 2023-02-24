@@ -69,6 +69,7 @@ private:
 	struct FunctionHeaderParserResult
 	{
 		bool isVirtual = false;
+		bool usableAsSuffix = false;
 		ASTPointer<OverrideSpecifier> overrides;
 		ASTPointer<ParameterList> parameters;
 		ASTPointer<ParameterList> returnParameters;
@@ -99,7 +100,7 @@ private:
 	Visibility parseVisibilitySpecifier();
 	ASTPointer<OverrideSpecifier> parseOverrideSpecifier();
 	StateMutability parseStateMutability();
-	FunctionHeaderParserResult parseFunctionHeader(bool _isStateVariable);
+	FunctionHeaderParserResult parseFunctionHeader(bool _isStateVariable, bool _freeFunction);
 	ASTPointer<ASTNode> parseFunctionDefinition(bool _freeFunction = false);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();

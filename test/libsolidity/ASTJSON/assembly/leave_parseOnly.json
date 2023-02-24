@@ -80,6 +80,7 @@
           },
           "src": "17:71:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

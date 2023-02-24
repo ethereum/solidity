@@ -69,6 +69,7 @@
           "scope": 5,
           "src": "14:32:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         }
@@ -141,6 +142,7 @@
           "scope": 16,
           "src": "77:30:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         },
@@ -188,6 +190,7 @@
           "scope": 16,
           "src": "109:41:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         }
@@ -279,6 +282,7 @@
           "scope": 29,
           "src": "172:34:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         },
@@ -326,6 +330,7 @@
           "scope": 29,
           "src": "208:34:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

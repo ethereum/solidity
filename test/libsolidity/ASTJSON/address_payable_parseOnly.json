@@ -373,6 +373,7 @@
           },
           "src": "67:189:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

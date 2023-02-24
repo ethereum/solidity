@@ -373,6 +373,7 @@
           "scope": 28,
           "src": "42:223:1",
           "stateMutability": "pure",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

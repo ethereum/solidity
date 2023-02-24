@@ -184,6 +184,7 @@
           },
           "src": "51:95:1",
           "stateMutability": "pure",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

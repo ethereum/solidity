@@ -80,6 +80,7 @@ JSON AST (compact format):
           "scope": 18,
           "src": "82:63:0",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         },
@@ -174,6 +175,7 @@ JSON AST (compact format):
           "scope": 18,
           "src": "398:61:0",
           "stateMutability": "view",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

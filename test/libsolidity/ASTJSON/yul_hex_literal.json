@@ -142,6 +142,7 @@
           "scope": 6,
           "src": "22:192:1",
           "stateMutability": "pure",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }
