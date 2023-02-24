@@ -145,6 +145,7 @@
           "scope": 6,
           "src": "17:93:1",
           "stateMutability": "view",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

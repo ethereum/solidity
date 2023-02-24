@@ -117,6 +117,7 @@
       },
       "src": "16:45:1",
       "stateMutability": "pure",
+      "suffix": false,
       "virtual": false,
       "visibility": "internal"
     }

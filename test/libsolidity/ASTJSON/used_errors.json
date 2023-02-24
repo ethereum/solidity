@@ -108,6 +108,7 @@
       "scope": 20,
       "src": "11:33:1",
       "stateMutability": "pure",
+      "suffix": false,
       "virtual": false,
       "visibility": "internal"
     },
@@ -218,6 +219,7 @@
           "scope": 19,
           "src": "77:28:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }

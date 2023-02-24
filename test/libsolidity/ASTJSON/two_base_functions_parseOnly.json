@@ -46,6 +46,7 @@
           },
           "src": "17:30:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         }
@@ -95,6 +96,7 @@
           },
           "src": "67:30:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": true,
           "visibility": "public"
         }
@@ -207,6 +209,7 @@
           },
           "src": "125:37:1",
           "stateMutability": "nonpayable",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }
