@@ -163,6 +163,7 @@
           "scope": 8,
           "src": "15:137:1",
           "stateMutability": "pure",
+          "suffix": false,
           "virtual": false,
           "visibility": "public"
         }
