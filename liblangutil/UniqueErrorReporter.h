@@ -33,6 +33,11 @@ class UniqueErrorReporter
 public:
 	UniqueErrorReporter(): m_errorReporter(m_uniqueErrors) {}
 
+	void append(UniqueErrorReporter const& _other)
+	{
+		m_errorReporter.append(_other.m_errorReporter.errors());
+	}
+
 	void warning(ErrorId _error, SourceLocation const& _location, std::string const& _description)
 	{
 		if (!seen(_error, _location, _description))

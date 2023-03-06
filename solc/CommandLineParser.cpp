@@ -73,6 +73,7 @@ static string const g_strModelCheckerExtCalls = "model-checker-ext-calls";
 static string const g_strModelCheckerInvariants = "model-checker-invariants";
 static string const g_strModelCheckerShowProvedSafe = "model-checker-show-proved-safe";
 static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved";
+static string const g_strModelCheckerShowUnsupported = "model-checker-show-unsupported";
 static string const g_strModelCheckerSolvers = "model-checker-solvers";
 static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
@@ -855,6 +856,10 @@ General Information)").c_str(),
 			"Show all unproved targets separately."
 		)
 		(
+			g_strModelCheckerShowUnsupported.c_str(),
+			"Show all unsupported language features separately."
+		)
+		(
 			g_strModelCheckerSolvers.c_str(),
 			po::value<string>()->value_name("cvc4,eld,z3,smtlib2")->default_value("z3"),
 			"Select model checker solvers."
@@ -960,6 +965,7 @@ void CommandLineParser::processArgs()
 		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerShowProvedSafe, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnsupported, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerInvariants, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
@@ -1326,6 +1332,9 @@ void CommandLineParser::processArgs()
 	if (m_args.count(g_strModelCheckerShowUnproved))
 		m_options.modelChecker.settings.showUnproved = true;
 
+	if (m_args.count(g_strModelCheckerShowUnsupported))
+		m_options.modelChecker.settings.showUnsupported = true;
+
 	if (m_args.count(g_strModelCheckerSolvers))
 	{
 		string solversStr = m_args[g_strModelCheckerSolvers].as<string>();
@@ -1356,6 +1365,7 @@ void CommandLineParser::processArgs()
 		m_args.count(g_strModelCheckerInvariants) ||
 		m_args.count(g_strModelCheckerShowProvedSafe) ||
 		m_args.count(g_strModelCheckerShowUnproved) ||
+		m_args.count(g_strModelCheckerShowUnsupported) ||
 		m_args.count(g_strModelCheckerSolvers) ||
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);
