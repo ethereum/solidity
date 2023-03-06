@@ -650,7 +650,7 @@ defaults:
   - job_b_ubu_ubsan_clang: &job_b_ubu_ubsan_clang
       <<: *workflow_trigger_on_tags
       name: b_ubu_ubsan_clang
-      cmake_options: -DSANITIZE=address
+      cmake_options: -DSANITIZE=undefined
 
 # -----------------------------------------------------------------------------------------------
 jobs:
