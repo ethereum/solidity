@@ -55,7 +55,7 @@ To set indentation and tab width settings uniformly, the repository contains an 
 3. All symbols should be declared in a namespace except for final applications.
 4. Use anonymous namespaces for helpers whose scope is a cpp file only.
 5. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
-6. Do not use `std::` qualifier in cpp files (see 2.), except for `std::move`, which will otherwise cause the `check_style` step to fail.
+6. Do not use `std::` qualifier in cpp files (see 2.), except for `std::move` and `std::forward`, which will otherwise cause the `check_style` step to fail.
 
 Only in the header:
 ```cpp
