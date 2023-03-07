@@ -1780,11 +1780,10 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 
 	_operation.annotation().userDefinedFunction = operatorDefinition;
 
-	TypePointers const& returnParameterTypes = _operation.userDefinedFunctionType()->returnParameterTypes();
-	if (operatorDefinition && !returnParameterTypes.empty())
+	if (operatorDefinition && !_operation.userDefinedFunctionType()->returnParameterTypes().empty())
 		// Use the actual result type from operator definition. Ignore all values but the
 		// first one - in valid code there will be only one anyway.
-		resultType = returnParameterTypes[0];
+		resultType = _operation.userDefinedFunctionType()->returnParameterTypes()[0];
 	_operation.annotation().type = resultType;
 	_operation.annotation().isConstant = false;
 	_operation.annotation().isPure =
