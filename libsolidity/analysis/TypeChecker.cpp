@@ -3993,11 +3993,25 @@ void TypeChecker::endVisit(Literal const& _literal)
 			suffixFunctionType->hasBoundFirstArgument() ||
 			!_literal.suffixFunction()->usableAsSuffix()
 		)
+		{
+			auto suffixDefinitionLocation = SecondarySourceLocation{};
+			if (
+				suffixFunctionType &&
+				suffixFunctionType->hasDeclaration() &&
+				dynamic_cast<Declaration const*>(&suffixFunctionType->declaration())
+			)
+				suffixDefinitionLocation.append(
+					"Suffix defined here:",
+					dynamic_cast<Declaration const*>(&suffixFunctionType->declaration())->location()
+				);
+
 			m_errorReporter.typeError(
 				4438_error,
 				_literal.location(),
+				suffixDefinitionLocation,
 				"The literal suffix must be either a subdenomination or a file-level suffix function."
 			);
+		}
 		else
 		{
 			solAssert(_literal.suffixFunction());
@@ -4015,6 +4029,10 @@ void TypeChecker::endVisit(Literal const& _literal)
 					m_errorReporter.typeError(
 						2505_error,
 						_literal.location(),
+						SecondarySourceLocation().append(
+							"Suffix function defined here:",
+							dynamic_cast<FunctionDefinition const*>(&suffixFunctionType->declaration())->parameterList().location()
+						),
 						"Functions that take 2 arguments can only be used as literal suffixes for rational numbers."
 					);
 				else
@@ -4040,7 +4058,15 @@ void TypeChecker::endVisit(Literal const& _literal)
 				solAssert(m_errorReporter.hasErrors());
 
 			if (parameterTypeMessage.has_value())
-				m_errorReporter.typeError(8838_error, _literal.location(), parameterTypeMessage.value());
+				m_errorReporter.typeError(
+					8838_error,
+					_literal.location(),
+					SecondarySourceLocation().append(
+						"Suffix function defined here:",
+						dynamic_cast<FunctionDefinition const*>(&suffixFunctionType->declaration())->parameterList().location()
+					),
+					parameterTypeMessage.value()
+				);
 
 			if (suffixFunctionType->returnParameterTypes().size() == 1)
 				_literal.annotation().type = suffixFunctionType->returnParameterTypes().front();
