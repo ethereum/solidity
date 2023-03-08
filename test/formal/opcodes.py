@@ -51,6 +51,9 @@ def AND(x, y):
 def OR(x, y):
 	return x | y
 
+def XOR(x, y):
+	return x ^ y
+
 def NOT(x):
 	return ~(x)
 

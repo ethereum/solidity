@@ -326,8 +326,6 @@ sub_0: assembly {
       swap1
       dup2
       slt
-      0x01
-      and
       tag_14
       jumpi
         /* \"C\":79:428  contract C... */
@@ -351,15 +349,7 @@ sub_0: assembly {
       slt
       swap2
       slt
-      swap1
-      dup1
-      iszero
-      dup3
-      and
-      swap2
-      iszero
-      and
-      or
+      xor
       tag_38
       jumpi
       jump\t// out
@@ -433,8 +423,6 @@ sub_0: assembly {
   swap1
   dup2
   slt
-  0x01
-  and
   tag_7
   jumpi
   0x00
@@ -715,8 +703,6 @@ sub_0: assembly {
       swap1
       dup2
       slt
-      0x01
-      and
       tag_14
       jumpi
         /* \"D\":91:166  contract D is C(3)... */
@@ -740,15 +726,7 @@ sub_0: assembly {
       slt
       swap2
       slt
-      swap1
-      dup1
-      iszero
-      dup3
-      and
-      swap2
-      iszero
-      and
-      or
+      xor
       tag_38
       jumpi
       jump\t// out

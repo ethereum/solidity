@@ -1,7 +1,7 @@
-from opcodes import AND, ISZERO, SGT, SLT, ADD
+from opcodes import SGT, SLT, ADD, XOR
 from rule import Rule
 from util import BVSignedMax, BVSignedMin, BVSignedUpCast
-from z3 import BitVec, BVAddNoOverflow, BVAddNoUnderflow, Not
+from z3 import BitVec, BVAddNoOverflow, BVAddNoUnderflow, Not, Or
 
 """
 Overflow checked signed integer addition.
@@ -33,13 +33,17 @@ while type_bits <= n_bits:
 
 	# Overflow and underflow checks in YulUtilFunction::overflowCheckedIntAddFunction
 	if type_bits == 256:
-		overflow_check = AND(ISZERO(SLT(X, 0)), SLT(sum_, Y))
-		underflow_check = AND(SLT(X, 0), ISZERO(SLT(sum_, Y)))
+		actual_overflow_or_underflow = Or(actual_overflow, actual_underflow)
+
+		overflow_or_underflow_check = XOR(SLT(X, 0), SLT(sum_, Y))
+
+		rule.check(actual_overflow_or_underflow,
+				   overflow_or_underflow_check != 0)
 	else:
 		overflow_check = SGT(sum_, maxValue)
 		underflow_check = SLT(sum_, minValue)
 
-	type_bits += 8
+		rule.check(actual_overflow, overflow_check != 0)
+		rule.check(actual_underflow, underflow_check != 0)
 
-	rule.check(actual_overflow, overflow_check != 0)
-	rule.check(actual_underflow, underflow_check != 0)
+	type_bits += 8

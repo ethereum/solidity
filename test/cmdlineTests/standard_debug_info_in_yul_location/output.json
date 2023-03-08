@@ -365,10 +365,8 @@ object \"C_54\" {
 
                 // overflow, if x >= 0 and sum < y
                 // underflow, if x < 0 and sum >= y
-                if or(
-                    and(iszero(slt(x, 0)), slt(sum, y)),
-                    and(slt(x, 0), iszero(slt(sum, y)))
-                ) { panic_error_0x11() }
+                // combine both conditions using xor
+                if xor(slt(x, 0), slt(sum, y)) { panic_error_0x11() }
 
             }
 
@@ -667,7 +665,7 @@ object \"C_54\" {
                         let _4 := loadimmutable(\"8\")
                         /// @src 0:79:435  \"contract C...\"
                         let sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 0:79:435  \"contract C...\" */ _4)
-                        if and(1, slt(sum, _4))
+                        if slt(sum, _4)
                         {
                             mstore(_3, shl(224, 0x4e487b71))
                             mstore(4, 0x11)
@@ -754,9 +752,7 @@ object \"C_54\" {
             function checked_add_int256(x, y) -> sum
             {
                 sum := add(x, y)
-                let _1 := slt(sum, y)
-                let _2 := slt(x, 0)
-                if or(and(iszero(_2), _1), and(_2, iszero(_1)))
+                if xor(slt(x, 0), slt(sum, y))
                 {
                     mstore(0, shl(224, 0x4e487b71))
                     mstore(4, 0x11)
@@ -910,10 +906,8 @@ object \"D_72\" {
 
             // overflow, if x >= 0 and sum < y
             // underflow, if x < 0 and sum >= y
-            if or(
-                and(iszero(slt(x, 0)), slt(sum, y)),
-                and(slt(x, 0), iszero(slt(sum, y)))
-            ) { panic_error_0x11() }
+            // combine both conditions using xor
+            if xor(slt(x, 0), slt(sum, y)) { panic_error_0x11() }
 
         }
 
@@ -1204,10 +1198,8 @@ object \"D_72\" {
 
                 // overflow, if x >= 0 and sum < y
                 // underflow, if x < 0 and sum >= y
-                if or(
-                    and(iszero(slt(x, 0)), slt(sum, y)),
-                    and(slt(x, 0), iszero(slt(sum, y)))
-                ) { panic_error_0x11() }
+                // combine both conditions using xor
+                if xor(slt(x, 0), slt(sum, y)) { panic_error_0x11() }
 
             }
 
@@ -1479,7 +1471,7 @@ object \"D_72\" {
             mstore(128, 0x2a)
             /// @src 1:91:166  \"contract D is C(3)...\"
             let sum := add(/** @src 1:107:108  \"3\" */ 0x03, /** @src 1:91:166  \"contract D is C(3)...\" */ value)
-            if and(1, slt(sum, value))
+            if slt(sum, value)
             {
                 mstore(/** @src -1:-1:-1 */ 0, /** @src 1:91:166  \"contract D is C(3)...\" */ shl(224, 0x4e487b71))
                 mstore(4, 0x11)
@@ -1513,7 +1505,7 @@ object \"D_72\" {
                         let _4 := loadimmutable(\"8\")
                         /// @src 1:91:166  \"contract D is C(3)...\"
                         let sum := add(/** @src 0:124:126  \"41\" */ 0x29, /** @src 1:91:166  \"contract D is C(3)...\" */ _4)
-                        if and(1, slt(sum, _4))
+                        if slt(sum, _4)
                         {
                             mstore(_3, shl(224, 0x4e487b71))
                             mstore(4, 0x11)
@@ -1600,9 +1592,7 @@ object \"D_72\" {
             function checked_add_int256(x, y) -> sum
             {
                 sum := add(x, y)
-                let _1 := slt(sum, y)
-                let _2 := slt(x, 0)
-                if or(and(iszero(_2), _1), and(_2, iszero(_1)))
+                if xor(slt(x, 0), slt(sum, y))
                 {
                     mstore(0, shl(224, 0x4e487b71))
                     mstore(4, 0x11)

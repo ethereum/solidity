@@ -1,7 +1,7 @@
-from opcodes import AND, ISZERO, SLT, SGT, SUB
+from opcodes import SLT, SGT, SUB, XOR
 from rule import Rule
 from util import BVSignedMax, BVSignedMin, BVSignedUpCast
-from z3 import BitVec, BVSubNoOverflow, BVSubNoUnderflow, Not
+from z3 import BitVec, BVSubNoOverflow, BVSubNoUnderflow, Not, Or
 
 """
 Overflow checked signed integer subtraction.
@@ -33,13 +33,18 @@ while type_bits <= n_bits:
 
 	# Overflow and underflow checks in YulUtilFunction::overflowCheckedIntSubFunction
 	if type_bits == 256:
-		underflow_check = AND(ISZERO(SLT(Y, 0)), SGT(diff, X))
-		overflow_check = AND(SLT(Y, 0), SLT(diff, X))
+		actual_overflow_or_underflow = Or(actual_overflow, actual_underflow)
+
+		overflow_or_underflow_check = XOR(SLT(Y, 0), SLT(X, diff))
+
+		rule.check(actual_overflow_or_underflow,
+				   overflow_or_underflow_check != 0)
+
 	else:
 		underflow_check = SLT(diff, minValue)
 		overflow_check = SGT(diff, maxValue)
 
-	type_bits += 8
+		rule.check(actual_underflow, underflow_check != 0)
+		rule.check(actual_overflow, overflow_check != 0)
 
-	rule.check(actual_underflow, underflow_check != 0)
-	rule.check(actual_overflow, overflow_check != 0)
+	type_bits += 8

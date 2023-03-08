@@ -628,10 +628,8 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 					<?256bit>
 						// overflow, if x >= 0 and sum < y
 						// underflow, if x < 0 and sum >= y
-						if or(
-							and(iszero(slt(x, 0)), slt(sum, y)),
-							and(slt(x, 0), iszero(slt(sum, y)))
-						) { <panic>() }
+						// combine both conditions using xor
+						if xor(slt(x, 0), slt(sum, y)) { <panic>() }
 					<!256bit>
 						if or(
 							sgt(sum, <maxValue>),
@@ -829,11 +827,9 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 				<?signed>
 					<?256bit>
 						// underflow, if y >= 0 and diff > x
-						// overflow, if y < 0 and diff < x
-						if or(
-							and(iszero(slt(y, 0)), sgt(diff, x)),
-							and(slt(y, 0), slt(diff, x))
-						) { <panic>() }
+						// overflow, if y < 0 and diff <= x
+						// combine both conditions using xor
+						if xor(slt(y, 0), slt(x, diff)) { <panic>() }
 					<!256bit>
 						if or(
 							slt(diff, <minValue>),
