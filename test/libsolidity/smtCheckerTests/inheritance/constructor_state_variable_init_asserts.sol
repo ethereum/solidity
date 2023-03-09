@@ -33,7 +33,8 @@ contract C is B {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (247-261): CHC: Assertion violation happens here.\nCounterexample:\ny = 2, x = (- 1)\na = 1\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (339-362): CHC: Assertion violation happens here.\nCounterexample:\ny = 2, x = (- 1)\na = 1\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (439-463): CHC: Assertion violation happens here.\nCounterexample:\ny = 4, x = 0\na = 0\n\nTransaction trace:\nC.constructor(0)
-// Warning 6328: (483-496): CHC: Assertion violation happens here.\nCounterexample:\ny = 4, x = 0\na = 0\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (247-261): CHC: Assertion violation happens here.
+// Warning 6328: (339-362): CHC: Assertion violation happens here.
+// Warning 6328: (439-463): CHC: Assertion violation happens here.
+// Warning 6328: (483-496): CHC: Assertion violation happens here.
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

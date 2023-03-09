@@ -14,4 +14,4 @@ contract C {
 // SMTExtCalls: trusted
 // ----
 // Warning 2072: (72-75): Unused local variable.
-// Info 1180: Contract invariant(s) for :C:\n(y <= 0)\n
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

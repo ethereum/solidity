@@ -27,6 +27,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (497-545): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.r()\n    C.h(1) -- internal call\n    C.h(2) -- internal call\n    C.h(255) -- internal call\n    C.h(255) -- internal call
-// Warning 6328: (652-702): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.s()\n    C.i(250) -- internal call\n    C.i(250) -- internal call
-// Info 1180: Contract invariant(s) for :C:\n(true || true || true || true || true)\nReentrancy property(ies) for :C:\n(((<errorCode> = 0) && ((:var 0) = (:var 1))) || true || true || true || true || true || true || true || true)\n(true || ((<errorCode> = 0) && ((:var 0) = (:var 1))) || true || true || true || true || true || true || true)\n(true || true || true || true || ((<errorCode> = 0) && ((:var 0) = (:var 1))) || true || true || true || true)\n(true || true || true || true || true || ((<errorCode> = 0) && ((:var 0) = (:var 1))) || true || true || true)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(MyInt8.unwrap(h(MyUInt8.wrap(1))) == 1)\n<errorCode> = 2 -> Assertion failed at assert(MyInt8.unwrap(h(MyUInt8.wrap(2))) == 2)\n<errorCode> = 3 -> Assertion failed at assert(MyInt8.unwrap(h(MyUInt8.wrap(255))) == -1)\n<errorCode> = 4 -> Assertion failed at assert(MyInt8.unwrap(h(MyUInt8.wrap(255))) == 1)\n<errorCode> = 6 -> Assertion failed at assert(MyUInt16.unwrap(i(MyUInt8.wrap(250))) == 250)\n<errorCode> = 7 -> Assertion failed at assert(MyUInt16.unwrap(i(MyUInt8.wrap(250))) == 0)\n
+// Warning 6328: (497-545): CHC: Assertion violation happens here.
+// Warning 6328: (652-702): CHC: Assertion violation happens here.
+// Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

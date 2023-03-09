@@ -1882,6 +1882,48 @@ void CHC::verificationTargetEncountered(
 	m_context.addAssertion(errorFlag().currentValue() == previousError);
 }
 
+pair<string, ErrorId> CHC::targetDescription(CHCVerificationTarget const& _target)
+{
+	if (_target.type == VerificationTargetType::PopEmptyArray)
+	{
+		solAssert(dynamic_cast<FunctionCall const*>(_target.errorNode), "");
+		return {"Empty array \"pop\"", 2529_error};
+	}
+	else if (_target.type == VerificationTargetType::OutOfBounds)
+	{
+		solAssert(dynamic_cast<IndexAccess const*>(_target.errorNode), "");
+		return {"Out of bounds access", 6368_error};
+	}
+	else if (
+		_target.type == VerificationTargetType::Underflow ||
+		_target.type == VerificationTargetType::Overflow
+	)
+	{
+		auto const* expr = dynamic_cast<Expression const*>(_target.errorNode);
+		solAssert(expr, "");
+		auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
+		if (!intType)
+			intType = TypeProvider::uint256();
+
+		if (_target.type == VerificationTargetType::Underflow)
+			return {
+				"Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")",
+				3944_error
+			};
+
+		return {
+			"Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")",
+			4984_error
+		};
+	}
+	else if (_target.type == VerificationTargetType::DivByZero)
+		return {"Division by zero", 4281_error};
+	else if (_target.type == VerificationTargetType::Assert)
+		return {"Assertion violation", 6328_error};
+	else
+		solAssert(false);
+}
+
 void CHC::checkVerificationTargets()
 {
 	// The verification conditions have been collected per function where they have been encountered (m_verificationTargets).
@@ -1900,57 +1942,8 @@ void CHC::checkVerificationTargets()
 	set<unsigned> checkedErrorIds;
 	for (auto const& [targetId, placeholders]: targetEntryPoints)
 	{
-		string errorType;
-		ErrorId errorReporterId;
-
 		auto const& target = m_verificationTargets.at(targetId);
-
-		if (target.type == VerificationTargetType::PopEmptyArray)
-		{
-			solAssert(dynamic_cast<FunctionCall const*>(target.errorNode), "");
-			errorType = "Empty array \"pop\"";
-			errorReporterId = 2529_error;
-		}
-		else if (target.type == VerificationTargetType::OutOfBounds)
-		{
-			solAssert(dynamic_cast<IndexAccess const*>(target.errorNode), "");
-			errorType = "Out of bounds access";
-			errorReporterId = 6368_error;
-		}
-		else if (
-			target.type == VerificationTargetType::Underflow ||
-			target.type == VerificationTargetType::Overflow
-		)
-		{
-			auto const* expr = dynamic_cast<Expression const*>(target.errorNode);
-			solAssert(expr, "");
-			auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
-			if (!intType)
-				intType = TypeProvider::uint256();
-
-			if (target.type == VerificationTargetType::Underflow)
-			{
-				errorType = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
-				errorReporterId = 3944_error;
-			}
-			else if (target.type == VerificationTargetType::Overflow)
-			{
-				errorType = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
-				errorReporterId = 4984_error;
-			}
-		}
-		else if (target.type == VerificationTargetType::DivByZero)
-		{
-			errorType = "Division by zero";
-			errorReporterId = 4281_error;
-		}
-		else if (target.type == VerificationTargetType::Assert)
-		{
-			errorType = "Assertion violation";
-			errorReporterId = 6328_error;
-		}
-		else
-			solAssert(false, "");
+		auto [errorType, errorReporterId] = targetDescription(target);
 
 		checkAndReportTarget(target, placeholders, errorReporterId, errorType + " happens here.", errorType + " might happen here.");
 		checkedErrorIds.insert(target.errorId);
@@ -1981,6 +1974,25 @@ void CHC::checkVerificationTargets()
 			" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
 			" Consider increasing the timeout per query."
 		);
+
+	if (!m_settings.showProvedSafe && !m_safeTargets.empty())
+		m_errorReporter.info(
+			1391_error,
+			"CHC: " +
+			to_string(m_safeTargets.size()) +
+			" verification condition(s) proved safe!" +
+			" Enable the model checker option \"show proved safe\" to see all of them."
+		);
+	else if (m_settings.showProvedSafe)
+		for (auto const& [node, targets]: m_safeTargets)
+			for (auto const& target: targets)
+				m_errorReporter.info(
+					9576_error,
+					node->location(),
+					"CHC: " +
+					targetDescription(target).first +
+					" check is safe!"
+				);
 
 	if (!m_settings.invariants.invariants.empty())
 	{
@@ -2040,7 +2052,7 @@ void CHC::checkVerificationTargets()
 		inserter(unreachableErrorIds, unreachableErrorIds.begin())
 	);
 	for (auto id: unreachableErrorIds)
-		m_safeTargets[m_verificationTargets.at(id).errorNode].insert(m_verificationTargets.at(id).type);
+		m_safeTargets[m_verificationTargets.at(id).errorNode].insert(m_verificationTargets.at(id));
 }
 
 void CHC::checkAndReportTarget(
@@ -2065,7 +2077,7 @@ void CHC::checkAndReportTarget(
 	auto [result, invariant, model] = query(error(), location);
 	if (result == CheckResult::UNSATISFIABLE)
 	{
-		m_safeTargets[_target.errorNode].insert(_target.type);
+		m_safeTargets[_target.errorNode].insert(_target);
 		set<Predicate const*> predicates;
 		for (auto const* pred: m_interfaces | ranges::views::values)
 			predicates.insert(pred);

@@ -110,6 +110,7 @@ void FuzzerUtil::testCompiler(
 			frontend::ModelCheckerEngine::All(),
 			frontend::ModelCheckerExtCalls{},
 			frontend::ModelCheckerInvariants::All(),
+			/*showProvedSafe=*/false,
 			/*showUnproved=*/false,
 			smtutil::SMTSolverChoice::All(),
 			frontend::ModelCheckerTargets::Default(),

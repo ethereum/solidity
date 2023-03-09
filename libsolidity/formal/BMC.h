@@ -135,7 +135,14 @@ private:
 		Expression const* expression;
 		std::vector<CallStackEntry> callStack;
 		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> modelExpressions;
+
+		friend bool operator<(BMCVerificationTarget const& _a, BMCVerificationTarget const& _b)
+		{
+			return _a.expression->id() < _b.expression->id();
+		}
 	};
+
+	std::string targetDescription(BMCVerificationTarget const& _target);
 
 	void checkVerificationTargets();
 	void checkVerificationTarget(BMCVerificationTarget& _target);
@@ -156,13 +163,13 @@ private:
 	//@{
 	/// Check that a condition can be satisfied.
 	void checkCondition(
+		BMCVerificationTarget const& _target,
 		smtutil::Expression _condition,
 		std::vector<CallStackEntry> const& _callStack,
 		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> const& _modelExpressions,
 		langutil::SourceLocation const& _location,
 		langutil::ErrorId _errorHappens,
 		langutil::ErrorId _errorMightHappen,
-		std::string const& _description,
 		std::string const& _additionalValueName = "",
 		smtutil::Expression const* _additionalValue = nullptr
 	);
@@ -188,7 +195,10 @@ private:
 
 	std::vector<BMCVerificationTarget> m_verificationTargets;
 
-	/// Targets that were already proven.
+	/// Targets proved safe by this engine.
+	std::map<ASTNode const*, std::set<BMCVerificationTarget>, smt::EncodingContext::IdCompare> m_safeTargets;
+
+	/// Targets that were already proven before this engine started.
 	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> m_solvedTargets;
 
 	/// Number of verification conditions that could not be proved.

@@ -21,4 +21,4 @@ contract C{
 // SMTEngine: all
 // ----
 // Warning 5667: (37-43): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Info 1180: Contract invariant(s) for :C:\n!(x <= 0)\n!(x >= 2)\n(!(x <= 0) && !(x >= 2))\n
+// Info 1391: CHC: 6 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

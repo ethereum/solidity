@@ -9,5 +9,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
 // Warning 6838: (60-110): BMC: Condition is always false.
 // Warning 6838: (125-175): BMC: Condition is always false.

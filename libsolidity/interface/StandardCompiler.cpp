@@ -445,7 +445,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"contracts", "divModNoSlacks", "engine", "extCalls", "invariants", "showUnproved", "solvers", "targets", "timeout"};
+	static set<string> keys{"contracts", "divModNoSlacks", "engine", "extCalls", "invariants", "showProvedSafe", "showUnproved", "solvers", "targets", "timeout"};
 	return checkKeys(_input, keys, "modelChecker");
 }
 
@@ -1045,6 +1045,14 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.invariants must be a non-empty array.");
 
 		ret.modelCheckerSettings.invariants = invariants;
+	}
+
+	if (modelCheckerSettings.isMember("showProvedSafe"))
+	{
+		auto const& showProvedSafe = modelCheckerSettings["showProvedSafe"];
+		if (!showProvedSafe.isBool())
+			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.showProvedSafe must be a Boolean value.");
+		ret.modelCheckerSettings.showProvedSafe = showProvedSafe.asBool();
 	}
 
 	if (modelCheckerSettings.isMember("showUnproved"))

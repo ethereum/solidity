@@ -30,3 +30,4 @@ contract A {
 // SMTIgnoreInv: yes
 // ----
 // Warning 6328: (392-408): CHC: Assertion violation happens here.
+// Info 1391: CHC: 17 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

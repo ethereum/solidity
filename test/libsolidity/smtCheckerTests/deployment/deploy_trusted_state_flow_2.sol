@@ -17,4 +17,4 @@ contract C {
 // SMTEngine: all
 // SMTExtCalls: trusted
 // ----
-// Info 1180: Contract invariant(s) for :C:\n((:var 1).storage.storage_D_12[d].x_3_D_12 <= 0)\nReentrancy property(ies) for :D:\n((x' <= 0) || !(x <= 0))\n
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -40,7 +40,8 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (s3.sol:327-342): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 13\ny = 89\nz = 42\nt = 89\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        s1.sol:fre() -- internal call\n        s2.sol:foo() -- internal call
-// Warning 6328: (s3.sol:396-411): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 13\ny = 89\nz = 42\nt = 89\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        s1.sol:fre() -- internal call\n        s2.sol:foo() -- internal call
-// Warning 6328: (s3.sol:465-480): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 13\ny = 89\nz = 42\nt = 89\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        s1.sol:fre() -- internal call\n        s2.sol:foo() -- internal call
-// Warning 6328: (s3.sol:534-549): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 13\ny = 89\nz = 42\nt = 89\n\nTransaction trace:\nC.constructor()\nC.p()\n    C.f() -- internal call\n        s1.sol:fre() -- internal call\n        s2.sol:foo() -- internal call
+// Warning 6328: (s3.sol:327-342): CHC: Assertion violation happens here.
+// Warning 6328: (s3.sol:396-411): CHC: Assertion violation happens here.
+// Warning 6328: (s3.sol:465-480): CHC: Assertion violation happens here.
+// Warning 6328: (s3.sol:534-549): CHC: Assertion violation happens here.
+// Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

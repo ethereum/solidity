@@ -22,3 +22,4 @@ contract C {
 // Warning 2319: (149-160): This declaration shadows a builtin symbol.
 // Warning 2319: (189-203): This declaration shadows a builtin symbol.
 // Warning 6328: (274-297): CHC: Assertion violation happens here.
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -24,3 +24,4 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
+// Info 1391: CHC: 7 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

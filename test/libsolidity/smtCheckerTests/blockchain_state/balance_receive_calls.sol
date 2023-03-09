@@ -22,7 +22,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Warning 6328: (173-208): CHC: Assertion violation happens here.\nCounterexample:\nonce = true\n\nTransaction trace:\nC.constructor()\nState: once = false\nC.f(){ msg.value: 10 }
-// Warning 6328: (321-356): CHC: Assertion violation happens here.\nCounterexample:\nonce = true\n\nTransaction trace:\nC.constructor()\nState: once = false\nC.f(){ msg.value: 10 }\n    C.g() -- internal call
-// Warning 6328: (469-504): CHC: Assertion violation happens here.\nCounterexample:\nonce = true\n\nTransaction trace:\nC.constructor()\nState: once = false\nC.f(){ msg.value: 10 }\n    C.g() -- internal call\n        C.h() -- internal call
-// Info 1180: Contract invariant(s) for :C:\n((:var 1).balances[address(this)] >= 0)\nonce\n
+// Warning 6328: (173-208): CHC: Assertion violation happens here.
+// Warning 6328: (321-356): CHC: Assertion violation happens here.
+// Warning 6328: (469-504): CHC: Assertion violation happens here.
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -30,4 +30,4 @@ contract C {
 // SMTEngine: all
 // SMTExtCalls: trusted
 // ----
-// Info 1180: Contract invariant(s) for :C:\n((sig_1 <= 0) && (sig_2 <= 0))\nReentrancy property(ies) for :Crypto:\n(<errorCode> = 0)\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(prevOwner == owner)\n<errorCode> = 3 -> Assertion failed at assert(sig_1 == sig_2)\n
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -32,5 +32,6 @@ contract C is Z(5) {
 // ====
 // SMTEngine: all
 // ----
-// Warning 4984: (292-299): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\nx = 1\nz = 115792089237316195423570985008687907853269984665640564039457584007913129639935\n\nTransaction trace:\nZ.constructor(115792089237316195423570985008687907853269984665640564039457584007913129639935)
-// Warning 6328: (367-380): CHC: Assertion violation happens here.\nCounterexample:\nx = 6\n\nTransaction trace:\nC.constructor()
+// Warning 4984: (292-299): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (367-380): CHC: Assertion violation happens here.
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

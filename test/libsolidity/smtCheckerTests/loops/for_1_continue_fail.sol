@@ -13,4 +13,5 @@ contract C
 // SMTSolvers: z3
 // ----
 // Warning 5667: (33-39): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (109-123): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 10\nb = false\n\nTransaction trace:\nC.constructor()\nC.f(9, false)
+// Warning 6328: (109-123): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

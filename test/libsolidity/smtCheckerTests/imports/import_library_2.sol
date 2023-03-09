@@ -26,3 +26,4 @@ contract ERC20 {
 // SMTEngine: all
 // ----
 // Warning 3944: (ERC20.sol:157-162): CHC: Underflow (resulting value less than 0) happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -1,0 +1,42 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "2018",
+            "formattedMessage": "Warning: Function state mutability can be restricted to pure
+ --> A:5:6:
+  |
+5 | \t\t\t\t\tfunction f(uint8 x) public {
+  | \t\t\t\t\t^ (Relevant source part starts here and spans across multiple lines).
+
+",
+            "message": "Function state mutability can be restricted to pure",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 162,
+                "file": "A",
+                "start": 81
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "1391",
+            "formattedMessage": "Info: CHC: 2 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.
+
+",
+            "message": "CHC: 2 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.",
+            "severity": "info",
+            "type": "Info"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

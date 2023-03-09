@@ -25,3 +25,4 @@ contract C
 // ----
 // Warning 6328: (120-147): CHC: Assertion violation happens here.
 // Warning 6328: (467-494): CHC: Assertion violation happens here.
+// Info 1391: CHC: 16 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
