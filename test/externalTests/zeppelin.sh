@@ -65,36 +65,21 @@ function zeppelin_test
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
-    # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
-    pushd test/utils/
-    sed -i "s|it(\('reverts \)|it.skip(\1|g" math/SafeMath.test.js
-    sed -i "s|it(\('reverts \)|it.skip(\1|g" math/SignedSafeMath.test.js
-    sed -i "s|it(\('reverts \)|it.skip(\1|g" structs/EnumerableSet.behavior.js
-    popd
-    pushd test/proxy/
-    sed -i "s|it(\('proxy admin cannot call delegated functions',\)|it.skip(\1|g" transparent/TransparentUpgradeableProxy.behaviour.js
-    popd
-
-
+    # TODO: Remove the lines below when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3750).
+    sed -i "s|it(\('proxy admin cannot call delegated functions',\)|it.skip(\1|g" test/proxy/transparent/TransparentUpgradeableProxy.behaviour.js
     # In some cases Hardhat does not detect revert reasons properly via IR.
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "s|it(\('reverts if the current value is 0'\)|it.skip(\1|g" test/utils/Counters.test.js
     sed -i "s|it(\('prevent unauthorized maintenance'\)|it.skip(\1|g" test/governance/TimelockController.test.js
     sed -i "s|it(\('cannot cancel invalid operation'\)|it.skip(\1|g" test/governance/TimelockController.test.js
-    sed -i "s|it(\('reverts if block number >= current block'\)|it.skip(\1|g" test/governance/utils/Votes.test.js
-    sed -i "s|it(\('reverts if block number >= current block'\)|it.skip(\1|g" test/governance/utils/Votes.behavior.js
     sed -i "s|it(\('cannot call onlyInitializable function outside the scope of an initializable function'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
     sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC20/presets/ERC20PresetMinterPauser.test.js
     sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC1155/presets/ERC1155PresetMinterPauser.test.js
     sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC20/presets/ERC20PresetMinterPauser.test.js
     sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC1155/presets/ERC1155PresetMinterPauser.test.js
-    sed -i "s|it(\('reverts when decreasing the allowance'\)|it.skip(\1|g" test/token/ERC20/utils/SafeERC20.test.js
-    sed -i "s|it(\('reverts when decreasing the allowance to a negative value'\)|it.skip(\1|g" test/token/ERC20/utils/SafeERC20.test.js
     sed -i "s|it(\('cannot be released before time limit'\)|it.skip(\1|g" test/token/ERC20/utils/TokenTimelock.test.js
     sed -i "s|it(\('cannot be released just before time limit'\)|it.skip(\1|g" test/token/ERC20/utils/TokenTimelock.test.js
     sed -i "s|it(\('reverts when sending non-zero amounts'\)|it.skip(\1|g" test/utils/Address.test.js
     sed -i "s|it(\('reverts when sending more than the balance'\)|it.skip(\1|g" test/utils/Address.test.js
-    sed -i "s|it(\('reverts if block number >= current block'\)|it.skip(\1|g" test/utils/Checkpoints.test.js
     sed -i "s|it(\('fails deploying a contract if the bytecode length is zero'\)|it.skip(\1|g" test/utils/Create2.test.js
     sed -i "s|it(\('fails deploying a contract if factory contract does not have sufficient balance'\)|it.skip(\1|g" test/utils/Create2.test.js
     sed -i "s|it(\('reverts on withdrawals'\)|it.skip(\1|g" test/utils/escrow/ConditionalEscrow.test.js
@@ -102,42 +87,21 @@ function zeppelin_test
     sed -i "s|it(\('rejects deposits'\)|it.skip(\1|g" test/utils/escrow/RefundEscrow.test.js
     sed -i "s|it(\('does not allow 0xffffffff'\)|it.skip(\1|g" test/utils/introspection/ERC165Storage.test.js
     sed -i "s|it(\('reverts when casting -1'\)|it.skip(\1|g" test/utils/math/SafeCast.test.js
-    sed -i 's|it(\(`reverts when downcasting 2^\${bits} (\${maxValue.addn(1)})`\)|it.skip(\1|g' test/utils/math/SafeCast.test.js
-    sed -i 's|it(\(`reverts when downcasting 2^\${bits} + 1 (\${maxValue.addn(2)})`\)|it.skip(\1|g' test/utils/math/SafeCast.test.js
     sed -i 's|it(\(`reverts when casting [^`]\+`\)|it.skip(\1|g' test/utils/math/SafeCast.test.js
-    sed -i "s|it(\('missing value'\)|it.skip(\1|g" test/utils/structs/EnumerableMap.behavior.js
-    sed -i "s|it(\('reverts when queried for non existent token id'\)|it.skip(\1|g" test/token/ERC721/ERC721.behavior.js
     sed -i "s|it(\('reverts if index is greater than supply'\)|it.skip(\1|g" test/token/ERC721/ERC721.behavior.js
     sed -i "s|it(\('burns all tokens'\)|it.skip(\1|g" test/token/ERC721/ERC721.behavior.js
     sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC721/presets/ERC721PresetMinterPauserAutoId.test.js
     sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC721/presets/ERC721PresetMinterPauserAutoId.test.js
-    sed -i "s|it(\('prevents initialization'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
-    sed -i "s|it(\('divide by 0'\)|it.skip(\1|g" test/utils/math/Math.test.js
-    sed -i "s|it(\('pending owner resets after renouncing ownership'\)|it.skip(\1|g" test/access/Ownable2Step.test.js
     sed -i "s|it(\('guards transfer against invalid user'\)|it.skip(\1|g" test/access/Ownable2Step.test.js
-    # CAUTION:: The following two sed commands depend on the order of occurrence of the relevant patterns in the mentioned files.
-    # Could result in an error in the future.
-    sed -zi "s|it(\('deposit'\)|it.skip(\1|3" test/token/ERC20/extensions/ERC4626.test.js
-    sed -zi "s|it(\('withdraw'\)|it.skip(\1|3" test/token/ERC20/extensions/ERC4626.test.js
+    sed -i "s|it(\('reverting initialization'\)|it.skip(\1|g" test/proxy/beacon/BeaconProxy.test.js
+    sed -i "s|describe(\('reverting initialization'\)|describe.skip(\1|g" test/proxy/Proxy.behaviour.js
+    sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/security/ReentrancyGuard.test.js
+    sed -i "s|shouldBehaveLikeAccessControlDefaultAdminRules|\/\/&|" test/access/AccessControlDefaultAdminRules.test.js
 
     # Here only the testToInt(248) and testToInt(256) cases fail so change the loop range to skip them
     sed -i "s|range(8, 256, 8)\(.forEach(bits => testToInt(bits));\)|range(8, 240, 8)\1|" test/utils/math/SafeCast.test.js
 
-
-
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
-    sed -i "s|describe\(('Polygon-Child'\)|describe.skip\1|g" test/crosschain/CrossChainEnabled.test.js
-    sed -i "s|it(\('revert with invalid multi proof #2'\)|it.skip(\1|g" test/utils/cryptography/MerkleProof.test.js
-    sed -i "s|describe(\('to a receiver contract that panics'\)|describe.skip(\1|g" test/token/ERC721/ERC721.behavior.js
-    sed -i "s|context(\('to a receiver contract that panics'\)|context.skip(\1|g" test/token/ERC721/ERC721.behavior.js
-    sed -i "s|describe(\('to a contract that does not implement the required function'\)|describe.skip(\1|g" test/token/ERC721/ERC721.behavior.js
-    sed -i "s|context(\('to a contract that does not implement the required function'\)|context.skip(\1|g" test/token/ERC721/ERC721.behavior.js
-    sed -i "s|it(\('reverts when the called function throws'\)|it.skip(\1|g" test/utils/Address.test.js
-    sed -i "s|it(\('reverts when function does not exist'\)|it.skip(\1|g" test/utils/Address.test.js
-    sed -i "s|it(\('reverting initialization'\)|it.skip(\1|g" test/proxy/beacon/BeaconProxy.test.js
-    sed -i "s|describe(\('reverting initialization'\)|describe.skip(\1|g" test/proxy/Proxy.behaviour.js
-    sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/security/ReentrancyGuard.test.js
-
+    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"

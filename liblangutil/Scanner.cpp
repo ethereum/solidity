@@ -540,8 +540,8 @@ void Scanner::scanToken()
 
 	Token token;
 	// M and N are for the purposes of grabbing different type sizes
-	unsigned m;
-	unsigned n;
+	unsigned m = 0;
+	unsigned n = 0;
 	do
 	{
 		// Remember the position of the next token
