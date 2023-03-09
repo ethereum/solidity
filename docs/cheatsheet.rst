@@ -63,7 +63,7 @@ Global Variables
   with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address`` or ``address payable``
 - ``super``: the contract one level higher in the inheritance hierarchy
--  ``selfdestruct(address payable recipient)``: (**Deprecated**) destroy the current contract and transfer its remaining funds to the specified recipient address (deprecated starting from Solidity 0.8.0, use transfer or send instead)
+-  ``selfdestruct(address payable recipient)``: destroy the current contract and transfer its remaining funds to the specified recipient address (deprecated starting from Solidity 0.8.0, use transfer or send instead)
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address>.code`` (``bytes memory``): code at the :ref:`address` (can be empty)
 - ``<address>.codehash`` (``bytes32``): the codehash of the :ref:`address`
