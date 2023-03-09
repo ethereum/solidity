@@ -17,63 +17,63 @@ if they are marked ``virtual``. For details, please see
 
 .. code-block:: solidity
 
-// SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.1 <0.9.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.7.1 <0.9.0;
 
-contract owned {
-    constructor() { owner = payable(msg.sender); }
-    address payable owner;
+    contract owned {
+        constructor() { owner = payable(msg.sender); }
+        address payable owner;
 
-    modifier onlyOwner {
-        require(
-            msg.sender == owner,
-            "Only owner can call this function."
-        );
-        _;
-    }
-}
-
-contract priced {
-    modifier costs(uint price) {
-        if (msg.value >= price) {
+        modifier onlyOwner {
+            require(
+                msg.sender == owner,
+                "Only owner can call this function."
+            );
             _;
         }
     }
-}
 
-contract Register is priced, owned {
-    mapping(address => bool) registeredAddresses;
-    uint price;
-
-    constructor(uint initialPrice) { price = initialPrice; }
-
-    function register() public payable costs(price) {
-        registeredAddresses[msg.sender] = true;
+    contract priced {
+        modifier costs(uint price) {
+            if (msg.value >= price) {
+                _;
+            }
+        }
     }
 
-    function changePrice(uint price_) public onlyOwner {
-        price = price_;
-    }
-}
+    contract Register is priced, owned {
+        mapping(address => bool) registeredAddresses;
+        uint price;
 
-contract Mutex {
-    bool locked;
-    modifier noReentrancy() {
-        require(
-            !locked,
-            "Reentrant call."
-        );
-        locked = true;
-        _;
-        locked = false;
+        constructor(uint initialPrice) { price = initialPrice; }
+
+        function register() public payable costs(price) {
+            registeredAddresses[msg.sender] = true;
+        }
+
+        function changePrice(uint price_) public onlyOwner {
+            price = price_;
+        }
     }
 
-    function f() public noReentrancy returns (uint) {
-        (bool success,) = msg.sender.call("");
-        require(success);
-        return 7;
+    contract Mutex {
+        bool locked;
+        modifier noReentrancy() {
+            require(
+                !locked,
+                "Reentrant call."
+            );
+            locked = true;
+            _;
+            locked = false;
+        }
+
+        function f() public noReentrancy returns (uint) {
+            (bool success,) = msg.sender.call("");
+            require(success);
+            return 7;
+        }
     }
-}
 
 If you want to access a modifier ``m`` defined in a contract ``C``, you can use ``C.m`` to
 reference it without virtual lookup. It is only possible to use modifiers defined in the current
