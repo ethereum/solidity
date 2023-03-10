@@ -35,8 +35,8 @@ orbs:
   win: circleci/windows@2.2.0
 
 commands:
-  gitter_notify_unless_pr:
-    description: "Posts a notification to the main room on Gitter (if not running on a PR)."
+  matrix_notify_unless_pr:
+    description: "Posts a notification to the solidity-dev room on Matrix (if not running on a PR)."
     parameters:
       event:
         type: enum
@@ -45,7 +45,7 @@ commands:
         type: string
     steps:
       - run:
-          name: "Gitter notification"
+          name: "Matrix notification"
           when: << parameters.condition >>
           command: |
             # FIXME: Checking $CIRCLE_PULL_REQUEST would be better than hard-coding branch names
@@ -67,32 +67,32 @@ commands:
             # The release notification only makes sense on tagged commits. If the commit is untagged, just bail out.
             [[ "<< parameters.event >>" == "release" ]] && { [[ $CIRCLE_TAG != "" ]] || { echo "Not a tagged commit - notification skipped."; exit 0; } }
 
-            curl "https://api.gitter.im/v1/rooms/${GITTER_NOTIFY_ROOM_ID}/chatMessages" \
+            curl "https://${MATRIX_SERVER}/_matrix/client/v3/rooms/${MATRIX_NOTIFY_ROOM_ID}/send/m.room.message" \
               --request POST \
               --include \
               --header "Content-Type: application/json" \
               --header "Accept: application/json" \
-              --header "Authorization: Bearer ${GITTER_API_TOKEN}" \
-              --data "{\"text\":\"${message}\"}"
+              --header "Authorization: Bearer ${MATRIX_ACCESS_TOKEN}" \
+              --data "{\"msgtype\":\"m.text\", \"body\":\"${message}\"}"
 
-  gitter_notify_failure_unless_pr:
-    description: "Posts a failure notification to the main room on Gitter (if not running on a PR)."
+  matrix_notify_failure_unless_pr:
+    description: "Posts a failure notification to the main room on Matrix (if not running on a PR)."
     steps:
-      - gitter_notify_unless_pr:
+      - matrix_notify_unless_pr:
           event: failure
           condition: on_fail
 
-  gitter_notify_success_unless_pr:
-    description: "Posts a success notification to the main room on Gitter (if not running on a PR)."
+  matrix_notify_success_unless_pr:
+    description: "Posts a success notification to the main room on Matrix (if not running on a PR)."
     steps:
-      - gitter_notify_unless_pr:
+      - matrix_notify_unless_pr:
           event: success
           condition: on_success
 
-  gitter_notify_release_unless_pr:
-    description: "Posts a release notification to the main room on Gitter (if not running on a PR)."
+  matrix_notify_release_unless_pr:
+    description: "Posts a release notification to the main room on Matrix (if not running on a PR)."
     steps:
-      - gitter_notify_unless_pr:
+      - matrix_notify_unless_pr:
           event: release
           condition: on_success
 
@@ -117,7 +117,7 @@ commands:
           paths:
             - bytecode-report-<< parameters.label >>-json.txt
             - bytecode-report-<< parameters.label >>-cli.txt
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
 defaults:
 
@@ -232,7 +232,7 @@ defaults:
         - run: *run_soltest
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
-        - gitter_notify_failure_unless_pr
+        - matrix_notify_failure_unless_pr
 
   - steps_test_lsp: &steps_test_lsp
       steps:
@@ -245,7 +245,7 @@ defaults:
         - run:
             name: Executing solc LSP test suite
             command: ./test/lsp.py ./build/solc/solc --non-interactive
-        - gitter_notify_failure_unless_pr
+        - matrix_notify_failure_unless_pr
 
   - steps_build: &steps_build
       steps:
@@ -254,7 +254,7 @@ defaults:
         - store_artifacts: *artifacts_solc
         - store_artifacts: *artifact_yul_phaser
         - persist_to_workspace: *artifacts_executables
-        - gitter_notify_failure_unless_pr
+        - matrix_notify_failure_unless_pr
 
   - steps_soltest_all: &steps_soltest_all
       steps:
@@ -264,7 +264,7 @@ defaults:
         - run: *run_soltest_all
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
-        - gitter_notify_failure_unless_pr
+        - matrix_notify_failure_unless_pr
 
   - steps_cmdline_tests: &steps_cmdline_tests
       steps:
@@ -274,7 +274,7 @@ defaults:
         - run: *run_cmdline_tests
         - store_test_results: *store_test_results
         - store_artifacts: *artifacts_test_results
-        - gitter_notify_failure_unless_pr
+        - matrix_notify_failure_unless_pr
 
   - steps_install_dependencies_osx: &steps_install_dependencies_osx
       steps:
@@ -668,7 +668,7 @@ jobs:
       - run:
           name: Check spelling
           command: ~/.local/bin/codespell --skip "*.enc,.git,Dockerfile*,LICENSE,codespell_whitelist.txt,codespell_ignored_lines.txt" --ignore-words ./scripts/codespell_whitelist.txt --exclude-file ./scripts/codespell_ignored_lines.txt
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_docs_examples:
     <<: *base_node_small
@@ -682,7 +682,7 @@ jobs:
       - run:
           name: Test Docs examples
           command: ./test/docsCodeStyle.sh
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_coding_style:
     <<: *base_cimg_small
@@ -702,7 +702,7 @@ jobs:
       - run:
           name: Check for broken symlinks
           command: ./scripts/check_symlinks.sh
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_errorcodes:
     <<: *base_python_small
@@ -711,7 +711,7 @@ jobs:
       - run:
           name: Check for error codes
           command: ./scripts/error_codes.py --check
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_pylint:
     <<: *base_cimg_small
@@ -737,7 +737,7 @@ jobs:
       - run:
           name: Linting Python Scripts
           command: ./scripts/pylint_all.py
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_antlr_grammar:
     <<: *base_cimg_small
@@ -751,7 +751,7 @@ jobs:
       - run:
           name: Run tests
           command: ./scripts/test_antlr_grammar.sh
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_buglist:
     <<: *base_node_small
@@ -766,7 +766,7 @@ jobs:
       - run:
           name: Test buglist
           command: ./test/buglistTests.js
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_proofs:
     <<: *base_cimg_small
@@ -779,14 +779,14 @@ jobs:
             sudo apt-get -qy install python3-pip
             pip3 install --user z3-solver
       - run: *run_proofs
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   chk_docs_pragma_min_version:
     <<: *base_ubuntu2204_small
     steps:
       - checkout
       - run: *run_docs_pragma_min_version
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_ubu_pyscripts:
     <<: *base_ubuntu2204_small
@@ -795,7 +795,7 @@ jobs:
       - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_win_pyscripts:
     <<: *base_win_powershell
@@ -805,7 +805,7 @@ jobs:
       - run:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   b_ubu: &b_ubu
     # this runs 2x faster on xlarge but takes 4x more resources (compared to medium).
@@ -876,7 +876,7 @@ jobs:
           root: build
           paths:
             - solc/solc-static-linux
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   b_ubu_codecov:
     # Runs ~30% faster on large but we only run it nightly so efficiency matters more.
@@ -889,7 +889,7 @@ jobs:
       - checkout
       - run: *run_build
       - persist_to_workspace: *artifacts_executables
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_ubu_codecov:
     <<: *base_ubuntu2204_large
@@ -911,7 +911,7 @@ jobs:
           name: "Coverage: All"
           command: codecov --flags all --gcov-root build
       - store_artifacts: *artifacts_test_results
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   # Builds in C++20 mode and uses debug build in order to speed up.
   # Do *NOT* store any artifacts or workspace as we don't run tests on this build.
@@ -924,7 +924,7 @@ jobs:
     steps:
       - checkout
       - run: *run_build
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
     <<: *base_ubuntu1604_clang
@@ -933,7 +933,7 @@ jobs:
       - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
       - persist_to_workspace: *artifacts_executables_ossfuzz
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
     <<: *base_ubuntu1604_clang_small
@@ -967,7 +967,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   b_osx:
     <<: *base_osx_large
@@ -989,7 +989,7 @@ jobs:
             - build/solc/solc
             - build/test/soltest
             - build/test/tools/solfuzzer
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_osx_soltest: &t_osx_soltest
     <<: *base_osx
@@ -1007,7 +1007,7 @@ jobs:
       - run: *run_soltest
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_osx_cli:
     <<: *base_osx
@@ -1020,7 +1020,7 @@ jobs:
           at: .
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   b_ems:
     <<: *base_ems_large
@@ -1044,7 +1044,7 @@ jobs:
           paths:
             - soljson.js
             - version.txt
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   b_docs:
     <<: *base_ubuntu2204_small
@@ -1057,7 +1057,7 @@ jobs:
       - store_artifacts:
           path: docs/_build/html/
           destination: docs-html
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2204_large
@@ -1122,7 +1122,7 @@ jobs:
             apt update --assume-yes
             apt install locales-all --assume-yes --no-install-recommends
       - run: test/localeTest.sh build/solc/solc
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
@@ -1189,7 +1189,7 @@ jobs:
             node --version
             npm --version
             test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_ems_ext_hardhat:
     <<: *base_node_small
@@ -1217,7 +1217,7 @@ jobs:
             # NOTE: This is expected to work without running `yarn build` first.
             cd hardhat/packages/hardhat-core
             yarn test
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_ems_ext:
     parameters:
@@ -1294,7 +1294,7 @@ jobs:
           root: .
           paths:
             - reports/externalTests/
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   c_ext_benchmarks:
     <<: *base_node_small
@@ -1396,7 +1396,7 @@ jobs:
           paths:
             - .\solc\*\solc.exe
             - .\test\*\soltest.exe
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_win_soltest: &t_win_soltest
     <<: *base_win_powershell
@@ -1423,7 +1423,7 @@ jobs:
           command: python ./test/lsp.py .\build\solc\Release\solc.exe --non-interactive
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   # Note: b_bytecode_ubu_static is required because b_ubu_static and b_ubu
   # are currently built on different Ubuntu base images.
@@ -1503,7 +1503,7 @@ jobs:
           root: .
           paths:
             - bytecode-report-emscripten.txt
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   t_bytecode_compare:
     <<: *base_ubuntu2204_small
@@ -1542,7 +1542,7 @@ jobs:
           # NOTE: store_artifacts does not support the 'when' attribute.
           # Fortunately when the artifact does not exist it just says "No artifact files found" and ignores it.
           path: all-bytecode-reports.zip
-      - gitter_notify_failure_unless_pr
+      - matrix_notify_failure_unless_pr
 
   c_release_binaries:
     <<: *base_ubuntu2204
@@ -1582,8 +1582,8 @@ jobs:
             tar --create --file ../solc-bin-binaries.tar *
       - store_artifacts:
           path: solc-bin-binaries.tar
-      - gitter_notify_failure_unless_pr
-      - gitter_notify_release_unless_pr
+      - matrix_notify_failure_unless_pr
+      - matrix_notify_release_unless_pr
 
 workflows:
   version: 2
