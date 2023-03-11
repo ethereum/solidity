@@ -67,6 +67,7 @@ explanatory purposes.
           // Required: keccak256 hash of the source file
           "keccak256": "0x234...",
           // Required (unless "url" is used): literal contents of the source file
+          // This will report a warning due to deprecated selfdestruct
           "content": "contract destructible is owned { function destroy() { if (msg.sender == owner) selfdestruct(owner); } }"
         }
       },

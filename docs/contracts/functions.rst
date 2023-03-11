@@ -177,7 +177,8 @@ The following statements are considered modifying the state:
 #. Writing to state variables.
 #. :ref:`Emitting events <events>`.
 #. :ref:`Creating other contracts <creating-contracts>`.
-#. Using ``selfdestruct``.
+.. This will report a warning due to deprecated selfdestruct
+#. Using ``selfdestruct``. 
 #. Sending Ether via calls.
 #. Calling any function not marked ``view`` or ``pure``.
 #. Using low-level calls.
@@ -323,7 +324,7 @@ will consume more gas than the 2300 gas stipend:
 .. warning::
     A contract without a receive Ether function can receive Ether as a
     recipient of a *coinbase transaction* (aka *miner block reward*)
-    or as a destination of a ``selfdestruct``.
+    or as a destination of a ``selfdestruct``(`This will report a warning due to deprecated selfdestruct`).
 
     A contract cannot react to such Ether transfers and thus also
     cannot reject them. This is a design choice of the EVM and

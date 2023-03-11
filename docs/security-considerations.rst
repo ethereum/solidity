@@ -142,9 +142,11 @@ Sending and Receiving Ether
 ===========================
 
 - Neither contracts nor "external accounts" are currently able to prevent that someone sends them Ether.
-  Contracts can react on and reject a regular transfer, but there are ways
-  to move Ether without creating a message call. One way is to simply "mine to"
-  the contract address and the second way is using ``selfdestruct(x)``.
+
+..This will report a warning due to deprecated selfdestruct  
+Contracts can react on and reject a regular transfer, but there are ways
+to move Ether without creating a message call. One way is to simply "mine to"
+the contract address and the second way is using ``selfdestruct(x)``.
 
 - If a contract receives Ether (without a function being called),
   either the :ref:`receive Ether <receive-ether-function>`

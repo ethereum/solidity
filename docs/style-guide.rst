@@ -655,19 +655,19 @@ The modifier order for a function should be:
 5. Custom modifiers
 
 Yes:
-
+.. This will report a warning due to deprecated selfdestruct
 .. code-block:: solidity
 
     function balance(uint from) public view override returns (uint)  {
         return balanceOf[from];
     }
-
+    
     function shutdown() public onlyOwner {
         selfdestruct(owner);
     }
 
 No:
-
+.. This will report a warning due to deprecated selfdestruct
 .. code-block:: solidity
 
     function balance(uint from) public override view returns (uint)  {

@@ -8,7 +8,7 @@ Order of Precedence of Operators
 ================================
 .. include:: types/operator-precedence-table.rst
 
-.. index:: assert, block, coinbase, difficulty, prevrandao, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
+.. index:: assert, block, coinbase, difficulty, prevrandao, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct(`This will report a warning due to deprecated selfdestruct`), balance, codehash, send
 
 Global Variables
 ================
@@ -63,6 +63,8 @@ Global Variables
   with arbitrary precision and does not wrap around at ``2**256``. Assert that ``k != 0`` starting from version 0.5.0.
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address`` or ``address payable``
 - ``super``: the contract one level higher in the inheritance hierarchy
+
+.. This will report a warning due to deprecated selfdestruct
 - ``selfdestruct(address payable recipient)``: destroy the current contract, sending its funds to the given address
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address>.code`` (``bytes memory``): code at the :ref:`address` (can be empty)

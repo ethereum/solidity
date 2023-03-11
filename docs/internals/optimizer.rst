@@ -770,6 +770,7 @@ and the call-constant state of the environment. Most expressions are movable.
 The following parts make an expression non-movable:
 
 - function calls (might be relaxed in the future if all statements in the function are movable)
+.. This will report a warning due to deprecated selfdestruct
 - opcodes that (can) have side-effects (like ``call`` or ``selfdestruct``)
 - opcodes that read or write memory, storage or external state information
 - opcodes that depend on the current PC, memory size or returndata size
@@ -957,7 +958,7 @@ DeadCodeEliminator
 ^^^^^^^^^^^^^^^^^^
 
 This optimization stage removes unreachable code.
-
+.. This will report a warning due to deprecated selfdestruct
 Unreachable code is any code within a block which is preceded by a
 leave, return, invalid, break, continue, selfdestruct, revert or by a call to a user-defined function that recurses infinitely.
 

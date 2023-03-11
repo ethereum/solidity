@@ -167,7 +167,7 @@ at each version. Backward compatibility is not guaranteed between each version.
 - ``istanbul``
    - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
 - ``berlin``
-   - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
+   - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT``(`This will report a warning due to deprecated selfdestruct`) increased. The
      compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
      the optimizer.
 - ``london``

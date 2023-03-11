@@ -1054,7 +1054,7 @@ Therefore, the SMTChecker assumes that ``address(this).balance >= msg.value``
 in the constructor in order to be consistent with the EVM rules.
 The contract's balance may also increase without triggering any calls to the
 contract, if
-
+.. This will report a warning due to deprecated selfdestruct
 - ``selfdestruct`` is executed by another contract with the analyzed contract
   as the target of the remaining funds,
 - the contract is the coinbase (i.e., ``block.coinbase``) of some block.
