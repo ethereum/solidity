@@ -198,9 +198,7 @@ fragment EscapeSequence:
 /**
  * A single quoted string literal allowing arbitrary unicode characters.
  */
-UnicodeStringLiteral:
-	'unicode"' DoubleQuotedUnicodeStringCharacter* '"'
-	| 'unicode\'' SingleQuotedUnicodeStringCharacter* '\'';
+UnicodeStringLiteral: 'unicode' (('"' DoubleQuotedUnicodeStringCharacter* '"') | ('\'' SingleQuotedUnicodeStringCharacter* '\''));
 //@doc:inline
 fragment DoubleQuotedUnicodeStringCharacter: ~["\r\n\\] | EscapeSequence;
 //@doc:inline
