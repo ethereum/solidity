@@ -1,0 +1,43 @@
+object "C_23" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            sstore(0x00, 0x02)
+            sstore(0x01, 0x00)
+            let _2 := datasize("C_23_deployed")
+            codecopy(_1, dataoffset("C_23_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+    object "C_23_deployed" {
+        code {
+            {
+                let _1 := memoryguard(0x80)
+                mstore(64, _1)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _2 := 0
+                    switch shr(224, calldataload(_2))
+                    case 0xb4f40c61 {
+                        if callvalue() { revert(_2, _2) }
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
+                        mstore(_1, sload(/** @src 0:40:57  "uint public k = 2" */ 1))
+                        return(_1, 32)
+                    }
+                    case 0xe5aa3d58 {
+                        if callvalue() { revert(_2, _2) }
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
+                        let _3 := sload(_2)
+                        let memPos := mload(64)
+                        mstore(memPos, _3)
+                        return(memPos, 32)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data ".metadata" hex"a2646970667358221220f04f800086d1bd95dea7e66c53d041963124c118e4dc70bc4b39a50865c2483f64736f6c63430008130033"
+    }
+}
