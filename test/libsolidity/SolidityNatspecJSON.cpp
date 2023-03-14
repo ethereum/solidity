@@ -545,6 +545,81 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 	checkNatspec(sourceCode, "B", userDoc, true);
 }
 
+BOOST_AUTO_TEST_CASE(event_multiple_inheritance)
+{
+	char const* sourceCode = R"(
+		contract A {
+			/// @notice This event is emitted when a transfer is initiated.
+			/// @param from Source account.
+			/// @param to Destination account.
+			/// @param amount Amount of ETH.
+			/// @dev Transfer case.
+			event Transfer(address indexed from, address indexed to, uint256 amount);
+		}
+		contract B {
+			/// @notice This event is emitted when a transfer is initiated.
+			/// @param from Source account.
+			/// @param to Destination account.
+			/// @param amount Amount of ETH.
+			/// @param timestamp Unix timestamp of purchase.
+			/// @dev TransferWhen case.
+			event TransferWhen(address indexed from, address indexed to, uint256 amount, uint256 timestamp);
+		}
+		contract C is A, B {}
+	)";
+
+	const char* devDoc = R"ABCDEF(
+	{
+		"events": {
+			"Transfer(address,address,uint256)": {
+				"details": "Transfer case.",
+				"params": {
+					"amount": "Amount of ETH.",
+					"from": "Source account.",
+					"to": "Destination account."
+				}
+			},
+			"TransferWhen(address,address,uint256,uint256)": {
+				"details": "TransferWhen case.",
+				"params": {
+					"amount": "Amount of ETH.",
+					"from": "Source account.",
+					"timestamp": "Unix timestamp of purchase.",
+					"to": "Destination account."
+				}
+			}
+		},
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+		}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events": {
+			"Transfer(address,address,uint256)": [
+				{
+					"notice": "This event is emitted when a transfer is initiated."
+				}
+			],
+			"TransferWhen(address,address,uint256,uint256)": [
+				{
+					"notice": "This event is emitted when a transfer is initiated."
+				}
+			]
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 {
 	char const* sourceCode = R"(
