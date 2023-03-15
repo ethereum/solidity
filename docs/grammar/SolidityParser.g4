@@ -16,7 +16,7 @@ sourceUnit: (
 	| contractDefinition
 	| interfaceDefinition
 	| libraryDefinition
-	| functionDefinition
+	| functionDefinition[true]
 	| constantVariableDeclaration
 	| structDefinition
 	| enumDefinition
@@ -85,7 +85,7 @@ inheritanceSpecifier: name=identifierPath arguments=callArgumentList?;
  */
 contractBodyElement:
 	constructorDefinition
-	| functionDefinition
+	| functionDefinition[false]
 	| modifierDefinition
 	| fallbackFunctionDefinition
 	| receiveFunctionDefinition
@@ -156,10 +156,11 @@ overrideSpecifier: Override (LParen overrides+=identifierPath (Comma overrides+=
  * Depending on the context in which the function is defined, further restrictions may apply,
  * e.g. functions in interfaces have to be unimplemented, i.e. may not contain a body block.
  */
-functionDefinition
+functionDefinition[boolean free]
 locals[
 	boolean visibilitySet = false,
 	boolean mutabilitySet = false,
+	boolean suffixSet = false,
 	boolean virtualSet = false,
 	boolean overrideSpecifierSet = false,
 ]
@@ -169,7 +170,8 @@ locals[
 	(
 		{!$visibilitySet}? visibility {$visibilitySet = true;}
 		| {!$mutabilitySet}? stateMutability {$mutabilitySet = true;}
-		| modifierInvocation
+		| {!$free}? modifierInvocation
+		| {$free}? {!$suffixSet}? Suffix {$suffixSet = true;}
 		| {!$virtualSet}? Virtual {$virtualSet = true;}
 		| {!$overrideSpecifierSet}? overrideSpecifier {$overrideSpecifierSet = true;}
 	)*
@@ -396,6 +398,7 @@ expression:
 		identifier
 		| literal
 		| literalWithSubDenomination
+		| suffixedLiteral
 		| elementaryTypeName[false]
 	  ) # PrimaryExpression
 ;
@@ -411,11 +414,13 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.
  */
-identifier: Identifier | From | Error | Revert | Global;
+identifier: Identifier | From | Error | Revert | Global | Suffix;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 
 literalWithSubDenomination: numberLiteral SubDenomination;
+
+suffixedLiteral: literal identifier (Period identifier)*;
 
 booleanLiteral: True | False;
 /**
