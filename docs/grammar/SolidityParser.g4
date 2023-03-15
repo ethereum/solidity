@@ -182,7 +182,8 @@ locals[
  freeFunctionDefinition:
  	Function (identifier | Fallback | Receive)
  	LParen (arguments=parameterList)? RParen
- 	stateMutability?
+ 	stateMutability? Suffix?
+ 	| Suffix? stateMutability?
  	(Returns LParen returnParameters=parameterList RParen)?
  	(Semicolon | body=block);
 
@@ -406,6 +407,7 @@ expression:
 		identifier
 		| literal
 		| literalWithSubDenomination
+		| suffixedLiteral
 		| elementaryTypeName[false]
 	  ) # PrimaryExpression
 ;
@@ -421,11 +423,13 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.
  */
-identifier: Identifier | From | Error | Revert | Global;
+identifier: Identifier | From | Error | Revert | Global | Suffix;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 
 literalWithSubDenomination: numberLiteral SubDenomination;
+
+suffixedLiteral: literal identifier (Period identifier)*;
 
 booleanLiteral: True | False;
 /**
