@@ -1,0 +1,22 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "5724",
+            "formattedMessage": "Warning: SMTChecker: 1 unsupported language feature(s). Enable the model checker option \"show unsupported\" to see all of them.
+
+",
+            "message": "SMTChecker: 1 unsupported language feature(s). Enable the model checker option \"show unsupported\" to see all of them.",
+            "severity": "warning",
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

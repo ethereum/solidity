@@ -1,0 +1,32 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "7737",
+            "formattedMessage": "Warning: Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
+ --> A:6:7:
+  |
+6 | \t\t\t\t\t\tassembly {}
+  | \t\t\t\t\t\t^^^^^^^^^^^
+
+",
+            "message": "Inline assembly may cause SMTChecker to produce spurious warnings (false positives).",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 127,
+                "file": "A",
+                "start": 116
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}
