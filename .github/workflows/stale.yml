@@ -48,4 +48,4 @@ jobs:
           exempt-draft-pr: false
           exempt-all-milestones: true
           remove-stale-when-updated: true
-          operations-per-run: 128
+          operations-per-run: 256
