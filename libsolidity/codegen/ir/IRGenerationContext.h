@@ -163,14 +163,6 @@ public:
 	bool memoryUnsafeInlineAssemblySeen() const { return m_memoryUnsafeInlineAssemblySeen; }
 	void setMemoryUnsafeInlineAssemblySeen() { m_memoryUnsafeInlineAssemblySeen = true; }
 
-	/// @returns the runtime ID to be used for the function in the dispatch routine
-	/// and for internal function pointers.
-	/// @param _requirePresent if false, generates a new ID if not yet done.
-	uint64_t internalFunctionID(FunctionDefinition const& _function, bool _requirePresent);
-	/// Copies the internal function IDs from the @a _other. For use in transferring
-	/// function IDs from constructor code to deployed code.
-	void copyFunctionIDsFrom(IRGenerationContext const& _other);
-
 	std::map<std::string, unsigned> const& sourceIndices() const { return m_sourceIndices; }
 	void markSourceUsed(std::string const& _name) { m_usedSourceNames.insert(_name); }
 	std::set<std::string> const& usedSourceNames() const { return m_usedSourceNames; }
@@ -219,8 +211,6 @@ private:
 	/// the code contains a call via a pointer even though a specific function is never assigned to it.
 	/// It will fail at runtime but the code must still compile.
 	InternalDispatchMap m_internalDispatchMap;
-	/// Map used by @a internalFunctionID.
-	std::map<int64_t, uint64_t> m_functionIDs;
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
 

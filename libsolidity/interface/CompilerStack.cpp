@@ -526,6 +526,7 @@ bool CompilerStack::analyze()
 		if (noErrors)
 		{
 			createAndAssignCallGraphs();
+			annotateInternalFunctionIDs();
 			findAndReportCyclicContractDependencies();
 		}
 
@@ -1243,6 +1244,34 @@ void CompilerStack::storeContractDefinitions()
 				if (!m_contracts.count(fullyQualifiedName))
 					m_contracts[fullyQualifiedName].contract = contract;
 			}
+}
+
+void CompilerStack::annotateInternalFunctionIDs()
+{
+	uint64_t internalFunctionID = 1;
+	for (Source const* source: m_sourceOrder)
+	{
+		if (!source->ast)
+			continue;
+
+		for (ContractDefinition const* contract: ASTNode::filteredNodes<ContractDefinition>(source->ast->nodes()))
+		{
+			ContractDefinitionAnnotation& annotation = contract->annotation();
+
+			if (auto const* deployTimeInternalDispatch = util::valueOrNullptr((*annotation.deployedCallGraph)->edges, CallGraph::SpecialNode::InternalDispatch))
+				for (auto const& node: *deployTimeInternalDispatch)
+					if (auto const* callable = get_if<CallableDeclaration const*>(&node))
+						if (auto const* function = dynamic_cast<FunctionDefinition const*>(*callable))
+							if (!function->annotation().internalFunctionID.set())
+								function->annotation().internalFunctionID = internalFunctionID++;
+			if (auto const* creationTimeInternalDispatch = util::valueOrNullptr((*annotation.creationCallGraph)->edges, CallGraph::SpecialNode::InternalDispatch))
+				for (auto const& node: *creationTimeInternalDispatch)
+					if (auto const* callable = get_if<CallableDeclaration const*>(&node))
+						if (auto const* function = dynamic_cast<FunctionDefinition const*>(*callable))
+							// Make sure the function already got an ID since it also occurs in the deploy-time internal dispatch.
+							solAssert(function->annotation().internalFunctionID.set());
+		}
+	}
 }
 
 namespace

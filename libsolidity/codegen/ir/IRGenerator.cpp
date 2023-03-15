@@ -313,7 +313,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions(ContractDefin
 				solAssert(m_context.functionCollector().contains(IRNames::function(*function)), "");
 
 				cases.emplace_back(map<string, string>{
-					{"funID", to_string(m_context.internalFunctionID(*function, true))},
+					{"funID", to_string(*function->annotation().internalFunctionID)},
 					{"name", IRNames::function(*function)}
 				});
 			}
@@ -1117,7 +1117,6 @@ void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionCon
 		m_context.debugInfoSelection(),
 		m_context.soliditySourceProvider()
 	);
-	newContext.copyFunctionIDsFrom(m_context);
 	m_context = std::move(newContext);
 
 	m_context.setMostDerivedContract(_contract);
