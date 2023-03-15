@@ -179,10 +179,18 @@ locals[
 /**
  * The definition of a free function.
  */
- freeFunctionDefinition:
+ freeFunctionDefinition
+ locals[
+ 	boolean mutabilitySet = false,
+ 	boolean suffixSpecifierSet = false,
+ ]
+ :
  	Function (identifier | Fallback | Receive)
  	LParen (arguments=parameterList)? RParen
- 	stateMutability?
+ 	(
+		{!$mutabilitySet}? stateMutability {$mutabilitySet = true;}
+		| {!$suffixSpecifierSet}? Suffix {$suffixSpecifierSet = true;}
+ 	 )*
  	(Returns LParen returnParameters=parameterList RParen)?
  	(Semicolon | body=block);
 
@@ -421,7 +429,7 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.
  */
-identifier: Identifier | From | Error | Revert | Global;
+identifier: Identifier | From | Error | Revert | Global | Suffix;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 
