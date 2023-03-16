@@ -11,6 +11,7 @@
 	{
 		"modelChecker":
 		{
+			"targets": ["assert", "divByZero"],
 			"engine": "bmc",
 			"timeout": 1000
 		}

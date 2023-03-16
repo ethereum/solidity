@@ -81,6 +81,9 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename): SyntaxTest(_filena
 	if (m_modelCheckerSettings.solvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
 
+	// Disable the default timeout to force resource limit.
+	m_modelCheckerSettings.timeout = {};
+
 	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "yes");
 	if (ignoreCex == "no")
 		m_ignoreCex = false;

@@ -2025,7 +2025,7 @@ std::pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks
 	IntegerType const& _type
 )
 {
-	if (m_settings.divModNoSlacks)
+	if (m_settings.divModNoSlacks.has_value() && *m_settings.divModNoSlacks)
 		return {_left / _right, _left % _right};
 
 	IntegerType const* intType = &_type;

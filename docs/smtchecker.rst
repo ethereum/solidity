@@ -22,8 +22,7 @@ specification given by ``require`` and ``assert`` statements. That is, it consid
 ``require`` statements as assumptions and tries to prove that the conditions
 inside ``assert`` statements are always true.  If an assertion failure is
 found, a counterexample may be given to the user showing how the assertion can
-be violated. If no warning is given by the SMTChecker for a property,
-it means that the property is safe.
+be violated. Safe properties are also reported accordingly.
 
 The other verification targets that the SMTChecker checks at compile time are:
 
@@ -34,16 +33,27 @@ The other verification targets that the SMTChecker checks at compile time are:
 - Out of bounds index access.
 - Insufficient funds for a transfer.
 
-All the targets above are automatically checked by default if all engines are
-enabled, except underflow and overflow for Solidity >=0.8.7.
+By default, for Solidity >=0.8.20 only assertions are checked.  For Solidity
+>=0.8.7 all the targets above are checked by default except for underflow and
+overflow.  Underflow and overflow are also in the default set for Solidity
+<0.8.7.  The above only applies for the default targets which can be
+overridden by the users' choices.
 
 The potential warnings that the SMTChecker reports are:
 
 - ``<failing  property> happens here.``. This means that the SMTChecker proved that a certain property fails. A counterexample may be given, however in complex situations it may also not show a counterexample. This result may also be a false positive in certain cases, when the SMT encoding adds abstractions for Solidity code that is either hard or impossible to express.
+- ``X verification condition(s) could not be proved.``. This is a summary of how many properties the SMTChecker was not able to prove. The list can be expanded where the warning below is shown for each of those properties.
 - ``<failing property> might happen here``. This means that the solver could not prove either case within the given timeout. Since the result is unknown, the SMTChecker reports the potential failure for soundness. This may be solved by increasing the query timeout, but the problem might also simply be too hard for the engine to solve.
 
+The potential information messages that the SMTChecker reports are:
+
+- ``X verification condition(s) proved safe!``. This is a summary of how many properties the SMTChecker was able to prove. The list can be expanded where the information below is shown for each proved property.
+- ``<property> check is safe!``. This means that the SMTChecker managed to prove that the property is safe.
+- ``Contract invariant(s)``. This may be shown if the model checker ``invariants`` option is chosen with ``contract`` and the SMTChecker was able to infer contract invariants.
+- ``Reentrancy property(ies)``. This may be shown if the model checker ``invariants`` option is chosen with ``reentrancy`` and the SMTChecker was able to infer reentrancy properties for external calls.
+
 To enable the SMTChecker, you must select :ref:`which engine should run<smtchecker_engines>`,
-where the default is no engine. Selecting the engine enables the SMTChecker on all files.
+where the compiler default is no engine. Selecting the engine enables the SMTChecker on all files.
 
 .. note::
 
@@ -442,15 +452,14 @@ SMTChecker Options and Tuning
 Timeout
 =======
 
-The SMTChecker uses a hardcoded resource limit (``rlimit``) chosen per solver,
-which is not precisely related to time. We chose the ``rlimit`` option as the default
-because it gives more determinism guarantees than time inside the solver.
-
-This options translates roughly to "a few seconds timeout" per query. Of course many properties
-are very complex and need a lot of time to be solved, where determinism does not matter.
-If the SMTChecker does not manage to solve the contract properties with the default ``rlimit``,
-a timeout can be given in milliseconds via the CLI option ``--model-checker-timeout <time>`` or
+By default the SMTChecker uses a timeout of 1 second per query.
+If the SMTChecker does not manage to solve the contract properties with the default timeout,
+the user may modify the timeout duration (given in milliseconds) via the CLI option ``--model-checker-timeout <time>`` or
 the JSON option ``settings.modelChecker.timeout=<time>``, where 0 means no timeout.
+
+Note that some SMT/CHC solvers do not consider counterexample generation as
+part of the solving timeout, so one may experience longer times for properties
+that are false.
 
 .. _smtchecker_targets:
 
@@ -478,6 +487,7 @@ The keywords that represent the targets are:
 A common subset of targets might be, for example:
 ``--model-checker-targets assert,overflow``.
 
+Only assertions are checked by default for Solidity >=0.8.20.
 All targets are checked by default, except underflow and overflow for Solidity >=0.8.7.
 
 There is no precise heuristic on how and when to split verification targets,
