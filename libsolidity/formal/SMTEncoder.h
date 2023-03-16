@@ -56,6 +56,7 @@ public:
 		smt::EncodingContext& _context,
 		ModelCheckerSettings _settings,
 		langutil::UniqueErrorReporter& _errorReporter,
+		langutil::UniqueErrorReporter& _unsupportedErrorReporter,
 		langutil::CharStreamProvider const& _charStreamProvider
 	);
 
@@ -440,6 +441,7 @@ protected:
 	bool m_checked = true;
 
 	langutil::UniqueErrorReporter& m_errorReporter;
+	langutil::UniqueErrorReporter& m_unsupportedErrors;
 
 	/// Stores the current function/modifier call/invocation path.
 	std::vector<CallStackEntry> m_callStack;

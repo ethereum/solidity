@@ -39,12 +39,13 @@ using namespace solidity::frontend;
 BMC::BMC(
 	smt::EncodingContext& _context,
 	UniqueErrorReporter& _errorReporter,
+	UniqueErrorReporter& _unsupportedErrorReporter,
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	ModelCheckerSettings _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings, _errorReporter, _charStreamProvider),
+	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
 	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout))
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
@@ -593,7 +594,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 		// The processing happens in SMT Encoder, but we need to prevent the resetting of the state variables.
 	}
 	else if (funType.kind() == FunctionType::Kind::Internal)
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			5729_error,
 			_funCall.location(),
 			"BMC does not yet implement this type of function call."

@@ -47,6 +47,14 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unproved\" choice."));
 
+	auto const& showUnsupported = m_reader.stringSetting("SMTShowUnsupported", "yes");
+	if (showUnsupported == "no")
+		m_modelCheckerSettings.showUnsupported = false;
+	else if (showUnsupported == "yes")
+		m_modelCheckerSettings.showUnsupported = true;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unsupported\" choice."));
+
 	m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "z3");
 	if (choice == "none")

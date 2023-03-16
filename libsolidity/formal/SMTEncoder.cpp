@@ -49,9 +49,11 @@ SMTEncoder::SMTEncoder(
 	smt::EncodingContext& _context,
 	ModelCheckerSettings _settings,
 	UniqueErrorReporter& _errorReporter,
+	UniqueErrorReporter& _unsupportedErrorReporter,
 	langutil::CharStreamProvider const& _charStreamProvider
 ):
 	m_errorReporter(_errorReporter),
+	m_unsupportedErrors(_unsupportedErrorReporter),
 	m_context(_context),
 	m_settings(std::move(_settings)),
 	m_charStreamProvider(_charStreamProvider)
@@ -339,7 +341,7 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 		m_context.resetVariable(*var);
 	}
 
-	m_errorReporter.warning(
+	m_unsupportedErrors.warning(
 		7737_error,
 		_inlineAsm.location(),
 		"Inline assembly may cause SMTChecker to produce spurious warnings (false positives)."
@@ -458,7 +460,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	if (*_op.annotation().userDefinedFunction)
 	{
 		// TODO: Implement user-defined operators properly.
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			6156_error,
 			_op.location(),
 			"User-defined operators are not yet supported by SMTChecker. "s +
@@ -560,7 +562,7 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 	if (*_op.annotation().userDefinedFunction)
 	{
 		// TODO: Implement user-defined operators properly.
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			6756_error,
 			_op.location(),
 			"User-defined operators are not yet supported by SMTChecker. "s +
@@ -726,7 +728,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		return;
 	case FunctionType::Kind::Creation:
 		if (!m_settings.engine.chc || !m_settings.externalCalls.isTrusted())
-			m_errorReporter.warning(
+			m_unsupportedErrors.warning(
 				8729_error,
 				_funCall.location(),
 				"Contract deployment is only supported in the trusted mode for external calls"
@@ -737,7 +739,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
 	default:
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			4588_error,
 			_funCall.location(),
 			"Assertion checker does not yet implement this type of function call."
@@ -1406,7 +1408,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 				else
 					// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
 					//       at all usable in the SMT checker currently
-					m_errorReporter.warning(
+					m_unsupportedErrors.warning(
 						7507_error,
 						_memberAccess.location(),
 						"Assertion checker does not yet support this expression."
@@ -1497,7 +1499,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		}
 	}
 
-	m_errorReporter.warning(
+	m_unsupportedErrors.warning(
 		7650_error,
 		_memberAccess.location(),
 		"Assertion checker does not yet support this expression."
@@ -1628,7 +1630,7 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 				structType && structType->recursive()
 			)
 			{
-				m_errorReporter.warning(
+				m_unsupportedErrors.warning(
 					4375_error,
 					memberAccess->location(),
 					"Assertion checker does not support recursive structs."
@@ -1742,7 +1744,7 @@ void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _ex
 	{
 		bool abstract = m_context.createGlobalSymbol(_name, _expr);
 		if (abstract)
-			m_errorReporter.warning(
+			m_unsupportedErrors.warning(
 				1695_error,
 				_expr.location(),
 				"Assertion checker does not yet support this global variable."
@@ -1793,7 +1795,7 @@ void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
 		break;
 	}
 	default:
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			5188_error,
 			_op.location(),
 			"Assertion checker does not yet implement this operator."
@@ -1980,7 +1982,7 @@ void SMTEncoder::compareOperation(BinaryOperation const& _op)
 		defineExpr(_op, *value);
 	}
 	else
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			7229_error,
 			_op.location(),
 			"Assertion checker does not yet implement the type " + _op.annotation().commonType->toString() + " for comparisons"
@@ -2507,7 +2509,7 @@ bool SMTEncoder::createVariable(VariableDeclaration const& _varDecl)
 	bool abstract = m_context.createVariable(_varDecl);
 	if (abstract)
 	{
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			8115_error,
 			_varDecl.location(),
 			"Assertion checker does not yet support the type of this variable."
@@ -2521,7 +2523,7 @@ smtutil::Expression SMTEncoder::expr(Expression const& _e, Type const* _targetTy
 {
 	if (!m_context.knownExpression(_e))
 	{
-		m_errorReporter.warning(6031_error, _e.location(), "Internal error: Expression undefined for SMT solver." );
+		m_unsupportedErrors.warning(6031_error, _e.location(), "Internal error: Expression undefined for SMT solver." );
 		createExpr(_e);
 	}
 
@@ -2532,7 +2534,7 @@ void SMTEncoder::createExpr(Expression const& _e)
 {
 	bool abstract = m_context.createExpression(_e);
 	if (abstract)
-		m_errorReporter.warning(
+		m_unsupportedErrors.warning(
 			8364_error,
 			_e.location(),
 			"Assertion checker does not yet implement type " + _e.annotation().type->toString()
