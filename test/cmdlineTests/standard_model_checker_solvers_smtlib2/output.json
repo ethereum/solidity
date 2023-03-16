@@ -3,7 +3,8 @@
     {
         "smtlib2queries":
         {
-            "0x75b95497d56c30e254a59358d72ddd4e78f9e90db621cfe677e85d05b2252411": "(set-option :produce-models true)
+            "0x1709577b0e186388ed08c2cf085f20c115c4c94745fb102c5be552ff2e4c7028": "(set-option :produce-models true)
+(set-option :timeout 1000)
 (set-logic ALL)
 (declare-fun |x_3_3| () Int)
 (declare-fun |error_0| () Int)

@@ -82,6 +82,9 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	if (m_modelCheckerSettings.solvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
 
+	// Disable the default timeout to force resource limit.
+	m_modelCheckerSettings.timeout = {};
+
 	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "yes");
 	if (ignoreCex == "no")
 		m_ignoreCex = false;

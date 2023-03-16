@@ -117,7 +117,7 @@ enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, Unde
 
 struct ModelCheckerTargets
 {
-	/// Adds the default targets, that is, all except underflow and overflow.
+	/// By default adds only assertions as targets.
 	static ModelCheckerTargets Default() { return *fromString("default"); }
 	/// Adds all targets, including underflow and overflow.
 	static ModelCheckerTargets All() { return *fromString("all"); }
@@ -164,7 +164,7 @@ struct ModelCheckerSettings
 	/// This is the default because Spacer prefers that over precise / and mod.
 	/// This option allows disabling this mechanism since other solvers
 	/// might prefer the precise encoding.
-	bool divModNoSlacks = false;
+	std::optional<bool> divModNoSlacks = {};
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
 	ModelCheckerExtCalls externalCalls = {};
 	ModelCheckerInvariants invariants = ModelCheckerInvariants::Default();
@@ -173,7 +173,10 @@ struct ModelCheckerSettings
 	bool showUnsupported = false;
 	smtutil::SMTSolverChoice solvers = smtutil::SMTSolverChoice::Z3();
 	ModelCheckerTargets targets = ModelCheckerTargets::Default();
-	std::optional<unsigned> timeout;
+	// Default timeout per query in milliseconds.
+	// We keep it as optional because tests may overwrite this to use
+	// resource limit for reproducibility.
+	std::optional<unsigned> timeout = 1000;
 
 	bool operator!=(ModelCheckerSettings const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(ModelCheckerSettings const& _other) const noexcept

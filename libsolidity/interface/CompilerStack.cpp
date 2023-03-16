@@ -600,6 +600,15 @@ bool CompilerStack::analyze()
 			if (m_modelCheckerSettings.engine.any())
 				m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
 
+			// Tiny automatic optimization for Eldarica if the user
+			// has not forcefully chosen `divModNoSlacks = false` which
+			// is the default for Spacer but worse for Eldarica.
+			if (
+				m_modelCheckerSettings.solvers.eld &&
+				!m_modelCheckerSettings.divModNoSlacks.has_value()
+			)
+				m_modelCheckerSettings.divModNoSlacks = true;
+
 			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
 			modelChecker.checkRequestedSourcesAndContracts(allSources);
 			for (Source const* source: m_sourceOrder)
