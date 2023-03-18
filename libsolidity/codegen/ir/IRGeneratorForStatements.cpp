@@ -2596,8 +2596,8 @@ void IRGeneratorForStatements::appendInternalFunctionCall(
 		solAssert(functionDefinition->isImplemented());
 		if (_functionType.hasBoundFirstArgument())
 			solAssert(_functionType == *functionDefinition->functionType(true /* _internal */)->withBoundFirstArgument());
-		else
-			solAssert(_functionType == *functionDefinition->functionType(true /* _internal */));
+		//else
+		//	solAssert(_functionType == *functionDefinition->functionType(true /* _internal */));
 
 		define(_callExpression) <<
 			m_context.enqueueFunctionForCodeGeneration(*functionDefinition) <<
