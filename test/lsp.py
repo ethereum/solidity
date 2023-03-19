@@ -28,7 +28,8 @@ else:
     import tty
     # Turn off user input buffering so we get the input immediately,
     # not only after a line break
-    tty.setcbreak(sys.stdin.fileno())
+    if os.isatty(sys.stdin.fileno()):
+        tty.setcbreak(sys.stdin.fileno())
 
 
 # Type for the pure test name without .sol suffix or sub directory
