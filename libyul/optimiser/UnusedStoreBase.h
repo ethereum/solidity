@@ -38,8 +38,11 @@ struct Dialect;
  *
  * The class tracks the state of abstract "stores" (assignments or mstore/sstore
  * statements) across the control-flow. It is the job of the derived class to create
- * the stores and track references, but the base class adjusts their "used state" at
- * control-flow splits and joins.
+ * the stores and track references, but the base class manages control-flow splits and joins.
+ *
+ * In general, active stores are those where it has not yet been determined if they are used
+ * or not. Those are split and joined at control-flow forks. Once a store has been deemed
+ * used, it is removed from the active set and marked as used and this will never change.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
@@ -57,28 +60,12 @@ public:
 	void operator()(Continue const&) override;
 
 protected:
-	class State
-	{
-	public:
-		enum Value { Unused, Undecided, Used };
-		State(Value _value = Undecided): m_value(_value) {}
-		inline bool operator==(State _other) const { return m_value == _other.m_value; }
-		inline bool operator!=(State _other) const { return !operator==(_other); }
-		static inline void join(State& _a, State const& _b)
-		{
-			// Using "max" works here because of the order of the values in the enum.
-			_a.m_value =  Value(std::max(int(_a.m_value), int(_b.m_value)));
-		}
-	private:
-		Value m_value = Undecided;
-	};
-
-	using TrackedStores = std::map<YulString, std::map<Statement const*, State>>;
+	using ActiveStores = std::map<YulString, std::set<Statement const*>>;
 
 	/// This function is called for a loop that is nested too deep to avoid
 	/// horrible runtime and should just resolve the situation in a pragmatic
 	/// and correct manner.
-	virtual void shortcutNestedLoop(TrackedStores const& _beforeLoop) = 0;
+	virtual void shortcutNestedLoop(ActiveStores const& _beforeLoop) = 0;
 
 	/// This function is called right before the scoped restore of the function definition.
 	virtual void finalizeFunctionDefinition(FunctionDefinition const& /*_functionDefinition*/) {}
@@ -86,20 +73,26 @@ protected:
 	/// Joins the assignment mapping of @a _source into @a _target according to the rules laid out
 	/// above.
 	/// Will destroy @a _source.
-	static void merge(TrackedStores& _target, TrackedStores&& _source);
-	static void merge(TrackedStores& _target, std::vector<TrackedStores>&& _source);
+	static void merge(ActiveStores& _target, ActiveStores&& _source);
+	static void merge(ActiveStores& _target, std::vector<ActiveStores>&& _source);
 
 	Dialect const& m_dialect;
-	std::set<Statement const*> m_pendingRemovals;
-	TrackedStores m_stores;
+	/// Set of all stores encountered during the traversal (in the current function).
+	std::set<Statement const*> m_allStores;
+	/// Set of stores that are marked as being used (in the current function).
+	std::set<Statement const*> m_usedStores;
+	/// List of stores that can be removed (globally).
+	std::vector<Statement const*> m_storesToRemove;
+	/// Active (undecided) stores in the current branch.
+	ActiveStores m_activeStores;
 
 	/// Working data for traversing for-loops.
 	struct ForLoopInfo
 	{
 		/// Tracked assignment states for each break statement.
-		std::vector<TrackedStores> pendingBreakStmts;
+		std::vector<ActiveStores> pendingBreakStmts;
 		/// Tracked assignment states for each continue statement.
-		std::vector<TrackedStores> pendingContinueStmts;
+		std::vector<ActiveStores> pendingContinueStmts;
 	};
 	ForLoopInfo m_forLoopInfo;
 	size_t m_forLoopNestingDepth = 0;

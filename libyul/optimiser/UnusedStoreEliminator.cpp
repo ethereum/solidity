@@ -78,17 +78,17 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 		ignoreMemory
 	};
 	rse(_ast);
-	if (
-		auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
-		evmDialect && evmDialect->providesObjectAccess()
-	)
-		rse.changeUndecidedTo(State::Unused, Location::Memory);
-	else
-		rse.changeUndecidedTo(State::Used, Location::Memory);
-	rse.changeUndecidedTo(State::Used, Location::Storage);
-	rse.scheduleUnusedForDeletion();
 
-	StatementRemover remover(rse.m_pendingRemovals);
+	auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
+	if (evmDialect && evmDialect->providesObjectAccess())
+		rse.clearActive(Location::Memory);
+	else
+		rse.markActiveAsUsed(Location::Memory);
+	rse.markActiveAsUsed(Location::Storage);
+	rse.m_storesToRemove += rse.m_allStores - rse.m_usedStores;
+
+	set<Statement const*> toRemove{rse.m_storesToRemove.begin(), rse.m_storesToRemove.end()};
+	StatementRemover remover{toRemove};
 	remover(_ast);
 }
 
@@ -121,12 +121,12 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 
 	if (sideEffects.canTerminate)
-		changeUndecidedTo(State::Used, Location::Storage);
+		markActiveAsUsed(Location::Storage);
 	if (!sideEffects.canContinue)
 	{
-		changeUndecidedTo(State::Unused, Location::Memory);
+		clearActive(Location::Memory);
 		if (!sideEffects.canTerminate)
-			changeUndecidedTo(State::Unused, Location::Storage);
+			clearActive(Location::Storage);
 	}
 }
 
@@ -139,7 +139,7 @@ void UnusedStoreEliminator::operator()(FunctionDefinition const& _functionDefini
 
 void UnusedStoreEliminator::operator()(Leave const&)
 {
-	changeUndecidedTo(State::Used);
+	markActiveAsUsed();
 }
 
 void UnusedStoreEliminator::visit(Statement const& _statement)
@@ -183,10 +183,14 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	yulAssert(isCandidateForRemoval == (isStorageWrite || (!m_ignoreMemory && isMemoryWrite)));
 	if (isCandidateForRemoval)
 	{
-		State initialState = State::Undecided;
 		if (*instruction == Instruction::RETURNDATACOPY)
 		{
-			initialState = State::Used;
+			// Out-of-bounds access to the returndata buffer results in a revert,
+			// so we are careful not to remove a potentially reverting call to a builtin.
+			// The only way the Solidity compiler uses `returndatacopy` is
+			// `returndatacopy(X, 0, returndatasize())`, so we only allow to remove this pattern
+			// (which is guaranteed to never cause an out-of-bounds revert).
+			bool allowReturndatacopyToBeRemoved = false;
 			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
 			auto length = identifierNameIfSSA(funCall->arguments.at(2));
 			if (length && startOffset)
@@ -197,20 +201,20 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 					lengthCall &&
 					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
 				)
-					initialState = State::Undecided;
+					allowReturndatacopyToBeRemoved = true;
 			}
+			if (!allowReturndatacopyToBeRemoved)
+				return;
 		}
-		m_stores[YulString{}].insert({&_statement, initialState});
+		m_allStores.insert(&_statement);
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
+		if (operations.front().location == Location::Storage)
+			activeStorageStores().insert(&_statement);
+		else
+			activeMemoryStores().insert(&_statement);
 		m_storeOperations[&_statement] = std::move(operations.front());
 	}
-}
-
-void UnusedStoreEliminator::finalizeFunctionDefinition(FunctionDefinition const&)
-{
-	changeUndecidedTo(State::Used);
-	scheduleUnusedForDeletion();
 }
 
 vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFunctionCall(
@@ -265,15 +269,28 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 
 void UnusedStoreEliminator::applyOperation(UnusedStoreEliminator::Operation const& _operation)
 {
-	for (auto& [statement, state]: m_stores[YulString{}])
-		if (state == State::Undecided)
+	set<Statement const*>& active =
+		_operation.location == Location::Storage ?
+		activeStorageStores() :
+		activeMemoryStores();
+
+
+	for (auto it = active.begin(); it != active.end();)
+	{
+		Statement const* statement = *it;
+		Operation const& storeOperation = m_storeOperations.at(statement);
+		if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
 		{
-			Operation const& storeOperation = m_storeOperations.at(statement);
-			if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
-				state = State::Used;
-			else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
-				state = State::Unused;
+			// This store is read from, mark it as used and remove it from the active set.
+			m_usedStores.insert(statement);
+			it = active.erase(it);
 		}
+		else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
+			// This store is overwritten before being read, remove it from the active set.
+			it = active.erase(it);
+		else
+			++it;
+	}
 }
 
 bool UnusedStoreEliminator::knownUnrelated(
@@ -390,16 +407,27 @@ bool UnusedStoreEliminator::knownCovered(
 	return false;
 }
 
-void UnusedStoreEliminator::changeUndecidedTo(
-	State _newState,
-	optional<UnusedStoreEliminator::Location> _onlyLocation)
+void UnusedStoreEliminator::markActiveAsUsed(
+	optional<UnusedStoreEliminator::Location> _onlyLocation
+)
 {
-	for (auto& [statement, state]: m_stores[YulString{}])
-		if (
-			state == State::Undecided &&
-			(_onlyLocation == nullopt || *_onlyLocation == m_storeOperations.at(statement).location)
-		)
-			state = _newState;
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+		for (Statement const* statement: activeMemoryStores())
+			m_usedStores.insert(statement);
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+		for (Statement const* statement: activeStorageStores())
+			m_usedStores.insert(statement);
+	clearActive(_onlyLocation);
+}
+
+void UnusedStoreEliminator::clearActive(
+	optional<UnusedStoreEliminator::Location> _onlyLocation
+)
+{
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+		activeMemoryStores() = {};
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+		activeStorageStores() = {};
 }
 
 optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const& _expression) const
@@ -408,11 +436,4 @@ optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const&
 		if (m_ssaValues.count(identifier->name))
 			return {identifier->name};
 	return nullopt;
-}
-
-void UnusedStoreEliminator::scheduleUnusedForDeletion()
-{
-	for (auto const& [statement, state]: m_stores[YulString{}])
-		if (state == State::Unused)
-			m_pendingRemovals.insert(statement);
 }

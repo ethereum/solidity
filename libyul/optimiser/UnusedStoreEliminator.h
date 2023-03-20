@@ -50,8 +50,7 @@ struct AssignedValue;
  * to sstore, as we don't know whether the memory location will be read once we leave the function's scope,
  * so the statement will be removed only if all code code paths lead to a memory overwrite.
  *
- * The m_store member of UnusedStoreBase is only used with the empty yul string
- * as key in the first dimension.
+ * The m_store member of UnusedStoreBase uses the key "m" for memory and "s" for storage stores.
  *
  * Best run in SSA form.
  *
@@ -93,20 +92,26 @@ public:
 	};
 
 private:
-	void shortcutNestedLoop(TrackedStores const&) override
+	std::set<Statement const*>& activeMemoryStores() { return m_activeStores["m"_yulstring]; }
+	std::set<Statement const*>& activeStorageStores() { return m_activeStores["s"_yulstring]; }
+
+	void shortcutNestedLoop(ActiveStores const&) override
 	{
 		// We might only need to do this for newly introduced stores in the loop.
-		changeUndecidedTo(State::Used);
+		markActiveAsUsed();
 	}
-	void finalizeFunctionDefinition(FunctionDefinition const&) override;
+	void finalizeFunctionDefinition(FunctionDefinition const&) override
+	{
+		markActiveAsUsed();
+	}
 
 	std::vector<Operation> operationsFromFunctionCall(FunctionCall const& _functionCall) const;
 	void applyOperation(Operation const& _operation);
 	bool knownUnrelated(Operation const& _op1, Operation const& _op2) const;
 	bool knownCovered(Operation const& _covered, Operation const& _covering) const;
 
-	void changeUndecidedTo(State _newState, std::optional<Location> _onlyLocation = std::nullopt);
-	void scheduleUnusedForDeletion();
+	void markActiveAsUsed(std::optional<Location> _onlyLocation = std::nullopt);
+	void clearActive(std::optional<Location> _onlyLocation = std::nullopt);
 
 	std::optional<YulString> identifierNameIfSSA(Expression const& _expression) const;
 
