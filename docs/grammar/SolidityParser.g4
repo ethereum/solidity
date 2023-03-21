@@ -414,6 +414,7 @@ expression:
 		identifier
 		| literal
 		| literalWithSubDenomination
+		| suffixedLiteral
 		| elementaryTypeName[false]
 	  ) # PrimaryExpression
 ;
@@ -434,6 +435,8 @@ identifier: Identifier | From | Error | Revert | Global | Suffix;
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 
 literalWithSubDenomination: numberLiteral SubDenomination;
+
+suffixedLiteral: literal identifier;
 
 booleanLiteral: True | False;
 /**
