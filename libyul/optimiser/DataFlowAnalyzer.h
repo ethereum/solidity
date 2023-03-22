@@ -181,6 +181,8 @@ private:
 		std::map<YulString, AssignedValue> value;
 		/// m_references[a].contains(b) <=> the current expression assigned to a references b
 		std::unordered_map<YulString, std::set<YulString>> references;
+		/// Reverse lookup for above m_references map
+		std::unordered_map<YulString, std::set<YulString>> references_reverse_lookup;
 
 		Environment environment;
 	};
