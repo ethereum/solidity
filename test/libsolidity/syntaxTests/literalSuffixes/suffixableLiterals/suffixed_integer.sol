@@ -17,6 +17,8 @@ contract C {
         0x0000 e;
         0x1234 e;
         0xffffff e;
+        0xFFFFFF e;
+        0xFfFfFf e;
 
         // Almost address
         0x000012345678901234567890123456789012345678 e;
@@ -24,8 +26,10 @@ contract C {
 
         // Hexadecimal that resembles scientific notation
         0x0e0 e;
+        0x0E0 e;
         0x111e0 e;
         0xeeeee e;
+        0xEeEeE e;
         0x10e10 e;
         0x10e76 e;
 
@@ -35,6 +39,8 @@ contract C {
         1_000_000 e;
         9999_9999_9999 e;
         0x123_abc e;
+        0x123_ABC e;
+        0x123_aBc e;
         1_000.0 e;
         1_000.000_000 e;
 
@@ -45,6 +51,7 @@ contract C {
         0e-10 e;
         1e0 e;
         10e0 e;
+        10E0 e;
 
         10e10 e;
         10e76 e;
