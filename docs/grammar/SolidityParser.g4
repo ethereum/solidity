@@ -179,18 +179,11 @@ locals[
 /**
  * The definition of a free function.
  */
- freeFunctionDefinition
- locals[
- 	boolean mutabilitySet = false,
- 	boolean suffixSpecifierSet = false,
- ]
- :
+ freeFunctionDefinition:
  	Function (identifier | Fallback | Receive)
  	LParen (arguments=parameterList)? RParen
- 	(
-		{!$mutabilitySet}? stateMutability {$mutabilitySet = true;}
-		| {!$suffixSpecifierSet}? Suffix {$suffixSpecifierSet = true;}
- 	 )*
+ 	stateMutability? Suffix?
+ 	| Suffix? stateMutability?
  	(Returns LParen returnParameters=parameterList RParen)?
  	(Semicolon | body=block);
 
