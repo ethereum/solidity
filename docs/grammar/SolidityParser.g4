@@ -16,7 +16,7 @@ sourceUnit: (
 	| contractDefinition
 	| interfaceDefinition
 	| libraryDefinition
-	| functionDefinition
+	| freeFunctionDefinition
 	| constantVariableDeclaration
 	| structDefinition
 	| enumDefinition
@@ -85,7 +85,7 @@ inheritanceSpecifier: name=identifierPath arguments=callArgumentList?;
  */
 contractBodyElement:
 	constructorDefinition
-	| functionDefinition
+	| contractFunctionDefinition
 	| modifierDefinition
 	| fallbackFunctionDefinition
 	| receiveFunctionDefinition
@@ -156,12 +156,12 @@ overrideSpecifier: Override (LParen overrides+=identifierPath (Comma overrides+=
  * Depending on the context in which the function is defined, further restrictions may apply,
  * e.g. functions in interfaces have to be unimplemented, i.e. may not contain a body block.
  */
-functionDefinition
+contractFunctionDefinition
 locals[
 	boolean visibilitySet = false,
 	boolean mutabilitySet = false,
 	boolean virtualSet = false,
-	boolean overrideSpecifierSet = false
+	boolean overrideSpecifierSet = false,
 ]
 :
 	Function (identifier | Fallback | Receive)
@@ -175,6 +175,17 @@ locals[
 	 )*
 	(Returns LParen returnParameters=parameterList RParen)?
 	(Semicolon | body=block);
+
+/**
+ * The definition of a free function.
+ */
+ freeFunctionDefinition:
+ 	Function (identifier | Fallback | Receive)
+ 	LParen (arguments=parameterList)? RParen
+ 	stateMutability?
+ 	(Returns LParen returnParameters=parameterList RParen)?
+ 	(Semicolon | body=block);
+
 /**
  * The definition of a modifier.
  * Note that within the body block of a modifier, the underscore cannot be used as identifier,
@@ -394,6 +405,7 @@ expression:
  	| (
 		identifier
 		| literal
+		| literalWithSubDenomination
 		| elementaryTypeName[false]
 	  ) # PrimaryExpression
 ;
@@ -412,6 +424,9 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 identifier: Identifier | From | Error | Revert | Global;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
+
+literalWithSubDenomination: numberLiteral SubDenomination;
+
 booleanLiteral: True | False;
 /**
  * A full string literal consists of either one or several consecutive quoted strings.
@@ -429,7 +444,8 @@ unicodeStringLiteral: UnicodeStringLiteral+;
 /**
  * Number literals can be decimal or hexadecimal numbers with an optional unit.
  */
-numberLiteral: (DecimalNumber | HexNumber) NumberUnit?;
+numberLiteral: DecimalNumber | HexNumber;
+
 /**
  * A curly-braced block of statements. Opens its own scope.
  */

@@ -62,7 +62,7 @@ New: 'new';
 /**
  * Unit denomination for numbers.
  */
-NumberUnit: 'wei' | 'gwei' | 'ether' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years';
+SubDenomination: 'wei' | 'gwei' | 'ether' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years';
 Override: 'override';
 Payable: 'payable';
 Pragma: 'pragma' -> pushMode(PragmaMode);
@@ -221,6 +221,14 @@ fragment EvenHexDigits: HexCharacter HexCharacter ('_'? HexCharacter HexCharacte
 fragment HexCharacter: [0-9A-Fa-f];
 
 /**
+ * Scanned but not used by any rule, i.e, disallowed.
+ * solc parser considers number starting with '0', not immediately followed by '.' or 'x' as
+ * octal, even if non octal digits '8' and '9' are present.
+ */
+OctalNumber: '0' DecimalDigits ('.' DecimalDigits)?;
+
+
+/**
  * A decimal number literal consists of decimal digits that may be delimited by underscores and
  * an optional positive or negative exponent.
  * If the digits contain a decimal point, the literal has fixed point type.
@@ -228,6 +236,12 @@ fragment HexCharacter: [0-9A-Fa-f];
 DecimalNumber: (DecimalDigits | (DecimalDigits? '.' DecimalDigits)) ([eE] '-'? DecimalDigits)?;
 //@doc:inline
 fragment DecimalDigits: [0-9] ('_'? [0-9])* ;
+
+
+/**
+ * This is needed to avoid successfully parsing a number followed by a string with no whitespace between.
+ */
+DecimalNumberFollowedByIdentifier: DecimalNumber Identifier;
 
 
 /**
