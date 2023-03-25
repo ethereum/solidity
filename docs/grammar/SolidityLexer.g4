@@ -90,6 +90,7 @@ Try: 'try';
 Type: 'type';
 Ufixed: 'ufixed' | ('ufixed' [1-9][0-9]+ 'x' [1-9][0-9]+);
 Unchecked: 'unchecked';
+Unicode: 'unicode';
 /**
  * Sized unsigned integer types.
  * uint is an alias of uint256.
