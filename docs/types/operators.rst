@@ -69,7 +69,7 @@ delete
 ``delete a`` assigns the initial value for the type to ``a``. I.e. for integers it is
 equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic
 array of length zero or a static array of the same length with all elements set to their
-initial value, calling `delete` on each array element, both for static and dynamic arrays. ``delete a[x]`` deletes the item at index ``x`` of the array and leaves
+initial value, calling ``delete`` on each array element, both for static and dynamic arrays. ``delete a[x]`` deletes the item at index ``x`` of the array and leaves
 all other elements and the length of the array untouched. This especially means that it leaves
 a gap in the array. If you plan to remove items, a :ref:`mapping <mapping-types>` is probably a better choice.
 
