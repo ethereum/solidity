@@ -539,7 +539,7 @@ defaults:
       project: colony
       binary_type: solcjs
       compile_only: 1
-      nodejs_version: '14.20'
+      image: cimg/node:14.20
       python2: true
 
   - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
@@ -547,7 +547,7 @@ defaults:
       name: t_native_test_ext_gnosis
       project: gnosis
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
 
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
       <<: *requires_b_ubu_static
@@ -561,14 +561,14 @@ defaults:
       name: t_native_test_ext_ens
       project: ens
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
 
   - job_native_test_ext_trident: &job_native_test_ext_trident
       <<: *requires_b_ubu_static
       name: t_native_test_ext_trident
       project: trident
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
 
   - job_native_test_ext_euler: &job_native_test_ext_euler
       <<: *requires_b_ubu_static
@@ -595,28 +595,28 @@ defaults:
       name: t_native_test_ext_pool_together
       project: pool-together
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
 
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
       <<: *requires_b_ubu_static
       name: t_native_test_ext_perpetual_pools
       project: perpetual-pools
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
 
   - job_native_test_ext_uniswap: &job_native_test_ext_uniswap
       <<: *requires_b_ubu_static
       name: t_native_test_ext_uniswap
       project: uniswap
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
 
   - job_native_test_ext_prb_math: &job_native_test_ext_prb_math
       <<: *requires_b_ubu_static
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
 
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
       <<: *requires_b_ubu_static
@@ -630,14 +630,14 @@ defaults:
       name: t_native_test_ext_brink
       project: brink
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
 
   - job_native_test_ext_chainlink: &job_native_test_ext_chainlink
       <<: *requires_b_ubu_static
       name: t_native_test_ext_chainlink
       project: chainlink
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
       resource_class: large # Tests run out of memory on a smaller machine
 
   - job_native_test_ext_gp2: &job_native_test_ext_gp2
@@ -645,14 +645,14 @@ defaults:
       name: t_native_test_ext_gp2
       project: gp2
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
 
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
       <<: *requires_b_ems
       name: t_ems_test_ext_colony
       project: colony
       binary_type: solcjs
-      nodejs_version: '14.20'
+      image: cimg/node:14.20
       resource_class: medium
       python2: true
 
@@ -1239,7 +1239,7 @@ jobs:
       compile_only:
         type: integer
         default: 0
-      nodejs_version:
+      image:
         type: string
         default: current
       resource_class:
@@ -1249,7 +1249,7 @@ jobs:
         type: boolean
         default: false
     docker:
-      - image: cimg/node:<<parameters.nodejs_version>>
+      - image: <<parameters.image>>
     resource_class: <<parameters.resource_class>>
     # NOTE: Each external test runs up to 6 independent settings presets. If parallelism is higher than
     # actual preset count, some runs will exit immediately. If it's lower, some runs will get more than one preset.
