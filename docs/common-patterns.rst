@@ -55,7 +55,7 @@ you receive the funds of the person who is now the richest.
         function withdraw() public {
             uint amount = pendingWithdrawals[msg.sender];
             // Remember to zero the pending refund before
-            // sending to prevent re-entrancy attacks
+            // sending to prevent reentrancy attacks
             pendingWithdrawals[msg.sender] = 0;
             payable(msg.sender).transfer(amount);
         }
