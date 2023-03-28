@@ -68,7 +68,7 @@ conditions
     If no conditions are given, assume that the bug is present.
 check
     This field contains different checks that report whether the smart contract
-    contains the bug or not. The first type of check are Javascript regular
+    contains the bug or not. The first type of check are JavaScript regular
     expressions that are to be matched against the source code ("source-regex")
     if the bug is present.  If there is no match, then the bug is very likely
     not present. If there is a match, the bug might be present.  For improved
