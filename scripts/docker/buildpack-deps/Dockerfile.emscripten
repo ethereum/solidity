@@ -54,7 +54,8 @@ RUN set -ex && \
 		-DZ3_BUILD_TEST_EXECUTABLES=OFF \
 		-DZ3_BUILD_EXECUTABLE=OFF \
 		-DZ3_SINGLE_THREADED=ON \
-		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0" \
+		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0 -pthread -s USE_PTHREADS=1" \
+		-DCMAKE_STATIC_LINKER_FLAGS="-s -pthread -s USE_PTHREADS=1" \
 		.. && \
 	make && \
 	make install && \
@@ -71,6 +72,6 @@ RUN set -ex && \
 	echo "using emscripten : : em++ ;" >> project-config.jam && \
 	./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
 		--with-system --with-filesystem --with-test --with-program_options \
-		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
+		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -pthread -s USE_PTHREADS=1 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
 	       --prefix=$(em-config CACHE)/sysroot/usr install && \
 	rm -r /usr/src/boost_1_75_0

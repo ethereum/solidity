@@ -43,6 +43,45 @@ function build() {
     local prerelease_source="${2:-ci}"
 
     cd /root/project
+	cp scripts/docker/buildpack-deps/emscripten.jam /usr/src
+
+	apt-get update && \
+	apt-get install lz4 --no-install-recommends && \
+	\
+	cd /usr/src && \
+	git clone https://github.com/Z3Prover/z3.git -b z3-4.11.2 --depth 1 && \
+	cd z3 && \
+	mkdir build && \
+	cd build && \
+	emcmake cmake \
+		-DCMAKE_INSTALL_PREFIX=$(em-config CACHE)/sysroot/usr \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DZ3_BUILD_LIBZ3_SHARED=OFF \
+		-DZ3_ENABLE_EXAMPLE_TARGETS=OFF \
+		-DZ3_BUILD_TEST_EXECUTABLES=OFF \
+		-DZ3_BUILD_EXECUTABLE=OFF \
+		-DZ3_SINGLE_THREADED=ON \
+		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0 -pthread -s USE_PTHREADS=1" \
+		-DCMAKE_STATIC_LINKER_FLAGS="-s -pthread -s USE_PTHREADS=1" \
+		.. && \
+	make && \
+	make install && \
+	rm -r /usr/src/z3 && \
+	cd /usr/src && \
+	\
+	wget -q 'https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.bz2' -O boost.tar.bz2 && \
+	test "$(sha256sum boost.tar.bz2)" = "953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb  boost.tar.bz2" && \
+	tar -xf boost.tar.bz2 && \
+	rm boost.tar.bz2 && \
+	cd boost_1_75_0 && \
+	mv ../emscripten.jam . && \
+	./bootstrap.sh && \
+	echo "using emscripten : : em++ ;" >> project-config.jam && \
+	./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
+		--with-system --with-filesystem --with-test --with-program_options \
+		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -pthread -s USE_PTHREADS=1 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
+	       --prefix=$(em-config CACHE)/sysroot/usr install && \
+	rm -r /usr/src/boost_1_75_0
 
     # shellcheck disable=SC2166
     if [[ "$CIRCLE_BRANCH" = release || -n "$CIRCLE_TAG" || -n "$FORCE_RELEASE" || "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]
