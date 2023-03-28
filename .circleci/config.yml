@@ -26,7 +26,7 @@ parameters:
   emscripten-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:emscripten-15
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:f86cb1fb4631b1fbb927149f60caea7b095be5b85d379456eee09cb105e7f225"
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:e2729bd6c0734bb49d04e2688fec3dcf880394f351f69358dd2bd92c0f6fd309"
   evm-version:
     type: string
     default: london

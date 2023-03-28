@@ -24,9 +24,8 @@ contract C {
 // Warning 6328: (167-185): CHC: Assertion violation might happen here.
 // Warning 6328: (215-233): CHC: Assertion violation might happen here.
 // Warning 6328: (267-285): CHC: Assertion violation might happen here.
-// Warning 6328: (304-322): CHC: Assertion violation might happen here.
+// Warning 6328: (304-322): CHC: Assertion violation happens here.
 // Warning 2661: (47-50): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4661: (167-185): BMC: Assertion violation happens here.
 // Warning 4661: (215-233): BMC: Assertion violation happens here.
 // Warning 4661: (267-285): BMC: Assertion violation happens here.
-// Warning 4661: (304-322): BMC: Assertion violation happens here.
