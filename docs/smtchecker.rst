@@ -681,7 +681,7 @@ most derived type in case of inheritance.
     }
 
 Note that in function ``property_transfer``, the external calls are
-performed on variable ``t``
+performed on variable ``t``.
 
 Another caveat of this mode are calls to state variables of contract type
 outside the analyzed contract. In the code below, even though ``B`` deploys
