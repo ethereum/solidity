@@ -257,7 +257,7 @@ reverts on failure.
 
 * ``send``
 
-Send is the low-level counterpart of ``transfer``. If the execution fails, the current contract will not stop with an exception, but ``send`` will return ``false``.
+``send`` is the low-level counterpart of ``transfer``. If the execution fails, the current contract will not stop with an exception, but ``send`` will return ``false``.
 
 .. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
