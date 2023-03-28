@@ -160,7 +160,7 @@ at each version. Backward compatibility is not guaranteed between each version.
    - It is possible to access dynamic data returned from function calls.
    - ``revert`` opcode introduced, which means that ``revert()`` will not waste gas.
 - ``constantinople``
-   - Opcodes ``create2`, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
+   - Opcodes ``create2``, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
    - Shifting operators use shifting opcodes and thus need less gas.
 - ``petersburg``
    - The compiler behaves the same way as with constantinople.
