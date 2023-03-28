@@ -253,6 +253,7 @@ The compiler resolves the import into a source unit name based on the import pat
 #. We start with the source unit name of the importing source unit.
 #. The last path segment with preceding slashes is removed from the resolved name.
 #. Then, for every segment in the import path, starting from the leftmost one:
+
     - If the segment is ``.``, it is skipped.
     - If the segment is ``..``, the last path segment with preceding slashes is removed from the resolved name.
     - Otherwise, the segment (preceded by a single slash if the resolved name is not empty), is appended to the resolved name.
