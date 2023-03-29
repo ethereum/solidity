@@ -161,21 +161,31 @@ Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Additional Material
-
+   :caption: Avisory content
+   
+   security-considerations.rst
+   bugs.rst
    050-breaking-changes.rst
    060-breaking-changes.rst
    070-breaking-changes.rst
    080-breaking-changes.rst
+   
+.. toctree::
+   :maxdepth: 2
+   :caption: Additional Material
+   
    natspec-format.rst
-   security-considerations.rst
    smtchecker.rst
-   resources.rst
-   path-resolution.rst
    yul.rst
+   path-resolution.rst
+   
+.. toctree::
+   :maxdepth: 2
+   :caption: Resources  
+   
    style-guide.rst
    common-patterns.rst
-   bugs.rst
+   resources.rst
    contributing.rst
-   brand-guide.rst
    language-influences.rst
+   brand-guide.rst
