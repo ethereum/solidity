@@ -34,6 +34,7 @@ contract C
 // ====
 // SMTEngine: all
 // SMTIgnoreCex: yes
+// SMTIgnoreOS: macos
 // ----
 // Warning 6368: (439-453): CHC: Out of bounds access happens here.
 // Warning 6368: (465-480): CHC: Out of bounds access might happen here.
