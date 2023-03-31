@@ -431,7 +431,8 @@ You can add a function in your smart contract that performs some self-checks lik
 Keep in mind that you cannot use too much gas for that, so help through off-chain computations might be needed there.
 
 If the self-check fails, the contract automatically switches into some kind of "failsafe" mode,
-which, for example, disables most of the features, hands over control to a fixed and trusted third party
+which, for example, disables most of the features,
+hands over control to a fixed and trusted third party
 or just converts the contract into a simple "give me back my money" contract.
 
 Ask for Peer Review
