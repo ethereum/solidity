@@ -120,7 +120,8 @@ storage (Interactions). This is a common foolproof way to prevent *reentrancy at
 where an externally called malicious contract can double-spend an allowance, double-withdraw a balance, among other things,
 by using logic that calls back into the original contract before it has finalized its transaction.
 
-Note that reentrancy is not only an effect of Ether transfer but of any function call on another contract.
+Note that reentrancy is not only an effect of Ether transfer
+but of any function call on another contract.
 Furthermore, you also have to take multi-contract situations into account.
 A called contract could modify the state of another contract you depend on.
 
