@@ -367,9 +367,11 @@ Minor Details
 
 - Types that do not occupy the full 32 bytes might contain "dirty higher order bits".
   This is especially important if you access ``msg.data`` - it poses a malleability risk:
-  You can craft transactions that call a function ``f(uint8 x)`` with a raw byte argument of ``0xff000001`` and with ``0x00000001``.
+  You can craft transactions that call a function ``f(uint8 x)``
+  with a raw byte argument of ``0xff000001`` and with ``0x00000001``.
   Both are fed to the contract and both will look like the number ``1`` as far as ``x`` is concerned,
-  but ``msg.data`` will be different, so if you use ``keccak256(msg.data)`` for anything, you will get different results.
+  but ``msg.data`` will be different, so if you use ``keccak256(msg.data)`` for anything,
+  you will get different results.
 
 ***************
 Recommendations
