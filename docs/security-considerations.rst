@@ -273,7 +273,8 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
         }
     }
 
-If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet, instead of the owner's address.
+If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet,
+instead of the owner's address.
 But by checking ``tx.origin``, it gets the original address that kicked off the transaction, which is still the owner's address.
 The attack wallet instantly drains all your funds.
 
