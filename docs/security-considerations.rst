@@ -74,8 +74,8 @@ but it still exposes a weakness:
 Ether transfer can always include code execution,
 so the recipient could be a contract that calls back into ``withdraw``.
 This would let it get multiple refunds and, basically, retrieve all the Ether in the contract.
-In particular, the following contract will allow an attacker to refund multiple times as it uses ``call``
-which forwards all remaining gas by default:
+In particular, the following contract will allow an attacker to refund multiple times
+as it uses ``call`` which forwards all remaining gas by default:
 
 .. code-block:: solidity
 
