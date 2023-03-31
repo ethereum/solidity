@@ -439,5 +439,6 @@ Ask for Peer Review
 ===================
 
 The more people examine a piece of code, the more issues are found.
-Asking people to review your code also helps as a cross-check to find out whether your code is easy to understand -
+Asking people to review your code also helps as a cross-check to find out 
+whether your code is easy to understand -
 a very important criterion for good smart contracts.
