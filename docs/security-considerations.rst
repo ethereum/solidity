@@ -9,7 +9,7 @@ it is much harder to check that nobody can use it in a way that was **not** anti
 
 In Solidity, this is even more important because you can use smart contracts to handle tokens or,
 possibly, even more valuable things.
-Furthermore, every execution of a smart contract happens in public and, 
+Furthermore, every execution of a smart contract happens in public and,
 in addition to that, the source code is often available.
 
 Of course, you always have to consider how much is at stake:
