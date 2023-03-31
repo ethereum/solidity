@@ -18,11 +18,14 @@ You can compare a smart contract with a web service that is open to the public
 If you only store your grocery list on that web service, you might not have to take too much care,
 but if you manage your bank account using that web service, you should be more careful.
 
-This section will list some pitfalls and general security recommendations but can, of course, never be complete.
-Also, keep in mind that even if your smart contract code is bug-free, the compiler or the platform itself might have a bug.
-A list of some publicly known security-relevant bugs of the compiler can be found in the :ref:`list of known bugs<known_bugs>`,
-which is also machine-readable.
-Note that there is a `Bug Bounty Program <https://ethereum.org/en/bug-bounty/>` that covers the code generator of the Solidity compiler.
+This section will list some pitfalls and general security recommendations
+but can, of course, never be complete.
+Also, keep in mind that even if your smart contract code is bug-free,
+the compiler or the platform itself might have a bug.
+A list of some publicly known security-relevant bugs of the compiler can be found
+in the :ref:`list of known bugs<known_bugs>`, which is also machine-readable.
+Note that there is a `Bug Bounty Program <https://ethereum.org/en/bug-bounty/>`
+that covers the code generator of the Solidity compiler.
 
 As always, with open-source documentation,
 please help us extend this section (especially, some examples would not hurt)!
