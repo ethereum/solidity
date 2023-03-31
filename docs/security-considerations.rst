@@ -45,7 +45,8 @@ Using random numbers in smart contracts is quite tricky if you do not want block
 Reentrancy
 ==========
 
-Any interaction from a contract (A) with another contract (B) and any transfer of Ether hands over control to that contract (B).
+Any interaction from a contract (A) with another contract (B)
+and any transfer of Ether hands over control to that contract (B).
 This makes it possible for B to call back into A before this interaction is completed.
 To give an example, the following code contains a bug (it is just a snippet and not a complete contract):
 
