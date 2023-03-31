@@ -7,7 +7,7 @@ Security Considerations
 While it is usually quite easy to build software that works as expected,
 it is much harder to check that nobody can use it in a way that was **not** anticipated.
 
-In Solidity, this is even more important because you can use smart contracts to handle tokens or, 
+In Solidity, this is even more important because you can use smart contracts to handle tokens or,
 possibly, even more valuable things.
 Furthermore, every execution of a smart contract happens in public and, 
 in addition to that, the source code is often available.
