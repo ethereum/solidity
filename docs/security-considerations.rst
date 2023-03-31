@@ -381,7 +381,8 @@ Take Warnings Seriously
 =======================
 
 If the compiler warns you about something, you should change it.
-Even if you do not think that this particular warning has security implications, there might be another issue buried beneath it.
+Even if you do not think that this particular warning has security implications,
+there might be another issue buried beneath it.
 Any compiler warning we issue can be silenced by slight changes to the code.
 
 Always use the latest version of the compiler to be notified about all recently introduced warnings.
