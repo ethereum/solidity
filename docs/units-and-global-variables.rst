@@ -311,13 +311,16 @@ For more information, see the section on :ref:`address`.
     semantics than ``delegatecall``.
 
 
-.. index:: this, selfdestruct
+.. index:: this, selfdestruct, super
 
-Contract Related
+Contract-related
 ----------------
 
 ``this`` (current contract's type)
-    the current contract, explicitly convertible to :ref:`address`
+    The current contract, explicitly convertible to :ref:`address`
+
+``super``
+    A contract one level higher in the inheritance hierarchy
 
 ``selfdestruct(address payable recipient)``
     Destroy the current contract, sending its funds to the given :ref:`address`
