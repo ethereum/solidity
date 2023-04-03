@@ -155,7 +155,7 @@ Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Avisory content
+   :caption: Advisory content
 
    security-considerations.rst
    bugs.rst
