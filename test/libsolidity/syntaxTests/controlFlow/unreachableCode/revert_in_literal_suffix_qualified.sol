@@ -9,7 +9,9 @@ import "A.sol" as A;
 contract C {
     function f() public pure {
         1 A.suffix;
-        uint a = 0; // TODO: Should warn about unreachable code here
+        uint a = 0;
         a;
     }
 }
+// ----
+// Warning 5740: (B.sol:94-164): Unreachable code.

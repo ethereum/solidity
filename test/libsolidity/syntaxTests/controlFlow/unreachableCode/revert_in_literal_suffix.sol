@@ -5,7 +5,9 @@ function suffix(uint) pure suffix returns (uint) {
 contract C {
     function f() public pure {
         1 suffix;
-        uint a = 0; // TODO: Should warn about unreachable code here
+        uint a = 0;
         a;
     }
 }
+// ----
+// Warning 5740: (138-208): Unreachable code.
