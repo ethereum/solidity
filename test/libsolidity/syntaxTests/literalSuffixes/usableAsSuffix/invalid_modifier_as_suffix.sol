@@ -4,4 +4,4 @@ contract C {
     modifier suffix(uint x) { _; }
 }
 // ----
-// TypeError 4438: (26-37): The literal suffix must be either a subdenomination or a file-level suffix function.
+// TypeError 5704: (26-37): This object cannot be used as a literal suffix.

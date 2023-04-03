@@ -41,18 +41,18 @@ contract D {
 // DeclarationError 2333: (B.sol:317-343): Identifier already declared.
 // DeclarationError 2333: (B.sol:349-374): Identifier already declared.
 // DeclarationError 2333: (B.sol:380-404): Identifier already declared.
-// TypeError 5462: (B.sol:60-73): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:87-100): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:114-130): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:144-160): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:174-189): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:203-217): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:232-247): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:261-276): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:290-308): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:322-340): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:354-371): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
-// TypeError 5462: (B.sol:385-401): Invalid array length, expected integer literal or constant expression. A suffixed literal is not a constant expression unless the suffix is a denomination.
+// TypeError 5462: (B.sol:60-73): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:87-100): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:114-130): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:144-160): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:174-189): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:203-217): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:232-247): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:261-276): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:290-308): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:322-340): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:354-371): Invalid array length, expected integer literal or constant expression.
+// TypeError 5462: (B.sol:385-401): Invalid array length, expected integer literal or constant expression.
 // TypeError 5462: (B.sol:431-445): Invalid array length, expected integer literal or constant expression.
 // TypeError 5462: (B.sol:459-473): Invalid array length, expected integer literal or constant expression.
 // TypeError 5462: (B.sol:487-504): Invalid array length, expected integer literal or constant expression.

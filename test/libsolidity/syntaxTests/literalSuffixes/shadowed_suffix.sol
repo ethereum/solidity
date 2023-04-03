@@ -19,6 +19,4 @@ contract C {
 // Warning 2519: (298-304): This declaration shadows an existing declaration.
 // Warning 2519: (222-231): This declaration shadows an existing declaration.
 // Warning 2519: (238-262): This declaration shadows an existing declaration.
-// TypeError 4438: (315-318): The literal suffix must be either a subdenomination or a file-level suffix function.
-// TypeError 4438: (328-331): The literal suffix must be either a subdenomination or a file-level suffix function.
-// TypeError 4438: (341-344): The literal suffix must be either a subdenomination or a file-level suffix function.
+// TypeError 5704: (315-318): This object cannot be used as a literal suffix.
