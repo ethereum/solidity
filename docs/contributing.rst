@@ -175,6 +175,7 @@ See especially:
 
 If you want to debug using GDB, make sure you build differently than the "usual".
 For example, you could run the following command in your ``build`` folder:
+
 .. code-block:: bash
 
    cmake -DCMAKE_BUILD_TYPE=Debug ..

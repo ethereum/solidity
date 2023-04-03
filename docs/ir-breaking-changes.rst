@@ -174,8 +174,8 @@ hiding new and different behavior in existing code.
 
   The function ``preincr_u8(1)`` returns the following values:
 
-  - Old code generator: 3 (``1 + 2``) but the return value is unspecified in general
-  - New code generator: 4 (``2 + 2``) but the return value is not guaranteed
+  - Old code generator: ``3`` (``1 + 2``) but the return value is unspecified in general
+  - New code generator: ``4`` (``2 + 2``) but the return value is not guaranteed
 
   .. index:: ! evaluation order; function arguments
 
