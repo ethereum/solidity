@@ -5,3 +5,4 @@ contract C {
 }
 // ----
 // TypeError 4438: (48-54): The literal suffix must be either a subdenomination or a file-level suffix function.
+// TypeError 7407: (48-54): Type tuple() is not implicitly convertible to expected type uint256.
