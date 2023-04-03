@@ -41,7 +41,7 @@ Pitfalls
 Private Information and Randomness
 ==================================
 
-Everything you use in a smart contract is publicly visible, 
+Everything you use in a smart contract is publicly visible,
 even local variables and state variables marked ``private``.
 
 Using random numbers in smart contracts is quite tricky if you do not want block builders to be able to cheat.
@@ -119,7 +119,7 @@ only then it makes any changes to the state (Effects);
 it may make calls to functions in other contracts
 *after* all planned state changes have been written to storage (Interactions).
 This is a common foolproof way to prevent *reentrancy attacks*,
-where an externally called malicious contract can double-spend an allowance, 
+where an externally called malicious contract can double-spend an allowance,
 double-withdraw a balance, among other things,
 by using logic that calls back into the original contract before it has finalized its transaction.
 
@@ -283,8 +283,8 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
 
 If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet,
 instead of the owner's address.
-But by checking ``tx.origin``, it gets the original address that kicked off the transaction, 
-which is still the owner's address. 
+But by checking ``tx.origin``, it gets the original address that kicked off the transaction,
+which is still the owner's address.
 The attack wallet instantly drains all your funds.
 
 .. _underflow-overflow:
@@ -453,6 +453,6 @@ Ask for Peer Review
 ===================
 
 The more people examine a piece of code, the more issues are found.
-Asking people to review your code also helps as a cross-check to find out 
+Asking people to review your code also helps as a cross-check to find out
 whether your code is easy to understand -
 a very important criterion for good smart contracts.
