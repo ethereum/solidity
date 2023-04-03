@@ -116,9 +116,11 @@ To avoid reentrancy, you can use the Checks-Effects-Interactions pattern as demo
 The Checks-Effects-Interactions pattern ensures that all code paths through a contract
 complete all required checks of the supplied parameters before modifying the contract's state (Checks);
 only then it makes any changes to the state (Effects);
-it may make calls to functions in other contracts *after* all planned state changes have been written to
-storage (Interactions). This is a common foolproof way to prevent *reentrancy attacks*,
-where an externally called malicious contract can double-spend an allowance, double-withdraw a balance, among other things,
+it may make calls to functions in other contracts
+*after* all planned state changes have been written to storage (Interactions).
+This is a common foolproof way to prevent *reentrancy attacks*,
+where an externally called malicious contract can double-spend an allowance, 
+double-withdraw a balance, among other things,
 by using logic that calls back into the original contract before it has finalized its transaction.
 
 Note that reentrancy is not only an effect of Ether transfer
@@ -129,9 +131,11 @@ A called contract could modify the state of another contract you depend on.
 Gas Limit and Loops
 ===================
 
-Loops that do not have a fixed number of iterations, for example, loops that depend on storage values, have to be used carefully:
+Loops that do not have a fixed number of iterations, for example,
+loops that depend on storage values, have to be used carefully:
 Due to the block gas limit, transactions can only consume a certain amount of gas.
-Either explicitly or just due to normal operation, the number of iterations in a loop can grow beyond the block gas limit
+Either explicitly or just due to normal operation,
+the number of iterations in a loop can grow beyond the block gas limit
 which can cause the complete contract to be stalled at a certain point.
 This may not apply to ``view`` functions that are only executed to read data from the blockchain.
 Still, such functions may be called by other contracts as part of on-chain operations and stall those.
@@ -184,15 +188,18 @@ Sending and Receiving Ether
 Call Stack Depth
 ================
 
-External function calls can fail at any time because they exceed the maximum call stack size limit of 1024.
+External function calls can fail at any time
+because they exceed the maximum call stack size limit of 1024.
 In such situations, Solidity throws an exception.
-Malicious actors might be able to force the call stack to a high value before they interact with your contract.
+Malicious actors might be able to force the call stack to a high value
+before they interact with your contract.
 Note that, since `Tangerine Whistle <https://eips.ethereum.org/EIPS/eip-608>`_ hardfork,
 the `63/64 rule <https://eips.ethereum.org/EIPS/eip-150>`_ makes call stack depth attack impractical.
 Also note that the call stack and the expression stack are unrelated,
 even though both have a size limit of 1024 stack slots.
 
-Note that ``.send()`` does **not** throw an exception if the call stack is depleted but rather returns ``false`` in that case.
+Note that ``.send()`` does **not** throw an exception if the call stack is depleted
+but rather returns ``false`` in that case.
 The low-level functions ``.call()``, ``.delegatecall()`` and ``.staticcall()`` behave in the same way.
 
 Authorized Proxies
@@ -276,7 +283,8 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
 
 If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet,
 instead of the owner's address.
-But by checking ``tx.origin``, it gets the original address that kicked off the transaction, which is still the owner's address.
+But by checking ``tx.origin``, it gets the original address that kicked off the transaction, 
+which is still the owner's address. 
 The attack wallet instantly drains all your funds.
 
 .. _underflow-overflow:
@@ -388,7 +396,9 @@ Any compiler warning we issue can be silenced by slight changes to the code.
 
 Always use the latest version of the compiler to be notified about all recently introduced warnings.
 
-Messages of type ``info``, issued by the compiler, are not dangerous and simply represent extra suggestions and optional information that the compiler thinks might be useful to the user.
+Messages of type ``info``, issued by the compiler, are not dangerous
+and simply represent extra suggestions and optional information
+that the compiler thinks might be useful to the user.
 
 Restrict the Amount of Ether
 ============================
@@ -404,13 +414,15 @@ Keep your contracts small and easily understandable.
 Single out unrelated functionality in other contracts or into libraries.
 General recommendations about the source code quality of course apply:
 Limit the amount of local variables, the length of functions and so on.
-Document your functions so that others can see what your intention was and whether it is different than what the code does.
+Document your functions so that others can see what your intention was
+and whether it is different than what the code does.
 
 Use the Checks-Effects-Interactions Pattern
 ===========================================
 
 Most functions will first perform some checks and they should be done first
-(who called the function, are the arguments in range, did they send enough Ether, does the person have tokens, etc.).
+(who called the function, are the arguments in range, did they send enough Ether,
+does the person have tokens, etc.).
 
 As the second step, if all checks passed, effects to the state variables of the current contract should be made.
 Interaction with other contracts should be the very last step in any function.
@@ -429,7 +441,8 @@ it might be a good idea, especially for new code, to include some kind of fail-s
 
 You can add a function in your smart contract that performs some self-checks like "Has any Ether leaked?",
 "Is the sum of the tokens equal to the balance of the contract?" or similar things.
-Keep in mind that you cannot use too much gas for that, so help through off-chain computations might be needed there.
+Keep in mind that you cannot use too much gas for that,
+so help through off-chain computations might be needed there.
 
 If the self-check fails, the contract automatically switches into some kind of "failsafe" mode,
 which, for example, disables most of the features,
