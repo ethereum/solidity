@@ -102,12 +102,15 @@ At least a day before the release:
 ### Post-release
  - [ ] Make sure the documentation for the new release has been published successfully.
        Go to the [documentation status page at ReadTheDocs](https://readthedocs.org/projects/solidity/) and verify that the new version is listed, works and is marked as default.
- - [ ] Remove "still in progress" warning from the release notes.
- - [ ] Publish the blog posts.
+ - [ ] Remove "still in progress" warning from the [release notes](https://github.com/ethereum/solidity/releases).
+ - [ ] Merge the [blog posts](https://github.com/ethereum/solidity-blog/pulls) related to the release.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
- - [ ] Announce on Twitter, including links to the release and the blog post.
-       Use ``#xp`` at the end of the tweet to automatically cross post the announcement to Fosstodon.
+ - [ ] Update the release information section [in the source of soliditylang.org](https://github.com/ethereum/solidity-portal/blob/master/index.html).
+ - [ ] Announce on [Twitter](https://twitter.com/solidity_lang), including links to the release and the blog post.
+ - [ ] Announce on [Fosstodon](https://fosstodon.org/@solidity/), including links to the release and the blog post.
  - [ ] Share the announcement on Reddit in [``/r/ethdev``](https://reddit.com/r/ethdev/), cross-posted to [``/r/ethereum``](https://reddit.com/r/ethereum/).
- - [ ] Share the announcement the [Solidity forum](https://forum.soliditylang.org) in the ``Announcements`` category.
- - [ ] Update the release information section on [soliditylang.org](https://github.com/ethereum/solidity-portal).
+ - [ ] Share the announcement on the [Solidity forum](https://forum.soliditylang.org) in the ``Announcements`` category.
+ - [ ] Share the announcement on [Project Updates](https://discord.com/channels/420394352083337236/798974456704925696)
+ - [ ] Share the announcement on [`#solidity` channel on Matrix](https://matrix.to/#/#ethereum_solidity:gitter.im)
+ - [ ] Share the announcement on [`#solc-tooling`](https://matrix.to/#/#solc-tooling:matrix.org)
  - [ ] Lean back, wait for bug reports and repeat from step 1 :).
