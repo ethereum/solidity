@@ -1,5 +1,10 @@
 ---
 name: Bug Report
+about: Problems, deficiencies, inaccuracies or crashes discovered on Solidity.
+title: ''
+labels: 'bug :bug:'
+assignees: ''
+
 ---
 
 <!--## Prerequisites
