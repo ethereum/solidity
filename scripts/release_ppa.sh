@@ -173,7 +173,7 @@ Build-Depends: ${SMTDEPENDENCY}debhelper (>= 9.0.0),
                scons
 Standards-Version: 3.9.5
 Homepage: https://ethereum.org
-Vcs-Git: git://github.com/ethereum/solidity.git
+Vcs-Git: https://github.com/ethereum/solidity.git
 Vcs-Browser: https://github.com/ethereum/solidity
 
 Package: solc

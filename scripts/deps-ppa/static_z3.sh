@@ -89,7 +89,7 @@ Build-Depends: debhelper (>= 9.0.0),
                python3
 Standards-Version: 3.9.6
 Homepage: https://github.com/Z3Prover/z3
-Vcs-Git: git://github.com/Z3Prover/z3.git
+Vcs-Git: https://github.com/Z3Prover/z3.git
 Vcs-Browser: https://github.com/Z3Prover/z3
 
 Package: z3-static
