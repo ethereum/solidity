@@ -11,7 +11,7 @@ Solidity v0.8.0 Breaking Changes
 This section highlights the main breaking changes introduced in Solidity
 version 0.8.0.
 For the full list check
-`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.8.0>`_.
+`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.8.0>`__.
 
 Silent Changes of the Semantics
 ===============================
