@@ -11,7 +11,7 @@ Solidity v0.8.0 Breaking Changes
 This section highlights the main breaking changes introduced in Solidity
 version 0.8.0.
 For the full list check
-`the 0.8.0 release changelog <https://github.com/ethereum/solidity/releases/tag/v0.8.0>`__.
+`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.8.0>`__.
 
 Silent Changes of the Semantics
 ===============================
@@ -189,7 +189,7 @@ This section highlights the main breaking changes introduced in Solidity
 version 0.7.0, along with the reasoning behind the changes and how to update
 affected code.
 For the full list check
-`the 0.7.0 release changelog <https://github.com/ethereum/solidity/releases/tag/v0.7.0>`__.
+`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.7.0>`__.
 
 
 Silent Changes of the Semantics
@@ -323,7 +323,7 @@ This section highlights the main breaking changes introduced in Solidity
 version 0.6.0, along with the reasoning behind the changes and how to update
 affected code.
 For the full list check
-`the 0.6.0 release changelog <https://github.com/ethereum/solidity/releases/tag/v0.6.0>`__.
+`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.6.0>`__.
 
 
 Changes the Compiler Might not Warn About
@@ -426,13 +426,13 @@ the compiler. These may change the way how you use the compiler on the command l
 interface, or how you analyze the output produced by it.
 
 New Error Reporter
-~~~~~~~~~~~~~~~~~~
+------------------
 
 A new error reporter was introduced, which aims at producing more accessible error messages on the command line.
 It is enabled by default, but passing ``--old-reporter`` falls back to the the deprecated old error reporter.
 
 Metadata Hash Options
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 The compiler now appends the `IPFS <https://ipfs.io/>`_ hash of the metadata file to the end of the bytecode by default
 (for details, see documentation on :doc:`contract metadata <metadata>`). Before 0.6.0, the compiler appended the
@@ -447,14 +447,14 @@ The recommended way to read the metadata is to read the last two bytes to determ
 and perform a proper decoding on that data block as explained in the :ref:`metadata section<encoding-of-the-metadata-hash-in-the-bytecode>`.
 
 Yul Optimizer
-~~~~~~~~~~~~~
+-------------
 
 Together with the legacy bytecode optimizer, the :doc:`Yul <yul>` optimizer is now enabled by default when you call the compiler
 with ``--optimize``. It can be disabled by calling the compiler with ``--no-optimize-yul``.
 This mostly affects code that uses ABI coder v2.
 
 C API Changes
-~~~~~~~~~~~~~
+-------------
 
 The client code that uses the C API of ``libsolc`` is now in control of the memory used by the compiler. To make
 this change consistent, ``solidity_free`` was renamed to ``solidity_reset``, the functions ``solidity_alloc`` and
@@ -505,7 +505,7 @@ This section highlights the main breaking changes introduced in Solidity
 version 0.5.0, along with the reasoning behind the changes and how to update
 affected code.
 For the full list check
-`the 0.5.0 release changelog <https://github.com/ethereum/solidity/releases/tag/v0.5.0>`__.
+`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.5.0>`__.
 
 .. note::
    Contracts compiled with Solidity v0.5.0 can still interface with contracts
