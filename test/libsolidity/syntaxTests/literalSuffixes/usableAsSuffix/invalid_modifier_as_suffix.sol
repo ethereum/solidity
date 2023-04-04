@@ -4,4 +4,4 @@ contract C {
     modifier suffix(uint x) { _; }
 }
 // ----
-// TypeError 5704: (26-37): This object cannot be used as a literal suffix.
+// TypeError 5704: (26-37): Modifier cannot be used as a literal suffix.

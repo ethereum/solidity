@@ -4,4 +4,4 @@ contract C {
     uint x = 1000 suffix();
 }
 // ----
-// TypeError 5704: (100-113): This object is not callable.
+// TypeError 5704: (100-113): Integer is not callable.

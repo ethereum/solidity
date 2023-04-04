@@ -6,4 +6,4 @@ contract C {
     uint a = 1000 A;
 }
 // ----
-// TypeError 5704: (B.sol:48-54): This object cannot be used as a literal suffix.
+// TypeError 5704: (B.sol:48-54): Module cannot be used as a literal suffix.
