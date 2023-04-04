@@ -14,4 +14,4 @@ contract C {
     }
 }
 // ----
-// Warning 5740: (B.sol:94-164): Unreachable code.
+// Warning 5740: (B.sol:94-115): Unreachable code.
