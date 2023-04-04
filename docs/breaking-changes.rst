@@ -505,7 +505,7 @@ This section highlights the main breaking changes introduced in Solidity
 version 0.5.0, along with the reasoning behind the changes and how to update
 affected code.
 For the full list check
-`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.5.0>`_.
+`the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.5.0>`__.
 
 .. note::
    Contracts compiled with Solidity v0.5.0 can still interface with contracts
