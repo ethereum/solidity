@@ -47,33 +47,7 @@ commands:
       - run:
           name: "Matrix notification"
           when: << parameters.condition >>
-          command: |
-            # FIXME: Checking $CIRCLE_PULL_REQUEST would be better than hard-coding branch names
-            # but it's broken. CircleCI associates runs on develop/breaking with random old PRs.
-            [[ $CIRCLE_BRANCH == develop || $CIRCLE_BRANCH == breaking ]] || { echo "Running on a PR or a feature branch - notification skipped."; exit 0; }
-
-            # Workflow name is not exposed as an env variable. Has to be queried from the API.
-            # The name is not critical so if anything fails, use the raw workflow ID as a fallback.
-            workflow_info=$(curl --silent "https://circleci.com/api/v2/workflow/${CIRCLE_WORKFLOW_ID}") || true
-            workflow_name=$(echo "$workflow_info" | grep -E '"\s*name"\s*:\s*".*"' | cut -d \" -f 4 || echo "$CIRCLE_WORKFLOW_ID")
-
-            [[ $CIRCLE_NODE_TOTAL == 1 ]] && job="**${CIRCLE_JOB}**"
-            [[ $CIRCLE_NODE_TOTAL != 1 ]] && job="**${CIRCLE_JOB}** (run $((CIRCLE_NODE_INDEX + 1))/${CIRCLE_NODE_TOTAL})"
-
-            [[ "<< parameters.event >>" == "failure" ]] && message=" ❌ [${workflow_name}] Job ${job} failed on **${CIRCLE_BRANCH}**. Please see [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
-            [[ "<< parameters.event >>" == "success" ]] && message=" ✅ [${workflow_name}] Job ${job} succeeded on **${CIRCLE_BRANCH}**. Please see [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}) for details."
-            [[ "<< parameters.event >>" == "release" ]] && message=" 📦 Release binaries for version **${CIRCLE_TAG}** are ready and attached as artifacts to [build ${CIRCLE_BUILD_NUM}](${CIRCLE_BUILD_URL}). **Please make sure the whole workflow succeeded before using them.**"
-
-            # The release notification only makes sense on tagged commits. If the commit is untagged, just bail out.
-            [[ "<< parameters.event >>" == "release" ]] && { [[ $CIRCLE_TAG != "" ]] || { echo "Not a tagged commit - notification skipped."; exit 0; } }
-
-            curl "https://${MATRIX_SERVER}/_matrix/client/v3/rooms/${MATRIX_NOTIFY_ROOM_ID}/send/m.room.message" \
-              --request POST \
-              --include \
-              --header "Content-Type: application/json" \
-              --header "Accept: application/json" \
-              --header "Authorization: Bearer ${MATRIX_ACCESS_TOKEN}" \
-              --data "{\"msgtype\":\"m.text\", \"body\":\"${message}\"}"
+          command: scripts/ci/notification/matrix_notification.sh << parameters.event >>
 
   matrix_notify_failure_unless_pr:
     description: "Posts a failure notification to the main room on Matrix (if not running on a PR)."
