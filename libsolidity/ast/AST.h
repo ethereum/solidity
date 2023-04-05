@@ -2385,8 +2385,6 @@ private:
 
 /**
  * A literal string or number. @see ExpressionCompiler::endVisit() is used to actually parse its value.
- *
- * It can have a suffix that can lead to a function call.
  */
 class Literal: public PrimaryExpression
 {
@@ -2404,41 +2402,24 @@ public:
 		Week = static_cast<int>(Token::SubWeek),
 		Year = static_cast<int>(Token::SubYear)
 	};
-	using Suffix = std::variant<SubDenomination, ASTPointer<Identifier>, ASTPointer<MemberAccess>>;
 	Literal(
 		int64_t _id,
 		SourceLocation const& _location,
 		Token _token,
 		ASTPointer<ASTString> _value,
-		Suffix _suffix = SubDenomination::None
+		SubDenomination _sub = SubDenomination::None
 	):
-		PrimaryExpression(_id, _location), m_token(_token), m_value(std::move(_value)), m_suffix(std::move(_suffix)) {}
+		PrimaryExpression(_id, _location), m_token(_token), m_value(std::move(_value)), m_subDenomination(_sub) {}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	Token token() const { return m_token; }
 	/// @returns the non-parsed value of the literal
 	ASTString const& value() const { return *m_value; }
-	Type const& typeOfValue() const;
 
 	ASTString valueWithoutUnderscores() const;
 
-	/// @returns The subdenomination represented by the suffix.
-	/// Must not be called if the suffix is not a subdenomination.
-	SubDenomination subDenomination() const;
-	/// @returns The suffix of the literal. Does not check whether the suffix is present or is a
-	/// subdenomination.
-	/// @note Missing suffix is represented by SubDenomination::None.
-	Suffix const& suffix() const { return m_suffix; }
-	/// @returns Function definition associated with the suffix if the suffix is not a subdenomination.
-	/// nullptr otherwise.
-	FunctionDefinition const* suffixFunction() const;
-	FunctionType const* suffixFunctionType() const;
-
-	/// @returns true if the literal is suffixed with either a subdenomination or a suffix function.
-	bool isSuffixed() const;
-	/// @returns true if the literal is suffixed a subdenomination.
-	bool hasSubDenomination() const;
+	SubDenomination subDenomination() const { return m_subDenomination; }
 
 	/// @returns true if this is a number with a hex prefix.
 	bool isHexNumber() const;
@@ -2453,7 +2434,7 @@ public:
 private:
 	Token m_token;
 	ASTPointer<ASTString> m_value;
-	Suffix m_suffix;
+	SubDenomination m_subDenomination;
 };
 
 /// @}

@@ -343,17 +343,19 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		else if (optional<ConstantEvaluator::TypedRational> value = ConstantEvaluator::evaluate(m_errorReporter, *length))
 			lengthValue = value->value;
 
-		string suffixErrorMessage;
-		if (auto const* lengthLiteral = dynamic_cast<Literal const*>(length))
-			if (lengthLiteral->isSuffixed() && !lengthLiteral->hasSubDenomination())
-				suffixErrorMessage = " A suffixed literal is not a constant expression unless the suffix is a denomination.";
+		if (!lengthValue)
+		{
+			string suffixErrorMessage;
+			if (auto const* functionCall = dynamic_cast<FunctionCall const*>(length))
+				if (functionCall->isSuffixCall())
+					suffixErrorMessage = " A suffixed literal is not a constant expression unless the suffix is a subdenomination.";
 
-		if (!lengthValue || !suffixErrorMessage.empty())
 			m_errorReporter.typeError(
 				5462_error,
 				length->location(),
 				"Invalid array length, expected integer literal or constant expression." + suffixErrorMessage
 			);
+		}
 		else if (*lengthValue == 0)
 			m_errorReporter.typeError(1406_error, length->location(), "Array with zero length specified.");
 		else if (lengthValue->denominator() != 1)

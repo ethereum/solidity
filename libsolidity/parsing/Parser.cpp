@@ -2008,7 +2008,6 @@ ASTPointer<Expression> Parser::parseLiteral()
 	ASTNodeFactory nodeFactory(*this);
 	Token initialToken = m_scanner->currentToken();
 	ASTPointer<ASTString> value = make_shared<string>(m_scanner->currentLiteral());
-	Literal::Suffix suffix = Literal::SubDenomination::None;
 
 	switch (initialToken)
 	{
@@ -2046,50 +2045,35 @@ ASTPointer<Expression> Parser::parseLiteral()
 	))
 	{
 		nodeFactory.markEndPosition();
-		suffix = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
+		Literal::SubDenomination subDenomination = static_cast<Literal::SubDenomination>(m_scanner->currentToken());
 		advance();
-		return nodeFactory.createNode<Literal>(initialToken, std::move(value), std::move(suffix));
+		return nodeFactory.createNode<Literal>(initialToken, std::move(value), subDenomination);
 	}
-
-	// TMP: Suffix should be removed from AST or at least changed
-
-	if (m_scanner->currentToken() != Token::Identifier)
-		return nodeFactory.createNode<Literal>(initialToken, std::move(value), std::move(suffix));
+	else if (m_scanner->currentToken() != Token::Identifier)
+		// TODO: Don't we need markEndPosition() here?
+		return nodeFactory.createNode<Literal>(initialToken, std::move(value), Literal::SubDenomination::None);
 
 	// TODO: Make sure locations are set correctly
 	ASTPointer<ASTString> suffixName = make_shared<ASTString>(m_scanner->currentLiteral());
 	nodeFactory.markEndPosition();
-	ASTPointer<Identifier> identifier = nodeFactory.createNode<Identifier>(suffixName);
 
+	ASTPointer<Expression> callExpression = nodeFactory.createNode<Identifier>(suffixName);
 	advance();
 
-	ASTPointer<Expression> callExpression;
-	if (m_scanner->currentToken() != Token::Period)
+	while (m_scanner->currentToken() == Token::Period)
 	{
-		callExpression = identifier;
-		suffix = std::move(identifier);
-	}
-	else
-	{
-		callExpression = std::move(identifier);
-		do
-		{
-			// FIXME: This grabs the semicolon
-			advance();
-			nodeFactory.markEndPosition();
-			SourceLocation memberLocation = currentLocation();
-			ASTPointer<ASTString> memberName = expectIdentifierToken();
-			callExpression = nodeFactory.createNode<MemberAccess>(std::move(callExpression), std::move(memberName), std::move(memberLocation));
-		}
-		while (m_scanner->currentToken() == Token::Period);
-
-		suffix = dynamic_pointer_cast<MemberAccess>(callExpression);
+		// FIXME: This grabs the semicolon
+		advance();
+		nodeFactory.markEndPosition();
+		SourceLocation memberLocation = currentLocation();
+		ASTPointer<ASTString> memberName = expectIdentifierToken();
+		callExpression = nodeFactory.createNode<MemberAccess>(std::move(callExpression), std::move(memberName), std::move(memberLocation));
 	}
 
 	return nodeFactory.createNode<FunctionCall>(
 		std::move(callExpression),
 		std::vector<ASTPointer<Expression>>{
-			nodeFactory.createNode<Literal>(initialToken, std::move(value), std::move(suffix))
+			nodeFactory.createNode<Literal>(initialToken, std::move(value), Literal::SubDenomination::None)
 		},
 		vector<ASTPointer<ASTString>>{},
 		vector<SourceLocation>{},

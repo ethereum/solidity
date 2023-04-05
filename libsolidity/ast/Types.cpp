@@ -998,36 +998,34 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		return make_tuple(false, rational(0));
 	}
 
-	if (_literal.hasSubDenomination())
-		switch (_literal.subDenomination())
-		{
-		case Literal::SubDenomination::None:
-		case Literal::SubDenomination::Wei:
-		case Literal::SubDenomination::Second:
-			break;
-		case Literal::SubDenomination::Gwei:
-			value *= bigint("1000000000");
-			break;
-		case Literal::SubDenomination::Ether:
-			value *= bigint("1000000000000000000");
-			break;
-		case Literal::SubDenomination::Minute:
-			value *= bigint("60");
-			break;
-		case Literal::SubDenomination::Hour:
-			value *= bigint("3600");
-			break;
-		case Literal::SubDenomination::Day:
-			value *= bigint("86400");
-			break;
-		case Literal::SubDenomination::Week:
-			value *= bigint("604800");
-			break;
-		case Literal::SubDenomination::Year:
-			value *= bigint("31536000");
-			break;
-		}
-	// TODO: Do we need to consider literal suffixes here?
+	switch (_literal.subDenomination())
+	{
+	case Literal::SubDenomination::None:
+	case Literal::SubDenomination::Wei:
+	case Literal::SubDenomination::Second:
+		break;
+	case Literal::SubDenomination::Gwei:
+		value *= bigint("1000000000");
+		break;
+	case Literal::SubDenomination::Ether:
+		value *= bigint("1000000000000000000");
+		break;
+	case Literal::SubDenomination::Minute:
+		value *= bigint("60");
+		break;
+	case Literal::SubDenomination::Hour:
+		value *= bigint("3600");
+		break;
+	case Literal::SubDenomination::Day:
+		value *= bigint("86400");
+		break;
+	case Literal::SubDenomination::Week:
+		value *= bigint("604800");
+		break;
+	case Literal::SubDenomination::Year:
+		value *= bigint("31536000");
+		break;
+	}
 
 	return make_tuple(true, value);
 }

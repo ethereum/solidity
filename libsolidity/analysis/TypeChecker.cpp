@@ -4056,7 +4056,7 @@ bool TypeChecker::visit(Literal const& _literal)
 			);
 	}
 
-	if (_literal.isHexNumber() && _literal.hasSubDenomination())
+	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
 		m_errorReporter.fatalTypeError(
 			5145_error,
 			_literal.location(),
@@ -4064,7 +4064,7 @@ bool TypeChecker::visit(Literal const& _literal)
 			"You can use an expression of the form \"0x1234 * 1 day\" instead."
 		);
 
-	if (_literal.hasSubDenomination() && _literal.subDenomination() == Literal::SubDenomination::Year)
+	if (_literal.subDenomination() == Literal::SubDenomination::Year)
 		m_errorReporter.typeError(
 			4820_error,
 			_literal.location(),

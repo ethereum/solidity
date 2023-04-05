@@ -237,6 +237,7 @@
             "isConstant": false,
             "isLValue": false,
             "isPure": false,
+            "isSuffixCall": true,
             "kind": "functionCall",
             "lValueRequested": false,
             "nameLocations": [],
