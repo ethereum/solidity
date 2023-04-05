@@ -5,9 +5,9 @@ Language Features:
 
 Compiler Features:
  * NatSpec: Add support for NatSpec documentation in ``enum`` definitions.
+ * Optimizer: Re-implement simplified version of UnusedAssignEliminator and UnusedStoreEliminator. It can correctly remove some unused assignments in deeply nested loops that were ignored by the old version.
  * SMTChecker: Properties that are proved safe are now reported explicitly at the end of the analysis. By default, only the number of safe properties is shown. The CLI option ``--model-checker-show-proved-safe`` and the JSON option ``settings.modelChecker.showProvedSafe`` can be enabled to show the full list of safe properties.
  * SMTChecker: Group all messages about unsupported language features in a single warning. The CLI option ``--model-checker-show-unsupported`` and the JSON option ``settings.modelChecker.showUnsupported`` can be enabled to show the full list.
- * Optimizer: Re-implement simplified version of UnusedAssignEliminator and UnusedStoreEliminator. It can correctly remove some unused assignments in deeply nested loops that were ignored by the old version.
 
 
 Bugfixes:
