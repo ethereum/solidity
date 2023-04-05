@@ -737,7 +737,7 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
 
-class EnumDefinition: public Declaration, public ScopeOpener
+class EnumDefinition: public Declaration, public StructurallyDocumented, public ScopeOpener
 {
 public:
 	EnumDefinition(
@@ -745,9 +745,14 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		SourceLocation _nameLocation,
-		std::vector<ASTPointer<EnumValue>> _members
+		std::vector<ASTPointer<EnumValue>> _members,
+		ASTPointer<StructuredDocumentation> _documentation
 	):
-		Declaration(_id, _location, _name, std::move(_nameLocation)), m_members(std::move(_members)) {}
+		Declaration(_id, _location, _name, std::move(_nameLocation)),
+		StructurallyDocumented(std::move(_documentation)),
+		m_members(std::move(_members))
+	{}
+
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 

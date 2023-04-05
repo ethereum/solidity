@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	s.annotation().recursive = false;
 	BOOST_CHECK_EQUAL(s.type()->identifier(), "t_type$_t_struct$_Struct_$3_storage_ptr_$");
 
-	EnumDefinition e(++id, {}, make_shared<string>("Enum"), {}, {});
+	EnumDefinition e(++id, {}, make_shared<string>("Enum"), {}, {}, {});
 	BOOST_CHECK_EQUAL(e.type()->identifier(), "t_type$_t_enum$_Enum_$4_$");
 
 	TupleType t({e.type(), s.type(), stringArray, nullptr});
