@@ -429,7 +429,7 @@ literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | uni
 
 literalWithSubDenomination: numberLiteral SubDenomination;
 
-suffixedLiteral: literal identifier;
+suffixedLiteral: literal identifier (Period identifier)*;
 
 booleanLiteral: True | False;
 /**
