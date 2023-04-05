@@ -877,7 +877,8 @@ bool ASTJsonExporter::visit(FunctionCall const& _node)
 		make_pair("names", std::move(names)),
 		make_pair("nameLocations", sourceLocationsToJson(_node.nameLocations())),
 		make_pair("arguments", toJson(_node.arguments())),
-		make_pair("tryCall", _node.annotation().tryCall)
+		make_pair("tryCall", _node.annotation().tryCall),
+		make_pair("isSuffixCall", _node.isSuffixCall())
 	};
 
 	if (_node.annotation().kind.set())
@@ -984,15 +985,17 @@ bool ASTJsonExporter::visit(Literal const& _node)
 	Json::Value value{_node.value()};
 	if (!util::validateUTF8(_node.value()))
 		value = Json::nullValue;
-	Json::Value subdenomination = Json::nullValue;
-//	if (auto subden = get_if<Literal::SubDenomination>(&_node.suffix()))
-//		subdenomination = Json::Value{TokenTraits::toString(*subden)};
-	// TODO suffix
+	Token subdenomination = Token(_node.subDenomination());
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("kind", literalTokenKind(_node.token())),
 		make_pair("value", value),
 		make_pair("hexValue", util::toHex(util::asBytes(_node.value()))),
-		make_pair("subdenomination", subdenomination)
+		make_pair(
+			"subdenomination",
+			subdenomination == Token::Illegal ?
+			Json::nullValue :
+			Json::Value{TokenTraits::toString(subdenomination)}
+		)
 	};
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "Literal", std::move(attributes));

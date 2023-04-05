@@ -964,7 +964,8 @@ ASTPointer<FunctionCall> ASTJsonImporter::createFunctionCall(Json::Value const& 
 		names,
 		sourceLocations ?
 			*sourceLocations :
-			vector<SourceLocation>(names.size())
+			vector<SourceLocation>(names.size()),
+		member(_node, "isSuffixCall")
 	);
 }
 
