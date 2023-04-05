@@ -25,6 +25,8 @@ contract C {
         return L.run();
     }
 }
+// ====
+// EVMVersion: >=byzantium
 // ----
 // library: L
 // run() -> 0x20, 0x11, "contract function"

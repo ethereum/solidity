@@ -94,6 +94,8 @@ contract C is D(10 str) {
         return (0 iszero, 1 iszero);
     }
 }
+// ====
+// EVMVersion: >=constantinople
 // ----
 // counter() -> 13
 // testModifier() ->
