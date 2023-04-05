@@ -2847,7 +2847,11 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 
 	default:
-		m_errorReporter.fatalTypeError(5704_error, _functionCall.location(), "Type is not callable");
+		m_errorReporter.fatalTypeError(
+			5704_error,
+			_functionCall.location(),
+			capitalized(Type::categoryName(expressionType->category())) + " is not callable."
+		);
 		// Unreachable, because fatalTypeError throws. We don't set kind, but that's okay because the switch below
 		// is never reached. And, even if it was, SetOnce would trigger an assertion violation and not UB.
 		funcCallAnno.isPure = argumentsArePure;
