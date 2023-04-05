@@ -107,7 +107,9 @@ contract C is D(10 str) {
 // testError() -> FAILURE, hex"83e31485", 0x40, 0x04, 0x03, "abc"
 // testMemoryAllocation() -> 5
 // testNewContract() -> 3
+// gas irOptimized: 111878
 // gas legacy: 185340
+// gas legacyOptimized: 118889
 // testAttachedCall() -> 6
 // testCondition() -> 1
 // testAssert() ->
