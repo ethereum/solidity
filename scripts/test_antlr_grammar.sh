@@ -129,7 +129,8 @@ done < <(
       grep -v -E 'license/license_hidden_unicode.sol' |
       grep -v -E 'license/license_unicode.sol' |
       # Skipping tests with 'something.address' as 'address' as the grammar fails on those
-      grep -v -E 'inlineAssembly/external_function_pointer_address.*.sol'
+      grep -v -E 'inlineAssembly/external_function_pointer_address.*.sol' |
+      grep -v -E 'literalSuffixes/application/invalid_address_member_on_suffix.sol'
 )
 
 YUL_FILES=()
