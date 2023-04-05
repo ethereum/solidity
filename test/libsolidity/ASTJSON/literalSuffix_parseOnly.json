@@ -1,6 +1,6 @@
 {
   "absolutePath": "a",
-  "id": 16,
+  "id": 17,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -111,7 +111,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "id": 15,
+      "id": 16,
       "name": "C",
       "nameLocation": "75:1:1",
       "nodeType": "ContractDefinition",
@@ -119,7 +119,7 @@
       [
         {
           "constant": false,
-          "id": 14,
+          "id": 15,
           "mutability": "mutable",
           "name": "s",
           "nameLocation": "90:1:1",
@@ -138,13 +138,34 @@
           },
           "value":
           {
-            "hexValue": "3132332e3334355f373839",
-            "id": 13,
-            "kind": "number",
-            "nodeType": "Literal",
+            "arguments":
+            [
+              {
+                "hexValue": "3132332e3334355f373839",
+                "id": 13,
+                "kind": "number",
+                "nodeType": "Literal",
+                "src": "94:15:1",
+                "typeDescriptions": {},
+                "value": "123.345_789"
+              }
+            ],
+            "expression":
+            {
+              "id": 12,
+              "name": "str",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "src": "94:15:1",
+              "typeDescriptions": {}
+            },
+            "id": 14,
+            "nameLocations": [],
+            "names": [],
+            "nodeType": "FunctionCall",
             "src": "94:15:1",
-            "typeDescriptions": {},
-            "value": "123.345_789"
+            "tryCall": false,
+            "typeDescriptions": {}
           },
           "visibility": "internal"
         }

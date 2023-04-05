@@ -4,14 +4,14 @@
   {
     "C":
     [
-      15
+      16
     ],
     "str":
     [
       10
     ]
   },
-  "id": 16,
+  "id": 17,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -138,7 +138,7 @@
         ],
         "src": "47:15:1"
       },
-      "scope": 16,
+      "scope": 17,
       "src": "0:65:1",
       "stateMutability": "pure",
       "suffix": true,
@@ -152,10 +152,10 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 15,
+      "id": 16,
       "linearizedBaseContracts":
       [
-        15
+        16
       ],
       "name": "C",
       "nameLocation": "75:1:1",
@@ -164,12 +164,12 @@
       [
         {
           "constant": false,
-          "id": 14,
+          "id": 15,
           "mutability": "mutable",
           "name": "s",
           "nameLocation": "90:1:1",
           "nodeType": "VariableDeclaration",
-          "scope": 15,
+          "scope": 16,
           "src": "83:26:1",
           "stateVariable": true,
           "storageLocation": "default",
@@ -192,26 +192,68 @@
           },
           "value":
           {
-            "hexValue": "3132332e3334355f373839",
-            "id": 13,
+            "arguments":
+            [
+              {
+                "hexValue": "3132332e3334355f373839",
+                "id": 13,
+                "isConstant": false,
+                "isLValue": false,
+                "isPure": true,
+                "kind": "number",
+                "lValueRequested": false,
+                "nodeType": "Literal",
+                "src": "94:15:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_rational_123345789_by_1000000",
+                  "typeString": "rational_const 123345789 / 1000000"
+                },
+                "value": "123.345_789"
+              }
+            ],
+            "expression":
+            {
+              "argumentTypes":
+              [
+                {
+                  "typeIdentifier": "t_rational_123345789_by_1000000",
+                  "typeString": "rational_const 123345789 / 1000000"
+                }
+              ],
+              "id": 12,
+              "name": "str",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "referencedDeclaration": 10,
+              "src": "94:15:1",
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_function_internal_pure$_t_uint32_$_t_uint256_$returns$_t_string_memory_ptr_$",
+                "typeString": "function (uint32,uint256) pure returns (string memory)"
+              }
+            },
+            "id": 14,
             "isConstant": false,
             "isLValue": false,
             "isPure": false,
-            "kind": "number",
+            "kind": "functionCall",
             "lValueRequested": false,
-            "nodeType": "Literal",
+            "nameLocations": [],
+            "names": [],
+            "nodeType": "FunctionCall",
             "src": "94:15:1",
+            "tryCall": false,
             "typeDescriptions":
             {
               "typeIdentifier": "t_string_memory_ptr",
               "typeString": "string memory"
-            },
-            "value": "123.345_789"
+            }
           },
           "visibility": "internal"
         }
       ],
-      "scope": 16,
+      "scope": 17,
       "src": "66:46:1",
       "usedErrors": []
     }
