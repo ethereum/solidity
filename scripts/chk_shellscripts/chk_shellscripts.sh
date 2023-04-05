@@ -14,4 +14,4 @@ if [ ! -f "${SHELLCHECK}" ]; then
 fi
 
 mapfile -t FILES < <(find . -type f -name "*.sh")
-"${SHELLCHECK}" "${FILES[@]}"
+"${SHELLCHECK}" -o all "${FILES[@]}"
