@@ -173,4 +173,4 @@ How to update your code
 - Change ``msg.sender.transfer(x)`` to ``payable(msg.sender).transfer(x)`` or use a stored variable of ``address payable`` type.
 - Change ``x**y**z`` to ``(x**y)**z``.
 - Use inline assembly as a replacement for ``log0``, ..., ``log4``.
-- Negate unsigned integers by subtracting them from the maximum value of the type and adding 1 (e.g. ``type(uint256).max - x + 1``, while ensuring that `x` is not zero)
+- Negate unsigned integers by subtracting them from the maximum value of the type and adding 1 (e.g. ``type(uint256).max - x + 1``, while ensuring that ``x`` is not zero)
