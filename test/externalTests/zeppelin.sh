@@ -67,6 +67,8 @@ function zeppelin_test
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
     # TODO: Remove the lines below when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3750).
     sed -i "s|it(\('proxy admin cannot call delegated functions',\)|it.skip(\1|g" test/proxy/transparent/TransparentUpgradeableProxy.behaviour.js
+    sed -i "s|describe(\('when the given implementation is the zero address'\)|describe.skip(\1|g" test/proxy/transparent/TransparentUpgradeableProxy.behaviour.js
+    sed -i "s|describe(\('when the new proposed admin is the zero address'\)|describe.skip(\1|g" test/proxy/transparent/TransparentUpgradeableProxy.behaviour.js
     # In some cases Hardhat does not detect revert reasons properly via IR.
     sed -i "s|it(\('reverts if the current value is 0'\)|it.skip(\1|g" test/utils/Counters.test.js
     sed -i "s|it(\('prevent unauthorized maintenance'\)|it.skip(\1|g" test/governance/TimelockController.test.js
