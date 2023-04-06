@@ -155,16 +155,6 @@ if "%1" == "latexpdf" (
 	goto end
 )
 
-if "%1" == "latexpdfja" (
-	%SPHINXBUILD% -b latex %ALLSPHINXOPTS% %BUILDDIR%/latex
-	cd %BUILDDIR%/latex
-	make all-pdf-ja
-	cd %BUILDDIR%/..
-	echo.
-	echo.Build finished; the PDF files are in %BUILDDIR%/latex.
-	goto end
-)
-
 if "%1" == "text" (
 	%SPHINXBUILD% -b text %ALLSPHINXOPTS% %BUILDDIR%/text
 	if errorlevel 1 exit /b 1
