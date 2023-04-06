@@ -161,6 +161,7 @@ private:
 		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parseLiteral();
+	ASTPointer<Expression> parseLiteralSuffix();
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 
