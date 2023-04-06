@@ -3893,7 +3893,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 							auto&& [mantissa, exponent] = literalRationalType->mantissaExponent();
 							// This was already validated in visit(Literal) but the error is not fatal.
 							if (!mantissa || !exponent)
-								solAssert(!m_errorReporter.errors().empty());
+								solAssert(m_errorReporter.hasErrors());
 							else
 								argumentsMatch = functionType->canTakeArguments({{mantissa, exponent}, {}});
 						}
