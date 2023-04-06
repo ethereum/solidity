@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// ParserError 2314: (58-63): Expected ';' but got identifier
+// DeclarationError 7576: (58-63): Undeclared identifier.

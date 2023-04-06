@@ -2050,7 +2050,44 @@ ASTPointer<Expression> Parser::parseLiteral()
 		return nodeFactory.createNode<Literal>(initialToken, std::move(value), subDenomination);
 	}
 
-	return nodeFactory.createNode<Literal>(initialToken, std::move(value), Literal::SubDenomination::None);
+	ASTPointer<Literal> literal = nodeFactory.createNode<Literal>(initialToken, std::move(value), Literal::SubDenomination::None);
+
+	if (m_scanner->currentToken() != Token::Identifier)
+		return literal;
+
+	ASTPointer<Expression> suffix = parseLiteralSuffix();
+	nodeFactory.setEndPositionFromNode(suffix);
+
+	return nodeFactory.createNode<FunctionCall>(
+		std::move(suffix),
+		std::vector<ASTPointer<Expression>>{std::move(literal)},
+		vector<ASTPointer<ASTString>>{},
+		vector<SourceLocation>{},
+		true /* _isSuffixCall */
+	);
+}
+
+ASTPointer<Expression> Parser::parseLiteralSuffix()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	nodeFactory.markEndPosition();
+	ASTPointer<Expression> suffix = nodeFactory.createNode<Identifier>(expectIdentifierToken());
+
+	while (m_scanner->currentToken() == Token::Period)
+	{
+		advance();
+		SourceLocation memberLocation = currentLocation();
+		nodeFactory.markEndPosition();
+		suffix = nodeFactory.createNode<MemberAccess>(
+			std::move(suffix),
+			expectIdentifierToken(),
+			std::move(memberLocation)
+		);
+	}
+
+	return suffix;
 }
 
 ASTPointer<Expression> Parser::parsePrimaryExpression()
