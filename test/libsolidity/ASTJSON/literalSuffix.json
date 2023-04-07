@@ -214,13 +214,6 @@
             ],
             "expression":
             {
-              "argumentTypes":
-              [
-                {
-                  "typeIdentifier": "t_rational_123345789_by_1000000",
-                  "typeString": "rational_const 123345789 / 1000000"
-                }
-              ],
               "id": 13,
               "name": "str",
               "nodeType": "Identifier",

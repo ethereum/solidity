@@ -5,4 +5,4 @@ contract C {
     uint a = 1.27 iuSuffix;
 }
 // ----
-// TypeError 4487: (151-159): No unique declaration found after argument-dependent lookup.
+// TypeError 2144: (151-159): No matching declaration found after variable lookup.

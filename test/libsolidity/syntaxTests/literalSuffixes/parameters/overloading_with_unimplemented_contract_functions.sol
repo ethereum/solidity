@@ -7,4 +7,4 @@ abstract contract C {
     }
 }
 // ----
-// TypeError 9322: (194-200): No matching declaration found after argument-dependent lookup.
+// TypeError 2144: (194-200): No matching declaration found after variable lookup.
