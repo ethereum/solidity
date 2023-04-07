@@ -633,3 +633,22 @@ code.docutils.literal.notranslate {
 a.remix-link {
     filter: invert(1); /* The icon is black. In dark mode we want it white. */
 }
+
+
+/* Grammar */
+
+.railroad-diagram {
+    fill: white;
+}
+
+.railroad-diagram path {
+    stroke: white;
+}
+
+.railroad-diagram rect {
+    stroke: white;
+}
+
+.a4 .sig-name {
+    background-color: transparent !important;
+}
