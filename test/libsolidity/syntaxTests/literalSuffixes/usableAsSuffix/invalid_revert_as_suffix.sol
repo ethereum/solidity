@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9322: (54-60): No matching declaration found after argument-dependent lookup.
+// TypeError 2144: (54-60): No matching declaration found after variable lookup.

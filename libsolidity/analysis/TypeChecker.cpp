@@ -3021,10 +3021,6 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 
 bool TypeChecker::visit(FunctionCall const& _functionCall)
 {
-	solAssert(!m_currentSuffixCall);
-	if (_functionCall.isSuffixCall())
-		m_currentSuffixCall = &_functionCall;
-
 	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
 	bool argumentsArePure = true;
 
@@ -3045,7 +3041,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		for (ASTPointer<Expression const> const& argument: arguments)
 			funcCallArgs.types.push_back(type(*argument));
 
-		_functionCall.expression().annotation().arguments = std::move(funcCallArgs);
+		if (!_functionCall.isSuffixCall())
+			_functionCall.expression().annotation().arguments = std::move(funcCallArgs);
 	}
 
 	_functionCall.expression().accept(*this);
@@ -3220,7 +3217,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		break;
 	}
 
-	m_currentSuffixCall = nullptr;
 	return false;
 }
 
@@ -3439,62 +3435,15 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	size_t const initialMemberCount = possibleMembers.size();
 	if (initialMemberCount > 1 && arguments)
 	{
-		RationalNumberType const* mantissa = nullptr;
-		RationalNumberType const* exponent = nullptr;
-		RationalNumberType const* literalRationalType = nullptr;
-		if (m_currentSuffixCall)
-		{
-			if (annotation.arguments->types.size() == 1)
-			{
-				solAssert(annotation.arguments->types[0]);
-				literalRationalType = dynamic_cast<RationalNumberType const*>(annotation.arguments->types[0]);
-				if (literalRationalType)
-					tie(mantissa, exponent) = literalRationalType->fractionalDecomposition();
-			}
-		}
-
 		// do overload resolution
 		for (auto it = possibleMembers.begin(); it != possibleMembers.end();)
-		{
-			bool viableCandidate = false;
-			if (it->type->category() == Type::Category::Function)
-			{
-				FunctionTypePointer functionType = dynamic_cast<FunctionType const*>(it->type);
-				solAssert(functionType);
-
-				if (!m_currentSuffixCall || m_currentSuffixCall->expression() != _memberAccess)
-					viableCandidate = functionType->canTakeArguments(*arguments, exprType);
-				else
-				{
-					// NOTE: We're before type-checking of suffix calls so we can't yet assume that
-					// the suffix is not something weird, including being a bound function.
-
-					auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(it->declaration);
-
-					bool isSuffixFunction =
-						functionDefinition &&
-						functionDefinition->usableAsSuffix();
-					bool singleArgumentMatch =
-						functionType->parameterTypes().size() == 1 &&
-						functionType->canTakeArguments(*annotation.arguments);
-					bool mantissaExponentMatch =
-						functionType->parameterTypes().size() == 2 &&
-						literalRationalType &&
-						// NOTE: If the literal cannot be decomposed it's fine to act as if suffix could not take it.
-						// It will be reported as error when type-checking the suffix call anyway.
-						mantissa &&
-						exponent &&
-						functionType->canTakeArguments({{mantissa, exponent}, {}});
-
-					viableCandidate = isSuffixFunction && (singleArgumentMatch || mantissaExponentMatch);
-				}
-			}
-
-			if (viableCandidate)
-				++it;
-			else
+			if (
+				it->type->category() == Type::Category::Function &&
+				!dynamic_cast<FunctionType const&>(*it->type).canTakeArguments(*arguments, exprType)
+			)
 				it = possibleMembers.erase(it);
-		}
+			else
+				++it;
 	}
 
 	annotation.isConstant = false;
@@ -4004,8 +3953,6 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
 		else if (!annotation.arguments)
 		{
-			solAssert(!m_currentSuffixCall);
-
 			// The identifier should be a public state variable shadowing other functions
 			vector<Declaration const*> candidates;
 
@@ -4023,54 +3970,16 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		}
 		else
 		{
-			vector<Declaration const*> candidates;
+			// NOTE: Suffix calls intentionally have no 'arguments' annotation so that they never enter this branch.
 
-			RationalNumberType const* mantissa = nullptr;
-			RationalNumberType const* exponent = nullptr;
-			RationalNumberType const* literalRationalType = nullptr;
-			if (m_currentSuffixCall)
-			{
-				if (annotation.arguments->types.size() == 1)
-				{
-					solAssert(annotation.arguments->types[0]);
-					literalRationalType = dynamic_cast<RationalNumberType const*>(annotation.arguments->types[0]);
-					if (literalRationalType)
-						tie(mantissa, exponent) = literalRationalType->fractionalDecomposition();
-				}
-			}
+			vector<Declaration const*> candidates;
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
 				FunctionTypePointer functionType = declaration->functionType(true /* _internal */);
 				solAssert(!!functionType, "Requested type not present.");
-
-				if (!m_currentSuffixCall)
-				{
-					if (functionType->canTakeArguments(*annotation.arguments))
-						candidates.push_back(declaration);
-				}
-				else
-				{
-					auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(declaration);
-
-					bool isSuffixFunction =
-						functionDefinition &&
-						functionDefinition->usableAsSuffix();
-					bool singleArgumentMatch =
-						functionType->parameterTypes().size() == 1 &&
-						functionType->canTakeArguments(*annotation.arguments);
-					bool mantissaExponentMatch =
-						functionType->parameterTypes().size() == 2 &&
-						literalRationalType &&
-						// NOTE: If the literal cannot be decomposed it's fine to act as if suffix could not take it.
-						// It will be reported as error when type-checking the suffix call anyway.
-						mantissa &&
-						exponent &&
-						functionType->canTakeArguments({{mantissa, exponent}, {}});
-
-					if (isSuffixFunction && (singleArgumentMatch || mantissaExponentMatch))
-						candidates.push_back(declaration);
-				}
+				if (functionType->canTakeArguments(*annotation.arguments))
+					candidates.push_back(declaration);
 			}
 			if (candidates.size() == 1)
 				annotation.referencedDeclaration = candidates.front();

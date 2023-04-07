@@ -17,3 +17,5 @@ contract C {
         f("a");
     }
 }
+// ----
+// TypeError 2144: (268-269): No matching declaration found after variable lookup.

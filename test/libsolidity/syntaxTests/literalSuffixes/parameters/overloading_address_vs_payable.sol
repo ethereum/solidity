@@ -6,4 +6,4 @@ contract C {
 }
 // ----
 // TypeError 2998: (74-89): This literal suffix function is not usable as a suffix because no literal is implicitly convertible to its parameter type.
-// TypeError 7407: (170-219): Type address is not implicitly convertible to expected type address payable.
+// TypeError 2144: (213-219): No matching declaration found after variable lookup.

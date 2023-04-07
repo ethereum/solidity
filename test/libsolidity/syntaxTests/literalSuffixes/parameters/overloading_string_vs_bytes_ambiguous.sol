@@ -5,4 +5,4 @@ contract C {
     uint a = "abcd" suffix;
 }
 // ----
-// TypeError 4487: (155-161): No unique declaration found after argument-dependent lookup.
+// TypeError 2144: (155-161): No matching declaration found after variable lookup.

@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9582: (218-226): Member "suffix" not found or not visible after argument-dependent lookup in uint8.
+// TypeError 6675: (218-226): Member "suffix" not unique after argument-dependent lookup in uint8.

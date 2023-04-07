@@ -29,3 +29,5 @@ contract D {
         "a" f;
     }
 }
+// ----
+// TypeError 2144: (B.sol:201-202): No matching declaration found after variable lookup.

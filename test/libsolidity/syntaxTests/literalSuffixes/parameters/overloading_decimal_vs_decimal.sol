@@ -17,3 +17,5 @@ contract C {
     int e = 2.55 iuSuffix;
     int f = -2.55 iuSuffix;
 }
+// ----
+// TypeError 2144: (392-399): No matching declaration found after variable lookup.

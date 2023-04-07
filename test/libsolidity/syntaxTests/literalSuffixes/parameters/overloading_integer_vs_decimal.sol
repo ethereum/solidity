@@ -11,3 +11,5 @@ contract C {
     // Not ambiguous: 1024 won't fit into uint8.
     bool b = 1024 suffix8;
 }
+// ----
+// TypeError 2144: (325-334): No matching declaration found after variable lookup.

@@ -206,7 +206,6 @@ private:
 
 	SourceUnit const* m_currentSourceUnit = nullptr;
 	ContractDefinition const* m_currentContract = nullptr;
-	FunctionCall const* m_currentSuffixCall = nullptr;
 
 	langutil::EVMVersion m_evmVersion;
 

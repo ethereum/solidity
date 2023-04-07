@@ -5,4 +5,4 @@ contract C {
     int a = 127 iuSuffix;
 }
 // ----
-// TypeError 4487: (137-145): No unique declaration found after argument-dependent lookup.
+// TypeError 2144: (137-145): No matching declaration found after variable lookup.

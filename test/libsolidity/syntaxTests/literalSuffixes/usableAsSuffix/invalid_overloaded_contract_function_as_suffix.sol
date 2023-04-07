@@ -5,4 +5,4 @@ contract C {
     function suffix(address) public pure returns (uint) {}
 }
 // ----
-// TypeError 9322: (31-37): No matching declaration found after argument-dependent lookup.
+// TypeError 2144: (31-37): No matching declaration found after variable lookup.
