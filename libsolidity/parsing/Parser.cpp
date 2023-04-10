@@ -680,6 +680,7 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
 	expectToken(Token::Struct);
 	auto [name, nameLocation] = expectIdentifierWithLocation();
 	vector<ASTPointer<VariableDeclaration>> members;
@@ -691,7 +692,7 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
-	return nodeFactory.createNode<StructDefinition>(std::move(name), std::move(nameLocation), std::move(members));
+	return nodeFactory.createNode<StructDefinition>(std::move(name), std::move(nameLocation), std::move(members), std::move(documentation));
 }
 
 ASTPointer<EnumValue> Parser::parseEnumValue()

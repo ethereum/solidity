@@ -23,6 +23,7 @@ Language Features:
 
 
 Compiler Features:
+ * NatSpec: add support for NatSpec documentation in ''struct'' definition
  * SMTChecker: New trusted mode that assumes that any compile-time available code is the actual used code even in external calls. This can be used via the CLI option ``--model-checker-ext-calls trusted`` or the JSON field ``settings.modelChecker.extCalls: "trusted"``.
 
 
