@@ -7,3 +7,5 @@ struct Example {
     bool valid;
     uint256 value;
 }
+
+// ----
