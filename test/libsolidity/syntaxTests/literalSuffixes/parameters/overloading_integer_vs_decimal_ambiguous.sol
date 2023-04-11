@@ -1,5 +1,5 @@
-function suffix(uint) pure suffix returns (int) {}
-function suffix(uint, uint) pure suffix returns (int) {}
+function suffix(uint) pure suffix returns (bool) {}
+function suffix(uint, uint) pure suffix returns (address) {}
 
 contract C {
     function f() public pure {
@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4487: (171-177): No unique declaration found after argument-dependent lookup.
+// TypeError 4487: (176-182): No unique declaration found after argument-dependent lookup.
