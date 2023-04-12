@@ -698,42 +698,28 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
 
-			if (!_functionCall.isSuffixCall())
+			if (!_functionCall.isSuffixCall() || parameterTypes.size() == 1)
 			{
 				for (unsigned i = 0; i < arguments.size(); ++i)
 					acceptAndConvert(*arguments[i], *parameterTypes[i]);
 			}
 			else
 			{
-				solAssert(arguments.size() == 1);
-				solAssert(arguments[0]);
+				solAssert(parameterTypes.size() == 2);
+				solAssert(arguments.size() == 1 && arguments[0]);
 				auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
-				Type const& literalType = *literal->annotation().type;
 				solAssert(literal);
 				solAssert(literal->annotation().type);
 
-				if (parameterTypes.size() == 1)
-				{
-					if (literalType.category() != Type::Category::StringLiteral)
-						// NOTE: For string literals we do not need to define the variable. The variable
-						// value will be embedded inside the conversion function.
-						m_context << literalType.literalValue(literal);
-					utils().convertType(literalType, *parameterTypes.at(0));
-				}
-				else
-				{
-					solAssert(parameterTypes.size() == 2);
+				auto const* rationalNumberType = dynamic_cast<RationalNumberType const*>(literal->annotation().type);
+				solAssert(rationalNumberType);
 
-					auto const* rationalNumberType = dynamic_cast<RationalNumberType const*>(&literalType);
-					solAssert(rationalNumberType);
-
-					auto&& [mantissa, exponent] = rationalNumberType->fractionalDecomposition();
-					solAssert(mantissa && exponent);
-					m_context << mantissa->literalValue(nullptr);
-					utils().convertType(*mantissa, *parameterTypes.at(0));
-					m_context << exponent->literalValue(nullptr);
-					utils().convertType(*exponent, *parameterTypes.at(1));
-				}
+				auto&& [mantissa, exponent] = rationalNumberType->fractionalDecomposition();
+				solAssert(mantissa && exponent);
+				m_context << mantissa->literalValue(nullptr);
+				utils().convertType(*mantissa, *parameterTypes.at(0));
+				m_context << exponent->literalValue(nullptr);
+				utils().convertType(*exponent, *parameterTypes.at(1));
 			}
 
 			_functionCall.expression().accept(*this);

@@ -1003,7 +1003,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		vector<string> args;
 		FunctionDefinition const* functionDef = nullptr;
 
-		if (!_functionCall.isSuffixCall())
+		if (!_functionCall.isSuffixCall() || parameterTypes.size() == 1)
 		{
 			functionDef = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
 
@@ -1020,40 +1020,25 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			solAssert(!functionDef->virtualSemantics());
 			solAssert(!functionType->hasBoundFirstArgument());
 
-			solAssert(arguments.size() == 1);
-			solAssert(arguments[0]);
+			solAssert(parameterTypes.size() == 2);
+			solAssert(arguments.size() == 1 && arguments[0]);
 			auto const* literal = dynamic_cast<Literal const*>(arguments[0].get());
-			Type const& literalType = *literal->annotation().type;
 			solAssert(literal);
 			solAssert(literal->annotation().type);
 
-			if (parameterTypes.size() == 2)
-			{
-				auto const* literalRationalType = dynamic_cast<RationalNumberType const*>(&literalType);
-				solAssert(literalRationalType);
+			auto const* literalRationalType = dynamic_cast<RationalNumberType const*>(literal->annotation().type);
+			solAssert(literalRationalType);
 
-				auto&& [mantissa, exponent] = literalRationalType->fractionalDecomposition();
-				solAssert(mantissa && exponent);
+			auto&& [mantissa, exponent] = literalRationalType->fractionalDecomposition();
+			solAssert(mantissa && exponent);
 
-				IRVariable mantissaVar(m_context.newYulVariable(), *mantissa);
-				define(mantissaVar) << toCompactHexWithPrefix(mantissa->literalValue(literal)) << "\n";
-				args += convert(mantissaVar, *parameterTypes[0]).stackSlots();
+			IRVariable mantissaVar(m_context.newYulVariable(), *mantissa);
+			define(mantissaVar) << toCompactHexWithPrefix(mantissa->literalValue(literal)) << "\n";
+			args += convert(mantissaVar, *parameterTypes[0]).stackSlots();
 
-				IRVariable exponentVar(m_context.newYulVariable(), *exponent);
-				define(exponentVar) << toCompactHexWithPrefix(exponent->literalValue(literal)) << "\n";
-				args += convert(exponentVar, *parameterTypes[1]).stackSlots();
-			}
-			else
-			{
-				solAssert(parameterTypes.size() == 1);
-
-				IRVariable value(m_context.newYulVariable(), literalType);
-				if (literalType.category() != Type::Category::StringLiteral)
-					// NOTE: For string literals we do not need to define the variable. The variable
-					// value will be embedded inside the conversion function.
-					define(value) << toCompactHexWithPrefix(literalType.literalValue(literal)) << "\n";
-				args += convert(value, *parameterTypes[0]).stackSlots();
-			}
+			IRVariable exponentVar(m_context.newYulVariable(), *exponent);
+			define(exponentVar) << toCompactHexWithPrefix(exponent->literalValue(literal)) << "\n";
+			args += convert(exponentVar, *parameterTypes[1]).stackSlots();
 		}
 
 		if (functionDef)
