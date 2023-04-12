@@ -103,6 +103,7 @@ enum class Instruction: uint8_t
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
 
+	PUSH0 = 0x5f,       ///< place the value 0 on stack
 	PUSH1 = 0x60,		///< place 1 byte item on stack
 	PUSH2,				///< place 2 byte item on stack
 	PUSH3,				///< place 3 byte item on stack
@@ -207,7 +208,7 @@ constexpr bool isCallInstruction(Instruction _inst) noexcept
 /// @returns true if the instruction is a PUSH
 inline bool isPushInstruction(Instruction _inst)
 {
-	return Instruction::PUSH1 <= _inst && _inst <= Instruction::PUSH32;
+	return Instruction::PUSH0 <= _inst && _inst <= Instruction::PUSH32;
 }
 
 /// @returns true if the instruction is a DUP
@@ -231,7 +232,7 @@ inline bool isLogInstruction(Instruction _inst)
 /// @returns the number of PUSH Instruction _inst
 inline unsigned getPushNumber(Instruction _inst)
 {
-	return static_cast<uint8_t>(_inst) - unsigned(Instruction::PUSH1) + 1;
+	return static_cast<uint8_t>(_inst) - unsigned(Instruction::PUSH0);
 }
 
 /// @returns the number of DUP Instruction _inst
@@ -255,8 +256,8 @@ inline unsigned getLogNumber(Instruction _inst)
 /// @returns the PUSH<_number> instruction
 inline Instruction pushInstruction(unsigned _number)
 {
-	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, std::string("Invalid PUSH instruction requested (") + std::to_string(_number) + ").");
-	return Instruction(unsigned(Instruction::PUSH1) + _number - 1);
+	assertThrow(_number <= 32, InvalidOpcode, std::string("Invalid PUSH instruction requested (") + std::to_string(_number) + ").");
+	return Instruction(unsigned(Instruction::PUSH0) + _number);
 }
 
 /// @returns the DUP<_number> instruction
