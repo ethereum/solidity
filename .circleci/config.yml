@@ -955,9 +955,8 @@ jobs:
     environment:
       TERM: xterm
       MAKEFLAGS: -j 5
-      # Build without Z3. We won't be running SMT tests on Arch because that requires a specific
-      # version of Z3 and the one with the official repos is often not the one we need.
-      USE_Z3: OFF
+      # This can be switched off if we run out of sync with Arch.
+      USE_Z3: ON
     steps:
       - run:
           name: Install build dependencies
