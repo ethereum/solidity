@@ -38,6 +38,7 @@ struct OptimiserState
 	AssemblyItems const& items;
 	size_t i;
 	std::back_insert_iterator<AssemblyItems> out;
+	langutil::EVMVersion evmVersion = langutil::EVMVersion();
 };
 
 template<typename FunctionType>
@@ -199,16 +200,26 @@ struct DoubleSwap: SimplePeepholeOptimizerMethod<DoubleSwap>
 
 struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush>
 {
-	static bool applySimple(
-		AssemblyItem const& _push1,
-		AssemblyItem const& _push2,
-		std::back_insert_iterator<AssemblyItems> _out
-	)
+	static bool apply(OptimiserState& _state)
 	{
-		if (_push1.type() == Push && _push2.type() == Push && _push1.data() == _push2.data())
+		size_t windowSize = 2;
+		if (_state.i + windowSize > _state.items.size())
+			return false;
+
+		auto push1 = _state.items.begin() + static_cast<ptrdiff_t>(_state.i);
+		auto push2 = _state.items.begin() + static_cast<ptrdiff_t>(_state.i + 1);
+		assertThrow(push1 != _state.items.end() && push2 != _state.items.end(), OptimizerException, "");
+
+		if (
+			push1->type() == Push &&
+			push2->type() == Push &&
+			push1->data() == push2->data() &&
+			(!_state.evmVersion.hasPush0() || push1->data() != 0)
+		)
 		{
-			*_out = _push1;
-			*_out = {Instruction::DUP1, _push2.debugData()};
+			*_state.out = *push1;
+			*_state.out = {Instruction::DUP1, push2->debugData()};
+			_state.i += windowSize;
 			return true;
 		}
 		else
@@ -510,7 +521,7 @@ bool PeepholeOptimiser::optimise()
 {
 	// Avoid referencing immutables too early by using approx. counting in bytesRequired()
 	auto const approx = evmasm::Precision::Approximate;
-	OptimiserState state {m_items, 0, back_inserter(m_optimisedItems)};
+	OptimiserState state {m_items, 0, back_inserter(m_optimisedItems), m_evmVersion};
 	while (state.i < m_items.size())
 		applyMethods(
 			state,
@@ -520,7 +531,7 @@ bool PeepholeOptimiser::optimise()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
-			evmasm::bytesRequired(m_optimisedItems, 3, approx) < evmasm::bytesRequired(m_items, 3, approx) ||
+			evmasm::bytesRequired(m_optimisedItems, 3, m_evmVersion, approx) < evmasm::bytesRequired(m_items, 3, m_evmVersion, approx) ||
 			numberOfPops(m_optimisedItems) > numberOfPops(m_items)
 		)
 	))
