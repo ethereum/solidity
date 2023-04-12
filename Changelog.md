@@ -18,6 +18,10 @@ Bugfixes:
  * Antlr Grammar: Stricter rules for function definitions. The grammar will no longer accept as valid free functions having specifiers which are exclusive to contract functions.
 
 
+AST Changes:
+ * AST: add the ``internalFunctionID`` field to the AST nodes of functions that may be called via the internal dispatch. These IDs are always generated, but they are only used in via-IR code generation.
+
+
 ### 0.8.19 (2023-02-22)
 
 Language Features:

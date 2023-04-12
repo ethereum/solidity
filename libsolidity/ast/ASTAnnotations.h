@@ -178,6 +178,7 @@ struct CallableDeclarationAnnotation: DeclarationAnnotation
 
 struct FunctionDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
+	util::SetOnce<uint64_t> internalFunctionID;
 };
 
 struct EventDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation

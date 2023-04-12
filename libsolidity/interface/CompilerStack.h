@@ -415,6 +415,9 @@ private:
 	/// Store the contract definitions in m_contracts.
 	void storeContractDefinitions();
 
+	/// Annotate internal dispatch function Ids
+	void annotateInternalFunctionIDs();
+
 	/// @returns true if the source is requested to be compiled.
 	bool isRequestedSource(std::string const& _sourceName) const;
 
