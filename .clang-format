@@ -12,7 +12,7 @@ Language: Cpp
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
-AlignEscapedNewlinesLeft: true
+AlignEscapedNewlines: Left
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
