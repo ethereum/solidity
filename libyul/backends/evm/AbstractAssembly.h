@@ -117,6 +117,9 @@ public:
 
 	/// Mark this assembly as invalid. Any attempt to request bytecode from it should throw.
 	virtual void markAsInvalid() = 0;
+
+	/// @returns the EVM version the assembly targets.
+	virtual langutil::EVMVersion evmVersion() const = 0;
 };
 
 enum class IdentifierContext { LValue, RValue, VariableDeclaration, NonExternal };
