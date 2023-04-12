@@ -25,6 +25,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/KnowledgeBase.h>
+#include <libyul/optimiser/VariableAssignmentMap.h>
 #include <libyul/YulString.h>
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
@@ -104,7 +105,7 @@ public:
 
 	/// @returns the current value of the given variable, if known - always movable.
 	AssignedValue const* variableValue(YulString _variable) const { return util::valueOrNullptr(m_state.value, _variable); }
-	std::set<YulString> const* references(YulString _variable) const { return util::valueOrNullptr(m_state.references, _variable); }
+	std::set<YulString> const* references(YulString _variable) const { return m_state.references.getOrderedOrNullptr(_variable); }
 	std::map<YulString, AssignedValue> const& allValues() const { return m_state.value; }
 	std::optional<YulString> storageValue(YulString _key) const;
 	std::optional<YulString> memoryValue(YulString _key) const;
@@ -179,9 +180,9 @@ private:
 	{
 		/// Current values of variables, always movable.
 		std::map<YulString, AssignedValue> value;
-		/// m_references[a].contains(b) <=> the current expression assigned to a references b
-		std::unordered_map<YulString, std::set<YulString>> references;
-
+        /// references.m_ordered[a].contains(b) <=> the current expression assigned to a references b
+        /// references.m_reversed[b].contains(a) <=> b from current expression assigned to a is references by a
+		VariableAssignmentMap references;
 		Environment environment;
 	};
 

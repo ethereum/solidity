@@ -8,6 +8,7 @@ Compiler Features:
  * EVM: Support for the EVM Version "Shanghai".
  * NatSpec: Add support for NatSpec documentation in ``enum`` definitions.
  * NatSpec: Add support for NatSpec documentation in ``struct`` definitions.
+ * Optimizer: Introduced an optimized variable assignment map to improve the performance of Yul optimizer steps that rely on data flow analysis.
  * Optimizer: Re-implement simplified version of UnusedAssignEliminator and UnusedStoreEliminator. It can correctly remove some unused assignments in deeply nested loops that were ignored by the old version.
  * Parser: Unary plus is no longer recognized as a unary operator in the AST and triggers an error at the parsing stage (rather than later during the analysis).
  * SMTChecker: Properties that are proved safe are now reported explicitly at the end of the analysis. By default, only the number of safe properties is shown. The CLI option ``--model-checker-show-proved-safe`` and the JSON option ``settings.modelChecker.showProvedSafe`` can be enabled to show the full list of safe properties.
