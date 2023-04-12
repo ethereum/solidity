@@ -270,7 +270,7 @@ void DataFlowAnalyzer::handleAssignment(std::set<YulString> const& _variables, E
 	auto const& referencedVariables = movableChecker.referencedVariables();
 	for (auto const& name: _variables)
 	{
-		m_state.references[name] = referencedVariables;
+		m_state.references.set(name, referencedVariables);
 		if (!_isDeclaration)
 		{
 			// assignment to slot denoted by "name"
@@ -353,9 +353,8 @@ void DataFlowAnalyzer::clearValues(std::set<YulString> _variables)
 	// Also clear variables that reference variables to be cleared.
 	std::set<YulString> referencingVariables;
 	for (auto const& variableToClear: _variables)
-		for (auto const& [ref, names]: m_state.references)
-			if (names.count(variableToClear))
-				referencingVariables.emplace(ref);
+		if (auto&& references = m_state.references.getReversedOrNullptr(variableToClear))
+			referencingVariables += *references;
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables + referencingVariables)

@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Optimizer: Introduced an optimized variable assignment map to improve the performance of Yul optimizer steps that rely on data flow analysis.
 
 
 Bugfixes:
