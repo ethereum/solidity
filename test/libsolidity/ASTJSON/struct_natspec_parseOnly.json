@@ -1,0 +1,90 @@
+{
+  "absolutePath": "a",
+  "id": 9,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "documentation":
+      {
+        "id": 1,
+        "nodeType": "StructuredDocumentation",
+        "src": "0:112:1",
+        "text": "@title example of title\n @author example of author\n @notice example of notice\n @dev example of dev"
+      },
+      "id": 8,
+      "members":
+      [
+        {
+          "constant": false,
+          "id": 3,
+          "mutability": "mutable",
+          "name": "text",
+          "nameLocation": "140:4:1",
+          "nodeType": "VariableDeclaration",
+          "src": "133:11:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 2,
+            "name": "string",
+            "nodeType": "ElementaryTypeName",
+            "src": "133:6:1",
+            "typeDescriptions": {}
+          },
+          "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 5,
+          "mutability": "mutable",
+          "name": "valid",
+          "nameLocation": "155:5:1",
+          "nodeType": "VariableDeclaration",
+          "src": "150:10:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 4,
+            "name": "bool",
+            "nodeType": "ElementaryTypeName",
+            "src": "150:4:1",
+            "typeDescriptions": {}
+          },
+          "visibility": "internal"
+        },
+        {
+          "constant": false,
+          "id": 7,
+          "mutability": "mutable",
+          "name": "value",
+          "nameLocation": "174:5:1",
+          "nodeType": "VariableDeclaration",
+          "src": "166:13:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 6,
+            "name": "uint256",
+            "nodeType": "ElementaryTypeName",
+            "src": "166:7:1",
+            "typeDescriptions": {}
+          },
+          "visibility": "internal"
+        }
+      ],
+      "name": "Example",
+      "nameLocation": "119:7:1",
+      "nodeType": "StructDefinition",
+      "src": "112:70:1",
+      "visibility": "public"
+    }
+  ],
+  "src": "112:71:1"
+}
