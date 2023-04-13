@@ -588,7 +588,8 @@ of the hexadecimal sequence.
 Multiple hexadecimal literals separated by whitespace are concatenated into a single literal:
 ``hex"00112233" hex"44556677"`` is equivalent to ``hex"0011223344556677"``
 
-Hexadecimal literals behave like :ref:`string literals <string_literals>` and have the same convertibility restrictions.
+Hexadecimal literals in some ways behave like :ref:`string literals <string_literals>` but are not
+implicitly convertible to the ``string`` type.
 
 .. index:: enum
 
