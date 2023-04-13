@@ -1,4 +1,4 @@
-.. index:: ! functions
+.. index:: ! functions, ! function;free
 
 .. _functions:
 

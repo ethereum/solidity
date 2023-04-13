@@ -1,4 +1,4 @@
-.. index:: ! using for, library, ! operator; user-defined
+.. index:: ! using for, library, ! operator;user-defined, function;free
 
 .. _using-for:
 

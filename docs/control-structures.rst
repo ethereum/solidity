@@ -173,7 +173,6 @@ parameters from the function declaration, but can be in arbitrary order.
         function set(uint key, uint value) public {
             data[key] = value;
         }
-
     }
 
 Omitted Names in Function Definitions

@@ -423,7 +423,7 @@ Dynamically-sized byte array
 ``string``:
     Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
 
-.. index:: address, literal;address
+.. index:: address, ! literal;address
 
 .. _address_literals:
 
@@ -439,7 +439,7 @@ an error. You can prepend (for integer types) or append (for bytesNN types) zero
 .. note::
     The mixed-case address checksum format is defined in `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_.
 
-.. index:: literal, literal;rational
+.. index:: integer, rational number, ! literal;rational
 
 .. _rational_literals:
 
@@ -517,7 +517,7 @@ regardless of the type of the right (exponent) operand.
     uint128 a = 1;
     uint128 b = 2.5 + a + 0.5;
 
-.. index:: literal, literal;string, string
+.. index:: ! literal;string, string
 .. _string_literals:
 
 String Literals and Types
@@ -564,6 +564,8 @@ character sequence ``abcdef``.
 Any Unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
 terminate the string literal. Newline only terminates the string literal if it is not preceded by a ``\``.
 
+.. index:: ! literal;unicode
+
 Unicode Literals
 ----------------
 
@@ -574,7 +576,7 @@ They also support the very same escape sequences as regular string literals.
 
     string memory a = unicode"Hello 😃";
 
-.. index:: literal, bytes
+.. index:: ! literal;hexadecimal, bytes
 
 Hexadecimal Literals
 --------------------

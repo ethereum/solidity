@@ -235,7 +235,7 @@ with the :ref:`default value<default-value>`.
         }
     }
 
-.. index:: ! array;literals, ! inline;arrays
+.. index:: ! literal;array, ! inline;arrays
 
 Array Literals
 ^^^^^^^^^^^^^^
