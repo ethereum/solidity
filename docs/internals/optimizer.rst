@@ -829,7 +829,7 @@ if the common subexpression eliminator was run right before it.
 ExpressionSimplifier
 ^^^^^^^^^^^^^^^^^^^^
 
-The Expression Simplifier uses the Dataflow Analyzer and makes use
+The ExpressionSimplifier uses the Dataflow Analyzer and makes use
 of a list of equivalence transforms on expressions like ``X + 0 -> X``
 to simplify the code.
 
