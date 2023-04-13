@@ -3174,10 +3174,24 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 		firstParam = 1;
 	}
 
-	solAssert((arguments.size() + firstParam) == functionParams.size(), "");
-	for (unsigned i = 0; i < arguments.size(); ++i)
-		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
-
+	if (_funCall.isSuffixCall() && functionParams.size() == 2)
+	{
+		solAssert(!funType->hasBoundFirstArgument());
+		solAssert(arguments.size() == 1);
+		auto&& literalType = dynamic_cast<RationalNumberType const*>(arguments[0]->annotation().type);
+		solAssert(literalType);
+		auto&& [mantissa, exponent] = literalType->fractionalDecomposition();
+		solAssert(mantissa && exponent);
+		solAssert(!mantissa->isNegative() && !exponent->isNegative());
+		args.emplace_back(mantissa->literalValue(nullptr));
+		args.emplace_back(exponent->literalValue(nullptr));
+	}
+	else
+	{
+		solAssert((arguments.size() + firstParam) == functionParams.size(), "");
+		for (unsigned i = 0; i < arguments.size(); ++i)
+			args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
+	}
 	return args;
 }
 
