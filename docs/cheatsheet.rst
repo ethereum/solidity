@@ -141,7 +141,7 @@ Function Visibility Specifiers
 - ``internal``: only visible internally
 
 
-.. index:: modifiers, pure, view, payable, constant, anonymous, indexed
+.. index:: modifiers, pure, view, payable, constant, anonymous, indexed, literal;suffix
 
 Modifiers
 =========
@@ -157,4 +157,4 @@ Modifiers
   behaviour to be changed in derived contracts.
 - ``override``: States that this function, modifier or public state variable changes
   the behaviour of a function or modifier in a base contract.
-
+- ``suffix`` for free functions: Designates the function as a :ref:`literal suffix<literal_suffixes>` definition.

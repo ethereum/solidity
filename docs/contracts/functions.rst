@@ -41,6 +41,10 @@ that call them, similar to internal library functions.
     is that free functions do not have direct access to the variable ``this``, storage variables and functions
     not in their scope.
 
+There is a special category of free functions called :ref:`literal suffixes<literal_suffixes>`.
+Such functions are marked with the ``suffix`` modifier, and can be used to define convenient
+conversions from literals to arbitrary types.
+
 .. _function-parameters-return-variables:
 
 Function Parameters and Return Variables

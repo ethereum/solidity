@@ -195,6 +195,42 @@ can still return a value to the caller by use of the ``return`` statement.
         }
     }
 
+.. index:: ! literal suffix; suffix call syntax
+
+Suffix Calls
+------------
+
+For free functions designated as :ref:`literal suffix<literal_suffixes>` definitions there is
+another way to perform a function call when the argument is a literal.
+The functions from the example below can be used as suffixes:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.21;
+
+    type Integer is int;
+    type Float is uint;
+
+    function i(int value) pure suffix returns (Integer) {
+        return Integer.wrap(value);
+    }
+
+    function f(uint128 mantissa, uint128 exponent) pure suffix returns (Float) {
+        return Float.wrap((mantissa << 128) | exponent);
+    }
+
+``42 i`` and ``4.2 f`` are valid ways to call the functions defined above, equivalent to ``i(42)``
+and ``f(42, 1)``, respectively.
+
+For single-parameter suffixes, this call syntax is equivalent to passing the literal as an argument
+to an internal function call.
+For two-parameter suffixes, :ref:`fractional decomposition<fractional_decomposition>` is performed
+first in order to obtain the two input values.
+
+See the section on :ref:`calling suffix functions<calling_suffix_functions>` for more information
+on the limitations of this call syntax.
+
 
 .. index:: ! new, contracts;creating
 

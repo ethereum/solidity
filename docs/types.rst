@@ -26,4 +26,6 @@ tuple with a second ``bool`` value denoting success.
 
 .. include:: types/operators.rst
 
+.. include:: types/literal-suffixes.rst
+
 .. include:: types/conversion.rst

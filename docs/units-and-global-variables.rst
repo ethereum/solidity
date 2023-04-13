@@ -1,4 +1,5 @@
-.. index:: ! denomination
+.. index:: ! denomination, literal;suffix
+.. _denominations:
 
 **************************************
 Units and Globally Available Variables

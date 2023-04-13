@@ -8,6 +8,7 @@ The following are called value types because their variables will always be pass
 are used as function arguments or in assignments.
 
 .. index:: ! bool, ! true, ! false
+.. _booleans:
 
 Booleans
 --------
@@ -523,6 +524,9 @@ regardless of the type of the right (exponent) operand.
 String Literals and Types
 -------------------------
 
+.. index:: ! literal;string concatenation
+.. _string_literal_concatenation:
+
 String literals are written with either double or single-quotes (``"foo"`` or ``'bar'``), and they can also be split into multiple consecutive parts (``"foo" "bar"`` is equivalent to ``"foobar"``) which can be helpful when dealing with long strings.  They do not imply trailing zeroes as in C; ``"foo"`` represents three bytes, not four.  As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32``, if they fit, to ``bytes`` and to ``string``.
 
 For example, with ``bytes32 samevar = "stringliteral"`` the string literal is interpreted in its raw byte form when assigned to a ``bytes32`` type.
@@ -565,6 +569,7 @@ Any Unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS
 terminate the string literal. Newline only terminates the string literal if it is not preceded by a ``\``.
 
 .. index:: ! literal;unicode
+.. _unicode_literals:
 
 Unicode Literals
 ----------------
@@ -576,7 +581,8 @@ They also support the very same escape sequences as regular string literals.
 
     string memory a = unicode"Hello 😃";
 
-.. index:: ! literal;hexadecimal, bytes
+.. index:: ! literal;hexadecimal string, bytes
+.. _hexadecimal_literals:
 
 Hexadecimal Literals
 --------------------
@@ -586,6 +592,8 @@ or single-quotes (``hex"001122FF"``, ``hex'0011_22_FF'``). Their content must be
 hexadecimal digits which can optionally use a single underscore as separator between
 byte boundaries. The value of the literal will be the binary representation
 of the hexadecimal sequence.
+
+.. index:: ! literal;hexadecimal string concatenation
 
 Multiple hexadecimal literals separated by whitespace are concatenated into a single literal:
 ``hex"00112233" hex"44556677"`` is equivalent to ``hex"0011223344556677"``
