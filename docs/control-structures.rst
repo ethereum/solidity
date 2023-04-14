@@ -196,6 +196,7 @@ can still return a value to the caller by use of the ``return`` statement.
     }
 
 .. index:: ! literal suffix; suffix call syntax
+.. _function-calls-suffix-calls:
 
 Suffix Calls
 ------------
@@ -230,6 +231,15 @@ first in order to obtain the two input values.
 
 See the section on :ref:`calling suffix functions<calling_suffix_functions>` for more information
 on the limitations of this call syntax.
+
+.. note::
+    Suffix calls should not be confused with the application of :ref:`denomination suffixes<denominations>`,
+    which use the same syntax, but simply modify the literal without an actual function call.
+
+    There is only a limited number of denominations and their names cannot be used for literal
+    suffixes.
+    The only exceptions are ``finney`` and ``szabo``, which used to be denominations, but were
+    deprecated, and are now usable as identifiers.
 
 
 .. index:: ! new, contracts;creating
