@@ -159,7 +159,10 @@ Contents
 
    security-considerations.rst
    bugs.rst
-   breaking-changes.rst
+   050-breaking-changes.rst
+   060-breaking-changes.rst
+   070-breaking-changes.rst
+   080-breaking-changes.rst
 
 .. toctree::
    :maxdepth: 2
