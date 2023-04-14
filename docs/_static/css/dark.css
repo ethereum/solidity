@@ -628,7 +628,7 @@ code.docutils.literal.notranslate {
 
 /* Link to Remix IDE shown over code snippets */
 
-a.remix-link, 
+a.remix-link,
 a.remix-link:not(:visited) {
     color: black !important;
 }
