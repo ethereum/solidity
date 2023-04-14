@@ -332,9 +332,7 @@ bool SyntaxChecker::visit(Literal const& _literal)
 
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
-	if (_operation.getOperator() == Token::Add)
-		m_errorReporter.syntaxError(9636_error, _operation.location(), "Use of unary + is disallowed.");
-
+	solAssert(_operation.getOperator() != Token::Add);
 	return true;
 }
 
