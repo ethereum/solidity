@@ -26,7 +26,7 @@ that are not part of the original input but are referenced from the source
 mappings. These source files together with their identifiers can be
 obtained via ``output['contracts'][sourceName][contractName]['evm']['bytecode']['generatedSources']``.
 
-.. note ::
+.. note::
     In the case of instructions that are not associated with any particular source file,
     the source mapping assigns an integer identifier of ``-1``. This may happen for
     bytecode sections stemming from compiler-generated inline assembly statements.

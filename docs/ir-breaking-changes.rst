@@ -247,7 +247,7 @@ hiding new and different behavior in existing code.
           }
       }
 
-  The function `f()` behaves as follows:
+  The function ``f()`` behaves as follows:
 
   - Old code generator: runs out of gas while zeroing the array contents after the large memory allocation
   - New code generator: reverts due to free memory pointer overflow (does not run out of gas)

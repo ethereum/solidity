@@ -146,7 +146,7 @@ SMT tests by exporting ``SMT_FLAGS=--no-smt`` before running ``./scripts/tests.s
 running ``./scripts/soltest.sh --no-smt``.
 These tests are ``libsolidity/smtCheckerTests`` and ``libsolidity/smtCheckerTestsJSON``.
 
-.. note ::
+.. note::
 
     To get a list of all unit tests run by Soltest, run ``./build/test/soltest --list_content=HRF``.
 
@@ -167,7 +167,7 @@ See especially:
 - `run_test (-t) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/run_test.html>`_ to run specific tests cases, and
 - `report-level (-r) <https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/report_level.html>`_ give a more detailed report.
 
-.. note ::
+.. note::
 
     Those working in a Windows environment wanting to run the above basic sets
     without libz3. Using Git Bash, you use: ``./build/test/Release/soltest.exe -- --no-smt``.

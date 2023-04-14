@@ -527,7 +527,7 @@ If you are interested what CMake options are available run ``cmake .. -LH``.
 SMT Solvers
 -----------
 Solidity can be built against SMT solvers and will do so by default if
-they are found in the system. Each solver can be disabled by a `cmake` option.
+they are found in the system. Each solver can be disabled by a ``cmake`` option.
 
 *Note: In some cases, this can also be a potential workaround for build failures.*
 

@@ -651,7 +651,7 @@ in the following situations:
 
 For the following cases, the error data from the external call
 (if provided) is forwarded. This means that it can either cause
-an `Error` or a `Panic` (or whatever else was given):
+an ``Error`` or a ``Panic`` (or whatever else was given):
 
 #. If a ``.transfer()`` fails.
 #. If you call a function via a message call but it does not finish
