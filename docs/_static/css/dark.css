@@ -626,12 +626,11 @@ code.docutils.literal.notranslate {
 }
 
 
-/* Literal.Number.Integer.Long */
-
-
 /* Link to Remix IDE shown over code snippets */
-a.remix-link {
-    filter: invert(1); /* The icon is black. In dark mode we want it white. */
+
+a.remix-link, 
+a.remix-link:not(:visited) {
+    color: black !important;
 }
 
 
