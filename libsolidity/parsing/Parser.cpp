@@ -1862,7 +1862,11 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 	ASTNodeFactory nodeFactory = _partiallyParsedExpression ?
 		ASTNodeFactory(*this, _partiallyParsedExpression) : ASTNodeFactory(*this);
 	Token token = m_scanner->currentToken();
-	if (!_partiallyParsedExpression && (TokenTraits::isUnaryOp(token) || TokenTraits::isCountOp(token)))
+	if (!_partiallyParsedExpression && (
+		TokenTraits::isUnaryOp(token) ||
+		TokenTraits::isCountOp(token) ||
+		token == Token::Add
+	))
 	{
 		// prefix expression
 		advance();

@@ -2084,7 +2084,10 @@ public:
 		m_subExpression(std::move(_subExpression)),
 		m_isPrefix(_isPrefix)
 	{
-		solAssert(TokenTraits::isUnaryOp(_operator), "");
+		// NOTE: Unary plus is disallowed but only at the analysis stage.
+		// If you use `--stop-after parsing`, you can still get an AST with UnaryOperation node
+		// representing the unary plus.
+		solAssert(TokenTraits::isUnaryOp(_operator) || _operator == Token::Add);
 	}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
