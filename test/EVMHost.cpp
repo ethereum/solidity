@@ -351,14 +351,19 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		transfer(sender, destination, value);
 	}
 
-	// Populate the access access list.
+	// Populate the access access list (enabled since Berlin).
 	// Note, this will also properly touch the created address.
 	// TODO: support a user supplied access list too
 	if (m_evmRevision >= EVMC_BERLIN)
 	{
 		access_account(message.sender);
 		access_account(message.recipient);
+
+		// EIP-3651 rule
+		if (m_evmRevision >= EVMC_SHANGHAI)
+			access_account(tx_context.block_coinbase);
 	}
+
 	evmc::Result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 
 	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
