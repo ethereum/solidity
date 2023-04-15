@@ -120,6 +120,7 @@ private:
 	static evmc::Result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
 	template <evmc_revision Revision>
 	static evmc::Result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
+	static evmc::Result precompileBlake2f(evmc_message const& _message) noexcept;
 	static evmc::Result precompileGeneric(evmc_message const& _message, std::map<bytes, EVMPrecompileOutput> const& _inOut) noexcept;
 	/// @returns a result object with gas usage and result data taken from @a _data.
 	/// The outcome will be a failure if the limit < required.
