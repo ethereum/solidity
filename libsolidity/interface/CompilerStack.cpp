@@ -1322,7 +1322,7 @@ void CompilerStack::assemble(
 	}
 
 	// Throw a warning if EIP-170 limits are exceeded:
-	//   If contract creation returns data with length greater than 0x6000 (214 + 213) bytes,
+	//   If contract creation returns data with length greater than 0x6000 (2^14 + 2^13) bytes,
 	//   contract creation fails with an out of gas error.
 	if (
 		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
@@ -1334,6 +1334,24 @@ void CompilerStack::assemble(
 			"Contract code size is "s +
 			to_string(compiledContract.runtimeObject.bytecode.size()) +
 			" bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
+			"This contract may not be deployable on Mainnet. "
+			"Consider enabling the optimizer (with a low \"runs\" value!), "
+			"turning off revert strings, or using libraries."
+		);
+
+	// Throw a warning if EIP-3860 limits are exceeded:
+	//   If initcode is larger than 0xC000 bytes (twice the runtime code limit),
+	//   then contract creation fails with an out of gas error.
+	if (
+		m_evmVersion >= langutil::EVMVersion::shanghai() &&
+		compiledContract.object.bytecode.size() > 0xC000
+	)
+		m_errorReporter.warning(
+			3860_error,
+			_contract.location(),
+			"Contract initcode size is "s +
+			to_string(compiledContract.object.bytecode.size()) +
+			" bytes and exceeds 49152 bytes (a limit introduced in Shanghai). "
 			"This contract may not be deployable on Mainnet. "
 			"Consider enabling the optimizer (with a low \"runs\" value!), "
 			"turning off revert strings, or using libraries."
