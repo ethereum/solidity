@@ -43,7 +43,7 @@ def insert_remix_link(app, doctree, solidity_version):
         assert 'language' in literal_block_node.attributes
         language = literal_block_node.attributes['language'].lower()
         if language not in ['solidity', 'yul']:
-                continue
+            continue
 
         text_nodes = list(literal_block_node.traverse(docutils.nodes.Text))
         assert len(text_nodes) == 1
