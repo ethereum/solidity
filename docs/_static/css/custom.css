@@ -27,8 +27,8 @@ pre {
     background: #fafafa;
 }
 
-.wy-side-nav-search img.logo {
-    width: 100px !important;
+.wy-side-nav-search > a img.logo {
+    width: 100px;
     padding: 0;
 }
 
@@ -38,13 +38,13 @@ pre {
 }
 
 /* project version (displayed under project logo) */
-.wy-side-nav-search .version {
-    color: #272525 !important;
+.wy-side-nav-search > div.version {
+    color: #272525;
 }
 
 /* menu section headers */
-.wy-menu .caption {
-    color: #65afff !important;
+.wy-menu p.caption {
+    color: #65afff;
 }
 
 /* Link to Remix IDE shown next to code snippets */
