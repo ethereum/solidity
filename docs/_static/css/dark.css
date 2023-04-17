@@ -1,7 +1,7 @@
 /* links */
 
 .rst-content a:not(:visited) {
-    color: #aaddff !important;
+    color: #aaddff;
 }
 
 /* code directives */
@@ -630,7 +630,7 @@ code.docutils.literal.notranslate {
 
 a.remix-link,
 a.remix-link:not(:visited) {
-    color: black !important;
+    color: black;
 }
 
 

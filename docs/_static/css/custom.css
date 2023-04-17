@@ -64,7 +64,7 @@ a.remix-link {
 
 a.remix-link,
 a.remix-link:not(:visited) {
-    color: #707070 !important;
+    color: #707070;
 }
 
 a.remix-link:hover {
