@@ -253,6 +253,8 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		else
 			return precompileALTBN128PairingProduct<EVMC_LONDON>(_message);
 	}
+	else if (_message.recipient == 0x0000000000000000000000000000000000000009_address && m_evmVersion >= langutil::EVMVersion::istanbul())
+		return precompileBlake2f(_message);
 
 	auto const stateBackup = accounts;
 
@@ -1115,6 +1117,12 @@ evmc::Result EVMHost::precompileALTBN128PairingProduct(evmc_message const& _mess
 		}
 	};
 	return precompileGeneric(_message, inputOutput);
+}
+
+evmc::Result EVMHost::precompileBlake2f(evmc_message const&) noexcept
+{
+	// TODO implement
+	return resultWithFailure();
 }
 
 evmc::Result EVMHost::precompileGeneric(
