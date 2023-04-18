@@ -4035,9 +4035,7 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 
 			bool identicalFirstTwoParameters = (parameterCount < 2 || *parameterTypes.at(0) == *parameterTypes.at(1));
 			bool isUnaryOnlyOperator = (!TokenTraits::isBinaryOp(operator_.value()) && TokenTraits::isUnaryOp(operator_.value()));
-			bool isBinaryOnlyOperator =
-				(TokenTraits::isBinaryOp(operator_.value()) && !TokenTraits::isUnaryOp(operator_.value())) ||
-				operator_.value() == Token::Add;
+			bool isBinaryOnlyOperator = (TokenTraits::isBinaryOp(operator_.value()) && !TokenTraits::isUnaryOp(operator_.value()));
 			bool firstParameterMatchesUsingFor = parameterCount == 0 || *usingForType == *parameterTypes.front();
 
 			optional<string> wrongParametersMessage;

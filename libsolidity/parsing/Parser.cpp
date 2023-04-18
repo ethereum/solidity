@@ -1869,6 +1869,10 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 	ASTNodeFactory nodeFactory = _partiallyParsedExpression ?
 		ASTNodeFactory(*this, _partiallyParsedExpression) : ASTNodeFactory(*this);
 	Token token = m_scanner->currentToken();
+
+	if (token == Token::Add)
+		fatalParserError(9636_error, "Use of unary + is disallowed.");
+
 	if (!_partiallyParsedExpression && (TokenTraits::isUnaryOp(token) || TokenTraits::isCountOp(token)))
 	{
 		// prefix expression
