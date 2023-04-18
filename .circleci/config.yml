@@ -1249,14 +1249,14 @@ jobs:
         type: boolean
         default: false
     docker:
-      - image: <<parameters.image>>
-    resource_class: <<parameters.resource_class>>
+      - image: << parameters.image >>
+    resource_class: << parameters.resource_class >>
     # NOTE: Each external test runs up to 6 independent settings presets. If parallelism is higher than
     # actual preset count, some runs will exit immediately. If it's lower, some runs will get more than one preset.
     parallelism: 6
     environment:
       TERM: xterm
-      COMPILE_ONLY: <<parameters.compile_only>>
+      COMPILE_ONLY: << parameters.compile_only >>
     steps:
       - checkout
       - attach_workspace:
@@ -1282,17 +1282,17 @@ jobs:
             equal: [<< parameters.binary_type >>, "solcjs"]
           steps:
             - run:
-                name: External <<parameters.project>> tests (solcjs)
+                name: External << parameters.project >> tests (solcjs)
                 command: |
-                  test/externalTests/<<parameters.project>>.sh solcjs /tmp/workspace/soljson.js
+                  test/externalTests/<< parameters.project >>.sh solcjs /tmp/workspace/soljson.js
       - when:
           condition:
             equal: [<< parameters.binary_type >>, "native"]
           steps:
             - run:
-                name: External <<parameters.project>> tests (native)
+                name: External << parameters.project >> tests (native)
                 command: |
-                  test/externalTests/<<parameters.project>>.sh native /tmp/workspace/solc/solc-static-linux
+                  test/externalTests/<< parameters.project >>.sh native /tmp/workspace/solc/solc-static-linux
       - store_artifacts:
           path: reports/externalTests/
       # persist_to_workspace fails if the directory does not exist and the test script will create
