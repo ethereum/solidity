@@ -172,7 +172,7 @@ locals[
 		| modifierInvocation
 		| {!$virtualSet}? Virtual {$virtualSet = true;}
 		| {!$overrideSpecifierSet}? overrideSpecifier {$overrideSpecifierSet = true;}
-	 )*
+	)*
 	(Returns LParen returnParameters=parameterList RParen)?
 	(Semicolon | body=block);
 
