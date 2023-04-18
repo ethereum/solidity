@@ -24,7 +24,7 @@ Also, keep in mind that even if your smart contract code is bug-free,
 the compiler or the platform itself might have a bug.
 A list of some publicly known security-relevant bugs of the compiler can be found
 in the :ref:`list of known bugs<known_bugs>`, which is also machine-readable.
-Note that there is a `Bug Bounty Program <https://ethereum.org/en/bug-bounty/>`
+Note that there is a `Bug Bounty Program <https://ethereum.org/en/bug-bounty/>`_
 that covers the code generator of the Solidity compiler.
 
 As always, with open-source documentation,
