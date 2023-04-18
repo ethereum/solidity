@@ -6,7 +6,8 @@ pre {
     word-wrap: break-word;
 }
 
-.wy-table-responsive table td, .wy-table-responsive table th {
+.wy-table-responsive table td,
+.wy-table-responsive table th {
     white-space: normal;
 }
 .rst-content table.docutils td {
@@ -48,22 +49,26 @@ pre {
 }
 
 /* Link to Remix IDE shown next to code snippets */
-p.remix-link-container {
-    display: inline-block;
-    width: 100%;
+.rst-content p.remix-link-container {
+    display: block;
     text-align: right;
-    margin-bottom: 0;
-    line-height: 1;
+    margin: 0;
+    line-height: 1em;
 }
 
 a.remix-link {
+    display: inline-block;
     font-size: 0.7em;
-    padding: 0.3em 0.5em;
+    padding: 0.1em 0.4em;
     background: #e1e4e5;
 }
 
-a.remix-link,
-a.remix-link:not(:visited) {
+.rst-content div.highlight-solidity,
+.rst-content div.highlight-yul {
+    margin-top: 0;
+}
+
+.remix-link-container a.remix-link {
     color: #707070;
 }
 
