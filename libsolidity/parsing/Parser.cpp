@@ -995,11 +995,17 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 				Token operator_ = m_scanner->currentToken();
 				if (!util::contains(userDefinableOperators, operator_))
 				{
+					string operatorName;
+					if (!m_scanner->currentLiteral().empty())
+						operatorName = m_scanner->currentLiteral();
+					else if (char const* tokenString = TokenTraits::toString(operator_))
+						operatorName = string(tokenString);
+
 					parserError(
 						4403_error,
 						fmt::format(
 							"Not a user-definable operator: {}. Only the following operators can be user-defined: {}",
-							(!m_scanner->currentLiteral().empty() ? m_scanner->currentLiteral() : string(TokenTraits::toString(operator_))),
+							operatorName,
 							util::joinHumanReadable(userDefinableOperators | ranges::views::transform([](Token _t) { return string{TokenTraits::toString(_t)}; }))
 						)
 					);
