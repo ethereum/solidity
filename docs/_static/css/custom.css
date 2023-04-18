@@ -10,6 +10,7 @@ pre {
 .wy-table-responsive table th {
     white-space: normal;
 }
+
 .rst-content table.docutils td {
     vertical-align: top;
 }
@@ -56,22 +57,19 @@ pre {
     line-height: 1em;
 }
 
-a.remix-link {
+.rst-content .remix-link-container a.remix-link {
     display: inline-block;
     font-size: 0.7em;
     padding: 0.1em 0.4em;
     background: #e1e4e5;
+    color: #707070;
+}
+
+.rst-content .remix-link-container a.remix-link:hover {
+    background: #c8cbcc;
 }
 
 .rst-content div.highlight-solidity,
 .rst-content div.highlight-yul {
     margin-top: 0;
-}
-
-.remix-link-container a.remix-link {
-    color: #707070;
-}
-
-a.remix-link:hover {
-    background: #c8cbcc;
 }
