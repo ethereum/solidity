@@ -1076,6 +1076,41 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	expectNatspecError(sourceCode);
 }
 
+BOOST_AUTO_TEST_CASE(struct_no_docs)
+{
+	char const* sourceCode = R"(
+		contract C {
+			/// @title example of title
+			/// @author example of author
+			/// @notice example of notice
+			/// @dev example of dev
+			struct Example {
+				string text;
+				bool valid;
+				uint256 value;
+			}
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
 BOOST_AUTO_TEST_CASE(enum_no_docs)
 {
 	char const* sourceCode = R"(

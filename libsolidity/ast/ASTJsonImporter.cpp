@@ -449,7 +449,8 @@ ASTPointer<ASTNode> ASTJsonImporter::createStructDefinition(Json::Value const& _
 		_node,
 		memberAsASTString(_node, "name"),
 		createNameSourceLocation(_node),
-		members
+		members,
+		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation"))
 	);
 }
 
