@@ -398,21 +398,16 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 10
 
-  - base_win_bash: &base_win_bash
+  - base_win: &base_win
       executor:
         name: win/default
         shell: bash.exe
 
-  - base_win_powershell: &base_win_powershell
+  - base_win_large: &base_win_large
       executor:
         name: win/default
-        shell: powershell.exe
-
-  - base_win_powershell_large: &base_win_powershell_large
-      executor:
-        name: win/default
-        shell: powershell.exe
         size: large
+        shell: bash.exe
 
   # --------------------------------------------------------------------------
   # Workflow Templates
@@ -786,7 +781,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_win_pyscripts:
-    <<: *base_win_powershell
+    <<: *base_win
     steps:
       - run: git config --global core.autocrlf false
       - checkout
@@ -1350,7 +1345,7 @@ jobs:
           path: reports/externalTests/base-branch/
 
   b_win: &b_win
-    <<: *base_win_powershell_large
+    <<: *base_win_large
     steps:
       # NOTE: Not disabling git's core.autocrlf here because we want to build using the typical Windows config.
       - checkout
@@ -1362,6 +1357,7 @@ jobs:
       - run:
           name: "Installing dependencies"
           command: .\scripts\install_deps.ps1
+          shell: powershell.exe
       - save_cache:
           key: dependencies-win-{{ arch }}-{{ checksum "scripts/install_deps.ps1" }}
           paths:
@@ -1369,9 +1365,11 @@ jobs:
       - run:
           name: "Building solidity"
           command: .circleci/build_win.ps1
+          shell: powershell.exe
       - run:
           name: "Run solc.exe to make sure build was successful."
           command: .\build\solc\Release\solc.exe --version
+          shell: powershell.exe
       - store_artifacts: *artifact_solc_windows
       - persist_to_workspace:
           root: build
@@ -1381,7 +1379,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_win_soltest: &t_win_soltest
-    <<: *base_win_powershell
+    <<: *base_win
     steps:
       # NOTE: Git's default core.autocrlf is fine for running soltest. We get additional coverage
       # for files using CRLF that way.
@@ -1391,18 +1389,18 @@ jobs:
       - run:
           name: "Install evmone"
           command: scripts/install_evmone.ps1
+          shell: powershell.exe
       - run:
           name: "Run soltest"
           command: .circleci/soltest.ps1
+          shell: powershell.exe
       - run:
           name: Install LSP test dependencies
           command: python -m pip install --user deepdiff colorama
       - run:
-          name: Inspect lsp.py
-          command: Get-Content ./test/lsp.py
-      - run:
           name: Executing solc LSP test suite
           command: python ./test/lsp.py .\build\solc\Release\solc.exe --non-interactive
+          shell: powershell.exe
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
       - matrix_notify_failure_unless_pr
@@ -1453,7 +1451,7 @@ jobs:
           binary_path: "../build/solc/solc"
 
   b_bytecode_win:
-    <<: *base_win_bash
+    <<: *base_win
     environment:
       LC_ALL: C
     steps:
