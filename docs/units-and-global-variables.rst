@@ -1,8 +1,10 @@
+.. index:: ! denomination
+
 **************************************
 Units and Globally Available Variables
 **************************************
 
-.. index:: wei, finney, szabo, gwei, ether
+.. index:: ! wei, ! finney, ! szabo, ! gwei, ! ether, ! denomination;ether
 
 Ether Units
 ===========
@@ -21,7 +23,7 @@ The only effect of the subdenomination suffix is a multiplication by a power of 
 .. note::
     The denominations ``finney`` and ``szabo`` have been removed in version 0.7.0.
 
-.. index:: time, seconds, minutes, hours, days, weeks, years
+.. index:: ! seconds, ! minutes, ! hours, ! days, ! weeks, ! years, ! denomination;time
 
 Time Units
 ==========
@@ -52,7 +54,7 @@ interpret a function parameter in days, you can in the following way:
 
     function f(uint start, uint daysAfter) public {
         if (block.timestamp >= start + daysAfter * 1 days) {
-          // ...
+            // ...
         }
     }
 

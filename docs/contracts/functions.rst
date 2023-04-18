@@ -1,4 +1,4 @@
-.. index:: ! functions
+.. index:: ! functions, ! function;free
 
 .. _functions:
 
@@ -277,7 +277,7 @@ This behaviour is also in line with the ``STATICCALL`` opcode.
 Special Functions
 =================
 
-.. index:: ! receive ether function, function;receive ! receive
+.. index:: ! receive ether function, function;receive, ! receive
 
 .. _receive-ether-function:
 

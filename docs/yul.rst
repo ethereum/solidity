@@ -166,6 +166,8 @@ Inside a code block, the following elements can be used
 Multiple syntactical elements can follow each other simply separated by
 whitespace, i.e. there is no terminating ``;`` or newline required.
 
+.. index:: ! literal;in Yul
+
 Literals
 --------
 
