@@ -366,6 +366,11 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 			access_account(tx_context.block_coinbase);
 	}
 
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+	{
+		message.input_data = nullptr;
+		message.input_size = 0;
+	}
 	evmc::Result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 
 	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
