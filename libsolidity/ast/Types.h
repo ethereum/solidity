@@ -201,8 +201,6 @@ public:
 	static Type const* commonType(Type const* _a, Type const* _b);
 
 	virtual Category category() const = 0;
-	static char const* categoryName(Type::Category _category);
-
 	/// @returns a valid solidity identifier such that two types should compare equal if and
 	/// only if they have the same identifier.
 	/// The identifier should start with "t_".
