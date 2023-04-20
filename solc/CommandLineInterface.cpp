@@ -940,7 +940,8 @@ void CommandLineInterface::handleCombinedJSON()
 			);
 		if (m_options.compiler.combinedJsonRequests->funDebugRuntime && m_compiler->compilationSuccessful())
 			contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
-				m_compiler->runtimeObject(contractName).functionDebugData);
+				m_compiler->runtimeObject(contractName).functionDebugData
+			);
 		if (m_options.compiler.combinedJsonRequests->signatureHashes)
 			contractData[g_strSignatureHashes] = m_compiler->interfaceSymbols(contractName)["methods"];
 		if (m_options.compiler.combinedJsonRequests->natspecDev)
@@ -950,8 +951,8 @@ void CommandLineInterface::handleCombinedJSON()
 	}
 
 	bool needsSourceList = m_options.compiler.combinedJsonRequests->ast ||
-							m_options.compiler.combinedJsonRequests->srcMap ||
-							m_options.compiler.combinedJsonRequests->srcMapRuntime;
+		m_options.compiler.combinedJsonRequests->srcMap ||
+		m_options.compiler.combinedJsonRequests->srcMapRuntime;
 	if (needsSourceList)
 	{
 		// Indices into this array are used to abbreviate source names in source locations.
@@ -1212,7 +1213,7 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			shared_ptr<evmasm::Assembly> assembly{stack.assembleEVMWithDeployed().first};
 			if (assembly)
 			{
-				std::function<map<string, unsigned>(yul::Object const&)> collectSourceIndices =
+				function<map<string, unsigned>(yul::Object const&)> collectSourceIndices =
 					[&](yul::Object const& _object) -> map<string, unsigned> {
 					map<string, unsigned> sourceIndices;
 					if (_object.debugData && _object.debugData->sourceNames.has_value())
