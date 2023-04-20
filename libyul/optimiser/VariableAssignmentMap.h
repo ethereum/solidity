@@ -20,13 +20,13 @@
 #include <libyul/YulString.h>
 
 #include <set>
-#include <unordered_map>
+#include <map>
 
 namespace solidity::yul
 {
 
 /**
- * Class that implements a reverse lookup for an ``unordered_map<YulString, set<YulString>>`` by wrapping the
+ * Class that implements a reverse lookup for an ``map<YulString, set<YulString>>`` by wrapping the
  * two such maps - one ordered, and one reversed, e.g.
  *
  *  m_ordered           m_reversed
@@ -75,9 +75,9 @@ public:
 
 private:
 	/// m_ordered[a].contains[b] <=> the current expression assigned to ``a`` references ``b``
-	std::unordered_map<YulString, std::set<YulString>> m_ordered;
+	std::map<size_t, std::set<YulString>> m_ordered;
 	/// m_reversed[b].contains[a] <=> the current expression assigned to ``a`` references ``b``
-	std::unordered_map<YulString, std::set<YulString>> m_reversed;
+	std::map<size_t, std::set<YulString>> m_reversed;
 };
 
 } // solidity::yul

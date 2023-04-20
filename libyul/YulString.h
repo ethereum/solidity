@@ -155,6 +155,7 @@ public:
 		return YulStringRepository::instance().idToString(m_handle.id);
 	}
 
+	size_t id() const { return m_handle.id; }
 	uint64_t hash() const { return m_handle.hash; }
 
 private:
