@@ -82,6 +82,9 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <range/v3/view/concat.hpp>
+#include <range/v3/view/map.hpp>
+
+#include <fmt/format.h>
 
 #include <utility>
 #include <map>
@@ -710,10 +713,11 @@ bool CompilerStack::compile(State _stopAfter)
 								1834_error,
 								Error::Type::CodeGenerationError,
 								*sourceLocation,
-								"Unimplemented feature error" +
-								((comment && !comment->empty()) ? ": " + *comment : string{}) +
-								" in " +
-								_unimplementedError.lineInfo()
+								fmt::format(
+									"Unimplemented feature error {} in {}",
+									(comment && !comment->empty()) ? ": " + *comment : "",
+									_unimplementedError.lineInfo()
+								)
 							);
 							return false;
 						}
@@ -949,10 +953,7 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 
 vector<string> CompilerStack::sourceNames() const
 {
-	vector<string> names;
-	for (auto const& s: m_sources)
-		names.push_back(s.first);
-	return names;
+	return ranges::to<vector>(m_sources | ranges::views::keys);
 }
 
 map<string, unsigned> CompilerStack::sourceIndices() const
