@@ -407,15 +407,14 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 {
 	if (m_stackState != Empty)
 		solThrow(CompilerError, "Must call importASTs only before the SourcesSet state.");
-	m_sourceJsons = _sources;
-	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_evmVersion).jsonToSourceUnit(m_sourceJsons);
+	map<string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_evmVersion).jsonToSourceUnit(_sources);
 	for (auto& src: reconstructedSources)
 	{
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
 		source.charStream = make_shared<CharStream>(
-			util::jsonCompactPrint(m_sourceJsons[src.first]),
+			util::jsonCompactPrint(_sources.at(src.first)),
 			src.first,
 			true // imported from AST
 		);
