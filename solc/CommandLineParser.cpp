@@ -30,6 +30,8 @@
 #include <range/v3/view/filter.hpp>
 #include <range/v3/range/conversion.hpp>
 
+#include <fmt/format.h>
+
 using namespace std;
 using namespace solidity::langutil;
 
@@ -1052,7 +1054,11 @@ void CommandLineParser::processArgs()
 			if (!option.second.defaulted() && !supportedByEvmAsmJsonImport.count(option.first))
 				solThrow(
 					CommandLineValidationError,
-					"Option --" + option.first + " is not supported with --"+g_strImportEvmAssemblerJson+"."
+					fmt::format(
+						"Option --{} is not supported with --{}.",
+						g_strCombinedJson,
+						g_strImportEvmAssemblerJson
+					)
 				);
 	}
 
@@ -1421,7 +1427,8 @@ void CommandLineParser::processArgs()
 	solAssert(
 		m_options.input.mode == InputMode::Compiler ||
 		m_options.input.mode == InputMode::CompilerWithASTImport ||
-		m_options.input.mode == InputMode::EVMAssemblerJSON);
+		m_options.input.mode == InputMode::EVMAssemblerJSON
+	);
 }
 
 void CommandLineParser::parseCombinedJsonOption()
@@ -1458,7 +1465,13 @@ void CommandLineParser::parseCombinedJsonOption()
 			if (m_options.compiler.combinedJsonRequests.value().*invalidOption)
 				solThrow(
 					CommandLineValidationError,
-					"Invalid option to --" + g_strCombinedJson + ": " + CombinedJsonRequests::componentName(invalidOption) + " for --" + g_strImportEvmAssemblerJson);
+					fmt::format(
+						"Invalid option to --{}: {} for --{}",
+						g_strCombinedJson,
+						CombinedJsonRequests::componentName(invalidOption),
+						g_strImportEvmAssemblerJson
+					)
+				);
 	}
 }
 

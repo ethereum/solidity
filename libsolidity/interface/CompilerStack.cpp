@@ -430,17 +430,15 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 void CompilerStack::importFromEVMAssemblyStack(std::string const& _sourceName, std::string const& _source)
 {
 	solRequire(m_stackState == Empty, CompilerError, "");
-	m_evmAssemblyStack = std::make_unique<evmasm::EVMAssemblyStack>(m_evmVersion);
+	m_evmAssemblyStack = make_unique<evmasm::EVMAssemblyStack>(m_evmVersion);
 	Json::Value evmAsmJson;
 	if (m_evmAssemblyStack->parseAndAnalyze(_sourceName, _source))
 	{
 		m_evmAssemblyStack->assemble();
 		string const name{m_evmAssemblyStack->name()};
-		Json::Value const& json = m_evmAssemblyStack->json();
-		m_sourceJsons[name] = json;
 		Contract& contract = m_contracts[name];
 		contract.evmAssembly = m_evmAssemblyStack->evmAssembly();
-		contract.evmRuntimeAssembly= m_evmAssemblyStack->evmRuntimeAssembly();
+		contract.evmRuntimeAssembly = m_evmAssemblyStack->evmRuntimeAssembly();
 		contract.object = m_evmAssemblyStack->object();
 		contract.runtimeObject = m_evmAssemblyStack->runtimeObject();
 
@@ -727,7 +725,7 @@ bool CompilerStack::compile(State _stopAfter)
 					{
 						if (
 							SourceLocation const* sourceLocation =
-								boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
+							boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
 						)
 						{
 							string const* comment = _unimplementedError.comment();
@@ -969,8 +967,8 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
 	{
-		std::vector<std::string> sources = sourceNames();
-		if (std::find(sources.begin(), sources.end(), CompilerContext::yulUtilityFileName()) == sources.end())
+		vector<string> sources = sourceNames();
+		if (find(sources.begin(), sources.end(), CompilerContext::yulUtilityFileName()) == sources.end())
 			sources.emplace_back(CompilerContext::yulUtilityFileName());
 		currentContract.evmAssembly->setSourceList(sources);
 		return currentContract.evmAssembly->assemblyJSON();
@@ -981,6 +979,9 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 
 vector<string> CompilerStack::sourceNames() const
 {
+	if (m_evmAssemblyStack)
+		return m_evmAssemblyStack->evmAssembly()->sourceList();
+
 	return ranges::to<vector>(m_sources | ranges::views::keys);
 }
 
