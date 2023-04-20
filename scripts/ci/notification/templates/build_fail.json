@@ -1,0 +1,6 @@
+{
+    "msgtype": "m.text",
+    "body": " ❌ [${WORKFLOW_NAME}] Job ${JOB} failed on ${BRANCH}. Please see ${BUILD_URL} for details.",
+    "format": "org.matrix.custom.html",
+    "formatted_body": " ❌ [${WORKFLOW_NAME}] Job <strong>${JOB}</strong> failed on <strong>${BRANCH}</strong>. Please see <a href=\"${BUILD_URL}\">build ${BUILD_NUM}</a> for details."
+}
