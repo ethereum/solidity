@@ -42,13 +42,13 @@ function ens_test
     local config_file="hardhat.config.js"
 
     local compile_only_presets=(
+        ir-no-optimize            # FIXME: Tests fail with "Error: cannot estimate gas; transaction may fail or may require manual gas limit"
         legacy-no-optimize        # Compiles but tests fail to deploy GovernorCompatibilityBravo (code too large).
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__945 is 1 slot(s) too deep inside the stack."
-        ir-optimize-evm+yul      # Needs memory-safe inline assembly patch
+        ir-optimize-evm-only
+        ir-optimize-evm+yul       # Needs memory-safe inline assembly patch
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
     )

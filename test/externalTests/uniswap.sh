@@ -45,8 +45,8 @@ function uniswap_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with: "YulException: Variable ret_0 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with: "YulException: Variable ret_0 is 1 slot(s) too deep inside the stack."
+        ir-no-optimize
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only

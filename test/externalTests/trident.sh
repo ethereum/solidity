@@ -54,9 +54,9 @@ function trident_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize            # Compilation fails with: "YulException: Variable var_amount_165 is 9 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only      # Compilation fails with: "YulException: Variable var_amount_165 is 9 slot(s) too deep inside the stack."
-        ir-optimize-evm+yul       # Needs memory-safe inline assembly patch
+        ir-no-optimize
+        ir-optimize-evm-only
+        ir-optimize-evm+yul        # Needs memory-safe inline assembly patch
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
