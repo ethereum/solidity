@@ -1056,7 +1056,7 @@ void CommandLineParser::processArgs()
 					CommandLineValidationError,
 					fmt::format(
 						"Option --{} is not supported with --{}.",
-						g_strCombinedJson,
+						option.first,
 						g_strImportEvmAssemblerJson
 					)
 				);
