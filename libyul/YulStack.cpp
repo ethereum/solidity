@@ -86,9 +86,6 @@ bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const
 
 void YulStack::optimize()
 {
-	if (!m_optimiserSettings.runYulOptimiser)
-		return;
-
 	yulAssert(m_analysisSuccessful, "Analysis was not successful.");
 
 	m_analysisSuccessful = false;
@@ -159,13 +156,15 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	unique_ptr<GasMeter> meter;
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
 		meter = make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+
 	OptimiserSuite::run(
 		dialect,
 		meter.get(),
 		_object,
-		m_optimiserSettings.optimizeStackAllocation,
-		m_optimiserSettings.yulOptimiserSteps,
-		m_optimiserSettings.yulOptimiserCleanupSteps,
+		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
+		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.optimizeStackAllocation : true,
+		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.yulOptimiserSteps : "u",
+		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.yulOptimiserCleanupSteps : "",
 		_isCreation ? nullopt : make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
 	);
@@ -231,7 +230,12 @@ YulStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 
 	evmasm::Assembly assembly(m_evmVersion, true, {});
 	EthAssemblyAdapter adapter(assembly);
-	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
+
+	// NOTE: We always need stack optimization when Yul optimizer is disabled. It being disabled
+	// just means that we don't use the full step sequence. We still run it with the minimal steps
+	// required to avoid "stack too deep".
+	bool optimize = m_optimiserSettings.optimizeStackAllocation || !m_optimiserSettings.runYulOptimiser;
+	compileEVM(adapter, optimize);
 
 	assembly.optimise(evmasm::Assembly::OptimiserSettings::translateSettings(m_optimiserSettings, m_evmVersion));
 
