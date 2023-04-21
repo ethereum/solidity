@@ -59,4 +59,97 @@ void EVMAssemblyStack::assemble()
 	}
 }
 
+LinkerObject const& EVMAssemblyStack::object(string const& _contractName) const
+{
+	solAssert(_contractName == m_name);
+	return m_object;
+}
+
+LinkerObject const& EVMAssemblyStack::runtimeObject(string const& _contractName) const
+{
+	solAssert(_contractName == m_name);
+	return m_runtimeObject;
+}
+
+// TODO: Review implementation here
+map<string, unsigned> EVMAssemblyStack::sourceIndices() const
+{
+	solAssert(m_evmAssembly);
+
+	map<string, unsigned> indices;
+	unsigned index = 0;
+		for (auto const& s: m_evmAssembly->sourceList())
+			if (s != CompilerContext::yulUtilityFileName())
+				indices[s] = index++;
+
+	if (indices.find(CompilerContext::yulUtilityFileName()) == indices.end())
+		indices[CompilerContext::yulUtilityFileName()] = index++;
+	return indices;
+}
+
+string const* EVMAssemblyStack::sourceMapping(string const& _contractName) const
+{
+	solAssert(_contractName == m_name);
+	solAssert(m_evmAssembly);
+
+	if (!m_sourceMapping.has_value())
+	{
+		// TODO: Should this be already pre-computed in assemble() and only returned here?
+		AssemblyItems const& items = m_evmAssembly->items();
+		m_sourceMapping.emplace(AssemblyItem::computeSourceMapping(items, sourceIndices()));
+	}
+
+	return m_sourceMapping.has_value() ? &m_sourceMapping.value() : nullptr;
+}
+
+string const* EVMAssemblyStack::runtimeSourceMapping(string const& _contractName) const
+{
+	solAssert(_contractName == m_name);
+	solAssert(m_evmRuntimeAssembly);
+
+	if (!m_sourceMapping.has_value())
+	{
+		// TODO: Should this be already pre-computed in assemble() and only returned here?
+		AssemblyItems const& items = m_evmRuntimeAssembly->items();
+		m_sourceMapping.emplace(AssemblyItem::computeSourceMapping(items, sourceIndices()));
+	}
+
+	return m_sourceMapping.has_value() ? &m_sourceMapping.value() : nullptr;
+}
+
+Json::Value EVMAssemblyStack::assemblyJSON(string const& _contractName) const
+{
+	solAssert(_contractName == m_name);
+	solAssert(m_evmAssembly);
+
+	vector<string> sources = sourceNames();
+	if (find(sources.begin(), sources.end(), CompilerContext::yulUtilityFileName()) == sources.end())
+		sources.emplace_back(CompilerContext::yulUtilityFileName());
+	m_evmAssembly->setSourceList(sources);
+	return m_evmAssembly->assemblyJSON();
+}
+
+string EVMAssemblyStack::assemblyString(string const& _contractName, StringMap const& _sourceCodes) const
+{
+	solAssert(_contractName == m_name);
+	solAssert(m_evmAssembly);
+
+	return m_evmAssembly->assemblyString(m_debugInfoSelection, _sourceCodes);
+}
+
+string const EVMAssemblyStack::filesystemFriendlyName(string const& _contractName) const
+{
+	solAssert(_contractName == m_name);
+
+	// We have only one contract so there are no conflicts possible and no need to sanitize the name
+	return m_name;
+}
+
+vector<string> EVMAssemblyStack::sourceNames() const
+{
+	solAssert(m_evmAssembly);
+
+	return m_evmAssembly->sourceList();
+}
+
 } // namespace solidity::evmasm
