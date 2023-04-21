@@ -18,13 +18,13 @@
 
 #pragma once
 
-#include <map>
-#include <string>
+#include <libevmasm/Assembly.h>
+#include <libevmasm/LinkerObject.h>
 
 #include <libsolutil/JSON.h>
 
-#include <libevmasm/Assembly.h>
-#include <libevmasm/LinkerObject.h>
+#include <map>
+#include <string>
 
 namespace solidity::evmasm
 {
@@ -43,17 +43,11 @@ public:
 	std::string const& name() const { return m_name; }
 
 	evmasm::LinkerObject const& object() const { return m_object; }
-
-	std::shared_ptr<evmasm::Assembly> const& evmAssembly() const { return m_evmAssembly; }
-
 	evmasm::LinkerObject const& runtimeObject() const { return m_runtimeObject; }
 
+	std::shared_ptr<evmasm::Assembly> const& evmAssembly() const { return m_evmAssembly; }
 	std::shared_ptr<evmasm::Assembly> const& evmRuntimeAssembly() const { return m_evmRuntimeAssembly; }
 
-	Json::Value json() const
-	{
-		return m_json;
-	}
 
 private:
 	langutil::EVMVersion m_evmVersion;

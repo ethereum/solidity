@@ -32,20 +32,24 @@ using namespace std;
 namespace solidity::evmasm
 {
 
-bool EVMAssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
+bool EVMAssemblyStack::parseAndAnalyze(string const& _sourceName, string const& _source)
 {
+	solAssert(!m_evmAssembly);
+
 	m_name = _sourceName;
-	if (jsonParseStrict(_source, m_json))
-	{
-		m_evmAssembly = evmasm::Assembly::fromJSON(m_json);
-		return m_evmAssembly != nullptr;
-	}
-	return false;
+	if (!jsonParseStrict(_source, m_json))
+		return false;
+
+	m_evmAssembly = evmasm::Assembly::fromJSON(m_json);
+	return m_evmAssembly != nullptr;
 }
 
 void EVMAssemblyStack::assemble()
 {
 	solAssert(m_evmAssembly->isCreation());
+	solAssert(m_evmAssembly);
+	solAssert(!m_evmRuntimeAssembly);
+
 	m_object = m_evmAssembly->assemble();
 	if (m_evmAssembly->numSubs() > 0)
 	{

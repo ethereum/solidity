@@ -730,12 +730,13 @@ void CommandLineInterface::printLicense()
 void CommandLineInterface::assembleFromEvmAssemblyJson()
 {
 	solAssert(m_options.input.mode == InputMode::EVMAssemblerJSON);
+	solAssert(m_compiler == nullptr);
 	try
 	{
 		solAssert(m_fileReader.sourceUnits().size() == 1);
-		auto const iter = m_fileReader.sourceUnits().begin();
+		auto&& [sourceUnitName, source] = *m_fileReader.sourceUnits().begin();
 		m_compiler = make_unique<CompilerStack>(m_universalCallback.callback());
-		m_compiler->importFromEVMAssemblyStack(iter->first, iter->second);
+		m_compiler->importFromEVMAssemblyStack(sourceUnitName, source);
 	}
 	catch (evmasm::AssemblyImportException const& _exception)
 	{
