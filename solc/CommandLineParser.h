@@ -56,7 +56,7 @@ enum class InputMode
 	StandardJson,
 	Linker,
 	Assembler,
-	LanguageServer
+	LanguageServer,
 };
 
 struct CompilerOutputs
@@ -295,4 +295,4 @@ private:
 	boost::program_options::variables_map m_args;
 };
 
-}
+} // namespace solidity::frontend

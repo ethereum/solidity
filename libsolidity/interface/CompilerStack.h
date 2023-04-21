@@ -426,7 +426,7 @@ private:
 
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
-	void assemble(
+	void assembleYul(
 		ContractDefinition const& _contract,
 		std::shared_ptr<evmasm::Assembly> _assembly,
 		std::shared_ptr<evmasm::Assembly> _runtimeAssembly
@@ -514,8 +514,6 @@ private:
 	std::map<std::string, util::h160> m_libraries;
 	ImportRemapper m_importRemapper;
 	std::map<std::string const, Source> m_sources;
-	// if imported, store AST-JSONS for each filename
-	std::map<std::string, Json::Value> m_sourceJsons;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;

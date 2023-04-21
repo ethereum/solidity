@@ -244,7 +244,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 		jsonItem["end"] = item.location().end;
 		if (item.m_modifierDepth != 0)
 			jsonItem["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
-		std::string jumpType = item.getJumpTypeAsString();
+		string jumpType = item.getJumpTypeAsString();
 		if (!jumpType.empty())
 			jsonItem["jumpType"] = jumpType;
 		if (name == "PUSHLIB")
@@ -286,7 +286,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
-			std::stringstream hexStr;
+			stringstream hexStr;
 			hexStr << hex << i;
 			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices, /*_includeSourceList = */false);
 		}
@@ -341,7 +341,7 @@ Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 
 map<u256, u256> const& Assembly::optimiseInternal(
 	OptimiserSettings const& _settings,
-	std::set<size_t> _tagsReferencedFromOutside
+	set<size_t> _tagsReferencedFromOutside
 )
 {
 	if (m_tagReplacements)

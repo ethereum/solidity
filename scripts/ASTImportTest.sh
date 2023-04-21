@@ -19,6 +19,7 @@
 # (c) solidity contributors.
 # ------------------------------------------------------------------------------
 # Bash script to test the import/exports.
+#
 # ast import/export tests:
 #   - first exporting a .sol file to JSON, then loading it into the compiler
 #     and exporting it again. The second JSON should be identical to the first.

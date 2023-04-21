@@ -42,8 +42,8 @@ namespace
 
 string toStringInHex(u256 _value)
 {
-	std::stringstream hexStr;
-	hexStr << std::uppercase << hex << _value;
+	stringstream hexStr;
+	hexStr << uppercase << hex << _value;
 	return hexStr.str();
 }
 
@@ -158,7 +158,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 			return 2;
 	}
 	case VerbatimBytecode:
-		return std::get<2>(*m_verbatimBytecode).size();
+		return get<2>(*m_verbatimBytecode).size();
 	default:
 		break;
 	}
@@ -411,7 +411,7 @@ size_t AssemblyItem::opcodeCount() const noexcept
 	}
 }
 
-std::string AssemblyItem::computeSourceMapping(
+string AssemblyItem::computeSourceMapping(
 	AssemblyItems const& _items,
 	map<string, unsigned> const& _sourceIndicesMap
 )
