@@ -41,8 +41,8 @@
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
 
-#include <libevmasm/LinkerObject.h>
 #include <libevmasm/EVMAssemblyStack.h>
+#include <libevmasm/LinkerObject.h>
 
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
