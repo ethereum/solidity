@@ -9,19 +9,19 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-17
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:87c63f4c0e9be15b60417809cd3245892db281af0f80ed7378a1978f6f170029"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-18
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:db35d88a16f19adfac6dfd88bda4b32a85a82430f28830aad97bcd10fa4f846c"
   ubuntu-2204-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7f0b62da2aa0920660e67cd17fb3a7f6c57d7da72454003056f3bd27bbda2075"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:73e4e80128a0596c3ddb36e36e8039514a9f33ca8799bec82060a49b0cdae461"
   ubuntu-2204-clang-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-2
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:0d4fa1da806f9b3daabd2d1dc0842899af794a838e475c14045c3fb289cc8103"
-  ubuntu-1604-clang-ossfuzz-docker-image:
+  ubuntu-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-23
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-23
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7a84f67829ec2fdcfc8a61ebf22f9dc27b04a9edeb1531565ab3e0ebb1cbc4a0"
   emscripten-docker-image:
     type: string
@@ -137,12 +137,6 @@ defaults:
 
   # --------------------------------------------------------------------------
   # Artifacts Templates
-
-  # the whole build directory
-  - artifacts_build_dir: &artifacts_build_dir
-      root: build
-      paths:
-        - "*"
 
   # compiled solc executable target
   - artifacts_solc: &artifacts_solc
@@ -261,44 +255,88 @@ defaults:
   # --------------------------------------------------------------------------
   # Base Image Templates
 
-  - base_ubuntu1604_clang: &base_ubuntu1604_clang
+  - base_archlinux: &base_archlinux
       docker:
-        - image: << pipeline.parameters.ubuntu-1604-clang-ossfuzz-docker-image >>
+        - image: archlinux:base
       environment:
         TERM: xterm
         MAKEFLAGS: -j 3
 
-  - base_ubuntu1604_clang_small: &base_ubuntu1604_clang_small
-      <<: *base_ubuntu1604_clang
+  - base_archlinux_large: &base_archlinux_large
+      docker:
+        - image: archlinux:base
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 5
+
+  - base_cimg_small: &base_cimg_small
+      docker:
+        - image: cimg/base:current
       resource_class: small
       environment:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_ubuntu2204_clang: &base_ubuntu2204_clang
+  - base_ems_large: &base_ems_large
       docker:
-        - image: << pipeline.parameters.ubuntu-2204-clang-docker-image >>
-      environment:
-        TERM: xterm
-        CC: clang
-        CXX: clang++
-        MAKEFLAGS: -j 3
-
-  - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
-      <<: *base_ubuntu2204_clang
+        - image: << pipeline.parameters.emscripten-docker-image >>
       resource_class: large
       environment:
         TERM: xterm
-        CC: clang
-        CXX: clang++
         MAKEFLAGS: -j 5
 
-  - base_ubuntu2004: &base_ubuntu2004
+  - base_node_small: &base_node_small
       docker:
-        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+        - image: cimg/node:current
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
+
+  - base_osx: &base_osx
+      macos:
+        xcode: "13.2.0"
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j5
+
+  - base_osx_large: &base_osx_large
+      macos:
+        xcode: "13.2.0"
+      resource_class: large
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j10
+
+  - base_python_small: &base_python_small
+      docker:
+        - image: cimg/python:3.6
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
+
+  - base_ubuntu_clang: &base_ubuntu_clang
+      docker:
+        - image: << pipeline.parameters.ubuntu-clang-ossfuzz-docker-image >>
       environment:
         TERM: xterm
         MAKEFLAGS: -j 3
+
+  - base_ubuntu_clang_small: &base_ubuntu_clang_small
+      <<: *base_ubuntu_clang
+      resource_class: small
+      environment:
+        TERM: xterm
+        MAKEFLAGS: -j 2
+
+  - base_ubuntu2004: &base_ubuntu2004
+      docker:
+          - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+      environment:
+          TERM: xterm
+          MAKEFLAGS: -j 3
 
   - base_ubuntu2004_small: &base_ubuntu2004_small
       <<: *base_ubuntu2004
@@ -321,6 +359,24 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 3
 
+  - base_ubuntu2204_clang: &base_ubuntu2204_clang
+      docker:
+        - image: << pipeline.parameters.ubuntu-2204-clang-docker-image >>
+      environment:
+        TERM: xterm
+        CC: clang
+        CXX: clang++
+        MAKEFLAGS: -j 3
+
+  - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
+      <<: *base_ubuntu2204_clang
+      resource_class: large
+      environment:
+        TERM: xterm
+        CC: clang
+        CXX: clang++
+        MAKEFLAGS: -j 5
+
   - base_ubuntu2204_small: &base_ubuntu2204_small
       <<: *base_ubuntu2204
       resource_class: small
@@ -342,28 +398,10 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 10
 
-  - base_cimg_small: &base_cimg_small
-      docker:
-        - image: cimg/base:current
-      resource_class: small
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 2
-
-  - base_archlinux: &base_archlinux
-      docker:
-        - image: archlinux:base
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 3
-
-  - base_archlinux_large: &base_archlinux_large
-      docker:
-        - image: archlinux:base
-      resource_class: large
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 5
+  - base_win_bash: &base_win_bash
+      executor:
+        name: win/default
+        shell: bash.exe
 
   - base_win_powershell: &base_win_powershell
       executor:
@@ -376,132 +414,92 @@ defaults:
         shell: powershell.exe
         size: large
 
-  - base_win_bash: &base_win_bash
-      executor:
-        name: win/default
-        shell: bash.exe
-
-  - base_osx: &base_osx
-      macos:
-        xcode: "13.2.0"
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j5
-
-  - base_osx_large: &base_osx_large
-      macos:
-        xcode: "13.2.0"
-      resource_class: large
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j10
-
-  - base_ems_large: &base_ems_large
-      docker:
-        - image: << pipeline.parameters.emscripten-docker-image >>
-      resource_class: large
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 5
-
-  - base_python_small: &base_python_small
-      docker:
-        - image: cimg/python:3.6
-      resource_class: small
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 2
-
-  - base_node_small: &base_node_small
-      docker:
-        - image: cimg/node:current
-      resource_class: small
-      environment:
-        TERM: xterm
-        MAKEFLAGS: -j 2
-
   # --------------------------------------------------------------------------
   # Workflow Templates
 
-  - workflow_trigger_on_tags: &workflow_trigger_on_tags
+  - on_all_tags_and_branches: &on_all_tags_and_branches
       filters:
         tags:
           only: /.*/
 
-  - workflow_trigger_on_releases: &workflow_trigger_on_releases
+  - on_version_tags: &on_version_tags
       filters:
         tags:
           only: /^v.*/
         branches:
           ignore: /.*/
 
-  - workflow_ubuntu2204: &workflow_ubuntu2204
-      <<: *workflow_trigger_on_tags
+  - on_develop: &on_develop
+      filters:
+        branches:
+          only:
+            - develop
+
+  - requires_nothing: &requires_nothing
+      <<: *on_all_tags_and_branches
+
+  - requires_b_ubu: &requires_b_ubu
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu
 
-  - workflow_ubuntu1604_clang: &workflow_ubuntu1604_clang
-      <<: *workflow_trigger_on_tags
-      requires:
-        - b_ubu_ossfuzz
-
-  - workflow_ubuntu2204_clang: &workflow_ubuntu2204_clang
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_clang: &requires_b_ubu_clang
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_clang
 
-  - workflow_ubuntu2204_force_release: &workflow_ubuntu2204_force_release
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_force_release: &requires_b_ubu_force_release
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_force_release
 
-  - workflow_ubuntu2004_static: &workflow_ubuntu2004_static
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_static: &requires_b_ubu_static
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_static
 
-  - workflow_archlinux: &workflow_archlinux
-      <<: *workflow_trigger_on_tags
+  - requires_b_archlinux: &requires_b_archlinux
+      <<: *on_all_tags_and_branches
       requires:
         - b_archlinux
 
-  - workflow_ubuntu2204_codecov: &workflow_ubuntu2204_codecov
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_codecov: &requires_b_ubu_codecov
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_codecov
 
-  - workflow_osx: &workflow_osx
-      <<: *workflow_trigger_on_tags
+  - requires_b_osx: &requires_b_osx
+      <<: *on_all_tags_and_branches
       requires:
         - b_osx
 
-  - workflow_ubuntu2204_asan: &workflow_ubuntu2204_asan
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_asan: &requires_b_ubu_asan
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_asan
 
-  - workflow_ubuntu2204_asan_clang: &workflow_ubuntu2204_asan_clang
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_asan_clang: &requires_b_ubu_asan_clang
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_asan_clang
 
-  - workflow_ubuntu2204_ubsan_clang: &workflow_ubuntu2204_ubsan_clang
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_ubsan_clang: &requires_b_ubu_ubsan_clang
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_ubsan_clang
 
-  - workflow_emscripten: &workflow_emscripten
-      <<: *workflow_trigger_on_tags
+  - requires_b_ems: &requires_b_ems
+      <<: *on_all_tags_and_branches
       requires:
         - b_ems
 
-  - workflow_ubuntu1604_ossfuzz: &workflow_ubuntu1604_ossfuzz
-      <<: *workflow_trigger_on_tags
+  - requires_b_ubu_ossfuzz: &requires_b_ubu_ossfuzz
+      <<: *on_all_tags_and_branches
       requires:
         - b_ubu_ossfuzz
 
-  - workflow_win: &workflow_win
-      <<: *workflow_trigger_on_tags
+  - requires_b_win: &requires_b_win
+      <<: *on_all_tags_and_branches
       requires:
         - b_win
 
@@ -510,119 +508,135 @@ defaults:
 
   # Separate compile-only runs of those external tests where a full run takes much longer.
   - job_ems_compile_ext_colony: &job_ems_compile_ext_colony
-      <<: *workflow_emscripten
+      <<: *requires_b_ems
       name: t_ems_compile_ext_colony
       project: colony
       binary_type: solcjs
       compile_only: 1
-      nodejs_version: '14.20'
+      image: cimg/node:14.20
       python2: true
 
   - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_gnosis
       project: gnosis
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
+
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_zeppelin
       project: zeppelin
       binary_type: native
       resource_class: large
+
   - job_native_test_ext_ens: &job_native_test_ext_ens
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_ens
       project: ens
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
+
   - job_native_test_ext_trident: &job_native_test_ext_trident
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_trident
       project: trident
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
+
   - job_native_test_ext_euler: &job_native_test_ext_euler
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_euler
       project: euler
       binary_type: native
       resource_class: medium
+
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_yield_liquidator
       project: yield-liquidator
       binary_type: native
+
   - job_native_test_ext_bleeps: &job_native_test_ext_bleeps
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_bleeps
       project: bleeps
       binary_type: native
       resource_class: medium
+
   - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_pool_together
       project: pool-together
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
+
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_perpetual_pools
       project: perpetual-pools
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
+
   - job_native_test_ext_uniswap: &job_native_test_ext_uniswap
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_uniswap
       project: uniswap
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
+
   - job_native_test_ext_prb_math: &job_native_test_ext_prb_math
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
+
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_elementfi
       project: elementfi
       binary_type: native
       resource_class: medium
+
   - job_native_test_ext_brink: &job_native_test_ext_brink
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_brink
       project: brink
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
+
   - job_native_test_ext_chainlink: &job_native_test_ext_chainlink
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_chainlink
       project: chainlink
       binary_type: native
-      nodejs_version: '16.18'
+      image: cimg/node:16.18
       resource_class: large # Tests run out of memory on a smaller machine
+
   - job_native_test_ext_gp2: &job_native_test_ext_gp2
-      <<: *workflow_ubuntu2004_static
+      <<: *requires_b_ubu_static
       name: t_native_test_ext_gp2
       project: gp2
       binary_type: native
-      nodejs_version: '18.11'
+      image: cimg/node:18.11
+
   - job_ems_test_ext_colony: &job_ems_test_ext_colony
-      <<: *workflow_emscripten
+      <<: *requires_b_ems
       name: t_ems_test_ext_colony
       project: colony
       binary_type: solcjs
-      nodejs_version: '14.20'
+      image: cimg/node:14.20
       resource_class: medium
       python2: true
 
   - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       name: b_ubu_asan_clang
       cmake_options: -DSANITIZE=address
+
   - job_b_ubu_ubsan_clang: &job_b_ubu_ubsan_clang
-      <<: *workflow_trigger_on_tags
+      <<: *on_all_tags_and_branches
       name: b_ubu_ubsan_clang
       cmake_options: -DSANITIZE=undefined
 
@@ -901,7 +915,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
-    <<: *base_ubuntu1604_clang
+    <<: *base_ubuntu_clang
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -910,7 +924,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *base_ubuntu1604_clang_small
+    <<: *base_ubuntu_clang_small
     steps:
       - checkout
       - attach_workspace:
@@ -1089,11 +1103,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: build
-      - run:
-          name: Install all locales
-          command: |
-            apt update --assume-yes
-            apt install locales-all --assume-yes --no-install-recommends
       - run: test/localeTest.sh build/solc/solc
       - matrix_notify_failure_unless_pr
 
@@ -1192,7 +1201,7 @@ jobs:
             yarn test
       - matrix_notify_failure_unless_pr
 
-  t_ems_ext:
+  t_ext:
     parameters:
       project:
         type: string
@@ -1204,9 +1213,9 @@ jobs:
       compile_only:
         type: integer
         default: 0
-      nodejs_version:
+      image:
         type: string
-        default: current
+        default: cimg/node:current
       resource_class:
         type: string
         default: small
@@ -1214,14 +1223,14 @@ jobs:
         type: boolean
         default: false
     docker:
-      - image: cimg/node:<<parameters.nodejs_version>>
-    resource_class: <<parameters.resource_class>>
+      - image: << parameters.image >>
+    resource_class: << parameters.resource_class >>
     # NOTE: Each external test runs up to 6 independent settings presets. If parallelism is higher than
     # actual preset count, some runs will exit immediately. If it's lower, some runs will get more than one preset.
     parallelism: 6
     environment:
       TERM: xterm
-      COMPILE_ONLY: <<parameters.compile_only>>
+      COMPILE_ONLY: << parameters.compile_only >>
     steps:
       - checkout
       - attach_workspace:
@@ -1247,17 +1256,17 @@ jobs:
             equal: [<< parameters.binary_type >>, "solcjs"]
           steps:
             - run:
-                name: External <<parameters.project>> tests (solcjs)
+                name: External << parameters.project >> tests (solcjs)
                 command: |
-                  test/externalTests/<<parameters.project>>.sh solcjs /tmp/workspace/soljson.js
+                  test/externalTests/<< parameters.project >>.sh solcjs /tmp/workspace/soljson.js
       - when:
           condition:
             equal: [<< parameters.binary_type >>, "native"]
           steps:
             - run:
-                name: External <<parameters.project>> tests (native)
+                name: External << parameters.project >> tests (native)
                 command: |
-                  test/externalTests/<<parameters.project>>.sh native /tmp/workspace/solc/solc-static-linux
+                  test/externalTests/<< parameters.project >>.sh native /tmp/workspace/solc/solc-static-linux
       - store_artifacts:
           path: reports/externalTests/
       # persist_to_workspace fails if the directory does not exist and the test script will create
@@ -1502,12 +1511,6 @@ jobs:
           when: on_fail
           command: diff --unified=0 --report-identical-files --from-file $REPORT_FILES | head --lines 50
       - run:
-          name: Install zip
-          when: on_fail
-          command: |
-            apt update --quiet
-            apt install zip --assume-yes
-      - run:
           name: Bundle reports into a single package
           when: on_fail
           command: zip all-bytecode-reports.zip $REPORT_FILES
@@ -1564,75 +1567,75 @@ workflows:
   main:
     jobs:
       # basic checks
-      - chk_spelling: *workflow_trigger_on_tags
-      - chk_coding_style: *workflow_trigger_on_tags
-      # DISABLED FOR 0.6.0 - chk_docs_examples: *workflow_trigger_on_tags
-      - chk_buglist: *workflow_trigger_on_tags
-      - chk_proofs: *workflow_trigger_on_tags
-      - chk_pylint: *workflow_trigger_on_tags
-      - chk_errorcodes: *workflow_trigger_on_tags
-      - chk_antlr_grammar: *workflow_trigger_on_tags
-      - chk_docs_pragma_min_version: *workflow_trigger_on_tags
-      - t_ubu_pyscripts: *workflow_trigger_on_tags
-      - t_win_pyscripts: *workflow_trigger_on_tags
+      - chk_spelling: *requires_nothing
+      - chk_coding_style: *requires_nothing
+      # DISABLED FOR 0.6.0 - chk_docs_examples: *requires_nothing
+      - chk_buglist: *requires_nothing
+      - chk_proofs: *requires_nothing
+      - chk_pylint: *requires_nothing
+      - chk_errorcodes: *requires_nothing
+      - chk_antlr_grammar: *requires_nothing
+      - chk_docs_pragma_min_version: *requires_nothing
+      - t_ubu_pyscripts: *requires_nothing
+      - t_win_pyscripts: *requires_nothing
 
       # build-only
-      - b_docs: *workflow_trigger_on_tags
-      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *workflow_trigger_on_tags
+      - b_docs: *requires_nothing
+      # DISABLED FOR 0.8.18 - b_ubu_cxx20: *requires_nothing
       # Issue: https://github.com/ethereum/solidity/issues/13868
-      - b_ubu_ossfuzz: *workflow_trigger_on_tags
+      - b_ubu_ossfuzz: *requires_nothing
 
       # OS/X build and tests
-      - b_osx: *workflow_trigger_on_tags
-      - t_osx_cli: *workflow_osx
-      - t_osx_soltest: *workflow_osx
+      - b_osx: *requires_nothing
+      - t_osx_cli: *requires_b_osx
+      - t_osx_soltest: *requires_b_osx
 
       # ArchLinux build and tests
-      - b_archlinux: *workflow_trigger_on_tags
-      - t_archlinux_soltest: *workflow_archlinux
+      - b_archlinux: *requires_nothing
+      - t_archlinux_soltest: *requires_b_archlinux
 
       # Static build
-      - b_ubu_static: *workflow_trigger_on_tags
+      - b_ubu_static: *requires_nothing
 
       # Ubuntu build and tests
-      - b_ubu: *workflow_trigger_on_tags
-      - t_ubu_cli: *workflow_ubuntu2204
-      - t_ubu_locale: *workflow_ubuntu2204
-      - t_ubu_soltest_all: *workflow_ubuntu2204
-      - b_ubu_clang: *workflow_trigger_on_tags
-      - t_ubu_clang_soltest: *workflow_ubuntu2204_clang
-      - t_ubu_lsp: *workflow_ubuntu2204
+      - b_ubu: *requires_nothing
+      - t_ubu_cli: *requires_b_ubu
+      - t_ubu_locale: *requires_b_ubu
+      - t_ubu_soltest_all: *requires_b_ubu
+      - b_ubu_clang: *requires_nothing
+      - t_ubu_clang_soltest: *requires_b_ubu_clang
+      - t_ubu_lsp: *requires_b_ubu
 
       # Ubuntu fake release build and tests
-      - b_ubu_force_release: *workflow_trigger_on_tags
-      - t_ubu_force_release_cli: *workflow_ubuntu2204_force_release
-      - t_ubu_force_release_soltest_all: *workflow_ubuntu2204_force_release
+      - b_ubu_force_release: *requires_nothing
+      - t_ubu_force_release_cli: *requires_b_ubu_force_release
+      - t_ubu_force_release_soltest_all: *requires_b_ubu_force_release
 
       # Emscripten build and tests that take 15 minutes or less
-      - b_ems: *workflow_trigger_on_tags
-      - t_ems_solcjs: *workflow_emscripten
-      - t_ems_ext_hardhat: *workflow_emscripten
+      - b_ems: *requires_nothing
+      - t_ems_solcjs: *requires_b_ems
+      - t_ems_ext_hardhat: *requires_b_ems
 
-      - t_ems_ext: *job_ems_compile_ext_colony
+      - t_ext: *job_ems_compile_ext_colony
 
-      - t_ems_ext: *job_native_test_ext_gnosis
-      - t_ems_ext: *job_native_test_ext_zeppelin
-      - t_ems_ext: *job_native_test_ext_ens
-      - t_ems_ext: *job_native_test_ext_trident
-      - t_ems_ext: *job_native_test_ext_euler
-      - t_ems_ext: *job_native_test_ext_yield_liquidator
-      - t_ems_ext: *job_native_test_ext_bleeps
-      - t_ems_ext: *job_native_test_ext_pool_together
-      - t_ems_ext: *job_native_test_ext_perpetual_pools
-      - t_ems_ext: *job_native_test_ext_uniswap
-      - t_ems_ext: *job_native_test_ext_prb_math
-      - t_ems_ext: *job_native_test_ext_elementfi
-      - t_ems_ext: *job_native_test_ext_brink
-      - t_ems_ext: *job_native_test_ext_chainlink
-      - t_ems_ext: *job_native_test_ext_gp2
+      - t_ext: *job_native_test_ext_gnosis
+      - t_ext: *job_native_test_ext_zeppelin
+      - t_ext: *job_native_test_ext_ens
+      - t_ext: *job_native_test_ext_trident
+      - t_ext: *job_native_test_ext_euler
+      - t_ext: *job_native_test_ext_yield_liquidator
+      - t_ext: *job_native_test_ext_bleeps
+      - t_ext: *job_native_test_ext_pool_together
+      - t_ext: *job_native_test_ext_perpetual_pools
+      - t_ext: *job_native_test_ext_uniswap
+      - t_ext: *job_native_test_ext_prb_math
+      - t_ext: *job_native_test_ext_elementfi
+      - t_ext: *job_native_test_ext_brink
+      - t_ext: *job_native_test_ext_chainlink
+      - t_ext: *job_native_test_ext_gp2
 
       - c_ext_benchmarks:
-          <<: *workflow_trigger_on_tags
+          <<: *requires_nothing
           requires:
             - t_ems_compile_ext_colony
             - t_native_test_ext_gnosis
@@ -1652,32 +1655,32 @@ workflows:
             - t_native_test_ext_gp2
 
       # Windows build and tests
-      - b_win: *workflow_trigger_on_tags
-      - t_win_soltest: *workflow_win
+      - b_win: *requires_nothing
+      - t_win_soltest: *requires_b_win
 
       # Bytecode comparison:
       - b_bytecode_ubu_static:
-          <<: *workflow_trigger_on_tags
+          <<: *requires_nothing
           requires:
             - b_ubu_static
       - b_bytecode_ubu:
-          <<: *workflow_trigger_on_tags
+          <<: *requires_nothing
           requires:
             - b_ubu
       - b_bytecode_win:
-          <<: *workflow_trigger_on_tags
+          <<: *requires_nothing
           requires:
             - b_win
       - b_bytecode_osx:
-          <<: *workflow_trigger_on_tags
+          <<: *requires_nothing
           requires:
             - b_osx
       - b_bytecode_ems:
-          <<: *workflow_trigger_on_tags
+          <<: *requires_nothing
           requires:
             - b_ems
       - t_bytecode_compare:
-          <<: *workflow_trigger_on_tags
+          <<: *requires_nothing
           requires:
             - b_bytecode_ubu_static
             - b_bytecode_ubu
@@ -1687,7 +1690,7 @@ workflows:
 
       # Final artifacts
       - c_release_binaries:
-          <<: *workflow_trigger_on_releases
+          <<: *on_version_tags
           requires:
             - b_ubu_static
             - b_osx
@@ -1699,32 +1702,29 @@ workflows:
     triggers:
       - schedule:
           cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - develop
+          <<: *on_develop
 
     jobs:
       # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *workflow_trigger_on_tags
-      - t_ubu_ossfuzz: *workflow_ubuntu1604_ossfuzz
+      - b_ubu_ossfuzz: *requires_nothing
+      - t_ubu_ossfuzz: *requires_b_ubu_ossfuzz
 
       # Code Coverage enabled build and tests
-      - b_ubu_codecov: *workflow_trigger_on_tags
-      - t_ubu_codecov: *workflow_ubuntu2204_codecov
+      - b_ubu_codecov: *requires_nothing
+      - t_ubu_codecov: *requires_b_ubu_codecov
 
       # ASan build and tests
-      - b_ubu_asan: *workflow_trigger_on_tags
+      - b_ubu_asan: *requires_nothing
       - b_ubu_san_clang: *job_b_ubu_asan_clang
-      - t_ubu_asan_soltest: *workflow_ubuntu2204_asan
-      - t_ubu_asan_clang_soltest: *workflow_ubuntu2204_asan_clang
-      - t_ubu_asan_cli: *workflow_ubuntu2204_asan
+      - t_ubu_asan_soltest: *requires_b_ubu_asan
+      - t_ubu_asan_clang_soltest: *requires_b_ubu_asan_clang
+      - t_ubu_asan_cli: *requires_b_ubu_asan
 
       # UBSan build and tests
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
-      - t_ubu_ubsan_clang_soltest: *workflow_ubuntu2204_ubsan_clang
-      - t_ubu_ubsan_clang_cli: *workflow_ubuntu2204_ubsan_clang
+      - t_ubu_ubsan_clang_soltest: *requires_b_ubu_ubsan_clang
+      - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
 
       # Emscripten build and tests that take more than 15 minutes to execute
-      - b_ems: *workflow_trigger_on_tags
-      - t_ems_ext: *job_ems_test_ext_colony
+      - b_ems: *requires_nothing
+      - t_ext: *job_ems_test_ext_colony

@@ -27,7 +27,7 @@ If the version check was successful, the docker image will be built using the Do
 
 The resulting docker image will be tested by executing the corresponding `scripts/ci/buildpack-deps_test_*` scripts.
 Some of these scripts are symlinked to `scripts/ci/build.sh`, except the following two:
- * `buildpack-deps-ubuntu1604.clang.ossfuzz` => `scripts/ci/build_ossfuzz.sh`
+ * `buildpack-deps-ubuntu.clang.ossfuzz` => `scripts/ci/build_ossfuzz.sh`
  * `buildpack-deps_test_emscripten.sh` => `scripts/ci/build_emscripten.sh`
 
 These scripts `scripts/ci/build.sh` and `scripts/ci/build_ossfuzz.sh` are also used by CircleCI, see `.circleci/config.yml`.
