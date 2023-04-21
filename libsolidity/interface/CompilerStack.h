@@ -41,6 +41,7 @@
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
 
+#include <libevmasm/AbstractAssemblyStack.h>
 #include <libevmasm/EVMAssemblyStack.h>
 #include <libevmasm/LinkerObject.h>
 
@@ -90,7 +91,7 @@ class DeclarationContainer;
  * If error recovery is active, it is possible to progress through the stages even when
  * there are errors. In any case, producing code is only possible without errors.
  */
-class CompilerStack: public langutil::CharStreamProvider
+class CompilerStack: public langutil::CharStreamProvider, public evmasm::AbstractAssemblyStack
 {
 public:
 	/// Noncopyable.
@@ -142,7 +143,7 @@ public:
 
 	bool hasError() const { return m_hasError; }
 
-	bool compilationSuccessful() const { return m_stackState >= CompilationSuccessful; }
+	virtual bool compilationSuccessful() const override { return m_stackState >= CompilationSuccessful; }
 
 	/// Resets the compiler to an empty state. Unless @a _keepSettings is set to true,
 	/// all settings are reset as well.
@@ -252,7 +253,7 @@ public:
 	bool compile(State _stopAfter = State::CompilationSuccessful);
 
 	/// @returns the list of sources (paths) used
-	std::vector<std::string> sourceNames() const;
+	virtual std::vector<std::string> sourceNames() const override;
 
 	/// @returns a mapping assigning each source name its index inside the vector returned
 	/// by sourceNames().
@@ -273,13 +274,13 @@ public:
 	std::vector<std::string> const& unhandledSMTLib2Queries() const { return m_unhandledSMTLib2Queries; }
 
 	/// @returns a list of the contract names in the sources.
-	std::vector<std::string> contractNames() const;
+	virtual std::vector<std::string> contractNames() const override;
 
 	/// @returns the name of the last contract. If _sourceName is defined the last contract of that source will be returned.
 	std::string const lastContractName(std::optional<std::string> const& _sourceName = std::nullopt) const;
 
 	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
-	std::string const filesystemFriendlyName(std::string const& _contractName) const;
+	virtual std::string const filesystemFriendlyName(std::string const& _contractName) const override;
 
 	/// @returns the IR representation of a contract.
 	std::string const& yulIR(std::string const& _contractName) const;
@@ -294,10 +295,10 @@ public:
 	evmasm::LinkerObject const& ewasmObject(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
-	evmasm::LinkerObject const& object(std::string const& _contractName) const;
+	virtual evmasm::LinkerObject const& object(std::string const& _contractName) const override;
 
 	/// @returns the runtime object for the contract.
-	evmasm::LinkerObject const& runtimeObject(std::string const& _contractName) const;
+	virtual evmasm::LinkerObject const& runtimeObject(std::string const& _contractName) const override;
 
 	/// @returns normal contract assembly items
 	evmasm::AssemblyItems const* assemblyItems(std::string const& _contractName) const;
@@ -311,21 +312,21 @@ public:
 
 	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
 	/// if the contract does not (yet) have bytecode.
-	std::string const* sourceMapping(std::string const& _contractName) const;
+	virtual std::string const* sourceMapping(std::string const& _contractName) const override;
 
 	/// @returns the string that provides a mapping between runtime bytecode and sourcecode.
 	/// if the contract does not (yet) have bytecode.
-	std::string const* runtimeSourceMapping(std::string const& _contractName) const;
+	virtual std::string const* runtimeSourceMapping(std::string const& _contractName) const override;
 
 	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	std::string assemblyString(std::string const& _contractName, StringMap const& _sourceCodes = StringMap()) const;
+	virtual std::string assemblyString(std::string const& _contractName, StringMap const& _sourceCodes = StringMap()) const override;
 
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	Json::Value assemblyJSON(std::string const& _contractName) const;
+	virtual Json::Value assemblyJSON(std::string const& _contractName) const override;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.

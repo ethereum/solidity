@@ -1,4 +1,5 @@
 set(sources
+	AbstractAssemblyStack.h
 	Assembly.cpp
 	Assembly.h
 	AssemblyItem.cpp
