@@ -427,25 +427,6 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 	storeContractDefinitions();
 }
 
-void CompilerStack::importFromEVMAssemblyStack(std::string const& _sourceName, std::string const& _source)
-{
-	solRequire(m_stackState == Empty, CompilerError, "");
-	m_evmAssemblyStack = make_unique<evmasm::EVMAssemblyStack>(m_evmVersion);
-	Json::Value evmAsmJson;
-	if (m_evmAssemblyStack->parseAndAnalyze(_sourceName, _source))
-	{
-		m_evmAssemblyStack->assemble();
-		string const name{m_evmAssemblyStack->name()};
-		Contract& contract = m_contracts[name];
-		contract.evmAssembly = m_evmAssemblyStack->evmAssembly();
-		contract.evmRuntimeAssembly = m_evmAssemblyStack->evmRuntimeAssembly();
-		contract.object = m_evmAssemblyStack->object();
-		contract.runtimeObject = m_evmAssemblyStack->runtimeObject();
-
-		m_stackState = CompilationSuccessful;
-	}
-}
-
 bool CompilerStack::analyze()
 {
 	if (m_stackState != ParsedAndImported || m_stackState >= AnalysisPerformed)
@@ -680,7 +661,6 @@ bool CompilerStack::isRequestedContract(ContractDefinition const& _contract) con
 
 bool CompilerStack::compile(State _stopAfter)
 {
-	solAssert(m_compilationSourceType != CompilationSourceType::EvmAssemblyJSON);
 	m_stopAfter = _stopAfter;
 	if (m_stackState < AnalysisPerformed)
 		if (!parseAndAnalyze(_stopAfter))
@@ -979,9 +959,6 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 
 vector<string> CompilerStack::sourceNames() const
 {
-	if (m_evmAssemblyStack)
-		return m_evmAssemblyStack->evmAssembly()->sourceList();
-
 	return ranges::to<vector>(m_sources | ranges::views::keys);
 }
 
@@ -989,18 +966,9 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 {
 	map<string, unsigned> indices;
 	unsigned index = 0;
-	if (m_evmAssemblyStack)
-	{
-		for (auto const& s: m_evmAssemblyStack->evmAssembly()->sourceList())
-			if (s != CompilerContext::yulUtilityFileName())
-				indices[s] = index++;
-	}
-	else
-	{
-		for (auto const& s: m_sources)
-			if (s.first != CompilerContext::yulUtilityFileName())
-				indices[s.first] = index++;
-	}
+	for (auto const& s: m_sources)
+		if (s.first != CompilerContext::yulUtilityFileName())
+			indices[s.first] = index++;
 
 	if (indices.find(CompilerContext::yulUtilityFileName()) == indices.end())
 		indices[CompilerContext::yulUtilityFileName()] = index++;
@@ -1606,9 +1574,6 @@ string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) con
 		break;
 	case CompilationSourceType::SolidityAST:
 		sourceType = "SolidityAST";
-		break;
-	case CompilationSourceType::EvmAssemblyJSON:
-		sourceType = "EvmAssemblyJson";
 		break;
 	default:
 		solAssert(false);
