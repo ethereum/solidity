@@ -3,4 +3,4 @@ contract C {
     uint a = m(1000);
 }
 // ----
-// TypeError 5704: (56-63): Mapping is not callable.
+// TypeError 5704: (56-63): This expression is not callable.

@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5704: (90-108): Rational number literal is not callable.
+// TypeError 5704: (90-108): This expression is not callable.

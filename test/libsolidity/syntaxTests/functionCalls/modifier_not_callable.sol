@@ -4,4 +4,4 @@ contract C {
     modifier m(uint) { _; }
 }
 // ----
-// TypeError 5704: (26-33): Modifier is not callable.
+// TypeError 5704: (26-33): This expression is not callable.

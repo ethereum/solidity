@@ -160,15 +160,6 @@ inline std::string toLower(std::string _s)
 	return _s;
 }
 
-/// Returns a copy of the string with the first character converted to its uppercase equivalent.
-/// Uses the classic "C" locale semantics.
-inline std::string capitalized(std::string _s)
-{
-	if (_s.size() > 0)
-		_s[0] = toUpper(_s[0]);
-	return _s;
-}
-
 /// Checks whether _c is a decimal digit character. It uses the classic "C" locale semantics.
 /// @param _c character to be checked
 /// @return true if _c is a decimal digit character, false otherwise
