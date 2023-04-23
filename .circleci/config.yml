@@ -317,15 +317,15 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j 2
 
-  - base_ubuntu_clang: &base_ubuntu_clang
+  - base_ubuntu_clang_ossfuzz: &base_ubuntu_clang_ossfuzz
       docker:
         - image: << pipeline.parameters.ubuntu-clang-ossfuzz-docker-image >>
       environment:
         TERM: xterm
         MAKEFLAGS: -j 3
 
-  - base_ubuntu_clang_small: &base_ubuntu_clang_small
-      <<: *base_ubuntu_clang
+  - base_ubuntu_clang_ossfuzz_small: &base_ubuntu_clang_ossfuzz_small
+      <<: *base_ubuntu_clang_ossfuzz
       resource_class: small
       environment:
         TERM: xterm
@@ -915,7 +915,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
-    <<: *base_ubuntu_clang
+    <<: *base_ubuntu_clang_ossfuzz
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -924,7 +924,7 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
-    <<: *base_ubuntu_clang_small
+    <<: *base_ubuntu_clang_ossfuzz_small
     steps:
       - checkout
       - attach_workspace:
