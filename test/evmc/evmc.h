@@ -412,20 +412,21 @@ struct evmc_result
     /**
      * The reference to output data.
      *
-     *  The output contains data coming from RETURN opcode (iff evmc_result::code
-     *  field is ::EVMC_SUCCESS) or from REVERT opcode.
+     * The output contains data coming from RETURN opcode (iff evmc_result::code
+     * field is ::EVMC_SUCCESS) or from REVERT opcode.
      *
-     *  The memory containing the output data is owned by EVM and has to be
-     *  freed with evmc_result::release().
+     * The memory containing the output data is owned by EVM and has to be
+     * freed with evmc_result::release().
      *
-     *  This MAY be NULL.
+     * This pointer MAY be NULL.
+     * If evmc_result::output_size is 0 this pointer MUST NOT be dereferenced.
      */
     const uint8_t* output_data;
 
     /**
      * The size of the output data.
      *
-     *  If output_data is NULL this MUST be 0.
+     * If evmc_result::output_data is NULL this MUST be 0.
      */
     size_t output_size;
 
@@ -463,13 +464,13 @@ struct evmc_result
     /**
      * Reserved data that MAY be used by a evmc_result object creator.
      *
-     *  This reserved 4 bytes together with 20 bytes from create_address form
-     *  24 bytes of memory called "optional data" within evmc_result struct
-     *  to be optionally used by the evmc_result object creator.
+     * This reserved 4 bytes together with 20 bytes from create_address form
+     * 24 bytes of memory called "optional data" within evmc_result struct
+     * to be optionally used by the evmc_result object creator.
      *
-     *  @see evmc_result_optional_data, evmc_get_optional_data().
+     * @see evmc_result_optional_data, evmc_get_optional_data().
      *
-     *  Also extends the size of the evmc_result to 64 bytes (full cache line).
+     * Also extends the size of the evmc_result to 64 bytes (full cache line).
      */
     uint8_t padding[4];
 };
@@ -963,18 +964,26 @@ enum evmc_revision
      * The Cancun revision.
      *
      * The future next revision after Shanghai.
+     * https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/cancun.md
      */
     EVMC_CANCUN = 12,
 
+    /**
+     * The Prague revision.
+     *
+     * The future next revision after Cancun.
+     */
+    EVMC_PRAGUE = 13,
+
     /** The maximum EVM revision supported. */
-    EVMC_MAX_REVISION = EVMC_CANCUN,
+    EVMC_MAX_REVISION = EVMC_PRAGUE,
 
     /**
      * The latest known EVM revision with finalized specification.
      *
      * This is handy for EVM tools to always use the latest revision available.
      */
-    EVMC_LATEST_STABLE_REVISION = EVMC_LONDON
+    EVMC_LATEST_STABLE_REVISION = EVMC_SHANGHAI
 };
 
 
@@ -1111,7 +1120,7 @@ struct evmc_vm
     /**
      * Optional pointer to function modifying VM's options.
      *
-     *  If the VM does not support this feature the pointer can be NULL.
+     * If the VM does not support this feature the pointer can be NULL.
      */
     evmc_set_option_fn set_option;
 };

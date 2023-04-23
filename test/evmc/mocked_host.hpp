@@ -6,8 +6,8 @@
 #include <evmc/evmc.hpp>
 #include <algorithm>
 #include <cassert>
-#include <string>
 #include <map>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
