@@ -57,6 +57,7 @@ public:
 	 */
 	void insert(YulString const& _variable, std::set<YulString> const& _references)
 	{
+		erase(_variable);
 		for (auto const& reference: _references)
 		{
 			m_ordered.emplace(_variable, reference);
