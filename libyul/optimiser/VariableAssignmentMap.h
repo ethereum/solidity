@@ -25,7 +25,7 @@ namespace solidity::yul
 {
 
 /**
- * Class that implements a forward and a reverse lookup for YulStrings by storing them in multimaps
+ * Class that implements a forward and a reverse lookup for YulStrings by storing them in custom multimaps
  * - one ordered, and one reversed, e.g.
  *
  *  m_ordered           m_reversed
@@ -59,8 +59,8 @@ public:
 	{
 		for (auto const& reference: _references)
 		{
-			m_ordered.addIfNotFound(_variable, reference);
-			m_reversed.addIfNotFound(reference, _variable);
+			m_ordered.emplace(_variable, reference);
+			m_reversed.emplace(reference, _variable);
 		}
 	}
 
@@ -82,7 +82,7 @@ public:
 			[&](size_t i)
 			{
 				m_reversed.remove(m_ordered.value(i), _variable);
-				m_ordered.removeAt(i);
+				m_ordered.remove(i);
 			}
 		);
 	}
@@ -100,24 +100,23 @@ private:
 	public:
 		Multimap(): m_capacity(initialCapacity), m_load(0), m_size(0), m_elements(initialCapacity) {}
 
-		void addIfNotFound(YulString const& _key, YulString const& value)
+		void emplace(YulString const& _key, YulString const& _value)
 		{
 			size_t i = hash(_key);
-			for (; isOccupied(m_elements[i]); i = inc(i))
-				if (m_elements[i].first == _key && m_elements[i].second == value)
+			for (; isOccupied(m_elements[i]); i = next(i))
+				if (m_elements[i].first == _key && m_elements[i].second == _value)
 					return;
-			// We only increment if the slot has never been used.
+			// Only increment the load if the slot has never been used.
 			if (isZero(m_elements[i]))
 				++m_load;
-			m_elements[i] = Element(_key, value);
+			m_elements[i] = Element(_key, _value);
 			++m_size;
-			// We use a 50% load factor for simplicity and performance.
+			// Use a 50% load factor for simplicity and performance.
 			if (m_load > m_capacity / 2)
 			{
 				// Only grow if there are not enough vacant slots.
 				if (m_size > m_capacity / 4)
 					m_capacity *= 2;
-				m_newElements.clear();
 				m_newElements.resize(m_capacity);
 				m_load = m_size;
 				for (auto const& element: m_elements)
@@ -125,14 +124,15 @@ private:
 					{
 						size_t i = hash(element.first);
 						while (!isZero(m_newElements[i]))
-							i = inc(i);
+							i = next(i);
 						m_newElements[i] = element;
 					}
 				std::swap(m_elements, m_newElements); // To avoid reallocation.
+				m_newElements.clear(); // So that a future resize will reset the elements.
 			}
 		}
 
-		void removeAt(size_t _i)
+		void remove(size_t _i)
 		{
 			m_elements[_i].first.setId(maxSize);
 			--m_size;
@@ -140,12 +140,12 @@ private:
 
 		void remove(YulString const& _key, YulString const& _value)
 		{
-			size_t i = firstIndexOf(_key);
+			size_t i = find(_key);
 			if (i != maxSize)
-				for (; !isZero(m_elements[i]); i = inc(i))
+				for (; !isZero(m_elements[i]); i = next(i))
 					if (m_elements[i].first == _key && m_elements[i].second == _value)
 					{
-						removeAt(i);
+						remove(i);
 						return;
 					}
 		}
@@ -153,9 +153,9 @@ private:
 		std::vector<YulString> values(YulString const& _key) const
 		{
 			std::vector<YulString> v;
-			size_t i = firstIndexOf(_key);
+			size_t i = find(_key);
 			if (i != maxSize)
-				for (; !isZero(m_elements[i]); i = inc(i))
+				for (; !isZero(m_elements[i]); i = next(i))
 					if (m_elements[i].first == _key)
 						v.emplace_back(m_elements[i].second);
 			return v;
@@ -164,9 +164,9 @@ private:
 		template <class Function>
 		void walkValues(YulString const& _key, Function _f) const
 		{
-			size_t i = firstIndexOf(_key);
+			size_t i = find(_key);
 			if (i != maxSize)
-				for (; !isZero(m_elements[i]); i = inc(i))
+				for (; !isZero(m_elements[i]); i = next(i))
 					if (m_elements[i].first == _key)
 						_f(m_elements[i].second);
 		}
@@ -174,9 +174,9 @@ private:
 		template <class Function>
 		void walkIndices(YulString const& _key, Function _f) const
 		{
-			size_t i = firstIndexOf(_key);
+			size_t i = find(_key);
 			if (i != maxSize)
-				for (; !isZero(m_elements[i]); i = inc(i))
+				for (; !isZero(m_elements[i]); i = next(i))
 					if (m_elements[i].first == _key)
 						_f(i);
 		}
@@ -188,18 +188,24 @@ private:
 
 		/// Must be a power of 2.
 		constexpr static size_t initialCapacity = 512;
-		/// To denote that a slot has been cleared.
+		/// To denote that a slot has been cleared, or to represent an index for a key not found.
 		constexpr static size_t maxSize = (size_t) -1;
 
+		/// Number of slots.
 		size_t m_capacity;
+		/// Number of slots that are occupied or previously cleared.
 		size_t m_load;
+		/// Number of occupied slots.
 		size_t m_size;
+
+		/// For holding the elements.
 		std::vector<Element> m_elements;
+		/// For rebuilding the table.
 		std::vector<Element> m_newElements;
 
-		size_t firstIndexOf(YulString const& _key) const
+		size_t find(YulString const& _key) const
 		{
-			for (size_t i = hash(_key); ; i = inc(i))
+			for (size_t i = hash(_key); ; i = next(i))
 			{
 				if (isZero(m_elements[i]))
 					return maxSize;
@@ -210,7 +216,7 @@ private:
 
 		bool isZero(Element const& _e) const { return _e.first.empty(); }
 		bool isOccupied(Element const& _e) const { return !isZero(_e) && _e.first.id() != maxSize; }
-		size_t inc(size_t _i) const { return (_i + 1) & (m_capacity - 1); }
+		size_t next(size_t _i) const { return (_i + 1) & (m_capacity - 1); }
 		size_t hash(YulString const& _s) const { return _s.hash() & (m_capacity - 1); }
 	};
 
