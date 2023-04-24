@@ -72,7 +72,7 @@ function format_predefined_message() {
 # Set message environment variables based on CI backend
 if [[ "$CIRCLECI" = true ]] ; then
     BRANCH="$CIRCLE_BRANCH"
-    TAG="$CIRCLE_TAG"
+    TAG="${CIRCLE_TAG:-}"
     BUILD_URL="$CIRCLE_BUILD_URL"
     BUILD_NUM="$CIRCLE_BUILD_NUM"
     WORKFLOW_NAME="$(circleci_workflow_name)"
