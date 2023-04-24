@@ -20,14 +20,13 @@
 #include <libyul/YulString.h>
 
 #include <set>
-#include <map>
 
 namespace solidity::yul
 {
 
 /**
- * Class that implements a reverse lookup for an ``map<YulString, set<YulString>>`` by wrapping the
- * two such maps - one ordered, and one reversed, e.g.
+ * Class that implements a forward and a reverse lookup for YulStrings by storing them in multimaps
+ * - one ordered, and one reversed, e.g.
  *
  *  m_ordered           m_reversed
  *  f -> (g,)           g -> (f,)
@@ -56,7 +55,14 @@ public:
 	 * @param _variable current expression variable
 	 * @param _references all referenced variables in the expression assigned to ``_variable``
 	 */
-	void insert(YulString const& _variable, std::set<YulString> const& _references);
+	void insert(YulString const& _variable, std::set<YulString> const& _references)
+	{
+		for (auto const& reference: _references)
+		{
+			m_ordered.addIfNotFound(_variable, reference);
+			m_reversed.addIfNotFound(reference, _variable);
+		}
+	}
 
 	/**
 	 * Erase entries in both maps based on provided ``_variable``.
@@ -69,15 +75,149 @@ public:
 	 *
 	 * @param _variable variable to erase
 	 */
-	void erase(YulString const& _variable);
-	std::set<YulString> const* getOrderedOrNullptr(YulString const& _variable) const;
-	std::set<YulString> const* getReversedOrNullptr(YulString const& _variable) const;
+	void erase(YulString const& _variable)
+	{
+		m_ordered.walkIndices(
+			_variable,
+			[&](size_t i)
+			{
+				m_reversed.remove(m_ordered.value(i), _variable);
+				m_ordered.removeAt(i);
+			}
+		);
+	}
+
+	std::vector<YulString> getOrdered(YulString const& _variable) const { return m_ordered.values(_variable); }
+	std::vector<YulString> getReversed(YulString const& _variable) const { return m_reversed.values(_variable); }
+	template <class Function>
+	void walkOrdered(YulString const& _variable, Function _f) const { m_ordered.walkValues(_variable, _f); }
+	template <class Function>
+	void walkReversed(YulString const& _variable, Function _f) const { m_reversed.walkValues(_variable, _f); }
 
 private:
+	class Multimap
+	{
+	public:
+		Multimap(): m_capacity(initialCapacity), m_load(0), m_size(0), m_elements(initialCapacity) {}
+
+		void addIfNotFound(YulString const& _key, YulString const& value)
+		{
+			size_t i = hash(_key);
+			for (; isOccupied(m_elements[i]); i = inc(i))
+				if (m_elements[i].first == _key && m_elements[i].second == value)
+					return;
+			// We only increment if the slot has never been used.
+			if (isZero(m_elements[i]))
+				++m_load;
+			m_elements[i] = Element(_key, value);
+			++m_size;
+			// We use a 50% load factor for simplicity and performance.
+			if (m_load > m_capacity / 2)
+			{
+				// Only grow if there are not enough vacant slots.
+				if (m_size > m_capacity / 4)
+					m_capacity *= 2;
+				m_newElements.clear();
+				m_newElements.resize(m_capacity);
+				m_load = m_size;
+				for (auto const& element: m_elements)
+					if (isOccupied(element))
+					{
+						size_t i = hash(element.first);
+						while (!isZero(m_newElements[i]))
+							i = inc(i);
+						m_newElements[i] = element;
+					}
+				std::swap(m_elements, m_newElements); // To avoid reallocation.
+			}
+		}
+
+		void removeAt(size_t _i)
+		{
+			m_elements[_i].first.setId(maxSize);
+			--m_size;
+		}
+
+		void remove(YulString const& _key, YulString const& _value)
+		{
+			size_t i = firstIndexOf(_key);
+			if (i != maxSize)
+				for (; !isZero(m_elements[i]); i = inc(i))
+					if (m_elements[i].first == _key && m_elements[i].second == _value)
+					{
+						removeAt(i);
+						return;
+					}
+		}
+
+		std::vector<YulString> values(YulString const& _key) const
+		{
+			std::vector<YulString> v;
+			size_t i = firstIndexOf(_key);
+			if (i != maxSize)
+				for (; !isZero(m_elements[i]); i = inc(i))
+					if (m_elements[i].first == _key)
+						v.emplace_back(m_elements[i].second);
+			return v;
+		}
+
+		template <class Function>
+		void walkValues(YulString const& _key, Function _f) const
+		{
+			size_t i = firstIndexOf(_key);
+			if (i != maxSize)
+				for (; !isZero(m_elements[i]); i = inc(i))
+					if (m_elements[i].first == _key)
+						_f(m_elements[i].second);
+		}
+
+		template <class Function>
+		void walkIndices(YulString const& _key, Function _f) const
+		{
+			size_t i = firstIndexOf(_key);
+			if (i != maxSize)
+				for (; !isZero(m_elements[i]); i = inc(i))
+					if (m_elements[i].first == _key)
+						_f(i);
+		}
+
+		YulString const& value(size_t _i) const { return m_elements[_i].second; }
+
+	private:
+		using Element = std::pair<YulString, YulString>;
+
+		/// Must be a power of 2.
+		constexpr static size_t initialCapacity = 512;
+		/// To denote that a slot has been cleared.
+		constexpr static size_t maxSize = (size_t) -1;
+
+		size_t m_capacity;
+		size_t m_load;
+		size_t m_size;
+		std::vector<Element> m_elements;
+		std::vector<Element> m_newElements;
+
+		size_t firstIndexOf(YulString const& _key) const
+		{
+			for (size_t i = hash(_key); ; i = inc(i))
+			{
+				if (isZero(m_elements[i]))
+					return maxSize;
+				if (m_elements[i].first == _key)
+					return i;
+			}
+		}
+
+		bool isZero(Element const& _e) const { return _e.first.empty(); }
+		bool isOccupied(Element const& _e) const { return !isZero(_e) && _e.first.id() != maxSize; }
+		size_t inc(size_t _i) const { return (_i + 1) & (m_capacity - 1); }
+		size_t hash(YulString const& _s) const { return _s.hash() & (m_capacity - 1); }
+	};
+
 	/// m_ordered[a].contains[b] <=> the current expression assigned to ``a`` references ``b``
-	std::map<size_t, std::set<YulString>> m_ordered;
+	Multimap m_ordered;
 	/// m_reversed[b].contains[a] <=> the current expression assigned to ``a`` references ``b``
-	std::map<size_t, std::set<YulString>> m_reversed;
+	Multimap m_reversed;
 };
 
 } // solidity::yul

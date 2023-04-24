@@ -353,8 +353,7 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 
 	// Also clear variables that reference variables to be cleared.
 	for (auto const& variableToClear: _variables)
-		if (auto&& references = m_state.references.getReversedOrNullptr(variableToClear))
-			_variables += *references;
+		m_state.references.walkReversed(variableToClear, [&](auto const& name) { _variables.emplace(name); });
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)

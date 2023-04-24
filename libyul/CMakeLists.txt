@@ -219,7 +219,6 @@ add_library(yul
 	optimiser/UnusedPruner.h
 	optimiser/VarDeclInitializer.cpp
 	optimiser/VarDeclInitializer.h
-	optimiser/VariableAssignmentMap.cpp
 	optimiser/VariableAssignmentMap.h
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h

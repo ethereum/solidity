@@ -105,7 +105,7 @@ public:
 
 	/// @returns the current value of the given variable, if known - always movable.
 	AssignedValue const* variableValue(YulString _variable) const { return util::valueOrNullptr(m_state.value, _variable); }
-	std::set<YulString> const* references(YulString _variable) const { return m_state.references.getOrderedOrNullptr(_variable); }
+	std::vector<YulString> references(YulString _variable) const { return m_state.references.getOrdered(_variable); }
 	std::map<YulString, AssignedValue> const& allValues() const { return m_state.value; }
 	std::optional<YulString> storageValue(YulString _key) const;
 	std::optional<YulString> memoryValue(YulString _key) const;

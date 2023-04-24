@@ -73,7 +73,7 @@ void Rematerialiser::visit(Expression& _e)
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
 				auto variableReferences = references(name);
-				if (!variableReferences || ranges::all_of(*variableReferences, [&](auto const& ref) { return inScope(ref); }))
+				if (variableReferences.empty() || ranges::all_of(variableReferences, [&](auto const& ref) { return inScope(ref); }))
 				{
 					// update reference counts
 					m_referenceCounts[name]--;

@@ -155,8 +155,14 @@ public:
 		return YulStringRepository::instance().idToString(m_handle.id);
 	}
 
-	size_t id() const { return m_handle.id; }
 	uint64_t hash() const { return m_handle.hash; }
+
+	/// Function for directly getting the id.
+	size_t id() const { return m_handle.id; }
+
+	/// Function for directly setting the id.
+	/// Incorrect usage can cause the YulString to become invalid.
+	void setId(size_t _id) { m_handle.id = _id; }
 
 private:
 	/// Handle of the string. Assumes that the empty string has ID zero.
