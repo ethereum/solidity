@@ -149,6 +149,7 @@ set(libyul_sources
     libyul/StackLayoutGeneratorTest.cpp
     libyul/StackLayoutGeneratorTest.h
     libyul/StackShufflingTest.cpp
+    libyul/StackShufflingTest.h
     libyul/SyntaxTest.h
     libyul/SyntaxTest.cpp
     libyul/YulInterpreterTest.cpp
