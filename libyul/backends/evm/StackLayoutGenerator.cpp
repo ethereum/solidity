@@ -172,7 +172,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		vector<variant<PreviousSlot, StackSlot>>& layout;
 		Stack const& post;
 		std::set<StackSlot> outputs;
-		std::map<StackSlot, int> multiplicity;
+		Multiplicity multiplicity;
 		Callable generateSlotOnTheFly;
 		ShuffleOperations(
 			vector<variant<PreviousSlot, StackSlot>>& _layout,

@@ -377,6 +377,50 @@ private:
 	}
 };
 
+/// A simple optimized map for mapping StackSlots to ints.
+class Multiplicity
+{
+public:
+	int& operator[](StackSlot const& _slot)
+	{
+		if (auto* p = std::get_if<FunctionCallReturnLabelSlot>(&_slot))
+			return m_functionCallReturnLabelSlotMultiplicity[*p];
+		if (std::holds_alternative<FunctionReturnLabelSlot>(_slot))
+			return m_functionReturnLabelSlotMultiplicity;
+		if (auto* p = std::get_if<VariableSlot>(&_slot))
+			return m_variableSlotMultiplicity[*p];
+		if (auto* p = std::get_if<LiteralSlot>(&_slot))
+			return m_literalSlotMultiplicity[*p];
+		if (auto* p = std::get_if<TemporarySlot>(&_slot))
+			return m_temporarySlotMultiplicity[*p];
+		yulAssert(std::holds_alternative<JunkSlot>(_slot));
+		return m_junkSlotMultiplicity;
+	}
+
+	int at(StackSlot const& _slot) const
+	{
+		if (auto* p = std::get_if<FunctionCallReturnLabelSlot>(&_slot))
+			return m_functionCallReturnLabelSlotMultiplicity.at(*p);
+		if (std::holds_alternative<FunctionReturnLabelSlot>(_slot))
+			return m_functionReturnLabelSlotMultiplicity;
+		if (auto* p = std::get_if<VariableSlot>(&_slot))
+			return m_variableSlotMultiplicity.at(*p);
+		if (auto* p = std::get_if<LiteralSlot>(&_slot))
+			return m_literalSlotMultiplicity.at(*p);
+		if (auto* p = std::get_if<TemporarySlot>(&_slot))
+			return m_temporarySlotMultiplicity.at(*p);
+		yulAssert(std::holds_alternative<JunkSlot>(_slot));
+		return m_junkSlotMultiplicity;
+	}
+
+private:
+	std::map<FunctionCallReturnLabelSlot, int> m_functionCallReturnLabelSlotMultiplicity;
+	int m_functionReturnLabelSlotMultiplicity = 0;
+	std::map<VariableSlot, int> m_variableSlotMultiplicity;
+	std::map<LiteralSlot, int> m_literalSlotMultiplicity;
+	std::map<TemporarySlot, int> m_temporarySlotMultiplicity;
+	int m_junkSlotMultiplicity = 0;
+};
 
 /// Transforms @a _currentStack to @a _targetStack, invoking the provided shuffling operations.
 /// Modifies @a _currentStack itself after each invocation of the shuffling operations.
@@ -395,7 +439,7 @@ void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _sw
 		Swap swapCallback;
 		PushOrDup pushOrDupCallback;
 		Pop popCallback;
-		std::map<StackSlot, int> multiplicity;
+		Multiplicity multiplicity;
 		ShuffleOperations(
 			Stack& _currentStack,
 			Stack const& _targetStack,
