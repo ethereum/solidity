@@ -35,6 +35,7 @@
 #include <test/libyul/ControlFlowSideEffectsTest.h>
 #include <test/libyul/FunctionSideEffects.h>
 #include <test/libyul/StackLayoutGeneratorTest.h>
+#include <test/libyul/StackShufflingTest.h>
 #include <test/libyul/SyntaxTest.h>
 
 #include <boost/filesystem.hpp>
@@ -64,6 +65,7 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Yul Object Compiler",    "libyul",      "objectCompiler",        false, false, &yul::test::ObjectCompilerTest::create},
 	{"Yul Control Flow Graph", "libyul",      "yulControlFlowGraph",   false, false, &yul::test::ControlFlowGraphTest::create},
 	{"Yul Stack Layout",       "libyul",      "yulStackLayout",        false, false, &yul::test::StackLayoutGeneratorTest::create},
+	{"Yul Stack Shuffling",    "libyul",      "yulStackShuffling",     false, false, &yul::test::StackShufflingTest::create},
 	{"Control Flow Side Effects","libyul",    "controlFlowSideEffects",false, false, &yul::test::ControlFlowSideEffectsTest::create},
 	{"Function Side Effects",  "libyul",      "functionSideEffects",   false, false, &yul::test::FunctionSideEffects::create},
 	{"Yul Syntax",             "libyul",      "yulSyntaxTests",        false, false, &yul::test::SyntaxTest::create},

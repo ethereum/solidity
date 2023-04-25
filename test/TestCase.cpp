@@ -51,7 +51,7 @@ void TestCase::printUpdatedSettings(std::ostream& _stream, std::string const& _l
 bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 {
 	string extension = _filename.extension().string();
-	return (extension == ".sol" || extension == ".yul") &&
+	return (extension == ".sol" || extension == ".yul" || extension == ".stack") &&
 		   !boost::starts_with(_filename.string(), "~") &&
 			!boost::starts_with(_filename.string(), ".");
 }
