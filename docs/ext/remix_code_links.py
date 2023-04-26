@@ -22,7 +22,7 @@ def remix_code_url(source_code, language, solidity_version):
     # NOTE: base64 encoded data may contain +, = and / characters. Remix seems to handle them just
     # fine without any escaping.
     base64_encoded_source = base64.b64encode(source_code.encode('utf-8')).decode('ascii')
-    return f"https://remix.ethereum.org/?language={language}&version={solidity_version}&code={base64_encoded_source}"
+    return f"https://remix.ethereum.org/?#language={language}&version={solidity_version}&code={base64_encoded_source}"
 
 
 def build_remix_link_node(url):
