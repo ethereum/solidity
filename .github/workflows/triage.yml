@@ -12,7 +12,7 @@ env:
   # See: https://github.com/orgs/ethereum/projects/27/settings/fields/Status
   COLUMN_FIELD_NAME: "Status"
   TRIAGE_COLUMN_NAME: "To Triage"
-  DRY_RUN: true
+  DRY_RUN: false
 
 jobs:
   triage_issues:
