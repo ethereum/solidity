@@ -193,7 +193,7 @@ explanatory purposes.
         }
       },
       // Required: The version of the metadata format
-      "version": "1"
+      "version": 1
     }
 
 .. warning::
