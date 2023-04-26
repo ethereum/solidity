@@ -27,7 +27,7 @@ set -e
 export NODE_OPTIONS="--max-old-space-size=4096"
 
 source scripts/common.sh
-source test/externalTests/common.sh
+source scripts/externalTests/common.sh
 
 REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 

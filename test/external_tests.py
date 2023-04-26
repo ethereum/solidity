@@ -23,13 +23,7 @@ from argparse import ArgumentParser, Namespace
 import os
 from pathlib import Path
 import sys
-
-# Our scripts/ is not a proper Python package so we need to modify PYTHONPATH to import from it
-# pragma pylint: disable=import-error,wrong-import-position
-SCRIPTS_DIR = Path(__file__).parents[1] / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
-from common.shell_command import run_cmd
+import subprocess
 
 EXTERNAL_TESTS_DIR = Path(__file__).parent / "externalTests"
 
@@ -39,13 +33,10 @@ class ExternalTestNotFound(Exception):
 
 
 def detect_external_tests() -> dict:
-    # TODO: Remove `file_path.stem != "common"` when we complete the migration
-    # of the external tests to python, since there will be no more
-    # common.sh script in the externalTests folder.
     return {
         file_path.stem: file_path
         for file_path in Path(EXTERNAL_TESTS_DIR).iterdir()
-        if file_path.is_file() and file_path.suffix == ".sh" and file_path.stem != "common"
+        if file_path.is_file() and file_path.suffix == ".sh"
     }
 
 
