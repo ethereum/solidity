@@ -70,6 +70,7 @@ static string const g_strModelCheckerDivModNoSlacks = "model-checker-div-mod-no-
 static string const g_strModelCheckerEngine = "model-checker-engine";
 static string const g_strModelCheckerExtCalls = "model-checker-ext-calls";
 static string const g_strModelCheckerInvariants = "model-checker-invariants";
+static string const g_strModelCheckerPrintQuery = "model-checker-print-query";
 static string const g_strModelCheckerShowProvedSafe = "model-checker-show-proved-safe";
 static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved";
 static string const g_strModelCheckerShowUnsupported = "model-checker-show-unsupported";
@@ -842,6 +843,10 @@ General Information)").c_str(),
 			" By default no invariants are reported."
 		)
 		(
+			g_strModelCheckerPrintQuery.c_str(),
+			"Print the queries created by the SMTChecker in the SMTLIB2 format."
+		)
+		(
 			g_strModelCheckerShowProvedSafe.c_str(),
 			"Show all targets that were proved safe separately."
 		)
@@ -963,12 +968,14 @@ void CommandLineParser::processArgs()
 		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strNoCBORMetadata, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strModelCheckerShowProvedSafe, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strModelCheckerShowUnsupported, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerContracts, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerInvariants, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerPrintQuery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowProvedSafe, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnsupported, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerSolvers, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerTimeout, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerBMCLoopIterations, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
@@ -1320,6 +1327,13 @@ void CommandLineParser::processArgs()
 		if (!solvers)
 			solThrow(CommandLineValidationError, "Invalid option for --" + g_strModelCheckerSolvers + ": " + solversStr);
 		m_options.modelChecker.settings.solvers = *solvers;
+	}
+
+	if (m_args.count(g_strModelCheckerPrintQuery))
+	{
+		if (!(m_options.modelChecker.settings.solvers == smtutil::SMTSolverChoice::SMTLIB2()))
+			solThrow(CommandLineValidationError, "Only SMTLib2 solver can be enabled to print queries");
+		m_options.modelChecker.settings.printQuery = true;
 	}
 
 	if (m_args.count(g_strModelCheckerTargets))

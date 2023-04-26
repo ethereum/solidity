@@ -169,6 +169,7 @@ struct ModelCheckerSettings
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
 	ModelCheckerExtCalls externalCalls = {};
 	ModelCheckerInvariants invariants = ModelCheckerInvariants::Default();
+	bool printQuery = false;
 	bool showProvedSafe = false;
 	bool showUnproved = false;
 	bool showUnsupported = false;
@@ -186,6 +187,7 @@ struct ModelCheckerSettings
 			engine == _other.engine &&
 			externalCalls.mode == _other.externalCalls.mode &&
 			invariants == _other.invariants &&
+			printQuery == _other.printQuery &&
 			showProvedSafe == _other.showProvedSafe &&
 			showUnproved == _other.showUnproved &&
 			showUnsupported == _other.showUnsupported &&

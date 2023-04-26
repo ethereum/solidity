@@ -204,7 +204,9 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
         "1834", # Unimplemented feature error, as we do not test it anymore via cmdLineTests
         "5430", # basefee being used in inline assembly for EVMVersion < london
         "1180", # SMTChecker, covered by CL tests
+        "2339", # SMTChecker, covered by CL tests
         "2961", # SMTChecker, covered by CL tests
+        "6240", # SMTChecker, covered by CL tests
         "9576", # SMTChecker, covered by CL tests
     }
     assert len(test_ids & white_ids) == 0, "The sets are not supposed to intersect"

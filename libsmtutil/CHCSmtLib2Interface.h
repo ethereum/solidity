@@ -51,6 +51,8 @@ public:
 
 	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 
+	std::string dumpQuery(Expression const& _expr);
+
 	std::vector<std::string> unhandledQueries() const { return m_unhandledQueries; }
 
 	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
@@ -65,6 +67,9 @@ private:
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
 
 	void write(std::string _data);
+
+	std::string createQueryAssertion(std::string name);
+	std::string createHeaderAndDeclarations();
 
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);

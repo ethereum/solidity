@@ -47,8 +47,11 @@ BMC::BMC(
 	CharStreamProvider const& _charStreamProvider
 ):
 	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
-	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout))
+	m_interface(make_unique<smtutil::SMTPortfolio>(
+		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout, _settings.printQuery
+	))
 {
+	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
@@ -1192,6 +1195,15 @@ BMC::checkSatisfiableAndGenerateModel(vector<smtutil::Expression> const& _expres
 	vector<string> values;
 	try
 	{
+		if (m_settings.printQuery)
+		{
+			auto portfolio = dynamic_cast<smtutil::SMTPortfolio*>(m_interface.get());
+			string smtlibCode = portfolio->dumpQuery(_expressionsToEvaluate);
+			m_errorReporter.info(
+				6240_error,
+				"BMC: Requested query:\n" + smtlibCode
+			);
+		}
 		tie(result, values) = m_interface->check(_expressionsToEvaluate);
 	}
 	catch (smtutil::SolverError const& _e)

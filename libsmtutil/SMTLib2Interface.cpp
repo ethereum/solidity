@@ -322,3 +322,9 @@ string SMTLib2Interface::querySolver(string const& _input)
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";
 }
+
+string SMTLib2Interface::dumpQuery(vector<Expression> const& _expressionsToEvaluate)
+{
+	return boost::algorithm::join(m_accumulatedOutput, "\n") +
+		checkSatAndGetValuesCommand(_expressionsToEvaluate);
+}
