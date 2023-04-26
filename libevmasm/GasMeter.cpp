@@ -45,6 +45,12 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 	switch (_item.type())
 	{
 	case Push:
+		if (m_evmVersion.hasPush0() && _item.data() == 0)
+		{
+			gas = runGas(Instruction::PUSH0, m_evmVersion);
+			break;
+		}
+		[[fallthrough]];
 	case PushTag:
 	case PushData:
 	case PushSub:

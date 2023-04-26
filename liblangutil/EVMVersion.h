@@ -113,7 +113,7 @@ private:
 
 	EVMVersion(Version _version): m_version(_version) {}
 
-	Version m_version = Version::Paris;
+	Version m_version = Version::Shanghai;
 };
 
 }

@@ -41,7 +41,7 @@ using namespace solidity::frontend::test;
 using namespace std;
 
 EVMCodeTransformTest::EVMCodeTransformTest(string const& _filename):
-	TestCase(_filename)
+	EVMVersionRestrictedTestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_stackOpt = m_reader.boolSetting("stackOptimization", false);

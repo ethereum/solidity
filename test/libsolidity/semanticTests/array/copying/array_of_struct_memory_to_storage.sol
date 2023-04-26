@@ -19,4 +19,4 @@ contract C {
 // compileViaYul: true
 // ----
 // f() -> 10, 11, 12
-// gas irOptimized: 118394
+// gas irOptimized: 118393

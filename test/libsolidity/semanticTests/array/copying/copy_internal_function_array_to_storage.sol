@@ -21,6 +21,6 @@ contract C {
 // compileToEwasm: also
 // ----
 // one() -> 3
-// gas legacy: 140260
-// gas legacyOptimized: 140097
+// gas legacy: 140253
+// gas legacyOptimized: 140093
 // two() -> FAILURE, hex"4e487b71", 0x51

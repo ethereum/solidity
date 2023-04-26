@@ -11,7 +11,7 @@ object "a" {
 
 
 Binary representation:
-73__$8aa64f937099b65a4febc243a5ae0f2d64$__8060005550
+73__$8aa64f937099b65a4febc243a5ae0f2d64$__805f5550
 
 Text representation:
   linkerSymbol("8aa64f937099b65a4febc243a5ae0f2d6416bb9e473c30dd29c1ee498fb7c5a8")

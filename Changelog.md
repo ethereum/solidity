@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Assembler: Use ``push0`` for placing ``0`` in the stack for EVM versions starting from "Shanghai". This decreases the deployment costs.
+ * EVM: Set default EVM version to "Shanghai".
  * EVM: Support for the EVM Version "Shanghai".
  * NatSpec: Add support for NatSpec documentation in ``enum`` definitions.
  * NatSpec: Add support for NatSpec documentation in ``struct`` definitions.

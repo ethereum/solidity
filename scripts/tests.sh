@@ -115,7 +115,7 @@ do
     for vm in $EVM_VERSIONS
     do
         FORCE_ABIV1_RUNS="no"
-        if [[ "$vm" == "paris" ]]
+        if [[ "$vm" == "shanghai" ]]
         then
             FORCE_ABIV1_RUNS="no yes" # run both in paris
         fi
