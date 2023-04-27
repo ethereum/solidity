@@ -79,8 +79,8 @@ private:
 	evmasm::LinkerObject m_runtimeObject; ///< Runtime object.
 	std::vector<std::string> m_sourceList;
 	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();
-	std::optional<std::string const> m_sourceMapping;
-	std::optional<std::string const> m_runtimeSourceMapping;
+	std::string m_sourceMapping;
+	std::string m_runtimeSourceMapping;
 };
 
 } // namespace solidity::evmasm

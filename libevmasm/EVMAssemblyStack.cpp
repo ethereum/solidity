@@ -48,12 +48,12 @@ void EVMAssemblyStack::assemble()
 	solAssert(!m_evmRuntimeAssembly);
 
 	m_object = m_evmAssembly->assemble();
-	m_sourceMapping.emplace(AssemblyItem::computeSourceMapping(m_evmAssembly->items(), sourceIndices()));
+	m_sourceMapping = AssemblyItem::computeSourceMapping(m_evmAssembly->items(), sourceIndices());
 	if (m_evmAssembly->numSubs() > 0)
 	{
 		m_evmRuntimeAssembly = make_shared<evmasm::Assembly>(m_evmAssembly->sub(0));
 		solAssert(m_evmRuntimeAssembly && !m_evmRuntimeAssembly->isCreation());
-		m_runtimeSourceMapping.emplace(AssemblyItem::computeSourceMapping(m_evmRuntimeAssembly->items(), sourceIndices()));
+		m_runtimeSourceMapping = AssemblyItem::computeSourceMapping(m_evmRuntimeAssembly->items(), sourceIndices());
 		m_runtimeObject = m_evmRuntimeAssembly->assemble();
 	}
 }
@@ -87,13 +87,13 @@ map<string, unsigned> EVMAssemblyStack::sourceIndices() const
 string const* EVMAssemblyStack::sourceMapping(string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
-	return m_sourceMapping.has_value() ? &m_sourceMapping.value() : nullptr;
+	return &m_sourceMapping;
 }
 
 string const* EVMAssemblyStack::runtimeSourceMapping(string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
-	return m_runtimeSourceMapping.has_value() ? &m_runtimeSourceMapping.value() : nullptr;
+	return &m_runtimeSourceMapping;
 }
 
 Json::Value EVMAssemblyStack::assemblyJSON(string const& _contractName) const
