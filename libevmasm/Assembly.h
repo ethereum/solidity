@@ -150,30 +150,18 @@ public:
 	) const;
 
 	/// Create a JSON representation of the assembly.
-	Json::Value assemblyJSON(
-		bool _includeSourceList = true
-	) const;
+	Json::Value assemblyJSON(std::vector<std::string> const& _sources, bool _includeSourceList = true) const;
 
 	/// Loads the JSON representation of assembly.
 	/// @param _json JSON object containing assembly in the format produced by assemblyJSON().
 	/// @param _sourceList list of source names (used to supply the source-list from the root-assembly object to sub-assemblies).
 	/// @param _level this function might be called recursively, _level reflects the nesting level.
 	/// @returns Resulting Assembly object loaded from given json.
-	static std::shared_ptr<Assembly> fromJSON(
+	static std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> fromJSON(
 		Json::Value const& _json,
 		std::vector<std::string> const& _sourceList = {},
 		int _level = 0
 	);
-
-	void setSourceList(std::vector<std::string> const& _sourceList)
-	{
-		m_sourceList = _sourceList;
-	}
-
-	std::vector<std::string> const& sourceList()
-	{
-		return m_sourceList;
-	}
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }
@@ -195,7 +183,7 @@ protected:
 	/// the code array. This method only works on clean Assembly objects that don't have any items defined yet.
 	/// @param _json JSON array that contains assembly items (e.g. json['.code'])
 	/// @param _sourceList list of source names.
-	void importAssemblyItemsFromJSON(Json::Value const& _code);
+	void importAssemblyItemsFromJSON(Json::Value const& _code, std::vector<std::string> const& _sourceList);
 
 	/// Creates an AssemblyItem from a given JSON representation.
 	/// @param _json JSON object that consists a single assembly item
@@ -249,7 +237,6 @@ protected:
 	/// Internal name of the assembly object, only used with the Yul backend
 	/// currently
 	std::string m_name;
-	std::vector<std::string> m_sourceList;
 	langutil::SourceLocation m_currentSourceLocation;
 
 public:

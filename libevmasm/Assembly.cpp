@@ -75,19 +75,19 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 	}
 }
 
-void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code)
+void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, vector<string> const& _sourceList)
 {
 	solAssert(m_items.empty());
 	solRequire(_code.isArray(), AssemblyImportException, "Supplied JSON is not an array.");
 	for (auto current = begin(_code); current != end(_code); ++current)
 	{
-		auto const& item = m_items.emplace_back(createAssemblyItemFromJSON(*current, m_sourceList));
+		auto const& item = m_items.emplace_back(createAssemblyItemFromJSON(*current, _sourceList));
 		if (item == Instruction::JUMPDEST)
 			solThrow(AssemblyImportException, "JUMPDEST instruction without a tag");
 		else if (item.type() == AssemblyItemType::Tag)
 		{
 			++current;
-			if (current != end(_code) && createAssemblyItemFromJSON(*current, m_sourceList) != Instruction::JUMPDEST)
+			if (current != end(_code) && createAssemblyItemFromJSON(*current, _sourceList) != Instruction::JUMPDEST)
 				solThrow(AssemblyImportException, "JUMPDEST expected after tag.");
 		}
 	}
@@ -424,7 +424,7 @@ std::string Assembly::assemblyString(
 	return tmp.str();
 }
 
-Json::Value Assembly::assemblyJSON(bool _includeSourceList) const
+Json::Value Assembly::assemblyJSON(std::vector<std::string> const& _sources, bool _includeSourceList) const
 {
 	Json::Value root;
 	root[".code"] = Json::arrayValue;
@@ -433,11 +433,12 @@ Json::Value Assembly::assemblyJSON(bool _includeSourceList) const
 	{
 		int sourceIndex = -1;
 		if (item.location().sourceName)
-		{
-			for (size_t index = 0; index < m_sourceList.size(); ++index)
-				if (m_sourceList[index] == *item.location().sourceName)
+			for (size_t index = 0; index < _sources.size(); ++index)
+				if (_sources[index] == *item.location().sourceName)
+				{
 					sourceIndex = static_cast<int>(index);
-		}
+					break;
+				}
 
 		auto [name, data] = item.nameAndData(m_evmVersion);
 		Json::Value jsonItem;
@@ -470,12 +471,12 @@ Json::Value Assembly::assemblyJSON(bool _includeSourceList) const
 			code.append(std::move(jumpdest));
 		}
 	}
-	if (_includeSourceList)
+	if (!_sources.empty() && _includeSourceList)
 	{
 		root["sourceList"] = Json::arrayValue;
 		Json::Value& jsonSourceList = root["sourceList"];
-		for (int index = 0; index < static_cast<int>(m_sourceList.size()); ++index)
-			jsonSourceList[index] = m_sourceList[static_cast<size_t>(index)];
+		for (int index = 0; index < static_cast<int>(_sources.size()); ++index)
+			jsonSourceList[index] = _sources[static_cast<size_t>(index)];
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -490,8 +491,7 @@ Json::Value Assembly::assemblyJSON(bool _includeSourceList) const
 		{
 			stringstream hexStr;
 			hexStr << hex << i;
-			m_subs[i]->setSourceList(m_sourceList);
-			data[hexStr.str()] = m_subs[i]->assemblyJSON(false);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sources, false);
 		}
 	}
 
@@ -501,7 +501,7 @@ Json::Value Assembly::assemblyJSON(bool _includeSourceList) const
 	return root;
 }
 
-shared_ptr<Assembly> Assembly::fromJSON(Json::Value const& _json, vector<string> const& _sourceList, int _level)
+std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSON(Json::Value const& _json, vector<string> const& _sourceList, int _level)
 {
 	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
 	static set<string> const validMembers{".code", ".data", ".auxdata", "sourceList"};
@@ -528,15 +528,23 @@ shared_ptr<Assembly> Assembly::fromJSON(Json::Value const& _json, vector<string>
 		);
 
 	shared_ptr<Assembly> result = make_shared<Assembly>(langutil::EVMVersion(), _level == 0, "");
+	vector<string> sourceList;
 	if (_json.isMember("sourceList"))
 	{
 		solAssert(_level == 0);
 		for (auto const& it: _json["sourceList"])
-			result->m_sourceList.emplace_back(it.asString());
+		{
+			solRequire(
+				std::find(sourceList.begin(), sourceList.end(), it.asString()) == sourceList.end(),
+				AssemblyImportException,
+				"Items in 'sourceList' array are not unique."
+			);
+			sourceList.emplace_back(it.asString());
+		}
 	} else
-		result->m_sourceList = _sourceList;
+		sourceList = _sourceList;
 
-	result->importAssemblyItemsFromJSON(_json[".code"]);
+	result->importAssemblyItemsFromJSON(_json[".code"], sourceList);
 	if (_json[".auxdata"])
 	{
 		solRequire(_json[".auxdata"].isString(), AssemblyImportException, "Optional member '.auxdata' is not of type string.");
@@ -565,7 +573,7 @@ shared_ptr<Assembly> Assembly::fromJSON(Json::Value const& _json, vector<string>
 			}
 			else if (code.isObject())
 			{
-				shared_ptr<Assembly> subassembly(Assembly::fromJSON(code, result->m_sourceList, _level + 1));
+				shared_ptr<Assembly> subassembly(Assembly::fromJSON(code, sourceList, _level + 1).first);
 				solAssert(subassembly);
 				result->m_subs.emplace_back(make_shared<Assembly>(*subassembly));
 				// TODO: this shouldn't be enough for the general case.
@@ -575,7 +583,7 @@ shared_ptr<Assembly> Assembly::fromJSON(Json::Value const& _json, vector<string>
 				solThrow(AssemblyImportException, "Key inside '.data' '" + dataItemID + "' can only be a valid hex-string or an object.");
 		}
 	}
-	return result;
+	return std::make_pair(result, sourceList);
 }
 
 AssemblyItem Assembly::namedTag(string const& _name, size_t _params, size_t _returns, optional<uint64_t> _sourceID)
