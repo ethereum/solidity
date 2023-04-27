@@ -35,7 +35,10 @@ class EVMAssemblyStack: public AbstractAssemblyStack
 public:
 	explicit EVMAssemblyStack(langutil::EVMVersion _evmVersion): m_evmVersion(_evmVersion) {}
 
-	bool parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
+	/// Runs parsing and analysis steps.
+	/// Multiple calls overwrite the previous state.
+	/// @throws AssemblyImportException, if JSON could not be validated.
+	void parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
 
 	void assemble();
 

@@ -765,33 +765,23 @@ void CommandLineInterface::assembleFromEvmAssemblyJson()
 	solAssert(m_options.input.mode == InputMode::EVMAssemblerJSON);
 	solAssert(!m_assemblyStack);
 	solAssert(!m_evmAssemblyStack && !m_compiler);
-	bool importSuccessful = false;
 	unique_ptr<evmasm::EVMAssemblyStack> evmAssemblyStack;
+	solAssert(m_fileReader.sourceUnits().size() == 1);
+	auto&& [sourceUnitName, source] = *m_fileReader.sourceUnits().begin();
 	try
 	{
-		solAssert(m_fileReader.sourceUnits().size() == 1);
-		auto&& [sourceUnitName, source] = *m_fileReader.sourceUnits().begin();
-
 		evmAssemblyStack = make_unique<evmasm::EVMAssemblyStack>(m_options.output.evmVersion);
+		evmAssemblyStack->parseAndAnalyze(sourceUnitName, source);
 		if (m_options.output.debugInfoSelection.has_value())
 			evmAssemblyStack->selectDebugInfo(m_options.output.debugInfoSelection.value());
-
-		// TODO: Why does it report errors both with exceptions and with an error code?
-		// It should always throw when the operation is not successful.
-		importSuccessful = evmAssemblyStack->parseAndAnalyze(sourceUnitName, source);
+		evmAssemblyStack->assemble();
+		m_evmAssemblyStack = std::move(evmAssemblyStack);
+		m_assemblyStack = m_evmAssemblyStack.get();
 	}
 	catch (evmasm::AssemblyImportException const& _exception)
 	{
 		solThrow(CommandLineExecutionError, "Assembly Import Error: "s + _exception.what());
 	}
-	if (importSuccessful)
-	{
-		evmAssemblyStack->assemble();
-		m_evmAssemblyStack = std::move(evmAssemblyStack);
-		m_assemblyStack = m_evmAssemblyStack.get();
-	}
-	else
-		solThrow(CommandLineExecutionError, "Assembly Import Error: Could not create compiler object.");
 }
 
 void CommandLineInterface::compile()

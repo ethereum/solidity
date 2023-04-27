@@ -30,25 +30,21 @@ using namespace std;
 namespace solidity::evmasm
 {
 
-bool EVMAssemblyStack::parseAndAnalyze(string const& _sourceName, string const& _source)
+void EVMAssemblyStack::parseAndAnalyze(string const& _sourceName, string const& _source)
 {
 	solAssert(!m_evmAssembly);
-
 	m_name = _sourceName;
-	if (!jsonParseStrict(_source, m_json))
-		return false;
-
+	solRequire(jsonParseStrict(_source, m_json), AssemblyImportException, "Could not parse JSON file.");
 	auto result = evmasm::Assembly::fromJSON(m_json);
 	m_evmAssembly = result.first;
 	m_sourceList = result.second;
-
-	return m_evmAssembly != nullptr;
+	solRequire(m_evmAssembly != nullptr, AssemblyImportException, "Could not create evm assembly object.");
 }
 
 void EVMAssemblyStack::assemble()
 {
-	solAssert(m_evmAssembly->isCreation());
 	solAssert(m_evmAssembly);
+	solAssert(m_evmAssembly->isCreation());
 	solAssert(!m_evmRuntimeAssembly);
 
 	m_object = m_evmAssembly->assemble();
@@ -61,7 +57,6 @@ void EVMAssemblyStack::assemble()
 		m_runtimeObject = m_evmRuntimeAssembly->assemble();
 	}
 }
-
 
 LinkerObject const& EVMAssemblyStack::object(string const& _contractName) const
 {
