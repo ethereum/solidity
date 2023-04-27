@@ -173,7 +173,12 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 
 	solRequire(srcIndex >= -1 && srcIndex < static_cast<int>(_sourceList.size()), AssemblyImportException, "srcIndex out of bound.");
 	if (srcIndex != -1)
-		location.sourceName = std::make_shared<std::string>(_sourceList[static_cast<size_t>(srcIndex)]);
+	{
+		static map<std::string, std::shared_ptr<std::string const>> sharedSourceNames;
+		if (sharedSourceNames.find(_sourceList[static_cast<size_t>(srcIndex)]) == sharedSourceNames.end())
+			sharedSourceNames[_sourceList[static_cast<size_t>(srcIndex)]] = std::make_shared<std::string>(_sourceList[static_cast<size_t>(srcIndex)]);
+		location.sourceName = sharedSourceNames[_sourceList[static_cast<size_t>(srcIndex)]];
+	}
 
 	AssemblyItem result(0);
 
