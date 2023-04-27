@@ -297,6 +297,7 @@ defaults:
   - base_osx: &base_osx
       macos:
         xcode: "13.2.0"
+      resource_class: macos.x86.medium.gen2
       environment:
         TERM: xterm
         MAKEFLAGS: -j5
@@ -370,7 +371,7 @@ defaults:
 
   - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
       <<: *base_ubuntu2204_clang
-      resource_class: macos.m1.large.gen1
+      resource_class: large
       environment:
         TERM: xterm
         CC: clang
@@ -386,7 +387,7 @@ defaults:
 
   - base_ubuntu2204_large: &base_ubuntu2204_large
       <<: *base_ubuntu2204
-      resource_class: macos.m1.large.gen1
+      resource_class: large
       environment:
         TERM: xterm
         MAKEFLAGS: -j 5
@@ -528,7 +529,7 @@ defaults:
       name: t_native_test_ext_zeppelin
       project: zeppelin
       binary_type: native
-      resource_class: macos.m1.large.gen1
+      resource_class: large
 
   - job_native_test_ext_ens: &job_native_test_ext_ens
       <<: *requires_b_ubu_static
@@ -612,7 +613,7 @@ defaults:
       project: chainlink
       binary_type: native
       image: cimg/node:16.18
-      resource_class: macos.m1.large.gen1 # Tests run out of memory on a smaller machine
+      resource_class: large # Tests run out of memory on a smaller machine
 
   - job_native_test_ext_gp2: &job_native_test_ext_gp2
       <<: *requires_b_ubu_static
