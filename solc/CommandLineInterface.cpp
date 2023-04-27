@@ -1267,13 +1267,15 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 					for (auto const& [name, index]: sourceIndices)
 						if (max_index < index)
 							max_index = index;
-					vector<string> sourceList(max_index + 1, "<unknown>");
+					vector<string> sourceList(max_index + 1);
+					uint32_t counter{0};
+					for (auto& source: sourceList)
+						source = "unknown-source-" + std::to_string(counter++);
 					for (auto const& [name, index]: sourceIndices)
 						sourceList[index] = name;
-					assembly->setSourceList(sourceList);
 					sout() << util::jsonPrint(
 						removeNullMembers(
-							assembly->assemblyJSON()
+							assembly->assemblyJSON(sourceList)
 						),
 						m_options.formatting.json
 					) << endl;
