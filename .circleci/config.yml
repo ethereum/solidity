@@ -265,7 +265,7 @@ defaults:
   - base_archlinux_large: &base_archlinux_large
       docker:
         - image: archlinux:base
-      resource_class: macos.m1.large.gen1
+      resource_class: large
       environment:
         TERM: xterm
         MAKEFLAGS: -j 5
@@ -281,7 +281,7 @@ defaults:
   - base_ems_large: &base_ems_large
       docker:
         - image: << pipeline.parameters.emscripten-docker-image >>
-      resource_class: macos.m1.large.gen1
+      resource_class: large
       environment:
         TERM: xterm
         MAKEFLAGS: -j 5
@@ -549,7 +549,7 @@ defaults:
       name: t_native_test_ext_euler
       project: euler
       binary_type: native
-      resource_class: macos.x86.medium.gen2
+      resource_class: medium
 
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
       <<: *requires_b_ubu_static
@@ -562,7 +562,7 @@ defaults:
       name: t_native_test_ext_bleeps
       project: bleeps
       binary_type: native
-      resource_class: macos.x86.medium.gen2
+      resource_class: medium
 
   - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
       <<: *requires_b_ubu_static
@@ -597,7 +597,7 @@ defaults:
       name: t_native_test_ext_elementfi
       project: elementfi
       binary_type: native
-      resource_class: macos.x86.medium.gen2
+      resource_class: medium
 
   - job_native_test_ext_brink: &job_native_test_ext_brink
       <<: *requires_b_ubu_static
@@ -627,7 +627,7 @@ defaults:
       project: colony
       binary_type: solcjs
       image: cimg/node:14.20
-      resource_class: macos.x86.medium.gen2
+      resource_class: medium
       python2: true
 
   - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
