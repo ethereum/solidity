@@ -6,9 +6,11 @@ pre {
     word-wrap: break-word;
 }
 
-.wy-table-responsive table td, .wy-table-responsive table th {
+.wy-table-responsive table td,
+.wy-table-responsive table th {
     white-space: normal;
 }
+
 .rst-content table.docutils td {
     vertical-align: top;
 }
@@ -27,8 +29,8 @@ pre {
     background: #fafafa;
 }
 
-.wy-side-nav-search img.logo {
-    width: 100px !important;
+.wy-side-nav-search > a img.logo {
+    width: 100px;
     padding: 0;
 }
 
@@ -38,49 +40,36 @@ pre {
 }
 
 /* project version (displayed under project logo) */
-.wy-side-nav-search .version {
-    color: #272525 !important;
+.wy-side-nav-search > div.version {
+    color: #272525;
 }
 
 /* menu section headers */
-.wy-menu .caption {
-    color: #65afff !important;
+.wy-menu p.caption {
+    color: #65afff;
 }
 
 /* Link to Remix IDE shown next to code snippets */
-p.remix-link-container {
-    position: relative;
-    right: -100%;        /* Positioned next to the the top-right corner of the code block following it. */
-}
-
-a.remix-link {
-    position: absolute;  /* Remove it from normal flow not to affect the original position of the snippet. */
-    top: 0.5em;
-    width: 3.236em;      /* Size of the margin (= right-side padding in .wy-nav-content in the current theme). */
-}
-
-a.remix-link .link-icon {
-    background: url("../img/solid-share-arrow.svg") no-repeat;
+.rst-content p.remix-link-container {
     display: block;
-    width: 1.5em;
-    height: 1.5em;
-    margin: auto;
+    text-align: right;
+    margin: 0;
+    line-height: 1em;
 }
 
-a.remix-link .link-text {
-    display: none;       /* Visible only on hover. */
-    width: 3.3em;        /* Narrow enough to get two lines of text. */
-    margin: auto;
-    text-align: center;
-    font-size: 0.8em;
-    line-height: normal;
-    color: black;
+.rst-content .remix-link-container a.remix-link {
+    display: inline-block;
+    font-size: 0.7em;
+    padding: 0.1em 0.4em;
+    background: #e1e4e5;
+    color: #707070;
 }
 
-a.remix-link:hover {
-    opacity: 0.5;
+.rst-content .remix-link-container a.remix-link:hover {
+    background: #c8cbcc;
 }
 
-a.remix-link:hover .link-text {
-    display: block;
+.rst-content div.highlight-solidity,
+.rst-content div.highlight-yul {
+    margin-top: 0;
 }
