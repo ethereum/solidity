@@ -5,10 +5,15 @@ Language Features:
 
 Compiler Features:
  * EWasm: Remove EWasm backend.
+ * Parser: Introduce ``pragma experimental solidity``, which will enable an experimental language mode that in particular has no stability guarantees between non-breaking releases and is not suited for production use.
 
 
 Bugfixes:
  * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
+
+
+AST Changes:
+ * AST: Add the ``experimentalSolidity`` field to the ``SourceUnit`` nodes, which indicate whether the experimental parsing mode has been enabled via ``pragma experimental solidity``.
 
 
 ### 0.8.20 (2023-05-10)

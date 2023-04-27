@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	ModifierDefinition mod(++id, SourceLocation{}, make_shared<string>("modif"), SourceLocation{}, {}, emptyParams, {}, {}, {});
 	BOOST_CHECK_EQUAL(ModifierType(mod).identifier(), "t_modifier$__$");
 
-	SourceUnit su(++id, {}, {}, {});
+	SourceUnit su(++id, {}, {}, {}, {});
 	BOOST_CHECK_EQUAL(ModuleType(su).identifier(), "t_module_7");
 	BOOST_CHECK_EQUAL(MagicType(MagicType::Kind::Block).identifier(), "t_magic_block");
 	BOOST_CHECK_EQUAL(MagicType(MagicType::Kind::Message).identifier(), "t_magic_message");

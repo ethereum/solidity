@@ -429,7 +429,9 @@ bool CompilerStack::analyze()
 {
 	if (m_stackState != ParsedAndImported || m_stackState >= AnalysisPerformed)
 		solThrow(CompilerError, "Must call analyze only after parsing was performed.");
-	resolveImports();
+
+	if (!resolveImports())
+		return false;
 
 	for (Source const* source: m_sourceOrder)
 		if (source->ast)
@@ -1175,7 +1177,7 @@ string CompilerStack::applyRemapping(string const& _path, string const& _context
 	return m_importRemapper.apply(_path, _context);
 }
 
-void CompilerStack::resolveImports()
+bool CompilerStack::resolveImports()
 {
 	solAssert(m_stackState == ParsedAndImported, "");
 
@@ -1200,11 +1202,34 @@ void CompilerStack::resolveImports()
 		sourceOrder.push_back(_source);
 	};
 
+	vector<PragmaDirective const*> experimentalPragmaDirectives;
 	for (auto const& sourcePair: m_sources)
+	{
 		if (isRequestedSource(sourcePair.first))
 			toposort(&sourcePair.second);
+		if (sourcePair.second.ast && sourcePair.second.ast->experimentalSolidity())
+			for (ASTPointer<ASTNode> const& node: sourcePair.second.ast->nodes())
+				if (PragmaDirective const* pragma = dynamic_cast<PragmaDirective*>(node.get()))
+					if (pragma->literals().size() >=2 && pragma->literals()[0] == "experimental" && pragma->literals()[1] == "solidity")
+					{
+						experimentalPragmaDirectives.push_back(pragma);
+						break;
+					}
+	}
+
+	if (!experimentalPragmaDirectives.empty() && experimentalPragmaDirectives.size() != m_sources.size())
+	{
+		for (auto &&pragma: experimentalPragmaDirectives)
+			m_errorReporter.parserError(
+					2141_error,
+					pragma->location(),
+					"File declares \"pragma experimental solidity\". If you want to enable the experimental mode, all source units must include the pragma."
+			);
+		return false;
+	}
 
 	swap(m_sourceOrder, sourceOrder);
+	return true;
 }
 
 void CompilerStack::storeContractDefinitions()
