@@ -269,7 +269,7 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 		}
 		else if (name == "VERBATIM")
 		{
-			requireValueUndefinedForInstruction(name, value);
+			requireValueDefinedForInstruction(name, value);
 			AssemblyItem item(fromHex(value), 0, 0);
 			result = item;
 		}
