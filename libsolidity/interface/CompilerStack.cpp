@@ -72,8 +72,6 @@
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libevmasm/EVMAssemblyStack.h>
-#include <libevmasm/Exceptions.h>
 
 #include <libsolutil/SwarmHash.h>
 #include <libsolutil/IpfsHash.h>
@@ -437,25 +435,6 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 	m_compilationSourceType = CompilationSourceType::SolidityAST;
 
 	storeContractDefinitions();
-}
-
-void CompilerStack::importFromEVMAssemblyStack(std::string const& _sourceName, std::string const& _source)
-{
-	solRequire(m_stackState == Empty, CompilerError, "");
-	m_evmAssemblyStack = make_unique<evmasm::EVMAssemblyStack>(m_evmVersion);
-	Json::Value evmAsmJson;
-	if (m_evmAssemblyStack->parseAndAnalyze(_sourceName, _source))
-	{
-		m_evmAssemblyStack->assemble();
-		string const name{m_evmAssemblyStack->name()};
-		Contract& contract = m_contracts[name];
-		contract.evmAssembly = m_evmAssemblyStack->evmAssembly();
-		contract.evmRuntimeAssembly = m_evmAssemblyStack->evmRuntimeAssembly();
-		contract.object = m_evmAssemblyStack->object();
-		contract.runtimeObject = m_evmAssemblyStack->runtimeObject();
-
-		m_stackState = CompilationSuccessful;
-	}
 }
 
 bool CompilerStack::analyze()
@@ -982,8 +961,7 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 		vector<string> sources = sourceNames();
 		if (find(sources.begin(), sources.end(), CompilerContext::yulUtilityFileName()) == sources.end())
 			sources.emplace_back(CompilerContext::yulUtilityFileName());
-		currentContract.evmAssembly->setSourceList(sources);
-		return currentContract.evmAssembly->assemblyJSON();
+		return currentContract.evmAssembly->assemblyJSON(sources);
 	}
 	else
 		return Json::Value();
@@ -991,9 +969,6 @@ Json::Value CompilerStack::assemblyJSON(string const& _contractName) const
 
 vector<string> CompilerStack::sourceNames() const
 {
-	if (m_evmAssemblyStack)
-		return m_evmAssemblyStack->evmAssembly()->sourceList();
-
 	return ranges::to<vector>(m_sources | ranges::views::keys);
 }
 
@@ -1001,18 +976,9 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 {
 	map<string, unsigned> indices;
 	unsigned index = 0;
-	if (m_evmAssemblyStack)
-	{
-		for (auto const& s: m_evmAssemblyStack->evmAssembly()->sourceList())
-			if (s != CompilerContext::yulUtilityFileName())
-				indices[s] = index++;
-	}
-	else
-	{
-		for (auto const& s: m_sources)
-			if (s.first != CompilerContext::yulUtilityFileName())
-				indices[s.first] = index++;
-	}
+	for (auto const& s: m_sources)
+		if (s.first != CompilerContext::yulUtilityFileName())
+			indices[s.first] = index++;
 
 	if (indices.find(CompilerContext::yulUtilityFileName()) == indices.end())
 		indices[CompilerContext::yulUtilityFileName()] = index++;
