@@ -195,9 +195,7 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 					"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
 				);
 		}
-		InstructionInfo info = instructionInfo(item.instruction(), m_evmVersion);
-		if (info.args == 0)
-			requireValueUndefinedForInstruction(name, value);
+		requireValueUndefinedForInstruction(name, value);
 		result = item;
 	}
 	else
