@@ -59,23 +59,26 @@ def run_external_tests(args: dict):
     solc_binary_path = args["solc_binary_path"]
 
     all_test_scripts = detect_external_tests()
+    selected_tests = args["selected_tests"]
     if args["run_all"]:
+        assert len(selected_tests) == 0
         run_test_scripts(solc_binary_type, solc_binary_path, all_test_scripts)
-    else:
-        selected_tests = args["selected_tests"]
-        if selected_tests:
-            unrecognized_tests = set(selected_tests) - set(all_test_scripts.keys())
-            if unrecognized_tests != set():
-                raise ExternalTestNotFound(
-                    f"External test(s) not found: {', '.join(unrecognized_tests)}"
-                )
-            run_test_scripts(
-                solc_binary_type,
-                solc_binary_path,
-                {k: all_test_scripts[k] for k in selected_tests},
-            )
-    raise ExternalTestNotFound(
-        "External test was not selected. Please use --run or --run-all option"
+        return
+
+    if len(selected_tests) == 0:
+        raise ExternalTestNotFound(
+            "External test was not selected. Please use --run or --run-all option"
+        )
+
+    unrecognized_tests = set(selected_tests) - set(all_test_scripts.keys())
+    if unrecognized_tests != set():
+        raise ExternalTestNotFound(
+            f"External test(s) not found: {', '.join(unrecognized_tests)}"
+        )
+    run_test_scripts(
+        solc_binary_type,
+        solc_binary_path,
+        {k: all_test_scripts[k] for k in selected_tests},
     )
 
 
