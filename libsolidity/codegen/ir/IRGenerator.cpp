@@ -113,6 +113,7 @@ pair<string, string> IRGenerator::run(
 		solAssert(false, ir + "\n\nInvalid IR generated:\n" + errorMessage + "\n");
 	}
 	asmStack.optimize();
+	asmStack.optimize(); // FIXME: We should be getting good results without running this twice
 
 	return {std::move(ir), asmStack.print(m_context.soliditySourceProvider())};
 }

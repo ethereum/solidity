@@ -1467,7 +1467,6 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		m_debugInfoSelection
 	);
 	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
-	stack.optimize();
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
