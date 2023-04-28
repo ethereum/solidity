@@ -741,6 +741,9 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& members() const { return m_members; }
 
+	/// @returns the EIP-712 compatible typehash of this struct.
+	util::h256 typehash() const;
+
 	Type const* type() const override;
 
 	bool isVisibleInDerivedContracts() const override { return true; }

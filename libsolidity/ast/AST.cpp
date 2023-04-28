@@ -389,6 +389,17 @@ std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingFo
 	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<vector>;
 }
 
+util::h256 StructDefinition::typehash() const
+{
+	std::string str = name() + "(";
+	for (size_t i = 0; i < m_members.size(); i++)
+	{
+		str += i == 0 ? "" : ",";
+		str += m_members[i]->type()->canonicalName() + " " + m_members[i]->name();
+	}
+	return util::keccak256(str + ")");
+}
+
 Type const* StructDefinition::type() const
 {
 	solAssert(annotation().recursive.has_value(), "Requested struct type before DeclarationTypeChecker.");

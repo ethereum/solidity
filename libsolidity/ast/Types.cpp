@@ -4213,6 +4213,13 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 					{"name", TypeProvider::stringMemory()},
 				});
 		}
+		else if (m_typeArgument->category() == Type::Category::Struct)
+		{
+			StructType const* structTypePointer = dynamic_cast<StructType const*>(m_typeArgument);
+			return MemberList::MemberMap({
+				{"typehash", structTypePointer},
+			});
+		}
 		else if (m_typeArgument->category() == Type::Category::Integer)
 		{
 			IntegerType const* integerTypePointer = dynamic_cast<IntegerType const*>(m_typeArgument);

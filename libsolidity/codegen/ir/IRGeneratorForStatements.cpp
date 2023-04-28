@@ -1941,6 +1941,13 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			ContractDefinition const& contract = contractType.contractDefinition();
 			define(_memberAccess) << formatNumber(u256{contract.interfaceId()} << (256 - 32)) << "\n";
 		}
+		else if (member == "typehash")
+		{
+			Type const* arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			auto const& structType = dynamic_cast<StructType const&>(*arg);
+			StructDefinition const& struct_ = structType.structDefinition();
+			define(_memberAccess) << formatNumber(struct_.typehash()) << "\n";
+		}
 		else if (member == "min" || member == "max")
 		{
 			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);

@@ -3391,6 +3391,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isPure = true;
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "interfaceId")
 			annotation.isPure = true;
+		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "typehash")
+			annotation.isPure = true;
 		else if (
 			magicType->kind() == MagicType::Kind::MetaType &&
 			(memberName == "min" ||	memberName == "max")
