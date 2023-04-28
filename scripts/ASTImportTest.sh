@@ -101,6 +101,7 @@ function test_ast_import_export_equivalence
 
     local export_command=("$SOLC" --combined-json ast --pretty-json --json-indent 4 "${input_files[@]}")
     local import_command=("$SOLC" --import-ast --combined-json ast --pretty-json --json-indent 4 expected.json)
+    local import_via_standard_json_command=("$SOLC" --combined-json ast --pretty-json --json-indent 4 --standard-json standard_json_input.json)
 
     # export ast - save ast json as expected result (silently)
     if ! "${export_command[@]}" > expected.json 2> stderr_export.txt
@@ -118,8 +119,28 @@ function test_ast_import_export_equivalence
         return 1
     fi
 
+    echo ". += {\"sources\":" > _ast_json.json
+    jq .sources expected.json >> _ast_json.json
+    echo "}" >> _ast_json.json
+    echo "{\"language\": \"SolidityAST\", \"settings\": {\"outputSelection\": {\"*\": {\"\": [\"ast\"]}}}}" > standard_json.json
+    jq --from-file _ast_json.json standard_json.json > standard_json_input.json
+
+    # (re)import ast via standard json - and export it again as obtained result (silently)
+    if ! "${import_via_standard_json_command[@]}" > obtained_standard_json.json 2> stderr_import.txt
+    then
+        print_stderr_stdout "ERROR: AST reimport failed (import) for input file ${sol_file}." ./stderr_import.txt ./obtained_standard_json.json
+        print_used_commands "$(pwd)" "${export_command[*]} > expected.json" "${import_command[*]}"
+        return 1
+    fi
+
+    jq .sources expected.json > expected_standard_json.json
+    jq .sources obtained_standard_json.json >  obtained_standard_json_.json
+    jq 'walk(if type == "object" and has("ast") then .AST = .ast | del(.ast) else . end)' < obtained_standard_json_.json > obtained_standard_json.json
+    jq --sort-keys . < obtained_standard_json.json > obtained_standard_json_.json
+    mv obtained_standard_json_.json obtained_standard_json.json
+
     # compare expected and obtained ASTs
-    if ! diff_files expected.json obtained.json
+    if ! diff_files expected.json obtained.json || ! diff_files expected_standard_json.json obtained_standard_json.json
     then
         printError "ERROR: AST reimport failed for ${sol_file}"
         if (( EXIT_ON_ERROR == 1 ))

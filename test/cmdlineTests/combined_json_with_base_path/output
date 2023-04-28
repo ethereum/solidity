@@ -61,7 +61,8 @@
           }
         ],
         "src": "36:38:0"
-      }
+      },
+      "id": 0
     },
     "combined_json_with_base_path/input.sol":
     {
@@ -105,7 +106,8 @@
           }
         ],
         "src": "36:42:1"
-      }
+      },
+      "id": 1
     }
   },
   "version": "<VERSION REMOVED>"

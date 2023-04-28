@@ -1,0 +1,50 @@
+{
+  "language": "SolidityAST",
+  "sources": {
+    "A": {
+      "ast": {
+        "absolutePath": "empty_contract.sol",
+        "exportedSymbols": {
+          "test": [
+            1
+          ]
+        },
+        "id": 2,
+        "nodeType": "SourceUnit",
+        "nodes": [
+          {
+            "abstract": false,
+            "baseContracts": [],
+            "canonicalName": "test",
+            "contractDependencies": [],
+            "contractKind": "contract",
+            "fullyImplemented": true,
+            "id": 1,
+            "linearizedBaseContracts": [
+              1
+            ],
+            "name": "test",
+            "nameLocation": "9:4:0",
+            "nodeType": "ContractDefinition",
+            "nodes": [],
+            "scope": 2,
+            "src": "0:17:0",
+            "usedErrors": []
+          }
+        ],
+        "src": "0:124:0"
+      },
+      "id": 0
+    }
+  },
+  "settings": {
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.bytecode",
+          "evm.bytecode.sourceMap"
+        ]
+      }
+    }
+  }
+}

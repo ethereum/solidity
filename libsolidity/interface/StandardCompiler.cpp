@@ -657,72 +657,84 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 
 	ret.errors = Json::arrayValue;
 
-	for (auto const& sourceName: sources.getMemberNames())
+	if (ret.language == "Solidity" || ret.language == "Yul")
 	{
-		string hash;
-
-		if (auto result = checkSourceKeys(sources[sourceName], sourceName))
-			return *result;
-
-		if (sources[sourceName]["keccak256"].isString())
-			hash = sources[sourceName]["keccak256"].asString();
-
-		if (sources[sourceName]["content"].isString())
+		for (auto const& sourceName: sources.getMemberNames())
 		{
-			string content = sources[sourceName]["content"].asString();
-			if (!hash.empty() && !hashMatchesContent(hash, content))
-				ret.errors.append(formatError(
-					Error::Type::IOError,
-					"general",
-					"Mismatch between content and supplied hash for \"" + sourceName + "\""
-				));
-			else
-				ret.sources[sourceName] = content;
-		}
-		else if (sources[sourceName]["urls"].isArray())
-		{
-			if (!m_readFile)
-				return formatFatalError(Error::Type::JSONError, "No import callback supplied, but URL is requested.");
+			string hash;
 
-			vector<string> failures;
-			bool found = false;
+			if (auto result = checkSourceKeys(sources[sourceName], sourceName))
+				return *result;
 
-			for (auto const& url: sources[sourceName]["urls"])
+			if (sources[sourceName]["keccak256"].isString())
+				hash = sources[sourceName]["keccak256"].asString();
+
+			if (sources[sourceName]["content"].isString())
 			{
-				if (!url.isString())
-					return formatFatalError(Error::Type::JSONError, "URL must be a string.");
-				ReadCallback::Result result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), url.asString());
-				if (result.success)
-				{
-					if (!hash.empty() && !hashMatchesContent(hash, result.responseOrErrorMessage))
-						ret.errors.append(formatError(
-							Error::Type::IOError,
-							"general",
-							"Mismatch between content and supplied hash for \"" + sourceName + "\" at \"" + url.asString() + "\""
-						));
-					else
-					{
-						ret.sources[sourceName] = result.responseOrErrorMessage;
-						found = true;
-						break;
-					}
-				}
+				string content = sources[sourceName]["content"].asString();
+				if (!hash.empty() && !hashMatchesContent(hash, content))
+					ret.errors.append(formatError(
+						Error::Type::IOError,
+						"general",
+						"Mismatch between content and supplied hash for \"" + sourceName + "\""
+					));
 				else
-					failures.push_back("Cannot import url (\"" + url.asString() + "\"): " + result.responseOrErrorMessage);
+					ret.sources[sourceName] = content;
 			}
-
-			for (auto const& failure: failures)
+			else if (sources[sourceName]["urls"].isArray())
 			{
-				/// If the import succeeded, let mark all the others as warnings, otherwise all of them are errors.
-				ret.errors.append(formatError(
-					found ? Error::Type::Warning : Error::Type::IOError,
-					"general",
-					failure
-				));
+				if (!m_readFile)
+					return formatFatalError(
+						Error::Type::JSONError, "No import callback supplied, but URL is requested."
+					);
+
+				vector<string> failures;
+				bool found = false;
+
+				for (auto const& url: sources[sourceName]["urls"])
+				{
+					if (!url.isString())
+						return formatFatalError(Error::Type::JSONError, "URL must be a string.");
+					ReadCallback::Result result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), url.asString());
+					if (result.success)
+					{
+						if (!hash.empty() && !hashMatchesContent(hash, result.responseOrErrorMessage))
+							ret.errors.append(formatError(
+								Error::Type::IOError,
+								"general",
+								"Mismatch between content and supplied hash for \"" + sourceName + "\" at \"" + url.asString() + "\""
+							));
+						else
+						{
+							ret.sources[sourceName] = result.responseOrErrorMessage;
+							found = true;
+							break;
+						}
+					}
+					else
+						failures.push_back(
+							"Cannot import url (\"" + url.asString() + "\"): " + result.responseOrErrorMessage
+						);
+				}
+
+				for (auto const& failure: failures)
+				{
+					/// If the import succeeded, let mark all the others as warnings, otherwise all of them are errors.
+					ret.errors.append(formatError(
+						found ? Error::Type::Warning : Error::Type::IOError,
+						"general",
+						failure
+					));
+				}
 			}
+			else
+				return formatFatalError(Error::Type::JSONError, "Invalid input source specified.");
 		}
-		else
-			return formatFatalError(Error::Type::JSONError, "Invalid input source specified.");
+	}
+	else if (ret.language == "SolidityAST")
+	{
+		for (auto const& sourceName: sources.getMemberNames())
+			ret.sources[sourceName] = util::jsonCompactPrint(sources[sourceName]);
 	}
 
 	Json::Value const& auxInputs = _input["auxiliaryInput"];
@@ -1117,7 +1129,24 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		ret.modelCheckerSettings.timeout = modelCheckerSettings["timeout"].asUInt();
 	}
 
-	return { std::move(ret) };
+	return {std::move(ret)};
+}
+
+map<string, Json::Value> StandardCompiler::parseAstFromInput(StringMap const& _sources)
+{
+	map<string, Json::Value> sourceJsons;
+	for (auto const& [sourceName, sourceCode]: _sources)
+	{
+		Json::Value ast;
+		astAssert(util::jsonParseStrict(sourceCode, ast), "Input file could not be parsed to JSON");
+		string astKey = ast.isMember("ast") ? "ast" : "AST";
+
+		astAssert(ast.isMember(astKey), "astkey is not member");
+		astAssert(ast[astKey]["nodeType"].asString() == "SourceUnit", "Top-level node should be a 'SourceUnit'");
+		astAssert(sourceJsons.count(sourceName) == 0, "All sources must have unique names");
+		sourceJsons.emplace(sourceName, std::move(ast[astKey]));
+	}
+	return sourceJsons;
 }
 
 Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inputsAndSettings)
@@ -1125,7 +1154,8 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	CompilerStack compilerStack(m_readFile);
 
 	StringMap sourceList = std::move(_inputsAndSettings.sources);
-	compilerStack.setSources(sourceList);
+	if (_inputsAndSettings.language == "Solidity")
+		compilerStack.setSources(sourceList);
 	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
 		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
 	compilerStack.setViaIR(_inputsAndSettings.viaIR);
@@ -1153,23 +1183,37 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	try
 	{
-		if (binariesRequested)
-			compilerStack.compile();
-		else
-			compilerStack.parseAndAnalyze(_inputsAndSettings.stopAfter);
-
-		for (auto const& error: compilerStack.errors())
+		if (_inputsAndSettings.language == "SolidityAST")
 		{
-			Error const& err = dynamic_cast<Error const&>(*error);
+			try
+			{
+				compilerStack.importASTs(parseAstFromInput(sourceList));
+				if (!compilerStack.analyze())
+					errors.append(formatError(Error::Type::FatalError, "general", "Analysis of the AST failed."));
+				if (binariesRequested)
+					compilerStack.compile();
+			}
+			catch (util::Exception const& _exc)
+			{
+				solThrow(util::Exception, "Failed to import AST: "s + _exc.what());
+			}
+		}
+		else
+		{
+			if (binariesRequested)
+				compilerStack.compile();
+			else
+				compilerStack.parseAndAnalyze(_inputsAndSettings.stopAfter);
 
-			errors.append(formatErrorWithException(
-				compilerStack,
-				*error,
-				err.type(),
-				"general",
-				"",
-				err.errorId()
-			));
+			for (auto const& error: compilerStack.errors())
+				errors.append(formatErrorWithException(
+					compilerStack,
+					*error,
+					error->type(),
+					"general",
+					"",
+					error->errorId()
+				));
 		}
 	}
 	/// This is only thrown in a very few locations.
@@ -1558,8 +1602,10 @@ Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 			return compileSolidity(std::move(settings));
 		else if (settings.language == "Yul")
 			return compileYul(std::move(settings));
+		else if (settings.language == "SolidityAST")
+			return compileSolidity(std::move(settings));
 		else
-			return formatFatalError(Error::Type::JSONError, "Only \"Solidity\" or \"Yul\" is supported as a language.");
+			return formatFatalError(Error::Type::JSONError, "Only \"Solidity\", \"Yul\" or \"SolidityAST\" is supported as a language.");
 	}
 	catch (Json::LogicError const& _exception)
 	{

@@ -879,9 +879,12 @@ void CommandLineInterface::handleCombinedJSON()
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
-			ASTJsonExporter converter(m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
-			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
+			output[g_strSources][sourceCode.first]["AST"] = ASTJsonExporter(
+																m_compiler->state(),
+																m_compiler->sourceIndices()
+															).toJson(m_compiler->ast(sourceCode.first));
+			output[g_strSources][sourceCode.first]["id"] = m_compiler->sourceIndices().at(sourceCode.first);
 		}
 	}
 
