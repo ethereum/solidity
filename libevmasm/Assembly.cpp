@@ -560,11 +560,18 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case Push:
 		{
-			unsigned b = max<unsigned>(1, numberEncodingSize(i.data()));
+			unsigned b = numberEncodingSize(i.data());
+			if (b == 0 && !m_evmVersion.hasPush0())
+			{
+				b = 1;
+			}
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
-			ret.bytecode.resize(ret.bytecode.size() + b);
-			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
-			toBigEndian(i.data(), byr);
+			if (b > 0)
+			{
+				ret.bytecode.resize(ret.bytecode.size() + b);
+				bytesRef byr(&ret.bytecode.back() + 1 - b, b);
+				toBigEndian(i.data(), byr);
+			}
 			break;
 		}
 		case PushTag:

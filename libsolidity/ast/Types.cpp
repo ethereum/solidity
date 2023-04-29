@@ -819,16 +819,17 @@ BoolResult FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) con
 
 TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
 {
+	solAssert(_operator != Token::Add);
+
 	switch (_operator)
 	{
 	case Token::Delete:
 		// "delete" is ok for all fixed types
 		return TypeResult{TypeProvider::emptyTuple()};
-	case Token::Add:
 	case Token::Sub:
 	case Token::Inc:
 	case Token::Dec:
-		// for fixed, we allow +, -, ++ and --
+		// for fixed, we allow -, ++ and --
 		return this;
 	default:
 		return nullptr;

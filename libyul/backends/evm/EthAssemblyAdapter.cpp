@@ -181,6 +181,11 @@ void EthAssemblyAdapter::markAsInvalid()
 	m_assembly.markAsInvalid();
 }
 
+langutil::EVMVersion EthAssemblyAdapter::evmVersion() const
+{
+	return m_assembly.evmVersion();
+}
+
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag)
 {
 	u256 id = _tag.data();

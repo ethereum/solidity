@@ -511,8 +511,8 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		m_currentLValue.reset();
 		break;
 	case Token::Add: // +
-		// unary add, so basically no-op
-		break;
+		// According to SyntaxChecker...
+		solAssert(false, "Use of unary + is disallowed.");
 	case Token::Sub: // -
 		solUnimplementedAssert(
 			type.category() != Type::Category::FixedPoint,

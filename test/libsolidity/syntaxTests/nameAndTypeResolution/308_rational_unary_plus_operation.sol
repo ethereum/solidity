@@ -6,5 +6,4 @@ contract test {
     }
 }
 // ----
-// SyntaxError 9636: (70-75): Use of unary + is disallowed.
-// TypeError 4907: (70-75): Built-in unary operator + cannot be applied to type rational_const 13 / 4.
+// ParserError 9636: (70-71): Use of unary + is disallowed.

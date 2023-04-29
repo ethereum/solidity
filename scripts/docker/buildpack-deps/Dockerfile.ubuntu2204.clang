@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:jammy AS base
-LABEL version="1"
+LABEL version="2"
 
 ARG DEBIAN_FRONTEND=noninteractive
 

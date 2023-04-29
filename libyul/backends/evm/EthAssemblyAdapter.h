@@ -67,6 +67,9 @@ public:
 
 	void markAsInvalid() override;
 
+	langutil::EVMVersion evmVersion() const override;
+
+
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
 	void appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType);

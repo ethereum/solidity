@@ -367,6 +367,7 @@ bool ASTJsonExporter::visit(StructDefinition const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
+		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("members", toJson(_node.members())),
 		make_pair("scope", idOrNull(_node.scope()))
@@ -469,6 +470,10 @@ bool ASTJsonExporter::visit(FunctionDefinition const& _node)
 		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
 	if (!_node.annotation().baseFunctions.empty())
 		attributes.emplace_back(make_pair("baseFunctions", getContainerIds(_node.annotation().baseFunctions, true)));
+
+	if (_node.annotation().internalFunctionID.set())
+		attributes.emplace_back("internalFunctionID", *_node.annotation().internalFunctionID);
+
 	setJsonNode(_node, "FunctionDefinition", std::move(attributes));
 	return false;
 }

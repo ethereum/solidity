@@ -124,6 +124,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_LONDON;
 	else if (_evmVersion == langutil::EVMVersion::paris())
 		m_evmRevision = EVMC_PARIS;
+	else if (_evmVersion == langutil::EVMVersion::shanghai())
+		m_evmRevision = EVMC_SHANGHAI;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 
@@ -251,6 +253,8 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		else
 			return precompileALTBN128PairingProduct<EVMC_LONDON>(_message);
 	}
+	else if (_message.recipient == 0x0000000000000000000000000000000000000009_address && m_evmVersion >= langutil::EVMVersion::istanbul())
+		return precompileBlake2f(_message);
 
 	auto const stateBackup = accounts;
 
@@ -349,13 +353,23 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		transfer(sender, destination, value);
 	}
 
-	// Populate the access access list.
+	// Populate the access access list (enabled since Berlin).
 	// Note, this will also properly touch the created address.
 	// TODO: support a user supplied access list too
 	if (m_evmRevision >= EVMC_BERLIN)
 	{
 		access_account(message.sender);
 		access_account(message.recipient);
+
+		// EIP-3651 rule
+		if (m_evmRevision >= EVMC_SHANGHAI)
+			access_account(tx_context.block_coinbase);
+	}
+
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+	{
+		message.input_data = nullptr;
+		message.input_size = 0;
 	}
 	evmc::Result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 
@@ -1113,6 +1127,12 @@ evmc::Result EVMHost::precompileALTBN128PairingProduct(evmc_message const& _mess
 		}
 	};
 	return precompileGeneric(_message, inputOutput);
+}
+
+evmc::Result EVMHost::precompileBlake2f(evmc_message const&) noexcept
+{
+	// TODO implement
+	return resultWithFailure();
 }
 
 evmc::Result EVMHost::precompileGeneric(

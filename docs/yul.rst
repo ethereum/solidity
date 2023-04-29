@@ -166,6 +166,8 @@ Inside a code block, the following elements can be used
 Multiple syntactical elements can follow each other simply separated by
 whitespace, i.e. there is no terminating ``;`` or newline required.
 
+.. index:: ! literal;in Yul
+
 Literals
 --------
 
@@ -947,7 +949,7 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
   The remaining bytes will retain their values as of before the call.
 
 .. note::
-  The `difficulty()` instruction is disallowed in EVM version >= Paris.
+  The ``difficulty()`` instruction is disallowed in EVM version >= Paris.
   With the Paris network upgrade the semantics of the instruction that was previously called
   ``difficulty`` have been changed and the instruction was renamed to ``prevrandao``.
   It can now return arbitrary values in the full 256-bit range, whereas the highest recorded

@@ -46,6 +46,9 @@ public:
 	VariableAssignmentMap() = default;
 	/**
 	 * Insert a set of values for the provided key ``_variable`` into ``m_ordered`` and ``m_reversed``.
+	 * This method will erase all references of ``_variable`` from both sets before performing the insertion,
+	 * practically making this an insert with overwrite method, akin to container assignment with subscript operator,
+	 * i.e. container[index] = value.
 	 * For example, if ``_variable`` is ``x`` and ``_references`` is ``{"y", "z"}``, the following would be added to ``Ref 1``:
 	 *
 	 * m_ordered        m_reversed

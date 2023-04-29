@@ -709,7 +709,7 @@ private:
 	bool m_global = false;
 };
 
-class StructDefinition: public Declaration, public ScopeOpener
+class StructDefinition: public Declaration, public StructurallyDocumented, public ScopeOpener
 {
 public:
 	StructDefinition(
@@ -717,9 +717,13 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		SourceLocation _nameLocation,
-		std::vector<ASTPointer<VariableDeclaration>> _members
+		std::vector<ASTPointer<VariableDeclaration>> _members,
+		ASTPointer<StructuredDocumentation> _documentation
 	):
-		Declaration(_id, _location, _name, std::move(_nameLocation)), m_members(std::move(_members)) {}
+		Declaration(_id, _location, _name, std::move(_nameLocation)),
+		StructurallyDocumented(std::move(_documentation)),
+		m_members(std::move(_members))
+	{}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;

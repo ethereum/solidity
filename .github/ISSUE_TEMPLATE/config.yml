@@ -1,17 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Bug Report
-    url: https://github.com/ethereum/solidity/issues/new?template=bug_report.md&projects=ethereum/solidity/43
-    about: Bug reports for the Solidity Compiler.
-  - name: Documentation Issue
-    url: https://github.com/ethereum/solidity/issues/new?template=documentation_issue.md&projects=ethereum/solidity/43
-    about: Solidity documentation.
-  - name: Feature Request
-    url: https://github.com/ethereum/solidity/issues/new?template=feature_request.md&projects=ethereum/solidity/43
-    about: Solidity language or infrastructure feature requests.
-  - name: Report a security vulnerability
-    url: https://github.com/ethereum/solidity/security/policy
-    about: Please review our security policy for more details.
   - name: Initiate a language design or feedback discussion
     url: https://forum.soliditylang.org
     about: Open a thread on the Solidity forum.

@@ -77,6 +77,8 @@ public:
 
 	void markAsInvalid() override {}
 
+	langutil::EVMVersion evmVersion() const override { return m_evmVersion; }
+
 private:
 	int m_stackHeight = 0;
 	langutil::EVMVersion m_evmVersion;

@@ -1,0 +1,6 @@
+{
+    "msgtype": "m.text",
+    "body": " 📦 Release binaries for version ${TAG} are ready and attached as artifacts to ${BUILD_URL}. Please make sure the whole workflow succeeded before using them.",
+    "format": "org.matrix.custom.html",
+    "formatted_body": " 📦 Release binaries for version <strong>${TAG}</strong> are ready and attached as artifacts to <a href=\"${BUILD_URL}\">build ${BUILD_NUM}</a>. <strong>Please make sure the whole workflow succeeded before using them.</strong>"
+}

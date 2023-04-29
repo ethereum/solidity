@@ -526,6 +526,7 @@ bool CompilerStack::analyze()
 		if (noErrors)
 		{
 			createAndAssignCallGraphs();
+			annotateInternalFunctionIDs();
 			findAndReportCyclicContractDependencies();
 		}
 
@@ -1245,6 +1246,34 @@ void CompilerStack::storeContractDefinitions()
 			}
 }
 
+void CompilerStack::annotateInternalFunctionIDs()
+{
+	uint64_t internalFunctionID = 1;
+	for (Source const* source: m_sourceOrder)
+	{
+		if (!source->ast)
+			continue;
+
+		for (ContractDefinition const* contract: ASTNode::filteredNodes<ContractDefinition>(source->ast->nodes()))
+		{
+			ContractDefinitionAnnotation& annotation = contract->annotation();
+
+			if (auto const* deployTimeInternalDispatch = util::valueOrNullptr((*annotation.deployedCallGraph)->edges, CallGraph::SpecialNode::InternalDispatch))
+				for (auto const& node: *deployTimeInternalDispatch)
+					if (auto const* callable = get_if<CallableDeclaration const*>(&node))
+						if (auto const* function = dynamic_cast<FunctionDefinition const*>(*callable))
+							if (!function->annotation().internalFunctionID.set())
+								function->annotation().internalFunctionID = internalFunctionID++;
+			if (auto const* creationTimeInternalDispatch = util::valueOrNullptr((*annotation.creationCallGraph)->edges, CallGraph::SpecialNode::InternalDispatch))
+				for (auto const& node: *creationTimeInternalDispatch)
+					if (auto const* callable = get_if<CallableDeclaration const*>(&node))
+						if (auto const* function = dynamic_cast<FunctionDefinition const*>(*callable))
+							// Make sure the function already got an ID since it also occurs in the deploy-time internal dispatch.
+							solAssert(function->annotation().internalFunctionID.set());
+		}
+	}
+}
+
 namespace
 {
 bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& features)
@@ -1293,7 +1322,7 @@ void CompilerStack::assemble(
 	}
 
 	// Throw a warning if EIP-170 limits are exceeded:
-	//   If contract creation returns data with length greater than 0x6000 (214 + 213) bytes,
+	//   If contract creation returns data with length greater than 0x6000 (2^14 + 2^13) bytes,
 	//   contract creation fails with an out of gas error.
 	if (
 		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
@@ -1305,6 +1334,24 @@ void CompilerStack::assemble(
 			"Contract code size is "s +
 			to_string(compiledContract.runtimeObject.bytecode.size()) +
 			" bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
+			"This contract may not be deployable on Mainnet. "
+			"Consider enabling the optimizer (with a low \"runs\" value!), "
+			"turning off revert strings, or using libraries."
+		);
+
+	// Throw a warning if EIP-3860 limits are exceeded:
+	//   If initcode is larger than 0xC000 bytes (twice the runtime code limit),
+	//   then contract creation fails with an out of gas error.
+	if (
+		m_evmVersion >= langutil::EVMVersion::shanghai() &&
+		compiledContract.object.bytecode.size() > 0xC000
+	)
+		m_errorReporter.warning(
+			3860_error,
+			_contract.location(),
+			"Contract initcode size is "s +
+			to_string(compiledContract.object.bytecode.size()) +
+			" bytes and exceeds 49152 bytes (a limit introduced in Shanghai). "
 			"This contract may not be deployable on Mainnet. "
 			"Consider enabling the optimizer (with a low \"runs\" value!), "
 			"turning off revert strings, or using libraries."

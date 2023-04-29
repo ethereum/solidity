@@ -180,7 +180,8 @@ private:
 	{
 		/// Current values of variables, always movable.
 		std::map<YulString, AssignedValue> value;
-		/// Ordered and reverse map of expression references
+		/// references.m_ordered[a].contains(b) <=> the current expression assigned to a references b
+		/// references.m_reversed[b].contains(a) <=> b from current expression assigned to a is references by a
 		VariableAssignmentMap references;
 		Environment environment;
 	};
