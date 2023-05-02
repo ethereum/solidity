@@ -25,7 +25,7 @@ Bugfixes:
 
 
 AST Changes:
- * AST: Add the ``internalFunctionID`` field to the AST nodes of functions that may be called via the internal dispatch. These IDs are always generated, but they are only used in via-IR code generation.
+ * AST: Add the ``internalFunctionIDs`` field to the AST nodes of contracts containing IDs of functions that may be called via the internal dispatch. The field is a map from function AST IDs to internal dispatch function IDs. These IDs are always generated, but they are only used in via-IR code generation.
  * AST: Add the ``usedEvents`` field to ``ContractDefinition`` which contains the AST IDs of all events emitted by the contract as well as all events defined and inherited by the contract.
 
 
