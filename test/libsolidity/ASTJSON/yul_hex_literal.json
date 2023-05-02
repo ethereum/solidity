@@ -39,17 +39,20 @@
               {
                 "AST":
                 {
+                  "nativeSrc": "66:142:1",
                   "nodeType": "YulBlock",
                   "src": "66:142:1",
                   "statements":
                   [
                     {
+                      "nativeSrc": "80:15:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "80:15:1",
                       "value":
                       {
                         "hexValue": "74657374",
                         "kind": "string",
+                        "nativeSrc": "89:6:1",
                         "nodeType": "YulLiteral",
                         "src": "89:6:1",
                         "type": "",
@@ -59,6 +62,7 @@
                       [
                         {
                           "name": "a",
+                          "nativeSrc": "84:1:1",
                           "nodeType": "YulTypedName",
                           "src": "84:1:1",
                           "type": ""
@@ -66,12 +70,14 @@
                       ]
                     },
                     {
+                      "nativeSrc": "108:54:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "108:54:1",
                       "value":
                       {
                         "hexValue": "112233445566778899aabbccddeeff6677889900",
                         "kind": "string",
+                        "nativeSrc": "117:45:1",
                         "nodeType": "YulLiteral",
                         "src": "117:45:1",
                         "type": ""
@@ -80,6 +86,7 @@
                       [
                         {
                           "name": "b",
+                          "nativeSrc": "112:1:1",
                           "nodeType": "YulTypedName",
                           "src": "112:1:1",
                           "type": ""
@@ -87,12 +94,14 @@
                       ]
                     },
                     {
+                      "nativeSrc": "175:23:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "175:23:1",
                       "value":
                       {
                         "hexValue": "1234abcd",
                         "kind": "string",
+                        "nativeSrc": "184:14:1",
                         "nodeType": "YulLiteral",
                         "src": "184:14:1",
                         "type": ""
@@ -101,6 +110,7 @@
                       [
                         {
                           "name": "c",
+                          "nativeSrc": "179:1:1",
                           "nodeType": "YulTypedName",
                           "src": "179:1:1",
                           "type": ""

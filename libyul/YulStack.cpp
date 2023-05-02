@@ -31,10 +31,11 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
-
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
+
 #include <boost/algorithm/string.hpp>
+
 #include <optional>
 
 using namespace std;
@@ -268,6 +269,13 @@ string YulStack::print(
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
 	return m_parserResult->toString(&languageToDialect(m_language, m_evmVersion), m_debugInfoSelection, _soliditySourceProvider) + "\n";
+}
+
+Json::Value YulStack::astJson() const
+{
+	yulAssert(m_parserResult, "");
+	yulAssert(m_parserResult->code, "");
+	return  m_parserResult->toJson();
 }
 
 shared_ptr<Object> YulStack::parserResult() const

@@ -179,7 +179,7 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 
 bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact, bool _wildcardMatchesExperimental)
 {
-	static set<string> experimental{"ir", "irOptimized"};
+	static set<string> experimental{"ir", "irAst", "irOptimized", "irOptimizedAst"};
 	for (auto const& selectedArtifactJson: _outputSelection)
 	{
 		string const& selectedArtifact = selectedArtifactJson.asString();
@@ -263,7 +263,7 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	// This does not include "evm.methodIdentifiers" on purpose!
 	static vector<string> const outputsThatRequireBinaries = vector<string>{
 		"*",
-		"ir", "irOptimized",
+		"ir", "irAst", "irOptimized", "irOptimizedAst",
 		"evm.gasEstimates", "evm.legacyAssembly", "evm.assembly"
 	} + evmObjectComponents("bytecode") + evmObjectComponents("deployedBytecode");
 
@@ -295,7 +295,7 @@ bool isEvmBytecodeRequested(Json::Value const& _outputSelection)
 }
 
 /// @returns true if any Yul IR was requested. Note that as an exception, '*' does not
-/// yet match "ir" or "irOptimized"
+/// yet match "ir", "irAst", "irOptimized" or "irOptimizedAst"
 bool isIRRequested(Json::Value const& _outputSelection)
 {
 	if (!_outputSelection.isObject())
@@ -304,7 +304,12 @@ bool isIRRequested(Json::Value const& _outputSelection)
 	for (auto const& fileRequests: _outputSelection)
 		for (auto const& requests: fileRequests)
 			for (auto const& request: requests)
-				if (request == "ir" || request == "irOptimized")
+				if (
+					request == "ir" ||
+					request == "irAst" ||
+					request == "irOptimized" ||
+					request == "irOptimizedAst"
+				)
 					return true;
 
 	return false;
@@ -1350,8 +1355,12 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		// IR
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ir", wildcardMatchesExperimental))
 			contractData["ir"] = compilerStack.yulIR(contractName);
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irAst", wildcardMatchesExperimental))
+			contractData["irAst"] = compilerStack.yulIRAst(contractName);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized", wildcardMatchesExperimental))
 			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimizedAst", wildcardMatchesExperimental))
+			contractData["irOptimizedAst"] = compilerStack.yulIROptimizedAst(contractName);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);
@@ -1513,6 +1522,13 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["ir"] = stack.print();
 
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ast", wildcardMatchesExperimental))
+	{
+		Json::Value sourceResult = Json::objectValue;
+		sourceResult["id"] = 1;
+		sourceResult["ast"] = stack.astJson();
+		output["sources"][sourceName] = sourceResult;
+	}
 	stack.optimize();
 
 	MachineAssemblyObject object;

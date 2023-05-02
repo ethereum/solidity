@@ -4,8 +4,12 @@ Language Features:
 
 
 Compiler Features:
+ * Commandline Interface: Add ``--ast-compact-json`` output in assembler mode.
+ * Commandline Interface: Add ``--ir-ast-json`` and ``--ir-optimized-ast-json`` outputs for Solidity input, providing AST in compact JSON format for IR and optimized IR.
  * EWasm: Remove EWasm backend.
  * Parser: Introduce ``pragma experimental solidity``, which will enable an experimental language mode that in particular has no stability guarantees between non-breaking releases and is not suited for production use.
+ * Standard JSON Interface: Add ``ast`` file-level output for Yul input.
+ * Standard JSON Interface: Add ``irAst`` and ``irOptimizedAst`` contract-level outputs for Solidity input, providing AST in compact JSON format for IR and optimized IR.
 
 
 Bugfixes:

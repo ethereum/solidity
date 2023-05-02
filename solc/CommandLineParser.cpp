@@ -461,7 +461,8 @@ void CommandLineParser::parseOutputSelection()
 		static set<string> const assemblerModeOutputs = {
 			CompilerOutputs::componentName(&CompilerOutputs::asm_),
 			CompilerOutputs::componentName(&CompilerOutputs::binary),
-			CompilerOutputs::componentName(&CompilerOutputs::irOptimized)
+			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+			CompilerOutputs::componentName(&CompilerOutputs::astCompactJson),
 		};
 
 		switch (_mode)
@@ -735,7 +736,9 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::binaryRuntime).c_str(), "Binary of the runtime part of the contracts in hex.")
 		(CompilerOutputs::componentName(&CompilerOutputs::abi).c_str(), "ABI specification of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::ir).c_str(), "Intermediate Representation (IR) of all contracts.")
-		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized intermediate Representation (IR) of all contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::irAstJson).c_str(), "AST of Intermediate Representation (IR) of all contracts in a compact JSON format.")
+		(CompilerOutputs::componentName(&CompilerOutputs::irOptimized).c_str(), "Optimized Intermediate Representation (IR) of all contracts.")
+		(CompilerOutputs::componentName(&CompilerOutputs::irOptimizedAstJson).c_str(), "AST of optimized Intermediate Representation (IR) of all contracts in a compact JSON format.")
 		(CompilerOutputs::componentName(&CompilerOutputs::signatureHashes).c_str(), "Function signature hashes of the contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
@@ -991,7 +994,9 @@ void CommandLineParser::processArgs()
 	array<string, 9> const conflictingWithStopAfter{
 		CompilerOutputs::componentName(&CompilerOutputs::binary),
 		CompilerOutputs::componentName(&CompilerOutputs::ir),
+		CompilerOutputs::componentName(&CompilerOutputs::irAstJson),
 		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+		CompilerOutputs::componentName(&CompilerOutputs::irOptimizedAstJson),
 		g_strGas,
 		CompilerOutputs::componentName(&CompilerOutputs::asm_),
 		CompilerOutputs::componentName(&CompilerOutputs::asmJson),

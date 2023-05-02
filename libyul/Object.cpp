@@ -22,6 +22,8 @@
 #include <libyul/Object.h>
 
 #include <libyul/AsmPrinter.h>
+#include <libyul/AsmJsonConverter.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
@@ -86,6 +88,34 @@ string Object::toString(
 		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
 
 	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
+}
+
+Json::Value Data::toJson() const
+{
+	Json::Value ret{Json::objectValue};
+	ret["nodeType"] = "YulData";
+	ret["value"] = util::toHex(data);
+	return ret;
+}
+
+Json::Value Object::toJson() const
+{
+	yulAssert(code, "No code");
+
+	Json::Value codeJson{Json::objectValue};
+	codeJson["nodeType"] = "YulCode";
+	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(*code);
+
+	Json::Value subObjectsJson{Json::arrayValue};
+	for (shared_ptr<ObjectNode> const& subObject: subObjects)
+		subObjectsJson.append(subObject->toJson());
+
+	Json::Value ret{Json::objectValue};
+	ret["nodeType"] = "YulObject";
+	ret["name"] = name.str();
+	ret["code"] = codeJson;
+	ret["subObjects"] = subObjectsJson;
+	return ret;
 }
 
 set<YulString> Object::qualifiedDataNames() const

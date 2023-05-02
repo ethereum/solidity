@@ -101,7 +101,9 @@ private:
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
 	void handleIR(std::string const& _contract);
+	void handleIRAst(std::string const& _contract);
 	void handleIROptimized(std::string const& _contract);
+	void handleIROptimizedAst(std::string const& _contract);
 	void handleBytecode(std::string const& _contract);
 	void handleSignatureHashes(std::string const& _contract);
 	void handleMetadata(std::string const& _contract);

@@ -223,6 +223,31 @@ void CommandLineInterface::handleIR(string const& _contractName)
 	}
 }
 
+void CommandLineInterface::handleIRAst(string const& _contractName)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.irAstJson)
+		return;
+
+	if (!m_options.output.dir.empty())
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_yul_ast.json",
+			util::jsonPrint(
+				m_compiler->yulIRAst(_contractName),
+				m_options.formatting.json
+			)
+		);
+	else
+	{
+		sout() << "IR AST:" << endl;
+		sout() << util::jsonPrint(
+			m_compiler->yulIRAst(_contractName),
+			m_options.formatting.json
+		) << endl;
+	}
+}
+
 void CommandLineInterface::handleIROptimized(string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
@@ -231,11 +256,39 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 		return;
 
 	if (!m_options.output.dir.empty())
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul", m_compiler->yulIROptimized(_contractName));
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul",
+			m_compiler->yulIROptimized(_contractName)
+		);
 	else
 	{
 		sout() << "Optimized IR:" << endl;
 		sout() << m_compiler->yulIROptimized(_contractName) << endl;
+	}
+}
+
+void CommandLineInterface::handleIROptimizedAst(string const& _contractName)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.irOptimizedAstJson)
+		return;
+
+	if (!m_options.output.dir.empty())
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_opt_yul_ast.json",
+			util::jsonPrint(
+				m_compiler->yulIROptimizedAst(_contractName),
+				m_options.formatting.json
+			)
+		);
+	else
+	{
+		sout() << "Optimized IR AST:" << endl;
+		sout() << util::jsonPrint(
+			m_compiler->yulIROptimizedAst(_contractName),
+			m_options.formatting.json
+		) << endl;
 	}
 }
 
@@ -690,8 +743,12 @@ void CommandLineInterface::compile()
 		if (m_options.output.debugInfoSelection.has_value())
 			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
 		// TODO: Perhaps we should not compile unless requested
-
-		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
+		m_compiler->enableIRGeneration(
+			m_options.compiler.outputs.ir ||
+			m_options.compiler.outputs.irOptimized ||
+			m_options.compiler.outputs.irAstJson ||
+			m_options.compiler.outputs.irOptimizedAstJson
+		);
 		m_compiler->enableEvmBytecodeGeneration(
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||
@@ -1084,7 +1141,11 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			else
 				serr() << "No binary representation found." << endl;
 		}
-
+		if (m_options.compiler.outputs.astCompactJson)
+		{
+			sout() << "AST:" <<  endl <<  endl;
+			sout() << util::jsonPrint(stack.astJson(), m_options.formatting.json) << endl;
+		}
 		solAssert(_targetMachine == yul::YulStack::Machine::EVM, "");
 		if (m_options.compiler.outputs.asm_)
 		{
@@ -1141,7 +1202,9 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleIR(contract);
+		handleIRAst(contract);
 		handleIROptimized(contract);
+		handleIROptimizedAst(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);

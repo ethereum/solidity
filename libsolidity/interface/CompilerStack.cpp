@@ -883,12 +883,28 @@ string const& CompilerStack::yulIR(string const& _contractName) const
 	return contract(_contractName).yulIR;
 }
 
+Json::Value const& CompilerStack::yulIRAst(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		solThrow(CompilerError, "Compilation was not successful.");
+
+	return contract(_contractName).yulIRAst;
+}
+
 string const& CompilerStack::yulIROptimized(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
 	return contract(_contractName).yulIROptimized;
+}
+
+Json::Value const& CompilerStack::yulIROptimizedAst(string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		solThrow(CompilerError, "Compilation was not successful.");
+
+	return contract(_contractName).yulIROptimizedAst;
 }
 
 evmasm::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -1445,7 +1461,13 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		m_debugInfoSelection,
 		this
 	);
-	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(
+
+	tie(
+		compiledContract.yulIR,
+		compiledContract.yulIRAst,
+		compiledContract.yulIROptimized,
+		compiledContract.yulIROptimizedAst
+	) = generator.run(
 		_contract,
 		createCBORMetadata(compiledContract, /* _forIR */ true),
 		otherYulSources
