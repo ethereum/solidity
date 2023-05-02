@@ -7,28 +7,28 @@ Security Considerations
 While it is usually quite easy to build software that works as expected,
 it is much harder to check that nobody can use it in a way that was **not** anticipated.
 
-In Solidity, this is even more important because you can use smart contracts
-to handle tokens or, possibly, even more valuable things. Furthermore, every
-execution of a smart contract happens in public and, in addition to that,
-the source code is often available.
+In Solidity, this is even more important because you can use smart contracts to handle tokens or,
+possibly, even more valuable things.
+Furthermore, every execution of a smart contract happens in public and,
+in addition to that, the source code is often available.
 
-Of course you always have to consider how much is at stake:
-You can compare a smart contract with a web service that is open to the
-public (and thus, also to malicious actors) and perhaps even open source.
-If you only store your grocery list on that web service, you might not have
-to take too much care, but if you manage your bank account using that web service,
-you should be more careful.
+Of course, you always have to consider how much is at stake:
+You can compare a smart contract with a web service that is open to the public
+(and thus, also to malicious actors) and perhaps even open-source.
+If you only store your grocery list on that web service, you might not have to take too much care,
+but if you manage your bank account using that web service, you should be more careful.
 
-This section will list some pitfalls and general security recommendations but
-can, of course, never be complete.  Also, keep in mind that even if your smart
-contract code is bug-free, the compiler or the platform itself might have a
-bug. A list of some publicly known security-relevant bugs of the compiler can
-be found in the :ref:`list of known bugs<known_bugs>`, which is also
-machine-readable. Note that there is a bug bounty program that covers the code
-generator of the Solidity compiler.
+This section will list some pitfalls and general security recommendations
+but can, of course, never be complete.
+Also, keep in mind that even if your smart contract code is bug-free,
+the compiler or the platform itself might have a bug.
+A list of some publicly known security-relevant bugs of the compiler can be found
+in the :ref:`list of known bugs<known_bugs>`, which is also machine-readable.
+Note that there is a `Bug Bounty Program <https://ethereum.org/en/bug-bounty/>`_
+that covers the code generator of the Solidity compiler.
 
-As always, with open source documentation, please help us extend this section
-(especially, some examples would not hurt)!
+As always, with open-source documentation,
+please help us extend this section (especially, some examples would not hurt)!
 
 NOTE: In addition to the list below, you can find more security recommendations and best practices
 `in Guy Lando's knowledge list <https://github.com/guylando/KnowledgeLists/blob/master/EthereumSmartContracts.md>`_ and
@@ -41,20 +41,18 @@ Pitfalls
 Private Information and Randomness
 ==================================
 
-Everything you use in a smart contract is publicly visible, even
-local variables and state variables marked ``private``.
+Everything you use in a smart contract is publicly visible,
+even local variables and state variables marked ``private``.
 
-Using random numbers in smart contracts is quite tricky if you do not want
-block builders to be able to cheat.
+Using random numbers in smart contracts is quite tricky if you do not want block builders to be able to cheat.
 
 Reentrancy
-===========
+==========
 
-Any interaction from a contract (A) with another contract (B) and any transfer
-of Ether hands over control to that contract (B). This makes it possible for B
-to call back into A before this interaction is completed. To give an example,
-the following code contains a bug (it is just a snippet and not a
-complete contract):
+Any interaction from a contract (A) with another contract (B)
+and any transfer of Ether hands over control to that contract (B).
+This makes it possible for B to call back into A before this interaction is completed.
+To give an example, the following code contains a bug (it is just a snippet and not a complete contract):
 
 .. code-block:: solidity
 
@@ -72,12 +70,12 @@ complete contract):
         }
     }
 
-The problem is not too serious here because of the limited gas as part
-of ``send``, but it still exposes a weakness: Ether transfer can always
-include code execution, so the recipient could be a contract that calls
-back into ``withdraw``. This would let it get multiple refunds and
-basically retrieve all the Ether in the contract. In particular, the
-following contract will allow an attacker to refund multiple times
+The problem is not too serious here because of the limited gas as part of ``send``,
+but it still exposes a weakness:
+Ether transfer can always include code execution,
+so the recipient could be a contract that calls back into ``withdraw``.
+This would let it get multiple refunds and, basically, retrieve all the Ether in the contract.
+In particular, the following contract will allow an attacker to refund multiple times
 as it uses ``call`` which forwards all remaining gas by default:
 
 .. code-block:: solidity
@@ -97,8 +95,7 @@ as it uses ``call`` which forwards all remaining gas by default:
         }
     }
 
-To avoid reentrancy, you can use the Checks-Effects-Interactions pattern as
-demonstrated below:
+To avoid reentrancy, you can use the Checks-Effects-Interactions pattern as demonstrated below:
 
 .. code-block:: solidity
 
@@ -116,58 +113,58 @@ demonstrated below:
         }
     }
 
-The Checks-Effects-Interactions pattern ensures that all code paths through a contract complete all required checks
-of the supplied parameters before modifying the contract's state (Checks); only then it makes any changes to the state (Effects);
-it may make calls to functions in other contracts *after* all planned state changes have been written to
-storage (Interactions). This is a common foolproof way to prevent *reentrancy attacks*, where an externally called
-malicious contract is able to double-spend an allowance, double-withdraw a balance, among other things, by using logic that calls back into the
-original contract before it has finalized its transaction.
+The Checks-Effects-Interactions pattern ensures that all code paths through a contract
+complete all required checks of the supplied parameters before modifying the contract's state (Checks);
+only then it makes any changes to the state (Effects);
+it may make calls to functions in other contracts
+*after* all planned state changes have been written to storage (Interactions).
+This is a common foolproof way to prevent *reentrancy attacks*,
+where an externally called malicious contract can double-spend an allowance,
+double-withdraw a balance, among other things,
+by using logic that calls back into the original contract before it has finalized its transaction.
 
-Note that reentrancy is not only an effect of Ether transfer but of any
-function call on another contract. Furthermore, you also have to take
-multi-contract situations into account. A called contract could modify the
-state of another contract you depend on.
+Note that reentrancy is not only an effect of Ether transfer
+but of any function call on another contract.
+Furthermore, you also have to take multi-contract situations into account.
+A called contract could modify the state of another contract you depend on.
 
 Gas Limit and Loops
 ===================
 
-Loops that do not have a fixed number of iterations, for example, loops that depend on storage values, have to be used carefully:
-Due to the block gas limit, transactions can only consume a certain amount of gas. Either explicitly or just due to
-normal operation, the number of iterations in a loop can grow beyond the block gas limit which can cause the complete
-contract to be stalled at a certain point. This may not apply to ``view`` functions that are only executed
-to read data from the blockchain. Still, such functions may be called by other contracts as part of on-chain operations
-and stall those. Please be explicit about such cases in the documentation of your contracts.
+Loops that do not have a fixed number of iterations, for example,
+loops that depend on storage values, have to be used carefully:
+Due to the block gas limit, transactions can only consume a certain amount of gas.
+Either explicitly or just due to normal operation,
+the number of iterations in a loop can grow beyond the block gas limit
+which can cause the complete contract to be stalled at a certain point.
+This may not apply to ``view`` functions that are only executed to read data from the blockchain.
+Still, such functions may be called by other contracts as part of on-chain operations and stall those.
+Please be explicit about such cases in the documentation of your contracts.
 
 Sending and Receiving Ether
 ===========================
 
-- Neither contracts nor "external accounts" are currently able to prevent that someone sends them Ether.
-  Contracts can react on and reject a regular transfer, but there are ways
-  to move Ether without creating a message call. One way is to simply "mine to"
-  the contract address and the second way is using ``selfdestruct(x)``.
+- Neither contracts nor "external accounts" are currently able to prevent someone from sending them Ether.
+  Contracts can react on and reject a regular transfer, but there are ways to move Ether without creating a message call.
+  One way is to simply "mine to" the contract address and the second way is using ``selfdestruct(x)``.
 
-- If a contract receives Ether (without a function being called),
-  either the :ref:`receive Ether <receive-ether-function>`
+- If a contract receives Ether (without a function being called), either the :ref:`receive Ether <receive-ether-function>`
   or the :ref:`fallback <fallback-function>` function is executed.
-  If it does not have a receive nor a fallback function, the Ether will be
-  rejected (by throwing an exception). During the execution of one of these
-  functions, the contract can only rely on the "gas stipend" it is passed (2300
-  gas) being available to it at that time. This stipend is not enough to modify
-  storage (do not take this for granted though, the stipend might change with
-  future hard forks). To be sure that your contract can receive Ether in that
-  way, check the gas requirements of the receive and fallback functions
+  If it does not have a ``receive`` nor a ``fallback`` function, the Ether will be rejected (by throwing an exception).
+  During the execution of one of these functions, the contract can only rely on the "gas stipend" it is passed (2300 gas)
+  being available to it at that time.
+  This stipend is not enough to modify storage (do not take this for granted though, the stipend might change with future hard forks).
+  To be sure that your contract can receive Ether in that way, check the gas requirements of the receive and fallback functions
   (for example in the "details" section in Remix).
 
-- There is a way to forward more gas to the receiving contract using
-  ``addr.call{value: x}("")``. This is essentially the same as ``addr.transfer(x)``,
-  only that it forwards all remaining gas and opens up the ability for the
-  recipient to perform more expensive actions (and it returns a failure code
-  instead of automatically propagating the error). This might include calling back
-  into the sending contract or other state changes you might not have thought of.
+- There is a way to forward more gas to the receiving contract using ``addr.call{value: x}("")``.
+  This is essentially the same as ``addr.transfer(x)``, only that it forwards all remaining gas
+  and opens up the ability for the recipient to perform more expensive actions
+  (and it returns a failure code instead of automatically propagating the error).
+  This might include calling back into the sending contract or other state changes you might not have thought of.
   So it allows for great flexibility for honest users but also for malicious actors.
 
-- Use the most precise units to represent the wei amount as possible, as you lose
-  any that is rounded due to a lack of precision.
+- Use the most precise units to represent the Wei amount as possible, as you lose any that is rounded due to a lack of precision.
 
 - If you want to send Ether using ``address.transfer``, there are certain details to be aware of:
 
@@ -191,24 +188,28 @@ Sending and Receiving Ether
 Call Stack Depth
 ================
 
-External function calls can fail any time because they exceed the maximum
-call stack size limit of 1024. In such situations, Solidity throws an exception.
+External function calls can fail at any time
+because they exceed the maximum call stack size limit of 1024.
+In such situations, Solidity throws an exception.
 Malicious actors might be able to force the call stack to a high value
-before they interact with your contract. Note that, since `Tangerine Whistle <https://eips.ethereum.org/EIPS/eip-608>`_ hardfork, the `63/64 rule <https://eips.ethereum.org/EIPS/eip-150>`_ makes call stack depth attack impractical. Also note that the call stack and the expression stack are unrelated, even though both have a size limit of 1024 stack slots.
+before they interact with your contract.
+Note that, since `Tangerine Whistle <https://eips.ethereum.org/EIPS/eip-608>`_ hardfork,
+the `63/64 rule <https://eips.ethereum.org/EIPS/eip-150>`_ makes call stack depth attack impractical.
+Also note that the call stack and the expression stack are unrelated,
+even though both have a size limit of 1024 stack slots.
 
-Note that ``.send()`` does **not** throw an exception if the call stack is
-depleted but rather returns ``false`` in that case. The low-level functions
-``.call()``, ``.delegatecall()`` and ``.staticcall()`` behave in the same way.
+Note that ``.send()`` does **not** throw an exception if the call stack is depleted
+but rather returns ``false`` in that case.
+The low-level functions ``.call()``, ``.delegatecall()`` and ``.staticcall()`` behave in the same way.
 
 Authorized Proxies
 ==================
 
-If your contract can act as a proxy, i.e. if it can call arbitrary contracts
-with user-supplied data, then the user can essentially assume the identity
-of the proxy contract. Even if you have other protective measures in place,
-it is best to build your contract system such that the proxy does not have
-any permissions (not even for itself). If needed, you can accomplish that
-using a second proxy:
+If your contract can act as a proxy, i.e. if it can call arbitrary contracts with user-supplied data,
+then the user can essentially assume the identity of the proxy contract.
+Even if you have other protective measures in place, it is best to build your contract system such
+that the proxy does not have any permissions (not even for itself).
+If needed, you can accomplish that using a second proxy:
 
 .. code-block:: solidity
 
@@ -236,7 +237,8 @@ using a second proxy:
 tx.origin
 =========
 
-Never use tx.origin for authorization. Let's say you have a wallet contract like this:
+Never use ``tx.origin`` for authorization.
+Let's say you have a wallet contract like this:
 
 .. code-block:: solidity
 
@@ -279,7 +281,11 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
         }
     }
 
-If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet, instead of the owner address. But by checking ``tx.origin``, it gets the original address that kicked off the transaction, which is still the owner address. The attack wallet instantly drains all your funds.
+If your wallet had checked ``msg.sender`` for authorization, it would get the address of the attack wallet,
+instead of the owner's address.
+But by checking ``tx.origin``, it gets the original address that kicked off the transaction,
+which is still the owner's address.
+The attack wallet instantly drains all your funds.
 
 .. _underflow-overflow:
 
@@ -319,16 +325,14 @@ Try to use ``require`` to limit the size of inputs to a reasonable range and use
 Clearing Mappings
 =================
 
-The Solidity type ``mapping`` (see :ref:`mapping-types`) is a storage-only
-key-value data structure that does not keep track of the keys that were
-assigned a non-zero value.  Because of that, cleaning a mapping without extra
-information about the written keys is not possible.
-If a ``mapping`` is used as the base type of a dynamic storage array, deleting
-or popping the array will have no effect over the ``mapping`` elements.  The
-same happens, for example, if a ``mapping`` is used as the type of a member
-field of a ``struct`` that is the base type of a dynamic storage array.  The
-``mapping`` is also ignored in assignments of structs or arrays containing a
-``mapping``.
+The Solidity type ``mapping`` (see :ref:`mapping-types`) is a storage-only key-value data structure
+that does not keep track of the keys that were assigned a non-zero value.
+Because of that, cleaning a mapping without extra information about the written keys is not possible.
+If a ``mapping`` is used as the base type of a dynamic storage array,
+deleting or popping the array will have no effect over the ``mapping`` elements.
+The same happens, for example, if a ``mapping`` is used as the type of a member field of a ``struct``
+that is the base type of a dynamic storage array.
+The ``mapping`` is also ignored in assignments of structs or arrays containing a ``mapping``.
 
 .. code-block:: solidity
 
@@ -356,15 +360,12 @@ field of a ``struct`` that is the base type of a dynamic storage array.  The
         }
     }
 
-Consider the example above and the following sequence of calls: ``allocate(10)``,
-``writeMap(4, 128, 256)``.
+Consider the example above and the following sequence of calls: ``allocate(10)``, ``writeMap(4, 128, 256)``.
 At this point, calling ``readMap(4, 128)`` returns 256.
-If we call ``eraseMaps``, the length of state variable ``array`` is zeroed, but
-since its ``mapping`` elements cannot be zeroed, their information stays alive
-in the contract's storage.
-After deleting ``array``, calling ``allocate(5)`` allows us to access
-``array[4]`` again, and calling ``readMap(4, 128)`` returns 256 even without
-another call to ``writeMap``.
+If we call ``eraseMaps``, the length of the state variable ``array`` is zeroed,
+but since its ``mapping`` elements cannot be zeroed, their information stays alive in the contract's storage.
+After deleting ``array``, calling ``allocate(5)`` allows us to access ``array[4]`` again,
+and calling ``readMap(4, 128)`` returns 256 even without another call to ``writeMap``.
 
 If your ``mapping`` information must be deleted, consider using a library similar to
 `iterable mapping <https://github.com/ethereum/dapp-bin/blob/master/library/iterable_mapping.sol>`_,
@@ -375,10 +376,11 @@ Minor Details
 
 - Types that do not occupy the full 32 bytes might contain "dirty higher order bits".
   This is especially important if you access ``msg.data`` - it poses a malleability risk:
-  You can craft transactions that call a function ``f(uint8 x)`` with a raw byte argument
-  of ``0xff000001`` and with ``0x00000001``. Both are fed to the contract and both will
-  look like the number ``1`` as far as ``x`` is concerned, but ``msg.data`` will
-  be different, so if you use ``keccak256(msg.data)`` for anything, you will get different results.
+  You can craft transactions that call a function ``f(uint8 x)``
+  with a raw byte argument of ``0xff000001`` and with ``0x00000001``.
+  Both are fed to the contract and both will look like the number ``1`` as far as ``x`` is concerned,
+  but ``msg.data`` will be different, so if you use ``keccak256(msg.data)`` for anything,
+  you will get different results.
 
 ***************
 Recommendations
@@ -388,48 +390,45 @@ Take Warnings Seriously
 =======================
 
 If the compiler warns you about something, you should change it.
-Even if you do not think that this particular warning has security
-implications, there might be another issue buried beneath it.
-Any compiler warning we issue can be silenced by slight changes to the
-code.
+Even if you do not think that this particular warning has security implications,
+there might be another issue buried beneath it.
+Any compiler warning we issue can be silenced by slight changes to the code.
 
-Always use the latest version of the compiler to be notified about all recently
-introduced warnings.
+Always use the latest version of the compiler to be notified about all recently introduced warnings.
 
-Messages of type ``info`` issued by the compiler are not dangerous, and simply
-represent extra suggestions and optional information that the compiler thinks
-might be useful to the user.
+Messages of type ``info``, issued by the compiler, are not dangerous
+and simply represent extra suggestions and optional information
+that the compiler thinks might be useful to the user.
 
 Restrict the Amount of Ether
 ============================
 
-Restrict the amount of Ether (or other tokens) that can be stored in a smart
-contract. If your source code, the compiler or the platform has a bug, these
-funds may be lost. If you want to limit your loss, limit the amount of Ether.
+Restrict the amount of Ether (or other tokens) that can be stored in a smart contract.
+If your source code, the compiler or the platform has a bug, these funds may be lost.
+If you want to limit your loss, limit the amount of Ether.
 
 Keep it Small and Modular
 =========================
 
-Keep your contracts small and easily understandable. Single out unrelated
-functionality in other contracts or into libraries. General recommendations
-about source code quality of course apply: Limit the amount of local variables,
-the length of functions and so on. Document your functions so that others
-can see what your intention was and whether it is different than what the code does.
+Keep your contracts small and easily understandable.
+Single out unrelated functionality in other contracts or into libraries.
+General recommendations about the source code quality of course apply:
+Limit the amount of local variables, the length of functions and so on.
+Document your functions so that others can see what your intention was
+and whether it is different than what the code does.
 
 Use the Checks-Effects-Interactions Pattern
 ===========================================
 
-Most functions will first perform some checks (who called the function,
-are the arguments in range, did they send enough Ether, does the person
-have tokens, etc.). These checks should be done first.
+Most functions will first perform some checks and they should be done first
+(who called the function, are the arguments in range, did they send enough Ether,
+does the person have tokens, etc.).
 
-As the second step, if all checks passed, effects to the state variables
-of the current contract should be made. Interaction with other contracts
-should be the very last step in any function.
+As the second step, if all checks passed, effects to the state variables of the current contract should be made.
+Interaction with other contracts should be the very last step in any function.
 
-Early contracts delayed some effects and waited for external function
-calls to return in a non-error state. This is often a serious mistake
-because of the reentrancy problem explained above.
+Early contracts delayed some effects and waited for external function calls to return in a non-error state.
+This is often a serious mistake because of the reentrancy problem explained above.
 
 Note that, also, calls to known contracts might in turn cause calls to
 unknown contracts, so it is probably better to just always apply this pattern.
@@ -437,24 +436,23 @@ unknown contracts, so it is probably better to just always apply this pattern.
 Include a Fail-Safe Mode
 ========================
 
-While making your system fully decentralised will remove any intermediary,
-it might be a good idea, especially for new code, to include some kind
-of fail-safe mechanism:
+While making your system fully decentralized will remove any intermediary,
+it might be a good idea, especially for new code, to include some kind of fail-safe mechanism:
 
-You can add a function in your smart contract that performs some
-self-checks like "Has any Ether leaked?",
+You can add a function in your smart contract that performs some self-checks like "Has any Ether leaked?",
 "Is the sum of the tokens equal to the balance of the contract?" or similar things.
-Keep in mind that you cannot use too much gas for that, so help through off-chain
-computations might be needed there.
+Keep in mind that you cannot use too much gas for that,
+so help through off-chain computations might be needed there.
 
-If the self-check fails, the contract automatically switches into some kind
-of "failsafe" mode, which, for example, disables most of the features, hands over
-control to a fixed and trusted third party or just converts the contract into
-a simple "give me back my money" contract.
+If the self-check fails, the contract automatically switches into some kind of "failsafe" mode,
+which, for example, disables most of the features,
+hands over control to a fixed and trusted third party
+or just converts the contract into a simple "give me back my money" contract.
 
 Ask for Peer Review
 ===================
 
 The more people examine a piece of code, the more issues are found.
-Asking people to review your code also helps as a cross-check to find out whether your code
-is easy to understand - a very important criterion for good smart contracts.
+Asking people to review your code also helps as a cross-check to find out
+whether your code is easy to understand -
+a very important criterion for good smart contracts.
