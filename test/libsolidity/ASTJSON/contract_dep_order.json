@@ -45,7 +45,8 @@
       "nodes": [],
       "scope": 14,
       "src": "0:14:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -85,7 +86,8 @@
       "nodes": [],
       "scope": 14,
       "src": "15:19:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -126,7 +128,8 @@
       "nodes": [],
       "scope": 14,
       "src": "35:19:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -168,7 +171,8 @@
       "nodes": [],
       "scope": 14,
       "src": "55:19:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -211,7 +215,8 @@
       "nodes": [],
       "scope": 14,
       "src": "75:19:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:95:1"

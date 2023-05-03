@@ -89,7 +89,8 @@
       ],
       "scope": 7,
       "src": "0:75:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:76:1"

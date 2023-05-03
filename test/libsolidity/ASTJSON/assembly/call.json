@@ -164,7 +164,8 @@
       ],
       "scope": 7,
       "src": "0:98:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:99:1"

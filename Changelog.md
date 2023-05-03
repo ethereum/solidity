@@ -8,6 +8,7 @@ Compiler Features:
  * EVM: Support for the EVM Version "Shanghai".
  * NatSpec: Add support for NatSpec documentation in ``enum`` definitions.
  * NatSpec: Add support for NatSpec documentation in ``struct`` definitions.
+ * NatSpec: Include NatSpec from events that are emitted by a contract but defined outside of it in userdoc and devdoc output.
  * Optimizer: Re-implement simplified version of UnusedAssignEliminator and UnusedStoreEliminator. It can correctly remove some unused assignments in deeply nested loops that were ignored by the old version.
  * Parser: Unary plus is no longer recognized as a unary operator in the AST and triggers an error at the parsing stage (rather than later during the analysis).
  * SMTChecker: Properties that are proved safe are now reported explicitly at the end of the analysis. By default, only the number of safe properties is shown. The CLI option ``--model-checker-show-proved-safe`` and the JSON option ``settings.modelChecker.showProvedSafe`` can be enabled to show the full list of safe properties.
@@ -16,6 +17,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * ABI: Include events in the ABI that are emitted by a contract but defined outside of it.
  * Antlr Grammar: Fix discrepancy with the parser, which allowed octal numbers.
  * Antlr Grammar: Fix of a discrepancy with the parser, which allowed numbers followed by an identifier with no whitespace.
  * Antlr Grammar: Stricter rules for function definitions. The grammar will no longer accept as valid free functions having specifiers which are exclusive to contract functions.
@@ -23,13 +25,14 @@ Bugfixes:
 
 
 AST Changes:
- * AST: add the ``internalFunctionID`` field to the AST nodes of functions that may be called via the internal dispatch. These IDs are always generated, but they are only used in via-IR code generation.
+ * AST: Add the ``internalFunctionID`` field to the AST nodes of functions that may be called via the internal dispatch. These IDs are always generated, but they are only used in via-IR code generation.
+ * AST: Add the ``usedEvents`` field to ``ContractDefinition`` which contains the AST IDs of all events emitted by the contract as well as all events defined and inherited by the contract.
 
 
 ### 0.8.19 (2023-02-22)
 
 Language Features:
-* Allow defining custom operators for user-defined value types via ``using {f as +} for T global`` syntax.
+ * Allow defining custom operators for user-defined value types via ``using {f as +} for T global`` syntax.
 
 
 Compiler Features:

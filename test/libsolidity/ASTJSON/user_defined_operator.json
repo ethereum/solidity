@@ -656,7 +656,8 @@
       ],
       "scope": 50,
       "src": "143:97:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:241:1"

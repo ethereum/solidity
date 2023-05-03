@@ -128,7 +128,8 @@
       ],
       "scope": 7,
       "src": "0:102:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:103:1"

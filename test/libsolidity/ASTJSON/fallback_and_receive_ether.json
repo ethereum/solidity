@@ -1,5 +1,12 @@
 {
   "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      9
+    ]
+  },
   "id": 10,
   "nodeType": "SourceUnit",
   "nodes":
@@ -7,9 +14,15 @@
     {
       "abstract": false,
       "baseContracts": [],
+      "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
+      "fullyImplemented": true,
       "id": 9,
+      "linearizedBaseContracts":
+      [
+        9
+      ],
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
@@ -44,6 +57,7 @@
             "parameters": [],
             "src": "42:0:1"
           },
+          "scope": 9,
           "src": "15:32:1",
           "stateMutability": "payable",
           "virtual": false,
@@ -78,14 +92,17 @@
             "parameters": [],
             "src": "78:0:1"
           },
+          "scope": 9,
           "src": "50:33:1",
           "stateMutability": "payable",
           "virtual": false,
           "visibility": "external"
         }
       ],
+      "scope": 10,
       "src": "0:85:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:86:1"
