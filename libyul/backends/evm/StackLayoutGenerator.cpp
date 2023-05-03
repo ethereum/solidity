@@ -145,6 +145,15 @@ std::vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _s
 template<typename Callable>
 Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Callable _generateSlotOnTheFly)
 {
+	std::vector<StackSlot> indexedSlots;
+	using IndexedStack = std::vector<size_t>;
+	size_t junkIndex = std::numeric_limits<size_t>::max();
+	IndexingMap indexer;
+	auto indexTransform = ranges::views::transform([&](auto const& _slot) { return indexer[_slot]; });
+	IndexedStack operationOutputIndexed = _operationOutput | indexTransform | ranges::to<IndexedStack>;
+	IndexedStack postIndexed = _post | indexTransform | ranges::to<IndexedStack>;
+	indexedSlots = indexer.indexedSlots();
+
 	struct PreviousSlot { size_t slot; };
 
 	// Determine the number of slots that have to be on stack before executing the operation (excluding
@@ -159,34 +168,42 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 	// PreviousSlot{0}, ..., PreviousSlot{n}, [output<0>], ..., [output<m>]
 	auto layout = ranges::views::iota(0u, preOperationLayoutSize) |
 		ranges::views::transform([](size_t _index) { return PreviousSlot{_index}; }) |
-		ranges::to<std::vector<std::variant<PreviousSlot, StackSlot>>>;
-	layout += _operationOutput;
+		ranges::to<std::vector<std::variant<PreviousSlot, size_t>>>;
+	layout += operationOutputIndexed;
 
 	// Shortcut for trivial case.
 	if (layout.empty())
 		return Stack{};
 
+	auto generateSlotOnTheFlyIndexed = [&](size_t _slot) -> bool {
+		return _generateSlotOnTheFly(indexedSlots.at(_slot));
+	};
+
 	// Next we will shuffle the layout to the post stack using ShuffleOperations
 	// that are aware of PreviousSlot's.
 	struct ShuffleOperations
 	{
-		std::vector<std::variant<PreviousSlot, StackSlot>>& layout;
-		Stack const& post;
-		std::set<StackSlot> outputs;
-		Multiplicity multiplicity;
-		Callable generateSlotOnTheFly;
+		std::vector<std::variant<PreviousSlot, size_t>>& layout;
+		IndexedStack const& post;
+		std::set<size_t> outputs;
+		std::vector<int> multiplicity;
+		decltype(generateSlotOnTheFlyIndexed) generateSlotOnTheFly;
+		size_t junkIndex = std::numeric_limits<size_t>::max();
 		ShuffleOperations(
-			std::vector<std::variant<PreviousSlot, StackSlot>>& _layout,
-			Stack const& _post,
-			Callable _generateSlotOnTheFly
-		): layout(_layout), post(_post), generateSlotOnTheFly(_generateSlotOnTheFly)
+			std::vector<std::variant<PreviousSlot, size_t>>& _layout,
+			IndexedStack const& _post,
+			decltype(generateSlotOnTheFlyIndexed) _generateSlotOnTheFly,
+			size_t _numSlots,
+			size_t _junkIndex
+		): layout(_layout), post(_post), generateSlotOnTheFly(_generateSlotOnTheFly), junkIndex(_junkIndex)
 		{
+			multiplicity.resize(_numSlots, 0);
 			for (auto const& layoutSlot: layout)
-				if (StackSlot const* slot = std::get_if<StackSlot>(&layoutSlot))
+				if (size_t const* slot = std::get_if<size_t>(&layoutSlot))
 					outputs.insert(*slot);
 
 			for (auto const& layoutSlot: layout)
-				if (StackSlot const* slot = std::get_if<StackSlot>(&layoutSlot))
+				if (size_t const* slot = std::get_if<size_t>(&layoutSlot))
 					--multiplicity[*slot];
 			for (auto&& slot: post)
 				if (outputs.count(slot) || generateSlotOnTheFly(slot))
@@ -198,12 +215,12 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 				_source < layout.size() &&
 				_target < post.size() &&
 				(
-					std::holds_alternative<JunkSlot>(post.at(_target)) ||
+					junkIndex == post.at(_target) ||
 					std::visit(util::GenericVisitor{
 						[&](PreviousSlot const&) {
 							return !outputs.count(post.at(_target)) && !generateSlotOnTheFly(post.at(_target));
 						},
-						[&](StackSlot const& _s) { return _s == post.at(_target); }
+						[&](size_t const& _s) { return _s == post.at(_target); }
 					}, layout.at(_source))
 				);
 		}
@@ -211,7 +228,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		{
 			return std::visit(util::GenericVisitor{
 				[&](PreviousSlot const&, PreviousSlot const&) { return true; },
-				[&](StackSlot const& _lhs, StackSlot const& _rhs) { return _lhs == _rhs; },
+				[&](size_t const& _lhs, size_t const& _rhs) { return _lhs == _rhs; },
 				[&](auto const&, auto const&) { return false; }
 			}, layout.at(_lhs), layout.at(_rhs));
 		}
@@ -219,7 +236,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		{
 			return std::visit(util::GenericVisitor{
 				[&](PreviousSlot const&) { return 0; },
-				[&](StackSlot const& _s) { return multiplicity.at(_s); }
+				[&](size_t _s) { return multiplicity.at(_s); }
 			}, layout.at(_offset));
 		}
 		int targetMultiplicity(size_t _offset)
@@ -230,7 +247,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		}
 		bool targetIsArbitrary(size_t _offset)
 		{
-			return _offset < post.size() && std::holds_alternative<JunkSlot>(post.at(_offset));
+			return _offset < post.size() && junkIndex == post.at(_offset);
 		}
 		void swap(size_t _i)
 		{
@@ -242,17 +259,17 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		void pop() { layout.pop_back(); }
 		void pushOrDupTarget(size_t _offset) { layout.push_back(post.at(_offset)); }
 	};
-	Shuffler<ShuffleOperations>::shuffle(layout, _post, _generateSlotOnTheFly);
+	Shuffler<ShuffleOperations>::shuffle(layout, postIndexed, generateSlotOnTheFlyIndexed, indexedSlots.size(), junkIndex);
 
 	// Now we can construct the ideal layout before the operation.
 	// "layout" has shuffled the PreviousSlot{x} to new places using minimal operations to move the operation
 	// output in place. The resulting permutation of the PreviousSlot yields the ideal positions of slots
 	// before the operation, i.e. if PreviousSlot{2} is at a position at which _post contains VariableSlot{"tmp"},
 	// then we want the variable tmp in the slot at offset 2 in the layout before the operation.
-	std::vector<std::optional<StackSlot>> idealLayout(_post.size(), std::nullopt);
-	for (auto&& [slot, idealPosition]: ranges::zip_view(_post, layout))
+	std::vector<std::optional<StackSlot>> idealLayout(postIndexed.size(), std::nullopt);
+	for (auto&& [slot, idealPosition]: ranges::zip_view(postIndexed, layout))
 		if (PreviousSlot* previousSlot = std::get_if<PreviousSlot>(&idealPosition))
-			idealLayout.at(previousSlot->slot) = slot;
+			idealLayout.at(previousSlot->slot) = indexedSlots.at(slot);
 
 	// The tail of layout must have contained the operation outputs and will not have been assigned slots in the last loop.
 	while (!idealLayout.empty() && !idealLayout.back())
