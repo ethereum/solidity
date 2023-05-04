@@ -2,20 +2,20 @@ Solidity
 ========
 
 Solidity is an object-oriented, high-level language for implementing smart contracts.
-Smart contracts are programs which govern the behaviour of accounts within the Ethereum state.
+Smart contracts are programs that govern the behavior of accounts within the Ethereum state.
 
 Solidity is a `curly-bracket language <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_ designed to target the Ethereum Virtual Machine (EVM).
-It is influenced by C++, Python and JavaScript.
+It is influenced by C++, Python, and JavaScript.
 You can find more details about which languages Solidity has been inspired by in the :doc:`language influences <language-influences>` section.
 
-Solidity is statically typed, supports inheritance, libraries and complex user-defined types among other features.
+Solidity is statically typed, supports inheritance, libraries, and complex user-defined types, among other features.
 
-With Solidity you can create contracts for uses such as voting, crowdfunding, blind auctions, and multi-signature wallets.
+With Solidity, you can create contracts for uses such as voting, crowdfunding, blind auctions, and multi-signature wallets.
 
 When deploying contracts, you should use the latest released version of Solidity.
 Apart from exceptional cases, only the latest version receives
 `security fixes <https://github.com/ethereum/solidity/security/policy#supported-versions>`_.
-Furthermore, breaking changes as well as new features are introduced regularly.
+Furthermore, breaking changes, as well as new features, are introduced regularly.
 We currently use a 0.y.z version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
 
 .. warning::
@@ -37,7 +37,7 @@ Getting Started
 
 **1. Understand the Smart Contract Basics**
 
-If you are new to the concept of smart contracts we recommend you to get started by digging into the "Introduction to Smart Contracts" section, which covers:
+If you are new to the concept of smart contracts, we recommend you to get started by digging into the "Introduction to Smart Contracts" section, which covers the following:
 
 * :ref:`A simple example smart contract <simple-smart-contract>` written in Solidity.
 * :ref:`Blockchain Basics <blockchain-basics>`.
@@ -56,12 +56,12 @@ simply choose your preferred option and follow the steps outlined on the :ref:`i
 .. hint::
   You can try out code examples directly in your browser with the
   `Remix IDE <https://remix.ethereum.org>`_.
-  Remix is a web browser based IDE that allows you to write, deploy and administer Solidity smart contracts,
+  Remix is a web browser-based IDE that allows you to write, deploy and administer Solidity smart contracts,
   without the need to install Solidity locally.
 
 .. warning::
     As humans write software, it can have bugs.
-    You should follow established software development best-practices when writing your smart contracts.
+    Therefore, you should follow established software development best practices when writing your smart contracts.
     This includes code review, testing, audits, and correctness proofs.
     Smart contract users are sometimes more confident with code than their authors,
     and blockchains and smart contracts have their own unique issues to watch out for,
@@ -71,7 +71,7 @@ simply choose your preferred option and follow the steps outlined on the :ref:`i
 
 If you want to learn more about building decentralized applications on Ethereum,
 the `Ethereum Developer Resources <https://ethereum.org/en/developers/>`_ can help you with further general documentation around Ethereum,
-and a wide selection of tutorials, tools and development frameworks.
+and a wide selection of tutorials, tools, and development frameworks.
 
 If you have any questions, you can try searching for answers or asking on the
 `Ethereum StackExchange <https://ethereum.stackexchange.com/>`_,
@@ -115,8 +115,8 @@ Contents
    :caption: Basics
 
    introduction-to-smart-contracts.rst
-   installing-solidity.rst
    solidity-by-example.rst
+   installing-solidity.rst
 
 .. toctree::
    :maxdepth: 2
