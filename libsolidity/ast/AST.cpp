@@ -389,22 +389,39 @@ std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingFo
 	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<vector>;
 }
 
-std::string StructDefinition::encodeType() const
+void StructDefinition::insertEncodedSubtypes(std::set<std::string>& subtypes) const
+{
+	for (size_t i = 0; i < m_members.size(); i++)
+	{
+		if (m_members[i]->type()->category() == Type::Category::Struct)
+		{
+			Declaration const* declaration = m_members[i]->type()->typeDefinition();
+			StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration);
+			solAssert(structDef != nullptr);
+
+			subtypes.insert(structDef->encodeTypeWithoutSubtypes());
+			structDef->insertEncodedSubtypes(subtypes);
+		}
+	}
+}
+
+std::string StructDefinition::encodeTypeWithoutSubtypes() const
 {
 	std::string str = name() + "(";
-	std::set<std::string> nested; // std::set enables duplicates elimination and ordered enumeration
 	for (size_t i = 0; i < m_members.size(); i++)
 	{
 		str += i == 0 ? "" : ",";
 		str += m_members[i]->type()->canonicalName() + " " + m_members[i]->name();
-		if (m_members[i]->type()->category() == Type::Category::Struct) {
-			Declaration const* declaration = m_members[i]->type()->typeDefinition();
-			if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration)) {
-				nested.insert(structDef->encodeType());
-			}
-		}
 	}
-	return std::accumulate(nested.begin(), nested.end(), str + ")");
+	return str + ")";
+}
+
+std::string StructDefinition::encodeType() const
+{
+	// std::set enables duplicates elimination and ordered enumeration
+	std::set<std::string> subtypes;
+	insertEncodedSubtypes(subtypes);
+	return std::accumulate(subtypes.begin(), subtypes.end(), encodeTypeWithoutSubtypes());
 }
 
 util::h256 StructDefinition::typehash() const
