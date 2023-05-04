@@ -389,15 +389,27 @@ std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingFo
 	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<vector>;
 }
 
-util::h256 StructDefinition::typehash() const
+std::string StructDefinition::encodeType() const
 {
 	std::string str = name() + "(";
+	std::set<std::string> nested; // std::set enables duplicates elimination and ordered enumeration
 	for (size_t i = 0; i < m_members.size(); i++)
 	{
 		str += i == 0 ? "" : ",";
 		str += m_members[i]->type()->canonicalName() + " " + m_members[i]->name();
+		if (m_members[i]->type()->category() == Type::Category::Struct) {
+			Declaration const* declaration = m_members[i]->type()->typeDefinition();
+			if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration)) {
+				nested.insert(structDef->encodeType());
+			}
+		}
 	}
-	return util::keccak256(str + ")");
+	return std::accumulate(nested.begin(), nested.end(), str + ")");
+}
+
+util::h256 StructDefinition::typehash() const
+{
+	return util::keccak256(encodeType());
 }
 
 Type const* StructDefinition::type() const
