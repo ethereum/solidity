@@ -404,13 +404,12 @@ contributions to Solidity.
 English Language
 ----------------
 
-Use English, with British English spelling preferred, unless using project or brand names. Try to reduce the usage of
-local slang and references, making your language as clear to all readers as possible. Below are some references to help:
+Use International English, unless using project or brand names. Try to reduce the usage of
+local slang and references, making your language as clear to all readers as possible.
+Below are some references to help:
 
 * `Simplified technical English <https://en.wikipedia.org/wiki/Simplified_Technical_English>`_
 * `International English <https://en.wikipedia.org/wiki/International_English>`_
-* `British English spelling <https://web.archive.org/web/20220324094038/https://www.lexico.com/grammar/british-and-spelling>`_
-
 
 .. note::
 
