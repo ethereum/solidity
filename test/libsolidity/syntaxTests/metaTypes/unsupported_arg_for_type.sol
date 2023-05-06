@@ -5,4 +5,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 4259: (154-155): Invalid type for argument in the function call. An enum type, contract type, struct type or an integer type is required, but type(struct Test.S storage pointer) provided.
+// TypeError 4259: (129-136): Invalid type for argument in the function call. An enum type, contract type, struct type or an integer type is required, but type(bytes32) provided.
