@@ -316,6 +316,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			wrongType = contractType->isSuper();
 		else if (
 			typeCategory != Type::Category::Integer &&
+			typeCategory != Type::Category::Struct &&
 			typeCategory != Type::Category::Enum
 		)
 			wrongType = true;
