@@ -4215,9 +4215,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 		}
 		else if (m_typeArgument->category() == Type::Category::Struct)
 		{
-			StructType const* structTypePointer = dynamic_cast<StructType const*>(m_typeArgument);
 			return MemberList::MemberMap({
-				{"typehash", structTypePointer},
+				{"typehash", TypeProvider::fixedBytes(32)},
 			});
 		}
 		else if (m_typeArgument->category() == Type::Category::Integer)

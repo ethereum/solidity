@@ -1948,7 +1948,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			StructType const* structType = dynamic_cast<StructType const*>(arg);
 			solAssert(structType != nullptr);
 			StructDefinition const& struct_ = structType->structDefinition();
-			define(_memberAccess) << formatNumber(struct_.typehash()) << "\n";
+			define(_memberAccess) << "0x" << toHex(struct_.typehash()) << "\n";
 		}
 		else if (member == "min" || member == "max")
 		{
