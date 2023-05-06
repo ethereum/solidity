@@ -1251,17 +1251,17 @@ jobs:
             equal: [<< parameters.binary_type >>, "solcjs"]
           steps:
             - run:
-                name: External << parameters.project >> tests (solcjs)
+                name: External << parameters.project >> tests (<< parameters.binary_type >>)
                 command: |
-                  test/externalTests/<< parameters.project >>.sh solcjs /tmp/workspace/soljson.js
+                  test/external_tests.py test --solc-binary-type "<< parameters.binary_type >>" --solc-binary-path /tmp/workspace/soljson.js --run "<< parameters.project >>"
       - when:
           condition:
             equal: [<< parameters.binary_type >>, "native"]
           steps:
             - run:
-                name: External << parameters.project >> tests (native)
+                name: External << parameters.project >> tests (<< parameters.binary_type >>)
                 command: |
-                  test/externalTests/<< parameters.project >>.sh native /tmp/workspace/solc/solc-static-linux
+                  test/external_tests.py test --solc-binary-type "<< parameters.binary_type >>" --solc-binary-path /tmp/workspace/solc/solc-static-linux --run "<< parameters.project >>"
       - store_artifacts:
           path: reports/externalTests/
       # persist_to_workspace fails if the directory does not exist and the test script will create
