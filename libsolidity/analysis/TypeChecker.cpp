@@ -329,7 +329,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			4259_error,
 			arguments.front()->location(),
 			"Invalid type for argument in the function call. "
-			"An enum type, contract type or an integer type is required, but " +
+			"An enum type, contract type, struct type or an integer type is required, but " +
 			type(*arguments.front())->humanReadableName() + " provided."
 		);
 

@@ -50,4 +50,4 @@ contract D is B, C {
     }
 }
 // ----
-// TypeError 4259: (426-431): Invalid type for argument in the function call. An enum type, contract type or an integer type is required, but type(contract super B) provided.
+// TypeError 4259: (426-431): Invalid type for argument in the function call. An enum type, contract type, struct type or an integer type is required, but type(contract super B) provided.
