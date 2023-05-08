@@ -1,0 +1,70 @@
+name: Auto-assign author and move to "In Progress"
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+    # Exclude pull requests labeled with "external contribution :star:"
+    '!label':
+      - '^external contribution\\s:star:$'
+
+jobs:
+  assign_and_move:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if pull request is on the board
+        id: check_board
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_NUMBER: 17
+        run: |
+          # Check if pull request is already on the board
+          project_url=$(curl -X GET \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.inertia-preview+json" \
+            "https://api.github.com/repos/${{ github.repository }}/projects/${PROJECT_NUMBER}" \
+            | jq -r '.url')
+          project_id=$(echo "$project_url" | sed 's|.*/||')
+          pr_id=$(echo "${{ github.event.pull_request.url }}" | sed 's|.*/||')
+          card_url=$(curl -X GET \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.inertia-preview+json" \
+            "https://api.github.com/projects/columns/cards?archived_state=not_archived&content_type=PullRequest&project_id=${project_id}&per_page=100" \
+            | jq -r --arg pr_id "$pr_id" '.[] | select(.content_url | contains($pr_id)) | .url')
+          if [ -n "$card_url" ]; then
+            echo "Pull request is already on the board. Skipping..."
+            exit 78
+          fi
+
+      - name: Assign author to pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
+        run: |
+          # Assign the author to the pull request
+          curl -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/assignees" \
+            -d "{\"assignees\":[\"${AUTHOR_LOGIN}\"]}"
+
+      - name: Move pull request to "In Progress"
+        if: steps.check_board.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_NUMBER: 17
+        run: |
+          # Get the project board ID
+          project_url=$(curl -X GET \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.inertia-preview+json" \
+            "https://api.github.com/repos/${{ github.repository }}/projects/${PROJECT_NUMBER}" \
+            | jq -r '.url')
+          project_id=$(echo "$project_url" | sed 's|.*/||')
+
+          # Get the "In Progress" column ID
+          column_url=$(curl -X GET \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.inertia-preview+json" \
+            "https://api.github.com
