@@ -1,0 +1,43 @@
+object "A" {
+  code {
+    sstore(0, dataoffset("A"))
+    sstore(1, datasize("A"))
+    sstore(2, dataoffset("B"))
+    sstore(3, datasize("B"))
+    sstore(4, dataoffset("B.C"))
+    sstore(5, datasize("B.C"))
+    sstore(6, dataoffset("B.E"))
+    sstore(7, datasize("B.E"))
+    sstore(8, dataoffset("B.C.D"))
+    sstore(9, datasize("B.C.D"))
+  }
+
+  data "data1" "Hello, World!"
+
+  object "B" {
+    code {
+      sstore(10, dataoffset("C"))
+      sstore(11, datasize("C"))
+      sstore(12, dataoffset("E"))
+      sstore(13, datasize("E"))
+      sstore(14, dataoffset("C.D"))
+      sstore(15, datasize("C.D"))
+    }
+    object "C" {
+      code {
+        sstore(16, dataoffset("D"))
+        sstore(17, datasize("D"))
+      }
+      object "D" {
+        code {
+          invalid()
+        }
+      }
+    }
+    object "E" {
+      code {
+        invalid()
+      }
+    }
+  }
+}
