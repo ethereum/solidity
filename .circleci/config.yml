@@ -93,6 +93,73 @@ commands:
             - bytecode-report-<< parameters.label >>-cli.txt
       - matrix_notify_failure_unless_pr
 
+  install_python3:
+    description: "Install python3 and given packages."
+    parameters:
+      packages:
+        description: "List of extra Python packages to be installed (separated by space)."
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: Install python and dependencies
+          command: |
+            sudo apt update
+            sudo apt install python3 python3-pip --assume-yes --no-install-recommends
+            if [[ "<< parameters.packages >>" != "" ]]
+            then
+              echo "Installing additional packages..."
+              python3 -m pip install --user << parameters.packages >>
+            fi
+
+  install_foundry:
+    description: "Install Foundry."
+    parameters:
+      version:
+        type: string
+        default: "nightly"
+      install_path:
+        type: string
+        default: /home/circleci/bin
+    steps:
+      - run:
+          name: Setup Foundry environment variables
+          command: |
+            FOUNDRY_REPO="foundry-rs/foundry"
+            FOUNDRY_VERSION="<< parameters.version >>"
+            FOUNDRY_RELEASE_SHA=$(curl \
+              --silent \
+              --fail \
+              --show-error \
+              "https://api.github.com/repos/${FOUNDRY_REPO}/git/refs/tags/${FOUNDRY_VERSION}" \
+              | jq --raw-output .object.sha \
+            )
+            echo "export FOUNDRY_REPO=$FOUNDRY_REPO" >> "$BASH_ENV"
+            echo "export FOUNDRY_VERSION=$FOUNDRY_VERSION" >> "$BASH_ENV"
+            echo "export FOUNDRY_RELEASE_TAG='nightly-${FOUNDRY_RELEASE_SHA}'" >> "$BASH_ENV"
+            # Save commit sha for caching
+            echo "$FOUNDRY_RELEASE_SHA" > /tmp/workspace/foundry-release-sha
+      - restore_cache:
+          keys:
+            - foundry-<< parameters.version >>-{{ arch }}-{{ checksum "/tmp/workspace/foundry-release-sha" }}
+      # WARNING! If you edit anything between here and save_cache, remember to invalidate the cache manually.
+      - run:
+          name: Install foundry
+          command: |
+            ! forge --version 2> /dev/null
+            curl \
+              --fail \
+              --location \
+              --output /tmp/foundry.tar.gz \
+              "https://github.com/${FOUNDRY_REPO}/releases/download/${FOUNDRY_RELEASE_TAG}/foundry_${FOUNDRY_VERSION}_linux_amd64.tar.gz"
+            cd "<< parameters.install_path >>"
+            tar --extract --gzip --file /tmp/foundry.tar.gz --one-top-level
+            ln --symbolic --force foundry/{forge,anvil,cast,chisel} .
+      - save_cache:
+          key: foundry-<< parameters.version >>-{{ arch }}-{{ checksum "/tmp/workspace/foundry-release-sha" }}
+          paths:
+            - << parameters.install_path >>
+
 defaults:
 
   # --------------------------------------------------------------------------
@@ -701,14 +768,8 @@ jobs:
     <<: *base_cimg_small
     steps:
       - checkout
-      - run:
-          name: Install pip
-          command: |
-            sudo apt -q update
-            sudo apt install -y python3-pip
-      - run:
-          name: Install pylint and dependencies of the scripts that will be linted
-          command: python3 -m pip install
+      - install_python3:
+          packages: >
             pylint
             z3-solver
             pygments-lexer-solidity
@@ -756,12 +817,8 @@ jobs:
     <<: *base_cimg_small
     steps:
       - checkout
-      - run:
-          name: Z3 python deps
-          command: |
-            sudo apt-get -qq update
-            sudo apt-get -qy install python3-pip
-            pip3 install --user z3-solver
+      - install_python3:
+          packages: z3-solver
       - run: *run_proofs
       - matrix_notify_failure_unless_pr
 
@@ -1231,6 +1288,9 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
+      - install_foundry
+      - install_python3:
+          packages: requests
       - run:
           name: Install lsof
           command: |
@@ -1277,15 +1337,11 @@ jobs:
   c_ext_benchmarks:
     <<: *base_node_small
     steps:
+      - install_python3:
+          packages: requests
       - checkout
       - attach_workspace:
           at: .
-      - run:
-          name: Install dependencies of helper scripts
-          command: |
-            sudo apt update
-            sudo apt install python3-pip --assume-yes --no-install-recommends
-            python3 -m pip install requests --user
       - run:
           name: Combine benchmark reports
           command: cat reports/externalTests/benchmark-*.json | scripts/externalTests/merge_benchmarks.sh > reports/externalTests/all-benchmarks.json
