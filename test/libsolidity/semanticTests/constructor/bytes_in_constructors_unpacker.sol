@@ -8,8 +8,8 @@ contract Test {
 }
 // ----
 // constructor(): 7, 0x40, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz" ->
-// gas irOptimized: 270118
-// gas legacy: 315616
-// gas legacyOptimized: 260686
+// gas irOptimized: 269441
+// gas legacy: 311324
+// gas legacyOptimized: 258351
 // m_x() -> 7
 // m_s() -> 0x20, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz"

@@ -83,8 +83,6 @@ function uniswap_test
     #   "revert SPL" is expected but the message is "reverted with reason string 'SPL'" in 2.5.0.
     # - Newer versions of ethereumjs/tx have an issue with 'gteHardfork()' method.
     neutralize_package_lock
-    yarn add hardhat@2.4.3
-    yarn add @ethereumjs/tx@3.1.3
 
     yarn install
     yarn add hardhat-gas-reporter

@@ -172,10 +172,10 @@ at each version. Backward compatibility is not guaranteed between each version.
      the optimizer.
 - ``london``
    - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
-- ``paris`` (**default**)
+- ``paris``
    - Introduces ``prevrandao()`` and ``block.prevrandao``, and changes the semantics of the now deprecated ``block.difficulty``, disallowing ``difficulty()`` in inline assembly (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
-- ``shanghai``
-  - Cheaper deployment cost due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
+- ``shanghai`` (**default**)
+  - Smaller code size and gas savings due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:

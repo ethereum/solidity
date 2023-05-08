@@ -23,7 +23,7 @@ object "MyContract" {
 
 
 Binary representation:
-33600055600b8060106000396000f3fe60005460005260206000f3
+335f55600880600d5f395ff3fe5f545f5260205ff3
 
 Text representation:
     /* "object_compiler/input.yul":128:136   */

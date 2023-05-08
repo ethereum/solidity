@@ -30,6 +30,6 @@ contract C {
 
 // ----
 // f() -> 0x20, 7, 8, 9, 0xa0, 13, 2, 0x40, 0xa0, 2, 3, 4, 2, 3, 4
-// gas irOptimized: 197113
-// gas legacy: 199986
-// gas legacyOptimized: 196847
+// gas irOptimized: 197082
+// gas legacy: 199891
+// gas legacyOptimized: 196817
