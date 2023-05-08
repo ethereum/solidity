@@ -52,7 +52,6 @@ function validate_checksum {
 
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
-  brew unlink python
   brew install boost
   brew install cmake
   brew install wget

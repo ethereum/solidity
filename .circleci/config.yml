@@ -296,14 +296,15 @@ defaults:
 
   - base_osx: &base_osx
       macos:
-        xcode: "13.2.0"
+        xcode: "14.2.0"
+      resource_class: macos.x86.medium.gen2
       environment:
         TERM: xterm
         MAKEFLAGS: -j5
 
   - base_osx_large: &base_osx_large
       macos:
-        xcode: "13.2.0"
+        xcode: "14.2.0"
       resource_class: large
       environment:
         TERM: xterm
