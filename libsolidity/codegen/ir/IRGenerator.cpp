@@ -313,7 +313,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions(ContractDefin
 				solAssert(m_context.functionCollector().contains(IRNames::function(*function)), "");
 
 				cases.emplace_back(map<string, string>{
-					{"funID", to_string(*function->annotation().internalFunctionID)},
+					{"funID", to_string(m_context.mostDerivedContract().annotation().internalFunctionIDs.at(function))},
 					{"name", IRNames::function(*function)}
 				});
 			}

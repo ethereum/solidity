@@ -2807,7 +2807,7 @@ void IRGeneratorForStatements::assignInternalFunctionIDIfNotCalledDirectly(
 		return;
 
 	define(IRVariable(_expression).part("functionIdentifier")) <<
-		to_string(*_referencedFunction.annotation().internalFunctionID) <<
+		to_string(m_context.mostDerivedContract().annotation().internalFunctionIDs.at(&_referencedFunction)) <<
 		"\n";
 	m_context.addToInternalDispatch(_referencedFunction);
 }

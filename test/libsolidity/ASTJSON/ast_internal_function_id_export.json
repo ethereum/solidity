@@ -41,7 +41,6 @@
       },
       "id": 4,
       "implemented": true,
-      "internalFunctionID": 1,
       "kind": "freeFunction",
       "modifiers": [],
       "name": "free1",
@@ -77,7 +76,6 @@
       },
       "id": 8,
       "implemented": true,
-      "internalFunctionID": 2,
       "kind": "freeFunction",
       "modifiers": [],
       "name": "free2",
@@ -146,6 +144,13 @@
       "contractKind": "library",
       "fullyImplemented": true,
       "id": 53,
+      "internalFunctionIDs":
+      {
+        "20": 3,
+        "24": 4,
+        "4": 1,
+        "8": 2
+      },
       "linearizedBaseContracts":
       [
         53
@@ -201,7 +206,6 @@
           },
           "id": 20,
           "implemented": true,
-          "internalFunctionID": 3,
           "kind": "function",
           "modifiers": [],
           "name": "inr1",
@@ -237,7 +241,6 @@
           },
           "id": 24,
           "implemented": true,
-          "internalFunctionID": 4,
           "kind": "function",
           "modifiers": [],
           "name": "inr2",
@@ -579,6 +582,15 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 128,
+      "internalFunctionIDs":
+      {
+        "20": 3,
+        "24": 4,
+        "4": 1,
+        "69": 5,
+        "73": 6,
+        "8": 2
+      },
       "linearizedBaseContracts":
       [
         128
@@ -706,7 +718,6 @@
           },
           "id": 69,
           "implemented": true,
-          "internalFunctionID": 5,
           "kind": "function",
           "modifiers": [],
           "name": "inr1",
@@ -742,7 +753,6 @@
           },
           "id": 73,
           "implemented": true,
-          "internalFunctionID": 6,
           "kind": "function",
           "modifiers": [],
           "name": "inr2",
@@ -1405,6 +1415,15 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 141,
+      "internalFunctionIDs":
+      {
+        "20": 3,
+        "24": 4,
+        "4": 1,
+        "69": 5,
+        "73": 6,
+        "8": 2
+      },
       "linearizedBaseContracts":
       [
         141,

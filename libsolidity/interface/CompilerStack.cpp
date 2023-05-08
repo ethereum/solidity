@@ -1246,7 +1246,6 @@ void CompilerStack::storeContractDefinitions()
 
 void CompilerStack::annotateInternalFunctionIDs()
 {
-	uint64_t internalFunctionID = 1;
 	for (Source const* source: m_sourceOrder)
 	{
 		if (!source->ast)
@@ -1254,20 +1253,23 @@ void CompilerStack::annotateInternalFunctionIDs()
 
 		for (ContractDefinition const* contract: ASTNode::filteredNodes<ContractDefinition>(source->ast->nodes()))
 		{
+			uint64_t internalFunctionID = 1;
 			ContractDefinitionAnnotation& annotation = contract->annotation();
 
 			if (auto const* deployTimeInternalDispatch = util::valueOrNullptr((*annotation.deployedCallGraph)->edges, CallGraph::SpecialNode::InternalDispatch))
 				for (auto const& node: *deployTimeInternalDispatch)
 					if (auto const* callable = get_if<CallableDeclaration const*>(&node))
 						if (auto const* function = dynamic_cast<FunctionDefinition const*>(*callable))
-							if (!function->annotation().internalFunctionID.set())
-								function->annotation().internalFunctionID = internalFunctionID++;
+						{
+							solAssert(contract->annotation().internalFunctionIDs.count(function) == 0);
+							contract->annotation().internalFunctionIDs[function] = internalFunctionID++;
+						}
 			if (auto const* creationTimeInternalDispatch = util::valueOrNullptr((*annotation.creationCallGraph)->edges, CallGraph::SpecialNode::InternalDispatch))
 				for (auto const& node: *creationTimeInternalDispatch)
 					if (auto const* callable = get_if<CallableDeclaration const*>(&node))
 						if (auto const* function = dynamic_cast<FunctionDefinition const*>(*callable))
 							// Make sure the function already got an ID since it also occurs in the deploy-time internal dispatch.
-							solAssert(function->annotation().internalFunctionID.set());
+							solAssert(contract->annotation().internalFunctionIDs.count(function) != 0);
 		}
 	}
 }

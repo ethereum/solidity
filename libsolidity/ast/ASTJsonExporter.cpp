@@ -299,6 +299,14 @@ bool ASTJsonExporter::visit(ContractDefinition const& _node)
 	if (!_node.annotation().linearizedBaseContracts.empty())
 		attributes.emplace_back("linearizedBaseContracts", getContainerIds(_node.annotation().linearizedBaseContracts));
 
+	if (!_node.annotation().internalFunctionIDs.empty())
+	{
+		Json::Value internalFunctionIDs(Json::objectValue);
+		for (auto const& [functionDefinition, internalFunctionID]: _node.annotation().internalFunctionIDs)
+			internalFunctionIDs[to_string(functionDefinition->id())] = internalFunctionID;
+		attributes.emplace_back("internalFunctionIDs", std::move(internalFunctionIDs));
+	}
+
 	setJsonNode(_node, "ContractDefinition", std::move(attributes));
 	return false;
 }
@@ -472,9 +480,6 @@ bool ASTJsonExporter::visit(FunctionDefinition const& _node)
 		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
 	if (!_node.annotation().baseFunctions.empty())
 		attributes.emplace_back(make_pair("baseFunctions", getContainerIds(_node.annotation().baseFunctions, true)));
-
-	if (_node.annotation().internalFunctionID.set())
-		attributes.emplace_back("internalFunctionID", *_node.annotation().internalFunctionID);
 
 	setJsonNode(_node, "FunctionDefinition", std::move(attributes));
 	return false;
