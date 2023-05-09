@@ -13,4 +13,4 @@ contract D {
 }
 // ----
 // f() -> 2
-// gas legacy: 100201
+// gas legacy: 100211
