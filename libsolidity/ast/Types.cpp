@@ -1694,7 +1694,7 @@ bool ArrayType::operator==(Type const& _other) const
 		return false;
 	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
 	if (
-		!ReferenceType::operator==(other) ||
+		!equals(other) ||
 		other.isByteArray() != isByteArray() ||
 		other.isString() != isString() ||
 		other.isDynamicallySized() != isDynamicallySized()
@@ -2204,7 +2204,7 @@ bool StructType::operator==(Type const& _other) const
 	if (_other.category() != category())
 		return false;
 	StructType const& other = dynamic_cast<StructType const&>(_other);
-	return ReferenceType::operator==(other) && other.m_struct == m_struct;
+	return equals(other) && other.m_struct == m_struct;
 }
 
 

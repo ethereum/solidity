@@ -803,7 +803,7 @@ public:
 	/// if the type has an interfaceType.
 	virtual BoolResult validForLocation(DataLocation _loc) const = 0;
 
-	bool operator==(ReferenceType const& _other) const
+	bool equals(ReferenceType const& _other) const
 	{
 		return location() == _other.location() && isPointer() == _other.isPointer();
 	}

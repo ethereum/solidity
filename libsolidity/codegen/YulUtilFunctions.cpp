@@ -1833,7 +1833,7 @@ string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
 string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
 {
 	solAssert(
-		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
+		(*_fromType.copyForLocation(_toType.location(), _toType.isPointer())).equals(dynamic_cast<ReferenceType const&>(_toType)),
 		""
 	);
 	if (!_toType.isDynamicallySized())
@@ -1930,7 +1930,7 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
 {
 	solAssert(
-		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
+		(*_fromType.copyForLocation(_toType.location(), _toType.isPointer())).equals(dynamic_cast<ReferenceType const&>(_toType)),
 		""
 	);
 	solAssert(_fromType.isByteArrayOrString(), "");
@@ -2840,10 +2840,10 @@ string YulUtilFunctions::updateStorageValueFunction(
 			.render();
 		}
 
-		solAssert(*toReferenceType->copyForLocation(
+		solAssert((*toReferenceType->copyForLocation(
 			fromReferenceType->location(),
 			fromReferenceType->isPointer()
-		).get() == *fromReferenceType, "");
+		).get()).equals(*fromReferenceType), "");
 
 		if (fromReferenceType->category() == Type::Category::ArraySlice)
 			solAssert(toReferenceType->category() == Type::Category::Array, "");
