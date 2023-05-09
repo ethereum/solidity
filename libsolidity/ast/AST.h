@@ -742,13 +742,13 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& members() const { return m_members; }
 
 	/// Fills set with the EIP-712 compatible struct encodings without subtypes concatenated.
-	void insertEncodedSubtypes(std::set<std::string>& subtypes) const;
+	void insertEip712EncodedSubtypes(std::set<std::string>& subtypes) const;
 
 	/// @returns the EIP-712 compatible struct encoding but without subtypes concatenated.
-	std::string encodeTypeWithoutSubtypes() const;
+	std::string eip712EncodeTypeWithoutSubtypes() const;
 
 	/// @returns the EIP-712 compatible struct encoding with subtypes sorted and concatenated.
-	std::string encodeType() const;
+	std::string eip712EncodeType() const;
 
 	/// @returns the EIP-712 compatible typehash of this struct.
 	util::h256 typehash() const;
