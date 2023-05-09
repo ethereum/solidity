@@ -420,6 +420,9 @@ std::string StructDefinition::eip712EncodeTypeWithoutSubtypes() const
 
 std::string StructDefinition::eip712EncodeType() const
 {
+	// EIP-712 supports recurvie structs, but not containing nested mappings
+	solAssert(!annotation().containsNestedMapping.has_value() || !annotation().containsNestedMapping.value(), "Struct containing mapping cannot be used in EIP-712.");
+
 	// std::set enables duplicates elimination and ordered enumeration
 	std::set<std::string> subtypes;
 	insertEip712EncodedSubtypes(subtypes);
