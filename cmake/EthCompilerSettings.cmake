@@ -65,11 +65,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		if(WEXTRA_SEMI)
 			add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>)
 		endif()
-		# TODO: This is a temporary workaround. The underlying warning should be addressed and this workaround removed ASAP.
-		# Once https://github.com/fmtlib/fmt/issues/3415 is addressed, this can be fixed by bumping the fmtlib version.
-		check_cxx_compiler_flag(-Wno-error=dangling-reference WNO_ERROR_DANGLING_REFERENCE)
-		if (WNO_ERROR_DANGLING_REFERENCE)
-            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=dangling-reference>)
+		# See https://gcc.gnu.org/git/gitweb.cgi?p=gcc.git;h=6b927b1297e66e26e62e722bf15c921dcbbd25b9
+		check_cxx_compiler_flag(-Wno-dangling-reference WNO_DANGLING_REFERENCE)
+		if (WNO_DANGLING_REFERENCE)
+            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-dangling-reference>)
 		endif()
 
 
