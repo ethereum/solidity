@@ -22,7 +22,7 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="23"
+LABEL version="1"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -93,11 +93,11 @@ RUN set -ex; \
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.9.1" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	git clone --branch="v0.10.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \
-	cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	CXX=clang++ cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
 	ninja; \
 	ninja install/strip; \
 	rm -rf /usr/src/evmone
