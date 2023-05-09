@@ -35,7 +35,7 @@ contract D {
 // EVMVersion: >=byzantium
 // ----
 // f() -> 0x1 # This should work, next should throw #
-// gas legacy: 102085
+// gas legacy: 102095
 // fview() -> FAILURE
 // gas irOptimized: 98438596
 // gas legacy: 98438774

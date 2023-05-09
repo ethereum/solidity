@@ -24,4 +24,4 @@ contract C {
 // EVMVersion: >=constantinople
 // ----
 // test() -> 42
-// gas legacy: 100225
+// gas legacy: 100235

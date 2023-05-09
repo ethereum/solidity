@@ -73,10 +73,10 @@ then
   rm -r "$z3_dir"
 
   # evmone
-  evmone_version="0.9.1"
+  evmone_version="0.10.0"
   evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
-  validate_checksum "$evmone_package" 70420a893a9b1036fcb63526b806d97658db8c373bcab1c3e8382594dc8593e4
+  validate_checksum "$evmone_package" 1b7773779287d7908baca6b8d556a98800cbd7d6e5c910b55fa507642bc0a15c
   tar xzpf "$evmone_package" -C /usr/local
   rm "$evmone_package"
 
