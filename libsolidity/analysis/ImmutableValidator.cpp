@@ -132,6 +132,19 @@ bool ImmutableValidator::visit(WhileStatement const& _whileStatement)
 	return false;
 }
 
+bool ImmutableValidator::visit(TryStatement const& _tryStatement)
+{
+	ScopedSaveAndRestore constructorGuard{m_inTryStatement, true};
+
+	_tryStatement.externalCall().accept(*this);
+
+	for (auto&& clause: _tryStatement.clauses())
+		if (clause)
+			clause->accept(*this);
+
+	return false;
+}
+
 void ImmutableValidator::endVisit(IdentifierPath const& _identifierPath)
 {
 	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifierPath.annotation().referencedDeclaration))
@@ -216,6 +229,12 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 				4599_error,
 				_expression.location(),
 				"Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement."
+			);
+		else if (m_inTryStatement)
+			m_errorReporter.typeError(
+					4130_error,
+					_expression.location(),
+					"Cannot write to immutable here: Immutable variables cannot be initialized inside a try/catch statement."
 			);
 		else if (m_initializedStateVariables.count(&_variableReference))
 		{
