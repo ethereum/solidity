@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(invalid_language)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language."));
+	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\", \"Yul\" or \"SolidityAST\" is supported as a language."));
 }
 
 BOOST_AUTO_TEST_CASE(valid_language)
