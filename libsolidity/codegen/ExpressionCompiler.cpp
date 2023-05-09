@@ -1934,6 +1934,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "typehash")
 		{
 			Type const* arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			solAssert(dynamic_cast<StructType const*>(arg), "typehash called on a non-struct type")
 			StructDefinition const& struct_ = dynamic_cast<StructType const&>(*arg).structDefinition();
 			m_context << struct_.typehash();
 		}
