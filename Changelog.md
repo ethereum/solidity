@@ -5,7 +5,9 @@ Language Features:
 
 
 Compiler Features:
-* SMTChecker: Create balance check verification target for CHC engine.
+ * SMTChecker: Create balance check verification target for CHC engine.
+ * Yul IR Code Generation: Cheaper code for reverting with errors of a small static encoding size.
+
 
 Bugfixes:
  * Commandline Interface: Fix ICE when the optimizer is disabled and an empty/blank string is used for ``--yul-optimizations`` sequence.
