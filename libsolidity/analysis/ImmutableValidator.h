@@ -55,6 +55,7 @@ private:
 	bool visit(MemberAccess const& _memberAccess);
 	bool visit(IfStatement const& _ifStatement);
 	bool visit(WhileStatement const& _whileStatement);
+	bool visit(TryStatement const& _tryStatement);
 	void endVisit(IdentifierPath const& _identifierPath);
 	void endVisit(Identifier const& _identifier);
 	void endVisit(Return const& _return);
@@ -78,6 +79,7 @@ private:
 	bool m_inLoop = false;
 	bool m_inBranch = false;
 	bool m_inCreationContext = true;
+	bool m_inTryStatement = false;
 };
 
 }
