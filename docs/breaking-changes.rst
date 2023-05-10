@@ -4,6 +4,8 @@ Solidity Breaking Changes
 
 This page highlights the main breaking changes introduced in multiple Solidity versions.
 
+.. _080-breaking-changes:
+
 ********************************
 Solidity v0.8.0 Breaking Changes
 ********************************

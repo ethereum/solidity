@@ -21,7 +21,7 @@ We currently use a 0.y.z version number `to indicate this fast pace of change <h
 .. warning::
 
   Solidity recently released the 0.8.x version that introduced a lot of breaking changes.
-  Make sure you read :doc:`the full list <080-breaking-changes>`.
+  Make sure you read :ref:`the full list <080-breaking-changes>`.
 
 Ideas for improving Solidity or this documentation are always welcome,
 read our :doc:`contributors guide <contributing>` for more details.
@@ -159,10 +159,7 @@ Contents
 
    security-considerations.rst
    bugs.rst
-   050-breaking-changes.rst
-   060-breaking-changes.rst
-   070-breaking-changes.rst
-   080-breaking-changes.rst
+   breaking-changes.rst
 
 .. toctree::
    :maxdepth: 2
