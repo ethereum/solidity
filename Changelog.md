@@ -1,4 +1,4 @@
-## 0.8.20 (unreleased)
+### 0.8.20 (2023-05-10)
 
 Compiler Features:
  * Assembler: Use ``push0`` for placing ``0`` on the stack for EVM versions starting from "Shanghai". This decreases the deployment and runtime costs.
