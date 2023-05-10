@@ -75,7 +75,7 @@ and a wide selection of tutorials, tools, and development frameworks.
 
 If you have any questions, you can try searching for answers or asking on the
 `Ethereum StackExchange <https://ethereum.stackexchange.com/>`_,
-or our `Gitter channel <https://gitter.im/ethereum/solidity/>`_.
+or our `Gitter channel <https://gitter.im/ethereum/solidity>`_.
 
 .. _translations:
 
