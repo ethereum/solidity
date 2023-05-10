@@ -16,7 +16,7 @@ sourceUnit: (
 	| contractDefinition
 	| interfaceDefinition
 	| libraryDefinition
-	| freeFunctionDefinition
+	| functionDefinition
 	| constantVariableDeclaration
 	| structDefinition
 	| enumDefinition
@@ -85,7 +85,7 @@ inheritanceSpecifier: name=identifierPath arguments=callArgumentList?;
  */
 contractBodyElement:
 	constructorDefinition
-	| contractFunctionDefinition
+	| functionDefinition
 	| modifierDefinition
 	| fallbackFunctionDefinition
 	| receiveFunctionDefinition
@@ -152,11 +152,11 @@ stateMutability: Pure | View | Payable;
  */
 overrideSpecifier: Override (LParen overrides+=identifierPath (Comma overrides+=identifierPath)* RParen)?;
 /**
- * The definition of contract, library and interface functions.
+ * The definition of contract, library, interface or free functions.
  * Depending on the context in which the function is defined, further restrictions may apply,
  * e.g. functions in interfaces have to be unimplemented, i.e. may not contain a body block.
  */
-contractFunctionDefinition
+functionDefinition
 locals[
 	boolean visibilitySet = false,
 	boolean mutabilitySet = false,
@@ -175,16 +175,6 @@ locals[
 	 )*
 	(Returns LParen returnParameters=parameterList RParen)?
 	(Semicolon | body=block);
-
-/**
- * The definition of a free function.
- */
- freeFunctionDefinition:
- 	Function (identifier | Fallback | Receive)
- 	LParen (arguments=parameterList)? RParen
- 	stateMutability?
- 	(Returns LParen returnParameters=parameterList RParen)?
- 	(Semicolon | body=block);
 
 /**
  * The definition of a modifier.
