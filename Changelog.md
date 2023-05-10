@@ -1,19 +1,16 @@
 ## 0.8.20 (unreleased)
 
-Language Features:
-
-
 Compiler Features:
- * Assembler: Use ``push0`` for placing ``0`` in the stack for EVM versions starting from "Shanghai". This decreases the deployment and runtime costs.
+ * Assembler: Use ``push0`` for placing ``0`` on the stack for EVM versions starting from "Shanghai". This decreases the deployment and runtime costs.
  * EVM: Set default EVM version to "Shanghai".
  * EVM: Support for the EVM Version "Shanghai".
  * NatSpec: Add support for NatSpec documentation in ``enum`` definitions.
  * NatSpec: Add support for NatSpec documentation in ``struct`` definitions.
  * NatSpec: Include NatSpec from events that are emitted by a contract but defined outside of it in userdoc and devdoc output.
- * Optimizer: Re-implement simplified version of UnusedAssignEliminator and UnusedStoreEliminator. It can correctly remove some unused assignments in deeply nested loops that were ignored by the old version.
+ * Optimizer: Re-implement simplified version of ``UnusedAssignEliminator`` and ``UnusedStoreEliminator``. It can correctly remove some unused assignments in deeply nested loops that were ignored by the old version.
  * Parser: Unary plus is no longer recognized as a unary operator in the AST and triggers an error at the parsing stage (rather than later during the analysis).
- * SMTChecker: Properties that are proved safe are now reported explicitly at the end of the analysis. By default, only the number of safe properties is shown. The CLI option ``--model-checker-show-proved-safe`` and the JSON option ``settings.modelChecker.showProvedSafe`` can be enabled to show the full list of safe properties.
  * SMTChecker: Group all messages about unsupported language features in a single warning. The CLI option ``--model-checker-show-unsupported`` and the JSON option ``settings.modelChecker.showUnsupported`` can be enabled to show the full list.
+ * SMTChecker: Properties that are proved safe are now reported explicitly at the end of analysis. By default, only the number of safe properties is shown. The CLI option ``--model-checker-show-proved-safe`` and the JSON option ``settings.modelChecker.showProvedSafe`` can be enabled to show the full list of safe properties.
  * Standard JSON Interface: Add experimental support for importing ASTs via Standard JSON.
  * Yul EVM Code Transform: If available, use ``push0`` instead of ``codesize`` to produce an arbitrary value on stack in order to create equal stack heights between branches.
 
