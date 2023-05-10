@@ -13,6 +13,11 @@ Booleans
 --------
 
 ``bool``: The possible values are constants ``true`` and ``false``.
+    * **Syntax**: ``bool [public/private/internal] <variableName>;``
+    * The default value is ``false``. 
+    * Variable of bool type can not be converted to integers.
+    * Any assignment of a boolean variable to another creates a new copy of the value. 
+
 
 Operators:
 
