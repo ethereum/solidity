@@ -31,21 +31,21 @@ BINARY_TYPE="$1"
 BINARY_PATH="$(realpath "$2")"
 SELECTED_PRESETS="$3"
 
-function compile_fn { yarn run provision:token:contracts; }
-function test_fn { yarn run test:contracts; }
+function compile_fn { npm run provision:token:contracts; }
+function test_fn { npm run test:contracts; }
 
 function colony_test
 {
-    local repo="https://github.com/solidity-external-tests/colonyNetwork.git"
-    local ref_type=branch
-    local ref="develop_080"
+    local repo="https://github.com/JoinColony/colonyNetwork.git"
+    local ref_type="branch"
+    local ref="develop"
     local config_file="truffle.js"
 
     local compile_only_presets=(
-        ir-no-optimize            # Compiles but tests run out of gas
-        ir-optimize-evm-only      # Compiles but tests run out of gas
-        legacy-no-optimize        # Compiles but tests run out of gas
-        legacy-optimize-evm-only  # Compiles but tests run out of gas
+        #ir-no-optimize            # Compilation fails with: "YulException: Variable var__47248 is 6 slot(s) too deep inside the stack. Stack too deep."
+        #ir-optimize-evm-only      # Compilation fails with: "YulException: Variable var__47248 is 6 slot(s) too deep inside the stack. Stack too deep."
+        #legacy-no-optimize        # Compilation fails with: "CompilerError: Stack too deep. When compiling inline assembly: Variable headStart is 1 slot(s) too deep inside the stack."
+        #legacy-optimize-evm-only  # Compilation fails with: "CompilerError: Stack too deep. When compiling inline assembly: Variable headStart is 1 slot(s) too deep inside the stack."
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
@@ -60,15 +60,26 @@ function colony_test
     download_project "$repo" "$ref_type" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
+    neutralize_package_lock
     neutralize_package_json_hooks
     force_truffle_compiler_settings "$config_file" "$BINARY_TYPE" "${DIR}/solc/dist" "$(first_word "$SELECTED_PRESETS")"
-    yarn install
     git submodule update --init
+
+    # Force Truffle version that has support to Shanghai
+    force_truffle_version "5.9.0"
+    npm install
+    # Ensure Ganache version that has support to Shanghai
+    # https://github.com/trufflesuite/ganache/releases/tag/v7.8.0
+    npm install ganache@7.8.0
 
     cd lib
     rm -Rf dappsys
     git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_080 dappsys
     cd ..
+
+    # Ignoring node-hid since it is not relevant for the tests and fails with the following error during installation:
+    # make: *** [HID-hidraw.target.mk:124: Release/obj.target/HID-hidraw/src/HID.o] Error 1
+    sed -i 's|"node-hid": *\".*\",*||g' package.json
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"

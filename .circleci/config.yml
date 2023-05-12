@@ -576,8 +576,7 @@ defaults:
       project: colony
       binary_type: solcjs
       compile_only: 1
-      image: cimg/node:14.20
-      python2: true
+      image: cimg/node:16.18
 
   - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
       <<: *requires_b_ubu_static
@@ -689,9 +688,8 @@ defaults:
       name: t_ems_test_ext_colony
       project: colony
       binary_type: solcjs
-      image: cimg/node:14.20
+      image: cimg/node:16.18
       resource_class: medium
-      python2: true
 
   - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
       <<: *on_all_tags_and_branches
@@ -1272,9 +1270,6 @@ jobs:
       resource_class:
         type: string
         default: small
-      python2:
-        type: boolean
-        default: false
     docker:
       - image: << parameters.image >>
     resource_class: << parameters.resource_class >>
@@ -1298,21 +1293,12 @@ jobs:
             sudo apt update
             sudo apt-get --quiet --assume-yes --no-install-recommends install lsof
       - when:
-          condition: << parameters.python2 >>
-          steps:
-            - run:
-                name: Install Python 2 and make it the default
-                command: |
-                  # python is used by node-gyp to build native modules (needed for Colony).
-                  # In the 14.x image node-gyp still requires Python 2.
-                  sudo apt install python2 --assume-yes --no-install-recommends
-                  sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1
-      - when:
           condition:
             equal: [<< parameters.binary_type >>, "solcjs"]
           steps:
             - run:
                 name: External << parameters.project >> tests (<< parameters.binary_type >>)
+                no_output_timeout: 15m
                 command: |
                   test/external_tests.py test --solc-binary-type "<< parameters.binary_type >>" --solc-binary-path /tmp/workspace/soljson.js --run "<< parameters.project >>"
       - when:
