@@ -27,6 +27,9 @@ __pycache__
 *.a
 *.lib
 
+# ignore git mergetool backup files
+*.orig
+
 # Executables
 *.exe
 *.out
