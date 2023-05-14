@@ -68,7 +68,7 @@ packagename=solc
 # This needs to be a still active release
 static_build_distribution=focal
 
-DISTRIBUTIONS="focal jammy kinetic lunar"
+DISTRIBUTIONS="focal jammy kinetic"
 
 if is_release
 then
