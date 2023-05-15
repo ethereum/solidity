@@ -45,6 +45,23 @@ commands:
         type: string
     steps:
       - run:
+          name: Ensure envsubst is installed
+          command: |
+            os_family="$(uname -s | tr '[:upper:]' '[:lower:]')"
+            if [[ "$os_family" == "linux" ]]
+            then
+              os="$(grep --regexp '^ID=' /etc/os-release | cut --characters=4-)"
+              case "$os" in
+                ubuntu)
+                  sudo apt-get update
+                  sudo apt-get install --quiet --yes gettext-base
+                  ;;
+                arch)
+                  sudo pacman --quiet --sync --noconfirm gettext
+                  ;;
+              esac
+            fi
+      - run:
           name: "Matrix notification"
           when: << parameters.condition >>
           command: scripts/ci/notification/matrix_notification.sh << parameters.event >>
