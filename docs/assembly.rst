@@ -271,13 +271,8 @@ of the free memory pointer.
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this is
 even true for ``bytes1[]``, but not for ``bytes`` and ``string``). Multi-dimensional memory
-arrays are pointers to memory arrays. The length of a dynamic array is stored at the
+arrays are pointers to memory arrays. The length of both static and dynamic arrays in memory is stored at the
 first slot of the array and followed by the array elements.
-
-.. warning::
-    Statically-sized memory arrays do not have a length field, but it might be added later
-    to allow better convertibility between statically and dynamically-sized arrays; so,
-    do not rely on this.
 
 Memory Safety
 =============
