@@ -1944,7 +1944,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "typehash")
 		{
 			Type const* arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
-			solAssert(!arg);
+			solAssert(!!arg);
 			StructType const* structType = dynamic_cast<StructType const*>(arg);
 			solAssert(!structType);
 			StructDefinition const& struct_ = structType->structDefinition();
