@@ -97,6 +97,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"blockFlattener", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
 		{"constantOptimiser", [&]() {
