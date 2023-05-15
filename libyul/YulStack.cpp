@@ -30,6 +30,7 @@
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/ObjectParser.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/Suite.h>
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
@@ -87,6 +88,13 @@ bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const
 void YulStack::optimize()
 {
 	yulAssert(m_analysisSuccessful, "Analysis was not successful.");
+	yulAssert(m_parserResult);
+
+	if (
+		!m_optimiserSettings.runYulOptimiser &&
+		yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+	)
+		return;
 
 	m_analysisSuccessful = false;
 	yulAssert(m_parserResult, "");
@@ -231,10 +239,13 @@ YulStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 	evmasm::Assembly assembly(m_evmVersion, true, {});
 	EthAssemblyAdapter adapter(assembly);
 
-	// NOTE: We always need stack optimization when Yul optimizer is disabled. It being disabled
-	// just means that we don't use the full step sequence. We still run it with the minimal steps
-	// required to avoid "stack too deep".
-	bool optimize = m_optimiserSettings.optimizeStackAllocation || !m_optimiserSettings.runYulOptimiser;
+	// NOTE: We always need stack optimization when Yul optimizer is disabled (unless code contains
+	// msize). It being disabled just means that we don't use the full step sequence. We still run
+	// it with the minimal steps required to avoid "stack too deep".
+	bool optimize = m_optimiserSettings.optimizeStackAllocation || (
+		!m_optimiserSettings.runYulOptimiser &&
+		!yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+	);
 	compileEVM(adapter, optimize);
 
 	assembly.optimise(evmasm::Assembly::OptimiserSettings::translateSettings(m_optimiserSettings, m_evmVersion));
