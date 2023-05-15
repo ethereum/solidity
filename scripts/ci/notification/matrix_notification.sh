@@ -27,6 +27,7 @@ function notify() {
     curl "https://${MATRIX_SERVER}/_matrix/client/v3/rooms/${MATRIX_NOTIFY_ROOM_ID}/send/m.room.message" \
         --request POST \
         --include \
+        --fail \
         --header "Content-Type: application/json" \
         --header "Accept: application/json" \
         --header "Authorization: Bearer ${MATRIX_ACCESS_TOKEN}" \
