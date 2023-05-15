@@ -237,6 +237,7 @@ void BMC::endVisit(FunctionDefinition const& _function)
 
 bool BMC::visit(IfStatement const& _node)
 {
+	auto indicesBeforePush = copyVariableIndices();
 	// This check needs to be done in its own context otherwise
 	// constraints from the If body might influence it.
 	m_context.pushSolver();
@@ -251,6 +252,7 @@ bool BMC::visit(IfStatement const& _node)
 			&_node.condition()
 		);
 	m_context.popSolver();
+	resetVariableIndices(std::move(indicesBeforePush));
 
 	_node.condition().accept(*this);
 	auto conditionExpr = expr(_node.condition());
@@ -274,6 +276,7 @@ bool BMC::visit(IfStatement const& _node)
 
 bool BMC::visit(Conditional const& _op)
 {
+	auto indicesBeforePush = copyVariableIndices();
 	m_context.pushSolver();
 	_op.condition().accept(*this);
 
@@ -284,6 +287,7 @@ bool BMC::visit(Conditional const& _op)
 			&_op.condition()
 		);
 	m_context.popSolver();
+	resetVariableIndices(std::move(indicesBeforePush));
 
 	SMTEncoder::visit(_op);
 

@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
 
 
 ### 0.8.20 (2023-05-10)
