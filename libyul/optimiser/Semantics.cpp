@@ -94,6 +94,19 @@ bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
 	return finder.m_msizeFound;
 }
 
+bool MSizeFinder::containsMSize(Dialect const& _dialect, Object const& _object)
+{
+	if (containsMSize(_dialect, *_object.code))
+		return true;
+
+	for (shared_ptr<ObjectNode> const& node: _object.subObjects)
+		if (auto const* object = dynamic_cast<Object const*>(node.get()))
+			if (containsMSize(_dialect, *object))
+				return true;
+
+	return false;
+}
+
 void MSizeFinder::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
