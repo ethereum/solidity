@@ -167,9 +167,14 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		std::optional<std::string> _licenseString,
-		std::vector<ASTPointer<ASTNode>> _nodes
+		std::vector<ASTPointer<ASTNode>> _nodes,
+		bool _experimentalSolidity
 	):
-		ASTNode(_id, _location), m_licenseString(std::move(_licenseString)), m_nodes(std::move(_nodes)) {}
+		ASTNode(_id, _location),
+		m_licenseString(std::move(_licenseString)),
+		m_nodes(std::move(_nodes)),
+		m_experimentalSolidity(_experimentalSolidity)
+	{}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -180,10 +185,12 @@ public:
 
 	/// @returns a set of referenced SourceUnits. Recursively if @a _recurse is true.
 	std::set<SourceUnit const*> referencedSourceUnits(bool _recurse = false, std::set<SourceUnit const*> _skipList = std::set<SourceUnit const*>()) const;
+	bool experimentalSolidity() const { return m_experimentalSolidity; }
 
 private:
 	std::optional<std::string> m_licenseString;
 	std::vector<ASTPointer<ASTNode>> m_nodes;
+	bool m_experimentalSolidity = false;
 };
 
 /**

@@ -110,7 +110,7 @@ do
   SOL_FILES+=("$line")
 done < <(
   grep --include "*.sol" -riL -E \
-    "^\/\/ (Syntax|Type|Declaration)Error|^\/\/ ParserError (1684|2837|3716|3997|5333|6275|6281|6933|7319)|^==== Source:" \
+    "^\/\/ (Syntax|Type|Declaration)Error|^\/\/ ParserError (1684|2837|3716|3997|5333|6275|6281|6933|7319|8185)|^==== Source:" \
     "${ROOT_DIR}/test/libsolidity/syntaxTests" \
     "${ROOT_DIR}/test/libsolidity/semanticTests" |
       # Skipping the unicode tests as I couldn't adapt the lexical grammar to recursively counting RLO/LRO/PDF's.

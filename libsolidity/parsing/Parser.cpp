@@ -94,14 +94,18 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 		m_recursionDepth = 0;
 		m_scanner = make_shared<Scanner>(_charStream);
 		ASTNodeFactory nodeFactory(*this);
+		m_experimentalSolidityEnabledInCurrentSourceUnit = false;
 
 		vector<ASTPointer<ASTNode>> nodes;
+		while (m_scanner->currentToken() == Token::Pragma)
+			nodes.push_back(parsePragmaDirective(false));
+
 		while (m_scanner->currentToken() != Token::EOS)
 		{
 			switch (m_scanner->currentToken())
 			{
 			case Token::Pragma:
-				nodes.push_back(parsePragmaDirective());
+				nodes.push_back(parsePragmaDirective(true));
 				break;
 			case Token::Import:
 				nodes.push_back(parseImportDirective());
@@ -150,7 +154,7 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
-		return nodeFactory.createNode<SourceUnit>(findLicenseString(nodes), nodes);
+		return nodeFactory.createNode<SourceUnit>(findLicenseString(nodes), nodes, m_experimentalSolidityEnabledInCurrentSourceUnit);
 	}
 	catch (FatalError const&)
 	{
@@ -203,7 +207,7 @@ ASTPointer<StructuredDocumentation> Parser::parseStructuredDocumentation()
 	return nullptr;
 }
 
-ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
+ASTPointer<PragmaDirective> Parser::parsePragmaDirective(bool const _finishedParsingTopLevelPragmas)
 {
 	RecursionGuard recursionGuard(*this);
 	// pragma anything* ;
@@ -213,6 +217,7 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 	expectToken(Token::Pragma);
 	vector<string> literals;
 	vector<Token> tokens;
+
 	do
 	{
 		Token token = m_scanner->currentToken();
@@ -239,6 +244,13 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 			vector<Token>(tokens.begin() + 1, tokens.end()),
 			vector<string>(literals.begin() + 1, literals.end())
 		);
+	}
+
+	if (literals.size() >= 2 && literals[0] == "experimental" && literals[1] == "solidity")
+	{
+		if (_finishedParsingTopLevelPragmas)
+			fatalParserError(8185_error, "Experimental pragma \"solidity\" can only be set at the beginning of the source unit.");
+		m_experimentalSolidityEnabledInCurrentSourceUnit = true;
 	}
 
 	return nodeFactory.createNode<PragmaDirective>(tokens, literals);

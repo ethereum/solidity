@@ -399,7 +399,7 @@ private:
 	/// @returns the newly loaded sources.
 	StringMap loadMissingSources(SourceUnit const& _ast);
 	std::string applyRemapping(std::string const& _path, std::string const& _context);
-	void resolveImports();
+	bool resolveImports();
 
 	/// Store the contract definitions in m_contracts.
 	void storeContractDefinitions();
