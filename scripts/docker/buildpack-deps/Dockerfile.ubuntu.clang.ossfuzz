@@ -22,13 +22,13 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="1"
+LABEL version="2"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update; \
 	apt-get -qqy install --no-install-recommends \
-		build-essential \
+		build-essential sudo \
 		software-properties-common \
 		ninja-build git wget \
 		libbz2-dev zlib1g-dev git curl uuid-dev \
