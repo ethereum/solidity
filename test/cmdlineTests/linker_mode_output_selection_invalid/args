@@ -1,1 +1,1 @@
---link --asm --asm-json --opcodes --bin --bin-runtime --abi --ir --ir-optimized --ewasm --hashes --userdoc --devdoc --metadata --storage-layout
+--link --asm --asm-json --opcodes --bin --bin-runtime --abi --ir --ir-optimized --hashes --userdoc --devdoc --metadata --storage-layout

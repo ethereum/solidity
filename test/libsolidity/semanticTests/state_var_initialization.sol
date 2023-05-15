@@ -7,8 +7,6 @@ contract C {
         k = k - i;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // i() -> 2
 // k() -> 0

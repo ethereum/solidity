@@ -17,8 +17,6 @@ contract Test {
         b = data["abc"].b[19];
     }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: Lib
 // f() -> 7, 8

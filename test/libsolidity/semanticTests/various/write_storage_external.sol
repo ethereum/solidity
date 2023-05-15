@@ -33,7 +33,6 @@ contract D {
         return c.x();
     }
 }
-
 // ----
 // f() -> 3
 // g() -> 8

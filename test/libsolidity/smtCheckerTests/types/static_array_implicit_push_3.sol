@@ -5,7 +5,6 @@ contract D {
 		data.push(inner);
 	}
 }
-
 // ====
 // SMTEngine: all
 // ----

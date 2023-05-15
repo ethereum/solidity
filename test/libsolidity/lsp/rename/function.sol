@@ -40,7 +40,6 @@ function free() pure
            //      ^^^^^^^^ @FunctionInFreeFunction
         //         ^ @CursorInFreeFunction
 }
-
 // ----
 // -> textDocument/rename {
 //     "newName": "Renamed",

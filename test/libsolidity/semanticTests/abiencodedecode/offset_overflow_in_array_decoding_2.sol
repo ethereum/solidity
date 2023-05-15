@@ -24,7 +24,5 @@ contract Test {
 		return decoded[0][0] + decoded[1][0];
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // withinArray() -> FAILURE

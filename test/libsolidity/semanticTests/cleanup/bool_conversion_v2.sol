@@ -11,8 +11,6 @@ contract C {
         _out = _in;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(bool): 0x0 -> 0x0
 // f(bool): 0x1 -> 0x1

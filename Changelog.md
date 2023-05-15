@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * EWasm: Remove EWasm backend.
 
 
 Bugfixes:

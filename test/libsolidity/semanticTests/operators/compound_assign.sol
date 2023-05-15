@@ -9,8 +9,6 @@ contract test {
 		return value2 += 7;
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256,uint256): 0, 6 -> 7
 // f(uint256,uint256): 1, 3 -> 0x23

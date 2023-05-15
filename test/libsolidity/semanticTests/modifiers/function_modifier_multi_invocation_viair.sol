@@ -10,7 +10,6 @@ contract C {
 }
 // ====
 // compileViaYul: true
-// compileToEwasm: also
 // ----
 // f(bool): false -> 1
 // f(bool): true -> 1

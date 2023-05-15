@@ -15,7 +15,6 @@ contract c {
         y = data2[4];
     }
 }
-
 // ----
 // test() -> 5, 4
 // gas irOptimized: 252986

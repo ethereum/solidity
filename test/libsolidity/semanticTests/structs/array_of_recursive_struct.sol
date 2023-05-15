@@ -8,7 +8,5 @@ contract Test {
         assert(val[0].vals.length == 42);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // func() ->

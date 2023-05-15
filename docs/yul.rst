@@ -1194,8 +1194,7 @@ An example Yul Object is shown below:
             // executing code is the constructor code)
             size := datasize("Contract1_deployed")
             offset := allocate(size)
-            // This will turn into a memory->memory copy for Ewasm and
-            // a codecopy for EVM
+            // This will turn into a codecopy for EVM
             datacopy(offset, dataoffset("Contract1_deployed"), size)
             return(offset, size)
         }

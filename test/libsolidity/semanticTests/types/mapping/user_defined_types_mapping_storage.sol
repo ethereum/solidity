@@ -19,7 +19,6 @@ contract C {
 		return uintMap[3] == 4;
 	}
 }
-
 // ----
 // library: L
 // testAB() -> true

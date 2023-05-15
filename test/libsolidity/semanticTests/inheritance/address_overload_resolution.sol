@@ -18,7 +18,6 @@ contract D {
         return (new C()).transfer(5);
     }
 }
-
 // ----
 // f() -> 1
 // gas irOptimized: 77051

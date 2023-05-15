@@ -5,7 +5,6 @@ contract C {
 }
 // ====
 // allowNonExistingFunctions: true
-// compileToEwasm: also
 // ----
 // f(uint256,uint256,uint256,uint256,uint256): 1, 1, 1, 1, 1
 // -> 5

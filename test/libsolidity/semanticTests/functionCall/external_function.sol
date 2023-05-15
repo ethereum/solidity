@@ -11,8 +11,5 @@ contract c {
         r_b = b;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test(uint256,uint256): 2, 3 -> 9, 3

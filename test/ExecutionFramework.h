@@ -295,7 +295,6 @@ protected:
 	solidity::frontend::RevertStrings m_revertStrings = solidity::frontend::RevertStrings::Default;
 	solidity::frontend::OptimiserSettings m_optimiserSettings = solidity::frontend::OptimiserSettings::minimal();
 	bool m_showMessages = false;
-	bool m_supportsEwasm = false;
 	std::unique_ptr<EVMHost> m_evmcHost;
 
 	std::vector<boost::filesystem::path> m_vmPaths;

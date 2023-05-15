@@ -9,7 +9,6 @@ contract C {
         return this.g(2 * n);
     }
 }
-
 // ----
 // g(uint256): 4 -> 5
 // f(uint256): 2 -> 5

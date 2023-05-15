@@ -37,7 +37,6 @@ contract Main {
         them = address(h).balance;
     }
 }
-
 // ----
 // constructor(), 22 wei ->
 // gas irOptimized: 266886

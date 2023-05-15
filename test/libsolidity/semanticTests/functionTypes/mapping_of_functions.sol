@@ -24,7 +24,6 @@ contract Flow {
         return 7;
     }
 }
-
 // ----
 // success() -> false
 // f() -> 7

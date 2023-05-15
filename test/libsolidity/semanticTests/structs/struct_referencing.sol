@@ -45,8 +45,6 @@ contract C is I {
     function a1() public pure returns (uint) { S memory s; return L.a(s); }
     function a2() public pure returns (uint) { L.S memory s; return L.a(s); }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: L
 // f() -> 1

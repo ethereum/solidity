@@ -9,9 +9,6 @@ contract C {
         return 2;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // x() -> 0
 // f() -> 2

@@ -9,6 +9,5 @@ contract Tsra {
         return 1;
     }
 }
-
 // ----
 // f() -> 1

@@ -4,7 +4,5 @@ contract test {
         return int8(x);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // run() -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa

@@ -5,7 +5,6 @@ contract A {
         A.a[0] = 2;
     }
 }
-
 // ====
 // SMTEngine: all
 // ----

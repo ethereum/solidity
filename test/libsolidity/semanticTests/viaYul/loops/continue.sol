@@ -29,8 +29,6 @@ contract C {
         x = x + a;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 11
 // g() -> 11

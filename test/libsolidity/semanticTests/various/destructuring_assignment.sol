@@ -31,7 +31,6 @@ contract C {
         if (x != 456 || memBytes.length != s.length || y[2] != 789) return 11;
     }
 }
-
 // ----
 // f(bytes): 0x20, 0x5, "abcde" -> 0
 // gas irOptimized: 241853

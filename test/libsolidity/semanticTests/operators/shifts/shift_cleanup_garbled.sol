@@ -6,8 +6,5 @@ contract C {
         x >>= 8;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0x0

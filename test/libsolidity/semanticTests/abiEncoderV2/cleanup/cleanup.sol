@@ -6,8 +6,6 @@ contract C {
         assembly { v := a  w := b x := c y := d z := e}
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(uint16,int16,address,bytes3,bool): 1, 2, 3, "a", true -> 1, 2, 3, "a", true
 // f(uint16,int16,address,bytes3,bool): 0xffffff, 0x1ffff, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, "abcd", 1 -> FAILURE

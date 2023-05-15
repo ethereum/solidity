@@ -44,6 +44,5 @@ contract C {
 		return success;
 	}
 }
-
 // ----
 // callExternal() -> true

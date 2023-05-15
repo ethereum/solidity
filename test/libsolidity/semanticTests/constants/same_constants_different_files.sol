@@ -19,8 +19,5 @@ contract C {
         return (a, fre(), M.a, b);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0x0d, 0x59, 0x59, 0x59

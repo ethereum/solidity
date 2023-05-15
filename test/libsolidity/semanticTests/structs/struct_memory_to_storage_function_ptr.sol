@@ -26,9 +26,6 @@ contract C {
         return x.s.a;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 42, 23, 34, 42, 42
 // gas irOptimized: 110388

@@ -10,7 +10,6 @@ contract C
 		assert(a > 0);
 	}
 }
-
 // ====
 // SMTEngine: all
 // ----

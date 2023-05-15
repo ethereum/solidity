@@ -7,8 +7,5 @@ contract C {
     assembly { z := e }
   }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0x00

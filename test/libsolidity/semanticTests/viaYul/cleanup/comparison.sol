@@ -30,8 +30,6 @@ contract C {
 		return (x < y);
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // eq() -> true
 // neq() -> false

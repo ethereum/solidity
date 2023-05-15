@@ -18,7 +18,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileToEwasm: also
 // ----
 // test_store_ok() -> 1
 // x() -> 0

@@ -11,7 +11,6 @@ contract C {
         return address(this).codehash != 0;
     }
 }
-
 // ====
 // EVMVersion: >=constantinople
 // ----

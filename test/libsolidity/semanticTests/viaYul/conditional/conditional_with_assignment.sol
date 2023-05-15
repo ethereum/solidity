@@ -7,7 +7,5 @@ contract A {
 		return (x, y1, y2, z);
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 6, 1, 5, 5

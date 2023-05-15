@@ -12,7 +12,5 @@ contract D is C {
     return g();
   }
 }
-// ====
-// compileToEwasm: also
 // ----
 // h() -> 1337

@@ -9,9 +9,6 @@ contract C {
         return a;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256): 3 -> 10
 // a() -> 10

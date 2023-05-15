@@ -6,8 +6,6 @@ contract Test {
         return x + 9;
     }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: Lib
 // f(uint256): 33 -> 0x2a

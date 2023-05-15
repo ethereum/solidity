@@ -9,8 +9,6 @@ contract C {
         (,,a) = f();
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // g() -> 3, 2, 1
 // h() -> 3

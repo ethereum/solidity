@@ -15,7 +15,6 @@ contract SendCoin {
     return true;
   }
 }
-
 // ----
 // ParserError 6635: (235-236): Expected identifier but got '}'
 // ParserError 6635: (276-284): Expected ';' but got 'contract'

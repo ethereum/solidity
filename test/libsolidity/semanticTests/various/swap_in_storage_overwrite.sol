@@ -22,9 +22,6 @@ contract c {
         (x, y) = (y, x);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // x() -> 0, 0
 // y() -> 0, 0

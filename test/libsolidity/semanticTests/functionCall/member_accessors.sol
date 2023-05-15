@@ -14,7 +14,6 @@ contract test {
 }
 // ====
 // allowNonExistingFunctions: true
-// compileToEwasm: also
 // ----
 // data() -> 8
 // name() -> "Celina"

@@ -239,29 +239,6 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 	}
 }
 
-void CommandLineInterface::handleEwasm(string const& _contractName)
-{
-	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
-
-	if (!m_options.compiler.outputs.ewasm)
-		return;
-
-	if (!m_options.output.dir.empty())
-	{
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
-		createFile(
-			m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
-			asString(m_compiler->ewasmObject(_contractName).bytecode)
-		);
-	}
-	else
-	{
-		sout() << "Ewasm text:" << endl;
-		sout() << m_compiler->ewasm(_contractName) << endl;
-		sout() << "Ewasm binary (hex): " << m_compiler->ewasmObject(_contractName).toHex() << endl;
-	}
-}
-
 void CommandLineInterface::handleBytecode(string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
@@ -715,7 +692,6 @@ void CommandLineInterface::compile()
 		// TODO: Perhaps we should not compile unless requested
 
 		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
-		m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm);
 		m_compiler->enableEvmBytecodeGeneration(
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||
@@ -1082,9 +1058,8 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
-		string machine =
-			_targetMachine == yul::YulStack::Machine::EVM ? "EVM" :
-			"Ewasm";
+		solAssert(_targetMachine == yul::YulStack::Machine::EVM);
+		string machine = "EVM";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
 		yul::YulStack& stack = yulStacks[src.first];
@@ -1095,19 +1070,6 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			// 'ir' output in StandardCompiler works the same way.
 			sout() << endl << "Pretty printed source:" << endl;
 			sout() << stack.print() << endl;
-		}
-
-		if (_language != yul::YulStack::Language::Ewasm && _targetMachine == yul::YulStack::Machine::Ewasm)
-		{
-			stack.translate(yul::YulStack::Language::Ewasm);
-			stack.optimize();
-
-			if (m_options.compiler.outputs.ewasmIR)
-			{
-				sout() << endl << "==========================" << endl;
-				sout() << endl << "Translated source:" << endl;
-				sout() << stack.print() << endl;
-			}
 		}
 
 		yul::MachineAssemblyObject object;
@@ -1123,11 +1085,8 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 				serr() << "No binary representation found." << endl;
 		}
 
-		solAssert(_targetMachine == yul::YulStack::Machine::Ewasm || _targetMachine == yul::YulStack::Machine::EVM, "");
-		if (
-			(_targetMachine == yul::YulStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
-			(_targetMachine == yul::YulStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
-		)
+		solAssert(_targetMachine == yul::YulStack::Machine::EVM, "");
+		if (m_options.compiler.outputs.asm_)
 		{
 			sout() << endl << "Text representation:" << endl;
 			if (!object.assembly.empty())
@@ -1183,7 +1142,6 @@ void CommandLineInterface::outputCompilationResults()
 		handleBytecode(contract);
 		handleIR(contract);
 		handleIROptimized(contract);
-		handleEwasm(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);

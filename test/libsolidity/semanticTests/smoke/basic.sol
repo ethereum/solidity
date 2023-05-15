@@ -28,8 +28,6 @@ contract C {
         return a * 7;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // d() ->
 // e(), 1 wei -> 1

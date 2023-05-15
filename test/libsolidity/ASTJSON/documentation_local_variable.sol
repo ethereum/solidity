@@ -21,5 +21,4 @@ contract C {
         uint param3
     ) public {}
 }
-
 // ----

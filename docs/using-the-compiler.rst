@@ -404,10 +404,8 @@ Input Description
         //   evm.deployedBytecode.immutableReferences - Map from AST ids to bytecode ranges that reference immutables
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   ewasm.wast - Ewasm in WebAssembly S-expressions format
-        //   ewasm.wasm - Ewasm in WebAssembly binary format
         //
-        // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
+        // Note that using a using `evm`, `evm.bytecode`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
         //
         "outputSelection": {
@@ -501,7 +499,7 @@ Output Description
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc.
           // See below for complete list of types.
           "type": "TypeError",
-          // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
+          // Mandatory: Component where the error originated, such as "general" etc.
           "component": "general",
           // Mandatory ("error", "warning" or "info", but please note that this may be extended in the future)
           "severity": "error",
@@ -617,13 +615,6 @@ Output Description
                   "heavyLifting()": "infinite"
                 }
               }
-            },
-            // Ewasm related outputs
-            "ewasm": {
-              // S-expressions format
-              "wast": "",
-              // Binary format (hex string)
-              "wasm": ""
             }
           }
         }

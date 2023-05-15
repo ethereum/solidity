@@ -11,8 +11,6 @@ contract C {
         return s.length();
     }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: D
 // f() -> 3

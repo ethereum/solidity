@@ -15,9 +15,6 @@ contract c {
         return data2.a == data1.a && data2.b == data1.b;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> true
 // gas irOptimized: 109713

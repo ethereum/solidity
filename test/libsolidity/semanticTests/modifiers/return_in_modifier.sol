@@ -13,9 +13,6 @@ contract C {
         x = t;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // x() -> 0
 // f() ->

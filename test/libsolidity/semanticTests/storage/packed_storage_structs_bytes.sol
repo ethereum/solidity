@@ -40,9 +40,6 @@ contract C {
             y == 0x07;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> true
 // gas irOptimized: 132505

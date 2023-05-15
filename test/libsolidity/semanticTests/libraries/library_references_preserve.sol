@@ -40,7 +40,6 @@ contract C {
         return b.getSum();
     }
 }
-
 // ----
 // library: L1
 // library: L2

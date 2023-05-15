@@ -315,7 +315,6 @@ void CompilerStack::reset(bool _keepSettings)
 		m_evmVersion = langutil::EVMVersion();
 		m_modelCheckerSettings = ModelCheckerSettings{};
 		m_generateIR = false;
-		m_generateEwasm = false;
 		m_revertStrings = RevertStrings::Default;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
@@ -681,7 +680,7 @@ bool CompilerStack::compile(State _stopAfter)
 				{
 					try
 					{
-						if (m_viaIR || m_generateIR || m_generateEwasm)
+						if (m_viaIR || m_generateIR)
 							generateIR(*contract);
 						if (m_generateEvmBytecode)
 						{
@@ -690,8 +689,6 @@ bool CompilerStack::compile(State _stopAfter)
 							else
 								compileContract(*contract, otherCompilers);
 						}
-						if (m_generateEwasm)
-							generateEwasm(*contract);
 					}
 					catch (Error const& _error)
 					{
@@ -890,22 +887,6 @@ string const& CompilerStack::yulIROptimized(string const& _contractName) const
 		solThrow(CompilerError, "Compilation was not successful.");
 
 	return contract(_contractName).yulIROptimized;
-}
-
-string const& CompilerStack::ewasm(string const& _contractName) const
-{
-	if (m_stackState != CompilationSuccessful)
-		solThrow(CompilerError, "Compilation was not successful.");
-
-	return contract(_contractName).ewasm;
-}
-
-evmasm::LinkerObject const& CompilerStack::ewasmObject(string const& _contractName) const
-{
-	if (m_stackState != CompilationSuccessful)
-		solThrow(CompilerError, "Compilation was not successful.");
-
-	return contract(_contractName).ewasmObject;
 }
 
 evmasm::LinkerObject const& CompilerStack::object(string const& _contractName) const
@@ -1477,42 +1458,6 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	solAssert(!deployedName.empty(), "");
 	tie(compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly) = stack.assembleEVMWithDeployed(deployedName);
 	assembleYul(_contract, compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly);
-}
-
-void CompilerStack::generateEwasm(ContractDefinition const& _contract)
-{
-	solAssert(m_stackState >= AnalysisPerformed, "");
-	if (m_hasError)
-		solThrow(CompilerError, "Called generateEwasm with errors.");
-
-	if (!_contract.canBeDeployed())
-		return;
-
-	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
-	solAssert(!compiledContract.yulIROptimized.empty(), "");
-	if (!compiledContract.ewasm.empty())
-		return;
-
-	// Re-parse the Yul IR in EVM dialect
-	yul::YulStack stack(
-		m_evmVersion,
-		m_eofVersion,
-		yul::YulStack::Language::StrictAssembly,
-		m_optimiserSettings,
-		m_debugInfoSelection
-	);
-	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
-
-	stack.optimize();
-	stack.translate(yul::YulStack::Language::Ewasm);
-	stack.optimize();
-
-	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
-
-	// Turn into Ewasm text representation.
-	auto result = stack.assemble(yul::YulStack::Machine::Ewasm);
-	compiledContract.ewasm = std::move(result.assembly);
-	compiledContract.ewasmObject = std::move(*result.bytecode);
 }
 
 CompilerStack::Contract const& CompilerStack::contract(string const& _contractName) const

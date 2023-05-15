@@ -23,8 +23,6 @@ contract C {
         } while (x < 3);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 2
 // g() -> 2

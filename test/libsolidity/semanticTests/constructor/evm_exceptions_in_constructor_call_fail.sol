@@ -13,7 +13,6 @@ contract B {
         ++test;
     }
 }
-
 // ----
 // testIt() ->
 // test() -> 2

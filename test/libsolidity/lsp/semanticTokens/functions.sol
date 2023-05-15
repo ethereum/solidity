@@ -22,7 +22,6 @@ contract Contract
         return true;
     }
 }
-
 // ----
 // functions: @unusedVariable 2072
 // -> textDocument/semanticTokens/full {

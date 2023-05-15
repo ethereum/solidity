@@ -11,7 +11,5 @@ contract C {
         return x + 1;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256): 7 -> 8

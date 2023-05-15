@@ -102,7 +102,6 @@ private:
 	void handleOpcode(std::string const& _contract);
 	void handleIR(std::string const& _contract);
 	void handleIROptimized(std::string const& _contract);
-	void handleEwasm(std::string const& _contract);
 	void handleBytecode(std::string const& _contract);
 	void handleSignatureHashes(std::string const& _contract);
 	void handleMetadata(std::string const& _contract);

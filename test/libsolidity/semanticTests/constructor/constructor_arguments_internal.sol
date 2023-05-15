@@ -32,7 +32,6 @@ contract Main {
         return h.getName();
     }
 }
-
 // ----
 // getFlag() -> true
 // getName() -> "abc"

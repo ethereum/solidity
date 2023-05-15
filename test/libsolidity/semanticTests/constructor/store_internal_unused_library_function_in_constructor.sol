@@ -16,6 +16,5 @@ contract C {
         return x();
     }
 }
-
 // ----
 // t() -> 7

@@ -44,8 +44,5 @@ contract C is A {
         data |= 0x4000;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // getData() -> 0x4300

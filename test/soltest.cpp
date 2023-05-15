@@ -133,7 +133,6 @@ int registerTests(
 	boost::unit_test::test_suite& _suite,
 	boost::filesystem::path const& _basepath,
 	boost::filesystem::path const& _path,
-	bool _enforceCompileToEwasm,
 	vector<string> const& _labels,
 	TestCase::TestCaseCreator _testCaseCreator,
 	solidity::test::Batcher& _batcher
@@ -146,7 +145,6 @@ int registerTests(
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().eofVersion(),
 		solidity::test::CommonOptions::get().vmPaths,
-		_enforceCompileToEwasm,
 		solidity::test::CommonOptions::get().enforceGasTest,
 		solidity::test::CommonOptions::get().enforceGasTestMinValue,
 	};
@@ -164,7 +162,6 @@ int registerTests(
 				numTestsAdded += registerTests(
 					*sub_suite,
 					_basepath, _path / entry.path().filename(),
-					_enforceCompileToEwasm,
 					_labels,
 					_testCaseCreator,
 					_batcher
@@ -269,7 +266,6 @@ test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/[])
 				master,
 				options.testPath / ts.path,
 				ts.subpath,
-				options.enforceCompileToEwasm,
 				ts.labels,
 				ts.testCaseCreator,
 				batcher

@@ -12,7 +12,6 @@ contract C {
 		t.s.b.push();
 	}
 }
-
 // ====
 // SMTEngine: all
 // ----

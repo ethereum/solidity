@@ -27,7 +27,6 @@ contract C {
         return dst[0];
     }
 }
-
 // ----
 // f() -> 0x20, 7, 8, 9, 0xa0, 13, 2, 0x40, 0xa0, 2, 3, 4, 2, 3, 4
 // gas irOptimized: 197082

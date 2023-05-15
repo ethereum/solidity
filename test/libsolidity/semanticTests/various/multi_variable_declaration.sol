@@ -42,7 +42,5 @@ contract C {
         return f1() && f2();
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true

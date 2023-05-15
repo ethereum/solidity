@@ -40,7 +40,6 @@ contract C {
         return this.e;
     }
 }
-
 // ----
 // test() -> 5, 6, 7
 // gas irOptimized: 260895

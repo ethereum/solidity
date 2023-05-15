@@ -11,8 +11,6 @@ contract C {
         return x.mul(a);
     }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: D
 // f(uint256): 7 -> 0x2a

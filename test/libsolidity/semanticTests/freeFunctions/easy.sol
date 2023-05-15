@@ -7,7 +7,5 @@ contract C {
     return add(x, 2);
   }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256): 7 -> 9

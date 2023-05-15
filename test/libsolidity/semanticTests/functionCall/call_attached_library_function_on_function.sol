@@ -8,8 +8,6 @@ contract C {
     }
     function t() public pure returns (uint)  { return 7; }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: L
 // f() -> 7

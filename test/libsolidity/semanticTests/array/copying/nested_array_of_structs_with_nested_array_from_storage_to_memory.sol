@@ -37,7 +37,6 @@ contract C {
         return s2[0];
     }
 }
-
 // ====
 // compileViaYul: true
 // ----

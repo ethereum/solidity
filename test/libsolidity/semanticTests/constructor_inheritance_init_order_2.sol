@@ -7,8 +7,6 @@ contract A {
 contract B is A {
     uint public y = f();
 }
-// ====
-// compileToEwasm: also
 // ----
 // constructor() ->
 // gas irOptimized: 120936

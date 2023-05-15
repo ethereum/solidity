@@ -22,13 +22,11 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <test/tools/yulInterpreter/EVMInstructionInterpreter.h>
-#include <test/tools/yulInterpreter/EwasmBuiltinInterpreter.h>
 
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/backends/wasm/WasmDialect.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -329,13 +327,6 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 			return;
 		}
 	}
-	else if (WasmDialect const* dialect = dynamic_cast<WasmDialect const*>(&m_dialect))
-		if (dialect->builtin(_funCall.functionName.name))
-		{
-			EwasmBuiltinInterpreter interpreter(m_state);
-			setValue(interpreter.evalBuiltin(_funCall.functionName.name, _funCall.arguments, values()));
-			return;
-		}
 
 	Scope* scope = &m_scope;
 	for (; scope; scope = scope->parent)

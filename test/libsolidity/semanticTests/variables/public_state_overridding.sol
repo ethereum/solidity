@@ -11,8 +11,6 @@ contract X is A
 
 	function set() public { test = 2; }
 }
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 0
 // set() ->

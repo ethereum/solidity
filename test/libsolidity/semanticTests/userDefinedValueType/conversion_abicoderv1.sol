@@ -27,7 +27,6 @@ contract C {
         return MyUInt8.wrap(uint8(MyUInt16.unwrap(a)));
     }
 }
-
 // ====
 // compileViaYul: false
 // ----

@@ -9,7 +9,6 @@ contract C {
 		assert(x[0] == 42 || x[0] == 23);
 	}
 }
-
 // ====
 // SMTEngine: all
 // ----

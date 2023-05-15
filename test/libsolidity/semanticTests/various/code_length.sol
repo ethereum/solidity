@@ -57,8 +57,6 @@ contract C {
 
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // constructor()
 // gas legacy: 124168

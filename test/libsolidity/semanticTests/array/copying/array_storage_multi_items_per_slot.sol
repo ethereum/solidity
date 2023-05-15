@@ -10,8 +10,6 @@ contract C {
         return (a[32], b[1], c[2]);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 1, 2, 3
 // gas irOptimized: 131932

@@ -16,8 +16,6 @@ contract sender {
     bytes savedData1;
     bytes savedData2;
 }
-// ====
-// compileToEwasm: false
 // ----
 // (): 7 ->
 // gas irOptimized: 110820

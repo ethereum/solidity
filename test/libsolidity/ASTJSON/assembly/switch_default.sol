@@ -3,5 +3,4 @@ contract C {
         assembly { switch 0 case 0 {} default {} }
     }
 }
-
 // ----

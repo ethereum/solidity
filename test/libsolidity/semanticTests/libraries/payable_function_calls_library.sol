@@ -6,8 +6,6 @@ contract C {
         return L.f();
     }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: L
 // f(): 27 -> 7

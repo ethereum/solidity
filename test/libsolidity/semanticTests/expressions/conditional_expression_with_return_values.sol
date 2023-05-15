@@ -3,8 +3,6 @@ contract test {
         cond ? a = v : b = v;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(bool,uint256): true, 20 -> 20, 0
 // f(bool,uint256): false, 20 -> 0, 20

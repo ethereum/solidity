@@ -25,8 +25,6 @@ contract C {
         return s3;
     }
 }
-
-
 // ====
 // compileViaYul: true
 // ----

@@ -22,8 +22,6 @@ contract Test {
         return (a[0], a[1], a[2], b[0], b[1], b[2]);
     }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: Lib
 // f() -> 0, 0x2a, 0, 0, 0x15, 0x54

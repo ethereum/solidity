@@ -55,7 +55,6 @@ contract D {
 		}
 	}
 }
-
 // ====
 // SMTEngine: all
 // ----

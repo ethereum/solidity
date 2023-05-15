@@ -19,6 +19,5 @@ contract Derived is Base {
         return m_a;
     }
 }
-
 // ----
 // getA() -> 49
