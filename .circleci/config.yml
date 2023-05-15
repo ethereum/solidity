@@ -46,6 +46,7 @@ commands:
     steps:
       - run:
           name: Ensure envsubst is installed
+          when: << parameters.condition >>
           command: |
             os_family="$(uname -s | tr '[:upper:]' '[:lower:]')"
             if [[ "$os_family" == "linux" ]]
