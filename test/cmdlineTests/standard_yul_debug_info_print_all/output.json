@@ -16,6 +16,7 @@ tag_2:
     /* \"input.sol\":77:99   */
   jump(tag_3)
 tag_1:
+  sstore(0x00, 0x2a)
   jump\t// out
 tag_3:
 "

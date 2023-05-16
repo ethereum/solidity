@@ -8,13 +8,13 @@ object "C_6_deployed" {
         mstore(64, 128)
         fun_f_5()
         function fun_f_5()
-        { }
+        { sstore(0, 42) }
     }
 }
 
 
 Binary representation:
-6080604052600a600e565b6010565b565b
+6080604052600a600e565b6014565b602a5f55565b
 
 Text representation:
   mstore(0x40, 0x80)
@@ -24,5 +24,6 @@ Text representation:
 tag_2:
   jump(tag_3)
 tag_1:
+  sstore(0x00, 0x2a)
   jump	// out
 tag_3:
