@@ -1634,7 +1634,7 @@ public:
 	u256 storageSize() const override;
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string richIdentifier() const override;
-	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of modfier type"); }
+	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of modifier type"); }
 	bool operator==(Type const& _other) const override;
 	std::string toString(bool _withoutDataLocation) const override;
 protected:
