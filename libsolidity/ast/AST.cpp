@@ -416,7 +416,8 @@ void StructDefinition::insertEip712EncodedSubtypes(std::set<std::string>& subtyp
 				continue;
 		}
 
-		if(!declaration) {
+		if (!declaration)
+		{
 			continue;
 		}
 
