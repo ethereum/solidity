@@ -69,6 +69,14 @@ function gp2_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     yarn
 
+    # Workaround for error caused by the last release of hardhat-waffle@2.0.6 that bumps ethereum-waffle
+    # to version 4.0.10 and breaks gp2 build with the following error:
+    #
+    #  Cannot find module 'ethereum-waffle/dist/cjs/src/deployContract'
+    #
+    # See: https://github.com/NomicFoundation/hardhat-waffle/commit/83ee9cb36ee59d0bedacbbd00043f030af104ad0
+    yarn add '@nomiclabs/hardhat-waffle@2.0.5'
+
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
     rm -r node_modules/@gnosis.pm/safe-contracts/build/
 
