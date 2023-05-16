@@ -395,12 +395,33 @@ void StructDefinition::insertEip712EncodedSubtypes(std::set<std::string>& subtyp
 {
 	for (size_t i = 0; i < m_members.size(); i++)
 	{
-		if (m_members[i]->type()->category() == Type::Category::Struct)
-		{
-			Declaration const* declaration = m_members[i]->type()->typeDefinition();
-			StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration);
-			solAssert(structDef != nullptr);
+		Declaration const* declaration = nullptr;
 
+		switch (m_members[i]->type()->category())
+		{
+			case Type::Category::Struct:
+				declaration = m_members[i]->type()->typeDefinition();
+				break;
+			case Type::Category::Array:
+				{
+					auto const* arrayType = dynamic_cast<ArrayType const*>(m_members[i]->type());
+					solAssert(!!arrayType);
+					if (auto finalyBaseType = dynamic_cast<StructType const*>(arrayType->finalBaseType(false)))
+					{
+						declaration = finalyBaseType->typeDefinition();
+					}
+				}
+				break;
+			default:
+				continue;
+		}
+
+		if(!declaration) {
+			continue;
+		}
+
+		if (auto const* structDef = dynamic_cast<StructDefinition const*>(declaration))
+		{
 			subtypes.insert(structDef->eip712EncodeTypeWithoutSubtypes());
 			structDef->insertEip712EncodedSubtypes(subtypes);
 		}
@@ -413,16 +434,13 @@ std::string StructDefinition::eip712EncodeTypeWithoutSubtypes() const
 	for (size_t i = 0; i < m_members.size(); i++)
 	{
 		str += i == 0 ? "" : ",";
-		str += m_members[i]->type()->canonicalName() + " " + m_members[i]->name();
+		str += m_members[i]->type()->eip712TypeName() + " " + m_members[i]->name();
 	}
 	return str + ")";
 }
 
 std::string StructDefinition::eip712EncodeType() const
 {
-	// EIP-712 supports recurvie structs, but not containing nested mappings
-	solAssert(!annotation().containsNestedMapping.has_value() || !annotation().containsNestedMapping.value(), "Struct containing mapping cannot be used in EIP-712.");
-
 	// std::set enables duplicates elimination and ordered enumeration
 	std::set<std::string> subtypes;
 	insertEip712EncodedSubtypes(subtypes);
