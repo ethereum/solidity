@@ -4,18 +4,19 @@
 Pretty printed source:
 object "a" {
     code {
-        let addr := linkersymbol(":L")
-        sstore(0, addr)
+        {
+            let addr := linkersymbol(":L")
+            sstore(0, addr)
+        }
     }
 }
 
 
 Binary representation:
-731234567890123456789012345678901234567890805f5550
+7312345678901234567890123456789012345678905f5500
 
 Text representation:
   linkerSymbol("20a18a9bf97d889dcf77111b674da319a4e9e3e05d3f4df9e0bf5c588dd4f0f8")
-  dup1
   0x00
   sstore
-  pop
+  stop

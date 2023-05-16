@@ -13,6 +13,8 @@ object "a" {
 //   0x00
 //     /* "source":22:50   */
 //   sstore
+//     /* "source":20:52   */
+//   stop
 // stop
 //
 // sub_0: assembly {
@@ -22,9 +24,11 @@ object "a" {
 //       0x00
 //         /* "source":81:93   */
 //       sstore
+//         /* "source":79:95   */
+//       stop
 //     stop
 //     data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421
 // }
-// Bytecode: 60055f55fe60085f55fe
-// Opcodes: PUSH1 0x5 PUSH0 SSTORE INVALID PUSH1 0x8 PUSH0 SSTORE INVALID
-// SourceMappings: 32:17:0:-:0;29:1;22:28
+// Bytecode: 60065f5500fe60085f5500fe
+// Opcodes: PUSH1 0x6 PUSH0 SSTORE STOP INVALID PUSH1 0x8 PUSH0 SSTORE STOP INVALID
+// SourceMappings: 32:17:0:-:0;29:1;22:28;20:32
