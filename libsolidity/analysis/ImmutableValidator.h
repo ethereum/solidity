@@ -50,11 +50,13 @@ public:
 
 private:
 	bool visit(Assignment const& _assignment);
+	bool visit(Conditional const& _conditional);
 	bool visit(FunctionDefinition const& _functionDefinition);
 	bool visit(ModifierDefinition const& _modifierDefinition);
 	bool visit(MemberAccess const& _memberAccess);
 	bool visit(IfStatement const& _ifStatement);
 	bool visit(WhileStatement const& _whileStatement);
+	bool visit(ForStatement const& _forStatement);
 	bool visit(TryStatement const& _tryStatement);
 	void endVisit(IdentifierPath const& _identifierPath);
 	void endVisit(Identifier const& _identifier);

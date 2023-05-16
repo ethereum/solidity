@@ -9,6 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Immutables: Disallow initialization of immutables in for loops and ternary expressions.
  * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
 
 

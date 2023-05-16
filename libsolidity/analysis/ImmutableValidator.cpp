@@ -73,6 +73,16 @@ bool ImmutableValidator::visit(Assignment const& _assignment)
 	return false;
 }
 
+bool ImmutableValidator::visit(Conditional const& _conditional)
+{
+	ScopedSaveAndRestore branchGuard{m_inBranch, true};
+
+	_conditional.condition().accept(*this);
+	_conditional.trueExpression().accept(*this);
+	_conditional.falseExpression().accept(*this);
+
+	return false;
+}
 
 bool ImmutableValidator::visit(FunctionDefinition const& _functionDefinition)
 {
@@ -128,6 +138,21 @@ bool ImmutableValidator::visit(WhileStatement const& _whileStatement)
 	_whileStatement.body().accept(*this);
 
 	m_inLoop = prevInLoop;
+
+	return false;
+}
+
+bool ImmutableValidator::visit(ForStatement const& _forStatement)
+{
+	ScopedSaveAndRestore forLoopGuard{m_inLoop, true};
+
+	if (auto&& initializationExpression = _forStatement.initializationExpression())
+		initializationExpression->accept(*this);
+	if (auto&& condition = _forStatement.condition())
+		condition->accept(*this);
+	if (auto&& loopExpression = _forStatement.loopExpression())
+		loopExpression->accept(*this);
+	_forStatement.body().accept(*this);
 
 	return false;
 }
@@ -228,7 +253,7 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 			m_errorReporter.typeError(
 				4599_error,
 				_expression.location(),
-				"Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement."
+				"Cannot write to immutable here: Immutable variables cannot be initialized inside a conditional (if/ternary) statement."
 			);
 		else if (m_inTryStatement)
 			m_errorReporter.typeError(
