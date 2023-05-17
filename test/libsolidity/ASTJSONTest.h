@@ -35,7 +35,7 @@ class CompilerStack;
 namespace solidity::frontend::test
 {
 
-class ASTJSONTest: public TestCase
+class ASTJSONTest: public EVMVersionRestrictedTestCase
 {
 public:
 	struct TestVariant

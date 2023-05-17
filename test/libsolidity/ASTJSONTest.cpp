@@ -181,7 +181,8 @@ void ASTJSONTest::validateTestConfiguration() const
 	}
 }
 
-ASTJSONTest::ASTJSONTest(string const& _filename)
+ASTJSONTest::ASTJSONTest(string const& _filename):
+	EVMVersionRestrictedTestCase(_filename)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
