@@ -571,6 +571,8 @@ defaults:
   # Parameterized Job Templates
 
   # Separate compile-only runs of those external tests where a full run takes much longer.
+  # Also see https://github.com/ethereum/solidity/pull/14234 for why we excluded those
+  # external tests from the nightly jobs.
   - job_ems_compile_ext_colony: &job_ems_compile_ext_colony
       <<: *requires_b_ems
       name: t_ems_compile_ext_colony
