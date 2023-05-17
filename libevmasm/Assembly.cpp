@@ -567,11 +567,14 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 			Json::Value const& code = data[dataItemID];
 			if (code.isString())
 			{
-				bytes data_value{fromHex(code.asString())};
-				solRequire(
-					!data_value.empty(),
-					AssemblyImportException,
-					"Member '.data' contains a value for '" + dataItemID + "' that is not a valid hexadecimal string.");
+				if (!code.asString().empty())
+				{
+					bytes data_value{fromHex(code.asString())};
+					solRequire(
+						!data_value.empty(),
+						AssemblyImportException,
+						"Member '.data' contains a value for '" + dataItemID + "' that is not a valid hexadecimal string.");
+				}
 				result->m_data[h256(fromHex(dataItemID))] = fromHex(code.asString());
 			}
 			else if (code.isObject())

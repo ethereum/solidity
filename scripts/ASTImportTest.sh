@@ -109,6 +109,8 @@ done
 SYNTAXTESTS_DIR="${REPO_ROOT}/test/libsolidity/syntaxTests"
 ASTJSONTESTS_DIR="${REPO_ROOT}/test/libsolidity/ASTJSON"
 SEMANTICTESTS_DIR="${REPO_ROOT}/test/libsolidity/semanticTests"
+YULTESTS_DIR="${REPO_ROOT}/test/libyul"
+
 
 FAILED=0
 UNCOMPILABLE=0
@@ -518,6 +520,66 @@ case "${IMPORT_TEST_TYPE}" in
     evm-assembly) TEST_DIRS=("${SEMANTICTESTS_DIR}") ;;
     *) assertFail "Import test type not defined. $(print_usage || true)}" ;;
 esac
+
+if [[ "${IMPORT_TEST_TYPE}" == "evm-assembly" ]]
+then
+    IMPORT_TEST_FILES=$(find "${YULTESTS_DIR}" -name "*.yul")
+    NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
+    echo "Looking at ${NSOURCES} .yul files..."
+    for yulfile in ${IMPORT_TEST_FILES}
+    do
+        echo -n "·"
+        # create a temporary sub-directory
+        FILETMP=$(mktemp -d)
+        cd "${FILETMP}"
+
+        set +e
+        output=$("${SOLC}" "--strict-assembly" "${yulfile}" "--bin" "--optimize" 2>/dev/null)
+        solc_return_code=$?
+        set -e
+
+        # if yul file got compiled with success.
+        if (( solc_return_code == 0 ))
+        then
+            yul_bin="$(basename "$yulfile").bin"
+            yul_json="$(basename "$yulfile").asm.json"
+            echo "$output" > "${yul_bin}"
+            grep -v -e '^=======' -e '^Binary representation:' "${yul_bin}" > tmpfile && mv tmpfile "${yul_bin}"
+            # remove all white-spaces. we only want the binary.
+            tr -d '[:space:]' < "${yul_bin}" > tmpfile && mv tmpfile "${yul_bin}"
+            # only compare bytecode, if bytecode got generated.
+            if [[ -s "${yul_bin}" ]]
+            then
+                # take the yul file and export it as evm assembly json. save the result in "$yul_json".
+                run_solc_store_stdout "${yul_json}" --strict-assembly "${yulfile}" --optimize --asm-json --pretty-json --json-indent 4
+                # remove the lines containing '=======', so that we just have a nice json file.
+                grep -v '^=======' "${yul_json}" > tmpfile && mv tmpfile "${yul_json}"
+
+                # import the created evm assembly json file and create a combined json out of it.
+                run_solc_store_stdout "${yul_json}.combined.json" --combined-json "bin" --pretty-json --json-indent 4 --import-asm-json "${yul_json}"
+                # split the combined json into different files.
+                split_combined_json "${yul_json}.combined.json" . "compiled"
+                tr -d '[:space:]' < "compiled.bin" > tmpfile && mv tmpfile "compiled.bin"
+
+                if ! diff_files compiled.bin "${yul_bin}" > diff_error
+                then
+                    diff_error=$(cat diff_error)
+                    printError "ERROR: diff failed ${file} ${imported}:\n   ${diff_error}"
+                    if (( EXIT_ON_ERROR == 1 ))
+                    then
+                        print_used_commands "${PWD}" "${export_command[*]}" "${import_command[*]}"
+                        exit 1
+                    fi
+                    return 1
+                fi
+            fi
+        fi
+        cd "${WORKINGDIR}"
+        # Delete temporary files
+        rm -rf "${FILETMP}"
+    done
+    echo
+fi
 
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
 # bug. Since the test involves a malformed path, there is no point in running
