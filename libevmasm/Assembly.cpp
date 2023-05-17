@@ -578,15 +578,47 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 			{
 				shared_ptr<Assembly> subassembly(Assembly::fromJSON(code, sourceList, _level + 1).first);
 				solAssert(subassembly);
-				result->m_subs.emplace_back(make_shared<Assembly>(*subassembly));
-				// TODO: this shouldn't be enough for the general case.
-				result->encodeSubPath({0, 0});
+				result->m_subs.emplace_back(subassembly);
 			}
 			else
 				solThrow(AssemblyImportException, "Key inside '.data' '" + dataItemID + "' can only be a valid hex-string or an object.");
 		}
 	}
+	if (_level == 0)
+		result->updatePaths();
 	return std::make_pair(result, sourceList);
+}
+
+void Assembly::updatePaths(std::vector<Assembly*> const& _parents, std::vector<size_t> const& _absolutePathFromRoot)
+{
+	size_t subId = 0;
+	for (auto& assembly: this->m_subs)
+	{
+		std::vector<Assembly*> parents{_parents};
+		parents.push_back(this);
+
+		std::vector<size_t> absolutePathFromRoot{_absolutePathFromRoot};
+		absolutePathFromRoot.emplace_back(subId);
+
+		int pindex = 0;
+		for (auto& parent: parents)
+		{
+			if (pindex == 0)
+				parent->encodeSubPath(absolutePathFromRoot);
+			else
+			{
+				std::vector<size_t> relativePath{absolutePathFromRoot};
+				for (int i = 0; i < pindex; ++i)
+					relativePath.erase(relativePath.begin());
+				parent->encodeSubPath(relativePath);
+			}
+			++pindex;
+		}
+
+		assembly->updatePaths(parents, absolutePathFromRoot);
+
+		++subId;
+	}
 }
 
 AssemblyItem Assembly::namedTag(string const& _name, size_t _params, size_t _returns, optional<uint64_t> _sourceID)

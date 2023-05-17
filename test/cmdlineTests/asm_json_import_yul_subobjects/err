@@ -1,5 +1,0 @@
-Uncaught exception:
-/solidity/libevmasm/Assembly.cpp(1070): Throw in function vector<size_t> solidity::evmasm::Assembly::decodeSubPath(size_t) const
-Dynamic exception type:
-std::exception::what: Assertion failed
-[solidity::util::tag_comment*] = Assertion failed

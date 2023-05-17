@@ -196,6 +196,8 @@ private:
 
 	Assembly const* subAssemblyById(size_t _subId) const;
 
+	void updatePaths(std::vector<Assembly *> const& _parents = {}, std::vector<size_t> const& _absolutePathFromRoot = {});
+
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;

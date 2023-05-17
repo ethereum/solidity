@@ -37,9 +37,9 @@
                     "#utility.yul"
                 ]
             },
-            "bin": "6000fe",
+            "bin": "5ffe",
             "bin-runtime": "6001",
-            "opcodes": "PUSH1 0x0 INVALID ",
+            "opcodes": "PUSH0 INVALID ",
             "srcmap": "0:0::-:0",
             "srcmap-runtime": "0:0::-:0"
         }
@@ -52,7 +52,7 @@
     "version": "<VERSION REMOVED>"
 }
 Binary:
-6000fe
+5ffe
 Binary of the runtime part:
 6001
 EVM assembly:
