@@ -25,6 +25,7 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:a4fc3a41240c3bc58882d3f504e446c6931b547119012f5c45f79b0df91dbdd1"
   emscripten-docker-image:
     type: string
+    # NOTE: Please remember to update the `build_emscripten.sh` whenever the hash of this image changes.
     # solbuildpackpusher/solidity-buildpack-deps:emscripten-16
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:19fcb5ac029bbc27ec36e10f7d14ea224d8010145f9690562ef084fd16146b0c"
   evm-version:
