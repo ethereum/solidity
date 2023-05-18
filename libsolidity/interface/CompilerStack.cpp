@@ -59,6 +59,8 @@
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
 
+#include <libstdlib/stdlib.h>
+
 #include <libyul/YulString.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
@@ -95,6 +97,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
+using namespace solidity::stdlib;
 
 using solidity::util::errinfo_comment;
 
@@ -369,6 +372,15 @@ bool CompilerStack::parse()
 			for (auto const& import: ASTNode::filteredNodes<ImportDirective>(source.ast->nodes()))
 			{
 				solAssert(!import->path().empty(), "Import path cannot be empty.");
+				// Check whether the import directive is for the standard library,
+				// and if yes, add specified file to source units to be parsed.
+				auto it = stdlib::sources.find(import->path());
+				if (it != stdlib::sources.end())
+				{
+					auto [name, content] = *it;
+					m_sources[name].charStream = make_unique<CharStream>(content, name);
+					sourcesToParse.push_back(name);
+				}
 
 				// The current value of `path` is the absolute path as seen from this source file.
 				// We first have to apply remappings before we can store the actual absolute path

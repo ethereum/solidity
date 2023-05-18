@@ -271,9 +271,9 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	SourceLocation unitAliasLocation{};
 	ImportDirective::SymbolAliasList symbolAliases;
 
-	if (m_scanner->currentToken() == Token::StringLiteral)
+	if (isQuotedPath() || isStdlibPath())
 	{
-		path = getLiteralAndAdvance();
+		path = isQuotedPath() ? getLiteralAndAdvance() : getStdlibImportPathAndAdvance();
 		if (m_scanner->currentToken() == Token::As)
 		{
 			advance();
@@ -315,9 +315,9 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 		if (m_scanner->currentToken() != Token::Identifier || m_scanner->currentLiteral() != "from")
 			fatalParserError(8208_error, "Expected \"from\".");
 		advance();
-		if (m_scanner->currentToken() != Token::StringLiteral)
+		if (!isQuotedPath() && !isStdlibPath())
 			fatalParserError(6845_error, "Expected import path.");
-		path = getLiteralAndAdvance();
+		path = isQuotedPath() ? getLiteralAndAdvance() : getStdlibImportPathAndAdvance();
 	}
 	if (path->empty())
 		fatalParserError(6326_error, "Import path cannot be empty.");
@@ -2484,6 +2484,27 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->currentLiteral());
 	advance();
 	return identifier;
+}
+
+bool Parser::isQuotedPath() const
+{
+	return m_scanner->currentToken() == Token::StringLiteral;
+}
+
+bool Parser::isStdlibPath() const
+{
+	return m_experimentalSolidityEnabledInCurrentSourceUnit
+		&& m_scanner->currentToken() == Token::Identifier
+		&& m_scanner->currentLiteral() == "std";
+}
+
+ASTPointer<ASTString> Parser::getStdlibImportPathAndAdvance()
+{
+	ASTPointer<ASTString> std = expectIdentifierToken();
+	if (m_scanner->currentToken() == Token::Period)
+		advance();
+	ASTPointer<ASTString> library = expectIdentifierToken();
+	return make_shared<ASTString>(*std + "." + *library);
 }
 
 }
