@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -euo pipefail
-shopt -s inherit_errexit
 
 SCRIPT_DIR="$(dirname "$0")"
 
@@ -28,6 +27,7 @@ function notify() {
     curl "https://${MATRIX_SERVER}/_matrix/client/v3/rooms/${MATRIX_NOTIFY_ROOM_ID}/send/m.room.message" \
         --request POST \
         --include \
+        --fail \
         --header "Content-Type: application/json" \
         --header "Accept: application/json" \
         --header "Authorization: Bearer ${MATRIX_ACCESS_TOKEN}" \
@@ -63,10 +63,14 @@ function format_predefined_message() {
 
     [[ -z "$template" ]] && fail "Message template for event [$event] not defined."
 
-    # Export variables that must be substituted
-    export WORKFLOW_NAME JOB BRANCH TAG BUILD_URL BUILD_NUM
-    envsubst < "$template"
-    unset WORKFLOW_NAME JOB BRANCH TAG BUILD_URL BUILD_NUM
+    # shellcheck disable=SC2016
+    sed -e 's|${WORKFLOW_NAME}|'"${WORKFLOW_NAME}"'|' \
+        -e 's|${JOB}|'"${JOB}"'|' \
+        -e 's|${BRANCH}|'"${BRANCH}"'|' \
+        -e 's|${TAG}|'"${TAG}"'|' \
+        -e 's|${BUILD_URL}|'"${BUILD_URL}"'|' \
+        -e 's|${BUILD_NUM}|'"${BUILD_NUM}"'|' \
+        "$template"
 }
 
 # Set message environment variables based on CI backend
