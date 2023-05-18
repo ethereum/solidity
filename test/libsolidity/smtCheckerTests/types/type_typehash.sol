@@ -30,18 +30,14 @@ contract C {
     }
 
 	function f() public pure {
-		assert(type(S1).typehash == keccak256("S1(uint256 x)"));
-		assert(type(S2).typehash == keccak256("S2(uint256 x,address y)"));
-		assert(type(S3).typehash == keccak256("S3(uint256 x,address y,S2 third)S2(uint256 x,address y)"));
-        assert(type(S4).typehash == keccak256("S4(S3 one,S2 two)S2(uint256 x,address y)S3(uint256 x,address y,S2 third)"));
-        assert(type(S5).typehash == keccak256("S5(S2 two,S1 one,S3 three,S4[5] four)S1(uint256 x)S2(uint256 x,address y)S3(uint256 x,address y,S2 third)S4(S3 one,S2 two)"));
+		assert(type(S1).typehash == 0x78a822935e38445215ba7404686b919cbbef5725cbf9231d92802f542d7456e0); // keccak256("S1(uint256 x)")
+		assert(type(S2).typehash == 0x6c397ebd50462a81423e44830702ee1214cb9ab734bf173eb55f04238c9d398f); // keccak256("S2(uint256 x,address y)")
+		assert(type(S3).typehash == 0xfa5685568fb2f15c09479ecbcfe9d0494743d804587d1966db67d5e62ea4344a); // keccak256("S3(uint256 x,address y,S2 third)S2(uint256 x,address y)")
+        assert(type(S4).typehash == 0x17ed8da37c0446eeffef8cd38d116505b399b5644fdc3a59f8a68a68dd5d4178); // keccak256("S4(S3 one,S2 two)S2(uint256 x,address y)S3(uint256 x,address y,S2 third)")
+        assert(type(S5).typehash == 0x5e52252fbbc0eda2d75f57c57d47fbec3bc6b215a9a3790c7f7ca44a36eb5185); // keccak256("S5(S2 two,S1 one,S3 three,S4[5] four)S1(uint256 x)S2(uint256 x,address y)S3(uint256 x,address y,S2 third)S4(S3 one,S2 two)")
 	}
 }
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (386-441): CHC: Assertion violation happens here.
-// Warning 6328: (445-510): CHC: Assertion violation happens here.
-// Warning 6328: (514-611): CHC: Assertion violation happens here.
-// Warning 6328: (621-735): CHC: Assertion violation happens here.
-// Warning 6328: (745-909): CHC: Assertion violation happens here.
+// Info 1391: CHC: 5 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
