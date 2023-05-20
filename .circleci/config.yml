@@ -131,6 +131,7 @@ commands:
               --silent \
               --fail \
               --show-error \
+              --header "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" \
               "https://api.github.com/repos/${FOUNDRY_REPO}/git/refs/tags/${FOUNDRY_VERSION}" \
               | jq --raw-output .object.sha \
             )
@@ -570,6 +571,8 @@ defaults:
   # Parameterized Job Templates
 
   # Separate compile-only runs of those external tests where a full run takes much longer.
+  # Also see https://github.com/ethereum/solidity/pull/14234 for why we excluded those
+  # external tests from the nightly jobs.
   - job_ems_compile_ext_colony: &job_ems_compile_ext_colony
       <<: *requires_b_ems
       name: t_ems_compile_ext_colony
@@ -683,15 +686,6 @@ defaults:
       project: gp2
       binary_type: native
       image: cimg/node:18.11
-
-  - job_ems_test_ext_colony: &job_ems_test_ext_colony
-      <<: *requires_b_ems
-      name: t_ems_test_ext_colony
-      project: colony
-      binary_type: solcjs
-      image: cimg/node:14.20
-      resource_class: medium
-      python2: true
 
   - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
       <<: *on_all_tags_and_branches
@@ -1783,7 +1777,3 @@ workflows:
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_soltest: *requires_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
-
-      # Emscripten build and tests that take more than 15 minutes to execute
-      - b_ems: *requires_nothing
-      - t_ext: *job_ems_test_ext_colony
