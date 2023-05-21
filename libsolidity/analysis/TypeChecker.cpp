@@ -3398,7 +3398,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			auto accessedStructType = dynamic_cast<StructType const*>(magicType->typeArgument());
 			solAssert(accessedStructType, "typehash requested on a non struct type.");
 
-			if (accessedStructType->recursive()) {
+			if (accessedStructType->recursive())
+			{
 				m_errorReporter.typeError(
 					9298_error,
 					_memberAccess.location(),

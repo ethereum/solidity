@@ -4,8 +4,8 @@ contract A {
     }
 }
 contract C {
-    struct S { 
-        A.S s; 
+    struct S {
+        A.S s;
     }
 
     bytes32 h = type(S).typehash;

@@ -1,6 +1,6 @@
 contract C {
     struct S {
-        mapping (uint256 => uint256) x; 
+        mapping (uint256 => uint256) x;
     }
 
     bytes32 h = type(S).typehash;
