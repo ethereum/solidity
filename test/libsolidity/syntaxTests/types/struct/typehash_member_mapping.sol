@@ -6,4 +6,4 @@ contract C {
     bytes32 h = type(S).typehash;
 }
 // ----
-// TypeError 9518: (92-108): "typehash" cannot be used for structs with members of "mapping(uint256 => uint256)" type.
+// TypeError 9518: (91-107): "typehash" cannot be used for structs with members of "mapping(uint256 => uint256)" type.

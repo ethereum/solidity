@@ -11,4 +11,4 @@ contract C {
     bytes32 h = type(S).typehash;
 }
 // ----
-// TypeError 9298: (121-137): "typehash" cannot be used for recursive structs.
+// TypeError 9298: (119-135): "typehash" cannot be used for recursive structs.
