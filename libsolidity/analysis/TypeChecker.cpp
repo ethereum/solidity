@@ -3393,7 +3393,31 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "interfaceId")
 			annotation.isPure = true;
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "typehash")
+		{
 			annotation.isPure = true;
+			auto accessedStructType = dynamic_cast<StructType const*>(magicType->typeArgument());
+			solAssert(accessedStructType, "typehash requested on a non struct type.");
+
+			if (accessedStructType->recursive()) {
+				m_errorReporter.typeError(
+					9298_error,
+					_memberAccess.location(),
+					"\"typehash\" cannot be used for recursive structs."
+				);
+			}
+
+			for (auto const& member: accessedStructType->members(currentDefinitionScope()))
+			{
+				if (!member.type->isEIP712AllowedStructMemberType())
+				{
+					m_errorReporter.typeError(
+						9518_error,
+						_memberAccess.location(),
+						"\"typehash\" cannot be used for structs with members of \"" + member.type->humanReadableName() + "\" type."
+					);
+				}
+			}
+		}
 		else if (
 			magicType->kind() == MagicType::Kind::MetaType &&
 			(memberName == "min" ||	memberName == "max")

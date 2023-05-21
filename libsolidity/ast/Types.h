@@ -358,6 +358,7 @@ public:
 	virtual std::string canonicalName() const { return toString(true); }
 	virtual std::string humanReadableName() const { return toString(); }
 	virtual std::string eip712TypeName() const { return encodingType()->toString(true); }
+	virtual bool isEIP712AllowedStructMemberType() const { return false; }
 	/// @returns the signature of this type in external functions, i.e. `uint256` for integers
 	/// or `(uint256,bytes8)[2]` for an array of structs. If @a _structsByName,
 	/// structs are given by canonical name like `ContractName.StructName[2]`.
@@ -458,6 +459,7 @@ public:
 	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
 
@@ -503,6 +505,7 @@ public:
 	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool _withoutDataLocation) const override;
 
@@ -662,6 +665,8 @@ public:
 		return nullptr;
 	}
 
+	bool isEIP712AllowedStructMemberType() const override { return true; }
+
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 
@@ -700,6 +705,7 @@ public:
 	bool leftAligned() const override { return true; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool) const override { return "bytes" + util::toString(m_bytes); }
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
@@ -728,6 +734,7 @@ public:
 	bool leftAligned() const override { return false; }
 	bool isValueType() const override { return true; }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool) const override { return "bool"; }
 	u256 literalValue(Literal const* _literal) const override;
@@ -865,6 +872,7 @@ public:
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override { return m_baseType->containsNestedMapping(); }
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string humanReadableName() const override;
@@ -978,6 +986,7 @@ public:
 	bool leftAligned() const override { solAssert(!isSuper(), ""); return false; }
 	bool isValueType() const override { return !isSuper(); }
 	bool nameable() const override { return !isSuper(); }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 
@@ -1040,6 +1049,7 @@ public:
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override;
 	bool nameable() const override { return true; }
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 	std::string toString(bool _withoutDataLocation) const override;
 
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
