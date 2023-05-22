@@ -282,7 +282,7 @@ the source account is also not modified.
 Furthermore, a transaction is always cryptographically signed by the sender (creator).
 This makes it straightforward to guard access to specific modifications of the
 database. In the example of the electronic currency, a simple check ensures that
-only the person holding the keys to the account can transfer money from it.
+only the person holding the keys to the account can transfer some compensation, e.g. Ether, from it.
 
 .. index:: ! block
 

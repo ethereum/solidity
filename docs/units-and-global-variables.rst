@@ -107,7 +107,7 @@ Block and Transaction Properties
 
     Both the timestamp and the block hash can be influenced by miners to some degree.
     Bad actors in the mining community can for example run a casino payout function on a chosen hash
-    and just retry a different hash if they did not receive any money.
+    and just retry a different hash if they did not receive any compensation, e.g. Ether.
 
     The current block timestamp must be strictly larger than the timestamp of the last block,
     but the only guarantee is that it will be somewhere between the timestamps of two
@@ -282,7 +282,7 @@ For more information, see the section on :ref:`address`.
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
-    Use a pattern where the recipient withdraws the money.
+    Use a pattern where the recipient withdraws the Ether.
 
 .. warning::
     Due to the fact that the EVM considers a call to a non-existing contract to always succeed,
