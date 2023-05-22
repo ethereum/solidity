@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:jammy AS base
-LABEL version="4"
+LABEL version="5"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -32,7 +32,7 @@ RUN set -ex; \
         apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9 ; \
 	apt-get update; \
 	apt-get install -qqy --no-install-recommends \
-		build-essential \
+		build-essential sudo \
 		software-properties-common \
 		cmake ninja-build \
 		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
