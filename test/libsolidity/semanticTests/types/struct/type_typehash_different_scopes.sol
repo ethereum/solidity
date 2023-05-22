@@ -15,11 +15,11 @@ library B {
 }
 
 contract C {
-    function f() public pure {
-        assert(A.a == B.b);
+    function f() public pure returns(bool) {
+        return A.a == B.b;
     }
 }
 // ====
-// SMTEngine: all
+// compileToEwasm: also
 // ----
-// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// f() -> true
