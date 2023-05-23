@@ -440,6 +440,10 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 
 BOOST_AUTO_TEST_CASE(optimizer_flags)
 {
+	OptimiserSettings yulOnly = OptimiserSettings::minimal();
+	yulOnly.runYulOptimiser = true;
+	yulOnly.optimizeStackAllocation = true;
+
 	OptimiserSettings evmasmOnly = OptimiserSettings::standard();
 	evmasmOnly.runYulOptimiser = false;
 
@@ -447,7 +451,7 @@ BOOST_AUTO_TEST_CASE(optimizer_flags)
 		{{}, OptimiserSettings::minimal()},
 		{{"--optimize"}, OptimiserSettings::standard()},
 		{{"--no-optimize-yul"}, OptimiserSettings::minimal()},
-		{{"--optimize-yul"}, OptimiserSettings::minimal()},
+		{{"--optimize-yul"}, yulOnly},
 		{{"--optimize", "--no-optimize-yul"}, evmasmOnly},
 		{{"--optimize", "--optimize-yul"}, OptimiserSettings::standard()},
 	};
@@ -455,6 +459,7 @@ BOOST_AUTO_TEST_CASE(optimizer_flags)
 	map<InputMode, string> inputModeFlagMap = {
 		{InputMode::Compiler, ""},
 		{InputMode::CompilerWithASTImport, "--import-ast"},
+		{InputMode::Assembler, "--strict-assembly"},
 	};
 
 	for (auto const& [inputMode, inputModeFlag]: inputModeFlagMap)

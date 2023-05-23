@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Commandline Interface: Add ``--ast-compact-json`` output in assembler mode.
  * Commandline Interface: Add ``--ir-ast-json`` and ``--ir-optimized-ast-json`` outputs for Solidity input, providing AST in compact JSON format for IR and optimized IR.
+ * Commandline Interface: Respect ``--optimize-yul`` and ``--no-optimize-yul`` in compiler mode and accept them in assembler mode as well. ``--optimize --no-optimize-yul`` combination now allows enabling EVM assembly optimizer without enabling Yul optimizer.
  * EWasm: Remove EWasm backend.
  * Parser: Introduce ``pragma experimental solidity``, which will enable an experimental language mode that in particular has no stability guarantees between non-breaking releases and is not suited for production use.
  * Standard JSON Interface: Add ``ast`` file-level output for Yul input.
