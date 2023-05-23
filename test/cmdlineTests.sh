@@ -339,7 +339,7 @@ function test_via_ir_equivalence()
 
     local asm_output_two_stage asm_output_via_ir
     for asm_file in $(find . -name "${output_file_prefix}*.asm" | sort -V); do
-        asm_output_two_stage+=$(sed '/^asm_output_two_stage:$/d' "$asm_file" | sed '/^=======/d')
+        asm_output_two_stage+=$(sed '/^=======/d')
     done
 
     asm_output_via_ir=$(
