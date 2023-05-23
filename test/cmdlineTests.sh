@@ -317,14 +317,9 @@ function test_via_ir_equivalence()
     pushd "$SOLTMPDIR" > /dev/null
 
     (( $# <= 2 )) || fail "This function accepts at most two arguments."
-
-    if [[ $2 != --optimize ]] && [[ $2 != "" ]]
-    then
-        fail "The second argument must be --optimize if present."
-    fi
-
     local solidity_file="$1"
     local optimize_flag="$2"
+    [[ $optimize_flag == --optimize || $optimize_flag == "" ]] || assertFail "The second argument must be --optimize if present."
 
     output_file_prefix=$(basename "$1" .sol)
 
