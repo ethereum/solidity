@@ -321,6 +321,7 @@ function test_via_ir_equivalence()
     local optimize_flag="$2"
     [[ $optimize_flag == --optimize || $optimize_flag == "" ]] || assertFail "The second argument must be --optimize if present."
 
+    local output_file_prefix
     output_file_prefix=$(basename "$1" .sol)
 
     local optimizer_flags=()
@@ -329,7 +330,7 @@ function test_via_ir_equivalence()
 
     msg_on_error --no-stderr "$SOLC" --ir-optimized --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
         sed '/^Optimized IR:$/d' |
-        split_on_empty_lines_into_numbered_files $output_file_prefix ".yul"
+        split_on_empty_lines_into_numbered_files "$output_file_prefix" ".yul"
 
     for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
         msg_on_error --no-stderr "$SOLC" --strict-assembly --asm "${optimizer_flags[@]}" "$yul_file" |
