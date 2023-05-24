@@ -1074,9 +1074,6 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 	map<string, yul::YulStack> yulStacks;
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
-		// --no-optimize-yul option is not accepted in assembly mode.
-		solAssert(!m_options.optimizer.noOptimizeYul);
-
 		auto& stack = yulStacks[src.first] = yul::YulStack(
 			m_options.output.evmVersion,
 			m_options.output.eofVersion,

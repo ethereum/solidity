@@ -140,6 +140,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--metadata-hash=swarm",
 			"--metadata-literal",
 			"--optimize",
+			"--optimize-yul",
 			"--optimize-runs=1000",
 			"--yul-optimizations=agf",
 			"--model-checker-bmc-loop-iterations=2",
@@ -205,7 +206,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		};
 		expectedOptions.metadata.hash = CompilerStack::MetadataHash::Bzzr1;
 		expectedOptions.metadata.literalSources = true;
-		expectedOptions.optimizer.enabled = true;
+		expectedOptions.optimizer.optimizeEvmasm = true;
+		expectedOptions.optimizer.optimizeYul = true;
 		expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		expectedOptions.optimizer.yulSteps = "agf";
 
@@ -336,7 +338,8 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.astCompactJson = true;
 		if (expectedLanguage == YulStack::Language::StrictAssembly)
 		{
-			expectedOptions.optimizer.enabled = true;
+			expectedOptions.optimizer.optimizeEvmasm = true;
+			expectedOptions.optimizer.optimizeYul = true;
 			expectedOptions.optimizer.yulSteps = "agf";
 			expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		}
@@ -432,6 +435,34 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 			auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
 
 			BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+		}
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_flags)
+{
+	OptimiserSettings evmasmOnly = OptimiserSettings::standard();
+	evmasmOnly.runYulOptimiser = false;
+
+	map<vector<string>, OptimiserSettings> settingsMap = {
+		{{}, OptimiserSettings::minimal()},
+		{{"--optimize"}, OptimiserSettings::standard()},
+		{{"--no-optimize-yul"}, OptimiserSettings::minimal()},
+		{{"--optimize-yul"}, OptimiserSettings::minimal()},
+		{{"--optimize", "--no-optimize-yul"}, evmasmOnly},
+		{{"--optimize", "--optimize-yul"}, OptimiserSettings::standard()},
+	};
+
+	map<InputMode, string> inputModeFlagMap = {
+		{InputMode::Compiler, ""},
+		{InputMode::CompilerWithASTImport, "--import-ast"},
+	};
+
+	for (auto const& [inputMode, inputModeFlag]: inputModeFlagMap)
+		for (auto const& [optimizerFlags, expectedOptimizerSettings]: settingsMap)
+		{
+			vector<string> commandLine = {"solc", inputModeFlag, "file"};
+			commandLine += optimizerFlags;
+			BOOST_CHECK(parseCommandLine(commandLine).optimiserSettings() == expectedOptimizerSettings);
 		}
 }
 

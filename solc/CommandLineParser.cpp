@@ -247,9 +247,9 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		metadata.format == _other.metadata.format &&
 		metadata.hash == _other.metadata.hash &&
 		metadata.literalSources == _other.metadata.literalSources &&
-		optimizer.enabled == _other.optimizer.enabled &&
+		optimizer.optimizeEvmasm == _other.optimizer.optimizeEvmasm &&
+		optimizer.optimizeYul == _other.optimizer.optimizeYul &&
 		optimizer.expectedExecutionsPerDeployment == _other.optimizer.expectedExecutionsPerDeployment &&
-		optimizer.noOptimizeYul == _other.optimizer.noOptimizeYul &&
 		optimizer.yulSteps == _other.optimizer.yulSteps &&
 		modelChecker.initialize == _other.modelChecker.initialize &&
 		modelChecker.settings == _other.modelChecker.settings;
@@ -259,12 +259,12 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 {
 	OptimiserSettings settings;
 
-	if (optimizer.enabled)
+	if (optimizer.optimizeEvmasm || optimizer.optimizeYul)
 		settings = OptimiserSettings::standard();
 	else
 		settings = OptimiserSettings::minimal();
 
-	if (optimizer.noOptimizeYul)
+	if (!optimizer.optimizeYul)
 		settings.runYulOptimiser = false;
 
 	if (optimizer.expectedExecutionsPerDeployment.has_value())
@@ -1166,8 +1166,10 @@ void CommandLineParser::processArgs()
 		);
 
 	// We deliberately ignore --optimize-yul
-	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
-	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
+	m_options.optimizer.optimizeEvmasm = (m_args.count(g_strOptimize) > 0);
+	m_options.optimizer.optimizeYul = (
+		m_args.count(g_strOptimize) > 0 && m_args.count(g_strNoOptimizeYul) == 0
+	);
 	if (!m_args[g_strOptimizeRuns].defaulted())
 		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
 
@@ -1235,7 +1237,10 @@ void CommandLineParser::processArgs()
 			else
 				solThrow(CommandLineValidationError, "Invalid option for --" + g_strYulDialect + ": " + dialect);
 		}
-		if (m_options.optimizer.enabled && (m_options.assembly.inputLanguage != Input::StrictAssembly))
+		if (
+				(m_options.optimizer.optimizeEvmasm || m_options.optimizer.optimizeYul) &&
+				m_options.assembly.inputLanguage != Input::StrictAssembly
+			)
 			solThrow(
 				CommandLineValidationError,
 				"Optimizer can only be used for strict assembly. Use --"  + g_strStrictAssembly + "."
