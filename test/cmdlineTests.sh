@@ -317,15 +317,11 @@ function test_via_ir_equivalence()
     pushd "$SOLTMPDIR" > /dev/null
 
     (( $# <= 2 )) || fail "This function accepts at most two arguments."
-
-    if [[ $2 != --optimize ]] && [[ $2 != "" ]]
-    then
-        fail "The second argument must be --optimize if present."
-    fi
-
     local solidity_file="$1"
     local optimize_flag="$2"
+    [[ $optimize_flag == --optimize || $optimize_flag == "" ]] || assertFail "The second argument must be --optimize if present."
 
+    local output_file_prefix
     output_file_prefix=$(basename "$1" .sol)
 
     local optimizer_flags=()
@@ -334,16 +330,16 @@ function test_via_ir_equivalence()
 
     msg_on_error --no-stderr "$SOLC" --ir-optimized --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
         sed '/^Optimized IR:$/d' |
-        split_on_empty_lines_into_numbered_files $output_file_prefix ".yul"
-
-    for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
-        msg_on_error --no-stderr "$SOLC" --strict-assembly --asm "${optimizer_flags[@]}" "$yul_file" |
-            sed '/^Text representation:$/d' > "${yul_file/.yul/.asm}"
-    done
+        split_on_empty_lines_into_numbered_files "$output_file_prefix" ".yul"
 
     local asm_output_two_stage asm_output_via_ir
-    for asm_file in $(find . -name "${output_file_prefix}*.asm" | sort -V); do
-        asm_output_two_stage+=$(sed '/^asm_output_two_stage:$/d' "$asm_file" | sed '/^=======/d')
+
+    for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
+        asm_output_two_stage+=$(
+            msg_on_error --no-stderr "$SOLC" --strict-assembly --asm "${optimizer_flags[@]}" "$yul_file" |
+                sed '/^Text representation:$/d' |
+                sed '/^=======/d'
+        )
     done
 
     asm_output_via_ir=$(
@@ -358,7 +354,7 @@ function test_via_ir_equivalence()
 
     for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
         bin_output_two_stage+=$(
-        msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
+            msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
                 sed '/^Binary representation:$/d' |
                 sed '/^=======/d'
         )
@@ -366,8 +362,8 @@ function test_via_ir_equivalence()
 
     bin_output_via_ir=$(
         msg_on_error --no-stderr "$SOLC" --via-ir --bin "${optimizer_flags[@]}" "$solidity_file" |
-        sed '/^Binary:$/d' |
-        sed '/^=======/d'
+            sed '/^Binary:$/d' |
+            sed '/^=======/d'
     )
 
     diff_values "$bin_output_two_stage" "$bin_output_via_ir" --ignore-space-change --ignore-blank-lines
