@@ -1146,6 +1146,13 @@ void CommandLineParser::processArgs()
 		m_options.output.eofVersion = 1;
 	}
 
+	if (m_args.count(g_strNoOptimizeYul) > 0 && m_args.count(g_strOptimizeYul) > 0)
+		solThrow(
+			CommandLineValidationError,
+			"Options --" + g_strOptimizeYul + " and --" + g_strNoOptimizeYul + " cannot be used together."
+		);
+
+	// We deliberately ignore --optimize-yul
 	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
 	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
 	if (!m_args[g_strOptimizeRuns].defaulted())
