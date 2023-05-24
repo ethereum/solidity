@@ -1279,8 +1279,8 @@ This is a tiny step that helps in reversing the effects of the SSA transform
 if it is combined with the Common Subexpression Eliminator and the
 Unused Pruner.
 
-The SSA form we generate is detrimental to code generation on the EVM and
-WebAssembly alike because it generates many local variables. It would
+The SSA form we generate is detrimental to code generation
+because it produces many local variables. It would
 be better to just re-use existing variables with assignments instead of
 fresh variable declarations.
 
@@ -1398,15 +1398,3 @@ into
     }
 
 The LiteralRematerialiser should be run before this step.
-
-
-WebAssembly specific
---------------------
-
-MainFunction
-^^^^^^^^^^^^
-
-Changes the topmost block to be a function with a specific name ("main") which has no
-inputs nor outputs.
-
-Depends on the Function Grouper.
