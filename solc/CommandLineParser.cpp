@@ -522,8 +522,8 @@ are welcome to redistribute it under certain conditions. See 'solc --)" + g_strL
 for details.
 
 Usage: solc [options] [input_file...]
-Compiles the given Solidity input files (or the standard input if none given or
-"-" is used as a file name) and outputs the components specified in the options
+Compiles the given Solidity input files (or the standard input if "-" is
+used as a file name) and outputs the components specified in the options
 at standard output or in files in the output directory, if specified.
 Imports are automatically read from the filesystem, but it is also possible to
 remap paths using the context:prefix=path syntax.
