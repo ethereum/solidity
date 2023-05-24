@@ -13,6 +13,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Commandline Interface: ``--no-optimize-yul`` would not disable optimized stack allocation (unlike setting ``settings.optimizer.details.yul`` to ``false`` in Standard JSON).
  * Commandline Interface: It is no longer possible to specify both ``--optimize-yul`` and ``--no-optimize-yul`` at the same time.
  * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
 

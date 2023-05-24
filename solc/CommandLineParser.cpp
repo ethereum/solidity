@@ -265,6 +265,7 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 
 	if (optimizer.noOptimizeYul)
 		settings.runYulOptimiser = false;
+	settings.optimizeStackAllocation = settings.runYulOptimiser;
 
 	if (optimizer.expectedExecutionsPerDeployment.has_value())
 		settings.expectedExecutionsPerDeployment = optimizer.expectedExecutionsPerDeployment.value();
