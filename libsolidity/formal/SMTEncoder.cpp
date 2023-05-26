@@ -2839,7 +2839,8 @@ smtutil::Expression SMTEncoder::contractAddressValue(FunctionCall const& _f)
 
 VariableDeclaration const* SMTEncoder::publicGetter(Expression const& _expr) const {
 	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expr))
-		return dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration);
+		if (auto variableDeclaration = dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration))
+			return variableDeclaration->isStateVariable() ? variableDeclaration : nullptr;
 	return nullptr;
 }
 
