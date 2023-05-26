@@ -1,7 +1,7 @@
 ### 0.8.21 (unreleased)
 
 Language Features:
-
+ * Allow qualified access to events from other contracts.
 
 Compiler Features:
  * EWasm: Remove EWasm backend.
