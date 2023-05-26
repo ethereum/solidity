@@ -128,11 +128,15 @@ commands:
           command: |
             FOUNDRY_REPO="foundry-rs/foundry"
             FOUNDRY_VERSION="<< parameters.version >>"
+            # Make authenticated requests when the Github token is available
+            if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then
+              EXTRA_HEADERS=(--header 'Authorization: Bearer '"${GITHUB_ACCESS_TOKEN}")
+            fi
             FOUNDRY_RELEASE_SHA=$(curl \
               --silent \
               --fail \
               --show-error \
-              --header "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" \
+              "${EXTRA_HEADERS[@]}" \
               "https://api.github.com/repos/${FOUNDRY_REPO}/git/refs/tags/${FOUNDRY_VERSION}" \
               | jq --raw-output .object.sha \
             )
