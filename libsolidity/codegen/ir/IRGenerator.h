@@ -32,6 +32,8 @@
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/EVMVersion.h>
 
+#include <json/json.h>
+
 #include <string>
 
 namespace solidity::frontend
@@ -70,7 +72,7 @@ public:
 
 	/// Generates and returns the IR code, in unoptimized and optimized form
 	/// (or just pretty-printed, depending on the optimizer settings).
-	std::pair<std::string, std::string> run(
+	std::tuple<std::string, Json::Value, std::string, Json::Value> run(
 		ContractDefinition const& _contract,
 		bytes const& _cborMetadata,
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources

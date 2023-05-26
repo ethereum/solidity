@@ -39,6 +39,7 @@
               {
                 "AST":
                 {
+                  "nativeSrc": "61:33:1",
                   "nodeType": "YulBlock",
                   "src": "61:33:1",
                   "statements":
@@ -49,15 +50,18 @@
                         {
                           "body":
                           {
+                            "nativeSrc": "79:2:1",
                             "nodeType": "YulBlock",
                             "src": "79:2:1",
                             "statements": []
                           },
+                          "nativeSrc": "72:9:1",
                           "nodeType": "YulCase",
                           "src": "72:9:1",
                           "value":
                           {
                             "kind": "number",
+                            "nativeSrc": "77:1:1",
                             "nodeType": "YulLiteral",
                             "src": "77:1:1",
                             "type": "",
@@ -67,10 +71,12 @@
                         {
                           "body":
                           {
+                            "nativeSrc": "90:2:1",
                             "nodeType": "YulBlock",
                             "src": "90:2:1",
                             "statements": []
                           },
+                          "nativeSrc": "82:10:1",
                           "nodeType": "YulCase",
                           "src": "82:10:1",
                           "value": "default"
@@ -79,11 +85,13 @@
                       "expression":
                       {
                         "kind": "number",
+                        "nativeSrc": "70:1:1",
                         "nodeType": "YulLiteral",
                         "src": "70:1:1",
                         "type": "",
                         "value": "0"
                       },
+                      "nativeSrc": "63:29:1",
                       "nodeType": "YulSwitch",
                       "src": "63:29:1"
                     }

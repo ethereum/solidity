@@ -39,6 +39,7 @@
               {
                 "AST":
                 {
+                  "nativeSrc": "61:43:1",
                   "nodeType": "YulBlock",
                   "src": "61:43:1",
                   "statements":
@@ -46,6 +47,7 @@
                     {
                       "body":
                       {
+                        "nativeSrc": "76:22:1",
                         "nodeType": "YulBlock",
                         "src": "76:22:1",
                         "statements":
@@ -60,6 +62,7 @@
                                   [
                                     {
                                       "kind": "number",
+                                      "nativeSrc": "92:2:1",
                                       "nodeType": "YulLiteral",
                                       "src": "92:2:1",
                                       "type": "",
@@ -69,9 +72,11 @@
                                   "functionName":
                                   {
                                     "name": "blockhash",
+                                    "nativeSrc": "82:9:1",
                                     "nodeType": "YulIdentifier",
                                     "src": "82:9:1"
                                   },
+                                  "nativeSrc": "82:13:1",
                                   "nodeType": "YulFunctionCall",
                                   "src": "82:13:1"
                                 }
@@ -79,18 +84,22 @@
                               "functionName":
                               {
                                 "name": "pop",
+                                "nativeSrc": "78:3:1",
                                 "nodeType": "YulIdentifier",
                                 "src": "78:3:1"
                               },
+                              "nativeSrc": "78:18:1",
                               "nodeType": "YulFunctionCall",
                               "src": "78:18:1"
                             },
+                            "nativeSrc": "78:18:1",
                             "nodeType": "YulExpressionStatement",
                             "src": "78:18:1"
                           }
                         ]
                       },
                       "name": "g",
+                      "nativeSrc": "63:35:1",
                       "nodeType": "YulFunctionDefinition",
                       "src": "63:35:1"
                     },
@@ -101,12 +110,15 @@
                         "functionName":
                         {
                           "name": "g",
+                          "nativeSrc": "99:1:1",
                           "nodeType": "YulIdentifier",
                           "src": "99:1:1"
                         },
+                        "nativeSrc": "99:3:1",
                         "nodeType": "YulFunctionCall",
                         "src": "99:3:1"
                       },
+                      "nativeSrc": "99:3:1",
                       "nodeType": "YulExpressionStatement",
                       "src": "99:3:1"
                     }

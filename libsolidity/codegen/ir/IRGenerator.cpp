@@ -40,6 +40,8 @@
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
+#include <json/json.h>
+
 #include <sstream>
 #include <variant>
 
@@ -87,7 +89,7 @@ set<CallableDeclaration const*, ASTNode::CompareByID> collectReachableCallables(
 
 }
 
-pair<string, string> IRGenerator::run(
+tuple<string, Json::Value, string, Json::Value> IRGenerator::run(
 	ContractDefinition const& _contract,
 	bytes const& _cborMetadata,
 	map<ContractDefinition const*, string_view const> const& _otherYulSources
@@ -112,9 +114,11 @@ pair<string, string> IRGenerator::run(
 			);
 		solAssert(false, ir + "\n\nInvalid IR generated:\n" + errorMessage + "\n");
 	}
+	Json::Value irAst = asmStack.astJson();
 	asmStack.optimize();
+	Json::Value irOptAst = asmStack.astJson();
 
-	return {std::move(ir), asmStack.print(m_context.soliditySourceProvider())};
+	return {std::move(ir), std::move(irAst), asmStack.print(m_context.soliditySourceProvider()), std::move(irOptAst)};
 }
 
 string IRGenerator::generate(

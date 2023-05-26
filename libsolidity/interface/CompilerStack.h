@@ -276,8 +276,14 @@ public:
 	/// @returns the IR representation of a contract.
 	std::string const& yulIR(std::string const& _contractName) const;
 
+	/// @returns the IR representation of a contract AST in format.
+	Json::Value const& yulIRAst(std::string const& _contractName) const;
+
 	/// @returns the optimized IR representation of a contract.
 	std::string const& yulIROptimized(std::string const& _contractName) const;
+
+	/// @returns the optimized IR representation of a contract AST in JSON format.
+	Json::Value const& yulIROptimizedAst(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	evmasm::LinkerObject const& object(std::string const& _contractName) const;
@@ -380,6 +386,8 @@ private:
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Yul IR code.
 		std::string yulIROptimized; ///< Optimized Yul IR code.
+		Json::Value yulIRAst; ///< JSON AST of Yul IR code.
+		Json::Value yulIROptimizedAst; ///< JSON AST of optimized Yul IR code.
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		util::LazyInit<Json::Value const> abi;
 		util::LazyInit<Json::Value const> storageLayout;

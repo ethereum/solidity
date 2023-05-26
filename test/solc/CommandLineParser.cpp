@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
 			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-optimized", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
+			"--ir", "--ir-ast-json", "--ir-optimized", "--ir-optimized-ast-json", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 			"--gas",
 			"--combined-json="
 				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
@@ -192,7 +192,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.compiler.outputs = {
 			true, true, true, true, true,
 			true, true, true, true, true,
-			true, true, true, true,
+			true, true, true, true, true,
+			true,
 		};
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
@@ -290,6 +291,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--asm",
 			"--bin",
 			"--ir-optimized",
+			"--ast-compact-json",
 		};
 		commandLine += assemblyOptions;
 		if (expectedLanguage == YulStack::Language::StrictAssembly)
@@ -329,6 +331,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.asm_ = true;
 		expectedOptions.compiler.outputs.binary = true;
 		expectedOptions.compiler.outputs.irOptimized = true;
+		expectedOptions.compiler.outputs.astCompactJson = true;
 		if (expectedLanguage == YulStack::Language::StrictAssembly)
 		{
 			expectedOptions.optimizer.enabled = true;

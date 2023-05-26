@@ -390,7 +390,9 @@ Input Description
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
         //   ir - Yul intermediate representation of the code before optimization
+        //   irAst - AST of Yul intermediate representation of the code before optimization
         //   irOptimized - Intermediate representation after optimization
+        //   irOptimizedAst - AST of intermediate representation after optimization
         //   storageLayout - Slots, offsets and types of the contract's state variables.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
@@ -536,8 +538,14 @@ Output Description
             "userdoc": {},
             // Developer documentation (natspec)
             "devdoc": {},
-            // Intermediate representation (string)
+            // Intermediate representation before optimization (string)
             "ir": "",
+            // AST of intermediate representation before optimization
+            "irAst":  {/* ... */},
+            // Intermediate representation after optimization (string)
+            "irOptimized": "",
+            // AST of intermediate representation after optimization
+            "irOptimizedAst": {/* ... */},
             // See the Storage Layout documentation.
             "storageLayout": {"storage": [/* ... */], "types": {/* ... */} },
             // EVM-related outputs
