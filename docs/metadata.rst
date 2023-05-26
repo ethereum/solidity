@@ -153,8 +153,8 @@ explanatory purposes.
             "constantOptimizer": false,
             "cse": false,
             "deduplicate": false,
-            // inliner defaults to "true"
-            "inliner": true,
+            // inliner defaults to "false"
+            "inliner": false,
             // jumpdestRemover defaults to "true"
             "jumpdestRemover": true,
             "orderLiterals": false,

@@ -272,9 +272,9 @@ Input Description
             // The peephole optimizer is always on if no details are given,
             // use details to switch it off.
             "peephole": true,
-            // The inliner is always on if no details are given,
-            // use details to switch it off.
-            "inliner": true,
+            // The inliner is always off if no details are given,
+            // use details to switch it on.
+            "inliner": false,
             // The unused jumpdest remover is always on if no details are given,
             // use details to switch it off.
             "jumpdestRemover": true,
