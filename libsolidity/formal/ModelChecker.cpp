@@ -170,8 +170,8 @@ SMTSolverChoice ModelChecker::availableSolvers()
 #ifdef HAVE_Z3
 	available.z3 = solidity::smtutil::Z3Interface::available();
 #endif
-#ifdef HAVE_CVC4
-	available.cvc4 = true;
+#ifdef HAVE_CVC5
+	available.cvc5 = true;
 #endif
 	return available;
 }
@@ -180,13 +180,13 @@ SMTSolverChoice ModelChecker::checkRequestedSolvers(SMTSolverChoice _enabled, Er
 {
 	SMTSolverChoice availableSolvers{ModelChecker::availableSolvers()};
 
-	if (_enabled.cvc4 && !availableSolvers.cvc4)
+	if (_enabled.cvc5 && !availableSolvers.cvc5)
 	{
-		_enabled.cvc4 = false;
+		_enabled.cvc5 = false;
 		_errorReporter.warning(
 			4902_error,
 			SourceLocation(),
-			"Solver CVC4 was selected for SMTChecker but it is not available."
+			"Solver cvc5 was selected for SMTChecker but it is not available."
 		);
 	}
 

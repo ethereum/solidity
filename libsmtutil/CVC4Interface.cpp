@@ -18,102 +18,82 @@
 
 #include <libsmtutil/CVC4Interface.h>
 
+#include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
-
-#include <cvc4/util/bitvector.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::smtutil;
 
-CVC4Interface::CVC4Interface(optional<unsigned> _queryTimeout):
-	SolverInterface(_queryTimeout),
-	m_solver(&m_context)
+CVC5Interface::CVC5Interface(optional<unsigned> _queryTimeout):
+	SolverInterface(_queryTimeout)
 {
 	reset();
 }
 
-void CVC4Interface::reset()
+void CVC5Interface::reset()
 {
 	m_variables.clear();
-	m_solver.reset();
-	m_solver.setOption("produce-models", true);
+	m_solver.resetAssertions();
+	m_solver.setOption("produce-models", "true");
 	if (m_queryTimeout)
-		m_solver.setTimeLimit(*m_queryTimeout);
+		m_solver.setOption("tlimit-per", std::to_string(*m_queryTimeout));
 	else
-		m_solver.setResourceLimit(resourceLimit);
+		m_solver.setOption("rlimit", std::to_string(resourceLimit));
 }
 
-void CVC4Interface::push()
+void CVC5Interface::push()
 {
 	m_solver.push();
 }
 
-void CVC4Interface::pop()
+void CVC5Interface::pop()
 {
 	m_solver.pop();
 }
 
-void CVC4Interface::declareVariable(string const& _name, SortPointer const& _sort)
+void CVC5Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort, "");
-	m_variables[_name] = m_context.mkVar(_name.c_str(), cvc4Sort(*_sort));
+	m_variables[_name] = m_solver.mkConst(CVC5Sort(*_sort), _name);
 }
 
-void CVC4Interface::addAssertion(Expression const& _expr)
+void CVC5Interface::addAssertion(Expression const& _expr)
 {
 	try
 	{
-		m_solver.assertFormula(toCVC4Expr(_expr));
+		m_solver.assertFormula(toCVC5Expr(_expr));
 	}
-	catch (CVC4::TypeCheckingException const& _e)
-	{
-		smtAssert(false, _e.what());
-	}
-	catch (CVC4::LogicException const& _e)
-	{
-		smtAssert(false, _e.what());
-	}
-	catch (CVC4::UnsafeInterruptException const& _e)
-	{
-		smtAssert(false, _e.what());
-	}
-	catch (CVC4::Exception const& _e)
+	catch (cvc5::CVC5ApiException const& _e)
 	{
 		smtAssert(false, _e.what());
 	}
 }
 
-pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> CVC5Interface::check(vector<Expression> const& _expressionsToEvaluate)
 {
 	CheckResult result;
 	vector<string> values;
 	try
 	{
-		switch (m_solver.checkSat().isSat())
-		{
-		case CVC4::Result::SAT:
+		cvc5::Result res = m_solver.checkSat();
+		if (res.isSat())
 			result = CheckResult::SATISFIABLE;
-			break;
-		case CVC4::Result::UNSAT:
+		else if (res.isUnsat())
 			result = CheckResult::UNSATISFIABLE;
-			break;
-		case CVC4::Result::SAT_UNKNOWN:
+		else if (res.isUnknown())
 			result = CheckResult::UNKNOWN;
-			break;
-		default:
+		else
 			smtAssert(false, "");
-		}
-
 		if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		{
 			for (Expression const& e: _expressionsToEvaluate)
-				values.push_back(toString(m_solver.getValue(toCVC4Expr(e))));
+				values.push_back(toString(m_solver.getValue(toCVC5Expr(e))));
 		}
 	}
-	catch (CVC4::Exception const&)
+	catch (cvc5::CVC5ApiException const&)
 	{
 		result = CheckResult::ERROR;
 		values.clear();
@@ -122,41 +102,41 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 	return make_pair(result, values);
 }
 
-CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
+cvc5::Term CVC5Interface::toCVC5Expr(Expression const& _expr)
 {
 	// Variable
 	if (_expr.arguments.empty() && m_variables.count(_expr.name))
 		return m_variables.at(_expr.name);
 
-	vector<CVC4::Expr> arguments;
+	vector<cvc5::Term> arguments;
 	for (auto const& arg: _expr.arguments)
-		arguments.push_back(toCVC4Expr(arg));
+		arguments.push_back(toCVC5Expr(arg));
 
 	try
 	{
 		string const& n = _expr.name;
 		// Function application
 		if (!arguments.empty() && m_variables.count(_expr.name))
-			return m_context.mkExpr(CVC4::kind::APPLY_UF, m_variables.at(n), arguments);
+			return m_solver.mkTerm(cvc5::Kind::APPLY_UF, vector<cvc5::Term>{m_variables.at(n)} + arguments);
 		// Literal
 		else if (arguments.empty())
 		{
 			if (n == "true")
-				return m_context.mkConst(true);
+				return m_solver.mkTrue();
 			else if (n == "false")
-				return m_context.mkConst(false);
+				return m_solver.mkFalse();
 			else if (auto sortSort = dynamic_pointer_cast<SortSort>(_expr.sort))
-				return m_context.mkVar(n, cvc4Sort(*sortSort->inner));
+				return m_solver.mkVar(CVC5Sort(*sortSort->inner), n);
 			else
 				try
 				{
-					return m_context.mkConst(CVC4::Rational(n));
+					return m_solver.mkInteger(n);
 				}
-				catch (CVC4::TypeCheckingException const& _e)
+				catch (cvc5::CVC5ApiRecoverableException const& _e)
 				{
 					smtAssert(false, _e.what());
 				}
-				catch (CVC4::Exception const& _e)
+				catch (cvc5::CVC5ApiException const& _e)
 				{
 					smtAssert(false, _e.what());
 				}
@@ -164,127 +144,127 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 
 		smtAssert(_expr.hasCorrectArity(), "");
 		if (n == "ite")
-			return arguments[0].iteExpr(arguments[1], arguments[2]);
+			return arguments[0].iteTerm(arguments[1], arguments[2]);
 		else if (n == "not")
-			return arguments[0].notExpr();
+			return arguments[0].notTerm();
 		else if (n == "and")
-			return arguments[0].andExpr(arguments[1]);
+			return arguments[0].andTerm(arguments[1]);
 		else if (n == "or")
-			return arguments[0].orExpr(arguments[1]);
+			return arguments[0].orTerm(arguments[1]);
 		else if (n == "=>")
-			return m_context.mkExpr(CVC4::kind::IMPLIES, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::IMPLIES, {arguments[0], arguments[1]});
 		else if (n == "=")
-			return m_context.mkExpr(CVC4::kind::EQUAL, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::EQUAL, {arguments[0], arguments[1]});
 		else if (n == "<")
-			return m_context.mkExpr(CVC4::kind::LT, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::LT, {arguments[0], arguments[1]});
 		else if (n == "<=")
-			return m_context.mkExpr(CVC4::kind::LEQ, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::LEQ, {arguments[0], arguments[1]});
 		else if (n == ">")
-			return m_context.mkExpr(CVC4::kind::GT, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::GT, {arguments[0], arguments[1]});
 		else if (n == ">=")
-			return m_context.mkExpr(CVC4::kind::GEQ, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::GEQ, {arguments[0], arguments[1]});
 		else if (n == "+")
-			return m_context.mkExpr(CVC4::kind::PLUS, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::ADD, {arguments[0], arguments[1]});
 		else if (n == "-")
-			return m_context.mkExpr(CVC4::kind::MINUS, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::SUB, {arguments[0], arguments[1]});
 		else if (n == "*")
-			return m_context.mkExpr(CVC4::kind::MULT, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::MULT, {arguments[0], arguments[1]});
 		else if (n == "div")
-			return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::INTS_DIVISION, {arguments[0], arguments[1]});
 		else if (n == "mod")
-			return m_context.mkExpr(CVC4::kind::INTS_MODULUS, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::INTS_MODULUS, {arguments[0], arguments[1]});
 		else if (n == "bvnot")
-			return m_context.mkExpr(CVC4::kind::BITVECTOR_NOT, arguments[0]);
+			return m_solver.mkTerm(cvc5::Kind::BITVECTOR_NOT, {arguments[0]});
 		else if (n == "bvand")
-			return m_context.mkExpr(CVC4::kind::BITVECTOR_AND, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::BITVECTOR_AND, {arguments[0], arguments[1]});
 		else if (n == "bvor")
-			return m_context.mkExpr(CVC4::kind::BITVECTOR_OR, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::BITVECTOR_OR, {arguments[0], arguments[1]});
 		else if (n == "bvxor")
-			return m_context.mkExpr(CVC4::kind::BITVECTOR_XOR, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::BITVECTOR_XOR, {arguments[0], arguments[1]});
 		else if (n == "bvshl")
-			return m_context.mkExpr(CVC4::kind::BITVECTOR_SHL, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::BITVECTOR_SHL, {arguments[0], arguments[1]});
 		else if (n == "bvlshr")
-			return m_context.mkExpr(CVC4::kind::BITVECTOR_LSHR, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::BITVECTOR_LSHR, {arguments[0], arguments[1]});
 		else if (n == "bvashr")
-			return m_context.mkExpr(CVC4::kind::BITVECTOR_ASHR, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::BITVECTOR_ASHR, {arguments[0], arguments[1]});
 		else if (n == "int2bv")
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);
-			auto i2bvOp = m_context.mkConst(CVC4::IntToBitVector(static_cast<unsigned>(size)));
-			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
-			return m_context.mkExpr(
-				CVC4::kind::ITE,
-				m_context.mkExpr(CVC4::kind::GEQ, arguments[0], m_context.mkConst(CVC4::Rational(0))),
-				m_context.mkExpr(CVC4::kind::INT_TO_BITVECTOR, i2bvOp, arguments[0]),
-				m_context.mkExpr(
-					CVC4::kind::BITVECTOR_NEG,
-					m_context.mkExpr(CVC4::kind::INT_TO_BITVECTOR, i2bvOp, m_context.mkExpr(CVC4::kind::UMINUS, arguments[0]))
-				)
+			auto i2bvOp = m_solver.mkOp(cvc5::Kind::INT_TO_BITVECTOR, {static_cast<unsigned>(size)});
+			// CVC5 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
+			return m_solver.mkTerm(
+				cvc5::Kind::ITE,
+				{
+					m_solver.mkTerm(cvc5::Kind::GEQ, {arguments[0], m_solver.mkInteger(0)}),
+					m_solver.mkTerm(i2bvOp, {arguments[0]}),
+					m_solver.mkTerm(
+						cvc5::Kind::BITVECTOR_NEG,
+						{m_solver.mkTerm(i2bvOp, {m_solver.mkTerm(cvc5::Kind::NEG, {arguments[0]})})}
+					)
+				}
 			);
 		}
 		else if (n == "bv2int")
 		{
 			auto intSort = dynamic_pointer_cast<IntSort>(_expr.sort);
 			smtAssert(intSort, "");
-			auto nat = m_context.mkExpr(CVC4::kind::BITVECTOR_TO_NAT, arguments[0]);
+			auto nat = m_solver.mkTerm(cvc5::Kind::BITVECTOR_TO_NAT, {arguments[0]});
 			if (!intSort->isSigned)
 				return nat;
 
-			auto type = arguments[0].getType();
+			auto type = arguments[0].getSort();
 			smtAssert(type.isBitVector(), "");
-			auto size = CVC4::BitVectorType(type).getSize();
-			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
-			auto extractOp = m_context.mkConst(CVC4::BitVectorExtract(size - 1, size - 1));
-			return m_context.mkExpr(CVC4::kind::ITE,
-				m_context.mkExpr(
-					CVC4::kind::EQUAL,
-					m_context.mkExpr(CVC4::kind::BITVECTOR_EXTRACT, extractOp, arguments[0]),
-					m_context.mkConst(CVC4::BitVector(1, uint64_t{0}))
-				),
-				nat,
-				m_context.mkExpr(
-					CVC4::kind::UMINUS,
-					m_context.mkExpr(CVC4::kind::BITVECTOR_TO_NAT, m_context.mkExpr(CVC4::kind::BITVECTOR_NEG, arguments[0]))
-				)
+			auto size = type.getBitVectorSize();
+			// CVC5 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
+			auto extractOp = m_solver.mkOp(cvc5::Kind::BITVECTOR_EXTRACT, {size - 1, size - 1});
+			return m_solver.mkTerm(
+				cvc5::Kind::ITE,
+				{
+					m_solver.mkTerm(
+						cvc5::Kind::EQUAL,
+						{m_solver.mkTerm(extractOp, {arguments[0]}), m_solver.mkBitVector(1, uint64_t{0})}
+					),
+					nat,
+					m_solver.mkTerm(
+						cvc5::Kind::NEG,
+						{m_solver.mkTerm(cvc5::Kind::BITVECTOR_TO_NAT, {m_solver.mkTerm(cvc5::Kind::BITVECTOR_NEG, {arguments[0]})})}
+					)
+				}
 			);
 		}
 		else if (n == "select")
-			return m_context.mkExpr(CVC4::kind::SELECT, arguments[0], arguments[1]);
+			return m_solver.mkTerm(cvc5::Kind::SELECT, {arguments[0], arguments[1]});
 		else if (n == "store")
-			return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
+			return m_solver.mkTerm(cvc5::Kind::STORE, {arguments[0], arguments[1], arguments[2]});
 		else if (n == "const_array")
 		{
 			shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
 			smtAssert(sortSort, "");
-			return m_context.mkConst(CVC4::ArrayStoreAll(cvc4Sort(*sortSort->inner), arguments[1]));
+			return m_solver.mkConstArray(CVC5Sort(*sortSort->inner), arguments[1]);
 		}
 		else if (n == "tuple_get")
 		{
 			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.arguments[0].sort);
 			smtAssert(tupleSort, "");
-			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
-			CVC4::Datatype const& dt = tt.getDatatype();
+			auto tt = m_solver.mkTupleSort(CVC5Sort(tupleSort->components));
+			cvc5::Datatype const& dt = tt.getDatatype();
 			size_t index = std::stoul(_expr.arguments[1].name);
-			CVC4::Expr s = dt[0][index].getSelector();
-			return m_context.mkExpr(CVC4::kind::APPLY_SELECTOR, s, arguments[0]);
+			cvc5::DatatypeSelector s = dt[0][index];
+			return m_solver.mkTerm(cvc5::Kind::APPLY_SELECTOR, {s.getTerm(), arguments[0]});
 		}
 		else if (n == "tuple_constructor")
 		{
 			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.sort);
 			smtAssert(tupleSort, "");
-			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
-			CVC4::Datatype const& dt = tt.getDatatype();
-			CVC4::Expr c = dt[0].getConstructor();
-			return m_context.mkExpr(CVC4::kind::APPLY_CONSTRUCTOR, c, arguments);
+			auto tt = m_solver.mkTupleSort(CVC5Sort(tupleSort->components));
+			cvc5::Datatype const& dt = tt.getDatatype();
+			cvc5::DatatypeConstructor c = dt[0];
+			return m_solver.mkTerm(cvc5::Kind::APPLY_CONSTRUCTOR, vector<cvc5::Term>{c.getTerm()} + arguments);
 		}
 
 		smtAssert(false);
 	}
-	catch (CVC4::TypeCheckingException const& _e)
-	{
-		smtAssert(false, _e.what());
-	}
-	catch (CVC4::Exception const& _e)
+	catch (cvc5::CVC5ApiException const& _e)
 	{
 		smtAssert(false, _e.what());
 	}
@@ -295,43 +275,45 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 	util::unreachable();
 }
 
-CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
+cvc5::Sort CVC5Interface::CVC5Sort(Sort const& _sort)
 {
 	switch (_sort.kind)
 	{
 	case Kind::Bool:
-		return m_context.booleanType();
+		return m_solver.getBooleanSort();
 	case Kind::Int:
-		return m_context.integerType();
+		return m_solver.getIntegerSort();
 	case Kind::BitVector:
-		return m_context.mkBitVectorType(dynamic_cast<BitVectorSort const&>(_sort).size);
+		return m_solver.mkBitVectorSort(dynamic_cast<BitVectorSort const&>(_sort).size);
 	case Kind::Function:
 	{
 		FunctionSort const& fSort = dynamic_cast<FunctionSort const&>(_sort);
-		return m_context.mkFunctionType(cvc4Sort(fSort.domain), cvc4Sort(*fSort.codomain));
+		if (fSort.domain.empty()) // function sort in cvc5 must have nonempty domain
+			return CVC5Sort(*fSort.codomain);
+		return m_solver.mkFunctionSort(CVC5Sort(fSort.domain), CVC5Sort(*fSort.codomain));
 	}
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
-		return m_context.mkArrayType(cvc4Sort(*arraySort.domain), cvc4Sort(*arraySort.range));
+		return m_solver.mkArraySort(CVC5Sort(*arraySort.domain), CVC5Sort(*arraySort.range));
 	}
 	case Kind::Tuple:
 	{
 		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
-		return m_context.mkTupleType(cvc4Sort(tupleSort.components));
+		return m_solver.mkTupleSort(CVC5Sort(tupleSort.components));
 	}
 	default:
 		break;
 	}
 	smtAssert(false, "");
 	// Cannot be reached.
-	return m_context.integerType();
+	return m_solver.getIntegerSort();
 }
 
-vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<SortPointer> const& _sorts)
+vector<cvc5::Sort> CVC5Interface::CVC5Sort(vector<SortPointer> const& _sorts)
 {
-	vector<CVC4::Type> cvc4Sorts;
+	vector<cvc5::Sort> CVC5Sorts;
 	for (auto const& _sort: _sorts)
-		cvc4Sorts.push_back(cvc4Sort(*_sort));
-	return cvc4Sorts;
+		CVC5Sorts.push_back(CVC5Sort(*_sort));
+	return CVC5Sorts;
 }

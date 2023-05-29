@@ -21,7 +21,7 @@
 #ifdef HAVE_Z3
 #include <libsmtutil/Z3Interface.h>
 #endif
-#ifdef HAVE_CVC4
+#ifdef HAVE_CVC5
 #include <libsmtutil/CVC4Interface.h>
 #endif
 #include <libsmtutil/SMTLib2Interface.h>
@@ -46,9 +46,9 @@ SMTPortfolio::SMTPortfolio(
 	if (_enabledSolvers.z3 && Z3Interface::available())
 		m_solvers.emplace_back(make_unique<Z3Interface>(m_queryTimeout));
 #endif
-#ifdef HAVE_CVC4
-	if (_enabledSolvers.cvc4)
-		m_solvers.emplace_back(make_unique<CVC4Interface>(m_queryTimeout));
+#ifdef HAVE_CVC5
+	if (_enabledSolvers.cvc5)
+		m_solvers.emplace_back(make_unique<CVC5Interface>(m_queryTimeout));
 #endif
 }
 

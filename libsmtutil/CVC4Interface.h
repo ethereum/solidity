@@ -20,30 +20,19 @@
 
 #include <libsmtutil/SolverInterface.h>
 
-#if defined(__GLIBC__)
-// The CVC4 headers includes the deprecated system headers <ext/hash_map>
-// and <ext/hash_set>. These headers cause a warning that will break the
-// build, unless _GLIBCXX_PERMIT_BACKWARD_HASH is set.
-#define _GLIBCXX_PERMIT_BACKWARD_HASH
-#endif
-
-#include <cvc4/cvc4.h>
-
-#if defined(__GLIBC__)
-#undef _GLIBCXX_PERMIT_BACKWARD_HASH
-#endif
+#include <cvc5/cvc5.h>
 
 namespace solidity::smtutil
 {
 
-class CVC4Interface: public SolverInterface
+class CVC5Interface: public SolverInterface
 {
 public:
 	/// Noncopyable.
-	CVC4Interface(CVC4Interface const&) = delete;
-	CVC4Interface& operator=(CVC4Interface const&) = delete;
+	CVC5Interface(CVC5Interface const&) = delete;
+	CVC5Interface& operator=(CVC5Interface const&) = delete;
 
-	CVC4Interface(std::optional<unsigned> _queryTimeout = {});
+	CVC5Interface(std::optional<unsigned> _queryTimeout = {});
 
 	void reset() override;
 
@@ -56,17 +45,16 @@ public:
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 private:
-	CVC4::Expr toCVC4Expr(Expression const& _expr);
-	CVC4::Type cvc4Sort(Sort const& _sort);
-	std::vector<CVC4::Type> cvc4Sort(std::vector<SortPointer> const& _sorts);
+	cvc5::Term toCVC5Expr(Expression const& _expr);
+	cvc5::Sort CVC5Sort(Sort const& _sort);
+	std::vector<cvc5::Sort> CVC5Sort(std::vector<SortPointer> const& _sorts);
 
-	CVC4::ExprManager m_context;
-	CVC4::SmtEngine m_solver;
-	std::map<std::string, CVC4::Expr> m_variables;
+	cvc5::Solver m_solver;
+	std::map<std::string, cvc5::Term> m_variables;
 
-	// CVC4 "basic resources" limit.
+	// CVC5 "basic resources" limit.
 	// This is used to make the runs more deterministic and platform/machine independent.
-	// The tests start failing for CVC4 with less than 6000,
+	// The tests start failing for CVC5 with less than 6000,
 	// so using double that.
 	static int const resourceLimit = 12000;
 };
