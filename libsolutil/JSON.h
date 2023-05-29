@@ -26,6 +26,8 @@
 #include <json/json.h>
 
 #include <string>
+#include <string_view>
+#include <optional>
 
 namespace solidity::util
 {
@@ -66,6 +68,13 @@ std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format);
 /// \param _errs [out] Formatted error messages
 /// \return \c true if the document was successfully parsed, \c false if an error occurred.
 bool jsonParseStrict(std::string const& _input, Json::Value& _json, std::string* _errs = nullptr);
+
+/// Retrieves the value specified by @p _jsonPath by from a series of nested JSON dictionaries.
+/// @param _jsonPath A dot-separated series of dictionary keys.
+/// @param _node The node representing the start of the path.
+/// @returns The value of the last key on the path. @a nullptr if any node on the path descends
+/// into something that is not a dictionary or the key is not present.
+std::optional<Json::Value> jsonValueByPath(Json::Value const& _node, std::string_view _jsonPath);
 
 namespace detail
 {
