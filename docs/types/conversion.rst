@@ -44,7 +44,7 @@ Explicit Conversions
 
 If the compiler does not allow implicit conversion but you are confident a conversion will work,
 an explicit type conversion is sometimes possible. This may
-result in unexpected behaviour and allows you to bypass some security
+result in unexpected behavior and allows you to bypass some security
 features of the compiler, so be sure to test that the
 result is what you want and expect!
 

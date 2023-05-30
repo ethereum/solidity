@@ -960,7 +960,7 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 
 .. warning::
     From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
-    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behavior
     as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
 
 In some internal dialects, there are additional functions:
@@ -995,7 +995,7 @@ Its first and only argument must be a string literal and uniquely represents the
 Identifiers can be arbitrary but when the compiler produces Yul code from Solidity sources,
 it uses a library name qualified with the name of the source unit that defines that library.
 To link the code with a particular library address, the same identifier must be provided to the
-``--libraries`` option on the command line.
+``--libraries`` option on the command-line.
 
 For example this code
 
@@ -1076,12 +1076,12 @@ or even opcodes unknown to the Solidity compiler, care has to be taken
 when using ``verbatim`` together with the optimizer. Even when the
 optimizer is switched off, the code generator has to determine
 the stack layout, which means that e.g. using ``verbatim`` to modify
-the stack height can lead to undefined behaviour.
+the stack height can lead to undefined behavior.
 
 The following is a non-exhaustive list of restrictions on
 verbatim bytecode that are not checked by
 the compiler. Violations of these restrictions can result in
-undefined behaviour.
+undefined behavior.
 
 - Control-flow should not jump into or out of verbatim blocks,
   but it can jump within the same verbatim block.

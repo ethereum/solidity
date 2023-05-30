@@ -47,8 +47,8 @@ non-persistent area where function arguments are stored, and behaves mostly like
 
 .. _data-location-assignment:
 
-Data location and assignment behaviour
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Data location and assignment behavior
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Data locations are not only relevant for persistency of data, but also for the semantics of assignments:
 
@@ -582,10 +582,10 @@ and the assignment will effectively garble the length of ``x``.
 To be safe, only enlarge bytes arrays by at most one element during a single
 assignment and do not simultaneously index-access the array in the same statement.
 
-While the above describes the behaviour of dangling storage references in the
+While the above describes the behavior of dangling storage references in the
 current version of the compiler, any code with dangling references should be
-considered to have *undefined behaviour*. In particular, this means that
-any future version of the compiler may change the behaviour of code that
+considered to have *undefined behavior*. In particular, this means that
+any future version of the compiler may change the behavior of code that
 involves dangling references.
 
 Be sure to avoid dangling references in your code!
@@ -641,7 +641,7 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
         /// after doing basic validation on the address argument.
         function forward(bytes calldata payload) external {
             bytes4 sig = bytes4(payload[:4]);
-            // Due to truncating behaviour, bytes4(payload) performs identically.
+            // Due to truncating behavior, bytes4(payload) performs identically.
             // bytes4 sig = bytes4(payload);
             if (sig == bytes4(keccak256("setOwner(address)"))) {
                 address owner = abi.decode(payload[4:], (address));

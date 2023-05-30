@@ -86,7 +86,7 @@ Packing arguments
 Now that we have identified what information to include in the signed message,
 we are ready to put the message together, hash it, and sign it. For simplicity,
 we concatenate the data. The `ethereumjs-abi <https://github.com/ethereumjs/ethereumjs-abi>`_
-library provides a function called ``soliditySHA3`` that mimics the behaviour of
+library provides a function called ``soliditySHA3`` that mimics the behavior of
 Solidity's ``keccak256`` function applied to arguments encoded using ``abi.encodePacked``.
 Here is a JavaScript function that creates the proper signature for the ``ReceiverPays`` example:
 

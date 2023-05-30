@@ -23,7 +23,7 @@ Integrated (Ethereum) Development Environments
         Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
 
     * `Dapp <https://dapp.tools/>`_
-        Tool for building, testing and deploying smart contracts from the command line.
+        Tool for building, testing and deploying smart contracts from the command-line.
 
     * `Embark <https://framework.embarklabs.io/>`_
         Developer platform for building and deploying decentralized applications.

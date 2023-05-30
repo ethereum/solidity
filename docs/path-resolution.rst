@@ -139,7 +139,7 @@ The initial content of the VFS depends on how you invoke the compiler:
 
 #. **Standard input**
 
-   On the command line it is also possible to provide the source by sending it to compiler's
+   On the command-line it is also possible to provide the source by sending it to compiler's
    standard input:
 
    .. code-block:: bash
@@ -345,13 +345,13 @@ of the compiler.
 CLI Path Normalization and Stripping
 ------------------------------------
 
-On the command line the compiler behaves just as you would expect from any other program:
+On the command-line the compiler behaves just as you would expect from any other program:
 it accepts paths in a format native to the platform and relative paths are relative to the current
 working directory.
-The source unit names assigned to files whose paths are specified on the command line, however,
+The source unit names assigned to files whose paths are specified on the command-line, however,
 should not change just because the project is being compiled on a different platform or because the
 compiler happens to have been invoked from a different directory.
-To achieve this, paths to source files coming from the command line must be converted to a canonical
+To achieve this, paths to source files coming from the command-line must be converted to a canonical
 form, and, if possible, made relative to the base path or one of the include paths.
 
 The normalization rules are as follows:
@@ -408,7 +408,7 @@ The resulting file path becomes the source unit name.
     Prior to version 0.8.8, CLI path stripping was not performed and the only normalization applied
     was the conversion of path separators.
     When working with older versions of the compiler it is recommended to invoke the compiler from
-    the base path and to only use relative paths on the command line.
+    the base path and to only use relative paths on the command-line.
 
 .. index:: ! allowed paths, ! --allow-paths, remapping; target
 .. _allowed-paths:
@@ -421,7 +421,7 @@ locations that are considered safe by default:
 
 - Outside of Standard JSON mode:
 
-  - The directories containing input files listed on the command line.
+  - The directories containing input files listed on the command-line.
   - The directories used as :ref:`remapping <import-remapping>` targets.
     If the target is not a directory (i.e does not end with ``/``, ``/.`` or ``/..``) the directory
     containing the target is used instead.
@@ -551,7 +551,7 @@ you checked out to ``/project/dapp-bin_old``, then you can run:
 This means that all imports in ``module2`` point to the old version but imports in ``module1``
 point to the new version.
 
-Here are the detailed rules governing the behaviour of remappings:
+Here are the detailed rules governing the behavior of remappings:
 
 #. **Remappings only affect the translation between import paths and source unit names.**
 
