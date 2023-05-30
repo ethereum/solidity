@@ -10,12 +10,12 @@ Versioning
 ==========
 
 Solidity versions follow `Semantic Versioning <https://semver.org>`_. In
-addition, patch level releases with major release 0 (i.e. 0.x.y) will not
+addition, patch-level releases with major release 0 (i.e. 0.x.y) will not
 contain breaking changes. That means code that compiles with version 0.x.y
 can be expected to compile with 0.x.z where z > y.
 
-In addition to releases, we provide **nightly development builds** with the
-intention of making it easy for developers to try out upcoming features and
+In addition to releases, we provide **nightly development builds** to make
+it easy for developers to try out upcoming features and
 provide early feedback. Note, however, that while the nightly builds are usually
 very stable, they contain bleeding-edge code from the development branch and are
 not guaranteed to be always working. Despite our best efforts, they might
@@ -33,8 +33,8 @@ Remix
 
 `Access Remix online <https://remix.ethereum.org/>`_, you do not need to install anything.
 If you want to use it without connection to the Internet, go to
-https://github.com/ethereum/remix-live/tree/gh-pages and download the ``.zip`` file as
-explained on that page. Remix is also a convenient option for testing nightly builds
+https://github.com/ethereum/remix-live/tree/gh-pages#readme and follow the instructions there.
+Remix is also a convenient option for testing nightly builds
 without installing multiple Solidity versions.
 
 Further options on this page detail installing commandline Solidity compiler software
@@ -341,7 +341,7 @@ The following are dependencies for all builds of Solidity:
 .. note::
     Solidity versions prior to 0.5.10 can fail to correctly link against Boost versions 1.70+.
     A possible workaround is to temporarily rename ``<Boost install path>/lib/cmake/Boost-1.70.0``
-    prior to running the cmake command to configure solidity.
+    prior to running the cmake command to configure Solidity.
 
     Starting from 0.5.10 linking against Boost 1.70+ should work without manual intervention.
 
