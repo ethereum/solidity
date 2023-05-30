@@ -1000,6 +1000,12 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 	if (!function)
 		return;
 
+	// Remember the external call in the call graph to properly detect verification targets for the current function
+	if (m_currentFunction && !m_currentFunction->isConstructor())
+		m_callGraph[m_currentFunction].insert(function);
+	else
+		m_callGraph[m_currentContract].insert(function);
+
 	// External call creates a new transaction.
 	auto originalTx = state().tx();
 	Expression const* value = valueOption(callOptions);
