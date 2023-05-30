@@ -52,7 +52,7 @@ At least a day before the release:
  - [ ] Create a [release on GitHub](https://github.com/ethereum/solidity/releases/new).
        Set the target to the ``develop`` branch and the tag to the new version, e.g. ``v0.8.5``.
        Include the following warning: ``**The release is still in progress and the binaries may not yet be available from all sources.**``.
-       Don't publish it yet - click the ``Save draft`` button instead.
+       Do not publish it yet - click the ``Save draft`` button instead.
  - [ ] Thank voluntary contributors in the GitHub release notes.
        Use ``scripts/list_contributors.sh v<previous version>`` to get initial list of names.
        Remove different variants of the same name manually before using the output.

@@ -336,7 +336,7 @@ Furthermore, all functions of the current contract are callable directly includi
 
 .. warning::
     From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
-    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behavior
     as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
 
 .. note::

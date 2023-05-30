@@ -54,7 +54,7 @@ or ../ <direct-imports>` are treated as relative to the directories specified us
 Furthermore, the part of the path added via these options will not appear in the contract metadata.
 
 For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
-Directories of source files specified on the command line and target paths of
+Directories of source files specified on the command-line and target paths of
 remappings are automatically allowed to be accessed by the file reader, but everything
 else is rejected by default.
 Additional paths (and their subdirectories) can be allowed via the
@@ -114,15 +114,15 @@ Setting the EVM Version to Target
 *********************************
 
 When you compile your contract code you can specify the Ethereum virtual machine
-version to compile for to avoid particular features or behaviours.
+version to compile for to avoid particular features or behaviors.
 
 .. warning::
 
    Compiling for the wrong EVM version can result in wrong, strange and failing
-   behaviour. Please ensure, especially if running a private chain, that you
+   behavior. Please ensure, especially if running a private chain, that you
    use matching EVM versions.
 
-On the command line, you can select the EVM version as follows:
+On the command-line, you can select the EVM version as follows:
 
 .. code-block:: shell
 
@@ -227,7 +227,7 @@ Input Description
             "bzzr://56ab...",
             "ipfs://Qma...",
             "/tmp/path/to/file.sol"
-            // If files are used, their directories should be added to the command line via
+            // If files are used, their directories should be added to the command-line via
             // `--allow-paths <path>`.
           ]
           // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key.

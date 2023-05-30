@@ -6,7 +6,7 @@
 Function Modifiers
 ******************
 
-Modifiers can be used to change the behaviour of functions in a declarative way.
+Modifiers can be used to change the behavior of functions in a declarative way.
 For example,
 you can use a modifier to automatically check a condition prior to executing the function.
 

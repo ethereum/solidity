@@ -137,7 +137,7 @@ For most of the topics the compiler will provide suggestions.
   ``payable`` or create a new internal function for the program logic that
   uses ``msg.value``.
 
-* For clarity reasons, the command line interface now requires ``-`` if the
+* For clarity reasons, the command-line interface now requires ``-`` if the
   standard input is used as source.
 
 Deprecated Elements
@@ -147,18 +147,18 @@ This section lists changes that deprecate prior features or syntax.  Note that
 many of these changes were already enabled in the experimental mode
 ``v0.5.0``.
 
-Command Line and JSON Interfaces
+Command-line and JSON Interfaces
 --------------------------------
 
-* The command line option ``--formal`` (used to generate Why3 output for
+* The command-line option ``--formal`` (used to generate Why3 output for
   further formal verification) was deprecated and is now removed.  A new
   formal verification module, the SMTChecker, is enabled via ``pragma
   experimental SMTChecker;``.
 
-* The command line option ``--julia`` was renamed to ``--yul`` due to the
+* The command-line option ``--julia`` was renamed to ``--yul`` due to the
   renaming of the intermediate language ``Julia`` to ``Yul``.
 
-* The ``--clone-bin`` and ``--combined-json clone-bin`` command line options
+* The ``--clone-bin`` and ``--combined-json clone-bin`` command-line options
   were removed.
 
 * Remappings with empty prefix are disallowed.

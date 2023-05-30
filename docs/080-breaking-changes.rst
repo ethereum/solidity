@@ -10,18 +10,18 @@ For the full list check
 Silent Changes of the Semantics
 ===============================
 
-This section lists changes where existing code changes its behaviour without
+This section lists changes where existing code changes its behavior without
 the compiler notifying you about it.
 
 * Arithmetic operations revert on underflow and overflow. You can use ``unchecked { ... }`` to use
-  the previous wrapping behaviour.
+  the previous wrapping behavior.
 
   Checks for overflow are very common, so we made them the default to increase readability of code,
   even if it comes at a slight increase of gas costs.
 
 * ABI coder v2 is activated by default.
 
-  You can choose to use the old behaviour using ``pragma abicoder v1;``.
+  You can choose to use the old behavior using ``pragma abicoder v1;``.
   The pragma ``pragma experimental ABIEncoderV2;`` is still valid, but it is deprecated and has no effect.
   If you want to be explicit, please use ``pragma abicoder v2;`` instead.
 
@@ -57,7 +57,7 @@ New Restrictions
 
 This section lists changes that might cause existing contracts to not compile anymore.
 
-* There are new restrictions related to explicit conversions of literals. The previous behaviour in
+* There are new restrictions related to explicit conversions of literals. The previous behavior in
   the following cases was likely ambiguous:
 
   1. Explicit conversions from negative literals and literals larger than ``type(uint160).max`` to
@@ -106,7 +106,7 @@ This section lists changes that might cause existing contracts to not compile an
 
 * The global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4`` have been removed.
 
-  These are low-level functions that were largely unused. Their behaviour can be accessed from inline assembly.
+  These are low-level functions that were largely unused. Their behavior can be accessed from inline assembly.
 
 * ``enum`` definitions cannot contain more than 256 members.
 

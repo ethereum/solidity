@@ -28,7 +28,7 @@ captures this concept well.
 
     A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
 
-    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
+    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And do not hesitate to ask!
 
 
 ***********
@@ -448,7 +448,7 @@ No:
     y            = 2;
     longVariable = 3;
 
-Don't include a whitespace in the receive and fallback functions:
+Do not include a whitespace in the receive and fallback functions:
 
 Yes:
 

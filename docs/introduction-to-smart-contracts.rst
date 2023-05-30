@@ -564,7 +564,7 @@ contracts, the Ether is forever lost.
 
 .. warning::
     From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
-    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behavior
     as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
 
 .. warning::
@@ -591,7 +591,7 @@ Precompiled Contracts
 There is a small set of contract addresses that are special:
 The address range between ``1`` and (including) ``8`` contains
 "precompiled contracts" that can be called as any other contract
-but their behaviour (and their gas consumption) is not defined
+but their behavior (and their gas consumption) is not defined
 by EVM code stored at that address (they do not contain code)
 but instead is implemented in the EVM execution environment itself.
 

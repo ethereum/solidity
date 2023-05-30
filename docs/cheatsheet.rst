@@ -154,7 +154,7 @@ Modifiers
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
 - ``virtual`` for functions and modifiers: Allows the function's or modifier's
-  behaviour to be changed in derived contracts.
+  behavior to be changed in derived contracts.
 - ``override``: States that this function, modifier or public state variable changes
-  the behaviour of a function or modifier in a base contract.
+  the behavior of a function or modifier in a base contract.
 

@@ -117,7 +117,7 @@ Use `solAssert` and `solUnimplementedAssert` generously to check assumptions tha
 1. {Typename} + {qualifiers} + {name}.
 2. Only one per line.
 3. Associate */& with type, not variable (at ends with parser, but more readable, and safe if in conjunction with (b)).
-4. Favour declarations close to use; don't habitually declare at top of scope ala C.
+4. Favour declarations close to use; do not habitually declare at top of scope ala C.
 5. Pass non-trivial parameters as const reference, unless the data is to be copied into the function, then either pass by const reference or by value and use std::move.
 6. If a function returns multiple values, use std::tuple (std::pair acceptable) or better introduce a struct type. Do not use */& arguments.
 7. Use parameters of pointer type only if ``nullptr`` is a valid argument, use references otherwise. Often, ``std::optional`` is better suited than a raw pointer.
