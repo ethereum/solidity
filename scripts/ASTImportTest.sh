@@ -508,27 +508,15 @@ function test_import_export_equivalence {
     fi
 }
 
-WORKINGDIR=${PWD}
-
-command_available "${SOLC}" --version
-command_available jq --version
-command_available "${EXPR}" --version
-command_available "${READLINK}" --version
-
-case "${IMPORT_TEST_TYPE}" in
-    ast) TEST_DIRS=("${SYNTAXTESTS_DIR}" "${ASTJSONTESTS_DIR}") ;;
-    evm-assembly) TEST_DIRS=("${SEMANTICTESTS_DIR}") ;;
-    *) assertFail "Import test type not defined. $(print_usage || true)}" ;;
-esac
-
-if [[ "${IMPORT_TEST_TYPE}" == "evm-assembly" ]]
-then
-    IMPORT_TEST_FILES=$(find "${YULTESTS_DIR}" -name "*.yul")
-    NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
-    echo "Looking at ${NSOURCES} .yul files..."
-    for yulfile in ${IMPORT_TEST_FILES}
+function test_evmjson_import_from_yul_export
+{
+    local files="${*}"
+    for yulfile in $files
     do
+        local export_command
+        local import_command
         echo -n "·"
+
         # create a temporary sub-directory
         FILETMP=$(mktemp -d)
         cd "${FILETMP}"
@@ -544,6 +532,7 @@ then
             yul_bin="$(basename "$yulfile").bin"
             yul_json="$(basename "$yulfile").asm.json"
             echo "$output" > "${yul_bin}"
+            # remove all lines starting with '=======' and 'Binary representation:'.
             grep -v -e '^=======' -e '^Binary representation:' "${yul_bin}" > tmpfile && mv tmpfile "${yul_bin}"
             # remove all white-spaces. we only want the binary.
             tr -d '[:space:]' < "${yul_bin}" > tmpfile && mv tmpfile "${yul_bin}"
@@ -551,11 +540,13 @@ then
             if [[ -s "${yul_bin}" ]]
             then
                 # take the yul file and export it as evm assembly json. save the result in "$yul_json".
+                export_command=("${SOLC}" --strict-assembly "${yulfile}" --optimize --asm-json --pretty-json --json-indent 4)
                 run_solc_store_stdout "${yul_json}" --strict-assembly "${yulfile}" --optimize --asm-json --pretty-json --json-indent 4
                 # remove the lines containing '=======', so that we just have a nice json file.
                 grep -v '^=======' "${yul_json}" > tmpfile && mv tmpfile "${yul_json}"
 
                 # import the created evm assembly json file and create a combined json out of it.
+                import_command=("${SOLC}" --combined-json "bin" --pretty-json --json-indent 4 --import-asm-json "${yul_json}")
                 run_solc_store_stdout "${yul_json}.combined.json" --combined-json "bin" --pretty-json --json-indent 4 --import-asm-json "${yul_json}"
                 # split the combined json into different files.
                 split_combined_json "${yul_json}.combined.json" . "compiled"
@@ -564,13 +555,15 @@ then
                 if ! diff_files compiled.bin "${yul_bin}" > diff_error
                 then
                     diff_error=$(cat diff_error)
-                    printError "ERROR: diff failed ${file} ${imported}:\n   ${diff_error}"
+                    printError "ERROR: diff failed ${yulfile}:\n   ${diff_error}"
                     if (( EXIT_ON_ERROR == 1 ))
                     then
                         print_used_commands "${PWD}" "${export_command[*]}" "${import_command[*]}"
                         exit 1
                     fi
-                    return 1
+                    FAILED=$((FAILED + 1))
+                else
+                    TESTED=$((TESTED + 1))
                 fi
             fi
         fi
@@ -579,6 +572,28 @@ then
         rm -rf "${FILETMP}"
     done
     echo
+}
+
+WORKINGDIR=${PWD}
+
+command_available "${SOLC}" --version
+command_available jq --version
+command_available "${EXPR}" --version
+command_available "${READLINK}" --version
+
+case "${IMPORT_TEST_TYPE}" in
+    ast) TEST_DIRS=("${SYNTAXTESTS_DIR}" "${ASTJSONTESTS_DIR}") ;;
+    evm-assembly) TEST_DIRS=("${SEMANTICTESTS_DIR}") ;;
+    *) assertFail "Import test type not defined. $(print_usage || true)}" ;;
+esac
+
+YUL_NSOURCES=0
+if [[ "${IMPORT_TEST_TYPE}" == "evm-assembly" ]]
+then
+    IMPORT_TEST_FILES=$(find "${YULTESTS_DIR}" -name "*.yul")
+    YUL_NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
+    echo "Looking at ${YUL_NSOURCES} .yul files..."
+    test_evmjson_import_from_yul_export "${IMPORT_TEST_FILES[@]}"
 fi
 
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
@@ -586,8 +601,10 @@ fi
 # tests on it. See https://github.com/boostorg/filesystem/issues/176
 IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol" -not -path "*/experimental/*")
 
-NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
-echo "Looking at ${NSOURCES} .sol files..."
+SOL_NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
+echo "Looking at ${SOL_NSOURCES} .sol files..."
+
+NSOURCES=$(( YUL_NSOURCES + SOL_NSOURCES ))
 
 for solfile in ${IMPORT_TEST_FILES}
 do
