@@ -10,4 +10,3 @@ contract C is B(C.f) {
     function f() internal view returns(uint) { return x + 2; }
 }
 // ----
-// TypeError 7733: (205-206): Immutable variables cannot be read before they are initialized.

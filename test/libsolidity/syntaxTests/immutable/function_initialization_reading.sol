@@ -3,5 +3,3 @@ contract C {
 
     function f() public view returns (uint) { return 3 + x; }
 }
-// ----
-// TypeError 7733: (99-100): Immutable variables cannot be read before they are initialized.

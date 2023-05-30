@@ -26,4 +26,3 @@ contract C is A, B {
     }
 }
 // ----
-// TypeError 7733: (499-500): Immutable variables cannot be read before they are initialized.

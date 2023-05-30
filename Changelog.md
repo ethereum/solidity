@@ -2,6 +2,7 @@
 
 Language Features:
  * Allow qualified access to events from other contracts.
+ * Relax restrictions on initialization of immutable variables. Reads and writes may now happen at any point at construction time outside of functions and modifiers. Explicit initialization is no longer mandatory.
 
 Compiler Features:
  * Commandline Interface: Add ``--ast-compact-json`` output in assembler mode.

@@ -16,5 +16,3 @@ contract C is B {
     function f() internal view override returns(uint) { return readX(); }
 
 }
-// ----
-// TypeError 7733: (202-203): Immutable variables cannot be read before they are initialized.

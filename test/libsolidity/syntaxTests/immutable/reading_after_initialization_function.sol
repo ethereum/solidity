@@ -13,4 +13,3 @@ contract C {
 	}
 }
 // ----
-// TypeError 7733: (141-142): Immutable variables cannot be read before they are initialized.
