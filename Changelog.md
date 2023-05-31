@@ -13,6 +13,7 @@ Compiler Features:
 * EVM: Support for the EVM Version "Cancun".
 * SMTChecker: Support `bytes.concat` except when string literals are passed as arguments.
 * TypeChecker: Comparison of internal function pointers now yields a warning, as it can produce unexpected results with the legacy pipeline enabled.
+* Standard JSON Interface: Add experimental support to import EVM assembly in the format used by ``--asm-json``.
 
 
 Bugfixes:

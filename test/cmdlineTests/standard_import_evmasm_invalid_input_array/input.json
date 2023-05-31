@@ -1,0 +1,15 @@
+{
+    "language": "EVMAssembly",
+    "sources": {
+        "A": {
+            "assemblyJson": []
+        }
+    },
+    "settings": {
+        "outputSelection": {
+            "*": {
+                "": ["evm.bytecode"]
+            }
+        }
+    }
+}

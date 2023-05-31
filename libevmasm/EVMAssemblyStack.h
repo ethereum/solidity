@@ -40,6 +40,11 @@ public:
 	/// @throws AssemblyImportException, if JSON could not be validated.
 	void parseAndAnalyze(std::string const& _sourceName, std::string const& _source);
 
+	/// Runs analysis steps.
+	/// Multiple calls overwrite the previous state.
+	/// @throws AssemblyImportException, if JSON could not be validated.
+	void analyze(std::string const& _sourceName, Json::Value const& _assemblyJson);
+
 	void assemble();
 
 	std::string const& name() const { return m_name; }

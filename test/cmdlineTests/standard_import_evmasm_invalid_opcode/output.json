@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Assembly import error: InvalidOpcode",
+            "message": "Assembly import error: InvalidOpcode",
+            "severity": "error",
+            "type": "Exception"
+        }
+    ]
+}
