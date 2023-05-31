@@ -74,26 +74,14 @@ function zeppelin_test
     sed -i "s|it(\('prevent unauthorized maintenance'\)|it.skip(\1|g" test/governance/TimelockController.test.js
     sed -i "s|it(\('cannot cancel invalid operation'\)|it.skip(\1|g" test/governance/TimelockController.test.js
     sed -i "s|it(\('cannot call onlyInitializable function outside the scope of an initializable function'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
-    sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC20/presets/ERC20PresetMinterPauser.test.js
-    sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC1155/presets/ERC1155PresetMinterPauser.test.js
-    sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC20/presets/ERC20PresetMinterPauser.test.js
-    sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC1155/presets/ERC1155PresetMinterPauser.test.js
-    sed -i "s|it(\('cannot be released before time limit'\)|it.skip(\1|g" test/token/ERC20/utils/TokenTimelock.test.js
-    sed -i "s|it(\('cannot be released just before time limit'\)|it.skip(\1|g" test/token/ERC20/utils/TokenTimelock.test.js
     sed -i "s|it(\('reverts when sending non-zero amounts'\)|it.skip(\1|g" test/utils/Address.test.js
     sed -i "s|it(\('reverts when sending more than the balance'\)|it.skip(\1|g" test/utils/Address.test.js
     sed -i "s|it(\('fails deploying a contract if the bytecode length is zero'\)|it.skip(\1|g" test/utils/Create2.test.js
     sed -i "s|it(\('fails deploying a contract if factory contract does not have sufficient balance'\)|it.skip(\1|g" test/utils/Create2.test.js
-    sed -i "s|it(\('reverts on withdrawals'\)|it.skip(\1|g" test/utils/escrow/ConditionalEscrow.test.js
-    sed -i "s|it(\('does not allow beneficiary withdrawal'\)|it.skip(\1|g" test/utils/escrow/RefundEscrow.test.js
-    sed -i "s|it(\('rejects deposits'\)|it.skip(\1|g" test/utils/escrow/RefundEscrow.test.js
-    sed -i "s|it(\('does not allow 0xffffffff'\)|it.skip(\1|g" test/utils/introspection/ERC165Storage.test.js
     sed -i "s|it(\('reverts when casting -1'\)|it.skip(\1|g" test/utils/math/SafeCast.test.js
     sed -i 's|it(\(`reverts when casting [^`]\+`\)|it.skip(\1|g' test/utils/math/SafeCast.test.js
     sed -i "s|it(\('reverts if index is greater than supply'\)|it.skip(\1|g" test/token/ERC721/ERC721.behavior.js
     sed -i "s|it(\('burns all tokens'\)|it.skip(\1|g" test/token/ERC721/ERC721.behavior.js
-    sed -i "s|it(\('other accounts cannot pause'\)|it.skip(\1|g" test/token/ERC721/presets/ERC721PresetMinterPauserAutoId.test.js
-    sed -i "s|it(\('other accounts cannot unpause'\)|it.skip(\1|g" test/token/ERC721/presets/ERC721PresetMinterPauserAutoId.test.js
     sed -i "s|it(\('guards transfer against invalid user'\)|it.skip(\1|g" test/access/Ownable2Step.test.js
     sed -i "s|it(\('reverting initialization'\)|it.skip(\1|g" test/proxy/beacon/BeaconProxy.test.js
     sed -i "s|describe(\('reverting initialization'\)|describe.skip(\1|g" test/proxy/Proxy.behaviour.js
