@@ -61,6 +61,7 @@ static string const g_strLicense = "license";
 static string const g_strLibraries = "libraries";
 static string const g_strLink = "link";
 static string const g_strLSP = "lsp";
+static string const g_strMachine = "machine";
 static string const g_strNoCBORMetadata = "no-cbor-metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
@@ -108,6 +109,12 @@ static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
 static string const g_strErrorIds = "error-codes";
+
+/// Possible arguments to for --machine
+static set<string> const g_machineArgs
+{
+	g_strEVM
+};
 
 /// Possible arguments to for --yul-dialect
 static set<string> const g_yulDialectArgs
@@ -668,6 +675,11 @@ General Information)").c_str(),
 	po::options_description assemblyModeOptions("Assembly Mode Options");
 	assemblyModeOptions.add_options()
 		(
+			g_strMachine.c_str(),
+			po::value<string>()->value_name(util::joinHumanReadable(g_machineArgs, ",")),
+			"Target machine in assembly or Yul mode."
+		)
+		(
 			g_strYulDialect.c_str(),
 			po::value<string>()->value_name(util::joinHumanReadable(g_yulDialectArgs, ",")),
 			"Input dialect to use in assembly or yul mode."
@@ -1197,6 +1209,12 @@ void CommandLineParser::processArgs()
 		using Input = yul::YulStack::Language;
 		m_options.assembly.inputLanguage = m_args.count(g_strYul) ? Input::Yul : (m_args.count(g_strStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 
+		if (m_args.count(g_strMachine))
+		{
+			string machine = m_args[g_strMachine].as<string>();
+			if (machine != g_strEVM)
+				solThrow(CommandLineValidationError, "Invalid option for --" + g_strMachine + ": " + machine);
+		}
 		if (m_args.count(g_strYulDialect))
 		{
 			string dialect = m_args[g_strYulDialect].as<string>();
@@ -1212,10 +1230,10 @@ void CommandLineParser::processArgs()
 			);
 		return;
 	}
-	else if (countEnabledOptions({g_strYulDialect}) >= 1)
+	else if (countEnabledOptions({g_strYulDialect, g_strMachine}) >= 1)
 		solThrow(
 			CommandLineValidationError,
-			"--" + g_strYulDialect + " is only valid in assembly mode."
+			"--" + g_strYulDialect + " and --" + g_strMachine + " are only valid in assembly mode."
 		);
 
 	if (m_args.count(g_strMetadataHash))
