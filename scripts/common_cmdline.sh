@@ -103,3 +103,30 @@ function compileFull
         false
     fi
 }
+
+function stripCLIDecorations
+{
+    sed -e '/^=======.*=======$/d' \
+        -e '/^Binary:$/d' \
+        -e '/^Binary of the runtime part:$/d' \
+        -e '/^Opcodes:$/d' \
+        -e '/^IR:$/d' \
+        -e '/^Optimized IR:$/d' \
+        -e '/^EVM assembly:$/d' \
+        -e '/^JSON AST (compact format):$/d' \
+        -e '/^Function signatures:$/d' \
+        -e '/^Contract Storage Layout:$/d' \
+        -e '/^Developer Documentation$/d' \
+        -e '/^User Documentation$/d' \
+        -e '/^Contract JSON ABI$/d' \
+        -e '/^Metadata:$/d' \
+        -e '/^EVM$/d' \
+        -e '/^Pretty printed source:$/d' \
+        -e '/^Text representation:$/d' \
+        -e '/^Binary representation:$/d'
+}
+
+function stripEmptyLines
+{
+    sed -e '/^\s*$/d'
+}
