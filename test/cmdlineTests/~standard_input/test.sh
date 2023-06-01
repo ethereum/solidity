@@ -4,7 +4,6 @@ set -euo pipefail
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 
-SOLTMPDIR=$(mktemp -d)
 set +e
 output=$("$SOLC" --bin 2>&1)
 result=$?
@@ -25,4 +24,3 @@ fi
 # This should not fail
 echo '' | msg_on_error --silent --msg "Incorrect response to --ast-compact-json option with empty stdin" \
     "$SOLC" --ast-compact-json -
-rm -r "$SOLTMPDIR"

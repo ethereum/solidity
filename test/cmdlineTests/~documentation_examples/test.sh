@@ -7,8 +7,6 @@ source "${REPO_ROOT}/scripts/common.sh"
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
 SOLTMPDIR=$(mktemp -d)
-
-set -e
 cd "$SOLTMPDIR"
 
 "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/

@@ -5,8 +5,6 @@ set -euo pipefail
 source "${REPO_ROOT}/scripts/common.sh"
 
 SOLTMPDIR=$(mktemp -d)
-
-set -e
 cd "$SOLTMPDIR"
 
 "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
