@@ -11,7 +11,7 @@ SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 SOLC=${SOLIDITY_BUILD_DIR}/solc/solc
 SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
 
-FILETMP=$(mktemp -d)
+FILETMP=$(mktemp -d -t "stop-after-parse-tests-XXXXXX")
 cd "$FILETMP" || exit 1
 
 

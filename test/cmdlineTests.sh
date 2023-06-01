@@ -174,8 +174,8 @@ function test_solc_behaviour
     local stderr_expected="${7}"
     local stdout_expectation_file="${8}" # the file to write to when user chooses to update stdout expectation
     local stderr_expectation_file="${9}" # the file to write to when user chooses to update stderr expectation
-    local stdout_path; stdout_path=$(mktemp)
-    local stderr_path; stderr_path=$(mktemp)
+    local stdout_path; stdout_path=$(mktemp -t "cmdline-test-stdout-XXXXXX")
+    local stderr_path; stderr_path=$(mktemp -t "cmdline-test-stderr-XXXXXX")
 
     # shellcheck disable=SC2064
     trap "rm -f $stdout_path $stderr_path" EXIT

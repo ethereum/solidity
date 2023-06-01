@@ -6,9 +6,6 @@ source "${REPO_ROOT}/scripts/common.sh"
 
 function test_via_ir_equivalence()
 {
-    SOLTMPDIR=$(mktemp -d)
-    pushd "$SOLTMPDIR" > /dev/null
-
     (( $# <= 2 )) || fail "This function accepts at most two arguments."
     local solidity_file="$1"
     local optimize_flag="$2"
@@ -16,6 +13,9 @@ function test_via_ir_equivalence()
 
     local output_file_prefix
     output_file_prefix=$(basename "$solidity_file" .sol)
+
+    SOLTMPDIR=$(mktemp -d -t "cmdline-test-via-ir-equivalence-${output_file_prefix}-XXXXXX")
+    pushd "$SOLTMPDIR" > /dev/null
 
     local optimizer_flags=()
     [[ $optimize_flag == "" ]] || optimizer_flags+=("$optimize_flag")

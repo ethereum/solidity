@@ -6,7 +6,7 @@ source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
-SOLTMPDIR=$(mktemp -d)
+SOLTMPDIR=$(mktemp -d -t "cmdline-test-docs-examples-XXXXXX")
 cd "$SOLTMPDIR"
 
 "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
