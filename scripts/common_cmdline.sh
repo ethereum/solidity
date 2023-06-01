@@ -104,6 +104,45 @@ function compileFull
     fi
 }
 
+function singleContractOutputViaStandardJSON
+{
+    (( $# == 4 )) || assertFail
+    local language="$1"
+    local selected_output="$2"
+    local extra_settings="$3"
+    local input_file="$4"
+    [[ $selected_output != "*" ]] || assertFail
+
+    json_output=$(
+        "$SOLC" --standard-json --allow-paths "$(basename "$input_file")" - <<EOF
+        {
+            "language": "${language}",
+            "sources": {"${input_file}": {"urls": ["${input_file}"]}},
+            "settings": {
+                "outputSelection": {"*": { "*": ["${selected_output}"]}},
+                ${extra_settings}
+            }
+        }
+EOF
+    )
+
+    local error_list output has_contract_level_outputs
+
+    error_list=$(echo "$json_output" | jq '.errors[] | select(.severity=="error")')
+    [[ $error_list == '' ]] || \
+        fail "Failed to compile ${input_file} via Standard JSON. Errors: ${error_list}"
+
+    has_contract_level_outputs=$(echo "$json_output" | jq 'has("contracts")')
+    [[ $has_contract_level_outputs == true ]] || \
+        fail "Standard JSON output ${selected_output} was ignored by the compiler."
+
+    output=$(echo "$json_output" | jq --raw-output ".contracts[\"${input_file}\"][].${selected_output}")
+    [[ $output != null ]] || \
+        fail "Compiler failed to produce the ${selected_output} output when compiling ${input_file} via Standard JSON."
+
+    echo "$output"
+}
+
 function stripCLIDecorations
 {
     sed -e '/^=======.*=======$/d' \
