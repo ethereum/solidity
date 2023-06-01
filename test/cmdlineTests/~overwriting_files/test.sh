@@ -4,7 +4,6 @@ set -euo pipefail
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 
-printTask "Testing overwriting files..."
 SOLTMPDIR=$(mktemp -d)
 
 # First time it works

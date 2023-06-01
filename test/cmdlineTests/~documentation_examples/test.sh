@@ -6,7 +6,6 @@ source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
-printTask "Compiling all examples from the documentation..."
 SOLTMPDIR=$(mktemp -d)
 
 set -e
@@ -24,7 +23,7 @@ do
     then
         continue
     fi
-    echo "$f"
+    echo "    - Compiling example $f"
 
     opts=()
     # We expect errors if explicitly stated, or if imports
@@ -49,4 +48,3 @@ do
     compileFull "${opts[@]}" "$SOLTMPDIR/$f"
 done
 rm -r "$SOLTMPDIR"
-echo "Done."

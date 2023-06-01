@@ -24,7 +24,6 @@ function test_solc_assembly_output
     fi
 }
 
-printTask "Testing assemble, yul, strict-assembly and optimize..."
 echo '{}' | msg_on_error --silent "$SOLC" - --assemble
 echo '{}' | msg_on_error --silent "$SOLC" - --yul
 echo '{}' | msg_on_error --silent "$SOLC" - --strict-assembly

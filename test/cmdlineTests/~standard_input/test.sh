@@ -4,7 +4,6 @@ set -euo pipefail
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 
-printTask "Testing standard input..."
 SOLTMPDIR=$(mktemp -d)
 set +e
 output=$("$SOLC" --bin 2>&1)

@@ -5,7 +5,6 @@ set -euo pipefail
 source "${REPO_ROOT}/scripts/common.sh"
 
 SOLTMPDIR=$(mktemp -d)
-printTask "Checking that the bug list is up to date..."
 
 cp "${REPO_ROOT}/docs/bugs_by_version.json" "${SOLTMPDIR}/original_bugs_by_version.json"
 "${REPO_ROOT}/scripts/update_bugs_by_version.py"

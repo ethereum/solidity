@@ -15,7 +15,7 @@ function test_via_ir_equivalence()
     [[ $optimize_flag == --optimize || $optimize_flag == "" ]] || assertFail "The second argument must be --optimize if present."
 
     local output_file_prefix
-    output_file_prefix=$(basename "$1" .sol)
+    output_file_prefix=$(basename "$solidity_file" .sol)
 
     local optimizer_flags=()
     [[ $optimize_flag == "" ]] || optimizer_flags+=("$optimize_flag")
@@ -65,7 +65,6 @@ function test_via_ir_equivalence()
     rm -r "$SOLTMPDIR"
 }
 
-printTask "Testing the eqivalence of --via-ir and a two-stage compilation..."
 externalContracts=(
     externalTests/solc-js/DAO/TokenCreation.sol
     libsolidity/semanticTests/externalContracts/_prbmath/PRBMathSD59x18.sol
@@ -87,10 +86,10 @@ for contractFile in "${externalContracts[@]}"
 do
     if ! [[ "${requiresOptimizer[*]}" =~ $contractFile ]]
     then
-        printTask " - ${contractFile}"
+        printTask "    - ${contractFile}"
         test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}"
     fi
 
-    printTask " - ${contractFile} (optimized)"
+    printTask "    - ${contractFile} (optimized)"
     test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}" --optimize
 done

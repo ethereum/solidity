@@ -4,7 +4,6 @@ set -euo pipefail
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 
-printTask "Testing linking itself..."
 SOLTMPDIR=$(mktemp -d)
 cd "$SOLTMPDIR"
 
@@ -18,6 +17,7 @@ grep -q '//' C.bin && grep -q '__' C.bin
 grep -q -v '[/_]' L.bin
 
 # Now link
+printf "    "
 msg_on_error "$SOLC" --link --libraries x.sol:L=0x90f20564390eAe531E810af625A22f51385Cd222 C.bin
 
 # Now the placeholder and explanation should be gone.
