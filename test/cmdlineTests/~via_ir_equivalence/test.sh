@@ -66,33 +66,31 @@ function test_via_ir_equivalence()
 }
 
 printTask "Testing the eqivalence of --via-ir and a two-stage compilation..."
-(
-    externalContracts=(
-        externalTests/solc-js/DAO/TokenCreation.sol
-        libsolidity/semanticTests/externalContracts/_prbmath/PRBMathSD59x18.sol
-        libsolidity/semanticTests/externalContracts/_prbmath/PRBMathUD60x18.sol
-        libsolidity/semanticTests/externalContracts/_stringutils/stringutils.sol
-        libsolidity/semanticTests/externalContracts/deposit_contract.sol
-        libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
-        libsolidity/semanticTests/externalContracts/snark.sol
-    )
-
-    requiresOptimizer=(
-        externalTests/solc-js/DAO/TokenCreation.sol
-        libsolidity/semanticTests/externalContracts/deposit_contract.sol
-        libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
-        libsolidity/semanticTests/externalContracts/snark.sol
-    )
-
-    for contractFile in "${externalContracts[@]}"
-    do
-        if ! [[ "${requiresOptimizer[*]}" =~ $contractFile ]]
-        then
-            printTask " - ${contractFile}"
-            test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}"
-        fi
-
-        printTask " - ${contractFile} (optimized)"
-        test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}" --optimize
-    done
+externalContracts=(
+    externalTests/solc-js/DAO/TokenCreation.sol
+    libsolidity/semanticTests/externalContracts/_prbmath/PRBMathSD59x18.sol
+    libsolidity/semanticTests/externalContracts/_prbmath/PRBMathUD60x18.sol
+    libsolidity/semanticTests/externalContracts/_stringutils/stringutils.sol
+    libsolidity/semanticTests/externalContracts/deposit_contract.sol
+    libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
+    libsolidity/semanticTests/externalContracts/snark.sol
 )
+
+requiresOptimizer=(
+    externalTests/solc-js/DAO/TokenCreation.sol
+    libsolidity/semanticTests/externalContracts/deposit_contract.sol
+    libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
+    libsolidity/semanticTests/externalContracts/snark.sol
+)
+
+for contractFile in "${externalContracts[@]}"
+do
+    if ! [[ "${requiresOptimizer[*]}" =~ $contractFile ]]
+    then
+        printTask " - ${contractFile}"
+        test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}"
+    fi
+
+    printTask " - ${contractFile} (optimized)"
+    test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}" --optimize
+done

@@ -25,22 +25,20 @@ function test_solc_assembly_output
 }
 
 printTask "Testing assemble, yul, strict-assembly and optimize..."
-(
-    echo '{}' | msg_on_error --silent "$SOLC" - --assemble
-    echo '{}' | msg_on_error --silent "$SOLC" - --yul
-    echo '{}' | msg_on_error --silent "$SOLC" - --strict-assembly
+echo '{}' | msg_on_error --silent "$SOLC" - --assemble
+echo '{}' | msg_on_error --silent "$SOLC" - --yul
+echo '{}' | msg_on_error --silent "$SOLC" - --strict-assembly
 
-    # Test options above in conjunction with --optimize.
-    # Using both, --assemble and --optimize should fail.
-    echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null && fail "solc --assemble --optimize did not fail as expected."
-    echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && fail "solc --yul --optimize did not fail as expected."
+# Test options above in conjunction with --optimize.
+# Using both, --assemble and --optimize should fail.
+echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null && fail "solc --assemble --optimize did not fail as expected."
+echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && fail "solc --yul --optimize did not fail as expected."
 
-    # Test yul and strict assembly output
-    # Non-empty code results in non-empty binary representation with optimizations turned off,
-    # while it results in empty binary representation with optimizations turned on.
-    test_solc_assembly_output "{ let x:u256 := 0:u256 }" "{ let x := 0 }" "--yul"
-    test_solc_assembly_output "{ let x:u256 := bitnot(7:u256) }" "{ let x := bitnot(7) }" "--yul"
-    test_solc_assembly_output "{ let t:bool := not(true) }" "{ let t:bool := not(true) }" "--yul"
-    test_solc_assembly_output "{ let x := 0 }" "{ let x := 0 }" "--strict-assembly"
-    test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
-)
+# Test yul and strict assembly output
+# Non-empty code results in non-empty binary representation with optimizations turned off,
+# while it results in empty binary representation with optimizations turned on.
+test_solc_assembly_output "{ let x:u256 := 0:u256 }" "{ let x := 0 }" "--yul"
+test_solc_assembly_output "{ let x:u256 := bitnot(7:u256) }" "{ let x := bitnot(7) }" "--yul"
+test_solc_assembly_output "{ let t:bool := not(true) }" "{ let t:bool := not(true) }" "--yul"
+test_solc_assembly_output "{ let x := 0 }" "{ let x := 0 }" "--strict-assembly"
+test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
