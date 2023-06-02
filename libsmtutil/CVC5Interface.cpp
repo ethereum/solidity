@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsmtutil/CVC4Interface.h>
+#include <libsmtutil/CVC5Interface.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>

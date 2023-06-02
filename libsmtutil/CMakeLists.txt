@@ -19,7 +19,7 @@ else()
 endif()
 
 if (${CVC5_FOUND})
-  set(cvc5_SRCS CVC4Interface.cpp CVC4Interface.h)
+  set(cvc5_SRCS CVC5Interface.cpp CVC5Interface.h)
 else()
   set(cvc5_SRCS)
 endif()

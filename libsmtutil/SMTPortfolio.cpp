@@ -22,7 +22,7 @@
 #include <libsmtutil/Z3Interface.h>
 #endif
 #ifdef HAVE_CVC5
-#include <libsmtutil/CVC4Interface.h>
+#include <libsmtutil/CVC5Interface.h>
 #endif
 #include <libsmtutil/SMTLib2Interface.h>
 
