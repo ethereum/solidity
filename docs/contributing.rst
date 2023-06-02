@@ -269,6 +269,60 @@ and re-run the test. It now passes again:
     Do not put more than one contract into a single file, unless you are testing inheritance or cross-contract calls.
     Each file should test one aspect of your new feature.
 
+Command-line Tests
+------------------
+
+Our suite of end-to-end command-line tests checks the behaviour of the compiler binary as a whole
+in various scenarios.
+These tests are located in `test/cmdlineTests/ <https://github.com/ethereum/solidity/tree/develop/test/cmdlineTests>`_,
+one per subdirectory, and can be executed using the ``cmdlineTests.sh`` script.
+
+By default the script runs all available tests.
+You can also provide one or more `file name patterns <https://www.gnu.org/software/bash/manual/bash.html#Filename-Expansion>`_,
+in which case only the tests matching at least one pattern will be executed.
+
+By default the script assumes that a ``solc`` binary is available inside the ``build/`` subdirectory
+inside the working copy.
+If you build the compiler outside of the source tree, you can use the ``SOLIDITY_BUILD_DIR`` environment
+variable to specify a different location for the build directory.
+
+Example:
+
+.. code-block:: bash
+
+    export SOLIDITY_BUILD_DIR=~/solidity/build/
+    test/cmdlineTests.sh "standard_*" "*_yul_*"
+
+The commands above will run tests from directories starting with ``test/cmdlineTests/standard_`` and
+subdirectories of ``test/cmdlineTests/`` that have ``_yul_`` somewhere in the name.
+It will also assume that the file ``solidity/build/solc/solc`` inside your home directory is the
+compiler binary (unless you are on Windows -- then ``solidity/build/solc/Release/solc.exe``).
+
+There are several kinds of command-line tests:
+
+- *Standard JSON test*: contains at least an ``input.json`` file.
+  In general may contain:
+
+    - ``input.json``: input file to be passed to the ``--standard-json`` option on the command line.
+    - ``output.json``: expected Standard JSON output.
+    - ``args``: extra command-line arguments passed to ``solc``.
+
+- *CLI test*: contains at least an ``input.*`` file (other than ``input.json``).
+  In general may contain:
+
+    - ``input.*``: a single input file, whose name will be supplied to ``solc`` on the command line.
+      Usually ``input.sol`` or ``input.yul``.
+    - ``args``: extra command-line arguments passed to ``solc``.
+    - ``stdin``: content to be passed to ``solc`` via standard input.
+    - ``output``: expected content of the standard output.
+    - ``err``: expected content of the standard error output.
+    - ``exit``: expected exit code. If not provided, zero is expected.
+
+- *Script test*: contains a ``test.*`` file.
+  In general may contain:
+
+    - ``test.*``: a single script to run, usually ``test.sh`` or ``test.py``.
+      The script must be executable.
 
 Running the Fuzzer via AFL
 ==========================
