@@ -32,6 +32,8 @@ set -eo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
+export REPO_ROOT SOLIDITY_BUILD_DIR
+
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
@@ -54,7 +56,7 @@ do
             shift
             ;;
         *)
-            matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut -c 3- | sort)
+            matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut -c 3- | LC_COLLATE=C sort)
 
             if [[ $matching_tests == "" ]]
             then
@@ -72,7 +74,11 @@ done
 
 if (( ${#selected_tests[@]} == 0 && ${#patterns_with_no_matches[@]} == 0 ))
 then
-    selected_tests=(*)
+    # NOTE: We want leading symbols in names to affect the sort order but without
+    # LC_COLLATE=C sort seems to ignore them.
+    all_tests=$(echo * | tr '[:space:]' '\n' | LC_COLLATE=C sort)
+    # shellcheck disable=SC2206 # We do not support test names containing spaces.
+    selected_tests=($all_tests)
 fi
 popd > /dev/null
 
@@ -88,6 +94,7 @@ case "$OSTYPE" in
         ;;
 esac
 echo "Using solc binary at ${SOLC}"
+export SOLC
 
 INTERACTIVE=true
 if ! tty -s || [ "$CI" ]
@@ -167,8 +174,8 @@ function test_solc_behaviour
     local stderr_expected="${7}"
     local stdout_expectation_file="${8}" # the file to write to when user chooses to update stdout expectation
     local stderr_expectation_file="${9}" # the file to write to when user chooses to update stderr expectation
-    local stdout_path; stdout_path=$(mktemp)
-    local stderr_path; stderr_path=$(mktemp)
+    local stdout_path; stdout_path=$(mktemp -t "cmdline-test-stdout-XXXXXX")
+    local stderr_path; stderr_path=$(mktemp -t "cmdline-test-stderr-XXXXXX")
 
     # shellcheck disable=SC2064
     trap "rm -f $stdout_path $stderr_path" EXIT
@@ -291,112 +298,7 @@ EOF
 }
 
 
-function test_solc_assembly_output
-{
-    local input="${1}"
-    local expected="${2}"
-    IFS=" " read -r -a solc_args <<< "${3}"
-
-    local expected_object="object \"object\" { code ${expected} }"
-
-    output=$(echo "${input}" | msg_on_error --no-stderr "$SOLC" - "${solc_args[@]}")
-    empty=$(echo "$output" | tr '\n' ' ' | tr -s ' ' | sed -ne "/${expected_object}/p")
-    if [ -z "$empty" ]
-    then
-        printError "Incorrect assembly output. Expected: "
-        >&2 echo -e "${expected}"
-        printError "with arguments ${solc_args[*]}, but got:"
-        >&2 echo "${output}"
-        fail
-    fi
-}
-
-function test_via_ir_equivalence()
-{
-    SOLTMPDIR=$(mktemp -d)
-    pushd "$SOLTMPDIR" > /dev/null
-
-    (( $# <= 2 )) || fail "This function accepts at most two arguments."
-    local solidity_file="$1"
-    local optimize_flag="$2"
-    [[ $optimize_flag == --optimize || $optimize_flag == "" ]] || assertFail "The second argument must be --optimize if present."
-
-    local output_file_prefix
-    output_file_prefix=$(basename "$1" .sol)
-
-    local optimizer_flags=()
-    [[ $optimize_flag == "" ]] || optimizer_flags+=("$optimize_flag")
-    [[ $optimize_flag == "" ]] || output_file_prefix+="_optimize"
-
-    msg_on_error --no-stderr "$SOLC" --ir-optimized --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
-        sed '/^Optimized IR:$/d' |
-        split_on_empty_lines_into_numbered_files "$output_file_prefix" ".yul"
-
-    local asm_output_two_stage asm_output_via_ir
-
-    for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
-        asm_output_two_stage+=$(
-            msg_on_error --no-stderr "$SOLC" --strict-assembly --asm "${optimizer_flags[@]}" "$yul_file" |
-                sed '/^Text representation:$/d' |
-                sed '/^=======/d'
-        )
-    done
-
-    asm_output_via_ir=$(
-        msg_on_error --no-stderr "$SOLC" --via-ir --asm --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
-            sed '/^EVM assembly:$/d' |
-            sed '/^=======/d'
-    )
-
-    diff_values "$asm_output_two_stage" "$asm_output_via_ir" --ignore-space-change --ignore-blank-lines
-
-    local bin_output_two_stage bin_output_via_ir
-
-    for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
-        bin_output_two_stage+=$(
-            msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
-                sed '/^Binary representation:$/d' |
-                sed '/^=======/d'
-        )
-    done
-
-    bin_output_via_ir=$(
-        msg_on_error --no-stderr "$SOLC" --via-ir --bin "${optimizer_flags[@]}" "$solidity_file" |
-            sed '/^Binary:$/d' |
-            sed '/^=======/d'
-    )
-
-    diff_values "$bin_output_two_stage" "$bin_output_via_ir" --ignore-space-change --ignore-blank-lines
-
-    popd > /dev/null
-    rm -r "$SOLTMPDIR"
-}
-
 ## RUN
-
-SOLTMPDIR=$(mktemp -d)
-printTask "Checking that the bug list is up to date..."
-cp "${REPO_ROOT}/docs/bugs_by_version.json" "${SOLTMPDIR}/original_bugs_by_version.json"
-"${REPO_ROOT}/scripts/update_bugs_by_version.py"
-diff --unified "${SOLTMPDIR}/original_bugs_by_version.json" "${REPO_ROOT}/docs/bugs_by_version.json" || \
-    fail "The bug list in bugs_by_version.json was out of date and has been updated. Please investigate and submit a bugfix if necessary."
-rm -r "$SOLTMPDIR"
-
-printTask "Testing unknown options..."
-(
-    set +e
-    output=$("$SOLC" --allow=test 2>&1)
-    failed=$?
-    set -e
-
-    if [ "$output" == "unrecognised option '--allow=test'" ] && [ $failed -ne 0 ]
-    then
-        echo "Passed"
-    else
-        fail "Incorrect response to unknown options: $output"
-    fi
-)
-
 
 printTask "Testing passing files that are not found..."
 test_solc_behaviour "file_not_found.sol" "" "" "" 1 "" "\"file_not_found.sol\" is not found." "" ""
@@ -437,13 +339,23 @@ printTask "Running general commandline tests..."
             fi
         fi
 
+        scriptFiles="$(ls -1 "${tdir}/test."* 2> /dev/null || true)"
+        scriptCount="$(echo "${scriptFiles}" | wc -w)"
+
         inputFiles="$(ls -1 "${tdir}/input."* 2> /dev/null || true)"
         inputCount="$(echo "${inputFiles}" | wc -w)"
-        if (( inputCount > 1 ))
+        (( inputCount <= 1 )) || fail "Ambiguous input. Found input files in multiple formats:"$'\n'"${inputFiles}"
+        (( scriptCount <= 1 )) || fail "Ambiguous input. Found script files in multiple formats:"$'\n'"${scriptFiles}"
+        (( inputCount == 0 || scriptCount == 0 )) || fail "Ambiguous input. Found both input and script files:"$'\n'"${inputFiles}"$'\n'"${scriptFiles}"
+
+        if (( scriptCount == 1 ))
         then
-            printError "Ambiguous input. Found input files in multiple formats:"
-            echo -e "${inputFiles}"
-            fail
+            if ! "$scriptFiles"
+            then
+                fail "Test script ${scriptFiles} failed."
+            fi
+
+            continue
         fi
 
         # Use printf to get rid of the trailing newline
@@ -492,207 +404,5 @@ printTask "Running general commandline tests..."
                             "$stderrExpectationFile"
     done
 )
-
-printTask "Compiling various other contracts and libraries..."
-(
-    cd "$REPO_ROOT"/test/compilationTests/
-    for dir in */
-    do
-        echo " - $dir"
-        cd "$dir"
-        # shellcheck disable=SC2046 # These file names are not supposed to contain spaces.
-        compileFull --expect-warnings $(find . -name '*.sol')
-        cd ..
-    done
-)
-
-printTask "Compiling all examples from the documentation..."
-SOLTMPDIR=$(mktemp -d)
-(
-    set -e
-    cd "$SOLTMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
-    developmentVersion=$("$REPO_ROOT/scripts/get_version.sh")
-
-    for f in *.yul *.sol
-    do
-        # The contributors guide uses syntax tests, but we cannot
-        # really handle them here.
-        if grep -E 'DeclarationError:|// ----' "$f" >/dev/null
-        then
-            continue
-        fi
-        echo "$f"
-
-        opts=()
-        # We expect errors if explicitly stated, or if imports
-        # are used (in the style guide)
-        if grep -E "// This will not compile" "$f" >/dev/null ||
-            sed -e 's|//.*||g' "$f" | grep -E "import \"" >/dev/null
-        then
-            opts=(--expect-errors)
-        fi
-        if grep "// This will report a warning" "$f" >/dev/null
-        then
-            opts+=(--expect-warnings)
-        fi
-        if grep "// This may report a warning" "$f" >/dev/null
-        then
-            opts+=(--ignore-warnings)
-        fi
-
-        # Disable the version pragma in code snippets that only work with the current development version.
-        # It's necessary because x.y.z won't match `^x.y.z` or `>=x.y.z` pragmas until it's officially released.
-        sed -i.bak -E -e 's/pragma[[:space:]]+solidity[[:space:]]*(\^|>=)[[:space:]]*'"$developmentVersion"'/pragma solidity >0.0.1/' "$f"
-        compileFull "${opts[@]}" "$SOLTMPDIR/$f"
-    done
-)
-rm -r "$SOLTMPDIR"
-echo "Done."
-
-printTask "Testing library checksum..."
-echo '' | msg_on_error --no-stdout "$SOLC" - --link --libraries a=0x90f20564390eAe531E810af625A22f51385Cd222
-echo '' | "$SOLC" - --link --libraries a=0x80f20564390eAe531E810af625A22f51385Cd222 &>/dev/null && \
-    fail "solc --link did not reject a library address with an invalid checksum."
-
-printTask "Testing long library names..."
-echo '' | msg_on_error --no-stdout "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname=0x90f20564390eAe531E810af625A22f51385Cd222
-
-printTask "Testing linking itself..."
-SOLTMPDIR=$(mktemp -d)
-(
-    cd "$SOLTMPDIR"
-    echo 'library L { function f() public pure {} } contract C { function f() public pure { L.f(); } }' > x.sol
-    msg_on_error --no-stderr "$SOLC" --bin -o . x.sol
-    # Explanation and placeholder should be there
-    grep -q '//' C.bin && grep -q '__' C.bin
-    # But not in library file.
-    grep -q -v '[/_]' L.bin
-    # Now link
-    msg_on_error "$SOLC" --link --libraries x.sol:L=0x90f20564390eAe531E810af625A22f51385Cd222 C.bin
-    # Now the placeholder and explanation should be gone.
-    grep -q -v '[/_]' C.bin
-)
-rm -r "$SOLTMPDIR"
-
-printTask "Testing overwriting files..."
-SOLTMPDIR=$(mktemp -d)
-(
-    # First time it works
-    echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create"
-    # Second time it fails
-    echo 'contract C {}' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null && \
-        fail "solc did not refuse to overwrite $SOLTMPDIR/non-existing-stuff-to-create."
-    # Unless we force
-    echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create"
-)
-rm -r "$SOLTMPDIR"
-
-printTask "Testing assemble, yul, strict-assembly and optimize..."
-(
-    echo '{}' | msg_on_error --silent "$SOLC" - --assemble
-    echo '{}' | msg_on_error --silent "$SOLC" - --yul
-    echo '{}' | msg_on_error --silent "$SOLC" - --strict-assembly
-
-    # Test options above in conjunction with --optimize.
-    # Using both, --assemble and --optimize should fail.
-    echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null && fail "solc --assemble --optimize did not fail as expected."
-    echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && fail "solc --yul --optimize did not fail as expected."
-
-    # Test yul and strict assembly output
-    # Non-empty code results in non-empty binary representation with optimizations turned off,
-    # while it results in empty binary representation with optimizations turned on.
-    test_solc_assembly_output "{ let x:u256 := 0:u256 }" "{ let x := 0 }" "--yul"
-    test_solc_assembly_output "{ let x:u256 := bitnot(7:u256) }" "{ let x := bitnot(7) }" "--yul"
-    test_solc_assembly_output "{ let t:bool := not(true) }" "{ let t:bool := not(true) }" "--yul"
-    test_solc_assembly_output "{ let x := 0 }" "{ let x := 0 }" "--strict-assembly"
-    test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
-)
-
-printTask "Testing the eqivalence of --via-ir and a two-stage compilation..."
-(
-    externalContracts=(
-        externalTests/solc-js/DAO/TokenCreation.sol
-        libsolidity/semanticTests/externalContracts/_prbmath/PRBMathSD59x18.sol
-        libsolidity/semanticTests/externalContracts/_prbmath/PRBMathUD60x18.sol
-        libsolidity/semanticTests/externalContracts/_stringutils/stringutils.sol
-        libsolidity/semanticTests/externalContracts/deposit_contract.sol
-        libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
-        libsolidity/semanticTests/externalContracts/snark.sol
-    )
-
-    requiresOptimizer=(
-        externalTests/solc-js/DAO/TokenCreation.sol
-        libsolidity/semanticTests/externalContracts/deposit_contract.sol
-        libsolidity/semanticTests/externalContracts/FixedFeeRegistrar.sol
-        libsolidity/semanticTests/externalContracts/snark.sol
-    )
-
-    for contractFile in "${externalContracts[@]}"
-    do
-        if ! [[ "${requiresOptimizer[*]}" =~ $contractFile ]]
-        then
-            printTask " - ${contractFile}"
-            test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}"
-        fi
-
-        printTask " - ${contractFile} (optimized)"
-        test_via_ir_equivalence "${REPO_ROOT}/test/${contractFile}" --optimize
-    done
-)
-
-printTask "Testing standard input..."
-SOLTMPDIR=$(mktemp -d)
-(
-    set +e
-    output=$("$SOLC" --bin 2>&1)
-    result=$?
-    set -e
-
-    # This should fail
-    if [[ ! ("$output" =~ "No input files given") || ($result == 0) ]]
-    then
-        fail "Incorrect response to empty input arg list: $output"
-    fi
-
-    # The contract should be compiled
-    if ! echo 'contract C {}' | msg_on_error --no-stderr "$SOLC" - --bin | grep -q "<stdin>:C"
-    then
-        fail "Failed to compile a simple contract from standard input"
-    fi
-
-    # This should not fail
-    echo '' | msg_on_error --silent --msg "Incorrect response to --ast-compact-json option with empty stdin" \
-        "$SOLC" --ast-compact-json -
-)
-rm -r "$SOLTMPDIR"
-
-printTask "Testing AST import/export..."
-SOLTMPDIR=$(mktemp -d)
-(
-    cd "$SOLTMPDIR"
-    if ! "$REPO_ROOT/scripts/ASTImportTest.sh" ast
-    then
-        rm -r "$SOLTMPDIR"
-        fail
-    fi
-)
-rm -r "$SOLTMPDIR"
-
-printTask "Testing AST export with stop-after=parsing..."
-"$REPO_ROOT/test/stopAfterParseTests.sh"
-
-printTask "Testing soljson via the fuzzer..."
-SOLTMPDIR=$(mktemp -d)
-(
-    set -e
-    cd "$SOLTMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
-
-    echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
-    echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
-)
-rm -r "$SOLTMPDIR"
 
 echo "Commandline tests successful."
