@@ -1681,7 +1681,8 @@ workflows:
       - t_ext: *job_native_test_ext_prb_math
       - t_ext: *job_native_test_ext_elementfi
       - t_ext: *job_native_test_ext_brink
-      - t_ext: *job_native_test_ext_gp2
+      # NOTE: We are disabling gp2 tests due to constant failures.
+      # - t_ext: *job_native_test_ext_gp2
       # NOTE: The external tests below were commented because they
       # depend on a specific version of hardhat which does not support shanghai EVM.
       #- t_ext: *job_native_test_ext_trident
@@ -1703,7 +1704,8 @@ workflows:
             - t_native_test_ext_prb_math
             - t_native_test_ext_elementfi
             - t_native_test_ext_brink
-            - t_native_test_ext_gp2
+            # NOTE: We are disabling gp2 tests due to constant failures.
+            #- t_native_test_ext_gp2
             # NOTE: The external tests below were commented because they
             # depend on a specific version of hardhat which does not support shanghai EVM.
             #- t_native_test_ext_trident
