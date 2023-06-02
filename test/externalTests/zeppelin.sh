@@ -70,7 +70,6 @@ function zeppelin_test
     sed -i "s|describe(\('when the given implementation is the zero address'\)|describe.skip(\1|g" test/proxy/transparent/TransparentUpgradeableProxy.behaviour.js
     sed -i "s|describe(\('when the new proposed admin is the zero address'\)|describe.skip(\1|g" test/proxy/transparent/TransparentUpgradeableProxy.behaviour.js
     # In some cases Hardhat does not detect revert reasons properly via IR.
-    sed -i "s|it(\('reverts if the current value is 0'\)|it.skip(\1|g" test/utils/Counters.test.js
     sed -i "s|it(\('prevent unauthorized maintenance'\)|it.skip(\1|g" test/governance/TimelockController.test.js
     sed -i "s|it(\('cannot cancel invalid operation'\)|it.skip(\1|g" test/governance/TimelockController.test.js
     sed -i "s|it(\('cannot call onlyInitializable function outside the scope of an initializable function'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
