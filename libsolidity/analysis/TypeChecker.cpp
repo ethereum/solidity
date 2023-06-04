@@ -3359,6 +3359,29 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isPure = isPure;
 		}
 	if (
+		auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
+		!annotation.isPure.set() &&
+		functionType &&
+		functionType->kind() == FunctionType::Kind::Event &&
+		functionType->hasDeclaration() &&
+		memberName == "selector"
+	)
+		if (
+			auto const* eventDefinition = dynamic_cast<EventDefinition const*>(&functionType->declaration());
+			eventDefinition &&
+			!eventDefinition->isAnonymous()
+		)
+			annotation.isPure = true;
+	if (
+		auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
+		!annotation.isPure.set() &&
+		functionType &&
+		functionType->kind() == FunctionType::Kind::Error &&
+		functionType->hasDeclaration() &&
+		memberName == "selector"
+	)
+		annotation.isPure = true;
+	if (
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
 		!annotation.isPure.set() &&
 		varDecl &&

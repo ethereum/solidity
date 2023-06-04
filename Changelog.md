@@ -21,6 +21,7 @@ Bugfixes:
  * SMTChecker: Fix false negative when a verification target can be violated only by trusted external call from another public function.
  * Yul Optimizer: Ensure that the assignment of memory slots for variables moved to memory does not depend on AST IDs that may depend on whether additional files are included during compilation.
  * Yul Optimizer: Fix optimized IR being unnecessarily passed through the Yul optimizer again before bytecode generation.
+ * TypeChecker: Fix non-constant event and error selectors.
 
 AST Changes:
  * AST: Add the ``experimentalSolidity`` field to the ``SourceUnit`` nodes, which indicate whether the experimental parsing mode has been enabled via ``pragma experimental solidity``.
