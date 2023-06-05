@@ -1,0 +1,197 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "2046",
+            "formattedMessage": "TypeError: Recursive struct definition.
+ --> A:3:1:
+  |
+3 | struct S { S s; } contract C { event E(S); }
+  | ^^^^^^^^^^^^^^^^^
+
+",
+            "message": "Recursive struct definition.",
+            "severity": "error",
+            "sourceLocation":
+            {
+                "end": 76,
+                "file": "A",
+                "start": 59
+            },
+            "type": "TypeError"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "ast":
+            {
+                "absolutePath": "A",
+                "exportedSymbols":
+                {
+                    "C":
+                    [
+                        11
+                    ],
+                    "S":
+                    [
+                        5
+                    ]
+                },
+                "id": 12,
+                "license": "GPL-3.0",
+                "nodeType": "SourceUnit",
+                "nodes":
+                [
+                    {
+                        "id": 1,
+                        "literals":
+                        [
+                            "solidity",
+                            ">=",
+                            "0.0"
+                        ],
+                        "nodeType": "PragmaDirective",
+                        "src": "36:22:0"
+                    },
+                    {
+                        "canonicalName": "S",
+                        "id": 5,
+                        "members":
+                        [
+                            {
+                                "constant": false,
+                                "id": 4,
+                                "mutability": "mutable",
+                                "name": "s",
+                                "nameLocation": "72:1:0",
+                                "nodeType": "VariableDeclaration",
+                                "scope": 5,
+                                "src": "70:3:0",
+                                "stateVariable": false,
+                                "storageLocation": "default",
+                                "typeDescriptions":
+                                {
+                                    "typeIdentifier": "t_struct$_S_$5_storage_ptr",
+                                    "typeString": "struct S"
+                                },
+                                "typeName":
+                                {
+                                    "id": 3,
+                                    "nodeType": "UserDefinedTypeName",
+                                    "pathNode":
+                                    {
+                                        "id": 2,
+                                        "name": "S",
+                                        "nameLocations":
+                                        [
+                                            "70:1:0"
+                                        ],
+                                        "nodeType": "IdentifierPath",
+                                        "referencedDeclaration": 5,
+                                        "src": "70:1:0"
+                                    },
+                                    "referencedDeclaration": 5,
+                                    "src": "70:1:0",
+                                    "typeDescriptions":
+                                    {
+                                        "typeIdentifier": "t_struct$_S_$5_storage_ptr",
+                                        "typeString": "struct S"
+                                    }
+                                },
+                                "visibility": "internal"
+                            }
+                        ],
+                        "name": "S",
+                        "nameLocation": "66:1:0",
+                        "nodeType": "StructDefinition",
+                        "scope": 12,
+                        "src": "59:17:0",
+                        "visibility": "public"
+                    },
+                    {
+                        "abstract": false,
+                        "baseContracts": [],
+                        "canonicalName": "C",
+                        "contractDependencies": [],
+                        "contractKind": "contract",
+                        "id": 11,
+                        "linearizedBaseContracts":
+                        [
+                            11
+                        ],
+                        "name": "C",
+                        "nameLocation": "86:1:0",
+                        "nodeType": "ContractDefinition",
+                        "nodes":
+                        [
+                            {
+                                "anonymous": false,
+                                "id": 10,
+                                "name": "E",
+                                "nameLocation": "96:1:0",
+                                "nodeType": "EventDefinition",
+                                "parameters":
+                                {
+                                    "id": 9,
+                                    "nodeType": "ParameterList",
+                                    "parameters":
+                                    [
+                                        {
+                                            "constant": false,
+                                            "id": 8,
+                                            "indexed": false,
+                                            "mutability": "mutable",
+                                            "name": "",
+                                            "nameLocation": "-1:-1:-1",
+                                            "nodeType": "VariableDeclaration",
+                                            "scope": 10,
+                                            "src": "98:1:0",
+                                            "stateVariable": false,
+                                            "storageLocation": "default",
+                                            "typeDescriptions": {},
+                                            "typeName":
+                                            {
+                                                "id": 7,
+                                                "nodeType": "UserDefinedTypeName",
+                                                "pathNode":
+                                                {
+                                                    "id": 6,
+                                                    "name": "S",
+                                                    "nameLocations":
+                                                    [
+                                                        "98:1:0"
+                                                    ],
+                                                    "nodeType": "IdentifierPath",
+                                                    "referencedDeclaration": 5,
+                                                    "src": "98:1:0"
+                                                },
+                                                "referencedDeclaration": 5,
+                                                "src": "98:1:0",
+                                                "typeDescriptions": {}
+                                            },
+                                            "visibility": "internal"
+                                        }
+                                    ],
+                                    "src": "97:3:0"
+                                },
+                                "src": "90:11:0"
+                            }
+                        ],
+                        "scope": 12,
+                        "src": "77:26:0",
+                        "usedErrors": [],
+                        "usedEvents":
+                        [
+                            10
+                        ]
+                    }
+                ],
+                "src": "36:67:0"
+            },
+            "id": 0
+        }
+    }
+}
