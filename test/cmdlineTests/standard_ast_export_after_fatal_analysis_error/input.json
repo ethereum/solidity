@@ -1,0 +1,15 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\nstruct S { S s; } contract C { event E(S); }"
+		}
+	},
+	"settings":
+	{
+		"parserErrorRecovery": true,
+		"outputSelection": { "*": { "": ["ast"] } }
+	}
+}

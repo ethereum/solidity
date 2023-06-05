@@ -620,6 +620,8 @@ bool CompilerStack::analyze()
 					modelChecker.analyze(*source->ast);
 			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
 		}
+
+		m_stackState = AnalysisPerformed;
 	}
 	catch (FatalError const&)
 	{
@@ -628,7 +630,6 @@ bool CompilerStack::analyze()
 		noErrors = false;
 	}
 
-	m_stackState = AnalysisPerformed;
 	if (!noErrors)
 		m_hasError = true;
 
