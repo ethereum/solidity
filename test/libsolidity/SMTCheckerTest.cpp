@@ -122,6 +122,9 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 			m_shouldRun = false;
 #endif
 	}
+
+	auto const& bmcLoopIterations = m_reader.sizetSetting("BMCLoopIterations", 1);
+	m_modelCheckerSettings.bmcLoopIterations = std::optional<unsigned>{bmcLoopIterations};
 }
 
 TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)

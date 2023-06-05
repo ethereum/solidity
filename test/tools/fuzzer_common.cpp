@@ -105,6 +105,7 @@ void FuzzerUtil::testCompiler(
 	{
 		forceSMT(_input);
 		compiler.setModelCheckerSettings({
+			/*bmcLoopIterations*/1,
 			frontend::ModelCheckerContracts::Default(),
 			/*divModWithSlacks*/true,
 			frontend::ModelCheckerEngine::All(),

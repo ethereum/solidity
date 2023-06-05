@@ -14,4 +14,4 @@ contract C
 // ----
 // Warning 4984: (106-111): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
-// Warning 2661: (106-111): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Info 6002: BMC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
