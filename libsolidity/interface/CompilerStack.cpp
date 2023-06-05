@@ -475,10 +475,12 @@ bool CompilerStack::analyze()
 
 		resolver.warnHomonymDeclarations();
 
-		DocStringTagParser docStringTagParser(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
-				noErrors = false;
+		{
+			DocStringTagParser docStringTagParser(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
+					noErrors = false;
+		}
 
 		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
@@ -490,10 +492,13 @@ bool CompilerStack::analyze()
 			if (source->ast && !declarationTypeChecker.check(*source->ast))
 				return false;
 
-		// Requires DeclarationTypeChecker to have run
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.validateDocStringsUsingTypes(*source->ast))
-				noErrors = false;
+		{
+			// Requires DeclarationTypeChecker to have run
+			DocStringTagParser docStringTagParser(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (source->ast && !docStringTagParser.validateDocStringsUsingTypes(*source->ast))
+					noErrors = false;
+		}
 
 		// Next, we check inheritance, overrides, function collisions and other things at
 		// contract or function level.
