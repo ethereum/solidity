@@ -187,9 +187,16 @@ void ImmutableItem::storeValue(Type const& _sourceType, SourceLocation const&, b
 	m_context << Instruction::POP;
 }
 
-void ImmutableItem::setToZero(SourceLocation const&, bool) const
+void ImmutableItem::setToZero(SourceLocation const&, bool _removeReference) const
 {
-	solAssert(false, "Attempted to set immutable variable to zero.");
+	CompilerUtils utils(m_context);
+	solUnimplementedAssert(m_dataType->isValueType());
+	solAssert(_removeReference);
+
+	m_context << m_context.immutableMemoryOffset(m_variable);
+	utils.pushZeroValue(*m_dataType);
+	utils.storeInMemoryDynamic(*m_dataType);
+	m_context << Instruction::POP;
 }
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
