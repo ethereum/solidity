@@ -225,6 +225,13 @@ public:
 	/// @returns false on error.
 	bool analyze();
 
+	/// Perform the analysis steps of legacy language mode.
+	/// @returns false on error.
+	bool analyzeLegacy(bool _noErrorsSoFar);
+	/// Perform the analysis steps of experimental language mode.
+	/// @returns false on error.
+	bool analyzeExperimental();
+
 	/// Parses and analyzes all source units that were added
 	/// @returns false on error.
 	bool parseAndAnalyze(State _stopAfter = State::CompilationSuccessful);
