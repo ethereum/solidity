@@ -57,6 +57,7 @@
 #include <libsolidity/parsing/Parser.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/codegen/experimental/IRGenerator.h>
 
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
@@ -478,10 +479,12 @@ bool CompilerStack::analyze()
 
 		resolver.warnHomonymDeclarations();
 
-		DocStringTagParser docStringTagParser(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
-				noErrors = false;
+		{
+			DocStringTagParser docStringTagParser(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
+					noErrors = false;
+ 		}
 
 		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
@@ -1522,20 +1525,40 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(
-		m_evmVersion,
-		m_eofVersion,
-		m_revertStrings,
-		sourceIndices(),
-		m_debugInfoSelection,
-		this,
-		m_optimiserSettings
-	);
-	compiledContract.yulIR = generator.run(
-		_contract,
-		createCBORMetadata(compiledContract, /* _forIR */ true),
-		otherYulSources
-	);
+	if (m_experimentalAnalysis)
+	{
+		experimental::IRGenerator generator(
+			m_evmVersion,
+			m_eofVersion,
+			m_revertStrings,
+			sourceIndices(),
+			m_debugInfoSelection,
+			this,
+			*m_experimentalAnalysis
+		);
+		compiledContract.yulIR = generator.run(
+			_contract,
+			{}, // TODO: createCBORMetadata(compiledContract, /* _forIR */ true),
+			otherYulSources
+		);
+	}
+	else
+	{
+		IRGenerator generator(
+			m_evmVersion,
+			m_eofVersion,
+			m_revertStrings,
+			sourceIndices(),
+			m_debugInfoSelection,
+			this,
+			m_optimiserSettings
+		);
+		compiledContract.yulIR = generator.run(
+			_contract,
+			createCBORMetadata(compiledContract, /* _forIR */ true),
+			otherYulSources
+		);
+	}
 
 	yul::YulStack stack(
 		m_evmVersion,
