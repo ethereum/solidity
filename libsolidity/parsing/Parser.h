@@ -219,6 +219,11 @@ private:
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
+	bool isQuotedPath() const;
+	bool isStdlibPath() const;
+
+	ASTPointer<ASTString> getStdlibImportPathAndAdvance();
+
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
 	ASTPointer<ParameterList> createEmptyParameterList();
 
