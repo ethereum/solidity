@@ -46,6 +46,8 @@ set(sources
 	analysis/TypeChecker.h
 	analysis/ViewPureChecker.cpp
 	analysis/ViewPureChecker.h
+	analysis/experimental/Analysis.cpp
+	analysis/experimental/Analysis.h
 	ast/AST.cpp
 	ast/AST.h
 	ast/AST_accept.h
@@ -90,6 +92,8 @@ set(sources
 	codegen/ReturnInfo.cpp
 	codegen/YulUtilFunctions.h
 	codegen/YulUtilFunctions.cpp
+	codegen/experimental/IRGenerator.cpp
+	codegen/experimental/IRGenerator.h
 	codegen/ir/Common.cpp
 	codegen/ir/Common.h
 	codegen/ir/IRGenerator.cpp
