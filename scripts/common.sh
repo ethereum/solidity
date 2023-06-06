@@ -313,3 +313,14 @@ function command_available
         fail "'${program}' not found or not executed successfully with parameter(s) '${parameters[*]}'. aborting."
     fi
 }
+
+function gnu_grep
+{
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        command_available ggrep --version
+        ggrep "$@"
+    else
+        command_available grep --version
+        grep "$@"
+    fi
+}

@@ -73,7 +73,7 @@ void SyntaxTest::parseAndAnalyze()
 	try
 	{
 		runFramework(withPreamble(m_sources.sources), PipelineStage::Compilation);
-		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
+		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis) && !compiler().isExperimentalAnalysis())
 		{
 			ErrorList const& errors = compiler().errors();
 			auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {

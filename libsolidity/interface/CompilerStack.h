@@ -236,6 +236,13 @@ public:
 	/// @returns false on error.
 	bool compile(State _stopAfter = State::CompilationSuccessful);
 
+	/// Checks whether experimental analysis is on; used in SyntaxTests to skip compilation in case it's ``true``.
+	/// @returns true if experimental analysis is set
+	bool isExperimentalAnalysis() const
+	{
+		return !!m_experimentalAnalysis;
+	}
+
 	/// @returns the list of sources (paths) used
 	virtual std::vector<std::string> sourceNames() const override;
 
@@ -349,6 +356,8 @@ public:
 	void setMetadataFormat(MetadataFormat _metadataFormat) { m_metadataFormat = _metadataFormat; }
 
 	bool isExperimentalSolidity() const;
+
+	experimental::Analysis const& experimentalAnalysis() const;
 
 	static MetadataFormat defaultMetadataFormat()
 	{
@@ -509,6 +518,7 @@ private:
 	std::map<std::string, util::h160> m_libraries;
 	ImportRemapper m_importRemapper;
 	std::map<std::string const, Source> m_sources;
+	std::optional<int64_t> m_maxAstId;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;

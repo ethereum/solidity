@@ -245,6 +245,8 @@ struct ReturnAnnotation: StatementAnnotation
 {
 	/// Reference to the return parameters of the function.
 	ParameterList const* functionReturnParameters = nullptr;
+	/// Reference to the function containing the return statement.
+	FunctionDefinition const* function = nullptr;
 };
 
 struct TypeNameAnnotation: ASTAnnotation
@@ -341,5 +343,13 @@ struct FunctionCallAnnotation: ExpressionAnnotation
 	/// If true, this is the external call of a try statement.
 	bool tryCall = false;
 };
+
+/// Experimental Solidity annotations.
+/// Used to integrate with name and type resolution.
+/// @{
+struct TypeClassDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
+{
+};
+/// @}
 
 }

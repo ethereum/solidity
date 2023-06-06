@@ -326,7 +326,14 @@ esac
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
 # bug. Since the test involves a malformed path, there is no point in running
 # tests on it. See https://github.com/boostorg/filesystem/issues/176
-IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol" -not -path "*/experimental/*")
+# In addition, exclude all experimental Solidity tests (new type inference system)
+EXCLUDE_FILES=(
+  boost_filesystem_bug.sol
+  pragma_experimental_solidity.sol
+)
+EXCLUDE_FILES_JOINED=$(printf "! -name %s " "${EXCLUDE_FILES[@]}")
+# shellcheck disable=SC2086
+IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and $EXCLUDE_FILES_JOINED -not -path "*/experimental/*")
 
 NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
 echo "Looking at ${NSOURCES} .sol files..."

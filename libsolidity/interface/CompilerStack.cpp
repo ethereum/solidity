@@ -57,6 +57,8 @@
 #include <libsolidity/parsing/Parser.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
+#include <libsolidity/experimental/codegen/IRGenerator.h>
 
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
@@ -312,6 +314,7 @@ void CompilerStack::reset(bool _keepSettings)
 {
 	m_stackState = Empty;
 	m_sources.clear();
+	m_maxAstId.reset();
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
 	if (!_keepSettings)
@@ -412,6 +415,10 @@ bool CompilerStack::parse()
 
 	m_stackState = (m_stopAfter <= Parsed ? Parsed : ParsedAndImported);
 	storeContractDefinitions();
+
+	solAssert(!m_maxAstId.has_value());
+	m_maxAstId = parser.maxID();
+
 	return true;
 }
 
@@ -464,7 +471,7 @@ bool CompilerStack::analyze()
 
 		m_globalContext = std::make_shared<GlobalContext>();
 		// We need to keep the same resolver during the whole process.
-		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
+		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter, experimentalSolidity);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.registerDeclarations(*source->ast))
 				return false;
@@ -478,10 +485,12 @@ bool CompilerStack::analyze()
 
 		resolver.warnHomonymDeclarations();
 
-		DocStringTagParser docStringTagParser(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
-				noErrors = false;
+		{
+			DocStringTagParser docStringTagParser(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
+					noErrors = false;
+		}
 
 		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
@@ -658,7 +667,8 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 bool CompilerStack::analyzeExperimental()
 {
 	solAssert(!m_experimentalAnalysis);
-	m_experimentalAnalysis = std::make_unique<experimental::Analysis>(m_errorReporter);
+	solAssert(m_maxAstId && *m_maxAstId >= 0);
+	m_experimentalAnalysis = std::make_unique<experimental::Analysis>(m_errorReporter, static_cast<std::uint64_t>(*m_maxAstId));
 	std::vector<std::shared_ptr<SourceUnit const>> sourceAsts;
 	for (Source const* source: m_sourceOrder)
 		if (source->ast)
@@ -925,8 +935,6 @@ std::string const& CompilerStack::yulIR(std::string const& _contractName) const
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	return contract(_contractName).yulIR;
 }
 
@@ -944,8 +952,6 @@ std::string const& CompilerStack::yulIROptimized(std::string const& _contractNam
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
-
-	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).yulIROptimized;
 }
@@ -965,8 +971,6 @@ evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractNa
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	return contract(_contractName).object;
 }
 
@@ -974,8 +978,6 @@ evmasm::LinkerObject const& CompilerStack::runtimeObject(std::string const& _con
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
-
-	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).runtimeObject;
 }
@@ -985,8 +987,6 @@ std::string CompilerStack::assemblyString(std::string const& _contractName, Stri
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
-
-	solUnimplementedAssert(!isExperimentalSolidity());
 
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
@@ -1496,9 +1496,6 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
 
-	if (m_experimentalAnalysis)
-		solThrow(CompilerError, "IR codegen after experimental analysis is unsupported.");
-
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
 		return;
@@ -1522,20 +1519,40 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(
-		m_evmVersion,
-		m_eofVersion,
-		m_revertStrings,
-		sourceIndices(),
-		m_debugInfoSelection,
-		this,
-		m_optimiserSettings
-	);
-	compiledContract.yulIR = generator.run(
-		_contract,
-		createCBORMetadata(compiledContract, /* _forIR */ true),
-		otherYulSources
-	);
+	if (m_experimentalAnalysis)
+	{
+		experimental::IRGenerator generator(
+			m_evmVersion,
+			m_eofVersion,
+			m_revertStrings,
+			sourceIndices(),
+			m_debugInfoSelection,
+			this,
+			*m_experimentalAnalysis
+		);
+		compiledContract.yulIR = generator.run(
+			_contract,
+			{}, // TODO: createCBORMetadata(compiledContract, /* _forIR */ true),
+			otherYulSources
+		);
+	}
+	else
+	{
+		IRGenerator generator(
+			m_evmVersion,
+			m_eofVersion,
+			m_revertStrings,
+			sourceIndices(),
+			m_debugInfoSelection,
+			this,
+			m_optimiserSettings
+		);
+		compiledContract.yulIR = generator.run(
+			_contract,
+			createCBORMetadata(compiledContract, /* _forIR */ true),
+			otherYulSources
+		);
+	}
 
 	yul::YulStack stack(
 		m_evmVersion,
@@ -1976,4 +1993,10 @@ bool CompilerStack::isExperimentalSolidity() const
 		!m_sourceOrder.empty() &&
 		ranges::all_of(m_sourceOrder, [](auto const* _source) { return _source->ast->experimentalSolidity(); } )
 	;
+}
+
+experimental::Analysis const& CompilerStack::experimentalAnalysis() const
+{
+	solAssert(!!m_experimentalAnalysis);
+	return *m_experimentalAnalysis;
 }
