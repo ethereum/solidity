@@ -121,7 +121,7 @@ function assertFail
 
 function msg_on_error
 {
-    local error_message
+    local error_message=""
     local no_stdout=false
     local no_stderr=false
 
