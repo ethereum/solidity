@@ -1,4 +1,6 @@
 set(sources
+	Address.cpp
+	Address.h
 	Algorithms.h
 	AnsiColorized.h
 	Assertions.h

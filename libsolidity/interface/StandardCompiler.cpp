@@ -31,6 +31,7 @@
 
 #include <libevmasm/Disassemble.h>
 
+#include <libsolutil/Address.h>
 #include <libsmtutil/Exceptions.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -888,31 +889,11 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!jsonSourceName[library].isString())
 				return formatFatalError(Error::Type::JSONError, "Library address must be a string.");
-			string address = jsonSourceName[library].asString();
-
-			if (!boost::starts_with(address, "0x"))
-				return formatFatalError(
-					Error::Type::JSONError,
-					"Library address is not prefixed with \"0x\"."
-				);
-
-			if (address.length() != 42)
-				return formatFatalError(
-					Error::Type::JSONError,
-					"Library address is of invalid length."
-				);
-
-			try
-			{
-				ret.libraries[sourceName + ":" + library] = util::h160(address);
-			}
-			catch (util::BadHexCharacter const&)
-			{
-				return formatFatalError(
-					Error::Type::JSONError,
-					"Invalid library address (\"" + address + "\") supplied."
-				);
-			}
+			std::string addrString = jsonSourceName[library].asString();
+			util::Result<util::h160> addrResult = util::validateAddress(addrString);
+			if (!addrResult.message().empty())
+				return formatFatalError(Error::Type::JSONError, addrResult.message());
+			ret.libraries[sourceName + ":" + library] = addrResult.get();
 		}
 	}
 

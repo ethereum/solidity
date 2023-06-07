@@ -853,7 +853,7 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_length)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Library address is of invalid length."));
+	BOOST_CHECK(containsError(result, "JSONError", "Invalid library address length 2 instead of 40 characters."));
 }
 
 BOOST_AUTO_TEST_CASE(libraries_missing_hex_prefix)
@@ -876,7 +876,32 @@ BOOST_AUTO_TEST_CASE(libraries_missing_hex_prefix)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Library address is not prefixed with \"0x\"."));
+	BOOST_CHECK(containsError(result, "JSONError",
+	                          "Library address \"4200000000000000000000000000000000000001\" is not prefixed with \"0x\".\nNote that the address must be prefixed with \"0x\"."));
+}
+
+BOOST_AUTO_TEST_CASE(libraries_invalid_ckecsum)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"settings": {
+			"libraries": {
+				"library.sol": {
+					"L": "0x42000000000000000000000000000000000000Ab"
+				}
+			}
+		},
+		"sources": {
+			"empty": {
+				"content": ""
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError",
+	                          "Invalid checksum for library address \"0x42000000000000000000000000000000000000Ab\".\nThe correct checksum is \"0x42000000000000000000000000000000000000AB\"."));
 }
 
 BOOST_AUTO_TEST_CASE(library_linking)

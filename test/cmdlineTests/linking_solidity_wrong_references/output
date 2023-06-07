@@ -1,0 +1,62 @@
+
+======= linking_solidity_wrong_references/input.sol:C =======
+Binary:
+<BYTECODE REMOVED>__$58d585080104a63ea16eac081c26fdeb7d$__<BYTECODE REMOVED>__$1618aeda50b2dcc26f161cca5d8e112b6f$__<BYTECODE REMOVED>__$265f2a239eabe0580e9e3f71486a88d62d$__<BYTECODE REMOVED>__$5c806807d1dd49cf7e0831ce4f7c3e225c$__<BYTECODE REMOVED>__$305390516cf3f93dc14e593f5c3a7ccd6a$__<BYTECODE REMOVED>__$23207ce64f0ebdd09636cf18c59a1ef8a8$__<BYTECODE REMOVED>
+
+// $58d585080104a63ea16eac081c26fdeb7d$ -> linking_solidity_wrong_references/input.sol:L1
+// $1618aeda50b2dcc26f161cca5d8e112b6f$ -> linking_solidity_wrong_references/input.sol:L2
+// $265f2a239eabe0580e9e3f71486a88d62d$ -> linking_solidity_wrong_references/input.sol:L3
+// $5c806807d1dd49cf7e0831ce4f7c3e225c$ -> linking_solidity_wrong_references/input.sol:L4
+// $305390516cf3f93dc14e593f5c3a7ccd6a$ -> linking_solidity_wrong_references/input.sol:L5
+// $23207ce64f0ebdd09636cf18c59a1ef8a8$ -> linking_solidity_wrong_references/input.sol:L6
+Binary of the runtime part:
+<BYTECODE REMOVED>__$58d585080104a63ea16eac081c26fdeb7d$__<BYTECODE REMOVED>__$1618aeda50b2dcc26f161cca5d8e112b6f$__<BYTECODE REMOVED>__$265f2a239eabe0580e9e3f71486a88d62d$__<BYTECODE REMOVED>__$5c806807d1dd49cf7e0831ce4f7c3e225c$__<BYTECODE REMOVED>__$305390516cf3f93dc14e593f5c3a7ccd6a$__<BYTECODE REMOVED>__$23207ce64f0ebdd09636cf18c59a1ef8a8$__<BYTECODE REMOVED>
+
+// $58d585080104a63ea16eac081c26fdeb7d$ -> linking_solidity_wrong_references/input.sol:L1
+// $1618aeda50b2dcc26f161cca5d8e112b6f$ -> linking_solidity_wrong_references/input.sol:L2
+// $265f2a239eabe0580e9e3f71486a88d62d$ -> linking_solidity_wrong_references/input.sol:L3
+// $5c806807d1dd49cf7e0831ce4f7c3e225c$ -> linking_solidity_wrong_references/input.sol:L4
+// $305390516cf3f93dc14e593f5c3a7ccd6a$ -> linking_solidity_wrong_references/input.sol:L5
+// $23207ce64f0ebdd09636cf18c59a1ef8a8$ -> linking_solidity_wrong_references/input.sol:L6
+
+======= linking_solidity_wrong_references/input.sol:L =======
+Binary:
+<BYTECODE REMOVED>
+Binary of the runtime part:
+<BYTECODE REMOVED>
+
+======= linking_solidity_wrong_references/input.sol:L1 =======
+Binary:
+<BYTECODE REMOVED>
+Binary of the runtime part:
+<BYTECODE REMOVED>
+
+======= linking_solidity_wrong_references/input.sol:L2 =======
+Binary:
+<BYTECODE REMOVED>
+Binary of the runtime part:
+<BYTECODE REMOVED>
+
+======= linking_solidity_wrong_references/input.sol:L3 =======
+Binary:
+<BYTECODE REMOVED>
+Binary of the runtime part:
+<BYTECODE REMOVED>
+
+======= linking_solidity_wrong_references/input.sol:L4 =======
+Binary:
+<BYTECODE REMOVED>
+Binary of the runtime part:
+<BYTECODE REMOVED>
+
+======= linking_solidity_wrong_references/input.sol:L5 =======
+Binary:
+<BYTECODE REMOVED>
+Binary of the runtime part:
+<BYTECODE REMOVED>
+
+======= linking_solidity_wrong_references/input.sol:L6 =======
+Binary:
+<BYTECODE REMOVED>
+Binary of the runtime part:
+<BYTECODE REMOVED>

@@ -24,6 +24,8 @@
 
 #include <liblangutil/EVMVersion.h>
 
+#include <libsolutil/Address.h>
+
 #include <boost/algorithm/string.hpp>
 
 #include <range/v3/view/transform.hpp>
@@ -417,36 +419,10 @@ void CommandLineParser::parseLibraryOption(string const& _input)
 					"Note that there should not be any whitespace after the " +
 					(isSeparatorEqualSign ? "equal sign" : "colon") + "."
 				);
-
-			if (addrString.substr(0, 2) == "0x")
-				addrString = addrString.substr(2);
-			else
-				solThrow(
-					CommandLineValidationError,
-					"The address " + addrString + " is not prefixed with \"0x\".\n"
-					"Note that the address must be prefixed with \"0x\"."
-				);
-
-			if (addrString.length() != 40)
-				solThrow(
-					CommandLineValidationError,
-					"Invalid length for address for library \"" + libName + "\": " +
-					to_string(addrString.length()) + " instead of 40 characters."
-				);
-			if (!util::passesAddressChecksum(addrString, false))
-				solThrow(
-					CommandLineValidationError,
-					"Invalid checksum on address for library \"" + libName + "\": " + addrString + "\n"
-					"The correct checksum is " + util::getChecksummedAddress(addrString)
-				);
-			bytes binAddr = util::fromHex(addrString);
-			util::h160 address(binAddr, util::h160::AlignRight);
-			if (binAddr.size() > 20 || address == util::h160())
-				solThrow(
-					CommandLineValidationError,
-					"Invalid address for library \"" + libName + "\": " + addrString
-				);
-			m_options.linker.libraries[libName] = address;
+			util::Result<util::h160> addrResult = util::validateAddress(addrString);
+			if (!addrResult.message().empty())
+				solThrow(CommandLineValidationError, "Library \"" + libName + "\": " + addrResult.message());
+			m_options.linker.libraries[libName] = addrResult.get();
 		}
 }
 
