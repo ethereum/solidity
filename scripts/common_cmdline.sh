@@ -103,3 +103,69 @@ function compileFull
         false
     fi
 }
+
+function singleContractOutputViaStandardJSON
+{
+    (( $# == 4 )) || assertFail
+    local language="$1"
+    local selected_output="$2"
+    local extra_settings="$3"
+    local input_file="$4"
+    [[ $selected_output != "*" ]] || assertFail
+
+    json_output=$(
+        "$SOLC" --standard-json --allow-paths "$(basename "$input_file")" - <<EOF
+        {
+            "language": "${language}",
+            "sources": {"${input_file}": {"urls": ["${input_file}"]}},
+            "settings": {
+                "outputSelection": {"*": { "*": ["${selected_output}"]}},
+                ${extra_settings}
+            }
+        }
+EOF
+    )
+
+    local error_list output has_contract_level_outputs
+
+    error_list=$(echo "$json_output" | jq '.errors[] | select(.severity=="error")')
+    [[ $error_list == '' ]] || \
+        fail "Failed to compile ${input_file} via Standard JSON. Errors: ${error_list}"
+
+    has_contract_level_outputs=$(echo "$json_output" | jq 'has("contracts")')
+    [[ $has_contract_level_outputs == true ]] || \
+        fail "Standard JSON output ${selected_output} was ignored by the compiler."
+
+    output=$(echo "$json_output" | jq --raw-output ".contracts[\"${input_file}\"][].${selected_output}")
+    [[ $output != null ]] || \
+        fail "Compiler failed to produce the ${selected_output} output when compiling ${input_file} via Standard JSON."
+
+    echo "$output"
+}
+
+function stripCLIDecorations
+{
+    sed -e '/^=======.*=======$/d' \
+        -e '/^Binary:$/d' \
+        -e '/^Binary of the runtime part:$/d' \
+        -e '/^Opcodes:$/d' \
+        -e '/^IR:$/d' \
+        -e '/^Optimized IR:$/d' \
+        -e '/^EVM assembly:$/d' \
+        -e '/^JSON AST (compact format):$/d' \
+        -e '/^Function signatures:$/d' \
+        -e '/^Contract Storage Layout:$/d' \
+        -e '/^Developer Documentation$/d' \
+        -e '/^User Documentation$/d' \
+        -e '/^Contract JSON ABI$/d' \
+        -e '/^Metadata:$/d' \
+        -e '/^EVM$/d' \
+        -e '/^Pretty printed source:$/d' \
+        -e '/^Text representation:$/d' \
+        -e '/^Binary representation:$/d'
+}
+
+function stripEmptyLines
+{
+    sed -e '/^\s*$/d'
+}

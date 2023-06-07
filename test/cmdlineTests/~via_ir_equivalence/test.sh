@@ -3,6 +3,8 @@ set -eo pipefail
 
 # shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
+# shellcheck source=scripts/common_cmdline.sh
+source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
 function test_via_ir_equivalence()
 {
@@ -21,24 +23,24 @@ function test_via_ir_equivalence()
     [[ $optimize_flag == "" ]] || optimizer_flags+=("$optimize_flag")
     [[ $optimize_flag == "" ]] || output_file_prefix+="_optimize"
 
-    msg_on_error --no-stderr "$SOLC" --ir-optimized --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
-        sed '/^Optimized IR:$/d' |
-        split_on_empty_lines_into_numbered_files "$output_file_prefix" ".yul"
+    msg_on_error --no-stderr \
+        "$SOLC" --ir-optimized --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
+            stripCLIDecorations |
+            split_on_empty_lines_into_numbered_files "$output_file_prefix" ".yul"
 
     local asm_output_two_stage asm_output_via_ir
 
     for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
         asm_output_two_stage+=$(
-            msg_on_error --no-stderr "$SOLC" --strict-assembly --asm "${optimizer_flags[@]}" "$yul_file" |
-                sed '/^Text representation:$/d' |
-                sed '/^=======/d'
+            msg_on_error --no-stderr \
+                "$SOLC" --strict-assembly --asm "${optimizer_flags[@]}" "$yul_file" | stripCLIDecorations
         )
     done
 
     asm_output_via_ir=$(
-        msg_on_error --no-stderr "$SOLC" --via-ir --asm --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
-            sed '/^EVM assembly:$/d' |
-            sed '/^=======/d'
+        msg_on_error --no-stderr \
+            "$SOLC" --via-ir --asm --debug-info location "${optimizer_flags[@]}" "$solidity_file" |
+                stripCLIDecorations
     )
 
     diff_values "$asm_output_two_stage" "$asm_output_via_ir" --ignore-space-change --ignore-blank-lines
@@ -47,16 +49,14 @@ function test_via_ir_equivalence()
 
     for yul_file in $(find . -name "${output_file_prefix}*.yul" | sort -V); do
         bin_output_two_stage+=$(
-            msg_on_error --no-stderr "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" |
-                sed '/^Binary representation:$/d' |
-                sed '/^=======/d'
+            msg_on_error --no-stderr \
+                "$SOLC" --strict-assembly --bin "${optimizer_flags[@]}" "$yul_file" | stripCLIDecorations
         )
     done
 
     bin_output_via_ir=$(
-        msg_on_error --no-stderr "$SOLC" --via-ir --bin "${optimizer_flags[@]}" "$solidity_file" |
-            sed '/^Binary:$/d' |
-            sed '/^=======/d'
+        msg_on_error --no-stderr \
+            "$SOLC" --via-ir --bin "${optimizer_flags[@]}" "$solidity_file" | stripCLIDecorations
     )
 
     diff_values "$bin_output_two_stage" "$bin_output_via_ir" --ignore-space-change --ignore-blank-lines
