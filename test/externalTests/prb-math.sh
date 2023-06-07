@@ -45,11 +45,12 @@ function prb_math_test
     local config_file="hardhat.config.ts"
     local config_var="config"
 
-    local compile_only_presets=()
+    local compile_only_presets=(
+        ir-no-optimize            # Tests fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
+    )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_y_1960 is 8 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_y_1960 is 8 slot(s) too deep inside the stack."
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul

@@ -45,8 +45,8 @@ function yield_liquidator_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_roles_168_mpos is 2 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__33 is 6 slot(s) too deep inside the stack."
+        ir-no-optimize
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul

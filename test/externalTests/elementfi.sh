@@ -45,8 +45,8 @@ function elementfi_test
     local compile_only_presets=(
         # ElementFi's test suite is hard-coded for Mainnet forked via alchemy.io.
         # Locally we can only compile.
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_amount_9311 is 10 slot(s) too deep inside the stack."
+        ir-no-optimize
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only

@@ -43,12 +43,12 @@ function gp2_test
     local config_var="config"
 
     local compile_only_presets=(
-        legacy-no-optimize        # Tests doing `new GPv2VaultRelayer` fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
+        ir-no-optimize            # Tests fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
+        legacy-no-optimize        # Tests fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_amount_1468 is 10 slot(s) too deep inside the stack."
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_offset_3451 is 1 slot(s) too deep inside the stack."
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul

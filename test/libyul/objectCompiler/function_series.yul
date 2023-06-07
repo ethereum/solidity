@@ -3,6 +3,10 @@ object "Contract" {
     function f() {}
     function g() {}
     sstore(0, 1)
+
+    // NOTE: msize forces the compiler to completely disable the Yul optimizer.
+    // Otherwise the functions would get optimized out.
+    pop(msize())
   }
 }
 
@@ -26,6 +30,10 @@ object "Contract" {
 //   0x00
 //     /* "source":73:85   */
 //   sstore
-// Bytecode: 6009565b5b565b5b565b60015f55
-// Opcodes: PUSH1 0x9 JUMP JUMPDEST JUMPDEST JUMP JUMPDEST JUMPDEST JUMP JUMPDEST PUSH1 0x1 PUSH0 SSTORE
-// SourceMappings: 33:15:0:-:0;;;;:::o;53:::-;;:::o;:::-;83:1;80;73:12
+//     /* "source":231:238   */
+//   msize
+//     /* "source":227:239   */
+//   pop
+// Bytecode: 6009565b5b565b5b565b60015f555950
+// Opcodes: PUSH1 0x9 JUMP JUMPDEST JUMPDEST JUMP JUMPDEST JUMPDEST JUMP JUMPDEST PUSH1 0x1 PUSH0 SSTORE MSIZE POP
+// SourceMappings: 33:15:0:-:0;;;;:::o;53:::-;;:::o;:::-;83:1;80;73:12;231:7;227:12

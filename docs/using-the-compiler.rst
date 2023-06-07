@@ -304,7 +304,7 @@ Input Description
               // optimization-sequence:clean-up-sequence. For more information see
               // "The Optimizer > Selecting Optimizations".
               // This field is optional, and if not provided, the default sequences for both
-              // optimization and clean-up are used. If only one of the options is provivded
+              // optimization and clean-up are used. If only one of the sequences is provided
               // the other will not be run.
               // If only the delimiter ":" is provided then neither the optimization nor the clean-up
               // sequence will be run.

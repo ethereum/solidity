@@ -1,0 +1,261 @@
+
+======= viair_msize_without_optimizer/input.sol:C =======
+EVM assembly:
+  mstore(0x40, 0x80)
+  jumpi(tag_4, iszero(callvalue))
+  tag_5
+  tag_2
+  jump	// in
+tag_5:
+tag_4:
+  tag_6
+  tag_3
+  jump	// in
+tag_6:
+  tag_7
+  tag_1
+  jump	// in
+tag_7:
+  dataSize(sub_0)
+  dataOffset(sub_0)
+  dup3
+  codecopy
+  dataSize(sub_0)
+  dup2
+  return
+tag_1:
+  0x00
+  mload(0x40)
+  swap1
+  pop
+  swap1
+  jump	// out
+tag_2:
+  0x00
+  dup1
+  revert
+tag_3:
+  jump	// out
+stop
+
+sub_0: assembly {
+      mstore(0x40, 0x80)
+      jumpi(tag_10, lt(calldatasize, 0x04))
+      tag_11
+      calldataload(0x00)
+      tag_1
+      jump	// in
+    tag_11:
+      dup1
+      0x26121ff0
+      dup2
+      sub
+      tag_12
+      jumpi
+      tag_14
+      tag_7
+      jump	// in
+    tag_14:
+    tag_12:
+      pop
+      pop
+    tag_10:
+      tag_15
+      tag_8
+      jump	// in
+    tag_15:
+      jump(tag_16)
+    tag_1:
+      0x00
+      dup2
+      0xe0
+      shr
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump	// out
+    tag_2:
+      0x00
+      mload(0x40)
+      swap1
+      pop
+      swap1
+      jump	// out
+    tag_3:
+      0x00
+      dup1
+      revert
+    tag_4:
+      0x00
+      dup1
+      revert
+    tag_5:
+      0x00
+      dup2
+      dup4
+      sub
+      slt
+      iszero
+      tag_22
+      jumpi
+      tag_23
+      tag_4
+      jump	// in
+    tag_23:
+    tag_22:
+      pop
+      pop
+      jump	// out
+    tag_6:
+      0x00
+      dup1
+      dup3
+      add
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump	// out
+    tag_7:
+      jumpi(tag_26, iszero(callvalue))
+      tag_27
+      tag_3
+      jump	// in
+    tag_27:
+    tag_26:
+      tag_28
+      calldatasize
+      0x04
+      tag_5
+      jump	// in
+    tag_28:
+      tag_29
+      tag_9
+      jump	// in
+    tag_29:
+      tag_30
+      tag_2
+      jump	// in
+    tag_30:
+      tag_31
+      dup2
+      tag_6
+      jump	// in
+    tag_31:
+      dup2
+      dup2
+      sub
+      dup3
+      return
+    tag_8:
+      0x00
+      dup1
+      revert
+    tag_9:
+      jump(tag_35)
+    tag_34:
+      0x00
+      dup1
+      mload
+      swap1
+      pop
+      swap1
+      jump	// out
+    tag_35:
+      0x00
+      dup1
+      tag_37
+      tag_34
+      jump	// in
+    tag_37:
+      0x00
+      mstore
+      pop
+      pop
+      jump	// out
+    tag_16:
+
+    auxdata: <AUXDATA REMOVED>
+}
+
+Optimized IR:
+/// @use-src 0:"viair_msize_without_optimizer/input.sol"
+object "C_7" {
+    code {
+        mstore(64, memoryguard(128))
+        if callvalue()
+        {
+            revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+        }
+        constructor_C_7()
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset("C_7_deployed"), datasize("C_7_deployed"))
+        return(_1, datasize("C_7_deployed"))
+        function allocate_unbounded() -> memPtr
+        { memPtr := mload(64) }
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+        { revert(0, 0) }
+        function constructor_C_7()
+        { }
+    }
+    /// @use-src 0:"viair_msize_without_optimizer/input.sol"
+    object "C_7_deployed" {
+        code {
+            mstore(64, memoryguard(128))
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+                case 0x26121ff0 { external_fun_f_6() }
+                default { }
+            }
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            function shift_right_224_unsigned(value) -> newValue
+            { newValue := shr(224, value) }
+            function allocate_unbounded() -> memPtr
+            { memPtr := mload(64) }
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+            { revert(0, 0) }
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b()
+            { revert(0, 0) }
+            function abi_decode_tuple_(headStart, dataEnd)
+            {
+                if slt(sub(dataEnd, headStart), 0)
+                {
+                    revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b()
+                }
+            }
+            function abi_encode_tuple__to__fromStack(headStart) -> tail
+            { tail := add(headStart, 0) }
+            function external_fun_f_6()
+            {
+                if callvalue()
+                {
+                    revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+                }
+                abi_decode_tuple_(4, calldatasize())
+                fun_f_6()
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple__to__fromStack(memPos)
+                return(memPos, sub(memEnd, memPos))
+            }
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            { revert(0, 0) }
+            function fun_f_6()
+            {
+                {
+                    function usr$f() -> usr$x
+                    { usr$x := mload(0) }
+                    pop(msize())
+                    let usr$x := 0
+                    let usr$y := usr$x
+                    mstore(0, usr$f())
+                }
+            }
+        }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}

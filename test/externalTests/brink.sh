@@ -45,8 +45,8 @@ function brink_test
     local extra_optimizer_settings="runs: 800"
 
     local compile_only_presets=(
-        #ir-no-optimize            # Compilation fails with "YulException: Variable var_signature_127_offset is 2 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_signature_127_offset is 2 slot(s) too deep inside the stack."
+        ir-no-optimize             # Lots of test failures. Tests depend on constants.js, which seems to be calculated specifically for 0.8.10.
+        ir-optimize-evm-only       # Lots of test failures. Tests depend on constants.js, which seems to be calculated specifically for 0.8.10.
         ir-optimize-evm+yul        # Lots of test failures. Tests depend on constants.js, which seems to be calculated specifically for 0.8.10.
         legacy-optimize-evm+yul    # Lots of test failures. Tests depend on constants.js, which seems to be calculated specifically for 0.8.10.
         legacy-no-optimize         # Lots of test failures. Tests depend on constants.js, which seems to be calculated specifically for 0.8.10.

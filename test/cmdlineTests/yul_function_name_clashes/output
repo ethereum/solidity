@@ -4,63 +4,43 @@
 Pretty printed source:
 object "object" {
     code {
-        let a
-        let b
         {
-            function z() -> y
-            { y := calldataload(0) }
+            let a
+            let b
             a := z()
+            b := z_1()
+            sstore(a, b)
         }
-        {
-            function z() -> y
-            { y := calldataload(0x20) }
-            b := z()
-        }
-        sstore(a, b)
+        function z() -> y
+        { y := calldataload(0) }
+        function z_1() -> y
+        { y := calldataload(0x20) }
     }
 }
 
 
 Binary representation:
-5f80600d565b5f8035905090565b60136005565b91506022565b5f602035905090565b60286019565b90508082555050
+6005600f565b600b6014565b9055005b5f3590565b6020359056
 
 Text representation:
-  0x00
-  dup1
-  jump(tag_2)
+  tag_3
+  tag_1
+  jump	// in
+tag_3:
+  tag_4
+  tag_2
+  jump	// in
+tag_4:
+  swap1
+  sstore
+  stop
 tag_1:
   0x00
-  dup1
   calldataload
-  swap1
-  pop
   swap1
   jump	// out
 tag_2:
-  tag_4
-  tag_1
-  jump	// in
-tag_4:
-  swap2
-  pop
-  jump(tag_6)
-tag_5:
-  0x00
   0x20
   calldataload
   swap1
-  pop
-  swap1
   jump	// out
-tag_6:
-  tag_8
-  tag_5
-  jump	// in
-tag_8:
-  swap1
-  pop
-  dup1
-  dup3
-  sstore
-  pop
-  pop

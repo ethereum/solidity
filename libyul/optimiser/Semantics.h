@@ -21,10 +21,11 @@
 
 #pragma once
 
-#include <libyul/optimiser/ASTWalker.h>
-#include <libyul/SideEffects.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/AST.h>
+#include <libyul/Object.h>
+#include <libyul/SideEffects.h>
+#include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 
 #include <set>
 
@@ -143,6 +144,7 @@ class MSizeFinder: public ASTWalker
 {
 public:
 	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
+	static bool containsMSize(Dialect const& _dialect, Object const& _object);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _funCall) override;

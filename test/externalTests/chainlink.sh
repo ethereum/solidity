@@ -47,8 +47,8 @@ function chainlink_test
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var__value_775 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__value_10 is 1 slot(s) too deep inside the stack"
+        #ir-no-optimize           # Compilation fails with "YulException: Variable expr_10724_mpos is 2 too deep in the stack". No memoryguard was present.
+        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable expr_1891_mpos is 2 too deep in the stack". No memoryguard was present.
         ir-optimize-evm+yul
         legacy-optimize-evm-only  # NOTE: This requires >= 4 GB RAM in CI not to crash
         legacy-optimize-evm+yul   # NOTE: This requires >= 4 GB RAM in CI not to crash

@@ -7,7 +7,15 @@ object "a" {
 }
 // ----
 // Assembly:
+//     /* "source":179:180   */
+//   0x00
+//     /* "source":174:177   */
+//   0x80
+//     /* "source":171:172   */
+//   0x04
 //     /* "source":44:79   */
+//   dup2
+//   dup4
 //   linkerSymbol("f919ba91ac99f96129544b80b9516b27a80e376b9dc693819d0b18b7e0395612")
 //     /* "source":109:119   */
 //   0x18530aaf
@@ -15,29 +23,15 @@ object "a" {
 //   0xe3
 //     /* "source":100:120   */
 //   shl
-//     /* "source":95:98   */
-//   0x80
 //     /* "source":88:121   */
+//   dup4
 //   mstore
-//     /* "source":179:180   */
-//   0x00
-//     /* "source":174:177   */
-//   0x80
-//     /* "source":171:172   */
-//   0x04
-//     /* "source":166:169   */
-//   0x80
-//     /* "source":163:164   */
-//   0x00
-//     /* "source":157:161   */
-//   dup6
 //     /* "source":150:155   */
 //   gas
 //     /* "source":145:181   */
 //   call
-//     /* "source":22:187   */
-//   pop
-//   pop
-// Bytecode: 7300000000000000000000000000000000000000006318530aaf60e31b6080525f6080600460805f855af15050
-// Opcodes: PUSH20 0x0 PUSH4 0x18530AAF PUSH1 0xE3 SHL PUSH1 0x80 MSTORE PUSH0 PUSH1 0x80 PUSH1 0x4 PUSH1 0x80 PUSH0 DUP6 GAS CALL POP POP
-// SourceMappings: 44:35:0:-:0;109:10;104:3;100:20;95:3;88:33;179:1;174:3;171:1;166:3;163:1;157:4;150:5;145:36;22:165;
+//     /* "source":130:181   */
+//   stop
+// Bytecode: 5f6080600481837300000000000000000000000000000000000000006318530aaf60e31b83525af100
+// Opcodes: PUSH0 PUSH1 0x80 PUSH1 0x4 DUP2 DUP4 PUSH20 0x0 PUSH4 0x18530AAF PUSH1 0xE3 SHL DUP4 MSTORE GAS CALL STOP
+// SourceMappings: 179:1:0:-:0;174:3;171:1;44:35;;;109:10;104:3;100:20;88:33;;150:5;145:36;130:51

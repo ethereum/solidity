@@ -36,8 +36,8 @@ echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && fail "solc --yul --optimiz
 # Test yul and strict assembly output
 # Non-empty code results in non-empty binary representation with optimizations turned off,
 # while it results in empty binary representation with optimizations turned on.
-test_solc_assembly_output "{ let x:u256 := 0:u256 }" "{ let x := 0 }" "--yul"
-test_solc_assembly_output "{ let x:u256 := bitnot(7:u256) }" "{ let x := bitnot(7) }" "--yul"
-test_solc_assembly_output "{ let t:bool := not(true) }" "{ let t:bool := not(true) }" "--yul"
-test_solc_assembly_output "{ let x := 0 }" "{ let x := 0 }" "--strict-assembly"
-test_solc_assembly_output "{ let x := 0 }" "{ { } }" "--strict-assembly --optimize"
+test_solc_assembly_output "{ let x:u256 := 0:u256 mstore(0, x) }" "{ { let x := 0 mstore(0, x) } }" "--yul"
+test_solc_assembly_output "{ let x:u256 := bitnot(7:u256) mstore(0, x) }" "{ { let x := bitnot(7) mstore(0, x) } }" "--yul"
+test_solc_assembly_output "{ let t:bool := not(true) if t { mstore(0, 1) } }" "{ { let t:bool := not(true) if t { mstore(0, 1) } } }" "--yul"
+test_solc_assembly_output "{ let x := 0 mstore(0, x) }" "{ { let x := 0 mstore(0, x) } }" "--strict-assembly"
+test_solc_assembly_output "{ let x := 0 mstore(0, x) }" "{ { } }" "--strict-assembly --optimize"
