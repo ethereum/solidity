@@ -349,7 +349,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
-				map<YulString, set<YulString>> fakeUnreachables;
+				map<YulString, vector<YulString>> fakeUnreachables;
 				using ASTWalker::operator();
 				void operator()(FunctionDefinition const& _function) override
 				{
@@ -365,7 +365,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				void visitVariableName(YulString _var)
 				{
 					if (!_var.empty() && _var.str().front() == '$')
-						fakeUnreachables[m_currentFunction].insert(_var);
+						if (!util::contains(fakeUnreachables[m_currentFunction], _var))
+							fakeUnreachables[m_currentFunction].emplace_back(_var);
 				}
 				void operator()(VariableDeclaration const& _varDecl) override
 				{
