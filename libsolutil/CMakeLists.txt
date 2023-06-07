@@ -8,6 +8,7 @@ set(sources
 	CommonIO.cpp
 	CommonIO.h
 	cxx20.h
+	Dominator.h
 	Exceptions.cpp
 	Exceptions.h
 	ErrorCodes.h
