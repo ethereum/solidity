@@ -247,9 +247,9 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		metadata.format == _other.metadata.format &&
 		metadata.hash == _other.metadata.hash &&
 		metadata.literalSources == _other.metadata.literalSources &&
-		optimizer.enabled == _other.optimizer.enabled &&
+		optimizer.optimizeEvmasm == _other.optimizer.optimizeEvmasm &&
+		optimizer.optimizeYul == _other.optimizer.optimizeYul &&
 		optimizer.expectedExecutionsPerDeployment == _other.optimizer.expectedExecutionsPerDeployment &&
-		optimizer.noOptimizeYul == _other.optimizer.noOptimizeYul &&
 		optimizer.yulSteps == _other.optimizer.yulSteps &&
 		modelChecker.initialize == _other.modelChecker.initialize &&
 		modelChecker.settings == _other.modelChecker.settings;
@@ -259,13 +259,16 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 {
 	OptimiserSettings settings;
 
-	if (optimizer.enabled)
+	if (optimizer.optimizeEvmasm)
 		settings = OptimiserSettings::standard();
 	else
 		settings = OptimiserSettings::minimal();
 
-	if (optimizer.noOptimizeYul)
-		settings.runYulOptimiser = false;
+	settings.runYulOptimiser = optimizer.optimizeYul;
+	if (optimizer.optimizeYul)
+		// NOTE: Standard JSON disables optimizeStackAllocation by default when yul optimizer is disabled.
+		// --optimize --no-optimize-yul on the CLI does not have that effect.
+		settings.optimizeStackAllocation = true;
 
 	if (optimizer.expectedExecutionsPerDeployment.has_value())
 		settings.expectedExecutionsPerDeployment = optimizer.expectedExecutionsPerDeployment.value();
@@ -644,21 +647,15 @@ General Information)").c_str(),
 		)
 		(
 			g_strAssemble.c_str(),
-			("Switch to assembly mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is assembly.").c_str()
+			"Switch to assembly mode and assume input is assembly."
 		)
 		(
 			g_strYul.c_str(),
-			("Switch to Yul mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is Yul.").c_str()
+			"Switch to Yul mode and assume input is Yul."
 		)
 		(
 			g_strStrictAssembly.c_str(),
-			("Switch to strict assembly mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is strict assembly.").c_str()
+			"Switch to strict assembly mode and assume input is strict assembly."
 		)
 		(
 			g_strImportAst.c_str(),
@@ -784,7 +781,7 @@ General Information)").c_str(),
 	optimizerOptions.add_options()
 		(
 			g_strOptimize.c_str(),
-			"Enable bytecode optimizer."
+			"Enable optimizer."
 		)
 		(
 			g_strOptimizeRuns.c_str(),
@@ -796,16 +793,18 @@ General Information)").c_str(),
 		)
 		(
 			g_strOptimizeYul.c_str(),
-			("Legacy option, ignored. Use the general --" + g_strOptimize + " to enable Yul optimizer.").c_str()
+			("Enable Yul optimizer (independently of the EVM assembly optimizer). "
+			"The general --" + g_strOptimize + " option automatically enables this unless --" +
+			g_strNoOptimizeYul + " is specified.").c_str()
 		)
 		(
 			g_strNoOptimizeYul.c_str(),
-			"Disable Yul optimizer in Solidity."
+			"Disable Yul optimizer (independently of the EVM assembly optimizer)."
 		)
 		(
 			g_strYulOptimizations.c_str(),
 			po::value<string>()->value_name("steps"),
-			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
+			"Forces Yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
 		)
 	;
 	desc.add(optimizerOptions);
@@ -1165,9 +1164,11 @@ void CommandLineParser::processArgs()
 			"Options --" + g_strOptimizeYul + " and --" + g_strNoOptimizeYul + " cannot be used together."
 		);
 
-	// We deliberately ignore --optimize-yul
-	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
-	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
+	m_options.optimizer.optimizeEvmasm = (m_args.count(g_strOptimize) > 0);
+	m_options.optimizer.optimizeYul = (
+		(m_args.count(g_strOptimize) > 0 && m_args.count(g_strNoOptimizeYul) == 0) ||
+		m_args.count(g_strOptimizeYul) > 0
+	);
 	if (!m_args[g_strOptimizeRuns].defaulted())
 		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
 
@@ -1199,8 +1200,6 @@ void CommandLineParser::processArgs()
 			g_strOutputDir,
 			g_strGas,
 			g_strCombinedJson,
-			g_strOptimizeYul,
-			g_strNoOptimizeYul,
 		};
 		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
 		{
@@ -1208,9 +1207,6 @@ void CommandLineParser::processArgs()
 			auto enabledOptions = nonAssemblyModeOptions | ranges::views::filter(optionEnabled) | ranges::to_vector;
 
 			string message = "The following options are invalid in assembly mode: " + joinOptionNames(enabledOptions) + ".";
-			if (m_args.count(g_strOptimizeYul) || m_args.count(g_strNoOptimizeYul))
-				message += " Optimization is disabled by default and can be enabled with --" + g_strOptimize + ".";
-
 			solThrow(CommandLineValidationError, message);
 		}
 
@@ -1235,7 +1231,10 @@ void CommandLineParser::processArgs()
 			else
 				solThrow(CommandLineValidationError, "Invalid option for --" + g_strYulDialect + ": " + dialect);
 		}
-		if (m_options.optimizer.enabled && (m_options.assembly.inputLanguage != Input::StrictAssembly))
+		if (
+				(m_options.optimizer.optimizeEvmasm || m_options.optimizer.optimizeYul) &&
+				m_options.assembly.inputLanguage != Input::StrictAssembly
+			)
 			solThrow(
 				CommandLineValidationError,
 				"Optimizer can only be used for strict assembly. Use --"  + g_strStrictAssembly + "."

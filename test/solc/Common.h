@@ -28,6 +28,7 @@
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::CommandLineOptions)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::InputMode)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::OptimiserSettings)
 
 namespace solidity::frontend::test
 {
