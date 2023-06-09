@@ -6,7 +6,7 @@ else()
     set(JSONCPP_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
-set(prefix "${CMAKE_BINARY_DIR}/deps")
+set(prefix "${PROJECT_BINARY_DIR}/deps")
 set(JSONCPP_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 

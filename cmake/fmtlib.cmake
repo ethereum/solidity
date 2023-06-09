@@ -2,7 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(
 	fmtlib
-	PREFIX "${CMAKE_BINARY_DIR}/deps"
+	PREFIX "${PROJECT_BINARY_DIR}/deps"
 	DOWNLOAD_DIR "${PROJECT_SOURCE_DIR}/deps/downloads"
 	DOWNLOAD_NAME fmt-8.0.1.tar.gz
 	URL https://github.com/fmtlib/fmt/archive/8.0.1.tar.gz

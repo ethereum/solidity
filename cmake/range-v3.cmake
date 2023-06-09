@@ -6,7 +6,7 @@ else()
     set(RANGE_V3_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
-set(prefix "${CMAKE_BINARY_DIR}/deps")
+set(prefix "${PROJECT_BINARY_DIR}/deps")
 set(RANGE_V3_INCLUDE_DIR "${prefix}/include")
 
 ExternalProject_Add(range-v3-project
