@@ -515,7 +515,7 @@ you can use the following in your source file:
 
 The compiler will look for the file in the VFS under ``dapp-bin/library/math.sol``.
 If the file is not available there, the source unit name will be passed to the Host Filesystem
-Loader, which will then look in ``/project/dapp-bin/library/iterable_mapping.sol``.
+Loader, which will then look in ``/project/dapp-bin/library/math.sol``.
 
 .. warning::
 

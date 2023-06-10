@@ -372,7 +372,7 @@ Array Members
 
 .. note::
     In EVM versions before Byzantium, it was not possible to access
-    dynamic arrays return from function calls. If you call functions
+    dynamic arrays returned from function calls. If you call functions
     that return dynamic arrays, make sure to use an EVM that is set to
     Byzantium mode.
 
