@@ -1035,6 +1035,7 @@ public:
 	bigint storageSizeUpperBound() const override;
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override;
+	bool containsStructArray() const;
 	bool nameable() const override { return true; }
 	std::string toString(bool _withoutDataLocation) const override;
 

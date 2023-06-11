@@ -3240,6 +3240,20 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					return { 9862_error, "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->humanReadableName() + "\"." };
 				}
 			}
+			else if (auto const* arrayType = dynamic_cast<ArrayType const*>(exprType))
+			{
+				if (
+					memberName == "push" &&
+					exprType->category() == Type::Category::Array &&
+					arrayType->baseType()->category() == Type::Category::Struct
+				) {
+					return { 1598_error,
+						"Source struct cannot be pushed to target struct array " +
+						exprType->humanReadableName() +
+						". E.g. beuase push memory struct array to storage struct array not yet implemented."
+					};
+				}
+			}
 
 			return { 9582_error, errorMsg };
 		}();

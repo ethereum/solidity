@@ -1617,6 +1617,8 @@ BoolResult ArrayType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.category() != category())
 		return false;
 	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
+	if (convertTo.location() == DataLocation::Storage && location() != DataLocation::Storage && convertTo.baseType()->category() == Category::Struct)
+		return BoolResult::err("Copy of non-storage struct array to storage array is not yet supported.");
 	if (convertTo.isByteArray() != isByteArray() || convertTo.isString() != isString())
 		return false;
 	// memory/calldata to storage can be converted, but only to a direct storage reference
@@ -2191,6 +2193,13 @@ BoolResult StructType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 	if (convertTo.location() == DataLocation::CallData && location() != convertTo.location())
 		return false;
+	if (convertTo.location() == DataLocation::Storage && location() != DataLocation::Storage)
+	{
+		if (containsStructArray())
+		{
+			return BoolResult::err("Copy to storage struct array from non-storage array is not yet supported.");
+		}
+	}
 	return this->m_struct == convertTo.m_struct;
 }
 
@@ -2321,6 +2330,42 @@ bool StructType::containsNestedMapping() const
 	}
 
 	return m_struct.annotation().containsNestedMapping.value();
+}
+
+bool StructType::containsStructArray() const
+{
+	if (!m_struct.annotation().containsStructArray.has_value())
+	{
+		bool hasStructArray = false;
+
+		util::BreadthFirstSearch<StructDefinition const*> breadthFirstSearch{{&m_struct}};
+
+		breadthFirstSearch.run(
+			[&](StructDefinition const* _struct, auto&& _addChild)
+			{
+				for (auto const& member: _struct->members())
+				{
+					Type const* memberType = member->annotation().type;
+					solAssert(memberType, "");
+
+					if (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
+					{
+						if (arrayType->baseType()->category() == Category::Struct)
+						{
+							hasStructArray = true;
+							breadthFirstSearch.abort();
+						}
+					}
+					else if (auto structType = dynamic_cast<StructType const*>(memberType))
+						_addChild(&structType->structDefinition());
+				}
+
+			});
+
+		m_struct.annotation().containsStructArray = hasStructArray;
+	}
+
+	return m_struct.annotation().containsStructArray.value();
 }
 
 string StructType::toString(bool _withoutDataLocation) const

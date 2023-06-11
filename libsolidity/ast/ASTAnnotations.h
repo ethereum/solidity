@@ -148,6 +148,7 @@ struct StructDeclarationAnnotation: TypeDeclarationAnnotation
 	/// Whether the struct contains a mapping type, either directly or, indirectly inside another
 	/// struct or an array.
 	std::optional<bool> containsNestedMapping;
+	std::optional<bool> containsStructArray;
 };
 
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
