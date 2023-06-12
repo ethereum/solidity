@@ -3,6 +3,3 @@ Error: Expected pragma, import directive or contract/interface/library/struct/en
   |
 3 | c
   | ^
-
-
-Compilation halted after AST generation due to errors.

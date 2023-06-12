@@ -9,6 +9,3 @@ Warning: Recovered in Statement at ';'.
   |
 6 |     balances[tx.origin] = ; // missing RHS.
   |                           ^
-
-
-Compilation halted after AST generation due to errors.

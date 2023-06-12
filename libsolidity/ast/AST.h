@@ -87,15 +87,19 @@ public:
 	static void listAccept(std::vector<T> const& _list, ASTVisitor& _visitor)
 	{
 		for (T const& element: _list)
-			if (element)
-				element->accept(_visitor);
+		{
+			solAssert(element);
+			element->accept(_visitor);
+		}
 	}
 	template <class T>
 	static void listAccept(std::vector<T> const& _list, ASTConstVisitor& _visitor)
 	{
 		for (T const& element: _list)
-			if (element)
-				element->accept(_visitor);
+		{
+			solAssert(element);
+			element->accept(_visitor);
+		}
 	}
 
 	/// @returns a copy of the vector containing only the nodes which derive from T.

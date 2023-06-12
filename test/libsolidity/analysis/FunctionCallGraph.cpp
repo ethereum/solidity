@@ -102,7 +102,7 @@ EdgeNames edgeNames(EdgeMap const& _edgeMap)
 
 tuple<CallGraphMap, CallGraphMap> collectGraphs(CompilerStack const& _compilerStack)
 {
-	soltestAssert(!_compilerStack.hasError(), "");
+	soltestAssert(_compilerStack.state() >= CompilerStack::State::AnalysisSuccessful);
 
 	tuple<CallGraphMap, CallGraphMap> graphs;
 

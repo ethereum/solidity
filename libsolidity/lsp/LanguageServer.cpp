@@ -265,7 +265,7 @@ void LanguageServer::compile()
 
 	m_compilerStack.reset(false);
 	m_compilerStack.setSources(m_fileRepository.sourceUnits());
-	m_compilerStack.compile(CompilerStack::State::AnalysisPerformed);
+	m_compilerStack.compile(CompilerStack::State::AnalysisSuccessful);
 }
 
 void LanguageServer::compileAndUpdateDiagnostics()
@@ -554,7 +554,7 @@ ASTNode const* LanguageServer::astNodeAtSourceLocation(std::string const& _sourc
 
 std::tuple<ASTNode const*, int> LanguageServer::astNodeAndOffsetAtSourceLocation(std::string const& _sourceUnitName, LineColumn const& _filePos)
 {
-	if (m_compilerStack.state() < CompilerStack::AnalysisPerformed)
+	if (m_compilerStack.state() < CompilerStack::AnalysisSuccessful)
 		return {nullptr, -1};
 	if (!m_fileRepository.sourceUnits().count(_sourceUnitName))
 		return {nullptr, -1};
