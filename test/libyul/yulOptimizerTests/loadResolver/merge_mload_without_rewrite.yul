@@ -6,16 +6,16 @@
     }
     sstore(0, mload(2))
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
 // {
 //     {
 //         let _1 := 2
-//         let b := mload(_1)
-//         let _2 := 0
-//         sstore(_2, b)
+//         sstore(0, mload(_1))
 //         if calldataload(1) { mstore(_1, 7) }
-//         sstore(_2, mload(_1))
+//         sstore(0, mload(_1))
 //     }
 // }

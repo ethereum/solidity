@@ -229,7 +229,7 @@
     }
 }
 // ====
-// EVMVersion: >=istanbul
+// EVMVersion: >=shanghai
 // ----
 // step: fullSuite
 //
@@ -273,11 +273,11 @@
 //             switch gt(_2, calldataload(0x24))
 //             case 1 {
 //                 kn := addmod(kn, sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, k), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
-//                 let x := mod(mload(0), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//                 let x := mod(mload(0x00), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 k := mulmod(k, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 a := mulmod(a, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 c := mulmod(mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
-//                 mstore(0, keccak256(0, 0x20))
+//                 mstore(0x00, keccak256(0x00, 0x20))
 //             }
 //             case 0 {
 //                 kn := addmod(kn, k, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
@@ -309,19 +309,19 @@
 //             }
 //             if iszero(result)
 //             {
-//                 mstore(0, 400)
-//                 revert(0, 0x20)
+//                 mstore(0x00, 400)
+//                 revert(0x00, 0x20)
 //             }
 //             b := add(b, 0x40)
 //         }
 //         if lt(calldataload(0x24), n) { validatePairing() }
 //         if iszero(eq(mod(keccak256(_1, add(b, not(671))), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)))
 //         {
-//             mstore(0, 404)
-//             revert(0, 0x20)
+//             mstore(0x00, 404)
+//             revert(0x00, 0x20)
 //         }
-//         mstore(0, 0x01)
-//         return(0, 0x20)
+//         mstore(0x00, 0x01)
+//         return(0x00, 0x20)
 //     }
 //     function validatePairing()
 //     {
@@ -356,8 +356,8 @@
 //         let success := call(gas(), 8, 0, _6, _7, _6, _6)
 //         if or(iszero(success), iszero(mload(_6)))
 //         {
-//             mstore(0, 400)
-//             revert(0, _6)
+//             mstore(0x00, 400)
+//             revert(0x00, _6)
 //         }
 //     }
 //     function validateCommitment(note, k, a)
@@ -381,6 +381,6 @@
 //         {
 //             calldatacopy(add(0x300, shl(7, i)), add(add(notes, mul(i, 0xc0)), 0x60), 0x80)
 //         }
-//         mstore(0, keccak256(0x300, shl(7, n)))
+//         mstore(0x00, keccak256(0x300, shl(7, n)))
 //     }
 // }

@@ -10,13 +10,17 @@
         if iszero(a) { leave }
     }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullSuite
 //
 // {
 //     {
 //         f()
+//         sstore(0, 1)
 //         f()
+//         sstore(0, 1)
 //         f()
 //         sstore(0, 1)
 //     }

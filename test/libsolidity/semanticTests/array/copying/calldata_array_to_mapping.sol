@@ -14,4 +14,4 @@ contract C {
 // compileViaYul: true
 // ----
 // from_calldata(uint8[][]): 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14 -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14
-// gas irOptimized: 139905
+// gas irOptimized: 139683

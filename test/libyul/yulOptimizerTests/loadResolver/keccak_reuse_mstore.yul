@@ -7,16 +7,17 @@
     let b := keccak256(0x20, x)
     sstore(b, 3)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
 // {
 //     {
-//         let _1 := 0
-//         let x := calldataload(_1)
+//         let x := calldataload(0)
 //         let _2 := 0x20
 //         sstore(keccak256(_2, x), 2)
-//         mstore(_1, 1)
+//         mstore(0, 1)
 //         sstore(keccak256(_2, x), 3)
 //     }
 // }

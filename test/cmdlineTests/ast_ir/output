@@ -815,7 +815,7 @@ Optimized IR AST:
                                             [
                                                 {
                                                     "kind": "number",
-                                                    "nativeSrc": "650:1:0",
+                                                    "nativeSrc": "647:1:0",
                                                     "nodeType": "YulLiteral",
                                                     "src": "60:13:0",
                                                     "type": "",
@@ -1028,7 +1028,59 @@ Optimized IR AST:
                                         [
                                             {
                                                 "kind": "number",
-                                                "nativeSrc": "1490:1:0",
+                                                "nativeSrc": "996:2:0",
+                                                "nodeType": "YulLiteral",
+                                                "src": "60:13:0",
+                                                "type": "",
+                                                "value": "64"
+                                            },
+                                            {
+                                                "arguments":
+                                                [
+                                                    {
+                                                        "kind": "number",
+                                                        "nativeSrc": "1012:3:0",
+                                                        "nodeType": "YulLiteral",
+                                                        "src": "60:13:0",
+                                                        "type": "",
+                                                        "value": "0x80"
+                                                    }
+                                                ],
+                                                "functionName":
+                                                {
+                                                    "name": "memoryguard",
+                                                    "nativeSrc": "1000:11:0",
+                                                    "nodeType": "YulIdentifier",
+                                                    "src": "60:13:0"
+                                                },
+                                                "nativeSrc": "1000:16:0",
+                                                "nodeType": "YulFunctionCall",
+                                                "src": "60:13:0"
+                                            }
+                                        ],
+                                        "functionName":
+                                        {
+                                            "name": "mstore",
+                                            "nativeSrc": "989:6:0",
+                                            "nodeType": "YulIdentifier",
+                                            "src": "60:13:0"
+                                        },
+                                        "nativeSrc": "989:28:0",
+                                        "nodeType": "YulFunctionCall",
+                                        "src": "60:13:0"
+                                    },
+                                    "nativeSrc": "989:28:0",
+                                    "nodeType": "YulExpressionStatement",
+                                    "src": "60:13:0"
+                                },
+                                {
+                                    "expression":
+                                    {
+                                        "arguments":
+                                        [
+                                            {
+                                                "kind": "number",
+                                                "nativeSrc": "1487:1:0",
                                                 "nodeType": "YulLiteral",
                                                 "src": "60:13:0",
                                                 "type": "",

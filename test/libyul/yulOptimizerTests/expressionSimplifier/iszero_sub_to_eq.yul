@@ -6,13 +6,14 @@
         sstore(0, 1)
     }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSimplifier
 //
 // {
 //     {
-//         let _1 := 0
-//         let a := calldataload(_1)
-//         if eq(a, calldataload(0x20)) { sstore(_1, 1) }
+//         let a := calldataload(0)
+//         if eq(a, calldataload(0x20)) { sstore(0, 1) }
 //     }
 // }

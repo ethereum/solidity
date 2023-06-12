@@ -25,7 +25,7 @@ contract C {
 // revertStrings: debug
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 390464
+// gas irOptimized: 377924
 // gas legacy: 809985
 // gas legacyOptimized: 498331
 // f(uint256): 0 -> FAILURE, hex"08c379a0", 0x20, 37, "Target contract does not contain", " code"

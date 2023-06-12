@@ -7,15 +7,15 @@
     let val := keccak256(0, 32)
     sstore(1, val)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
 // {
 //     {
-//         let _1 := msize()
-//         let _2 := 0
-//         sstore(_2, _1)
-//         mstore(_2, 10)
-//         sstore(1, keccak256(_2, 32))
+//         sstore(0, msize())
+//         mstore(0, 10)
+//         sstore(1, keccak256(0, 32))
 //     }
 // }

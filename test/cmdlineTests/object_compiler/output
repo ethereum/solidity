@@ -37,11 +37,11 @@ Text representation:
     /* "object_compiler/input.yul":217:238   */
   dup1
   dataOffset(sub_0)
-    /* "object_compiler/input.yul":125:126   */
+    /* "object_compiler/input.yul":214:215   */
   0x00
     /* "object_compiler/input.yul":205:260   */
   codecopy
-    /* "object_compiler/input.yul":125:126   */
+    /* "object_compiler/input.yul":272:273   */
   0x00
     /* "object_compiler/input.yul":265:295   */
   return
@@ -52,13 +52,13 @@ sub_0: assembly {
       0x00
         /* "object_compiler/input.yul":391:399   */
       sload
-        /* "object_compiler/input.yul":397:398   */
+        /* "object_compiler/input.yul":388:389   */
       0x00
         /* "object_compiler/input.yul":381:400   */
       mstore
         /* "object_compiler/input.yul":417:421   */
       0x20
-        /* "object_compiler/input.yul":397:398   */
+        /* "object_compiler/input.yul":414:415   */
       0x00
         /* "object_compiler/input.yul":407:422   */
       return

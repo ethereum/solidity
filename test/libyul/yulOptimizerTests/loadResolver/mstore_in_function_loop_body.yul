@@ -11,27 +11,22 @@
     funcWithLoop(42)
     sstore(0, mload(0))
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
 // {
 //     {
-//         let _1 := 1337
-//         let _2 := 0
-//         mstore(_2, _1)
+//         mstore(0, 1337)
 //         funcWithLoop(42)
-//         sstore(_2, mload(_2))
+//         sstore(0, mload(0))
 //     }
 //     function userNot(x) -> y
 //     { y := iszero(x) }
 //     function funcWithLoop(x_1)
 //     {
-//         for { }
-//         userNot(x_1)
-//         {
-//             let _7 := 0
-//             mstore(_7, _7)
-//         }
+//         for { } userNot(x_1) { mstore(0, 0) }
 //         { }
 //     }
 // }

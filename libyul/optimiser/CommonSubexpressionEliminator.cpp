@@ -25,6 +25,7 @@
 #include <libyul/optimiser/BlockHasher.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/SideEffects.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
@@ -110,14 +111,22 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 			if (AssignedValue const* value = variableValue(variable))
 			{
 				assertThrow(value->value, OptimizerException, "");
-				// Prevent using the default value of return variables
-				// instead of literal zeros.
 				if (
-					m_returnVariables.count(variable) &&
 					holds_alternative<Literal>(*value->value) &&
 					valueOfLiteral(get<Literal>(*value->value)) == 0
 				)
-					continue;
+				{
+					// Prevent using the default value of return variables
+					// instead of literal zeros.
+					if (m_returnVariables.count(variable))
+						continue;
+					// Do not replace literal zeros when PUSH0 command is available.
+					if (auto&& evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+					{
+						if (evmDialect->evmVersion().hasPush0())
+							continue;
+					}
+				}
 				// We check for syntactic equality again because the value might have changed.
 				if (inScope(variable) && SyntacticallyEqual{}(_e, *value->value))
 				{

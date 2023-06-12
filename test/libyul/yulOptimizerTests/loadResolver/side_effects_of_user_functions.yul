@@ -8,6 +8,8 @@
     stores()
     sstore(0, mload(2))
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
@@ -17,11 +19,9 @@
 //         let _2 := 2
 //         mstore(_2, _1)
 //         reads()
-//         let _4 := _1
-//         let _5 := 0
-//         sstore(_5, _4)
+//         sstore(0, _1)
 //         stores()
-//         sstore(_5, mload(_2))
+//         sstore(0, mload(_2))
 //     }
 //     function stores()
 //     { mstore(0, 1) }

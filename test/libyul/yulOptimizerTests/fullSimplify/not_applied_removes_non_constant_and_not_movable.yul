@@ -3,13 +3,14 @@
 	let a := div(create(0, 0, 0), 0)
 	mstore(0, a)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullSimplify
 //
 // {
 //     {
-//         let _1 := 0
-//         pop(create(_1, _1, _1))
-//         mstore(_1, 0)
+//         pop(create(0, 0, 0))
+//         mstore(0, 0)
 //     }
 // }

@@ -10,7 +10,7 @@
     mstore(0, sload(a))
 }
 // ====
-// EVMVersion: >=byzantium
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
@@ -23,8 +23,8 @@
 //         let _2 := 900
 //         mstore(_2, _1)
 //         let _3 := 200
-//         pop(staticcall(10000, 10, a, _3, a, _3))
+//         pop(staticcall(10000, 10, 0, _3, 0, _3))
 //         sstore(1, mload(_2))
-//         mstore(a, b)
+//         mstore(0, b)
 //     }
 // }

@@ -4,12 +4,9 @@
 	let y := add(d, add(c, 7))
 	sstore(0, y)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSimplifier
 //
-// {
-//     {
-//         let c, d
-//         sstore(d, 7)
-//     }
-// }
+// { { sstore(0, 7) } }

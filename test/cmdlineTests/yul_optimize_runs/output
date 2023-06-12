@@ -33,7 +33,7 @@ Text representation:
   0x00
     /* "yul_optimize_runs/input.yul":71:144   */
   codecopy
-    /* "yul_optimize_runs/input.yul":80:81   */
+    /* "yul_optimize_runs/input.yul":160:161   */
   0x00
     /* "yul_optimize_runs/input.yul":153:192   */
   return

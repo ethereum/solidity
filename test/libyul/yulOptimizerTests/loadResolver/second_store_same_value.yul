@@ -6,6 +6,8 @@
     // written are 7.
     mstore(0, sload(x))
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
@@ -14,8 +16,7 @@
 //         let x := calldataload(1)
 //         let _2 := 7
 //         sstore(x, _2)
-//         let _4 := 0
-//         sstore(calldataload(_4), _2)
-//         mstore(_4, _2)
+//         sstore(calldataload(0), _2)
+//         mstore(0, _2)
 //     }
 // }

@@ -2,12 +2,9 @@
     let a := add(0, mload(0))
     sstore(0, a)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSimplifier
 //
-// {
-//     {
-//         let _1 := 0
-//         sstore(_1, mload(_1))
-//     }
-// }
+// { { sstore(0, mload(0)) } }

@@ -18,7 +18,7 @@ object "a" {
 // optimizationPreset: full
 // ----
 // Assembly:
-//     /* "source":48:49   */
+//     /* "source":93:102   */
 //   0x00
 //     /* "source":35:50   */
 //   dup1
@@ -30,7 +30,7 @@ object "a" {
 // stop
 //
 // sub_0: assembly {
-//         /* "source":188:189   */
+//         /* "source":237:246   */
 //       0x00
 //         /* "source":175:190   */
 //       dup1
@@ -42,4 +42,4 @@ object "a" {
 // }
 // Bytecode: 5f80355500fe
 // Opcodes: PUSH0 DUP1 CALLDATALOAD SSTORE STOP INVALID
-// SourceMappings: 48:1:0:-:0;35:15;;107:20;20:111
+// SourceMappings: 93:9:0:-:0;35:15;;107:20;20:111

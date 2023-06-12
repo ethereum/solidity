@@ -5,14 +5,14 @@
     let val := keccak256(0, 32)
     sstore(0, val)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
 // {
 //     {
-//         let _1 := 10
-//         let _2 := 0
-//         mstore(_2, _1)
-//         sstore(_2, 89717814153306320011181716697424560163256864414616650038987186496166826726056)
+//         mstore(0, 10)
+//         sstore(0, keccak256(0, 32))
 //     }
 // }

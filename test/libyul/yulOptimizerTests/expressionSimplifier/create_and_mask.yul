@@ -7,16 +7,17 @@
     let b := and(0xffffffffffffffffffffffffffffffffffffffff, create(0, 0, 0x20))
     sstore(a, b)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSimplifier
 //
 // {
 //     {
 //         let _1 := 0x20
-//         let _2 := 0
-//         let c := create(_2, _2, _1)
+//         let c := create(0, 0, _1)
 //         let _4 := 0xffffffffffffffffffffffffffffffffffffffff
 //         let a := and(c, _4)
-//         sstore(a, and(_4, create(_2, _2, _1)))
+//         sstore(a, and(_4, create(0, 0, _1)))
 //     }
 // }

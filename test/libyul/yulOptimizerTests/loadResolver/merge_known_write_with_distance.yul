@@ -7,16 +7,20 @@
     let q := mload(calldataload(0))
     sstore(t, q)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
 // {
 //     {
-//         let _2 := calldataload(10)
-//         let _4 := calldataload(0)
-//         mstore(_4, _2)
+//         mstore(calldataload(0), calldataload(10))
 //         let _5 := 1
-//         if calldataload(_5) { mstore(add(_4, 0x20), _5) }
-//         sstore(mload(add(_4, 0x20)), _2)
+//         if calldataload(_5)
+//         {
+//             mstore(add(calldataload(0), 0x20), _5)
+//         }
+//         let t := mload(add(calldataload(0), 0x20))
+//         sstore(t, mload(calldataload(0)))
 //     }
 // }

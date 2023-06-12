@@ -8,7 +8,7 @@
 // optimizationPreset: full
 // ----
 // Assembly:
-//     /* "source":26:27   */
+//     /* "source":67:76   */
 //   0x00
 //     /* "source":13:28   */
 //   dup1
@@ -19,4 +19,4 @@
 //   stop
 // Bytecode: 5f80355500
 // Opcodes: PUSH0 DUP1 CALLDATALOAD SSTORE STOP
-// SourceMappings: 26:1:0:-:0;13:15;;79:20;0:101
+// SourceMappings: 67:9:0:-:0;13:15;;79:20;0:101

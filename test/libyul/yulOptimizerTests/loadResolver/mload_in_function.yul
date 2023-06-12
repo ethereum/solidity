@@ -6,25 +6,24 @@
         foo(42)
         sstore(0, mload(0))
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
 // {
 //     {
-//         let _1 := 1337
-//         let _2 := 0
-//         mstore(_2, _1)
+//         mstore(0, 1337)
 //         foo(42)
-//         sstore(_2, mload(_2))
+//         sstore(0, mload(0))
 //     }
 //     function foo(x)
 //     {
 //         for { }
 //         x
 //         {
-//             let _7 := 0
-//             x := mload(_7)
-//             mstore(_7, _7)
+//             x := mload(0)
+//             mstore(0, 0)
 //         }
 //         { }
 //     }

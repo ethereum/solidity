@@ -14,6 +14,8 @@
 
     function g() {}
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //
@@ -22,16 +24,14 @@
 //         let _1 := 9
 //         let _2 := 2
 //         mstore(_2, _1)
-//         let _4 := _1
-//         let _5 := 0
-//         sstore(_5, _4)
-//         pop(call(_5, _5, _5, _5, _5, _5, _5))
-//         sstore(_5, mload(_2))
+//         sstore(0, _1)
+//         pop(call(0, 0, 0, 0, 0, 0, 0))
+//         sstore(0, mload(_2))
 //         let _17 := 10
 //         mstore(_2, _17)
-//         mstore8(calldataload(_5), 4)
-//         sstore(_5, mload(_2))
+//         mstore8(calldataload(0), 4)
+//         sstore(0, mload(_2))
 //         mstore(_2, _17)
-//         sstore(_5, _17)
+//         sstore(0, _17)
 //     }
 // }

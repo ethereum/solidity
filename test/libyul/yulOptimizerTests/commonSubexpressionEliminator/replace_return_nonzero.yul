@@ -6,6 +6,8 @@
         let b := 1
     }
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: commonSubexpressionEliminator
 //
@@ -14,7 +16,7 @@
 //     {
 //         let t := 0
 //         x := 1
-//         let a := t
+//         let a := 0
 //         let b := x
 //     }
 // }
