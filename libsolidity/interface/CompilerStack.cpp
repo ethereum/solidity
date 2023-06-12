@@ -70,6 +70,7 @@
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libevmasm/Exceptions.h>
 
@@ -1468,22 +1469,38 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		m_evmVersion,
 		m_eofVersion,
 		m_revertStrings,
-		m_optimiserSettings,
 		sourceIndices(),
 		m_debugInfoSelection,
 		this
 	);
-
-	tie(
-		compiledContract.yulIR,
-		compiledContract.yulIRAst,
-		compiledContract.yulIROptimized,
-		compiledContract.yulIROptimizedAst
-	) = generator.run(
+	compiledContract.yulIR = generator.run(
 		_contract,
 		createCBORMetadata(compiledContract, /* _forIR */ true),
 		otherYulSources
 	);
+
+	yul::YulStack stack(
+		m_evmVersion,
+		m_eofVersion,
+		yul::YulStack::Language::StrictAssembly,
+		m_optimiserSettings,
+		m_debugInfoSelection
+	);
+	if (!stack.parseAndAnalyze("", compiledContract.yulIR))
+	{
+		string errorMessage;
+		for (auto const& error: stack.errors())
+			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(
+				*error,
+				stack.charStream("")
+			);
+		solAssert(false, compiledContract.yulIR + "\n\nInvalid IR generated:\n" + errorMessage + "\n");
+	}
+
+	compiledContract.yulIRAst = stack.astJson();
+	stack.optimize();
+	compiledContract.yulIROptimized = stack.print(this);
+	compiledContract.yulIROptimizedAst = stack.astJson();
 }
 
 void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
@@ -1508,8 +1525,8 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 		m_optimiserSettings,
 		m_debugInfoSelection
 	);
-	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
-	stack.optimize();
+	bool analysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIROptimized);
+	solAssert(analysisSuccessful);
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
