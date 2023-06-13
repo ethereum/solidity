@@ -322,6 +322,14 @@ namespace TokenTraits
 			tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue || tok == Token::Leave ||
 			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex;
 	}
+	constexpr bool isExperimentalSolidityKeyword(Token tok)
+	{
+		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback;
+	}
+	constexpr bool isExperimentalSolidityOnlyKeyword(Token)
+	{
+		return false;
+	}
 
 	bool isYulKeyword(std::string const& _literal);
 

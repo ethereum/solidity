@@ -313,6 +313,7 @@ void CompilerStack::reset(bool _keepSettings)
 	m_stackState = Empty;
 	m_hasError = false;
 	m_sources.clear();
+	m_maxAstId.reset();
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
 	if (!_keepSettings)
@@ -416,6 +417,9 @@ bool CompilerStack::parse()
 		m_hasError = true;
 
 	storeContractDefinitions();
+
+	solAssert(!m_maxAstId.has_value());
+	m_maxAstId = parser.maxID();
 
 	return !m_hasError;
 }
@@ -664,6 +668,7 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 bool CompilerStack::analyzeExperimental()
 {
 	bool noErrors = true;
+	solAssert(m_maxAstId);
 	m_experimentalAnalysis = make_unique<experimental::Analysis>(m_errorReporter);
 	for (Source const* source: m_sourceOrder)
 		if (source->ast)
