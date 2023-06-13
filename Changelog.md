@@ -15,6 +15,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Commandline Interface: Fix internal error when using ``--stop-after parsing`` and requesting some of the outputs that require full analysis or compilation.
  * Commandline Interface: It is no longer possible to specify both ``--optimize-yul`` and ``--no-optimize-yul`` at the same time.
  * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
  * SMTChecker: Fix false negative when a verification target can be violated only by trusted external call from another public function.
