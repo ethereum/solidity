@@ -1019,15 +1019,28 @@ std::tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	while (isIdentifierPart(m_char) || (m_char == '.' && m_kind == ScannerKind::Yul))
 		addLiteralCharAndAdvance();
 	literal.complete();
+
 	auto const token = TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
-	if (m_kind == ScannerKind::Yul)
+	switch (m_kind)
 	{
+	case ScannerKind::Solidity:
+		// Turn experimental Solidity keywords that are not keywords in legacy Solidity into identifiers.
+		if (TokenTraits::isExperimentalSolidityOnlyKeyword(std::get<0>(token)))
+			return std::make_tuple(Token::Identifier, 0, 0);
+		break;
+	case ScannerKind::Yul:
 		// Turn Solidity identifier into a Yul keyword
 		if (m_tokens[NextNext].literal == "leave")
 			return std::make_tuple(Token::Leave, 0, 0);
 		// Turn non-Yul keywords into identifiers.
 		if (!TokenTraits::isYulKeyword(std::get<0>(token)))
 			return std::make_tuple(Token::Identifier, 0, 0);
+		break;
+	case ScannerKind::ExperimentalSolidity:
+		// Turn Solidity keywords that are not keywords in experimental solidity into identifiers.
+		if (!TokenTraits::isExperimentalSolidityKeyword(std::get<0>(token)))
+			return std::make_tuple(Token::Identifier, 0, 0);
+		break;
 	}
 	return token;
 }
