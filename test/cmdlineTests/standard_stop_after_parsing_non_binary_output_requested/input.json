@@ -1,0 +1,19 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_stop_after_parsing_non_binary_output_requested/in.sol"]}
+	},
+	"settings": {
+		"stopAfter": "parsing",
+		"outputSelection": {
+			"*": {"*": [
+				"abi",
+				"devdoc",
+				"userdoc",
+				"metadata",
+				"storageLayout",
+				"evm.methodIdentifiers"
+			]}
+		}
+	}
+}
