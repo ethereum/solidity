@@ -418,14 +418,6 @@ private:
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;
 
-	/// Perform the analysis steps of legacy language mode.
-	/// @returns false on error.
-	bool analyzeLegacy(bool _noErrorsSoFar);
-
-	/// Perform the analysis steps of experimental language mode.
-	/// @returns false on error.
-	bool analyzeExperimental();
-
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
 	void assembleYul(
@@ -511,6 +503,7 @@ private:
 	std::map<std::string, util::h160> m_libraries;
 	ImportRemapper m_importRemapper;
 	std::map<std::string const, Source> m_sources;
+	std::optional<int64_t> m_maxAstId;
 	std::vector<std::string> m_unhandledSMTLib2Queries;
 	std::map<util::h256, std::string> m_smtlib2Responses;
 	std::shared_ptr<GlobalContext> m_globalContext;
