@@ -313,6 +313,7 @@ void CompilerStack::reset(bool _keepSettings)
 {
 	m_stackState = Empty;
 	m_sources.clear();
+	m_maxAstId.reset();
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
 	if (!_keepSettings)
@@ -413,6 +414,10 @@ bool CompilerStack::parse()
 
 	m_stackState = (m_stopAfter <= Parsed ? Parsed : ParsedAndImported);
 	storeContractDefinitions();
+
+	solAssert(!m_maxAstId.has_value());
+	m_maxAstId = parser.maxID();
+
 	return true;
 }
 
@@ -661,7 +666,8 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 bool CompilerStack::analyzeExperimental()
 {
 	solAssert(!m_experimentalAnalysis);
-	m_experimentalAnalysis = std::make_unique<experimental::Analysis>(m_errorReporter);
+	solAssert(m_maxAstId && *m_maxAstId >= 0);
+	m_experimentalAnalysis = std::make_unique<experimental::Analysis>(m_errorReporter, static_cast<std::uint64_t>(*m_maxAstId));
 	std::vector<std::shared_ptr<SourceUnit const>> sourceAsts;
 	for (Source const* source: m_sourceOrder)
 		if (source->ast)

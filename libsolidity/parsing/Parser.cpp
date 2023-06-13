@@ -100,6 +100,9 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 		while (m_scanner->currentToken() == Token::Pragma)
 			nodes.push_back(parsePragmaDirective(false));
 
+		if (m_experimentalSolidityEnabledInCurrentSourceUnit)
+			m_scanner->setScannerMode(ScannerKind::ExperimentalSolidity);
+
 		while (m_scanner->currentToken() != Token::EOS)
 		{
 			switch (m_scanner->currentToken())
