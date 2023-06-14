@@ -997,21 +997,11 @@ void CommandLineParser::processArgs()
 		return;
 
 	checkMutuallyExclusive({g_strColor, g_strNoColor});
+	checkMutuallyExclusive({g_strStopAfter, g_strGas});
 
-	array<string, 9> const conflictingWithStopAfter{
-		CompilerOutputs::componentName(&CompilerOutputs::binary),
-		CompilerOutputs::componentName(&CompilerOutputs::ir),
-		CompilerOutputs::componentName(&CompilerOutputs::irAstJson),
-		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
-		CompilerOutputs::componentName(&CompilerOutputs::irOptimizedAstJson),
-		g_strGas,
-		CompilerOutputs::componentName(&CompilerOutputs::asm_),
-		CompilerOutputs::componentName(&CompilerOutputs::asmJson),
-		CompilerOutputs::componentName(&CompilerOutputs::opcodes),
-	};
-
-	for (auto& option: conflictingWithStopAfter)
-		checkMutuallyExclusive({g_strStopAfter, option});
+	for (string const& option: CompilerOutputs::componentMap() | ranges::views::keys)
+		if (option != CompilerOutputs::componentName(&CompilerOutputs::astCompactJson))
+			checkMutuallyExclusive({g_strStopAfter, option});
 
 	if (
 		m_options.input.mode != InputMode::Compiler &&
