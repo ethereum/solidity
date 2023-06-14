@@ -109,6 +109,13 @@ public:
 	virtual bool visit(ElementaryTypeNameExpression& _node) { return visitNode(_node); }
 	virtual bool visit(Literal& _node) { return visitNode(_node); }
 	virtual bool visit(StructuredDocumentation& _node) { return visitNode(_node); }
+	/// Experimental Solidity nodes
+	/// @{
+	virtual bool visit(TypeClassDefinition& _node) { return visitNode(_node); }
+	virtual bool visit(TypeClassInstantiation& _node) { return visitNode(_node); }
+	virtual bool visit(TypeDefinition& _node) { return visitNode(_node); }
+	virtual bool visit(TypeClassName& _node) { return visitNode(_node); }
+	///  @}
 
 	virtual void endVisit(SourceUnit& _node) { endVisitNode(_node); }
 	virtual void endVisit(PragmaDirective& _node) { endVisitNode(_node); }
@@ -165,6 +172,13 @@ public:
 	virtual void endVisit(ElementaryTypeNameExpression& _node) { endVisitNode(_node); }
 	virtual void endVisit(Literal& _node) { endVisitNode(_node); }
 	virtual void endVisit(StructuredDocumentation& _node) { endVisitNode(_node); }
+	/// Experimental Solidity nodes
+	/// @{
+	virtual void endVisit(TypeClassDefinition& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeClassInstantiation& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeDefinition& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeClassName& _node) { endVisitNode(_node); }
+	///  @}
 
 protected:
 	/// Generic function called by default for each node, to be overridden by derived classes
@@ -243,6 +257,13 @@ public:
 	virtual bool visit(ElementaryTypeNameExpression const& _node) { return visitNode(_node); }
 	virtual bool visit(Literal const& _node) { return visitNode(_node); }
 	virtual bool visit(StructuredDocumentation const& _node) { return visitNode(_node); }
+	/// Experimental Solidity nodes
+	/// @{
+	virtual bool visit(TypeClassDefinition const& _node) { return visitNode(_node); }
+	virtual bool visit(TypeClassInstantiation const& _node) { return visitNode(_node); }
+	virtual bool visit(TypeDefinition const& _node) { return visitNode(_node); }
+	virtual bool visit(TypeClassName const& _node) { return visitNode(_node); }
+	///  @}
 
 	virtual void endVisit(SourceUnit const& _node) { endVisitNode(_node); }
 	virtual void endVisit(PragmaDirective const& _node) { endVisitNode(_node); }
@@ -299,6 +320,13 @@ public:
 	virtual void endVisit(ElementaryTypeNameExpression const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Literal const& _node) { endVisitNode(_node); }
 	virtual void endVisit(StructuredDocumentation const& _node) { endVisitNode(_node); }
+	/// Experimental Solidity nodes
+	/// @{
+	virtual void endVisit(TypeClassDefinition const& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeClassInstantiation const& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeDefinition const& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeClassName const& _node) { endVisitNode(_node); }
+	///  @}
 
 protected:
 	/// Generic function called by default for each node, to be overridden by derived classes
