@@ -59,7 +59,8 @@ public:
 	NameAndTypeResolver(
 		GlobalContext& _globalContext,
 		langutil::EVMVersion _evmVersion,
-		langutil::ErrorReporter& _errorReporter
+		langutil::ErrorReporter& _errorReporter,
+		bool _experimentalSolidity
 	);
 	/// Registers all declarations found in the AST node, usually a source unit.
 	/// @returns false in case of error.
@@ -107,6 +108,7 @@ public:
 	/// Sets the current scope.
 	void setScope(ASTNode const* _node);
 
+	bool experimentalSolidity() const { return m_experimentalSolidity; }
 private:
 	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal errors.
 	bool resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode = true);
@@ -132,6 +134,7 @@ private:
 	DeclarationContainer* m_currentScope = nullptr;
 	langutil::ErrorReporter& m_errorReporter;
 	GlobalContext& m_globalContext;
+	bool m_experimentalSolidity = false;
 };
 
 /**

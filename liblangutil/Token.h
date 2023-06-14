@@ -268,6 +268,20 @@ namespace solidity::langutil
 	/* Yul-specific tokens, but not keywords. */                       \
 	T(Leave, "leave", 0)                                               \
 	\
+	T(NonExperimentalEnd, nullptr, 0) /* used as non-experimental enum end marker */ \
+    /* Experimental Solidity specific keywords. */                     \
+	K(Class, "class", 0)                                               \
+	K(Instantiation, "instantiation", 0)                               \
+	K(Word, "word", 0)                                                 \
+	K(Integer, "integer", 0)                                           \
+	K(Itself, "itself", 0)                                             \
+	K(Void, "void", 0)                                                 \
+	K(Pair, "pair", 0)                                                 \
+	K(Fun, "fun", 0)                                                   \
+	K(Unit, "unit", 0)                                                 \
+	K(StaticAssert, "static_assert", 0)                                \
+	T(ExperimentalEnd, nullptr, 0) /* used as experimental enum end marker */ \
+	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
@@ -290,7 +304,12 @@ namespace TokenTraits
 	constexpr size_t count() { return static_cast<size_t>(Token::NUM_TOKENS); }
 
 	// Predicates
-	constexpr bool isElementaryTypeName(Token tok) { return Token::Int <= tok && tok < Token::TypesEnd; }
+	constexpr bool isElementaryTypeName(Token tok)
+	{
+		return (Token::Int <= tok && tok < Token::TypesEnd) ||
+			   tok == Token::Word || tok == Token::Void || tok == Token::Integer ||
+			   tok == Token::Pair || tok == Token::Unit || tok == Token::Fun;
+	}
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
 	constexpr bool isCommutativeOp(Token op) { return op == Token::BitOr || op == Token::BitXor || op == Token::BitAnd ||
@@ -322,13 +341,22 @@ namespace TokenTraits
 			tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue || tok == Token::Leave ||
 			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex;
 	}
+	constexpr bool isBuiltinTypeClassName(Token tok)
+	{
+		return tok == Token::Integer || (isBinaryOp(tok) && tok != Token::Comma) ||
+			   isCompareOp(tok) || isUnaryOp(tok) || (isAssignmentOp(tok) && tok != Token::Assign);
+	}
 	constexpr bool isExperimentalSolidityKeyword(Token tok)
 	{
-		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback;
+		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback ||
+			tok == Token::Pragma || tok == Token::Import || tok == Token::As || tok == Token::Function || tok == Token::Let ||
+			tok == Token::Return || tok == Token::Type || tok == Token::Bool || tok == Token::If || tok == Token::Else ||
+			tok == Token::Do || tok == Token::While || tok == Token::For || tok == Token::Continue || tok == Token::Break ||
+			(tok > Token::NonExperimentalEnd && tok < Token::ExperimentalEnd);
 	}
-	constexpr bool isExperimentalSolidityOnlyKeyword(Token)
+	constexpr bool isExperimentalSolidityOnlyKeyword(Token tok)
 	{
-		return false;
+		return tok > Token::NonExperimentalEnd && tok < Token::ExperimentalEnd;
 	}
 
 	bool isYulKeyword(std::string const& _literal);

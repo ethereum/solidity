@@ -46,8 +46,6 @@ set(sources
 	analysis/TypeChecker.h
 	analysis/ViewPureChecker.cpp
 	analysis/ViewPureChecker.h
-	analysis/experimental/Analysis.cpp
-	analysis/experimental/Analysis.h
 	ast/AST.cpp
 	ast/AST.h
 	ast/AST_accept.h
@@ -92,8 +90,6 @@ set(sources
 	codegen/ReturnInfo.cpp
 	codegen/YulUtilFunctions.h
 	codegen/YulUtilFunctions.cpp
-	codegen/experimental/IRGenerator.cpp
-	codegen/experimental/IRGenerator.h
 	codegen/ir/Common.cpp
 	codegen/ir/Common.h
 	codegen/ir/IRGenerator.cpp
@@ -186,6 +182,29 @@ set(sources
 	parsing/Parser.cpp
 	parsing/Parser.h
 	parsing/Token.h
+	experimental/analysis/Analysis.cpp
+	experimental/analysis/Analysis.h
+	experimental/analysis/DebugWarner.cpp
+	experimental/analysis/DebugWarner.h
+	experimental/analysis/TypeInference.cpp
+	experimental/analysis/TypeInference.h
+	experimental/analysis/TypeRegistration.cpp
+	experimental/analysis/TypeRegistration.h
+	experimental/analysis/SyntaxRestrictor.cpp
+	experimental/analysis/SyntaxRestrictor.h
+	experimental/ast/Type.cpp
+	experimental/ast/Type.h
+	experimental/ast/TypeSystem.cpp
+	experimental/ast/TypeSystem.h
+	experimental/ast/TypeSystemHelper.cpp
+	experimental/ast/TypeSystemHelper.h
+	experimental/codegen/Common.h
+	experimental/codegen/Common.cpp
+	experimental/codegen/IRGenerationContext.h
+	experimental/codegen/IRGenerator.cpp
+	experimental/codegen/IRGenerator.h
+	experimental/codegen/IRGeneratorForStatements.cpp
+	experimental/codegen/IRGeneratorForStatements.h
 )
 
 add_library(solidity ${sources})
