@@ -130,6 +130,7 @@ public:
 
 	void endVisit(EventDefinition const&) override;
 
+	bool visitNode(ASTNode const& _node) override;
 private:
 	void setJsonNode(
 		ASTNode const& _node,

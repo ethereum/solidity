@@ -15,29 +15,27 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
+
 #pragma once
 
-namespace solidity::frontend
-{
-class ASTNode;
-}
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 
-namespace solidity::langutil
-{
-class ErrorReporter;
-}
+#include <algorithm>
+#include <string>
 
 namespace solidity::frontend::experimental
 {
 
-class Analysis
+struct IRNames
 {
-public:
-	Analysis(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
-	{}
-	bool check(ASTNode const& _ast);
-private:
-	langutil::ErrorReporter& m_errorReporter;
+	static std::string function(TypeEnvironment const& _env, FunctionDefinition const& _function, Type _type);
+	static std::string function(VariableDeclaration const& _varDecl);
+	static std::string creationObject(ContractDefinition const& _contract);
+	static std::string deployedObject(ContractDefinition const& _contract);
+	static std::string constructor(ContractDefinition const& _contract);
+	static std::string localVariable(VariableDeclaration const& _declaration);
+	static std::string localVariable(Expression const& _expression);
 };
 
 }

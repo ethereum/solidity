@@ -99,6 +99,14 @@ class ElementaryTypeNameExpression;
 class Literal;
 class StructuredDocumentation;
 
+/// Experimental Solidity nodes
+/// @{
+class TypeClassDefinition;
+class TypeClassInstantiation;
+class TypeClassName;
+class TypeDefinition;
+/// @}
+
 class VariableScope;
 
 template <class T>
