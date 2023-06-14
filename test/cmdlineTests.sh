@@ -115,7 +115,7 @@ function update_expectation {
     local newExpectation="${1}"
     local expectationFile="${2}"
 
-    if [[ $newExpectation == "" || $newExpectation -eq 0 && $expectationFile == */exit ]]
+    if [[ $newExpectation == '' || $newExpectation == '0' && $expectationFile == */exit ]]
     then
         if [[ -f $expectationFile ]]
         then
