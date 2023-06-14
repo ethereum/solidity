@@ -486,7 +486,7 @@ bool CompilerStack::analyze()
 			for (Source const* source: m_sourceOrder)
 				if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
 					noErrors = false;
- 		}
+		}
 
 		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
@@ -1474,9 +1474,6 @@ void CompilerStack::compileContract(
 void CompilerStack::generateIR(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
-
-	if (m_experimentalAnalysis)
-		solThrow(CompilerError, "IR codegen after experimental analysis is unsupported.");
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
