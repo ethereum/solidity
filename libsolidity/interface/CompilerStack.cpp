@@ -57,7 +57,7 @@
 #include <libsolidity/parsing/Parser.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
-#include <libsolidity/codegen/experimental/IRGenerator.h>
+#include <libsolidity/experimental/codegen/IRGenerator.h>
 
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
@@ -470,7 +470,7 @@ bool CompilerStack::analyze()
 
 		m_globalContext = std::make_shared<GlobalContext>();
 		// We need to keep the same resolver during the whole process.
-		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
+		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter, experimentalSolidity);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.registerDeclarations(*source->ast))
 				return false;
@@ -489,7 +489,7 @@ bool CompilerStack::analyze()
 			for (Source const* source: m_sourceOrder)
 				if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
 					noErrors = false;
- 		}
+		}
 
 		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
@@ -1504,9 +1504,6 @@ void CompilerStack::compileContract(
 void CompilerStack::generateIR(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
-
-	if (m_experimentalAnalysis)
-		solThrow(CompilerError, "IR codegen after experimental analysis is unsupported.");
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
