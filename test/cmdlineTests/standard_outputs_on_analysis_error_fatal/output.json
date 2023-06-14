@@ -1,0 +1,26 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "3644",
+            "formattedMessage": "TypeError: This parameter has a type that can only be used internally. You can make the contract abstract to avoid this problem.
+ --> C:7:17:
+  |
+7 |     constructor(uint[] storage) {}
+  |                 ^^^^^^^^^^^^^^
+
+",
+            "message": "This parameter has a type that can only be used internally. You can make the contract abstract to avoid this problem.",
+            "severity": "error",
+            "sourceLocation":
+            {
+                "end": 258,
+                "file": "C",
+                "start": 244
+            },
+            "type": "TypeError"
+        }
+    ],
+    "sources": {}
+}
