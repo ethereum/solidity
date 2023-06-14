@@ -17,6 +17,8 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+#include <cstdint>
+
 namespace solidity::frontend
 {
 class ASTNode;
@@ -33,11 +35,14 @@ namespace solidity::frontend::experimental
 class Analysis
 {
 public:
-	Analysis(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
+	Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId):
+	m_errorReporter(_errorReporter),
+	m_maxAstId(_maxAstId)
 	{}
 	bool check(ASTNode const& _ast);
 private:
 	langutil::ErrorReporter& m_errorReporter;
+	uint64_t m_maxAstId = 0;
 };
 
 }

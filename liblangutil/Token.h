@@ -268,6 +268,11 @@ namespace solidity::langutil
 	/* Yul-specific tokens, but not keywords. */                       \
 	T(Leave, "leave", 0)                                               \
 	\
+    /* Experimental Solidity specific keywords. */                     \
+	K(Word, "word", 0)                                                 \
+	K(StaticAssert, "static_assert", 0)                                \
+	T(ExperimentalEnd, nullptr, 0) /* used as experimental enum end marker */ \
+	\
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
@@ -290,7 +295,7 @@ namespace TokenTraits
 	constexpr size_t count() { return static_cast<size_t>(Token::NUM_TOKENS); }
 
 	// Predicates
-	constexpr bool isElementaryTypeName(Token tok) { return Token::Int <= tok && tok < Token::TypesEnd; }
+	constexpr bool isElementaryTypeName(Token tok) { return (Token::Int <= tok && tok < Token::TypesEnd) || tok == Token::Word; }
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
 	constexpr bool isCommutativeOp(Token op) { return op == Token::BitOr || op == Token::BitXor || op == Token::BitAnd ||
@@ -324,11 +329,13 @@ namespace TokenTraits
 	}
 	constexpr bool isExperimentalSolidityKeyword(Token tok)
 	{
-		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback;
+		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback ||
+			tok == Token::Pragma || tok == Token::Import || tok == Token::As || tok == Token::Function ||
+			(tok >= Token::Word && tok < Token::ExperimentalEnd);
 	}
-	constexpr bool isExperimentalSolidityOnlyKeyword(Token)
+	constexpr bool isExperimentalSolidityOnlyKeyword(Token tok)
 	{
-		return false;
+		return tok >= Token::Word && tok < Token::ExperimentalEnd;
 	}
 
 	bool isYulKeyword(std::string const& _literal);

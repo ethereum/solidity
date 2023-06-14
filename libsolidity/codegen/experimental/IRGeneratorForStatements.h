@@ -15,17 +15,24 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/analysis/experimental/Analysis.h>
 
-#include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
+#pragma once
 
-using namespace solidity::langutil;
-using namespace solidity::frontend::experimental;
+#include <libsolidity/ast/ASTVisitor.h>
 
-bool Analysis::check(ASTNode const& _node)
+#include <functional>
+
+namespace solidity::frontend::experimental
 {
-	SyntaxRestrictor syntaxRestrictor{m_errorReporter};
-	if (!syntaxRestrictor.check(_node))
-		return false;
-	return true;
+
+class IRGeneratorForStatements: public ASTConstVisitor
+{
+public:
+	IRGeneratorForStatements() {}
+
+private:
+	/// Default visit will reject all AST nodes that are not explicitly supported.
+	bool visitNode(ASTNode const& _node) override;
+};
+
 }

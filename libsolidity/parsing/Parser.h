@@ -49,6 +49,8 @@ public:
 
 	ASTPointer<SourceUnit> parse(langutil::CharStream& _charStream);
 
+	/// Returns the maximal AST node ID assigned so far
+	int64_t maxID() const { return m_currentNodeID; }
 private:
 	class ASTNodeFactory;
 
@@ -198,8 +200,6 @@ private:
 
 	/// Returns the next AST node ID
 	int64_t nextID() { return ++m_currentNodeID; }
-	/// Returns the maximal AST node ID assigned so far
-	int64_t maxID() const { return m_currentNodeID; }
 
 	std::pair<LookAheadInfo, IndexAccessedPath> tryParseIndexAccessedPath();
 	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.

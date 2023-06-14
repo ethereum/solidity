@@ -668,8 +668,8 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 bool CompilerStack::analyzeExperimental()
 {
 	bool noErrors = true;
-	solAssert(m_maxAstId);
-	m_experimentalAnalysis = make_unique<experimental::Analysis>(m_errorReporter);
+	solAssert(m_maxAstId && *m_maxAstId >= 0);
+	m_experimentalAnalysis = make_unique<experimental::Analysis>(m_errorReporter, static_cast<uint64_t>(*m_maxAstId));
 	for (Source const* source: m_sourceOrder)
 		if (source->ast)
 			if (!m_experimentalAnalysis->check(*source->ast))

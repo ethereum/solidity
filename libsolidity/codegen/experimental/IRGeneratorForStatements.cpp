@@ -15,17 +15,12 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/analysis/experimental/Analysis.h>
 
-#include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
+#include <libsolidity/codegen/experimental/IRGeneratorForStatements.h>
 
-using namespace solidity::langutil;
+using namespace std;
+using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
-
-bool Analysis::check(ASTNode const& _node)
-{
-	SyntaxRestrictor syntaxRestrictor{m_errorReporter};
-	if (!syntaxRestrictor.check(_node))
-		return false;
-	return true;
-}
+using namespace std::string_literals;

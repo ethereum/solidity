@@ -48,6 +48,10 @@ set(sources
 	analysis/ViewPureChecker.h
 	analysis/experimental/Analysis.cpp
 	analysis/experimental/Analysis.h
+	analysis/experimental/TypeInference.cpp
+	analysis/experimental/TypeInference.h
+	analysis/experimental/SyntaxRestrictor.cpp
+	analysis/experimental/SyntaxRestrictor.h
 	ast/AST.cpp
 	ast/AST.h
 	ast/AST_accept.h
@@ -94,6 +98,8 @@ set(sources
 	codegen/YulUtilFunctions.cpp
 	codegen/experimental/IRGenerator.cpp
 	codegen/experimental/IRGenerator.h
+	codegen/experimental/IRGeneratorForStatements.cpp
+	codegen/experimental/IRGeneratorForStatements.h
 	codegen/ir/Common.cpp
 	codegen/ir/Common.h
 	codegen/ir/IRGenerator.cpp

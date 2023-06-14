@@ -15,17 +15,23 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/analysis/experimental/Analysis.h>
 
-#include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
 
-using namespace solidity::langutil;
+#include <libsolidity/analysis/experimental/TypeInference.h>
+#include <liblangutil/Exceptions.h>
+
+using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
+using namespace solidity::langutil;
 
-bool Analysis::check(ASTNode const& _node)
+bool TypeInference::visitNode(ASTNode const& _node)
 {
-	SyntaxRestrictor syntaxRestrictor{m_errorReporter};
-	if (!syntaxRestrictor.check(_node))
-		return false;
-	return true;
+	m_errorReporter.typeError(0000_error, _node.location(), "Unsupported AST node during type inference.");
+	return false;
+}
+
+bool TypeInference::visit(VariableDeclaration const&)
+{
+//	m_env.assignType(&_varialeDeclaration, m_env.lookupType(_varialeDeclaration.typeName()));
+	return false;
 }
