@@ -844,6 +844,9 @@ void CommandLineInterface::handleCombinedJSON()
 
 	output[g_strVersion] = frontend::VersionString;
 	vector<string> contracts = m_compiler->contractNames();
+
+	// NOTE: The state checks here are more strict that in Standard JSON. There we allow
+	// requesting certain outputs even if compilation fails as long as analysis went ok.
 	bool compilationSuccess = m_compiler->state() >= CompilerStack::State::CompilationSuccessful;
 
 	if (!contracts.empty())
@@ -851,9 +854,9 @@ void CommandLineInterface::handleCombinedJSON()
 	for (string const& contractName: contracts)
 	{
 		Json::Value& contractData = output[g_strContracts][contractName] = Json::objectValue;
-		if (m_options.compiler.combinedJsonRequests->abi)
+		if (m_options.compiler.combinedJsonRequests->abi && compilationSuccess)
 			contractData[g_strAbi] = m_compiler->contractABI(contractName);
-		if (m_options.compiler.combinedJsonRequests->metadata)
+		if (m_options.compiler.combinedJsonRequests->metadata && compilationSuccess)
 			contractData["metadata"] = m_compiler->metadata(contractName);
 		if (m_options.compiler.combinedJsonRequests->binary && compilationSuccess)
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
@@ -887,11 +890,11 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
 				m_compiler->runtimeObject(contractName).functionDebugData
 			);
-		if (m_options.compiler.combinedJsonRequests->signatureHashes)
+		if (m_options.compiler.combinedJsonRequests->signatureHashes && compilationSuccess)
 			contractData[g_strSignatureHashes] = m_compiler->interfaceSymbols(contractName)["methods"];
-		if (m_options.compiler.combinedJsonRequests->natspecDev)
+		if (m_options.compiler.combinedJsonRequests->natspecDev && compilationSuccess)
 			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
-		if (m_options.compiler.combinedJsonRequests->natspecUser)
+		if (m_options.compiler.combinedJsonRequests->natspecUser && compilationSuccess)
 			contractData[g_strNatspecUser] = m_compiler->natspecUser(contractName);
 	}
 
