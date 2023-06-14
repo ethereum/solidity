@@ -18,10 +18,12 @@
 
 #pragma once
 
+#include <libsolidity/experimental/codegen/IRGenerationContext.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/CallGraph.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
@@ -34,7 +36,7 @@
 namespace solidity::frontend::experimental
 {
 
-class SourceUnit;
+class Analysis;
 
 class IRGenerator
 {
@@ -44,30 +46,27 @@ public:
 		std::optional<uint8_t> _eofVersion,
 		RevertStrings /*_revertStrings*/,
 		std::map<std::string, unsigned> /*_sourceIndices*/,
-		langutil::DebugInfoSelection const& _debugInfoSelection,
-		langutil::CharStreamProvider const* _soliditySourceProvider
-	):
-		m_evmVersion(_evmVersion),
-		m_eofVersion(_eofVersion),
-		m_debugInfoSelection(_debugInfoSelection),
-		m_soliditySourceProvider(_soliditySourceProvider)
-	{}
+		langutil::DebugInfoSelection const& /*_debugInfoSelection*/,
+		langutil::CharStreamProvider const* /*_soliditySourceProvider*/,
+		Analysis const& _analysis
+	);
 
 	std::string run(
 		ContractDefinition const& _contract,
 		bytes const& _cborMetadata,
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
-	) const;
+	);
 
-	std::string generate(ContractDefinition const& _contract) const;
-	std::string generate(FunctionDefinition const& _function) const;
-	std::string generate(InlineAssembly const& _assembly) const;
+	std::string generate(ContractDefinition const& _contract);
+	std::string generate(FunctionDefinition const& _function, Type _type);
 private:
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
 	OptimiserSettings const m_optimiserSettings;
-	langutil::DebugInfoSelection m_debugInfoSelection = {};
-	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
+//	langutil::DebugInfoSelection m_debugInfoSelection = {};
+//	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
+	TypeEnvironment m_env;
+	IRGenerationContext m_context;
 };
 
 }

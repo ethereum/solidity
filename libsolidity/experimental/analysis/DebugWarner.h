@@ -15,12 +15,28 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/analysis/experimental/Analysis.h>
+#pragma once
 
-using namespace solidity::langutil;
-using namespace solidity::frontend::experimental;
+#include <libsolidity/ast/ASTVisitor.h>
 
-bool Analysis::check(ASTNode const&)
+#include <liblangutil/ErrorReporter.h>
+
+namespace solidity::frontend::experimental
 {
-	return true;
+class Analysis;
+
+class DebugWarner: public ASTConstVisitor
+{
+public:
+	DebugWarner(Analysis& _analysis);
+
+	bool analyze(ASTNode const& _astRoot);
+
+private:
+	bool visitNode(ASTNode const& _node) override;
+
+	Analysis& m_analysis;
+	langutil::ErrorReporter& m_errorReporter;
+};
+
 }
