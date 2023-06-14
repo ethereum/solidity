@@ -221,6 +221,7 @@ EOF
         # shellcheck disable=SC1003
         sed -i.bak -E -e 's/\\n/\'$'\n/g' "$stdout_path"
         sed -i.bak -e 's/\(^[ ]*auxdata:[[:space:]]\)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
+        sed -i.bak -e 's/\(\\"version\\":[ ]*\\"\)[^"\\]*\(\\"\)/\1<VERSION REMOVED>\2/' "$stdout_path"
         rm "$stdout_path.bak"
     else
         sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
