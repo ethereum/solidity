@@ -88,6 +88,12 @@ function zeppelin_test
     sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/security/ReentrancyGuard.test.js
     sed -i "s|shouldBehaveLikeAccessControlDefaultAdminRules|\/\/&|" test/access/AccessControlDefaultAdminRules.test.js
 
+    # TODO: Remove when hardhat properly handle reverts of custom errors with via-ir enabled
+    # and/or open-zeppelin fix https://github.com/OpenZeppelin/openzeppelin-contracts/issues/4349
+    sed -i "s|it(\('cannot nest reinitializers'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+    sed -i "s|it(\('prevents re-initialization'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+    sed -i "s|it(\('can lock contract after initialization'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+
     # Here only the testToInt(248) and testToInt(256) cases fail so change the loop range to skip them
     sed -i "s|range(8, 256, 8)\(.forEach(bits => testToInt(bits));\)|range(8, 240, 8)\1|" test/utils/math/SafeCast.test.js
 
