@@ -60,7 +60,7 @@ public:
 	static void run(
 		OptimiserStepContext& _context,
 		Object& _object,
-		std::map<YulString, std::set<YulString>> const& _unreachableVariables
+		std::map<YulString, std::vector<YulString>> const& _unreachableVariables
 	);
 	/// @a _stackTooDeepErrors can be determined by the StackLayoutGenerator.
 	/// Can only be run on the EVM dialect with objects.

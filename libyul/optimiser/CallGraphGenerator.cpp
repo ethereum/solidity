@@ -22,6 +22,7 @@
 #include <libyul/AST.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 
+#include <libsolutil/CommonData.h>
 #include <stack>
 
 using namespace std;
@@ -79,7 +80,9 @@ CallGraph CallGraphGenerator::callGraph(Block const& _ast)
 
 void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 {
-	m_callGraph.functionCalls[m_currentFunction].insert(_functionCall.functionName.name);
+	auto& functionCalls = m_callGraph.functionCalls[m_currentFunction];
+	if (!util::contains(functionCalls, _functionCall.functionName.name))
+		functionCalls.emplace_back(_functionCall.functionName.name);
 	ASTWalker::operator()(_functionCall);
 }
 
