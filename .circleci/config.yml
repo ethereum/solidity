@@ -80,9 +80,22 @@ commands:
         type: string
     steps:
       - run: mkdir test-cases/
-      - run: cd test-cases && python3 ../scripts/isolate_tests.py ../test/
-      - run: cd test-cases && python3 ../scripts/bytecodecompare/prepare_report.py << parameters.binary_path >> --interface standard-json --report-file "../bytecode-report-<< parameters.label >>-standard-json.txt"
-      - run: cd test-cases && python3 ../scripts/bytecodecompare/prepare_report.py << parameters.binary_path >> --interface cli --report-file "../bytecode-report-<< parameters.label >>-cli.txt"
+      - run:
+          name: Prepare input files
+          command: |
+            cd test-cases/
+            python3 ../scripts/isolate_tests.py ../test/
+      - run:
+          name: Generate bytecode report
+          command: |
+            cd test-cases/
+            interface=$(echo -e "standard-json\ncli" | circleci tests split)
+            echo "Selected interface: ${interface}"
+
+            python3 ../scripts/bytecodecompare/prepare_report.py \
+              << parameters.binary_path >> \
+              --interface "$interface" \
+              --report-file "../bytecode-report-<< parameters.label >>-${interface}.txt"
       - store_artifacts:
           path: bytecode-report-<< parameters.label >>-standard-json.txt
       - store_artifacts:
@@ -1476,6 +1489,7 @@ jobs:
       TERM: xterm
       MAKEFLAGS: -j 2
       LC_ALL: C
+    parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
       - attach_workspace:
@@ -1490,6 +1504,7 @@ jobs:
       TERM: xterm
       MAKEFLAGS: -j 2
       LC_ALL: C
+    parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
       - attach_workspace:
@@ -1504,6 +1519,7 @@ jobs:
       TERM: xterm
       MAKEFLAGS: -j 5
       LC_ALL: C
+    parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
       - attach_workspace:
@@ -1516,6 +1532,7 @@ jobs:
     <<: *base_win
     environment:
       LC_ALL: C
+    parallelism: 2 # For prepare_bytecode_report
     steps:
       # NOTE: For bytecode generation we need the input files to be byte-for-byte identical on all
       # platforms so line ending conversions must absolutely be disabled.
