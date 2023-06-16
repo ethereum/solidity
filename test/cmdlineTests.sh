@@ -43,6 +43,7 @@ pushd "${REPO_ROOT}/test/cmdlineTests" > /dev/null
 autoupdate=false
 no_smt=false
 declare -a included_test_patterns
+declare -a excluded_test_patterns
 while [[ $# -gt 0 ]]
 do
     case "$1" in
@@ -52,6 +53,12 @@ do
             ;;
         --no-smt)
             no_smt=true
+            shift
+            ;;
+        --exclude)
+            [[ $2 != '' ]] || fail "No pattern given to --exclude option or the pattern is empty."
+            excluded_test_patterns+=("$2")
+            shift
             shift
             ;;
         *)
@@ -69,6 +76,11 @@ do
     test_name_filter+=(-or -name "$pattern")
 done
 test_name_filter+=(')')
+
+for pattern in "${excluded_test_patterns[@]}"
+do
+    test_name_filter+=(-and -not -name "$pattern")
+done
 
 # NOTE: We want leading symbols in names to affect the sort order but without
 # LC_COLLATE=C sort seems to ignore them.
