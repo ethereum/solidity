@@ -202,7 +202,7 @@ defaults:
   - run_cmdline_tests: &run_cmdline_tests
       name: command line tests
       no_output_timeout: 30m
-      command: ./test/cmdlineTests.sh
+      command: .circleci/parallel_cli_tests.py
 
   - run_docs_pragma_min_version: &run_docs_pragma_min_version
       name: docs pragma version check
@@ -1053,6 +1053,7 @@ jobs:
 
   t_osx_cli:
     <<: *base_osx
+    parallelism: 7 # Should match number of tests in .circleci/cli.sh
     steps:
       - checkout
       - when:
@@ -1147,6 +1148,7 @@ jobs:
 
   t_ubu_cli: &t_ubu_cli
     <<: *base_ubuntu2204_small
+    parallelism: 7 # Should match number of tests in .circleci/cli.sh
     <<: *steps_cmdline_tests
 
   t_ubu_force_release_cli: &t_ubu_force_release_cli
@@ -1164,6 +1166,7 @@ jobs:
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
     <<: *base_ubuntu2204
+    parallelism: 7 # Should match number of tests in .circleci/cli.sh
     environment:
       TERM: xterm
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
@@ -1205,6 +1208,7 @@ jobs:
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2204_clang
+    parallelism: 7 # Should match number of tests in .circleci/cli.sh
     <<: *steps_cmdline_tests
 
   t_ems_solcjs:
