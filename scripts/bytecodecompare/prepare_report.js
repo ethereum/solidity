@@ -5,8 +5,10 @@ const fs = require('fs')
 const compiler = require('solc')
 
 SETTINGS_PRESETS = {
-    'legacy-optimize':    {optimize: true},
-    'legacy-no-optimize': {optimize: false},
+    'legacy-optimize':    {optimize: true,  viaIR: false},
+    'legacy-no-optimize': {optimize: false, viaIR: false},
+    'via-ir-optimize':    {optimize: true,  viaIR: true},
+    'via-ir-no-optimize': {optimize: false, viaIR: true},
 }
 
 function loadSource(sourceFileName, stripSMTPragmas)
@@ -67,6 +69,8 @@ for (const preset of presets)
             },
             settings: {
                 optimizer: {enabled: settings.optimize},
+                // NOTE: We omit viaIR rather than set it to false to handle older versions that don't have it.
+                viaIR: settings.viaIR ? true : undefined,
                 outputSelection: {'*': {'*': ['evm.bytecode.object', 'metadata']}}
             }
         }

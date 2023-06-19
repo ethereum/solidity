@@ -29,6 +29,8 @@ class CompilerInterface(Enum):
 class SettingsPreset(Enum):
     LEGACY_OPTIMIZE = 'legacy-optimize'
     LEGACY_NO_OPTIMIZE = 'legacy-no-optimize'
+    VIA_IR_OPTIMIZE = 'via-ir-optimize'
+    VIA_IR_NO_OPTIMIZE = 'via-ir-no-optimize'
 
 
 class SMTUse(Enum):
@@ -40,12 +42,15 @@ class SMTUse(Enum):
 @dataclass(frozen=True)
 class CompilerSettings:
     optimize: bool
+    via_ir: bool
 
     @staticmethod
     def from_preset(preset: SettingsPreset):
         return {
-            SettingsPreset.LEGACY_OPTIMIZE:    CompilerSettings(optimize=True),
-            SettingsPreset.LEGACY_NO_OPTIMIZE: CompilerSettings(optimize=False),
+            SettingsPreset.LEGACY_OPTIMIZE:    CompilerSettings(optimize=True,  via_ir=False),
+            SettingsPreset.LEGACY_NO_OPTIMIZE: CompilerSettings(optimize=False, via_ir=False),
+            SettingsPreset.VIA_IR_OPTIMIZE:    CompilerSettings(optimize=True,  via_ir=True),
+            SettingsPreset.VIA_IR_NO_OPTIMIZE: CompilerSettings(optimize=False, via_ir=True),
         }[preset]
 
 
@@ -224,6 +229,8 @@ def prepare_compiler_input(
             },
             'settings': {
                 'optimizer': {'enabled': settings.optimize},
+                # NOTE: We omit viaIR rather than set it to false to handle older versions that don't have it.
+                **({'viaIR': True} if settings.via_ir else {}),
                 'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}},
             }
         }
@@ -243,6 +250,8 @@ def prepare_compiler_input(
             compiler_options.append('--optimize')
         elif force_no_optimize_yul:
             compiler_options.append('--no-optimize-yul')
+        if settings.via_ir:
+            compiler_options.append('--via-ir')
         if smt_use == SMTUse.DISABLE:
             compiler_options += ['--model-checker-engine', 'none']
 
