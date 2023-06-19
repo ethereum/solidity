@@ -1,0 +1,14 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_outputs_on_parsing_error/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {
+				"*": ["*"],
+				"": ["*"]
+			}
+		}
+	}
+}

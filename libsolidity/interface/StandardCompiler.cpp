@@ -1317,15 +1317,21 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		));
 	}
 
+	bool parsingSuccess = compilerStack.state() >= CompilerStack::State::Parsed;
 	bool analysisPerformed = compilerStack.state() >= CompilerStack::State::AnalysisPerformed;
-	bool const compilationSuccess = compilerStack.state() == CompilerStack::State::CompilationSuccessful;
+	bool compilationSuccess = compilerStack.state() == CompilerStack::State::CompilationSuccessful;
 
 	if (compilerStack.hasError() && !_inputsAndSettings.parserErrorRecovery)
 		analysisPerformed = false;
 
+	// If analysis fails, the artifacts inside CompilerStack are potentially incomplete and must not be returned.
+	// Note that not completing analysis due to stopAfter does not count as a failure. It's neither failure nor success.
+	bool analysisFailed = !analysisPerformed && _inputsAndSettings.stopAfter >= CompilerStack::State::AnalysisPerformed;
+	bool compilationFailed = !compilationSuccess && binariesRequested;
+
 	/// Inconsistent state - stop here to receive error reports from users
 	if (
-		((binariesRequested && !compilationSuccess) || !analysisPerformed) &&
+		(compilationFailed || !analysisPerformed) &&
 		(errors.empty() && _inputsAndSettings.stopAfter >= CompilerStack::State::AnalysisPerformed)
 	)
 		return formatFatalError(Error::Type::InternalCompilerError, "No error reported, but compilation failed.");
@@ -1343,7 +1349,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	if (compilerStack.state() >= CompilerStack::State::Parsed && (!compilerStack.hasError() || _inputsAndSettings.parserErrorRecovery))
+	if (parsingSuccess && !analysisFailed && (!compilerStack.hasError() || _inputsAndSettings.parserErrorRecovery))
 		for (string const& sourceName: compilerStack.sourceNames())
 		{
 			Json::Value sourceResult = Json::objectValue;
