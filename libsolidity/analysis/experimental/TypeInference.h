@@ -18,6 +18,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/ast/experimental/TypeSystem.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -26,84 +27,32 @@
 namespace solidity::frontend::experimental
 {
 
-class GlobalTypeContext;
-
-struct SumType;
-struct TupleType;
-struct FunctionType;
-struct WordType;
-struct UserDefinedType;
-struct TypeVariable;
-struct FreeType;
-
-using Type = std::variant<SumType, TupleType, FunctionType, WordType, UserDefinedType, TypeVariable, FreeType>;
-
-struct SumType
-{
-	std::vector<Type const*> alternatives;
-};
-
-struct TupleType
-{
-	std::vector<Type const*> components;
-};
-
-struct FunctionType
-{
-	Type const* codomain = nullptr;
-	Type const* domain = nullptr;
-};
-
-struct WordType
-{
-};
-
-struct UserDefinedType
-{
-	Declaration const* declaration = nullptr;
-	std::vector<Type const*> arguments;
-};
-
-struct TypeVariable
-{
-	uint64_t index = 0;
-};
-
-struct FreeType
-{
-	uint64_t index = 0;
-};
-
-Type unify(Type _a, Type _b)
-{
-	
-}
-
-class TypeEnvironment
-{
-public:
-	TypeEnvironment() {}
-	void assignType(Declaration const* _declaration, Type _typeAssignment)
-	{
-		m_types.emplace(std::piecewise_construct, std::forward_as_tuple(_declaration), std::forward_as_tuple(std::move(_typeAssignment)));
-	}
-private:
-	uint64_t m_numTypeVariables = 0;
-	std::map<Declaration const*, Type> m_types;
-};
-
 class TypeInference: public ASTConstVisitor
 {
 public:
 	TypeInference(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+
+	bool analyze(SourceUnit const& _sourceUnit);
 private:
 	bool visit(Block const&) override { return true; }
 	bool visit(VariableDeclarationStatement const&) override { return true; }
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 
+	bool visit(FunctionDefinition const& _functionDefinition) override;
+	bool visit(ParameterList const& _parameterList) override;
+	bool visit(SourceUnit const&) override { return true; }
+	bool visit(ContractDefinition const&) override { return true; }
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(PragmaDirective const&) override { return false; }
+
+	bool visit(ExpressionStatement const&) override { return true; }
+	bool visit(Assignment const&) override;
+	bool visit(Identifier const&) override;
+
 	bool visitNode(ASTNode const& _node) override;
 
-private:
+	Type fromTypeName(TypeName const& _typeName);
+	TypeSystem m_typeSystem;
 	langutil::ErrorReporter& m_errorReporter;
 	TypeEnvironment m_env;
 };

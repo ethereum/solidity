@@ -21,18 +21,25 @@
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <functional>
+#include <sstream>
 
 namespace solidity::frontend::experimental
 {
+class Analysis;
 
 class IRGeneratorForStatements: public ASTConstVisitor
 {
 public:
-	IRGeneratorForStatements() {}
+	IRGeneratorForStatements(Analysis const& _analysis): m_analysis(_analysis) {}
 
+	std::string generate(ASTNode const& _node);
 private:
+	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	/// Default visit will reject all AST nodes that are not explicitly supported.
 	bool visitNode(ASTNode const& _node) override;
+	Analysis const& m_analysis;
+	std::stringstream m_code;
 };
 
 }

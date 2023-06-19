@@ -610,7 +610,9 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 		else
 			break;
 	}
-	if (m_scanner->currentToken() == Token::Returns)
+	if (
+		m_scanner->currentToken() == (m_experimentalSolidityEnabledInCurrentSourceUnit ? Token::RightArrow : Token::Returns)
+	)
 	{
 		bool const permitEmptyParameterList = false;
 		advance();
@@ -1269,15 +1271,21 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 	VarDeclParserOptions options(_options);
 	options.allowEmptyName = true;
 	expectToken(Token::LParen);
+	auto parseSingleVariableDeclaration = [&]() {
+		if (m_experimentalSolidityEnabledInCurrentSourceUnit)
+			return parsePostfixVariableDeclaration();
+		else
+			return parseVariableDeclaration(options);
+	};
 	if (!_allowEmpty || m_scanner->currentToken() != Token::RParen)
 	{
-		parameters.push_back(parseVariableDeclaration(options));
+		parameters.push_back(parseSingleVariableDeclaration());
 		while (m_scanner->currentToken() != Token::RParen)
 		{
 			if (m_scanner->currentToken() == Token::Comma && m_scanner->peekNextToken() == Token::RParen)
 				fatalParserError(7591_error, "Unexpected trailing comma in parameter list.");
 			expectToken(Token::Comma);
-			parameters.push_back(parseVariableDeclaration(options));
+			parameters.push_back(parseSingleVariableDeclaration());
 		}
 	}
 	nodeFactory.markEndPosition();
@@ -1658,11 +1666,65 @@ ASTPointer<RevertStatement> Parser::parseRevertStatement(ASTPointer<ASTString> c
 	return nodeFactory.createNode<RevertStatement>(_docString, errorCall);
 }
 
+ASTPointer<VariableDeclarationStatement> Parser::parsePostfixVariableDeclarationStatement(
+	ASTPointer<ASTString> const& _docString
+)
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	expectToken(Token::Let);
+
+	vector<ASTPointer<VariableDeclaration>> variables;
+	variables.emplace_back(parsePostfixVariableDeclaration());
+	nodeFactory.setEndPositionFromNode(variables.back());
+
+	ASTPointer<Expression> value;
+	if (m_scanner->currentToken() == Token::Assign)
+	{
+		advance();
+		value = parseExpression();
+		nodeFactory.setEndPositionFromNode(value);
+	}
+	return nodeFactory.createNode<VariableDeclarationStatement>(_docString, variables, value);
+}
+
+ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	ASTPointer<StructuredDocumentation> const documentation = parseStructuredDocumentation();
+
+	nodeFactory.markEndPosition();
+	auto [identifier, nameLocation] = expectIdentifierWithLocation();
+
+	ASTPointer<TypeName> type;
+	if (m_scanner->currentToken() == Token::Colon)
+	{
+		advance();
+		type = parseTypeName();
+		nodeFactory.setEndPositionFromNode(type);
+	}
+
+	return nodeFactory.createNode<VariableDeclaration>(
+		type,
+		identifier,
+		nameLocation,
+		nullptr,
+		Visibility::Default,
+		documentation
+	);
+}
+
 ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& _docString)
 {
 	RecursionGuard recursionGuard(*this);
 	LookAheadInfo statementType;
 	IndexAccessedPath iap;
+
+	if (m_experimentalSolidityEnabledInCurrentSourceUnit && m_scanner->currentToken() == Token::Let)
+		return parsePostfixVariableDeclarationStatement(_docString);
 
 	if (m_scanner->currentToken() == Token::LParen)
 	{
@@ -1766,7 +1828,10 @@ pair<Parser::LookAheadInfo, Parser::IndexAccessedPath> Parser::tryParseIndexAcce
 	{
 	case LookAheadInfo::VariableDeclaration:
 	case LookAheadInfo::Expression:
-		return make_pair(statementType, IndexAccessedPath());
+		return make_pair(
+			m_experimentalSolidityEnabledInCurrentSourceUnit ? LookAheadInfo::Expression : statementType,
+			IndexAccessedPath()
+		);
 	default:
 		break;
 	}
@@ -1776,6 +1841,9 @@ pair<Parser::LookAheadInfo, Parser::IndexAccessedPath> Parser::tryParseIndexAcce
 	// until we can decide whether to hand this over to ExpressionStatement or create a
 	// VariableDeclarationStatement out of it.
 	IndexAccessedPath iap = parseIndexAccessedPath();
+
+	if (m_experimentalSolidityEnabledInCurrentSourceUnit)
+		return make_pair(LookAheadInfo::Expression, std::move(iap));
 
 	if (m_scanner->currentToken() == Token::Identifier || TokenTraits::isLocationSpecifier(m_scanner->currentToken()))
 		return make_pair(LookAheadInfo::VariableDeclaration, std::move(iap));

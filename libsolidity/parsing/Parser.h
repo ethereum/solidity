@@ -171,6 +171,14 @@ private:
 	///@}
 
 	///@{
+	///@name Specialized parsing functions for the AST nodes of experimental solidity.
+	ASTPointer<VariableDeclarationStatement> parsePostfixVariableDeclarationStatement(
+		ASTPointer<ASTString> const& _docString
+	);
+	ASTPointer<VariableDeclaration> parsePostfixVariableDeclaration();
+	///@}
+
+	///@{
 	///@name Helper functions
 
 	/// @return true if we are at the start of a variable declaration.

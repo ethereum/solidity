@@ -1077,13 +1077,15 @@ public:
 		m_overrides(std::move(_overrides)),
 		m_location(_referenceLocation)
 	{
-		solAssert(m_typeName, "");
+		// TODO: consider still asserting unless we are in experimental solidity.
+		// solAssert(m_typeName, "");
 	}
 
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
+	bool hasTypeName() const { return m_typeName != nullptr; }
 	TypeName const& typeName() const { return *m_typeName; }
 	ASTPointer<Expression> const& value() const { return m_value; }
 

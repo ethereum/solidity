@@ -49,10 +49,10 @@ bool SyntaxRestrictor::visit(FunctionDefinition const& _functionDefinition)
 {
 	if (!_functionDefinition.isImplemented())
 		m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Functions must be implemented.");
-	if (!_functionDefinition.parameterList().parameters().empty())
-		m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Function may not have arguments.");
-	if (_functionDefinition.returnParameterList() && !_functionDefinition.returnParameterList()->parameters().empty())
-		m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Function may not have return variables.");
+	if (!_functionDefinition.modifiers().empty())
+		m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Function may not have modifiers.");
+	if (_functionDefinition.overrides())
+		m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Function may not have override specifiers.");
 	if (_functionDefinition.isFree())
 	{
 		if (_functionDefinition.stateMutability() != StateMutability::NonPayable)
@@ -69,9 +69,7 @@ bool SyntaxRestrictor::visit(FunctionDefinition const& _functionDefinition)
 			m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Only fallback functions are supported in contracts.");
 	}
 
-	_functionDefinition.body().accept(*this);
-
-	return false;
+	return true;
 }
 
 bool SyntaxRestrictor::visit(VariableDeclarationStatement const& _variableDeclarationStatement)

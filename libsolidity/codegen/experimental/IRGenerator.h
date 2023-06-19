@@ -35,6 +35,7 @@ namespace solidity::frontend::experimental
 {
 
 class SourceUnit;
+class Analysis;
 
 class IRGenerator
 {
@@ -45,12 +46,14 @@ public:
 		RevertStrings /*_revertStrings*/,
 		std::map<std::string, unsigned> /*_sourceIndices*/,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
-		langutil::CharStreamProvider const* _soliditySourceProvider
+		langutil::CharStreamProvider const* _soliditySourceProvider,
+		Analysis const& _analysis
 	):
 		m_evmVersion(_evmVersion),
 		m_eofVersion(_eofVersion),
 		m_debugInfoSelection(_debugInfoSelection),
-		m_soliditySourceProvider(_soliditySourceProvider)
+		m_soliditySourceProvider(_soliditySourceProvider),
+		m_analysis(_analysis)
 	{}
 
 	std::string run(
@@ -61,13 +64,13 @@ public:
 
 	std::string generate(ContractDefinition const& _contract) const;
 	std::string generate(FunctionDefinition const& _function) const;
-	std::string generate(InlineAssembly const& _assembly) const;
 private:
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
 	OptimiserSettings const m_optimiserSettings;
 	langutil::DebugInfoSelection m_debugInfoSelection = {};
 	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
+	Analysis const& m_analysis;
 };
 
 }

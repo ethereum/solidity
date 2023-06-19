@@ -1,10 +1,21 @@
 pragma experimental solidity;
 
+function f(a:word) -> (b:word) {
+    assembly {
+        b := a
+    }
+}
+
 contract C {
 	fallback() external {
-	    word x;
+		let x : word;
+		let y : word;
 		assembly {
-			mstore(0, 42)
+			x := 0x42
+		}
+		y = x;
+		assembly {
+			mstore(0, y)
 			return(0, 32)
 		}
 	}
@@ -12,4 +23,4 @@ contract C {
 // ====
 // compileViaYul: true
 // ----
-// () -> 42
+// () -> 0x42

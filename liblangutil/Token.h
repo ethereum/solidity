@@ -330,7 +330,7 @@ namespace TokenTraits
 	constexpr bool isExperimentalSolidityKeyword(Token tok)
 	{
 		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback ||
-			tok == Token::Pragma || tok == Token::Import || tok == Token::As || tok == Token::Function ||
+			tok == Token::Pragma || tok == Token::Import || tok == Token::As || tok == Token::Function || tok == Token::Let ||
 			(tok >= Token::Word && tok < Token::ExperimentalEnd);
 	}
 	constexpr bool isExperimentalSolidityOnlyKeyword(Token tok)

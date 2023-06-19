@@ -18,10 +18,12 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace solidity::frontend
 {
-class ASTNode;
+class SourceUnit;
 }
 
 namespace solidity::langutil
@@ -35,11 +37,8 @@ namespace solidity::frontend::experimental
 class Analysis
 {
 public:
-	Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId):
-	m_errorReporter(_errorReporter),
-	m_maxAstId(_maxAstId)
-	{}
-	bool check(ASTNode const& _ast);
+	Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId);
+	bool check(std::vector<std::shared_ptr<SourceUnit const>> const& _sourceUnits);
 private:
 	langutil::ErrorReporter& m_errorReporter;
 	uint64_t m_maxAstId = 0;

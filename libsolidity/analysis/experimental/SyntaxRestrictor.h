@@ -42,12 +42,15 @@ private:
 	bool visit(ImportDirective const&) override { return true; }
 	bool visit(ContractDefinition const& _contractDefinition) override;
 	bool visit(FunctionDefinition const& _functionDefinition) override;
+	bool visit(ExpressionStatement const&) override { return true; }
+	bool visit(Assignment const&) override { return true; }
 	bool visit(Block const&) override { return true; }
 	bool visit(InlineAssembly const&) override { return true; }
 	bool visit(Identifier const&) override { return true; }
 	bool visit(VariableDeclarationStatement const&) override;
 	bool visit(VariableDeclaration const&) override;
 	bool visit(ElementaryTypeName const&) override { return true; }
+	bool visit(ParameterList const&) override { return true; }
 
 	langutil::ErrorReporter& m_errorReporter;
 };

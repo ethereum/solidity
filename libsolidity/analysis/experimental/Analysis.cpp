@@ -18,14 +18,27 @@
 #include <libsolidity/analysis/experimental/Analysis.h>
 
 #include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
+#include <libsolidity/analysis/experimental/TypeInference.h>
 
+using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend::experimental;
 
-bool Analysis::check(ASTNode const& _node)
+Analysis::Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId):
+	m_errorReporter(_errorReporter),
+	m_maxAstId(_maxAstId)
+{
+}
+
+bool Analysis::check(vector<shared_ptr<SourceUnit const>> const& _sourceUnits)
 {
 	SyntaxRestrictor syntaxRestrictor{m_errorReporter};
-	if (!syntaxRestrictor.check(_node))
-		return false;
+	for (auto source: _sourceUnits)
+		if (!syntaxRestrictor.check(*source))
+			return false;
+	TypeInference typeInference{m_errorReporter};
+	for (auto source: _sourceUnits)
+		if (!typeInference.analyze(*source))
+			return false;
 	return true;
 }

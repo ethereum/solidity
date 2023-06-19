@@ -670,10 +670,12 @@ bool CompilerStack::analyzeExperimental()
 	bool noErrors = true;
 	solAssert(m_maxAstId && *m_maxAstId >= 0);
 	m_experimentalAnalysis = make_unique<experimental::Analysis>(m_errorReporter, static_cast<uint64_t>(*m_maxAstId));
+	vector<shared_ptr<SourceUnit const>> sourceAsts;
 	for (Source const* source: m_sourceOrder)
 		if (source->ast)
-			if (!m_experimentalAnalysis->check(*source->ast))
-				noErrors = false;
+			sourceAsts.emplace_back(source->ast);
+	if (!m_experimentalAnalysis->check(sourceAsts))
+		noErrors = false;
 	return noErrors;
 }
 
@@ -1519,7 +1521,8 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 			m_revertStrings,
 			sourceIndices(),
 			m_debugInfoSelection,
-			this
+			this,
+			*m_experimentalAnalysis
 		);
 		compiledContract.yulIR = generator.run(
 			_contract,
