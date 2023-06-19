@@ -68,6 +68,8 @@ public:
 
 	std::vector<std::pair<std::string, std::string>> const& userSorts() const { return m_userSorts; }
 
+	std::string dumpQuery(std::vector<Expression> const& _expressionsToEvaluate);
+
 private:
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
 

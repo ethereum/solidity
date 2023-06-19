@@ -111,6 +111,7 @@ void FuzzerUtil::testCompiler(
 			frontend::ModelCheckerEngine::All(),
 			frontend::ModelCheckerExtCalls{},
 			frontend::ModelCheckerInvariants::All(),
+			/*printQuery=*/false,
 			/*showProvedSafe=*/false,
 			/*showUnproved=*/false,
 			/*showUnsupported=*/false,

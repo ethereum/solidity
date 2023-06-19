@@ -72,6 +72,7 @@ CHC::CHC(
 	m_smtlib2Responses(_smtlib2Responses),
 	m_smtCallback(_smtCallback)
 {
+	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -1807,6 +1808,16 @@ tuple<CheckResult, smtutil::Expression, CHCSolverInterface::CexGraph> CHC::query
 	CheckResult result;
 	smtutil::Expression invariant(true);
 	CHCSolverInterface::CexGraph cex;
+	if (m_settings.printQuery)
+	{
+		auto smtLibInterface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
+		solAssert(smtLibInterface, "Requested to print queries but CHCSmtLib2Interface not available");
+		string smtLibCode = smtLibInterface->dumpQuery(_query);
+		m_errorReporter.info(
+			2339_error,
+			"CHC: Requested query:\n" + smtLibCode
+		);
+	}
 	tie(result, invariant, cex) = m_interface->query(_query);
 	switch (result)
 	{

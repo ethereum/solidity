@@ -9,6 +9,7 @@ Compiler Features:
  * Commandline Interface: Respect ``--optimize-yul`` and ``--no-optimize-yul`` in compiler mode and accept them in assembler mode as well. ``--optimize --no-optimize-yul`` combination now allows enabling EVM assembly optimizer without enabling Yul optimizer.
  * EWasm: Remove EWasm backend.
  * Parser: Introduce ``pragma experimental solidity``, which will enable an experimental language mode that in particular has no stability guarantees between non-breaking releases and is not suited for production use.
+ * SMTChecker: Add ``--model-checker-print-query`` CLI option and ``settings.modelChecker.printQuery`` JSON option to output the SMTChecker queries in the SMTLIB2 format. This requires using `smtlib2` solver only.
  * Standard JSON Interface: Add ``ast`` file-level output for Yul input.
  * Standard JSON Interface: Add ``irAst`` and ``irOptimizedAst`` contract-level outputs for Solidity input, providing AST in compact JSON format for IR and optimized IR.
  * Yul Optimizer: Stack-to-memory mover is now enabled by default whenever possible for via IR code generation and pure Yul compilation.

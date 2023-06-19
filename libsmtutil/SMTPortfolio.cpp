@@ -36,10 +36,12 @@ SMTPortfolio::SMTPortfolio(
 	map<h256, string> _smtlib2Responses,
 	frontend::ReadCallback::Callback _smtCallback,
 	[[maybe_unused]] SMTSolverChoice _enabledSolvers,
-	optional<unsigned> _queryTimeout
+	optional<unsigned> _queryTimeout,
+	bool _printQuery
 ):
 	SolverInterface(_queryTimeout)
 {
+	solAssert(!_printQuery || _enabledSolvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
 	if (_enabledSolvers.smtlib2)
 		m_solvers.emplace_back(make_unique<SMTLib2Interface>(std::move(_smtlib2Responses), std::move(_smtCallback), m_queryTimeout));
 #ifdef HAVE_Z3
@@ -154,4 +156,13 @@ vector<string> SMTPortfolio::unhandledQueries()
 bool SMTPortfolio::solverAnswered(CheckResult result)
 {
 	return result == CheckResult::SATISFIABLE || result == CheckResult::UNSATISFIABLE;
+}
+
+string SMTPortfolio::dumpQuery(vector<Expression> const& _expressionsToEvaluate)
+{
+	// This code assumes that the constructor guarantees that
+	// SmtLib2Interface is in position 0, if enabled.
+	auto smtlib2 = dynamic_cast<SMTLib2Interface*>(m_solvers.front().get());
+	solAssert(smtlib2, "Must use SMTLib2 solver to dump queries");
+	return smtlib2->dumpQuery(_expressionsToEvaluate);
 }

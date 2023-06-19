@@ -91,23 +91,8 @@ void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& /*
 
 tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expression const& _block)
 {
-	string accumulated{};
-	swap(m_accumulatedOutput, accumulated);
-	solAssert(m_smtlib2, "");
-	writeHeader();
-	for (auto const& decl: m_smtlib2->userSorts() | ranges::views::values)
-		write(decl);
-	m_accumulatedOutput += accumulated;
-
-	string queryRule = "(assert\n(forall " + forall() + "\n" +
-		"(=> " + _block.name + " false)"
-		"))";
-	string response = querySolver(
-		m_accumulatedOutput +
-		queryRule +
-		"\n(check-sat)"
-	);
-	swap(m_accumulatedOutput, accumulated);
+	string query = dumpQuery(_block);
+	string response = querySolver(query);
 
 	CheckResult result;
 	// TODO proper parsing
@@ -149,13 +134,6 @@ string CHCSmtLib2Interface::toSmtLibSort(vector<SortPointer> const& _sorts)
 		ssort += toSmtLibSort(*sort) + " ";
 	ssort += ")";
 	return ssort;
-}
-
-void CHCSmtLib2Interface::writeHeader()
-{
-	if (m_queryTimeout)
-		write("(set-option :timeout " + to_string(*m_queryTimeout) + ")");
-	write("(set-logic HORN)\n");
 }
 
 string CHCSmtLib2Interface::forall()
@@ -216,4 +194,33 @@ string CHCSmtLib2Interface::querySolver(string const& _input)
 
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";
+}
+
+std::string CHCSmtLib2Interface::dumpQuery(Expression const& _expr)
+{
+	std::stringstream s;
+
+	s
+		<< createHeaderAndDeclarations()
+		<< m_accumulatedOutput << std::endl
+		<< createQueryAssertion(_expr.name) << std::endl
+		<< "(check-sat)" << std::endl;
+
+	return s.str();
+}
+
+std::string CHCSmtLib2Interface::createHeaderAndDeclarations() {
+	std::stringstream s;
+	if (m_queryTimeout)
+		s << "(set-option :timeout " + to_string(*m_queryTimeout) + ")\n";
+	s << "(set-logic HORN)" << std::endl;
+
+	for (auto const& decl: m_smtlib2->userSorts() | ranges::views::values)
+		s << decl << std::endl;
+
+	return s.str();
+}
+
+std::string CHCSmtLib2Interface::createQueryAssertion(std::string name) {
+	return "(assert\n(forall " + forall() + "\n" +	"(=> " + name + " false)))";
 }

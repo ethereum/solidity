@@ -219,6 +219,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			{true, false},
 			{ModelCheckerExtCalls::Mode::TRUSTED},
 			{{InvariantType::Contract, InvariantType::Reentrancy}},
+			false, // --model-checker-print-query
 			true,
 			true,
 			true,

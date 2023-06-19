@@ -430,7 +430,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"bmcLoopIterations", "contracts", "divModNoSlacks", "engine", "extCalls", "invariants", "showProvedSafe", "showUnproved", "showUnsupported", "solvers", "targets", "timeout"};
+	static set<string> keys{"bmcLoopIterations", "contracts", "divModNoSlacks", "engine", "extCalls", "invariants", "printQuery", "showProvedSafe", "showUnproved", "showUnsupported", "solvers", "targets", "timeout"};
 	return checkKeys(_input, keys, "modelChecker");
 }
 
@@ -1094,6 +1094,18 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		}
 
 		ret.modelCheckerSettings.solvers = solvers;
+	}
+
+	if (modelCheckerSettings.isMember("printQuery"))
+	{
+		auto const& printQuery = modelCheckerSettings["printQuery"];
+		if (!printQuery.isBool())
+			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.printQuery must be a Boolean value.");
+
+		if (!(ret.modelCheckerSettings.solvers == smtutil::SMTSolverChoice::SMTLIB2()))
+			return formatFatalError(Error::Type::JSONError, "Only SMTLib2 solver can be enabled to print queries");
+
+		ret.modelCheckerSettings.printQuery = printQuery.asBool();
 	}
 
 	if (modelCheckerSettings.isMember("targets"))
