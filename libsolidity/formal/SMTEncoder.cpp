@@ -1358,7 +1358,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	{
 		auto const* functionType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
 		if (functionType && functionType->hasDeclaration())
-			defineExpr(_memberAccess, functionType->externalIdentifier());
+			defineExpr(_memberAccess, u256(_memberAccess.id()));
 
 		return true;
 	}
