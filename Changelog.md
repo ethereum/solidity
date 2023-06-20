@@ -20,6 +20,7 @@ Bugfixes:
  * Commandline Interface: It is no longer possible to specify both ``--optimize-yul`` and ``--no-optimize-yul`` at the same time.
  * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
  * SMTChecker: Fix false negative when a verification target can be violated only by trusted external call from another public function.
+ * SMTChecker: Fix internal error caused by using external identifier to encode member access to functions that take an internal function as a parameter.
  * Standard JSON Interface: Fix an incomplete AST being returned when analysis is interrupted by certain kinds of fatal errors.
  * Yul Optimizer: Ensure that the assignment of memory slots for variables moved to memory does not depend on AST IDs that may depend on whether additional files are included during compilation.
  * Yul Optimizer: Fix optimized IR being unnecessarily passed through the Yul optimizer again before bytecode generation.

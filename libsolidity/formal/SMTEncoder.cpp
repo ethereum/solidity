@@ -33,6 +33,7 @@
 #include <liblangutil/CharStreamProvider.h>
 
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/FunctionSelector.h>
 
 #include <range/v3/view.hpp>
 
@@ -1358,7 +1359,10 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	{
 		auto const* functionType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
 		if (functionType && functionType->hasDeclaration())
-			defineExpr(_memberAccess, functionType->externalIdentifier());
+			defineExpr(
+				_memberAccess,
+				util::selectorFromSignatureU32(functionType->richIdentifier())
+			);
 
 		return true;
 	}
