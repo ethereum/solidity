@@ -19,8 +19,6 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <fmt/format.h>
-
 #include <optional>
 #include <string>
 #include <variant>
@@ -35,99 +33,64 @@ namespace solidity::frontend::experimental
 {
 
 class TypeSystem;
+class TypeEnvironment;
 
-struct SumType;
-struct TupleType;
-struct FunctionType;
-struct WordType;
-struct UserDefinedType;
-struct TypeVariable;
-struct FreeType;
+struct AtomicType;
+struct GenericTypeVariable;
+struct FreeTypeVariable;
 
-using Type = std::variant<SumType, TupleType, FunctionType, WordType, UserDefinedType, TypeVariable, FreeType>;
+using Type = std::variant<AtomicType, GenericTypeVariable, FreeTypeVariable>;
 
-struct SumType
+enum class BuiltinType
 {
-	std::vector<Type const*> alternatives;
-	std::string toString() const
-	{
-		return "sum";
-	}
+	Void,
+	Function,
+	Unit,
+	Pair,
+	Word
 };
 
-struct TupleType
+struct AtomicType
 {
-	std::vector<Type const*> components;
-	std::string toString() const
-	{
-		return "tuple";
-	}
+	using Constructor = std::variant<BuiltinType, Declaration const*>;
+	Constructor constructor;
+	std::vector<Type> arguments;
+
 };
 
-struct FunctionType
+struct FreeTypeVariable
 {
-	Type const* codomain = nullptr;
-	Type const* domain = nullptr;
-	std::string toString() const
-	{
-		return "fun";
-	}
-};
-
-struct WordType
-{
-	std::string toString() const
-	{
-		return "word";
-	}
-};
-
-struct UserDefinedType
-{
-	Declaration const* declaration = nullptr;
-	std::vector<Type const*> arguments;
-	std::string toString() const
-	{
-		return "user_defined_type";
-	}
-};
-
-struct TypeVariable
-{
-	std::string toString() const
-	{
-		return fmt::format("var<{}>", m_index);
-	}
-private:
+	TypeSystem const& parent() const { return *m_parent; }
 	uint64_t index() const { return m_index; }
+private:
 	friend class TypeSystem;
+	TypeSystem const* m_parent = nullptr;
 	uint64_t m_index = 0;
-	TypeVariable(uint64_t _index): m_index(_index) {}
+	FreeTypeVariable(TypeSystem const& _parent, uint64_t _index): m_parent(&_parent), m_index(_index) {}
 };
 
-struct FreeType
+struct GenericTypeVariable
 {
-	uint64_t index = 0;
-	std::string toString() const
-	{
-		return fmt::format("free<{}>", index);
-	}
+	TypeSystem const& parent() const { return *m_parent; }
+	uint64_t index() const { return m_index; }
+private:
+	friend class TypeSystem;
+	TypeSystem const* m_parent = nullptr;
+	uint64_t m_index = 0;
+	GenericTypeVariable(TypeSystem const& _parent, uint64_t _index): m_parent(&_parent), m_index(_index) {}
 };
-
-inline std::string typeToString(Type const& _type)
-{
-	return std::visit([](auto _type) { return _type.toString(); }, _type);
-}
 
 class TypeEnvironment
 {
 public:
-	void assignType(TypeSystem& _typeSystem, Declaration const* _declaration, Type _typeAssignment);
-	Type lookup(TypeSystem& _typeSystem, Declaration const* _declaration);
-	Type freshFreeType();
-	void unify(TypeSystem& _typeSystem, Type _a, Type _b);
+	TypeEnvironment(TypeSystem& _parent): m_parent(_parent) {}
+	TypeEnvironment(TypeEnvironment const& _env) = delete;
+	TypeEnvironment& operator=(TypeEnvironment const& _env) = delete;
+	std::unique_ptr<TypeEnvironment> fresh() const;
+	void assignType(Declaration const* _declaration, Type _typeAssignment);
+	std::optional<Type> lookup(Declaration const* _declaration);
 private:
-	uint64_t m_numFreeTypes = 0;
+	TypeSystem& m_parent;
 	std::map<Declaration const*, Type> m_types;
 };
 
@@ -138,30 +101,38 @@ public:
 	TypeSystem() {}
 	TypeSystem(TypeSystem const&) = delete;
 	TypeSystem const& operator=(TypeSystem const&) = delete;
-	Type freshTypeVariable()
+	void declareBuiltinType(BuiltinType _builtinType, std::string _name, uint64_t _arity);
+	Type builtinType(BuiltinType _builtinType, std::vector<Type> _arguments) const;
+	std::string builtinTypeName(BuiltinType _builtinType) const
 	{
-		uint64_t index = m_typeVariables.size();
-		m_typeVariables.emplace_back(std::nullopt);
-		return TypeVariable(index);
+		return m_builtinTypes.at(_builtinType).name;
 	}
-	void instantiate(TypeVariable _variable, Type _type)
-	{
-		solAssert(_variable.index() < m_typeVariables.size());
-		solAssert(!m_typeVariables.at(_variable.index()).has_value());
-		m_typeVariables[_variable.index()] = _type;
-	}
-	Type resolve(Type _type)
-	{
-		Type result = _type;
-		while(auto const* var = std::get_if<TypeVariable>(&result))
-			if (auto value = m_typeVariables.at(var->index()))
-				result = *value;
-			else
-				break;
-		return result;
-	}
+	Type freshFreeType();
+	void instantiate(GenericTypeVariable _variable, Type _type);
+	void validate(GenericTypeVariable _variable) const;
+	Type resolve(Type _type) const;
+	std::string typeToString(Type const& _type) const;
+	Type freshTypeVariable();
+	Type fresh(Type _type);
+	void unify(Type _a, Type _b);
 private:
+	std::vector<std::optional<Type>> m_freeTypes;
+	struct TypeConstructorInfo
+	{
+		std::string name;
+		uint64_t arity = 0;
+	};
+	std::map<BuiltinType, TypeConstructorInfo> m_builtinTypes;
 	std::vector<std::optional<Type>> m_typeVariables;
+};
+
+struct TypeSystemHelpers
+{
+	TypeSystem& typeSystem;
+	Type tupleType(std::vector<Type> _elements) const;
+	Type functionType(Type _argType, Type _resultType) const;
+	std::tuple<AtomicType::Constructor, std::vector<Type>> destAtomicType(Type _functionType) const;
+	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
 };
 
 }

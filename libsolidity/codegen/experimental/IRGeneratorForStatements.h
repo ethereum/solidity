@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <libsolidity/codegen/experimental/IRGenerationContext.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <functional>
@@ -30,15 +31,19 @@ class Analysis;
 class IRGeneratorForStatements: public ASTConstVisitor
 {
 public:
-	IRGeneratorForStatements(Analysis const& _analysis): m_analysis(_analysis) {}
+	IRGeneratorForStatements(IRGenerationContext& _context): m_context(_context) {}
 
 	std::string generate(ASTNode const& _node);
 private:
+	bool visit(ExpressionStatement const& _expressionStatement) override;
+	bool visit(Assignment const& _assignment) override;
+	bool visit(Identifier const& _identifier) override;
+	bool visit(FunctionCall const&) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	/// Default visit will reject all AST nodes that are not explicitly supported.
 	bool visitNode(ASTNode const& _node) override;
-	Analysis const& m_analysis;
+	IRGenerationContext& m_context;
 	std::stringstream m_code;
 };
 

@@ -36,7 +36,7 @@ bool Analysis::check(vector<shared_ptr<SourceUnit const>> const& _sourceUnits)
 	for (auto source: _sourceUnits)
 		if (!syntaxRestrictor.check(*source))
 			return false;
-	TypeInference typeInference{m_errorReporter};
+	TypeInference typeInference{*this};
 	for (auto source: _sourceUnits)
 		if (!typeInference.analyze(*source))
 			return false;

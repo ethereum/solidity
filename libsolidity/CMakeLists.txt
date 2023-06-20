@@ -98,6 +98,7 @@ set(sources
 	codegen/ReturnInfo.cpp
 	codegen/YulUtilFunctions.h
 	codegen/YulUtilFunctions.cpp
+	codegen/experimental/IRGenerationContext.h
 	codegen/experimental/IRGenerator.cpp
 	codegen/experimental/IRGenerator.h
 	codegen/experimental/IRGeneratorForStatements.cpp

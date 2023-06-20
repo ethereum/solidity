@@ -18,6 +18,7 @@
 
 #include <libsolidity/codegen/experimental/IRGenerator.h>
 
+#include <libsolidity/codegen/experimental/IRGenerationContext.h>
 #include <libsolidity/codegen/experimental/IRGeneratorForStatements.h>
 
 #include <libsolidity/codegen/ir/Common.h>
@@ -31,6 +32,8 @@
 
 #include <libsolutil/Whiskers.h>
 
+#include <range/v3/view/drop_last.hpp>
+
 #include <variant>
 
 using namespace std;
@@ -43,7 +46,7 @@ string IRGenerator::run(
 	ContractDefinition const& _contract,
 	bytes const& /*_cborMetadata*/,
 	map<ContractDefinition const*, string_view const> const& /*_otherYulSources*/
-) const
+)
 {
 
 	Whiskers t(R"(
@@ -66,30 +69,52 @@ string IRGenerator::run(
 	return t.render();
 }
 
-string IRGenerator::generate(ContractDefinition const& _contract) const
+string IRGenerator::generate(ContractDefinition const& _contract)
 {
 	std::stringstream code;
 	code << "{\n";
 	if (_contract.fallbackFunction())
 	{
 		code << IRNames::function(*_contract.fallbackFunction()) << "()\n";
+		m_context.functionQueue.emplace_front(_contract.fallbackFunction());
 	}
 	code << "revert(0,0)\n";
 	code << "}\n";
 
-	for (FunctionDefinition const* f: _contract.definedFunctions())
-		code << generate(*f);
+	while (!m_context.functionQueue.empty())
+	{
+		FunctionDefinition const* function = m_context.functionQueue.front();
+		m_context.functionQueue.pop_front();
+		m_context.generatedFunctions.insert(function);
+		code << generate(*function);
+	}
 
 	return code.str();
 }
 
-string IRGenerator::generate(FunctionDefinition const& _function) const
+string IRGenerator::generate(FunctionDefinition const& _function)
 {
 	std::stringstream code;
-	code << "function " << IRNames::function(_function) << "() {\n";
+	code << "function " << IRNames::function(_function) << "(";
+	if (_function.parameters().size() > 1)
+		for (auto const& arg: _function.parameters() | ranges::view::drop_last(1))
+			code << IRNames::localVariable(*arg) << ", ";
+	if (!_function.parameters().empty())
+		code << IRNames::localVariable(*_function.parameters().back());
+	code << ")";
+	if (_function.returnParameterList() && !_function.returnParameters().empty())
+	{
+		code << " -> ";
+		if (_function.returnParameters().size() > 1)
+			for (auto const& arg: _function.returnParameters() | ranges::view::drop_last(1))
+				code << IRNames::localVariable(*arg) << ", ";
+		if (!_function.returnParameters().empty())
+			code << IRNames::localVariable(*_function.returnParameters().back());
+	}
+	code << "{\n";
 	for (auto _statement: _function.body().statements())
 	{
-		IRGeneratorForStatements statementGenerator{m_analysis};
+		IRGeneratorForStatements statementGenerator{m_context};
 		code << statementGenerator.generate(*_statement);
 	}
 	code << "}\n";

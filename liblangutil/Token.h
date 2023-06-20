@@ -268,8 +268,10 @@ namespace solidity::langutil
 	/* Yul-specific tokens, but not keywords. */                       \
 	T(Leave, "leave", 0)                                               \
 	\
+	T(NonExperimentalEnd, nullptr, 0) /* used as non-experimental enum end marker */ \
     /* Experimental Solidity specific keywords. */                     \
 	K(Word, "word", 0)                                                 \
+	K(Void, "void", 0)                                                 \
 	K(StaticAssert, "static_assert", 0)                                \
 	T(ExperimentalEnd, nullptr, 0) /* used as experimental enum end marker */ \
 	\
@@ -295,7 +297,10 @@ namespace TokenTraits
 	constexpr size_t count() { return static_cast<size_t>(Token::NUM_TOKENS); }
 
 	// Predicates
-	constexpr bool isElementaryTypeName(Token tok) { return (Token::Int <= tok && tok < Token::TypesEnd) || tok == Token::Word; }
+	constexpr bool isElementaryTypeName(Token tok)
+	{
+		return (Token::Int <= tok && tok < Token::TypesEnd) || tok == Token::Word || tok == Token::Void;
+	}
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
 	constexpr bool isCommutativeOp(Token op) { return op == Token::BitOr || op == Token::BitXor || op == Token::BitAnd ||
@@ -331,11 +336,11 @@ namespace TokenTraits
 	{
 		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback ||
 			tok == Token::Pragma || tok == Token::Import || tok == Token::As || tok == Token::Function || tok == Token::Let ||
-			(tok >= Token::Word && tok < Token::ExperimentalEnd);
+			(tok > Token::NonExperimentalEnd && tok < Token::ExperimentalEnd);
 	}
 	constexpr bool isExperimentalSolidityOnlyKeyword(Token tok)
 	{
-		return tok >= Token::Word && tok < Token::ExperimentalEnd;
+		return tok > Token::NonExperimentalEnd && tok < Token::ExperimentalEnd;
 	}
 
 	bool isYulKeyword(std::string const& _literal);

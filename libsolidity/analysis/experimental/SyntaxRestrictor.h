@@ -43,6 +43,7 @@ private:
 	bool visit(ContractDefinition const& _contractDefinition) override;
 	bool visit(FunctionDefinition const& _functionDefinition) override;
 	bool visit(ExpressionStatement const&) override { return true; }
+	bool visit(FunctionCall const&) override { return true; }
 	bool visit(Assignment const&) override { return true; }
 	bool visit(Block const&) override { return true; }
 	bool visit(InlineAssembly const&) override { return true; }

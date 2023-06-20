@@ -27,10 +27,12 @@
 namespace solidity::frontend::experimental
 {
 
+class Analysis;
+
 class TypeInference: public ASTConstVisitor
 {
 public:
-	TypeInference(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	TypeInference(Analysis& _analysis);
 
 	bool analyze(SourceUnit const& _sourceUnit);
 private:
@@ -40,6 +42,7 @@ private:
 
 	bool visit(FunctionDefinition const& _functionDefinition) override;
 	bool visit(ParameterList const& _parameterList) override;
+	void endVisit(ParameterList const& _parameterList) override;
 	bool visit(SourceUnit const&) override { return true; }
 	bool visit(ContractDefinition const&) override { return true; }
 	bool visit(InlineAssembly const& _inlineAssembly) override;
@@ -47,14 +50,29 @@ private:
 
 	bool visit(ExpressionStatement const&) override { return true; }
 	bool visit(Assignment const&) override;
+	void endVisit(Assignment const&) override;
 	bool visit(Identifier const&) override;
+	bool visit(FunctionCall const& _functionCall) override;
+	void endVisit(FunctionCall const& _functionCall) override;
 
 	bool visitNode(ASTNode const& _node) override;
 
 	Type fromTypeName(TypeName const& _typeName);
-	TypeSystem m_typeSystem;
+	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
-	TypeEnvironment m_env;
+	TypeSystem m_typeSystem;
+	std::unique_ptr<TypeEnvironment> m_env;
+	Type m_voidType;
+	Type m_wordType;
+
+	struct TypeAnnotation
+	{
+		std::optional<Type> type;
+	};
+
+	TypeAnnotation& annotation(ASTNode const& _node);
+
+	std::vector<std::unique_ptr<TypeAnnotation>> m_typeAnnotations;
 };
 
 }

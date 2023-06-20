@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <libsolidity/codegen/experimental/IRGenerationContext.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/ASTForward.h>
@@ -53,24 +54,24 @@ public:
 		m_eofVersion(_eofVersion),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider),
-		m_analysis(_analysis)
+		m_context{_analysis, {}, {}}
 	{}
 
 	std::string run(
 		ContractDefinition const& _contract,
 		bytes const& _cborMetadata,
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
-	) const;
+	);
 
-	std::string generate(ContractDefinition const& _contract) const;
-	std::string generate(FunctionDefinition const& _function) const;
+	std::string generate(ContractDefinition const& _contract);
+	std::string generate(FunctionDefinition const& _function);
 private:
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
 	OptimiserSettings const m_optimiserSettings;
 	langutil::DebugInfoSelection m_debugInfoSelection = {};
 	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
-	Analysis const& m_analysis;
+	IRGenerationContext m_context;
 };
 
 }

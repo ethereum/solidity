@@ -1,9 +1,7 @@
 pragma experimental solidity;
 
-function f(a:word) -> (b:word) {
-    assembly {
-        b := a
-    }
+function f(a) -> (b) {
+    b = a;
 }
 
 contract C {
@@ -13,7 +11,7 @@ contract C {
 		assembly {
 			x := 0x42
 		}
-		y = x;
+		y = f(x);
 		assembly {
 			mstore(0, y)
 			return(0, 32)
@@ -23,4 +21,4 @@ contract C {
 // ====
 // compileViaYul: true
 // ----
-// () -> 0x42
+// () -> 21

@@ -15,37 +15,29 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
+
 #pragma once
 
-#include <cstdint>
-#include <memory>
-#include <vector>
+#include <libsolidity/ast/ASTForward.h>
 
-namespace solidity::frontend
-{
-class SourceUnit;
-}
-
-namespace solidity::langutil
-{
-class ErrorReporter;
-}
+#include <list>
+#include <set>
 
 namespace solidity::frontend::experimental
 {
 
-class Analysis
+class Analysis;
+
+struct IRGenerationContext
 {
-public:
-	Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId);
-	Analysis(Analysis const&) = delete;
-	Analysis const& operator=(Analysis const&) = delete;
-	bool check(std::vector<std::shared_ptr<SourceUnit const>> const& _sourceUnits);
-	langutil::ErrorReporter& errorReporter() { return m_errorReporter; }
-	uint64_t maxAstId() const { return m_maxAstId; }
-private:
-	langutil::ErrorReporter& m_errorReporter;
-	uint64_t m_maxAstId = 0;
+	Analysis const& analysis;
+	std::list<FunctionDefinition const*> functionQueue;
+	std::set<FunctionDefinition const*> generatedFunctions;
+	void enqueueFunctionDefinition(FunctionDefinition const* _functionDefinition)
+	{
+		if (!generatedFunctions.count(_functionDefinition))
+			functionQueue.emplace_back(_functionDefinition);
+	}
 };
 
 }
