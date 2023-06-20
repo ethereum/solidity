@@ -27,9 +27,6 @@
 
 #include <utility>
 
-#ifdef HAVE_Z3_DLOPEN
-#include <z3_version.h>
-#endif
 
 using namespace solidity;
 using namespace solidity::util;
@@ -51,7 +48,6 @@ BMC::BMC(
 	))
 {
 	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
-#if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
 			m_errorReporter.warning(
@@ -61,7 +57,6 @@ BMC::BMC(
 				"These responses will be ignored."
 				"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
 			);
-#endif
 }
 
 void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
@@ -136,9 +131,6 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 			SourceLocation(),
 			"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
 			" None of the installed solvers was enabled."
-#ifdef HAVE_Z3_DLOPEN
-			" Install libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " to enable Z3."
-#endif
 		);
 }
 

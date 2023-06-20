@@ -183,13 +183,18 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 	if (m_queryResponses.count(inputHash))
 		return m_queryResponses.at(inputHash);
 
-	smtAssert(m_enabledSolvers.smtlib2 || m_enabledSolvers.eld);
-	if (m_smtCallback)
-	{
-		auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), _input);
-		if (result.success)
-			return result.responseOrErrorMessage;
-	}
+	smtAssert(m_enabledSolvers.smtlib2 || m_enabledSolvers.eld || m_enabledSolvers.z3);
+	smtAssert(m_smtCallback, "Callback must be set!");
+	std::string solverBinary = [&](){
+		if (m_enabledSolvers.eld)
+			return "eld";
+		if (m_enabledSolvers.z3)
+			return "z3";
+		return "";
+	}();
+	auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, _input);
+	if (result.success)
+		return result.responseOrErrorMessage;
 
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";

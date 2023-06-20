@@ -37,41 +37,44 @@ using solidity::util::errinfo_comment;
 namespace solidity::frontend
 {
 
-SMTSolverCommand::SMTSolverCommand(std::string _solverCmd) : m_solverCmd(_solverCmd) {}
-
 ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query)
 {
 	try
 	{
-		if (_kind != ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
-			solAssert(false, "SMTQuery callback used as callback kind " + _kind);
+		auto pos = _kind.find(' ');
+		auto kind = _kind.substr(0, pos);
+		auto solverCommand = _kind.substr(pos + 1);
+		if (kind != ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
+			solAssert(false, "SMTQuery callback used as callback kind " + kind);
 
 		auto tempDir = solidity::util::TemporaryDirectory("smt");
 		util::h256 queryHash = util::keccak256(_query);
 		auto queryFileName = tempDir.path() / ("query_" + queryHash.hex() + ".smt2");
 
 		auto queryFile = boost::filesystem::ofstream(queryFileName);
+
 		queryFile << _query;
 
-		auto eldBin = boost::process::search_path(m_solverCmd);
+		std::string solverBinary = solverCommand.substr(0, solverCommand.find(' '));
+		auto pathToBinary = boost::process::search_path(solverBinary);
 
-		if (eldBin.empty())
-			return ReadCallback::Result{false, m_solverCmd + " binary not found."};
+		if (pathToBinary.empty())
+			return ReadCallback::Result{false, solverBinary + " binary not found."};
 
 		boost::process::ipstream pipe;
-		boost::process::child eld(
-			eldBin,
+		boost::process::child solver(
+			pathToBinary,
 			queryFileName,
 			boost::process::std_out > pipe
 		);
 
 		std::vector<std::string> data;
 		std::string line;
-		while (eld.running() && std::getline(pipe, line))
+		while (solver.running() && std::getline(pipe, line))
 			if (!line.empty())
 				data.push_back(line);
 
-		eld.wait();
+		solver.wait();
 
 		return ReadCallback::Result{true, boost::join(data, "\n")};
 	}

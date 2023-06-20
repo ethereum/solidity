@@ -75,63 +75,6 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/templates/license.h.in" include/lice
 
 include(EthOptions)
 configure_project(TESTS)
-set(LATEST_Z3_VERSION "4.12.1")
-set(MINIMUM_Z3_VERSION "4.8.16")
-find_package(Z3)
-if (${Z3_FOUND})
-  if (${STRICT_Z3_VERSION})
-    if (NOT ("${Z3_VERSION_STRING}" VERSION_EQUAL ${LATEST_Z3_VERSION}))
-      message(
-        FATAL_ERROR
-        "SMTChecker tests require Z3 ${LATEST_Z3_VERSION} for all tests to pass.\n\
-Build with -DSTRICT_Z3_VERSION=OFF if you want to use a different version. \
-You can also use -DUSE_Z3=OFF to build without Z3. In both cases use --no-smt when running tests."
-      )
-    endif()
-  else()
-    if ("${Z3_VERSION_STRING}" VERSION_LESS ${MINIMUM_Z3_VERSION})
-      message(
-        FATAL_ERROR
-        "Solidity requires Z3 ${MINIMUM_Z3_VERSION} or newer. You can also use -DUSE_Z3=OFF to build without Z3."
-      )
-    endif()
-  endif()
-endif()
-
-if(${USE_Z3_DLOPEN})
-  add_definitions(-DHAVE_Z3)
-  add_definitions(-DHAVE_Z3_DLOPEN)
-  find_package(Python3 COMPONENTS Interpreter)
-  if(${Z3_FOUND})
-    get_target_property(Z3_HEADER_HINTS z3::libz3 INTERFACE_INCLUDE_DIRECTORIES)
-  endif()
-  find_path(Z3_HEADER_PATH z3.h HINTS ${Z3_HEADER_HINTS})
-  if(Z3_HEADER_PATH)
-    set(Z3_FOUND TRUE)
-  else()
-    message(SEND_ERROR "Dynamic loading of Z3 requires Z3 headers to be present at build time.")
-  endif()
-  if(NOT ${Python3_FOUND})
-    message(SEND_ERROR "Dynamic loading of Z3 requires Python 3 to be present at build time.")
-  endif()
-  if(${SOLC_LINK_STATIC})
-    message(SEND_ERROR "solc cannot be linked statically when dynamically loading Z3.")
-  endif()
-elseif (${Z3_FOUND})
-  add_definitions(-DHAVE_Z3)
-  message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
-endif()
-
-find_package(CVC4 QUIET)
-if (${CVC4_FOUND})
-  add_definitions(-DHAVE_CVC4)
-  message("CVC4 SMT solver found. This enables optional SMT checking with CVC4.")
-endif()
-
-if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
-  message("No SMT solver found (or it has been forcefully disabled). Optional SMT checking will not be available.\
-  \nPlease install Z3 or CVC4 or remove the option disabling them (USE_Z3, USE_CVC4).")
-endif()
 
 add_subdirectory(libsolutil)
 add_subdirectory(liblangutil)

@@ -141,7 +141,7 @@ private:
 	std::ostream& m_serr;
 	bool m_hasOutput = false;
 	FileReader m_fileReader;
-	SMTSolverCommand m_solverCommand{"eld"};
+	SMTSolverCommand m_solverCommand;
 	UniversalCallback m_universalCallback{m_fileReader, m_solverCommand};
 	std::optional<std::string> m_standardJsonInput;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;

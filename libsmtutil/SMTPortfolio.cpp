@@ -18,12 +18,6 @@
 
 #include <libsmtutil/SMTPortfolio.h>
 
-#ifdef HAVE_Z3
-#include <libsmtutil/Z3Interface.h>
-#endif
-#ifdef HAVE_CVC4
-#include <libsmtutil/CVC4Interface.h>
-#endif
 #include <libsmtutil/SMTLib2Interface.h>
 
 using namespace solidity;
@@ -43,14 +37,6 @@ SMTPortfolio::SMTPortfolio(
 	solAssert(!_printQuery || _enabledSolvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
 	if (_enabledSolvers.smtlib2)
 		m_solvers.emplace_back(std::make_unique<SMTLib2Interface>(std::move(_smtlib2Responses), std::move(_smtCallback), m_queryTimeout));
-#ifdef HAVE_Z3
-	if (_enabledSolvers.z3 && Z3Interface::available())
-		m_solvers.emplace_back(std::make_unique<Z3Interface>(m_queryTimeout));
-#endif
-#ifdef HAVE_CVC4
-	if (_enabledSolvers.cvc4)
-		m_solvers.emplace_back(std::make_unique<CVC4Interface>(m_queryTimeout));
-#endif
 }
 
 void SMTPortfolio::reset()
