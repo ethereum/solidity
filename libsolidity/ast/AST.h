@@ -2485,6 +2485,40 @@ private:
 	ASTPointer<VariableDeclaration> m_typeVariable;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 };
+class TypeClassInstantiation: public ASTNode, public ScopeOpener
+{
+public:
+	TypeClassInstantiation(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<TypeName> _typeConstructor,
+		std::vector<ASTPointer<IdentifierPath>> const& _argumentSorts,
+		ASTPointer<IdentifierPath> _sort,
+		std::vector<ASTPointer<ASTNode>> _subNodes
+		):
+		   ASTNode(_id, _location),
+		   m_typeConstructor(std::move(_typeConstructor)),
+		   m_argumentSorts(std::move(_argumentSorts)),
+		   m_sort(std::move(_sort)),
+		   m_subNodes(std::move(_subNodes))
+	{}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	TypeName const& typeConstructor() const { return *m_typeConstructor; }
+	std::vector<ASTPointer<IdentifierPath>> const& argumentSorts() const { return m_argumentSorts; }
+	IdentifierPath const& sort() const { return *m_sort; }
+	std::vector<ASTPointer<ASTNode>> const& subNodes() const { return m_subNodes; }
+
+	bool experimentalSolidityOnly() const override { return true; }
+
+private:
+	ASTPointer<TypeName> m_typeConstructor;
+	std::vector<ASTPointer<IdentifierPath>> m_argumentSorts;
+	ASTPointer<IdentifierPath> m_sort;
+	std::vector<ASTPointer<ASTNode>> m_subNodes;
+};
 
 /// @}
 

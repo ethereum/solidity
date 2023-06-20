@@ -282,6 +282,32 @@ bool TypeInference::visit(Identifier const& _identifier)
 	return true;
 }
 
+bool TypeInference::visit(IdentifierPath const& _identifier)
+{
+	// TODO: deduplicate with Identifier visit
+	auto& identifierAnnotation = annotation(_identifier);
+	solAssert(!identifierAnnotation.type);
+
+	auto const* referencedDeclaration = _identifier.annotation().referencedDeclaration;
+	solAssert(referencedDeclaration);
+
+	auto& declarationAnnotation = annotation(*referencedDeclaration);
+	if (!declarationAnnotation.type)
+		referencedDeclaration->accept(*this);
+
+	solAssert(declarationAnnotation.type);
+	identifierAnnotation.type = declarationAnnotation.type;
+
+	return true;
+}
+
+bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
+{
+	for (auto subNode: _typeClassInstantiation.subNodes())
+		 subNode->accept(*this);
+	return false;
+}
+
 bool TypeInference::visit(FunctionCall const&) { return true; }
 void TypeInference::endVisit(FunctionCall const& _functionCall)
 {

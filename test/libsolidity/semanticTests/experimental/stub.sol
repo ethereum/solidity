@@ -4,13 +4,12 @@ pragma experimental solidity;
 class a:StackType {
 	function stackSize() -> x:integer;
 }
-/*
-instantiate uint256 : StackType {
-	function stackSize() -> (integer) {
-		return 1;
+
+instantiation word : StackType {
+	function stackSize() -> x:integer {
+		return x;
 	}
 }
-*/
 
 function f(a) -> b {
     return a;

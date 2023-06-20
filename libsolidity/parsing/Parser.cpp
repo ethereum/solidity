@@ -138,6 +138,10 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 				solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
 				nodes.push_back(parseTypeClassDefinition());
 				break;
+			case Token::Instantiation:
+				solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+				nodes.push_back(parseTypeClassInstantiation());
+				break;
 			default:
 				if (
 					// Workaround because `error` is not a keyword.
@@ -1732,6 +1736,7 @@ ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
 
 ASTPointer<TypeClassDefinition> Parser::parseTypeClassDefinition()
 {
+	solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 
@@ -1774,6 +1779,55 @@ ASTPointer<TypeClassDefinition> Parser::parseTypeClassDefinition()
 		name,
 		nameLocation,
 		documentation,
+		subNodes
+	);
+}
+
+ASTPointer<TypeClassInstantiation> Parser::parseTypeClassInstantiation()
+{
+	solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	vector<ASTPointer<ASTNode>> subNodes;
+
+	expectToken(Token::Instantiation);
+	// TODO: parseTypeConstructor()
+	ASTPointer<TypeName> typeConstructor = parseTypeName();
+	expectToken(Token::Colon);
+	vector<ASTPointer<IdentifierPath>> argumentSorts;
+	if (m_scanner->currentToken() == Token::LParen)
+	{
+		expectToken(Token::LParen);
+		if (m_scanner->currentToken() != Token::RParen)
+		{
+			argumentSorts.emplace_back(parseIdentifierPath());
+			while (m_scanner->currentToken() == Token::Comma)
+			{
+				expectToken(Token::Comma);
+				argumentSorts.emplace_back(parseIdentifierPath());
+			}
+		}
+		expectToken(Token::RParen);
+	}
+	ASTPointer<IdentifierPath> sort = parseIdentifierPath();
+	expectToken(Token::LBrace);
+	while (true)
+	{
+		Token currentTokenValue = m_scanner->currentToken();
+		if (currentTokenValue == Token::RBrace)
+			break;
+		expectToken(Token::Function, false);
+		// TODO: require body already during parsing?
+		subNodes.push_back(parseFunctionDefinition(false, true));
+	}
+	nodeFactory.markEndPosition();
+	expectToken(Token::RBrace);
+
+	return nodeFactory.createNode<TypeClassInstantiation>(
+		typeConstructor,
+		argumentSorts,
+		sort,
 		subNodes
 	);
 }

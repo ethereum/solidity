@@ -52,12 +52,15 @@ private:
 	bool visit(Assignment const&) override;
 	void endVisit(Assignment const&) override;
 	bool visit(Identifier const&) override;
+	bool visit(IdentifierPath const&) override;
 	bool visit(FunctionCall const& _functionCall) override;
 	void endVisit(FunctionCall const& _functionCall) override;
 	bool visit(Return const&) override { return true; }
 	void endVisit(Return const& _return) override;
 
+	// TODO: properly account for it
 	bool visit(TypeClassDefinition const&) override  { return true; }
+	bool visit(TypeClassInstantiation const&) override;
 
 	bool visitNode(ASTNode const& _node) override;
 

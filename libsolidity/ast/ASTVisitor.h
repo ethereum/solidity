@@ -112,6 +112,7 @@ public:
 	/// Experimental Solidity nodes
 	/// @{
 	virtual bool visit(TypeClassDefinition& _node) { return visitNode(_node); }
+	virtual bool visit(TypeClassInstantiation& _node) { return visitNode(_node); }
 	///  @}
 
 	virtual void endVisit(SourceUnit& _node) { endVisitNode(_node); }
@@ -172,6 +173,7 @@ public:
 	/// Experimental Solidity nodes
 	/// @{
 	virtual void endVisit(TypeClassDefinition& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeClassInstantiation& _node) { endVisitNode(_node); }
 	///  @}
 
 protected:
@@ -254,6 +256,7 @@ public:
 	/// Experimental Solidity nodes
 	/// @{
 	virtual bool visit(TypeClassDefinition const& _node) { return visitNode(_node); }
+	virtual bool visit(TypeClassInstantiation const& _node) { return visitNode(_node); }
 	///  @}
 
 	virtual void endVisit(SourceUnit const& _node) { endVisitNode(_node); }
@@ -314,6 +317,7 @@ public:
 	/// Experimental Solidity nodes
 	/// @{
 	virtual void endVisit(TypeClassDefinition const& _node) { endVisitNode(_node); }
+	virtual void endVisit(TypeClassInstantiation const& _node) { endVisitNode(_node); }
 	///  @}
 
 protected:

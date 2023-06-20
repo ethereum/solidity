@@ -177,6 +177,7 @@ private:
 	);
 	ASTPointer<VariableDeclaration> parsePostfixVariableDeclaration();
 	ASTPointer<TypeClassDefinition> parseTypeClassDefinition();
+	ASTPointer<TypeClassInstantiation> parseTypeClassInstantiation();
 	///@}
 
 	///@{

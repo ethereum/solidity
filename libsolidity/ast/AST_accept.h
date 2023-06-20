@@ -1049,6 +1049,30 @@ void TypeClassDefinition::accept(ASTConstVisitor& _visitor) const
 	}
 	_visitor.endVisit(*this);
 }
+
+void TypeClassInstantiation::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_typeConstructor->accept(_visitor);
+		listAccept(m_argumentSorts, _visitor);
+		m_sort->accept(_visitor);
+		listAccept(m_subNodes, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void TypeClassInstantiation::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_typeConstructor->accept(_visitor);
+		listAccept(m_argumentSorts, _visitor);
+		m_sort->accept(_visitor);
+		listAccept(m_subNodes, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
 /// @}
 
 }
