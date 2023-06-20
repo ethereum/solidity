@@ -57,6 +57,8 @@ private:
 	bool visit(Return const&) override { return true; }
 	void endVisit(Return const& _return) override;
 
+	bool visit(TypeClassDefinition const&) override  { return true; }
+
 	bool visitNode(ASTNode const& _node) override;
 
 	Type fromTypeName(TypeName const& _typeName);
@@ -65,6 +67,7 @@ private:
 	TypeSystem m_typeSystem;
 	Type m_voidType;
 	Type m_wordType;
+	Type m_integerType;
 	std::optional<Type> m_currentFunctionType;
 
 	struct TypeAnnotation

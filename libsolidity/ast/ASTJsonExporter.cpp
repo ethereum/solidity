@@ -1033,6 +1033,15 @@ void ASTJsonExporter::endVisit(EventDefinition const&)
 	m_inEvent = false;
 }
 
+bool ASTJsonExporter::visitNode(ASTNode const& _node)
+{
+	solAssert(false, _node.experimentalSolidityOnly() ?
+		"Attempt to export an AST of experimental solidity." :
+		"Attempt to export an AST that contains unexpected nodes."
+	);
+	return false;
+}
+
 string ASTJsonExporter::location(VariableDeclaration::Location _location)
 {
 	switch (_location)

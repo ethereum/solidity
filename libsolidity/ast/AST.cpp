@@ -1058,3 +1058,11 @@ TryCatchClause const* TryStatement::errorClause() const {
 TryCatchClause const* TryStatement::fallbackClause() const {
 	return findClause(m_clauses);
 }
+
+/// Experimental Solidity nodes
+/// @{
+TypeClassDefinitionAnnotation& TypeClassDefinition::annotation() const
+{
+	return initAnnotation<TypeClassDefinitionAnnotation>();
+}
+/// @}

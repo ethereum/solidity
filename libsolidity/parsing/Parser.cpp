@@ -134,6 +134,10 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 			case Token::Function:
 				nodes.push_back(parseFunctionDefinition(true));
 				break;
+			case Token::Class:
+				solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+				nodes.push_back(parseTypeClassDefinition());
+				break;
 			default:
 				if (
 					// Workaround because `error` is not a keyword.
@@ -623,7 +627,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 	return result;
 }
 
-ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction)
+ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction, bool _allowBody)
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
@@ -673,7 +677,9 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction)
 
 	ASTPointer<Block> block;
 	nodeFactory.markEndPosition();
-	if (m_scanner->currentToken() == Token::Semicolon)
+	if (!_allowBody)
+		expectToken(Token::Semicolon);
+	else if (m_scanner->currentToken() == Token::Semicolon)
 		advance();
 	else
 	{
@@ -1270,6 +1276,13 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 	vector<ASTPointer<VariableDeclaration>> parameters;
 	VarDeclParserOptions options(_options);
 	options.allowEmptyName = true;
+	if (m_experimentalSolidityEnabledInCurrentSourceUnit && m_scanner->currentToken() == Token::Identifier)
+	{
+		// Parses unary parameter lists without parentheses. TODO: is this a good idea in all cases? Including arguments?
+		parameters = {parsePostfixVariableDeclaration()};
+		nodeFactory.setEndPositionFromNode(parameters.front());
+		return nodeFactory.createNode<ParameterList>(parameters);
+	}
 	expectToken(Token::LParen);
 	auto parseSingleVariableDeclaration = [&]() {
 		if (m_experimentalSolidityEnabledInCurrentSourceUnit)
@@ -1714,6 +1727,54 @@ ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
 		nullptr,
 		Visibility::Default,
 		documentation
+	);
+}
+
+ASTPointer<TypeClassDefinition> Parser::parseTypeClassDefinition()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	vector<ASTPointer<ASTNode>> subNodes;
+
+	ASTPointer<StructuredDocumentation> const documentation = parseStructuredDocumentation();
+
+	expectToken(Token::Class);
+	// TODO: parseTypeVariable()? parseTypeVariableDeclaration()?
+	ASTPointer<VariableDeclaration> typeVariable;
+	{
+		ASTNodeFactory nodeFactory(*this);
+		nodeFactory.markEndPosition();
+		auto [identifier, nameLocation] = expectIdentifierWithLocation();
+		typeVariable = nodeFactory.createNode<VariableDeclaration>(
+			nullptr,
+			identifier,
+			nameLocation,
+			nullptr,
+			Visibility::Default,
+			nullptr
+		);
+	}
+	expectToken(Token::Colon);
+	auto [name, nameLocation] = expectIdentifierWithLocation();
+	expectToken(Token::LBrace);
+	while (true)
+	{
+		Token currentTokenValue = m_scanner->currentToken();
+		if (currentTokenValue == Token::RBrace)
+			break;
+		expectToken(Token::Function, false);
+		subNodes.push_back(parseFunctionDefinition(false, false));
+	}
+	nodeFactory.markEndPosition();
+	expectToken(Token::RBrace);
+
+	return nodeFactory.createNode<TypeClassDefinition>(
+		typeVariable,
+		name,
+		nameLocation,
+		documentation,
+		subNodes
 	);
 }
 

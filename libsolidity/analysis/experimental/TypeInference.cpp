@@ -41,11 +41,13 @@ m_errorReporter(_analysis.errorReporter())
 			 {BuiltinType::Function, "fun", 2},
 			 {BuiltinType::Unit, "unit", 0},
 			 {BuiltinType::Pair, "pair", 2},
-			 {BuiltinType::Word, "word", 0}
+			 {BuiltinType::Word, "word", 0},
+			 {BuiltinType::Integer, "integer", 0}
 	})
 		m_typeSystem.declareBuiltinType(type, name, arity);
 	m_voidType = m_typeSystem.builtinType(BuiltinType::Void, {});
 	m_wordType = m_typeSystem.builtinType(BuiltinType::Word, {});
+	m_integerType = m_typeSystem.builtinType(BuiltinType::Integer, {});
 
 	m_typeAnnotations.resize(_analysis.maxAstId());
 }
@@ -84,7 +86,8 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 
 	m_currentFunctionType = functionType;
 
-	_functionDefinition.body().accept(*this);
+	if (_functionDefinition.isImplemented())
+		_functionDefinition.body().accept(*this);
 
 	functionAnnotation.type = m_typeSystem.fresh(
 		functionType,
@@ -143,13 +146,32 @@ experimental::Type TypeInference::fromTypeName(TypeName const& _typeName)
 			return m_wordType;
 		case Token::Void:
 			return m_voidType;
+		case Token::Integer:
+			return m_integerType;
 		default:
 			m_errorReporter.typeError(0000_error, _typeName.location(), "Only elementary types are supported.");
 			break;
 		}
 	}
+	else if (auto const* userDefinedTypeName = dynamic_cast<UserDefinedTypeName const*>(&_typeName))
+	{
+		auto const* declaration = userDefinedTypeName->pathNode().annotation().referencedDeclaration;
+		solAssert(declaration);
+		if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(declaration))
+		{
+			if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(variableDeclaration->scope()))
+			{
+				(void)typeClass;
+				m_errorReporter.typeError(0000_error, _typeName.location(), "Using type class type variables not yet implemented.");
+			}
+			else
+				m_errorReporter.typeError(0000_error, _typeName.location(), "Type name referencing a variable declaration.");
+		}
+		else
+			m_errorReporter.typeError(0000_error, _typeName.location(), "Unsupported user defined type name.");
+	}
 	else
-		m_errorReporter.typeError(0000_error, _typeName.location(), "Only elementary types are supported.");
+		m_errorReporter.typeError(0000_error, _typeName.location(), "Unsupported type name.");
 	return m_typeSystem.freshTypeVariable(false);
 
 }

@@ -121,6 +121,8 @@ public:
 	bool operator!=(ASTNode const& _other) const { return !operator==(_other); }
 	///@}
 
+	virtual bool experimentalSolidityOnly() const { return false; }
+
 protected:
 	size_t const m_id = 0;
 
@@ -2443,6 +2445,45 @@ private:
 	Token m_token;
 	ASTPointer<ASTString> m_value;
 	SubDenomination m_subDenomination;
+};
+
+/// @}
+
+/// Experimental Solidity nodes
+/// @{
+class TypeClassDefinition: public Declaration, public StructurallyDocumented, public ScopeOpener
+{
+public:
+	TypeClassDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<VariableDeclaration> _typeVariable,
+		ASTPointer<ASTString> const& _name,
+		SourceLocation _nameLocation,
+		ASTPointer<StructuredDocumentation> const& _documentation,
+		std::vector<ASTPointer<ASTNode>> _subNodes
+	):
+		Declaration(_id, _location, _name, std::move(_nameLocation)),
+		StructurallyDocumented(_documentation),
+		m_typeVariable(std::move(_typeVariable)),
+		m_subNodes(std::move(_subNodes))
+	{}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	VariableDeclaration const& typeVariable() const { return *m_typeVariable; }
+	std::vector<ASTPointer<ASTNode>> const& subNodes() const { return m_subNodes; }
+
+	TypeClassDefinitionAnnotation& annotation() const override;
+
+	Type const* type() const override { solAssert(false, "Requested type of experimental solidity node."); }
+
+	bool experimentalSolidityOnly() const override { return true; }
+
+private:
+	ASTPointer<VariableDeclaration> m_typeVariable;
+	std::vector<ASTPointer<ASTNode>> m_subNodes;
 };
 
 /// @}

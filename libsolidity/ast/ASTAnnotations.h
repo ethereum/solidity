@@ -341,4 +341,12 @@ struct FunctionCallAnnotation: ExpressionAnnotation
 	bool tryCall = false;
 };
 
+/// Experimental Solidity annotations.
+/// Used to intergrate with name and type resolution.
+/// @{
+struct TypeClassDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
+{
+};
+/// @}
+
 }

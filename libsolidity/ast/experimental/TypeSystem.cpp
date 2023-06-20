@@ -40,26 +40,52 @@ std::string TypeSystem::typeToString(Type const& _type) const
 	return std::visit(util::GenericVisitor{
 		[&](TypeExpression const& _type) {
 			std::stringstream stream;
-			if (!_type.arguments.empty())
-			{
-				stream << "(";
-				for (auto type: _type.arguments | ranges::views::drop_last(1))
-					stream << typeToString(type) << ", ";
-				stream << typeToString(_type.arguments.back());
-				stream << ") ";
-			}
-			stream << std::visit(util::GenericVisitor{
+			auto printTypeArguments = [&]() {
+				if (!_type.arguments.empty())
+				{
+					stream << "(";
+					for (auto type: _type.arguments | ranges::views::drop_last(1))
+						stream << typeToString(type) << ", ";
+					stream << typeToString(_type.arguments.back());
+					stream << ") ";
+				}
+			};
+			std::visit(util::GenericVisitor{
 				[&](Declaration const* _declaration) {
-					return _declaration->name();
+					printTypeArguments();
+					stream << _declaration->name();
 				},
-				[&](BuiltinType _builtinType) -> string {
-					return builtinTypeName(_builtinType);
+				[&](BuiltinType _builtinType) {
+					switch (_builtinType)
+					{
+					case BuiltinType::Function:
+						solAssert(_type.arguments.size() == 2);
+						stream << fmt::format("{} -> {}", typeToString(_type.arguments.front()), typeToString(_type.arguments.back()));
+						break;
+					case BuiltinType::Unit:
+						solAssert(_type.arguments.empty());
+						stream << "()";
+						break;
+					case BuiltinType::Pair:
+					{
+						auto tupleTypes = TypeSystemHelpers{*this}.destTupleType(_type);
+						stream << "(";
+						for (auto type: tupleTypes | ranges::view::drop_last(1))
+							stream << typeToString(type) << ", ";
+						stream << typeToString(tupleTypes.back()) << ")";
+						break;
+					}
+					default:
+						printTypeArguments();
+						stream << builtinTypeName(_builtinType);
+						break;
+					}
 				}
 			}, _type.constructor);
 			return stream.str();
 		},
 		[](TypeVariable const& _type) {
-			return fmt::format("var[{}]", _type.index());
+			return fmt::format("{}var{}", _type.generic() ? '?' : '\'', _type.index());
 		},
 	}, resolve(_type));
 }
@@ -180,6 +206,41 @@ experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 	return result;
 }
 
+vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) const
+{
+	auto [constructor, arguments] = destTypeExpression(_tupleType);
+	if (auto const* builtinType = get_if<BuiltinType>(&constructor))
+	{
+		if (*builtinType == BuiltinType::Unit)
+			return {};
+		else if (*builtinType != BuiltinType::Pair)
+			return {_tupleType};
+	}
+	else
+		return {_tupleType};
+	solAssert(arguments.size() == 2);
+
+	vector<Type> result;
+	result.emplace_back(arguments.front());
+	Type tail = arguments.back();
+	while(true)
+	{
+		auto const* tailTypeExpression = get_if<TypeExpression>(&tail);
+		if (!tailTypeExpression)
+			break;
+
+		auto [tailConstructor, tailArguments] = destTypeExpression(tail);
+		auto const* builtinType = get_if<BuiltinType>(&tailConstructor);
+		if(!builtinType || *builtinType != BuiltinType::Pair)
+			break;
+		solAssert(tailArguments.size() == 2);
+		result.emplace_back(tailArguments.front());
+		tail = tailArguments.back();
+	}
+	result.emplace_back(tail);
+	return result;
+}
+
 experimental::Type TypeSystemHelpers::functionType(experimental::Type _argType, experimental::Type _resultType) const
 {
 	return typeSystem.builtinType(BuiltinType::Function, {_argType, _resultType});
@@ -197,7 +258,6 @@ tuple<TypeExpression::Constructor, vector<experimental::Type>> TypeSystemHelpers
 		}
 	}, _functionType);
 }
-
 
 tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFunctionType(Type _functionType) const
 {

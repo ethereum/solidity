@@ -1,10 +1,10 @@
 pragma experimental solidity;
 
-/*
-class a:StackType {
-	function stackSize() -> (integer);
-}
 
+class a:StackType {
+	function stackSize() -> x:integer;
+}
+/*
 instantiate uint256 : StackType {
 	function stackSize() -> (integer) {
 		return 1;
@@ -12,7 +12,7 @@ instantiate uint256 : StackType {
 }
 */
 
-function f(a) -> (b) {
+function f(a) -> b {
     return a;
 }
 

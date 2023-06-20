@@ -1024,4 +1024,31 @@ void Literal::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+/// Experimental Solidity nodes
+/// @{
+void TypeClassDefinition::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_typeVariable->accept(_visitor);
+		if (m_documentation)
+			m_documentation->accept(_visitor);
+		listAccept(m_subNodes, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void TypeClassDefinition::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_typeVariable->accept(_visitor);
+		if (m_documentation)
+			m_documentation->accept(_visitor);
+		listAccept(m_subNodes, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+/// @}
+
 }

@@ -46,7 +46,8 @@ enum class BuiltinType
 	Function,
 	Unit,
 	Pair,
-	Word
+	Word,
+	Integer
 };
 
 struct TypeExpression
@@ -104,10 +105,11 @@ private:
 
 struct TypeSystemHelpers
 {
-	TypeSystem& typeSystem;
-	Type tupleType(std::vector<Type> _elements) const;
-	Type functionType(Type _argType, Type _resultType) const;
+	TypeSystem const& typeSystem;
 	std::tuple<TypeExpression::Constructor, std::vector<Type>> destTypeExpression(Type _functionType) const;
+	Type tupleType(std::vector<Type> _elements) const;
+	std::vector<Type> destTupleType(Type _tupleType) const;
+	Type functionType(Type _argType, Type _resultType) const;
 	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
 };
 

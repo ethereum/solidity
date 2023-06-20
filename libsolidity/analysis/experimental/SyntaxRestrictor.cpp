@@ -32,7 +32,8 @@ bool SyntaxRestrictor::check(ASTNode const& _astRoot)
 
 bool SyntaxRestrictor::visitNode(ASTNode const& _node)
 {
-	m_errorReporter.syntaxError(0000_error, _node.location(), "Unsupported AST node.");
+	if (!_node.experimentalSolidityOnly())
+		m_errorReporter.syntaxError(0000_error, _node.location(), "Unsupported AST node.");
 	return false;
 }
 
