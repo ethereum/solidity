@@ -42,8 +42,8 @@ source "${REPO_ROOT}/scripts/common_cmdline.sh"
 pushd "${REPO_ROOT}/test/cmdlineTests" > /dev/null
 autoupdate=false
 no_smt=false
-declare -a selected_tests
-declare -a patterns_with_no_matches
+declare -a included_test_patterns
+declare -a excluded_test_patterns
 while [[ $# -gt 0 ]]
 do
     case "$1" in
@@ -55,31 +55,47 @@ do
             no_smt=true
             shift
             ;;
+        --exclude)
+            [[ $2 != '' ]] || fail "No pattern given to --exclude option or the pattern is empty."
+            excluded_test_patterns+=("$2")
+            shift
+            shift
+            ;;
         *)
-            matching_tests=$(find . -mindepth 1 -maxdepth 1 -type d -name "$1" | cut -c 3- | LC_COLLATE=C sort)
-
-            if [[ $matching_tests == "" ]]
-            then
-                patterns_with_no_matches+=("$1")
-                printWarning "No tests matching pattern '$1' found."
-            else
-                # shellcheck disable=SC2206 # We do not support test names containing spaces.
-                selected_tests+=($matching_tests)
-            fi
-
+            included_test_patterns+=("$1")
             shift
             ;;
     esac
 done
 
-if (( ${#selected_tests[@]} == 0 && ${#patterns_with_no_matches[@]} == 0 ))
+(( ${#included_test_patterns[@]} > 0 )) || included_test_patterns+=('*')
+
+test_name_filter=('(' -name "${included_test_patterns[0]}")
+for pattern in "${included_test_patterns[@]:1}"
+do
+    test_name_filter+=(-or -name "$pattern")
+done
+test_name_filter+=(')')
+
+for pattern in "${excluded_test_patterns[@]}"
+do
+    test_name_filter+=(-and -not -name "$pattern")
+done
+
+# NOTE: We want leading symbols in names to affect the sort order but without
+# LC_COLLATE=C sort seems to ignore them.
+# shellcheck disable=SC2207 # We do not support test names containing spaces.
+selected_tests=($(find . -mindepth 1 -maxdepth 1 -type d "${test_name_filter[@]}" | cut -c 3- | LC_COLLATE=C sort))
+
+if (( ${#selected_tests[@]} == 0 ))
 then
-    # NOTE: We want leading symbols in names to affect the sort order but without
-    # LC_COLLATE=C sort seems to ignore them.
-    all_tests=$(echo * | tr '[:space:]' '\n' | LC_COLLATE=C sort)
-    # shellcheck disable=SC2206 # We do not support test names containing spaces.
-    selected_tests=($all_tests)
+    printWarning "The pattern '${test_name_filter[*]}' did not match any tests."
+    exit 0;
+else
+    test_count=$(find . -mindepth 1 -maxdepth 1 -type d | wc -l)
+    printLog "Selected ${#selected_tests[@]} out of ${test_count} tests."
 fi
+
 popd > /dev/null
 
 case "$OSTYPE" in

@@ -280,6 +280,7 @@ one per subdirectory, and can be executed using the ``cmdlineTests.sh`` script.
 By default the script runs all available tests.
 You can also provide one or more `file name patterns <https://www.gnu.org/software/bash/manual/bash.html#Filename-Expansion>`_,
 in which case only the tests matching at least one pattern will be executed.
+It is also possible to exclude files matching a specific pattern by prefixing it with ``--exclude``.
 
 By default the script assumes that a ``solc`` binary is available inside the ``build/`` subdirectory
 inside the working copy.
@@ -291,10 +292,11 @@ Example:
 .. code-block:: bash
 
     export SOLIDITY_BUILD_DIR=~/solidity/build/
-    test/cmdlineTests.sh "standard_*" "*_yul_*"
+    test/cmdlineTests.sh "standard_*" "*_yul_*" --exclude "standard_yul_*"
 
 The commands above will run tests from directories starting with ``test/cmdlineTests/standard_`` and
-subdirectories of ``test/cmdlineTests/`` that have ``_yul_`` somewhere in the name.
+subdirectories of ``test/cmdlineTests/`` that have ``_yul_`` somewhere in the name,
+but no test whose name starts with ``standard_yul_`` will be executed.
 It will also assume that the file ``solidity/build/solc/solc`` inside your home directory is the
 compiler binary (unless you are on Windows -- then ``solidity/build/solc/Release/solc.exe``).
 
