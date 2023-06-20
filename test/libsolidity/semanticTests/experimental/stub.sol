@@ -1,7 +1,19 @@
 pragma experimental solidity;
 
+/*
+class a:StackType {
+	function stackSize() -> (integer);
+}
+
+instantiate uint256 : StackType {
+	function stackSize() -> (integer) {
+		return 1;
+	}
+}
+*/
+
 function f(a) -> (b) {
-    b = a;
+    return a;
 }
 
 contract C {

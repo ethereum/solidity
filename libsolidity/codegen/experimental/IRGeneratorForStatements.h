@@ -41,6 +41,8 @@ private:
 	bool visit(FunctionCall const&) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
+	bool visit(Return const&) override { return true; }
+	void endVisit(Return const& _return) override;
 	/// Default visit will reject all AST nodes that are not explicitly supported.
 	bool visitNode(ASTNode const& _node) override;
 	IRGenerationContext& m_context;

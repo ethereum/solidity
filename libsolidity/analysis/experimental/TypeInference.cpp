@@ -58,6 +58,7 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
+	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, nullopt);
 	auto& functionAnnotation = annotation(_functionDefinition);
 	if (functionAnnotation.type)
 		return false;
@@ -65,8 +66,6 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	_functionDefinition.parameterList().accept(*this);
 	if (_functionDefinition.returnParameterList())
 		_functionDefinition.returnParameterList()->accept(*this);
-
-	_functionDefinition.body().accept(*this);
 
 	auto typeFromParameterList = [&](ParameterList const* _list) {
 		if (!_list)
@@ -78,17 +77,35 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 		}) | ranges::to<std::vector<Type>>);
 	};
 
-	Type argType = typeFromParameterList(&_functionDefinition.parameterList());
-	Type resultType = typeFromParameterList(_functionDefinition.returnParameterList().get());
+	Type functionType = TypeSystemHelpers{m_typeSystem}.functionType(
+		typeFromParameterList(&_functionDefinition.parameterList()),
+		typeFromParameterList(_functionDefinition.returnParameterList().get())
+	);
+
+	m_currentFunctionType = functionType;
+
+	_functionDefinition.body().accept(*this);
 
 	functionAnnotation.type = m_typeSystem.fresh(
-		TypeSystemHelpers{m_typeSystem}.functionType(argType, resultType),
+		functionType,
 		true
 	);
 
 	m_errorReporter.warning(0000_error, _functionDefinition.location(), m_typeSystem.typeToString(*functionAnnotation.type));
 
 	return false;
+}
+
+void TypeInference::endVisit(Return const& _return)
+{
+	solAssert(m_currentFunctionType);
+	if (_return.expression())
+	{
+		auto& returnExpressionAnnotation = annotation(*_return.expression());
+		solAssert(returnExpressionAnnotation.type);
+		Type functionReturnType = get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(*m_currentFunctionType));
+		unify(functionReturnType, *returnExpressionAnnotation.type);
+	}
 }
 
 bool TypeInference::visit(ParameterList const&)

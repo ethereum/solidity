@@ -52,6 +52,7 @@ private:
 	bool visit(VariableDeclaration const&) override;
 	bool visit(ElementaryTypeName const&) override { return true; }
 	bool visit(ParameterList const&) override { return true; }
+	bool visit(Return const&) override { return true; }
 
 	langutil::ErrorReporter& m_errorReporter;
 };

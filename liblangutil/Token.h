@@ -270,6 +270,8 @@ namespace solidity::langutil
 	\
 	T(NonExperimentalEnd, nullptr, 0) /* used as non-experimental enum end marker */ \
     /* Experimental Solidity specific keywords. */                     \
+	K(Class, "class", 0)                                               \
+	K(Instantiation, "instantiation", 0)                               \
 	K(Word, "word", 0)                                                 \
 	K(Void, "void", 0)                                                 \
 	K(StaticAssert, "static_assert", 0)                                \
@@ -336,7 +338,7 @@ namespace TokenTraits
 	{
 		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback ||
 			tok == Token::Pragma || tok == Token::Import || tok == Token::As || tok == Token::Function || tok == Token::Let ||
-			(tok > Token::NonExperimentalEnd && tok < Token::ExperimentalEnd);
+			tok == Token::Return || (tok > Token::NonExperimentalEnd && tok < Token::ExperimentalEnd);
 	}
 	constexpr bool isExperimentalSolidityOnlyKeyword(Token tok)
 	{

@@ -134,6 +134,21 @@ bool IRGeneratorForStatements::visit(Identifier const& _identifier)
 	return false;
 }
 
+void IRGeneratorForStatements::endVisit(Return const& _return)
+{
+	if (Expression const* value = _return.expression())
+	{
+		solAssert(_return.annotation().functionReturnParameters, "Invalid return parameters pointer.");
+		vector<ASTPointer<VariableDeclaration>> const& returnParameters =
+			_return.annotation().functionReturnParameters->parameters();
+		solAssert(returnParameters.size() == 1, "Returning tuples not yet supported.");
+		m_code << IRNames::localVariable(*returnParameters.front()) << " := " << IRNames::localVariable(*value) << "\n";
+	}
+
+	_return.annotation().functionReturnParameters;
+	m_code << "leave\n";
+}
+
 bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 {
 	for(auto arg: _functionCall.arguments())
