@@ -38,7 +38,7 @@ using namespace solidity::frontend::experimental;
 std::string TypeSystem::typeToString(Type const& _type) const
 {
 	return std::visit(util::GenericVisitor{
-		[&](AtomicType const& _type) {
+		[&](TypeExpression const& _type) {
 			std::stringstream stream;
 			if (!_type.arguments.empty())
 			{
@@ -58,89 +58,56 @@ std::string TypeSystem::typeToString(Type const& _type) const
 			}, _type.constructor);
 			return stream.str();
 		},
-		[](FreeTypeVariable const& _type) {
-			return fmt::format("free[{}]", _type.index());
-		},
-		[](GenericTypeVariable const& _type) {
+		[](TypeVariable const& _type) {
 			return fmt::format("var[{}]", _type.index());
 		},
 	}, resolve(_type));
 }
 
-void TypeEnvironment::assignType(Declaration const* _declaration, Type _typeAssignment)
+vector<TypeSystem::UnificationFailure> TypeSystem::unify(Type _a, Type _b)
 {
-	auto&& [type, newlyInserted] = m_types.emplace(std::piecewise_construct, std::forward_as_tuple(_declaration), std::forward_as_tuple(std::move(_typeAssignment)));
-	if (!newlyInserted)
-	{
-		m_parent.unify(type->second, _typeAssignment);
-	}
-}
-std::optional<experimental::Type> TypeEnvironment::lookup(Declaration const* _declaration)
-{
-	if (m_types.count(_declaration))
-		return m_types[_declaration];
-	return std::nullopt;
-}
-
-
-void TypeSystem::unify(Type _a, Type _b)
-{
+	vector<UnificationFailure> failures;
 	auto unificationFailure = [&]() {
-		solAssert(false, fmt::format("cannot unify {} and {}", typeToString(_a), typeToString(_b)));
+		failures.emplace_back(UnificationFailure{_a, _b});
 	};
 	_a = resolve(_a);
 	_b = resolve(_b);
 	std::visit(util::GenericVisitor{
-		[&](GenericTypeVariable _left, GenericTypeVariable _right) {
+		[&](TypeVariable _left, TypeVariable _right) {
 			validate(_left);
 			validate(_right);
 			if (_left.index() != _right.index())
 				instantiate(_left, _right);
 		},
-		[&](GenericTypeVariable _var, auto) {
+		[&](TypeVariable _var, auto) {
 			instantiate(_var, _b);
 		},
-		[&](auto, GenericTypeVariable _var) {
+		[&](auto, TypeVariable _var) {
 			instantiate(_var, _a);
 		},
-		[&](AtomicType _atomicLeft, AtomicType _atomicRight) {
-		  if(_atomicLeft.constructor != _atomicRight.constructor)
-			  unificationFailure();
-		  if (_atomicLeft.arguments.size() != _atomicRight.arguments.size())
-			  unificationFailure();
-		   for (auto&& [left, right]: ranges::zip_view(_atomicLeft.arguments, _atomicRight.arguments))
-			  unify(left, right);
+		[&](TypeExpression _left, TypeExpression _right) {
+		  if(_left.constructor != _right.constructor)
+			  return unificationFailure();
+		  if (_left.arguments.size() != _right.arguments.size())
+			  return unificationFailure();
+		   for (auto&& [left, right]: ranges::zip_view(_left.arguments, _right.arguments))
+			  failures += unify(left, right);
 		},
 		[&](auto, auto) {
 			unificationFailure();
 		}
 	}, _a, _b);
+	return failures;
 }
 
-unique_ptr<TypeEnvironment> TypeEnvironment::fresh() const
-{
-	auto newEnv = make_unique<TypeEnvironment>(m_parent);
-	for(auto [decl,type]: m_types)
-		newEnv->m_types.emplace(decl, type);
-	return newEnv;
-
-}
-
-experimental::Type TypeSystem::freshTypeVariable()
+experimental::Type TypeSystem::freshTypeVariable(bool _generic)
 {
 	uint64_t index = m_typeVariables.size();
 	m_typeVariables.emplace_back(std::nullopt);
-	return GenericTypeVariable(*this, index);
+	return TypeVariable(*this, index, _generic);
 }
 
-experimental::Type TypeSystem::freshFreeType()
-{
-	uint64_t index = m_freeTypes.size();
-	m_freeTypes.emplace_back(std::nullopt);
-	return FreeTypeVariable(*this, index);
-}
-
-void TypeSystem::instantiate(GenericTypeVariable _variable, Type _type)
+void TypeSystem::instantiate(TypeVariable _variable, Type _type)
 {
 	validate(_variable);
 	solAssert(!m_typeVariables.at(_variable.index()).has_value());
@@ -151,7 +118,7 @@ void TypeSystem::instantiate(GenericTypeVariable _variable, Type _type)
 experimental::Type TypeSystem::resolve(Type _type) const
 {
 	Type result = _type;
-	while(auto const* var = std::get_if<GenericTypeVariable>(&result))
+	while(auto const* var = std::get_if<TypeVariable>(&result))
 		if (auto value = m_typeVariables.at(var->index()))
 			result = *value;
 		else
@@ -172,13 +139,33 @@ experimental::Type TypeSystem::builtinType(BuiltinType _builtinType, std::vector
 {
 	auto const& info = m_builtinTypes.at(_builtinType);
 	solAssert(info.arity == _arguments.size(), "Invalid arity.");
-	return AtomicType{_builtinType, _arguments};
+	return TypeExpression{_builtinType, _arguments};
 }
 
-void TypeSystem::validate(GenericTypeVariable _variable) const
+void TypeSystem::validate(TypeVariable _variable) const
 {
 	solAssert(_variable.m_parent == this);
 	solAssert(_variable.index() < m_typeVariables.size());
+}
+
+experimental::Type TypeSystem::fresh(Type _type, bool _generalize)
+{
+	return std::visit(util::GenericVisitor{
+		[&](TypeExpression const& _type) -> Type {
+			return TypeExpression{
+				_type.constructor,
+				_type.arguments | ranges::view::transform([&](Type _argType) {
+					return fresh(_argType, _generalize);
+				}) | ranges::to<vector<Type>>
+			};
+		},
+		[&](TypeVariable const& _var) {
+			if (_generalize || _var.generic())
+				return freshTypeVariable(true);
+			else
+				return _type;
+		},
+	}, resolve(_type));
 }
 
 experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
@@ -198,31 +185,11 @@ experimental::Type TypeSystemHelpers::functionType(experimental::Type _argType, 
 	return typeSystem.builtinType(BuiltinType::Function, {_argType, _resultType});
 }
 
-experimental::Type TypeSystem::fresh(Type _type)
+tuple<TypeExpression::Constructor, vector<experimental::Type>> TypeSystemHelpers::destTypeExpression(Type _functionType) const
 {
+	using ResultType = tuple<TypeExpression::Constructor, vector<Type>>;
 	return std::visit(util::GenericVisitor{
-		[&](AtomicType const& _type) -> Type {
-			return AtomicType{
-				_type.constructor,
-				_type.arguments | ranges::view::transform([&](Type _argType) {
-					return fresh(_argType);
-				}) | ranges::to<vector<Type>>
-			};
-		},
-		[&](FreeTypeVariable const&) {
-			return _type;
-		},
-		[&](GenericTypeVariable const&) {
-			return freshTypeVariable();
-		},
-	}, resolve(_type));
-}
-
-tuple<AtomicType::Constructor, vector<experimental::Type>> TypeSystemHelpers::destAtomicType(Type _functionType) const
-{
-	using ResultType = tuple<AtomicType::Constructor, vector<Type>>;
-	return std::visit(util::GenericVisitor{
-		[&](AtomicType const& _type) -> ResultType {
+		[&](TypeExpression const& _type) -> ResultType {
 			return std::make_tuple(_type.constructor, _type.arguments);
 		},
 		[](auto) -> ResultType {
@@ -234,7 +201,7 @@ tuple<AtomicType::Constructor, vector<experimental::Type>> TypeSystemHelpers::de
 
 tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFunctionType(Type _functionType) const
 {
-	auto [constructor, arguments] = destAtomicType(_functionType);
+	auto [constructor, arguments] = destTypeExpression(_functionType);
 	auto const* builtinType = get_if<BuiltinType>(&constructor);
 	solAssert(builtinType && *builtinType == BuiltinType::Function);
 	solAssert(arguments.size() == 2);

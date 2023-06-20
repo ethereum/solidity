@@ -35,11 +35,10 @@ namespace solidity::frontend::experimental
 class TypeSystem;
 class TypeEnvironment;
 
-struct AtomicType;
-struct GenericTypeVariable;
-struct FreeTypeVariable;
+struct TypeExpression;
+struct TypeVariable;
 
-using Type = std::variant<AtomicType, GenericTypeVariable, FreeTypeVariable>;
+using Type = std::variant<TypeExpression, TypeVariable>;
 
 enum class BuiltinType
 {
@@ -50,7 +49,7 @@ enum class BuiltinType
 	Word
 };
 
-struct AtomicType
+struct TypeExpression
 {
 	using Constructor = std::variant<BuiltinType, Declaration const*>;
 	Constructor constructor;
@@ -58,42 +57,18 @@ struct AtomicType
 
 };
 
-struct FreeTypeVariable
+struct TypeVariable
 {
 	TypeSystem const& parent() const { return *m_parent; }
 	uint64_t index() const { return m_index; }
+	bool generic() const { return m_generic; }
 private:
 	friend class TypeSystem;
 	TypeSystem const* m_parent = nullptr;
 	uint64_t m_index = 0;
-	FreeTypeVariable(TypeSystem const& _parent, uint64_t _index): m_parent(&_parent), m_index(_index) {}
+	bool m_generic = false;
+	TypeVariable(TypeSystem const& _parent, uint64_t _index, bool _generic): m_parent(&_parent), m_index(_index), m_generic(_generic) {}
 };
-
-struct GenericTypeVariable
-{
-	TypeSystem const& parent() const { return *m_parent; }
-	uint64_t index() const { return m_index; }
-private:
-	friend class TypeSystem;
-	TypeSystem const* m_parent = nullptr;
-	uint64_t m_index = 0;
-	GenericTypeVariable(TypeSystem const& _parent, uint64_t _index): m_parent(&_parent), m_index(_index) {}
-};
-
-class TypeEnvironment
-{
-public:
-	TypeEnvironment(TypeSystem& _parent): m_parent(_parent) {}
-	TypeEnvironment(TypeEnvironment const& _env) = delete;
-	TypeEnvironment& operator=(TypeEnvironment const& _env) = delete;
-	std::unique_ptr<TypeEnvironment> fresh() const;
-	void assignType(Declaration const* _declaration, Type _typeAssignment);
-	std::optional<Type> lookup(Declaration const* _declaration);
-private:
-	TypeSystem& m_parent;
-	std::map<Declaration const*, Type> m_types;
-};
-
 
 class TypeSystem
 {
@@ -108,14 +83,15 @@ public:
 		return m_builtinTypes.at(_builtinType).name;
 	}
 	Type freshFreeType();
-	void instantiate(GenericTypeVariable _variable, Type _type);
-	void validate(GenericTypeVariable _variable) const;
 	Type resolve(Type _type) const;
 	std::string typeToString(Type const& _type) const;
-	Type freshTypeVariable();
-	Type fresh(Type _type);
-	void unify(Type _a, Type _b);
+	Type freshTypeVariable(bool _generic);
+	Type fresh(Type _type, bool _generalize);
+	struct UnificationFailure { Type a; Type b; };
+	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
 private:
+	void instantiate(TypeVariable _variable, Type _type);
+	void validate(TypeVariable _variable) const;
 	std::vector<std::optional<Type>> m_freeTypes;
 	struct TypeConstructorInfo
 	{
@@ -131,7 +107,7 @@ struct TypeSystemHelpers
 	TypeSystem& typeSystem;
 	Type tupleType(std::vector<Type> _elements) const;
 	Type functionType(Type _argType, Type _resultType) const;
-	std::tuple<AtomicType::Constructor, std::vector<Type>> destAtomicType(Type _functionType) const;
+	std::tuple<TypeExpression::Constructor, std::vector<Type>> destTypeExpression(Type _functionType) const;
 	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
 };
 

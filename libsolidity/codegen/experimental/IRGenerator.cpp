@@ -85,8 +85,11 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	{
 		FunctionDefinition const* function = m_context.functionQueue.front();
 		m_context.functionQueue.pop_front();
-		m_context.generatedFunctions.insert(function);
-		code << generate(*function);
+		if (!m_context.generatedFunctions.count(function))
+		{
+			m_context.generatedFunctions.insert(function);
+			code << generate(*function);
+		}
 	}
 
 	return code.str();

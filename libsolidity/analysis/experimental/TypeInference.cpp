@@ -46,7 +46,6 @@ m_errorReporter(_analysis.errorReporter())
 		m_typeSystem.declareBuiltinType(type, name, arity);
 	m_voidType = m_typeSystem.builtinType(BuiltinType::Void, {});
 	m_wordType = m_typeSystem.builtinType(BuiltinType::Word, {});
-	m_env = make_unique<TypeEnvironment>(m_typeSystem);
 
 	m_typeAnnotations.resize(_analysis.maxAstId());
 }
@@ -63,32 +62,31 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	if (functionAnnotation.type)
 		return false;
 
-	Type functionType;
-	{
-		_functionDefinition.parameterList().accept(*this);
-		if (_functionDefinition.returnParameterList())
-			_functionDefinition.returnParameterList()->accept(*this);
+	_functionDefinition.parameterList().accept(*this);
+	if (_functionDefinition.returnParameterList())
+		_functionDefinition.returnParameterList()->accept(*this);
 
-		_functionDefinition.body().accept(*this);
+	_functionDefinition.body().accept(*this);
 
-		auto typeFromParameterList = [&](ParameterList const* _list) {
-			if (!_list)
-				return m_typeSystem.builtinType(BuiltinType::Unit, {});
-			return TypeSystemHelpers{m_typeSystem}.tupleType(_list->parameters() | ranges::view::transform([&](auto _param) {
-				auto& argAnnotation = annotation(*_param);
-				solAssert(argAnnotation.type);
-				return *argAnnotation.type;
-			}) | ranges::to<std::vector<Type>>);
-		};
+	auto typeFromParameterList = [&](ParameterList const* _list) {
+		if (!_list)
+			return m_typeSystem.builtinType(BuiltinType::Unit, {});
+		return TypeSystemHelpers{m_typeSystem}.tupleType(_list->parameters() | ranges::view::transform([&](auto _param) {
+			auto& argAnnotation = annotation(*_param);
+			solAssert(argAnnotation.type);
+			return *argAnnotation.type;
+		}) | ranges::to<std::vector<Type>>);
+	};
 
-		Type argType = typeFromParameterList(&_functionDefinition.parameterList());
-		Type resultType = typeFromParameterList(_functionDefinition.returnParameterList().get());
+	Type argType = typeFromParameterList(&_functionDefinition.parameterList());
+	Type resultType = typeFromParameterList(_functionDefinition.returnParameterList().get());
 
-		functionType = m_typeSystem.builtinType(BuiltinType::Function, {argType, resultType});
-	}
-	functionAnnotation.type = functionType;
+	functionAnnotation.type = m_typeSystem.fresh(
+		TypeSystemHelpers{m_typeSystem}.functionType(argType, resultType),
+		true
+	);
 
-	m_errorReporter.warning(0000_error, _functionDefinition.location(), m_typeSystem.typeToString(m_typeSystem.resolve(functionType)));
+	m_errorReporter.warning(0000_error, _functionDefinition.location(), m_typeSystem.typeToString(*functionAnnotation.type));
 
 	return false;
 }
@@ -135,11 +133,15 @@ experimental::Type TypeInference::fromTypeName(TypeName const& _typeName)
 	}
 	else
 		m_errorReporter.typeError(0000_error, _typeName.location(), "Only elementary types are supported.");
-	// TODO: free type?
-	return m_typeSystem.freshTypeVariable();
+	return m_typeSystem.freshTypeVariable(false);
 
 }
+void TypeInference::unify(Type _a, Type _b)
+{
+	for (auto failure: m_typeSystem.unify(_a, _b))
+		m_errorReporter.typeError(0000_error, {}, fmt::format("Cannot unify {} and {}.", m_typeSystem.typeToString(_a), m_typeSystem.typeToString(_b)));
 
+}
 bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 {
 	// External references have already been resolved in a prior stage and stored in the annotation.
@@ -166,7 +168,7 @@ bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 
 		auto& declarationAnnotation = annotation(*declaration);
 		solAssert(declarationAnnotation.type);
-		m_typeSystem.unify(*declarationAnnotation.type, m_wordType);
+		unify(*declarationAnnotation.type, m_wordType);
 		identifierInfo.valueSize = 1;
 		return true;
 	};
@@ -192,7 +194,7 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 		if (_variableDeclaration.hasTypeName())
 			return fromTypeName(_variableDeclaration.typeName());
 		else
-			return m_typeSystem.freshTypeVariable();
+			return m_typeSystem.freshTypeVariable(false);
 	}();
 	return false;
 }
@@ -211,7 +213,7 @@ void TypeInference::endVisit(Assignment const& _assignment)
 	solAssert(lhsAnnotation.type);
 	auto& rhsAnnotation = annotation(_assignment.rightHandSide());
 	solAssert(rhsAnnotation.type);
-	m_typeSystem.unify(*lhsAnnotation.type, *rhsAnnotation.type);
+	unify(*lhsAnnotation.type, *rhsAnnotation.type);
 	assignmentAnnotation.type = m_typeSystem.resolve(*lhsAnnotation.type);
 }
 
@@ -250,7 +252,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	auto& expressionAnnotation = annotation(_functionCall.expression());
 	solAssert(expressionAnnotation.type);
 
-	Type functionType = m_typeSystem.fresh(*expressionAnnotation.type);
+	Type functionType = m_typeSystem.fresh(*expressionAnnotation.type, false);
 
 	std::vector<Type> argTypes;
 	for(auto arg: _functionCall.arguments())
@@ -260,8 +262,8 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 		argTypes.emplace_back(*argAnnotation.type);
 	}
 	Type argTuple = TypeSystemHelpers{m_typeSystem}.tupleType(argTypes);
-	Type genericFunctionType = TypeSystemHelpers{m_typeSystem}.functionType(argTuple, m_typeSystem.freshTypeVariable());
-	m_typeSystem.unify(genericFunctionType, functionType);
+	Type genericFunctionType = TypeSystemHelpers{m_typeSystem}.functionType(argTuple, m_typeSystem.freshTypeVariable(false));
+	unify(genericFunctionType, functionType);
 
 	functionCallAnnotation.type = m_typeSystem.resolve(std::get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(m_typeSystem.resolve(genericFunctionType))));
 }

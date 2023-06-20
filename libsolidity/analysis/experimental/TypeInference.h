@@ -61,7 +61,6 @@ private:
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
 	TypeSystem m_typeSystem;
-	std::unique_ptr<TypeEnvironment> m_env;
 	Type m_voidType;
 	Type m_wordType;
 
@@ -71,6 +70,8 @@ private:
 	};
 
 	TypeAnnotation& annotation(ASTNode const& _node);
+
+	void unify(Type _a, Type _b);
 
 	std::vector<std::unique_ptr<TypeAnnotation>> m_typeAnnotations;
 };
