@@ -200,6 +200,12 @@
       "end": 337,
       "name": "SSTORE",
       "source": 0
+    },
+    {
+      "begin": 20,
+      "end": 341,
+      "name": "STOP",
+      "source": 0
     }
   ],
   ".data":
@@ -327,6 +333,12 @@
           "end": 602,
           "name": "SSTORE",
           "source": 0
+        },
+        {
+          "begin": 399,
+          "end": 608,
+          "name": "STOP",
+          "source": 0
         }
       ],
       ".data":
@@ -373,6 +385,12 @@
               "begin": 683,
               "end": 708,
               "name": "SSTORE",
+              "source": 0
+            },
+            {
+              "begin": 637,
+              "end": 716,
+              "name": "STOP",
               "source": 0
             }
           ],

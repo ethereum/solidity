@@ -244,6 +244,8 @@ object "root" {
 //   0x11
 //     /* "source":568:594   */
 //   sstore
+//     /* "source":23:598   */
+//   stop
 // stop
 //
 // sub_0: assembly {
@@ -259,6 +261,8 @@ object "root" {
 //       0xc8
 //         /* "source":653:682   */
 //       sstore
+//         /* "source":624:688   */
+//       stop
 //     stop
 //
 //     sub_0: assembly {
@@ -268,6 +272,8 @@ object "root" {
 //           0x012c
 //             /* "source":730:744   */
 //           sstore
+//             /* "source":720:752   */
+//           stop
 //     }
 // }
 //
@@ -278,6 +284,8 @@ object "root" {
 //       0x64
 //         /* "source":796:810   */
 //       sstore
+//         /* "source":788:816   */
+//       stop
 // }
 //
 // sub_2: assembly {
@@ -287,6 +295,8 @@ object "root" {
 //       0x65
 //         /* "source":854:868   */
 //       sstore
+//         /* "source":846:874   */
+//       stop
 // }
 //
 // sub_3: assembly {
@@ -296,6 +306,8 @@ object "root" {
 //       0x66
 //         /* "source":912:926   */
 //       sstore
+//         /* "source":904:932   */
+//       stop
 // }
 //
 // sub_4: assembly {
@@ -305,6 +317,8 @@ object "root" {
 //       0x67
 //         /* "source":970:984   */
 //       sstore
+//         /* "source":962:990   */
+//       stop
 // }
 //
 // sub_5: assembly {
@@ -314,6 +328,8 @@ object "root" {
 //       0x68
 //         /* "source":1028:1042   */
 //       sstore
+//         /* "source":1020:1048   */
+//       stop
 // }
 //
 // sub_6: assembly {
@@ -323,6 +339,8 @@ object "root" {
 //       0x69
 //         /* "source":1086:1100   */
 //       sstore
+//         /* "source":1078:1106   */
+//       stop
 // }
 //
 // sub_7: assembly {
@@ -332,6 +350,8 @@ object "root" {
 //       0x6a
 //         /* "source":1144:1158   */
 //       sstore
+//         /* "source":1136:1164   */
+//       stop
 // }
 //
 // sub_8: assembly {
@@ -341,6 +361,8 @@ object "root" {
 //       0x6b
 //         /* "source":1202:1216   */
 //       sstore
+//         /* "source":1194:1222   */
+//       stop
 // }
 //
 // sub_9: assembly {
@@ -350,6 +372,8 @@ object "root" {
 //       0x6c
 //         /* "source":1260:1274   */
 //       sstore
+//         /* "source":1252:1280   */
+//       stop
 // }
 //
 // sub_10: assembly {
@@ -359,6 +383,8 @@ object "root" {
 //       0x6d
 //         /* "source":1318:1333   */
 //       sstore
+//         /* "source":1310:1339   */
+//       stop
 // }
 //
 // sub_11: assembly {
@@ -368,6 +394,8 @@ object "root" {
 //       0x6e
 //         /* "source":1377:1392   */
 //       sstore
+//         /* "source":1369:1398   */
+//       stop
 // }
 //
 // sub_12: assembly {
@@ -377,6 +405,8 @@ object "root" {
 //       0x6f
 //         /* "source":1436:1451   */
 //       sstore
+//         /* "source":1428:1457   */
+//       stop
 // }
 //
 // sub_13: assembly {
@@ -386,6 +416,8 @@ object "root" {
 //       0x70
 //         /* "source":1495:1510   */
 //       sstore
+//         /* "source":1487:1516   */
+//       stop
 // }
 //
 // sub_14: assembly {
@@ -395,6 +427,8 @@ object "root" {
 //       0x71
 //         /* "source":1554:1569   */
 //       sstore
+//         /* "source":1546:1575   */
+//       stop
 // }
 //
 // sub_15: assembly {
@@ -404,6 +438,8 @@ object "root" {
 //       0x72
 //         /* "source":1613:1628   */
 //       sstore
+//         /* "source":1605:1634   */
+//       stop
 // }
 //
 // sub_16: assembly {
@@ -419,6 +455,8 @@ object "root" {
 //       0xc9
 //         /* "source":1695:1725   */
 //       sstore
+//         /* "source":1665:1731   */
+//       stop
 //     stop
 //
 //     sub_0: assembly {
@@ -428,8 +466,10 @@ object "root" {
 //           0x012c
 //             /* "source":1774:1789   */
 //           sstore
+//             /* "source":1764:1797   */
+//           stop
 //     }
 // }
-// Bytecode: 605a5f55600a600155600560025560056003556005600455600560055560056006556005600755600560085560056009556005600a556005600b556005600c556005600d556005600e556005600f556005601055600b601155fe
-// Opcodes: PUSH1 0x5A PUSH0 SSTORE PUSH1 0xA PUSH1 0x1 SSTORE PUSH1 0x5 PUSH1 0x2 SSTORE PUSH1 0x5 PUSH1 0x3 SSTORE PUSH1 0x5 PUSH1 0x4 SSTORE PUSH1 0x5 PUSH1 0x5 SSTORE PUSH1 0x5 PUSH1 0x6 SSTORE PUSH1 0x5 PUSH1 0x7 SSTORE PUSH1 0x5 PUSH1 0x8 SSTORE PUSH1 0x5 PUSH1 0x9 SSTORE PUSH1 0x5 PUSH1 0xA SSTORE PUSH1 0x5 PUSH1 0xB SSTORE PUSH1 0x5 PUSH1 0xC SSTORE PUSH1 0x5 PUSH1 0xD SSTORE PUSH1 0x5 PUSH1 0xE SSTORE PUSH1 0x5 PUSH1 0xF SSTORE PUSH1 0x5 PUSH1 0x10 SSTORE PUSH1 0xB PUSH1 0x11 SSTORE INVALID
-// SourceMappings: 41:16:0:-:0;38:1;31:27;75:13;72:1;65:24;106:13;103:1;96:24;137:13;134:1;127:24;168:13;165:1;158:24;199:13;196:1;189:24;230:13;227:1;220:24;261:13;258:1;251:24;292:13;289:1;282:24;323:13;320:1;313:24;355:13;351:2;344:25;387:13;383:2;376:25;419:13;415:2;408:25;451:13;447:2;440:25;483:13;479:2;472:25;515:13;511:2;504:25;547:13;543:2;536:25;579:14;575:2;568:26
+// Bytecode: 61005c5f55600b600155600660025560066003556006600455600660055560066006556006600755600660085560066009556006600a556006600b556006600c556006600d556006600e556006600f556006601055600c60115500fe
+// Opcodes: PUSH2 0x5C PUSH0 SSTORE PUSH1 0xB PUSH1 0x1 SSTORE PUSH1 0x6 PUSH1 0x2 SSTORE PUSH1 0x6 PUSH1 0x3 SSTORE PUSH1 0x6 PUSH1 0x4 SSTORE PUSH1 0x6 PUSH1 0x5 SSTORE PUSH1 0x6 PUSH1 0x6 SSTORE PUSH1 0x6 PUSH1 0x7 SSTORE PUSH1 0x6 PUSH1 0x8 SSTORE PUSH1 0x6 PUSH1 0x9 SSTORE PUSH1 0x6 PUSH1 0xA SSTORE PUSH1 0x6 PUSH1 0xB SSTORE PUSH1 0x6 PUSH1 0xC SSTORE PUSH1 0x6 PUSH1 0xD SSTORE PUSH1 0x6 PUSH1 0xE SSTORE PUSH1 0x6 PUSH1 0xF SSTORE PUSH1 0x6 PUSH1 0x10 SSTORE PUSH1 0xC PUSH1 0x11 SSTORE STOP INVALID
+// SourceMappings: 41:16:0:-:0;38:1;31:27;75:13;72:1;65:24;106:13;103:1;96:24;137:13;134:1;127:24;168:13;165:1;158:24;199:13;196:1;189:24;230:13;227:1;220:24;261:13;258:1;251:24;292:13;289:1;282:24;323:13;320:1;313:24;355:13;351:2;344:25;387:13;383:2;376:25;419:13;415:2;408:25;451:13;447:2;440:25;483:13;479:2;472:25;515:13;511:2;504:25;547:13;543:2;536:25;579:14;575:2;568:26;23:575
