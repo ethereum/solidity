@@ -13,4 +13,6 @@ contract A {
 // SMTEngine: all
 // ----
 // Warning 6328: (124-146): CHC: Assertion violation happens here.
-// Info 1391: CHC: 5 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Warning 6328: (150-173): CHC: Assertion violation might happen here.
+// Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Warning 4661: (150-173): BMC: Assertion violation happens here.

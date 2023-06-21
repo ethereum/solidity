@@ -327,6 +327,7 @@
           "source": 0
         }
       ],
+      "index": 0,
       ".data":
       {
         "0":
@@ -374,6 +375,7 @@
               "source": 0
             }
           ],
+          "index": 0,
           ".data":
           {
             "0":
@@ -386,7 +388,8 @@
                   "name": "INVALID",
                   "source": 0
                 }
-              ]
+              ],
+              "index": 0
             }
           }
         },
@@ -400,7 +403,8 @@
               "name": "INVALID",
               "source": 0
             }
-          ]
+          ],
+          "index": 1
         }
       }
     },

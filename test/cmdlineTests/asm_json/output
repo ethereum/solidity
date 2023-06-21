@@ -1567,7 +1567,8 @@ EVM assembly:
           "name": "JUMP",
           "source": 1
         }
-      ]
+      ],
+      "index": 0
     }
   },
   "sourceList":

@@ -28,7 +28,8 @@
                                 "source": -1,
                                 "value": "1"
                             }
-                        ]
+                        ],
+                        "index": 0
                     }
                 },
                 "sourceList":
@@ -80,7 +81,8 @@ EVM assembly:
                     "source": -1,
                     "value": "1"
                 }
-            ]
+            ],
+            "index": 0
         }
     },
     "sourceList":

@@ -327,7 +327,8 @@
                   "name": "INVALID",
                   "source": 0
                 }
-              ]
+              ],
+              "index": 0
             },
             "1":
             {
@@ -339,7 +340,8 @@
                   "name": "INVALID",
                   "source": 0
                 }
-              ]
+              ],
+              "index": 1
             },
             "2":
             {
@@ -351,11 +353,14 @@
                   "name": "INVALID",
                   "source": 0
                 }
-              ]
+              ],
+              "index": 2
             }
-          }
+          },
+          "index": 0
         }
-      }
+      },
+      "index": 0
     }
   },
   "sourceList":

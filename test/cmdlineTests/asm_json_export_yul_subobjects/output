@@ -388,9 +388,11 @@
                   "name": "INVALID",
                   "source": 0
                 }
-              ]
+              ],
+              "index": 0
             }
-          }
+          },
+          "index": 0
         },
         "1":
         {
@@ -402,9 +404,11 @@
               "name": "INVALID",
               "source": 0
             }
-          ]
+          ],
+          "index": 1
         }
-      }
+      },
+      "index": 0
     },
     "ACAF3289D7B601CBD114FB36C4D29C85BBFD5E133F14CB355C3FD8D99367964F": "48656c6c6f2c20576f726c6421"
   },
