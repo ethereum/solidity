@@ -269,7 +269,7 @@ function test_evmjson_via_ir_and_yul_import_export
 
     mkdir sol
     # create from a combined json from the supplied solidity contracts.
-    export_command=("${SOLC}" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 "${input_files[@]}" -o sol/)
+    export_command=("${SOLC}" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 --no-optimize-yul "${input_files[@]}" -o sol/)
     run_solc --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 "${input_files[@]}" -o sol/
     mkdir input
 
@@ -285,7 +285,7 @@ function test_evmjson_via_ir_and_yul_import_export
     for yulfile in yul/*
     do
         # take the yul file and export it as evm assembly json. save the result in "$yulfile.asm.json".
-        run_solc_store_stdout "${yulfile}.asm.json" --strict-assembly "${yulfile}" --optimize --asm-json --pretty-json --json-indent 4
+        run_solc_store_stdout "${yulfile}.asm.json" --strict-assembly "${yulfile}" --optimize --asm-json --pretty-json --json-indent 4 --no-optimize-yul
         # remove the lines containing '=======', so that we just have a nice json file.
         grep -v '^=======' "${yulfile}.asm.json" > tmpfile && mv tmpfile "${yulfile}.asm.json"
         # import_command will just contain the last file in yul/*.asm - but it's still a good starting point ;)
