@@ -495,6 +495,7 @@ Json::Value Assembly::assemblyJSON(std::vector<std::string> const& _sources, boo
 			stringstream hexStr;
 			hexStr << hex << i;
 			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sources, false);
+			data[hexStr.str()]["index"] = static_cast<int>(i);
 		}
 	}
 
