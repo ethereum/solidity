@@ -622,7 +622,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 		m_scanner->currentToken() == (m_experimentalSolidityEnabledInCurrentSourceUnit ? Token::RightArrow : Token::Returns)
 	)
 	{
-		bool const permitEmptyParameterList = false;
+		bool const permitEmptyParameterList = m_experimentalSolidityEnabledInCurrentSourceUnit;
 		advance();
 		result.returnParameters = parseParameterList(options, permitEmptyParameterList);
 	}

@@ -176,22 +176,31 @@ void TypeSystem::validate(TypeVariable _variable) const
 
 experimental::Type TypeSystem::fresh(Type _type, bool _generalize)
 {
-	return std::visit(util::GenericVisitor{
-		[&](TypeExpression const& _type) -> Type {
-			return TypeExpression{
-				_type.constructor,
-				_type.arguments | ranges::view::transform([&](Type _argType) {
-					return fresh(_argType, _generalize);
-				}) | ranges::to<vector<Type>>
-			};
-		},
-		[&](TypeVariable const& _var) {
-			if (_generalize || _var.generic())
-				return freshTypeVariable(true);
-			else
-				return _type;
-		},
-	}, resolve(_type));
+	std::unordered_map<uint64_t, Type> mapping;
+	auto freshImpl = [&](Type _type, bool _generalize, auto _recurse) -> Type {
+		return std::visit(util::GenericVisitor{
+			[&](TypeExpression const& _type) -> Type {
+				return TypeExpression{
+					_type.constructor,
+					_type.arguments | ranges::view::transform([&](Type _argType) {
+						return _recurse(_argType, _generalize, _recurse);
+					}) | ranges::to<vector<Type>>
+				};
+			},
+			[&](TypeVariable const& _var) -> Type {
+				validate(_var);
+				if (_generalize || _var.generic())
+				{
+					if (mapping.count(_var.index()))
+						return mapping[_var.index()];
+					return mapping[_var.index()] = freshTypeVariable(true);
+				}
+				else
+					return _type;
+			},
+		}, resolve(_type));
+	};
+	return freshImpl(_type, _generalize, freshImpl);
 }
 
 experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const

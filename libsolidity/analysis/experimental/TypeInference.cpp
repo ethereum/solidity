@@ -272,6 +272,12 @@ bool TypeInference::visit(Identifier const& _identifier)
 	auto const* referencedDeclaration = _identifier.annotation().referencedDeclaration;
 	solAssert(referencedDeclaration);
 
+	if (
+		!dynamic_cast<FunctionDefinition const*>(referencedDeclaration) &&
+		!dynamic_cast<VariableDeclaration const*>(referencedDeclaration)
+	)
+		m_errorReporter.fatalTypeError(0000_error, referencedDeclaration->location(), "Attempt to type ídentifier referring to unexpected node.");
+
 	auto& declarationAnnotation = annotation(*referencedDeclaration);
 	if (!declarationAnnotation.type)
 		referencedDeclaration->accept(*this);
@@ -290,6 +296,11 @@ bool TypeInference::visit(IdentifierPath const& _identifier)
 
 	auto const* referencedDeclaration = _identifier.annotation().referencedDeclaration;
 	solAssert(referencedDeclaration);
+	if (
+		!dynamic_cast<FunctionDefinition const*>(referencedDeclaration) &&
+		!dynamic_cast<VariableDeclaration const*>(referencedDeclaration)
+	)
+		m_errorReporter.fatalTypeError(0000_error, referencedDeclaration->location(), "Attempt to type ídentifier referring to unexpected node.");
 
 	auto& declarationAnnotation = annotation(*referencedDeclaration);
 	if (!declarationAnnotation.type)
