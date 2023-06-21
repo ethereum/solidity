@@ -508,7 +508,7 @@ Json::Value Assembly::assemblyJSON(std::vector<std::string> const& _sources, boo
 std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSON(Json::Value const& _json, vector<string> const& _sourceList, int _level)
 {
 	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
-	static set<string> const validMembers{".code", ".data", ".auxdata", "sourceList"};
+	static set<string> const validMembers{".code", ".data", ".auxdata", "sourceList", "index"};
 	for (auto const& attribute: _json.getMemberNames())
 		solRequire(validMembers.count(attribute), AssemblyImportException, "Unknown attribute '" + attribute + "'.");
 	solRequire(_json.isMember(".code"), AssemblyImportException, "Member '.code' does not exist.");
@@ -580,9 +580,13 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 			}
 			else if (code.isObject())
 			{
+				solAssert(code.isMember("index"));
+				size_t index = static_cast<size_t>(code["index"].asInt());
+				if (result->m_subs.size() <= index)
+					result->m_subs.resize(index + 1);
 				shared_ptr<Assembly> subassembly(Assembly::fromJSON(code, sourceList, _level + 1).first);
 				solAssert(subassembly);
-				result->m_subs.emplace_back(subassembly);
+				result->m_subs[index] = subassembly;
 			}
 			else
 				solThrow(AssemblyImportException, "Key inside '.data' '" + dataItemID + "' can only be a valid hex-string or an object.");

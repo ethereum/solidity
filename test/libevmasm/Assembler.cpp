@@ -198,12 +198,12 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSH [ErrorTag]\",\"source\":1},"
 		"{\"begin\":6,\"end\":8,\"name\":\"INVALID\",\"source\":1}"
-		"]},"
+		"],\"index\":0},"
 		"\"1\":{\".code\":["
 		"{\"begin\":8,\"end\":18,\"name\":\"VERBATIM\",\"source\":2,\"value\":\"ffff\"},"
 		"{\"begin\":8,\"end\":18,\"name\":\"VERBATIM\",\"source\":2,\"value\":\"74657374\"},"
 		"{\"begin\":8,\"end\":18,\"name\":\"MSTORE\",\"source\":2}"
-		"]},\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"},\"sourceList\":[\"root.asm\",\"sub.asm\",\"verbatim.asm\"]}"
+		"],\"index\":1},\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"},\"sourceList\":[\"root.asm\",\"sub.asm\",\"verbatim.asm\"]}"
 	};
 	Json::Value jsonValue;
 	BOOST_CHECK(util::jsonParseStrict(json, jsonValue));
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someOtherImmutable\"},"
 		"{\"begin\":6,\"end\":8,\"name\":\"PUSHIMMUTABLE\",\"source\":1,\"value\":\"someImmutable\"}"
-		"]}},\"sourceList\":[\"root.asm\",\"sub.asm\"]}"
+		"],\"index\":0}},\"sourceList\":[\"root.asm\",\"sub.asm\"]}"
 	);
 }
 
