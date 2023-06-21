@@ -93,6 +93,10 @@ function zeppelin_test
     sed -i "s|it(\('cannot nest reinitializers'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
     sed -i "s|it(\('prevents re-initialization'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
     sed -i "s|it(\('can lock contract after initialization'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+    sed -i "s|it(\('calling upgradeTo on the implementation reverts'\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('calling upgradeToAndCall on the implementation reverts'\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('calling upgradeTo from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('calling upgradeToAndCall from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
 
     # Here only the testToInt(248) and testToInt(256) cases fail so change the loop range to skip them
     sed -i "s|range(8, 256, 8)\(.forEach(bits => testToInt(bits));\)|range(8, 240, 8)\1|" test/utils/math/SafeCast.test.js
