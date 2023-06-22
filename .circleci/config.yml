@@ -1743,27 +1743,27 @@ workflows:
 
       # Bytecode comparison:
       - b_bytecode_ubu_static:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_ubu_static
       - b_bytecode_ubu:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_ubu
       - b_bytecode_win:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_win
       - b_bytecode_osx:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_osx
       - b_bytecode_ems:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_ems
       - t_bytecode_compare:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_bytecode_ubu_static
             - b_bytecode_ubu
