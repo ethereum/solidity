@@ -1598,6 +1598,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool _withoutDataLocation) const override { return "type(" + m_actualType->toString(_withoutDataLocation) + ")"; }
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
+	Type const* mobileType() const override { return nullptr; }
 
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 protected:
