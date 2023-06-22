@@ -16,8 +16,7 @@
 //     {
 //         mstore(0, 5)
 //         if calldataload(0) { leave }
-//         let _5 := 5
-//         let _6 := 0x20
+//         mstore(0x20, 5)
 //         revert(0, 0)
 //     }
 // }

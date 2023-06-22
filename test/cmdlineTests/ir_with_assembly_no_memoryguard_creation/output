@@ -9,9 +9,10 @@ object "D_12" {
             /// @src 0:115:139  "assembly { mstore(0,0) }"
             mstore(0, 0)
             /// @src 0:82:175  "contract D {..."
-            let _1 := datasize("D_12_deployed")
-            codecopy(128, dataoffset("D_12_deployed"), _1)
-            return(128, _1)
+            let _1 := mload(64)
+            let _2 := datasize("D_12_deployed")
+            codecopy(_1, dataoffset("D_12_deployed"), _2)
+            return(_1, _2)
         }
     }
     /// @use-src 0:"ir_with_assembly_no_memoryguard_creation/input.sol"

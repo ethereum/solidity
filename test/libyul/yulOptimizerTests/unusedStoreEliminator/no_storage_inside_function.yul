@@ -22,6 +22,6 @@
 //     function f() -> r
 //     {
 //         r := mload(0x20)
-//         let r_7 := r
+//         let r_6 := r
 //     }
 // }

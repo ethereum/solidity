@@ -13,21 +13,19 @@
 //
 // {
 //     {
-//         let a_9
-//         let a := a_9
+//         let a_5
+//         let a := a_5
 //         switch calldataload(0)
 //         case 0 {
 //             a := calldataload(9)
-//             let a_10 := a
+//             let a_6 := a
 //         }
 //         case 1 {
-//             let a_12 := a
+//             let a_8 := a
 //             a := calldataload(10)
-//             let a_11 := a
+//             let a_7 := a
 //         }
-//         let a_13 := a
-//         let _5 := 0
-//         let _6 := 0x20
+//         calldatacopy(0x20, 0, a)
 //         sstore(0, mload(0))
 //     }
 // }

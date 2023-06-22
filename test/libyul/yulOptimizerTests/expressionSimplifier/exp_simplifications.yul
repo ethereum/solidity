@@ -17,8 +17,8 @@
 //         let t := calldataload(0)
 //         sstore(0, iszero(t))
 //         sstore(1, 1)
-//         let _8 := 2
-//         sstore(_8, shl(t, 1))
+//         let _5 := 2
+//         sstore(_5, shl(t, 1))
 //         sstore(3, exp(8, t))
 //         sstore(4, sub(iszero(and(t, 1)), and(t, 1)))
 //     }

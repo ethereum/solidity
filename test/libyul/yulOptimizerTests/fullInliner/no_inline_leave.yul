@@ -9,8 +9,8 @@
 //
 // {
 //     {
-//         let a_2 := calldataload(0)
-//         a_2 := g()
+//         let a_1 := calldataload(0)
+//         a_1 := g()
 //     }
 //     function g() -> x
 //     {

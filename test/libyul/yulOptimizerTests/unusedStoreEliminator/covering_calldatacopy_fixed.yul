@@ -33,14 +33,13 @@
 //         }
 //         if calldataload(1)
 //         {
-//             let _10 := 9
-//             let _11 := 2
+//             let _7 := 9
+//             let _8 := 2
 //             calldatacopy(1, 0, 0x21)
 //         }
 //         if calldataload(2)
 //         {
-//             let _17 := 7
-//             let _18 := 2
+//             mstore8(2, 7)
 //             calldatacopy(0, 0, 3)
 //         }
 //         if calldataload(3)

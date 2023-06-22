@@ -23,23 +23,22 @@
 //
 // {
 //     {
-//         let _1 := 0
-//         let _2 := 1
-//         returndatacopy(0, _2, _1)
-//         calldatacopy(0, _2, 0)
-//         extcodecopy(_2, 0, _2, 0)
-//         codecopy(0, _2, 0)
+//         let _1 := 1
+//         returndatacopy(0, _1, 0)
+//         calldatacopy(0, _1, 0)
+//         extcodecopy(_1, 0, _1, 0)
+//         codecopy(0, _1, 0)
 //         log0(0, 0)
-//         log1(0, 0, _2)
-//         log2(0, 0, _2, _2)
-//         log3(0, 0, _2, _2, _2)
-//         log4(0, 0, _2, _2, _2, _2)
-//         pop(create(_2, 0, 0))
-//         pop(create2(_2, 0, 0, _2))
-//         pop(call(_2, _2, _2, 0, 0, _2, 0))
-//         pop(callcode(_2, _2, _2, 0, 0, _2, 0))
-//         pop(delegatecall(_2, _2, 0, 0, _2, 0))
-//         pop(staticcall(_2, _2, 0, 0, _2, 0))
+//         log1(0, 0, _1)
+//         log2(0, 0, _1, _1)
+//         log3(0, 0, _1, _1, _1)
+//         log4(0, 0, _1, _1, _1, _1)
+//         pop(create(_1, 0, 0))
+//         pop(create2(_1, 0, 0, _1))
+//         pop(call(_1, _1, _1, 0, 0, _1, 0))
+//         pop(callcode(_1, _1, _1, 0, 0, _1, 0))
+//         pop(delegatecall(_1, _1, 0, 0, _1, 0))
+//         pop(staticcall(_1, _1, 0, 0, _1, 0))
 //         return(0, 0)
 //     }
 // }

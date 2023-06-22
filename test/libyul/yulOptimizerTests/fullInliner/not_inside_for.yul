@@ -9,31 +9,33 @@
 		r := a
 	}
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullInliner
 //
 // {
 //     {
-//         let a_3 := 0
-//         let r_4 := 0
-//         sstore(a_3, 0)
-//         r_4 := a_3
-//         let x := r_4
+//         let a_1 := 0
+//         let r_2 := 0
+//         sstore(a_1, 0)
+//         r_2 := a_1
+//         let x := r_2
 //         for { }
 //         f(x)
 //         {
-//             let a_6 := x
-//             let r_7 := 0
-//             sstore(a_6, 0)
-//             r_7 := a_6
-//             x := r_7
+//             let a_3 := x
+//             let r_4 := 0
+//             sstore(a_3, 0)
+//             r_4 := a_3
+//             x := r_4
 //         }
 //         {
-//             let a_9 := x
-//             let r_10 := 0
-//             sstore(a_9, 0)
-//             r_10 := a_9
-//             let t := r_10
+//             let a_5 := x
+//             let r_6 := 0
+//             sstore(a_5, 0)
+//             r_6 := a_5
+//             let t := r_6
 //         }
 //     }
 //     function f(a) -> r

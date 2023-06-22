@@ -14,12 +14,10 @@
 //
 // {
 //     {
-//         let _3 := 1
-//         if calldataload(_3)
-//         {
-//             mstore(add(calldataload(0), 0x20), _3)
-//         }
-//         let t := mload(add(calldataload(0), 0x20))
-//         sstore(t, mload(calldataload(0)))
+//         let _1 := calldataload(0)
+//         let x := mload(_1)
+//         let _2 := 1
+//         if calldataload(_2) { mstore(add(_1, 0x20), _2) }
+//         sstore(mload(add(_1, 0x20)), x)
 //     }
 // }

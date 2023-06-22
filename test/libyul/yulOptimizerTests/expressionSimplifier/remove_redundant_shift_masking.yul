@@ -13,12 +13,12 @@
 //
 // {
 //     {
-//         let _2 := calldataload(0)
-//         let _5 := 0xff
-//         let a := shr(248, _2)
-//         let b := shr(248, calldataload(0))
-//         let c := and(shr(249, calldataload(0)), 0xfa)
-//         let d := and(shr(247, calldataload(0)), _5)
+//         let _1 := calldataload(0)
+//         let _4 := 0xff
+//         let a := shr(248, _1)
+//         let b := shr(248, _1)
+//         let c := and(shr(249, _1), 0xfa)
+//         let d := and(shr(247, _1), _4)
 //         sstore(a, b)
 //         sstore(c, d)
 //     }

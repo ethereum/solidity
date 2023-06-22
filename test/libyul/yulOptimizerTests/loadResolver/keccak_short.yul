@@ -24,12 +24,12 @@
 //     {
 //         mstore(0, 10)
 //         sstore(0, keccak256(0, 31))
-//         let _9 := keccak256(0, 30)
-//         let _10 := 1
-//         sstore(_10, _9)
-//         let _13 := keccak256(0, _10)
-//         let _14 := 2
-//         sstore(_14, _13)
-//         sstore(_14, keccak256(0, 0))
+//         let _5 := keccak256(0, 30)
+//         let _6 := 1
+//         sstore(_6, _5)
+//         let _8 := keccak256(0, _6)
+//         let _9 := 2
+//         sstore(_9, _8)
+//         sstore(_9, keccak256(0, 0))
 //     }
 // }

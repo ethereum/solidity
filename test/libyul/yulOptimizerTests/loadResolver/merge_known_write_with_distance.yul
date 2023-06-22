@@ -14,13 +14,11 @@
 //
 // {
 //     {
-//         mstore(calldataload(0), calldataload(10))
-//         let _5 := 1
-//         if calldataload(_5)
-//         {
-//             mstore(add(calldataload(0), 0x20), _5)
-//         }
-//         let t := mload(add(calldataload(0), 0x20))
-//         sstore(t, mload(calldataload(0)))
+//         let _2 := calldataload(10)
+//         let _3 := calldataload(0)
+//         mstore(_3, _2)
+//         let _4 := 1
+//         if calldataload(_4) { mstore(add(_3, 0x20), _4) }
+//         sstore(mload(add(_3, 0x20)), _2)
 //     }
 // }

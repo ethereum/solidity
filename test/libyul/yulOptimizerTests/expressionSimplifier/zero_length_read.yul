@@ -13,9 +13,8 @@
 // {
 //     {
 //         revert(0, 0)
-//         let _4 := 0
 //         pop(call(0, 0, 0, 0, 0, 0, 0))
-//         revert(0, _4)
+//         revert(0, 0)
 //         calldatacopy(0, calldataload(2), 0)
 //         return(0, 0)
 //         codecopy(0, calldataload(5), 0)

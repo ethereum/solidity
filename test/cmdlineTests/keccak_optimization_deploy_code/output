@@ -10,9 +10,10 @@ object "C_12" {
             mstore(0, 100)
             sstore(0, keccak256(0, 32))
             /// @src 0:62:463  "contract C {..."
-            let _1 := datasize("C_12_deployed")
-            codecopy(128, dataoffset("C_12_deployed"), _1)
-            return(128, _1)
+            let _1 := mload(64)
+            let _2 := datasize("C_12_deployed")
+            codecopy(_1, dataoffset("C_12_deployed"), _2)
+            return(_1, _2)
         }
     }
     /// @use-src 0:"keccak_optimization_deploy_code/input.sol"

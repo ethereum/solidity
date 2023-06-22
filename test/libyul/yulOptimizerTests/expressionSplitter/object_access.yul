@@ -20,9 +20,8 @@ object "main" {
 //         let _2 := mload(_1)
 //         let _3 := 1
 //         let _4 := mload(_3)
-//         let _5 := 0
-//         let _6 := mload(_5)
-//         datacopy(_6, _4, _2)
+//         let _5 := mload(0)
+//         datacopy(_5, _4, _2)
 //     }
 //     data "abc" hex"48656c6c6f2c20576f726c6421"
 // }

@@ -27,6 +27,8 @@
 
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -96,6 +98,16 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 {
 	if (holds_alternative<Identifier>(_expr))
 		return;
+
+	// Do not split function calls with a zero (0) literal argument
+	// in case the PUSH0 opcode is available
+	if (auto&& evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (
+			evmDialect->evmVersion().hasPush0() &&
+			holds_alternative<Literal>(_expr) &&
+			valueOfLiteral(get<Literal>(_expr)) == 0
+		)
+			return;
 
 	visit(_expr);
 

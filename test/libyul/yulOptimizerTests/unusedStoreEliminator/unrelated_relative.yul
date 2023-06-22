@@ -13,11 +13,11 @@
 //     {
 //         let c := calldataload(0)
 //         mstore(c, 4)
-//         let _3 := 8
-//         let _5 := add(c, 0x20)
+//         let _2 := 8
+//         let _4 := add(c, 0x20)
 //         sstore(0, mload(c))
-//         let _8 := 9
-//         let _9 := 20
-//         let _11 := add(c, 0x20)
+//         let _6 := 9
+//         let _7 := 20
+//         let _9 := add(c, 0x20)
 //     }
 // }

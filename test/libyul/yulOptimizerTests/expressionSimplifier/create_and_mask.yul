@@ -16,8 +16,8 @@
 //     {
 //         let _1 := 0x20
 //         let c := create(0, 0, _1)
-//         let _4 := 0xffffffffffffffffffffffffffffffffffffffff
-//         let a := and(c, _4)
-//         sstore(a, and(_4, create(0, 0, _1)))
+//         let _2 := 0xffffffffffffffffffffffffffffffffffffffff
+//         let a := and(c, _2)
+//         sstore(a, and(_2, create(0, 0, _1)))
 //     }
 // }

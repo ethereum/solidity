@@ -84,11 +84,9 @@ stop
 
 sub_0: assembly {
         /* \"C\":79:428  contract C... */
-      0x80
       0x40
-      swap1
-      dup1
-      dup3
+      0x80
+      dup2
       mstore
       jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
       0x00
@@ -96,13 +94,11 @@ sub_0: assembly {
       revert
     tag_2:
       shr(0xe0, calldataload(0x00))
-      swap1
-      dup2
+      dup1
       0x26121ff0
       eq
       tag_4
       jumpi
-      pop
       dup1
       0x793816ec
       eq
@@ -301,17 +297,17 @@ sub_0: assembly {
       mstore
       return
     tag_4:
+      pop
       jumpi(tag_26, callvalue)
       jumpi(tag_26, slt(add(not(0x03), calldatasize), 0x00))
         /* \"C\":290:298  immutVar */
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
         /* \"C\":117:119  41 */
-      swap1
-      dup2
+      dup1
       0x29
       add
-      swap2
-      dup3
+      swap1
+      dup2
       slt
       0x01
       and
@@ -320,6 +316,8 @@ sub_0: assembly {
         /* \"C\":79:428  contract C... */
       0x20
       swap2
+      mload
+      swap1
       dup2
       mstore
       return
@@ -460,11 +458,9 @@ stop
 
 sub_0: assembly {
         /* \"D\":91:166  contract D is C(3)... */
-      0x80
       0x40
-      swap1
-      dup1
-      dup3
+      0x80
+      dup2
       mstore
       jumpi(tag_2, iszero(lt(calldatasize, 0x04)))
       0x00
@@ -472,13 +468,11 @@ sub_0: assembly {
       revert
     tag_2:
       shr(0xe0, calldataload(0x00))
-      swap1
-      dup2
+      dup1
       0x26121ff0
       eq
       tag_4
       jumpi
-      pop
       dup1
       0x793816ec
       eq
@@ -677,17 +671,17 @@ sub_0: assembly {
       mstore
       return
     tag_4:
+      pop
       jumpi(tag_26, callvalue)
       jumpi(tag_26, slt(add(not(0x03), calldatasize), 0x00))
         /* \"C\":290:298  immutVar */
       immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
         /* \"C\":117:119  41 */
-      swap1
-      dup2
+      dup1
       0x29
       add
-      swap2
-      dup3
+      swap1
+      dup2
       slt
       0x01
       and
@@ -696,6 +690,8 @@ sub_0: assembly {
         /* \"D\":91:166  contract D is C(3)... */
       0x20
       swap2
+      mload
+      swap1
       dup2
       mstore
       return

@@ -27,11 +27,11 @@
 //         sstore(0, _1)
 //         pop(call(0, 0, 0, 0, 0, 0, 0))
 //         sstore(0, mload(_2))
-//         let _17 := 10
-//         mstore(_2, _17)
+//         let _8 := 10
+//         mstore(_2, _8)
 //         mstore8(calldataload(0), 4)
 //         sstore(0, mload(_2))
-//         mstore(_2, _17)
-//         sstore(0, _17)
+//         mstore(_2, _8)
+//         sstore(0, _8)
 //     }
 // }
