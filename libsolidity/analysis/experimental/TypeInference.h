@@ -22,8 +22,6 @@
 
 #include <liblangutil/ErrorReporter.h>
 
-#include <range/v3/span.hpp>
-
 namespace solidity::frontend::experimental
 {
 
@@ -35,6 +33,12 @@ public:
 	TypeInference(Analysis& _analysis);
 
 	bool analyze(SourceUnit const& _sourceUnit);
+
+
+	struct Annotation
+	{
+		std::optional<Type> type;
+	};
 private:
 	bool visit(Block const&) override { return true; }
 	bool visit(VariableDeclarationStatement const&) override { return true; }
@@ -67,22 +71,15 @@ private:
 	Type fromTypeName(TypeName const& _typeName);
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
-	TypeSystem m_typeSystem;
+	TypeSystem& m_typeSystem;
 	Type m_voidType;
 	Type m_wordType;
 	Type m_integerType;
 	std::optional<Type> m_currentFunctionType;
 
-	struct TypeAnnotation
-	{
-		std::optional<Type> type;
-	};
-
-	TypeAnnotation& annotation(ASTNode const& _node);
+	Annotation& annotation(ASTNode const& _node);
 
 	void unify(Type _a, Type _b);
-
-	std::vector<std::unique_ptr<TypeAnnotation>> m_typeAnnotations;
 };
 
 }

@@ -34,22 +34,12 @@ using namespace solidity::langutil;
 
 TypeInference::TypeInference(Analysis& _analysis):
 m_analysis(_analysis),
-m_errorReporter(_analysis.errorReporter())
+m_errorReporter(_analysis.errorReporter()),
+m_typeSystem(_analysis.typeSystem())
 {
-	for (auto [type, name, arity]: std::initializer_list<std::tuple<BuiltinType, const char*, uint64_t>> {
-			 {BuiltinType::Void, "void", 0},
-			 {BuiltinType::Function, "fun", 2},
-			 {BuiltinType::Unit, "unit", 0},
-			 {BuiltinType::Pair, "pair", 2},
-			 {BuiltinType::Word, "word", 0},
-			 {BuiltinType::Integer, "integer", 0}
-	})
-		m_typeSystem.declareBuiltinType(type, name, arity);
 	m_voidType = m_typeSystem.builtinType(BuiltinType::Void, {});
 	m_wordType = m_typeSystem.builtinType(BuiltinType::Word, {});
 	m_integerType = m_typeSystem.builtinType(BuiltinType::Integer, {});
-
-	m_typeAnnotations.resize(_analysis.maxAstId());
 }
 
 bool TypeInference::analyze(SourceUnit const& _sourceUnit)
@@ -72,7 +62,7 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	auto typeFromParameterList = [&](ParameterList const* _list) {
 		if (!_list)
 			return m_typeSystem.builtinType(BuiltinType::Unit, {});
-		return TypeSystemHelpers{m_typeSystem}.tupleType(_list->parameters() | ranges::view::transform([&](auto _param) {
+		return TypeSystemHelpers{m_typeSystem}.tupleType(_list->parameters() | ranges::views::transform([&](auto _param) {
 			auto& argAnnotation = annotation(*_param);
 			solAssert(argAnnotation.type);
 			return *argAnnotation.type;
@@ -173,7 +163,6 @@ experimental::Type TypeInference::fromTypeName(TypeName const& _typeName)
 	else
 		m_errorReporter.typeError(0000_error, _typeName.location(), "Unsupported type name.");
 	return m_typeSystem.freshTypeVariable(false);
-
 }
 void TypeInference::unify(Type _a, Type _b)
 {
@@ -256,12 +245,9 @@ void TypeInference::endVisit(Assignment const& _assignment)
 	assignmentAnnotation.type = m_typeSystem.resolve(*lhsAnnotation.type);
 }
 
-TypeInference::TypeAnnotation& TypeInference::annotation(ASTNode const& _node)
+TypeInference::Annotation& TypeInference::annotation(ASTNode const& _node)
 {
-	auto& annotation = m_typeAnnotations.at(static_cast<size_t>(_node.id()));
-	if (!annotation)
-		annotation = make_unique<TypeAnnotation>();
-	return *annotation;
+	return m_analysis.annotation<TypeInference>(_node);
 }
 
 bool TypeInference::visit(Identifier const& _identifier)

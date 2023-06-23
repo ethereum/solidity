@@ -46,14 +46,14 @@ public:
 		std::optional<uint8_t> _eofVersion,
 		RevertStrings /*_revertStrings*/,
 		std::map<std::string, unsigned> /*_sourceIndices*/,
-		langutil::DebugInfoSelection const& _debugInfoSelection,
-		langutil::CharStreamProvider const* _soliditySourceProvider,
+		langutil::DebugInfoSelection const& /*_debugInfoSelection*/,
+		langutil::CharStreamProvider const* /*_soliditySourceProvider*/,
 		Analysis const& _analysis
 	):
 		m_evmVersion(_evmVersion),
 		m_eofVersion(_eofVersion),
-		m_debugInfoSelection(_debugInfoSelection),
-		m_soliditySourceProvider(_soliditySourceProvider),
+//		m_debugInfoSelection(_debugInfoSelection),
+//		m_soliditySourceProvider(_soliditySourceProvider),
 		m_context{_analysis, {}, {}}
 	{}
 
@@ -69,8 +69,8 @@ private:
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
 	OptimiserSettings const m_optimiserSettings;
-	langutil::DebugInfoSelection m_debugInfoSelection = {};
-	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
+//	langutil::DebugInfoSelection m_debugInfoSelection = {};
+//	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
 	IRGenerationContext m_context;
 };
 

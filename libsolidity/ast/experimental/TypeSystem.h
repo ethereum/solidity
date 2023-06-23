@@ -55,7 +55,6 @@ struct TypeExpression
 	using Constructor = std::variant<BuiltinType, Declaration const*>;
 	Constructor constructor;
 	std::vector<Type> arguments;
-
 };
 
 struct TypeVariable
@@ -71,6 +70,21 @@ private:
 	TypeVariable(TypeSystem const& _parent, uint64_t _index, bool _generic): m_parent(&_parent), m_index(_index), m_generic(_generic) {}
 };
 
+struct TypeClass
+{
+	Declaration const* declaration = nullptr;
+};
+
+struct Sort
+{
+		
+};
+
+struct Arity
+{
+	std::vector<Arity> _argumentSorts;
+	TypeClass _class;
+};
 class TypeSystem
 {
 public:
@@ -90,6 +104,7 @@ public:
 	Type fresh(Type _type, bool _generalize);
 	struct UnificationFailure { Type a; Type b; };
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
+	void instantiateClass(TypeExpression::Constructor _typeConstructor, std::vector<TypeClass> _argumentSorts, TypeClass _class);
 private:
 	void instantiate(TypeVariable _variable, Type _type);
 	void validate(TypeVariable _variable) const;
@@ -101,6 +116,7 @@ private:
 	};
 	std::map<BuiltinType, TypeConstructorInfo> m_builtinTypes;
 	std::vector<std::optional<Type>> m_typeVariables;
+	std::map<TypeExpression::Constructor, Sort> m_sorts;
 };
 
 struct TypeSystemHelpers

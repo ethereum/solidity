@@ -24,14 +24,14 @@
 
 namespace solidity::frontend::experimental
 {
+class Analysis;
 
 class SyntaxRestrictor: public ASTConstVisitor
 {
 public:
-	/// @param _errorReporter provides the error logging functionality.
-	explicit SyntaxRestrictor(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	SyntaxRestrictor(Analysis& _analysis);
 
-	bool check(ASTNode const& _astRoot);
+	bool analyze(ASTNode const& _astRoot);
 
 private:
 	/// Default visit will reject all AST nodes that are not explicitly allowed.

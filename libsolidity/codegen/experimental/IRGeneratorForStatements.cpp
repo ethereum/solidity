@@ -145,7 +145,6 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 		m_code << IRNames::localVariable(*returnParameters.front()) << " := " << IRNames::localVariable(*value) << "\n";
 	}
 
-	_return.annotation().functionReturnParameters;
 	m_code << "leave\n";
 }
 
@@ -163,7 +162,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*functionDefinition) << "(";
 	auto const& arguments = _functionCall.arguments();
 	if (arguments.size() > 1)
-		for (auto arg: arguments | ranges::view::drop_last(1))
+		for (auto arg: arguments | ranges::views::drop_last(1))
 			m_code << IRNames::localVariable(*arg) << ", ";
 	if (!arguments.empty())
 		m_code << IRNames::localVariable(*arguments.back());

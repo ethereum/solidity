@@ -18,13 +18,18 @@
 
 #include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
 
+#include <libsolidity/analysis/experimental/Analysis.h>
+
 #include <liblangutil/Exceptions.h>
 
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
 
-bool SyntaxRestrictor::check(ASTNode const& _astRoot)
+SyntaxRestrictor::SyntaxRestrictor(Analysis& _analysis): m_errorReporter(_analysis.errorReporter())
+{}
+
+bool SyntaxRestrictor::analyze(ASTNode const& _astRoot)
 {
 	_astRoot.accept(*this);
 	return !Error::containsErrors(m_errorReporter.errors());

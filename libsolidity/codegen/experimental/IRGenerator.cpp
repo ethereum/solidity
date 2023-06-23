@@ -100,7 +100,7 @@ string IRGenerator::generate(FunctionDefinition const& _function)
 	std::stringstream code;
 	code << "function " << IRNames::function(_function) << "(";
 	if (_function.parameters().size() > 1)
-		for (auto const& arg: _function.parameters() | ranges::view::drop_last(1))
+		for (auto const& arg: _function.parameters() | ranges::views::drop_last(1))
 			code << IRNames::localVariable(*arg) << ", ";
 	if (!_function.parameters().empty())
 		code << IRNames::localVariable(*_function.parameters().back());
@@ -109,7 +109,7 @@ string IRGenerator::generate(FunctionDefinition const& _function)
 	{
 		code << " -> ";
 		if (_function.returnParameters().size() > 1)
-			for (auto const& arg: _function.returnParameters() | ranges::view::drop_last(1))
+			for (auto const& arg: _function.returnParameters() | ranges::views::drop_last(1))
 				code << IRNames::localVariable(*arg) << ", ";
 		if (!_function.returnParameters().empty())
 			code << IRNames::localVariable(*_function.returnParameters().back());

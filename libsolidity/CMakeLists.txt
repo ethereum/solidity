@@ -50,6 +50,8 @@ set(sources
 	analysis/experimental/Analysis.h
 	analysis/experimental/TypeInference.cpp
 	analysis/experimental/TypeInference.h
+	analysis/experimental/TypeRegistration.cpp
+	analysis/experimental/TypeRegistration.h
 	analysis/experimental/SyntaxRestrictor.cpp
 	analysis/experimental/SyntaxRestrictor.h
 	ast/AST.cpp

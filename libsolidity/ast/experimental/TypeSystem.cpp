@@ -70,7 +70,7 @@ std::string TypeSystem::typeToString(Type const& _type) const
 					{
 						auto tupleTypes = TypeSystemHelpers{*this}.destTupleType(_type);
 						stream << "(";
-						for (auto type: tupleTypes | ranges::view::drop_last(1))
+						for (auto type: tupleTypes | ranges::views::drop_last(1))
 							stream << typeToString(type) << ", ";
 						stream << typeToString(tupleTypes.back()) << ")";
 						break;
@@ -136,16 +136,16 @@ experimental::Type TypeSystem::freshTypeVariable(bool _generic)
 void TypeSystem::instantiate(TypeVariable _variable, Type _type)
 {
 	validate(_variable);
-	solAssert(!m_typeVariables.at(_variable.index()).has_value());
+	solAssert(!m_typeVariables.at(static_cast<size_t>(_variable.index())).has_value());
 	solAssert(_variable.m_parent == this);
-	m_typeVariables[_variable.index()] = _type;
+	m_typeVariables[static_cast<size_t>(_variable.index())] = _type;
 }
 
 experimental::Type TypeSystem::resolve(Type _type) const
 {
 	Type result = _type;
 	while(auto const* var = std::get_if<TypeVariable>(&result))
-		if (auto value = m_typeVariables.at(var->index()))
+		if (auto value = m_typeVariables.at(static_cast<size_t>(var->index())))
 			result = *value;
 		else
 			break;
@@ -182,7 +182,7 @@ experimental::Type TypeSystem::fresh(Type _type, bool _generalize)
 			[&](TypeExpression const& _type) -> Type {
 				return TypeExpression{
 					_type.constructor,
-					_type.arguments | ranges::view::transform([&](Type _argType) {
+					_type.arguments | ranges::views::transform([&](Type _argType) {
 						return _recurse(_argType, _generalize, _recurse);
 					}) | ranges::to<vector<Type>>
 				};
@@ -203,6 +203,13 @@ experimental::Type TypeSystem::fresh(Type _type, bool _generalize)
 	return freshImpl(_type, _generalize, freshImpl);
 }
 
+void TypeSystem::instantiateClass(TypeExpression::Constructor _typeConstructor, vector<TypeClass> _argumentSorts, TypeClass _class)
+{
+	(void)_typeConstructor;
+	(void)_argumentSorts;
+	(void)_class;
+}
+
 experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 {
 	if (_elements.empty())
@@ -210,7 +217,7 @@ experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 	if (_elements.size() == 1)
 		return _elements.front();
 	Type result = _elements.back();
-	for (Type type: _elements | ranges::view::reverse | ranges::view::drop_exactly(1))
+	for (Type type: _elements | ranges::views::reverse | ranges::views::drop_exactly(1))
 		result = typeSystem.builtinType(BuiltinType::Pair, {type, result});
 	return result;
 }

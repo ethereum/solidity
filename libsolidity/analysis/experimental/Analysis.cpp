@@ -19,26 +19,87 @@
 
 #include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
 #include <libsolidity/analysis/experimental/TypeInference.h>
+#include <libsolidity/analysis/experimental/TypeRegistration.h>
 
 using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend::experimental;
 
+// TODO: creating all of them for all nodes up front may be wasteful, we should improve the mechanism.
+struct Analysis::AnnotationContainer
+{
+	TypeRegistration::Annotation typeRegistrationAnnotation;
+	TypeInference::Annotation typeInferenceAnnotation;
+};
+
+template<>
+TypeRegistration::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeRegistration>::get(ASTNode const& _node)
+{
+	return analysis.annotationContainer(_node).typeRegistrationAnnotation;
+}
+
+template<>
+TypeInference::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeInference>::get(ASTNode const& _node)
+{
+	return analysis.annotationContainer(_node).typeInferenceAnnotation;
+}
+
+Analysis::AnnotationContainer& Analysis::annotationContainer(ASTNode const& _node)
+{
+	solAssert(_node.id() > 0);
+	size_t id = static_cast<size_t>(_node.id());
+	solAssert(id < m_maxAstId);
+	return m_annotations[id];
+}
+
 Analysis::Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId):
 	m_errorReporter(_errorReporter),
-	m_maxAstId(_maxAstId)
+	m_maxAstId(_maxAstId),
+	m_annotations(std::make_unique<AnnotationContainer[]>(static_cast<size_t>(_maxAstId)))
 {
+}
+
+Analysis::~Analysis()
+{}
+
+template<size_t... Is>
+std::tuple<std::integral_constant<size_t, Is>...> makeIndexTuple(std::index_sequence<Is...>) {
+	return std::make_tuple( std::integral_constant<size_t, Is>{}...);
 }
 
 bool Analysis::check(vector<shared_ptr<SourceUnit const>> const& _sourceUnits)
 {
-	SyntaxRestrictor syntaxRestrictor{m_errorReporter};
-	for (auto source: _sourceUnits)
-		if (!syntaxRestrictor.check(*source))
-			return false;
-	TypeInference typeInference{*this};
-	for (auto source: _sourceUnits)
-		if (!typeInference.analyze(*source))
-			return false;
+	using AnalysisSteps = std::tuple<SyntaxRestrictor, TypeRegistration, TypeInference>;
+
+	return std::apply([&](auto... _indexTuple) {
+		return ([&](auto&& _step) {
+			for (auto source: _sourceUnits)
+				if (!_step.analyze(*source))
+				  return false;
+			return true;
+		}(std::tuple_element_t<decltype(_indexTuple)::value, AnalysisSteps>{*this}) && ...);
+	}, makeIndexTuple(std::make_index_sequence<std::tuple_size_v<AnalysisSteps>>{}));
+
+/*
+ 	{
+		SyntaxRestrictor syntaxRestrictor{*this};
+		for (auto source: _sourceUnits)
+			if (!syntaxRestrictor.analyze(*source))
+				return false;
+	}
+
+ 	{
+		TypeRegistration typeRegistration{*this};
+		for (auto source: _sourceUnits)
+			if (!typeRegistration.analyze(*source))
+				return false;
+	}
+	{
+		TypeInference typeInference{*this};
+		for (auto source: _sourceUnits)
+			if (!typeInference.analyze(*source))
+				return false;
+	}
 	return true;
+ */
 }
