@@ -83,6 +83,8 @@ commands:
           - native
       binary_path:
         type: string
+      preset:
+        type: string
     steps:
       - run:
           name: Generate bytecode reports for the selected preset
@@ -90,13 +92,14 @@ commands:
             .circleci/parallel_bytecode_report.sh \
                 "<< parameters.label >>" \
                 "<< parameters.binary_type >>" \
-                "${PWD}/<< parameters.binary_path >>"
+                "${PWD}/<< parameters.binary_path >>" \
+                "<< parameters.preset >>"
       - store_artifacts:
-          path: bytecode-report-<< parameters.label >>-standard-json.txt
+          path: bytecode-report-<< parameters.label >>-standard-json-<< parameters.preset >>.txt
       - store_artifacts:
-          path: bytecode-report-<< parameters.label >>-cli.txt
+          path: bytecode-report-<< parameters.label >>-cli-<< parameters.preset >>.txt
       - store_artifacts:
-          path: bytecode-report-<< parameters.label >>.txt
+          path: bytecode-report-<< parameters.label >>-<< parameters.preset >>.txt
       - persist_to_workspace:
           root: .
           paths:
@@ -216,6 +219,21 @@ defaults:
   - run_docs_pragma_min_version: &run_docs_pragma_min_version
       name: docs pragma version check
       command: ./scripts/docs_version_pragma_check.sh
+
+  # --------------------------------------------------------------------------
+  # Matrix templates
+
+  - bytecode_compare_env_presets: &bytecode_compare_env_presets
+      PRESETS:
+        legacy-optimize
+        legacy-no-optimize
+
+  - bytecode_compare_preset_matrix: &bytecode_compare_preset_matrix
+      parameters:
+        preset:
+          # NOTE: Keep in sync with preset list in bytecode_compare_env_presets
+          - legacy-optimize
+          - legacy-no-optimize
 
   # --------------------------------------------------------------------------
   # Artifacts Templates
@@ -1481,6 +1499,9 @@ jobs:
   # are currently built on different Ubuntu base images.
   # It can be safely removed once we move both to the same Ubuntu version.
   b_bytecode_ubu_static:
+    parameters:
+      preset:
+        type: string
     <<: *base_ubuntu2004_small
     parallelism: 2 # For prepare_bytecode_report
     steps:
@@ -1491,8 +1512,12 @@ jobs:
           label: "ubuntu2004-static"
           binary_type: native
           binary_path: "build/solc/solc-static-linux"
+          preset: "<< parameters.preset >>"
 
   b_bytecode_ubu:
+    parameters:
+      preset:
+        type: string
     <<: *base_ubuntu2204_small
     parallelism: 2 # For prepare_bytecode_report
     steps:
@@ -1503,8 +1528,12 @@ jobs:
           label: "ubuntu"
           binary_type: native
           binary_path: "build/solc/solc"
+          preset: "<< parameters.preset >>"
 
   b_bytecode_osx:
+    parameters:
+      preset:
+        type: string
     <<: *base_osx
     parallelism: 2 # For prepare_bytecode_report
     steps:
@@ -1515,8 +1544,12 @@ jobs:
           label: "osx"
           binary_type: native
           binary_path: "build/solc/solc"
+          preset: "<< parameters.preset >>"
 
   b_bytecode_win:
+    parameters:
+      preset:
+        type: string
     <<: *base_win
     parallelism: 2 # For prepare_bytecode_report
     steps:
@@ -1532,8 +1565,12 @@ jobs:
           label: "windows"
           binary_type: native
           binary_path: "build/solc/Release/solc.exe"
+          preset: "<< parameters.preset >>"
 
   b_bytecode_ems:
+    parameters:
+      preset:
+        type: string
     <<: *base_node_small
     steps:
       - checkout
@@ -1543,18 +1580,23 @@ jobs:
           label: "emscripten"
           binary_type: solcjs
           binary_path: "emscripten_build/libsolc/soljson.js"
+          preset: "<< parameters.preset >>"
 
   t_bytecode_compare:
     <<: *base_ubuntu2204_small
+    environment:
+      <<: *bytecode_compare_env_presets
+      TERM: xterm
+      MAKEFLAGS: -j 2
     steps:
       - checkout
       - attach_workspace:
           at: .
-      - run: .circleci/compare_bytecode_reports.sh
+      - run: .circleci/compare_bytecode_reports.sh $PRESETS
       - store_artifacts:
           # NOTE: store_artifacts does not support the 'when' attribute.
           # Fortunately when the artifact does not exist it just says "No artifact files found" and ignores it.
-          path: all-bytecode-reports.zip
+          path: bytecode-reports-*.zip
       - matrix_notify_failure_unless_pr
 
   c_release_binaries:
@@ -1704,22 +1746,27 @@ workflows:
       # Bytecode comparison:
       - b_bytecode_ubu_static:
           <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
           requires:
             - b_ubu_static
       - b_bytecode_ubu:
           <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
           requires:
             - b_ubu
       - b_bytecode_win:
           <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
           requires:
             - b_win
       - b_bytecode_osx:
           <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
           requires:
             - b_osx
       - b_bytecode_ems:
           <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
           requires:
             - b_ems
       - t_bytecode_compare:

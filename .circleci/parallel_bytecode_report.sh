@@ -27,10 +27,11 @@ set -euo pipefail
 # (c) 2023 solidity contributors.
 #------------------------------------------------------------------------------
 
-(( $# == 3 )) || { >&2 echo "Wrong number of arguments."; exit 1; }
+(( $# == 4 )) || { >&2 echo "Wrong number of arguments."; exit 1; }
 label="$1"
 binary_type="$2"
 binary_path="$3" # This path must be absolute
+preset="$4"
 
 [[ $binary_type == native || $binary_type == solcjs ]] || { >&2 echo "Invalid binary type: ${binary_type}"; exit 1; }
 
@@ -51,7 +52,8 @@ if [[ $binary_type == native ]]; then
     python3 ../scripts/bytecodecompare/prepare_report.py \
         "$binary_path" \
         --interface "$interface" \
-        --report-file "../bytecode-report-${label}-${interface}.txt"
+        --preset "$preset" \
+        --report-file "../bytecode-report-${label}-${interface}-${preset}.txt"
 else
     echo "Installing solc-js"
     git clone --depth 1 https://github.com/ethereum/solc-js.git solc-js
@@ -69,5 +71,6 @@ else
     echo "Generating bytecode reports"
     # shellcheck disable=SC2035
     ./prepare_report.js \
-        *.sol > "../bytecode-report-${label}.txt"
+        --preset "$preset" \
+        *.sol > "../bytecode-report-${label}-${preset}.txt"
 fi
