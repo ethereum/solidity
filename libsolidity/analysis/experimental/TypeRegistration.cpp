@@ -61,37 +61,81 @@ bool TypeRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
 }
 bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiation)
 {
-	auto const* classDefintion = dynamic_cast<TypeClassDefinition const*>(_typeClassInstantiation.sort().annotation().referencedDeclaration);
+	auto const* classDefintion = dynamic_cast<TypeClassDefinition const*>(_typeClassInstantiation.typeClass().annotation().referencedDeclaration);
 	if (!classDefintion)
-		m_errorReporter.fatalTypeError(0000_error, _typeClassInstantiation.sort().location(), "Expected a type class.");
+		m_errorReporter.fatalTypeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
 	classDefintion->accept(*this);
 
-//	TypeClass typeClass{classDefintion};
+	TypeClass typeClass{classDefintion};
 
-	auto fromTypeName = [&](TypeName const& _typeName) -> Type {
-		if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&_typeName))
+	TypeName const& typeName = _typeClassInstantiation.typeConstructor();
+
+	TypeExpression::Constructor typeConstructor = [&]() -> TypeExpression::Constructor {
+		if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&typeName))
 		{
 			switch(elementaryTypeName->typeName().token())
 			{
 			case Token::Word:
-				return m_typeSystem.builtinType(BuiltinType::Word, {});
+				return BuiltinType::Word;
 			case Token::Void:
-				return m_typeSystem.builtinType(BuiltinType::Void, {});
+				return BuiltinType::Void;
 			case Token::Integer:
-				return m_typeSystem.builtinType(BuiltinType::Integer, {});
+				return BuiltinType::Integer;
 			default:
-				m_errorReporter.typeError(0000_error, _typeName.location(), "Only elementary types are supported.");
-				break;
+				m_errorReporter.typeError(0000_error, typeName.location(), "Only elementary types are supported.");
+				return BuiltinType::Void;
+			}
+		}
+		else if (auto const* userDefinedType = dynamic_cast<UserDefinedTypeName const*>(&typeName))
+		{
+			if (auto const* referencedDeclaration = userDefinedType->pathNode().annotation().referencedDeclaration)
+				return referencedDeclaration;
+			else
+			{
+				m_errorReporter.typeError(0000_error, userDefinedType->pathNode().location(), "No declaration found for user-defined type name.");
+				return BuiltinType::Void;
 			}
 		}
 		else
-			m_errorReporter.typeError(0000_error, _typeName.location(), "Unsupported type name.");
-		return m_typeSystem.freshTypeVariable(false);
-	};
-	auto type = fromTypeName(_typeClassInstantiation.typeConstructor());
-	_typeClassInstantiation.argumentSorts();
+		{
+			m_errorReporter.typeError(0000_error, typeName.location(), "Only elementary types are supported.");
+			return BuiltinType::Void;
+		}
+	}();
 
-//	m_typeSystem.instantiateClass();
+	Arity arity{
+		{},
+		typeClass
+	};
+	if (_typeClassInstantiation.argumentSorts().size() != m_typeSystem.constructorArguments(typeConstructor))
+		m_errorReporter.fatalTypeError(0000_error, _typeClassInstantiation.location(), "Invalid number of arguments.");
+
+	for (auto argumentSort : _typeClassInstantiation.argumentSorts())
+	{
+		if (auto const* referencedDeclaration = argumentSort->annotation().referencedDeclaration)
+		{
+			if (!dynamic_cast<TypeClassDefinition const*>(referencedDeclaration))
+				m_errorReporter.fatalTypeError(0000_error, argumentSort->location(), "Argument sort has to be a type class.");
+			// TODO: multi arities
+			arity._argumentSorts.emplace_back(Sort{{TypeClass{referencedDeclaration}}});
+		}
+		else
+		{
+			// TODO: error Handling
+			m_errorReporter.fatalTypeError(0000_error, argumentSort->location(), "Invalid sort.");
+		}
+	}
+	m_typeSystem.instantiateClass(typeConstructor, arity);
+
+	if (
+		auto [instantiation, newlyInserted] = annotation(*classDefintion).instantiations.emplace(typeConstructor, &_typeClassInstantiation);
+		!newlyInserted
+	)
+	{
+		SecondarySourceLocation ssl;
+		ssl.append("Previous instantiation.", instantiation->second->location());
+		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), ssl, "Duplicate type class instantiation.");
+	}
 
 	return false;
 }

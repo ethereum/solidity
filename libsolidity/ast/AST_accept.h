@@ -296,6 +296,7 @@ void VariableDeclaration::accept(ASTVisitor& _visitor)
 	{
 		if (m_typeName)
 			m_typeName->accept(_visitor);
+		listAccept(m_sort, _visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
 		if (m_value)
@@ -310,6 +311,7 @@ void VariableDeclaration::accept(ASTConstVisitor& _visitor) const
 	{
 		if (m_typeName)
 			m_typeName->accept(_visitor);
+		listAccept(m_sort, _visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
 		if (m_value)
@@ -1056,7 +1058,7 @@ void TypeClassInstantiation::accept(ASTVisitor& _visitor)
 	{
 		m_typeConstructor->accept(_visitor);
 		listAccept(m_argumentSorts, _visitor);
-		m_sort->accept(_visitor);
+		m_class->accept(_visitor);
 		listAccept(m_subNodes, _visitor);
 	}
 	_visitor.endVisit(*this);
@@ -1068,7 +1070,7 @@ void TypeClassInstantiation::accept(ASTConstVisitor& _visitor) const
 	{
 		m_typeConstructor->accept(_visitor);
 		listAccept(m_argumentSorts, _visitor);
-		m_sort->accept(_visitor);
+		m_class->accept(_visitor);
 		listAccept(m_subNodes, _visitor);
 	}
 	_visitor.endVisit(*this);

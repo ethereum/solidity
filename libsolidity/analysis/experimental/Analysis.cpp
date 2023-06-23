@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/analysis/experimental/Analysis.h>
 
+#include <libsolidity/analysis/experimental/DebugWarner.h>
 #include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
 #include <libsolidity/analysis/experimental/TypeInference.h>
 #include <libsolidity/analysis/experimental/TypeRegistration.h>
@@ -39,7 +40,19 @@ TypeRegistration::Annotation& solidity::frontend::experimental::detail::Annotati
 }
 
 template<>
+TypeRegistration::Annotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeRegistration>::get(ASTNode const& _node) const
+{
+	return analysis.annotationContainer(_node).typeRegistrationAnnotation;
+}
+
+template<>
 TypeInference::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeInference>::get(ASTNode const& _node)
+{
+	return analysis.annotationContainer(_node).typeInferenceAnnotation;
+}
+
+template<>
+TypeInference::Annotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeInference>::get(ASTNode const& _node) const
 {
 	return analysis.annotationContainer(_node).typeInferenceAnnotation;
 }
@@ -48,14 +61,22 @@ Analysis::AnnotationContainer& Analysis::annotationContainer(ASTNode const& _nod
 {
 	solAssert(_node.id() > 0);
 	size_t id = static_cast<size_t>(_node.id());
-	solAssert(id < m_maxAstId);
+	solAssert(id <= m_maxAstId);
+	return m_annotations[id];
+}
+
+Analysis::AnnotationContainer const& Analysis::annotationContainer(ASTNode const& _node) const
+{
+	solAssert(_node.id() > 0);
+	size_t id = static_cast<size_t>(_node.id());
+	solAssert(id <= m_maxAstId);
 	return m_annotations[id];
 }
 
 Analysis::Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId):
 	m_errorReporter(_errorReporter),
 	m_maxAstId(_maxAstId),
-	m_annotations(std::make_unique<AnnotationContainer[]>(static_cast<size_t>(_maxAstId)))
+	m_annotations(std::make_unique<AnnotationContainer[]>(static_cast<size_t>(_maxAstId + 1)))
 {
 }
 
@@ -69,7 +90,7 @@ std::tuple<std::integral_constant<size_t, Is>...> makeIndexTuple(std::index_sequ
 
 bool Analysis::check(vector<shared_ptr<SourceUnit const>> const& _sourceUnits)
 {
-	using AnalysisSteps = std::tuple<SyntaxRestrictor, TypeRegistration, TypeInference>;
+	using AnalysisSteps = std::tuple<SyntaxRestrictor, TypeRegistration, TypeInference, DebugWarner>;
 
 	return std::apply([&](auto... _indexTuple) {
 		return ([&](auto&& _step) {

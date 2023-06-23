@@ -18,12 +18,16 @@
 
 #include <libsolidity/codegen/experimental/IRGeneratorForStatements.h>
 
+#include <libsolidity/analysis/experimental/Analysis.h>
+#include <libsolidity/analysis/experimental/TypeInference.h>
+#include <libsolidity/analysis/experimental/TypeRegistration.h>
+
 #include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/optimiser/ASTCopier.h>
 
-#include <libsolidity/codegen/ir/Common.h>
+#include <libsolidity/codegen/experimental/Common.h>
 
 #include <range/v3/view/drop_last.hpp>
 
@@ -46,9 +50,10 @@ namespace {
 struct CopyTranslate: public yul::ASTCopier
 {
 	CopyTranslate(
+		IRGenerationContext const& _context,
 		yul::Dialect const& _dialect,
 		map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> _references
-		): m_dialect(_dialect), m_references(std::move(_references)) {}
+	): m_context(_context), m_dialect(_dialect), m_references(std::move(_references)) {}
 
 	using ASTCopier::operator();
 
@@ -90,11 +95,15 @@ private:
 		auto const& reference = m_references.at(&_identifier);
 		auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
 		solAssert(varDecl, "External reference in inline assembly to something that is not a variable declaration.");
-		// TODO: validate that variable is known and has word type.
+		auto type = m_context.analysis.annotation<TypeInference>(*varDecl).type;
+		solAssert(type);
+		type = m_context.env->resolve(*type);
+		solAssert(*type == m_context.analysis.typeSystem().builtinType(BuiltinType::Word, {}));
 		string value = IRNames::localVariable(*varDecl);
 		return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}
 
+	IRGenerationContext const& m_context;
 	yul::Dialect const& m_dialect;
 	map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> m_references;
 };
@@ -103,7 +112,7 @@ private:
 
 bool IRGeneratorForStatements::visit(InlineAssembly const& _assembly)
 {
-	CopyTranslate bodyCopier{_assembly.dialect(), _assembly.annotation().externalReferences};
+	CopyTranslate bodyCopier{m_context, _assembly.dialect(), _assembly.annotation().externalReferences};
 	yul::Statement modified = bodyCopier(_assembly.operations());
 	solAssert(holds_alternative<yul::Block>(modified));
 	m_code << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
@@ -153,13 +162,45 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	for(auto arg: _functionCall.arguments())
 		arg->accept(*this);
 
-	auto const* identifier = dynamic_cast<Identifier const*>(&_functionCall.expression());
-	solAssert(identifier, "Complex function call expressions not supported.");
-	auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration);
-	solAssert(functionDefinition, "Function call expression must refer to a function definition.");
-	m_context.enqueueFunctionDefinition(functionDefinition);
+	FunctionDefinition const* functionDefinition = nullptr;
+	if (auto const* identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+	{
+		functionDefinition = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration);
+	}
+	else if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+	{
+		auto const& expressionAnnotation = m_context.analysis.annotation<TypeInference>(memberAccess->expression());
+		solAssert(expressionAnnotation.type);
 
-	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*functionDefinition) << "(";
+		auto typeConstructor = std::get<0>(TypeSystemHelpers{m_context.analysis.typeSystem()}.destTypeExpression(
+			m_context.analysis.typeSystem().env().resolve(*expressionAnnotation.type)
+		));
+		auto const* typeClass = dynamic_cast<Identifier const*>(&memberAccess->expression());
+		solAssert(typeClass, "Function call to member access only supported for type classes.");
+		auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(typeClass->annotation().referencedDeclaration);
+		solAssert(typeClassDefinition, "Function call to member access only supported for type classes.");
+		auto const& classAnnotation = m_context.analysis.annotation<TypeRegistration>(*typeClassDefinition);
+		TypeClassInstantiation const* instantiation = classAnnotation.instantiations.at(typeConstructor);
+		for (auto const& node: instantiation->subNodes())
+		{
+			auto const* def = dynamic_cast<FunctionDefinition const*>(node.get());
+			solAssert(def);
+			if (def->name() == memberAccess->memberName())
+			{
+				functionDefinition = def;
+				break;
+			}
+		}
+	}
+	else
+		solAssert(false, "Complex function call expressions not supported.");
+
+	solAssert(functionDefinition);
+	auto functionType = m_context.analysis.annotation<TypeInference>(_functionCall).type;
+	solAssert(functionType);
+	functionType = m_context.analysis.typeSystem().env().resolve(*functionType);
+	m_context.enqueueFunctionDefinition(functionDefinition, *functionType);
+	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*functionDefinition, *functionType) << "(";
 	auto const& arguments = _functionCall.arguments();
 	if (arguments.size() > 1)
 		for (auto arg: arguments | ranges::views::drop_last(1))

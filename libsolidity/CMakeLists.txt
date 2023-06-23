@@ -48,6 +48,8 @@ set(sources
 	analysis/ViewPureChecker.h
 	analysis/experimental/Analysis.cpp
 	analysis/experimental/Analysis.h
+	analysis/experimental/DebugWarner.cpp
+	analysis/experimental/DebugWarner.h
 	analysis/experimental/TypeInference.cpp
 	analysis/experimental/TypeInference.h
 	analysis/experimental/TypeRegistration.cpp
@@ -100,6 +102,8 @@ set(sources
 	codegen/ReturnInfo.cpp
 	codegen/YulUtilFunctions.h
 	codegen/YulUtilFunctions.cpp
+	codegen/experimental/Common.h
+	codegen/experimental/Common.cpp
 	codegen/experimental/IRGenerationContext.h
 	codegen/experimental/IRGenerator.cpp
 	codegen/experimental/IRGenerator.h

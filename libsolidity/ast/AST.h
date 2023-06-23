@@ -1068,7 +1068,8 @@ public:
 		bool _isIndexed = false,
 		Mutability _mutability = Mutability::Mutable,
 		ASTPointer<OverrideSpecifier> _overrides = nullptr,
-		Location _referenceLocation = Location::Unspecified
+		Location _referenceLocation = Location::Unspecified,
+		std::vector<ASTPointer<IdentifierPath>> _sort = {}
 	):
 		Declaration(_id, _location, _name, std::move(_nameLocation), _visibility),
 		StructurallyDocumented(std::move(_documentation)),
@@ -1077,10 +1078,11 @@ public:
 		m_isIndexed(_isIndexed),
 		m_mutability(_mutability),
 		m_overrides(std::move(_overrides)),
-		m_location(_referenceLocation)
+		m_location(_referenceLocation),
+		m_sort(std::move(_sort))
 	{
 		// TODO: consider still asserting unless we are in experimental solidity.
-		// solAssert(m_typeName, "");
+		// solAssert(m_typeName, ""); solAssert(m_sorts.empy(), "");
 	}
 
 
@@ -1142,6 +1144,7 @@ public:
 	/// @returns null when it is not accessible as a function.
 	FunctionTypePointer functionType(bool /*_internal*/) const override;
 
+	std::vector<ASTPointer<IdentifierPath>> const& sort() const { return m_sort; }
 	VariableDeclarationAnnotation& annotation() const override;
 
 protected:
@@ -1157,6 +1160,7 @@ private:
 	Mutability m_mutability = Mutability::Mutable;
 	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
 	Location m_location = Location::Unspecified; ///< Location of the variable if it is of reference type.
+	std::vector<ASTPointer<IdentifierPath>> m_sort;
 };
 
 /**
@@ -2493,13 +2497,13 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<TypeName> _typeConstructor,
 		std::vector<ASTPointer<IdentifierPath>> const& _argumentSorts,
-		ASTPointer<IdentifierPath> _sort,
+		ASTPointer<IdentifierPath> _class,
 		std::vector<ASTPointer<ASTNode>> _subNodes
 		):
 		   ASTNode(_id, _location),
 		   m_typeConstructor(std::move(_typeConstructor)),
 		   m_argumentSorts(std::move(_argumentSorts)),
-		   m_sort(std::move(_sort)),
+		   m_class(std::move(_class)),
 		   m_subNodes(std::move(_subNodes))
 	{}
 
@@ -2508,7 +2512,7 @@ public:
 
 	TypeName const& typeConstructor() const { return *m_typeConstructor; }
 	std::vector<ASTPointer<IdentifierPath>> const& argumentSorts() const { return m_argumentSorts; }
-	IdentifierPath const& sort() const { return *m_sort; }
+	IdentifierPath const& typeClass() const { return *m_class; }
 	std::vector<ASTPointer<ASTNode>> const& subNodes() const { return m_subNodes; }
 
 	bool experimentalSolidityOnly() const override { return true; }
@@ -2516,7 +2520,7 @@ public:
 private:
 	ASTPointer<TypeName> m_typeConstructor;
 	std::vector<ASTPointer<IdentifierPath>> m_argumentSorts;
-	ASTPointer<IdentifierPath> m_sort;
+	ASTPointer<IdentifierPath> m_class;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 };
 

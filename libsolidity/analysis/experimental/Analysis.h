@@ -48,6 +48,12 @@ struct AnnotationFetcher
 	Analysis& analysis;
 	typename Step::Annotation& get(ASTNode const& _node);
 };
+template<typename Step>
+struct ConstAnnotationFetcher
+{
+	Analysis const& analysis;
+	typename Step::Annotation const& get(ASTNode const& _node) const;
+};
 }
 
 class Analysis
@@ -62,12 +68,19 @@ public:
 	langutil::ErrorReporter& errorReporter() { return m_errorReporter; }
 	uint64_t maxAstId() const { return m_maxAstId; }
 	TypeSystem& typeSystem() { return m_typeSystem; }
+	TypeSystem const& typeSystem() const { return m_typeSystem; }
 	template<typename Step>
 	typename Step::Annotation& annotation(ASTNode const& _node)
 	{
 		return detail::AnnotationFetcher<Step>{*this}.get(_node);
 	}
+	template<typename Step>
+	typename Step::Annotation const& annotation(ASTNode const& _node) const
+	{
+		return detail::ConstAnnotationFetcher<Step>{*this}.get(_node);
+	}
 	AnnotationContainer& annotationContainer(ASTNode const& _node);
+	AnnotationContainer const& annotationContainer(ASTNode const& _node) const;
 private:
 	langutil::ErrorReporter& m_errorReporter;
 	TypeSystem m_typeSystem;

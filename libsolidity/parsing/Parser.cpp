@@ -1717,11 +1717,42 @@ ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
 	auto [identifier, nameLocation] = expectIdentifierWithLocation();
 
 	ASTPointer<TypeName> type;
+	vector<ASTPointer<IdentifierPath>> sorts;
 	if (m_scanner->currentToken() == Token::Colon)
 	{
 		advance();
-		type = parseTypeName();
-		nodeFactory.setEndPositionFromNode(type);
+		// TODO: handle this in parseTypeName()?
+		if (m_scanner->currentLiteral() == "_")
+		{
+			nodeFactory.markEndPosition();
+			advance();
+		}
+		else
+		{
+			type = parseTypeName();
+			nodeFactory.setEndPositionFromNode(type);
+		}
+		if (m_scanner->currentToken() == Token::Colon)
+		{
+			advance();
+			if (m_scanner->currentToken() == Token::LBrace)
+			{
+				// TODO
+				sorts.emplace_back(parseIdentifierPath());
+				while (m_scanner->currentToken() == Token::Comma)
+				{
+					advance();
+					sorts.emplace_back(parseIdentifierPath());
+				}
+				expectToken(Token::RBrace);
+			}
+			else
+			{
+				sorts.emplace_back(parseIdentifierPath());
+			}
+			if (!sorts.empty())
+				nodeFactory.setEndPositionFromNode(sorts.back());
+		}
 	}
 
 	return nodeFactory.createNode<VariableDeclaration>(
@@ -1730,7 +1761,12 @@ ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
 		nameLocation,
 		nullptr,
 		Visibility::Default,
-		documentation
+		documentation,
+		false,
+		VariableDeclaration::Mutability::Mutable,
+		nullptr,
+		VariableDeclaration::Location::Unspecified,
+		sorts
 	);
 }
 

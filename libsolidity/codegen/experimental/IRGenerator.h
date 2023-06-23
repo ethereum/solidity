@@ -23,6 +23,7 @@
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/CallGraph.h>
+#include <libsolidity/ast/experimental/TypeSystem.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
@@ -35,7 +36,6 @@
 namespace solidity::frontend::experimental
 {
 
-class SourceUnit;
 class Analysis;
 
 class IRGenerator
@@ -49,13 +49,7 @@ public:
 		langutil::DebugInfoSelection const& /*_debugInfoSelection*/,
 		langutil::CharStreamProvider const* /*_soliditySourceProvider*/,
 		Analysis const& _analysis
-	):
-		m_evmVersion(_evmVersion),
-		m_eofVersion(_eofVersion),
-//		m_debugInfoSelection(_debugInfoSelection),
-//		m_soliditySourceProvider(_soliditySourceProvider),
-		m_context{_analysis, {}, {}}
-	{}
+	);
 
 	std::string run(
 		ContractDefinition const& _contract,
@@ -64,13 +58,14 @@ public:
 	);
 
 	std::string generate(ContractDefinition const& _contract);
-	std::string generate(FunctionDefinition const& _function);
+	std::string generate(FunctionDefinition const& _function, Type _type);
 private:
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
 	OptimiserSettings const m_optimiserSettings;
 //	langutil::DebugInfoSelection m_debugInfoSelection = {};
 //	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
+	TypeEnvironment m_env;
 	IRGenerationContext m_context;
 };
 

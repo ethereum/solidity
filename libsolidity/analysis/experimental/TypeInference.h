@@ -34,12 +34,11 @@ public:
 
 	bool analyze(SourceUnit const& _sourceUnit);
 
-
 	struct Annotation
 	{
+		/// Expressions, variable declarations, function declarations.
 		std::optional<Type> type;
 	};
-private:
 	bool visit(Block const&) override { return true; }
 	bool visit(VariableDeclarationStatement const&) override { return true; }
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
@@ -62,16 +61,19 @@ private:
 	bool visit(Return const&) override { return true; }
 	void endVisit(Return const& _return) override;
 
+	bool visit(MemberAccess const& _memberAccess) override;
+
 	// TODO: properly account for it
-	bool visit(TypeClassDefinition const&) override  { return true; }
+	bool visit(TypeClassDefinition const&) override;
 	bool visit(TypeClassInstantiation const&) override;
 
 	bool visitNode(ASTNode const& _node) override;
-
+private:
 	Type fromTypeName(TypeName const& _typeName);
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
 	TypeSystem& m_typeSystem;
+	TypeEnvironment* m_env = nullptr;
 	Type m_voidType;
 	Type m_wordType;
 	Type m_integerType;

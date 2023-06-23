@@ -18,35 +18,25 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/ast/experimental/TypeSystem.h>
 
 #include <liblangutil/ErrorReporter.h>
 
 namespace solidity::frontend::experimental
 {
-
 class Analysis;
 
-class TypeRegistration: public ASTConstVisitor
+class DebugWarner: public ASTConstVisitor
 {
 public:
-	struct Annotation
-	{
-		Type type;
-		std::map<TypeExpression::Constructor, TypeClassInstantiation const*> instantiations;
-	};
-	TypeRegistration(Analysis& _analysis);
+	DebugWarner(Analysis& _analysis);
 
-	bool analyze(SourceUnit const& _sourceUnit);
+	bool analyze(ASTNode const& _astRoot);
+
 private:
-	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
-	bool visit(TypeClassInstantiation const& _typeClassInstantiation) override;
-	Annotation& annotation(ASTNode const& _node);
+	bool visitNode(ASTNode const& _node) override;
 
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
-	TypeSystem& m_typeSystem;
-	std::set<int64_t> m_visitedClasses;
 };
 
 }

@@ -20,6 +20,9 @@
 
 #include <libsolidity/ast/ASTForward.h>
 
+#include <libsolidity/analysis/experimental/Analysis.h>
+#include <libsolidity/ast/experimental/TypeSystem.h>
+
 #include <list>
 #include <set>
 
@@ -31,13 +34,23 @@ class Analysis;
 struct IRGenerationContext
 {
 	Analysis const& analysis;
-	std::list<FunctionDefinition const*> functionQueue;
-	std::set<FunctionDefinition const*> generatedFunctions;
-	void enqueueFunctionDefinition(FunctionDefinition const* _functionDefinition)
+	TypeEnvironment const* env = nullptr;
+	void enqueueFunctionDefinition(FunctionDefinition const* _functionDefinition, Type _type)
 	{
-		if (!generatedFunctions.count(_functionDefinition))
-			functionQueue.emplace_back(_functionDefinition);
+		QueuedFunction queue{_functionDefinition, env->resolve(_type)};
+		if (!generatedFunctions.count(queue))
+			functionQueue.emplace_back(queue);
 	}
+	struct QueuedFunction
+	{
+		FunctionDefinition const* function;
+		Type type;
+		bool operator<(QueuedFunction const& _rhs) const {
+			return std::make_tuple(function, type) < std::make_tuple(_rhs.function, _rhs.type);
+		}
+	};
+	std::list<QueuedFunction> functionQueue;
+	std::set<QueuedFunction> generatedFunctions;
 };
 
 }

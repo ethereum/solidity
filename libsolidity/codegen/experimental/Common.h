@@ -15,38 +15,27 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
+
 #pragma once
 
-#include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/experimental/TypeSystem.h>
 
-#include <liblangutil/ErrorReporter.h>
+#include <algorithm>
+#include <string>
 
 namespace solidity::frontend::experimental
 {
 
-class Analysis;
-
-class TypeRegistration: public ASTConstVisitor
+struct IRNames
 {
-public:
-	struct Annotation
-	{
-		Type type;
-		std::map<TypeExpression::Constructor, TypeClassInstantiation const*> instantiations;
-	};
-	TypeRegistration(Analysis& _analysis);
-
-	bool analyze(SourceUnit const& _sourceUnit);
-private:
-	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
-	bool visit(TypeClassInstantiation const& _typeClassInstantiation) override;
-	Annotation& annotation(ASTNode const& _node);
-
-	Analysis& m_analysis;
-	langutil::ErrorReporter& m_errorReporter;
-	TypeSystem& m_typeSystem;
-	std::set<int64_t> m_visitedClasses;
+	static std::string function(FunctionDefinition const& _function, Type _type);
+	static std::string function(VariableDeclaration const& _varDecl);
+	static std::string creationObject(ContractDefinition const& _contract);
+	static std::string deployedObject(ContractDefinition const& _contract);
+	static std::string constructor(ContractDefinition const& _contract);
+	static std::string localVariable(VariableDeclaration const& _declaration);
+	static std::string localVariable(Expression const& _expression);
 };
 
 }

@@ -40,6 +40,7 @@ m_typeSystem(_analysis.typeSystem())
 	m_voidType = m_typeSystem.builtinType(BuiltinType::Void, {});
 	m_wordType = m_typeSystem.builtinType(BuiltinType::Word, {});
 	m_integerType = m_typeSystem.builtinType(BuiltinType::Integer, {});
+	m_env = &m_typeSystem.env();
 }
 
 bool TypeInference::analyze(SourceUnit const& _sourceUnit)
@@ -79,12 +80,9 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	if (_functionDefinition.isImplemented())
 		_functionDefinition.body().accept(*this);
 
-	functionAnnotation.type = m_typeSystem.fresh(
-		functionType,
-		true
-	);
+	functionAnnotation.type = functionType;
 
-	m_errorReporter.warning(0000_error, _functionDefinition.location(), m_typeSystem.typeToString(*functionAnnotation.type));
+	m_errorReporter.info(0000_error, _functionDefinition.location(), m_env->typeToString(*functionAnnotation.type));
 
 	return false;
 }
@@ -122,7 +120,22 @@ void TypeInference::endVisit(ParameterList const& _parameterList)
 
 bool TypeInference::visitNode(ASTNode const& _node)
 {
-	m_errorReporter.typeError(0000_error, _node.location(), "Unsupported AST node during type inference.");
+	m_errorReporter.fatalTypeError(0000_error, _node.location(), "Unsupported AST node during type inference.");
+	return false;
+}
+
+bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
+{
+	auto& typeVariableAnnotation = annotation(_typeClassDefinition.typeVariable());
+	if (typeVariableAnnotation.type)
+		return false;
+	_typeClassDefinition.typeVariable().accept(*this);
+
+	for (auto const& subNode: _typeClassDefinition.subNodes())
+		subNode->accept(*this);
+
+	solAssert(typeVariableAnnotation.type);
+	unify(*typeVariableAnnotation.type, m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{&_typeClassDefinition}}}));
 	return false;
 }
 
@@ -151,8 +164,10 @@ experimental::Type TypeInference::fromTypeName(TypeName const& _typeName)
 		{
 			if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(variableDeclaration->scope()))
 			{
-				(void)typeClass;
-				m_errorReporter.typeError(0000_error, _typeName.location(), "Using type class type variables not yet implemented.");
+				typeClass->accept(*this);
+				auto varType = annotation(typeClass->typeVariable()).type;
+				solAssert(varType);
+				return *varType;
 			}
 			else
 				m_errorReporter.typeError(0000_error, _typeName.location(), "Type name referencing a variable declaration.");
@@ -162,12 +177,12 @@ experimental::Type TypeInference::fromTypeName(TypeName const& _typeName)
 	}
 	else
 		m_errorReporter.typeError(0000_error, _typeName.location(), "Unsupported type name.");
-	return m_typeSystem.freshTypeVariable(false);
+	return m_typeSystem.freshTypeVariable(false, {});
 }
 void TypeInference::unify(Type _a, Type _b)
 {
-	for (auto failure: m_typeSystem.unify(_a, _b))
-		m_errorReporter.typeError(0000_error, {}, fmt::format("Cannot unify {} and {}.", m_typeSystem.typeToString(_a), m_typeSystem.typeToString(_b)));
+	for (auto failure: m_env->unify(_a, _b))
+		m_errorReporter.typeError(0000_error, {}, fmt::format("Cannot unify {} and {}.", m_env->typeToString(_a), m_env->typeToString(_b)));
 
 }
 bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
@@ -218,12 +233,25 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 	solAssert(!_variableDeclaration.value());
 	auto& variableAnnotation = annotation(_variableDeclaration);
 	solAssert(!variableAnnotation.type);
+
+	Sort sort;
+	for (auto const& typeClass: _variableDeclaration.sort())
+	{
+		auto const* declaration = dynamic_cast<TypeClassDefinition const*>(typeClass->annotation().referencedDeclaration);
+		if (!declaration)
+			m_errorReporter.typeError(0000_error, typeClass->location(), "Expected type class.");
+		sort.classes.emplace(TypeClass{declaration});
+	}
+
 	variableAnnotation.type = [&] {
 		if (_variableDeclaration.hasTypeName())
 			return fromTypeName(_variableDeclaration.typeName());
 		else
-			return m_typeSystem.freshTypeVariable(false);
+			return m_typeSystem.freshTypeVariable(false, sort);
 	}();
+
+	// TODO: validate sort.
+
 	return false;
 }
 
@@ -242,7 +270,7 @@ void TypeInference::endVisit(Assignment const& _assignment)
 	auto& rhsAnnotation = annotation(_assignment.rightHandSide());
 	solAssert(rhsAnnotation.type);
 	unify(*lhsAnnotation.type, *rhsAnnotation.type);
-	assignmentAnnotation.type = m_typeSystem.resolve(*lhsAnnotation.type);
+	assignmentAnnotation.type = m_env->resolve(*lhsAnnotation.type);
 }
 
 TypeInference::Annotation& TypeInference::annotation(ASTNode const& _node)
@@ -269,7 +297,13 @@ bool TypeInference::visit(Identifier const& _identifier)
 		referencedDeclaration->accept(*this);
 
 	solAssert(declarationAnnotation.type);
-	identifierAnnotation.type = declarationAnnotation.type;
+
+	if (dynamic_cast<FunctionDefinition const*>(referencedDeclaration))
+		identifierAnnotation.type = m_env->fresh(*declarationAnnotation.type, false);
+	else if (dynamic_cast<VariableDeclaration const*>(referencedDeclaration))
+		identifierAnnotation.type = declarationAnnotation.type;
+	else
+		solAssert(false);
 
 	return true;
 }
@@ -282,6 +316,7 @@ bool TypeInference::visit(IdentifierPath const& _identifier)
 
 	auto const* referencedDeclaration = _identifier.annotation().referencedDeclaration;
 	solAssert(referencedDeclaration);
+
 	if (
 		!dynamic_cast<FunctionDefinition const*>(referencedDeclaration) &&
 		!dynamic_cast<VariableDeclaration const*>(referencedDeclaration)
@@ -293,15 +328,97 @@ bool TypeInference::visit(IdentifierPath const& _identifier)
 		referencedDeclaration->accept(*this);
 
 	solAssert(declarationAnnotation.type);
-	identifierAnnotation.type = declarationAnnotation.type;
+
+	if (dynamic_cast<FunctionDefinition const*>(referencedDeclaration))
+		identifierAnnotation.type = m_env->fresh(*declarationAnnotation.type, false);
+	else if (dynamic_cast<VariableDeclaration const*>(referencedDeclaration))
+		identifierAnnotation.type = declarationAnnotation.type;
+	else
+		solAssert(false);
 
 	return true;
 }
 
 bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 {
+	auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(_typeClassInstantiation.typeClass().annotation().referencedDeclaration);
+	if (!typeClass)
+		m_errorReporter.fatalTypeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
+	typeClass->accept(*this);
+
+	map<string, Type> functionTypes;
+
+	for (auto subNode: typeClass->subNodes())
+	{
+		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
+		solAssert(functionDefinition);
+		auto functionType = annotation(*functionDefinition).type;
+		solAssert(functionType);
+		functionTypes[functionDefinition->name()] = *functionType;
+	}
 	for (auto subNode: _typeClassInstantiation.subNodes())
-		 subNode->accept(*this);
+	{
+		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
+		solAssert(functionDefinition);
+		Type* expectedFunctionType = util::valueOrNullptr(functionTypes, functionDefinition->name());
+		if (!expectedFunctionType)
+		{
+			m_errorReporter.typeError(0000_error, functionDefinition->location(), "Function definition during instantiation that does not belong to the class.");
+			continue;
+		}
+		subNode->accept(*this);
+	}
+	for (auto subNode: _typeClassInstantiation.subNodes())
+	{
+		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
+		if (Type* expectedFunctionType = util::valueOrNullptr(functionTypes, functionDefinition->name()))
+		{
+			auto functionType = annotation(*functionDefinition).type;
+			solAssert(functionType);
+			// TODO: require exact match?
+			unify(*functionType, m_env->fresh(*expectedFunctionType, true));
+		}
+	}
+
+	return false;
+}
+
+bool TypeInference::visit(MemberAccess const& _memberAccess)
+{
+	if (auto const* identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression()))
+	{
+		auto const* declaration = identifier->annotation().referencedDeclaration;
+		if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(declaration))
+		{
+			for (auto subNode: typeClass->subNodes())
+			{
+				if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get()))
+				{
+					if (functionDefinition->name() == _memberAccess.memberName())
+					{
+						auto& declarationAnnotation = annotation(*functionDefinition);
+						if (!declarationAnnotation.type)
+							functionDefinition->accept(*this);
+						solAssert(declarationAnnotation.type);
+						Type type = m_env->fresh(*declarationAnnotation.type, true);
+						annotation(_memberAccess).type = type;
+						auto typeVars = TypeSystemHelpers{m_typeSystem}.typeVars(type);
+						if (typeVars.size() != 1)
+							m_errorReporter.typeError(0000_error, _memberAccess.location(), "Type class reference does not uniquely depend on class type.");
+						annotation(_memberAccess.expression()).type = typeVars.front();
+						m_errorReporter.info(0000_error, _memberAccess.location(), m_env->typeToString(*declarationAnnotation.type));
+						return false;
+					}
+				}
+			}
+			m_errorReporter.fatalTypeError(0000_error, _memberAccess.location(), "Unknown member of type-class.");
+		}
+		else
+			m_errorReporter.fatalTypeError(0000_error, _memberAccess.location(), "Member access to non-type-class.");
+	}
+	else
+		 m_errorReporter.fatalTypeError(0000_error, _memberAccess.location(), "Member access to non-identifier.");
+
 	return false;
 }
 
@@ -314,7 +431,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	auto& expressionAnnotation = annotation(_functionCall.expression());
 	solAssert(expressionAnnotation.type);
 
-	Type functionType = m_typeSystem.fresh(*expressionAnnotation.type, false);
+	Type functionType = *expressionAnnotation.type;
 
 	std::vector<Type> argTypes;
 	for(auto arg: _functionCall.arguments())
@@ -324,8 +441,8 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 		argTypes.emplace_back(*argAnnotation.type);
 	}
 	Type argTuple = TypeSystemHelpers{m_typeSystem}.tupleType(argTypes);
-	Type genericFunctionType = TypeSystemHelpers{m_typeSystem}.functionType(argTuple, m_typeSystem.freshTypeVariable(false));
+	Type genericFunctionType = TypeSystemHelpers{m_typeSystem}.functionType(argTuple, m_typeSystem.freshTypeVariable(false, {}));
 	unify(genericFunctionType, functionType);
 
-	functionCallAnnotation.type = m_typeSystem.resolve(std::get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(m_typeSystem.resolve(genericFunctionType))));
+	functionCallAnnotation.type = m_env->resolve(std::get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(m_env->resolve(genericFunctionType))));
 }

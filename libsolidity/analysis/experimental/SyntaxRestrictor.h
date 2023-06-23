@@ -48,11 +48,13 @@ private:
 	bool visit(Block const&) override { return true; }
 	bool visit(InlineAssembly const&) override { return true; }
 	bool visit(Identifier const&) override { return true; }
+	bool visit(IdentifierPath const&) override { return true; }
 	bool visit(VariableDeclarationStatement const&) override;
 	bool visit(VariableDeclaration const&) override;
 	bool visit(ElementaryTypeName const&) override { return true; }
 	bool visit(ParameterList const&) override { return true; }
 	bool visit(Return const&) override { return true; }
+	bool visit(MemberAccess const&) override { return true; }
 
 	langutil::ErrorReporter& m_errorReporter;
 };

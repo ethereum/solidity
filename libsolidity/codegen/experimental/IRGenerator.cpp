@@ -17,11 +17,14 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/codegen/experimental/IRGenerator.h>
-
 #include <libsolidity/codegen/experimental/IRGenerationContext.h>
 #include <libsolidity/codegen/experimental/IRGeneratorForStatements.h>
 
-#include <libsolidity/codegen/ir/Common.h>
+#include <libsolidity/codegen/experimental/Common.h>
+
+#include <libsolidity/analysis/experimental/Analysis.h>
+#include <libsolidity/analysis/experimental/TypeInference.h>
+
 
 #include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
@@ -41,6 +44,24 @@ using namespace solidity;
 using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
 using namespace solidity::util;
+
+IRGenerator::IRGenerator(
+	EVMVersion _evmVersion,
+	std::optional<uint8_t> _eofVersion,
+	frontend::RevertStrings, std::map<std::string, unsigned int>,
+	DebugInfoSelection const&,
+	CharStreamProvider const*,
+	Analysis const& _analysis
+)
+:
+m_evmVersion(_evmVersion),
+m_eofVersion(_eofVersion),
+//		m_debugInfoSelection(_debugInfoSelection),
+//		m_soliditySourceProvider(_soliditySourceProvider),
+m_env(_analysis.typeSystem().env().clone()),
+m_context{_analysis, &m_env, {}, {}}
+{
+}
 
 string IRGenerator::run(
 	ContractDefinition const& _contract,
@@ -75,30 +96,33 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	code << "{\n";
 	if (_contract.fallbackFunction())
 	{
-		code << IRNames::function(*_contract.fallbackFunction()) << "()\n";
-		m_context.functionQueue.emplace_front(_contract.fallbackFunction());
+		auto type = m_context.analysis.annotation<TypeInference>(*_contract.fallbackFunction()).type;
+		solAssert(type);
+		type = m_context.analysis.typeSystem().env().resolve(*type);
+		code << IRNames::function(*_contract.fallbackFunction(), *type) << "()\n";
+		m_context.enqueueFunctionDefinition(_contract.fallbackFunction(), *type);
 	}
 	code << "revert(0,0)\n";
 	code << "}\n";
 
 	while (!m_context.functionQueue.empty())
 	{
-		FunctionDefinition const* function = m_context.functionQueue.front();
+		auto function = m_context.functionQueue.front();
 		m_context.functionQueue.pop_front();
 		if (!m_context.generatedFunctions.count(function))
 		{
 			m_context.generatedFunctions.insert(function);
-			code << generate(*function);
+			code << generate(*function.function, function.type);
 		}
 	}
 
 	return code.str();
 }
 
-string IRGenerator::generate(FunctionDefinition const& _function)
+string IRGenerator::generate(FunctionDefinition const& _function, Type _type)
 {
 	std::stringstream code;
-	code << "function " << IRNames::function(_function) << "(";
+	code << "function " << IRNames::function(_function, _type) << "(";
 	if (_function.parameters().size() > 1)
 		for (auto const& arg: _function.parameters() | ranges::views::drop_last(1))
 			code << IRNames::localVariable(*arg) << ", ";
