@@ -128,6 +128,7 @@ public:
 	TypeEnvironment& operator=(TypeEnvironment const&) = delete;
 	TypeEnvironment clone() const;
 	Type resolve(Type _type) const;
+	Type resolveRecursive(Type _type) const;
 	Type fresh(Type _type, bool _generalize);
 	struct UnificationFailure { Type a; Type b; };
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);

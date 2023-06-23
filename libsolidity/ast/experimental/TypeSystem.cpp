@@ -287,6 +287,24 @@ experimental::Type TypeEnvironment::resolve(Type _type) const
 	return result;
 }
 
+experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
+{
+	return std::visit(util::GenericVisitor{
+		[&](TypeExpression const& _type) -> Type {
+			return TypeExpression{
+				_type.constructor,
+				_type.arguments | ranges::views::transform([&](Type _argType) {
+					return resolveRecursive(_argType);
+				}) | ranges::to<vector<Type>>
+			};
+		},
+		[&](TypeVariable const&) -> Type {
+			return _type;
+		},
+	}, resolve(_type));
+}
+
+
 void TypeSystem::declareBuiltinType(BuiltinType _builtinType, std::string _name, uint64_t _arguments)
 {
 	declareTypeConstructor(_builtinType, _name, _arguments);

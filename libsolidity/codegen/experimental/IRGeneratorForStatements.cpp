@@ -196,9 +196,10 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 		solAssert(false, "Complex function call expressions not supported.");
 
 	solAssert(functionDefinition);
-	auto functionType = m_context.analysis.annotation<TypeInference>(_functionCall).type;
+	auto functionType = m_context.analysis.annotation<TypeInference>(_functionCall.expression()).type;
 	solAssert(functionType);
-	functionType = m_context.analysis.typeSystem().env().resolve(*functionType);
+	// TODO: get around resolveRecursive by passing the environment further down?
+	functionType = m_context.env->resolveRecursive(*functionType);
 	m_context.enqueueFunctionDefinition(functionDefinition, *functionType);
 	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*functionDefinition, *functionType) << "(";
 	auto const& arguments = _functionCall.arguments();

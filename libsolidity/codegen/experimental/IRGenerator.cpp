@@ -98,7 +98,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	{
 		auto type = m_context.analysis.annotation<TypeInference>(*_contract.fallbackFunction()).type;
 		solAssert(type);
-		type = m_context.analysis.typeSystem().env().resolve(*type);
+		type = m_context.env->resolve(*type);
 		code << IRNames::function(*_contract.fallbackFunction(), *type) << "()\n";
 		m_context.enqueueFunctionDefinition(_contract.fallbackFunction(), *type);
 	}
@@ -121,6 +121,14 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 
 string IRGenerator::generate(FunctionDefinition const& _function, Type _type)
 {
+	TypeEnvironment newEnv = m_context.env->clone();
+	ScopedSaveAndRestore envRestore{m_context.env, &newEnv};
+	auto type = m_context.analysis.annotation<TypeInference>(_function).type;
+	solAssert(type);
+	for (auto err: newEnv.unify(*type, _type))
+	{
+		solAssert(false, newEnv.typeToString(*type) + " <-> " + newEnv.typeToString(_type));
+	}
 	std::stringstream code;
 	code << "function " << IRNames::function(_function, _type) << "(";
 	if (_function.parameters().size() > 1)
