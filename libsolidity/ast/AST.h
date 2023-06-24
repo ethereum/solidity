@@ -2143,7 +2143,7 @@ public:
 		Expression(_id, _location), m_left(std::move(_left)), m_operator(_operator), m_right(std::move(_right))
 	{
 		// TODO: assert against colon for non-experimental solidity
-		solAssert(TokenTraits::isBinaryOp(_operator) || TokenTraits::isCompareOp(_operator) || _operator == Token::Colon, "");
+		solAssert(TokenTraits::isBinaryOp(_operator) || TokenTraits::isCompareOp(_operator) || _operator == Token::Colon || _operator == Token::RightArrow, "");
 	}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;

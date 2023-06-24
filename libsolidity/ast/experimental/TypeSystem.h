@@ -36,16 +36,17 @@ namespace solidity::frontend::experimental
 class TypeSystem;
 class TypeEnvironment;
 
-struct TypeExpression;
+struct TypeConstant;
 struct TypeVariable;
 
-using Type = std::variant<TypeExpression, TypeVariable>;
+using Type = std::variant<TypeConstant, TypeVariable>;
 
 std::string canonicalTypeName(Type _type);
 
 enum class BuiltinType
 {
 	Type,
+	Sort,
 	Void,
 	Function,
 	Unit,
@@ -54,18 +55,18 @@ enum class BuiltinType
 	Integer
 };
 
-struct TypeExpression
+struct TypeConstant
 {
 	using Constructor = std::variant<BuiltinType, Declaration const*>;
 	Constructor constructor;
 	std::vector<Type> arguments;
-	bool operator<(TypeExpression const& _rhs) const;
-	bool operator==(TypeExpression const& _rhs) const
+	bool operator<(TypeConstant const& _rhs) const;
+	bool operator==(TypeConstant const& _rhs) const
 	{
 		// TODO
 		return !(*this < _rhs) && !(_rhs < *this);
 	}
-	bool operator!=(TypeExpression const& _rhs) const
+	bool operator!=(TypeConstant const& _rhs) const
 	{
 		return !operator==(_rhs);
 	}
@@ -74,7 +75,8 @@ struct TypeExpression
 enum class BuiltinClass
 {
 	Type,
-	Kind
+	Kind,
+	Constraint
 };
 
 struct TypeClass
@@ -91,7 +93,7 @@ struct Sort
 	std::set<TypeClass> classes;
 	bool operator==(Sort const& _rhs) const;
 	bool operator!=(Sort const& _rhs) const { return !operator==(_rhs); }
-	bool operator<(Sort const& _rhs) const;
+	bool operator<=(Sort const& _rhs) const;
 	Sort operator+(Sort const& _rhs) const;
 	Sort operator-(Sort const& _rhs) const;
 };
@@ -145,6 +147,7 @@ public:
 	using UnificationFailure = std::variant<TypeMismatch, SortMismatch>;
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
 	std::string typeToString(Type const& _type) const;
+	Sort sort(Type _type) const;
 private:
 	TypeEnvironment(TypeEnvironment&& _env): m_typeSystem(_env.m_typeSystem), m_typeVariables(std::move(_env.m_typeVariables)) {}
 	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);
@@ -155,33 +158,6 @@ private:
 class TypeSystem
 {
 public:
-	TypeSystem();
-	TypeSystem(TypeSystem const&) = delete;
-	TypeSystem const& operator=(TypeSystem const&) = delete;
-	Type type(TypeExpression::Constructor _typeConstructor, std::vector<Type> _arguments) const;
-	std::string typeName(TypeExpression::Constructor _typeConstructor) const
-	{
-		// TODO: proper error handling
-		return m_typeConstructors.at(_typeConstructor).name;
-	}
-	void declareTypeConstructor(TypeExpression::Constructor _typeConstructor, std::string _name, size_t _arguments);
-	size_t constructorArguments(TypeExpression::Constructor _typeConstructor) const
-	{
-		// TODO: error handling
-		return m_typeConstructors.at(_typeConstructor).arguments();
-	}
-	void instantiateClass(TypeExpression::Constructor _typeConstructor, Arity _arity);
-
-	Type freshTypeVariable(bool _generic, Sort _sort);
-	Type freshKindVariable(bool _generic, Sort _sort);
-
-	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
-	TypeEnvironment& env() { return m_globalTypeEnvironment; }
-	Sort sort(Type _type) const;
-
-	Type freshVariable(bool _generic, Sort _sort);
-private:
-	size_t m_numTypeVariables = 0;
 	struct TypeConstructorInfo
 	{
 		std::string name;
@@ -192,21 +168,57 @@ private:
 			return arities.front().argumentSorts.size();
 		}
 	};
-	std::map<TypeExpression::Constructor, TypeConstructorInfo> m_typeConstructors;
+	TypeSystem();
+	TypeSystem(TypeSystem const&) = delete;
+	TypeSystem const& operator=(TypeSystem const&) = delete;
+	Type type(TypeConstant::Constructor _typeConstructor, std::vector<Type> _arguments) const;
+	std::string typeName(TypeConstant::Constructor _typeConstructor) const
+	{
+		// TODO: proper error handling
+		return m_typeConstructors.at(_typeConstructor).name;
+	}
+	void declareTypeConstructor(TypeConstant::Constructor _typeConstructor, std::string _name, size_t _arguments);
+	size_t constructorArguments(TypeConstant::Constructor _typeConstructor) const
+	{
+		// TODO: error handling
+		return m_typeConstructors.at(_typeConstructor).arguments();
+	}
+	TypeConstructorInfo const& constructorInfo(TypeConstant::Constructor _typeConstructor) const
+	{
+		// TODO: error handling
+		return m_typeConstructors.at(_typeConstructor);
+	}
+
+	void declareTypeClass(TypeConstant::Constructor _classDeclaration, std::string _name);
+	void instantiateClass(TypeConstant::Constructor _typeConstructor, Arity _arity);
+
+	Type freshTypeVariable(bool _generic, Sort _sort);
+	Type freshKindVariable(bool _generic, Sort _sort);
+
+	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
+	TypeEnvironment& env() { return m_globalTypeEnvironment; }
+
+	Type freshVariable(bool _generic, Sort _sort);
+private:
+	size_t m_numTypeVariables = 0;
+	std::map<TypeConstant::Constructor, TypeConstructorInfo> m_typeConstructors;
 	TypeEnvironment m_globalTypeEnvironment{*this};
 };
 
 struct TypeSystemHelpers
 {
 	TypeSystem const& typeSystem;
-	std::tuple<TypeExpression::Constructor, std::vector<Type>> destTypeExpression(Type _functionType) const;
+	std::tuple<TypeConstant::Constructor, std::vector<Type>> destTypeExpression(Type _type) const;
+	bool isTypeExpression(Type _type) const;
 	Type tupleType(std::vector<Type> _elements) const;
 	std::vector<Type> destTupleType(Type _tupleType) const;
 	Type functionType(Type _argType, Type _resultType) const;
 	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
+	bool isFunctionType(Type _type) const;
 	std::vector<Type> typeVars(Type _type) const;
 	std::string sortToString(Sort _sort) const;
 	Type kindType(Type _type) const;
+	bool isKindType(Type _type) const;
 	Type destKindType(Type _type) const;
 };
 

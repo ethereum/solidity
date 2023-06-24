@@ -41,7 +41,12 @@ bool DebugWarner::visitNode(ASTNode const& _node)
 	auto const& typeInferenceAnnotation = m_analysis.annotation<TypeInference>(_node);
 	if (typeInferenceAnnotation.type)
 	{
-		m_errorReporter.info(0000_error, _node.location(), "Inferred type: " + m_analysis.typeSystem().env().typeToString(*typeInferenceAnnotation.type));
+		Type type = m_analysis.typeSystem().env().resolveRecursive(*typeInferenceAnnotation.type);
+		m_errorReporter.info(
+			0000_error,
+			_node.location(),
+			"Inferred type: " + m_analysis.typeSystem().env().typeToString(type) + ":" + TypeSystemHelpers{m_analysis.typeSystem()}.sortToString(m_analysis.typeSystem().env().sort(type))
+		);
 	}
 	return true;
 }

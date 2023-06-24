@@ -328,9 +328,27 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 			unify(*leftAnnotation.type, *rightAnnotation.type, _binaryOperation.location());
 			operationAnnotation.type = leftAnnotation.type;
 		}
+		else if (_binaryOperation.getOperator() == Token::RightArrow)
+		{
+			_binaryOperation.leftExpression().accept(*this);
+			_binaryOperation.rightExpression().accept(*this);
+			auto getType = [&](std::optional<Type> _type) -> Type {
+				solAssert(_type);
+				if (helper.isKindType(*_type))
+					return helper.destKindType(*_type);
+				else
+				{
+					m_errorReporter.typeError(0000_error, _binaryOperation.leftExpression().location(), "Expected type but got " + m_env->typeToString(*leftAnnotation.type));
+					return m_typeSystem.freshTypeVariable(false, {});
+				}
+			};
+			Type leftType = getType(leftAnnotation.type);
+			Type rightType = getType(rightAnnotation.type);
+			operationAnnotation.type = helper.kindType(helper.functionType(leftType, rightType));
+		}
 		else
 		{
-			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Binary operations other than colon in type context not yet supported.");
+			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Invalid binary operations in type context.");
 			operationAnnotation.type = helper.kindType(m_typeSystem.freshTypeVariable(false, {}));
 		}
 		return false;
@@ -358,12 +376,17 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 			_variableDeclaration.typeExpression()->accept(*this);
 			auto& typeExpressionAnnotation = annotation(*_variableDeclaration.typeExpression());
 			solAssert(typeExpressionAnnotation.type);
-			variableAnnotation.type = m_env->fresh(helper.destKindType(*typeExpressionAnnotation.type), false);
+			if (helper.isKindType(*typeExpressionAnnotation.type))
+				variableAnnotation.type = m_env->fresh(helper.destKindType(*typeExpressionAnnotation.type), false);
+			else
+			{
+				m_errorReporter.typeError(0000_error, _variableDeclaration.typeExpression()->location(), "Expected type, but got " + m_env->typeToString(*typeExpressionAnnotation.type));
+				variableAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
+			}
 			return false;
 		}
 
 		variableAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
-
 		return false;
 	case ExpressionContext::Type:
 		if (_variableDeclaration.typeExpression())
@@ -469,12 +492,12 @@ bool TypeInference::visit(Identifier const& _identifier)
 
 			if (dynamic_cast<VariableDeclaration const*>(referencedDeclaration))
 			{
-				helper.destKindType(*declarationAnnotation.type);
+				// TODO: helper.destKindType(*declarationAnnotation.type);
 				identifierAnnotation.type = declarationAnnotation.type;
 			}
 			else if (dynamic_cast<TypeDefinition const*>(referencedDeclaration))
 			{
-				helper.destKindType(*declarationAnnotation.type);
+				// TODO: helper.destKindType(*declarationAnnotation.type);
 				identifierAnnotation.type = m_env->fresh(*declarationAnnotation.type, true);
 			}
 			else
@@ -511,12 +534,27 @@ void TypeInference::endVisit(TupleExpression const& _tupleExpression)
 	auto& expressionAnnotation = annotation(_tupleExpression);
 	solAssert(!expressionAnnotation.type);
 
+	TypeSystemHelpers helper{m_typeSystem};
 	auto componentTypes = _tupleExpression.components() | ranges::views::transform([&](auto _expr) -> Type {
 		auto& componentAnnotation = annotation(*_expr);
 		solAssert(componentAnnotation.type);
-		return *componentAnnotation.type;
+		switch(m_expressionContext)
+		{
+		case ExpressionContext::Term:
+			return *componentAnnotation.type;
+		case ExpressionContext::Type:
+			if (helper.isKindType(*componentAnnotation.type))
+				return helper.destKindType(*componentAnnotation.type);
+			else
+			{
+				m_errorReporter.typeError(0000_error, _expr->location(), "Expected type, but got " + m_env->typeToString(*componentAnnotation.type));
+				return m_typeSystem.freshTypeVariable(false, {});
+			}
+		case ExpressionContext::Sort:
+			return *componentAnnotation.type;
+		}
+		solAssert(false);
 	}) | ranges::to<vector<Type>>;
-	TypeSystemHelpers helper{m_typeSystem};
 	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
@@ -658,12 +696,12 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 
 	TypeSystemHelpers helper{m_typeSystem};
 	if (arguments.empty())
-		 typeDefinitionAnnotation.type = helper.kindType(m_typeSystem.type(TypeExpression::Constructor{&_typeDefinition}, arguments));
+		 typeDefinitionAnnotation.type = helper.kindType(m_typeSystem.type(TypeConstant::Constructor{&_typeDefinition}, arguments));
 	else
 		typeDefinitionAnnotation.type =
 			 helper.functionType(
 				 helper.kindType(helper.tupleType(arguments)),
-				helper.kindType(m_typeSystem.type(TypeExpression::Constructor{&_typeDefinition}, arguments))
+				helper.kindType(m_typeSystem.type(TypeConstant::Constructor{&_typeDefinition}, arguments))
 			);
 	return false;
 }
@@ -679,15 +717,33 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 
 	Type functionType = *expressionAnnotation.type;
 
+	TypeSystemHelpers helper{m_typeSystem};
 	std::vector<Type> argTypes;
 	for(auto arg: _functionCall.arguments())
 	{
 		 auto& argAnnotation = annotation(*arg);
 		 solAssert(argAnnotation.type);
-		 argTypes.emplace_back(*argAnnotation.type);
+		 switch(m_expressionContext)
+		 {
+		 case ExpressionContext::Term:
+			argTypes.emplace_back(*argAnnotation.type);
+			break;
+		 case ExpressionContext::Type:
+			if (helper.isKindType(*argAnnotation.type))
+				argTypes.emplace_back(helper.destKindType(*argAnnotation.type));
+			else
+			{
+				m_errorReporter.typeError(0000_error, arg->location(), "Expected type, but got " + m_env->typeToString(*argAnnotation.type));
+				argTypes.emplace_back(m_typeSystem.freshTypeVariable(false, {}));
+			}
+			break;
+		 case ExpressionContext::Sort:
+			m_errorReporter.typeError(0000_error, _functionCall.location(), "Function call in sort context.");
+			functionCallAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
+			break;
+		 }
 	}
 
-	TypeSystemHelpers helper{m_typeSystem};
 	switch(m_expressionContext)
 	{
 	case ExpressionContext::Term:
@@ -701,17 +757,15 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	}
 	case ExpressionContext::Type:
 	{
-		 Type argTuple = helper.tupleType(argTypes);
-		 Type genericFunctionType = helper.functionType(argTuple, m_typeSystem.freshTypeVariable(false, {}));
+		 Type argTuple = helper.kindType(helper.tupleType(argTypes));
+		 Type genericFunctionType = helper.functionType(argTuple, m_typeSystem.freshKindVariable(false, {}));
 		 unify(genericFunctionType, functionType, _functionCall.location());
 
 		 functionCallAnnotation.type = m_env->resolve(std::get<1>(helper.destFunctionType(m_env->resolve(genericFunctionType))));
 		 break;
 	}
 	case ExpressionContext::Sort:
-		 m_errorReporter.typeError(0000_error, _functionCall.location(), "Function call in sort context.");
-		 functionCallAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
-		 break;
+		 solAssert(false);
 	}
 
 

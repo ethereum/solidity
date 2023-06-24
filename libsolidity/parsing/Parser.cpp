@@ -2098,9 +2098,17 @@ ASTPointer<Expression> Parser::parseBinaryExpression(
 
 int Parser::tokenPrecedence(Token _token) const
 {
-	if (m_experimentalSolidityEnabledInCurrentSourceUnit && _token == Token::Colon)
+	if (m_experimentalSolidityEnabledInCurrentSourceUnit)
 	{
-		return 1000;
+		switch(_token)
+		{
+		case Token::Colon:
+			return 1000;
+		case Token::RightArrow:
+			return 999;
+		default:
+			break;
+		}
 	}
 	return TokenTraits::precedence(m_scanner->currentToken());
 }
