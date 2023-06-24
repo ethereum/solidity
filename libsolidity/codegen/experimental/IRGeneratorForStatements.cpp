@@ -172,7 +172,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 		auto const& expressionAnnotation = m_context.analysis.annotation<TypeInference>(memberAccess->expression());
 		solAssert(expressionAnnotation.type);
 
-		auto typeConstructor = std::get<0>(TypeSystemHelpers{m_context.analysis.typeSystem()}.destTypeExpression(
+		auto typeConstructor = std::get<0>(TypeSystemHelpers{m_context.analysis.typeSystem()}.destTypeConstant(
 			m_context.analysis.typeSystem().env().resolve(*expressionAnnotation.type)
 		));
 		auto const* typeClass = dynamic_cast<Identifier const*>(&memberAccess->expression());

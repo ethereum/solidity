@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+#include <libsolidity/ast/experimental/Type.h>
 #include <liblangutil/Exceptions.h>
 
 #include <optional>
@@ -32,105 +33,6 @@ class TypeClassDefinition;
 
 namespace solidity::frontend::experimental
 {
-
-class TypeSystem;
-class TypeEnvironment;
-
-struct TypeConstant;
-struct TypeVariable;
-
-using Type = std::variant<TypeConstant, TypeVariable>;
-
-std::string canonicalTypeName(Type _type);
-
-enum class BuiltinType
-{
-	Type,
-	Sort,
-	Void,
-	Function,
-	Unit,
-	Pair,
-	Word,
-	Integer
-};
-
-struct TypeConstant
-{
-	using Constructor = std::variant<BuiltinType, Declaration const*>;
-	Constructor constructor;
-	std::vector<Type> arguments;
-	bool operator<(TypeConstant const& _rhs) const;
-	bool operator==(TypeConstant const& _rhs) const
-	{
-		// TODO
-		return !(*this < _rhs) && !(_rhs < *this);
-	}
-	bool operator!=(TypeConstant const& _rhs) const
-	{
-		return !operator==(_rhs);
-	}
-};
-
-enum class BuiltinClass
-{
-	Type,
-	Kind,
-	Constraint
-};
-
-struct TypeClass
-{
-	std::variant<BuiltinClass, TypeClassDefinition const*> declaration;
-	std::string toString() const;
-	bool operator<(TypeClass const& _rhs) const;
-	bool operator==(TypeClass const& _rhs) const;
-	bool operator!=(TypeClass const& _rhs) const { return !operator==(_rhs); }
-};
-
-struct Sort
-{
-	std::set<TypeClass> classes;
-	bool operator==(Sort const& _rhs) const;
-	bool operator!=(Sort const& _rhs) const { return !operator==(_rhs); }
-	bool operator<=(Sort const& _rhs) const;
-	Sort operator+(Sort const& _rhs) const;
-	Sort operator-(Sort const& _rhs) const;
-};
-
-struct Arity
-{
-	std::vector<Sort> argumentSorts;
-	TypeClass typeClass;
-};
-
-struct TypeVariable
-{
-	size_t index() const { return m_index; }
-	bool generic() const { return m_generic; }
-	Sort const& sort() const { return m_sort; }
-	bool operator<(TypeVariable const& _rhs) const
-	{
-		// TODO: more robust comparison?
-		return m_index < _rhs.m_index;
-	}
-	bool operator==(TypeVariable const& _rhs) const
-	{
-		// TODO
-		return !(*this < _rhs) && !(_rhs < *this);
-	}
-	bool operator!=(TypeVariable const& _rhs) const
-	{
-		return !operator==(_rhs);
-	}
-private:
-	friend class TypeSystem;
-	size_t m_index = 0;
-	Sort m_sort;
-	bool m_generic = false;
-	TypeVariable(size_t _index, Sort _sort, bool _generic):
-	m_index(_index), m_sort(std::move(_sort)), m_generic(_generic) {}
-};
 
 class TypeEnvironment
 {
@@ -171,26 +73,26 @@ public:
 	TypeSystem();
 	TypeSystem(TypeSystem const&) = delete;
 	TypeSystem const& operator=(TypeSystem const&) = delete;
-	Type type(TypeConstant::Constructor _typeConstructor, std::vector<Type> _arguments) const;
-	std::string typeName(TypeConstant::Constructor _typeConstructor) const
+	Type type(TypeConstructor _typeConstructor, std::vector<Type> _arguments) const;
+	std::string typeName(TypeConstructor _typeConstructor) const
 	{
 		// TODO: proper error handling
 		return m_typeConstructors.at(_typeConstructor).name;
 	}
-	void declareTypeConstructor(TypeConstant::Constructor _typeConstructor, std::string _name, size_t _arguments);
-	size_t constructorArguments(TypeConstant::Constructor _typeConstructor) const
+	void declareTypeConstructor(TypeConstructor _typeConstructor, std::string _name, size_t _arguments);
+	size_t constructorArguments(TypeConstructor _typeConstructor) const
 	{
 		// TODO: error handling
 		return m_typeConstructors.at(_typeConstructor).arguments();
 	}
-	TypeConstructorInfo const& constructorInfo(TypeConstant::Constructor _typeConstructor) const
+	TypeConstructorInfo const& constructorInfo(TypeConstructor _typeConstructor) const
 	{
 		// TODO: error handling
 		return m_typeConstructors.at(_typeConstructor);
 	}
 
-	void declareTypeClass(TypeConstant::Constructor _classDeclaration, std::string _name);
-	void instantiateClass(TypeConstant::Constructor _typeConstructor, Arity _arity);
+	void declareTypeClass(TypeConstructor _classDeclaration, std::string _name);
+	void instantiateClass(TypeConstructor _typeConstructor, Arity _arity);
 
 	Type freshTypeVariable(bool _generic, Sort _sort);
 	Type freshKindVariable(bool _generic, Sort _sort);
@@ -201,15 +103,15 @@ public:
 	Type freshVariable(bool _generic, Sort _sort);
 private:
 	size_t m_numTypeVariables = 0;
-	std::map<TypeConstant::Constructor, TypeConstructorInfo> m_typeConstructors;
+	std::map<TypeConstructor, TypeConstructorInfo> m_typeConstructors;
 	TypeEnvironment m_globalTypeEnvironment{*this};
 };
 
 struct TypeSystemHelpers
 {
 	TypeSystem const& typeSystem;
-	std::tuple<TypeConstant::Constructor, std::vector<Type>> destTypeExpression(Type _type) const;
-	bool isTypeExpression(Type _type) const;
+	std::tuple<TypeConstructor, std::vector<Type>> destTypeConstant(Type _type) const;
+	bool isTypeConstant(Type _type) const;
 	Type tupleType(std::vector<Type> _elements) const;
 	std::vector<Type> destTupleType(Type _tupleType) const;
 	Type functionType(Type _argType, Type _resultType) const;

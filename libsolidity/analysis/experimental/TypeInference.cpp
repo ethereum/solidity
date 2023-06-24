@@ -696,12 +696,12 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 
 	TypeSystemHelpers helper{m_typeSystem};
 	if (arguments.empty())
-		 typeDefinitionAnnotation.type = helper.kindType(m_typeSystem.type(TypeConstant::Constructor{&_typeDefinition}, arguments));
+		 typeDefinitionAnnotation.type = helper.kindType(m_typeSystem.type(TypeConstructor{&_typeDefinition}, arguments));
 	else
 		typeDefinitionAnnotation.type =
 			 helper.functionType(
 				 helper.kindType(helper.tupleType(arguments)),
-				helper.kindType(m_typeSystem.type(TypeConstant::Constructor{&_typeDefinition}, arguments))
+				helper.kindType(m_typeSystem.type(TypeConstructor{&_typeDefinition}, arguments))
 			);
 	return false;
 }

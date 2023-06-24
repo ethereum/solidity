@@ -69,7 +69,7 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 
 	TypeName const& typeName = _typeClassInstantiation.typeConstructor();
 
-	TypeConstant::Constructor typeConstructor = [&]() -> TypeConstant::Constructor {
+	TypeConstructor typeConstructor = [&]() -> TypeConstructor {
 		if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&typeName))
 		{
 			switch(elementaryTypeName->typeName().token())
@@ -149,7 +149,7 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 bool TypeRegistration::visit(TypeDefinition const& _typeDefinition)
 {
 	m_typeSystem.declareTypeConstructor(
-		TypeConstant::Constructor{&_typeDefinition},
+		TypeConstructor{&_typeDefinition},
 		_typeDefinition.name(),
 		_typeDefinition.arguments() ? _typeDefinition.arguments()->parameters().size() : 0
 	);

@@ -35,158 +35,6 @@ using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
 
-bool TypeClass::operator<(TypeClass const& _rhs) const
-{
-	return std::visit(util::GenericVisitor{
-		[](BuiltinClass _left, BuiltinClass _right) { return _left < _right; },
-		[](TypeClassDefinition const* _left, TypeClassDefinition const* _right) { return _left->id() < _right->id(); },
-		[](BuiltinClass, TypeClassDefinition const*) { return true; },
-		[](TypeClassDefinition const*, BuiltinClass) { return false; },
-	}, declaration, _rhs.declaration);
-}
-
-bool TypeClass::operator==(TypeClass const& _rhs) const
-{
-	return std::visit(util::GenericVisitor{
-		[](BuiltinClass _left, BuiltinClass _right) { return _left == _right; },
-		[](TypeClassDefinition const* _left, TypeClassDefinition const* _right) { return _left->id() == _right->id(); },
-		[](BuiltinClass, TypeClassDefinition const*) { return false; },
-		[](TypeClassDefinition const*, BuiltinClass) { return false; },
-	}, declaration, _rhs.declaration);
-}
-
-string TypeClass::toString() const
-{
-	return std::visit(util::GenericVisitor{
-		[](BuiltinClass _class) -> string {
-			switch(_class)
-			{
-			case BuiltinClass::Type:
-				return "type";
-			case BuiltinClass::Kind:
-				return "kind";
-			case BuiltinClass::Constraint:
-				return "contraint";
-			}
-			solAssert(false);
-		},
-		[](TypeClassDefinition const* _declaration) { return _declaration->name(); },
-	}, declaration);
-}
-
-bool Sort::operator==(Sort const& _rhs) const
-{
-	if (classes.size() != _rhs.classes.size())
-		return false;
-	for (auto [lhs, rhs]: ranges::zip_view(classes, _rhs.classes))
-		if (lhs != rhs)
-			return false;
-	return true;
-}
-
-bool Sort::operator<=(Sort const& _rhs) const
-{
-	for (auto c: classes)
-		if (!_rhs.classes.count(c))
-			return false;
-	return true;
-}
-
-Sort Sort::operator+(Sort const& _rhs) const
-{
-	Sort result { classes };
-	result.classes += _rhs.classes;
-	return result;
-}
-
-
-Sort Sort::operator-(Sort const& _rhs) const
-{
-	Sort result { classes };
-	result.classes -= _rhs.classes;
-	return result;
-}
-
-bool TypeConstant::operator<(TypeConstant const& _rhs) const
-{
-	if (constructor < _rhs.constructor)
-		return true;
-	if (_rhs.constructor < constructor)
-		return false;
-	solAssert(arguments.size() == _rhs.arguments.size());
-	for(auto [lhs, rhs]: ranges::zip_view(arguments, _rhs.arguments))
-	{
-		if (lhs < rhs)
-			return true;
-		if (rhs < lhs)
-			return false;
-	}
-	return false;
-}
-
-std::string experimental::canonicalTypeName(Type _type)
-{
-	return std::visit(util::GenericVisitor{
-		[&](TypeConstant const& _type) {
-			std::stringstream stream;
-			auto printTypeArguments = [&]() {
-				if (!_type.arguments.empty())
-				{
-					stream << "$";
-					for (auto type: _type.arguments | ranges::views::drop_last(1))
-						stream << canonicalTypeName(type) << "$";
-					stream << canonicalTypeName(_type.arguments.back());
-					stream << "$";
-				}
-			};
-			std::visit(util::GenericVisitor{
-				[&](Declaration const* _declaration) {
-					printTypeArguments();
-					if (auto const* typeDeclarationAnnotation = dynamic_cast<TypeDeclarationAnnotation const*>(&_declaration->annotation()))
-						stream << *typeDeclarationAnnotation->canonicalName;
-					else
-						// TODO: canonical name
-						stream << _declaration->name();
-				},
-				[&](BuiltinType _builtinType) {
-					printTypeArguments();
-					switch(_builtinType)
-					{
-					case BuiltinType::Type:
-						stream << "type";
-						break;
-					case BuiltinType::Sort:
-						stream << "sort";
-						break;
-					case BuiltinType::Void:
-						stream << "void";
-						break;
-					case BuiltinType::Function:
-						stream << "fun";
-						break;
-					case BuiltinType::Unit:
-						stream << "unit";
-						break;
-					case BuiltinType::Pair:
-						stream << "pair";
-						break;
-					case BuiltinType::Word:
-						stream << "word";
-						break;
-					case BuiltinType::Integer:
-						stream << "integer";
-						break;
-					}
-				}
-			}, _type.constructor);
-			return stream.str();
-		},
-		[](TypeVariable const&)-> string {
-			solAssert(false);
-		},
-	}, _type);
-}
-
 std::string TypeEnvironment::typeToString(Type const& _type) const
 {
 	return std::visit(util::GenericVisitor{
@@ -431,7 +279,7 @@ Sort TypeEnvironment::sort(Type _type) const
 	}, _type);
 }
 
-void TypeSystem::declareTypeConstructor(TypeConstant::Constructor _typeConstructor, std::string _name, size_t _arguments)
+void TypeSystem::declareTypeConstructor(TypeConstructor _typeConstructor, std::string _name, size_t _arguments)
 {
 	Sort baseSort{{TypeClass{BuiltinClass::Type}}};
 	bool newlyInserted = m_typeConstructors.emplace(std::make_pair(_typeConstructor, TypeConstructorInfo{
@@ -442,7 +290,7 @@ void TypeSystem::declareTypeConstructor(TypeConstant::Constructor _typeConstruct
 	solAssert(newlyInserted, "Type constructor already declared.");
 }
 
-void TypeSystem::declareTypeClass(TypeConstant::Constructor _classDeclaration, std::string _name)
+void TypeSystem::declareTypeClass(TypeConstructor _classDeclaration, std::string _name)
 {
 	bool newlyInserted = m_typeConstructors.emplace(std::make_pair(_classDeclaration, TypeConstructorInfo{
 		_name,
@@ -453,7 +301,7 @@ void TypeSystem::declareTypeClass(TypeConstant::Constructor _classDeclaration, s
 
 }
 
-experimental::Type TypeSystem::type(TypeConstant::Constructor _constructor, std::vector<Type> _arguments) const
+experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Type> _arguments) const
 {
 	// TODO: proper error handling
 	auto const& info = m_typeConstructors.at(_constructor);
@@ -495,7 +343,7 @@ experimental::Type TypeEnvironment::fresh(Type _type, bool _generalize)
 	return freshImpl(_type, _generalize, freshImpl);
 }
 
-void TypeSystem::instantiateClass(TypeConstant::Constructor _typeConstructor, Arity _arity)
+void TypeSystem::instantiateClass(TypeConstructor _typeConstructor, Arity _arity)
 {
 	// TODO: proper error handling
 	auto& typeConstructorInfo = m_typeConstructors.at(_typeConstructor);
@@ -517,7 +365,9 @@ experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 
 vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) const
 {
-	auto [constructor, arguments] = destTypeExpression(_tupleType);
+	if (!isTypeConstant(_tupleType))
+		return {_tupleType};
+	auto [constructor, arguments] = destTypeConstant(_tupleType);
 	if (auto const* builtinType = get_if<BuiltinType>(&constructor))
 	{
 		if (*builtinType == BuiltinType::Unit)
@@ -534,11 +384,9 @@ vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) con
 	Type tail = arguments.back();
 	while(true)
 	{
-		auto const* tailTypeConstant = get_if<TypeConstant>(&tail);
-		if (!tailTypeConstant)
+		if (!isTypeConstant(tail))
 			break;
-
-		auto [tailConstructor, tailArguments] = destTypeExpression(tail);
+		auto [tailConstructor, tailArguments] = destTypeConstant(tail);
 		auto const* builtinType = get_if<BuiltinType>(&tailConstructor);
 		if(!builtinType || *builtinType != BuiltinType::Pair)
 			break;
@@ -555,9 +403,9 @@ experimental::Type TypeSystemHelpers::functionType(experimental::Type _argType, 
 	return typeSystem.type(BuiltinType::Function, {_argType, _resultType});
 }
 
-tuple<TypeConstant::Constructor, vector<experimental::Type>> TypeSystemHelpers::destTypeExpression(Type _type) const
+tuple<TypeConstructor, vector<experimental::Type>> TypeSystemHelpers::destTypeConstant(Type _type) const
 {
-	using ResultType = tuple<TypeConstant::Constructor, vector<Type>>;
+	using ResultType = tuple<TypeConstructor, vector<Type>>;
 	return std::visit(util::GenericVisitor{
 		[&](TypeConstant const& _type) -> ResultType {
 			return std::make_tuple(_type.constructor, _type.arguments);
@@ -568,7 +416,7 @@ tuple<TypeConstant::Constructor, vector<experimental::Type>> TypeSystemHelpers::
 	}, _type);
 }
 
-bool TypeSystemHelpers::isTypeExpression(Type _type) const
+bool TypeSystemHelpers::isTypeConstant(Type _type) const
 {
 	return std::visit(util::GenericVisitor{
 		[&](TypeConstant const&) -> bool {
@@ -582,7 +430,7 @@ bool TypeSystemHelpers::isTypeExpression(Type _type) const
 
 tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFunctionType(Type _functionType) const
 {
-	auto [constructor, arguments] = destTypeExpression(_functionType);
+	auto [constructor, arguments] = destTypeConstant(_functionType);
 	auto const* builtinType = get_if<BuiltinType>(&constructor);
 	solAssert(builtinType && *builtinType == BuiltinType::Function);
 	solAssert(arguments.size() == 2);
@@ -591,9 +439,9 @@ tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFunctionTyp
 
 bool TypeSystemHelpers::isFunctionType(Type _type) const
 {
-	if (!isTypeExpression(_type))
+	if (!isTypeConstant(_type))
 		return false;
-	auto constructor = get<0>(destTypeExpression(_type));
+	auto constructor = get<0>(destTypeConstant(_type));
 	auto const* builtinType = get_if<BuiltinType>(&constructor);
 	return builtinType && *builtinType == BuiltinType::Function;
 }
@@ -625,18 +473,18 @@ experimental::Type TypeSystemHelpers::kindType(Type _type) const
 
 experimental::Type TypeSystemHelpers::destKindType(Type _type) const
 {
-	auto [constructor, arguments] = destTypeExpression(_type);
-	solAssert(constructor == TypeConstant::Constructor{BuiltinType::Type});
+	auto [constructor, arguments] = destTypeConstant(_type);
+	solAssert(constructor == TypeConstructor{BuiltinType::Type});
 	solAssert(arguments.size() == 1);
 	return arguments.front();
 }
 
 bool TypeSystemHelpers::isKindType(Type _type) const
 {
-	if (!isTypeExpression(_type))
+	if (!isTypeConstant(_type))
 		return false;
-	auto constructor = get<0>(destTypeExpression(_type));
-	return constructor == TypeConstant::Constructor{BuiltinType::Type};
+	auto constructor = get<0>(destTypeConstant(_type));
+	return constructor == TypeConstructor{BuiltinType::Type};
 }
 
 std::string TypeSystemHelpers::sortToString(Sort _sort) const

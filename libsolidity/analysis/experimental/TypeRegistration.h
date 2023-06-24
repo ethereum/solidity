@@ -33,7 +33,7 @@ public:
 	struct Annotation
 	{
 		Type type;
-		std::map<TypeConstant::Constructor, TypeClassInstantiation const*> instantiations;
+		std::map<TypeConstructor, TypeClassInstantiation const*> instantiations;
 	};
 	TypeRegistration(Analysis& _analysis);
 

@@ -78,6 +78,8 @@ set(sources
 	ast/Types.h
 	ast/TypeProvider.cpp
 	ast/TypeProvider.h
+	ast/experimental/Type.cpp
+	ast/experimental/Type.h
 	ast/experimental/TypeSystem.cpp
 	ast/experimental/TypeSystem.h
 	codegen/ABIFunctions.cpp
