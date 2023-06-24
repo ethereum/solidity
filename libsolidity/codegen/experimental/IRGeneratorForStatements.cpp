@@ -99,8 +99,7 @@ private:
 		solAssert(varDecl, "External reference in inline assembly to something that is not a variable declaration.");
 		auto type = m_context.analysis.annotation<TypeInference>(*varDecl).type;
 		solAssert(type);
-		type = m_context.env->resolve(*type);
-		solAssert(*type == m_context.analysis.typeSystem().type(BuiltinType::Word, {}));
+		solAssert(m_context.env->typeEquals(*type, m_context.analysis.typeSystem().type(BuiltinType::Word, {})));
 		string value = IRNames::localVariable(*varDecl);
 		return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}

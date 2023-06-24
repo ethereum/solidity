@@ -107,12 +107,13 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 
 	while (!m_context.functionQueue.empty())
 	{
-		auto function = m_context.functionQueue.front();
+		auto [function, type] = m_context.functionQueue.front();
 		m_context.functionQueue.pop_front();
-		if (!m_context.generatedFunctions.count(function))
+		auto& generatedTypes = m_context.generatedFunctions[function];
+		if (!util::contains_if(generatedTypes, [&, type=type](auto _generatedType) { return m_context.env->typeEquals(_generatedType, type); }))
 		{
-			m_context.generatedFunctions.insert(function);
-			code << generate(*function.function, function.type);
+			m_context.generatedFunctions[function].emplace_back(type);
+			code << generate(*function, type);
 		}
 	}
 

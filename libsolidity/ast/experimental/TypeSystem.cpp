@@ -228,6 +228,33 @@ vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type
 	return failures;
 }
 
+bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
+{
+	return std::visit(util::GenericVisitor{
+		[&](TypeVariable _left, TypeVariable _right) {
+			if (_left.index() == _right.index())
+			{
+				solAssert(_left.sort() == _right.sort());
+				return true;
+			}
+			return false;
+		},
+		[&](TypeConstant _left, TypeConstant _right) {
+		  if(_left.constructor != _right.constructor)
+			  return false;
+		  if (_left.arguments.size() != _right.arguments.size())
+			  return false;
+		   for (auto&& [left, right]: ranges::zip_view(_left.arguments, _right.arguments))
+			  if (!typeEquals(left, right))
+				  return false;
+		   return true;
+		},
+		[&](auto, auto) {
+			return false;
+		}
+	}, resolve(_lhs), resolve(_rhs));
+}
+
 TypeEnvironment TypeEnvironment::clone() const
 {
 	TypeEnvironment result{m_typeSystem};

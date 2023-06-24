@@ -56,16 +56,6 @@ struct TypeConstant
 {
 	TypeConstructor constructor;
 	std::vector<Type> arguments;
-	bool operator<(TypeConstant const& _rhs) const;
-	bool operator==(TypeConstant const& _rhs) const
-	{
-		// TODO
-		return !(*this < _rhs) && !(_rhs < *this);
-	}
-	bool operator!=(TypeConstant const& _rhs) const
-	{
-		return !operator==(_rhs);
-	}
 };
 
 enum class BuiltinClass
@@ -105,20 +95,6 @@ struct TypeVariable
 	size_t index() const { return m_index; }
 	bool generic() const { return m_generic; }
 	Sort const& sort() const { return m_sort; }
-	bool operator<(TypeVariable const& _rhs) const
-	{
-		// TODO: more robust comparison?
-		return m_index < _rhs.m_index;
-	}
-	bool operator==(TypeVariable const& _rhs) const
-	{
-		// TODO
-		return !(*this < _rhs) && !(_rhs < *this);
-	}
-	bool operator!=(TypeVariable const& _rhs) const
-	{
-		return !operator==(_rhs);
-	}
 private:
 	friend class TypeSystem;
 	size_t m_index = 0;

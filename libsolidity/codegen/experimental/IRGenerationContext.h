@@ -38,19 +38,18 @@ struct IRGenerationContext
 	void enqueueFunctionDefinition(FunctionDefinition const* _functionDefinition, Type _type)
 	{
 		QueuedFunction queue{_functionDefinition, env->resolve(_type)};
-		if (!generatedFunctions.count(queue))
-			functionQueue.emplace_back(queue);
+		for (auto type: generatedFunctions[_functionDefinition])
+			if (env->typeEquals(type, _type))
+				return;
+		functionQueue.emplace_back(queue);
 	}
 	struct QueuedFunction
 	{
 		FunctionDefinition const* function;
 		Type type;
-		bool operator<(QueuedFunction const& _rhs) const {
-			return std::make_tuple(function, type) < std::make_tuple(_rhs.function, _rhs.type);
-		}
 	};
 	std::list<QueuedFunction> functionQueue;
-	std::set<QueuedFunction> generatedFunctions;
+	std::map<FunctionDefinition const*, std::vector<Type>> generatedFunctions;
 };
 
 }

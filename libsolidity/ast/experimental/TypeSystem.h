@@ -45,6 +45,7 @@ public:
 	std::string canonicalTypeName(Type _type) const;
 	std::string typeToString(Type const& _type) const;
 	Sort sort(Type _type) const;
+	bool typeEquals(Type _lhs, Type _rhs) const;
 private:
 	TypeEnvironment(TypeEnvironment&& _env): m_typeSystem(_env.m_typeSystem), m_typeVariables(std::move(_env.m_typeVariables)) {}
 	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);

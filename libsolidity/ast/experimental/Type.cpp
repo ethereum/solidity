@@ -100,20 +100,3 @@ Sort Sort::operator-(Sort const& _rhs) const
 	result.classes -= _rhs.classes;
 	return result;
 }
-
-bool TypeConstant::operator<(TypeConstant const& _rhs) const
-{
-	if (constructor < _rhs.constructor)
-		return true;
-	if (_rhs.constructor < constructor)
-		return false;
-	solAssert(arguments.size() == _rhs.arguments.size());
-	for(auto [lhs, rhs]: ranges::zip_view(arguments, _rhs.arguments))
-	{
-		if (lhs < rhs)
-			return true;
-		if (rhs < lhs)
-			return false;
-	}
-	return false;
-}
