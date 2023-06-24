@@ -29,69 +29,6 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend::experimental;
 
-std::string frontend::experimental::canonicalTypeName(Type _type)
-{
-	return std::visit(util::GenericVisitor{
-		[&](TypeConstant const& _type) {
-			std::stringstream stream;
-			auto printTypeArguments = [&]() {
-				if (!_type.arguments.empty())
-				{
-					stream << "$";
-					for (auto type: _type.arguments | ranges::views::drop_last(1))
-						stream << canonicalTypeName(type) << "$";
-					stream << canonicalTypeName(_type.arguments.back());
-					stream << "$";
-				}
-			};
-			std::visit(util::GenericVisitor{
-				[&](Declaration const* _declaration) {
-					printTypeArguments();
-					if (auto const* typeDeclarationAnnotation = dynamic_cast<TypeDeclarationAnnotation const*>(&_declaration->annotation()))
-						stream << *typeDeclarationAnnotation->canonicalName;
-					else
-						// TODO: canonical name
-						stream << _declaration->name();
-				},
-				[&](BuiltinType _builtinType) {
-					printTypeArguments();
-					switch(_builtinType)
-					{
-					case BuiltinType::Type:
-						stream << "type";
-						break;
-					case BuiltinType::Sort:
-						stream << "sort";
-						break;
-					case BuiltinType::Void:
-						stream << "void";
-						break;
-					case BuiltinType::Function:
-						stream << "fun";
-						break;
-					case BuiltinType::Unit:
-						stream << "unit";
-						break;
-					case BuiltinType::Pair:
-						stream << "pair";
-						break;
-					case BuiltinType::Word:
-						stream << "word";
-						break;
-					case BuiltinType::Integer:
-						stream << "integer";
-						break;
-					}
-				}
-			}, _type.constructor);
-			return stream.str();
-		},
-		[](TypeVariable const&)-> string {
-			solAssert(false);
-		},
-	}, _type);
-}
-
 bool TypeClass::operator<(TypeClass const& _rhs) const
 {
 	return std::visit(util::GenericVisitor{

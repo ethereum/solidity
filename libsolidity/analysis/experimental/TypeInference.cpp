@@ -19,6 +19,7 @@
 
 #include <libsolidity/analysis/experimental/TypeInference.h>
 #include <libsolidity/analysis/experimental/Analysis.h>
+#include <libsolidity/ast/experimental/TypeSystemHelper.h>
 #include <liblangutil/Exceptions.h>
 
 #include <libyul/AsmAnalysis.h>

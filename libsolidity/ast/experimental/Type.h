@@ -38,8 +38,6 @@ struct TypeVariable;
 
 using Type = std::variant<TypeConstant, TypeVariable>;
 
-std::string canonicalTypeName(Type _type);
-
 enum class BuiltinType
 {
 	Type,

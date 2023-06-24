@@ -32,12 +32,12 @@ using namespace solidity::yul;
 namespace solidity::frontend::experimental
 {
 
-string IRNames::function(FunctionDefinition const& _function, Type _type)
+string IRNames::function(TypeEnvironment const& _env, FunctionDefinition const& _function, Type _type)
 {
 	if (_function.isConstructor())
 		return constructor(*_function.annotation().contract);
 
-	return "fun_" + _function.name() + "_" + to_string(_function.id()) + "$" + canonicalTypeName(_type) + "$";
+	return "fun_" + _function.name() + "_" + to_string(_function.id()) + "$" + _env.canonicalTypeName(_type) + "$";
 }
 
 string IRNames::function(VariableDeclaration const& _varDecl)

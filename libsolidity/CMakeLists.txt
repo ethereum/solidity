@@ -82,6 +82,8 @@ set(sources
 	ast/experimental/Type.h
 	ast/experimental/TypeSystem.cpp
 	ast/experimental/TypeSystem.h
+	ast/experimental/TypeSystemHelper.cpp
+	ast/experimental/TypeSystemHelper.h
 	codegen/ABIFunctions.cpp
 	codegen/ABIFunctions.h
 	codegen/ArrayUtils.cpp

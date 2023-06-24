@@ -99,7 +99,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 		auto type = m_context.analysis.annotation<TypeInference>(*_contract.fallbackFunction()).type;
 		solAssert(type);
 		type = m_context.env->resolve(*type);
-		code << IRNames::function(*_contract.fallbackFunction(), *type) << "()\n";
+		code << IRNames::function(*m_context.env, *_contract.fallbackFunction(), *type) << "()\n";
 		m_context.enqueueFunctionDefinition(_contract.fallbackFunction(), *type);
 	}
 	code << "revert(0,0)\n";
@@ -130,7 +130,7 @@ string IRGenerator::generate(FunctionDefinition const& _function, Type _type)
 		solAssert(false, newEnv.typeToString(*type) + " <-> " + newEnv.typeToString(_type));
 	}
 	std::stringstream code;
-	code << "function " << IRNames::function(_function, _type) << "(";
+	code << "function " << IRNames::function(newEnv, _function, _type) << "(";
 	if (_function.parameters().size() > 1)
 		for (auto const& arg: _function.parameters() | ranges::views::drop_last(1))
 			code << IRNames::localVariable(*arg) << ", ";

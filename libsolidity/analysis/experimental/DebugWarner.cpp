@@ -20,6 +20,7 @@
 
 #include <libsolidity/analysis/experimental/Analysis.h>
 #include <libsolidity/analysis/experimental/TypeInference.h>
+#include <libsolidity/ast/experimental/TypeSystemHelper.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -41,7 +42,7 @@ bool DebugWarner::visitNode(ASTNode const& _node)
 	auto const& typeInferenceAnnotation = m_analysis.annotation<TypeInference>(_node);
 	if (typeInferenceAnnotation.type)
 	{
-		Type type = m_analysis.typeSystem().env().resolveRecursive(*typeInferenceAnnotation.type);
+		Type type = *typeInferenceAnnotation.type;
 		m_errorReporter.info(
 			0000_error,
 			_node.location(),

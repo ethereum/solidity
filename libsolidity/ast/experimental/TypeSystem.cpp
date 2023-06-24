@@ -18,6 +18,7 @@
 
 
 #include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/ast/experimental/TypeSystemHelper.h>
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/Exceptions.h>
 
@@ -34,6 +35,70 @@
 using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
+
+std::string TypeEnvironment::canonicalTypeName(Type _type) const
+{
+	return visit(util::GenericVisitor{
+		[&](TypeConstant const& _type) {
+			std::stringstream stream;
+			auto printTypeArguments = [&]() {
+				if (!_type.arguments.empty())
+				{
+					stream << "$";
+					for (auto type: _type.arguments | ranges::views::drop_last(1))
+						stream << canonicalTypeName(type) << "$";
+					stream << canonicalTypeName(_type.arguments.back());
+					stream << "$";
+				}
+			};
+			std::visit(util::GenericVisitor{
+				[&](Declaration const* _declaration) {
+					printTypeArguments();
+					if (auto const* typeDeclarationAnnotation = dynamic_cast<TypeDeclarationAnnotation const*>(&_declaration->annotation()))
+						stream << *typeDeclarationAnnotation->canonicalName;
+					else
+						// TODO: canonical name
+						stream << _declaration->name();
+				},
+				[&](BuiltinType _builtinType) {
+					printTypeArguments();
+					switch(_builtinType)
+					{
+					case BuiltinType::Type:
+						stream << "type";
+						break;
+					case BuiltinType::Sort:
+						stream << "sort";
+						break;
+					case BuiltinType::Void:
+						stream << "void";
+						break;
+					case BuiltinType::Function:
+						stream << "fun";
+						break;
+					case BuiltinType::Unit:
+						stream << "unit";
+						break;
+					case BuiltinType::Pair:
+						stream << "pair";
+						break;
+					case BuiltinType::Word:
+						stream << "word";
+						break;
+					case BuiltinType::Integer:
+						stream << "integer";
+						break;
+					}
+				}
+			}, _type.constructor);
+			return stream.str();
+		},
+		[](TypeVariable const&)-> string {
+			solAssert(false);
+		},
+	}, resolve(_type));
+}
+
 
 std::string TypeEnvironment::typeToString(Type const& _type) const
 {
@@ -349,160 +414,4 @@ void TypeSystem::instantiateClass(TypeConstructor _typeConstructor, Arity _arity
 	auto& typeConstructorInfo = m_typeConstructors.at(_typeConstructor);
 	solAssert(_arity.argumentSorts.size() == typeConstructorInfo.arguments(), "Invalid arity.");
 	typeConstructorInfo.arities.emplace_back(_arity);
-}
-
-experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
-{
-	if (_elements.empty())
-		return typeSystem.type(BuiltinType::Unit, {});
-	if (_elements.size() == 1)
-		return _elements.front();
-	Type result = _elements.back();
-	for (Type type: _elements | ranges::views::reverse | ranges::views::drop_exactly(1))
-		result = typeSystem.type(BuiltinType::Pair, {type, result});
-	return result;
-}
-
-vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) const
-{
-	if (!isTypeConstant(_tupleType))
-		return {_tupleType};
-	auto [constructor, arguments] = destTypeConstant(_tupleType);
-	if (auto const* builtinType = get_if<BuiltinType>(&constructor))
-	{
-		if (*builtinType == BuiltinType::Unit)
-			return {};
-		else if (*builtinType != BuiltinType::Pair)
-			return {_tupleType};
-	}
-	else
-		return {_tupleType};
-	solAssert(arguments.size() == 2);
-
-	vector<Type> result;
-	result.emplace_back(arguments.front());
-	Type tail = arguments.back();
-	while(true)
-	{
-		if (!isTypeConstant(tail))
-			break;
-		auto [tailConstructor, tailArguments] = destTypeConstant(tail);
-		auto const* builtinType = get_if<BuiltinType>(&tailConstructor);
-		if(!builtinType || *builtinType != BuiltinType::Pair)
-			break;
-		solAssert(tailArguments.size() == 2);
-		result.emplace_back(tailArguments.front());
-		tail = tailArguments.back();
-	}
-	result.emplace_back(tail);
-	return result;
-}
-
-experimental::Type TypeSystemHelpers::functionType(experimental::Type _argType, experimental::Type _resultType) const
-{
-	return typeSystem.type(BuiltinType::Function, {_argType, _resultType});
-}
-
-tuple<TypeConstructor, vector<experimental::Type>> TypeSystemHelpers::destTypeConstant(Type _type) const
-{
-	using ResultType = tuple<TypeConstructor, vector<Type>>;
-	return std::visit(util::GenericVisitor{
-		[&](TypeConstant const& _type) -> ResultType {
-			return std::make_tuple(_type.constructor, _type.arguments);
-		},
-		[](auto const&) -> ResultType {
-			solAssert(false);
-		}
-	}, _type);
-}
-
-bool TypeSystemHelpers::isTypeConstant(Type _type) const
-{
-	return std::visit(util::GenericVisitor{
-		[&](TypeConstant const&) -> bool {
-			return true;
-		},
-		[](auto const&) -> bool {
-			return false;
-		}
-	}, _type);
-}
-
-tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFunctionType(Type _functionType) const
-{
-	auto [constructor, arguments] = destTypeConstant(_functionType);
-	auto const* builtinType = get_if<BuiltinType>(&constructor);
-	solAssert(builtinType && *builtinType == BuiltinType::Function);
-	solAssert(arguments.size() == 2);
-	return make_tuple(arguments.front(), arguments.back());
-}
-
-bool TypeSystemHelpers::isFunctionType(Type _type) const
-{
-	if (!isTypeConstant(_type))
-		return false;
-	auto constructor = get<0>(destTypeConstant(_type));
-	auto const* builtinType = get_if<BuiltinType>(&constructor);
-	return builtinType && *builtinType == BuiltinType::Function;
-}
-
-vector<experimental::Type> TypeSystemHelpers::typeVars(Type _type) const
-{
-	vector<Type> typeVars;
-	auto typeVarsImpl = [&](Type _type, auto _recurse) -> void {
-		std::visit(util::GenericVisitor{
-			[&](TypeConstant const& _type) {
-				for (auto arg: _type.arguments)
-					_recurse(arg, _recurse);
-			},
-			[&](TypeVariable const& _var) {
-				typeVars.emplace_back(_var);
-			},
-// TODO: move to env helpers?
-		}, typeSystem.env().resolve(_type));
-	};
-	typeVarsImpl(_type, typeVarsImpl);
-	return typeVars;
-
-}
-
-experimental::Type TypeSystemHelpers::kindType(Type _type) const
-{
-	return typeSystem.type(BuiltinType::Type, {_type});
-}
-
-experimental::Type TypeSystemHelpers::destKindType(Type _type) const
-{
-	auto [constructor, arguments] = destTypeConstant(_type);
-	solAssert(constructor == TypeConstructor{BuiltinType::Type});
-	solAssert(arguments.size() == 1);
-	return arguments.front();
-}
-
-bool TypeSystemHelpers::isKindType(Type _type) const
-{
-	if (!isTypeConstant(_type))
-		return false;
-	auto constructor = get<0>(destTypeConstant(_type));
-	return constructor == TypeConstructor{BuiltinType::Type};
-}
-
-std::string TypeSystemHelpers::sortToString(Sort _sort) const
-{
-	switch (_sort.classes.size())
-	{
-	case 0:
-		return "()";
-	case 1:
-		return _sort.classes.begin()->toString();
-	default:
-	{
-		std::stringstream stream;
-		stream << "(";
-		for (auto typeClass: _sort.classes | ranges::views::drop_last(1))
-			stream << typeClass.toString() << ", ";
-		stream << _sort.classes.rbegin()->toString() << ")";
-		return stream.str();
-	}
-	}
 }

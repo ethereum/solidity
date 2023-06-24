@@ -25,12 +25,6 @@
 #include <variant>
 #include <vector>
 
-namespace solidity::frontend
-{
-class Declaration;
-class TypeClassDefinition;
-}
-
 namespace solidity::frontend::experimental
 {
 
@@ -48,6 +42,7 @@ public:
 	struct SortMismatch { Type type; Sort sort; };
 	using UnificationFailure = std::variant<TypeMismatch, SortMismatch>;
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
+	std::string canonicalTypeName(Type _type) const;
 	std::string typeToString(Type const& _type) const;
 	Sort sort(Type _type) const;
 private:
@@ -105,23 +100,6 @@ private:
 	size_t m_numTypeVariables = 0;
 	std::map<TypeConstructor, TypeConstructorInfo> m_typeConstructors;
 	TypeEnvironment m_globalTypeEnvironment{*this};
-};
-
-struct TypeSystemHelpers
-{
-	TypeSystem const& typeSystem;
-	std::tuple<TypeConstructor, std::vector<Type>> destTypeConstant(Type _type) const;
-	bool isTypeConstant(Type _type) const;
-	Type tupleType(std::vector<Type> _elements) const;
-	std::vector<Type> destTupleType(Type _tupleType) const;
-	Type functionType(Type _argType, Type _resultType) const;
-	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
-	bool isFunctionType(Type _type) const;
-	std::vector<Type> typeVars(Type _type) const;
-	std::string sortToString(Sort _sort) const;
-	Type kindType(Type _type) const;
-	bool isKindType(Type _type) const;
-	Type destKindType(Type _type) const;
 };
 
 }

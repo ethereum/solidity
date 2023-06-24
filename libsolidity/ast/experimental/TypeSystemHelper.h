@@ -15,27 +15,28 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-
 #pragma once
 
-#include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/experimental/TypeSystem.h>
-
-#include <algorithm>
-#include <string>
 
 namespace solidity::frontend::experimental
 {
 
-struct IRNames
+struct TypeSystemHelpers
 {
-	static std::string function(TypeEnvironment const& _env, FunctionDefinition const& _function, Type _type);
-	static std::string function(VariableDeclaration const& _varDecl);
-	static std::string creationObject(ContractDefinition const& _contract);
-	static std::string deployedObject(ContractDefinition const& _contract);
-	static std::string constructor(ContractDefinition const& _contract);
-	static std::string localVariable(VariableDeclaration const& _declaration);
-	static std::string localVariable(Expression const& _expression);
+	TypeSystem const& typeSystem;
+	std::tuple<TypeConstructor, std::vector<Type>> destTypeConstant(Type _type) const;
+	bool isTypeConstant(Type _type) const;
+	Type tupleType(std::vector<Type> _elements) const;
+	std::vector<Type> destTupleType(Type _tupleType) const;
+	Type functionType(Type _argType, Type _resultType) const;
+	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
+	bool isFunctionType(Type _type) const;
+	std::vector<Type> typeVars(Type _type) const;
+	std::string sortToString(Sort _sort) const;
+	Type kindType(Type _type) const;
+	bool isKindType(Type _type) const;
+	Type destKindType(Type _type) const;
 };
 
 }

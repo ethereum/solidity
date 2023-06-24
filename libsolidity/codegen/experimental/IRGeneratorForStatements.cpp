@@ -22,6 +22,8 @@
 #include <libsolidity/analysis/experimental/TypeInference.h>
 #include <libsolidity/analysis/experimental/TypeRegistration.h>
 
+#include <libsolidity/ast/experimental/TypeSystemHelper.h>
+
 #include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
@@ -173,7 +175,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 		solAssert(expressionAnnotation.type);
 
 		auto typeConstructor = std::get<0>(TypeSystemHelpers{m_context.analysis.typeSystem()}.destTypeConstant(
-			m_context.analysis.typeSystem().env().resolve(*expressionAnnotation.type)
+			m_context.env->resolve(*expressionAnnotation.type)
 		));
 		auto const* typeClass = dynamic_cast<Identifier const*>(&memberAccess->expression());
 		solAssert(typeClass, "Function call to member access only supported for type classes.");
@@ -201,7 +203,7 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	// TODO: get around resolveRecursive by passing the environment further down?
 	functionType = m_context.env->resolveRecursive(*functionType);
 	m_context.enqueueFunctionDefinition(functionDefinition, *functionType);
-	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*functionDefinition, *functionType) << "(";
+	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*m_context.env, *functionDefinition, *functionType) << "(";
 	auto const& arguments = _functionCall.arguments();
 	if (arguments.size() > 1)
 		for (auto arg: arguments | ranges::views::drop_last(1))
