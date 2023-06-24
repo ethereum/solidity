@@ -574,7 +574,9 @@ Constructor, receive, and fallback never have ``name`` or ``outputs``. Receive a
 
 An event description is a JSON object with fairly similar fields:
 
-- ``type``: always ``"event"``
+- ``type``: always ``"event"``:
+  * ``internalType``: ABI JSON's internalType describes a contract's internal function parameter or 
+           return value type, inaccessible outside the contract.
 - ``name``: the name of the event.
 - ``inputs``: an array of objects, each of which contains:
 
