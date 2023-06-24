@@ -98,7 +98,7 @@ private:
 		auto type = m_context.analysis.annotation<TypeInference>(*varDecl).type;
 		solAssert(type);
 		type = m_context.env->resolve(*type);
-		solAssert(*type == m_context.analysis.typeSystem().builtinType(BuiltinType::Word, {}));
+		solAssert(*type == m_context.analysis.typeSystem().type(BuiltinType::Word, {}));
 		string value = IRNames::localVariable(*varDecl);
 		return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}

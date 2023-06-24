@@ -148,7 +148,6 @@ public:
 	TypeSystem() {}
 	TypeSystem(TypeSystem const&) = delete;
 	TypeSystem const& operator=(TypeSystem const&) = delete;
-	Type builtinType(BuiltinType _builtinType, std::vector<Type> _arguments) const;
 	Type type(TypeExpression::Constructor _typeConstructor, std::vector<Type> _arguments) const;
 	std::string typeName(TypeExpression::Constructor _typeConstructor) const
 	{

@@ -37,10 +37,10 @@ m_analysis(_analysis),
 m_errorReporter(_analysis.errorReporter()),
 m_typeSystem(_analysis.typeSystem())
 {
-	m_voidType = m_typeSystem.builtinType(BuiltinType::Void, {});
-	m_wordType = m_typeSystem.builtinType(BuiltinType::Word, {});
-	m_integerType = m_typeSystem.builtinType(BuiltinType::Integer, {});
-	m_unitType = m_typeSystem.builtinType(BuiltinType::Unit, {});
+	m_voidType = m_typeSystem.type(BuiltinType::Void, {});
+	m_wordType = m_typeSystem.type(BuiltinType::Word, {});
+	m_integerType = m_typeSystem.type(BuiltinType::Integer, {});
+	m_unitType = m_typeSystem.type(BuiltinType::Unit, {});
 	m_env = &m_typeSystem.env();
 }
 
@@ -63,7 +63,7 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 
 	auto typeFromParameterList = [&](ParameterList const* _list) {
 		if (!_list)
-			return m_typeSystem.builtinType(BuiltinType::Unit, {});
+			return m_unitType;
 		auto& listAnnotation = annotation(*_list);
 		solAssert(listAnnotation.type);
 		return *listAnnotation.type;

@@ -355,11 +355,6 @@ void TypeSystem::declareTypeConstructor(TypeExpression::Constructor _typeConstru
 	solAssert(newlyInserted, "Type constructor already declared.");
 }
 
-experimental::Type TypeSystem::builtinType(BuiltinType _builtinType, std::vector<Type> _arguments) const
-{
-	return type(_builtinType, std::move(_arguments));
-}
-
 experimental::Type TypeSystem::type(TypeExpression::Constructor _constructor, std::vector<Type> _arguments) const
 {
 	// TODO: proper error handling
@@ -413,12 +408,12 @@ void TypeSystem::instantiateClass(TypeExpression::Constructor _typeConstructor, 
 experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 {
 	if (_elements.empty())
-		return typeSystem.builtinType(BuiltinType::Unit, {});
+		return typeSystem.type(BuiltinType::Unit, {});
 	if (_elements.size() == 1)
 		return _elements.front();
 	Type result = _elements.back();
 	for (Type type: _elements | ranges::views::reverse | ranges::views::drop_exactly(1))
-		result = typeSystem.builtinType(BuiltinType::Pair, {type, result});
+		result = typeSystem.type(BuiltinType::Pair, {type, result});
 	return result;
 }
 
@@ -459,7 +454,7 @@ vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) con
 
 experimental::Type TypeSystemHelpers::functionType(experimental::Type _argType, experimental::Type _resultType) const
 {
-	return typeSystem.builtinType(BuiltinType::Function, {_argType, _resultType});
+	return typeSystem.type(BuiltinType::Function, {_argType, _resultType});
 }
 
 tuple<TypeExpression::Constructor, vector<experimental::Type>> TypeSystemHelpers::destTypeExpression(Type _type) const
