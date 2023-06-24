@@ -37,7 +37,6 @@ m_typeSystem(_analysis.typeSystem())
 {
 	for (auto [type, name, arity]: std::initializer_list<std::tuple<BuiltinType, const char*, uint64_t>> {
 		{BuiltinType::Void, "void", 0},
-		{BuiltinType::Function, "fun", 2},
 		{BuiltinType::Unit, "unit", 0},
 		{BuiltinType::Pair, "pair", 2},
 		{BuiltinType::Word, "word", 0},
@@ -120,10 +119,11 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 	{
 		if (auto const* referencedDeclaration = argumentSort->annotation().referencedDeclaration)
 		{
-			if (!dynamic_cast<TypeClassDefinition const*>(referencedDeclaration))
+			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(referencedDeclaration))
+				// TODO: multi arities
+				arity.argumentSorts.emplace_back(Sort{{TypeClass{typeClassDefinition}}});
+			else
 				m_errorReporter.fatalTypeError(0000_error, argumentSort->location(), "Argument sort has to be a type class.");
-			// TODO: multi arities
-			arity.argumentSorts.emplace_back(Sort{{TypeClass{referencedDeclaration}}});
 		}
 		else
 		{

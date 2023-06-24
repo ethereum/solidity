@@ -37,7 +37,39 @@ using namespace solidity::frontend::experimental;
 
 bool TypeClass::operator<(TypeClass const& _rhs) const
 {
-	return declaration->id() < _rhs.declaration->id();
+	return std::visit(util::GenericVisitor{
+		[](BuiltinClass _left, BuiltinClass _right) { return _left < _right; },
+		[](TypeClassDefinition const* _left, TypeClassDefinition const* _right) { return _left->id() < _right->id(); },
+		[](BuiltinClass, TypeClassDefinition const*) { return true; },
+		[](TypeClassDefinition const*, BuiltinClass) { return false; },
+	}, declaration, _rhs.declaration);
+}
+
+bool TypeClass::operator==(TypeClass const& _rhs) const
+{
+	return std::visit(util::GenericVisitor{
+		[](BuiltinClass _left, BuiltinClass _right) { return _left == _right; },
+		[](TypeClassDefinition const* _left, TypeClassDefinition const* _right) { return _left->id() == _right->id(); },
+		[](BuiltinClass, TypeClassDefinition const*) { return false; },
+		[](TypeClassDefinition const*, BuiltinClass) { return false; },
+	}, declaration, _rhs.declaration);
+}
+
+string TypeClass::toString() const
+{
+	return std::visit(util::GenericVisitor{
+		[](BuiltinClass _class) -> string {
+			switch(_class)
+			{
+			case BuiltinClass::Type:
+				return "type";
+			case BuiltinClass::Kind:
+				return "kind";
+			}
+			solAssert(false);
+		},
+		[](TypeClassDefinition const* _declaration) { return _declaration->name(); },
+	}, declaration);
 }
 
 bool Sort::operator==(Sort const& _rhs) const
@@ -62,6 +94,14 @@ Sort Sort::operator+(Sort const& _rhs) const
 {
 	Sort result { classes };
 	result.classes += _rhs.classes;
+	return result;
+}
+
+
+Sort Sort::operator-(Sort const& _rhs) const
+{
+	Sort result { classes };
+	result.classes -= _rhs.classes;
 	return result;
 }
 
@@ -110,6 +150,9 @@ std::string experimental::canonicalTypeName(Type _type)
 					printTypeArguments();
 					switch(_builtinType)
 					{
+					case BuiltinType::Type:
+						stream << "type";
+						break;
 					case BuiltinType::Void:
 						stream << "void";
 						break;
@@ -156,8 +199,8 @@ std::string TypeEnvironment::typeToString(Type const& _type) const
 			};
 			std::visit(util::GenericVisitor{
 				[&](Declaration const* _declaration) {
-					printTypeArguments();
 					stream << m_typeSystem.typeName(_declaration);
+					printTypeArguments();
 				},
 				[&](BuiltinType _builtinType) {
 					switch (_builtinType)
@@ -179,9 +222,15 @@ std::string TypeEnvironment::typeToString(Type const& _type) const
 						stream << typeToString(tupleTypes.back()) << ")";
 						break;
 					}
+					case BuiltinType::Type:
+					{
+						solAssert(_type.arguments.size() == 1);
+						stream << "TYPE(" << typeToString(_type.arguments.front()) << ")";
+						break;
+					}
 					default:
-						printTypeArguments();
 						stream << m_typeSystem.typeName(_builtinType);
+						printTypeArguments();
 						break;
 					}
 				}
@@ -196,14 +245,14 @@ std::string TypeEnvironment::typeToString(Type const& _type) const
 			case 0:
 				break;
 			case 1:
-				stream << ":" << _type.sort().classes.begin()->declaration->name();
+				stream << ":" << _type.sort().classes.begin()->toString();
 				break;
 			default:
-				stream << ":{";
+				stream << ":(";
 				for (auto typeClass: _type.sort().classes | ranges::views::drop_last(1))
-					stream << typeClass.declaration->name() << ", ";
-				stream << _type.sort().classes.rbegin()->declaration->name();
-				stream << "}";
+					stream << typeClass.toString() << ", ";
+				stream << _type.sort().classes.rbegin()->toString();
+				stream << ")";
 				break;
 			}
 			return stream.str();
@@ -234,7 +283,7 @@ vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type
 					failures += instantiate(_right, _left);
 				else
 				{
-					Type newVar = m_typeSystem.freshTypeVariable(_left.generic() && _right.generic(), _left.sort() + _right.sort());
+					Type newVar = m_typeSystem.freshVariable(_left.generic() && _right.generic(), _left.sort() + _right.sort());
 					failures += instantiate(_left, newVar);
 					failures += instantiate(_right, newVar);
 				}
@@ -268,10 +317,39 @@ TypeEnvironment TypeEnvironment::clone() const
 	return result;
 }
 
-experimental::Type TypeSystem::freshTypeVariable(bool _generic, Sort const& _sort)
+TypeSystem::TypeSystem()
+{
+	Sort kindSort{{TypeClass{BuiltinClass::Kind}}};
+	Sort typeSort{{TypeClass{BuiltinClass::Type}}};
+	m_typeConstructors[BuiltinType::Type] = TypeConstructorInfo{
+		"type",
+		{Arity{vector<Sort>{{kindSort}}, TypeClass{BuiltinClass::Kind}}}
+	};
+	m_typeConstructors[BuiltinType::Function] = TypeConstructorInfo{
+		"fun",
+		{
+			Arity{vector<Sort>{{kindSort, kindSort}}, TypeClass{BuiltinClass::Kind}},
+			Arity{vector<Sort>{{typeSort, typeSort}}, TypeClass{BuiltinClass::Type}}
+		}
+	};
+}
+
+experimental::Type TypeSystem::freshVariable(bool _generic, Sort _sort)
 {
 	uint64_t index = m_numTypeVariables++;
-	return TypeVariable(index, _sort, _generic);
+	return TypeVariable(index, std::move(_sort), _generic);
+}
+
+experimental::Type TypeSystem::freshTypeVariable(bool _generic, Sort _sort)
+{
+	_sort.classes.emplace(TypeClass{BuiltinClass::Type});
+	return freshVariable(_generic, _sort);
+}
+
+experimental::Type TypeSystem::freshKindVariable(bool _generic, Sort _sort)
+{
+	_sort.classes.emplace(TypeClass{BuiltinClass::Kind});
+	return freshVariable(_generic, _sort);
 }
 
 vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
@@ -279,7 +357,7 @@ vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVar
 	Sort sort = m_typeSystem.sort(_type);
 	if (!(_variable.sort() < sort))
 	{
-		return {UnificationFailure{SortMismatch{_type, _variable.sort()}}};
+		return {UnificationFailure{SortMismatch{_type, _variable.sort() - sort}}};
 	}
 	solAssert(m_typeVariables.emplace(_variable.index(), _type).second);
 	return {};
@@ -346,10 +424,10 @@ Sort TypeSystem::sort(Type _type) const
 
 void TypeSystem::declareTypeConstructor(TypeExpression::Constructor _typeConstructor, std::string _name, size_t _arguments)
 {
+	Sort baseSort{{TypeClass{BuiltinClass::Type}}};
 	bool newlyInserted = m_typeConstructors.emplace(std::make_pair(_typeConstructor, TypeConstructorInfo{
 		_name,
-		_arguments,
-		{}
+		{Arity{vector<Sort>{_arguments, baseSort}, TypeClass{BuiltinClass::Type}}}
 	})).second;
 	// TODO: proper error handling.
 	solAssert(newlyInserted, "Type constructor already declared.");
@@ -359,7 +437,7 @@ experimental::Type TypeSystem::type(TypeExpression::Constructor _constructor, st
 {
 	// TODO: proper error handling
 	auto const& info = m_typeConstructors.at(_constructor);
-	solAssert(info.arguments == _arguments.size(), "Invalid arity.");
+	solAssert(info.arguments() == _arguments.size(), "Invalid arity.");
 	return TypeExpression{_constructor, _arguments};
 }
 
@@ -401,7 +479,7 @@ void TypeSystem::instantiateClass(TypeExpression::Constructor _typeConstructor, 
 {
 	// TODO: proper error handling
 	auto& typeConstructorInfo = m_typeConstructors.at(_typeConstructor);
-	solAssert(_arity.argumentSorts.size() == typeConstructorInfo.arguments, "Invalid arity.");
+	solAssert(_arity.argumentSorts.size() == typeConstructorInfo.arguments(), "Invalid arity.");
 	typeConstructorInfo.arities.emplace_back(_arity);
 }
 
@@ -499,6 +577,19 @@ vector<experimental::Type> TypeSystemHelpers::typeVars(Type _type) const
 
 }
 
+experimental::Type TypeSystemHelpers::kindType(Type _type) const
+{
+	return typeSystem.type(BuiltinType::Type, {_type});
+}
+
+experimental::Type TypeSystemHelpers::destKindType(Type _type) const
+{
+	auto [constructor, arguments] = destTypeExpression(_type);
+	solAssert(constructor == TypeExpression::Constructor{BuiltinType::Type});
+	solAssert(arguments.size() == 1);
+	return arguments.front();
+}
+
 std::string TypeSystemHelpers::sortToString(Sort _sort) const
 {
 	switch (_sort.classes.size())
@@ -506,14 +597,14 @@ std::string TypeSystemHelpers::sortToString(Sort _sort) const
 	case 0:
 		return "()";
 	case 1:
-		return _sort.classes.begin()->declaration->name();
+		return _sort.classes.begin()->toString();
 	default:
 	{
 		std::stringstream stream;
 		stream << "(";
 		for (auto typeClass: _sort.classes | ranges::views::drop_last(1))
-			stream << typeClass.declaration->name() << ", ";
-		stream << _sort.classes.rbegin()->declaration->name() << ")";
+			stream << typeClass.toString() << ", ";
+		stream << _sort.classes.rbegin()->toString() << ")";
 		return stream.str();
 	}
 	}

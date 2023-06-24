@@ -52,6 +52,7 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
+	solAssert(m_expressionContext == ExpressionContext::Term);
 	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, nullopt);
 	auto& functionAnnotation = annotation(_functionDefinition);
 	if (functionAnnotation.type)
@@ -125,16 +126,21 @@ bool TypeInference::visitNode(ASTNode const& _node)
 
 bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 {
+	solAssert(m_expressionContext == ExpressionContext::Term);
 	auto& typeVariableAnnotation = annotation(_typeClassDefinition.typeVariable());
 	if (typeVariableAnnotation.type)
 		return false;
-	_typeClassDefinition.typeVariable().accept(*this);
+	{
+		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
+		_typeClassDefinition.typeVariable().accept(*this);
+	}
 
 	for (auto const& subNode: _typeClassDefinition.subNodes())
 		subNode->accept(*this);
 
 	solAssert(typeVariableAnnotation.type);
-	unify(*typeVariableAnnotation.type, m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{&_typeClassDefinition}}}), _typeClassDefinition.location());
+	TypeSystemHelpers helper{m_typeSystem};
+	unify(*typeVariableAnnotation.type, helper.kindType(m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{&_typeClassDefinition}}})), _typeClassDefinition.location());
 	return false;
 }
 
@@ -190,9 +196,7 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 			},
 			[&](TypeEnvironment::SortMismatch _sortMismatch) {
 				m_errorReporter.typeError(0000_error, _location, fmt::format(
-					"Cannot unify {} and {}: {} does not have sort {}",
-					m_env->typeToString(_a),
-					m_env->typeToString(_b),
+					"{} does not have sort {}",
 					m_env->typeToString(_sortMismatch.type),
 					TypeSystemHelpers{m_typeSystem}.sortToString(_sortMismatch.sort)
 				));
@@ -254,29 +258,29 @@ bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 		expressionAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
 		return false;
 	}
+	TypeSystemHelpers helper{m_typeSystem};
 	switch(_expression.type().typeName().token())
 	{
 	case Token::Word:
-		expressionAnnotation.type = m_wordType;
+		expressionAnnotation.type = helper.kindType(m_wordType);
 		break;
 	case Token::Void:
-		expressionAnnotation.type = m_voidType;
+		expressionAnnotation.type = helper.kindType(m_voidType);
 		break;
 	case Token::Integer:
-		expressionAnnotation.type = m_integerType;
+		expressionAnnotation.type = helper.kindType(m_integerType);
 		break;
 	case Token::Unit:
-		expressionAnnotation.type = m_unitType;
+		expressionAnnotation.type = helper.kindType(m_unitType);
 		break;
 	case Token::Pair:
 	{
 		auto leftType = m_typeSystem.freshTypeVariable(true, {});
 		auto rightType = m_typeSystem.freshTypeVariable(true, {});
-		TypeSystemHelpers helper{m_typeSystem};
 		expressionAnnotation.type =
 			helper.functionType(
-					  helper.tupleType({leftType, rightType}),
-						m_typeSystem.type(BuiltinType::Pair, {leftType, rightType})
+			helper.kindType(helper.tupleType({leftType, rightType})),
+			helper.kindType(m_typeSystem.type(BuiltinType::Pair, {leftType, rightType}))
 			);
 		break;
 	}
@@ -284,17 +288,16 @@ bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 	{
 		auto argType = m_typeSystem.freshTypeVariable(true, {});
 		auto resultType = m_typeSystem.freshTypeVariable(true, {});
-		TypeSystemHelpers helper{m_typeSystem};
 		expressionAnnotation.type =
 			helper.functionType(
-				helper.tupleType({argType, resultType}),
-				m_typeSystem.type(BuiltinType::Function, {argType, resultType})
+				helper.kindType(helper.tupleType({argType, resultType})),
+				helper.kindType(m_typeSystem.type(BuiltinType::Function, {argType, resultType}))
 			);
 		break;
 	}
 	default:
 		m_errorReporter.typeError(0000_error, _expression.location(), "Only elementary types are supported.");
-		expressionAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
+		expressionAnnotation.type = helper.kindType(m_typeSystem.freshTypeVariable(false, {}));
 		break;
 	}
 	return false;
@@ -305,6 +308,7 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 	auto& operationAnnotation = annotation(_binaryOperation);
 	auto& leftAnnotation = annotation(_binaryOperation.leftExpression());
 	auto& rightAnnotation = annotation(_binaryOperation.rightExpression());
+	TypeSystemHelpers helper{m_typeSystem};
 	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
@@ -327,12 +331,12 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		else
 		{
 			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Binary operations other than colon in type context not yet supported.");
-			operationAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
+			operationAnnotation.type = helper.kindType(m_typeSystem.freshTypeVariable(false, {}));
 		}
 		return false;
 	case ExpressionContext::Sort:
 		m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Invalid binary operation in sort context.");
-		operationAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
+		operationAnnotation.type = helper.kindType(m_typeSystem.freshTypeVariable(false, {}));
 		return false;
 	}
 	return false;
@@ -344,18 +348,33 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 	auto& variableAnnotation = annotation(_variableDeclaration);
 	solAssert(!variableAnnotation.type);
 
-	if (_variableDeclaration.typeExpression())
+	TypeSystemHelpers helper{m_typeSystem};
+	switch (m_expressionContext)
 	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		_variableDeclaration.typeExpression()->accept(*this);
-		auto& typeExpressionAnnotation = annotation(*_variableDeclaration.typeExpression());
-		solAssert(typeExpressionAnnotation.type);
-		variableAnnotation.type = m_env->fresh(*typeExpressionAnnotation.type, false);
+	case ExpressionContext::Term:
+		if (_variableDeclaration.typeExpression())
+		{
+			ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
+			_variableDeclaration.typeExpression()->accept(*this);
+			auto& typeExpressionAnnotation = annotation(*_variableDeclaration.typeExpression());
+			solAssert(typeExpressionAnnotation.type);
+			variableAnnotation.type = m_env->fresh(helper.destKindType(*typeExpressionAnnotation.type), false);
+			return false;
+		}
+
+		variableAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
+
+		return false;
+	case ExpressionContext::Type:
+		if (_variableDeclaration.typeExpression())
+			m_errorReporter.typeError(0000_error, _variableDeclaration.location(), "Variable declaration in type context with type expression.");
+		variableAnnotation.type = helper.kindType(m_typeSystem.freshTypeVariable(false, {}));
+		return false;
+	case ExpressionContext::Sort:
+		m_errorReporter.typeError(0000_error, _variableDeclaration.location(), "Variable declaration in sort context.");
 		return false;
 	}
-
-	variableAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
-
+	solAssert(false);
 	return false;
 }
 
@@ -396,6 +415,7 @@ bool TypeInference::visit(Identifier const& _identifier)
 
 	auto const* referencedDeclaration = _identifier.annotation().referencedDeclaration;
 
+	TypeSystemHelpers helper{m_typeSystem};
 	switch(m_expressionContext)
 	{
 	case ExpressionContext::Term:
@@ -448,16 +468,22 @@ bool TypeInference::visit(Identifier const& _identifier)
 			solAssert(declarationAnnotation.type);
 
 			if (dynamic_cast<VariableDeclaration const*>(referencedDeclaration))
+			{
+				helper.destKindType(*declarationAnnotation.type);
 				identifierAnnotation.type = declarationAnnotation.type;
+			}
 			else if (dynamic_cast<TypeDefinition const*>(referencedDeclaration))
+			{
+				helper.destKindType(*declarationAnnotation.type);
 				identifierAnnotation.type = m_env->fresh(*declarationAnnotation.type, true);
+			}
 			else
 				solAssert(false);
 		}
 		else
 		{
 			// TODO: register free type variable name!
-			identifierAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
+			identifierAnnotation.type = helper.kindType(m_typeSystem.freshTypeVariable(false, {}));
 			return false;
 		}
 		break;
@@ -472,7 +498,7 @@ bool TypeInference::visit(Identifier const& _identifier)
 		)
 			m_errorReporter.fatalTypeError(0000_error, _identifier.location(), "Expected type class.");
 
-		identifierAnnotation.type = m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{typeClass}}});
+		identifierAnnotation.type = helper.kindType(m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{typeClass}}}));
 		break;
 	}
 	}
@@ -490,15 +516,18 @@ void TypeInference::endVisit(TupleExpression const& _tupleExpression)
 		solAssert(componentAnnotation.type);
 		return *componentAnnotation.type;
 	}) | ranges::to<vector<Type>>;
+	TypeSystemHelpers helper{m_typeSystem};
 	switch (m_expressionContext)
 	{
-	case ExpressionContext::Type:
 	case ExpressionContext::Term:
-		expressionAnnotation.type = TypeSystemHelpers{m_typeSystem}.tupleType(componentTypes);
+		expressionAnnotation.type = helper.tupleType(componentTypes);
+		break;
+	case ExpressionContext::Type:
+		expressionAnnotation.type = helper.kindType(helper.tupleType(componentTypes));
 		break;
 	case ExpressionContext::Sort:
 	{
-		Type type = m_typeSystem.freshTypeVariable(false, {});
+		Type type = helper.kindType(m_typeSystem.freshTypeVariable(false, {}));
 		for (auto componentType: componentTypes)
 			unify(type, componentType, _tupleExpression.location());
 		expressionAnnotation.type = type;
@@ -627,13 +656,14 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 		 for (size_t i = 0; i < _typeDefinition.arguments()->parameters().size(); ++i)
 			arguments.emplace_back(m_typeSystem.freshTypeVariable(true, {}));
 
+	TypeSystemHelpers helper{m_typeSystem};
 	if (arguments.empty())
-		 typeDefinitionAnnotation.type = m_typeSystem.type(TypeExpression::Constructor{&_typeDefinition}, arguments);
+		 typeDefinitionAnnotation.type = helper.kindType(m_typeSystem.type(TypeExpression::Constructor{&_typeDefinition}, arguments));
 	else
 		typeDefinitionAnnotation.type =
-			TypeSystemHelpers{m_typeSystem}.functionType(
-				TypeSystemHelpers{m_typeSystem}.tupleType(arguments),
-				m_typeSystem.type(TypeExpression::Constructor{&_typeDefinition}, arguments)
+			 helper.functionType(
+				 helper.kindType(helper.tupleType(arguments)),
+				helper.kindType(m_typeSystem.type(TypeExpression::Constructor{&_typeDefinition}, arguments))
 			);
 	return false;
 }
@@ -657,16 +687,25 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 		 argTypes.emplace_back(*argAnnotation.type);
 	}
 
+	TypeSystemHelpers helper{m_typeSystem};
 	switch(m_expressionContext)
 	{
 	case ExpressionContext::Term:
-	case ExpressionContext::Type:
 	{
-		 Type argTuple = TypeSystemHelpers{m_typeSystem}.tupleType(argTypes);
-		 Type genericFunctionType = TypeSystemHelpers{m_typeSystem}.functionType(argTuple, m_typeSystem.freshTypeVariable(false, {}));
+		 Type argTuple = helper.tupleType(argTypes);
+		 Type genericFunctionType = helper.functionType(argTuple, m_typeSystem.freshTypeVariable(false, {}));
 		 unify(genericFunctionType, functionType, _functionCall.location());
 
-		 functionCallAnnotation.type = m_env->resolve(std::get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(m_env->resolve(genericFunctionType))));
+		 functionCallAnnotation.type = m_env->resolve(std::get<1>(helper.destFunctionType(m_env->resolve(genericFunctionType))));
+		 break;
+	}
+	case ExpressionContext::Type:
+	{
+		 Type argTuple = helper.tupleType(argTypes);
+		 Type genericFunctionType = helper.functionType(argTuple, m_typeSystem.freshTypeVariable(false, {}));
+		 unify(genericFunctionType, functionType, _functionCall.location());
+
+		 functionCallAnnotation.type = m_env->resolve(std::get<1>(helper.destFunctionType(m_env->resolve(genericFunctionType))));
 		 break;
 	}
 	case ExpressionContext::Sort:

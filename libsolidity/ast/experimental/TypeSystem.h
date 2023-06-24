@@ -27,6 +27,7 @@
 namespace solidity::frontend
 {
 class Declaration;
+class TypeClassDefinition;
 }
 
 namespace solidity::frontend::experimental
@@ -44,6 +45,7 @@ std::string canonicalTypeName(Type _type);
 
 enum class BuiltinType
 {
+	Type,
 	Void,
 	Function,
 	Unit,
@@ -69,12 +71,19 @@ struct TypeExpression
 	}
 };
 
+enum class BuiltinClass
+{
+	Type,
+	Kind
+};
+
 struct TypeClass
 {
-	Declaration const* declaration = nullptr;
+	std::variant<BuiltinClass, TypeClassDefinition const*> declaration;
+	std::string toString() const;
 	bool operator<(TypeClass const& _rhs) const;
-	bool operator==(TypeClass const& _rhs) const { return declaration == _rhs.declaration; }
-	bool operator!=(TypeClass const& _rhs) const { return declaration != _rhs.declaration; }
+	bool operator==(TypeClass const& _rhs) const;
+	bool operator!=(TypeClass const& _rhs) const { return !operator==(_rhs); }
 };
 
 struct Sort
@@ -84,6 +93,7 @@ struct Sort
 	bool operator!=(Sort const& _rhs) const { return !operator==(_rhs); }
 	bool operator<(Sort const& _rhs) const;
 	Sort operator+(Sort const& _rhs) const;
+	Sort operator-(Sort const& _rhs) const;
 };
 
 struct Arity
@@ -145,7 +155,7 @@ private:
 class TypeSystem
 {
 public:
-	TypeSystem() {}
+	TypeSystem();
 	TypeSystem(TypeSystem const&) = delete;
 	TypeSystem const& operator=(TypeSystem const&) = delete;
 	Type type(TypeExpression::Constructor _typeConstructor, std::vector<Type> _arguments) const;
@@ -158,22 +168,29 @@ public:
 	size_t constructorArguments(TypeExpression::Constructor _typeConstructor) const
 	{
 		// TODO: error handling
-		return m_typeConstructors.at(_typeConstructor).arguments;
+		return m_typeConstructors.at(_typeConstructor).arguments();
 	}
 	void instantiateClass(TypeExpression::Constructor _typeConstructor, Arity _arity);
 
-	Type freshTypeVariable(bool _generic, Sort const& _sort);
+	Type freshTypeVariable(bool _generic, Sort _sort);
+	Type freshKindVariable(bool _generic, Sort _sort);
 
 	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
 	TypeEnvironment& env() { return m_globalTypeEnvironment; }
 	Sort sort(Type _type) const;
+
+	Type freshVariable(bool _generic, Sort _sort);
 private:
 	size_t m_numTypeVariables = 0;
 	struct TypeConstructorInfo
 	{
 		std::string name;
-		size_t arguments;
 		std::vector<Arity> arities;
+		size_t arguments() const
+		{
+			solAssert(!arities.empty());
+			return arities.front().argumentSorts.size();
+		}
 	};
 	std::map<TypeExpression::Constructor, TypeConstructorInfo> m_typeConstructors;
 	TypeEnvironment m_globalTypeEnvironment{*this};
@@ -189,6 +206,8 @@ struct TypeSystemHelpers
 	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
 	std::vector<Type> typeVars(Type _type) const;
 	std::string sortToString(Sort _sort) const;
+	Type kindType(Type _type) const;
+	Type destKindType(Type _type) const;
 };
 
 }
