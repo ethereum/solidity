@@ -85,6 +85,7 @@ private:
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(Return const& _return) override;
 	bool visit(UsingForDirective const& _usingFor) override;
+	bool visit(BinaryOperation const& _binaryOperation) override;
 
 	void operator()(yul::FunctionDefinition const& _function) override;
 	void operator()(yul::Identifier const& _identifier) override;
@@ -104,6 +105,7 @@ private:
 
 	InlineAssemblyAnnotation* m_yulAnnotation = nullptr;
 	bool m_yulInsideFunction = false;
+	bool m_typeContext = false;
 };
 
 }

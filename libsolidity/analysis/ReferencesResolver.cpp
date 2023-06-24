@@ -113,6 +113,21 @@ bool ReferencesResolver::visit(VariableDeclaration const& _varDecl)
 	if (_varDecl.documentation())
 		resolveInheritDoc(*_varDecl.documentation(), _varDecl.annotation());
 
+	if (m_resolver.experimentalSolidity())
+	{
+		solAssert(!_varDecl.hasTypeName());
+		if (_varDecl.typeExpression())
+		{
+			ScopedSaveAndRestore typeContext{m_typeContext, true};
+			_varDecl.typeExpression()->accept(*this);
+		}
+		if (_varDecl.overrides())
+			_varDecl.overrides()->accept(*this);
+		if (_varDecl.value())
+			_varDecl.value()->accept(*this);
+		return false;
+	}
+
 	return true;
 }
 
@@ -121,6 +136,8 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
 	if (declarations.empty())
 	{
+		if (m_resolver.experimentalSolidity() && m_typeContext)
+			return false;
 		string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
 		string errorMessage = "Undeclared identifier.";
 		if (!suggestions.empty())
@@ -233,6 +250,24 @@ bool ReferencesResolver::visit(Return const& _return)
 	return true;
 }
 
+bool ReferencesResolver::visit(BinaryOperation const& _binaryOperation)
+{
+	if (m_resolver.experimentalSolidity())
+	{
+		_binaryOperation.leftExpression().accept(*this);
+		if (_binaryOperation.getOperator() == Token::Colon)
+		{
+			ScopedSaveAndRestore typeContext(m_typeContext, !m_typeContext);
+			_binaryOperation.rightExpression().accept(*this);
+		}
+		else
+			_binaryOperation.rightExpression().accept(*this);
+		return false;
+	}
+	else
+		return ASTConstVisitor::visit(_binaryOperation);
+}
+
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
 	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
@@ -252,6 +287,47 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
 	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
+
+	if (m_resolver.experimentalSolidity())
+	{
+		vector<string> splitName;
+		boost::split(splitName, _identifier.name.str(), boost::is_any_of("."));
+		solAssert(!splitName.empty());
+		if (splitName.size() > 2)
+		{
+			m_errorReporter.declarationError(
+				0000_error,
+				nativeLocationOf(_identifier),
+				"Unsupported identifier in inline assembly."
+			);
+			return;
+		}
+		string name = splitName.front();
+		auto declarations = m_resolver.nameFromCurrentScope(name);
+		switch(declarations.size())
+		{
+		case 0:
+			if (splitName.size() > 1)
+				m_errorReporter.declarationError(
+					0000_error,
+					nativeLocationOf(_identifier),
+					"Unsupported identifier in inline assembly."
+				);
+			break;
+		case 1:
+			m_yulAnnotation->externalReferences[&_identifier].declaration = declarations.front();
+			m_yulAnnotation->externalReferences[&_identifier].suffix = splitName.size() > 1 ? splitName.back() : "";
+			break;
+		default:
+			m_errorReporter.declarationError(
+				0000_error,
+				nativeLocationOf(_identifier),
+				"Multiple matching identifiers. Resolving overloaded identifiers is not supported."
+			);
+			break;
+		}
+		return;
+	}
 
 	static set<string> suffixes{"slot", "offset", "length", "address", "selector"};
 	string suffix;

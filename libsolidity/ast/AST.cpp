@@ -1065,4 +1065,8 @@ TypeClassDefinitionAnnotation& TypeClassDefinition::annotation() const
 {
 	return initAnnotation<TypeClassDefinitionAnnotation>();
 }
+TypeDeclarationAnnotation& TypeDefinition::annotation() const
+{
+	return initAnnotation<TypeDeclarationAnnotation>();
+}
 /// @}

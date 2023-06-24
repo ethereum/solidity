@@ -41,6 +41,7 @@ public:
 private:
 	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
 	bool visit(TypeClassInstantiation const& _typeClassInstantiation) override;
+	bool visit(TypeDefinition const& _typeDefinition) override;
 	Annotation& annotation(ASTNode const& _node);
 
 	Analysis& m_analysis;

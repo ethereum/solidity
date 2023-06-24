@@ -62,14 +62,18 @@ public:
 	void endVisit(Return const& _return) override;
 
 	bool visit(MemberAccess const& _memberAccess) override;
+	bool visit(ElementaryTypeNameExpression const& _expression) override;
 
-	// TODO: properly account for it
-	bool visit(TypeClassDefinition const&) override;
-	bool visit(TypeClassInstantiation const&) override;
+	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
+	bool visit(TypeClassInstantiation const& _typeClassInstantiation) override;
+	bool visit(TupleExpression const&) override { return true; }
+	void endVisit(TupleExpression const& _tupleExpression) override;
+	bool visit(TypeDefinition const& _typeDefinition) override;
 
 	bool visitNode(ASTNode const& _node) override;
+
+	bool visit(BinaryOperation const& _operation) override;
 private:
-	Type fromTypeName(TypeName const& _typeName);
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
 	TypeSystem& m_typeSystem;
@@ -82,6 +86,13 @@ private:
 	Annotation& annotation(ASTNode const& _node);
 
 	void unify(Type _a, Type _b);
+	enum class ExpressionContext
+	{
+		Term,
+		Type,
+		Sort
+	};
+	ExpressionContext m_expressionContext = ExpressionContext::Term;
 };
 
 }

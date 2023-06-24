@@ -463,6 +463,8 @@ bool CompilerStack::analyze()
 
 	try
 	{
+		bool experimentalSolidity = !m_sourceOrder.empty() && m_sourceOrder.front()->ast->experimentalSolidity();
+
 		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
@@ -470,7 +472,7 @@ bool CompilerStack::analyze()
 
 		m_globalContext = make_shared<GlobalContext>();
 		// We need to keep the same resolver during the whole process.
-		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
+		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter, experimentalSolidity);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.registerDeclarations(*source->ast))
 				return false;
@@ -496,7 +498,7 @@ bool CompilerStack::analyze()
 			if (source->ast && !resolver.resolveNamesAndTypes(*source->ast))
 				return false;
 
-		if (!m_sourceOrder.empty() && m_sourceOrder.front()->ast->experimentalSolidity())
+		if (experimentalSolidity)
 		{
 			if (!analyzeExperimental())
 				noErrors = false;

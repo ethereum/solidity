@@ -126,7 +126,10 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 				nodes.push_back(parseEnumDefinition());
 				break;
 			case Token::Type:
-				nodes.push_back(parseUserDefinedValueTypeDefinition());
+				if (m_experimentalSolidityEnabledInCurrentSourceUnit)
+					nodes.push_back(parseTypeDefinition());
+				else
+					nodes.push_back(parseUserDefinedValueTypeDefinition());
 				break;
 			case Token::Using:
 				nodes.push_back(parseUsingDirective());
@@ -1716,47 +1719,16 @@ ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
 	nodeFactory.markEndPosition();
 	auto [identifier, nameLocation] = expectIdentifierWithLocation();
 
-	ASTPointer<TypeName> type;
-	vector<ASTPointer<IdentifierPath>> sorts;
+	ASTPointer<Expression> type;
 	if (m_scanner->currentToken() == Token::Colon)
 	{
 		advance();
-		// TODO: handle this in parseTypeName()?
-		if (m_scanner->currentLiteral() == "_")
-		{
-			nodeFactory.markEndPosition();
-			advance();
-		}
-		else
-		{
-			type = parseTypeName();
-			nodeFactory.setEndPositionFromNode(type);
-		}
-		if (m_scanner->currentToken() == Token::Colon)
-		{
-			advance();
-			if (m_scanner->currentToken() == Token::LBrace)
-			{
-				// TODO
-				sorts.emplace_back(parseIdentifierPath());
-				while (m_scanner->currentToken() == Token::Comma)
-				{
-					advance();
-					sorts.emplace_back(parseIdentifierPath());
-				}
-				expectToken(Token::RBrace);
-			}
-			else
-			{
-				sorts.emplace_back(parseIdentifierPath());
-			}
-			if (!sorts.empty())
-				nodeFactory.setEndPositionFromNode(sorts.back());
-		}
+		type = parseExpression();
+		nodeFactory.setEndPositionFromNode(type);
 	}
 
 	return nodeFactory.createNode<VariableDeclaration>(
-		type,
+		nullptr,
 		identifier,
 		nameLocation,
 		nullptr,
@@ -1766,7 +1738,7 @@ ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
 		VariableDeclaration::Mutability::Mutable,
 		nullptr,
 		VariableDeclaration::Location::Unspecified,
-		sorts
+		type
 	);
 }
 
@@ -1865,6 +1837,33 @@ ASTPointer<TypeClassInstantiation> Parser::parseTypeClassInstantiation()
 		argumentSorts,
 		sort,
 		subNodes
+	);
+}
+
+ASTPointer<TypeDefinition> Parser::parseTypeDefinition()
+{
+	solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Type);
+	auto&& [name, nameLocation] = expectIdentifierWithLocation();
+
+	ASTPointer<ParameterList> arguments;
+	if (m_scanner->currentToken() == Token::LParen)
+		arguments = parseParameterList();
+
+	ASTPointer<Expression> expression;
+	if (m_scanner->currentToken() == Token::Assign)
+	{
+		expectToken(Token::Assign);
+		expression = parseExpression();
+	}
+	nodeFactory.markEndPosition();
+	expectToken(Token::Semicolon);
+	return nodeFactory.createNode<TypeDefinition>(
+		std::move(name),
+		std::move(nameLocation),
+		std::move(arguments),
+		std::move(expression)
 	);
 }
 
@@ -2078,9 +2077,9 @@ ASTPointer<Expression> Parser::parseBinaryExpression(
 	RecursionGuard recursionGuard(*this);
 	ASTPointer<Expression> expression = parseUnaryExpression(_partiallyParsedExpression);
 	ASTNodeFactory nodeFactory(*this, expression);
-	int precedence = TokenTraits::precedence(m_scanner->currentToken());
+	int precedence = tokenPrecedence(m_scanner->currentToken());
 	for (; precedence >= _minPrecedence; --precedence)
-		while (TokenTraits::precedence(m_scanner->currentToken()) == precedence)
+		while (tokenPrecedence(m_scanner->currentToken()) == precedence)
 		{
 			Token op = m_scanner->currentToken();
 			advance();
@@ -2095,6 +2094,15 @@ ASTPointer<Expression> Parser::parseBinaryExpression(
 			expression = nodeFactory.createNode<BinaryOperation>(expression, op, right);
 		}
 	return expression;
+}
+
+int Parser::tokenPrecedence(Token _token) const
+{
+	if (m_experimentalSolidityEnabledInCurrentSourceUnit && _token == Token::Colon)
+	{
+		return 1000;
+	}
+	return TokenTraits::precedence(m_scanner->currentToken());
 }
 
 ASTPointer<Expression> Parser::parseUnaryExpression(
@@ -2555,7 +2563,14 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 		while (m_scanner->currentToken() == Token::Period)
 		{
 			advance();
-			iap.path.push_back(parseIdentifierOrAddress());
+			if (m_experimentalSolidityEnabledInCurrentSourceUnit && m_scanner->currentToken() == Token::Number)
+			{
+				ASTNodeFactory nodeFactory(*this);
+				nodeFactory.markEndPosition();
+				iap.path.push_back(nodeFactory.createNode<Identifier>(getLiteralAndAdvance()));
+			}
+			else
+				iap.path.push_back(parseIdentifierOrAddress());
 		}
 	}
 	else

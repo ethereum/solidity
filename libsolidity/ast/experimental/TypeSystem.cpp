@@ -109,7 +109,7 @@ std::string experimental::canonicalTypeName(Type _type)
 					{
 					case BuiltinType::Void:
 						stream << "void";
-					break;
+						break;
 					case BuiltinType::Function:
 						stream << "fun";
 						break;
@@ -305,11 +305,6 @@ experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 }
 
 
-void TypeSystem::declareBuiltinType(BuiltinType _builtinType, std::string _name, uint64_t _arguments)
-{
-	declareTypeConstructor(_builtinType, _name, _arguments);
-}
-
 void TypeSystem::declareTypeConstructor(TypeExpression::Constructor _typeConstructor, std::string _name, size_t _arguments)
 {
 	bool newlyInserted = m_typeConstructors.emplace(std::make_pair(_typeConstructor, TypeConstructorInfo{
@@ -323,10 +318,15 @@ void TypeSystem::declareTypeConstructor(TypeExpression::Constructor _typeConstru
 
 experimental::Type TypeSystem::builtinType(BuiltinType _builtinType, std::vector<Type> _arguments) const
 {
+	return type(_builtinType, std::move(_arguments));
+}
+
+experimental::Type TypeSystem::type(TypeExpression::Constructor _constructor, std::vector<Type> _arguments) const
+{
 	// TODO: proper error handling
-	auto const& info = m_typeConstructors.at(_builtinType);
+	auto const& info = m_typeConstructors.at(_constructor);
 	solAssert(info.arguments == _arguments.size(), "Invalid arity.");
-	return TypeExpression{_builtinType, _arguments};
+	return TypeExpression{_constructor, _arguments};
 }
 
 experimental::Type TypeEnvironment::fresh(Type _type, bool _generalize)

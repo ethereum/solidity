@@ -1069,7 +1069,7 @@ public:
 		Mutability _mutability = Mutability::Mutable,
 		ASTPointer<OverrideSpecifier> _overrides = nullptr,
 		Location _referenceLocation = Location::Unspecified,
-		std::vector<ASTPointer<IdentifierPath>> _sort = {}
+		ASTPointer<Expression> _typeExpression = {}
 	):
 		Declaration(_id, _location, _name, std::move(_nameLocation), _visibility),
 		StructurallyDocumented(std::move(_documentation)),
@@ -1079,10 +1079,10 @@ public:
 		m_mutability(_mutability),
 		m_overrides(std::move(_overrides)),
 		m_location(_referenceLocation),
-		m_sort(std::move(_sort))
+		m_typeExpression(std::move(_typeExpression))
 	{
 		// TODO: consider still asserting unless we are in experimental solidity.
-		// solAssert(m_typeName, ""); solAssert(m_sorts.empy(), "");
+		// solAssert(m_typeName, ""); solAssert(!m_typeExpression, "");
 	}
 
 
@@ -1144,7 +1144,7 @@ public:
 	/// @returns null when it is not accessible as a function.
 	FunctionTypePointer functionType(bool /*_internal*/) const override;
 
-	std::vector<ASTPointer<IdentifierPath>> const& sort() const { return m_sort; }
+	ASTPointer<Expression> const& typeExpression() const { return m_typeExpression; }
 	VariableDeclarationAnnotation& annotation() const override;
 
 protected:
@@ -1160,7 +1160,7 @@ private:
 	Mutability m_mutability = Mutability::Mutable;
 	ASTPointer<OverrideSpecifier> m_overrides; ///< Contains the override specifier node
 	Location m_location = Location::Unspecified; ///< Location of the variable if it is of reference type.
-	std::vector<ASTPointer<IdentifierPath>> m_sort;
+	ASTPointer<Expression> m_typeExpression;
 };
 
 /**
@@ -2142,7 +2142,8 @@ public:
 	):
 		Expression(_id, _location), m_left(std::move(_left)), m_operator(_operator), m_right(std::move(_right))
 	{
-		solAssert(TokenTraits::isBinaryOp(_operator) || TokenTraits::isCompareOp(_operator), "");
+		// TODO: assert against colon for non-experimental solidity
+		solAssert(TokenTraits::isBinaryOp(_operator) || TokenTraits::isCompareOp(_operator) || _operator == Token::Colon, "");
 	}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -2499,7 +2500,7 @@ public:
 		std::vector<ASTPointer<IdentifierPath>> const& _argumentSorts,
 		ASTPointer<IdentifierPath> _class,
 		std::vector<ASTPointer<ASTNode>> _subNodes
-		):
+	):
 		   ASTNode(_id, _location),
 		   m_typeConstructor(std::move(_typeConstructor)),
 		   m_argumentSorts(std::move(_argumentSorts)),
@@ -2522,6 +2523,40 @@ private:
 	std::vector<ASTPointer<IdentifierPath>> m_argumentSorts;
 	ASTPointer<IdentifierPath> m_class;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
+};
+
+class TypeDefinition: public Declaration, public ScopeOpener
+{
+public:
+	TypeDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> _name,
+		SourceLocation _nameLocation,
+		ASTPointer<ParameterList> _arguments,
+		ASTPointer<Expression> _typeExpression
+	):
+		Declaration(_id, _location, _name, std::move(_nameLocation), Visibility::Default),
+		m_arguments(std::move(_arguments)),
+		m_typeExpression(std::move(_typeExpression))
+	{
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	Type const* type() const override { return nullptr; }
+
+	TypeDeclarationAnnotation& annotation() const override;
+
+	ParameterList const* arguments() const { return m_arguments.get(); }
+	Expression const* typeExpression() const { return m_typeExpression.get(); }
+
+	bool experimentalSolidityOnly() const override { return true; }
+
+private:
+	ASTPointer<ParameterList> m_arguments;
+	ASTPointer<Expression> m_typeExpression;
 };
 
 /// @}

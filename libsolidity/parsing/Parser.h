@@ -178,6 +178,7 @@ private:
 	ASTPointer<VariableDeclaration> parsePostfixVariableDeclaration();
 	ASTPointer<TypeClassDefinition> parseTypeClassDefinition();
 	ASTPointer<TypeClassInstantiation> parseTypeClassInstantiation();
+	ASTPointer<TypeDefinition> parseTypeDefinition();
 	///@}
 
 	///@{
@@ -233,6 +234,8 @@ private:
 
 	bool isQuotedPath() const;
 	bool isStdlibPath() const;
+
+	int tokenPrecedence(Token _token) const;
 
 	ASTPointer<ASTString> getStdlibImportPathAndAdvance();
 

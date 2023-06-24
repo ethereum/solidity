@@ -43,7 +43,7 @@ m_typeSystem(_analysis.typeSystem())
 		{BuiltinType::Word, "word", 0},
 		{BuiltinType::Integer, "integer", 0}
 	})
-		m_typeSystem.declareBuiltinType(type, name, arity);
+		m_typeSystem.declareTypeConstructor(type, name, arity);
 }
 
 bool TypeRegistration::analyze(SourceUnit const& _sourceUnit)
@@ -137,6 +137,16 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), ssl, "Duplicate type class instantiation.");
 	}
 
+	return false;
+}
+
+bool TypeRegistration::visit(TypeDefinition const& _typeDefinition)
+{
+	m_typeSystem.declareTypeConstructor(
+		TypeExpression::Constructor{&_typeDefinition},
+		_typeDefinition.name(),
+		_typeDefinition.arguments() ? _typeDefinition.arguments()->parameters().size() : 0
+	);
 	return false;
 }
 

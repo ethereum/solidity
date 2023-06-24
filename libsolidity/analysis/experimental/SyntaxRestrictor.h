@@ -55,6 +55,9 @@ private:
 	bool visit(ParameterList const&) override { return true; }
 	bool visit(Return const&) override { return true; }
 	bool visit(MemberAccess const&) override { return true; }
+	bool visit(BinaryOperation const&) override { return true; }
+	bool visit(ElementaryTypeNameExpression const&) override { return true; }
+	bool visit(TupleExpression const&) override { return true; }
 
 	langutil::ErrorReporter& m_errorReporter;
 };
