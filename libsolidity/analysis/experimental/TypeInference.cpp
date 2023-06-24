@@ -40,6 +40,7 @@ m_typeSystem(_analysis.typeSystem())
 	m_voidType = m_typeSystem.builtinType(BuiltinType::Void, {});
 	m_wordType = m_typeSystem.builtinType(BuiltinType::Word, {});
 	m_integerType = m_typeSystem.builtinType(BuiltinType::Integer, {});
+	m_unitType = m_typeSystem.builtinType(BuiltinType::Unit, {});
 	m_env = &m_typeSystem.env();
 }
 
@@ -93,7 +94,7 @@ void TypeInference::endVisit(Return const& _return)
 		auto& returnExpressionAnnotation = annotation(*_return.expression());
 		solAssert(returnExpressionAnnotation.type);
 		Type functionReturnType = get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(*m_currentFunctionType));
-		unify(functionReturnType, *returnExpressionAnnotation.type);
+		unify(functionReturnType, *returnExpressionAnnotation.type, _return.location());
 	}
 }
 
@@ -133,7 +134,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		subNode->accept(*this);
 
 	solAssert(typeVariableAnnotation.type);
-	unify(*typeVariableAnnotation.type, m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{&_typeClassDefinition}}}));
+	unify(*typeVariableAnnotation.type, m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{&_typeClassDefinition}}}), _typeClassDefinition.location());
 	return false;
 }
 
@@ -180,10 +181,23 @@ experimental::Type TypeInference::fromTypeName(TypeName const& _typeName)
 }
  */
 
-void TypeInference::unify(Type _a, Type _b)
+void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 {
 	for (auto failure: m_env->unify(_a, _b))
-		m_errorReporter.typeError(0000_error, {}, fmt::format("Cannot unify {} and {}.", m_env->typeToString(_a), m_env->typeToString(_b)));
+		std::visit(util::GenericVisitor{
+			[&](TypeEnvironment::TypeMismatch _typeMismatch) {
+				m_errorReporter.typeError(0000_error, _location, fmt::format("Cannot unify {} and {}.", m_env->typeToString(_typeMismatch.a), m_env->typeToString(_typeMismatch.b)));
+			},
+			[&](TypeEnvironment::SortMismatch _sortMismatch) {
+				m_errorReporter.typeError(0000_error, _location, fmt::format(
+					"Cannot unify {} and {}: {} does not have sort {}",
+					m_env->typeToString(_a),
+					m_env->typeToString(_b),
+					m_env->typeToString(_sortMismatch.type),
+					TypeSystemHelpers{m_typeSystem}.sortToString(_sortMismatch.sort)
+				));
+			}
+		}, failure);
 
 }
 bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
@@ -214,7 +228,7 @@ bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 
 		auto& declarationAnnotation = annotation(*declaration);
 		solAssert(declarationAnnotation.type);
-		unify(*declarationAnnotation.type, m_wordType);
+		unify(*declarationAnnotation.type, m_wordType, originLocationOf(_identifier));
 		identifierInfo.valueSize = 1;
 		return true;
 	};
@@ -251,6 +265,33 @@ bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 	case Token::Integer:
 		expressionAnnotation.type = m_integerType;
 		break;
+	case Token::Unit:
+		expressionAnnotation.type = m_unitType;
+		break;
+	case Token::Pair:
+	{
+		auto leftType = m_typeSystem.freshTypeVariable(true, {});
+		auto rightType = m_typeSystem.freshTypeVariable(true, {});
+		TypeSystemHelpers helper{m_typeSystem};
+		expressionAnnotation.type =
+			helper.functionType(
+					  helper.tupleType({leftType, rightType}),
+						m_typeSystem.type(BuiltinType::Pair, {leftType, rightType})
+			);
+		break;
+	}
+	case Token::Fun:
+	{
+		auto argType = m_typeSystem.freshTypeVariable(true, {});
+		auto resultType = m_typeSystem.freshTypeVariable(true, {});
+		TypeSystemHelpers helper{m_typeSystem};
+		expressionAnnotation.type =
+			helper.functionType(
+				helper.tupleType({argType, resultType}),
+				m_typeSystem.type(BuiltinType::Function, {argType, resultType})
+			);
+		break;
+	}
 	default:
 		m_errorReporter.typeError(0000_error, _expression.location(), "Only elementary types are supported.");
 		expressionAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
@@ -280,7 +321,7 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 			}
 			solAssert(leftAnnotation.type);
 			solAssert(rightAnnotation.type);
-			unify(*leftAnnotation.type, *rightAnnotation.type);
+			unify(*leftAnnotation.type, *rightAnnotation.type, _binaryOperation.location());
 			operationAnnotation.type = leftAnnotation.type;
 		}
 		else
@@ -339,7 +380,7 @@ void TypeInference::endVisit(Assignment const& _assignment)
 	solAssert(lhsAnnotation.type);
 	auto& rhsAnnotation = annotation(_assignment.rightHandSide());
 	solAssert(rhsAnnotation.type);
-	unify(*lhsAnnotation.type, *rhsAnnotation.type);
+	unify(*lhsAnnotation.type, *rhsAnnotation.type, _assignment.location());
 	assignmentAnnotation.type = m_env->resolve(*lhsAnnotation.type);
 }
 
@@ -459,7 +500,7 @@ void TypeInference::endVisit(TupleExpression const& _tupleExpression)
 	{
 		Type type = m_typeSystem.freshTypeVariable(false, {});
 		for (auto componentType: componentTypes)
-			unify(type, componentType);
+			unify(type, componentType, _tupleExpression.location());
 		expressionAnnotation.type = type;
 		break;
 	}
@@ -480,13 +521,18 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 
 	map<string, Type> functionTypes;
 
+	Type typeVar = m_typeSystem.freshTypeVariable(false, {});
+
 	for (auto subNode: typeClass->subNodes())
 	{
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
 		solAssert(functionDefinition);
 		auto functionType = annotation(*functionDefinition).type;
 		solAssert(functionType);
-		functionTypes[functionDefinition->name()] = *functionType;
+		functionTypes[functionDefinition->name()] = m_env->fresh(*functionType, true);
+		auto typeVars = TypeSystemHelpers{m_typeSystem}.typeVars(functionTypes[functionDefinition->name()]);
+		solAssert(typeVars.size() == 1);
+		unify(typeVars.front(), typeVar);
 	}
 	for (auto subNode: _typeClassInstantiation.subNodes())
 	{
@@ -508,7 +554,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			auto functionType = annotation(*functionDefinition).type;
 			solAssert(functionType);
 			// TODO: require exact match?
-			unify(*functionType, m_env->fresh(*expectedFunctionType, true));
+			unify(*functionType, *expectedFunctionType, functionDefinition->location());
 			functionTypes.erase(functionDefinition->name());
 		}
 	}
@@ -618,7 +664,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	{
 		 Type argTuple = TypeSystemHelpers{m_typeSystem}.tupleType(argTypes);
 		 Type genericFunctionType = TypeSystemHelpers{m_typeSystem}.functionType(argTuple, m_typeSystem.freshTypeVariable(false, {}));
-		 unify(genericFunctionType, functionType);
+		 unify(genericFunctionType, functionType, _functionCall.location());
 
 		 functionCallAnnotation.type = m_env->resolve(std::get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(m_env->resolve(genericFunctionType))));
 		 break;

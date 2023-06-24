@@ -100,8 +100,11 @@ std::string experimental::canonicalTypeName(Type _type)
 			std::visit(util::GenericVisitor{
 				[&](Declaration const* _declaration) {
 					printTypeArguments();
-					// TODO: canonical name
-					stream << _declaration->name();
+					if (auto const* typeDeclarationAnnotation = dynamic_cast<TypeDeclarationAnnotation const*>(&_declaration->annotation()))
+						stream << *typeDeclarationAnnotation->canonicalName;
+					else
+						// TODO: canonical name
+						stream << _declaration->name();
 				},
 				[&](BuiltinType _builtinType) {
 					printTypeArguments();
@@ -212,7 +215,7 @@ vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type
 {
 	vector<UnificationFailure> failures;
 	auto unificationFailure = [&]() {
-		failures.emplace_back(UnificationFailure{_a, _b});
+		failures.emplace_back(UnificationFailure{TypeMismatch{_a, _b}});
 	};
 	_a = resolve(_a);
 	_b = resolve(_b);
@@ -226,22 +229,22 @@ vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type
 			else
 			{
 				if (_left.sort() < _right.sort())
-					instantiate(_left, _right);
+					failures += instantiate(_left, _right);
 				else if (_right.sort() < _left.sort())
-					instantiate(_right, _left);
+					failures += instantiate(_right, _left);
 				else
 				{
 					Type newVar = m_typeSystem.freshTypeVariable(_left.generic() && _right.generic(), _left.sort() + _right.sort());
-					instantiate(_left, newVar);
-					instantiate(_right, newVar);
+					failures += instantiate(_left, newVar);
+					failures += instantiate(_right, newVar);
 				}
 			}
 		},
 		[&](TypeVariable _var, auto) {
-			instantiate(_var, _b);
+			failures += instantiate(_var, _b);
 		},
 		[&](auto, TypeVariable _var) {
-			instantiate(_var, _a);
+			failures += instantiate(_var, _a);
 		},
 		[&](TypeExpression _left, TypeExpression _right) {
 		  if(_left.constructor != _right.constructor)
@@ -271,9 +274,15 @@ experimental::Type TypeSystem::freshTypeVariable(bool _generic, Sort const& _sor
 	return TypeVariable(index, _sort, _generic);
 }
 
-void TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
+vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
 {
+	Sort sort = m_typeSystem.sort(_type);
+	if (!(_variable.sort() < sort))
+	{
+		return {UnificationFailure{SortMismatch{_type, _variable.sort()}}};
+	}
 	solAssert(m_typeVariables.emplace(_variable.index(), _type).second);
+	return {};
 }
 
 experimental::Type TypeEnvironment::resolve(Type _type) const
@@ -304,6 +313,36 @@ experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 	}, resolve(_type));
 }
 
+Sort TypeSystem::sort(Type _type) const
+{
+	return std::visit(util::GenericVisitor{
+		[&](TypeExpression const& _expression) -> Sort
+		{
+			auto const& constructorInfo = m_typeConstructors.at(_expression.constructor);
+			auto argumentSorts = _expression.arguments | ranges::views::transform([&](Type _type) {
+				return sort(_type);
+			}) | ranges::to<vector<Sort>>;
+			Sort sort;
+			for (auto const& arity: constructorInfo.arities)
+			{
+				solAssert(arity.argumentSorts.size() == argumentSorts.size());
+				bool hasArity = true;
+				for (auto&& [argumentSort, arityArgumentSort]: ranges::zip_view(argumentSorts, arity.argumentSorts))
+				{
+					if (!(argumentSort < arityArgumentSort))
+					{
+						hasArity = false;
+						break;
+					}
+				}
+				if (hasArity)
+					sort.classes.insert(arity.typeClass);
+			}
+			return sort;
+		},
+		[](TypeVariable const& _variable) -> Sort { return _variable.sort(); },
+	}, _type);
+}
 
 void TypeSystem::declareTypeConstructor(TypeExpression::Constructor _typeConstructor, std::string _name, size_t _arguments)
 {
@@ -367,7 +406,7 @@ void TypeSystem::instantiateClass(TypeExpression::Constructor _typeConstructor, 
 {
 	// TODO: proper error handling
 	auto& typeConstructorInfo = m_typeConstructors.at(_typeConstructor);
-	solAssert(_arity._argumentSorts.size() == typeConstructorInfo.arguments, "Invalid arity.");
+	solAssert(_arity.argumentSorts.size() == typeConstructorInfo.arguments, "Invalid arity.");
 	typeConstructorInfo.arities.emplace_back(_arity);
 }
 
@@ -463,4 +502,24 @@ vector<experimental::Type> TypeSystemHelpers::typeVars(Type _type) const
 	typeVarsImpl(_type, typeVarsImpl);
 	return typeVars;
 
+}
+
+std::string TypeSystemHelpers::sortToString(Sort _sort) const
+{
+	switch (_sort.classes.size())
+	{
+	case 0:
+		return "()";
+	case 1:
+		return _sort.classes.begin()->declaration->name();
+	default:
+	{
+		std::stringstream stream;
+		stream << "(";
+		for (auto typeClass: _sort.classes | ranges::views::drop_last(1))
+			stream << typeClass.declaration->name() << ", ";
+		stream << _sort.classes.rbegin()->declaration->name() << ")";
+		return stream.str();
+	}
+	}
 }

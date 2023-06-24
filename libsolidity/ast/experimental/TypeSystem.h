@@ -88,8 +88,8 @@ struct Sort
 
 struct Arity
 {
-	std::vector<Sort> _argumentSorts;
-	TypeClass _class;
+	std::vector<Sort> argumentSorts;
+	TypeClass typeClass;
 };
 
 struct TypeVariable
@@ -130,12 +130,14 @@ public:
 	Type resolve(Type _type) const;
 	Type resolveRecursive(Type _type) const;
 	Type fresh(Type _type, bool _generalize);
-	struct UnificationFailure { Type a; Type b; };
+	struct TypeMismatch { Type a; Type b; };
+	struct SortMismatch { Type type; Sort sort; };
+	using UnificationFailure = std::variant<TypeMismatch, SortMismatch>;
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
 	std::string typeToString(Type const& _type) const;
 private:
 	TypeEnvironment(TypeEnvironment&& _env): m_typeSystem(_env.m_typeSystem), m_typeVariables(std::move(_env.m_typeVariables)) {}
-	void instantiate(TypeVariable _variable, Type _type);
+	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);
 	TypeSystem& m_typeSystem;
 	std::map<size_t, Type> m_typeVariables;
 };
@@ -165,6 +167,7 @@ public:
 
 	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
 	TypeEnvironment& env() { return m_globalTypeEnvironment; }
+	Sort sort(Type _type) const;
 private:
 	size_t m_numTypeVariables = 0;
 	struct TypeConstructorInfo
@@ -186,6 +189,7 @@ struct TypeSystemHelpers
 	Type functionType(Type _argType, Type _resultType) const;
 	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
 	std::vector<Type> typeVars(Type _type) const;
+	std::string sortToString(Sort _sort) const;
 };
 
 }

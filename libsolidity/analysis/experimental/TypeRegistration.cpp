@@ -81,6 +81,12 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 				return BuiltinType::Void;
 			case Token::Integer:
 				return BuiltinType::Integer;
+			case Token::Pair:
+				return BuiltinType::Pair;
+			case Token::Function:
+				return BuiltinType::Function;
+			case Token::Unit:
+				return BuiltinType::Function;
 			default:
 				m_errorReporter.typeError(0000_error, typeName.location(), "Only elementary types are supported.");
 				return BuiltinType::Void;
@@ -117,7 +123,7 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 			if (!dynamic_cast<TypeClassDefinition const*>(referencedDeclaration))
 				m_errorReporter.fatalTypeError(0000_error, argumentSort->location(), "Argument sort has to be a type class.");
 			// TODO: multi arities
-			arity._argumentSorts.emplace_back(Sort{{TypeClass{referencedDeclaration}}});
+			arity.argumentSorts.emplace_back(Sort{{TypeClass{referencedDeclaration}}});
 		}
 		else
 		{

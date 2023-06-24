@@ -81,11 +81,12 @@ private:
 	Type m_voidType;
 	Type m_wordType;
 	Type m_integerType;
+	Type m_unitType;
 	std::optional<Type> m_currentFunctionType;
 
 	Annotation& annotation(ASTNode const& _node);
 
-	void unify(Type _a, Type _b);
+	void unify(Type _a, Type _b, langutil::SourceLocation _location = {});
 	enum class ExpressionContext
 	{
 		Term,

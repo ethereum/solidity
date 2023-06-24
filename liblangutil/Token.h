@@ -275,6 +275,9 @@ namespace solidity::langutil
 	K(Word, "word", 0)                                                 \
 	K(Integer, "integer", 0)                                           \
 	K(Void, "void", 0)                                                 \
+	K(Pair, "pair", 0)                                                 \
+	K(Fun, "fun", 0)                                                   \
+	K(Unit, "unit", 0)                                                 \
 	K(StaticAssert, "static_assert", 0)                                \
 	T(ExperimentalEnd, nullptr, 0) /* used as experimental enum end marker */ \
 	\
@@ -302,7 +305,9 @@ namespace TokenTraits
 	// Predicates
 	constexpr bool isElementaryTypeName(Token tok)
 	{
-		return (Token::Int <= tok && tok < Token::TypesEnd) || tok == Token::Word || tok == Token::Void || tok == Token::Integer;
+		return (Token::Int <= tok && tok < Token::TypesEnd) ||
+			   tok == Token::Word || tok == Token::Void || tok == Token::Integer ||
+			   tok == Token::Pair || tok == Token::Unit || tok == Token::Fun;
 	}
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
