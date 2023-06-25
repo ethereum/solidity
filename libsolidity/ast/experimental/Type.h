@@ -117,8 +117,7 @@ private:
 	friend class TypeSystem;
 	size_t m_index = 0;
 	Sort m_sort;
-	TypeVariable(size_t _index, Sort _sort):
-	m_index(_index), m_sort(std::move(_sort)) {}
+	TypeVariable(size_t _index, Sort _sort): m_index(_index), m_sort(std::move(_sort)) {}
 };
 
 }

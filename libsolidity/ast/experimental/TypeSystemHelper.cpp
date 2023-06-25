@@ -398,7 +398,13 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 		},
 		[](TypeVariable const& _type) {
 			std::stringstream stream;
-			stream << "'var" << _type.index();
+			std::string varName;
+			size_t index = _type.index();
+			varName += 'a' + static_cast<char>(index%26);
+			while (index /= 26)
+				varName += 'a' + static_cast<char>(index%26);
+			reverse(varName.begin(), varName.end());
+			stream << '\'' << varName;
 			switch (_type.sort().classes.size())
 			{
 			case 0:
