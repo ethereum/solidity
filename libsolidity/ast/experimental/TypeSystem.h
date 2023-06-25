@@ -66,6 +66,11 @@ public:
 			return arities.front().argumentSorts.size();
 		}
 	};
+	struct TypeClassInfo
+	{
+		Type typeVariable;
+		std::map<std::string, Type> functions;
+	};
 	TypeSystem();
 	TypeSystem(TypeSystem const&) = delete;
 	TypeSystem const& operator=(TypeSystem const&) = delete;
@@ -86,9 +91,13 @@ public:
 		// TODO: error handling
 		return m_typeConstructors.at(_typeConstructor);
 	}
+	TypeClassInfo const* typeClassInfo(TypeClass _class) const
+	{
+		return util::valueOrNullptr(m_typeClasses, _class);
+	}
 
-	void declareTypeClass(TypeConstructor _classDeclaration, std::string _name);
-	void instantiateClass(TypeConstructor _typeConstructor, Arity _arity);
+	[[nodiscard]] std::optional<std::string> declareTypeClass(TypeClass _class, Type _typeVariable, std::map<std::string, Type> _functions);
+	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity, std::map<std::string, Type> _functions);
 
 	Type freshTypeVariable(bool _generic, Sort _sort);
 	Type freshKindVariable(bool _generic, Sort _sort);
@@ -100,6 +109,7 @@ public:
 private:
 	size_t m_numTypeVariables = 0;
 	std::map<TypeConstructor, TypeConstructorInfo> m_typeConstructors;
+	std::map<TypeClass, TypeClassInfo> m_typeClasses;
 	TypeEnvironment m_globalTypeEnvironment{*this};
 };
 

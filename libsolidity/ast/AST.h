@@ -2497,8 +2497,8 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<TypeName> _typeConstructor,
-		std::vector<ASTPointer<IdentifierPath>> const& _argumentSorts,
-		ASTPointer<IdentifierPath> _class,
+		ASTPointer<ParameterList> _argumentSorts,
+		ASTPointer<TypeClassName> _class,
 		std::vector<ASTPointer<ASTNode>> _subNodes
 	):
 		   ASTNode(_id, _location),
@@ -2512,16 +2512,16 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	TypeName const& typeConstructor() const { return *m_typeConstructor; }
-	std::vector<ASTPointer<IdentifierPath>> const& argumentSorts() const { return m_argumentSorts; }
-	IdentifierPath const& typeClass() const { return *m_class; }
+	ParameterList const* argumentSorts() const { return m_argumentSorts.get(); }
+	TypeClassName const& typeClass() const { return *m_class; }
 	std::vector<ASTPointer<ASTNode>> const& subNodes() const { return m_subNodes; }
 
 	bool experimentalSolidityOnly() const override { return true; }
 
 private:
 	ASTPointer<TypeName> m_typeConstructor;
-	std::vector<ASTPointer<IdentifierPath>> m_argumentSorts;
-	ASTPointer<IdentifierPath> m_class;
+	ASTPointer<ParameterList> m_argumentSorts;
+	ASTPointer<TypeClassName> m_class;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 };
 
@@ -2557,6 +2557,31 @@ public:
 private:
 	ASTPointer<ParameterList> m_arguments;
 	ASTPointer<Expression> m_typeExpression;
+};
+
+class TypeClassName: public ASTNode
+{
+public:
+	TypeClassName(
+		int64_t _id,
+		SourceLocation const& _location,
+		std::variant<Token, ASTPointer<IdentifierPath>> _name
+	):
+		ASTNode(_id, _location),
+		m_name(std::move(_name))
+	{
+		if (Token const* token = std::get_if<Token>(&_name))
+			solAssert(TokenTraits::isBuiltinTypeClassName(*token));
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	bool experimentalSolidityOnly() const override { return true; }
+
+	std::variant<Token, ASTPointer<IdentifierPath>> name() const { return m_name; }
+private:
+	std::variant<Token, ASTPointer<IdentifierPath>> m_name;
 };
 
 /// @}

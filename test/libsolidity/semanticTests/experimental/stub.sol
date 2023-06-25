@@ -1,58 +1,37 @@
 pragma experimental solidity;
 
-
-class a:A {
-    function testValue(x:a) -> y:word;
-}
-
-
-class a:B {
-    function testValue(x:a) -> y:word;
-}
-
-instantiation word : A {
-    function testValue(x:word) -> y:word {
-        assembly {
-            y := 7
-        }
-    }
-}
-
-instantiation word : B {
-    function testValue(x:word) -> y:word {
-        assembly {
-            y := 14
-        }
-    }
-}
-
-function f(a:_:A) -> b:_:B {
-    return a;
-}
-
 type uint256 = word;
 
-instantiation uint256 : A {
-    function testValue(x:uint256) -> y:word {
+instantiation uint256: * {
+    function mul(x, y) -> z {
+        let a = uint256.rep(x);
+        let b = uint256.rep(y);
         assembly {
-            y := 21
+            a := mul(a,b)
+        }
+        z = uint256.abs(a);
+    }
+}
+
+instantiation word: * {
+    function mul(x, y) -> z {
+        assembly {
+            z := mul(x,y)
         }
     }
 }
 
 contract C {
 	fallback() external {
-		let x : word : A;
-		let y;
-        let z: (word, word);
-        let w: uint256;
+		let x : word;
 		assembly {
-			x := 0x42
+			x := 0x10
 		}
-		z = f(z);
-		y = f(x);
-		y = B.testValue(x);
-		y = A.testValue(w);
+        let w: uint256 = uint256.abs(x);
+        w = w * w;
+		let y : word;
+        assembly { y := 2 }
+        y = uint256.rep(w) * y;
 		assembly {
 			mstore(0, y)
 			return(0, 32)

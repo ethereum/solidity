@@ -80,8 +80,6 @@ bool SyntaxRestrictor::visit(FunctionDefinition const& _functionDefinition)
 
 bool SyntaxRestrictor::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
-	if (_variableDeclarationStatement.initialValue())
-		m_errorReporter.syntaxError(0000_error, _variableDeclarationStatement.initialValue()->location(), "Variable declarations with initial value not supported.");
 	if (_variableDeclarationStatement.declarations().size() == 1)
 	{
 		if (!_variableDeclarationStatement.declarations().front())

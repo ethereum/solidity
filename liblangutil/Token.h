@@ -340,6 +340,11 @@ namespace TokenTraits
 			tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue || tok == Token::Leave ||
 			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex;
 	}
+	constexpr bool isBuiltinTypeClassName(Token tok)
+	{
+		return tok == Token::Integer || (isBinaryOp(tok) && tok != Token::Comma) ||
+			   isCompareOp(tok) || isUnaryOp(tok) || (isAssignmentOp(tok) && tok != Token::Assign);
+	}
 	constexpr bool isExperimentalSolidityKeyword(Token tok)
 	{
 		return tok == Token::Assembly || tok == Token::Contract || tok == Token::External || tok == Token::Fallback ||

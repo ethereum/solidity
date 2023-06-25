@@ -38,8 +38,13 @@ private:
 	bool visit(ExpressionStatement const& _expressionStatement) override;
 	bool visit(Assignment const& _assignment) override;
 	bool visit(Identifier const& _identifier) override;
-	bool visit(FunctionCall const&) override;
+	bool visit(FunctionCall const& _functionCall) override;
+	void endVisit(FunctionCall const& _functionCall) override;
+	bool visit(MemberAccess const&) override { return true; }
+	void endVisit(MemberAccess const& _memberAccess) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(BinaryOperation const&) override { return true; }
+	void endVisit(BinaryOperation const& _binaryOperation) override;
 	bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(Return const&) override { return true; }
 	void endVisit(Return const& _return) override;
@@ -47,6 +52,14 @@ private:
 	bool visitNode(ASTNode const& _node) override;
 	IRGenerationContext& m_context;
 	std::stringstream m_code;
+	enum class Builtins
+	{
+		Identity
+	};
+	std::map<Expression const*, std::variant<Declaration const*, Builtins>> m_expressionDeclaration;
+	Type type(ASTNode const& _node) const;
+
+	FunctionDefinition const& resolveTypeClassFunction(TypeClass _class, std::string _name, Type _type);
 };
 
 }

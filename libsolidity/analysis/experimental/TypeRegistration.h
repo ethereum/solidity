@@ -30,19 +30,25 @@ class Analysis;
 class TypeRegistration: public ASTConstVisitor
 {
 public:
+	using TypeClassInstantiations = std::map<TypeConstructor, TypeClassInstantiation const*>;
 	struct Annotation
 	{
 		Type type;
-		std::map<TypeConstructor, TypeClassInstantiation const*> instantiations;
+		TypeClassInstantiations instantiations;
+	};
+	struct GlobalAnnotation
+	{
+		std::map<BuiltinClass, TypeClassInstantiations> builtinClassInstantiations;
+		std::map<Token, std::tuple<TypeClass, std::string>> operators;
 	};
 	TypeRegistration(Analysis& _analysis);
 
 	bool analyze(SourceUnit const& _sourceUnit);
 private:
-	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
 	bool visit(TypeClassInstantiation const& _typeClassInstantiation) override;
 	bool visit(TypeDefinition const& _typeDefinition) override;
 	Annotation& annotation(ASTNode const& _node);
+	GlobalAnnotation& annotation();
 
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;

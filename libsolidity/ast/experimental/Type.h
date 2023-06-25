@@ -51,7 +51,17 @@ enum class BuiltinType
 };
 
 using TypeConstructor = std::variant<BuiltinType, Declaration const*>;
-
+}
+namespace std
+{
+template<>
+struct less<solidity::frontend::experimental::TypeConstructor>
+{
+	bool operator()(solidity::frontend::experimental::TypeConstructor const& _lhs, solidity::frontend::experimental::TypeConstructor const& _rhs) const;
+};
+}
+namespace solidity::frontend::experimental
+{
 struct TypeConstant
 {
 	TypeConstructor constructor;
@@ -62,7 +72,9 @@ enum class BuiltinClass
 {
 	Type,
 	Kind,
-	Constraint
+	Constraint,
+	Integer,
+	Mul
 };
 
 struct TypeClass

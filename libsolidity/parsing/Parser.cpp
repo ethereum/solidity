@@ -1723,7 +1723,7 @@ ASTPointer<VariableDeclaration> Parser::parsePostfixVariableDeclaration()
 	if (m_scanner->currentToken() == Token::Colon)
 	{
 		advance();
-		type = parseExpression();
+		type = parseBinaryExpression();
 		nodeFactory.setEndPositionFromNode(type);
 	}
 
@@ -1791,6 +1791,26 @@ ASTPointer<TypeClassDefinition> Parser::parseTypeClassDefinition()
 	);
 }
 
+ASTPointer<TypeClassName> Parser::parseTypeClassName()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+	std::variant<Token, ASTPointer<IdentifierPath>> name;
+	if (TokenTraits::isBuiltinTypeClassName(m_scanner->currentToken()))
+	{
+		nodeFactory.markEndPosition();
+		name = m_scanner->currentToken();
+		advance();
+	}
+	else
+	{
+		auto identifierPath = parseIdentifierPath();
+		name = identifierPath;
+		nodeFactory.setEndPositionFromNode(identifierPath);
+	}
+	return nodeFactory.createNode<TypeClassName>(name);
+}
+
 ASTPointer<TypeClassInstantiation> Parser::parseTypeClassInstantiation()
 {
 	solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
@@ -1803,22 +1823,12 @@ ASTPointer<TypeClassInstantiation> Parser::parseTypeClassInstantiation()
 	// TODO: parseTypeConstructor()
 	ASTPointer<TypeName> typeConstructor = parseTypeName();
 	expectToken(Token::Colon);
-	vector<ASTPointer<IdentifierPath>> argumentSorts;
+	ASTPointer<ParameterList> argumentSorts;
 	if (m_scanner->currentToken() == Token::LParen)
 	{
-		expectToken(Token::LParen);
-		if (m_scanner->currentToken() != Token::RParen)
-		{
-			argumentSorts.emplace_back(parseIdentifierPath());
-			while (m_scanner->currentToken() == Token::Comma)
-			{
-				expectToken(Token::Comma);
-				argumentSorts.emplace_back(parseIdentifierPath());
-			}
-		}
-		expectToken(Token::RParen);
+		argumentSorts = parseParameterList();
 	}
-	ASTPointer<IdentifierPath> sort = parseIdentifierPath();
+	ASTPointer<TypeClassName> typeClassName = parseTypeClassName();
 	expectToken(Token::LBrace);
 	while (true)
 	{
@@ -1835,7 +1845,7 @@ ASTPointer<TypeClassInstantiation> Parser::parseTypeClassInstantiation()
 	return nodeFactory.createNode<TypeClassInstantiation>(
 		typeConstructor,
 		argumentSorts,
-		sort,
+		typeClassName,
 		subNodes
 	);
 }

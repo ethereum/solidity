@@ -33,10 +33,29 @@ struct Analysis::AnnotationContainer
 	TypeInference::Annotation typeInferenceAnnotation;
 };
 
+struct Analysis::GlobalAnnotationContainer
+{
+	TypeRegistration::GlobalAnnotation typeRegistrationAnnotation;
+	TypeInference::GlobalAnnotation typeInferenceAnnotation;
+};
+
 template<>
 TypeRegistration::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeRegistration>::get(ASTNode const& _node)
 {
 	return analysis.annotationContainer(_node).typeRegistrationAnnotation;
+}
+
+template<>
+TypeRegistration::GlobalAnnotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeRegistration>::get() const
+{
+	return analysis.annotationContainer().typeRegistrationAnnotation;
+}
+
+
+template<>
+TypeRegistration::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeRegistration>::get()
+{
+	return analysis.annotationContainer().typeRegistrationAnnotation;
 }
 
 template<>
@@ -55,6 +74,19 @@ template<>
 TypeInference::Annotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeInference>::get(ASTNode const& _node) const
 {
 	return analysis.annotationContainer(_node).typeInferenceAnnotation;
+}
+
+template<>
+TypeInference::GlobalAnnotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeInference>::get() const
+{
+	return analysis.annotationContainer().typeInferenceAnnotation;
+}
+
+
+template<>
+TypeInference::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeInference>::get()
+{
+	return analysis.annotationContainer().typeInferenceAnnotation;
 }
 
 Analysis::AnnotationContainer& Analysis::annotationContainer(ASTNode const& _node)
@@ -76,7 +108,8 @@ Analysis::AnnotationContainer const& Analysis::annotationContainer(ASTNode const
 Analysis::Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId):
 	m_errorReporter(_errorReporter),
 	m_maxAstId(_maxAstId),
-	m_annotations(std::make_unique<AnnotationContainer[]>(static_cast<size_t>(_maxAstId + 1)))
+	m_annotations(std::make_unique<AnnotationContainer[]>(static_cast<size_t>(_maxAstId + 1))),
+	m_globalAnnotation(std::make_unique<GlobalAnnotationContainer>())
 {
 }
 

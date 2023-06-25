@@ -29,6 +29,16 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend::experimental;
 
+bool less<TypeConstructor>::operator()(TypeConstructor const& _lhs, TypeConstructor const& _rhs) const
+{
+	return std::visit(util::GenericVisitor{
+		[](BuiltinType _left, BuiltinType _right) { return _left < _right; },
+		[](frontend::Declaration const* _left, frontend::Declaration const* _right) { return _left->id() < _right->id(); },
+		[](BuiltinType, frontend::Declaration const*) { return true; },
+		[](frontend::Declaration const*, BuiltinType) { return false; },
+	}, _lhs, _rhs);
+}
+
 bool TypeClass::operator<(TypeClass const& _rhs) const
 {
 	return std::visit(util::GenericVisitor{
@@ -61,6 +71,10 @@ string TypeClass::toString() const
 				return "kind";
 			case BuiltinClass::Constraint:
 				return "contraint";
+			case BuiltinClass::Integer:
+				return "integer";
+			case BuiltinClass::Mul:
+				return "*";
 			}
 			solAssert(false);
 		},

@@ -103,6 +103,8 @@ class StructuredDocumentation;
 /// @{
 class TypeClassDefinition;
 class TypeClassInstantiation;
+class TypeClassName;
+class TypeDefinition;
 /// @}
 
 class VariableScope;

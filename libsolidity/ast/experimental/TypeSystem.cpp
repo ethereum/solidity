@@ -382,14 +382,28 @@ void TypeSystem::declareTypeConstructor(TypeConstructor _typeConstructor, std::s
 	solAssert(newlyInserted, "Type constructor already declared.");
 }
 
-void TypeSystem::declareTypeClass(TypeConstructor _classDeclaration, std::string _name)
+std::optional<std::string> TypeSystem::declareTypeClass(TypeClass _class, Type _typeVariable, std::map<std::string, Type> _functions)
 {
-	bool newlyInserted = m_typeConstructors.emplace(std::make_pair(_classDeclaration, TypeConstructorInfo{
-		_name,
-		{Arity{vector<Sort>{}, TypeClass{BuiltinClass::Kind}}}
-	})).second;
-	// TODO: proper error handling.
-	solAssert(newlyInserted, "Type class already declared.");
+	TypeVariable const* typeVariable = get_if<TypeVariable>(&_typeVariable);
+	if (!typeVariable)
+		return "Invalid type variable.";
+	for (auto [functionName, functionType]: _functions)
+	{
+		auto typeVars = TypeSystemHelpers{*this}.typeVars(functionType);
+		if (typeVars.empty())
+			return "Function " + functionName + " does not depend on class variable.";
+		if (typeVars.size() > 2)
+			return "Function " + functionName + " depends on multiple type variables.";
+		if (get<TypeVariable>(typeVars.front()).index() != typeVariable->index())
+			return "Function " + functionName + " depends on invalid type variable.";
+	}
+
+	if (!m_typeClasses.emplace(std::make_pair(_class, TypeClassInfo{
+		_typeVariable,
+		std::move(_functions)
+	})).second)
+		return "Type class already declared";
+	return nullopt;
 
 }
 
@@ -435,10 +449,48 @@ experimental::Type TypeEnvironment::fresh(Type _type, bool _generalize)
 	return freshImpl(_type, _generalize, freshImpl);
 }
 
-void TypeSystem::instantiateClass(TypeConstructor _typeConstructor, Arity _arity)
+std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, Arity _arity, map<string, Type> _functionTypes)
 {
-	// TODO: proper error handling
-	auto& typeConstructorInfo = m_typeConstructors.at(_typeConstructor);
-	solAssert(_arity.argumentSorts.size() == typeConstructorInfo.arguments(), "Invalid arity.");
+	if (!TypeSystemHelpers{*this}.isTypeConstant(_instanceVariable))
+		return "Invalid instance variable.";
+	auto [typeConstructor, typeArguments] = TypeSystemHelpers{*this}.destTypeConstant(_instanceVariable);
+	auto& typeConstructorInfo = m_typeConstructors.at(typeConstructor);
+	if (_arity.argumentSorts.size() != typeConstructorInfo.arguments())
+		return "Invalid arity.";
+	if (typeArguments.size() != typeConstructorInfo.arguments())
+		return "Invalid arity.";
+
+	auto const* classInfo = typeClassInfo(_arity.typeClass);
+	if (!classInfo)
+		return "Unknown class.";
+
+	TypeEnvironment newEnv = m_globalTypeEnvironment.clone();
+
+	std::set<size_t> typeVariables;
+
+	Type classVariable = classInfo->typeVariable;
+	if (!newEnv.unify(classVariable, _instanceVariable).empty())
+		// TODO: error reporting
+		return "Unification of class and instance variable failed.";
+
+	for (auto [name, classFunctionType]: classInfo->functions)
+	{
+		if (!_functionTypes.count(name))
+			return "Missing function: " + name;
+		Type instanceFunctionType = _functionTypes.at(name);
+		_functionTypes.erase(name);
+
+		if (!newEnv.typeEquals(instanceFunctionType, classFunctionType))
+			return "Type mismatch for function " + name + " " + newEnv.typeToString(instanceFunctionType) + " != " + newEnv.typeToString(classFunctionType);
+	}
+
 	typeConstructorInfo.arities.emplace_back(_arity);
+
+	if (!_functionTypes.empty())
+	{
+		// TODO: list function names.
+		return "Additional functions in class instantiation.";
+	}
+
+	return nullopt;
 }

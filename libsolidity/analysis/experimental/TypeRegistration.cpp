@@ -19,6 +19,7 @@
 
 #include <libsolidity/analysis/experimental/TypeRegistration.h>
 #include <libsolidity/analysis/experimental/Analysis.h>
+#include <libsolidity/ast/experimental/TypeSystemHelper.h>
 #include <liblangutil/Exceptions.h>
 
 #include <libyul/AsmAnalysis.h>
@@ -43,6 +44,36 @@ m_typeSystem(_analysis.typeSystem())
 		{BuiltinType::Integer, "integer", 0}
 	})
 		m_typeSystem.declareTypeConstructor(type, name, arity);
+
+	auto declareBuiltinClass = [&](BuiltinClass _class, auto _memberCreator, Sort _sort = {}) {
+		Type type = m_typeSystem.freshTypeVariable(false, std::move(_sort));
+		auto error = m_typeSystem.declareTypeClass(
+			TypeClass{_class},
+			type,
+			_memberCreator(type)
+		);
+		solAssert(!error, *error);
+	};
+	TypeSystemHelpers helper{m_typeSystem};
+	using MemberList = std::map<std::string, Type>;
+
+	declareBuiltinClass(BuiltinClass::Integer, [&](Type _typeVar) -> MemberList {
+		return {
+			{
+				"fromInteger",
+				helper.functionType(TypeConstant{{BuiltinType::Integer}, {}}, _typeVar)
+			}
+		};
+	});
+	declareBuiltinClass(BuiltinClass::Mul, [&](Type _typeVar) -> MemberList {
+		return {
+			{
+				"mul",
+				helper.functionType(helper.tupleType({_typeVar, _typeVar}), _typeVar)
+			}
+		};
+	});
+	annotation().operators[Token::Mul] = std::make_tuple(TypeClass{BuiltinClass::Mul}, "mul");
 }
 
 bool TypeRegistration::analyze(SourceUnit const& _sourceUnit)
@@ -51,90 +82,36 @@ bool TypeRegistration::analyze(SourceUnit const& _sourceUnit)
 	return !m_errorReporter.hasErrors();
 }
 
-bool TypeRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
-{
-	if (!m_visitedClasses.insert(_typeClassDefinition.id()).second)
-		return false;
-
-	return false;
-}
 bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiation)
 {
-	auto const* classDefintion = dynamic_cast<TypeClassDefinition const*>(_typeClassInstantiation.typeClass().annotation().referencedDeclaration);
-	if (!classDefintion)
-		m_errorReporter.fatalTypeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
-	classDefintion->accept(*this);
-
-	TypeClass typeClass{classDefintion};
-
-	TypeName const& typeName = _typeClassInstantiation.typeConstructor();
-
-	TypeConstructor typeConstructor = [&]() -> TypeConstructor {
-		if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&typeName))
-		{
-			switch(elementaryTypeName->typeName().token())
-			{
-			case Token::Word:
-				return BuiltinType::Word;
-			case Token::Void:
-				return BuiltinType::Void;
-			case Token::Integer:
-				return BuiltinType::Integer;
-			case Token::Pair:
-				return BuiltinType::Pair;
-			case Token::Function:
-				return BuiltinType::Function;
-			case Token::Unit:
-				return BuiltinType::Function;
-			default:
-				m_errorReporter.typeError(0000_error, typeName.location(), "Only elementary types are supported.");
-				return BuiltinType::Void;
-			}
-		}
-		else if (auto const* userDefinedType = dynamic_cast<UserDefinedTypeName const*>(&typeName))
-		{
-			if (auto const* referencedDeclaration = userDefinedType->pathNode().annotation().referencedDeclaration)
-				return referencedDeclaration;
-			else
-			{
-				m_errorReporter.typeError(0000_error, userDefinedType->pathNode().location(), "No declaration found for user-defined type name.");
-				return BuiltinType::Void;
-			}
-		}
-		else
-		{
-			m_errorReporter.typeError(0000_error, typeName.location(), "Only elementary types are supported.");
-			return BuiltinType::Void;
-		}
-	}();
-
-	Arity arity{
-		{},
-		typeClass
-	};
-	if (_typeClassInstantiation.argumentSorts().size() != m_typeSystem.constructorArguments(typeConstructor))
-		m_errorReporter.fatalTypeError(0000_error, _typeClassInstantiation.location(), "Invalid number of arguments.");
-
-	for (auto argumentSort : _typeClassInstantiation.argumentSorts())
+	optional<TypeClass> typeClass = typeClassFromTypeClassName(_typeClassInstantiation.typeClass());
+	if (!typeClass)
 	{
-		if (auto const* referencedDeclaration = argumentSort->annotation().referencedDeclaration)
-		{
-			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(referencedDeclaration))
-				// TODO: multi arities
-				arity.argumentSorts.emplace_back(Sort{{TypeClass{typeClassDefinition}}});
-			else
-				m_errorReporter.fatalTypeError(0000_error, argumentSort->location(), "Argument sort has to be a type class.");
-		}
-		else
-		{
-			// TODO: error Handling
-			m_errorReporter.fatalTypeError(0000_error, argumentSort->location(), "Invalid sort.");
-		}
+		m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
+		return false;
 	}
-	m_typeSystem.instantiateClass(typeConstructor, arity);
+
+	optional<TypeConstructor> typeConstructor = typeConstructorFromTypeName(_typeClassInstantiation.typeConstructor());
+	if (!typeConstructor)
+	{
+		m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type name.");
+		return false;
+	}
+
+	auto& instantiations = std::visit(util::GenericVisitor{
+		[&](TypeClassDefinition const* classDefinition) -> auto&
+		{
+			return annotation(*classDefinition).instantiations;
+		},
+		[&](BuiltinClass _builtinClass) -> auto&
+		{
+			return annotation().builtinClassInstantiations[_builtinClass];
+		}
+	}, typeClass->declaration);
+
 
 	if (
-		auto [instantiation, newlyInserted] = annotation(*classDefintion).instantiations.emplace(typeConstructor, &_typeClassInstantiation);
+		auto [instantiation, newlyInserted] = instantiations.emplace(*typeConstructor, &_typeClassInstantiation);
 		!newlyInserted
 	)
 	{
@@ -159,4 +136,10 @@ bool TypeRegistration::visit(TypeDefinition const& _typeDefinition)
 TypeRegistration::Annotation& TypeRegistration::annotation(ASTNode const& _node)
 {
 	return m_analysis.annotation<TypeRegistration>(_node);
+}
+
+
+TypeRegistration::GlobalAnnotation& TypeRegistration::annotation()
+{
+	return m_analysis.annotation<TypeRegistration>();
 }

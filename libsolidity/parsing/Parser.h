@@ -179,6 +179,7 @@ private:
 	ASTPointer<TypeClassDefinition> parseTypeClassDefinition();
 	ASTPointer<TypeClassInstantiation> parseTypeClassInstantiation();
 	ASTPointer<TypeDefinition> parseTypeDefinition();
+	ASTPointer<TypeClassName> parseTypeClassName();
 	///@}
 
 	///@{

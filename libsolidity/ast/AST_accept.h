@@ -1059,7 +1059,8 @@ void TypeClassInstantiation::accept(ASTVisitor& _visitor)
 	if (_visitor.visit(*this))
 	{
 		m_typeConstructor->accept(_visitor);
-		listAccept(m_argumentSorts, _visitor);
+		if(m_argumentSorts)
+			m_argumentSorts->accept(_visitor);
 		m_class->accept(_visitor);
 		listAccept(m_subNodes, _visitor);
 	}
@@ -1071,7 +1072,8 @@ void TypeClassInstantiation::accept(ASTConstVisitor& _visitor) const
 	if (_visitor.visit(*this))
 	{
 		m_typeConstructor->accept(_visitor);
-		listAccept(m_argumentSorts, _visitor);
+		if(m_argumentSorts)
+			m_argumentSorts->accept(_visitor);
 		m_class->accept(_visitor);
 		listAccept(m_subNodes, _visitor);
 	}
@@ -1098,6 +1100,27 @@ void TypeDefinition::accept(ASTConstVisitor& _visitor) const
 			m_arguments->accept(_visitor);
 		if (m_typeExpression)
 			m_typeExpression->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+
+void TypeClassName::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		if (auto* path = std::get_if<ASTPointer<IdentifierPath>>(&m_name))
+			(*path)->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void TypeClassName::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		if (auto* path = std::get_if<ASTPointer<IdentifierPath>>(&m_name))
+			(*path)->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }

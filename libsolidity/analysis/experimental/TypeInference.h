@@ -39,8 +39,17 @@ public:
 		/// Expressions, variable declarations, function declarations.
 		std::optional<Type> type;
 	};
+	struct TypeMember
+	{
+		Type type;
+	};
+	struct GlobalAnnotation
+	{
+		std::map<TypeConstructor, std::map<std::string, TypeMember>> members;
+	};
 	bool visit(Block const&) override { return true; }
 	bool visit(VariableDeclarationStatement const&) override { return true; }
+	void endVisit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 
 	bool visit(FunctionDefinition const& _functionDefinition) override;
@@ -62,6 +71,7 @@ public:
 	void endVisit(Return const& _return) override;
 
 	bool visit(MemberAccess const& _memberAccess) override;
+	void endVisit(MemberAccess const& _memberAccess) override;
 	bool visit(ElementaryTypeNameExpression const& _expression) override;
 
 	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
@@ -73,6 +83,8 @@ public:
 	bool visitNode(ASTNode const& _node) override;
 
 	bool visit(BinaryOperation const& _operation) override;
+
+	bool visit(Literal const& _literal) override;
 private:
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
@@ -85,14 +97,16 @@ private:
 	std::optional<Type> m_currentFunctionType;
 
 	Annotation& annotation(ASTNode const& _node);
+	GlobalAnnotation& annotation();
 
-	void unify(Type _a, Type _b, langutil::SourceLocation _location = {});
+	void unify(Type _a, Type _b, langutil::SourceLocation _location = {}, TypeEnvironment* _env = nullptr);
 	enum class ExpressionContext
 	{
 		Term,
 		Type,
 		Sort
 	};
+	Type handleIdentifierByReferencedDeclaration(langutil::SourceLocation _location, Declaration const& _declaration);
 	ExpressionContext m_expressionContext = ExpressionContext::Term;
 };
 

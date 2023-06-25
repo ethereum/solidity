@@ -18,7 +18,7 @@
 
 
 #include <libsolidity/ast/experimental/TypeSystemHelper.h>
-
+#include <libsolidity/ast/AST.h>
 #include <libsolutil/Visitor.h>
 
 #include <range/v3/to_container.hpp>
@@ -27,8 +27,73 @@
 #include <range/v3/view/reverse.hpp>
 
 using namespace std;
+using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
+
+std::optional<TypeConstructor> experimental::typeConstructorFromTypeName(TypeName const& _typeName)
+{
+	if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&_typeName))
+	{
+		if (auto constructor = typeConstructorFromToken(elementaryTypeName->typeName().token()))
+			return *constructor;
+	}
+	else if (auto const* userDefinedType = dynamic_cast<UserDefinedTypeName const*>(&_typeName))
+	{
+		if (auto const* referencedDeclaration = userDefinedType->pathNode().annotation().referencedDeclaration)
+			return referencedDeclaration;
+	}
+	return nullopt;
+}
+
+std::optional<TypeConstructor> experimental::typeConstructorFromToken(langutil::Token _token)
+{
+	switch(_token)
+	{
+	case Token::Void:
+		return BuiltinType::Void;
+	case Token::Fun:
+		return BuiltinType::Function;
+	case Token::Unit:
+		return BuiltinType::Unit;
+	case Token::Pair:
+		return BuiltinType::Pair;
+	case Token::Word:
+		return BuiltinType::Word;
+	case Token::Integer:
+		return BuiltinType::Integer;
+	default:
+		return nullopt;
+	}
+}
+
+std::optional<TypeClass> experimental::typeClassFromToken(langutil::Token _token)
+{
+	switch (_token)
+	{
+	case Token::Integer:
+		return TypeClass{BuiltinClass::Integer};
+	case Token::Mul:
+		return TypeClass{BuiltinClass::Mul};
+	default:
+		return nullopt;
+	}
+}
+
+std::optional<TypeClass> experimental::typeClassFromTypeClassName(TypeClassName const& _typeClass)
+{
+	return std::visit(util::GenericVisitor{
+		[&](ASTPointer<IdentifierPath> _path) -> optional<TypeClass> {
+			auto classDefinition = dynamic_cast<TypeClassDefinition const*>(_path->annotation().referencedDeclaration);
+			if (!classDefinition)
+				return nullopt;
+			return TypeClass{classDefinition};
+		},
+		[&](Token _token) -> optional<TypeClass> {
+			return typeClassFromToken(_token);
+		}
+	}, _typeClass.name());
+}
 
 experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 {
@@ -127,6 +192,7 @@ bool TypeSystemHelpers::isFunctionType(Type _type) const
 
 vector<experimental::Type> TypeSystemHelpers::typeVars(Type _type) const
 {
+	set<size_t> indices;
 	vector<Type> typeVars;
 	auto typeVarsImpl = [&](Type _type, auto _recurse) -> void {
 		std::visit(util::GenericVisitor{
@@ -135,7 +201,8 @@ vector<experimental::Type> TypeSystemHelpers::typeVars(Type _type) const
 					_recurse(arg, _recurse);
 			},
 			[&](TypeVariable const& _var) {
-				typeVars.emplace_back(_var);
+				if (indices.emplace(_var.index()).second)
+					typeVars.emplace_back(_var);
 			},
 // TODO: move to env helpers?
 		}, typeSystem.env().resolve(_type));

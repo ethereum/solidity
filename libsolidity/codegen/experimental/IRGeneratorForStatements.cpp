@@ -122,12 +122,16 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _assembly)
 
 bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
+	if (_variableDeclarationStatement.initialValue())
+		_variableDeclarationStatement.initialValue()->accept(*this);
 	solAssert(_variableDeclarationStatement.declarations().size() == 1, "multi variable declarations not supported");
-	solAssert(!_variableDeclarationStatement.initialValue(), "initial values not yet supported");
 	VariableDeclaration const* variableDeclaration = _variableDeclarationStatement.declarations().front().get();
 	solAssert(variableDeclaration);
 	// TODO: check the type of the variable; register local variable; initialize
-	m_code << "let " << IRNames::localVariable(*variableDeclaration) << "\n";
+	m_code << "let " << IRNames::localVariable(*variableDeclaration);
+	if (_variableDeclarationStatement.initialValue())
+		m_code << " := " << IRNames::localVariable(*_variableDeclarationStatement.initialValue());
+	m_code << "\n";
 	return false;
 }
 
@@ -138,9 +142,18 @@ bool IRGeneratorForStatements::visit(ExpressionStatement const&)
 
 bool IRGeneratorForStatements::visit(Identifier const& _identifier)
 {
-	auto const* rhsVar = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration);
-	solAssert(rhsVar, "Can only reference identifiers referring to variables.");
-	m_code << "let " << IRNames::localVariable(_identifier) << " := " << IRNames::localVariable(*rhsVar) << "\n";
+	if (auto const* var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+	{
+		m_code << "let " << IRNames::localVariable(_identifier) << " := " << IRNames::localVariable(*var) << "\n";
+	}
+	else if (auto const* function = dynamic_cast<FunctionDefinition const*>(_identifier.annotation().referencedDeclaration))
+		solAssert(m_expressionDeclaration.emplace(&_identifier, function).second);
+	else if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(_identifier.annotation().referencedDeclaration))
+		solAssert(m_expressionDeclaration.emplace(&_identifier, typeClass).second);
+	else if (auto const* typeDefinition = dynamic_cast<TypeDefinition const*>(_identifier.annotation().referencedDeclaration))
+		solAssert(m_expressionDeclaration.emplace(&_identifier, typeDefinition).second);
+	else
+		solAssert(false, "Unsupported Identifier");
 	return false;
 }
 
@@ -158,51 +171,129 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 	m_code << "leave\n";
 }
 
-bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
+experimental::Type IRGeneratorForStatements::type(ASTNode const& _node) const
 {
-	for(auto arg: _functionCall.arguments())
-		arg->accept(*this);
+	auto type = m_context.analysis.annotation<TypeInference>(_node).type;
+	solAssert(type);
+	return *type;
+}
 
+void IRGeneratorForStatements::endVisit(BinaryOperation const& _binaryOperation)
+{
+	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
+	Type leftType = type(_binaryOperation.leftExpression());
+	Type rightType = type(_binaryOperation.rightExpression());
+	Type resultType = type(_binaryOperation);
+	Type functionType = helper.functionType(helper.tupleType({leftType, rightType}), resultType);
+	auto [typeClass, memberName] = m_context.analysis.annotation<TypeRegistration>().operators.at(_binaryOperation.getOperator());
+	auto const& functionDefinition = resolveTypeClassFunction(typeClass, memberName, functionType);
+	// TODO: deduplicate with FunctionCall
+	// TODO: get around resolveRecursive by passing the environment further down?
+	functionType = m_context.env->resolveRecursive(functionType);
+	m_context.enqueueFunctionDefinition(&functionDefinition, functionType);
+	// TODO: account for return stack size
+	m_code << "let " << IRNames::localVariable(_binaryOperation) << " := " << IRNames::function(*m_context.env, functionDefinition, functionType) << "("
+		<< IRNames::localVariable(_binaryOperation.leftExpression()) << ", " << IRNames::localVariable(_binaryOperation.rightExpression()) << ")\n";
+}
+
+namespace
+{
+TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGenerationContext const& _context, TypeClass _class)
+{
+	return std::visit(util::GenericVisitor{
+		[&](BuiltinClass _builtinClass) -> auto const& {
+			return _context.analysis.annotation<TypeRegistration>().builtinClassInstantiations.at(_builtinClass);
+		},
+		[&](TypeClassDefinition const* _classDefinition) -> auto const& {
+			return _context.analysis.annotation<TypeRegistration>(*_classDefinition).instantiations;
+		}
+	}, _class.declaration);
+}
+}
+
+FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(TypeClass _class, string _name, Type _type)
+{
+	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
+	auto const* typeClassInfo = m_context.analysis.typeSystem().typeClassInfo(_class);
+	solAssert(typeClassInfo);
+	Type genericFunctionType = typeClassInfo->functions.at(_name);
+
+	TypeEnvironment env = m_context.env->clone();
+	auto typeVars = helper.typeVars(genericFunctionType);
+	solAssert(typeVars.size() == 1);
+	solAssert(env.unify(genericFunctionType, _type).empty());
+	auto typeClassInstantiation = get<0>(helper.destTypeConstant(env.resolve(typeVars.front())));
+
+	auto const& instantiations = typeClassInstantiations(m_context, _class);
+	TypeClassInstantiation const* instantiation = instantiations.at(typeClassInstantiation);
 	FunctionDefinition const* functionDefinition = nullptr;
-	if (auto const* identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+	for (auto const& node: instantiation->subNodes())
 	{
-		functionDefinition = dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration);
-	}
-	else if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
-	{
-		auto const& expressionAnnotation = m_context.analysis.annotation<TypeInference>(memberAccess->expression());
-		solAssert(expressionAnnotation.type);
-
-		auto typeConstructor = std::get<0>(TypeSystemHelpers{m_context.analysis.typeSystem()}.destTypeConstant(
-			m_context.env->resolve(*expressionAnnotation.type)
-		));
-		auto const* typeClass = dynamic_cast<Identifier const*>(&memberAccess->expression());
-		solAssert(typeClass, "Function call to member access only supported for type classes.");
-		auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(typeClass->annotation().referencedDeclaration);
-		solAssert(typeClassDefinition, "Function call to member access only supported for type classes.");
-		auto const& classAnnotation = m_context.analysis.annotation<TypeRegistration>(*typeClassDefinition);
-		TypeClassInstantiation const* instantiation = classAnnotation.instantiations.at(typeConstructor);
-		for (auto const& node: instantiation->subNodes())
+		auto const* def = dynamic_cast<FunctionDefinition const*>(node.get());
+		solAssert(def);
+		if (def->name() == _name)
 		{
-			auto const* def = dynamic_cast<FunctionDefinition const*>(node.get());
-			solAssert(def);
-			if (def->name() == memberAccess->memberName())
-			{
-				functionDefinition = def;
-				break;
-			}
+			functionDefinition = def;
+			break;
 		}
 	}
-	else
-		solAssert(false, "Complex function call expressions not supported.");
-
 	solAssert(functionDefinition);
-	auto functionType = m_context.analysis.annotation<TypeInference>(_functionCall.expression()).type;
-	solAssert(functionType);
+	return *functionDefinition;
+}
+
+void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
+{
+	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
+	auto expressionType = type(_memberAccess.expression());
+	// TODO: avoid kind destruction
+	if (helper.isKindType(expressionType))
+		expressionType = helper.destKindType(expressionType);
+	auto constructor = std::get<0>(helper.destTypeConstant(expressionType));
+	auto memberAccessType = type(_memberAccess);
+	std::visit(util::GenericVisitor{
+		[](BuiltinType) { solAssert(false); },
+		[&](Declaration const *_declaration)
+		{
+			if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(_declaration))
+				solAssert(m_expressionDeclaration.emplace(
+					&_memberAccess,
+					&resolveTypeClassFunction(TypeClass{typeClass}, _memberAccess.memberName(), memberAccessType)
+				).second);
+			else if (dynamic_cast<TypeDefinition const*>(_declaration))
+			{
+				if (_memberAccess.memberName() == "abs" || _memberAccess.memberName() == "rep")
+					solAssert(m_expressionDeclaration.emplace(&_memberAccess, Builtins::Identity).second);
+				else
+					solAssert(false);
+			}
+			else
+				solAssert(false);
+		}
+	}, constructor);
+}
+
+void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
+{
+	Type functionType = type(_functionCall.expression());
+	auto declaration = m_expressionDeclaration.at(&_functionCall.expression());
+	if (auto builtin = get_if<Builtins>(&declaration))
+	{
+		switch(*builtin)
+		{
+		case Builtins::Identity:
+			solAssert(_functionCall.arguments().size() == 1);
+			m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::localVariable(*_functionCall.arguments().front()) << "\n";
+			return;
+		}
+		solAssert(false);
+	}
+	FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(get<Declaration const*>(declaration));
+	solAssert(functionDefinition);
 	// TODO: get around resolveRecursive by passing the environment further down?
-	functionType = m_context.env->resolveRecursive(*functionType);
-	m_context.enqueueFunctionDefinition(functionDefinition, *functionType);
-	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*m_context.env, *functionDefinition, *functionType) << "(";
+	functionType = m_context.env->resolveRecursive(functionType);
+	m_context.enqueueFunctionDefinition(functionDefinition, functionType);
+	// TODO: account for return stack size
+	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*m_context.env, *functionDefinition, functionType) << "(";
 	auto const& arguments = _functionCall.arguments();
 	if (arguments.size() > 1)
 		for (auto arg: arguments | ranges::views::drop_last(1))
@@ -210,7 +301,11 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	if (!arguments.empty())
 		m_code << IRNames::localVariable(*arguments.back());
 	m_code << ")\n";
-	return false;
+}
+
+bool IRGeneratorForStatements::visit(FunctionCall const&)
+{
+	return true;
 }
 
 bool IRGeneratorForStatements::visit(Assignment const& _assignment)

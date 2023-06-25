@@ -18,9 +18,16 @@
 #pragma once
 
 #include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/ast/ASTForward.h>
+#include <liblangutil/Token.h>
 
 namespace solidity::frontend::experimental
 {
+
+std::optional<TypeConstructor> typeConstructorFromTypeName(TypeName const& _typeName);
+std::optional<TypeConstructor> typeConstructorFromToken(langutil::Token _token);
+std::optional<TypeClass> typeClassFromTypeClassName(TypeClassName const& _typeClass);
+std::optional<TypeClass> typeClassFromToken(langutil::Token _token);
 
 struct TypeSystemHelpers
 {
