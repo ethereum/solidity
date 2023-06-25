@@ -37,7 +37,7 @@ public:
 	TypeEnvironment clone() const;
 	Type resolve(Type _type) const;
 	Type resolveRecursive(Type _type) const;
-	Type fresh(Type _type, bool _generalize);
+	Type fresh(Type _type);
 	struct TypeMismatch { Type a; Type b; };
 	struct SortMismatch { Type type; Sort sort; };
 	using UnificationFailure = std::variant<TypeMismatch, SortMismatch>;
@@ -99,13 +99,13 @@ public:
 	[[nodiscard]] std::optional<std::string> declareTypeClass(TypeClass _class, Type _typeVariable, std::map<std::string, Type> _functions);
 	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity, std::map<std::string, Type> _functions);
 
-	Type freshTypeVariable(bool _generic, Sort _sort);
-	Type freshKindVariable(bool _generic, Sort _sort);
+	Type freshTypeVariable(Sort _sort);
+	Type freshKindVariable(Sort _sort);
 
 	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
 	TypeEnvironment& env() { return m_globalTypeEnvironment; }
 
-	Type freshVariable(bool _generic, Sort _sort);
+	Type freshVariable(Sort _sort);
 private:
 	size_t m_numTypeVariables = 0;
 	std::map<TypeConstructor, TypeConstructorInfo> m_typeConstructors;

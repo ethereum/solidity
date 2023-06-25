@@ -47,7 +47,7 @@ m_typeSystem(_analysis.typeSystem())
 		m_typeSystem.declareTypeConstructor(type, name, arity);
 
 	auto declareBuiltinClass = [&](BuiltinClass _class, auto _memberCreator, Sort _sort = {}) {
-		Type type = m_typeSystem.freshTypeVariable(false, std::move(_sort));
+		Type type = m_typeSystem.freshTypeVariable(std::move(_sort));
 		auto error = m_typeSystem.declareTypeClass(
 			TypeClass{_class},
 			type,

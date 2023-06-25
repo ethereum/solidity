@@ -112,15 +112,13 @@ struct Arity
 struct TypeVariable
 {
 	size_t index() const { return m_index; }
-	bool generic() const { return m_generic; }
 	Sort const& sort() const { return m_sort; }
 private:
 	friend class TypeSystem;
 	size_t m_index = 0;
 	Sort m_sort;
-	bool m_generic = false;
-	TypeVariable(size_t _index, Sort _sort, bool _generic):
-	m_index(_index), m_sort(std::move(_sort)), m_generic(_generic) {}
+	TypeVariable(size_t _index, Sort _sort):
+	m_index(_index), m_sort(std::move(_sort)) {}
 };
 
 }

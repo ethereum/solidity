@@ -160,7 +160,7 @@ std::string TypeEnvironment::typeToString(Type const& _type) const
 		},
 		[](TypeVariable const& _type) {
 			std::stringstream stream;
-			stream << (_type.generic() ? '?' : '\'') << "var" << _type.index();
+			stream << "'var" << _type.index();
 			switch (_type.sort().classes.size())
 			{
 			case 0:
@@ -204,7 +204,7 @@ vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type
 					failures += instantiate(_right, _left);
 				else
 				{
-					Type newVar = m_typeSystem.freshVariable(_left.generic() && _right.generic(), _left.sort() + _right.sort());
+					Type newVar = m_typeSystem.freshVariable(_left.sort() + _right.sort());
 					failures += instantiate(_left, newVar);
 					failures += instantiate(_right, newVar);
 				}
@@ -285,22 +285,22 @@ TypeSystem::TypeSystem()
 	};
 }
 
-experimental::Type TypeSystem::freshVariable(bool _generic, Sort _sort)
+experimental::Type TypeSystem::freshVariable(Sort _sort)
 {
 	uint64_t index = m_numTypeVariables++;
-	return TypeVariable(index, std::move(_sort), _generic);
+	return TypeVariable(index, std::move(_sort));
 }
 
-experimental::Type TypeSystem::freshTypeVariable(bool _generic, Sort _sort)
+experimental::Type TypeSystem::freshTypeVariable(Sort _sort)
 {
 	_sort.classes.emplace(TypeClass{BuiltinClass::Type});
-	return freshVariable(_generic, _sort);
+	return freshVariable(_sort);
 }
 
-experimental::Type TypeSystem::freshKindVariable(bool _generic, Sort _sort)
+experimental::Type TypeSystem::freshKindVariable(Sort _sort)
 {
 	_sort.classes.emplace(TypeClass{BuiltinClass::Kind});
-	return freshVariable(_generic, _sort);
+	return freshVariable(_sort);
 }
 
 vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
@@ -418,38 +418,33 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 	return TypeConstant{_constructor, _arguments};
 }
 
-experimental::Type TypeEnvironment::fresh(Type _type, bool _generalize)
+experimental::Type TypeEnvironment::fresh(Type _type)
 {
 	std::unordered_map<uint64_t, Type> mapping;
-	auto freshImpl = [&](Type _type, bool _generalize, auto _recurse) -> Type {
+	auto freshImpl = [&](Type _type, auto _recurse) -> Type {
 		return std::visit(util::GenericVisitor{
 			[&](TypeConstant const& _type) -> Type {
 				return TypeConstant{
 					_type.constructor,
 					_type.arguments | ranges::views::transform([&](Type _argType) {
-						return _recurse(_argType, _generalize, _recurse);
+						return _recurse(_argType, _recurse);
 					}) | ranges::to<vector<Type>>
 				};
 			},
 			[&](TypeVariable const& _var) -> Type {
-				if (_generalize || _var.generic())
+				if (auto* mapped = util::valueOrNullptr(mapping, _var.index()))
 				{
-					if (auto* mapped = util::valueOrNullptr(mapping, _var.index()))
-					{
-						auto* typeVariable = get_if<TypeVariable>(mapped);
-						solAssert(typeVariable);
-						// TODO: can there be a mismatch?
-						solAssert(typeVariable->sort() == _var.sort());
-						return *mapped;
-					}
-					return mapping[_var.index()] = m_typeSystem.freshTypeVariable(true, _var.sort());
+					auto* typeVariable = get_if<TypeVariable>(mapped);
+					solAssert(typeVariable);
+					// TODO: can there be a mismatch?
+					solAssert(typeVariable->sort() == _var.sort());
+					return *mapped;
 				}
-				else
-					return _type;
+				return mapping[_var.index()] = m_typeSystem.freshTypeVariable(_var.sort());
 			},
 		}, resolve(_type));
 	};
-	return freshImpl(_type, _generalize, freshImpl);
+	return freshImpl(_type, freshImpl);
 }
 
 std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, Arity _arity, map<string, Type> _functionTypes)
