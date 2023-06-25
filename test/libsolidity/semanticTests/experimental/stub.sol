@@ -9,7 +9,18 @@ instantiation uint256: * {
         assembly {
             a := mul(a,b)
         }
-        z = uint256.abs(a);
+        return uint256.abs(a);
+    }
+}
+
+instantiation uint256: + {
+    function add(x, y) -> z {
+        let a = uint256.rep(x);
+        let b = uint256.rep(y);
+        assembly {
+            a := add(a,b)
+        }
+        return uint256.abs(a);
     }
 }
 
@@ -28,8 +39,8 @@ contract C {
 			x := 0x10
 		}
         let w: uint256 = uint256.abs(x);
-        w = w * w;
-		let y : word;
+        w = w * w + w;
+		let y : word = 2;
         assembly { y := 2 }
         y = uint256.rep(w) * y;
 		assembly {

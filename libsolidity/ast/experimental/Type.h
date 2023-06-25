@@ -74,7 +74,8 @@ enum class BuiltinClass
 	Kind,
 	Constraint,
 	Integer,
-	Mul
+	Mul,
+	Add
 };
 
 struct TypeClass

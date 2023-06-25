@@ -65,15 +65,21 @@ m_typeSystem(_analysis.typeSystem())
 			}
 		};
 	});
-	declareBuiltinClass(BuiltinClass::Mul, [&](Type _typeVar) -> MemberList {
-		return {
-			{
-				"mul",
-				helper.functionType(helper.tupleType({_typeVar, _typeVar}), _typeVar)
-			}
-		};
-	});
-	annotation().operators[Token::Mul] = std::make_tuple(TypeClass{BuiltinClass::Mul}, "mul");
+
+	auto defineBinaryMonoidalOperator = [&](BuiltinClass _class, Token _token, std::string _name) {
+		declareBuiltinClass(_class, [&](Type _typeVar) -> MemberList {
+			return {
+				{
+					_name,
+					helper.functionType(helper.tupleType({_typeVar, _typeVar}), _typeVar)
+				}
+			};
+		});
+		annotation().operators[_token] = std::make_tuple(TypeClass{_class}, _name);
+	};
+
+	defineBinaryMonoidalOperator(BuiltinClass::Mul, Token::Mul, "mul");
+	defineBinaryMonoidalOperator(BuiltinClass::Add, Token::Add, "add");
 }
 
 bool TypeRegistration::analyze(SourceUnit const& _sourceUnit)

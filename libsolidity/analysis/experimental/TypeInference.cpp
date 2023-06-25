@@ -184,55 +184,6 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 	return false;
 }
 
-/*
-optional<TypeConstructor> TypeInference::fromTypeName(TypeName const& _typeName)
-{
-	if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&_typeName))
-	{
-		switch(elementaryTypeName->typeName().token())
-		{
-		case Token::Void:
-			return BuiltinType::Void;
-		case Token::Fun:
-			return BuiltinType::Function;
-		case Token::Unit:
-			return BuiltinType::Unit;
-		case Token::Pair:
-			return BuiltinType::Pair;
-		case Token::Word:
-			return BuiltinType::Word;
-		case Token::Integer:
-			return BuiltinType::Integer;
-		default:
-			m_errorReporter.typeError(0000_error, _typeName.location(), "Only elementary types are supported.");
-			break;
-		}
-	}
-	else if (auto const* userDefinedTypeName = dynamic_cast<UserDefinedTypeName const*>(&_typeName))
-	{
-		auto const* declaration = userDefinedTypeName->pathNode().annotation().referencedDeclaration;
-		solAssert(declaration);
-		if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(declaration))
-		{
-			if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(variableDeclaration->scope()))
-			{
-				typeClass->accept(*this);
-				auto varType = annotation(typeClass->typeVariable()).type;
-				solAssert(varType);
-				return *varType;
-			}
-			else
-				m_errorReporter.typeError(0000_error, _typeName.location(), "Type name referencing a variable declaration.");
-		}
-		else
-			m_errorReporter.typeError(0000_error, _typeName.location(), "Unsupported user defined type name.");
-	}
-	else
-		m_errorReporter.typeError(0000_error, _typeName.location(), "Unsupported type name.");
-	return m_typeSystem.freshTypeVariable(false, {});
-}
- */
-
 void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location, TypeEnvironment* _env)
 {
 	if (!_env)
@@ -791,28 +742,9 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		functionTypes[functionDefinition->name()] = *annotation(*functionDefinition).type;
 	}
 
-
 	if (auto error = m_typeSystem.instantiateClass(type, arity, std::move(functionTypes)))
 		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), *error);
-	/*
-	TypeEnvironment newEnv = m_env->clone();
 
-
-	for (auto subNode: _typeClassInstantiation.subNodes())
-	{
-		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
-		if (Type* expectedFunctionType = util::valueOrNullptr(functionTypes, functionDefinition->name()))
-		{
-			auto functionType = annotation(*functionDefinition).type;
-			solAssert(functionType);
-			// TODO: require exact match?
-			unify(*functionType, *expectedFunctionType, functionDefinition->location());
-			functionTypes.erase(functionDefinition->name());
-		}
-	}
-	if (!functionTypes.empty())
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Type class instantiation does not implement all required functions.");
-*/
 	return false;
 }
 
@@ -856,43 +788,6 @@ bool TypeInference::visit(MemberAccess const& _memberAccess)
 		return false;
 	}
 	return true;
-/*
-	_memberAccess.expression().accept(*this);
-	if (auto const* identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression()))
-	{
-		auto const* declaration = identifier->annotation().referencedDeclaration;
-		if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(declaration))
-		{
-			for (auto subNode: typeClass->subNodes())
-			{
-				if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get()))
-				{
-					if (functionDefinition->name() == _memberAccess.memberName())
-					{
-						auto& declarationAnnotation = annotation(*functionDefinition);
-						if (!declarationAnnotation.type)
-							functionDefinition->accept(*this);
-						solAssert(declarationAnnotation.type);
-						Type type = m_env->fresh(*declarationAnnotation.type, true);
-						annotation(_memberAccess).type = type;
-						auto typeVars = TypeSystemHelpers{m_typeSystem}.typeVars(type);
-						if (typeVars.size() != 1)
-							m_errorReporter.typeError(0000_error, _memberAccess.location(), "Type class reference does not uniquely depend on class type.");
-						annotation(_memberAccess.expression()).type = typeVars.front();
-						m_errorReporter.info(0000_error, _memberAccess.location(), m_env->typeToString(*declarationAnnotation.type));
-						return false;
-					}
-				}
-			}
-			m_errorReporter.fatalTypeError(0000_error, _memberAccess.location(), "Unknown member of type-class.");
-		}
-		else
-			m_errorReporter.fatalTypeError(0000_error, _memberAccess.location(), "Member access to non-type-class.");
-	}
-	else
-		 m_errorReporter.fatalTypeError(0000_error, _memberAccess.location(), "Member access to non-identifier.");
-
-	return false;*/
 }
 
 bool TypeInference::visit(TypeDefinition const& _typeDefinition)

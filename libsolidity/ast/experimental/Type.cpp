@@ -75,6 +75,8 @@ string TypeClass::toString() const
 				return "integer";
 			case BuiltinClass::Mul:
 				return "*";
+			case BuiltinClass::Add:
+				return "+";
 			}
 			solAssert(false);
 		},

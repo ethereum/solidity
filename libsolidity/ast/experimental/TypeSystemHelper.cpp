@@ -75,6 +75,8 @@ std::optional<TypeClass> experimental::typeClassFromToken(langutil::Token _token
 		return TypeClass{BuiltinClass::Integer};
 	case Token::Mul:
 		return TypeClass{BuiltinClass::Mul};
+	case Token::Add:
+		return TypeClass{BuiltinClass::Add};
 	default:
 		return nullopt;
 	}
