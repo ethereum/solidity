@@ -219,7 +219,7 @@ FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(Typ
 	Type genericFunctionType = typeClassInfo->functions.at(_name);
 
 	TypeEnvironment env = m_context.env->clone();
-	auto typeVars = helper.typeVars(genericFunctionType);
+	auto typeVars = TypeEnvironmentHelpers{env}.typeVars(genericFunctionType);
 	solAssert(typeVars.size() == 1);
 	solAssert(env.unify(genericFunctionType, _type).empty());
 	auto typeClassInstantiation = get<0>(helper.destTypeConstant(env.resolve(typeVars.front())));
@@ -245,9 +245,6 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 {
 	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
 	auto expressionType = type(_memberAccess.expression());
-	// TODO: avoid kind destruction
-	if (helper.isKindType(expressionType))
-		expressionType = helper.destKindType(expressionType);
 	auto constructor = std::get<0>(helper.destTypeConstant(expressionType));
 	auto memberAccessType = type(_memberAccess);
 	std::visit(util::GenericVisitor{

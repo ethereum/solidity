@@ -69,8 +69,6 @@ string TypeClass::toString() const
 				return "type";
 			case BuiltinClass::Kind:
 				return "kind";
-			case BuiltinClass::Constraint:
-				return "contraint";
 			case BuiltinClass::Integer:
 				return "integer";
 			case BuiltinClass::Mul:

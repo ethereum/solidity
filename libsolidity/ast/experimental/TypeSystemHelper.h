@@ -39,11 +39,18 @@ struct TypeSystemHelpers
 	Type functionType(Type _argType, Type _resultType) const;
 	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
 	bool isFunctionType(Type _type) const;
-	std::vector<Type> typeVars(Type _type) const;
+	Type typeFunctionType(Type _argType, Type _resultType) const;
+	std::tuple<Type, Type> destTypeFunctionType(Type _functionType) const;
+	bool isTypeFunctionType(Type _type) const;
 	std::string sortToString(Sort _sort) const;
-	Type kindType(Type _type) const;
-	bool isKindType(Type _type) const;
-	Type destKindType(Type _type) const;
+};
+
+struct TypeEnvironmentHelpers
+{
+	TypeEnvironment const& env;
+	std::string typeToString(Type const& _type) const;
+	std::string canonicalTypeName(Type _type) const;
+	std::vector<Type> typeVars(Type _type) const;
 };
 
 }

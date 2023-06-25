@@ -25,6 +25,7 @@
 #include <libsolidity/analysis/experimental/Analysis.h>
 #include <libsolidity/analysis/experimental/TypeInference.h>
 
+#include <libsolidity/ast/experimental/TypeSystemHelper.h>
 
 #include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
@@ -128,7 +129,8 @@ string IRGenerator::generate(FunctionDefinition const& _function, Type _type)
 	solAssert(type);
 	for (auto err: newEnv.unify(*type, _type))
 	{
-		solAssert(false, newEnv.typeToString(*type) + " <-> " + newEnv.typeToString(_type));
+		TypeEnvironmentHelpers helper{newEnv};
+		solAssert(false, helper.typeToString(*type) + " <-> " + helper.typeToString(_type));
 	}
 	std::stringstream code;
 	code << "function " << IRNames::function(newEnv, _function, _type) << "(";

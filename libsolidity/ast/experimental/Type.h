@@ -44,6 +44,7 @@ enum class BuiltinType
 	Sort,
 	Void,
 	Function,
+	TypeFunction,
 	Unit,
 	Pair,
 	Word,
@@ -73,7 +74,6 @@ enum class BuiltinClass
 {
 	Type,
 	Kind,
-	Constraint,
 	Integer,
 	Mul,
 	Add,

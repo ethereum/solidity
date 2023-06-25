@@ -42,10 +42,10 @@ public:
 	struct SortMismatch { Type type; Sort sort; };
 	using UnificationFailure = std::variant<TypeMismatch, SortMismatch>;
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
-	std::string canonicalTypeName(Type _type) const;
-	std::string typeToString(Type const& _type) const;
 	Sort sort(Type _type) const;
 	bool typeEquals(Type _lhs, Type _rhs) const;
+	TypeSystem& typeSystem() { return m_typeSystem; }
+	TypeSystem const& typeSystem() const { return m_typeSystem; }
 private:
 	TypeEnvironment(TypeEnvironment&& _env): m_typeSystem(_env.m_typeSystem), m_typeVariables(std::move(_env.m_typeVariables)) {}
 	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);

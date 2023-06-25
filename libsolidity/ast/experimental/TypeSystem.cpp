@@ -36,151 +36,6 @@ using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
 
-std::string TypeEnvironment::canonicalTypeName(Type _type) const
-{
-	return visit(util::GenericVisitor{
-		[&](TypeConstant const& _type) {
-			std::stringstream stream;
-			auto printTypeArguments = [&]() {
-				if (!_type.arguments.empty())
-				{
-					stream << "$";
-					for (auto type: _type.arguments | ranges::views::drop_last(1))
-						stream << canonicalTypeName(type) << "$";
-					stream << canonicalTypeName(_type.arguments.back());
-					stream << "$";
-				}
-			};
-			std::visit(util::GenericVisitor{
-				[&](Declaration const* _declaration) {
-					printTypeArguments();
-					if (auto const* typeDeclarationAnnotation = dynamic_cast<TypeDeclarationAnnotation const*>(&_declaration->annotation()))
-						stream << *typeDeclarationAnnotation->canonicalName;
-					else
-						// TODO: canonical name
-						stream << _declaration->name();
-				},
-				[&](BuiltinType _builtinType) {
-					printTypeArguments();
-					switch(_builtinType)
-					{
-					case BuiltinType::Type:
-						stream << "type";
-						break;
-					case BuiltinType::Sort:
-						stream << "sort";
-						break;
-					case BuiltinType::Void:
-						stream << "void";
-						break;
-					case BuiltinType::Function:
-						stream << "fun";
-						break;
-					case BuiltinType::Unit:
-						stream << "unit";
-						break;
-					case BuiltinType::Pair:
-						stream << "pair";
-						break;
-					case BuiltinType::Word:
-						stream << "word";
-						break;
-					case BuiltinType::Bool:
-						stream << "bool";
-						break;
-					case BuiltinType::Integer:
-						stream << "integer";
-						break;
-					}
-				}
-			}, _type.constructor);
-			return stream.str();
-		},
-		[](TypeVariable const&)-> string {
-			solAssert(false);
-		},
-	}, resolve(_type));
-}
-
-
-std::string TypeEnvironment::typeToString(Type const& _type) const
-{
-	return std::visit(util::GenericVisitor{
-		[&](TypeConstant const& _type) {
-			std::stringstream stream;
-			auto printTypeArguments = [&]() {
-				if (!_type.arguments.empty())
-				{
-					stream << "(";
-					for (auto type: _type.arguments | ranges::views::drop_last(1))
-						stream << typeToString(type) << ", ";
-					stream << typeToString(_type.arguments.back());
-					stream << ")";
-				}
-			};
-			std::visit(util::GenericVisitor{
-				[&](Declaration const* _declaration) {
-					stream << m_typeSystem.typeName(_declaration);
-					printTypeArguments();
-				},
-				[&](BuiltinType _builtinType) {
-					switch (_builtinType)
-					{
-					case BuiltinType::Function:
-						solAssert(_type.arguments.size() == 2);
-						stream << fmt::format("{} -> {}", typeToString(_type.arguments.front()), typeToString(_type.arguments.back()));
-						break;
-					case BuiltinType::Unit:
-						solAssert(_type.arguments.empty());
-						stream << "()";
-						break;
-					case BuiltinType::Pair:
-					{
-						auto tupleTypes = TypeSystemHelpers{m_typeSystem}.destTupleType(_type);
-						stream << "(";
-						for (auto type: tupleTypes | ranges::views::drop_last(1))
-							stream << typeToString(type) << ", ";
-						stream << typeToString(tupleTypes.back()) << ")";
-						break;
-					}
-					case BuiltinType::Type:
-					{
-						solAssert(_type.arguments.size() == 1);
-						stream << "TYPE(" << typeToString(_type.arguments.front()) << ")";
-						break;
-					}
-					default:
-						stream << m_typeSystem.typeName(_builtinType);
-						printTypeArguments();
-						break;
-					}
-				}
-			}, _type.constructor);
-			return stream.str();
-		},
-		[](TypeVariable const& _type) {
-			std::stringstream stream;
-			stream << "'var" << _type.index();
-			switch (_type.sort().classes.size())
-			{
-			case 0:
-				break;
-			case 1:
-				stream << ":" << _type.sort().classes.begin()->toString();
-				break;
-			default:
-				stream << ":(";
-				for (auto typeClass: _type.sort().classes | ranges::views::drop_last(1))
-					stream << typeClass.toString() << ", ";
-				stream << _type.sort().classes.rbegin()->toString();
-				stream << ")";
-				break;
-			}
-			return stream.str();
-		},
-	}, resolve(_type));
-}
-
 vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type _b)
 {
 	vector<UnificationFailure> failures;
@@ -267,15 +122,10 @@ TypeEnvironment TypeEnvironment::clone() const
 
 TypeSystem::TypeSystem()
 {
-	Sort kindSort{{TypeClass{BuiltinClass::Kind}}};
 	Sort typeSort{{TypeClass{BuiltinClass::Type}}};
-	m_typeConstructors[BuiltinType::Type] = TypeConstructorInfo{
-		"type",
-		{Arity{vector<Sort>{{typeSort}}, TypeClass{BuiltinClass::Kind}}}
-	};
-	m_typeConstructors[BuiltinType::Sort] = TypeConstructorInfo{
-		"constraint",
-		{Arity{vector<Sort>{{kindSort}}, TypeClass{BuiltinClass::Constraint}}}
+	m_typeConstructors[BuiltinType::TypeFunction] = TypeConstructorInfo{
+		"tfun",
+		{Arity{vector<Sort>{{typeSort},{typeSort}}, TypeClass{BuiltinClass::Kind}}}
 	};
 	m_typeConstructors[BuiltinType::Function] = TypeConstructorInfo{
 		"fun",
@@ -392,7 +242,7 @@ std::optional<std::string> TypeSystem::declareTypeClass(TypeClass _class, Type _
 		return "Invalid type variable.";
 	for (auto [functionName, functionType]: _functions)
 	{
-		auto typeVars = TypeSystemHelpers{*this}.typeVars(functionType);
+		auto typeVars = TypeEnvironmentHelpers{m_globalTypeEnvironment}.typeVars(functionType);
 		if (typeVars.empty())
 			return "Function " + functionName + " does not depend on class variable.";
 		if (typeVars.size() > 2)
@@ -479,7 +329,7 @@ std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, 
 		_functionTypes.erase(name);
 
 		if (!newEnv.typeEquals(instanceFunctionType, classFunctionType))
-			return "Type mismatch for function " + name + " " + newEnv.typeToString(instanceFunctionType) + " != " + newEnv.typeToString(classFunctionType);
+			return "Type mismatch for function " + name + " " + TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType) + " != " + TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType);
 	}
 
 	typeConstructorInfo.arities.emplace_back(_arity);

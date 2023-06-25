@@ -43,10 +43,14 @@ bool DebugWarner::visitNode(ASTNode const& _node)
 	if (typeInferenceAnnotation.type)
 	{
 		Type type = *typeInferenceAnnotation.type;
+		Sort sort = m_analysis.typeSystem().env().sort(type);
+		std::string sortString;
+		if (sort.classes.size() != 1 || *sort.classes.begin() != TypeClass{{BuiltinClass::Type}})
+			sortString = ":" + TypeSystemHelpers{m_analysis.typeSystem()}.sortToString(m_analysis.typeSystem().env().sort(type));
 		m_errorReporter.info(
 			0000_error,
 			_node.location(),
-			"Inferred type: " + m_analysis.typeSystem().env().typeToString(type) + ":" + TypeSystemHelpers{m_analysis.typeSystem()}.sortToString(m_analysis.typeSystem().env().sort(type))
+			"Inferred type: " + TypeEnvironmentHelpers{m_analysis.typeSystem().env()}.typeToString(type) + sortString
 		);
 	}
 	return true;
