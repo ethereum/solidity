@@ -41,7 +41,8 @@ m_typeSystem(_analysis.typeSystem())
 		{BuiltinType::Unit, "unit", 0},
 		{BuiltinType::Pair, "pair", 2},
 		{BuiltinType::Word, "word", 0},
-		{BuiltinType::Integer, "integer", 0}
+		{BuiltinType::Integer, "integer", 0},
+ 		{BuiltinType::Bool, "bool", 0}
 	})
 		m_typeSystem.declareTypeConstructor(type, name, arity);
 
@@ -80,6 +81,23 @@ m_typeSystem(_analysis.typeSystem())
 
 	defineBinaryMonoidalOperator(BuiltinClass::Mul, Token::Mul, "mul");
 	defineBinaryMonoidalOperator(BuiltinClass::Add, Token::Add, "add");
+
+	auto defineBinaryCompareOperator = [&](BuiltinClass _class, Token _token, std::string _name) {
+		declareBuiltinClass(_class, [&](Type _typeVar) -> MemberList {
+			return {
+				{
+					_name,
+					helper.functionType(helper.tupleType({_typeVar, _typeVar}), TypeConstant{BuiltinType::Bool, {}})
+				}
+			};
+		});
+		annotation().operators[_token] = std::make_tuple(TypeClass{_class}, _name);
+	};
+	defineBinaryCompareOperator(BuiltinClass::Equal, Token::Equal, "eq");
+	defineBinaryCompareOperator(BuiltinClass::Less, Token::LessThan, "lt");
+	defineBinaryCompareOperator(BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
+	defineBinaryCompareOperator(BuiltinClass::Greater, Token::GreaterThan, "gt");
+	defineBinaryCompareOperator(BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
 }
 
 bool TypeRegistration::analyze(SourceUnit const& _sourceUnit)

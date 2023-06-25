@@ -47,6 +47,7 @@ enum class BuiltinType
 	Unit,
 	Pair,
 	Word,
+	Bool,
 	Integer
 };
 
@@ -75,7 +76,12 @@ enum class BuiltinClass
 	Constraint,
 	Integer,
 	Mul,
-	Add
+	Add,
+	Equal,
+	Less,
+	LessOrEqual,
+	Greater,
+	GreaterOrEqual
 };
 
 struct TypeClass

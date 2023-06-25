@@ -48,6 +48,7 @@ m_typeSystem(_analysis.typeSystem())
 	m_wordType = m_typeSystem.type(BuiltinType::Word, {});
 	m_integerType = m_typeSystem.type(BuiltinType::Integer, {});
 	m_unitType = m_typeSystem.type(BuiltinType::Unit, {});
+	m_boolType = m_typeSystem.type(BuiltinType::Bool, {});
 	m_env = &m_typeSystem.env();
 }
 
@@ -271,6 +272,9 @@ bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 		break;
 	case Token::Unit:
 		expressionAnnotation.type = helper.kindType(m_unitType);
+		break;
+	case Token::Bool:
+		expressionAnnotation.type = helper.kindType(m_boolType);
 		break;
 	case Token::Pair:
 	{
@@ -1055,7 +1059,6 @@ optional<rational> rationalValue(Literal const& _literal)
 bool TypeInference::visit(Literal const& _literal)
 {
 	auto& literalAnnotation = annotation(_literal);
-	literalAnnotation.type = m_typeSystem.freshTypeVariable(false, {});
 	if (_literal.token() != Token::Number)
 	{
 		 m_errorReporter.typeError(0000_error, _literal.location(), "Only number literals are supported.");
@@ -1072,5 +1075,6 @@ bool TypeInference::visit(Literal const& _literal)
 		 m_errorReporter.typeError(0000_error, _literal.location(), "Only integers are supported.");
 		 return false;
 	}
+	literalAnnotation.type = m_typeSystem.freshTypeVariable(false, Sort{{TypeClass{BuiltinClass::Integer}}});
 	return false;
 }

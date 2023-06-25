@@ -77,6 +77,16 @@ string TypeClass::toString() const
 				return "*";
 			case BuiltinClass::Add:
 				return "+";
+			case BuiltinClass::Equal:
+				return "==";
+			case BuiltinClass::Less:
+				return "<";
+			case BuiltinClass::LessOrEqual:
+				return "<=";
+			case BuiltinClass::Greater:
+				return ">";
+			case BuiltinClass::GreaterOrEqual:
+				return ">=";
 			}
 			solAssert(false);
 		},

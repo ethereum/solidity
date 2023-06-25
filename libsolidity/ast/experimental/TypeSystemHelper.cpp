@@ -62,6 +62,8 @@ std::optional<TypeConstructor> experimental::typeConstructorFromToken(langutil::
 		return BuiltinType::Word;
 	case Token::Integer:
 		return BuiltinType::Integer;
+	case Token::Bool:
+		return BuiltinType::Bool;
 	default:
 		return nullopt;
 	}
@@ -77,6 +79,16 @@ std::optional<TypeClass> experimental::typeClassFromToken(langutil::Token _token
 		return TypeClass{BuiltinClass::Mul};
 	case Token::Add:
 		return TypeClass{BuiltinClass::Add};
+	case Token::Equal:
+		return TypeClass{BuiltinClass::Equal};
+	case Token::LessThan:
+		return TypeClass{BuiltinClass::Less};
+	case Token::LessThanOrEqual:
+		return TypeClass{BuiltinClass::LessOrEqual};
+	case Token::GreaterThan:
+		return TypeClass{BuiltinClass::Greater};
+	case Token::GreaterThanOrEqual:
+		return TypeClass{BuiltinClass::GreaterOrEqual};
 	default:
 		return nullopt;
 	}

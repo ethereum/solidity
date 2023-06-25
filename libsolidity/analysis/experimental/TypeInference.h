@@ -94,6 +94,7 @@ private:
 	Type m_wordType;
 	Type m_integerType;
 	Type m_unitType;
+	Type m_boolType;
 	std::optional<Type> m_currentFunctionType;
 
 	Annotation& annotation(ASTNode const& _node);

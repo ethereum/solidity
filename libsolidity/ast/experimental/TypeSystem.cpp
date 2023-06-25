@@ -85,6 +85,9 @@ std::string TypeEnvironment::canonicalTypeName(Type _type) const
 					case BuiltinType::Word:
 						stream << "word";
 						break;
+					case BuiltinType::Bool:
+						stream << "bool";
+						break;
 					case BuiltinType::Integer:
 						stream << "integer";
 						break;

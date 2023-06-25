@@ -32,15 +32,28 @@ instantiation word: * {
     }
 }
 
+instantiation word: integer {
+    function fromInteger(x:integer) -> y:word {
+    }
+}
+
+instantiation word: == {
+    function eq(x, y) -> z:bool {
+        assembly {
+            x := eq(x, y)
+        }
+    }
+}
+
 contract C {
 	fallback() external {
 		let x : word;
 		assembly {
 			x := 0x10
 		}
-        let w: uint256 = uint256.abs(x);
+        let w = uint256.abs(x);
         w = w * w + w;
-		let y : word = 2;
+		let y : word;
         assembly { y := 2 }
         y = uint256.rep(w) * y;
 		assembly {
