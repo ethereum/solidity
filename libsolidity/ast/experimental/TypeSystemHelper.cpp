@@ -289,15 +289,14 @@ std::string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 			};
 			std::visit(util::GenericVisitor{
 				[&](Declaration const* _declaration) {
-					printTypeArguments();
 					if (auto const* typeDeclarationAnnotation = dynamic_cast<TypeDeclarationAnnotation const*>(&_declaration->annotation()))
 						stream << *typeDeclarationAnnotation->canonicalName;
 					else
 					// TODO: canonical name
 						stream << _declaration->name();
+					printTypeArguments();
 				},
 				[&](BuiltinType _builtinType) {
-					printTypeArguments();
 					switch(_builtinType)
 					{
 					case BuiltinType::Type:
@@ -331,6 +330,7 @@ std::string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 						stream << "integer";
 						break;
 					}
+					printTypeArguments();
 				}
 			}, _type.constructor);
 			return stream.str();

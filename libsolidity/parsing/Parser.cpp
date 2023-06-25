@@ -1822,12 +1822,12 @@ ASTPointer<TypeClassInstantiation> Parser::parseTypeClassInstantiation()
 	expectToken(Token::Instantiation);
 	// TODO: parseTypeConstructor()
 	ASTPointer<TypeName> typeConstructor = parseTypeName();
-	expectToken(Token::Colon);
 	ASTPointer<ParameterList> argumentSorts;
 	if (m_scanner->currentToken() == Token::LParen)
 	{
 		argumentSorts = parseParameterList();
 	}
+	expectToken(Token::Colon);
 	ASTPointer<TypeClassName> typeClassName = parseTypeClassName();
 	expectToken(Token::LBrace);
 	while (true)

@@ -104,12 +104,7 @@ private:
 	GlobalAnnotation& annotation();
 
 	void unify(Type _a, Type _b, langutil::SourceLocation _location = {}, TypeEnvironment* _env = nullptr);
-	enum class ExpressionContext
-	{
-		Term,
-		Type,
-		Sort
-	};
+	enum class ExpressionContext { Term, Type, Sort };
 	Type handleIdentifierByReferencedDeclaration(langutil::SourceLocation _location, Declaration const& _declaration);
 	ExpressionContext m_expressionContext = ExpressionContext::Term;
 };
