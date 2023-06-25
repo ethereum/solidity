@@ -53,7 +53,7 @@ public:
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 
 	bool visit(FunctionDefinition const& _functionDefinition) override;
-	bool visit(ParameterList const& _parameterList) override;
+	bool visit(ParameterList const&) override { return true; }
 	void endVisit(ParameterList const& _parameterList) override;
 	bool visit(SourceUnit const&) override { return true; }
 	bool visit(ContractDefinition const&) override { return true; }
@@ -61,8 +61,8 @@ public:
 	bool visit(PragmaDirective const&) override { return false; }
 
 	bool visit(ExpressionStatement const&) override { return true; }
-	bool visit(Assignment const&) override;
-	void endVisit(Assignment const&) override;
+	bool visit(Assignment const&) override { return true; }
+	void endVisit(Assignment const& _assignment) override;
 	bool visit(Identifier const&) override;
 	bool visit(IdentifierPath const&) override;
 	bool visit(FunctionCall const& _functionCall) override;
@@ -97,7 +97,10 @@ private:
 	Type m_boolType;
 	std::optional<Type> m_currentFunctionType;
 
+	Type getType(ASTNode const& _node) const;
+
 	Annotation& annotation(ASTNode const& _node);
+	Annotation const& annotation(ASTNode const& _node) const;
 	GlobalAnnotation& annotation();
 
 	void unify(Type _a, Type _b, langutil::SourceLocation _location = {}, TypeEnvironment* _env = nullptr);
