@@ -262,7 +262,22 @@ TypeConstructor TypeSystem::declareTypeConstructor(string _name, string _canonic
 		{Arity{vector<Sort>{_arguments, baseSort}, primitiveClass(PrimitiveClass::Type)}},
 		_declaration
 	});
-	return TypeConstructor{index};
+	TypeConstructor constructor{index};
+	if (_arguments)
+	{
+		std::vector<Sort> argumentSorts;
+		std::generate_n(std::back_inserter(argumentSorts), _arguments, [&](){ return Sort{{primitiveClass(PrimitiveClass::Type)}}; });
+		std::vector<Type> argumentTypes;
+		std::generate_n(std::back_inserter(argumentTypes), _arguments, [&](){ return freshVariable({}); });
+		auto error = instantiateClass(type(constructor, argumentTypes), Arity{argumentSorts, primitiveClass(PrimitiveClass::Kind)}, {});
+		solAssert(!error, *error);
+	}
+	else
+	{
+		auto error = instantiateClass(type(constructor, {}), Arity{{}, primitiveClass(PrimitiveClass::Type)}, {});
+		solAssert(!error, *error);
+	}
+	return constructor;
 }
 
 std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(Type _typeVariable, std::map<std::string, Type> _functions, std::string _name, Declaration const* _declaration)
