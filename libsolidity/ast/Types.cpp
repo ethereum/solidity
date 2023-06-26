@@ -3472,7 +3472,11 @@ Type const* FunctionType::mobileType() const
 	if (valueSet() || gasSet() || saltSet() || hasBoundFirstArgument())
 		return nullptr;
 
-	// return function without parameter names
+	// Special function types do not get a mobile type, such that they cannot be used in complex expressions.
+	if (m_kind != FunctionType::Kind::Internal && m_kind != FunctionType::Kind::External && m_kind != FunctionType::Kind::DelegateCall)
+		return nullptr;
+
+	// return function without parameter names and without declaration
 	return TypeProvider::function(
 		m_parameterTypes,
 		m_returnParameterTypes,
@@ -3480,7 +3484,7 @@ Type const* FunctionType::mobileType() const
 		strings(m_returnParameterNames.size()),
 		m_kind,
 		m_stateMutability,
-		m_declaration,
+		nullptr,
 		Options::fromFunctionType(*this)
 	);
 }
