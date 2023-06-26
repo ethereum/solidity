@@ -76,34 +76,31 @@ commands:
     parameters:
       label:
         type: string
+      binary_type:
+        type: enum
+        enum:
+          - solcjs
+          - native
       binary_path:
         type: string
     steps:
-      - run: mkdir test-cases/
       - run:
-          name: Prepare input files
+          name: Generate bytecode reports for the selected preset
           command: |
-            cd test-cases/
-            python3 ../scripts/isolate_tests.py ../test/
-      - run:
-          name: Generate bytecode report
-          command: |
-            cd test-cases/
-            interface=$(echo -e "standard-json\ncli" | circleci tests split)
-            echo "Selected interface: ${interface}"
-
-            python3 ../scripts/bytecodecompare/prepare_report.py \
-              << parameters.binary_path >> \
-              --interface "$interface" \
-              --report-file "../bytecode-report-<< parameters.label >>-${interface}.txt"
+            .circleci/parallel_bytecode_report.sh \
+                "<< parameters.label >>" \
+                "<< parameters.binary_type >>" \
+                "${PWD}/<< parameters.binary_path >>"
       - store_artifacts:
           path: bytecode-report-<< parameters.label >>-standard-json.txt
       - store_artifacts:
           path: bytecode-report-<< parameters.label >>-cli.txt
+      - store_artifacts:
+          path: bytecode-report-<< parameters.label >>.txt
       - persist_to_workspace:
           root: .
           paths:
-            - bytecode-report-<< parameters.label >>-*.txt
+            - bytecode-report-<< parameters.label >>*.txt
       - matrix_notify_failure_unless_pr
 
   install_python3:
@@ -1485,10 +1482,6 @@ jobs:
   # It can be safely removed once we move both to the same Ubuntu version.
   b_bytecode_ubu_static:
     <<: *base_ubuntu2004_small
-    environment:
-      TERM: xterm
-      MAKEFLAGS: -j 2
-      LC_ALL: C
     parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
@@ -1496,14 +1489,11 @@ jobs:
           at: build
       - prepare_bytecode_report:
           label: "ubuntu2004-static"
-          binary_path: "../build/solc/solc-static-linux"
+          binary_type: native
+          binary_path: "build/solc/solc-static-linux"
 
   b_bytecode_ubu:
     <<: *base_ubuntu2204_small
-    environment:
-      TERM: xterm
-      MAKEFLAGS: -j 2
-      LC_ALL: C
     parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
@@ -1511,14 +1501,11 @@ jobs:
           at: build
       - prepare_bytecode_report:
           label: "ubuntu"
-          binary_path: "../build/solc/solc"
+          binary_type: native
+          binary_path: "build/solc/solc"
 
   b_bytecode_osx:
     <<: *base_osx
-    environment:
-      TERM: xterm
-      MAKEFLAGS: -j 5
-      LC_ALL: C
     parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
@@ -1526,12 +1513,11 @@ jobs:
           at: .
       - prepare_bytecode_report:
           label: "osx"
-          binary_path: "../build/solc/solc"
+          binary_type: native
+          binary_path: "build/solc/solc"
 
   b_bytecode_win:
     <<: *base_win
-    environment:
-      LC_ALL: C
     parallelism: 2 # For prepare_bytecode_report
     steps:
       # NOTE: For bytecode generation we need the input files to be byte-for-byte identical on all
@@ -1544,53 +1530,27 @@ jobs:
           at: build
       - prepare_bytecode_report:
           label: "windows"
-          binary_path: "../build/solc/Release/solc.exe"
+          binary_type: native
+          binary_path: "build/solc/Release/solc.exe"
 
   b_bytecode_ems:
     <<: *base_node_small
-    environment:
-      SOLC_EMSCRIPTEN: "On"
-      LC_ALL: C
     steps:
       - checkout
       - attach_workspace:
           at: emscripten_build/libsolc
-      - run: scripts/bytecodecompare/storebytecode.sh && mv -v report.txt bytecode-report-emscripten.txt
-      - store_artifacts:
-          path: bytecode-report-emscripten.txt
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bytecode-report-emscripten.txt
-      - matrix_notify_failure_unless_pr
+      - prepare_bytecode_report:
+          label: "emscripten"
+          binary_type: solcjs
+          binary_path: "emscripten_build/libsolc/soljson.js"
 
   t_bytecode_compare:
     <<: *base_ubuntu2204_small
-    environment:
-      REPORT_FILES: |
-        bytecode-report-emscripten.txt
-        bytecode-report-ubuntu2004-static-standard-json.txt
-        bytecode-report-ubuntu2004-static-cli.txt
-        bytecode-report-ubuntu-standard-json.txt
-        bytecode-report-ubuntu-cli.txt
-        bytecode-report-osx-standard-json.txt
-        bytecode-report-osx-cli.txt
-        bytecode-report-windows-standard-json.txt
-        bytecode-report-windows-cli.txt
     steps:
+      - checkout
       - attach_workspace:
           at: .
-      - run:
-          name: Compare reports
-          command: diff --brief --report-identical-files --from-file $REPORT_FILES
-      - run:
-          name: Print diff
-          when: on_fail
-          command: diff --unified=0 --report-identical-files --from-file $REPORT_FILES | head --lines 50
-      - run:
-          name: Bundle reports into a single package
-          when: on_fail
-          command: zip all-bytecode-reports.zip $REPORT_FILES
+      - run: .circleci/compare_bytecode_reports.sh
       - store_artifacts:
           # NOTE: store_artifacts does not support the 'when' attribute.
           # Fortunately when the artifact does not exist it just says "No artifact files found" and ignores it.
@@ -1743,27 +1703,27 @@ workflows:
 
       # Bytecode comparison:
       - b_bytecode_ubu_static:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_ubu_static
       - b_bytecode_ubu:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_ubu
       - b_bytecode_win:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_win
       - b_bytecode_osx:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_osx
       - b_bytecode_ems:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_ems
       - t_bytecode_compare:
-          <<: *requires_nothing
+          <<: *on_all_tags_and_branches
           requires:
             - b_bytecode_ubu_static
             - b_bytecode_ubu
