@@ -183,7 +183,7 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 	if (m_queryResponses.count(inputHash))
 		return m_queryResponses.at(inputHash);
 
-	smtAssert(m_enabledSolvers.smtlib2 || m_enabledSolvers.eld || m_enabledSolvers.z3);
+	smtAssert(m_enabledSolvers.eld || m_enabledSolvers.z3);
 	smtAssert(m_smtCallback, "Callback must be set!");
 	std::string solverBinary = [&](){
 		if (m_enabledSolvers.eld)

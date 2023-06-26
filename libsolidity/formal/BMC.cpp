@@ -47,7 +47,6 @@ BMC::BMC(
 		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout
 	))
 {
-	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
 	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
 			m_errorReporter.warning(
@@ -62,7 +61,7 @@ BMC::BMC(
 void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
 {
 	// At this point every enabled solver is available.
-	if (!m_settings.solvers.cvc4 && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
+	if (!m_settings.solvers.cvc4 && !m_settings.solvers.z3)
 	{
 		m_errorReporter.warning(
 			7710_error,
@@ -121,11 +120,7 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 	// If this check is true, Z3 and CVC4 are not available
 	// and the query answers were not provided, since SMTPortfolio
 	// guarantees that SmtLib2Interface is the first solver, if enabled.
-	if (
-		!m_interface->unhandledQueries().empty() &&
-		m_interface->solvers() == 1 &&
-		m_settings.solvers.smtlib2
-	)
+	if (!m_interface->unhandledQueries().empty())
 		m_errorReporter.warning(
 			8084_error,
 			SourceLocation(),

@@ -853,7 +853,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strModelCheckerSolvers.c_str(),
-			po::value<std::string>()->value_name("cvc4,eld,z3,smtlib2")->default_value("z3"),
+			po::value<std::string>()->value_name("cvc4,eld,z3")->default_value("z3"),
 			"Select model checker solvers."
 		)
 		(
@@ -1323,8 +1323,6 @@ void CommandLineParser::processArgs()
 
 	if (m_args.count(g_strModelCheckerPrintQuery))
 	{
-		if (!(m_options.modelChecker.settings.solvers == smtutil::SMTSolverChoice::SMTLIB2()))
-			solThrow(CommandLineValidationError, "Only SMTLib2 solver can be enabled to print queries");
 		m_options.modelChecker.settings.printQuery = true;
 	}
 

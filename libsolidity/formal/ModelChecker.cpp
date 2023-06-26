@@ -162,7 +162,7 @@ std::vector<std::string> ModelChecker::unhandledQueries()
 
 SMTSolverChoice ModelChecker::availableSolvers()
 {
-	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
+	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::None();
 #if defined(__linux) || defined(__APPLE__)
 	available.eld = !boost::process::search_path("eld").empty();
 	available.z3 = !boost::process::search_path("z3").empty();

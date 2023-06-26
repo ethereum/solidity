@@ -1094,9 +1094,6 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		if (!printQuery.isBool())
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.printQuery must be a Boolean value.");
 
-		if (!(ret.modelCheckerSettings.solvers == smtutil::SMTSolverChoice::SMTLIB2()))
-			return formatFatalError(Error::Type::JSONError, "Only SMTLib2 solver can be enabled to print queries");
-
 		ret.modelCheckerSettings.printQuery = printQuery.asBool();
 	}
 

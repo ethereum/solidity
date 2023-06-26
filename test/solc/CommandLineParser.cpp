@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--model-checker-show-proved-safe",
 			"--model-checker-show-unproved",
 			"--model-checker-show-unsupported",
-			"--model-checker-solvers=z3,smtlib2",
+			"--model-checker-solvers=z3",
 			"--model-checker-targets=underflow,divByZero",
 			"--model-checker-timeout=5"
 		};
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			true,
 			true,
 			true,
-			{false, false, true, true},
+			{false, false, true},
 			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
 			5,
 		};
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 		{"--model-checker-div-mod-no-slacks", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-engine=bmc", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-invariants=contract,reentrancy", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-solvers=z3,smtlib2", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-solvers=z3", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-timeout=5", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-contracts=contract1.yul:A,contract2.yul:B", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-targets=underflow,divByZero", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}}

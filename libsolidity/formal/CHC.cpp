@@ -66,14 +66,12 @@ CHC::CHC(
 	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
 	m_smtlib2Responses(_smtlib2Responses),
 	m_smtCallback(_smtCallback)
-{
-	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
-}
+{}
 
 void CHC::analyze(SourceUnit const& _source)
 {
 	// At this point every enabled solver is available.
-	if (!m_settings.solvers.eld && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
+	if (!m_settings.solvers.eld && !m_settings.solvers.z3)
 	{
 		m_errorReporter.warning(
 			7649_error,
@@ -1168,7 +1166,7 @@ void CHC::resetSourceAnalysis()
 	m_blockCounter = 0;
 
 	// At this point every enabled solver is available.
-	solAssert(m_settings.solvers.smtlib2 || m_settings.solvers.eld || m_settings.solvers.z3);
+	solAssert(m_settings.solvers.eld || m_settings.solvers.z3);
 
 	if (!m_interface)
 		m_interface = std::make_unique<CHCSmtLib2Interface>(m_smtlib2Responses, m_smtCallback, m_settings.solvers, m_settings.timeout);
