@@ -19,8 +19,6 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
-#include <boost/filesystem.hpp>
-
 namespace solidity::frontend
 {
 
