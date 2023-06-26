@@ -39,7 +39,7 @@ public:
 		return [this](std::string const& _kind, std::string const& _data) -> ReadCallback::Result {
 			if (_kind == ReadCallback::kindString(ReadCallback::Kind::ReadFile))
 				return m_fileReader.readFile(_kind, _data);
-			else if (_kind == ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
+			else if (_kind.rfind(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), 0) == 0) // starts with SMTQuery
 				return m_solver.solve(_kind, _data);
 			solAssert(false, "Unknown callback kind.");
 		};
