@@ -44,7 +44,9 @@ public:
 	explicit SMTLib2Interface(
 		std::map<util::h256, std::string> _queryResponses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
-		std::optional<unsigned> _queryTimeout = {}
+		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
+		std::optional<unsigned> _queryTimeout = {},
+		bool _printQuery = false
 	);
 
 	void reset() override;
@@ -94,6 +96,8 @@ private:
 	std::vector<std::string> m_unhandledQueries;
 
 	frontend::ReadCallback::Callback m_smtCallback;
+	SMTSolverChoice m_enabledSolvers;
+	bool m_dumpQuery;
 };
 
 }

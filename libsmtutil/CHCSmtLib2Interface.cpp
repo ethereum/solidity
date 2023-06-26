@@ -43,7 +43,7 @@ CHCSmtLib2Interface::CHCSmtLib2Interface(
 	std::optional<unsigned> _queryTimeout
 ):
 	CHCSolverInterface(_queryTimeout),
-	m_smtlib2(std::make_unique<SMTLib2Interface>(_queryResponses, _smtCallback, m_queryTimeout)),
+	m_smtlib2(std::make_unique<SMTLib2Interface>(_queryResponses, _smtCallback, _enabledSolvers,  m_queryTimeout)),
 	m_queryResponses(std::move(_queryResponses)),
 	m_smtCallback(_smtCallback),
 	m_enabledSolvers(_enabledSolvers)

@@ -27,7 +27,6 @@
 #include <libyul/AST.h>
 #include <libyul/optimiser/Semantics.h>
 
-#include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
 
 #include <liblangutil/CharStreamProvider.h>

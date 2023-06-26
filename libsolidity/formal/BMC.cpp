@@ -20,7 +20,7 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
-#include <libsmtutil/SMTPortfolio.h>
+#include <libsmtutil/SMTLib2Interface.h>
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
@@ -43,7 +43,7 @@ BMC::BMC(
 	CharStreamProvider const& _charStreamProvider
 ):
 	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
-	m_interface(std::make_unique<smtutil::SMTPortfolio>(
+	m_interface(std::make_unique<smtutil::SMTLib2Interface>(
 		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout, _settings.printQuery
 	))
 {
@@ -1219,8 +1219,9 @@ BMC::checkSatisfiableAndGenerateModel(std::vector<smtutil::Expression> const& _e
 	{
 		if (m_settings.printQuery)
 		{
-			auto portfolio = dynamic_cast<smtutil::SMTPortfolio*>(m_interface.get());
-			std::string smtlibCode = portfolio->dumpQuery(_expressionsToEvaluate);
+			auto smtlibInterface = dynamic_cast<smtutil::SMTLib2Interface*>(m_interface.get());
+			solAssert(smtlibInterface, "Must use SMTLib2 solver to dump queries");
+			std::string smtlibCode = smtlibInterface->dumpQuery(_expressionsToEvaluate);
 			m_errorReporter.info(
 				6240_error,
 				"BMC: Requested query:\n" + smtlibCode

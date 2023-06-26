@@ -4,8 +4,6 @@ set(sources
 	Exceptions.h
 	SMTLib2Interface.cpp
 	SMTLib2Interface.h
-	SMTPortfolio.cpp
-	SMTPortfolio.h
 	SolverInterface.h
 	Sorts.cpp
 	Sorts.h
