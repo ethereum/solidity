@@ -1659,6 +1659,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	{
 		if (functionType->hasDeclaration())
 		{
+			// Still visit the expression in case it has side effects.
+			_memberAccess.expression().accept(*this);
+			utils().popStackElement(*functionType);
+
 			if (functionType->kind() == FunctionType::Kind::Event)
 				m_context << u256(h256::Arith(util::keccak256(functionType->externalSignature())));
 			else
