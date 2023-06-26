@@ -118,11 +118,11 @@ namespace { // Helpers for querying solvers using SMT callback
 	auto resultFromSolverResponse (std::string const& response) {
 		CheckResult result;
 		// TODO proper parsing
-		if (boost::starts_with(response, "sat\n"))
+		if (boost::starts_with(response, "sat"))
 			result = CheckResult::SATISFIABLE;
-		else if (boost::starts_with(response, "unsat\n"))
+		else if (boost::starts_with(response, "unsat"))
 			result = CheckResult::UNSATISFIABLE;
-		else if (boost::starts_with(response, "unknown\n"))
+		else if (boost::starts_with(response, "unknown"))
 			result = CheckResult::UNKNOWN;
 		else
 			result = CheckResult::ERROR;

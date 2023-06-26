@@ -44,7 +44,7 @@ public:
 	explicit SMTLib2Interface(
 		std::map<util::h256, std::string> _queryResponses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
-		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
+		SMTSolverChoice _enabledSolvers = SMTSolverChoice::None(),
 		std::optional<unsigned> _queryTimeout = {}
 	);
 
