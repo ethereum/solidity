@@ -148,9 +148,9 @@ TypeSystem::TypeSystem()
 		m_primitiveTypeConstructors.emplace(type, declareTypeConstructor(name, name, arity, nullptr));
 
 	TypeClass classType = primitiveClass(PrimitiveClass::Type);
-	TypeClass classKind = primitiveClass(PrimitiveClass::Kind);
+	//TypeClass classKind = primitiveClass(PrimitiveClass::Kind);
 	Sort typeSort{{classType}};
-	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::TypeFunction).m_index).arities = {Arity{vector<Sort>{{typeSort},{typeSort}}, classKind}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::TypeFunction).m_index).arities = {Arity{vector<Sort>{{typeSort},{typeSort}}, classType}};
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{vector<Sort>{{typeSort, typeSort}}, classType}};
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{vector<Sort>{{typeSort, typeSort}}, classType}};
 }
@@ -269,7 +269,7 @@ TypeConstructor TypeSystem::declareTypeConstructor(string _name, string _canonic
 		std::generate_n(std::back_inserter(argumentSorts), _arguments, [&](){ return Sort{{primitiveClass(PrimitiveClass::Type)}}; });
 		std::vector<Type> argumentTypes;
 		std::generate_n(std::back_inserter(argumentTypes), _arguments, [&](){ return freshVariable({}); });
-		auto error = instantiateClass(type(constructor, argumentTypes), Arity{argumentSorts, primitiveClass(PrimitiveClass::Kind)}, {});
+		auto error = instantiateClass(type(constructor, argumentTypes), Arity{argumentSorts, primitiveClass(PrimitiveClass::Type)}, {});
 		solAssert(!error, *error);
 	}
 	else

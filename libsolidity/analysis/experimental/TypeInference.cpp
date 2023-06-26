@@ -121,22 +121,18 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 
 	Type typeVar = m_typeSystem.freshTypeVariable({});
 
-	auto& typeMembers = annotation().members[typeConstructor(&_typeClassDefinition)];
-
 	for (auto subNode: _typeClassDefinition.subNodes())
 	{
 		subNode->accept(*this);
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
 		solAssert(functionDefinition);
 		auto functionType = m_env->fresh(getType(*functionDefinition));
-		functionTypes[functionDefinition->name()] = functionType;
+		if (!functionTypes.emplace(functionDefinition->name(), functionType).second)
+			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class declared multiple times.");
 		auto typeVars = TypeEnvironmentHelpers{*m_env}.typeVars(functionType);
 		if(typeVars.size() != 1)
 			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class may only depend on the type class variable.");
 		unify(typeVars.front(), typeVar, functionDefinition->location());
-
-		if (!typeMembers.emplace(functionDefinition->name(), TypeMember{functionType}).second)
-			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class declared multiple times.");
 	}
 
 	TypeClass typeClass = std::visit(util::GenericVisitor{
@@ -146,7 +142,18 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 			util::unreachable();
 		}
 	}, m_typeSystem.declareTypeClass(typeVar, std::move(functionTypes), _typeClassDefinition.name(), &_typeClassDefinition));
+	annotation(_typeClassDefinition).typeClass = typeClass;
 
+	auto& typeMembers = annotation().members[typeConstructor(&_typeClassDefinition)];
+
+	for (auto subNode: _typeClassDefinition.subNodes())
+	{
+		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
+		solAssert(functionDefinition);
+		auto functionType = m_env->typeClassFunction(typeClass, functionDefinition->name());
+		solAssert(functionType);
+		typeMembers[functionDefinition->name()] = TypeMember{*functionType};
+	}
 
 	unify(getType(_typeClassDefinition.typeVariable()), m_typeSystem.freshTypeVariable({{typeClass}}), _typeClassDefinition.location());
 	for (auto instantiation: m_analysis.annotation<TypeRegistration>(_typeClassDefinition).instantiations | ranges::views::values)
@@ -258,15 +265,24 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 			unify(*functionType, genericFunctionType, _binaryOperation.location());
 
 			operationAnnotation.type = m_env->resolve(std::get<1>(helper.destFunctionType(m_env->resolve(genericFunctionType))));
-
-			return false;
+		}
+		else if (_binaryOperation.getOperator() == Token::Colon)
+		{
+			_binaryOperation.leftExpression().accept(*this);
+			{
+				ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
+				_binaryOperation.rightExpression().accept(*this);
+			}
+			Type leftType = getType(_binaryOperation.leftExpression());
+			unify(leftType, getType(_binaryOperation.rightExpression()), _binaryOperation.location());
+			operationAnnotation.type = leftType;
 		}
 		else
 		{
 			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Binary operation in term context not yet supported.");
 			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
-			return false;
 		}
+		return false;
 	case ExpressionContext::Type:
 		if (_binaryOperation.getOperator() == Token::Colon)
 		{
@@ -395,7 +411,13 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		else if (dynamic_cast<TypeClassDefinition const*>(&_declaration))
 			return m_env->fresh(*declarationAnnotation.type);
 		else if (dynamic_cast<TypeDefinition const*>(&_declaration))
-			return m_env->fresh(*declarationAnnotation.type);
+		{
+			// TODO: can we avoid this?
+			Type type = *declarationAnnotation.type;
+			if (TypeSystemHelpers{m_typeSystem}.isTypeFunctionType(type))
+				type = std::get<1>(TypeSystemHelpers{m_typeSystem}.destTypeFunctionType(type));
+			return m_env->fresh(type);
+		}
 		else
 			solAssert(false);
 		break;
@@ -539,6 +561,8 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 				// visiting the type class will re-visit this instantiation
 				typeClass->accept(*this);
 				// TODO: more error handling? Should be covered by the visit above.
+				if (!annotation(*typeClass).typeClass)
+					m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
 				return annotation(*typeClass).typeClass;
 			}
 			else
@@ -719,7 +743,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	case ExpressionContext::Type:
 	{
 		 Type argTuple = helper.tupleType(argTypes);
-		 Type genericFunctionType = helper.typeFunctionType(argTuple, m_typeSystem.freshKindVariable({}));
+		 Type genericFunctionType = helper.typeFunctionType(argTuple, m_typeSystem.freshTypeVariable({}));
 		 unify(functionType, genericFunctionType, _functionCall.location());
 		 functionCallAnnotation.type = m_env->resolve(std::get<1>(helper.destTypeFunctionType(m_env->resolve(genericFunctionType))));
 		 break;

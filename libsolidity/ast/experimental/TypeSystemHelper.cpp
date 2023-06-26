@@ -304,12 +304,13 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 			 solAssert(_args.size() == 0);
 			 return "()";
 		 }},
-		{env.typeSystem().constructor(PrimitiveType::Pair), [&](auto const&) {
-			 auto tupleTypes = TypeSystemHelpers{env.typeSystem()}.destTupleType(_type);
+		{env.typeSystem().constructor(PrimitiveType::Pair), [&](auto const& _arguments) {
+			 auto tupleTypes = TypeSystemHelpers{env.typeSystem()}.destTupleType(_arguments.back());
 			 string result = "(";
-			 for (auto type: tupleTypes | ranges::views::drop_last(1))
-				 result += typeToString(type) + ", ";
-			 result += typeToString(tupleTypes.back()) + ")";
+			 result += typeToString(_arguments.front());
+			 for (auto type: tupleTypes)
+				 result += ", " + typeToString(type);
+			 result += ")";
 			 return result;
 		 }},
 	};
