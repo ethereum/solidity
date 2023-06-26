@@ -37,21 +37,23 @@ interfaces=(
     standard-json
 )
 
-report_files=()
-for platform in "${no_cli_platforms[@]}"; do
-    report_files+=("bytecode-report-${platform}.txt")
-done
-for platform in "${native_platforms[@]}"; do
-    for interface in "${interfaces[@]}"; do
-        report_files+=("bytecode-report-${platform}-${interface}.txt")
+for preset in "$@"; do
+    report_files=()
+    for platform in "${no_cli_platforms[@]}"; do
+        report_files+=("bytecode-report-${platform}-${preset}.txt")
     done
+    for platform in "${native_platforms[@]}"; do
+        for interface in "${interfaces[@]}"; do
+            report_files+=("bytecode-report-${platform}-${interface}-${preset}.txt")
+        done
+    done
+
+    echo "Reports to compare:"
+    printf -- "- %s\n" "${report_files[@]}"
+
+    if ! diff --brief --report-identical-files --from-file "${report_files[@]}"; then
+        diff --unified=0 --report-identical-files --from-file "${report_files[@]}" | head --lines 50
+        zip "bytecode-reports-${preset}.zip" "${report_files[@]}"
+        exit 1
+    fi
 done
-
-echo "Reports to compare:"
-printf -- "- %s\n" "${report_files[@]}"
-
-if ! diff --brief --report-identical-files --from-file "${report_files[@]}"; then
-    diff --unified=0 --report-identical-files --from-file "${report_files[@]}" | head --lines 50
-    zip "all-bytecode-reports.zip" "${report_files[@]}"
-    exit 1
-fi
