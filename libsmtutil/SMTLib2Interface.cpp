@@ -168,7 +168,8 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 		solverCommands.emplace_back("cvc4");
 
 	CheckResult lastResult = CheckResult::ERROR;
-    std::vector<std::string> finalValues;
+	std::vector<string> finalValues;
+	smtAssert(m_smtCallback);
 	for (auto const& s: solverCommands)
 	{
 		auto callBackResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + ' ' + s, query);
@@ -181,7 +182,8 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 			if (!solverAnswered(lastResult))
 			{
 				lastResult = result;
-				finalValues = parseValues(response);
+				if (result == CheckResult::SATISFIABLE)
+					finalValues = parseValues(response);
 			}
 			else if (lastResult != result)
 			{
