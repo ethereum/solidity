@@ -25,6 +25,10 @@
 #include <variant>
 #include <vector>
 
+namespace solidity::frontend
+{
+class Declaration;
+}
 namespace solidity::frontend::experimental
 {
 
@@ -40,12 +44,14 @@ public:
 	Type fresh(Type _type);
 	struct TypeMismatch { Type a; Type b; };
 	struct SortMismatch { Type type; Sort sort; };
-	using UnificationFailure = std::variant<TypeMismatch, SortMismatch>;
+	struct RecursiveUnification { Type var; Type type; };
+	using UnificationFailure = std::variant<TypeMismatch, SortMismatch, RecursiveUnification>;
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
 	Sort sort(Type _type) const;
 	bool typeEquals(Type _lhs, Type _rhs) const;
 	TypeSystem& typeSystem() { return m_typeSystem; }
 	TypeSystem const& typeSystem() const { return m_typeSystem; }
+	std::optional<Type> typeClassFunction(TypeClass _class, std::string _name);
 private:
 	TypeEnvironment(TypeEnvironment&& _env): m_typeSystem(_env.m_typeSystem), m_typeVariables(std::move(_env.m_typeVariables)) {}
 	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);
@@ -59,7 +65,9 @@ public:
 	struct TypeConstructorInfo
 	{
 		std::string name;
+		std::string canonicalName;
 		std::vector<Arity> arities;
+		Declaration const* typeDeclaration = nullptr;
 		size_t arguments() const
 		{
 			solAssert(!arities.empty());
@@ -70,33 +78,52 @@ public:
 	{
 		Type typeVariable;
 		std::map<std::string, Type> functions;
+		std::string name;
+		Declaration const* classDeclaration = nullptr;
 	};
 	TypeSystem();
 	TypeSystem(TypeSystem const&) = delete;
 	TypeSystem const& operator=(TypeSystem const&) = delete;
+	Type type(PrimitiveType _typeConstructor, std::vector<Type> _arguments) const
+	{
+		return type(m_primitiveTypeConstructors.at(_typeConstructor), std::move(_arguments));
+	}
 	Type type(TypeConstructor _typeConstructor, std::vector<Type> _arguments) const;
 	std::string typeName(TypeConstructor _typeConstructor) const
 	{
 		// TODO: proper error handling
-		return m_typeConstructors.at(_typeConstructor).name;
+		return m_typeConstructors.at(_typeConstructor.m_index).name;
 	}
-	void declareTypeConstructor(TypeConstructor _typeConstructor, std::string _name, size_t _arguments);
+	std::string canonicalName(TypeConstructor _typeConstructor) const
+	{
+		// TODO: proper error handling
+		return m_typeConstructors.at(_typeConstructor.m_index).canonicalName;
+	}
+	TypeConstructor declareTypeConstructor(std::string _name, std::string _canonicalName, size_t _arguments, Declaration const* _declaration);
+	TypeConstructor constructor(PrimitiveType _type) const
+	{
+		return m_primitiveTypeConstructors.at(_type);
+	}
+	TypeClass primitiveClass(PrimitiveClass _class) const
+	{
+		return m_primitiveTypeClasses.at(_class);
+	}
 	size_t constructorArguments(TypeConstructor _typeConstructor) const
 	{
 		// TODO: error handling
-		return m_typeConstructors.at(_typeConstructor).arguments();
+		return m_typeConstructors.at(_typeConstructor.m_index).arguments();
 	}
 	TypeConstructorInfo const& constructorInfo(TypeConstructor _typeConstructor) const
 	{
 		// TODO: error handling
-		return m_typeConstructors.at(_typeConstructor);
+		return m_typeConstructors.at(_typeConstructor.m_index);
 	}
-	TypeClassInfo const* typeClassInfo(TypeClass _class) const
+	TypeConstructorInfo const& constructorInfo(PrimitiveType _typeConstructor) const
 	{
-		return util::valueOrNullptr(m_typeClasses, _class);
+		return constructorInfo(constructor(_typeConstructor));
 	}
 
-	[[nodiscard]] std::optional<std::string> declareTypeClass(TypeClass _class, Type _typeVariable, std::map<std::string, Type> _functions);
+	std::variant<TypeClass, std::string> declareTypeClass(Type _typeVariable, std::map<std::string, Type> _functions, std::string _name, Declaration const* _declaration);
 	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity, std::map<std::string, Type> _functions);
 
 	Type freshTypeVariable(Sort _sort);
@@ -106,10 +133,20 @@ public:
 	TypeEnvironment& env() { return m_globalTypeEnvironment; }
 
 	Type freshVariable(Sort _sort);
+	std::string typeClassName(TypeClass _class) const { return m_typeClasses.at(_class.m_index).name; }
+	Declaration const* typeClassDeclaration(TypeClass _class) const { return m_typeClasses.at(_class.m_index).classDeclaration; }
 private:
+	friend class TypeEnvironment;
+	TypeClassInfo const& typeClassInfo(TypeClass _class) const
+	{
+		return m_typeClasses.at(_class.m_index);
+	}
 	size_t m_numTypeVariables = 0;
-	std::map<TypeConstructor, TypeConstructorInfo> m_typeConstructors;
-	std::map<TypeClass, TypeClassInfo> m_typeClasses;
+	std::map<PrimitiveType, TypeConstructor> m_primitiveTypeConstructors;
+	std::map<PrimitiveClass, TypeClass> m_primitiveTypeClasses;
+	std::set<std::string> m_canonicalTypeNames;
+	std::vector<TypeConstructorInfo> m_typeConstructors;
+	std::vector<TypeClassInfo> m_typeClasses;
 	TypeEnvironment m_globalTypeEnvironment{*this};
 };
 

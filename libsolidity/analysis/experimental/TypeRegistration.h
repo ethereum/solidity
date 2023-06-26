@@ -27,17 +27,34 @@ namespace solidity::frontend::experimental
 
 class Analysis;
 
+enum class BuiltinClass
+{
+	Integer,
+	Mul,
+	Add,
+	Equal,
+	Less,
+	LessOrEqual,
+	Greater,
+	GreaterOrEqual
+};
+
 class TypeRegistration: public ASTConstVisitor
 {
 public:
 	using TypeClassInstantiations = std::map<TypeConstructor, TypeClassInstantiation const*>;
 	struct Annotation
 	{
-		Type type;
+		// For type class definititions.
 		TypeClassInstantiations instantiations;
+		// For type definitions, type class definitions, type names and type name expressions.
+		std::optional<TypeConstructor> typeConstructor;
 	};
 	struct GlobalAnnotation
 	{
+		std::map<BuiltinClass, TypeClass> builtinClasses;
+		std::map<std::string, BuiltinClass> builtinClassesByName;
+		std::map<PrimitiveClass, TypeClassInstantiations> primitiveClassInstantiations;
 		std::map<BuiltinClass, TypeClassInstantiations> builtinClassInstantiations;
 		std::map<Token, std::tuple<TypeClass, std::string>> operators;
 	};
@@ -45,8 +62,12 @@ public:
 
 	bool analyze(SourceUnit const& _sourceUnit);
 private:
+	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
 	bool visit(TypeClassInstantiation const& _typeClassInstantiation) override;
 	bool visit(TypeDefinition const& _typeDefinition) override;
+	bool visit(UserDefinedTypeName const& _typeName) override;
+	void endVisit(ElementaryTypeNameExpression const& _typeName) override;
+	bool visit(ElementaryTypeName const& _typeName) override;
 	Annotation& annotation(ASTNode const& _node);
 	GlobalAnnotation& annotation();
 

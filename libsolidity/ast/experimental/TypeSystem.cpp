@@ -33,6 +33,7 @@
 #include <fmt/format.h>
 
 using namespace std;
+using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
 
@@ -122,17 +123,36 @@ TypeEnvironment TypeEnvironment::clone() const
 
 TypeSystem::TypeSystem()
 {
-	Sort typeSort{{TypeClass{BuiltinClass::Type}}};
-	m_typeConstructors[BuiltinType::TypeFunction] = TypeConstructorInfo{
-		"tfun",
-		{Arity{vector<Sort>{{typeSort},{typeSort}}, TypeClass{BuiltinClass::Kind}}}
+	auto declarePrimitiveClass = [&](std::string _name) {
+		return std::visit(util::GenericVisitor{
+			[](std::string _error) -> TypeClass {
+				solAssert(false, _error);
+			},
+			[](TypeClass _class) -> TypeClass { return _class; }
+		}, declareTypeClass(freshVariable({}), {}, _name, nullptr));
 	};
-	m_typeConstructors[BuiltinType::Function] = TypeConstructorInfo{
-		"fun",
-		{
-			Arity{vector<Sort>{{typeSort, typeSort}}, TypeClass{BuiltinClass::Type}},
-		}
-	};
+
+	m_primitiveTypeClasses.emplace(PrimitiveClass::Type, declarePrimitiveClass("type"));
+	m_primitiveTypeClasses.emplace(PrimitiveClass::Kind, declarePrimitiveClass("kind"));
+
+	for (auto [type, name, arity]: std::initializer_list<std::tuple<PrimitiveType, const char*, uint64_t>> {
+		{PrimitiveType::TypeFunction, "tfun", 2},
+		{PrimitiveType::Function, "fun", 2},
+		{PrimitiveType::Void, "void", 0},
+		{PrimitiveType::Unit, "unit", 0},
+		{PrimitiveType::Pair, "pair", 2},
+		{PrimitiveType::Word, "word", 0},
+		{PrimitiveType::Integer, "integer", 0},
+		{PrimitiveType::Bool, "bool", 0},
+	})
+		m_primitiveTypeConstructors.emplace(type, declareTypeConstructor(name, name, arity, nullptr));
+
+	TypeClass classType = primitiveClass(PrimitiveClass::Type);
+	TypeClass classKind = primitiveClass(PrimitiveClass::Kind);
+	Sort typeSort{{classType}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::TypeFunction).m_index).arities = {Arity{vector<Sort>{{typeSort},{typeSort}}, classKind}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{vector<Sort>{{typeSort, typeSort}}, classType}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{vector<Sort>{{typeSort, typeSort}}, classType}};
 }
 
 experimental::Type TypeSystem::freshVariable(Sort _sort)
@@ -143,18 +163,21 @@ experimental::Type TypeSystem::freshVariable(Sort _sort)
 
 experimental::Type TypeSystem::freshTypeVariable(Sort _sort)
 {
-	_sort.classes.emplace(TypeClass{BuiltinClass::Type});
+	_sort.classes.emplace(primitiveClass(PrimitiveClass::Type));
 	return freshVariable(_sort);
 }
 
 experimental::Type TypeSystem::freshKindVariable(Sort _sort)
 {
-	_sort.classes.emplace(TypeClass{BuiltinClass::Kind});
+	_sort.classes.emplace(primitiveClass(PrimitiveClass::Kind));
 	return freshVariable(_sort);
 }
 
 vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
 {
+	for (auto typeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
+		if (typeVar.index() == _variable.index())
+			return {UnificationFailure{RecursiveUnification{_variable, _type}}};
 	Sort typeSort = sort(_type);
 	if (!(_variable.sort() <= typeSort))
 	{
@@ -189,6 +212,9 @@ experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 		[&](TypeVariable const&) -> Type {
 			return _type;
 		},
+		[&](std::monostate) -> Type {
+			return _type;
+		}
 	}, resolve(_type));
 }
 
@@ -221,21 +247,25 @@ Sort TypeEnvironment::sort(Type _type) const
 			return sort;
 		},
 		[](TypeVariable const& _variable) -> Sort { return _variable.sort(); },
+		[](std::monostate) -> Sort { solAssert(false); }
 	}, _type);
 }
 
-void TypeSystem::declareTypeConstructor(TypeConstructor _typeConstructor, std::string _name, size_t _arguments)
+TypeConstructor TypeSystem::declareTypeConstructor(string _name, string _canonicalName, size_t _arguments, Declaration const* _declaration)
 {
-	Sort baseSort{{TypeClass{BuiltinClass::Type}}};
-	bool newlyInserted = m_typeConstructors.emplace(std::make_pair(_typeConstructor, TypeConstructorInfo{
+	solAssert(m_canonicalTypeNames.insert(_canonicalName).second, "Duplicate canonical type name.");
+	Sort baseSort{{primitiveClass(PrimitiveClass::Type)}};
+	size_t index = m_typeConstructors.size();
+	m_typeConstructors.emplace_back(TypeConstructorInfo{
 		_name,
-		{Arity{vector<Sort>{_arguments, baseSort}, TypeClass{BuiltinClass::Type}}}
-	})).second;
-	// TODO: proper error handling.
-	solAssert(newlyInserted, "Type constructor already declared.");
+		_canonicalName,
+		{Arity{vector<Sort>{_arguments, baseSort}, primitiveClass(PrimitiveClass::Type)}},
+		_declaration
+	});
+	return TypeConstructor{index};
 }
 
-std::optional<std::string> TypeSystem::declareTypeClass(TypeClass _class, Type _typeVariable, std::map<std::string, Type> _functions)
+std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(Type _typeVariable, std::map<std::string, Type> _functions, std::string _name, Declaration const* _declaration)
 {
 	TypeVariable const* typeVariable = get_if<TypeVariable>(&_typeVariable);
 	if (!typeVariable)
@@ -251,19 +281,34 @@ std::optional<std::string> TypeSystem::declareTypeClass(TypeClass _class, Type _
 			return "Function " + functionName + " depends on invalid type variable.";
 	}
 
-	if (!m_typeClasses.emplace(std::make_pair(_class, TypeClassInfo{
+	size_t index = m_typeClasses.size();
+	m_typeClasses.emplace_back(TypeClassInfo{
 		_typeVariable,
-		std::move(_functions)
-	})).second)
-		return "Type class already declared";
-	return nullopt;
+		std::move(_functions),
+		_name,
+		_declaration
+	});
+	TypeClass typeClass{index};
 
+	return typeClass;
+}
+
+std::optional<experimental::Type> TypeEnvironment::typeClassFunction(TypeClass _class, std::string _name)
+{
+	auto* type = util::valueOrNullptr(m_typeSystem.typeClassInfo(_class).functions, _name);
+	if (!type)
+		return nullopt;
+	Type functionType = fresh(*type);
+	auto typeVars = TypeEnvironmentHelpers{*this}.typeVars(functionType);
+	solAssert(typeVars.size() == 1);
+	solAssert(unify(typeVars.front(), m_typeSystem.freshTypeVariable({{_class}})).empty());
+	return functionType;
 }
 
 experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Type> _arguments) const
 {
 	// TODO: proper error handling
-	auto const& info = m_typeConstructors.at(_constructor);
+	auto const& info = m_typeConstructors.at(_constructor.m_index);
 	solAssert(info.arguments() == _arguments.size(), "Invalid arity.");
 	return TypeConstant{_constructor, _arguments};
 }
@@ -292,6 +337,7 @@ experimental::Type TypeEnvironment::fresh(Type _type)
 				}
 				return mapping[_var.index()] = m_typeSystem.freshTypeVariable(_var.sort());
 			},
+			[](std::monostate) -> Type { solAssert(false); }
 		}, resolve(_type));
 	};
 	return freshImpl(_type, freshImpl);
@@ -302,26 +348,24 @@ std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, 
 	if (!TypeSystemHelpers{*this}.isTypeConstant(_instanceVariable))
 		return "Invalid instance variable.";
 	auto [typeConstructor, typeArguments] = TypeSystemHelpers{*this}.destTypeConstant(_instanceVariable);
-	auto& typeConstructorInfo = m_typeConstructors.at(typeConstructor);
+	auto& typeConstructorInfo = m_typeConstructors.at(typeConstructor.m_index);
 	if (_arity.argumentSorts.size() != typeConstructorInfo.arguments())
 		return "Invalid arity.";
 	if (typeArguments.size() != typeConstructorInfo.arguments())
 		return "Invalid arity.";
 
-	auto const* classInfo = typeClassInfo(_arity.typeClass);
-	if (!classInfo)
-		return "Unknown class.";
+	auto const& classInfo = typeClassInfo(_arity.typeClass);
 
 	TypeEnvironment newEnv = m_globalTypeEnvironment.clone();
 
 	std::set<size_t> typeVariables;
 
-	Type classVariable = classInfo->typeVariable;
+	Type classVariable = classInfo.typeVariable;
 	if (!newEnv.unify(classVariable, _instanceVariable).empty())
 		// TODO: error reporting
 		return "Unification of class and instance variable failed.";
 
-	for (auto [name, classFunctionType]: classInfo->functions)
+	for (auto [name, classFunctionType]: classInfo.functions)
 	{
 		if (!_functionTypes.count(name))
 			return "Missing function: " + name;

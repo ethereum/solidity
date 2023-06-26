@@ -45,7 +45,7 @@ bool DebugWarner::visitNode(ASTNode const& _node)
 		Type type = *typeInferenceAnnotation.type;
 		Sort sort = m_analysis.typeSystem().env().sort(type);
 		std::string sortString;
-		if (sort.classes.size() != 1 || *sort.classes.begin() != TypeClass{{BuiltinClass::Type}})
+		if (sort.classes.size() != 1 || *sort.classes.begin() != m_analysis.typeSystem().primitiveClass(PrimitiveClass::Type))
 			sortString = ":" + TypeSystemHelpers{m_analysis.typeSystem()}.sortToString(m_analysis.typeSystem().env().sort(type));
 		m_errorReporter.info(
 			0000_error,

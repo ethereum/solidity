@@ -36,68 +36,63 @@ m_analysis(_analysis),
 m_errorReporter(_analysis.errorReporter()),
 m_typeSystem(_analysis.typeSystem())
 {
-	for (auto [type, name, arity]: std::initializer_list<std::tuple<BuiltinType, const char*, uint64_t>> {
-		{BuiltinType::Void, "void", 0},
-		{BuiltinType::Unit, "unit", 0},
-		{BuiltinType::Pair, "pair", 2},
-		{BuiltinType::Word, "word", 0},
-		{BuiltinType::Integer, "integer", 0},
- 		{BuiltinType::Bool, "bool", 0}
-	})
-		m_typeSystem.declareTypeConstructor(type, name, arity);
-
-	auto declareBuiltinClass = [&](BuiltinClass _class, auto _memberCreator, Sort _sort = {}) {
+	// TODO: move builtin class declarations to TypeInference
+	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class, auto _memberCreator, Sort _sort = {}) -> TypeClass {
 		Type type = m_typeSystem.freshTypeVariable(std::move(_sort));
-		auto error = m_typeSystem.declareTypeClass(
-			TypeClass{_class},
+		auto result = m_typeSystem.declareTypeClass(
 			type,
-			_memberCreator(type)
+			_memberCreator(type),
+			_name,
+			nullptr
 		);
-		solAssert(!error, *error);
+		if (auto error = get_if<string>(&result))
+			solAssert(!error, *error);
+		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
+		return annotation().builtinClasses.emplace(_class, get<TypeClass>(result)).first->second;
 	};
 	TypeSystemHelpers helper{m_typeSystem};
 	using MemberList = std::map<std::string, Type>;
 
-	declareBuiltinClass(BuiltinClass::Integer, [&](Type _typeVar) -> MemberList {
+	declareBuiltinClass("integer", BuiltinClass::Integer, [&](Type _typeVar) -> MemberList {
 		return {
 			{
 				"fromInteger",
-				helper.functionType(TypeConstant{{BuiltinType::Integer}, {}}, _typeVar)
+				helper.functionType(m_typeSystem.type(PrimitiveType::Integer, {}), _typeVar)
 			}
 		};
 	});
 
-	auto defineBinaryMonoidalOperator = [&](BuiltinClass _class, Token _token, std::string _name) {
-		declareBuiltinClass(_class, [&](Type _typeVar) -> MemberList {
+	auto defineBinaryMonoidalOperator = [&](std::string _className, BuiltinClass _class, Token _token, std::string _functionName) {
+		TypeClass typeClass = declareBuiltinClass(_className, _class, [&](Type _typeVar) -> MemberList {
 			return {
 				{
-					_name,
+					_functionName,
 					helper.functionType(helper.tupleType({_typeVar, _typeVar}), _typeVar)
 				}
 			};
 		});
-		annotation().operators[_token] = std::make_tuple(TypeClass{_class}, _name);
+		annotation().operators.emplace(_token, std::make_tuple(typeClass, _functionName));
 	};
 
-	defineBinaryMonoidalOperator(BuiltinClass::Mul, Token::Mul, "mul");
-	defineBinaryMonoidalOperator(BuiltinClass::Add, Token::Add, "add");
+	defineBinaryMonoidalOperator("*", BuiltinClass::Mul, Token::Mul, "mul");
+	defineBinaryMonoidalOperator("+", BuiltinClass::Add, Token::Add, "add");
 
-	auto defineBinaryCompareOperator = [&](BuiltinClass _class, Token _token, std::string _name) {
-		declareBuiltinClass(_class, [&](Type _typeVar) -> MemberList {
+	auto defineBinaryCompareOperator = [&](std::string _className, BuiltinClass _class, Token _token, std::string _functionName) {
+		TypeClass typeClass = declareBuiltinClass(_className, _class, [&](Type _typeVar) -> MemberList {
 			return {
 				{
-					_name,
-					helper.functionType(helper.tupleType({_typeVar, _typeVar}), TypeConstant{BuiltinType::Bool, {}})
+					_functionName,
+					helper.functionType(helper.tupleType({_typeVar, _typeVar}), m_typeSystem.type(PrimitiveType::Bool, {}))
 				}
 			};
 		});
-		annotation().operators[_token] = std::make_tuple(TypeClass{_class}, _name);
+		annotation().operators.emplace(_token, std::make_tuple(typeClass, _functionName));
 	};
-	defineBinaryCompareOperator(BuiltinClass::Equal, Token::Equal, "eq");
-	defineBinaryCompareOperator(BuiltinClass::Less, Token::LessThan, "lt");
-	defineBinaryCompareOperator(BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
-	defineBinaryCompareOperator(BuiltinClass::Greater, Token::GreaterThan, "gt");
-	defineBinaryCompareOperator(BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
+	defineBinaryCompareOperator("==", BuiltinClass::Equal, Token::Equal, "eq");
+	defineBinaryCompareOperator("<", BuiltinClass::Less, Token::LessThan, "lt");
+	defineBinaryCompareOperator("<=", BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
+	defineBinaryCompareOperator(">", BuiltinClass::Greater, Token::GreaterThan, "gt");
+	defineBinaryCompareOperator(">=", BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
 }
 
 bool TypeRegistration::analyze(SourceUnit const& _sourceUnit)
@@ -106,36 +101,115 @@ bool TypeRegistration::analyze(SourceUnit const& _sourceUnit)
 	return !m_errorReporter.hasErrors();
 }
 
-bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiation)
+bool TypeRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
 {
-	optional<TypeClass> typeClass = typeClassFromTypeClassName(_typeClassInstantiation.typeClass());
-	if (!typeClass)
+	if (annotation(_typeClassDefinition).typeConstructor)
+		return false;
+	annotation(_typeClassDefinition).typeConstructor = m_typeSystem.declareTypeConstructor(
+		_typeClassDefinition.name(),
+		"t_" + *_typeClassDefinition.annotation().canonicalName + "_" + util::toString(_typeClassDefinition.id()),
+		0,
+		&_typeClassDefinition
+	);
+	return true;
+}
+
+bool TypeRegistration::visit(ElementaryTypeName const& _typeName)
+{
+	if (annotation(_typeName).typeConstructor)
+		return false;
+	annotation(_typeName).typeConstructor = [&]() -> optional<TypeConstructor> {
+		switch(_typeName.typeName().token())
+		{
+		case Token::Void:
+			return m_typeSystem.constructor(PrimitiveType::Void);
+		case Token::Fun:
+			return m_typeSystem.constructor(PrimitiveType::Function);
+		case Token::Unit:
+			return m_typeSystem.constructor(PrimitiveType::Unit);
+		case Token::Pair:
+			return m_typeSystem.constructor(PrimitiveType::Pair);
+		case Token::Word:
+			return m_typeSystem.constructor(PrimitiveType::Word);
+		case Token::Integer:
+			return m_typeSystem.constructor(PrimitiveType::Integer);
+		case Token::Bool:
+			return m_typeSystem.constructor(PrimitiveType::Bool);
+		default:
+			m_errorReporter.fatalTypeError(0000_error, _typeName.location(), "Expected primitive type.");
+			return nullopt;
+		}
+	}();
+	return true;
+}
+
+void TypeRegistration::endVisit(ElementaryTypeNameExpression const & _typeNameExpression)
+{
+	if (annotation(_typeNameExpression).typeConstructor)
+		return;
+
+	// TODO: this is not visited in the ElementaryTypeNameExpression visit - is that intentional?
+	_typeNameExpression.type().accept(*this);
+	if (auto constructor = annotation(_typeNameExpression.type()).typeConstructor)
+		annotation(_typeNameExpression).typeConstructor = constructor;
+	else
+		solAssert(m_errorReporter.hasErrors());
+}
+
+bool TypeRegistration::visit(UserDefinedTypeName const& _userDefinedTypeName)
+{
+	if (annotation(_userDefinedTypeName).typeConstructor)
+		return false;
+	auto const* declaration = _userDefinedTypeName.pathNode().annotation().referencedDeclaration;
+	if (!declaration)
 	{
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
+		// TODO: fatal/non-fatal
+		m_errorReporter.fatalTypeError(0000_error, _userDefinedTypeName.pathNode().location(), "Expected declaration.");
 		return false;
 	}
+	declaration->accept(*this);
+	if (!(annotation(_userDefinedTypeName).typeConstructor = annotation(*declaration).typeConstructor))
+	{
+		// TODO: fatal/non-fatal
+		m_errorReporter.fatalTypeError(0000_error, _userDefinedTypeName.pathNode().location(), "Expected type declaration.");
+		return false;
+	}
+	return true;
+}
 
-	optional<TypeConstructor> typeConstructor = typeConstructorFromTypeName(_typeClassInstantiation.typeConstructor());
+bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiation)
+{
+	if (annotation(_typeClassInstantiation).typeConstructor)
+		return false;
+	_typeClassInstantiation.typeConstructor().accept(*this);
+	auto typeConstructor = annotation(_typeClassInstantiation.typeConstructor()).typeConstructor;
 	if (!typeConstructor)
 	{
 		m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type name.");
 		return false;
 	}
-
-	auto& instantiations = std::visit(util::GenericVisitor{
-		[&](TypeClassDefinition const* classDefinition) -> auto&
+	auto* instantiations = std::visit(util::GenericVisitor{
+		[&](ASTPointer<IdentifierPath> _path) -> TypeClassInstantiations*
 		{
-			return annotation(*classDefinition).instantiations;
+			if (TypeClassDefinition const* classDefinition = dynamic_cast<TypeClassDefinition const*>(_path->annotation().referencedDeclaration))
+				return &annotation(*classDefinition).instantiations;
+			m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
+			return nullptr;
 		},
-		[&](BuiltinClass _builtinClass) -> auto&
+		[&](Token _token) -> TypeClassInstantiations*
 		{
-			return annotation().builtinClassInstantiations[_builtinClass];
+			if (auto typeClass = builtinClassFromToken(_token))
+				return &annotation().builtinClassInstantiations[*typeClass];
+			m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
+			return nullptr;
 		}
-	}, typeClass->declaration);
+	}, _typeClassInstantiation.typeClass().name());
 
+	if (!instantiations)
+		return false;
 
 	if (
-		auto [instantiation, newlyInserted] = instantiations.emplace(*typeConstructor, &_typeClassInstantiation);
+		auto [instantiation, newlyInserted] = instantiations->emplace(*typeConstructor, &_typeClassInstantiation);
 		!newlyInserted
 	)
 	{
@@ -144,24 +218,26 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), ssl, "Duplicate type class instantiation.");
 	}
 
-	return false;
+	return true;
 }
 
 bool TypeRegistration::visit(TypeDefinition const& _typeDefinition)
 {
-	m_typeSystem.declareTypeConstructor(
-		TypeConstructor{&_typeDefinition},
+	if (annotation(_typeDefinition).typeConstructor)
+		return false;
+	annotation(_typeDefinition).typeConstructor = m_typeSystem.declareTypeConstructor(
 		_typeDefinition.name(),
-		_typeDefinition.arguments() ? _typeDefinition.arguments()->parameters().size() : 0
+		"t_" + *_typeDefinition.annotation().canonicalName + "_" + util::toString(_typeDefinition.id()),
+		_typeDefinition.arguments() ? _typeDefinition.arguments()->parameters().size() : 0,
+		&_typeDefinition
 	);
-	return false;
+	return true;
 }
 
 TypeRegistration::Annotation& TypeRegistration::annotation(ASTNode const& _node)
 {
 	return m_analysis.annotation<TypeRegistration>(_node);
 }
-
 
 TypeRegistration::GlobalAnnotation& TypeRegistration::annotation()
 {

@@ -44,11 +44,11 @@ m_analysis(_analysis),
 m_errorReporter(_analysis.errorReporter()),
 m_typeSystem(_analysis.typeSystem())
 {
-	m_voidType = m_typeSystem.type(BuiltinType::Void, {});
-	m_wordType = m_typeSystem.type(BuiltinType::Word, {});
-	m_integerType = m_typeSystem.type(BuiltinType::Integer, {});
-	m_unitType = m_typeSystem.type(BuiltinType::Unit, {});
-	m_boolType = m_typeSystem.type(BuiltinType::Bool, {});
+	m_voidType = m_typeSystem.type(PrimitiveType::Void, {});
+	m_wordType = m_typeSystem.type(PrimitiveType::Word, {});
+	m_integerType = m_typeSystem.type(PrimitiveType::Integer, {});
+	m_unitType = m_typeSystem.type(PrimitiveType::Unit, {});
+	m_boolType = m_typeSystem.type(PrimitiveType::Bool, {});
 	m_env = &m_typeSystem.env();
 }
 
@@ -61,17 +61,17 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
 	solAssert(m_expressionContext == ExpressionContext::Term);
-	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, nullopt);
 	auto& functionAnnotation = annotation(_functionDefinition);
 	if (functionAnnotation.type)
 		return false;
+
+	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, nullopt);
 
 	_functionDefinition.parameterList().accept(*this);
 	if (_functionDefinition.returnParameterList())
 		_functionDefinition.returnParameterList()->accept(*this);
 
 	auto getListType = [&](ParameterList const* _list) { return _list ? getType(*_list) : m_unitType; };
-
 	Type functionType = TypeSystemHelpers{m_typeSystem}.functionType(
 		getListType(&_functionDefinition.parameterList()),
 		getListType(_functionDefinition.returnParameterList().get())
@@ -83,21 +83,17 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 		_functionDefinition.body().accept(*this);
 
 	functionAnnotation.type = functionType;
-
-	m_errorReporter.info(0000_error, _functionDefinition.location(), TypeEnvironmentHelpers{*m_env}.typeToString(*functionAnnotation.type));
-
 	return false;
 }
 
 void TypeInference::endVisit(Return const& _return)
 {
 	solAssert(m_currentFunctionType);
+	Type functionReturnType = get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(*m_currentFunctionType));
 	if (_return.expression())
-	{
-		Type returnExpressionType = getType(*_return.expression());
-		Type functionReturnType = get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(*m_currentFunctionType));
-		unify(functionReturnType, returnExpressionType, _return.location());
-	}
+		unify(functionReturnType, getType(*_return.expression()), _return.location());
+	else
+		unify(functionReturnType, m_unitType, _return.location());
 }
 
 void TypeInference::endVisit(ParameterList const& _parameterList)
@@ -115,8 +111,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 	auto& typeClassAnnotation = annotation(_typeClassDefinition);
 	if (typeClassAnnotation.type)
 		return false;
-	m_typeSystem.declareTypeConstructor(&_typeClassDefinition, _typeClassDefinition.name(), 0);
-	typeClassAnnotation.type = TypeConstant{&_typeClassDefinition, {}};
+	typeClassAnnotation.type = type(&_typeClassDefinition, {});
 	{
 		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
 		_typeClassDefinition.typeVariable().accept(*this);
@@ -126,32 +121,36 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 
 	Type typeVar = m_typeSystem.freshTypeVariable({});
 
-	auto& typeMembers = annotation().members[&_typeClassDefinition];
+	auto& typeMembers = annotation().members[typeConstructor(&_typeClassDefinition)];
 
 	for (auto subNode: _typeClassDefinition.subNodes())
 	{
 		subNode->accept(*this);
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
 		solAssert(functionDefinition);
-		auto functionDefinitionType = annotation(*functionDefinition).type;
-		solAssert(functionDefinitionType);
-		auto functionType = m_env->fresh(*functionDefinitionType);
+		auto functionType = m_env->fresh(getType(*functionDefinition));
 		functionTypes[functionDefinition->name()] = functionType;
 		auto typeVars = TypeEnvironmentHelpers{*m_env}.typeVars(functionType);
 		if(typeVars.size() != 1)
 			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class may only depend on the type class variable.");
-		unify(typeVars.front(), typeVar);
+		unify(typeVars.front(), typeVar, functionDefinition->location());
 
 		if (!typeMembers.emplace(functionDefinition->name(), TypeMember{functionType}).second)
 			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class declared multiple times.");
 	}
 
-	if (auto error = m_typeSystem.declareTypeClass(TypeClass{&_typeClassDefinition}, typeVar, std::move(functionTypes)))
-		m_errorReporter.fatalTypeError(0000_error, _typeClassDefinition.location(), *error);
+	TypeClass typeClass = std::visit(util::GenericVisitor{
+		[](TypeClass _class) -> TypeClass { return _class; },
+		[&](std::string _error) -> TypeClass {
+			m_errorReporter.fatalTypeError(0000_error, _typeClassDefinition.location(), _error);
+			util::unreachable();
+		}
+	}, m_typeSystem.declareTypeClass(typeVar, std::move(functionTypes), _typeClassDefinition.name(), &_typeClassDefinition));
 
-	unify(getType(_typeClassDefinition.typeVariable()), m_typeSystem.freshTypeVariable({{{&_typeClassDefinition}}}), _typeClassDefinition.location());
+
+	unify(getType(_typeClassDefinition.typeVariable()), m_typeSystem.freshTypeVariable({{typeClass}}), _typeClassDefinition.location());
 	for (auto instantiation: m_analysis.annotation<TypeRegistration>(_typeClassDefinition).instantiations | ranges::views::values)
-		// TODO: recursion-safety?
+		// TODO: recursion-safety? Order of instantiation?
 		instantiation->accept(*this);
 
 	return false;
@@ -169,22 +168,21 @@ bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 	{
 		if (_context == yul::IdentifierContext::NonExternal)
 		{
+			// TODO: do we need this?
 			// Hack until we can disallow any shadowing: If we found an internal reference,
 			// clear the external references, so that codegen does not use it.
 			_inlineAssembly.annotation().externalReferences.erase(& _identifier);
 			return false;
 		}
-		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
-		if (ref == _inlineAssembly.annotation().externalReferences.end())
+		InlineAssemblyAnnotation::ExternalIdentifierInfo* identifierInfo = util::valueOrNullptr(_inlineAssembly.annotation().externalReferences, &_identifier);
+		if (!identifierInfo)
 			return false;
-		InlineAssemblyAnnotation::ExternalIdentifierInfo& identifierInfo = ref->second;
-		Declaration const* declaration = identifierInfo.declaration;
+		Declaration const* declaration = identifierInfo->declaration;
 		solAssert(!!declaration, "");
-
-		solAssert(identifierInfo.suffix == "", "");
+		solAssert(identifierInfo->suffix == "", "");
 
 		unify(getType(*declaration), m_wordType, originLocationOf(_identifier));
-		identifierInfo.valueSize = 1;
+		identifierInfo->valueSize = 1;
 		return true;
 	};
 	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
@@ -203,55 +201,37 @@ bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 {
 	auto& expressionAnnotation = annotation(_expression);
+	solAssert(!expressionAnnotation.type);
+
 	if (m_expressionContext != ExpressionContext::Type)
 	{
 		m_errorReporter.typeError(0000_error, _expression.location(), "Elementary type name expression only supported in type context.");
 		expressionAnnotation.type = m_typeSystem.freshTypeVariable({});
 		return false;
 	}
-	TypeSystemHelpers helper{m_typeSystem};
-	switch(_expression.type().typeName().token())
+
+	if (auto constructor = m_analysis.annotation<TypeRegistration>(_expression).typeConstructor)
 	{
-	case Token::Word:
-		expressionAnnotation.type = m_wordType;
-		break;
-	case Token::Void:
-		expressionAnnotation.type = m_voidType;
-		break;
-	case Token::Integer:
-		expressionAnnotation.type = m_integerType;
-		break;
-	case Token::Unit:
-		expressionAnnotation.type = m_unitType;
-		break;
-	case Token::Bool:
-		expressionAnnotation.type = m_boolType;
-		break;
-	case Token::Pair:
-	{
-		auto leftType = m_typeSystem.freshTypeVariable({});
-		auto rightType = m_typeSystem.freshTypeVariable({});
-		expressionAnnotation.type =
-			helper.typeFunctionType(
-			helper.tupleType({leftType, rightType}),
-			m_typeSystem.type(BuiltinType::Pair, {leftType, rightType})
-		);
-		break;
+		vector<Type> arguments;
+		std::generate_n(std::back_inserter(arguments), m_typeSystem.constructorInfo(*constructor).arguments(), [&]() {
+			return m_typeSystem.freshTypeVariable({});
+		});
+		if (arguments.empty())
+			expressionAnnotation.type = m_typeSystem.type(*constructor, arguments);
+		else
+		{
+			TypeSystemHelpers helper{m_typeSystem};
+			expressionAnnotation.type =
+				helper.typeFunctionType(
+					helper.tupleType(arguments),
+					m_typeSystem.type(*constructor, arguments)
+				);
+		}
 	}
-	case Token::Fun:
+	else
 	{
-		auto argType = m_typeSystem.freshTypeVariable({});
-		auto resultType = m_typeSystem.freshTypeVariable({});
-		expressionAnnotation.type = helper.typeFunctionType(
-			helper.tupleType({argType, resultType}),
-			m_typeSystem.type(BuiltinType::Function, {argType, resultType})
-		);
-		break;
-	}
-	default:
-		m_errorReporter.typeError(0000_error, _expression.location(), "Only elementary types are supported.");
+		m_errorReporter.typeError(0000_error, _expression.location(), "No type constructor registered for elementary type name.");
 		expressionAnnotation.type = m_typeSystem.freshTypeVariable({});
-		break;
 	}
 	return false;
 }
@@ -259,6 +239,7 @@ bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 {
 	auto& operationAnnotation = annotation(_binaryOperation);
+	solAssert(!operationAnnotation.type);
 	TypeSystemHelpers helper{m_typeSystem};
 	switch (m_expressionContext)
 	{
@@ -266,14 +247,15 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		if (auto* operatorInfo = util::valueOrNullptr(m_analysis.annotation<TypeRegistration>().operators, _binaryOperation.getOperator()))
 		{
 			auto [typeClass, functionName] = *operatorInfo;
-			Type functionType = m_env->fresh(m_typeSystem.typeClassInfo(typeClass)->functions.at(functionName));
+			optional<Type> functionType = m_env->typeClassFunction(typeClass, functionName);
+			solAssert(functionType);
 
 			_binaryOperation.leftExpression().accept(*this);
 			_binaryOperation.rightExpression().accept(*this);
 
 			Type argTuple = helper.tupleType({getType(_binaryOperation.leftExpression()), getType(_binaryOperation.rightExpression())});
 			Type genericFunctionType = helper.functionType(argTuple, m_typeSystem.freshTypeVariable({}));
-			unify(functionType, genericFunctionType, _binaryOperation.location());
+			unify(*functionType, genericFunctionType, _binaryOperation.location());
 
 			operationAnnotation.type = m_env->resolve(std::get<1>(helper.destFunctionType(m_env->resolve(genericFunctionType))));
 
@@ -281,7 +263,7 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		}
 		else
 		{
-			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Binary operations in term context not yet supported.");
+			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Binary operation in term context not yet supported.");
 			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
 			return false;
 		}
@@ -430,7 +412,7 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 			m_errorReporter.fatalTypeError(0000_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
 		}
 
-		// TODO: Assert that this is a type class variable declaration.
+		// TODO: Assert that this is a type class variable declaration?
 		auto& declarationAnnotation = annotation(_declaration);
 		if (!declarationAnnotation.type)
 			_declaration.accept(*this);
@@ -451,7 +433,12 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		{
 			ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Term};
 			typeClass->accept(*this);
-			return m_typeSystem.freshTypeVariable(Sort{{TypeClass{typeClass}}});
+			if (!annotation(*typeClass).typeClass)
+			{
+				m_errorReporter.typeError(0000_error, _location, "Unregistered type class.");
+				return m_typeSystem.freshTypeVariable({});
+			}
+			return m_typeSystem.freshTypeVariable(Sort{{*annotation(*typeClass).typeClass}});
 		}
 		else
 		{
@@ -539,7 +526,8 @@ bool TypeInference::visit(IdentifierPath const& _identifierPath)
 
 bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 {
-	// TODO: Deal with dependencies between type class instantiations.
+	ScopedSaveAndRestore activeInstantiations{m_activeInstantiations, m_activeInstantiations + set<TypeClassInstantiation const*>{&_typeClassInstantiation}};
+	// Note: recursion is resolved due to special handling during unification.
 	auto& instantiationAnnotation = annotation(_typeClassInstantiation);
 	if (instantiationAnnotation.type)
 		return false;
@@ -548,13 +536,10 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		[&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
 			if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
 			{
-				auto const* typeClassInfo = m_typeSystem.typeClassInfo(TypeClass{typeClass});
-				if (!typeClassInfo)
-				{
-					// visiting the type class will re-visit this instantiation
-					typeClass->accept(*this);
-				}
-				return TypeClass{typeClass};
+				// visiting the type class will re-visit this instantiation
+				typeClass->accept(*this);
+				// TODO: more error handling? Should be covered by the visit above.
+				return annotation(*typeClass).typeClass;
 			}
 			else
 			{
@@ -563,19 +548,18 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			}
 		},
 		[&](Token _token) -> std::optional<TypeClass> {
-			if (auto typeClass = typeClassFromToken(_token))
-				return typeClass;
-			else
-			{
-				m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Invalid type class name.");
-				return nullopt;
-			}
+			if (auto builtinClass = builtinClassFromToken(_token))
+				if (auto typeClass = util::valueOrNullptr(m_analysis.annotation<TypeRegistration>().builtinClasses, *builtinClass))
+					return *typeClass;
+			m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Invalid type class name.");
+			return nullopt;
 		}
 	}, _typeClassInstantiation.typeClass().name());
 	if (!typeClass)
 		return false;
 
-	auto typeConstructor = typeConstructorFromTypeName(_typeClassInstantiation.typeConstructor());
+	// TODO: _typeClassInstantiation.typeConstructor().accept(*this); ?
+	auto typeConstructor = m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
 	if (!typeConstructor)
 	{
 		m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type constructor.");
@@ -680,21 +664,20 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 	vector<Type> arguments;
 	if (_typeDefinition.arguments())
 		 for (size_t i = 0; i < _typeDefinition.arguments()->parameters().size(); ++i)
-			// TODO: GENERALIZE?
 			arguments.emplace_back(m_typeSystem.freshTypeVariable({}));
 
-	Type type = m_typeSystem.type(TypeConstructor{&_typeDefinition}, arguments);
+	Type definedType = type(&_typeDefinition, arguments);
 	if (arguments.empty())
-		 typeDefinitionAnnotation.type = m_typeSystem.type(TypeConstructor{&_typeDefinition}, arguments);
+		 typeDefinitionAnnotation.type = definedType;
 	else
-		typeDefinitionAnnotation.type = helper.typeFunctionType(helper.tupleType(arguments), type);
+		typeDefinitionAnnotation.type = helper.typeFunctionType(helper.tupleType(arguments), definedType);
 
-	auto [members, newlyInserted] = annotation().members.emplace(&_typeDefinition, map<string, TypeMember>{});
+	auto [members, newlyInserted] = annotation().members.emplace(typeConstructor(&_typeDefinition), map<string, TypeMember>{});
 	solAssert(newlyInserted);
 	if (underlyingType)
 	{
-		members->second.emplace("abs", TypeMember{helper.functionType(*underlyingType, type)});
-		members->second.emplace("rep", TypeMember{helper.functionType(type, *underlyingType)});
+		members->second.emplace("abs", TypeMember{helper.functionType(*underlyingType, definedType)});
+		members->second.emplace("rep", TypeMember{helper.functionType(definedType, *underlyingType)});
 	}
 	return false;
 }
@@ -920,17 +903,89 @@ bool TypeInference::visit(Literal const& _literal)
 		 m_errorReporter.typeError(0000_error, _literal.location(), "Only integers are supported.");
 		 return false;
 	}
-	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{TypeClass{BuiltinClass::Integer}}});
+	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{m_analysis.annotation<TypeRegistration>().builtinClasses.at(BuiltinClass::Integer)}});
 	return false;
 }
 
+
+namespace
+{
+// TODO: put at a nice place to deduplicate.
+TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysis const& _analysis, TypeClass _class)
+{
+	auto const* typeClassDeclaration = _analysis.typeSystem().typeClassDeclaration(_class);
+	if (typeClassDeclaration)
+		 return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
+	// TODO: better mechanism than fetching by name.
+	auto& annotation = _analysis.annotation<TypeRegistration>();
+	return annotation.builtinClassInstantiations.at(annotation.builtinClassesByName.at(_analysis.typeSystem().typeClassName(_class)));
+}
+}
+
+
 void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location, TypeEnvironment* _env)
 {
+	TypeSystemHelpers helper{m_typeSystem};
 	if (!_env)
 		_env = m_env;
-	for (auto failure: _env->unify(_a, _b))
+	auto unificationFailures = _env->unify(_a, _b);
+
+	if (!m_activeInstantiations.empty())
 	{
-		TypeEnvironmentHelpers helper{*_env};
+		// Attempt to resolve interdependencies between type class instantiations.
+		std::vector<TypeClassInstantiation const*> missingInstantiations;
+		bool recursion = false;
+		bool onlyMissingInstantiations = [&]() {
+			for (auto failure: unificationFailures)
+			{
+				if (auto* sortMismatch = get_if<TypeEnvironment::SortMismatch>(&failure))
+					if (helper.isTypeConstant(sortMismatch->type))
+					{
+						TypeConstructor constructor = std::get<0>(helper.destTypeConstant(sortMismatch->type));
+						for (auto typeClass: sortMismatch->sort.classes)
+						{
+							if (auto const* instantiation = util::valueOrDefault(typeClassInstantiations(m_analysis, typeClass), constructor, nullptr))
+							{
+								if (m_activeInstantiations.count(instantiation))
+								{
+									langutil::SecondarySourceLocation ssl;
+									for (auto activeInstantiation: m_activeInstantiations)
+										ssl.append("Involved instantiation", activeInstantiation->location());
+									m_errorReporter.typeError(
+										0000_error,
+										_location,
+										ssl,
+										"Recursion during type class instantiation."
+									);
+									recursion = true;
+									return false;
+								}
+								missingInstantiations.emplace_back(instantiation);
+							}
+							else
+								return false;
+						}
+						continue;
+					}
+				return false;
+			}
+			return true;
+		}();
+
+		if (recursion)
+			return;
+
+		if (onlyMissingInstantiations)
+		{
+			for (auto instantiation: missingInstantiations)
+				instantiation->accept(*this);
+			unificationFailures = _env->unify(_a, _b);
+		}
+	}
+
+	for (auto failure: unificationFailures)
+	{
+		TypeEnvironmentHelpers envHelper{*_env};
 		std::visit(util::GenericVisitor{
 			[&](TypeEnvironment::TypeMismatch _typeMismatch) {
 				m_errorReporter.typeError(
@@ -938,16 +993,26 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location, 
 					_location,
 					fmt::format(
 						"Cannot unify {} and {}.",
-						helper.typeToString(_typeMismatch.a),
-						helper.typeToString(_typeMismatch.b))
+						envHelper.typeToString(_typeMismatch.a),
+						envHelper.typeToString(_typeMismatch.b))
 				);
 			},
 			[&](TypeEnvironment::SortMismatch _sortMismatch) {
 				m_errorReporter.typeError(0000_error, _location, fmt::format(
 					"{} does not have sort {}",
-					helper.typeToString(_sortMismatch.type),
+					envHelper.typeToString(_sortMismatch.type),
 					TypeSystemHelpers{m_typeSystem}.sortToString(_sortMismatch.sort)
 				));
+			},
+			[&](TypeEnvironment::RecursiveUnification _recursiveUnification) {
+				m_errorReporter.typeError(
+					0000_error,
+					_location,
+					fmt::format(
+						"Recursive unification: {} occurs in {}.",
+						envHelper.typeToString(_recursiveUnification.var),
+						envHelper.typeToString(_recursiveUnification.type))
+				);
 			}
 		}, failure);
 	}
@@ -958,6 +1023,17 @@ experimental::Type TypeInference::getType(ASTNode const& _node) const
 	auto result = annotation(_node).type;
 	solAssert(result);
 	return *result;
+}
+TypeConstructor TypeInference::typeConstructor(Declaration const* _type) const
+{
+	if (auto const& constructor = m_analysis.annotation<TypeRegistration>(*_type).typeConstructor)
+		return *constructor;
+	m_errorReporter.fatalTypeError(0000_error, _type->location(), "Unregistered type.");
+	util::unreachable();
+}
+experimental::Type TypeInference::type(Declaration const* _type, vector<Type> _arguments) const
+{
+	return m_typeSystem.type(typeConstructor(_type), std::move(_arguments));
 }
 
 bool TypeInference::visitNode(ASTNode const& _node)

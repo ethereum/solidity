@@ -99,7 +99,7 @@ private:
 		solAssert(varDecl, "External reference in inline assembly to something that is not a variable declaration.");
 		auto type = m_context.analysis.annotation<TypeInference>(*varDecl).type;
 		solAssert(type);
-		solAssert(m_context.env->typeEquals(*type, m_context.analysis.typeSystem().type(BuiltinType::Word, {})));
+		solAssert(m_context.env->typeEquals(*type, m_context.analysis.typeSystem().type(PrimitiveType::Word, {})));
 		string value = IRNames::localVariable(*varDecl);
 		return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}
@@ -200,28 +200,25 @@ namespace
 {
 TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGenerationContext const& _context, TypeClass _class)
 {
-	return std::visit(util::GenericVisitor{
-		[&](BuiltinClass _builtinClass) -> auto const& {
-			return _context.analysis.annotation<TypeRegistration>().builtinClassInstantiations.at(_builtinClass);
-		},
-		[&](TypeClassDefinition const* _classDefinition) -> auto const& {
-			return _context.analysis.annotation<TypeRegistration>(*_classDefinition).instantiations;
-		}
-	}, _class.declaration);
+	auto const* typeClassDeclaration = _context.analysis.typeSystem().typeClassDeclaration(_class);
+	if (typeClassDeclaration)
+		return _context.analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
+	// TODO: better mechanism than fetching by name.
+	auto& annotation = _context.analysis.annotation<TypeRegistration>();
+	return annotation.builtinClassInstantiations.at(annotation.builtinClassesByName.at(_context.analysis.typeSystem().typeClassName(_class)));
 }
 }
 
 FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(TypeClass _class, string _name, Type _type)
 {
 	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
-	auto const* typeClassInfo = m_context.analysis.typeSystem().typeClassInfo(_class);
-	solAssert(typeClassInfo);
-	Type genericFunctionType = typeClassInfo->functions.at(_name);
 
 	TypeEnvironment env = m_context.env->clone();
-	auto typeVars = TypeEnvironmentHelpers{env}.typeVars(genericFunctionType);
+	std::optional<Type> genericFunctionType = env.typeClassFunction(_class, _name);
+	solAssert(genericFunctionType);
+	auto typeVars = TypeEnvironmentHelpers{env}.typeVars(*genericFunctionType);
 	solAssert(typeVars.size() == 1);
-	solAssert(env.unify(genericFunctionType, _type).empty());
+	solAssert(env.unify(*genericFunctionType, _type).empty());
 	auto typeClassInstantiation = get<0>(helper.destTypeConstant(env.resolve(typeVars.front())));
 
 	auto const& instantiations = typeClassInstantiations(m_context, _class);
@@ -247,26 +244,26 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	auto expressionType = type(_memberAccess.expression());
 	auto constructor = std::get<0>(helper.destTypeConstant(expressionType));
 	auto memberAccessType = type(_memberAccess);
-	std::visit(util::GenericVisitor{
-		[](BuiltinType) { solAssert(false); },
-		[&](Declaration const *_declaration)
-		{
-			if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(_declaration))
-				solAssert(m_expressionDeclaration.emplace(
-					&_memberAccess,
-					&resolveTypeClassFunction(TypeClass{typeClass}, _memberAccess.memberName(), memberAccessType)
-				).second);
-			else if (dynamic_cast<TypeDefinition const*>(_declaration))
-			{
-				if (_memberAccess.memberName() == "abs" || _memberAccess.memberName() == "rep")
-					solAssert(m_expressionDeclaration.emplace(&_memberAccess, Builtins::Identity).second);
-				else
-					solAssert(false);
-			}
-			else
-				solAssert(false);
-		}
-	}, constructor);
+	auto const* declaration = m_context.analysis.typeSystem().constructorInfo(constructor).typeDeclaration;
+	solAssert(declaration);
+	if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(declaration))
+	{
+		optional<TypeClass> typeClass = m_context.analysis.annotation<TypeInference>(*typeClassDefinition).typeClass;
+		solAssert(typeClass);
+		solAssert(m_expressionDeclaration.emplace(
+			&_memberAccess,
+			&resolveTypeClassFunction(*typeClass, _memberAccess.memberName(), memberAccessType)
+		).second);
+	}
+	else if (dynamic_cast<TypeDefinition const*>(declaration))
+	{
+		if (_memberAccess.memberName() == "abs" || _memberAccess.memberName() == "rep")
+			solAssert(m_expressionDeclaration.emplace(&_memberAccess, Builtins::Identity).second);
+		else
+			solAssert(false);
+	}
+	else
+		solAssert(false);
 }
 
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)

@@ -108,13 +108,13 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 
 	while (!m_context.functionQueue.empty())
 	{
-		auto [function, type] = m_context.functionQueue.front();
+		auto queueEntry = m_context.functionQueue.front();
 		m_context.functionQueue.pop_front();
-		auto& generatedTypes = m_context.generatedFunctions[function];
-		if (!util::contains_if(generatedTypes, [&, type=type](auto _generatedType) { return m_context.env->typeEquals(_generatedType, type); }))
+		auto& generatedTypes = m_context.generatedFunctions.insert(std::make_pair(queueEntry.function, vector<Type>{})).first->second;
+		if (!util::contains_if(generatedTypes, [&](auto const& _generatedType) { return m_context.env->typeEquals(_generatedType, queueEntry.type); }))
 		{
-			m_context.generatedFunctions[function].emplace_back(type);
-			code << generate(*function, type);
+			generatedTypes.emplace_back(queueEntry.type);
+			code << generate(*queueEntry.function, queueEntry.type);
 		}
 	}
 

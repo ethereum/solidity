@@ -38,6 +38,8 @@ public:
 	{
 		/// Expressions, variable declarations, function declarations.
 		std::optional<Type> type;
+		// Type classes.
+		std::optional<TypeClass> typeClass;
 	};
 	struct TypeMember
 	{
@@ -106,7 +108,10 @@ private:
 	void unify(Type _a, Type _b, langutil::SourceLocation _location = {}, TypeEnvironment* _env = nullptr);
 	enum class ExpressionContext { Term, Type, Sort };
 	Type handleIdentifierByReferencedDeclaration(langutil::SourceLocation _location, Declaration const& _declaration);
+	TypeConstructor typeConstructor(Declaration const* _type) const;
+	Type type(Declaration const* _type, std::vector<Type> _arguments) const;
 	ExpressionContext m_expressionContext = ExpressionContext::Term;
+	std::set<TypeClassInstantiation const*, ASTCompareByID<TypeClassInstantiation>> m_activeInstantiations;
 };
 
 }

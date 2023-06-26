@@ -45,8 +45,8 @@ struct IRGenerationContext
 	}
 	struct QueuedFunction
 	{
-		FunctionDefinition const* function;
-		Type type;
+		FunctionDefinition const* function = nullptr;
+		Type type = std::monostate{};
 	};
 	std::list<QueuedFunction> functionQueue;
 	std::map<FunctionDefinition const*, std::vector<Type>> generatedFunctions;

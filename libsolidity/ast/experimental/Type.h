@@ -18,15 +18,8 @@
 #pragma once
 
 #include <set>
-#include <string>
 #include <variant>
 #include <vector>
-
-namespace solidity::frontend
-{
-class Declaration;
-class TypeClassDefinition;
-}
 
 namespace solidity::frontend::experimental
 {
@@ -36,12 +29,10 @@ class TypeSystem;
 struct TypeConstant;
 struct TypeVariable;
 
-using Type = std::variant<TypeConstant, TypeVariable>;
+using Type = std::variant<std::monostate, TypeConstant, TypeVariable>;
 
-enum class BuiltinType
+enum class PrimitiveType
 {
-	Type,
-	Sort,
 	Void,
 	Function,
 	TypeFunction,
@@ -52,45 +43,70 @@ enum class BuiltinType
 	Integer
 };
 
-using TypeConstructor = std::variant<BuiltinType, Declaration const*>;
-}
-namespace std
+enum class PrimitiveClass
 {
-template<>
-struct less<solidity::frontend::experimental::TypeConstructor>
-{
-	bool operator()(solidity::frontend::experimental::TypeConstructor const& _lhs, solidity::frontend::experimental::TypeConstructor const& _rhs) const;
+	Type,
+	Kind
 };
-}
-namespace solidity::frontend::experimental
+
+struct TypeConstructor
 {
+public:
+	TypeConstructor(TypeConstructor const& _typeConstructor): m_index(_typeConstructor.m_index) {}
+	TypeConstructor& operator=(TypeConstructor const& _typeConstructor)
+	{
+		m_index = _typeConstructor.m_index;
+		return *this;
+	}
+	bool operator<(TypeConstructor const& _rhs) const
+	{
+		return m_index < _rhs.m_index;
+	}
+	bool operator==(TypeConstructor const& _rhs) const
+	{
+		return m_index == _rhs.m_index;
+	}
+	bool operator!=(TypeConstructor const& _rhs) const
+	{
+		return m_index != _rhs.m_index;
+	}
+private:
+	friend class TypeSystem;
+	TypeConstructor(size_t _index): m_index(_index) {}
+	size_t m_index = 0;
+};
+
 struct TypeConstant
 {
 	TypeConstructor constructor;
 	std::vector<Type> arguments;
 };
 
-enum class BuiltinClass
-{
-	Type,
-	Kind,
-	Integer,
-	Mul,
-	Add,
-	Equal,
-	Less,
-	LessOrEqual,
-	Greater,
-	GreaterOrEqual
-};
-
 struct TypeClass
 {
-	std::variant<BuiltinClass, TypeClassDefinition const*> declaration;
-	std::string toString() const;
-	bool operator<(TypeClass const& _rhs) const;
-	bool operator==(TypeClass const& _rhs) const;
-	bool operator!=(TypeClass const& _rhs) const { return !operator==(_rhs); }
+public:
+	TypeClass(TypeClass const& _typeClass): m_index(_typeClass.m_index) {}
+	TypeClass& operator=(TypeClass const& _typeConstructor)
+	{
+		m_index = _typeConstructor.m_index;
+		return *this;
+	}
+	bool operator<(TypeClass const& _rhs) const
+	{
+		return m_index < _rhs.m_index;
+	}
+	bool operator==(TypeClass const& _rhs) const
+	{
+		return m_index == _rhs.m_index;
+	}
+	bool operator!=(TypeClass const& _rhs) const
+	{
+		return m_index != _rhs.m_index;
+	}
+private:
+	friend class TypeSystem;
+	TypeClass(size_t _index): m_index(_index) {}
+	size_t m_index = 0;
 };
 
 struct Sort

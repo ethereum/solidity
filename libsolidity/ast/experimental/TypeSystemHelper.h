@@ -23,11 +23,12 @@
 
 namespace solidity::frontend::experimental
 {
-
-std::optional<TypeConstructor> typeConstructorFromTypeName(TypeName const& _typeName);
-std::optional<TypeConstructor> typeConstructorFromToken(langutil::Token _token);
-std::optional<TypeClass> typeClassFromTypeClassName(TypeClassName const& _typeClass);
-std::optional<TypeClass> typeClassFromToken(langutil::Token _token);
+class Analysis;
+enum class BuiltinClass;
+//std::optional<TypeConstructor> typeConstructorFromTypeName(Analysis const& _analysis, TypeName const& _typeName);
+//std::optional<TypeConstructor> typeConstructorFromToken(Analysis const& _analysis, langutil::Token _token);
+//std::optional<TypeClass> typeClassFromTypeClassName(TypeClassName const& _typeClass);
+std::optional<BuiltinClass> builtinClassFromToken(langutil::Token _token);
 
 struct TypeSystemHelpers
 {
