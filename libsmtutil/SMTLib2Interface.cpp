@@ -39,17 +39,14 @@ using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 SMTLib2Interface::SMTLib2Interface(
-	std::map<h256, std::string> _queryResponses,
+	[[maybe_unused]] std::map<h256, string> _queryResponses,
 	ReadCallback::Callback _smtCallback,
 	SMTSolverChoice _enabledSolvers,
-	std::optional<unsigned> _queryTimeout,
-	bool _dumpQuery
+	std::optional<unsigned> _queryTimeout
 ):
 	SolverInterface(_queryTimeout),
-	m_queryResponses(std::move(_queryResponses)),
 	m_smtCallback(std::move(_smtCallback)),
-	m_enabledSolvers(_enabledSolvers),
-	m_dumpQuery(_dumpQuery)
+	m_enabledSolvers(_enabledSolvers)
 {
 	reset();
 }
@@ -117,28 +114,88 @@ void SMTLib2Interface::addAssertion(Expression const& _expr)
 	write("(assert " + toSExpr(_expr) + ")");
 }
 
+namespace { // Helpers for querying solvers using SMT callback
+	auto resultFromSolverResponse (std::string const& response) {
+		CheckResult result;
+		// TODO proper parsing
+		if (boost::starts_with(response, "sat\n"))
+			result = CheckResult::SATISFIABLE;
+		else if (boost::starts_with(response, "unsat\n"))
+			result = CheckResult::UNSATISFIABLE;
+		else if (boost::starts_with(response, "unknown\n"))
+			result = CheckResult::UNKNOWN;
+		else
+			result = CheckResult::ERROR;
+		return result;
+	}
+
+	bool solverAnswered(CheckResult result)
+	{
+		return result == CheckResult::SATISFIABLE || result == CheckResult::UNSATISFIABLE;
+	}
+
+    std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
+	{
+        std::vector<string> values;
+		while (_start < _end)
+		{
+			auto valStart = find(_start, _end, ' ');
+			if (valStart < _end)
+				++valStart;
+			auto valEnd = find(valStart, _end, ')');
+			values.emplace_back(valStart, valEnd);
+			_start = find(valEnd, _end, '(');
+		}
+
+		return values;
+	}
+
+    std::vector<string> parseValues(string const& solverAnswer)
+	{
+		return parseValues(find(solverAnswer.cbegin(), solverAnswer.cend(), '\n'), solverAnswer.cend());
+	}
+}
+
 std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::vector<Expression> const& _expressionsToEvaluate)
 {
-	std::string response = querySolver(
-		boost::algorithm::join(m_accumulatedOutput, "\n") +
-		checkSatAndGetValuesCommand(_expressionsToEvaluate)
-	);
+	auto query = boost::algorithm::join(m_accumulatedOutput, "\n") +
+				 checkSatAndGetValuesCommand(_expressionsToEvaluate);
 
-	CheckResult result;
-	// TODO proper parsing
-	if (boost::starts_with(response, "sat\n"))
-		result = CheckResult::SATISFIABLE;
-	else if (boost::starts_with(response, "unsat\n"))
-		result = CheckResult::UNSATISFIABLE;
-	else if (boost::starts_with(response, "unknown\n"))
-		result = CheckResult::UNKNOWN;
-	else
-		result = CheckResult::ERROR;
+	std::vector<std::string> solverCommands;
+	if (m_enabledSolvers.z3)
+		solverCommands.emplace_back("z3");
+	if (m_enabledSolvers.cvc4)
+		solverCommands.emplace_back("cvc4");
 
-	std::vector<std::string> values;
-	if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
-		values = parseValues(find(response.cbegin(), response.cend(), '\n'), response.cend());
-	return std::make_pair(result, values);
+	CheckResult lastResult = CheckResult::ERROR;
+    std::vector<std::string> finalValues;
+	for (auto const& s: solverCommands)
+	{
+		auto callBackResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + ' ' + s, query);
+		if (not callBackResult.success)
+			continue;
+		auto const& response = callBackResult.responseOrErrorMessage;
+		CheckResult result = resultFromSolverResponse(response);
+		if (solverAnswered(result))
+		{
+			if (!solverAnswered(lastResult))
+			{
+				lastResult = result;
+				finalValues = parseValues(response);
+			}
+			else if (lastResult != result)
+			{
+				lastResult = CheckResult::CONFLICTING;
+				break;
+			}
+		}
+		else if (result == CheckResult::UNKNOWN && lastResult == CheckResult::ERROR)
+			lastResult = result;
+	}
+	if (lastResult == CheckResult::ERROR) {
+		m_unhandledQueries.push_back(query);
+	}
+	return std::make_pair(lastResult, finalValues);
 }
 
 std::string SMTLib2Interface::toSExpr(Expression const& _expr)
@@ -293,37 +350,6 @@ std::string SMTLib2Interface::checkSatAndGetValuesCommand(std::vector<Expression
 	}
 
 	return command;
-}
-
-std::vector<std::string> SMTLib2Interface::parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
-{
-	std::vector<std::string> values;
-	while (_start < _end)
-	{
-		auto valStart = find(_start, _end, ' ');
-		if (valStart < _end)
-			++valStart;
-		auto valEnd = find(valStart, _end, ')');
-		values.emplace_back(valStart, valEnd);
-		_start = find(valEnd, _end, '(');
-	}
-
-	return values;
-}
-
-std::string SMTLib2Interface::querySolver(std::string const& _input)
-{
-	h256 inputHash = keccak256(_input);
-	if (m_queryResponses.count(inputHash))
-		return m_queryResponses.at(inputHash);
-	if (m_smtCallback)
-	{
-		auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), _input);
-		if (result.success)
-			return result.responseOrErrorMessage;
-	}
-	m_unhandledQueries.push_back(_input);
-	return "unknown\n";
 }
 
 std::string SMTLib2Interface::dumpQuery(std::vector<Expression> const& _expressionsToEvaluate)

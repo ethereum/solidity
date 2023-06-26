@@ -44,7 +44,7 @@ BMC::BMC(
 ):
 	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
 	m_interface(std::make_unique<smtutil::SMTLib2Interface>(
-		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout, _settings.printQuery
+		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout
 	))
 {
 	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");

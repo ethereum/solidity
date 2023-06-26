@@ -45,8 +45,7 @@ public:
 		std::map<util::h256, std::string> _queryResponses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
 		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
-		std::optional<unsigned> _queryTimeout = {},
-		bool _printQuery = false
+		std::optional<unsigned> _queryTimeout = {}
 	);
 
 	void reset() override;
@@ -78,10 +77,6 @@ private:
 	void write(std::string _data);
 
 	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
-	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
-
-	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
-	std::string querySolver(std::string const& _input);
 
 	std::vector<std::string> m_accumulatedOutput;
 	std::map<std::string, SortPointer> m_variables;
@@ -92,12 +87,10 @@ private:
 	/// otherwise solvers cannot parse the queries.
 	std::vector<std::pair<std::string, std::string>> m_userSorts;
 
-	std::map<util::h256, std::string> m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
 
 	frontend::ReadCallback::Callback m_smtCallback;
 	SMTSolverChoice m_enabledSolvers;
-	bool m_dumpQuery;
 };
 
 }
