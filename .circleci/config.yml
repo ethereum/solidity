@@ -358,23 +358,22 @@ defaults:
   - base_archlinux: &base_archlinux
       docker:
         - image: archlinux:base
-      environment:
+      environment: &base_archlinux_env
         TERM: xterm
         MAKEFLAGS: -j 3
 
   - base_archlinux_large: &base_archlinux_large
-      docker:
-        - image: archlinux:base
+      <<: *base_archlinux
       resource_class: large
-      environment:
-        TERM: xterm
+      environment: &base_archlinux_large_env
+        <<: *base_archlinux_env
         MAKEFLAGS: -j 5
 
   - base_cimg_small: &base_cimg_small
       docker:
         - image: cimg/base:current
       resource_class: small
-      environment:
+      environment: &base_cimg_small_env
         TERM: xterm
         MAKEFLAGS: -j 2
 
@@ -382,7 +381,7 @@ defaults:
       docker:
         - image: << pipeline.parameters.emscripten-docker-image >>
       resource_class: large
-      environment:
+      environment: &base_ems_large_env
         TERM: xterm
         MAKEFLAGS: -j 5
 
@@ -390,7 +389,7 @@ defaults:
       docker:
         - image: cimg/node:current
       resource_class: small
-      environment:
+      environment: &base_node_small_env
         TERM: xterm
         MAKEFLAGS: -j 2
 
@@ -398,72 +397,71 @@ defaults:
       macos:
         xcode: "14.2.0"
       resource_class: macos.x86.medium.gen2
-      environment:
+      environment: &base_osx_env
         TERM: xterm
         MAKEFLAGS: -j5
 
   - base_osx_large: &base_osx_large
-      macos:
-        xcode: "14.2.0"
+      <<: *base_osx
       resource_class: large
-      environment:
-        TERM: xterm
+      environment: &base_osx_large_env
+        <<: *base_osx_env
         MAKEFLAGS: -j10
 
   - base_python_small: &base_python_small
       docker:
         - image: cimg/python:3.6
       resource_class: small
-      environment:
+      environment: &base_python_small_env
         TERM: xterm
         MAKEFLAGS: -j 2
 
   - base_ubuntu_clang: &base_ubuntu_clang
       docker:
         - image: << pipeline.parameters.ubuntu-clang-ossfuzz-docker-image >>
-      environment:
+      environment: &base_ubuntu_clang_env
         TERM: xterm
         MAKEFLAGS: -j 3
 
   - base_ubuntu_clang_small: &base_ubuntu_clang_small
       <<: *base_ubuntu_clang
       resource_class: small
-      environment:
-        TERM: xterm
+      environment: &base_ubuntu_clang_small_env
+        <<: *base_ubuntu_clang_env
         MAKEFLAGS: -j 2
 
   - base_ubuntu2004: &base_ubuntu2004
       docker:
-          - image: << pipeline.parameters.ubuntu-2004-docker-image >>
-      environment:
-          TERM: xterm
-          MAKEFLAGS: -j 3
+        - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+      environment: &base_ubuntu2004_env
+        TERM: xterm
+        MAKEFLAGS: -j 3
 
   - base_ubuntu2004_small: &base_ubuntu2004_small
       <<: *base_ubuntu2004
       resource_class: small
-      environment:
-          TERM: xterm
-          MAKEFLAGS: -j 2
+      environment: &base_ubuntu2004_small_env
+        <<: *base_ubuntu2004_env
+        MAKEFLAGS: -j 2
 
   - base_ubuntu2004_xlarge: &base_ubuntu2004_xlarge
       <<: *base_ubuntu2004
       resource_class: xlarge
-      environment:
-          TERM: xterm
-          MAKEFLAGS: -j 10
+      environment: &base_ubuntu2004_xlarge_env
+        <<: *base_ubuntu2004_env
+        MAKEFLAGS: -j 10
 
   - base_ubuntu2204: &base_ubuntu2204
       docker:
         - image: << pipeline.parameters.ubuntu-2204-docker-image >>
-      environment:
+      environment: &base_ubuntu2204_env
         TERM: xterm
         MAKEFLAGS: -j 3
 
   - base_ubuntu2204_clang: &base_ubuntu2204_clang
       docker:
         - image: << pipeline.parameters.ubuntu-2204-clang-docker-image >>
-      environment:
+      environment: &base_ubuntu2204_clang_env
         TERM: xterm
         CC: clang
         CXX: clang++
@@ -472,31 +470,29 @@ defaults:
   - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
       <<: *base_ubuntu2204_clang
       resource_class: large
-      environment:
-        TERM: xterm
-        CC: clang
-        CXX: clang++
+      environment: &base_ubuntu2204_clang_large_env
+        <<: *base_ubuntu2204_clang_env
         MAKEFLAGS: -j 5
 
   - base_ubuntu2204_small: &base_ubuntu2204_small
       <<: *base_ubuntu2204
       resource_class: small
-      environment:
-        TERM: xterm
+      environment: &base_ubuntu2204_small_env
+        <<: *base_ubuntu2204_env
         MAKEFLAGS: -j 2
 
   - base_ubuntu2204_large: &base_ubuntu2204_large
       <<: *base_ubuntu2204
       resource_class: large
-      environment:
-        TERM: xterm
+      environment: &base_ubuntu2204_large_env
+        <<: *base_ubuntu2204_env
         MAKEFLAGS: -j 5
 
   - base_ubuntu2204_xlarge: &base_ubuntu2204_xlarge
       <<: *base_ubuntu2204
       resource_class: xlarge
-      environment:
-        TERM: xterm
+      environment: &base_ubuntu2204_xlarge_env
+        <<: *base_ubuntu2204_env
         MAKEFLAGS: -j 10
 
   - base_win: &base_win
@@ -888,17 +884,15 @@ jobs:
     # Runs slightly faster on large and xlarge but we only run it nightly so efficiency matters more.
     <<: *base_ubuntu2204
     environment:
+      <<: *base_ubuntu2204_env
       CMAKE_OPTIONS: -DSANITIZE=address
-      MAKEFLAGS: -j 3
       CMAKE_BUILD_TYPE: Release
     <<: *steps_build
 
   b_ubu_clang: &b_ubu_clang
     <<: *base_ubuntu2204_clang_large
     environment:
-      TERM: xterm
-      CC: clang
-      CXX: clang++
+      <<: *base_ubuntu2204_clang_large_env
       MAKEFLAGS: -j 10
     <<: *steps_build
 
@@ -909,18 +903,15 @@ jobs:
         type: string
     <<: *base_ubuntu2204_clang
     environment:
-      TERM: xterm
-      CC: clang
-      CXX: clang++
-      MAKEFLAGS: -j 3
+      <<: *base_ubuntu2204_clang_env
       CMAKE_OPTIONS: << parameters.cmake_options >>
     <<: *steps_build
 
   b_ubu_force_release: &b_ubu_force_release
     <<: *b_ubu
     environment:
+      <<: *base_ubuntu2204_xlarge_env
       FORCE_RELEASE: ON
-      MAKEFLAGS: -j 10
 
   b_ubu_static:
     # We temporarily keep building static release binaries on ubuntu 20.04
@@ -929,8 +920,7 @@ jobs:
     # On large runs 2x faster than on medium. 3x on xlarge.
     <<: *base_ubuntu2004_xlarge
     environment:
-      TERM: xterm
-      MAKEFLAGS: -j 10
+      <<: *base_ubuntu2204_xlarge_env
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
@@ -952,9 +942,9 @@ jobs:
     # Runs ~30% faster on large but we only run it nightly so efficiency matters more.
     <<: *base_ubuntu2204
     environment:
+      <<: *base_ubuntu2204_env
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
-      MAKEFLAGS: -j 3
     steps:
       - checkout
       - run: *run_build
@@ -964,6 +954,7 @@ jobs:
   t_ubu_codecov:
     <<: *base_ubuntu2204_large
     environment:
+      <<: *base_ubuntu2204_large_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 1
     steps:
@@ -988,6 +979,7 @@ jobs:
   b_ubu_cxx20:
     <<: *base_ubuntu2204_large
     environment:
+      <<: *base_ubuntu2204_large_env
       CMAKE_BUILD_TYPE: Debug
       CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
       MAKEFLAGS: -j 10
@@ -1023,8 +1015,7 @@ jobs:
   b_archlinux:
     <<: *base_archlinux_large
     environment:
-      TERM: xterm
-      MAKEFLAGS: -j 5
+      <<: *base_archlinux_large_env
       # This can be switched off if we run out of sync with Arch.
       USE_Z3: ON
     steps:
@@ -1041,9 +1032,8 @@ jobs:
   b_osx:
     <<: *base_osx_large
     environment:
-      TERM: xterm
+      <<: *base_osx_large_env
       CMAKE_BUILD_TYPE: Release
-      MAKEFLAGS: -j10
     steps:
       - checkout
       - when:
@@ -1063,9 +1053,9 @@ jobs:
   t_osx_soltest: &t_osx_soltest
     <<: *base_osx
     environment:
+      <<: *base_osx_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
-      TERM: xterm
     steps:
       - checkout
       - when:
@@ -1095,7 +1085,7 @@ jobs:
   b_ems:
     <<: *base_ems_large
     environment:
-      TERM: xterm
+      <<: *base_ems_large_env
       MAKEFLAGS: -j 10
     steps:
       - checkout
@@ -1142,9 +1132,9 @@ jobs:
     <<: *base_archlinux
     parallelism: 20
     environment:
+      <<: *base_archlinux_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
-      TERM: xterm
       # For Archlinux we do not have prebuilt docker images and we would need to build evmone from source,
       # thus we forgo semantics tests to speed things up.
       SOLTEST_FLAGS: --no-semantic-tests --no-smt
@@ -1161,6 +1151,7 @@ jobs:
     <<: *base_ubuntu2204_clang
     parallelism: 20
     environment:
+      <<: *base_ubuntu2204_clang_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       # The high parallelism in this job is causing the SMT tests to run out of memory,
@@ -1195,7 +1186,7 @@ jobs:
     <<: *base_ubuntu2204
     parallelism: 7 # Should match number of tests in .circleci/cli.sh
     environment:
-      TERM: xterm
+      <<: *base_ubuntu2204_env
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
       # Suppress CLN memory leak.
       # See: https://github.com/ethereum/solidity/issues/13891 for details.
@@ -1206,6 +1197,7 @@ jobs:
     <<: *base_ubuntu2204
     parallelism: 20
     environment:
+      <<: *base_ubuntu2204_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
@@ -1219,6 +1211,7 @@ jobs:
     <<: *base_ubuntu2204_clang
     parallelism: 20
     environment:
+      <<: *base_ubuntu2204_clang_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
@@ -1229,6 +1222,7 @@ jobs:
     <<: *base_ubuntu2204_clang
     parallelism: 20
     environment:
+      <<: *base_ubuntu2204_clang_env
       EVM: << pipeline.parameters.evm-version >>
       SOLTEST_FLAGS: --no-smt
     <<: *steps_soltest
@@ -1264,7 +1258,7 @@ jobs:
     docker:
       - image: cimg/node:18.16
     environment:
-      TERM: xterm
+      <<: *base_node_small_env
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
     steps:
       - checkout
@@ -1585,9 +1579,8 @@ jobs:
   t_bytecode_compare:
     <<: *base_ubuntu2204_small
     environment:
+      <<: *base_ubuntu2204_small_env
       <<: *bytecode_compare_env_presets
-      TERM: xterm
-      MAKEFLAGS: -j 2
     steps:
       - checkout
       - attach_workspace:
