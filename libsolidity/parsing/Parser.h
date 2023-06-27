@@ -77,6 +77,7 @@ private:
 		Visibility visibility = Visibility::Default;
 		StateMutability stateMutability = StateMutability::NonPayable;
 		std::vector<ASTPointer<ModifierInvocation>> modifiers;
+		ASTPointer<Expression> experimentalReturnExpression;
 	};
 
 	/// Struct to share parsed function call arguments.

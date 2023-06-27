@@ -958,7 +958,8 @@ public:
 		ASTPointer<ParameterList> const& _parameters,
 		std::vector<ASTPointer<ModifierInvocation>> _modifiers,
 		ASTPointer<ParameterList> const& _returnParameters,
-		ASTPointer<Block> const& _body
+		ASTPointer<Block> const& _body,
+		ASTPointer<Expression> const& _experimentalReturnExpression = {}
 	):
 		CallableDeclaration(_id, _location, _name, _nameLocation, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
 		StructurallyDocumented(_documentation),
@@ -967,10 +968,12 @@ public:
 		m_free(_free),
 		m_kind(_kind),
 		m_functionModifiers(std::move(_modifiers)),
-		m_body(_body)
+		m_body(_body),
+		m_experimentalReturnExpression(_experimentalReturnExpression)
 	{
 		solAssert(_kind == Token::Constructor || _kind == Token::Function || _kind == Token::Fallback || _kind == Token::Receive, "");
 		solAssert(isOrdinary() == !name().empty(), "");
+		// TODO: assert _returnParameters implies non-experimental _experimentalReturnExpression implies experimental
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -1028,12 +1031,15 @@ public:
 		ContractDefinition const* _searchStart = nullptr
 	) const override;
 
+	Expression const* experimentalReturnExpression() const { return m_experimentalReturnExpression.get(); }
+
 private:
 	StateMutability m_stateMutability;
 	bool m_free;
 	Token const m_kind;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
+	ASTPointer<Expression> m_experimentalReturnExpression;
 };
 
 /**

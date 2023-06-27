@@ -161,11 +161,9 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 {
 	if (Expression const* value = _return.expression())
 	{
-		solAssert(_return.annotation().functionReturnParameters, "Invalid return parameters pointer.");
-		vector<ASTPointer<VariableDeclaration>> const& returnParameters =
-			_return.annotation().functionReturnParameters->parameters();
-		solAssert(returnParameters.size() == 1, "Returning tuples not yet supported.");
-		m_code << IRNames::localVariable(*returnParameters.front()) << " := " << IRNames::localVariable(*value) << "\n";
+		solAssert(_return.annotation().function, "Invalid return.");
+		solAssert(_return.annotation().function->experimentalReturnExpression(), "Invalid return.");
+		m_code << IRNames::localVariable(*_return.annotation().function->experimentalReturnExpression()) << " := " << IRNames::localVariable(*value) << "\n";
 	}
 
 	m_code << "leave\n";

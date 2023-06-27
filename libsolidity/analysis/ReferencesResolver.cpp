@@ -158,7 +158,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 
 bool ReferencesResolver::visit(FunctionDefinition const& _functionDefinition)
 {
-	m_returnParameters.push_back(_functionDefinition.returnParameterList().get());
+	m_functionDefinitions.push_back(&_functionDefinition);
 
 	if (_functionDefinition.documentation())
 		resolveInheritDoc(*_functionDefinition.documentation(), _functionDefinition.annotation());
@@ -168,13 +168,13 @@ bool ReferencesResolver::visit(FunctionDefinition const& _functionDefinition)
 
 void ReferencesResolver::endVisit(FunctionDefinition const&)
 {
-	solAssert(!m_returnParameters.empty(), "");
-	m_returnParameters.pop_back();
+	solAssert(!m_functionDefinitions.empty(), "");
+	m_functionDefinitions.pop_back();
 }
 
 bool ReferencesResolver::visit(ModifierDefinition const& _modifierDefinition)
 {
-	m_returnParameters.push_back(nullptr);
+	m_functionDefinitions.push_back(nullptr);
 
 	if (_modifierDefinition.documentation())
 		resolveInheritDoc(*_modifierDefinition.documentation(), _modifierDefinition.annotation());
@@ -184,8 +184,8 @@ bool ReferencesResolver::visit(ModifierDefinition const& _modifierDefinition)
 
 void ReferencesResolver::endVisit(ModifierDefinition const&)
 {
-	solAssert(!m_returnParameters.empty(), "");
-	m_returnParameters.pop_back();
+	solAssert(!m_functionDefinitions.empty(), "");
+	m_functionDefinitions.pop_back();
 }
 
 void ReferencesResolver::endVisit(IdentifierPath const& _path)
@@ -245,8 +245,9 @@ bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 
 bool ReferencesResolver::visit(Return const& _return)
 {
-	solAssert(!m_returnParameters.empty(), "");
-	_return.annotation().functionReturnParameters = m_returnParameters.back();
+	solAssert(!m_functionDefinitions.empty(), "");
+	_return.annotation().function = m_functionDefinitions.back();
+	_return.annotation().functionReturnParameters = m_functionDefinitions.back() ? m_functionDefinitions.back()->returnParameterList().get() : nullptr;
 	return true;
 }
 

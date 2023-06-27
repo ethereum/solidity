@@ -59,6 +59,7 @@ bool SyntaxRestrictor::visit(FunctionDefinition const& _functionDefinition)
 		m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Function may not have modifiers.");
 	if (_functionDefinition.overrides())
 		m_errorReporter.syntaxError(0000_error, _functionDefinition.location(), "Function may not have override specifiers.");
+	solAssert(!_functionDefinition.returnParameterList());
 	if (_functionDefinition.isFree())
 	{
 		if (_functionDefinition.stateMutability() != StateMutability::NonPayable)

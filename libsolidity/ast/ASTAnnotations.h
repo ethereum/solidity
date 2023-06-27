@@ -244,6 +244,8 @@ struct ReturnAnnotation: StatementAnnotation
 {
 	/// Reference to the return parameters of the function.
 	ParameterList const* functionReturnParameters = nullptr;
+	/// Reference to the function containing the return statement.
+	FunctionDefinition const* function = nullptr;
 };
 
 struct TypeNameAnnotation: ASTAnnotation

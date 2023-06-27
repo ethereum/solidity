@@ -99,8 +99,8 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	langutil::EVMVersion m_evmVersion;
-	/// Stack of return parameters.
-	std::vector<ParameterList const*> m_returnParameters;
+	/// Stack of function definitions.
+	std::vector<FunctionDefinition const*> m_functionDefinitions;
 	bool const m_resolveInsideCode;
 
 	InlineAssemblyAnnotation* m_yulAnnotation = nullptr;

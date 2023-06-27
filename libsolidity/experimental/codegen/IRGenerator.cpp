@@ -140,14 +140,15 @@ string IRGenerator::generate(FunctionDefinition const& _function, Type _type)
 	if (!_function.parameters().empty())
 		code << IRNames::localVariable(*_function.parameters().back());
 	code << ")";
-	if (_function.returnParameterList() && !_function.returnParameters().empty())
+	if (_function.experimentalReturnExpression())
 	{
-		code << " -> ";
-		if (_function.returnParameters().size() > 1)
-			for (auto const& arg: _function.returnParameters() | ranges::views::drop_last(1))
-				code << IRNames::localVariable(*arg) << ", ";
-		if (!_function.returnParameters().empty())
-			code << IRNames::localVariable(*_function.returnParameters().back());
+		auto returnType = m_context.analysis.annotation<TypeInference>(*_function.experimentalReturnExpression()).type;
+		solAssert(returnType);
+		if (!m_env.typeEquals(*returnType, m_context.analysis.typeSystem().type(PrimitiveType::Unit, {})))
+		{
+			// TODO: destructure tuples.
+			code << " -> " << IRNames::localVariable(*_function.experimentalReturnExpression()) << " ";
+		}
 	}
 	code << "{\n";
 	for (auto _statement: _function.body().statements())

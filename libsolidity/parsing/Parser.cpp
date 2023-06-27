@@ -621,16 +621,25 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 		else
 			break;
 	}
-	if (
-		m_scanner->currentToken() == (m_experimentalSolidityEnabledInCurrentSourceUnit ? Token::RightArrow : Token::Returns)
-	)
+	if (m_experimentalSolidityEnabledInCurrentSourceUnit)
 	{
-		bool const permitEmptyParameterList = m_experimentalSolidityEnabledInCurrentSourceUnit;
-		advance();
-		result.returnParameters = parseParameterList(options, permitEmptyParameterList);
+		if (m_scanner->currentToken() == Token::RightArrow)
+		{
+			advance();
+			result.experimentalReturnExpression = parseBinaryExpression();
+		}
 	}
 	else
-		result.returnParameters = createEmptyParameterList();
+	{
+		if (m_scanner->currentToken() == Token::Returns)
+		{
+			bool const permitEmptyParameterList = m_experimentalSolidityEnabledInCurrentSourceUnit;
+			advance();
+			result.returnParameters = parseParameterList(options, permitEmptyParameterList);
+		}
+		else
+			result.returnParameters = createEmptyParameterList();
+	}
 	return result;
 }
 
@@ -682,6 +691,11 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction, bool _al
 
 	FunctionHeaderParserResult header = parseFunctionHeader(false);
 
+	if (m_experimentalSolidityEnabledInCurrentSourceUnit)
+		solAssert(!header.returnParameters);
+	else
+		solAssert(!header.experimentalReturnExpression);
+
 	ASTPointer<Block> block;
 	nodeFactory.markEndPosition();
 	if (!_allowBody)
@@ -706,7 +720,8 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction, bool _al
 		header.parameters,
 		header.modifiers,
 		header.returnParameters,
-		block
+		block,
+		header.experimentalReturnExpression
 	);
 }
 
@@ -1224,10 +1239,12 @@ ASTPointer<TypeName> Parser::parseTypeName()
 
 ASTPointer<FunctionTypeName> Parser::parseFunctionType()
 {
+	solAssert(!m_experimentalSolidityEnabledInCurrentSourceUnit);
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Function);
 	FunctionHeaderParserResult header = parseFunctionHeader(true);
+	solAssert(!header.experimentalReturnExpression);
 	return nodeFactory.createNode<FunctionTypeName>(
 		header.parameters,
 		header.returnParameters,

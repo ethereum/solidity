@@ -265,6 +265,8 @@ void FunctionDefinition::accept(ASTVisitor& _visitor)
 		m_parameters->accept(_visitor);
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
+		if (m_experimentalReturnExpression)
+			m_experimentalReturnExpression->accept(_visitor);
 		listAccept(m_functionModifiers, _visitor);
 		if (m_body)
 			m_body->accept(_visitor);
@@ -283,6 +285,8 @@ void FunctionDefinition::accept(ASTConstVisitor& _visitor) const
 		m_parameters->accept(_visitor);
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
+		if (m_experimentalReturnExpression)
+			m_experimentalReturnExpression->accept(_visitor);
 		listAccept(m_functionModifiers, _visitor);
 		if (m_body)
 			m_body->accept(_visitor);

@@ -68,13 +68,15 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, nullopt);
 
 	_functionDefinition.parameterList().accept(*this);
-	if (_functionDefinition.returnParameterList())
-		_functionDefinition.returnParameterList()->accept(*this);
+	if (_functionDefinition.experimentalReturnExpression())
+	{
+		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
+		_functionDefinition.experimentalReturnExpression()->accept(*this);
+	}
 
-	auto getListType = [&](ParameterList const* _list) { return _list ? getType(*_list) : m_unitType; };
 	Type functionType = TypeSystemHelpers{m_typeSystem}.functionType(
-		getListType(&_functionDefinition.parameterList()),
-		getListType(_functionDefinition.returnParameterList().get())
+		getType(_functionDefinition.parameterList()),
+		_functionDefinition.experimentalReturnExpression() ? getType(*_functionDefinition.experimentalReturnExpression()) : m_unitType
 	);
 
 	m_currentFunctionType = functionType;
