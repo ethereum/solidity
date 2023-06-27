@@ -316,7 +316,6 @@ Abbreviation Full name
 ``L``        :ref:`load-resolver`
 ``M``        :ref:`loop-invariant-code-motion`
 ``r``        :ref:`redundant-assign-eliminator`
-``R``        :ref:`reasoning-based-simplifier` - highly experimental
 ``m``        :ref:`rematerialiser`
 ``V``        :ref:`SSA-reverser`
 ``a``        :ref:`SSA-transform`
@@ -330,10 +329,6 @@ Abbreviation Full name
 Some steps depend on properties ensured by ``BlockFlattener``, ``FunctionGrouper``, ``ForLoopInitRewriter``.
 For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
 
-The ReasoningBasedSimplifier is an optimizer step that is currently not enabled
-in the default set of steps. It uses an SMT solver to simplify arithmetic expressions
-and boolean conditions. It has not received thorough testing or validation yet and can produce
-non-reproducible results, so please use with care!
 
 Selecting Optimizations
 -----------------------
@@ -862,22 +857,6 @@ currently stored in storage resp. memory, if known.
 Works best if the code is in SSA form.
 
 Prerequisite: Disambiguator, ForLoopInitRewriter.
-
-.. _reasoning-based-simplifier:
-
-ReasoningBasedSimplifier
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-This optimizer uses SMT solvers to check whether ``if`` conditions are constant.
-
-- If ``constraints AND condition`` is UNSAT, the condition is never true and the whole body can be removed.
-- If ``constraints AND NOT condition`` is UNSAT, the condition is always true and can be replaced by ``1``.
-
-The simplifications above can only be applied if the condition is movable.
-
-It is only effective on the EVM dialect, but safe to use on other dialects.
-
-Prerequisite: Disambiguator, SSATransform.
 
 Statement-Scale Simplifications
 -------------------------------
