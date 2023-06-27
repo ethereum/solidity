@@ -46,16 +46,6 @@ set(sources
 	analysis/TypeChecker.h
 	analysis/ViewPureChecker.cpp
 	analysis/ViewPureChecker.h
-	analysis/experimental/Analysis.cpp
-	analysis/experimental/Analysis.h
-	analysis/experimental/DebugWarner.cpp
-	analysis/experimental/DebugWarner.h
-	analysis/experimental/TypeInference.cpp
-	analysis/experimental/TypeInference.h
-	analysis/experimental/TypeRegistration.cpp
-	analysis/experimental/TypeRegistration.h
-	analysis/experimental/SyntaxRestrictor.cpp
-	analysis/experimental/SyntaxRestrictor.h
 	ast/AST.cpp
 	ast/AST.h
 	ast/AST_accept.h
@@ -78,12 +68,6 @@ set(sources
 	ast/Types.h
 	ast/TypeProvider.cpp
 	ast/TypeProvider.h
-	ast/experimental/Type.cpp
-	ast/experimental/Type.h
-	ast/experimental/TypeSystem.cpp
-	ast/experimental/TypeSystem.h
-	ast/experimental/TypeSystemHelper.cpp
-	ast/experimental/TypeSystemHelper.h
 	codegen/ABIFunctions.cpp
 	codegen/ABIFunctions.h
 	codegen/ArrayUtils.cpp
@@ -106,13 +90,6 @@ set(sources
 	codegen/ReturnInfo.cpp
 	codegen/YulUtilFunctions.h
 	codegen/YulUtilFunctions.cpp
-	codegen/experimental/Common.h
-	codegen/experimental/Common.cpp
-	codegen/experimental/IRGenerationContext.h
-	codegen/experimental/IRGenerator.cpp
-	codegen/experimental/IRGenerator.h
-	codegen/experimental/IRGeneratorForStatements.cpp
-	codegen/experimental/IRGeneratorForStatements.h
 	codegen/ir/Common.cpp
 	codegen/ir/Common.h
 	codegen/ir/IRGenerator.cpp
@@ -205,6 +182,29 @@ set(sources
 	parsing/Parser.cpp
 	parsing/Parser.h
 	parsing/Token.h
+	experimental/analysis/Analysis.cpp
+	experimental/analysis/Analysis.h
+	experimental/analysis/DebugWarner.cpp
+	experimental/analysis/DebugWarner.h
+	experimental/analysis/TypeInference.cpp
+	experimental/analysis/TypeInference.h
+	experimental/analysis/TypeRegistration.cpp
+	experimental/analysis/TypeRegistration.h
+	experimental/analysis/SyntaxRestrictor.cpp
+	experimental/analysis/SyntaxRestrictor.h
+	experimental/ast/Type.cpp
+	experimental/ast/Type.h
+	experimental/ast/TypeSystem.cpp
+	experimental/ast/TypeSystem.h
+	experimental/ast/TypeSystemHelper.cpp
+	experimental/ast/TypeSystemHelper.h
+	experimental/codegen/Common.h
+	experimental/codegen/Common.cpp
+	experimental/codegen/IRGenerationContext.h
+	experimental/codegen/IRGenerator.cpp
+	experimental/codegen/IRGenerator.h
+	experimental/codegen/IRGeneratorForStatements.cpp
+	experimental/codegen/IRGeneratorForStatements.h
 )
 
 add_library(solidity ${sources})

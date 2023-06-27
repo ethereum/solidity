@@ -18,12 +18,12 @@
 
 #pragma once
 
-#include <libsolidity/codegen/experimental/IRGenerationContext.h>
+#include <libsolidity/experimental/codegen/IRGenerationContext.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/CallGraph.h>
-#include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>

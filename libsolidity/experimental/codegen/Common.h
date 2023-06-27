@@ -19,7 +19,7 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 
 #include <algorithm>
 #include <string>

@@ -18,7 +18,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 
 #include <liblangutil/ErrorReporter.h>
 

@@ -17,9 +17,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
 
-#include <libsolidity/analysis/experimental/TypeRegistration.h>
-#include <libsolidity/analysis/experimental/Analysis.h>
-#include <libsolidity/ast/experimental/TypeSystemHelper.h>
+#include <libsolidity/experimental/analysis/TypeRegistration.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/ast/TypeSystemHelper.h>
 #include <liblangutil/Exceptions.h>
 
 #include <libyul/AsmAnalysis.h>

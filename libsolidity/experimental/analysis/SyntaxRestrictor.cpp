@@ -16,9 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/analysis/experimental/SyntaxRestrictor.h>
+#include <libsolidity/experimental/analysis/SyntaxRestrictor.h>
 
-#include <libsolidity/analysis/experimental/Analysis.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
 
 #include <liblangutil/Exceptions.h>
 

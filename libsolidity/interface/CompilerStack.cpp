@@ -44,7 +44,6 @@
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/analysis/ImmutableValidator.h>
 
-#include <libsolidity/analysis/experimental/Analysis.h>
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -58,7 +57,8 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 
-#include <libsolidity/codegen/experimental/IRGenerator.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/codegen/IRGenerator.h>
 
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>

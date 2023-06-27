@@ -20,8 +20,8 @@
 
 #include <libsolidity/ast/ASTForward.h>
 
-#include <libsolidity/analysis/experimental/Analysis.h>
-#include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 
 #include <list>
 #include <set>

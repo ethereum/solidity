@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libsolidity/codegen/experimental/IRGenerationContext.h>
+#include <libsolidity/experimental/codegen/IRGenerationContext.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <functional>

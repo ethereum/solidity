@@ -16,16 +16,16 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/codegen/experimental/IRGenerator.h>
-#include <libsolidity/codegen/experimental/IRGenerationContext.h>
-#include <libsolidity/codegen/experimental/IRGeneratorForStatements.h>
+#include <libsolidity/experimental/codegen/IRGenerator.h>
+#include <libsolidity/experimental/codegen/IRGenerationContext.h>
+#include <libsolidity/experimental/codegen/IRGeneratorForStatements.h>
 
-#include <libsolidity/codegen/experimental/Common.h>
+#include <libsolidity/experimental/codegen/Common.h>
 
-#include <libsolidity/analysis/experimental/Analysis.h>
-#include <libsolidity/analysis/experimental/TypeInference.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/TypeInference.h>
 
-#include <libsolidity/ast/experimental/TypeSystemHelper.h>
+#include <libsolidity/experimental/ast/TypeSystemHelper.h>
 
 #include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>

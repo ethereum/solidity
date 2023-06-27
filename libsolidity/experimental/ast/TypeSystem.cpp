@@ -17,8 +17,8 @@
 // SPDX-License-Identifier: GPL-3.0
 
 
-#include <libsolidity/ast/experimental/TypeSystem.h>
-#include <libsolidity/ast/experimental/TypeSystemHelper.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
+#include <libsolidity/experimental/ast/TypeSystemHelper.h>
 #include <libsolidity/ast/AST.h>
 #include <liblangutil/Exceptions.h>
 
@@ -141,6 +141,7 @@ TypeSystem::TypeSystem()
 		{PrimitiveType::Void, "void", 0},
 		{PrimitiveType::Unit, "unit", 0},
 		{PrimitiveType::Pair, "pair", 2},
+		{PrimitiveType::Sum, "sum", 2},
 		{PrimitiveType::Word, "word", 0},
 		{PrimitiveType::Integer, "integer", 0},
 		{PrimitiveType::Bool, "bool", 0},

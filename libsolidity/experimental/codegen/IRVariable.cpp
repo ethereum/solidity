@@ -15,11 +15,11 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-#include <libsolidity/codegen/experimental/Common.h>
-#include <libsolidity/codegen/experimental/IRGenerationContext.h>
-#include <libsolidity/codegen/experimental/IRVariable.h>
-#include <libsolidity/analysis/experimental/Analysis.h>
-#include <libsolidity/analysis/experimental/TypeInference.h>
+#include <libsolidity/experimental/codegen/Common.h>
+#include <libsolidity/experimental/codegen/IRGenerationContext.h>
+#include <libsolidity/experimental/codegen/IRVariable.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/TypeInference.h>
 
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/StringUtils.h>

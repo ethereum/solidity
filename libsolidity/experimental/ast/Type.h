@@ -38,6 +38,7 @@ enum class PrimitiveType
 	TypeFunction,
 	Unit,
 	Pair,
+	Sum,
 	Word,
 	Bool,
 	Integer

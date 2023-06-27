@@ -16,11 +16,11 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/analysis/experimental/DebugWarner.h>
+#include <libsolidity/experimental/analysis/DebugWarner.h>
 
-#include <libsolidity/analysis/experimental/Analysis.h>
-#include <libsolidity/analysis/experimental/TypeInference.h>
-#include <libsolidity/ast/experimental/TypeSystemHelper.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/TypeInference.h>
+#include <libsolidity/experimental/ast/TypeSystemHelper.h>
 
 #include <liblangutil/Exceptions.h>
 

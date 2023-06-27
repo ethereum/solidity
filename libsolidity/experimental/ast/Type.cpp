@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/ast/experimental/Type.h>
+#include <libsolidity/experimental/ast/Type.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/Visitor.h>
 

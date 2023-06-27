@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
-#include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 
 #include <optional>
 #include <string>

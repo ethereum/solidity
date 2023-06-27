@@ -16,9 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/codegen/experimental/Common.h>
-#include <libsolidity/ast/experimental/TypeSystem.h>
-#include <libsolidity/ast/experimental/TypeSystemHelper.h>
+#include <libsolidity/experimental/codegen/Common.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
+#include <libsolidity/experimental/ast/TypeSystemHelper.h>
 
 #include <libsolutil/CommonIO.h>
 

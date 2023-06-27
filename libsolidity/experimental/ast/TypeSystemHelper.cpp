@@ -17,11 +17,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
 
-#include <libsolidity/ast/experimental/TypeSystemHelper.h>
+#include <libsolidity/experimental/ast/TypeSystemHelper.h>
 #include <libsolidity/ast/AST.h>
 
-#include <libsolidity/analysis/experimental/Analysis.h>
-#include <libsolidity/analysis/experimental/TypeRegistration.h>
+#include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/TypeRegistration.h>
 
 #include <libsolutil/Visitor.h>
 
@@ -149,6 +149,48 @@ vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) con
 			break;
 		auto [tailConstructor, tailArguments] = destTypeConstant(tail);
 		if (tailConstructor != pairConstructor)
+			break;
+		solAssert(tailArguments.size() == 2);
+		result.emplace_back(tailArguments.front());
+		tail = tailArguments.back();
+	}
+	result.emplace_back(tail);
+	return result;
+}
+
+experimental::Type TypeSystemHelpers::sumType(vector<Type> _elements) const
+{
+	if (_elements.empty())
+		return typeSystem.type(PrimitiveType::Void, {});
+	if (_elements.size() == 1)
+		return _elements.front();
+	Type result = _elements.back();
+	for (Type type: _elements | ranges::views::reverse | ranges::views::drop_exactly(1))
+		result = typeSystem.type(PrimitiveType::Sum, {type, result});
+	return result;
+}
+
+vector<experimental::Type> TypeSystemHelpers::destSumType(Type _tupleType) const
+{
+	if (!isTypeConstant(_tupleType))
+		return {_tupleType};
+	TypeConstructor sumConstructor = typeSystem.constructor(PrimitiveType::Sum);
+	auto [constructor, arguments] = destTypeConstant(_tupleType);
+	if (constructor == typeSystem.constructor(PrimitiveType::Void))
+		return {};
+	if (constructor != sumConstructor)
+		return {_tupleType};
+	solAssert(arguments.size() == 2);
+
+	vector<Type> result;
+	result.emplace_back(arguments.front());
+	Type tail = arguments.back();
+	while(true)
+	{
+		if (!isTypeConstant(tail))
+			break;
+		auto [tailConstructor, tailArguments] = destTypeConstant(tail);
+		if (tailConstructor != sumConstructor)
 			break;
 		solAssert(tailArguments.size() == 2);
 		result.emplace_back(tailArguments.front());

@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
-#include <libsolidity/ast/experimental/TypeSystem.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <liblangutil/Token.h>
 
@@ -37,6 +37,8 @@ struct TypeSystemHelpers
 	bool isTypeConstant(Type _type) const;
 	Type tupleType(std::vector<Type> _elements) const;
 	std::vector<Type> destTupleType(Type _tupleType) const;
+	Type sumType(std::vector<Type> _elements) const;
+	std::vector<Type> destSumType(Type _tupleType) const;
 	Type functionType(Type _argType, Type _resultType) const;
 	std::tuple<Type, Type> destFunctionType(Type _functionType) const;
 	bool isFunctionType(Type _type) const;
