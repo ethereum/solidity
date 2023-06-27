@@ -1694,6 +1694,8 @@ public:
 
 	Type const* typeArgument() const;
 
+	Type const* mobileType() const override { return nullptr; }
+
 protected:
 	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }
 private:

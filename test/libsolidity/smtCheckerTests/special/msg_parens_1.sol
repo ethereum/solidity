@@ -9,5 +9,5 @@ contract C {
 // SMTIgnoreOS: macos
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (46-71): CHC: Assertion violation happens here.
-// Warning 6328: (75-113): CHC: Assertion violation happens here.
+// TypeError 9717: (90-93): Invalid mobile type in true expression.
+// TypeError 3703: (96-99): Invalid mobile type in false expression.
