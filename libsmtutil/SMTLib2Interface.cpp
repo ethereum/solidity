@@ -163,7 +163,7 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 
 	std::vector<std::string> solverCommands;
 	if (m_enabledSolvers.z3)
-		solverCommands.emplace_back("z3");
+		solverCommands.emplace_back("z3 rlimit=1000000");
 	if (m_enabledSolvers.cvc4)
 		solverCommands.emplace_back("cvc4");
 

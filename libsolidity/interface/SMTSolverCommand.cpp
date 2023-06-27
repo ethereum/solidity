@@ -55,16 +55,21 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 
 		queryFile << _query;
 
-		std::string solverBinary = solverCommand.substr(0, solverCommand.find(' '));
+		std::vector<std::string> commandArgs;
+		boost::split(commandArgs, solverCommand, boost::is_any_of(" "));
+		solAssert(commandArgs.size() > 0, "SMT command was empty");
+		auto const& solverBinary = commandArgs[0];
 		auto pathToBinary = boost::process::search_path(solverBinary);
 
 		if (pathToBinary.empty())
 			return ReadCallback::Result{false, solverBinary + " binary not found."};
 
+		commandArgs.erase(commandArgs.begin());
+		commandArgs.push_back(queryFileName.string());
 		boost::process::ipstream pipe;
 		boost::process::child solver(
 			pathToBinary,
-			queryFileName,
+			boost::process::args(commandArgs),
 			boost::process::std_out > pipe
 		);
 
