@@ -695,6 +695,17 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Calling convention: Caller pushes return address and arguments
 			// Callee removes them and pushes return values
 
+			FunctionDefinition const* functionDef = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
+			if (functionDef && !functionDef->isVisibleInDerivedContracts())
+			{
+				auto origCallingContract = _functionCall.annotation().origCallingContract;
+				solAssert (origCallingContract, "Original calling contract is not set");
+				solAssert(
+					functionDef->annotation().contract == origCallingContract,
+					"Attempt to call private function from other contract."
+				);
+			}
+
 			evmasm::AssemblyItem returnLabel = m_context.pushNewTag();
 			for (unsigned i = 0; i < arguments.size(); ++i)
 				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
