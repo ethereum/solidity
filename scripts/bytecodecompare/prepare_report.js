@@ -100,7 +100,7 @@ for (const preset of presets)
                     // JSON interface still returns contract metadata in case of an internal compiler error while
                     // CLI interface does not. To make reports comparable we must force this case to be detected as
                     // an error in both cases.
-                    if (['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError'].includes(error['type']))
+                    if (['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError', 'YulException'].includes(error['type']))
                     {
                         internalCompilerError = true
                         break

@@ -157,7 +157,7 @@ def parse_standard_json_output(source_file_name: Path, standard_json_output: str
     # CLI interface does not. To make reports comparable we must force this case to be detected as
     # an error in both cases.
     internal_compiler_error = any(
-        error['type'] in ['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError']
+        error['type'] in ['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError', 'YulException']
         for error in decoded_json_output.get('errors', {})
     )
 
