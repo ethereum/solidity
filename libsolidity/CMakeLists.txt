@@ -186,6 +186,10 @@ set(sources
 	experimental/analysis/Analysis.h
 	experimental/analysis/DebugWarner.cpp
 	experimental/analysis/DebugWarner.h
+	experimental/analysis/ASTTransform.cpp
+	experimental/analysis/ASTTransform.h
+	experimental/analysis/TypeCheck.cpp
+	experimental/analysis/TypeCheck.h
 	experimental/analysis/TypeInference.cpp
 	experimental/analysis/TypeInference.h
 	experimental/analysis/TypeRegistration.cpp

@@ -194,7 +194,8 @@ bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 		identifierInfo->valueSize = 1;
 		return true;
 	};
-	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
+	// TODO: temporarily disabled due to also trying the Desugarer
+	// solAssert(!_inlineAssembly.annotation().analysisInfo, "");
 	_inlineAssembly.annotation().analysisInfo = make_shared<yul::AsmAnalysisInfo>();
 	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,

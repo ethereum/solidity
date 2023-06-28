@@ -21,6 +21,9 @@
 #include <libsolidity/experimental/analysis/SyntaxRestrictor.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
+#include <libsolidity/experimental/analysis/ASTTransform.h>
+#include <libsolidity/experimental/analysis/TypeCheck.h>
+
 
 using namespace std;
 using namespace solidity::langutil;
@@ -121,9 +124,21 @@ std::tuple<std::integral_constant<size_t, Is>...> makeIndexTuple(std::index_sequ
 	return std::make_tuple( std::integral_constant<size_t, Is>{}...);
 }
 
-bool Analysis::check(vector<shared_ptr<SourceUnit const>> const& _sourceUnits)
+bool Analysis::check(vector<shared_ptr<legacy::SourceUnit const>> const& _sourceUnits)
 {
-	using AnalysisSteps = std::tuple<SyntaxRestrictor, TypeRegistration, TypeInference, DebugWarner>;
+	std::unique_ptr<AST> ast;
+	{
+		ASTTransform astTransform(*this);
+		for (auto source: _sourceUnits)
+			source->accept(astTransform);
+		ast = astTransform.ast();
+	}
+	{
+		TypeCheck typeChecker(*this);
+		typeChecker(*ast);
+	}
+
+	using AnalysisSteps = std::tuple<SyntaxRestrictor, TypeRegistration, TypeInference/*, DebugWarner*/>;
 
 	return std::apply([&](auto... _indexTuple) {
 		return ([&](auto&& _step) {
