@@ -2295,8 +2295,9 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 			case DataLocation::Memory:
 			{
+				string indexAccessFunction = m_utils.memoryArrayIndexAccessFunction(arrayType);
 				string const memAddress =
-					m_utils.memoryArrayIndexAccessFunction(arrayType) +
+					indexAccessFunction +
 					"(" +
 					IRVariable(_indexAccess.baseExpression()).part("mpos").name() +
 					", " +
