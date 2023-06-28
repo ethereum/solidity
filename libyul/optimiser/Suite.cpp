@@ -43,7 +43,6 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/FunctionSpecializer.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedFunctionParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -272,7 +271,6 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			LoopInvariantCodeMotion,
 			UnusedAssignEliminator,
 			UnusedStoreEliminator,
-			ReasoningBasedSimplifier,
 			Rematerialiser,
 			SSAReverser,
 			SSATransform,
@@ -312,7 +310,6 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{LiteralRematerialiser::name,         'T'},
 		{LoadResolver::name,                  'L'},
 		{LoopInvariantCodeMotion::name,       'M'},
-		{ReasoningBasedSimplifier::name,      'R'},
 		{UnusedAssignEliminator::name,        'r'},
 		{UnusedStoreEliminator::name,         'S'},
 		{Rematerialiser::name,                'm'},

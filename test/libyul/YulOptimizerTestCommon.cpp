@@ -49,7 +49,6 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/Semantics.h>
@@ -289,10 +288,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			LiteralRematerialiser::run(*m_context, *m_ast);
 			StructuralSimplifier::run(*m_context, *m_ast);
 		}},
-		{"reasoningBasedSimplifier", [&]() {
-			disambiguate();
-			ReasoningBasedSimplifier::run(*m_context, *m_object->code);
-		}},
 		{"equivalentFunctionCombiner", [&]() {
 			disambiguate();
 			ForLoopInitRewriter::run(*m_context, *m_ast);
@@ -424,8 +419,7 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 			// it can sometimes drain memory.
 			if (
 				optimiserStep == "mainFunction"	||
-				optimiserStep == "wordSizeTransform" ||
-				optimiserStep == "reasoningBasedSimplifier"
+				optimiserStep == "wordSizeTransform"
 			)
 				// "Fullsuite" is fuzzed roughly four times more frequently than
 				// other steps because of the filtering in place above.
