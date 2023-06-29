@@ -37,45 +37,6 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
 
-/*std::optional<TypeConstructor> experimental::typeConstructorFromTypeName(Analysis const& _analysis, TypeName const& _typeName)
-{
-	if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&_typeName))
-	{
-		if (auto constructor = typeConstructorFromToken(_analysis, elementaryTypeName->typeName().token()))
-			return *constructor;
-	}
-	else if (auto const* userDefinedType = dynamic_cast<UserDefinedTypeName const*>(&_typeName))
-	{
-		if (auto const* referencedDeclaration = userDefinedType->pathNode().annotation().referencedDeclaration)
-			return _analysis.annotation<TypeRegistration>(*referencedDeclaration).typeConstructor;
-	}
-	return nullopt;
-}*/
-/*
-std::optional<TypeConstructor> experimental::typeConstructorFromToken(Analysis const& _analysis, langutil::Token _token)
-{
-	TypeSystem const& typeSystem = _analysis.typeSystem();
-	switch(_token)
-	{
-	case Token::Void:
-		return typeSystem.builtinConstructor(BuiltinType::Void);
-	case Token::Fun:
-		return typeSystem.builtinConstructor(BuiltinType::Function);
-	case Token::Unit:
-		return typeSystem.builtinConstructor(BuiltinType::Unit);
-	case Token::Pair:
-		return typeSystem.builtinConstructor(BuiltinType::Pair);
-	case Token::Word:
-		return typeSystem.builtinConstructor(BuiltinType::Word);
-	case Token::Integer:
-		return typeSystem.builtinConstructor(BuiltinType::Integer);
-	case Token::Bool:
-		return typeSystem.builtinConstructor(BuiltinType::Bool);
-	default:
-		return nullopt;
-	}
-}*/
-
 std::optional<BuiltinClass> experimental::builtinClassFromToken(langutil::Token _token)
 {
 	switch (_token)
@@ -100,22 +61,7 @@ std::optional<BuiltinClass> experimental::builtinClassFromToken(langutil::Token 
 		return nullopt;
 	}
 }
-/*
-std::optional<TypeClass> experimental::typeClassFromTypeClassName(TypeClassName const& _typeClass)
-{
-	return std::visit(util::GenericVisitor{
-		[&](ASTPointer<IdentifierPath> _path) -> optional<TypeClass> {
-			auto classDefinition = dynamic_cast<TypeClassDefinition const*>(_path->annotation().referencedDeclaration);
-			if (!classDefinition)
-				return nullopt;
-			return TypeClass{classDefinition};
-		},
-		[&](Token _token) -> optional<TypeClass> {
-			return typeClassFromToken(_token);
-		}
-	}, _typeClass.name());
-}
-*/
+
 experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 {
 	if (_elements.empty())

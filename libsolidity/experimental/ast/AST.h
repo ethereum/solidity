@@ -34,17 +34,16 @@ struct TermBase
 	langutil::SourceLocation location;
 	std::optional<int64_t> legacyId;
 	Type type;
-	std::optional<size_t> declaration;
 };
 
 
 struct Application;
 struct Lambda;
 struct InlineAssembly;
-struct VariableDeclaration;
 struct Reference: TermBase
 {
 	size_t index = std::numeric_limits<size_t>::max();
+	std::string name;
 };
 
 enum class BuiltinConstant
@@ -54,9 +53,19 @@ enum class BuiltinConstant
 	Pair,
 	Fun,
 	Constrain,
-	Return,
+	NamedTerm,
+	TypeDeclaration,
+	TypeDefinition,
+	TypeClassDefinition,
+	TypeClassInstantiation,
+	FunctionDeclaration,
+	FunctionDefinition,
+	ContractDefinition,
+	VariableDeclaration,
+	VariableDefinition,
 	Block,
-	Statement,
+	ReturnStatement,
+	RegularStatement,
 	ChainStatements,
 	Assign,
 	MemberAccess,
@@ -75,18 +84,12 @@ struct Constant: TermBase
 	std::variant<std::string, BuiltinConstant> name;
 };
 
-using Term = std::variant<Application, Lambda, InlineAssembly, VariableDeclaration, Reference, Constant>;
+using Term = std::variant<Application, Lambda, InlineAssembly, Reference, Constant>;
 
 struct InlineAssembly: TermBase
 {
 	yul::Block const& block;
 	std::map<yul::Identifier const*, std::unique_ptr<Term>> references;
-};
-
-struct VariableDeclaration: TermBase
-{
-	std::unique_ptr<Term> namePattern;
-	std::unique_ptr<Term> initialValue;
 };
 
 struct Application: TermBase
@@ -145,41 +148,11 @@ langutil::SourceLocation locationOf(T const& _t)
 
 struct AST
 {
-	struct FunctionInfo {
-		std::unique_ptr<Term> function;
-		std::unique_ptr<Term> arguments;
-		std::unique_ptr<Term> returnType;
-	};
-	std::map<frontend::FunctionDefinition const*, FunctionInfo, ASTCompareByID<frontend::FunctionDefinition>> functions;
-	struct ContractInfo {
-		std::map<std::string, FunctionInfo> functions;
-	};
-	std::map<frontend::ContractDefinition const*, ContractInfo, ASTCompareByID<frontend::ContractDefinition>> contracts;
-	struct TypeInformation {
-		std::unique_ptr<Term> declaration;
-		std::unique_ptr<Term> arguments;
-		std::unique_ptr<Term> value;
-	};
-	std::map<frontend::TypeDefinition const*, TypeInformation, ASTCompareByID<frontend::TypeDefinition>> typeDefinitions;
-	struct TypeClassInformation {
-		std::unique_ptr<Term> declaration;
-		std::unique_ptr<Term> typeVariable;
-		std::map<std::string, FunctionInfo> functions;
-	};
-	struct TypeClassInstantiationInformation {
-		std::unique_ptr<Term> typeConstructor;
-		std::unique_ptr<Term> argumentSorts;
-		std::unique_ptr<Term> typeClass;
-		std::map<std::string, FunctionInfo> functions;
-	};
-	std::map<frontend::TypeClassDefinition const*, TypeClassInformation, ASTCompareByID<frontend::TypeClassDefinition>> typeClasses;
-	std::map<frontend::TypeClassInstantiation const*, TypeClassInstantiationInformation, ASTCompareByID<frontend::TypeClassInstantiation>> typeClassInstantiations;
-	struct DeclarationInfo
-	{
-		Term const* target = nullptr;
-		std::string name;
-	};
-	std::vector<DeclarationInfo> declarations;
+	std::map<frontend::TypeDefinition const*, std::unique_ptr<Term>, ASTCompareByID<frontend::TypeDefinition>> typeDefinitions;
+	std::map<frontend::TypeClassDefinition const*, std::unique_ptr<Term>, ASTCompareByID<frontend::TypeClassDefinition>> typeClasses;
+	std::map<frontend::TypeClassInstantiation const*, std::unique_ptr<Term>, ASTCompareByID<frontend::TypeClassInstantiation>> typeClassInstantiations;
+	std::map<frontend::FunctionDefinition const*, std::unique_ptr<Term>, ASTCompareByID<frontend::FunctionDefinition>> functions;
+	std::map<frontend::ContractDefinition const*, std::unique_ptr<Term>, ASTCompareByID<frontend::ContractDefinition>> contracts;
 };
 
 }

@@ -39,88 +39,130 @@ ASTTransform::ASTTransform(Analysis& _analysis): m_analysis(_analysis), m_errorR
 {
 }
 
-bool ASTTransform::visit(legacy::ContractDefinition const& _contractDefinition)
+bool ASTTransform::visit(legacy::TypeDefinition const& _typeDefinition)
 {
-	SetNode setNode(*this, _contractDefinition);
-	auto [it, newlyInserted] = m_ast->contracts.emplace(&_contractDefinition, AST::ContractInfo{});
+	SetNode setNode(*this, _typeDefinition);
+	auto [it, newlyInserted] = m_ast->typeDefinitions.emplace(&_typeDefinition, term(_typeDefinition));
 	solAssert(newlyInserted);
-	AST::ContractInfo& contractInfo = it->second;
-	for (auto const& node: _contractDefinition.subNodes())
-		if (auto const* function = dynamic_cast<legacy::FunctionDefinition const*>(node.get()))
-			solAssert(contractInfo.functions.emplace(string{}, functionDefinition(*function)).second);
-		else
-			m_errorReporter.typeError(0000_error, node->location(), "Unsupported contract element.");
-
-	return false;
-}
-
-bool ASTTransform::visit(legacy::FunctionDefinition const& _functionDefinition)
-{
-	SetNode setNode(*this, _functionDefinition);
-	solAssert(m_ast->functions.emplace(&_functionDefinition, functionDefinition(_functionDefinition)).second);
 	return false;
 }
 
 bool ASTTransform::visit(legacy::TypeClassDefinition const& _typeClassDefinition)
 {
 	SetNode setNode(*this, _typeClassDefinition);
-	auto [it, newlyInserted] = m_ast->typeClasses.emplace(&_typeClassDefinition, AST::TypeClassInformation{});
+	auto [it, newlyInserted] = m_ast->typeClasses.emplace(&_typeClassDefinition, term(_typeClassDefinition));
 	solAssert(newlyInserted);
-	auto& info = it->second;
-	info.typeVariable = term(_typeClassDefinition.typeVariable());
-	info.declaration = reference(_typeClassDefinition);
-	declare(_typeClassDefinition, *info.declaration);
-	map<std::string, AST::FunctionInfo>& functions = info.functions;
-	for (auto subNode: _typeClassDefinition.subNodes())
-	{
-		auto const *function = dynamic_cast<FunctionDefinition const*>(subNode.get());
-		solAssert(function);
-		solAssert(functions.emplace(function->name(), functionDefinition(*function)).second);
-	}
 	return false;
 }
 
 bool ASTTransform::visit(legacy::TypeClassInstantiation const& _typeClassInstantiation)
 {
 	SetNode setNode(*this, _typeClassInstantiation);
-	auto [it, newlyInserted] = m_ast->typeClassInstantiations.emplace(&_typeClassInstantiation, AST::TypeClassInstantiationInformation{});
+	auto [it, newlyInserted] = m_ast->typeClassInstantiations.emplace(&_typeClassInstantiation, term(_typeClassInstantiation));
 	solAssert(newlyInserted);
-	auto& info = it->second;
-	info.typeClass = std::visit(util::GenericVisitor{
-		[&](Token _token) -> unique_ptr<Term> { return builtinTypeClass(_token); },
-		[&](ASTPointer<legacy::IdentifierPath> _identifierPath) -> unique_ptr<Term> {
-			solAssert(_identifierPath->annotation().referencedDeclaration);
-			return reference(*_identifierPath->annotation().referencedDeclaration);
-		}
-	}, _typeClassInstantiation.typeClass().name());
-	info.typeConstructor = term(_typeClassInstantiation.typeConstructor());
-	info.argumentSorts = termOrConstant(_typeClassInstantiation.argumentSorts(), BuiltinConstant::Unit);
-	map<std::string, AST::FunctionInfo>& functions = info.functions;
-	for (auto subNode: _typeClassInstantiation.subNodes())
-	{
-		auto const *function = dynamic_cast<FunctionDefinition const*>(subNode.get());
-		solAssert(function);
-		solAssert(functions.emplace(function->name(), functionDefinition(*function)).second);
-	}
 	return false;
 }
 
-bool ASTTransform::visit(legacy::TypeDefinition const& _typeDefinition)
+bool ASTTransform::visit(legacy::ContractDefinition const& _contractDefinition)
+{
+	SetNode setNode(*this, _contractDefinition);
+	auto [it, newlyInserted] = m_ast->contracts.emplace(&_contractDefinition, term(_contractDefinition));
+	solAssert(newlyInserted);
+	return false;
+}
+
+bool ASTTransform::visit(legacy::FunctionDefinition const& _functionDefinition)
+{
+	SetNode setNode(*this, _functionDefinition);
+	solAssert(m_ast->functions.emplace(&_functionDefinition, term(_functionDefinition)).second);
+	return false;
+}
+
+bool ASTTransform::visitNode(ASTNode const& _node)
+{
+	m_errorReporter.typeError(0000_error, _node.location(), "Unexpected AST node during AST transform.");
+	return false;
+}
+
+unique_ptr<Term> ASTTransform::term(legacy::TypeDefinition const& _typeDefinition)
 {
 	SetNode setNode(*this, _typeDefinition);
-	auto [it, newlyInserted] = m_ast->typeDefinitions.emplace(&_typeDefinition, AST::TypeInformation{});
-	solAssert(newlyInserted);
-	auto& info = it->second;
-	info.declaration = makeTerm<VariableDeclaration>(reference(_typeDefinition), nullptr);
-	declare(_typeDefinition, *info.declaration);
-	if (_typeDefinition.arguments())
-		info.arguments = tuple(_typeDefinition.arguments()->parameters() | ranges::view::transform([&](auto argument){
-			solAssert(!argument->typeExpression()); // TODO: error handling
-			return term(*argument);
-		}) | ranges::view::move | ranges::to<list<unique_ptr<Term>>>);
+	unique_ptr<Term> name = reference(_typeDefinition);
+	unique_ptr<Term> arguments = termOrConstant(_typeDefinition.arguments(), BuiltinConstant::Unit);
 	if (_typeDefinition.typeExpression())
-		info.value = term(*_typeDefinition.typeExpression());
-	return false;
+	{
+		unique_ptr<Term> definiens = term(*_typeDefinition.typeExpression());
+		return application(BuiltinConstant::TypeDefinition, std::move(name), std::move(arguments), std::move(definiens));
+	}
+	else
+		return application(BuiltinConstant::TypeDeclaration, std::move(name), std::move(arguments));
+}
+
+unique_ptr<Term> ASTTransform::term(legacy::TypeClassDefinition const& _typeClassDefinition)
+{
+	SetNode setNode(*this, _typeClassDefinition);
+	unique_ptr<Term> typeVariable = term(_typeClassDefinition.typeVariable());
+	unique_ptr<Term> name = reference(_typeClassDefinition);
+	unique_ptr<Term> functions = namedFunctionList(_typeClassDefinition.subNodes());
+	return application(
+		BuiltinConstant::TypeClassDefinition,
+		std::move(typeVariable),
+		std::move(name),
+		std::move(functions)
+	);
+}
+
+std::unique_ptr<Term> ASTTransform::term(legacy::TypeClassInstantiation const& _typeClassInstantiation)
+{
+	SetNode setNode(*this, _typeClassInstantiation);
+	unique_ptr<Term> typeConstructor = term(_typeClassInstantiation.typeConstructor());
+	unique_ptr<Term> argumentSorts = termOrConstant(_typeClassInstantiation.argumentSorts(), BuiltinConstant::Unit);
+	unique_ptr<Term> typeClass = term(_typeClassInstantiation.typeClass());
+	unique_ptr<Term> functions = namedFunctionList(_typeClassInstantiation.subNodes());
+	return application(
+		BuiltinConstant::TypeClassInstantiation,
+		std::move(typeConstructor),
+		std::move(argumentSorts),
+		std::move(typeClass),
+		std::move(functions)
+	);
+}
+
+std::unique_ptr<Term> ASTTransform::term(legacy::FunctionDefinition const& _functionDefinition)
+{
+	SetNode setNode(*this, _functionDefinition);
+	unique_ptr<Term> name = reference(_functionDefinition);
+	unique_ptr<Term> arguments = term(_functionDefinition.parameterList());
+	unique_ptr<Term> returnType = termOrConstant(_functionDefinition.experimentalReturnExpression(), BuiltinConstant::Unit);
+	if (_functionDefinition.isImplemented())
+	{
+		unique_ptr<Term> body = term(_functionDefinition.body());
+		return application(
+			BuiltinConstant::FunctionDefinition,
+			std::move(name),
+			std::move(arguments),
+			std::move(returnType),
+			std::move(body)
+		);
+	}
+	else
+		return application(
+			BuiltinConstant::FunctionDeclaration,
+			std::move(name),
+			std::move(arguments),
+			std::move(returnType)
+		);
+}
+
+std::unique_ptr<Term> ASTTransform::term(legacy::ContractDefinition const& _contractDefinition)
+{
+	SetNode setNode(*this, _contractDefinition);
+	unique_ptr<Term> name = reference(_contractDefinition);
+	return application(
+		BuiltinConstant::ContractDefinition,
+		std::move(name),
+		namedFunctionList(_contractDefinition.subNodes())
+	);
 }
 
 unique_ptr<Term> ASTTransform::term(legacy::VariableDeclarationStatement const& _declaration)
@@ -142,10 +184,44 @@ unique_ptr<Term> ASTTransform::term(legacy::Assignment const& _assignment)
 		solAssert(false);
 }
 
-unique_ptr<Term> ASTTransform::term(TypeName const& _name)
+unique_ptr<Term> ASTTransform::term(legacy::Block const& _block)
+{
+	SetNode setNode(*this, _block);
+	if (auto statements = ranges::fold_right_last(
+		_block.statements() | ranges::view::transform([&](auto stmt) { return term(*stmt); }) | ranges::view::move,
+		[&](auto stmt, auto acc) {
+			return application(BuiltinConstant::ChainStatements, std::move(stmt), std::move(acc));
+		}
+	))
+		return application(BuiltinConstant::Block, std::move(*statements));
+	else
+		return application(BuiltinConstant::Block, constant(BuiltinConstant::Unit));
+}
+
+unique_ptr<Term> ASTTransform::term(legacy::Statement const& _statement)
+{
+	SetNode setNode(*this, _statement);
+	if (auto const* assembly = dynamic_cast<legacy::InlineAssembly const*>(&_statement))
+		return application(BuiltinConstant::RegularStatement, *assembly);
+	else if (auto const* declaration = dynamic_cast<legacy::VariableDeclarationStatement const*>(&_statement))
+		return application(BuiltinConstant::RegularStatement, *declaration);
+	else if (auto const* assign = dynamic_cast<legacy::Assignment const*>(&_statement))
+		return application(BuiltinConstant::RegularStatement, *assign);
+	else if (auto const* expressionStatement = dynamic_cast<legacy::ExpressionStatement const*>(&_statement))
+		return application(BuiltinConstant::RegularStatement, expressionStatement->expression());
+	else if (auto const* returnStatement = dynamic_cast<legacy::Return const*>(&_statement))
+		return application(BuiltinConstant::ReturnStatement, termOrConstant(returnStatement->expression(), BuiltinConstant::Unit));
+	else
+	{
+		m_analysis.errorReporter().fatalTypeError(0000_error, _statement.location(), "Unsupported statement.");
+		solAssert(false);
+	}
+}
+
+unique_ptr<Term> ASTTransform::term(legacy::TypeName const& _name)
 {
 	SetNode setNode(*this, _name);
-	if (auto const* elementaryTypeName = dynamic_cast<ElementaryTypeName const*>(&_name))
+	if (auto const* elementaryTypeName = dynamic_cast<legacy::ElementaryTypeName const*>(&_name))
 	{
 		switch (elementaryTypeName->typeName().token())
 		{
@@ -178,69 +254,23 @@ unique_ptr<Term> ASTTransform::term(TypeName const& _name)
 		solAssert(false);
 }
 
-unique_ptr<Term> ASTTransform::term(legacy::Statement const& _statement)
+unique_ptr<Term> ASTTransform::term(legacy::TypeClassName const& _typeClassName)
 {
-	SetNode setNode(*this, _statement);
-	if (auto const* assembly = dynamic_cast<legacy::InlineAssembly const*>(&_statement))
-		return term(*assembly);
-	else if (auto const* declaration = dynamic_cast<legacy::VariableDeclarationStatement const*>(&_statement))
-		return term(*declaration);
-	else if (auto const* assign = dynamic_cast<legacy::Assignment const*>(&_statement))
-		return term(*assign);
-	else if (auto const* expressionStatement = dynamic_cast<legacy::ExpressionStatement const*>(&_statement))
-		return term(expressionStatement->expression());
-	else if (auto const* returnStatement = dynamic_cast<legacy::Return const*>(&_statement))
-		return application(BuiltinConstant::Return, termOrConstant(returnStatement->expression(), BuiltinConstant::Unit));
-	else
-	{
-		m_analysis.errorReporter().fatalTypeError(0000_error, _statement.location(), "Unsupported statement.");
-		solAssert(false);
-	}
-}
-
-unique_ptr<Term> ASTTransform::term(legacy::Block const& _block)
-{
-	SetNode setNode(*this, _block);
-	if (_block.statements().empty())
-		return application(BuiltinConstant::Block, constant(BuiltinConstant::Unit));
-	auto makeStatement = [&](auto _stmt) {
-		return application(BuiltinConstant::Statement, *_stmt);
-	};
-
-	return application(
-		BuiltinConstant::Block,
-		ranges::fold_right(
-			_block.statements() | ranges::view::drop(1),
-			makeStatement(_block.statements().front()),
-			[&](auto stmt, auto acc) {
-				return application(BuiltinConstant::ChainStatements, std::move(acc), makeStatement(stmt));
-			}
-		)
-	);
-}
-
-AST::FunctionInfo ASTTransform::functionDefinition(legacy::FunctionDefinition const& _functionDefinition)
-{
-	SetNode setNode(*this, _functionDefinition);
-	std::unique_ptr<Term> body = nullptr;
-	unique_ptr<Term> argumentExpression = term(_functionDefinition.parameterList());
-	if (_functionDefinition.isImplemented())
-		body = term(_functionDefinition.body());
-	unique_ptr<Term> returnType = termOrConstant(_functionDefinition.experimentalReturnExpression(), BuiltinConstant::Unit);
-	unique_ptr<Term> name = reference(_functionDefinition);
-	unique_ptr<Term> function = makeTerm<VariableDeclaration>(std::move(name), std::move(body));
-	declare(_functionDefinition, *function);
-	return AST::FunctionInfo{
-		std::move(function),
-		std::move(argumentExpression),
-		std::move(returnType)
-	};
+	SetNode setNode(*this, _typeClassName);
+	return std::visit(util::GenericVisitor{
+		[&](Token _token) -> unique_ptr<Term> { return builtinTypeClass(_token); },
+		[&](ASTPointer<legacy::IdentifierPath> _identifierPath) -> unique_ptr<Term> {
+			solAssert(_identifierPath->annotation().referencedDeclaration);
+			return reference(*_identifierPath->annotation().referencedDeclaration);
+		}
+	}, _typeClassName.name());
 }
 
 unique_ptr<Term> ASTTransform::term(legacy::ParameterList const& _parameterList)
 {
 	SetNode setNode(*this, _parameterList);
 	return tuple(_parameterList.parameters() | ranges::view::transform([&](auto parameter) {
+		solAssert(!parameter->value());
 		return term(*parameter);
 	}) | ranges::view::move | ranges::to<list<unique_ptr<Term>>>);
 }
@@ -252,9 +282,10 @@ unique_ptr<Term> ASTTransform::term(legacy::VariableDeclaration const& _variable
 	unique_ptr<Term> name = reference(_variableDeclaration);
 	if (_variableDeclaration.typeExpression())
 		name = constrain(std::move(name), term(*_variableDeclaration.typeExpression()));
-	unique_ptr<Term> declaration = makeTerm<VariableDeclaration>(std::move(name), std::move(_initialValue));
-	declare(_variableDeclaration, *declaration);
-	return declaration;
+	if (_initialValue)
+		return application(BuiltinConstant::VariableDefinition, std::move(name), std::move(_initialValue));
+	else
+		return application(BuiltinConstant::VariableDeclaration, std::move(name));
 }
 
 unique_ptr<Term> ASTTransform::term(legacy::InlineAssembly const& _inlineAssembly)
@@ -349,47 +380,17 @@ unique_ptr<Term> ASTTransform::term(legacy::Expression const& _expression)
 	}
 }
 
-unique_ptr<Term> ASTTransform::binaryOperation(
-	Token _operator,
-	unique_ptr<Term> _leftHandSide,
-	unique_ptr<Term> _rightHandSide
-)
-{
-	return application(builtinBinaryOperator(_operator), std::move(_leftHandSide), std::move(_rightHandSide));
-}
-
 unique_ptr<Term> ASTTransform::reference(legacy::Declaration const& _declaration)
 {
-	auto [it, newlyInserted] = m_declarationIndices.emplace(&_declaration, m_ast->declarations.size());
-	if (newlyInserted)
-		m_ast->declarations.emplace_back(AST::DeclarationInfo{nullptr, {}});
-	return makeTerm<Reference>(it->second);
+	return makeTerm<Reference>(static_cast<size_t>(_declaration.id()), _declaration.name());
 }
 
-size_t ASTTransform::declare(legacy::Declaration const& _declaration, Term& _term)
+unique_ptr<Term> ASTTransform::tuple(list<unique_ptr<Term>> _components)
 {
-	auto [it, newlyInserted] = m_declarationIndices.emplace(&_declaration, m_ast->declarations.size());
-	if (newlyInserted)
-		m_ast->declarations.emplace_back(AST::DeclarationInfo{&_term, _declaration.name()});
+	if (auto term = ranges::fold_right_last(_components | ranges::view::move, [&](auto a, auto b) { return pair(std::move(a), std::move(b)); }))
+		return std::move(*term);
 	else
-	{
-		auto& info = m_ast->declarations.at(it->second);
-		solAssert(!info.target);
-		info.target = &_term;
-		info.name = _declaration.name();
-	}
-	termBase(_term).declaration = it->second;
-	return it->second;
-}
-
-TermBase ASTTransform::makeTermBase()
-{
-	return TermBase{
-		m_currentLocation,
-		m_currentNode ? make_optional(m_currentNode->id()) : nullopt,
-		std::monostate{},
-		nullopt
-	};
+		return constant(BuiltinConstant::Unit);
 }
 
 unique_ptr<Term> ASTTransform::constrain(unique_ptr<Term> _value, unique_ptr<Term> _constraint)
@@ -397,22 +398,18 @@ unique_ptr<Term> ASTTransform::constrain(unique_ptr<Term> _value, unique_ptr<Ter
 	return application(BuiltinConstant::Constrain, std::move(_value), std::move(_constraint));
 }
 
-unique_ptr<Term> ASTTransform::builtinTypeClass(langutil::Token _token)
+std::unique_ptr<Term> ASTTransform::namedFunctionList(std::vector<ASTPointer<ASTNode>> _nodes)
 {
-	switch (_token)
+	list<unique_ptr<Term>> functionList;
+	for (auto subNode: _nodes)
 	{
-	case Token::Mul:
-		return constant(BuiltinConstant::Mul);
-	case Token::Add:
-		return constant(BuiltinConstant::Add);
-	case Token::Integer:
-		return constant(BuiltinConstant::Integer);
-	case Token::Equal:
-		return constant(BuiltinConstant::Equal);
-	default:
-		m_analysis.errorReporter().typeError(0000_error, m_currentLocation, "Invalid type class.");
-		return constant(BuiltinConstant::Undefined);
+		auto const *function = dynamic_cast<FunctionDefinition const*>(subNode.get());
+		solAssert(function);
+		unique_ptr<Term> functionName = constant(function->name());
+		unique_ptr<Term> functionDefinition = term(*function);
+		functionList.emplace_back(application(BuiltinConstant::NamedTerm, std::move(functionName), std::move(functionDefinition)));
 	}
+	return tuple(std::move(functionList));
 }
 
 unique_ptr<Term> ASTTransform::builtinBinaryOperator(Token _token)
@@ -435,26 +432,29 @@ unique_ptr<Term> ASTTransform::builtinBinaryOperator(Token _token)
 	}
 }
 
-unique_ptr<Term> ASTTransform::pair(unique_ptr<Term> _first, unique_ptr<Term> _second)
+unique_ptr<Term> ASTTransform::builtinTypeClass(langutil::Token _token)
 {
-	return application(
-		application(
-			BuiltinConstant::Pair,
-			std::move(_first)
-		),
-		std::move(_second)
-	);
+	switch (_token)
+	{
+	case Token::Mul:
+		return constant(BuiltinConstant::Mul);
+	case Token::Add:
+		return constant(BuiltinConstant::Add);
+	case Token::Integer:
+		return constant(BuiltinConstant::Integer);
+	case Token::Equal:
+		return constant(BuiltinConstant::Equal);
+	default:
+		m_analysis.errorReporter().typeError(0000_error, m_currentLocation, "Invalid type class.");
+		return constant(BuiltinConstant::Undefined);
+	}
 }
 
-unique_ptr<Term> ASTTransform::tuple(list<unique_ptr<Term>> _components)
+TermBase ASTTransform::makeTermBase()
 {
-	if (auto term = ranges::fold_right_last(_components | ranges::view::move, [&](auto a, auto b) { return pair(std::move(a), std::move(b)); }))
-		return std::move(*term);
-	else
-		return constant(BuiltinConstant::Unit);
-}
-
-unique_ptr<Term> ASTTransform::application(unique_ptr<Term> _function, std::list<unique_ptr<Term>> _arguments)
-{
-	return makeTerm<Application>(std::move(_function), tuple(std::move(_arguments)));
+	return TermBase{
+		m_currentLocation,
+		m_currentNode ? make_optional(m_currentNode->id()) : nullopt,
+		std::monostate{}
+	};
 }

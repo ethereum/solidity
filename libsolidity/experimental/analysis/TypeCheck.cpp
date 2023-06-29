@@ -18,12 +18,16 @@
 #include <libsolidity/experimental/analysis/TypeCheck.h>
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolutil/CommonIO.h>
-#include <libsolutil/Visitor.h>
-#include <range/v3/view/map.hpp>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
+
+#include <libsolutil/AnsiColorized.h>
+#include <libsolutil/CommonIO.h>
+#include <libsolutil/Visitor.h>
+
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -32,8 +36,143 @@ using namespace solidity::frontend::experimental;
 
 namespace
 {
-using Term = std::variant<Application, Lambda, InlineAssembly, VariableDeclaration, Reference, Constant>;
 
+struct TPat
+{
+	using Unifier = std::function<void(Type, Type)>;
+	template<typename R, typename... Args>
+	TPat(R _f(Args...)): generator([f = _f](TypeEnvironment& _env, Unifier _unifier) -> Type {
+		return invoke(_env, _unifier, f, std::make_index_sequence<sizeof...(Args)>{});
+	}) {}
+	TPat(PrimitiveType _type): generator([type = _type](TypeEnvironment& _env, Unifier) { return _env.typeSystem().type(type, {}); }) {}
+	Type realize(TypeEnvironment& _env, Unifier _unifier) const { return generator(_env, _unifier); }
+	TPat(std::function<Type(TypeEnvironment&, Unifier)> _generator):generator(std::move(_generator)) {}
+	TPat(Type _t): generator([t = _t](TypeEnvironment&, Unifier) -> Type { return t; }) {}
+private:
+	template<size_t I>
+	static TPat makeFreshVariable(TypeEnvironment& _env) { return TPat{_env.typeSystem().freshTypeVariable({})}; }
+	template<typename Generator, size_t... Is>
+	static Type invoke(TypeEnvironment& _env, Unifier _unifier, Generator const& _generator, std::index_sequence<Is...>)
+	{
+		// Use an auxiliary array to ensure deterministic evaluation order.
+		[[maybe_unused]] std::array<TPat, sizeof...(Is)> patterns{makeFreshVariable<Is>(_env)...};
+		return (_generator(std::move(patterns[Is])...)).realize(_env, _unifier);
+	}
+	std::function<Type(TypeEnvironment&, Unifier)> generator;
+};
+namespace pattern_ops
+{
+using Unifier = std::function<void(Type, Type)>;
+inline TPat operator>>(TPat _a, TPat _b)
+{
+	return TPat([a = std::move(_a), b = std::move(_b)](TypeEnvironment& _env, Unifier _unifier) -> Type {
+		return TypeSystemHelpers{_env.typeSystem()}.functionType(a.realize(_env, _unifier), b.realize(_env, _unifier));
+	});
+}
+inline TPat operator==(TPat _a, TPat _b)
+{
+	return TPat([a = std::move(_a), b = std::move(_b)](TypeEnvironment& _env, Unifier _unifier) -> Type {
+		Type left = a.realize(_env, _unifier);
+		Type right = b.realize(_env, _unifier);
+		_unifier(left, right);
+		return left;
+	});
+}
+template<typename... Args>
+TPat tuple(Args... args)
+{
+	return TPat([args = std::array<TPat, sizeof...(Args)>{{std::move(args)...}}](TypeEnvironment& _env, Unifier _unifier) -> Type {
+		return TypeSystemHelpers{_env.typeSystem()}.tupleType(
+			args | ranges::view::transform([&](TPat _pat) { return _pat.realize(_env, _unifier); }) | ranges::to<vector<Type>>
+		);
+	});
+}
+}
+
+struct BuiltinConstantInfo
+{
+	std::string name;
+	std::optional<TPat> builtinType;
+};
+[[maybe_unused]] BuiltinConstantInfo const& builtinConstantInfo(BuiltinConstant _constant)
+{
+	using namespace pattern_ops;
+	static const TPat unit{PrimitiveType::Unit};
+	static const auto info = std::map<BuiltinConstant, BuiltinConstantInfo>{
+		{BuiltinConstant::Unit, {"Unit", unit}},
+		{BuiltinConstant::Pair, {"Pair", +[](TPat a, TPat b) { return a >> (b >> tuple(a,b)); }}},
+		{BuiltinConstant::Fun, {"Fun", +[](TPat a, TPat b) { return tuple(a,b) >> (a >> b); }}},
+		{BuiltinConstant::Constrain, {"Constrain", +[](TPat a) { return tuple(a,a) >> a; }}},
+		{BuiltinConstant::NamedTerm, {"NamedTerm", +[](TPat a) { return tuple(unit, a) >> a; /* TODO: (name, a) >> a */ }}},
+		{BuiltinConstant::TypeDeclaration, {"TypeDeclaration", nullopt}},
+		{BuiltinConstant::TypeDefinition, {"TypeDefinition", +[](TPat type, TPat args, TPat value) {
+			return tuple(type, args, value) >> (args >> type);
+		}}},
+		{BuiltinConstant::TypeClassDefinition, {"TypeClassDefinition", nullopt}},
+		{BuiltinConstant::TypeClassInstantiation, {"TypeClassInstantiation", nullopt}},
+		{BuiltinConstant::FunctionDeclaration, {"FunctionDeclaration", nullopt}},
+		{BuiltinConstant::FunctionDefinition, {"FunctionDefinition", +[](TPat a, TPat r) {
+			return tuple(a >> r, a, r, r) >> (a >> r);
+		}}},
+		{BuiltinConstant::ContractDefinition, {"ContractDefinition", +[]() {
+			return tuple(unit, (unit >> unit)) >> unit;
+		}}},
+		{BuiltinConstant::VariableDeclaration, {"VariableDeclaration", +[](TPat a) { return a >> a; }}},
+		{BuiltinConstant::VariableDefinition, {"VariableDefinition", nullopt}},
+		{BuiltinConstant::Block, {"Block", +[](TPat a) { return a >> a; }}},
+		{BuiltinConstant::ReturnStatement, {"ReturnStatement", +[](TPat a) { return a >> a; }}},
+		{BuiltinConstant::RegularStatement, {"RegularStatement", +[](TPat a) { return a >> unit; }}},
+		{BuiltinConstant::ChainStatements, {"ChainStatements", +[](TPat a, TPat b) { return tuple(a,b) >> b; }}},
+		{BuiltinConstant::Assign, {"Assign", +[](TPat a) { return tuple(a,a) >> unit; }}},
+		{BuiltinConstant::MemberAccess, {"MemberAccess", nullopt}},
+		{BuiltinConstant::Mul, {"Mul", nullopt}},
+		{BuiltinConstant::Add, {"Add", nullopt}},
+		{BuiltinConstant::Void, {"Void", nullopt}},
+		{BuiltinConstant::Word, {"Word", PrimitiveType::Word}},
+		{BuiltinConstant::Integer, {"Integer", nullopt}},
+		{BuiltinConstant::Bool, {"Bool", nullopt}},
+		{BuiltinConstant::Undefined, {"Undefined", nullopt}},
+		{BuiltinConstant::Equal, {"Equal", nullopt}},
+	};
+	return info.at(_constant);
+}
+
+template<typename Visitor>
+void forEachTopLevelTerm(AST& _ast, Visitor _visitor)
+{
+	for (auto& term: _ast.typeDefinitions | ranges::view::values)
+		_visitor(*term);
+	for (auto& term: _ast.typeClasses | ranges::view::values)
+		_visitor(*term);
+	for (auto& term: _ast.typeClassInstantiations | ranges::view::values)
+		_visitor(*term);
+	for (auto& term: _ast.functions | ranges::views::values)
+		_visitor(*term);
+	for (auto& term: _ast.contracts | ranges::views::values)
+		_visitor(*term);
+}
+
+template<typename Visitor>
+void forEachImmediateSubTerm(Term& _term, Visitor _visitor)
+{
+	std::visit(util::GenericVisitor{
+		[&](Application const& _app) {
+			_visitor(*_app.expression);
+			_visitor(*_app.argument);
+		},
+		[&](Lambda const& _lambda)
+		{
+			_visitor(*_lambda.argument);
+			_visitor(*_lambda.value);
+		},
+		[&](InlineAssembly const&)
+		{
+			// TODO
+		},
+		[&](Reference const&) {},
+		[&](Constant const&) {}
+	}, _term);
+}
 
 optional<pair<reference_wrapper<Term const>, reference_wrapper<Term const>>> destPair(Term const& _term)
 {
@@ -71,29 +210,15 @@ void setType(Term& _term, Type _type)
 	std::visit([&](auto& term) { term.type = _type; }, _term);
 }
 
+string colorize(string _color, string _string)
+{
+	return _color + _string + util::formatting::RESET;
+}
+
 string termPrinter(AST& _ast, Term const& _term, TypeEnvironment* _env = nullptr, bool _sugarPairs = true, bool _sugarConsts = true, size_t _indent = 0)
 {
+	using namespace util::formatting;
 	auto recurse = [&](Term const& _next) { return termPrinter(_ast, _next, _env, _sugarPairs, _sugarConsts, _indent); };
-	static const std::map<BuiltinConstant, const char*> builtinConstants = {
-		{BuiltinConstant::Unit, "()"},
-		{BuiltinConstant::Pair, "Pair"},
-		{BuiltinConstant::Fun, "Fun"},
-		{BuiltinConstant::Constrain, "Constrain"},
-		{BuiltinConstant::Return, "Return"},
-		{BuiltinConstant::Block, "Block"},
-		{BuiltinConstant::Statement, "Statement"},
-		{BuiltinConstant::ChainStatements, "ChainStatements"},
-		{BuiltinConstant::Assign, "Assign"},
-		{BuiltinConstant::MemberAccess, "MemberAccess"},
-		{BuiltinConstant::Mul, "Mul"},
-		{BuiltinConstant::Add, "Add"},
-		{BuiltinConstant::Void, "void"},
-		{BuiltinConstant::Word, "word"},
-		{BuiltinConstant::Integer, "Integer"},
-		{BuiltinConstant::Bool, "Bool"},
-		{BuiltinConstant::Undefined, "Undefined"},
-		{BuiltinConstant::Equal, "Equal"}
-	};
 	string result = std::visit(util::GenericVisitor{
 		[&](Application const& _app) {
 			if (_sugarPairs)
@@ -154,8 +279,10 @@ string termPrinter(AST& _ast, Term const& _term, TypeEnvironment* _env = nullptr
 							if (auto pair = destPair(*_app.argument))
 								return recurse(pair->first) + "\n" + std::string(_indent, '\t') + recurse(pair->second);
 							break;
-						case BuiltinConstant::Statement:
+						case BuiltinConstant::RegularStatement:
 							return recurse(*_app.argument) + ";";
+						case BuiltinConstant::ReturnStatement:
+							return colorize(CYAN, "return ") + recurse(*_app.argument) + ";";
 						default:
 							break;
 						}
@@ -166,23 +293,20 @@ string termPrinter(AST& _ast, Term const& _term, TypeEnvironment* _env = nullptr
 			return "(" + recurse(*_lambda.argument) + " -> " + recurse(*_lambda.value) + ")";
 		},
 		[&](InlineAssembly const&) -> string {
-			return "assembly";
-		},
-		[&](VariableDeclaration const& _varDecl) {
-			return "let " + recurse(*_varDecl.namePattern) + (_varDecl.initialValue ? " = " + recurse(*_varDecl.initialValue) : "");
+			return colorize(CYAN, "assembly");
 		},
 		[&](Reference const& _reference) {
-		  return "" + _ast.declarations.at(_reference.index).name + "";
+		  return _reference.name.empty() ? util::toString(_reference.index) : _reference.name;
 		},
 		[&](Constant const& _constant) {
-			return "" + std::visit(util::GenericVisitor{
+			return colorize(BLUE, std::visit(util::GenericVisitor{
 				[](BuiltinConstant _constant) -> string {
-					return builtinConstants.at(_constant);
+					return builtinConstantInfo(_constant).name;
 				},
 				[](std::string const& _name) {
 					return _name;
 				}
-			}, _constant.name) + "";
+			}, _constant.name));
 		}
 	}, _term);
 	if (_env)
@@ -190,113 +314,20 @@ string termPrinter(AST& _ast, Term const& _term, TypeEnvironment* _env = nullptr
 		Type termType = type(_term);
 		if (!holds_alternative<std::monostate>(termType))
 		{
-			result += "[:" + TypeEnvironmentHelpers{*_env}.typeToString(termType) + "]";
+			result += colorize(GREEN, "[:" + TypeEnvironmentHelpers{*_env}.typeToString(termType) + "]");
 		}
 	}
 	return result;
 }
 
-std::string functionPrinter(AST& _ast, AST::FunctionInfo const& _info, TypeEnvironment* _env = nullptr, bool _sugarPairs = true, bool _sugarConsts = true, size_t _indent = 0)
-{
-	auto printTerm = [&](Term const& _term) { return termPrinter(_ast, _term, _env, _sugarPairs, _sugarConsts, _indent + 1); };
-	return "function (" + printTerm(*_info.arguments) + ") -> " + printTerm(*_info.returnType) + " = " + printTerm(*_info.function) + "\n";
-}
-
 std::string astPrinter(AST& _ast, TypeEnvironment* _env = nullptr, bool _sugarPairs = true, bool _sugarConsts = true, size_t _indent = 0)
 {
-	auto printTerm = [&](Term const& _term) { return termPrinter(_ast, _term, _env, _sugarPairs, _sugarConsts, _indent + 1); };
-	auto printFunction = [&](AST::FunctionInfo const& _info) { return functionPrinter(_ast, _info, _env, _sugarPairs, _sugarConsts, _indent + 1); };
 	std::string result;
-	for (auto& info: _ast.typeDefinitions | ranges::view::values)
-	{
-		result += "type " + printTerm(*info.declaration);
-		if (info.arguments)
-			result += " " + printTerm(*info.arguments);
-		if (info.value)
-			result += " = " + printTerm(*info.declaration);
-		result += "\n\n";
-	}
-	for (auto& info: _ast.typeClasses | ranges::view::values)
-	{
-		result += "class " + printTerm(*info.typeVariable) + ":" + printTerm(*info.declaration) + " {";
-		_indent++;
-		for (auto&& functionInfo: info.functions | ranges::view::values)
-			result += printFunction(functionInfo);
-		_indent--;
-		result += "}\n\n";
-	}
-	for (auto& info: _ast.typeClassInstantiations | ranges::view::values)
-	{
-		result += "instantiation " + printTerm(*info.typeConstructor) + "(" + printTerm(*info.argumentSorts) + "):" + printTerm(*info.typeClass) + "{\n";
-		_indent++;
-		for (auto&& functionInfo: info.functions | ranges::view::values)
-			result += printFunction(functionInfo);
-		_indent--;
-	}
-	for (auto& functionInfo: _ast.functions | ranges::views::values)
-	{
-		result += printFunction(functionInfo);
-		result += "\n";
-	}
-	for (auto& [contract, info]: _ast.contracts)
-	{
-		result += "contract " + contract->name() + " {\n";
-		_indent++;
-		for(auto& function: info.functions | ranges::view::values)
-			result += printFunction(function);
-		_indent--;
-		result += "}\n\n";
-
-	}
+	auto printTerm = [&](Term const& _term) { result += termPrinter(_ast, _term, _env, _sugarPairs, _sugarConsts, _indent + 1) + "\n\n"; };
+	forEachTopLevelTerm(_ast, printTerm);
 	return result;
 }
 
-}
-
-namespace
-{
-struct TVar
-{
-	TypeEnvironment& env;
-	Type type;
-};
-inline TVar operator>>(TVar a, TVar b)
-{
-	TypeSystemHelpers helper{a.env.typeSystem()};
-	return TVar{a.env, helper.functionType(a.type, b.type)};
-}
-inline TVar operator,(TVar a, TVar b)
-{
-	TypeSystemHelpers helper{a.env.typeSystem()};
-	return TVar{a.env, helper.tupleType({a.type, b.type})};
-}
-template <typename T>
-struct ArgumentCount;
-template <typename R, typename... Args>
-struct ArgumentCount<std::function<R(Args...)>> {
-	static constexpr size_t value = sizeof...(Args);
-};
-struct TypeGenerator
-{
-	template<typename Generator>
-	TypeGenerator(Generator&& _generator):generator([generator = std::move(_generator)](TypeEnvironment& _env) -> Type {
-		return invoke(_env, generator, std::make_index_sequence<ArgumentCount<decltype(std::function{_generator})>::value>{});
-	}) {}
-	TypeGenerator(TVar _type):generator([type = _type.type](TypeEnvironment& _env) -> Type { return _env.fresh(type); }) {}
-	TypeGenerator(PrimitiveType _type): generator([type = _type](TypeEnvironment& _env) -> Type { return _env.typeSystem().type(type, {}); }) {}
-	Type operator()(TypeEnvironment& _env) const { return generator(_env); }
-private:
-	template<size_t I>
-	static TVar makeFreshVariable(TypeEnvironment& _env) { return TVar{_env, _env.typeSystem().freshTypeVariable({}) }; }
-	template<typename Generator, size_t... Is>
-	static Type invoke(TypeEnvironment& _env, Generator&& _generator, std::index_sequence<Is...>)
-	{
-		// Use an auxiliary array to ensure deterministic evaluation order.
-		std::array<TVar, sizeof...(Is)> tvars{makeFreshVariable<Is>(_env)...};
-		return std::invoke(_generator, tvars[Is]...).type;
-	}
-	std::function<Type(TypeEnvironment&)> generator;
-};
 }
 
 void TypeCheck::operator()(AST& _ast)
@@ -305,25 +336,17 @@ void TypeCheck::operator()(AST& _ast)
 	TypeSystemHelpers helper{typeSystem};
 	TypeEnvironment& env = typeSystem.env();
 
-	TVar unit = TVar{env, typeSystem.type(PrimitiveType::Unit, {})};
-	TVar word = TVar{env, typeSystem.type(PrimitiveType::Word, {})};
-	std::unique_ptr<TVar> currentReturn;
-	std::map<BuiltinConstant, TypeGenerator> builtinConstantTypeGenerators{
-		{BuiltinConstant::Unit, unit},
-		{BuiltinConstant::Pair, [](TVar a, TVar b) { return a >> (b >> (a,b)); }},
-		{BuiltinConstant::Word, word},
-		{BuiltinConstant::Assign, [=](TVar a) { return (a,a) >> unit; }}, // TODO: (a,a) >> a
-		{BuiltinConstant::Block, [](TVar a) { return a >> a; }},
-		{BuiltinConstant::ChainStatements, [](TVar a, TVar b) { return (a,b) >> b; }},
-		{BuiltinConstant::Statement, [=](TVar a) { return a >> unit; }},
-		{BuiltinConstant::Return, [&]() {
-			 solAssert(currentReturn);
-			 return *currentReturn >> unit;
-		 }},
-		{BuiltinConstant::Fun, [&](TVar a, TVar b) {
-			 return (a,b) >> (a >> b);
-		 }},
-	};
+	list<reference_wrapper<Term>> toCheck;
+	forEachTopLevelTerm(_ast, [&](Term& _root) {
+		list<reference_wrapper<Term>> staged{{_root}};
+		while (!staged.empty())
+		{
+			Term& term = staged.front().get();
+			staged.pop_front();
+			toCheck.push_back(term);
+			forEachImmediateSubTerm(term, [&](Term& _subTerm) { staged.push_back(_subTerm); });
+		}
+	});
 
 	auto unifyForTerm = [&](Type _a, Type _b, Term* _term) {
 		for (auto failure: env.unify(_a, _b))
@@ -361,161 +384,65 @@ void TypeCheck::operator()(AST& _ast)
 			}, failure);
 		}
 	};
-	auto checkTerm = [&](Term& _root) {
-		std::list<reference_wrapper<Term>> heap;
-		heap.emplace_back(_root);
-		auto checked = [](Term const& _term) {
-			return !holds_alternative<std::monostate>(type(_term));
-		};
-		auto canCheck = [&](Term& _term) -> bool {
-			bool hasUnchecked = false;
-			auto stage = [&](Term& _term) {
-				if (!checked(_term))
-				{
-					heap.push_back(_term);
-					hasUnchecked = true;
-				}
-			};
-			std::visit(util::GenericVisitor{
-				[&](Application const& _app) {
-					stage(*_app.expression);
-					stage(*_app.argument);
-				},
-				[&](Lambda const& _lambda)
-				{
-					stage(*_lambda.argument);
-					stage(*_lambda.value);
-				},
-				[&](InlineAssembly const&)
-				{
-					// TODO
-				},
-				[&](VariableDeclaration const& _varDecl)
-				{
-					stage(*_varDecl.namePattern);
-					if (_varDecl.initialValue)
-						stage(*_varDecl.initialValue);
-				},
-				[&](Reference const&)
-				{
-				},
-				[&](Constant const&) {}
-			}, _term);
-			if (hasUnchecked)
-			{
-				stage(_term);
-				return false;
-			}
-			return true;
-		};
-		std::map<size_t, Type> declarationTypes;
-		while (!heap.empty())
-		{
-			Term& current = heap.front();
-			heap.pop_front();
-			if (checked(current))
-				continue;
-			if (!canCheck(current))
-				continue;
 
-			auto unify = [&](Type _a, Type _b) { unifyForTerm(_a, _b, &current); };
-
-			std::visit(util::GenericVisitor{
-				[&](Application const& _app) {
-					if (auto* constant = get_if<Constant>(_app.expression.get()))
-						if (auto* builtin = get_if<BuiltinConstant>(&constant->name))
-							if (*builtin == BuiltinConstant::Constrain)
-								if (auto args = destPair(*_app.argument))
-								{
-									Type result = type(args->first);
-									unify(result, type(args->second));
-									setType(current, result);
-									return;
-								}
-					Type resultType = typeSystem.freshTypeVariable({});
-					unify(helper.functionType(type(*_app.argument), resultType), type(*_app.expression));
-					setType(current, resultType);
-				},
-				[&](Lambda const& _lambda)
-				{
-					setType(current, helper.functionType(type(*_lambda.argument), type(*_lambda.value)));
-				},
-				[&](InlineAssembly const& _inlineAssembly)
-				{
-					// TODO
-					(void)_inlineAssembly;
-					setType(current, typeSystem.type(PrimitiveType::Unit, {}));
-				},
-				[&](VariableDeclaration const& _varDecl)
-				{
-					Type name = type(*_varDecl.namePattern);
-					if (_varDecl.initialValue)
-						unify(name, type(*_varDecl.initialValue));
-					setType(current, name);
-				},
-				[&](Reference const& _reference)
-				{
-					Type result = typeSystem.freshTypeVariable({});
-					if (
-						auto [it, newlyInserted] = declarationTypes.emplace(_reference.index, result);
-						!newlyInserted
-					)
-						unify(result, it->second);
-					setType(current, result);
-				},
-				[&](Constant const& _constant)
-				{
-					bool assigned = std::visit(util::GenericVisitor{
-						[&](std::string const&) { return false; },
-						[&](BuiltinConstant const& _constant) {
-							if (auto* generator = util::valueOrNullptr(builtinConstantTypeGenerators, _constant))
+	std::map<size_t, Type> declarationTypes;
+	for(auto term: toCheck | ranges::view::reverse)
+	{
+		auto unify = [&](Type _a, Type _b) { unifyForTerm(_a, _b, &term.get()); };
+		std::visit(util::GenericVisitor{
+			[&](Application const& _app) {
+				/*if (auto* constant = get_if<Constant>(_app.expression.get()))
+					if (auto* builtin = get_if<BuiltinConstant>(&constant->name))
+						if (*builtin == BuiltinConstant::Constrain)
+							if (auto args = destPair(*_app.argument))
 							{
-								setType(current, (*generator)(env));
-								return true;
-							}
-							return false;
-						}
-					}, _constant.name);
-					if (!assigned)
-						setType(current, typeSystem.freshTypeVariable({}));
-				}
-			}, current);
-			solAssert(checked(current));
-			if (auto declaration = termBase(current).declaration)
+								Type result = type(args->first);
+								unify(result, type(args->second));
+								setType(term, result);
+								return;
+							}*/
+				Type resultType = typeSystem.freshTypeVariable({});
+				unify(helper.functionType(type(*_app.argument), resultType), type(*_app.expression));
+				setType(term, resultType);
+			},
+			[&](Lambda const& _lambda)
 			{
+				setType(term, helper.functionType(type(*_lambda.argument), type(*_lambda.value)));
+			},
+			[&](InlineAssembly const& _inlineAssembly)
+			{
+				// TODO
+				(void)_inlineAssembly;
+				setType(term, typeSystem.type(PrimitiveType::Unit, {}));
+			},
+			[&](Reference const& _reference)
+			{
+				Type result = typeSystem.freshTypeVariable({});
 				if (
-					auto [it, newlyInserted] = declarationTypes.emplace(*declaration, type(current));
+					auto [it, newlyInserted] = declarationTypes.emplace(_reference.index, result);
 					!newlyInserted
 				)
-					unify(type(current), it->second);
+					unify(result, it->second);
+				setType(term, result);
+			},
+			[&](Constant const& _constant)
+			{
+				bool assigned = std::visit(util::GenericVisitor{
+					[&](std::string const&) { return false; },
+					[&](BuiltinConstant const& _constant) {
+						if (auto generator = builtinConstantInfo(_constant).builtinType)
+						{
+							setType(term, (*generator).realize(env, unify));
+							return true;
+						}
+						return false;
+					}
+				}, _constant.name);
+				if (!assigned)
+					setType(term, typeSystem.freshTypeVariable({}));
 			}
-		}
-	};
-	for(auto& info: _ast.typeDefinitions | ranges::view::values)
-	{
-		if (info.arguments)
-			checkTerm(*info.arguments);
-		if (info.value)
-			checkTerm(*info.value);
-		checkTerm(*info.declaration);
-	}
-	for(auto& info: _ast.contracts | ranges::view::values)
-		for(auto& function: info.functions | ranges::view::values)
-		{
-			checkTerm(*function.returnType);
-			ScopedSaveAndRestore returnType{currentReturn, std::make_unique<TVar>(TVar{env,type(*function.returnType)})};
-			checkTerm(*function.function);
-			checkTerm(*function.arguments);
-			// TODO: unify stuff?
-
-		}
-	for(auto&& info: _ast.functions | ranges::view::values)
-	{
-		checkTerm(*info.returnType);
-		ScopedSaveAndRestore returnType{currentReturn, std::make_unique<TVar>(TVar{env,type(*info.returnType)})};
-		checkTerm(*info.function);
-		checkTerm(*info.arguments);
-		// TODO: unify stuff
+		}, term.get());
+		solAssert(!holds_alternative<std::monostate>(type(term)));
 	}
 
 	std::cout << astPrinter(_ast, &env) << std::endl;

@@ -1,6 +1,8 @@
 pragma experimental solidity;
 
 type uint256 = word;
+/*
+type double(a) = (a,a);
 
 instantiation uint256: + {
     function add(x, y) -> uint256 {
@@ -51,18 +53,22 @@ instantiation word: == {
 
 function f(x:uint256->uint256,y:uint256) -> uint256
 {
-    return x(y);
+    x(y);
 }
-
-function g(x:uint256) -> uint256
+*/
+function g(x) -> word
 {
     return x;
 }
 
 contract C {
 	fallback() external {
+	    let z : uint256;
 		let x : word;
-		assembly {
+        let y;
+        y = (x:word);
+        x = g(x);
+		/*assembly {
 			x := 0x10
 		}
         let w = uint256.abs(x);
@@ -75,7 +81,7 @@ contract C {
 		assembly {
 			mstore(0, y)
 			return(0, 32)
-		}
+		}*/
 	}
 }
 // ====
