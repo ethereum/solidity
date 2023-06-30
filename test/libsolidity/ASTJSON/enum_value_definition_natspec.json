@@ -1,0 +1,62 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "Color":
+    [
+      6
+    ]
+  },
+  "id": 7,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "canonicalName": "Color",
+      "id": 6,
+      "members":
+      [
+        {
+          "id": 1,
+          "name": "Red",
+          "nameLocation": "14:3:1",
+          "nodeType": "EnumValue",
+          "src": "14:3:1"
+        },
+        {
+          "documentation":
+          {
+            "id": 2,
+            "nodeType": "StructuredDocumentation",
+            "src": "20:54:1",
+            "text": "@notice example of notice\n @dev example of dev"
+          },
+          "id": 3,
+          "name": "Green",
+          "nameLocation": "76:5:1",
+          "nodeType": "EnumValue",
+          "src": "76:5:1"
+        },
+        {
+          "documentation":
+          {
+            "id": 4,
+            "nodeType": "StructuredDocumentation",
+            "src": "84:23:1",
+            "text": "@dev example of dev"
+          },
+          "id": 5,
+          "name": "Blue",
+          "nameLocation": "109:4:1",
+          "nodeType": "EnumValue",
+          "src": "109:4:1"
+        }
+      ],
+      "name": "Color",
+      "nameLocation": "5:5:1",
+      "nodeType": "EnumDefinition",
+      "src": "0:115:1"
+    }
+  ],
+  "src": "0:116:1"
+}
