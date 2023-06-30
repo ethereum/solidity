@@ -81,13 +81,13 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 
 	SMTEncoder::resetSourceAnalysis();
 
+	state().prepareForSourceUnit(_source, false);
 	m_solvedTargets = std::move(_solvedTargets);
 	m_context.setSolver(m_interface.get());
 	m_context.reset();
 	m_context.setAssertionAccumulation(true);
 	m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
 	createFreeConstants(sourceDependencies(_source));
-	state().prepareForSourceUnit(_source, false);
 	m_unprovedAmt = 0;
 
 	_source.accept(*this);
