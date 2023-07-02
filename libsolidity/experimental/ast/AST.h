@@ -153,6 +153,7 @@ struct AST
 	std::map<frontend::TypeClassInstantiation const*, std::unique_ptr<Term>, ASTCompareByID<frontend::TypeClassInstantiation>> typeClassInstantiations;
 	std::map<frontend::FunctionDefinition const*, std::unique_ptr<Term>, ASTCompareByID<frontend::FunctionDefinition>> functions;
 	std::map<frontend::ContractDefinition const*, std::unique_ptr<Term>, ASTCompareByID<frontend::ContractDefinition>> contracts;
+	std::vector<frontend::ASTNode const*> nodeById;
 };
 
 }

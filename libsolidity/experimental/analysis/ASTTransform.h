@@ -152,6 +152,12 @@ private:
 		{
 			_parent.m_currentNode = &_node;
 			_parent.m_currentLocation = _node.location();
+			// TODO: error robustness
+			ASTNode const*& node = _parent.m_ast->nodeById.at(static_cast<size_t>(_node.id()));
+			if (node)
+				solAssert(node == &_node);
+			else
+				node = &_node;
 		}
 		SetNode(ASTTransform& _parent, langutil::SourceLocation const& _location):
 		m_parent(_parent),

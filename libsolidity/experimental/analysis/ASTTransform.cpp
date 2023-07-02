@@ -37,6 +37,7 @@ using namespace solidity::frontend::experimental;
 
 ASTTransform::ASTTransform(Analysis& _analysis): m_analysis(_analysis), m_errorReporter(_analysis.errorReporter()), m_ast(make_unique<AST>())
 {
+	m_ast->nodeById.resize(_analysis.maxAstId() + 1, nullptr);
 }
 
 bool ASTTransform::visit(legacy::TypeDefinition const& _typeDefinition)
@@ -187,6 +188,7 @@ unique_ptr<Term> ASTTransform::term(legacy::Assignment const& _assignment)
 unique_ptr<Term> ASTTransform::term(legacy::Block const& _block)
 {
 	SetNode setNode(*this, _block);
+
 	if (auto statements = ranges::fold_right_last(
 		_block.statements() | ranges::view::transform([&](auto stmt) { return term(*stmt); }) | ranges::view::move,
 		[&](auto stmt, auto acc) {
