@@ -194,7 +194,16 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 	}();
 	auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, _input);
 	if (result.success)
+	{
+		if (m_enabledSolvers.z3 and boost::starts_with(result.responseOrErrorMessage, "unsat")) {
+			solverBinary += " fp.xform.slice=false fp.xform.inline_linear=false fp.xform.inline_eager=false";
+			string extendedQuery = "(set-option :produce-proofs true)" + _input + "\n(get-proof)";
+			auto secondResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, extendedQuery);
+			if (secondResult.success)
+				return secondResult.responseOrErrorMessage;
+		}
 		return result.responseOrErrorMessage;
+	}
 
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";
