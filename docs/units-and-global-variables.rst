@@ -380,7 +380,7 @@ The following properties are available for a contract type ``C``:
 In addition to the properties above, the following properties are available
 for an interface type ``I``:
 
-``type(I).interfaceId``:
+``type(I).interfaceId``
     A ``bytes4`` value containing the `EIP-165 <https://eips.ethereum.org/EIPS/eip-165>`_
     interface identifier of the given interface ``I``. This identifier is defined as the ``XOR`` of all
     function selectors defined within the interface itself - excluding all inherited functions.
