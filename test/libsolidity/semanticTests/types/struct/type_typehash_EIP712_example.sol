@@ -9,7 +9,5 @@ contract C {
         return type(Mail).typehash == keccak256("Mail(address from,address to,string contents)");
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true

@@ -22,7 +22,5 @@ contract C {
         );
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true, true, true

@@ -10,7 +10,5 @@ contract C is A {
         return type(S).typehash == keccak256("S(string x,bool[10][] y)");
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true

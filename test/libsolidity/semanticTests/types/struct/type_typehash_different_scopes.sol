@@ -19,7 +19,5 @@ contract C {
         return A.a == B.b;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true
