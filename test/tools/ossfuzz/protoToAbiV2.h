@@ -390,7 +390,7 @@ private:
 		return m_isLastDynParamRightPadded;
 	}
 
-	/// Convert delimter to a comma or null string.
+	/// Convert delimiter to a comma or null string.
 	static std::string delimiterToString(Delimiter _delimiter, bool _space = true);
 	/// Generates number in the range [1, @param _n] uniformly at random.
 	unsigned randomNumberOneToN(unsigned _n)
