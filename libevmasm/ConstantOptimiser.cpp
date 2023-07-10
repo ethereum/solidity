@@ -24,7 +24,6 @@
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
@@ -39,11 +38,11 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 	AssemblyItems& _items = _assembly.items();
 
 	unsigned optimisations = 0;
-	map<AssemblyItem, size_t> pushes;
+	std::map<AssemblyItem, size_t> pushes;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
 			pushes[item]++;
-	map<u256, AssemblyItems> pendingReplacements;
+	std::map<u256, AssemblyItems> pendingReplacements;
 	for (auto it: pushes)
 	{
 		AssemblyItem const& item = it.first;
@@ -108,7 +107,7 @@ size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
 
 void ConstantOptimisationMethod::replaceConstants(
 	AssemblyItems& _items,
-	map<u256, AssemblyItems> const& _replacements
+	std::map<u256, AssemblyItems> const& _replacements
 )
 {
 	AssemblyItems replaced;
@@ -255,7 +254,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const
 {
 	// This is a tiny EVM that can only evaluate some instructions.
-	vector<u256> stack;
+	std::vector<u256> stack;
 	for (AssemblyItem const& item: _routine)
 	{
 		switch (item.type())

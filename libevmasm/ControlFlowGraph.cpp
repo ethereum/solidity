@@ -31,7 +31,6 @@
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/KnownState.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
@@ -64,7 +63,7 @@ void ControlFlowGraph::findLargestTag()
 		{
 			// Assert that it can be converted.
 			BlockId(item.data());
-			m_lastUsedId = max(unsigned(item.data()), m_lastUsedId);
+			m_lastUsedId = std::max(unsigned(item.data()), m_lastUsedId);
 		}
 }
 
@@ -111,7 +110,7 @@ void ControlFlowGraph::splitBlocks()
 
 void ControlFlowGraph::resolveNextLinks()
 {
-	map<unsigned, BlockId> blockByBeginPos;
+	std::map<unsigned, BlockId> blockByBeginPos;
 	for (auto const& idAndBlock: m_blocks)
 		if (idAndBlock.second.begin != idAndBlock.second.end)
 			blockByBeginPos[idAndBlock.second.begin] = idAndBlock.first;
@@ -138,8 +137,8 @@ void ControlFlowGraph::resolveNextLinks()
 
 void ControlFlowGraph::removeUnusedBlocks()
 {
-	vector<BlockId> blocksToProcess{BlockId::initial()};
-	set<BlockId> neededBlocks{BlockId::initial()};
+	std::vector<BlockId> blocksToProcess{BlockId::initial()};
+	std::set<BlockId> neededBlocks{BlockId::initial()};
 	while (!blocksToProcess.empty())
 	{
 		BasicBlock const& block = m_blocks.at(blocksToProcess.back());
@@ -219,16 +218,16 @@ void ControlFlowGraph::gatherKnowledge()
 {
 	// @todo actually we know that memory is filled with zeros at the beginning,
 	// we could make use of that.
-	KnownStatePointer emptyState = make_shared<KnownState>();
+	KnownStatePointer emptyState = std::make_shared<KnownState>();
 	bool unknownJumpEncountered = false;
 
 	struct WorkQueueItem {
 		BlockId blockId;
 		KnownStatePointer state;
-		set<BlockId> blocksSeen;
+		std::set<BlockId> blocksSeen;
 	};
 
-	vector<WorkQueueItem> workQueue{WorkQueueItem{BlockId::initial(), emptyState->copy(), set<BlockId>()}};
+	std::vector<WorkQueueItem> workQueue{WorkQueueItem{BlockId::initial(), emptyState->copy(), std::set<BlockId>()}};
 	auto addWorkQueueItem = [&](WorkQueueItem const& _currentItem, BlockId _to, KnownStatePointer const& _state)
 	{
 		WorkQueueItem item;
@@ -275,7 +274,7 @@ void ControlFlowGraph::gatherKnowledge()
 			assertThrow(block.begin <= pc && pc == block.end - 1, OptimizerException, "");
 			//@todo in the case of JUMPI, add knowledge about the condition to the state
 			// (for both values of the condition)
-			set<u256> tags = state->tagsInExpression(
+			std::set<u256> tags = state->tagsInExpression(
 				state->stackElement(state->stackHeight(), langutil::SourceLocation{})
 			);
 			state->feedItem(m_items.at(pc++));
@@ -289,7 +288,7 @@ void ControlFlowGraph::gatherKnowledge()
 					unknownJumpEncountered = true;
 					for (auto const& it: m_blocks)
 						if (it.second.begin < it.second.end && m_items[it.second.begin].type() == Tag)
-							workQueue.push_back(WorkQueueItem{it.first, emptyState->copy(), set<BlockId>()});
+							workQueue.push_back(WorkQueueItem{it.first, emptyState->copy(), std::set<BlockId>()});
 				}
 			}
 			else
@@ -321,16 +320,16 @@ void ControlFlowGraph::gatherKnowledge()
 
 BasicBlocks ControlFlowGraph::rebuildCode()
 {
-	map<BlockId, unsigned> pushes;
+	std::map<BlockId, unsigned> pushes;
 	for (auto& idAndBlock: m_blocks)
 		for (BlockId ref: idAndBlock.second.pushedTags)
 			if (m_blocks.count(ref))
 				pushes[ref]++;
 
-	set<BlockId> blocksToAdd;
+	std::set<BlockId> blocksToAdd;
 	for (auto it: m_blocks)
 		blocksToAdd.insert(it.first);
-	set<BlockId> blocksAdded;
+	std::set<BlockId> blocksAdded;
 	BasicBlocks blocks;
 
 	for (

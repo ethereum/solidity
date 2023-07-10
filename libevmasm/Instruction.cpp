@@ -22,7 +22,6 @@
 
 #include <libevmasm/Instruction.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
@@ -335,7 +334,7 @@ InstructionInfo solidity::evmasm::instructionInfo(Instruction _inst, langutil::E
 	}
 	catch (...)
 	{
-		return InstructionInfo({"<INVALID_INSTRUCTION: " + to_string(static_cast<unsigned>(_inst)) + ">", 0, 0, 0, false, Tier::Invalid});
+		return InstructionInfo({"<INVALID_INSTRUCTION: " + std::to_string(static_cast<unsigned>(_inst)) + ">", 0, 0, 0, false, Tier::Invalid});
 	}
 }
 
