@@ -25,11 +25,10 @@
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/AssemblyItem.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
-vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(Instruction _instruction)
+std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(Instruction _instruction)
 {
 	switch (_instruction)
 	{
@@ -111,7 +110,7 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 	case Instruction::DELEGATECALL:
 	{
 		size_t paramCount = static_cast<size_t>(instructionInfo(_instruction, langutil::EVMVersion()).args);
-		vector<Operation> operations{
+		std::vector<Operation> operations{
 			Operation{Location::Memory, Effect::Read, paramCount - 4, paramCount - 3, {}},
 			Operation{Location::Storage, Effect::Read, {}, {}, {}}
 		};
@@ -130,7 +129,7 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 	}
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
-		return vector<Operation>{
+		return std::vector<Operation>{
 			Operation{
 				Location::Memory,
 				Effect::Read,
@@ -143,7 +142,7 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 		};
 	case Instruction::MSIZE:
 		// This is just to satisfy the assert below.
-		return vector<Operation>{};
+		return std::vector<Operation>{};
 	default:
 		assertThrow(storage(_instruction) == None && memory(_instruction) == None, AssemblyException, "");
 	}

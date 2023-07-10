@@ -22,7 +22,6 @@
 #include <libsolutil/CommonIO.h>
 #include <functional>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
@@ -31,7 +30,7 @@ using namespace solidity::evmasm;
 void solidity::evmasm::eachInstruction(
 	bytes const& _mem,
 	langutil::EVMVersion _evmVersion,
-	function<void(Instruction,u256 const&)> const& _onInstruction
+	std::function<void(Instruction,u256 const&)> const& _onInstruction
 )
 {
 	for (auto it = _mem.begin(); it < _mem.end(); ++it)
@@ -58,9 +57,9 @@ void solidity::evmasm::eachInstruction(
 	}
 }
 
-string solidity::evmasm::disassemble(bytes const& _mem, langutil::EVMVersion _evmVersion, string const& _delimiter)
+std::string solidity::evmasm::disassemble(bytes const& _mem, langutil::EVMVersion _evmVersion, std::string const& _delimiter)
 {
-	stringstream ret;
+	std::stringstream ret;
 	eachInstruction(_mem, _evmVersion, [&](Instruction _instr, u256 const& _data) {
 		if (!isValidInstruction(_instr))
 			ret << "0x" << std::uppercase << std::hex << static_cast<int>(_instr) << _delimiter;
