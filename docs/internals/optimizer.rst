@@ -1192,7 +1192,7 @@ This component can only be used on sources with unique names.
 FullInliner
 ^^^^^^^^^^^
 
-The Full Inliner replaces certain calls of certain functions
+The FullInliner replaces certain calls of certain functions
 by the function's body. This is not very helpful in most cases, because
 it just increases the code size but does not have a benefit. Furthermore,
 code is usually very expensive and we would often rather have shorter
@@ -1215,6 +1215,11 @@ a certain parameter is always replaced by a constant. After that,
 we can run the optimizer on this specialized function. If it
 results in heavy gains, the specialized function is kept,
 otherwise the original function is used instead.
+
+FunctionHoister and ExpressionSplitter are recommended as prerequisites since they make the step
+more efficient, but are not required for correctness.
+In particular, function calls with other function calls as arguments are not inlined, but running
+ExpressionSplitter beforehand ensures that there are no such calls in the input.
 
 Cleanup
 -------
