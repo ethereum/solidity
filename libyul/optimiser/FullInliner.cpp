@@ -189,6 +189,12 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (m_noInlineFunctions.count(_funCall.functionName.name) || recursive(*calledFunction))
 		return false;
 
+	// No inlining of calls where argument expressions may have side-effects.
+	// To avoid running into this, make sure that ExpressionSplitter runs before FullInliner.
+	for (auto const& argument: _funCall.arguments)
+		if (!holds_alternative<Literal>(argument) && !holds_alternative<Identifier>(argument))
+			return false;
+
 	// Inline really, really tiny functions
 	size_t size = m_functionSizes.at(calledFunction->name);
 	if (size <= 1)

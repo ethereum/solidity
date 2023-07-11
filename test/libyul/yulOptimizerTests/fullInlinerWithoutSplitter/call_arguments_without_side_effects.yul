@@ -31,13 +31,9 @@
 //         let c_4 := z
 //         let b_5 := y
 //         let a_6 := x
-//         let c_7 := calldataload(333)
-//         let b_8 := sload(222)
-//         let a_9 := mload(111)
+//         empty(mload(111), sload(222), calldataload(333))
 //         let a_1 := 222
-//         let c_10 := mload(333)
-//         let b_11 := a_1
-//         let a_12 := 111
+//         empty(111, a_1, mload(333))
 //     }
 //     function empty(a, b, c)
 //     { }

@@ -30,6 +30,7 @@ Bugfixes:
  * SMTChecker: Fix internal error caused by using external identifier to encode member access to functions that take an internal function as a parameter.
  * Standard JSON Interface: Fix an incomplete AST being returned when analysis is interrupted by certain kinds of fatal errors.
  * Yul Optimizer: Ensure that the assignment of memory slots for variables moved to memory does not depend on AST IDs that may depend on whether additional files are included during compilation.
+ * Yul Optimizer: Fix ``FullInliner`` step not ignoring code that is not in expression-split form.
  * Yul Optimizer: Fix optimized IR being unnecessarily passed through the Yul optimizer again before bytecode generation.
 
 AST Changes:
