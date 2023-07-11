@@ -38,6 +38,8 @@
 #include <libsolutil/Visitor.h>
 
 #include <range/v3/action/remove.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/zip.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -305,8 +307,8 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
-	for (size_t i = 0; i < _funCall.arguments.size(); ++i)
-		newVariable(function->parameters[i], &_funCall.arguments[i]);
+	for (auto&& [parameter, argument]: ranges::views::zip(function->parameters, _funCall.arguments) | ranges::views::reverse)
+		newVariable(parameter, &argument);
 	for (auto const& var: function->returnVariables)
 		newVariable(var, nullptr);
 

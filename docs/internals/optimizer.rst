@@ -570,7 +570,7 @@ It is not applied to loop iteration-condition, because the loop control flow doe
 this "outlining" of the inner expressions in all cases. We can sidestep this limitation by applying
 :ref:`for-loop-condition-into-body` to move the iteration condition into loop body.
 
-The final program should be in a form such that (with the exception of loop conditions)
+The final program should be in an *expression-split form*, where (with the exception of loop conditions)
 function calls cannot appear nested inside expressions
 and all function call arguments have to be variables.
 

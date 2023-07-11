@@ -58,8 +58,8 @@ class NameCollector;
  *
  * function f(a, b) -> c { ... }
  *
- * let f_a := x
  * let f_b := y
+ * let f_a := x
  * let f_c
  * code of f, with replacements: a -> f_a, b -> f_b, c -> f_c
  * let z := f_c

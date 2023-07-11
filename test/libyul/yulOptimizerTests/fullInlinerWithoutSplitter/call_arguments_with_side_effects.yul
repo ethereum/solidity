@@ -11,12 +11,12 @@
 //
 // {
 //     {
-//         let ret_1_3 := 0
-//         return(0, 0)
-//         let a_1 := ret_1_3
-//         let ret_4 := 0
+//         let ret_3 := 0
 //         revert(0, 0)
-//         let b_2 := ret_4
+//         let b_1 := ret_3
+//         let ret_1_4 := 0
+//         return(0, 0)
+//         let a_2 := ret_1_4
 //     }
 //     function fun_revert() -> ret
 //     { revert(0, 0) }
