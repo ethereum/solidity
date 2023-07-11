@@ -22,7 +22,6 @@
 #include <libsolutil/CommonIO.h>
 #include <functional>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
@@ -30,7 +29,8 @@ using namespace solidity::evmasm;
 
 void solidity::evmasm::eachInstruction(
 	bytes const& _mem,
-	function<void(Instruction,u256 const&)> const& _onInstruction
+	langutil::EVMVersion _evmVersion,
+	std::function<void(Instruction,u256 const&)> const& _onInstruction
 )
 {
 	for (auto it = _mem.begin(); it < _mem.end(); ++it)
@@ -38,7 +38,7 @@ void solidity::evmasm::eachInstruction(
 		Instruction const instr{*it};
 		int additional = 0;
 		if (isValidInstruction(instr))
-			additional = instructionInfo(instr).additional;
+			additional = instructionInfo(instr, _evmVersion).additional;
 
 		u256 data{};
 
@@ -57,15 +57,15 @@ void solidity::evmasm::eachInstruction(
 	}
 }
 
-string solidity::evmasm::disassemble(bytes const& _mem, string const& _delimiter)
+std::string solidity::evmasm::disassemble(bytes const& _mem, langutil::EVMVersion _evmVersion, std::string const& _delimiter)
 {
-	stringstream ret;
-	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
+	std::stringstream ret;
+	eachInstruction(_mem, _evmVersion, [&](Instruction _instr, u256 const& _data) {
 		if (!isValidInstruction(_instr))
 			ret << "0x" << std::uppercase << std::hex << static_cast<int>(_instr) << _delimiter;
 		else
 		{
-			InstructionInfo info = instructionInfo(_instr);
+			InstructionInfo info = instructionInfo(_instr, _evmVersion);
 			ret << info.name;
 			if (info.additional)
 				ret << " 0x" << std::uppercase << std::hex << _data;

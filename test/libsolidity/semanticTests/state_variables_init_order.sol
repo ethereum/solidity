@@ -8,7 +8,5 @@ contract A {
 }
 contract B is A {
 }
-// ====
-// compileToEwasm: also
 // ----
 // x() -> 1

@@ -8,6 +8,5 @@ contract c {
         return keccak256(data) == keccak256("foo");
     }
 }
-
 // ----
 // foo() -> true

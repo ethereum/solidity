@@ -17,8 +17,6 @@ contract C {
         return memorySizeAfter - memorySizeBefore;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // withValue() -> 0x00
 // withoutValue() -> 0x60

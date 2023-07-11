@@ -10,7 +10,5 @@ contract C {
         return 0;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(bytes2,uint16): "abc", 0x40102 -> FAILURE # We input longer data on purpose. #

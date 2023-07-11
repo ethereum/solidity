@@ -11,4 +11,8 @@ contract C {
 		assert(g == 0x0001020304050607080900010203040506070809000102030405060708090001); // should hold
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
+// Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

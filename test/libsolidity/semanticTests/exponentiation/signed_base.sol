@@ -10,7 +10,5 @@ contract test {
         return (x**y1, x**y2);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 9, -27

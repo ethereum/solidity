@@ -21,9 +21,9 @@ contract D is B, C {
 }
 // ----
 // constructor(): 2, 0 ->
-// gas irOptimized: 154331
-// gas legacy: 170115
-// gas legacyOptimized: 145429
+// gas irOptimized: 153694
+// gas legacy: 168623
+// gas legacyOptimized: 144577
 // i() -> 2
 // j() -> 2
 // k() -> 1

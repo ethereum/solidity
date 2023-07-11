@@ -1,5 +1,10 @@
 ---
 name: Documentation Issue
+about: Corrections, improvements or requests for new content on Solidity's documentation.
+title: ''
+labels: 'documentation :book:'
+assignees: ''
+
 ---
 
 ## Page

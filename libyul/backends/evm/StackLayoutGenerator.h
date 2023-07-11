@@ -66,7 +66,7 @@ public:
 	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulString _functionName);
 
 private:
-	StackLayoutGenerator(StackLayout& _context);
+	StackLayoutGenerator(StackLayout& _context, CFG::FunctionInfo const* _functionInfo);
 
 	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
 	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
@@ -115,6 +115,7 @@ private:
 	void fillInJunk(CFG::BasicBlock const& _block, CFG::FunctionInfo const* _functionInfo = nullptr);
 
 	StackLayout& m_layout;
+	CFG::FunctionInfo const* m_currentFunctionInfo = nullptr;
 };
 
 }

@@ -20,7 +20,6 @@ contract test {
 
     ActionChoices choice;
 }
-
 // ====
 // EVMVersion: <byzantium
 // ----

@@ -22,6 +22,5 @@ contract C {
         require(dst.y[1] == 11);
     }
 }
-
 // ----
 // test()

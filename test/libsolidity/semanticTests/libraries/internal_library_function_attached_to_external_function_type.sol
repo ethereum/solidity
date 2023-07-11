@@ -16,6 +16,5 @@ contract C {
         return this.identity.double(value);
     }
 }
-
 // ----
 // test(uint256): 5 -> 10

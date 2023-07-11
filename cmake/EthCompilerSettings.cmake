@@ -28,7 +28,7 @@ if(PEDANTIC)
 endif()
 
 # Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
-eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity")
+eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${PROJECT_SOURCE_DIR}=/solidity")
 
 # -Wpessimizing-move warns when a call to std::move would prevent copy elision
 # if the argument was not wrapped in a call.  This happens when moving a local
@@ -65,6 +65,13 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		if(WEXTRA_SEMI)
 			add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>)
 		endif()
+		# See https://gcc.gnu.org/git/gitweb.cgi?p=gcc.git;h=6b927b1297e66e26e62e722bf15c921dcbbd25b9
+		check_cxx_compiler_flag(-Wno-dangling-reference WNO_DANGLING_REFERENCE)
+		if (WNO_DANGLING_REFERENCE)
+            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-dangling-reference>)
+		endif()
+
+
 		eth_add_cxx_compiler_flag_if_supported(-Wfinal-dtor-non-final-class)
 		eth_add_cxx_compiler_flag_if_supported(-Wnewline-eof)
 		eth_add_cxx_compiler_flag_if_supported(-Wsuggest-destructor-override)

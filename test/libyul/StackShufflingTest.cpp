@@ -14,41 +14,166 @@
     You should have received a copy of the GNU General Public License
     along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * Unit tests for stack shuffling.
- */
+
+#include <test/libyul/StackShufflingTest.h>
+
+#include <liblangutil/Scanner.h>
+#include <libsolutil/AnsiColorized.h>
 #include <libyul/backends/evm/StackHelpers.h>
-#include <boost/test/unit_test.hpp>
 
-using namespace std;
+using namespace solidity::util;
 using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test;
+using namespace std;
 
-namespace solidity::yul::test
+bool StackShufflingTest::parse(string const& _source)
 {
+	CharStream stream(_source, "");
+	Scanner scanner(stream);
 
-BOOST_AUTO_TEST_SUITE(YulStackShuffling)
-
-BOOST_AUTO_TEST_CASE(swap_cycle)
-{
-	std::vector<Scope::Variable> scopeVariables;
-	Scope::Function function;
-	std::vector<VariableSlot> v;
-	for (size_t i = 0; i < 17; ++i)
-		scopeVariables.emplace_back(Scope::Variable{""_yulstring, YulString{"v" + to_string(i)}});
-	for (size_t i = 0; i < 17; ++i)
-		v.emplace_back(VariableSlot{scopeVariables[i]});
-
-	Stack sourceStack{
-		v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[9], v[10], v[11], v[12], v[13], v[14], v[15], v[16],
-		FunctionReturnLabelSlot{function}, FunctionReturnLabelSlot{function}, v[5]};
-	Stack targetStack{
-		v[1], v[0], v[2], v[3], v[4], v[5], v[6], v[7], v[9], v[10], v[11], v[12], v[13], v[14], v[15], v[16],
-		FunctionReturnLabelSlot{function}, JunkSlot{}, JunkSlot{}
+	auto expectToken = [&](Token _token)
+	{
+		soltestAssert(
+			scanner.next() == _token,
+			"Invalid token. Expected: \"" + TokenTraits::friendlyName(_token) + "\"."
+        );
 	};
-	// Used to hit a swapping cycle.
-	createStackLayout(sourceStack, targetStack, [](auto){}, [](auto){}, [](){});
+
+	auto parseStack = [&](Stack& stack) -> bool
+	{
+		if (scanner.currentToken() != Token::LBrack)
+			return false;
+		scanner.next();
+		while (scanner.currentToken() != Token::RBrack &&
+			   scanner.currentToken() != Token::EOS)
+		{
+			string literal = scanner.currentLiteral();
+			if (literal == "RET")
+			{
+				scanner.next();
+				if (scanner.currentToken() == Token::LBrack)
+				{
+					scanner.next();
+					string functionName = scanner.currentLiteral();
+					auto call = yul::FunctionCall{
+						{},	yul::Identifier{{}, YulString(functionName)}, {}
+					};
+					stack.emplace_back(FunctionCallReturnLabelSlot{
+							m_functions.insert(
+								make_pair(functionName, call)
+							).first->second
+					});
+					expectToken(Token::RBrack);
+				}
+				else
+				{
+					static Scope::Function function;
+					stack.emplace_back(FunctionReturnLabelSlot{function});
+					continue;
+				}
+			}
+			else if (literal == "TMP")
+			{
+				expectToken(Token::LBrack);
+				scanner.next();
+				string functionName = scanner.currentLiteral();
+				auto call = yul::FunctionCall{
+				    {},	yul::Identifier{{}, YulString(functionName)}, {}
+			    };
+				expectToken(Token::Comma);
+				scanner.next();
+				size_t index = size_t(atoi(scanner.currentLiteral().c_str()));
+				stack.emplace_back(TemporarySlot{
+						m_functions.insert(make_pair(functionName, call)).first->second,
+						index
+				});
+				expectToken(Token::RBrack);
+			}
+			else if (literal.find("0x") != string::npos || scanner.currentToken() == Token::Number)
+			{
+				stack.emplace_back(LiteralSlot{u256(literal)});
+			}
+			else if (literal == "JUNK")
+			{
+				stack.emplace_back(JunkSlot());
+			}
+			else if (literal == "GHOST")
+			{
+				expectToken(Token::LBrack);
+				scanner.next(); // read number of ghost variables as ghostVariableId
+				string ghostVariableId = scanner.currentLiteral();
+				Scope::Variable ghostVar = Scope::Variable{""_yulstring, YulString(literal + "[" + ghostVariableId + "]")};
+				stack.emplace_back(VariableSlot{
+						m_variables.insert(make_pair(ghostVar.name, ghostVar)).first->second
+				});
+				expectToken(Token::RBrack);
+			}
+			else
+			{
+				Scope::Variable var = Scope::Variable{""_yulstring, YulString(literal)};
+				stack.emplace_back(VariableSlot{
+						m_variables.insert(
+							make_pair(literal, var)
+						).first->second
+				});
+			}
+			scanner.next();
+		}
+		return scanner.currentToken() == Token::RBrack;
+	};
+
+	if (!parseStack(m_sourceStack))
+		return false;
+	scanner.next();
+	return parseStack(m_targetStack);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+StackShufflingTest::StackShufflingTest(string const& _filename):
+	TestCase(_filename)
+{
+	m_source = m_reader.source();
+	m_expectation = m_reader.simpleExpectations();
+}
 
+TestCase::TestResult StackShufflingTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+{
+	if (!parse(m_source))
+	{
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		return TestResult::FatalError;
+	}
+
+	ostringstream output;
+	createStackLayout(
+		m_sourceStack,
+		m_targetStack,
+		[&](unsigned _swapDepth) // swap
+		{
+			output << stackToString(m_sourceStack) << endl;
+			output << "SWAP" << _swapDepth << endl;
+		},
+		[&](StackSlot const& _slot) // dupOrPush
+		{
+			output << stackToString(m_sourceStack) << endl;
+			if (canBeFreelyGenerated(_slot))
+				output << "PUSH " << stackSlotToString(_slot) << endl;
+			else
+			{
+				if (auto depth = util::findOffset(m_sourceStack | ranges::views::reverse, _slot))
+					output << "DUP" << *depth + 1 << endl;
+				else
+					BOOST_THROW_EXCEPTION(runtime_error("Invalid DUP operation."));
+			}
+		},
+		[&](){ // pop
+			output << stackToString(m_sourceStack) << endl;
+			output << "POP" << endl;
+		}
+    );
+
+	output << stackToString(m_sourceStack) << endl;
+	m_obtainedResult = output.str();
+
+	return checkResult(_stream, _linePrefix, _formatted);
 }

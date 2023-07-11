@@ -23,3 +23,5 @@ contract C {
         assert(T.unwrap(C.b)); // should hold
     }
 }
+// ----
+// Info 1391: CHC: 7 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

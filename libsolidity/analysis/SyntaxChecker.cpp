@@ -332,9 +332,7 @@ bool SyntaxChecker::visit(Literal const& _literal)
 
 bool SyntaxChecker::visit(UnaryOperation const& _operation)
 {
-	if (_operation.getOperator() == Token::Add)
-		m_errorReporter.syntaxError(9636_error, _operation.location(), "Use of unary + is disallowed.");
-
+	solAssert(_operation.getOperator() != Token::Add);
 	return true;
 }
 
@@ -411,6 +409,12 @@ void SyntaxChecker::endVisit(ContractDefinition const&)
 
 bool SyntaxChecker::visit(UsingForDirective const& _usingFor)
 {
+	if (!_usingFor.usesBraces())
+		solAssert(
+			_usingFor.functionsAndOperators().size() == 1 &&
+			!get<1>(_usingFor.functionsAndOperators().front())
+		);
+
 	if (!m_currentContractKind && !_usingFor.typeName())
 		m_errorReporter.syntaxError(
 			8118_error,

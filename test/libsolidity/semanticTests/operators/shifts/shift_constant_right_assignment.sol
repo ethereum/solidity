@@ -4,8 +4,5 @@ contract C {
         a >>= 8;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0x42

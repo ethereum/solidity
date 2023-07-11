@@ -15,7 +15,7 @@ Using the Commandline Compiler
 Basic Usage
 -----------
 
-One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
+One of the build targets of the Solidity repository is ``solc``, the Solidity commandline compiler.
 Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
 If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast-compact-json --asm sourceFile.sol``.
 
@@ -54,7 +54,7 @@ or ../ <direct-imports>` are treated as relative to the directories specified us
 Furthermore, the part of the path added via these options will not appear in the contract metadata.
 
 For security reasons the compiler has :ref:`restrictions on what directories it can access <allowed-paths>`.
-Directories of source files specified on the command line and target paths of
+Directories of source files specified on the command-line and target paths of
 remappings are automatically allowed to be accessed by the file reader, but everything
 else is rejected by default.
 Additional paths (and their subdirectories) can be allowed via the
@@ -114,15 +114,15 @@ Setting the EVM Version to Target
 *********************************
 
 When you compile your contract code you can specify the Ethereum virtual machine
-version to compile for to avoid particular features or behaviours.
+version to compile for to avoid particular features or behaviors.
 
 .. warning::
 
    Compiling for the wrong EVM version can result in wrong, strange and failing
-   behaviour. Please ensure, especially if running a private chain, that you
+   behavior. Please ensure, especially if running a private chain, that you
    use matching EVM versions.
 
-On the command line, you can select the EVM version as follows:
+On the command-line, you can select the EVM version as follows:
 
 .. code-block:: shell
 
@@ -160,7 +160,7 @@ at each version. Backward compatibility is not guaranteed between each version.
    - It is possible to access dynamic data returned from function calls.
    - ``revert`` opcode introduced, which means that ``revert()`` will not waste gas.
 - ``constantinople``
-   - Opcodes ``create2`, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
+   - Opcodes ``create2``, ``extcodehash``, ``shl``, ``shr`` and ``sar`` are available in assembly.
    - Shifting operators use shifting opcodes and thus need less gas.
 - ``petersburg``
    - The compiler behaves the same way as with constantinople.
@@ -170,10 +170,12 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
      compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
      the optimizer.
-- ``london`` (**default**)
+- ``london``
    - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
 - ``paris``
-   - No changes, however the semantics of the ``difficulty`` value have changed (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
+   - Introduces ``prevrandao()`` and ``block.prevrandao``, and changes the semantics of the now deprecated ``block.difficulty``, disallowing ``difficulty()`` in inline assembly (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
+- ``shanghai`` (**default**)
+  - Smaller code size and gas savings due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
@@ -201,7 +203,7 @@ Input Description
 .. code-block:: javascript
 
     {
-      // Required: Source code language. Currently supported are "Solidity" and "Yul".
+      // Required: Source code language. Currently supported are "Solidity", "Yul" and "SolidityAST" (experimental).
       "language": "Solidity",
       // Required
       "sources":
@@ -225,9 +227,17 @@ Input Description
             "bzzr://56ab...",
             "ipfs://Qma...",
             "/tmp/path/to/file.sol"
-            // If files are used, their directories should be added to the command line via
+            // If files are used, their directories should be added to the command-line via
             // `--allow-paths <path>`.
           ]
+          // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key.
+          // Note that importing ASTs is experimental and in particular that:
+          // - importing invalid ASTs can produce undefined results and
+          // - no proper error reporting is available on invalid ASTs.
+          // Furthermore, note that the AST import only consumes the fields of the AST as
+          // produced by the compiler in "stopAfter": "parsing" mode and then re-performs
+          // analysis, so any analysis-based annotations of the AST are ignored upon import.
+          "ast": { ... } // formatted as the json ast requested with the ``ast`` output selection.
         },
         "destructible":
         {
@@ -262,9 +272,9 @@ Input Description
             // The peephole optimizer is always on if no details are given,
             // use details to switch it off.
             "peephole": true,
-            // The inliner is always on if no details are given,
-            // use details to switch it off.
-            "inliner": true,
+            // The inliner is always off if no details are given,
+            // use details to switch it on.
+            "inliner": false,
             // The unused jumpdest remover is always on if no details are given,
             // use details to switch it off.
             "jumpdestRemover": true,
@@ -294,7 +304,7 @@ Input Description
               // optimization-sequence:clean-up-sequence. For more information see
               // "The Optimizer > Selecting Optimizations".
               // This field is optional, and if not provided, the default sequences for both
-              // optimization and clean-up are used. If only one of the options is provivded
+              // optimization and clean-up are used. If only one of the sequences is provided
               // the other will not be run.
               // If only the delimiter ":" is provided then neither the optimization nor the clean-up
               // sequence will be run.
@@ -380,7 +390,9 @@ Input Description
         //   userdoc - User documentation (natspec)
         //   metadata - Metadata
         //   ir - Yul intermediate representation of the code before optimization
+        //   irAst - AST of Yul intermediate representation of the code before optimization
         //   irOptimized - Intermediate representation after optimization
+        //   irOptimizedAst - AST of intermediate representation after optimization
         //   storageLayout - Slots, offsets and types of the contract's state variables.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
@@ -394,10 +406,8 @@ Input Description
         //   evm.deployedBytecode.immutableReferences - Map from AST ids to bytecode ranges that reference immutables
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   ewasm.wast - Ewasm in WebAssembly S-expressions format
-        //   ewasm.wasm - Ewasm in WebAssembly binary format
         //
-        // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
+        // Note that using a using `evm`, `evm.bytecode`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
         //
         "outputSelection": {
@@ -433,10 +443,18 @@ Input Description
           "divModNoSlacks": false,
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
+          // Choose whether external calls should be considered trusted in case the
+          // code of the called function is available at compile-time.
+          // For details see the SMTChecker section.
+          "extCalls": "trusted",
           // Choose which types of invariants should be reported to the user: contract, reentrancy.
           "invariants": ["contract", "reentrancy"],
+          // Choose whether to output all proved targets. The default is `false`.
+          "showProved": true,
           // Choose whether to output all unproved targets. The default is `false`.
           "showUnproved": true,
+          // Choose whether to output all unsupported language features. The default is `false`.
+          "showUnsupported": true,
           // Choose which solvers should be used, if available.
           // See the Formal Verification section for the solvers description.
           "solvers": ["cvc4", "smtlib2", "z3"],
@@ -483,7 +501,7 @@ Output Description
           // Mandatory: Error type, such as "TypeError", "InternalCompilerError", "Exception", etc.
           // See below for complete list of types.
           "type": "TypeError",
-          // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
+          // Mandatory: Component where the error originated, such as "general" etc.
           "component": "general",
           // Mandatory ("error", "warning" or "info", but please note that this may be extended in the future)
           "severity": "error",
@@ -520,8 +538,14 @@ Output Description
             "userdoc": {},
             // Developer documentation (natspec)
             "devdoc": {},
-            // Intermediate representation (string)
+            // Intermediate representation before optimization (string)
             "ir": "",
+            // AST of intermediate representation before optimization
+            "irAst":  {/* ... */},
+            // Intermediate representation after optimization (string)
+            "irOptimized": "",
+            // AST of intermediate representation after optimization
+            "irOptimizedAst": {/* ... */},
             // See the Storage Layout documentation.
             "storageLayout": {"storage": [/* ... */], "types": {/* ... */} },
             // EVM-related outputs
@@ -599,13 +623,6 @@ Output Description
                   "heavyLifting()": "infinite"
                 }
               }
-            },
-            // Ewasm related outputs
-            "ewasm": {
-              // S-expressions format
-              "wast": "",
-              // Binary format (hex string)
-              "wasm": ""
             }
           }
         }
@@ -628,231 +645,6 @@ Error Types
 10. ``Exception``: Unknown failure during compilation - this should be reported as an issue.
 11. ``CompilerError``: Invalid use of the compiler stack - this should be reported as an issue.
 12. ``FatalError``: Fatal error not processed correctly - this should be reported as an issue.
-13. ``YulException``: Error during Yul Code generation - this should be reported as an issue.
+13. ``YulException``: Error during Yul code generation - this should be reported as an issue.
 14. ``Warning``: A warning, which didn't stop the compilation, but should be addressed if possible.
 15. ``Info``: Information that the compiler thinks the user might find useful, but is not dangerous and does not necessarily need to be addressed.
-
-
-.. _compiler-tools:
-
-Compiler Tools
-**************
-
-solidity-upgrade
-----------------
-
-``solidity-upgrade`` can help you to semi-automatically upgrade your contracts
-to breaking language changes. While it does not and cannot implement all
-required changes for every breaking release, it still supports the ones, that
-would need plenty of repetitive manual adjustments otherwise.
-
-.. note::
-
-    ``solidity-upgrade`` carries out a large part of the work, but your
-    contracts will most likely need further manual adjustments. We recommend
-    using a version control system for your files. This helps reviewing and
-    eventually rolling back the changes made.
-
-.. warning::
-
-    ``solidity-upgrade`` is not considered to be complete or free from bugs, so
-    please use with care.
-
-How it Works
-~~~~~~~~~~~~
-
-You can pass (a) Solidity source file(s) to ``solidity-upgrade [files]``. If
-these make use of ``import`` statement which refer to files outside the
-current source file's directory, you need to specify directories that
-are allowed to read and import files from, by passing
-``--allow-paths [directory]``. You can ignore missing files by passing
-``--ignore-missing``.
-
-``solidity-upgrade`` is based on ``libsolidity`` and can parse, compile and
-analyse your source files, and might find applicable source upgrades in them.
-
-Source upgrades are considered to be small textual changes to your source code.
-They are applied to an in-memory representation of the source files
-given. The corresponding source file is updated by default, but you can pass
-``--dry-run`` to simulate to whole upgrade process without writing to any file.
-
-The upgrade process itself has two phases. In the first phase source files are
-parsed, and since it is not possible to upgrade source code on that level,
-errors are collected and can be logged by passing ``--verbose``. No source
-upgrades available at this point.
-
-In the second phase, all sources are compiled and all activated upgrade analysis
-modules are run alongside compilation. By default, all available modules are
-activated. Please read the documentation on
-:ref:`available modules <upgrade-modules>` for further details.
-
-
-This can result in compilation errors that may
-be fixed by source upgrades. If no errors occur, no source upgrades are being
-reported and you're done.
-If errors occur and some upgrade module reported a source upgrade, the first
-reported one gets applied and compilation is triggered again for all given
-source files. The previous step is repeated as long as source upgrades are
-reported. If errors still occur, you can log them by passing ``--verbose``.
-If no errors occur, your contracts are up to date and can be compiled with
-the latest version of the compiler.
-
-.. _upgrade-modules:
-
-Available Upgrade Modules
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+----------------------------+---------+--------------------------------------------------+
-| Module                     | Version | Description                                      |
-+============================+=========+==================================================+
-| ``constructor``            | 0.5.0   | Constructors must now be defined using the       |
-|                            |         | ``constructor`` keyword.                         |
-+----------------------------+---------+--------------------------------------------------+
-| ``visibility``             | 0.5.0   | Explicit function visibility is now mandatory,   |
-|                            |         | defaults to ``public``.                          |
-+----------------------------+---------+--------------------------------------------------+
-| ``abstract``               | 0.6.0   | The keyword ``abstract`` has to be used if a     |
-|                            |         | contract does not implement all its functions.   |
-+----------------------------+---------+--------------------------------------------------+
-| ``virtual``                | 0.6.0   | Functions without implementation outside an      |
-|                            |         | interface have to be marked ``virtual``.         |
-+----------------------------+---------+--------------------------------------------------+
-| ``override``               | 0.6.0   | When overriding a function or modifier, the new  |
-|                            |         | keyword ``override`` must be used.               |
-+----------------------------+---------+--------------------------------------------------+
-| ``dotsyntax``              | 0.7.0   | The following syntax is deprecated:              |
-|                            |         | ``f.gas(...)()``, ``f.value(...)()`` and         |
-|                            |         | ``(new C).value(...)()``. Replace these calls by |
-|                            |         | ``f{gas: ..., value: ...}()`` and                |
-|                            |         | ``(new C){value: ...}()``.                       |
-+----------------------------+---------+--------------------------------------------------+
-| ``now``                    | 0.7.0   | The ``now`` keyword is deprecated. Use           |
-|                            |         | ``block.timestamp`` instead.                     |
-+----------------------------+---------+--------------------------------------------------+
-| ``constructor-visibility`` | 0.7.0   | Removes visibility of constructors.              |
-|                            |         |                                                  |
-+----------------------------+---------+--------------------------------------------------+
-
-Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
-:doc:`0.6.0 release notes <060-breaking-changes>`,
-:doc:`0.7.0 release notes <070-breaking-changes>` and :doc:`0.8.0 release notes <080-breaking-changes>` for further details.
-
-Synopsis
-~~~~~~~~
-
-.. code-block:: none
-
-    Usage: solidity-upgrade [options] contract.sol
-
-    Allowed options:
-        --help               Show help message and exit.
-        --version            Show version and exit.
-        --allow-paths path(s)
-                             Allow a given path for imports. A list of paths can be
-                             supplied by separating them with a comma.
-        --ignore-missing     Ignore missing files.
-        --modules module(s)  Only activate a specific upgrade module. A list of
-                             modules can be supplied by separating them with a comma.
-        --dry-run            Apply changes in-memory only and don't write to input
-                             file.
-        --verbose            Print logs, errors and changes. Shortens output of
-                             upgrade patches.
-        --unsafe             Accept *unsafe* changes.
-
-
-
-Bug Reports / Feature Requests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you found a bug or if you have a feature request, please
-`file an issue <https://github.com/ethereum/solidity/issues/new/choose>`_ on Github.
-
-
-Example
-~~~~~~~
-
-Assume that you have the following contract in ``Source.sol``:
-
-.. code-block:: Solidity
-
-    pragma solidity >=0.6.0 <0.6.4;
-    // This will not compile after 0.7.0
-    // SPDX-License-Identifier: GPL-3.0
-    contract C {
-        // FIXME: remove constructor visibility and make the contract abstract
-        constructor() internal {}
-    }
-
-    contract D {
-        uint time;
-
-        function f() public payable {
-            // FIXME: change now to block.timestamp
-            time = now;
-        }
-    }
-
-    contract E {
-        D d;
-
-        // FIXME: remove constructor visibility
-        constructor() public {}
-
-        function g() public {
-            // FIXME: change .value(5) =>  {value: 5}
-            d.f.value(5)();
-        }
-    }
-
-
-
-Required Changes
-^^^^^^^^^^^^^^^^
-
-The above contract will not compile starting from 0.7.0. To bring the contract up to date with the
-current Solidity version, the following upgrade modules have to be executed:
-``constructor-visibility``, ``now`` and ``dotsyntax``. Please read the documentation on
-:ref:`available modules <upgrade-modules>` for further details.
-
-
-Running the Upgrade
-^^^^^^^^^^^^^^^^^^^
-
-It is recommended to explicitly specify the upgrade modules by using ``--modules`` argument.
-
-.. code-block:: bash
-
-    solidity-upgrade --modules constructor-visibility,now,dotsyntax Source.sol
-
-The command above applies all changes as shown below. Please review them carefully (the pragmas will
-have to be updated manually.)
-
-.. code-block:: Solidity
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
-    abstract contract C {
-        // FIXME: remove constructor visibility and make the contract abstract
-        constructor() {}
-    }
-
-    contract D {
-        uint time;
-
-        function f() public payable {
-            // FIXME: change now to block.timestamp
-            time = block.timestamp;
-        }
-    }
-
-    contract E {
-        D d;
-
-        // FIXME: remove constructor visibility
-        constructor() {}
-
-        function g() public {
-            // FIXME: change .value(5) =>  {value: 5}
-            d.f{value: 5}();
-        }
-    }

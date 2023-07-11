@@ -102,7 +102,7 @@ The following points are all covered by the coding style but come up so often th
     already used elsewhere in the same expression.
 - [ ] **Indent braces and parentheses in a way that makes nesting clear.**
 - [ ] **Use `using namespace` only in `.cpp` files.** Use it for `std` and our own modules.
-    Avoid unnecessary `std::` prefix in `.cpp` files (except for `std::move`).
+    Avoid unnecessary `std::` prefix in `.cpp` files (except for `std::move` and `std::forward`).
 - [ ] **Use range-based loops and destructuring.**
 - [ ] **Include any headers you use directly,** even if they are implicitly included through other headers.
 

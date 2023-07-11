@@ -6,11 +6,11 @@ contract Small {
 }
 // ----
 // creation:
-//   codeDepositCost: 108800
-//   executionCost: 153
-//   totalCost: 108953
+//   codeDepositCost: 103800
+//   executionCost: 151
+//   totalCost: 103951
 // external:
-//   fallback: 129
-//   a(): 2407
+//   fallback: 128
+//   a(): 2402
 //   b(uint256): infinite
 //   f1(uint256): infinite

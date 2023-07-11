@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "settings.modelChecker.showUnsupported must be a Boolean value.",
+            "message": "settings.modelChecker.showUnsupported must be a Boolean value.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

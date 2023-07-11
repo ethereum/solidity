@@ -17,7 +17,5 @@ contract C {
         x = a + b + c;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 70

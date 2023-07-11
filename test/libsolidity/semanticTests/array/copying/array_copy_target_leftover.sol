@@ -15,10 +15,8 @@ contract c {
             res2 |= uint(uint16(data2[16 + i])) * 0x10000**i;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 0xffffffff, 0x0000000000000000000000000a00090008000700060005000400030002000100, 0x0000000000000000000000000000000000000000000000000000000000000000
-// gas irOptimized: 104740
-// gas legacy: 167514
-// gas legacyOptimized: 145759
+// gas irOptimized: 104665
+// gas legacy: 166874
+// gas legacyOptimized: 145474

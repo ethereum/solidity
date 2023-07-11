@@ -30,7 +30,6 @@ library MerkleProof {
         return computedHash == root;
     }
 }
-
 // ====
 // SMTEngine: all
 // ----

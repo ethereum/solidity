@@ -58,6 +58,13 @@ optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, Yul
 	return nullopt;
 }
 
+langutil::EVMVersion const yul::evmVersionFromDialect(Dialect const& _dialect)
+{
+	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
+		return dialect->evmVersion();
+	return langutil::EVMVersion();
+}
+
 void StatementRemover::operator()(Block& _block)
 {
 	util::iterateReplacing(

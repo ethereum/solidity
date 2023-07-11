@@ -76,7 +76,7 @@ public:
 		boost::replace_all(filter, "/", "\\/");
 		boost::replace_all(filter, "*", ".*");
 
-		m_filterExpression = regex{"(" + filter + "(\\.sol|\\.yul))"};
+		m_filterExpression = regex{"(" + filter + "(\\.sol|\\.yul|\\.stack))"};
 	}
 
 	bool matches(fs::path const& _path, string const& _name) const
@@ -161,7 +161,6 @@ TestTool::Result TestTool::process()
 				m_options.evmVersion(),
 				m_options.eofVersion(),
 				m_options.vmPaths,
-				m_options.enforceCompileToEwasm,
 				m_options.enforceGasTest,
 				m_options.enforceGasTestMinValue
 			});

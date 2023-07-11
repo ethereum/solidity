@@ -9,6 +9,5 @@ contract C {
 		return (L.f)();
 	}
 }
-
 // ----
 // foo() -> 3

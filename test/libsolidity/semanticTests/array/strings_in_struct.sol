@@ -28,8 +28,6 @@ contract buggystruct {
         return bug.last;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // getFirst() -> 0x0a
 // getSecond() -> 0x14

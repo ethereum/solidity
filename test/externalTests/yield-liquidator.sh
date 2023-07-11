@@ -22,7 +22,7 @@
 set -e
 
 source scripts/common.sh
-source test/externalTests/common.sh
+source scripts/externalTests/common.sh
 
 REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
@@ -45,8 +45,8 @@ function yield_liquidator_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_roles_168_mpos is 2 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var__33 is 6 slot(s) too deep inside the stack."
+        ir-no-optimize
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -66,9 +66,10 @@ function yield_liquidator_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     npm install
 
-    # 2.11.0 Hardhat release breaks contract compilation.
-    # TODO: remove when https://github.com/yieldprotocol/yield-liquidator-v2/issues/34 is addressed.
-    npm install hardhat@2.10.2
+    # The contract below is not used in any test and it depends on ISwapRouter which does not exists
+    # in the main repository.
+    # See: https://github.com/yieldprotocol/yield-liquidator-v2/blob/9a49d9a0e9398f6a6c07bad531e77d1001a1166f/src/swap_router.rs#L94
+    rm --force contracts/.YvBasicFlashLiquidator.sol
 
     replace_version_pragmas
     neutralize_packaged_contracts

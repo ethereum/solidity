@@ -36,4 +36,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (495-532): CHC: Assertion violation happens here.
-// Info 1180: Reentrancy property(ies) for :C:\n(((owner + ((- 1) * owner')) >= 0) && !(<errorCode> = 1) && ((owner + ((- 1) * owner')) <= 0))\n<errorCode> = 0 -> no errors\n<errorCode> = 1 -> Assertion failed at assert(prevOwner == owner)\n<errorCode> = 3 -> Assertion failed at assert(owner == address(0) || y != z)\n
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

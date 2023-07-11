@@ -485,6 +485,411 @@ BOOST_AUTO_TEST_CASE(event)
 	checkNatspec(sourceCode, "ERC20", userDoc, true);
 }
 
+BOOST_AUTO_TEST_CASE(emit_same_signature_event_library_contract)
+{
+	char const* sourceCode = R"(
+		library L {
+		    /// @notice This event is defined in Library L
+		    /// @dev This should not appear in Contract C dev doc
+		    event SameSignatureEvent(uint16);
+		    /// @notice This event is defined in Library L
+		    /// @dev This should appear in Contract C dev doc
+		    event LibraryEvent(uint32);
+		}
+		contract C {
+		    /// @notice This event is defined in Contract C
+			/// @dev This should appear in Contract C dev doc
+		    event SameSignatureEvent(uint16);
+		    /// @notice This event is defined in Contract C
+			/// @dev This should appear in contract C dev doc
+		    event ContractEvent(uint32);
+		    function f() public {
+		        emit L.SameSignatureEvent(0);
+		        emit SameSignatureEvent(1);
+		        emit L.LibraryEvent(2);
+		        emit ContractEvent(3);
+		    }
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+	    "events":
+	    {
+	        "ContractEvent(uint32)":
+	        {
+	            "details": "This should appear in contract C dev doc"
+	        },
+			"LibraryEvent(uint32)":
+			{
+				"details": "This should appear in Contract C dev doc"
+			},
+	        "SameSignatureEvent(uint16)":
+	        {
+	            "details": "This should appear in Contract C dev doc"
+	        }
+	    },
+	    "kind": "dev",
+	    "methods": {},
+	    "version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"ContractEvent(uint32)":
+			{
+				"notice": "This event is defined in Contract C"
+			},
+			"LibraryEvent(uint32)":
+			{
+				"notice": "This event is defined in Library L"
+			},
+			"SameSignatureEvent(uint16)":
+			{
+				"notice": "This event is defined in Contract C"
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(emit_same_signature_event_different_libraries)
+{
+	char const* sourceCode = R"(
+		library L1 {
+		    /// @notice This event is defined in Library L1
+		    /// @dev This should not appear in Contract C dev doc
+		    event SameSignatureEvent(uint16);
+		}
+		library L2 {
+		    /// @notice This event is defined in Library L2
+		    /// @dev This should not appear in Contract C dev doc
+		    event SameSignatureEvent(uint16);
+		}
+		library L3 {
+		    /// @notice This event is defined in Library L3
+		    /// @dev This should not appear in Contract C dev doc
+		    event SameSignatureEvent(uint16);
+		}
+		contract C {
+		    function f() public {
+		        emit L1.SameSignatureEvent(0);
+		        emit L2.SameSignatureEvent(1);
+		        emit L3.SameSignatureEvent(2);
+		    }
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDoc, true);
+
+	char const* libraryDevDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"SameSignatureEvent(uint16)":
+			{
+				"details": "This should not appear in Contract C dev doc"
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "L1", libraryDevDoc, false);
+
+	char const* libraryUserDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"SameSignatureEvent(uint16)":
+			{
+				"notice": "This event is defined in Library L1"
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "L1", libraryUserDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(emit_same_signature_event_library_inherited)
+{
+	char const* sourceCode = R"(
+		contract D {
+			/// @notice This event is defined in contract D
+			/// @dev This should appear in Contract C dev doc
+			event SameSignatureEvent(uint16);
+		}
+		library L {
+		    /// @notice This event is defined in Library L
+		    /// @dev This should not appear in Contract C
+		    event SameSignatureEvent(uint16);
+		}
+		contract C is D {
+		    function f() public {
+		        emit L.SameSignatureEvent(0);
+		        emit D.SameSignatureEvent(1);
+		    }
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"SameSignatureEvent(uint16)":
+			{
+				"details": "This should appear in Contract C dev doc"
+			}
+		},
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"SameSignatureEvent(uint16)":
+			{
+				"notice": "This event is defined in contract D"
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(emit_same_signature_event_library_contract_missing_natspec)
+{
+	char const* sourceCode = R"(
+		library L {
+		    /// @notice This event is defined in library L
+		    /// @dev This should not appear in contract C devdoc
+		    event SameSignatureEvent(uint16);
+		    /// @notice This event is defined in library L
+			/// @dev This should appear in contract C devdoc
+		    event LibraryEvent(uint32);
+		}
+		contract C {
+			event SameSignatureEvent(uint16);
+		    /// @notice This event is defined in contract C
+		    event ContractEvent(uint32);
+		    function f() public {
+		        emit L.SameSignatureEvent(0);
+		        emit SameSignatureEvent(1);
+		        emit L.LibraryEvent(2);
+		        emit ContractEvent(3);
+		    }
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+	    "events":
+	    {
+	        "LibraryEvent(uint32)":
+	        {
+	            "details": "This should appear in contract C devdoc"
+	        }
+	    },
+	    "kind": "dev",
+	    "methods": {},
+	    "version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"ContractEvent(uint32)":
+			{
+				"notice": "This event is defined in contract C"
+			},
+			"LibraryEvent(uint32)":
+			{
+				"notice": "This event is defined in library L"
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(emit_same_signature_event_different_libraries_missing_natspec)
+{
+	char const* sourceCode = R"(
+		library L1 {
+		    event SameSignatureEvent(uint16);
+		}
+		library L2 {
+		    /// @notice This event is defined in library L2
+		    /// @dev This should not appear in Contract C devdoc
+		    event SameSignatureEvent(uint16);
+		}
+		library L3 {
+		    event SameSignatureEvent(uint16);
+		}
+		contract C {
+		    function f() public {
+		        emit L1.SameSignatureEvent(0);
+		        emit L2.SameSignatureEvent(1);
+		        emit L3.SameSignatureEvent(2);
+		    }
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+	    "kind": "user",
+	    "methods": {},
+	    "version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(emit_same_signature_event_library_inherited_missing_natspec)
+{
+	char const* sourceCode = R"(
+		contract D {
+			event SameSignatureEvent(uint16);
+		}
+		library L {
+		    /// @notice This event is defined in library L
+		    /// @dev This should not appear in contract C devdoc
+		    event SameSignatureEvent(uint16);
+		}
+		contract C is D {
+		    function f() public {
+		        emit L.SameSignatureEvent(0);
+		        emit D.SameSignatureEvent(1);
+		    }
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+   {
+     "kind": "user",
+     "methods": {},
+     "version": 1
+   }
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(event_inheritance_interface)
+{
+	char const* sourceCode = R"(
+		interface ERC20 {
+			/// @notice This event is emitted when a transfer occurs.
+			/// @param from The source account.
+			/// @param to The destination account.
+			/// @param amount The amount.
+			/// @dev A test case!
+			event Transfer(address indexed from, address indexed to, uint amount);
+		}
+		contract A is ERC20 {
+		}
+		contract B is A {
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"details": "A test case!",
+				"params":
+				{
+					"amount": "The amount.",
+					"from": "The source account.",
+					"to": "The destination account."
+				}
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", devDoc, false);
+	checkNatspec(sourceCode, "A", devDoc, false);
+	checkNatspec(sourceCode, "B", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"Transfer(address,address,uint256)":
+			{
+				"notice": "This event is emitted when a transfer occurs."
+			}
+		},
+		"methods": {}
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "ERC20", userDoc, true);
+	checkNatspec(sourceCode, "A", userDoc, true);
+	checkNatspec(sourceCode, "B", userDoc, true);
+}
+
 BOOST_AUTO_TEST_CASE(event_inheritance)
 {
 	char const* sourceCode = R"(
@@ -496,10 +901,8 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 			/// @dev A test case!
 			event Transfer(address indexed from, address indexed to, uint amount);
 		}
-
 		contract A is ERC20 {
 		}
-
 		contract B is A {
 		}
 	)";
@@ -1074,6 +1477,75 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	)";
 
 	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(struct_no_docs)
+{
+	char const* sourceCode = R"(
+		contract C {
+			/// @title example of title
+			/// @author example of author
+			/// @notice example of notice
+			/// @dev example of dev
+			struct Example {
+				string text;
+				bool valid;
+				uint256 value;
+			}
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(enum_no_docs)
+{
+	char const* sourceCode = R"(
+		contract C {
+			/// @title example of title
+			/// @author example of author
+			/// @notice example of notice
+			/// @dev example of dev
+			enum Color {
+				Red,
+				Green
+			}
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+	  "kind": "user",
+	  "methods": {},
+	  "version": 1
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "C", userDoc, true);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)

@@ -26,11 +26,8 @@ contract C {
         return x.s.a;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 42, 23, 34, 42, 42
-// gas irOptimized: 110389
-// gas legacy: 112021
-// gas legacyOptimized: 110548
+// gas irOptimized: 110388
+// gas legacy: 111993
+// gas legacyOptimized: 110546

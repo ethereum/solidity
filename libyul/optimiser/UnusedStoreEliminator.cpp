@@ -78,19 +78,34 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 		ignoreMemory
 	};
 	rse(_ast);
-	if (
-		auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
-		evmDialect && evmDialect->providesObjectAccess()
-	)
-		rse.changeUndecidedTo(State::Unused, Location::Memory);
-	else
-		rse.changeUndecidedTo(State::Used, Location::Memory);
-	rse.changeUndecidedTo(State::Used, Location::Storage);
-	rse.scheduleUnusedForDeletion();
 
-	StatementRemover remover(rse.m_pendingRemovals);
+	auto evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
+	if (evmDialect && evmDialect->providesObjectAccess())
+		rse.clearActive(Location::Memory);
+	else
+		rse.markActiveAsUsed(Location::Memory);
+	rse.markActiveAsUsed(Location::Storage);
+	rse.m_storesToRemove += rse.m_allStores - rse.m_usedStores;
+
+	set<Statement const*> toRemove{rse.m_storesToRemove.begin(), rse.m_storesToRemove.end()};
+	StatementRemover remover{toRemove};
 	remover(_ast);
 }
+
+UnusedStoreEliminator::UnusedStoreEliminator(
+	Dialect const& _dialect,
+	map<YulString, SideEffects> const& _functionSideEffects,
+	map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
+	map<YulString, AssignedValue> const& _ssaValues,
+	bool _ignoreMemory
+):
+	UnusedStoreBase(_dialect),
+	m_ignoreMemory(_ignoreMemory),
+	m_functionSideEffects(_functionSideEffects),
+	m_controlFlowSideEffects(_controlFlowSideEffects),
+	m_ssaValues(_ssaValues),
+	m_knowledgeBase(_ssaValues)
+{}
 
 void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 {
@@ -106,12 +121,12 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 
 	if (sideEffects.canTerminate)
-		changeUndecidedTo(State::Used, Location::Storage);
+		markActiveAsUsed(Location::Storage);
 	if (!sideEffects.canContinue)
 	{
-		changeUndecidedTo(State::Unused, Location::Memory);
+		clearActive(Location::Memory);
 		if (!sideEffects.canTerminate)
-			changeUndecidedTo(State::Unused, Location::Storage);
+			clearActive(Location::Storage);
 	}
 }
 
@@ -124,7 +139,7 @@ void UnusedStoreEliminator::operator()(FunctionDefinition const& _functionDefini
 
 void UnusedStoreEliminator::operator()(Leave const&)
 {
-	changeUndecidedTo(State::Used);
+	markActiveAsUsed();
 }
 
 void UnusedStoreEliminator::visit(Statement const& _statement)
@@ -168,35 +183,38 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	yulAssert(isCandidateForRemoval == (isStorageWrite || (!m_ignoreMemory && isMemoryWrite)));
 	if (isCandidateForRemoval)
 	{
-		State initialState = State::Undecided;
 		if (*instruction == Instruction::RETURNDATACOPY)
 		{
-			initialState = State::Used;
+			// Out-of-bounds access to the returndata buffer results in a revert,
+			// so we are careful not to remove a potentially reverting call to a builtin.
+			// The only way the Solidity compiler uses `returndatacopy` is
+			// `returndatacopy(X, 0, returndatasize())`, so we only allow to remove this pattern
+			// (which is guaranteed to never cause an out-of-bounds revert).
+			bool allowReturndatacopyToBeRemoved = false;
 			auto startOffset = identifierNameIfSSA(funCall->arguments.at(1));
 			auto length = identifierNameIfSSA(funCall->arguments.at(2));
-			KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
 			if (length && startOffset)
 			{
 				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
 				if (
-					knowledge.knownToBeZero(*startOffset) &&
+					m_knowledgeBase.knownToBeZero(*startOffset) &&
 					lengthCall &&
 					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
 				)
-					initialState = State::Undecided;
+					allowReturndatacopyToBeRemoved = true;
 			}
+			if (!allowReturndatacopyToBeRemoved)
+				return;
 		}
-		m_stores[YulString{}].insert({&_statement, initialState});
+		m_allStores.insert(&_statement);
 		vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
+		if (operations.front().location == Location::Storage)
+			activeStorageStores().insert(&_statement);
+		else
+			activeMemoryStores().insert(&_statement);
 		m_storeOperations[&_statement] = std::move(operations.front());
 	}
-}
-
-void UnusedStoreEliminator::finalizeFunctionDefinition(FunctionDefinition const&)
-{
-	changeUndecidedTo(State::Used);
-	scheduleUnusedForDeletion();
 }
 
 vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFunctionCall(
@@ -251,15 +269,28 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 
 void UnusedStoreEliminator::applyOperation(UnusedStoreEliminator::Operation const& _operation)
 {
-	for (auto& [statement, state]: m_stores[YulString{}])
-		if (state == State::Undecided)
+	set<Statement const*>& active =
+		_operation.location == Location::Storage ?
+		activeStorageStores() :
+		activeMemoryStores();
+
+
+	for (auto it = active.begin(); it != active.end();)
+	{
+		Statement const* statement = *it;
+		Operation const& storeOperation = m_storeOperations.at(statement);
+		if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
 		{
-			Operation const& storeOperation = m_storeOperations.at(statement);
-			if (_operation.effect == Effect::Read && !knownUnrelated(storeOperation, _operation))
-				state = State::Used;
-			else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
-				state = State::Unused;
+			// This store is read from, mark it as used and remove it from the active set.
+			m_usedStores.insert(statement);
+			it = active.erase(it);
 		}
+		else if (_operation.effect == Effect::Write && knownCovered(storeOperation, _operation))
+			// This store is overwritten before being read, remove it from the active set.
+			it = active.erase(it);
+		else
+			++it;
+	}
 }
 
 bool UnusedStoreEliminator::knownUnrelated(
@@ -267,8 +298,6 @@ bool UnusedStoreEliminator::knownUnrelated(
 	UnusedStoreEliminator::Operation const& _op2
 ) const
 {
-	KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
-
 	if (_op1.location != _op2.location)
 		return true;
 	if (_op1.location == Location::Storage)
@@ -278,26 +307,26 @@ bool UnusedStoreEliminator::knownUnrelated(
 			yulAssert(
 				_op1.length &&
 				_op2.length &&
-				knowledge.valueIfKnownConstant(*_op1.length) == 1 &&
-				knowledge.valueIfKnownConstant(*_op2.length) == 1
+				m_knowledgeBase.valueIfKnownConstant(*_op1.length) == 1 &&
+				m_knowledgeBase.valueIfKnownConstant(*_op2.length) == 1
 			);
-			return knowledge.knownToBeDifferent(*_op1.start, *_op2.start);
+			return m_knowledgeBase.knownToBeDifferent(*_op1.start, *_op2.start);
 		}
 	}
 	else
 	{
 		yulAssert(_op1.location == Location::Memory, "");
 		if (
-			(_op1.length && knowledge.knownToBeZero(*_op1.length)) ||
-			(_op2.length && knowledge.knownToBeZero(*_op2.length))
+			(_op1.length && m_knowledgeBase.knownToBeZero(*_op1.length)) ||
+			(_op2.length && m_knowledgeBase.knownToBeZero(*_op2.length))
 		)
 			return true;
 
 		if (_op1.start && _op1.length && _op2.start)
 		{
-			optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
-			optional<u256> start1 = knowledge.valueIfKnownConstant(*_op1.start);
-			optional<u256> start2 = knowledge.valueIfKnownConstant(*_op2.start);
+			optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
+			optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
+			optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
 			if (
 				(length1 && start1 && start2) &&
 				*start1 + *length1 >= *start1 && // no overflow
@@ -307,9 +336,9 @@ bool UnusedStoreEliminator::knownUnrelated(
 		}
 		if (_op2.start && _op2.length && _op1.start)
 		{
-			optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
-			optional<u256> start2 = knowledge.valueIfKnownConstant(*_op2.start);
-			optional<u256> start1 = knowledge.valueIfKnownConstant(*_op1.start);
+			optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
+			optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
+			optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
 			if (
 				(length2 && start2 && start1) &&
 				*start2 + *length2 >= *start2 && // no overflow
@@ -320,12 +349,12 @@ bool UnusedStoreEliminator::knownUnrelated(
 
 		if (_op1.start && _op1.length && _op2.start && _op2.length)
 		{
-			optional<u256> length1 = knowledge.valueIfKnownConstant(*_op1.length);
-			optional<u256> length2 = knowledge.valueIfKnownConstant(*_op2.length);
+			optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
+			optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
 			if (
 				(length1 && *length1 <= 32) &&
 				(length2 && *length2 <= 32) &&
-				knowledge.knownToBeDifferentByAtLeast32(*_op1.start, *_op2.start)
+				m_knowledgeBase.knownToBeDifferentByAtLeast32(*_op1.start, *_op2.start)
 			)
 				return true;
 		}
@@ -348,22 +377,20 @@ bool UnusedStoreEliminator::knownCovered(
 		return true;
 	if (_covered.location == Location::Memory)
 	{
-		KnowledgeBase knowledge(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_ssaValues, _var); });
-
-		if (_covered.length && knowledge.knownToBeZero(*_covered.length))
+		if (_covered.length && m_knowledgeBase.knownToBeZero(*_covered.length))
 			return true;
 
 		// Condition (i = cover_i_ng, e = cover_e_d):
 		// i.start <= e.start && e.start + e.length <= i.start + i.length
 		if (!_covered.start || !_covering.start || !_covered.length || !_covering.length)
 			return false;
-		optional<u256> coveredLength = knowledge.valueIfKnownConstant(*_covered.length);
-		optional<u256> coveringLength = knowledge.valueIfKnownConstant(*_covering.length);
-		if (knowledge.knownToBeEqual(*_covered.start, *_covering.start))
+		optional<u256> coveredLength = m_knowledgeBase.valueIfKnownConstant(*_covered.length);
+		optional<u256> coveringLength = m_knowledgeBase.valueIfKnownConstant(*_covering.length);
+		if (*_covered.start == *_covering.start)
 			if (coveredLength && coveringLength && *coveredLength <= *coveringLength)
 				return true;
-		optional<u256> coveredStart = knowledge.valueIfKnownConstant(*_covered.start);
-		optional<u256> coveringStart = knowledge.valueIfKnownConstant(*_covering.start);
+		optional<u256> coveredStart = m_knowledgeBase.valueIfKnownConstant(*_covered.start);
+		optional<u256> coveringStart = m_knowledgeBase.valueIfKnownConstant(*_covering.start);
 		if (coveredStart && coveringStart && coveredLength && coveringLength)
 			if (
 				*coveringStart <= *coveredStart &&
@@ -380,16 +407,27 @@ bool UnusedStoreEliminator::knownCovered(
 	return false;
 }
 
-void UnusedStoreEliminator::changeUndecidedTo(
-	State _newState,
-	optional<UnusedStoreEliminator::Location> _onlyLocation)
+void UnusedStoreEliminator::markActiveAsUsed(
+	optional<UnusedStoreEliminator::Location> _onlyLocation
+)
 {
-	for (auto& [statement, state]: m_stores[YulString{}])
-		if (
-			state == State::Undecided &&
-			(_onlyLocation == nullopt || *_onlyLocation == m_storeOperations.at(statement).location)
-		)
-			state = _newState;
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+		for (Statement const* statement: activeMemoryStores())
+			m_usedStores.insert(statement);
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+		for (Statement const* statement: activeStorageStores())
+			m_usedStores.insert(statement);
+	clearActive(_onlyLocation);
+}
+
+void UnusedStoreEliminator::clearActive(
+	optional<UnusedStoreEliminator::Location> _onlyLocation
+)
+{
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+		activeMemoryStores() = {};
+	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+		activeStorageStores() = {};
 }
 
 optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const& _expression) const
@@ -398,11 +436,4 @@ optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const&
 		if (m_ssaValues.count(identifier->name))
 			return {identifier->name};
 	return nullopt;
-}
-
-void UnusedStoreEliminator::scheduleUnusedForDeletion()
-{
-	for (auto const& [statement, state]: m_stores[YulString{}])
-		if (state == State::Unused)
-			m_pendingRemovals.insert(statement);
 }

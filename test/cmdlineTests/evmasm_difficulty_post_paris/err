@@ -1,0 +1,5 @@
+Warning: Since the VM version paris, "difficulty" was replaced by "prevrandao", which now returns a random number based on the beacon chain.
+ --> evmasm_difficulty_post_paris/input.sol:6:21:
+  |
+6 |         uint256 x = block.difficulty;
+  |                     ^^^^^^^^^^^^^^^^

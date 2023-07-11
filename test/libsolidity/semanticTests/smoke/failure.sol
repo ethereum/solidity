@@ -16,7 +16,6 @@ contract C {
 // ====
 // EVMVersion: >homestead
 // allowNonExistingFunctions: true
-// compileToEwasm: also
 // ----
 // _() -> FAILURE
 // e() -> FAILURE, hex"08c379a0", 0x20, 0x13, "Transaction failed."

@@ -13,6 +13,5 @@ contract test {
         return campaigns[0].m_value;
     }
 }
-
 // ----
 // deleteIt() -> 0

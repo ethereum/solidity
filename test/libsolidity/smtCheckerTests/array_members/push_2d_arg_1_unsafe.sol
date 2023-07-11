@@ -13,3 +13,4 @@ contract C {
 // ----
 // Warning 3944: (129-144): CHC: Underflow (resulting value less than 0) happens here.
 // Warning 6328: (117-151): CHC: Assertion violation happens here.
+// Info 1391: CHC: 6 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

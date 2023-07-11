@@ -22,7 +22,6 @@ contract C {
         return abi.encode(s);
     }
 }
-
 // ----
 // f_memory(uint256[],uint256[2]): 0x20, 1, 2 -> 0x60, 0x01, 0x02, 1, 2
 // f_memory(uint256[],uint256[2]): 0x40, 1, 2, 5, 6 -> 0x60, 1, 2, 2, 5, 6
@@ -34,8 +33,8 @@ contract C {
 // f_which(uint256[],uint256[2],uint256): 0x40, 1, 2, 1, 5, 6 -> 0x20, 0x40, 5, 2
 // f_which(uint256[],uint256[2],uint256): 0x40, 1, 2, 1 -> FAILURE
 // f_storage(uint256[],uint256[2]): 0x20, 1, 2 -> 0x20, 0x60, 0x20, 1, 2
-// gas irOptimized: 111653
-// gas legacy: 112979
-// gas legacyOptimized: 112104
+// gas irOptimized: 111650
+// gas legacy: 112944
+// gas legacyOptimized: 112092
 // f_storage(uint256[],uint256[2]): 0x40, 1, 2, 5, 6 -> 0x20, 0x80, 0x20, 2, 5, 6
 // f_storage(uint256[],uint256[2]): 0x40, 1, 2, 5 -> FAILURE

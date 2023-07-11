@@ -351,9 +351,22 @@ void ProtoConverter::visit(BinaryOp const& _x)
 		break;
 	}
 	m_output << "(";
-	visit(_x.left());
-	m_output << ",";
-	visit(_x.right());
+	if (op == BinaryOp::KECCAK)
+	{
+		m_output << "mod(";
+		visit(_x.left());
+		m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
+		m_output << ",";
+		m_output << "mod(";
+		visit(_x.right());
+		m_output << ", " << to_string(s_maxSize) << ")";
+	}
+	else
+	{
+		visit(_x.left());
+		m_output << ",";
+		visit(_x.right());
+	}
 	m_output << ")";
 }
 
@@ -623,7 +636,14 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		break;
 	}
 	m_output << "(";
-	visit(_x.operand());
+	if (op == UnaryOp::MLOAD)
+	{
+		m_output << "mod(";
+		visit(_x.operand());
+		m_output << ", " << to_string(s_maxMemory - 32) << ")";
+	}
+	else
+		visit(_x.operand());
 	m_output << ")";
 }
 
@@ -715,7 +735,10 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		m_output << "number()";
 		break;
 	case NullaryOp::DIFFICULTY:
-		m_output << "difficulty()";
+		if (m_evmVersion >= EVMVersion::paris())
+			m_output << "prevrandao()";
+		else
+			m_output << "difficulty()";
 		break;
 	case NullaryOp::GASLIMIT:
 		m_output << "gaslimit()";
@@ -775,11 +798,15 @@ void ProtoConverter::visit(CopyFunc const& _x)
 		break;
 	}
 	m_output << "(";
+	m_output << "mod(";
 	visit(_x.target());
+	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
 	visit(_x.source());
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.size());
+	m_output << ", " << to_string(s_maxSize) << ")";
 	m_output << ")\n";
 }
 
@@ -789,32 +816,42 @@ void ProtoConverter::visit(ExtCodeCopy const& _x)
 	m_output << "(";
 	visit(_x.addr());
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.target());
+	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
 	visit(_x.source());
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.size());
+	m_output << ", " << to_string(s_maxSize) << ")";
 	m_output << ")\n";
 }
 
 void ProtoConverter::visit(LogFunc const& _x)
 {
+	auto visitPosAndSize = [&](LogFunc const& _y) {
+		m_output << "mod(";
+		visit(_y.pos());
+		m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
+		m_output << ", ";
+		m_output << "mod(";
+		visit(_y.size());
+		m_output << ", " << to_string(s_maxSize) << ")";
+	};
+
 	switch (_x.num_topics())
 	{
 	case LogFunc::ZERO:
 		m_output << "log0";
 		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
+		visitPosAndSize(_x);
 		m_output << ")\n";
 		break;
 	case LogFunc::ONE:
 		m_output << "log1";
 		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
+		visitPosAndSize(_x);
 		m_output << ", ";
 		visit(_x.t1());
 		m_output << ")\n";
@@ -822,9 +859,7 @@ void ProtoConverter::visit(LogFunc const& _x)
 	case LogFunc::TWO:
 		m_output << "log2";
 		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
+		visitPosAndSize(_x);
 		m_output << ", ";
 		visit(_x.t1());
 		m_output << ", ";
@@ -834,9 +869,7 @@ void ProtoConverter::visit(LogFunc const& _x)
 	case LogFunc::THREE:
 		m_output << "log3";
 		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
+		visitPosAndSize(_x);
 		m_output << ", ";
 		visit(_x.t1());
 		m_output << ", ";
@@ -848,9 +881,7 @@ void ProtoConverter::visit(LogFunc const& _x)
 	case LogFunc::FOUR:
 		m_output << "log4";
 		m_output << "(";
-		visit(_x.pos());
-		m_output << ", ";
-		visit(_x.size());
+		visitPosAndSize(_x);
 		m_output << ", ";
 		visit(_x.t1());
 		m_output << ", ";
@@ -1012,13 +1043,21 @@ void ProtoConverter::visit(LowLevelCall const& _x)
 		visit(_x.wei());
 		m_output << ", ";
 	}
+	m_output << "mod(";
 	visit(_x.in());
+	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.insize());
+	m_output << ", " << to_string(s_maxSize) << ")";
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.out());
+	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.outsize());
+	m_output << ", " << to_string(s_maxSize) << ")";
 	m_output << ")";
 }
 
@@ -1045,9 +1084,13 @@ void ProtoConverter::visit(Create const& _x)
 	}
 	visit(_x.wei());
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.position());
+	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.size());
+	m_output << ", " << to_string(s_maxSize) << ")";
 	if (type == Create::CREATE2)
 	{
 		m_output << ", ";
@@ -1066,7 +1109,8 @@ void ProtoConverter::visit(IfStmt const& _x)
 
 void ProtoConverter::visit(StoreFunc const& _x)
 {
-	switch (_x.st())
+	auto storeType = _x.st();
+	switch (storeType)
 	{
 	case StoreFunc::MSTORE:
 		m_output << "mstore(";
@@ -1078,7 +1122,24 @@ void ProtoConverter::visit(StoreFunc const& _x)
 		m_output << "mstore8(";
 		break;
 	}
-	visit(_x.loc());
+	// Write to memory within bounds, storage is unbounded
+	if (storeType == StoreFunc::SSTORE)
+		visit(_x.loc());
+	else if (storeType == StoreFunc::MSTORE8)
+	{
+		m_output << "mod(";
+		visit(_x.loc());
+		m_output << ", " << to_string(s_maxMemory) << ")";
+	}
+	else if (storeType == StoreFunc::MSTORE)
+	{
+		// Since we write 32 bytes, ensure it does not exceed
+		// upper bound on memory.
+		m_output << "mod(";
+		visit(_x.loc());
+		m_output << ", " << to_string(s_maxMemory - 32) << ")";
+
+	}
 	m_output << ", ";
 	visit(_x.val());
 	m_output << ")\n";
@@ -1259,9 +1320,13 @@ void ProtoConverter::visit(RetRevStmt const& _x)
 		break;
 	}
 	m_output << "(";
+	m_output << "mod(";
 	visit(_x.pos());
+	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
+	m_output << "mod(";
 	visit(_x.size());
+	m_output << ", " << to_string(s_maxSize) << ")";
 	m_output << ")\n";
 }
 
@@ -1648,8 +1713,12 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 			m_output << "calldataload(" << slot << ")";
 			break;
 		case 1:
+		{
+			// Access memory within stipulated bounds
+			slot = "mod(" + dictionaryToken() + ", " + to_string(s_maxMemory - 32) + ")";
 			m_output << "mload(" << slot << ")";
 			break;
+		}
 		case 2:
 			m_output << "sload(" << slot << ")";
 			break;
@@ -1880,6 +1949,8 @@ void ProtoConverter::visit(Program const& _x)
 	{
 	case Program::kBlock:
 		m_output << "{\n";
+		m_output << "mstore(memoryguard(0x10000), 1)\n";
+		m_output << "sstore(mload(calldataload(0)), 1)\n";
 		visit(_x.block());
 		m_output << "}\n";
 		break;

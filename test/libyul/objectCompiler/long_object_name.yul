@@ -24,6 +24,6 @@ object "t" {
 //         /* "source":272:274   */
 //       stop
 // }
-// Bytecode: 600160005500fe
-// Opcodes: PUSH1 0x1 PUSH1 0x0 SSTORE STOP INVALID
+// Bytecode: 60015f5500fe
+// Opcodes: PUSH1 0x1 PUSH0 SSTORE STOP INVALID
 // SourceMappings: 33:113:0:-:0;30:1;23:124;19:131

@@ -17,3 +17,4 @@ contract C {
 // Warning 6368: (184-188): CHC: Out of bounds access happens here.
 // Warning 3944: (184-199): CHC: Underflow (resulting value less than 0) happens here.
 // Warning 6328: (172-206): CHC: Assertion violation happens here.
+// Info 1391: CHC: 5 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

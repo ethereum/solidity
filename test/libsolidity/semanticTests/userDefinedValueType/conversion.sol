@@ -27,7 +27,6 @@ contract C {
         return MyUInt8.wrap(uint8(MyUInt16.unwrap(a)));
     }
 }
-
 // ----
 // f(uint256): 1 -> 1
 // f(uint256): 2 -> 2

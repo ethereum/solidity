@@ -6,8 +6,6 @@ contract C {
         return a.selector;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> left(0x26121ff0)
 // h(function): left(0x1122334400112233445566778899AABBCCDDEEFF42424242) -> left(0x42424242)

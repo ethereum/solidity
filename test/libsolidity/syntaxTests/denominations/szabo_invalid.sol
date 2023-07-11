@@ -1,7 +1,7 @@
 contract C {
-  function f() {
-    uint x = 1 szabo;
-  }
+    function f() public {
+        uint x = 1 szabo;
+    }
 }
 // ----
-// ParserError 2314: (45-50): Expected ';' but got identifier
+// ParserError 2314: (58-63): Expected ';' but got identifier

@@ -1,0 +1,26 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "7407",
+            "formattedMessage": "TypeError: Type uint256 is not implicitly convertible to expected type string storage ref.
+ --> C:8:16:
+  |
+8 |     string y = x;
+  |                ^
+
+",
+            "message": "Type uint256 is not implicitly convertible to expected type string storage ref.",
+            "severity": "error",
+            "sourceLocation":
+            {
+                "end": 235,
+                "file": "C",
+                "start": 234
+            },
+            "type": "TypeError"
+        }
+    ],
+    "sources": {}
+}

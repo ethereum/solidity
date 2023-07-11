@@ -22,5 +22,5 @@ contract C
 // Warning 6368: (152-162): CHC: Out of bounds access might happen here.
 // Warning 6368: (177-184): CHC: Out of bounds access might happen here.
 // Warning 6368: (177-187): CHC: Out of bounds access might happen here.
-// Warning 6328: (170-192): CHC: Assertion violation happens here.\nCounterexample:\nc = [[[0]]]\nb = false\n\nTransaction trace:\nC.constructor()\nState: c = [[[0]]]\nC.f(false)
-// Info 1180: Contract invariant(s) for :C:\n!(c.length <= 0)\n
+// Warning 6328: (170-192): CHC: Assertion violation happens here.
+// Info 1391: CHC: 6 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

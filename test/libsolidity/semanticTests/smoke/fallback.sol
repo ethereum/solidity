@@ -8,8 +8,6 @@ contract A {
         externalData = msg.data;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // data() -> 0
 // ()

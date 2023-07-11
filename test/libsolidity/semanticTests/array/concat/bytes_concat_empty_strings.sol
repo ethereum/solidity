@@ -18,8 +18,6 @@ contract C {
         return bytes.concat(b, "abc", b, "abc", b);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0x20, 0
 // g() -> 0x20, 6, "abcabc"

@@ -23,3 +23,4 @@ contract A is B {
 // ----
 // Warning 4984: (171-176): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 6328: (200-218): CHC: Assertion violation happens here.
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

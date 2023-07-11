@@ -112,21 +112,29 @@ BOOST_AUTO_TEST_CASE(string_storage)
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
 				CHECK_DEPLOY_GAS(0, 109241, evmVersion);
-			else
+			else if (evmVersion < EVMVersion::shanghai())
 				CHECK_DEPLOY_GAS(0, 97697, evmVersion);
+			// Shanghai is cheaper due to `push0`
+			else
+				CHECK_DEPLOY_GAS(0, 97071, evmVersion);
 		}
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
 				CHECK_DEPLOY_GAS(139013, 123969, evmVersion);
-			else
+			else if (evmVersion < EVMVersion::shanghai())
 				CHECK_DEPLOY_GAS(123361, 110969, evmVersion);
+			// Shanghai is cheaper due to `push0`
+			else
+				CHECK_DEPLOY_GAS(121493, 110969, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
 		CHECK_DEPLOY_GAS(125829, 118559, evmVersion);
-	else
+	else if (evmVersion < EVMVersion::shanghai())
 		CHECK_DEPLOY_GAS(114077, 96461, evmVersion);
+	else
+		CHECK_DEPLOY_GAS(114077, 95835, evmVersion);
 
 	if (evmVersion >= EVMVersion::byzantium())
 	{
@@ -198,7 +206,11 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck)
 	size_t bytecodeSizeNonpayable = m_compiler.object("Nonpayable").bytecode.size();
 	size_t bytecodeSizePayable = m_compiler.object("Payable").bytecode.size();
 
-	BOOST_CHECK_EQUAL(bytecodeSizePayable - bytecodeSizeNonpayable, 26);
+	auto evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	if (evmVersion < EVMVersion::shanghai())
+		BOOST_CHECK_EQUAL(bytecodeSizePayable - bytecodeSizeNonpayable, 26);
+	else
+		BOOST_CHECK_EQUAL(bytecodeSizePayable - bytecodeSizeNonpayable, 24);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

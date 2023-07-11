@@ -21,3 +21,4 @@ contract C {
 // Warning 7737: (170-205): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
 // Warning 6328: (208-229): CHC: Assertion violation happens here.
 // Warning 6328: (248-269): CHC: Assertion violation happens here.
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

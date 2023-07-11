@@ -105,7 +105,7 @@ EVM_VERSIONS="homestead byzantium"
 
 if [ -z "$CI" ]
 then
-    EVM_VERSIONS+=" constantinople petersburg istanbul berlin london paris"
+    EVM_VERSIONS+=" constantinople petersburg istanbul berlin london paris shanghai"
 fi
 
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
@@ -115,9 +115,9 @@ do
     for vm in $EVM_VERSIONS
     do
         FORCE_ABIV1_RUNS="no"
-        if [[ "$vm" == "london" ]]
+        if [[ "$vm" == "shanghai" ]]
         then
-            FORCE_ABIV1_RUNS="no yes" # run both in london
+            FORCE_ABIV1_RUNS="no yes" # run both in paris
         fi
         for abiv1 in $FORCE_ABIV1_RUNS
         do
@@ -139,11 +139,8 @@ do
                 fi
             fi
 
-            EWASM_ARGS=""
-            [ "${vm}" = "byzantium" ] && [ "${optimize}" = "" ] && EWASM_ARGS="--ewasm"
-
             set +e
-            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress "${log[@]}" -- ${EWASM_ARGS} --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" "${SMT_FLAGS[@]}" "${force_abiv1_flag[@]}"
+            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress "${log[@]}" -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" "${SMT_FLAGS[@]}" "${force_abiv1_flag[@]}"
 
             if test "0" -ne "$?"; then
                 exit 1

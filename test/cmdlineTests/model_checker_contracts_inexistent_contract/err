@@ -1,1 +1,27 @@
 Warning: Requested contract "C" does not exist in source "model_checker_contracts_inexistent_contract/input.sol".
+
+Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+x = 0
+
+Transaction trace:
+B.constructor()
+B.f(0)
+ --> model_checker_contracts_inexistent_contract/input.sol:5:3:
+  |
+5 | 		assert(x > 0);
+  | 		^^^^^^^^^^^^^
+
+Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+y = 0
+
+Transaction trace:
+A.constructor()
+A.g(0)
+  --> model_checker_contracts_inexistent_contract/input.sol:10:3:
+   |
+10 | 		assert(y > 0);
+   | 		^^^^^^^^^^^^^

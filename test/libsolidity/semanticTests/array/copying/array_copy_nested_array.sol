@@ -10,9 +10,8 @@ contract c {
         return c[1][1] | c[1][2] | c[1][3] | c[1][4];
     }
 }
-
 // ----
 // test(uint256[2][]): 32, 3, 7, 8, 9, 10, 11, 12 -> 10
-// gas irOptimized: 689759
-// gas legacy: 686268
-// gas legacyOptimized: 685688
+// gas irOptimized: 689714
+// gas legacy: 686178
+// gas legacyOptimized: 685628

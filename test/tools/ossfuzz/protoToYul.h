@@ -344,6 +344,12 @@ private:
 	static unsigned constexpr s_modOutputParams = 5;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
+	/// Upper bound on memory writes is 64KB in order to
+	/// preserve semantic equivalence in the presence of
+	/// memory guard
+	static unsigned constexpr s_maxMemory = 65536;
+	/// Upper bound on size for range copy functions
+	static unsigned constexpr s_maxSize = 32768;
 	/// Predicate to keep track of for body scope. If false, break/continue
 	/// statements can not be created.
 	bool m_inForBodyScope;

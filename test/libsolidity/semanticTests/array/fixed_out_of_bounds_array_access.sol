@@ -14,9 +14,6 @@ contract c {
         return data.length;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // length() -> 4
 // set(uint256,uint256): 3, 4 -> true

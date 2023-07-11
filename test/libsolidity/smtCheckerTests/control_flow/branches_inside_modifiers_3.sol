@@ -22,5 +22,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (326-340): CHC: Assertion violation happens here.\nCounterexample:\nx = 3\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.g()\n    C.f() -- internal call
-// Info 1180: Contract invariant(s) for :C:\n((x = 0) || (x = 3))\n
+// Warning 6328: (326-340): CHC: Assertion violation happens here.
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

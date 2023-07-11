@@ -8,8 +8,5 @@ contract C {
         return uint256(x);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> -7

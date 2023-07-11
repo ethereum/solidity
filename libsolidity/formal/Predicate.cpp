@@ -144,6 +144,11 @@ FunctionCall const* Predicate::programFunctionCall() const
 	return dynamic_cast<FunctionCall const*>(m_node);
 }
 
+VariableDeclaration  const* Predicate::programVariable() const
+{
+	return dynamic_cast<VariableDeclaration const*>(m_node);
+}
+
 optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
 {
 	if (m_contractContext)
@@ -214,6 +219,9 @@ string Predicate::formatSummaryCall(
 {
 	solAssert(isSummary(), "");
 
+	if (programVariable())
+		return {};
+
 	if (auto funCall = programFunctionCall())
 	{
 		if (funCall->location().hasText())
@@ -255,8 +263,14 @@ string Predicate::formatSummaryCall(
 					if (auto const* identifier = dynamic_cast<Identifier const*>(memberExpr))
 					{
 						ASTString const& name = identifier->name();
+						auto memberName = _memberAccess.memberName();
+
+						// TODO remove this for 0.9.0
+						if (name == "block" && memberName == "difficulty")
+							memberName = "prevrandao";
+
 						if (name == "block" || name == "msg" || name == "tx")
-							txVars.insert(name + "." + _memberAccess.memberName());
+							txVars.insert(name + "." + memberName);
 					}
 
 				return true;
@@ -342,6 +356,8 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 		stateFirst = _args.begin() + 7 + static_cast<int>(stateVars->size());
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
+	else if (programVariable())
+		return {};
 	else
 		solAssert(false, "");
 
@@ -642,7 +658,7 @@ map<string, optional<string>> Predicate::readTxVars(smtutil::Expression const& _
 		{"block.basefee", TypeProvider::uint256()},
 		{"block.chainid", TypeProvider::uint256()},
 		{"block.coinbase", TypeProvider::address()},
-		{"block.difficulty", TypeProvider::uint256()},
+		{"block.prevrandao", TypeProvider::uint256()},
 		{"block.gaslimit", TypeProvider::uint256()},
 		{"block.number", TypeProvider::uint256()},
 		{"block.timestamp", TypeProvider::uint256()},

@@ -70,14 +70,14 @@ smtutil::Expression constructor(Predicate const& _pred, EncodingContext& _contex
 	return _pred(stateExprs + initialStateVariables(contract, _context) + currentStateVariables(contract, _context));
 }
 
-smtutil::Expression constructorCall(Predicate const& _pred, EncodingContext& _context)
+smtutil::Expression constructorCall(Predicate const& _pred, EncodingContext& _context, bool _internal)
 {
 	auto const& contract = dynamic_cast<ContractDefinition const&>(*_pred.programNode());
 	if (auto const* constructor = contract.constructor())
-		return _pred(currentFunctionVariablesForCall(*constructor, &contract, _context));
+		return _pred(currentFunctionVariablesForCall(*constructor, &contract, _context, _internal));
 
 	auto& state = _context.state();
-	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.abi(0), state.crypto(0), state.tx(0), state.state()};
+	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), _internal ? state.thisAddress(0) : state.thisAddress(), state.abi(0), state.crypto(0), _internal ? state.tx(0) : state.tx(), state.state()};
 	state.newState();
 	stateExprs += vector<smtutil::Expression>{state.state()};
 	stateExprs += currentStateVariables(contract, _context);
@@ -166,11 +166,12 @@ vector<smtutil::Expression> currentFunctionVariablesForDefinition(
 vector<smtutil::Expression> currentFunctionVariablesForCall(
 	FunctionDefinition const& _function,
 	ContractDefinition const* _contract,
-	EncodingContext& _context
+	EncodingContext& _context,
+	bool _internal
 )
 {
 	auto& state = _context.state();
-	vector<smtutil::Expression> exprs{state.errorFlag().currentValue(), state.thisAddress(0), state.abi(0), state.crypto(0), state.tx(0), state.state()};
+	vector<smtutil::Expression> exprs{state.errorFlag().currentValue(), _internal ? state.thisAddress(0) : state.thisAddress(), state.abi(0), state.crypto(0), _internal ? state.tx(0) : state.tx(), state.state()};
 	exprs += _contract ? currentStateVariables(*_contract, _context) : vector<smtutil::Expression>{};
 	exprs += applyMap(_function.parameters(), [&](auto _var) { return _context.variable(*_var)->currentValue(); });
 

@@ -1,0 +1,26 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "8297",
+            "formattedMessage": "DeclarationError: The \"immutable\" keyword can only be used for state variables.
+ --> C:6:12:
+  |
+6 | function f(uint immutable x) {}
+  |            ^^^^^^^^^^^^^^^^
+
+",
+            "message": "The \"immutable\" keyword can only be used for state variables.",
+            "severity": "error",
+            "sourceLocation":
+            {
+                "end": 259,
+                "file": "C",
+                "start": 243
+            },
+            "type": "DeclarationError"
+        }
+    ],
+    "sources": {}
+}

@@ -9,7 +9,5 @@ contract C {
     return h();
   }
 }
-// ====
-// compileToEwasm: also
 // ----
 // foo() -> 1337

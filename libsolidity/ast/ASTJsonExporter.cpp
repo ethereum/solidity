@@ -45,6 +45,7 @@
 #include <range/v3/view/map.hpp>
 
 using namespace std;
+using namespace std::string_literals;
 using namespace solidity::langutil;
 
 namespace
@@ -138,7 +139,7 @@ Json::Value ASTJsonExporter::sourceLocationsToJson(vector<SourceLocation> const&
 
 string ASTJsonExporter::namePathToString(std::vector<ASTString> const& _namePath)
 {
-	return boost::algorithm::join(_namePath, ".");
+	return boost::algorithm::join(_namePath, "."s);
 }
 
 Json::Value ASTJsonExporter::typePointerToJson(Type const* _tp, bool _withoutDataLocation)
@@ -213,8 +214,11 @@ bool ASTJsonExporter::visit(SourceUnit const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("license", _node.licenseString() ? Json::Value(*_node.licenseString()) : Json::nullValue),
-		make_pair("nodes", toJson(_node.nodes()))
+		make_pair("nodes", toJson(_node.nodes())),
 	};
+
+	if (_node.experimentalSolidity())
+		attributes.emplace_back("experimentalSolidity", Json::Value(_node.experimentalSolidity()));
 
 	if (_node.annotation().exportedSymbols.set())
 	{
@@ -285,6 +289,8 @@ bool ASTJsonExporter::visit(ContractDefinition const& _node)
 		make_pair("abstract", _node.abstract()),
 		make_pair("baseContracts", toJson(_node.baseContracts())),
 		make_pair("contractDependencies", getContainerIds(_node.annotation().contractDependencies | ranges::views::keys)),
+		// Do not require call graph because the AST is also created for incorrect sources.
+		make_pair("usedEvents", getContainerIds(_node.interfaceEvents(false))),
 		make_pair("usedErrors", getContainerIds(_node.interfaceErrors(false))),
 		make_pair("nodes", toJson(_node.subNodes())),
 		make_pair("scope", idOrNull(_node.scope()))
@@ -295,6 +301,14 @@ bool ASTJsonExporter::visit(ContractDefinition const& _node)
 		attributes.emplace_back("fullyImplemented", _node.annotation().unimplementedDeclarations->empty());
 	if (!_node.annotation().linearizedBaseContracts.empty())
 		attributes.emplace_back("linearizedBaseContracts", getContainerIds(_node.annotation().linearizedBaseContracts));
+
+	if (!_node.annotation().internalFunctionIDs.empty())
+	{
+		Json::Value internalFunctionIDs(Json::objectValue);
+		for (auto const& [functionDefinition, internalFunctionID]: _node.annotation().internalFunctionIDs)
+			internalFunctionIDs[to_string(functionDefinition->id())] = internalFunctionID;
+		attributes.emplace_back("internalFunctionIDs", std::move(internalFunctionIDs));
+	}
 
 	setJsonNode(_node, "ContractDefinition", std::move(attributes));
 	return false;
@@ -329,19 +343,31 @@ bool ASTJsonExporter::visit(UsingForDirective const& _node)
 	vector<pair<string, Json::Value>> attributes = {
 		make_pair("typeName", _node.typeName() ? toJson(*_node.typeName()) : Json::nullValue)
 	};
+
 	if (_node.usesBraces())
 	{
 		Json::Value functionList;
-		for (auto const& function: _node.functionsOrLibrary())
+		for (auto&& [function, op]: _node.functionsAndOperators())
 		{
 			Json::Value functionNode;
-			functionNode["function"] = toJson(*function);
+			if (!op.has_value())
+				functionNode["function"] = toJson(*function);
+			else
+			{
+				functionNode["definition"] = toJson(*function);
+				functionNode["operator"] = string(TokenTraits::toString(*op));
+			}
 			functionList.append(std::move(functionNode));
 		}
 		attributes.emplace_back("functionList", std::move(functionList));
 	}
 	else
-		attributes.emplace_back("libraryName", toJson(*_node.functionsOrLibrary().front()));
+	{
+		auto const& functionAndOperators = _node.functionsAndOperators();
+		solAssert(_node.functionsAndOperators().size() == 1);
+		solAssert(!functionAndOperators.front().second.has_value());
+		attributes.emplace_back("libraryName", toJson(*(functionAndOperators.front().first)));
+	}
 	attributes.emplace_back("global", _node.global());
 
 	setJsonNode(_node, "UsingForDirective", std::move(attributes));
@@ -354,6 +380,7 @@ bool ASTJsonExporter::visit(StructDefinition const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
+		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
 		make_pair("members", toJson(_node.members())),
 		make_pair("scope", idOrNull(_node.scope()))
@@ -371,6 +398,7 @@ bool ASTJsonExporter::visit(EnumDefinition const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
+		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
 		make_pair("members", toJson(_node.members()))
 	};
 
@@ -455,6 +483,7 @@ bool ASTJsonExporter::visit(FunctionDefinition const& _node)
 		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
 	if (!_node.annotation().baseFunctions.empty())
 		attributes.emplace_back(make_pair("baseFunctions", getContainerIds(_node.annotation().baseFunctions, true)));
+
 	setJsonNode(_node, "FunctionDefinition", std::move(attributes));
 	return false;
 }
@@ -598,7 +627,11 @@ bool ASTJsonExporter::visit(Mapping const& _node)
 {
 	setJsonNode(_node, "Mapping", {
 		make_pair("keyType", toJson(_node.keyType())),
+		make_pair("keyName", _node.keyName()),
+		make_pair("keyNameLocation", sourceLocationToString(_node.keyNameLocation())),
 		make_pair("valueType", toJson(_node.valueType())),
+		make_pair("valueName", _node.valueName()),
+		make_pair("valueNameLocation", sourceLocationToString(_node.valueNameLocation())),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
 	});
 	return false;
@@ -825,6 +858,9 @@ bool ASTJsonExporter::visit(UnaryOperation const& _node)
 		make_pair("operator", TokenTraits::toString(_node.getOperator())),
 		make_pair("subExpression", toJson(_node.subExpression()))
 	};
+	// NOTE: This annotation is guaranteed to be set but only if we didn't stop at the parsing stage.
+	if (_node.annotation().userDefinedFunction.set() && *_node.annotation().userDefinedFunction != nullptr)
+		attributes.emplace_back("function", nodeId(**_node.annotation().userDefinedFunction));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "UnaryOperation", std::move(attributes));
 	return false;
@@ -838,6 +874,9 @@ bool ASTJsonExporter::visit(BinaryOperation const& _node)
 		make_pair("rightExpression", toJson(_node.rightExpression())),
 		make_pair("commonType", typePointerToJson(_node.annotation().commonType)),
 	};
+	// NOTE: This annotation is guaranteed to be set but only if we didn't stop at the parsing stage.
+	if (_node.annotation().userDefinedFunction.set() && *_node.annotation().userDefinedFunction != nullptr)
+		attributes.emplace_back("function", nodeId(**_node.annotation().userDefinedFunction));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "BinaryOperation", std::move(attributes));
 	return false;

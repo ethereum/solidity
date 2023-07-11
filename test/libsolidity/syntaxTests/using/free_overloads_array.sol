@@ -6,4 +6,4 @@ function f(uint x, uint y) pure returns (int) {
 }
 using {f} for uint;
 // ----
-// DeclarationError 7920: (138-139): Identifier not found or not unique.
+// DeclarationError 9589: (138-139): Identifier is not a function name or not unique.

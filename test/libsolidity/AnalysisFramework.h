@@ -72,7 +72,7 @@ protected:
 	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
 	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};
 
-	/// @returns reference to lazy-instanciated CompilerStack.
+	/// @returns reference to lazy-instantiated CompilerStack.
 	solidity::frontend::CompilerStack& compiler()
 	{
 		if (!m_compiler)
@@ -80,7 +80,7 @@ protected:
 		return *m_compiler;
 	}
 
-	/// @returns reference to lazy-instanciated CompilerStack.
+	/// @returns reference to lazy-instantiated CompilerStack.
 	solidity::frontend::CompilerStack const& compiler() const
 	{
 		if (!m_compiler)

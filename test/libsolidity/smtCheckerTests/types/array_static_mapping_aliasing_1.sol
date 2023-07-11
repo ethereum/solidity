@@ -28,4 +28,4 @@ contract C
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (456-487): CHC: Assertion violation happens here.
-// Info 1180: Contract invariant(s) for :C:\n!(severalMaps3d.length <= 1)\n!(severalMaps8.length <= 1)\n
+// Info 1391: CHC: 8 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

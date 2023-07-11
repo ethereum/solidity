@@ -12,7 +12,5 @@ contract C {
         return a.length;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 7

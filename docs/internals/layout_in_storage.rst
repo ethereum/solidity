@@ -208,7 +208,7 @@ of types), arrays have its ``base`` type, and structs list their ``members`` in
 the same format as the top-level ``storage`` (see :ref:`above
 <storage-layout-top-level>`).
 
-.. note ::
+.. note::
   The JSON output format of a contract's storage layout is still considered experimental
   and is subject to change in non-breaking releases of Solidity.
 
@@ -232,7 +232,7 @@ value and reference types, types that are encoded packed, and nested types.
         uint y;
         S s;
         address addr;
-        mapping (uint => mapping (address => bool)) map;
+        mapping(uint => mapping(address => bool)) map;
         uint[] array;
         string s1;
         bytes b1;

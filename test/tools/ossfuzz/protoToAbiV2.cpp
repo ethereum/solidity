@@ -944,7 +944,7 @@ string TypeVisitor::visit(StructType const& _type)
 		structDefinition(_type);
 		// Set last dyn param if struct contains a dyn param e.g., bytes, array etc.
 		m_isLastDynParamRightPadded = DynParamVisitor().visit(_type);
-		// If top-level struct is a non-emtpy struct, assign the name S<suffix>
+		// If top-level struct is a non-empty struct, assign the name S<suffix>
 		m_baseType = s_structTypeName + to_string(m_structStartCounter);
 	}
 	else

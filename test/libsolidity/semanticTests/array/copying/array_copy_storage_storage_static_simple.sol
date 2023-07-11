@@ -9,8 +9,6 @@ contract C {
         return (data2[0], data2[1]);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // test() -> left(0x01), left(0x02)
 // gas legacy: 90001

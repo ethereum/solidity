@@ -12,8 +12,6 @@ contract C {
         return 33;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // _() -> 88
 // g() -> 88

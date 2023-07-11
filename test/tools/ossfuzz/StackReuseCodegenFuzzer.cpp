@@ -27,6 +27,9 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
+#include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/CompilabilityChecker.h>
+
 #include <libevmasm/Instruction.h>
 
 #include <liblangutil/EVMVersion.h>
@@ -46,6 +49,24 @@ using namespace solidity::langutil;
 using namespace std;
 
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
+
+namespace
+{
+/// @returns true if there are recursive functions, false otherwise.
+bool recursiveFunctionExists(Dialect const& _dialect, yul::Object& _object)
+{
+	auto recursiveFunctions = CallGraphGenerator::callGraph(*_object.code).recursiveFunctions();
+	for(auto&& [function, variables]: CompilabilityChecker{
+			_dialect,
+			_object,
+			true
+		}.unreachableVariables
+	)
+		if(recursiveFunctions.count(function))
+			return true;
+	return false;
+}
+}
 
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
@@ -78,45 +99,58 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = false;
 	bytes unoptimisedByteCode;
+	bool recursiveFunction = false;
+	bool unoptimizedStackTooDeep = false;
 	try
 	{
-		unoptimisedByteCode = YulAssembler{version, nullopt, settings, yul_source}.assemble();
+		YulAssembler assembler{version, nullopt, settings, yul_source};
+		unoptimisedByteCode = assembler.assemble();
+		auto yulObject = assembler.object();
+		recursiveFunction = recursiveFunctionExists(
+			EVMDialect::strictAssemblyForEVMObjects(version),
+			*yulObject
+		);
 	}
 	catch (solidity::yul::StackTooDeepError const&)
 	{
-		return;
+		unoptimizedStackTooDeep = true;
 	}
 
-	evmc::Result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
-	if (deployResult.status_code != EVMC_SUCCESS)
-		return;
-	auto callMessage = YulEvmoneUtility{}.callMessage(deployResult.create_address);
-	evmc::Result callResult = hostContext.call(callMessage);
-	// If the fuzzer synthesized input does not contain the revert opcode which
-	// we lazily check by string find, the EVM call should not revert.
-	bool noRevertInSource = yul_source.find("revert") == string::npos;
-	bool noInvalidInSource = yul_source.find("invalid") == string::npos;
-	if (noInvalidInSource)
-		solAssert(
-			callResult.status_code != EVMC_INVALID_INSTRUCTION,
-			"Invalid instruction."
-		);
-	if (noRevertInSource)
-		solAssert(
-			callResult.status_code != EVMC_REVERT,
-			"SolidityEvmoneInterface: EVM One reverted"
-		);
-	// Bail out on serious errors encountered during a call.
-	if (YulEvmoneUtility{}.seriousCallError(callResult.status_code))
-		return;
-	solAssert(
-		(callResult.status_code == EVMC_SUCCESS ||
-		(!noRevertInSource && callResult.status_code == EVMC_REVERT) ||
-		(!noInvalidInSource && callResult.status_code == EVMC_INVALID_INSTRUCTION)),
-		"Unoptimised call failed."
-	);
 	ostringstream unoptimizedState;
-	unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
+	bool noRevertInSource = true;
+	bool noInvalidInSource = true;
+	if (!unoptimizedStackTooDeep)
+	{
+		evmc::Result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
+		if (deployResult.status_code != EVMC_SUCCESS)
+			return;
+		auto callMessage = YulEvmoneUtility{}.callMessage(deployResult.create_address);
+		evmc::Result callResult = hostContext.call(callMessage);
+		// If the fuzzer synthesized input does not contain the revert opcode which
+		// we lazily check by string find, the EVM call should not revert.
+		noRevertInSource = yul_source.find("revert") == string::npos;
+		noInvalidInSource = yul_source.find("invalid") == string::npos;
+		if (noInvalidInSource)
+			solAssert(
+				callResult.status_code != EVMC_INVALID_INSTRUCTION,
+				"Invalid instruction."
+			);
+		if (noRevertInSource)
+			solAssert(
+				callResult.status_code != EVMC_REVERT,
+				"SolidityEvmoneInterface: EVM One reverted"
+			);
+		// Bail out on serious errors encountered during a call.
+		if (YulEvmoneUtility{}.seriousCallError(callResult.status_code))
+			return;
+		solAssert(
+			(callResult.status_code == EVMC_SUCCESS ||
+			(!noRevertInSource && callResult.status_code == EVMC_REVERT) ||
+			(!noInvalidInSource && callResult.status_code == EVMC_INVALID_INSTRUCTION)),
+			"Unoptimised call failed."
+		);
+		unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
+	}
 
 	settings.runYulOptimiser = true;
 	settings.optimizeStackAllocation = true;
@@ -127,9 +161,14 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 	catch (solidity::yul::StackTooDeepError const&)
 	{
-		return;
+		if (!recursiveFunction)
+			throw;
+		else
+			return;
 	}
 
+	if (unoptimizedStackTooDeep)
+		return;
 	// Reset host before running optimised code.
 	hostContext.reset();
 	evmc::Result deployResultOpt = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
@@ -158,8 +197,13 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	ostringstream optimizedState;
 	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
 
-	solAssert(
-		unoptimizedState.str() == optimizedState.str(),
-		"State of unoptimised and optimised stack reused code do not match."
-	);
+	if (unoptimizedState.str() != optimizedState.str())
+	{
+		cout << unoptimizedState.str() << endl;
+		cout << optimizedState.str() << endl;
+		solAssert(
+			false,
+			"State of unoptimised and optimised stack reused code do not match."
+		);
+	}
 }

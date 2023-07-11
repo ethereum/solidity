@@ -7,9 +7,8 @@ contract c {
         return data;
     }
 }
-
 // ----
 // test() -> 0x20, 29, 0x0303030303030303030303030303030303030303030303030303030303000000
 // gas irOptimized: 109310
-// gas legacy: 101362
+// gas legacy: 101220
 // gas legacyOptimized: 123422

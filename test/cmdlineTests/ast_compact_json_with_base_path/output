@@ -45,7 +45,8 @@ JSON AST (compact format):
       "nodes": [],
       "scope": 6,
       "src": "60:13:0",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "36:38:0"

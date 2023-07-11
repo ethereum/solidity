@@ -47,7 +47,6 @@ contract C {
         return m2[0];
     }
 }
-
 // ----
 // from_storage_to_static_array() -> 0, 7
 // from_storage_to_dynamic_array() -> 0x20, 1, 7

@@ -43,7 +43,6 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/FunctionSpecializer.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedFunctionParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -70,7 +69,6 @@
 #include <libyul/AST.h>
 #include <libyul/Object.h>
 
-#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/evm/NoOutputAssembly.h>
 
 #include <libsolutil/CommonData.h>
@@ -212,13 +210,6 @@ void OptimiserSuite::run(
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 			StackLimitEvader::run(suite.m_context, _object);
 	}
-	else if (dynamic_cast<WasmDialect const*>(&_dialect))
-	{
-		// If the first statement is an empty block, remove it.
-		// We should only have function definitions after that.
-		if (ast.statements.size() > 1 && std::get<Block>(ast.statements.front()).statements.empty())
-			ast.statements.erase(ast.statements.begin());
-	}
 
 	dispenser.reset(ast);
 	NameSimplifier::run(suite.m_context, ast);
@@ -280,7 +271,6 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			LoopInvariantCodeMotion,
 			UnusedAssignEliminator,
 			UnusedStoreEliminator,
-			ReasoningBasedSimplifier,
 			Rematerialiser,
 			SSAReverser,
 			SSATransform,
@@ -320,7 +310,6 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{LiteralRematerialiser::name,         'T'},
 		{LoadResolver::name,                  'L'},
 		{LoopInvariantCodeMotion::name,       'M'},
-		{ReasoningBasedSimplifier::name,      'R'},
 		{UnusedAssignEliminator::name,        'r'},
 		{UnusedStoreEliminator::name,         'S'},
 		{Rematerialiser::name,                'm'},

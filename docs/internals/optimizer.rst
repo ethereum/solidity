@@ -27,7 +27,7 @@ optimized Yul IR for a Solidity source. Similarly, one can use ``solc --strict-a
 for a stand-alone Yul mode.
 
 .. note::
-    The `peephole optimizer <https://en.wikipedia.org/wiki/Peephole_optimization>`_ and the inliner are always
+    The `peephole optimizer <https://en.wikipedia.org/wiki/Peephole_optimization>`_ is always
     enabled by default and can only be turned off via the :ref:`Standard JSON <compiler-api>`.
 
 You can find more details on both optimizer modules and their optimization steps below.
@@ -316,7 +316,6 @@ Abbreviation Full name
 ``L``        :ref:`load-resolver`
 ``M``        :ref:`loop-invariant-code-motion`
 ``r``        :ref:`redundant-assign-eliminator`
-``R``        :ref:`reasoning-based-simplifier` - highly experimental
 ``m``        :ref:`rematerialiser`
 ``V``        :ref:`SSA-reverser`
 ``a``        :ref:`SSA-transform`
@@ -330,10 +329,6 @@ Abbreviation Full name
 Some steps depend on properties ensured by ``BlockFlattener``, ``FunctionGrouper``, ``ForLoopInitRewriter``.
 For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
 
-The ReasoningBasedSimplifier is an optimizer step that is currently not enabled
-in the default set of steps. It uses an SMT solver to simplify arithmetic expressions
-and boolean conditions. It has not received thorough testing or validation yet and can produce
-non-reproducible results, so please use with care!
 
 Selecting Optimizations
 -----------------------
@@ -826,10 +821,10 @@ if the common subexpression eliminator was run right before it.
 
 .. _expression-simplifier:
 
-Expression Simplifier
-^^^^^^^^^^^^^^^^^^^^^
+ExpressionSimplifier
+^^^^^^^^^^^^^^^^^^^^
 
-The Expression Simplifier uses the Dataflow Analyzer and makes use
+The ExpressionSimplifier uses the Dataflow Analyzer and makes use
 of a list of equivalence transforms on expressions like ``X + 0 -> X``
 to simplify the code.
 
@@ -862,22 +857,6 @@ currently stored in storage resp. memory, if known.
 Works best if the code is in SSA form.
 
 Prerequisite: Disambiguator, ForLoopInitRewriter.
-
-.. _reasoning-based-simplifier:
-
-ReasoningBasedSimplifier
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-This optimizer uses SMT solvers to check whether ``if`` conditions are constant.
-
-- If ``constraints AND condition`` is UNSAT, the condition is never true and the whole body can be removed.
-- If ``constraints AND NOT condition`` is UNSAT, the condition is always true and can be replaced by ``1``.
-
-The simplifications above can only be applied if the condition is movable.
-
-It is only effective on the EVM dialect, but safe to use on other dialects.
-
-Prerequisite: Disambiguator, SSATransform.
 
 Statement-Scale Simplifications
 -------------------------------
@@ -1162,7 +1141,7 @@ will be transformed into the code below after the Unused Store Eliminator step i
 For memory store operations, things are generally simpler, at least in the outermost yul block as all such
 statements will be removed if they are never read from in any code path.
 At function analysis level, however, the approach is similar to ``sstore``, as we do not know whether the memory location will
-be read once we leave the function's scope, so the statement will be removed only if all code code paths lead to a memory overwrite.
+be read once we leave the function's scope, so the statement will be removed only if all code paths lead to a memory overwrite.
 
 Best run in SSA form.
 
@@ -1279,8 +1258,8 @@ This is a tiny step that helps in reversing the effects of the SSA transform
 if it is combined with the Common Subexpression Eliminator and the
 Unused Pruner.
 
-The SSA form we generate is detrimental to code generation on the EVM and
-WebAssembly alike because it generates many local variables. It would
+The SSA form we generate is detrimental to code generation
+because it produces many local variables. It would
 be better to just re-use existing variables with assignments instead of
 fresh variable declarations.
 
@@ -1398,15 +1377,3 @@ into
     }
 
 The LiteralRematerialiser should be run before this step.
-
-
-WebAssembly specific
---------------------
-
-MainFunction
-^^^^^^^^^^^^
-
-Changes the topmost block to be a function with a specific name ("main") which has no
-inputs nor outputs.
-
-Depends on the Function Grouper.

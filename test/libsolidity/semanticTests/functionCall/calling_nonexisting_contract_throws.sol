@@ -21,9 +21,6 @@ contract C {
         return 7;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> FAILURE
 // g() -> FAILURE

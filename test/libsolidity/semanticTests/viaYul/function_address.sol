@@ -9,8 +9,6 @@ contract C {
       return a.address;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0xc06afe3a8444fc0004668591e8306bfb9968e79e
 // g() -> true

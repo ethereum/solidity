@@ -105,11 +105,16 @@ void FuzzerUtil::testCompiler(
 	{
 		forceSMT(_input);
 		compiler.setModelCheckerSettings({
+			/*bmcLoopIterations*/1,
 			frontend::ModelCheckerContracts::Default(),
 			/*divModWithSlacks*/true,
 			frontend::ModelCheckerEngine::All(),
+			frontend::ModelCheckerExtCalls{},
 			frontend::ModelCheckerInvariants::All(),
+			/*printQuery=*/false,
+			/*showProvedSafe=*/false,
 			/*showUnproved=*/false,
+			/*showUnsupported=*/false,
 			smtutil::SMTSolverChoice::All(),
 			frontend::ModelCheckerTargets::Default(),
 			/*timeout=*/1
@@ -118,7 +123,7 @@ void FuzzerUtil::testCompiler(
 	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
-	compiler.enableIRGeneration(_compileViaYul);
+	compiler.setViaIR(_compileViaYul);
 	try
 	{
 		compiler.compile();
@@ -134,6 +139,8 @@ void FuzzerUtil::testCompiler(
 	}
 	catch (StackTooDeepError const&)
 	{
+		if (_optimize && _compileViaYul)
+			throw;
 	}
 }
 
@@ -189,7 +196,7 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 
 	for (bool isCreation: {false, true})
 	{
-		Assembly assembly{isCreation, {}};
+		Assembly assembly{langutil::EVMVersion{}, isCreation, {}};
 		for (u256 const& n: numbers)
 		{
 			if (!_quiet)

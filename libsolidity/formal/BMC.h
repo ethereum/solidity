@@ -60,6 +60,7 @@ public:
 	BMC(
 		smt::EncodingContext& _context,
 		langutil::UniqueErrorReporter& _errorReporter,
+		langutil::UniqueErrorReporter& _unsupportedErrorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		ModelCheckerSettings _settings,
@@ -99,6 +100,8 @@ private:
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Return const& _node) override;
 	bool visit(TryStatement const& _node) override;
+	bool visit(Break const& _node) override;
+	bool visit(Continue const& _node) override;
 	//@}
 
 	/// Visitor helpers.
@@ -135,7 +138,14 @@ private:
 		Expression const* expression;
 		std::vector<CallStackEntry> callStack;
 		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> modelExpressions;
+
+		friend bool operator<(BMCVerificationTarget const& _a, BMCVerificationTarget const& _b)
+		{
+			return _a.expression->id() < _b.expression->id();
+		}
 	};
+
+	std::string targetDescription(BMCVerificationTarget const& _target);
 
 	void checkVerificationTargets();
 	void checkVerificationTarget(BMCVerificationTarget& _target);
@@ -156,13 +166,13 @@ private:
 	//@{
 	/// Check that a condition can be satisfied.
 	void checkCondition(
+		BMCVerificationTarget const& _target,
 		smtutil::Expression _condition,
 		std::vector<CallStackEntry> const& _callStack,
 		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> const& _modelExpressions,
 		langutil::SourceLocation const& _location,
 		langutil::ErrorId _errorHappens,
 		langutil::ErrorId _errorMightHappen,
-		std::string const& _description,
 		std::string const& _additionalValueName = "",
 		smtutil::Expression const* _additionalValue = nullptr
 	);
@@ -180,6 +190,9 @@ private:
 	smtutil::CheckResult checkSatisfiable();
 	//@}
 
+	std::tuple<smtutil::Expression, smtutil::Expression> mergeVariablesFromLoopCheckpoints();
+	bool isInsideLoop() const;
+
 	std::unique_ptr<smtutil::SolverInterface> m_interface;
 
 	/// Flags used for better warning messages.
@@ -188,11 +201,29 @@ private:
 
 	std::vector<BMCVerificationTarget> m_verificationTargets;
 
-	/// Targets that were already proven.
+	/// Targets proved safe by this engine.
+	std::map<ASTNode const*, std::set<BMCVerificationTarget>, smt::EncodingContext::IdCompare> m_safeTargets;
+
+	/// Targets that were already proven before this engine started.
 	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> m_solvedTargets;
 
 	/// Number of verification conditions that could not be proved.
 	size_t m_unprovedAmt = 0;
-};
 
+	enum class LoopControlKind
+	{
+		Continue,
+		Break
+	};
+
+	// Current path conditions and SSA indices for break or continue statement
+	struct LoopControl {
+		LoopControlKind kind;
+		smtutil::Expression pathConditions;
+		VariableIndices variableIndices;
+	};
+
+	// Loop control statements for every loop
+	std::stack<std::vector<LoopControl>> m_loopCheckpoints;
+};
 }

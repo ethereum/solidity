@@ -23,7 +23,8 @@
       "nodeType": "ContractDefinition",
       "nodes": [],
       "src": "28:13:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "28:14:1"
@@ -52,7 +53,8 @@
       "nodeType": "ContractDefinition",
       "nodes": [],
       "src": "62:13:2",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "62:14:2"
@@ -197,7 +199,8 @@
         }
       ],
       "src": "0:213:3",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:214:3"

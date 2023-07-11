@@ -19,8 +19,6 @@ function id(uint x) pure returns (uint) {
 function zero(uint) pure returns (uint) {
     return 0;
 }
-
-
 // ----
 // f(uint256): 10 -> 10
 // g(uint256): 10 -> 0

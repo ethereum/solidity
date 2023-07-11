@@ -22,7 +22,7 @@
 set -e
 
 source scripts/common.sh
-source test/externalTests/common.sh
+source scripts/externalTests/common.sh
 
 REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
@@ -43,12 +43,12 @@ function gp2_test
     local config_var="config"
 
     local compile_only_presets=(
-        legacy-no-optimize        # Tests doing `new GPv2VaultRelayer` fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
+        ir-no-optimize            # Tests fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
+        legacy-no-optimize        # Tests fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
     )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_amount_1468 is 10 slot(s) too deep inside the stack."
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_offset_3451 is 1 slot(s) too deep inside the stack."
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -69,12 +69,13 @@ function gp2_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     yarn
 
-    # New hardhat release breaks GP2 tests, and since GP2 repository has been archived, we are pinning hardhat
-    # to the previous stable version. See https://github.com/ethereum/solidity/pull/13485
-    yarn add hardhat@2.10.2
-    # hardhat-tenderly@1.2.0 and upwards break the build, hence we are pinning the version to the last stable one.
-    # See https://github.com/cowprotocol/contracts/issues/32
-    yarn add @tenderly/hardhat-tenderly@1.1.6
+    # Workaround for error caused by the last release of hardhat-waffle@2.0.6 that bumps ethereum-waffle
+    # to version 4.0.10 and breaks gp2 build with the following error:
+    #
+    #  Cannot find module 'ethereum-waffle/dist/cjs/src/deployContract'
+    #
+    # See: https://github.com/NomicFoundation/hardhat-waffle/commit/83ee9cb36ee59d0bedacbbd00043f030af104ad0
+    yarn add '@nomiclabs/hardhat-waffle@2.0.5'
 
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
     rm -r node_modules/@gnosis.pm/safe-contracts/build/

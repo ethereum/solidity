@@ -20,4 +20,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (256-270): CHC: Assertion violation happens here.
-// Info 1180: Contract invariant(s) for :C:\n!(m.length <= 0)\n!(m[0][1].length <= 2)\n
+// Info 1391: CHC: 8 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

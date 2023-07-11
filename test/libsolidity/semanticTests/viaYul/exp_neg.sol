@@ -3,8 +3,6 @@ contract C {
         return x**y;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(int256,uint256): 0, 0 -> 1
 // f(int256,uint256): 0, 1 -> 0x00

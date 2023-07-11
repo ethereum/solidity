@@ -13,3 +13,4 @@ contract Thing is IThing {
 
     mapping(uint256=>Value) public override value;
 }
+// ----

@@ -72,7 +72,8 @@
       "nodes": [],
       "scope": 14,
       "src": "20:12:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "body":
@@ -179,7 +180,8 @@
       ],
       "scope": 14,
       "src": "53:29:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:83:1"

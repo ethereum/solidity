@@ -195,7 +195,7 @@ public:
 
 	static MagicType const* meta(Type const* _type);
 
-	static MappingType const* mapping(Type const* _keyType, Type const* _valueType);
+	static MappingType const* mapping(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName);
 
 	static UserDefinedValueType const* userDefinedValueType(UserDefinedValueTypeDefinition const& _definition);
 

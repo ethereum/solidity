@@ -18,11 +18,5 @@
             "type": "DeclarationError"
         }
     ],
-    "sources":
-    {
-        "":
-        {
-            "id": 0
-        }
-    }
+    "sources": {}
 }

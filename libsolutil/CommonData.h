@@ -267,7 +267,7 @@ template<
 	typename MapType,
 	typename KeyType,
 	typename ValueType = std::decay_t<decltype(std::declval<MapType>().find(std::declval<KeyType>())->second)> const&,
-	typename AllowCopyType = std::conditional_t<std::is_pod_v<ValueType> || std::is_pointer_v<ValueType>, detail::allow_copy, void*>
+	typename AllowCopyType = std::conditional_t<(std::is_trivial_v<ValueType> && std::is_standard_layout_v<ValueType>) || std::is_pointer_v<ValueType>, detail::allow_copy, void*>
 >
 decltype(auto) valueOrDefault(
 	MapType&& _map,

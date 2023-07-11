@@ -11,4 +11,4 @@ contract SomeContract {
 }
 // ----
 // DeclarationError 2333: (106-145): Identifier already declared.
-// TypeError 5704: (185-195): Type is not callable
+// TypeError 5704: (185-195): This expression is not callable.

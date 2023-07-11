@@ -4,7 +4,5 @@ contract C {
         return [4][0];
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 4

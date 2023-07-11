@@ -12,7 +12,5 @@ contract B is A {
         z = x;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // z() -> 1

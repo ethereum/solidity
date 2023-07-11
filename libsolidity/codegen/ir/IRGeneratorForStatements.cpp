@@ -179,7 +179,7 @@ private:
 			else
 			{
 				solAssert(!IRVariable{*varDecl}.hasPart("offset"));
-				value = "0";
+				value = "0"s;
 			}
 		}
 		else if (varDecl->type()->dataStoredIn(DataLocation::CallData))
@@ -672,6 +672,30 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 {
 	setLocation(_unaryOperation);
+
+	FunctionDefinition const* function = *_unaryOperation.annotation().userDefinedFunction;
+	if (function)
+	{
+		_unaryOperation.subExpression().accept(*this);
+		setLocation(_unaryOperation);
+
+		solAssert(function->isImplemented());
+		solAssert(function->isFree());
+		solAssert(function->parameters().size() == 1);
+		solAssert(function->returnParameters().size() == 1);
+		solAssert(*function->returnParameters()[0]->type() == *_unaryOperation.annotation().type);
+
+		string argument = expressionAsType(_unaryOperation.subExpression(), *function->parameters()[0]->type());
+		solAssert(!argument.empty());
+
+		solAssert(_unaryOperation.userDefinedFunctionType()->kind() == FunctionType::Kind::Internal);
+		define(_unaryOperation) <<
+			m_context.enqueueFunctionForCodeGeneration(*function) <<
+			("(" + argument + ")\n");
+
+		return false;
+	}
+
 	Type const& resultType = type(_unaryOperation);
 	Token const op = _unaryOperation.getOperator();
 
@@ -774,6 +798,31 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	setLocation(_binOp);
+
+	FunctionDefinition const* function = *_binOp.annotation().userDefinedFunction;
+	if (function)
+	{
+		_binOp.leftExpression().accept(*this);
+		_binOp.rightExpression().accept(*this);
+		setLocation(_binOp);
+
+		solAssert(function->isImplemented());
+		solAssert(function->isFree());
+		solAssert(function->parameters().size() == 2);
+		solAssert(function->returnParameters().size() == 1);
+		solAssert(*function->returnParameters()[0]->type() == *_binOp.annotation().type);
+
+		string left = expressionAsType(_binOp.leftExpression(), *function->parameters()[0]->type());
+		string right = expressionAsType(_binOp.rightExpression(), *function->parameters()[1]->type());
+		solAssert(!left.empty() && !right.empty());
+
+		solAssert(_binOp.userDefinedFunctionType()->kind() == FunctionType::Kind::Internal);
+		define(_binOp) <<
+			m_context.enqueueFunctionForCodeGeneration(*function) <<
+			("(" + left + ", " + right + ")\n");
+
+		return false;
+	}
 
 	solAssert(!!_binOp.annotation().commonType);
 	Type const* commonType = _binOp.annotation().commonType;
@@ -1822,8 +1871,13 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			define(_memberAccess) << "coinbase()\n";
 		else if (member == "timestamp")
 			define(_memberAccess) << "timestamp()\n";
-		else if (member == "difficulty")
-			define(_memberAccess) << "difficulty()\n";
+		else if (member == "difficulty" || member == "prevrandao")
+		{
+			if (m_context.evmVersion().hasPrevRandao())
+				define(_memberAccess) << "prevrandao()\n";
+			else
+				define(_memberAccess) << "difficulty()\n";
+		}
 		else if (member == "number")
 			define(_memberAccess) << "number()\n";
 		else if (member == "gaslimit")
@@ -2753,7 +2807,7 @@ void IRGeneratorForStatements::assignInternalFunctionIDIfNotCalledDirectly(
 		return;
 
 	define(IRVariable(_expression).part("functionIdentifier")) <<
-		to_string(m_context.internalFunctionID(_referencedFunction, false)) <<
+		to_string(m_context.mostDerivedContract().annotation().internalFunctionIDs.at(&_referencedFunction)) <<
 		"\n";
 	m_context.addToInternalDispatch(_referencedFunction);
 }

@@ -6,7 +6,7 @@
 Function Modifiers
 ******************
 
-Modifiers can be used to change the behaviour of functions in a declarative way.
+Modifiers can be used to change the behavior of functions in a declarative way.
 For example,
 you can use a modifier to automatically check a condition prior to executing the function.
 
@@ -19,6 +19,7 @@ if they are marked ``virtual``. For details, please see
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.1 <0.9.0;
+    // This will report a warning due to deprecated selfdestruct
 
     contract owned {
         constructor() { owner = payable(msg.sender); }
@@ -60,7 +61,7 @@ if they are marked ``virtual``. For details, please see
     }
 
     contract Register is priced, destructible {
-        mapping (address => bool) registeredAddresses;
+        mapping(address => bool) registeredAddresses;
         uint price;
 
         constructor(uint initialPrice) { price = initialPrice; }

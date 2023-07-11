@@ -1,1 +1,0 @@
---strict-assembly --yul-dialect evm --machine ewasm --optimize --ewasm-ir

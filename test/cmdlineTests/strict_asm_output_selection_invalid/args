@@ -1,1 +1,1 @@
---strict-assembly --asm --asm-json --opcodes --bin --bin-runtime --abi --ir --ir-optimized --ewasm --hashes --userdoc --devdoc --metadata --storage-layout
+--strict-assembly --asm --asm-json --opcodes --bin --bin-runtime --abi --ir --ir-optimized --hashes --userdoc --devdoc --metadata --storage-layout

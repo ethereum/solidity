@@ -12,11 +12,8 @@ contract c {
         y = data1[30]; // should be cleared
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 8, 0
-// gas irOptimized: 196279
-// gas legacy: 194895
-// gas legacyOptimized: 194303
+// gas irOptimized: 196278
+// gas legacy: 194843
+// gas legacyOptimized: 194281

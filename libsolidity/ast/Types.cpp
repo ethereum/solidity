@@ -383,6 +383,38 @@ vector<UsingForDirective const*> usingForDirectivesForType(Type const& _type, AS
 
 }
 
+set<FunctionDefinition const*, ASTNode::CompareByID> Type::operatorDefinitions(
+	Token _token,
+	ASTNode const& _scope,
+	bool _unary
+) const
+{
+	if (!typeDefinition())
+		return {};
+
+	set<FunctionDefinition const*, ASTNode::CompareByID> matchingDefinitions;
+	for (UsingForDirective const* directive: usingForDirectivesForType(*this, _scope))
+		for (auto const& [identifierPath, operator_]: directive->functionsAndOperators())
+		{
+			if (operator_ != _token)
+				continue;
+
+			auto const& functionDefinition = dynamic_cast<FunctionDefinition const&>(
+				*identifierPath->annotation().referencedDeclaration
+			);
+			auto const* functionType = dynamic_cast<FunctionType const*>(
+				functionDefinition.libraryFunction() ? functionDefinition.typeViaContractName() : functionDefinition.type()
+			);
+			solAssert(functionType && !functionType->parameterTypes().empty());
+
+			size_t parameterCount = functionDefinition.parameterList().parameters().size();
+			if (*this == *functionType->parameterTypes().front() && (_unary ? parameterCount == 1 : parameterCount == 2))
+				matchingDefinitions.insert(&functionDefinition);
+		}
+
+	return matchingDefinitions;
+}
+
 MemberList::MemberMap Type::attachedFunctions(Type const& _type, ASTNode const& _scope)
 {
 	MemberList::MemberMap members;
@@ -405,8 +437,13 @@ MemberList::MemberMap Type::attachedFunctions(Type const& _type, ASTNode const& 
 	};
 
 	for (UsingForDirective const* ufd: usingForDirectivesForType(_type, _scope))
-		for (auto const& identifierPath: ufd->functionsOrLibrary())
+		for (auto const& [identifierPath, operator_]: ufd->functionsAndOperators())
 		{
+			if (operator_.has_value())
+				// Functions used to define operators are not automatically attached to the type.
+				// I.e. `using {f, f as +} for T` allows `T x; x.f()` but `using {f as +} for T` does not.
+				continue;
+
 			solAssert(identifierPath);
 			Declaration const* declaration = identifierPath->annotation().referencedDeclaration;
 			solAssert(declaration);
@@ -753,16 +790,17 @@ BoolResult FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) con
 
 TypeResult FixedPointType::unaryOperatorResult(Token _operator) const
 {
+	solAssert(_operator != Token::Add);
+
 	switch (_operator)
 	{
 	case Token::Delete:
 		// "delete" is ok for all fixed types
 		return TypeResult{TypeProvider::emptyTuple()};
-	case Token::Add:
 	case Token::Sub:
 	case Token::Inc:
 	case Token::Dec:
-		// for fixed, we allow +, -, ++ and --
+		// for fixed, we allow -, ++ and --
 		return this;
 	default:
 		return nullptr;
@@ -1656,7 +1694,7 @@ bool ArrayType::operator==(Type const& _other) const
 		return false;
 	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
 	if (
-		!ReferenceType::operator==(other) ||
+		!equals(other) ||
 		other.isByteArray() != isByteArray() ||
 		other.isString() != isString() ||
 		other.isDynamicallySized() != isDynamicallySized()
@@ -2166,7 +2204,7 @@ bool StructType::operator==(Type const& _other) const
 	if (_other.category() != category())
 		return false;
 	StructType const& other = dynamic_cast<StructType const&>(_other);
-	return ReferenceType::operator==(other) && other.m_struct == m_struct;
+	return equals(other) && other.m_struct == m_struct;
 }
 
 
@@ -2788,14 +2826,16 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	m_declaration(&_varDecl)
 {
 	auto returnType = _varDecl.annotation().type;
+	ASTString returnName;
 
 	while (true)
 	{
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType))
 		{
 			m_parameterTypes.push_back(mappingType->keyType());
-			m_parameterNames.emplace_back("");
+			m_parameterNames.push_back(mappingType->keyName());
 			returnType = mappingType->valueType();
+			returnName = mappingType->valueName();
 		}
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType))
 		{
@@ -2834,7 +2874,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 			DataLocation::Memory,
 			returnType
 		));
-		m_returnParameterNames.emplace_back("");
+		m_returnParameterNames.emplace_back(returnName);
 	}
 
 	solAssert(
@@ -4065,6 +4105,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			{"timestamp", TypeProvider::uint256()},
 			{"blockhash", TypeProvider::function(strings{"uint"}, strings{"bytes32"}, FunctionType::Kind::BlockHash, StateMutability::View)},
 			{"difficulty", TypeProvider::uint256()},
+			{"prevrandao", TypeProvider::uint256()},
 			{"number", TypeProvider::uint256()},
 			{"gaslimit", TypeProvider::uint256()},
 			{"chainid", TypeProvider::uint256()},

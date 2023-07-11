@@ -10,9 +10,6 @@ contract test {
         large = small;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // fixedBytesHex() -> "\xaa\xbb\x00\xff"
 // fixedBytes() -> "abc\x00\xff__"

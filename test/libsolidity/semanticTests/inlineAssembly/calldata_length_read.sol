@@ -7,8 +7,6 @@ contract C {
         assembly { l := x.length }
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // lenBytesRead(bytes): 0x20, 4, "abcd" -> 4
 // lenBytesRead(bytes): 0x20, 0, "abcd" -> 0x00

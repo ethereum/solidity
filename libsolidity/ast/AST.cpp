@@ -30,7 +30,9 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/tail.hpp>
+#include <range/v3/view/zip.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -218,9 +220,9 @@ vector<EventDefinition const*> const& ContractDefinition::definedInterfaceEvents
 				/// NOTE: this requires the "internal" version of an Event,
 				///       though here internal strictly refers to visibility,
 				///       and not to function encoding (jump vs. call)
-				auto const& function = e->functionType(true);
-				solAssert(function, "");
-				string eventSignature = function->externalSignature();
+				FunctionType const* functionType = e->functionType(true);
+				solAssert(functionType, "");
+				string eventSignature = functionType->externalSignature();
 				if (eventsSeen.count(eventSignature) == 0)
 				{
 					eventsSeen.insert(eventSignature);
@@ -239,6 +241,21 @@ vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() c
 		(*annotation().creationCallGraph)->emittedEvents +
 		(*annotation().deployedCallGraph)->emittedEvents
 	);
+}
+
+vector<EventDefinition const*> ContractDefinition::interfaceEvents(bool _requireCallGraph) const
+{
+	set<EventDefinition const*, CompareByID> result;
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		result += contract->events();
+	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set());
+	if (_requireCallGraph)
+		solAssert(annotation().creationCallGraph.set());
+	if (annotation().creationCallGraph.set())
+		result += usedInterfaceEvents();
+	// We could filter out all events that do not have an external interface
+	// if _requireCallGraph is false.
+	return util::convertContainer<vector<EventDefinition const*>>(std::move(result));
 }
 
 vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
@@ -365,6 +382,11 @@ Type const* UserDefinedValueTypeDefinition::type() const
 TypeDeclarationAnnotation& UserDefinedValueTypeDefinition::annotation() const
 {
 	return initAnnotation<TypeDeclarationAnnotation>();
+}
+
+std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingForDirective::functionsAndOperators() const
+{
+	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<vector>;
 }
 
 Type const* StructDefinition::type() const
@@ -893,6 +915,37 @@ ExpressionAnnotation& Expression::annotation() const
 MemberAccessAnnotation& MemberAccess::annotation() const
 {
 	return initAnnotation<MemberAccessAnnotation>();
+}
+
+OperationAnnotation& UnaryOperation::annotation() const
+{
+	return initAnnotation<OperationAnnotation>();
+}
+
+FunctionType const* UnaryOperation::userDefinedFunctionType() const
+{
+	if (*annotation().userDefinedFunction == nullptr)
+		return nullptr;
+
+	FunctionDefinition const* userDefinedFunction = *annotation().userDefinedFunction;
+	return dynamic_cast<FunctionType const*>(
+		userDefinedFunction->libraryFunction() ?
+		userDefinedFunction->typeViaContractName() :
+		userDefinedFunction->type()
+	);
+}
+
+FunctionType const* BinaryOperation::userDefinedFunctionType() const
+{
+	if (*annotation().userDefinedFunction == nullptr)
+		return nullptr;
+
+	FunctionDefinition const* userDefinedFunction = *annotation().userDefinedFunction;
+	return dynamic_cast<FunctionType const*>(
+		userDefinedFunction->libraryFunction() ?
+		userDefinedFunction->typeViaContractName() :
+		userDefinedFunction->type()
+	);
 }
 
 BinaryOperationAnnotation& BinaryOperation::annotation() const

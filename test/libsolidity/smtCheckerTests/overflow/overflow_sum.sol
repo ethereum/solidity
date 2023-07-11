@@ -15,4 +15,5 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Warning 4984: (185-192): CHC: Overflow (resulting value larger than 255) happens here.\nCounterexample:\n\nx = 255\n = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 4984: (185-192): CHC: Overflow (resulting value larger than 255) happens here.
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

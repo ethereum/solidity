@@ -41,15 +41,13 @@
 #include <libsolutil/vector_ref.h>
 
 #include <boost/version.hpp>
-#if (BOOST_VERSION < 106500)
-#error "Unsupported Boost version. At least 1.65 required."
-#endif
 
+#include <cstdint>
+#include <functional>
 #include <map>
+#include <string>
 #include <utility>
 #include <vector>
-#include <functional>
-#include <string>
 
 namespace solidity
 {

@@ -48,8 +48,8 @@ ModelChecker::ModelChecker(
 	m_errorReporter(_errorReporter),
 	m_settings(std::move(_settings)),
 	m_context(),
-	m_bmc(m_context, m_uniqueErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
-	m_chc(m_context, m_uniqueErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)
+	m_bmc(m_context, m_uniqueErrorReporter, m_unsupportedErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider),
+	m_chc(m_context, m_uniqueErrorReporter, m_unsupportedErrorReporter, _smtlib2Responses, _smtCallback, m_settings, _charStreamProvider)
 {
 }
 
@@ -125,12 +125,32 @@ void ModelChecker::analyze(SourceUnit const& _source)
 	if (m_settings.engine.chc)
 		m_chc.analyze(_source);
 
-	auto solvedTargets = m_chc.safeTargets();
+	map<ASTNode const*, set<VerificationTargetType>, smt::EncodingContext::IdCompare> solvedTargets;
+
+	for (auto const& [node, targets]: m_chc.safeTargets())
+		for (auto const& target: targets)
+			solvedTargets[node].insert(target.type);
+
 	for (auto const& [node, targets]: m_chc.unsafeTargets())
 		solvedTargets[node] += targets | ranges::views::keys;
 
 	if (m_settings.engine.bmc)
 		m_bmc.analyze(_source, solvedTargets);
+
+	if (m_settings.showUnsupported)
+	{
+		m_errorReporter.append(m_unsupportedErrorReporter.errors());
+		m_unsupportedErrorReporter.clear();
+	}
+	else if (!m_unsupportedErrorReporter.errors().empty())
+		m_errorReporter.warning(
+			5724_error,
+			{},
+			"SMTChecker: " +
+			to_string(m_unsupportedErrorReporter.errors().size()) +
+			" unsupported language feature(s)."
+			" Enable the model checker option \"show unsupported\" to see all of them."
+		);
 
 	m_errorReporter.append(m_uniqueErrorReporter.errors());
 	m_uniqueErrorReporter.clear();

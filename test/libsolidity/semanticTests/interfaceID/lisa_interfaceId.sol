@@ -39,7 +39,6 @@ contract Lisa is ERC165MappingImplementation, Simpson {
         return "yellow";
     }
 }
-
 // ----
 // supportsInterface(bytes4): left(0x01ffc9a0) -> false
 // supportsInterface(bytes4): left(0x01ffc9a7) -> true

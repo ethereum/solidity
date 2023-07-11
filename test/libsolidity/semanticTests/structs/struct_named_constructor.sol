@@ -9,8 +9,5 @@ contract C {
         s = S({x: true, a: 1});
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // s() -> 1, true

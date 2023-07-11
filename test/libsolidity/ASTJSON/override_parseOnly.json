@@ -51,7 +51,8 @@
         }
       ],
       "src": "0:48:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": true,
@@ -152,7 +153,8 @@
         }
       ],
       "src": "49:103:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -267,7 +269,8 @@
         }
       ],
       "src": "153:91:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:245:1"

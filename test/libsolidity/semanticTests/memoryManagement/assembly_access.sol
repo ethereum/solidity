@@ -10,7 +10,5 @@ contract C {
         assert(y != 0);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() ->

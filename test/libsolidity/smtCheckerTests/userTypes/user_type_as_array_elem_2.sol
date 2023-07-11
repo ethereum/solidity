@@ -13,4 +13,5 @@ contract C {
     }
 }
 // ----
-// Warning 6328: (200-238): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.p()\nC.inv2()
+// Warning 6328: (200-238): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

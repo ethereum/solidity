@@ -16,5 +16,4 @@ contract C {
   /** Some comment on mod.*/ modifier mod() { _; }
   /** Some comment on fn.*/ function fn() public {}
 }
-
 // ----

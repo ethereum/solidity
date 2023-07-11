@@ -16,8 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
- * Ewasm as output.
+ * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5
  */
 
 
@@ -30,15 +29,14 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
 #include <libyul/backends/evm/EVMMetrics.h>
-#include <libyul/backends/wasm/WasmDialect.h>
-#include <libyul/backends/wasm/WasmObjectCompiler.h>
-#include <libyul/backends/wasm/EVMToEwasmTranslator.h>
 #include <libyul/ObjectParser.h>
+#include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/Suite.h>
-
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
+
 #include <boost/algorithm/string.hpp>
+
 #include <optional>
 
 using namespace std;
@@ -57,8 +55,6 @@ Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _versi
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
 	case YulStack::Language::Yul:
 		return EVMDialectTyped::instance(_version);
-	case YulStack::Language::Ewasm:
-		return WasmDialect::instance();
 	}
 	yulAssert(false, "");
 	return Dialect::yulDeprecated();
@@ -91,33 +87,19 @@ bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const
 
 void YulStack::optimize()
 {
-	if (!m_optimiserSettings.runYulOptimiser)
-		return;
-
 	yulAssert(m_analysisSuccessful, "Analysis was not successful.");
+	yulAssert(m_parserResult);
+
+	if (
+		!m_optimiserSettings.runYulOptimiser &&
+		yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+	)
+		return;
 
 	m_analysisSuccessful = false;
 	yulAssert(m_parserResult, "");
 	optimize(*m_parserResult, true);
 	yulAssert(analyzeParsed(), "Invalid source code after optimization.");
-}
-
-void YulStack::translate(YulStack::Language _targetLanguage)
-{
-	if (m_language == _targetLanguage)
-		return;
-
-	yulAssert(
-		m_language == Language::StrictAssembly && _targetLanguage == Language::Ewasm,
-		"Invalid language combination"
-	);
-
-	*m_parserResult = EVMToEwasmTranslator(
-		languageToDialect(m_language, m_evmVersion),
-		*this
-	).run(*parserResult());
-
-	m_language = _targetLanguage;
 }
 
 bool YulStack::analyzeParsed()
@@ -182,13 +164,15 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	unique_ptr<GasMeter> meter;
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
 		meter = make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+
 	OptimiserSuite::run(
 		dialect,
 		meter.get(),
 		_object,
-		m_optimiserSettings.optimizeStackAllocation,
-		m_optimiserSettings.yulOptimiserSteps,
-		m_optimiserSettings.yulOptimiserCleanupSteps,
+		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
+		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.optimizeStackAllocation : true,
+		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.yulOptimiserSteps : "u",
+		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.yulOptimiserCleanupSteps : "",
 		_isCreation ? nullopt : make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
 	);
@@ -205,18 +189,6 @@ MachineAssemblyObject YulStack::assemble(Machine _machine) const
 	{
 	case Machine::EVM:
 		return assembleWithDeployed().first;
-	case Machine::Ewasm:
-	{
-		yulAssert(m_language == Language::Ewasm, "");
-		Dialect const& dialect = languageToDialect(m_language, EVMVersion{});
-
-		MachineAssemblyObject object;
-		auto result = WasmObjectCompiler::compile(*m_parserResult, dialect);
-		object.assembly = std::move(result.first);
-		object.bytecode = make_shared<evmasm::LinkerObject>();
-		object.bytecode->bytecode = std::move(result.second);
-		return object;
-	}
 	}
 	// unreachable
 	return MachineAssemblyObject();
@@ -264,9 +236,17 @@ YulStack::assembleEVMWithDeployed(optional<string_view> _deployName) const
 	yulAssert(m_parserResult->code, "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
-	evmasm::Assembly assembly(true, {});
+	evmasm::Assembly assembly(m_evmVersion, true, {});
 	EthAssemblyAdapter adapter(assembly);
-	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
+
+	// NOTE: We always need stack optimization when Yul optimizer is disabled (unless code contains
+	// msize). It being disabled just means that we don't use the full step sequence. We still run
+	// it with the minimal steps required to avoid "stack too deep".
+	bool optimize = m_optimiserSettings.optimizeStackAllocation || (
+		!m_optimiserSettings.runYulOptimiser &&
+		!yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+	);
+	compileEVM(adapter, optimize);
 
 	assembly.optimise(evmasm::Assembly::OptimiserSettings::translateSettings(m_optimiserSettings, m_evmVersion));
 
@@ -304,6 +284,13 @@ string YulStack::print(
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
 	return m_parserResult->toString(&languageToDialect(m_language, m_evmVersion), m_debugInfoSelection, _soliditySourceProvider) + "\n";
+}
+
+Json::Value YulStack::astJson() const
+{
+	yulAssert(m_parserResult, "");
+	yulAssert(m_parserResult->code, "");
+	return  m_parserResult->toJson();
 }
 
 shared_ptr<Object> YulStack::parserResult() const

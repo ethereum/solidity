@@ -15,4 +15,4 @@ contract D {
 // ====
 // SMTEngine: all
 // ----
-// Info 1180: Contract invariant(s) for :D:\n(items[1][2][3].y <= 0)\n
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

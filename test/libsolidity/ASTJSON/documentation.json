@@ -37,7 +37,8 @@
       "nodes": [],
       "scope": 3,
       "src": "28:13:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "28:14:1"
@@ -80,7 +81,8 @@
       "nodes": [],
       "scope": 6,
       "src": "62:13:2",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "62:14:2"
@@ -259,7 +261,11 @@
       ],
       "scope": 24,
       "src": "0:213:3",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents":
+      [
+        12
+      ]
     }
   ],
   "src": "0:214:3"

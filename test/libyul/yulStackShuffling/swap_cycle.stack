@@ -1,0 +1,22 @@
+[ v0 v1 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET RET v5 ]
+[ v1 v0 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET JUNK JUNK ]
+// ----
+// [ v0 v1 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET RET v5 ]
+// POP
+// [ v0 v1 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET RET ]
+// SWAP16
+// [ v0 RET v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET v1 ]
+// SWAP16
+// [ v0 v1 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET RET ]
+// POP
+// [ v0 v1 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET ]
+// SWAP15
+// [ v0 RET v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 v1 ]
+// SWAP16
+// [ v1 RET v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 v0 ]
+// SWAP15
+// [ v1 v0 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET ]
+// PUSH JUNK
+// [ v1 v0 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET JUNK ]
+// PUSH JUNK
+// [ v1 v0 v2 v3 v4 v5 v6 v7 v9 v10 v11 v12 v13 v14 v15 v16 RET JUNK JUNK ]

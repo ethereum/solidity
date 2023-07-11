@@ -63,7 +63,7 @@ void DocumentHoverHandler::operator()(MessageID _id, Json::Value const& _args)
 	auto const [sourceUnitName, lineColumn] = HandlerBase(*this).extractSourceUnitNameAndLineColumn(_args);
 	auto const [sourceNode, sourceOffset] = m_server.astNodeAndOffsetAtSourceLocation(sourceUnitName, lineColumn);
 
-	MarkdownBuilder markdown{};
+	MarkdownBuilder markdown;
 	auto rangeToHighlight = toRange(sourceNode->location());
 
 	// Try getting the type definition of the underlying AST node, if available.

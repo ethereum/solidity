@@ -12,6 +12,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Warning 6328: (90-116): CHC: Assertion violation happens here.\nCounterexample:\narray2d = [[[0]]]\nlast = 0\n\nTransaction trace:\nC.constructor()\nState: array2d = []\nC.l()
-// Warning 6328: (170-186): CHC: Assertion violation happens here.\nCounterexample:\narray2d = [[[0]]]\nlast = 1\n\nTransaction trace:\nC.constructor()\nState: array2d = []\nC.l()
-// Warning 6328: (190-246): CHC: Assertion violation happens here.\nCounterexample:\narray2d = [[[0]]]\nlast = 1\n\nTransaction trace:\nC.constructor()\nState: array2d = []\nC.l()
+// Warning 6328: (90-116): CHC: Assertion violation happens here.
+// Warning 6328: (170-186): CHC: Assertion violation happens here.
+// Warning 6328: (190-246): CHC: Assertion violation happens here.
+// Info 1391: CHC: 6 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

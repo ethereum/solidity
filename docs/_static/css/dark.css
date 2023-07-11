@@ -1,7 +1,7 @@
 /* links */
 
 .rst-content a:not(:visited) {
-    color: #aaddff !important;
+    color: #aaddff;
 }
 
 /* code directives */
@@ -626,10 +626,27 @@ code.docutils.literal.notranslate {
 }
 
 
-/* Literal.Number.Integer.Long */
-
-
 /* Link to Remix IDE shown over code snippets */
-a.remix-link {
-    filter: invert(1); /* The icon is black. In dark mode we want it white. */
+
+.rst-content .remix-link-container a.remix-link {
+    color: black;
+}
+
+
+/* Grammar */
+
+.railroad-diagram {
+    fill: white;
+}
+
+.railroad-diagram path {
+    stroke: white;
+}
+
+.railroad-diagram rect {
+    stroke: white;
+}
+
+.a4 .sig-name {
+    background-color: transparent !important;
 }

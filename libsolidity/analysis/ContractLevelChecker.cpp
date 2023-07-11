@@ -28,6 +28,8 @@
 #include <libsolutil/FunctionSelector.h>
 #include <liblangutil/ErrorReporter.h>
 
+#include <fmt/format.h>
+
 #include <range/v3/view/reverse.hpp>
 
 using namespace std;
@@ -284,9 +286,6 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 	}
 
 	// Set to not fully implemented if at least one flag is false.
-	// Note that `_contract.annotation().unimplementedDeclarations` has already been
-	// pre-filled by `checkBaseConstructorArguments`.
-	//
 	for (auto const& proxy: proxies)
 		if (proxy.unimplemented())
 			_contract.annotation().unimplementedDeclarations->push_back(proxy.declaration());
@@ -362,11 +361,27 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 
 	// check that we get arguments for all base constructors that need it.
 	// If not mark the contract as abstract (not fully implemented)
-	for (ContractDefinition const* contract: bases)
-		if (FunctionDefinition const* constructor = contract->constructor())
-			if (contract != &_contract && !constructor->parameters().empty())
-				if (!_contract.annotation().baseConstructorArguments.count(constructor))
-					_contract.annotation().unimplementedDeclarations->push_back(constructor);
+	if (_contract.contractKind() == ContractKind::Contract && !_contract.abstract())
+		for (ContractDefinition const* baseContract: bases)
+			if (FunctionDefinition const* baseConstructor = baseContract->constructor())
+				if (
+					baseContract != &_contract &&
+					!baseConstructor->parameters().empty() &&
+					_contract.annotation().baseConstructorArguments.count(baseConstructor) == 0
+				)
+					m_errorReporter.typeError(
+						3415_error,
+						_contract.location(),
+						SecondarySourceLocation{}.append(
+							"Base constructor parameters:",
+							baseConstructor->parameterList().location()
+						),
+						fmt::format(
+							"No arguments passed to the base constructor. "
+							"Specify the arguments or mark \"{}\" as abstract.",
+							*_contract.annotation().canonicalName
+						)
+					);
 }
 
 void ContractLevelChecker::annotateBaseConstructorArguments(

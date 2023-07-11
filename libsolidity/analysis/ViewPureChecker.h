@@ -54,6 +54,8 @@ private:
 
 	bool visit(FunctionDefinition const& _funDef) override;
 	void endVisit(FunctionDefinition const& _funDef) override;
+	void endVisit(BinaryOperation const& _binaryOperation) override;
+	void endVisit(UnaryOperation const& _unaryOperation) override;
 	bool visit(ModifierDefinition const& _modifierDef) override;
 	void endVisit(ModifierDefinition const& _modifierDef) override;
 	void endVisit(Identifier const& _identifier) override;

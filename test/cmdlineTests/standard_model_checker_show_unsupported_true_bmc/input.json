@@ -1,0 +1,22 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n\ncontract test {
+					function f() external pure {
+						assembly {}
+					}
+				}"
+		}
+	},
+	"settings":
+	{
+		"modelChecker":
+		{
+			"engine": "bmc",
+			"showUnsupported": true
+		}
+	}
+}

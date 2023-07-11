@@ -20,6 +20,7 @@
  * @date 2018
  * Tests for the assembler.
  */
+#include <test/Common.h>
 
 #include <libevmasm/Assembly.h>
 #include <libsolutil/JSON.h>
@@ -59,15 +60,16 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		{ "sub.asm", 1 },
 		{ "verbatim.asm", 2 }
 	};
-	Assembly _assembly{false, {}};
+	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	Assembly _assembly{evmVersion, false, {}};
 	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
-	Assembly _subAsm{false, {}};
+	Assembly _subAsm{evmVersion, false, {}};
 	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 
-	Assembly _verbatimAsm(true, "");
+	Assembly _verbatimAsm(evmVersion, true, "");
 	auto verbatim_asm = make_shared<string>("verbatim.asm");
 	_verbatimAsm.setSourceLocation({8, 18, verbatim_asm});
 
@@ -215,6 +217,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 
 BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 {
+	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	// Tests for 1, 2, 3 number of immutables.
 	for (int numImmutables = 1; numImmutables <= 3; ++numImmutables)
 	{
@@ -243,7 +246,7 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				{ *subName, 1 }
 			};
 
-			auto subAsm = make_shared<Assembly>(false, string{});
+			auto subAsm = make_shared<Assembly>(evmVersion, false, string{});
 			for (char i = 0; i < numImmutables; ++i)
 			{
 				for (int r = 0; r < numActualRefs; ++r)
@@ -253,7 +256,7 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				}
 			}
 
-			Assembly assembly{true, {}};
+			Assembly assembly{evmVersion, true, {}};
 			for (char i = 1; i <= numImmutables; ++i)
 			{
 				assembly.setSourceLocation({10*i, 10*i + 3+i, assemblyName});
@@ -270,7 +273,7 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 			auto const numberOfMappings = std::count(sourceMappings.begin(), sourceMappings.end(), ';');
 
 			LinkerObject const& obj = assembly.assemble();
-			string const disassembly = disassemble(obj.bytecode, "\n");
+			string const disassembly = disassemble(obj.bytecode, evmVersion, "\n");
 			auto const numberOfOpcodes = std::count(disassembly.begin(), disassembly.end(), '\n');
 
 			#if 0 // {{{ debug prints
@@ -302,11 +305,12 @@ BOOST_AUTO_TEST_CASE(immutable)
 		{ "root.asm", 0 },
 		{ "sub.asm", 1 }
 	};
-	Assembly _assembly{true, {}};
+	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	Assembly _assembly{evmVersion, true, {}};
 	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
-	Assembly _subAsm{false, {}};
+	Assembly _subAsm{evmVersion, false, {}};
 	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 	_subAsm.appendImmutable("someImmutable");
@@ -326,12 +330,16 @@ BOOST_AUTO_TEST_CASE(immutable)
 
 	checkCompilation(_assembly);
 
+	string genericPush0 = evmVersion.hasPush0() ? "5f" : "6000";
+	// PUSH1 0x1b v/s PUSH1 0x19
+	string dataOffset = evmVersion.hasPush0() ? "6019" : "601b" ;
+
 	BOOST_CHECK_EQUAL(
 		_assembly.assemble().toHex(),
 		// root.asm
 		// assign "someImmutable"
-		"602a" // PUSH1 42 - value for someImmutable
-		"6000" // PUSH1 0 - offset of code into which to insert the immutable
+		"602a" + // PUSH1 42 - value for someImmutable
+		genericPush0 + // PUSH1 0 - offset of code into which to insert the immutable
 		"8181" // DUP2 DUP2
 		"6001" // PUSH1 1 - offset of first someImmutable in sub_0
 		"01" // ADD - add offset of immutable to offset of code
@@ -340,13 +348,13 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"01" // ADD - add offset of immutable to offset of code
 		"52" // MSTORE
 		// assign "someOtherImmutable"
-		"6017" // PUSH1 23 - value for someOtherImmutable
-		"6000" // PUSH1 0 - offset of code into which to insert the immutable
+		"6017" + // PUSH1 23 - value for someOtherImmutable
+		genericPush0 + // PUSH1 0 - offset of code into which to insert the immutable
 		"6022" // PUSH1 34 - offset of someOtherImmutable in sub_0
 		"01" // ADD - add offset of immutable to offset of code
 		"52" // MSTORE
-		"6063" // PUSH1 0x63 - dataSize(sub_0)
-		"601b" // PUSH1 0x23 - dataOffset(sub_0)
+		"6063" + // PUSH1 0x63 - dataSize(sub_0)
+		dataOffset +  // PUSH1 0x23 - dataOffset(sub_0)
 		"fe" // INVALID
 		// end of root.asm
 		// sub.asm
@@ -395,10 +403,11 @@ BOOST_AUTO_TEST_CASE(immutable)
 
 BOOST_AUTO_TEST_CASE(subobject_encode_decode)
 {
-	Assembly assembly{true, {}};
+	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	Assembly assembly{evmVersion, true, {}};
 
-	shared_ptr<Assembly> subAsmPtr = make_shared<Assembly>(false, string{});
-	shared_ptr<Assembly> subSubAsmPtr = make_shared<Assembly>(false, string{});
+	shared_ptr<Assembly> subAsmPtr = make_shared<Assembly>(evmVersion, false, string{});
+	shared_ptr<Assembly> subSubAsmPtr = make_shared<Assembly>(evmVersion, false, string{});
 
 	assembly.appendSubroutine(subAsmPtr);
 	subAsmPtr->appendSubroutine(subSubAsmPtr);

@@ -414,6 +414,12 @@ public:
         return *this;
     }
 
+    /// Access the result object as a referenced to ::evmc_result.
+    evmc_result& raw() noexcept { return *this; }
+
+    /// Access the result object as a const referenced to ::evmc_result.
+    const evmc_result& raw() const noexcept { return *this; }
+
     /// Releases the ownership and returns the raw copy of evmc_result.
     ///
     /// This method drops the ownership of the result

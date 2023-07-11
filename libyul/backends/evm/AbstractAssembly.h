@@ -28,6 +28,7 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <functional>
 #include <memory>
@@ -116,6 +117,9 @@ public:
 
 	/// Mark this assembly as invalid. Any attempt to request bytecode from it should throw.
 	virtual void markAsInvalid() = 0;
+
+	/// @returns the EVM version the assembly targets.
+	virtual langutil::EVMVersion evmVersion() const = 0;
 };
 
 enum class IdentifierContext { LValue, RValue, VariableDeclaration, NonExternal };

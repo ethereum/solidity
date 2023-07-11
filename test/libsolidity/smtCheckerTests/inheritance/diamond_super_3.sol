@@ -32,5 +32,5 @@ contract E is C,D {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (379-394): CHC: Assertion violation happens here.\nCounterexample:\nx = 111\n\nTransaction trace:\nE.constructor()\nState: x = 0\nE.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
-// Info 1180: Contract invariant(s) for :C:\n((x = 0) || (x = 111))\nContract invariant(s) for :D:\n((x = 0) || (x = 101))\nContract invariant(s) for :E:\n((x = 0) || (x = 111))\nContract invariant(s) for :B:\n((x = 0) || (x = 101))\n
+// Warning 6328: (379-394): CHC: Assertion violation happens here.
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

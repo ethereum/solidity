@@ -2,5 +2,4 @@ abstract contract C {
 	constructor() {
 	}
 }
-
 // ----

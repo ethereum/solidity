@@ -46,7 +46,7 @@ for the purposes of NatSpec.
 
 -  For Vyper, use ``"""`` indented to the inner contents with bare
    comments. See the `Vyper
-   documentation <https://vyper.readthedocs.io/en/latest/natspec.html>`__.
+   documentation <https://docs.vyperlang.org/en/latest/natspec.html>`__.
 
 The following example shows a contract and a function using all available tags.
 
@@ -58,7 +58,7 @@ The following example shows a contract and a function using all available tags.
 
   This may change in the future.
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.2 < 0.9.0;

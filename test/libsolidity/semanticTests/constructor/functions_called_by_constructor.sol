@@ -14,8 +14,5 @@ contract Test {
         name = _name;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // getName() -> "abc"

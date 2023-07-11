@@ -195,16 +195,23 @@ Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> c
 	return nullptr;
 }
 
-std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAllDeclarations(std::vector<ASTString> const& _path) const
+std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAllDeclarations(
+	std::vector<ASTString> const& _path,
+	bool _includeInvisibles
+) const
 {
 	solAssert(!_path.empty(), "");
 	vector<Declaration const*> pathDeclarations;
 
 	ResolvingSettings settings;
 	settings.recursive = true;
-	settings.alsoInvisible = false;
+	settings.alsoInvisible = _includeInvisibles;
 	settings.onlyVisibleAsUnqualifiedNames = true;
-	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), std::move(settings));
+	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), settings);
+
+	// inside the loop, use default settings, except for alsoInvisible
+	settings.recursive = false;
+	settings.onlyVisibleAsUnqualifiedNames = false;
 
 	for (size_t i = 1; i < _path.size() && candidates.size() == 1; i++)
 	{
@@ -213,7 +220,7 @@ std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAll
 
 		pathDeclarations.push_back(candidates.front());
 
-		candidates = m_scopes.at(candidates.front())->resolveName(_path[i]);
+		candidates = m_scopes.at(candidates.front())->resolveName(_path[i], settings);
 	}
 	if (candidates.size() == 1)
 	{

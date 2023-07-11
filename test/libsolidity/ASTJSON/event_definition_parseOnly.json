@@ -32,7 +32,8 @@
         }
       ],
       "src": "0:25:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:26:1"

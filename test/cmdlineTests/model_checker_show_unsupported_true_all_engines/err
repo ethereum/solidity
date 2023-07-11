@@ -1,0 +1,5 @@
+Warning: Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
+ --> model_checker_show_unsupported_true_all_engines/input.sol:5:9:
+  |
+5 |         assembly {}
+  |         ^^^^^^^^^^^

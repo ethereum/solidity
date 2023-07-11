@@ -49,7 +49,6 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/Semantics.h>
@@ -61,8 +60,6 @@
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
-#include <libyul/backends/wasm/WordSizeTransform.h>
-#include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/CompilabilityChecker.h>
 
@@ -99,6 +96,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"blockFlattener", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
 		{"constantOptimiser", [&]() {
@@ -291,10 +289,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			LiteralRematerialiser::run(*m_context, *m_ast);
 			StructuralSimplifier::run(*m_context, *m_ast);
 		}},
-		{"reasoningBasedSimplifier", [&]() {
-			disambiguate();
-			ReasoningBasedSimplifier::run(*m_context, *m_object->code);
-		}},
 		{"equivalentFunctionCombiner", [&]() {
 			disambiguate();
 			ForLoopInitRewriter::run(*m_context, *m_ast);
@@ -326,11 +320,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			StackCompressor::run(*m_dialect, *m_object, true, maxIterations);
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
-		{"wordSizeTransform", [&]() {
-			disambiguate();
-			ExpressionSplitter::run(*m_context, *m_ast);
-			WordSizeTransform::run(*m_dialect, *m_dialect, *m_ast, *m_nameDispenser);
-		}},
 		{"fullSuite", [&]() {
 			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
 			OptimiserSuite::run(
@@ -356,7 +345,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
-				map<YulString, set<YulString>> fakeUnreachables;
+				map<YulString, vector<YulString>> fakeUnreachables;
 				using ASTWalker::operator();
 				void operator()(FunctionDefinition const& _function) override
 				{
@@ -372,7 +361,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				void visitVariableName(YulString _var)
 				{
 					if (!_var.empty() && _var.str().front() == '$')
-						fakeUnreachables[m_currentFunction].insert(_var);
+						if (!util::contains(fakeUnreachables[m_currentFunction], _var))
+							fakeUnreachables[m_currentFunction].emplace_back(_var);
 				}
 				void operator()(VariableDeclaration const& _varDecl) override
 				{
@@ -430,8 +420,7 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 			// it can sometimes drain memory.
 			if (
 				optimiserStep == "mainFunction"	||
-				optimiserStep == "wordSizeTransform" ||
-				optimiserStep == "reasoningBasedSimplifier"
+				optimiserStep == "wordSizeTransform"
 			)
 				// "Fullsuite" is fuzzed roughly four times more frequently than
 				// other steps because of the filtering in place above.

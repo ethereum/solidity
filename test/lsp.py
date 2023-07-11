@@ -28,7 +28,8 @@ else:
     import tty
     # Turn off user input buffering so we get the input immediately,
     # not only after a line break
-    tty.setcbreak(sys.stdin.fileno())
+    if os.isatty(sys.stdin.fileno()):
+        tty.setcbreak(sys.stdin.fileno())
 
 
 # Type for the pure test name without .sol suffix or sub directory
@@ -591,7 +592,7 @@ class FileTestRunner:
 
             for diagnostics in published_diagnostics:
                 if not diagnostics["uri"].startswith(self.suite.project_root_uri + "/"):
-                    raise Exception(
+                    raise RuntimeError(
                         f"'{self.test_name}.sol' imported file outside of test directory: '{diagnostics['uri']}'"
                     )
                 self.open_tests.append(self.suite.normalizeUri(diagnostics["uri"]))
@@ -804,9 +805,9 @@ class FileTestRunner:
                     if tag == desired_tag:
                         return tagRange
                     elif tag.lower() == desired_tag.lower():
-                        raise Exception(f"Detected lower/upper case mismatch: Requested {desired_tag} but only found {tag}")
+                        raise RuntimeError(f"Detected lower/upper case mismatch: Requested {desired_tag} but only found {tag}")
 
-                raise Exception(f"Marker {desired_tag} not found in file")
+                raise RuntimeError(f"Marker {desired_tag} not found in file")
 
 
             # Check if we need markers from a specific file
@@ -1032,7 +1033,7 @@ class SolidityLSPTestSuite: # {{{
                 tag = self.find_tag_with_range(testname, local_sub_dir, diagnostic['range'])
 
                 if tag is None:
-                    raise Exception(f"No tag found for diagnostic range {diagnostic['range']}")
+                    raise RuntimeError(f"No tag found for diagnostic range {diagnostic['range']}")
 
                 expectations += f" {tag} {diagnostic['code']}"
             expectations += "\n"

@@ -24,7 +24,6 @@
 #include <test/Common.h>
 
 #include <libyul/Object.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/AsmPrinter.h>
 
 #include <liblangutil/CharStreamProvider.h>
@@ -52,12 +51,6 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 	if (path.empty() || std::next(path.begin()) == path.end() || std::next(std::next(path.begin())) == path.end())
 		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
-
-	if (m_optimizerStep == "reasoningBasedSimplifier" && (
-		solidity::test::CommonOptions::get().disableSMT ||
-		ReasoningBasedSimplifier::invalidInCurrentEnvironment()
-	))
-		m_shouldRun = false;
 
 	m_source = m_reader.source();
 

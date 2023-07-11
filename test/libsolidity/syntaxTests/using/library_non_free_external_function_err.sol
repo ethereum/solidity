@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 7920: (115-123): Identifier not found or not unique.
+// TypeError 4357: (115-123): Library name expected. If you want to attach a function, use '{...}'.

@@ -1,0 +1,17 @@
+Warning: Function state mutability can be restricted to pure
+ --> model_checker_show_proved_safe_true_all_engines/input.sol:4:5:
+  |
+4 |     function f(uint8 x) public {
+  |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Info: CHC: Assertion violation check is safe!
+ --> model_checker_show_proved_safe_true_all_engines/input.sol:5:9:
+  |
+5 |         assert(x >= 0);
+  |         ^^^^^^^^^^^^^^
+
+Info: CHC: Assertion violation check is safe!
+ --> model_checker_show_proved_safe_true_all_engines/input.sol:6:9:
+  |
+6 |         assert(x < 1000);
+  |         ^^^^^^^^^^^^^^^^

@@ -267,14 +267,59 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 		solAssert(dynamic_cast<ElementaryTypeName const*>(&_mapping.keyType()), "");
 
 	Type const* keyType = _mapping.keyType().annotation().type;
+	ASTString keyName = _mapping.keyName();
+
 	Type const* valueType = _mapping.valueType().annotation().type;
+	ASTString valueName = _mapping.valueName();
 
 	// Convert key type to memory.
 	keyType = TypeProvider::withLocationIfReference(DataLocation::Memory, keyType);
 
 	// Convert value type to storage reference.
 	valueType = TypeProvider::withLocationIfReference(DataLocation::Storage, valueType);
-	_mapping.annotation().type = TypeProvider::mapping(keyType, valueType);
+	_mapping.annotation().type = TypeProvider::mapping(keyType, keyName, valueType, valueName);
+
+	// Check if parameter names are conflicting.
+	if (!keyName.empty())
+	{
+		auto childMappingType = dynamic_cast<MappingType const*>(valueType);
+		ASTString currentValueName = valueName;
+		bool loop = true;
+		while (loop)
+		{
+			bool isError = false;
+			// Value type is a mapping.
+			if (childMappingType)
+			{
+				// Compare top mapping's key name with child mapping's key name.
+				ASTString childKeyName = childMappingType->keyName();
+				if (keyName == childKeyName)
+					isError = true;
+
+				auto valueType = childMappingType->valueType();
+				currentValueName = childMappingType->valueName();
+				childMappingType = dynamic_cast<MappingType const*>(valueType);
+			}
+			else
+			{
+				// Compare top mapping's key name with the value name.
+				if (keyName == currentValueName)
+					isError = true;
+
+				loop = false; // We arrived at the end of mapping recursion.
+			}
+
+			// Report error.
+			if (isError)
+			{
+				m_errorReporter.declarationError(
+					1809_error,
+					_mapping.location(),
+					"Conflicting parameter name \"" + keyName + "\" in mapping."
+				);
+			}
+		}
+	}
 }
 
 void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)

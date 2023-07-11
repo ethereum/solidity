@@ -40,5 +40,128 @@
 "
             }
         }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "ast":
+            {
+                "code":
+                {
+                    "block":
+                    {
+                        "nativeSrc": "0:42:0",
+                        "nodeType": "YulBlock",
+                        "src": "0:42:0",
+                        "statements":
+                        [
+                            {
+                                "nativeSrc": "2:17:0",
+                                "nodeType": "YulVariableDeclaration",
+                                "src": "2:17:0",
+                                "value":
+                                {
+                                    "arguments":
+                                    [
+                                        {
+                                            "kind": "number",
+                                            "nativeSrc": "17:1:0",
+                                            "nodeType": "YulLiteral",
+                                            "src": "17:1:0",
+                                            "type": "",
+                                            "value": "0"
+                                        }
+                                    ],
+                                    "functionName":
+                                    {
+                                        "name": "mload",
+                                        "nativeSrc": "11:5:0",
+                                        "nodeType": "YulIdentifier",
+                                        "src": "11:5:0"
+                                    },
+                                    "nativeSrc": "11:8:0",
+                                    "nodeType": "YulFunctionCall",
+                                    "src": "11:8:0"
+                                },
+                                "variables":
+                                [
+                                    {
+                                        "name": "x",
+                                        "nativeSrc": "6:1:0",
+                                        "nodeType": "YulTypedName",
+                                        "src": "6:1:0",
+                                        "type": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "expression":
+                                {
+                                    "arguments":
+                                    [
+                                        {
+                                            "arguments":
+                                            [
+                                                {
+                                                    "name": "x",
+                                                    "nativeSrc": "31:1:0",
+                                                    "nodeType": "YulIdentifier",
+                                                    "src": "31:1:0"
+                                                },
+                                                {
+                                                    "kind": "number",
+                                                    "nativeSrc": "34:1:0",
+                                                    "nodeType": "YulLiteral",
+                                                    "src": "34:1:0",
+                                                    "type": "",
+                                                    "value": "0"
+                                                }
+                                            ],
+                                            "functionName":
+                                            {
+                                                "name": "add",
+                                                "nativeSrc": "27:3:0",
+                                                "nodeType": "YulIdentifier",
+                                                "src": "27:3:0"
+                                            },
+                                            "nativeSrc": "27:9:0",
+                                            "nodeType": "YulFunctionCall",
+                                            "src": "27:9:0"
+                                        },
+                                        {
+                                            "kind": "number",
+                                            "nativeSrc": "38:1:0",
+                                            "nodeType": "YulLiteral",
+                                            "src": "38:1:0",
+                                            "type": "",
+                                            "value": "0"
+                                        }
+                                    ],
+                                    "functionName":
+                                    {
+                                        "name": "sstore",
+                                        "nativeSrc": "20:6:0",
+                                        "nodeType": "YulIdentifier",
+                                        "src": "20:6:0"
+                                    },
+                                    "nativeSrc": "20:20:0",
+                                    "nodeType": "YulFunctionCall",
+                                    "src": "20:20:0"
+                                },
+                                "nativeSrc": "20:20:0",
+                                "nodeType": "YulExpressionStatement",
+                                "src": "20:20:0"
+                            }
+                        ]
+                    },
+                    "nodeType": "YulCode"
+                },
+                "name": "object",
+                "nodeType": "YulObject",
+                "subObjects": []
+            },
+            "id": 1
+        }
     }
 }

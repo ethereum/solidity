@@ -28,7 +28,7 @@ public:
 	using iterator = T*;
 	using const_iterator = T const*;
 
-	static_assert(std::is_pod<value_type>::value, "vector_ref can only be used with PODs due to its low-level treatment of data.");
+	static_assert(std::is_standard_layout_v<value_type> && std::is_trivial_v<value_type>, "vector_ref can only be used with PODs due to its low-level treatment of data.");
 
 	vector_ref(): m_data(nullptr), m_count(0) {}
 	/// Creates a new vector_ref to point to @a _count elements starting at @a _data.

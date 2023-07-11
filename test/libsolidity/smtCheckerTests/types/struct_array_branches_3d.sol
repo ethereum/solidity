@@ -24,3 +24,4 @@ contract C
 // SMTEngine: all
 // ----
 // Warning 5667: (53-59): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Info 1391: CHC: 11 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -53,3 +53,4 @@ contract C
 // SMTIgnoreCex: yes
 // ----
 // Warning 2018: (957-1329): Function state mutability can be restricted to view
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

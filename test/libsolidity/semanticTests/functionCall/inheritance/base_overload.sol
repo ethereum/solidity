@@ -18,8 +18,6 @@ contract Child is Base {
 		Base.init(c, d);
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // x() -> 0
 // y() -> 0

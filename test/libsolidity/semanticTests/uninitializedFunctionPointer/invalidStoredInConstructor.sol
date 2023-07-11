@@ -19,7 +19,5 @@ contract Test {
     new C();
   }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> FAILURE, hex"4e487b71", 0x51

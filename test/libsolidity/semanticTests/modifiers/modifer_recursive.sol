@@ -8,9 +8,6 @@ contract C {
         return x == 0 ? 2 : f(x - 1)**2;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // called() -> 0x00
 // f(uint256): 5 -> 0x0100000000

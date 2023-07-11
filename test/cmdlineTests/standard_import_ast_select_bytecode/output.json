@@ -1,0 +1,30 @@
+{
+    "contracts":
+    {
+        "A":
+        {
+            "test":
+            {
+                "evm":
+                {
+                    "bytecode":
+                    {
+                        "functionDebugData": {},
+                        "generatedSources": [],
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>",
+                        "opcodes":"<OPCODES REMOVED>",
+                        "sourceMap":"<SOURCEMAP REMOVED>"
+                    }
+                }
+            }
+        }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

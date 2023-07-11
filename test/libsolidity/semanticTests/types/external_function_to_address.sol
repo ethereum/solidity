@@ -6,8 +6,6 @@ contract C {
         return cb.address;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true
 // g(function): hex"00000000000000000000000000000000000004226121ff00000000000000000" -> 0x42

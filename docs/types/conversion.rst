@@ -44,7 +44,7 @@ Explicit Conversions
 
 If the compiler does not allow implicit conversion but you are confident a conversion will work,
 an explicit type conversion is sometimes possible. This may
-result in unexpected behaviour and allows you to bypass some security
+result in unexpected behavior and allows you to bypass some security
 features of the compiler, so be sure to test that the
 result is what you want and expect!
 
@@ -130,6 +130,7 @@ If the array is shorter than the target type, it will be padded with zeros at th
         }
     }
 
+.. index:: ! literal;conversion, literal;rational, literal;hexadecimal number
 .. _types-conversion-literals:
 
 Conversions between Literals and Elementary Types
@@ -151,6 +152,8 @@ that is large enough to represent it without truncation:
     Prior to version 0.8.0, any decimal or hexadecimal number literals could be explicitly
     converted to an integer type. From 0.8.0, such explicit conversions are as strict as implicit
     conversions, i.e., they are only allowed if the literal fits in the resulting range.
+
+.. index:: literal;string, literal;hexadecimal
 
 Fixed-Size Byte Arrays
 ----------------------
@@ -181,6 +184,8 @@ if their number of characters matches the size of the bytes type:
     bytes2 d = hex"123"; // not allowed
     bytes2 e = "x"; // not allowed
     bytes2 f = "xyz"; // not allowed
+
+.. index:: literal;address
 
 Addresses
 ---------

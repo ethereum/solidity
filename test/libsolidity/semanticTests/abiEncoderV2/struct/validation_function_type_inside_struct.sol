@@ -6,8 +6,6 @@ contract C {
     function g(S calldata) external pure returns (uint r) { r = 2; }
     function h(S calldata s) external pure returns (uint r) { s.x; r = 3; }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f((function)): "01234567890123456789abcd" -> 1
 // f((function)): "01234567890123456789abcdX" -> FAILURE

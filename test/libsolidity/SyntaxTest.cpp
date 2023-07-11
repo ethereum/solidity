@@ -123,25 +123,28 @@ void SyntaxTest::filterObtainedErrors()
 		string sourceName;
 		if (SourceLocation const* location = currentError->sourceLocation())
 		{
+			locationStart = location->start;
+			locationEnd = location->end;
 			solAssert(location->sourceName, "");
 			sourceName = *location->sourceName;
-			solAssert(m_sources.sources.count(sourceName) == 1, "");
-
-			int preambleSize =
-				static_cast<int>(compiler().charStream(sourceName).size()) -
-				static_cast<int>(m_sources.sources[sourceName].size());
-			solAssert(preambleSize >= 0, "");
-
-			// ignore the version & license pragma inserted by the testing tool when calculating locations.
-			if (location->start != -1)
+			if(m_sources.sources.count(sourceName) == 1)
 			{
-				solAssert(location->start >= preambleSize, "");
-				locationStart = location->start - preambleSize;
-			}
-			if (location->end != -1)
-			{
-				solAssert(location->end >= preambleSize, "");
-				locationEnd = location->end - preambleSize;
+				int preambleSize =
+						static_cast<int>(compiler().charStream(sourceName).size()) -
+						static_cast<int>(m_sources.sources[sourceName].size());
+				solAssert(preambleSize >= 0, "");
+
+				// ignore the version & license pragma inserted by the testing tool when calculating locations.
+				if (location->start != -1)
+				{
+					solAssert(location->start >= preambleSize, "");
+					locationStart = location->start - preambleSize;
+				}
+				if (location->end != -1)
+				{
+					solAssert(location->end >= preambleSize, "");
+					locationEnd = location->end - preambleSize;
+				}
 			}
 		}
 		m_errorList.emplace_back(SyntaxTestError{

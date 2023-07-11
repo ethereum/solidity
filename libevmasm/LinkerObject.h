@@ -72,6 +72,8 @@ struct LinkerObject
 	/// of the first 18 bytes of the keccak-256 hash of @a _libraryName.
 	static std::string libraryPlaceholder(std::string const& _libraryName);
 
+	bool operator<(LinkerObject const& _other) const;
+
 private:
 	static util::h160 const* matchLibrary(
 		std::string const& _linkRefName,

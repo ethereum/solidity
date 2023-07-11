@@ -15,7 +15,7 @@ library L {
         s.a = 4;
         return s;
     }
-    // argument-dependant lookup tests
+    // argument-dependent lookup tests
     function a(I.S memory) public pure returns (uint) { return 1; }
     function a(S memory) public pure returns (uint) { return 2; }
 }
@@ -45,8 +45,6 @@ contract C is I {
     function a1() public pure returns (uint) { S memory s; return L.a(s); }
     function a2() public pure returns (uint) { L.S memory s; return L.a(s); }
 }
-// ====
-// compileToEwasm: false
 // ----
 // library: L
 // f() -> 1

@@ -30,7 +30,6 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
-// compileToEwasm: also
 // ----
 // f(bool): true -> true
 // f(bool): false -> FAILURE

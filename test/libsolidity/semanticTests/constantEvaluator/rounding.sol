@@ -9,7 +9,5 @@ contract C {
         return (x.length, c, y.length, -d);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 2, 2, 2, 2

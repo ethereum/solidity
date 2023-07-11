@@ -19,5 +19,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (103-122): CHC: Assertion violation happens here.\nCounterexample:\nTON = 1000\n\nTransaction trace:\nl1.constructor()\nState: TON = 1000\nl1.f1()
-// Warning 4984: (196-201): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\n\nx = 115792089237316195423570985008687907853269984665640564039457584007913129639935\n\nTransaction trace:\nC.constructor()\nC.f(115792089237316195423570985008687907853269984665640564039457584007913129639935)\n    l1.f2(115792089237316195423570985008687907853269984665640564039457584007913129639935, 1) -- internal call
+// Warning 6328: (103-122): CHC: Assertion violation happens here.
+// Warning 4984: (196-201): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

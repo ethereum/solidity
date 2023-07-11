@@ -8,7 +8,5 @@ contract D {
     return g() + f() * 10000;
   }
 }
-// ====
-// compileToEwasm: also
 // ----
 // h() -> 61337

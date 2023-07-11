@@ -16,8 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
- * Ewasm as output.
+ * Full assembly stack that can support EVM-assembly and Yul as input and EVM.
  */
 
 #pragma once
@@ -33,6 +32,8 @@
 #include <libsolidity/interface/OptimiserSettings.h>
 
 #include <libevmasm/LinkerObject.h>
+
+#include <json/json.h>
 
 #include <memory>
 #include <string>
@@ -60,14 +61,13 @@ struct MachineAssemblyObject
 };
 
 /*
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
- * Ewasm as output.
+ * Full assembly stack that can support EVM-assembly and Yul as input and EVM as output.
  */
 class YulStack: public langutil::CharStreamProvider
 {
 public:
-	enum class Language { Yul, Assembly, StrictAssembly, Ewasm };
-	enum class Machine { EVM, Ewasm };
+	enum class Language { Yul, Assembly, StrictAssembly };
+	enum class Machine { EVM };
 
 	YulStack():
 		YulStack(
@@ -105,9 +105,6 @@ public:
 	/// If the settings (see constructor) disabled the optimizer, nothing is done here.
 	void optimize();
 
-	/// Translate the source to a different language / dialect.
-	void translate(Language _targetLanguage);
-
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
 
@@ -135,7 +132,7 @@ public:
 	std::string print(
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
-
+	Json::Value astJson() const;
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
 

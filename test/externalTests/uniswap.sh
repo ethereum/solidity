@@ -22,7 +22,7 @@
 set -e
 
 source scripts/common.sh
-source test/externalTests/common.sh
+source scripts/externalTests/common.sh
 
 REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
@@ -45,8 +45,8 @@ function uniswap_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with: "YulException: Variable ret_0 is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with: "YulException: Variable ret_0 is 1 slot(s) too deep inside the stack."
+        ir-no-optimize
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
@@ -83,8 +83,6 @@ function uniswap_test
     #   "revert SPL" is expected but the message is "reverted with reason string 'SPL'" in 2.5.0.
     # - Newer versions of ethereumjs/tx have an issue with 'gteHardfork()' method.
     neutralize_package_lock
-    yarn add hardhat@2.4.3
-    yarn add @ethereumjs/tx@3.1.3
 
     yarn install
     yarn add hardhat-gas-reporter

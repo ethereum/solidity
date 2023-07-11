@@ -39,4 +39,4 @@ contract ExtCallTest {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (ExtCall.sol:362-381): CHC: Assertion violation happens here.
-// Warning 4588: (ExtCall.t.sol:110-123): Assertion checker does not yet implement this type of function call.
+// Warning 8729: (ExtCall.t.sol:110-123): Contract deployment is only supported in the trusted mode for external calls with the CHC engine.

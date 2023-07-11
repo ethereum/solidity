@@ -91,7 +91,7 @@ registering with a username and password, all you need is an Ethereum keypair.
         // The keyword "public" makes variables
         // accessible from other contracts
         address public minter;
-        mapping (address => uint) public balances;
+        mapping(address => uint) public balances;
 
         // Events allow clients to react to specific
         // contract changes you declare
@@ -151,7 +151,7 @@ You do not need to do this, the compiler figures it out for you.
 
 .. index:: mapping
 
-The next line, ``mapping (address => uint) public balances;`` also
+The next line, ``mapping(address => uint) public balances;`` also
 creates a public state variable, but it is a more complex datatype.
 The :ref:`mapping <mapping-types>` type maps addresses to :ref:`unsigned integers <integers>`.
 
@@ -185,7 +185,7 @@ arguments ``from``, ``to`` and ``amount``, which makes it possible to track
 transactions.
 
 To listen for this event, you could use the following
-JavaScript code, which uses `web3.js <https://github.com/ethereum/web3.js/>`_ to create the ``Coin`` contract object,
+JavaScript code, which uses `web3.js <https://github.com/web3/web3.js/>`_ to create the ``Coin`` contract object,
 and any user interface calls the automatically generated ``balances`` function from above:
 
 .. code-block:: javascript
@@ -282,7 +282,7 @@ the source account is also not modified.
 Furthermore, a transaction is always cryptographically signed by the sender (creator).
 This makes it straightforward to guard access to specific modifications of the
 database. In the example of the electronic currency, a simple check ensures that
-only the person holding the keys to the account can transfer money from it.
+only the person holding the keys to the account can transfer some compensation, e.g. Ether, from it.
 
 .. index:: ! block
 
@@ -300,9 +300,9 @@ and then they will be executed and distributed among all participating nodes.
 If two transactions contradict each other, the one that ends up being second will
 be rejected and not become part of the block.
 
-These blocks form a linear sequence in time and that is where the word "blockchain"
-derives from. Blocks are added to the chain in rather regular intervals - for
-Ethereum this is roughly every 17 seconds.
+These blocks form a linear sequence in time, and that is where the word "blockchain" derives from.
+Blocks are added to the chain at regular intervals, although these intervals may be subject to change in the future.
+For the most up-to-date information, it is recommended to monitor the network, for example, on `Etherscan <https://etherscan.io/chart/blocktime>`_.
 
 As part of the "order selection mechanism" (which is called "mining") it may happen that
 blocks are reverted from time to time, but only at the "tip" of the chain. The more
@@ -563,6 +563,11 @@ idea, but it is potentially dangerous, as if someone sends Ether to removed
 contracts, the Ether is forever lost.
 
 .. warning::
+    From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behavior
+    as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
+
+.. warning::
     Even if a contract is removed by ``selfdestruct``, it is still part of the
     history of the blockchain and probably retained by most Ethereum nodes.
     So using ``selfdestruct`` is not the same as deleting data from a hard disk.
@@ -586,7 +591,7 @@ Precompiled Contracts
 There is a small set of contract addresses that are special:
 The address range between ``1`` and (including) ``8`` contains
 "precompiled contracts" that can be called as any other contract
-but their behaviour (and their gas consumption) is not defined
+but their behavior (and their gas consumption) is not defined
 by EVM code stored at that address (they do not contain code)
 but instead is implemented in the EVM execution environment itself.
 

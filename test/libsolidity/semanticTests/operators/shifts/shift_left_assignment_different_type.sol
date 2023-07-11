@@ -4,9 +4,6 @@ contract C {
         return a;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256,uint8): 0x4266, 0x0 -> 0x4266
 // f(uint256,uint8): 0x4266, 0x8 -> 0x426600

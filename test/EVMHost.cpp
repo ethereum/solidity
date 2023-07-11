@@ -47,10 +47,10 @@ evmc::VM& EVMHost::getVM(string const& _path)
 		auto vm = evmc::VM{evmc_load_and_configure(_path.c_str(), &errorCode)};
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
-			if (vm.get_capabilities() & (EVMC_CAPABILITY_EVM1 | EVMC_CAPABILITY_EWASM))
+			if (vm.get_capabilities() & (EVMC_CAPABILITY_EVM1))
 				vms[_path] = make_unique<evmc::VM>(evmc::VM(std::move(vm)));
 			else
-				cerr << "VM loaded neither supports EVM1 nor EWASM" << endl;
+				cerr << "VM loaded does not support EVM1" << endl;
 		}
 		else
 		{
@@ -67,10 +67,9 @@ evmc::VM& EVMHost::getVM(string const& _path)
 	return NullVM;
 }
 
-std::tuple<bool, bool> EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
+bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 {
 	bool evmVmFound = false;
-	bool ewasmVmFound = false;
 	for (auto const& path: _vmPaths)
 	{
 		evmc::VM& vm = EVMHost::getVM(path.string());
@@ -83,15 +82,8 @@ std::tuple<bool, bool> EVMHost::checkVmPaths(vector<boost::filesystem::path> con
 				BOOST_THROW_EXCEPTION(runtime_error("Multiple evm1 evmc vms defined. Please only define one evm1 evmc vm."));
 			evmVmFound = true;
 		}
-
-		if (vm.has_capability(EVMC_CAPABILITY_EWASM))
-		{
-			if (ewasmVmFound)
-				BOOST_THROW_EXCEPTION(runtime_error("Multiple ewasm evmc vms where defined. Please only define one ewasm evmc vm."));
-			ewasmVmFound = true;
-		}
 	}
-	return {evmVmFound, ewasmVmFound};
+	return evmVmFound;
 }
 
 EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
@@ -124,6 +116,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_LONDON;
 	else if (_evmVersion == langutil::EVMVersion::paris())
 		m_evmRevision = EVMC_PARIS;
+	else if (_evmVersion == langutil::EVMVersion::shanghai())
+		m_evmRevision = EVMC_SHANGHAI;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 
@@ -251,6 +245,8 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		else
 			return precompileALTBN128PairingProduct<EVMC_LONDON>(_message);
 	}
+	else if (_message.recipient == 0x0000000000000000000000000000000000000009_address && m_evmVersion >= langutil::EVMVersion::istanbul())
+		return precompileBlake2f(_message);
 
 	auto const stateBackup = accounts;
 
@@ -349,13 +345,23 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		transfer(sender, destination, value);
 	}
 
-	// Populate the access access list.
+	// Populate the access access list (enabled since Berlin).
 	// Note, this will also properly touch the created address.
 	// TODO: support a user supplied access list too
 	if (m_evmRevision >= EVMC_BERLIN)
 	{
 		access_account(message.sender);
 		access_account(message.recipient);
+
+		// EIP-3651 rule
+		if (m_evmRevision >= EVMC_SHANGHAI)
+			access_account(tx_context.block_coinbase);
+	}
+
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+	{
+		message.input_data = nullptr;
+		message.input_size = 0;
 	}
 	evmc::Result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());
 
@@ -1113,6 +1119,12 @@ evmc::Result EVMHost::precompileALTBN128PairingProduct(evmc_message const& _mess
 		}
 	};
 	return precompileGeneric(_message, inputOutput);
+}
+
+evmc::Result EVMHost::precompileBlake2f(evmc_message const&) noexcept
+{
+	// TODO implement
+	return resultWithFailure();
 }
 
 evmc::Result EVMHost::precompileGeneric(

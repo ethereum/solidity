@@ -6,12 +6,12 @@ else()
     set(RANGE_V3_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
-set(prefix "${CMAKE_BINARY_DIR}/deps")
+set(prefix "${PROJECT_BINARY_DIR}/deps")
 set(RANGE_V3_INCLUDE_DIR "${prefix}/include")
 
 ExternalProject_Add(range-v3-project
     PREFIX "${prefix}"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
+    DOWNLOAD_DIR "${PROJECT_SOURCE_DIR}/deps/downloads"
     DOWNLOAD_NAME range-v3-0.12.0.tar.gz
     URL https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz
     URL_HASH SHA256=015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb

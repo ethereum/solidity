@@ -1,0 +1,194 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "B":
+    [
+      3
+    ],
+    "C":
+    [
+      8
+    ],
+    "D":
+    [
+      13
+    ]
+  },
+  "id": 14,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "canonicalName": "B",
+      "contractDependencies": [],
+      "contractKind": "interface",
+      "fullyImplemented": true,
+      "id": 3,
+      "linearizedBaseContracts":
+      [
+        3
+      ],
+      "name": "B",
+      "nameLocation": "10:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "eventSelector": "dbec0351ad6bb0c1f07ea56e236e3e692fde2259f0165fd422f241da339b7e4f",
+          "id": 2,
+          "name": "EB",
+          "nameLocation": "24:2:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "26:2:1"
+          },
+          "src": "18:11:1"
+        }
+      ],
+      "scope": 14,
+      "src": "0:31:1",
+      "usedErrors": [],
+      "usedEvents":
+      [
+        2
+      ]
+    },
+    {
+      "abstract": false,
+      "baseContracts":
+      [
+        {
+          "baseName":
+          {
+            "id": 4,
+            "name": "B",
+            "nameLocations":
+            [
+              "46:1:1"
+            ],
+            "nodeType": "IdentifierPath",
+            "referencedDeclaration": 3,
+            "src": "46:1:1"
+          },
+          "id": 5,
+          "nodeType": "InheritanceSpecifier",
+          "src": "46:1:1"
+        }
+      ],
+      "canonicalName": "C",
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 8,
+      "linearizedBaseContracts":
+      [
+        8,
+        3
+      ],
+      "name": "C",
+      "nameLocation": "41:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "eventSelector": "a08b3367d3fa83ea27f8951ffb5d9d160cbfadbd80816b47f677e7699d76f5a0",
+          "id": 7,
+          "name": "EC",
+          "nameLocation": "60:2:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 6,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "62:2:1"
+          },
+          "src": "54:11:1"
+        }
+      ],
+      "scope": 14,
+      "src": "32:35:1",
+      "usedErrors": [],
+      "usedEvents":
+      [
+        2,
+        7
+      ]
+    },
+    {
+      "abstract": false,
+      "baseContracts":
+      [
+        {
+          "baseName":
+          {
+            "id": 9,
+            "name": "C",
+            "nameLocations":
+            [
+              "82:1:1"
+            ],
+            "nodeType": "IdentifierPath",
+            "referencedDeclaration": 8,
+            "src": "82:1:1"
+          },
+          "id": 10,
+          "nodeType": "InheritanceSpecifier",
+          "src": "82:1:1"
+        }
+      ],
+      "canonicalName": "D",
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 13,
+      "linearizedBaseContracts":
+      [
+        13,
+        8,
+        3
+      ],
+      "name": "D",
+      "nameLocation": "77:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "eventSelector": "caa54b91a2314ab89b39714b1cd283762e53a2f59cfb997d6770e2824c39db0d",
+          "id": 12,
+          "name": "ED",
+          "nameLocation": "96:2:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 11,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "98:2:1"
+          },
+          "src": "90:11:1"
+        }
+      ],
+      "scope": 14,
+      "src": "68:35:1",
+      "usedErrors": [],
+      "usedEvents":
+      [
+        2,
+        7,
+        12
+      ]
+    }
+  ],
+  "src": "0:104:1"
+}

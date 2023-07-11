@@ -21,6 +21,5 @@ contract C {
         return x;
     }
 }
-
 // ----
 // f() -> true

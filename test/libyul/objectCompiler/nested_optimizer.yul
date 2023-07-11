@@ -40,6 +40,6 @@ object "a" {
 //         /* "source":158:279   */
 //       stop
 // }
-// Bytecode: 600080355500fe
-// Opcodes: PUSH1 0x0 DUP1 CALLDATALOAD SSTORE STOP INVALID
+// Bytecode: 5f80355500fe
+// Opcodes: PUSH0 DUP1 CALLDATALOAD SSTORE STOP INVALID
 // SourceMappings: 48:1:0:-:0;35:15;;107:20;20:111

@@ -33,6 +33,12 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	if (!contract.empty())
 		m_modelCheckerSettings.contracts.contracts[""] = {contract};
 
+	auto extCallsMode = ModelCheckerExtCalls::fromString(m_reader.stringSetting("SMTExtCalls", "untrusted"));
+	if (extCallsMode)
+		m_modelCheckerSettings.externalCalls = *extCallsMode;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT external calls mode."));
+
 	auto const& showUnproved = m_reader.stringSetting("SMTShowUnproved", "yes");
 	if (showUnproved == "no")
 		m_modelCheckerSettings.showUnproved = false;
@@ -40,6 +46,14 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 		m_modelCheckerSettings.showUnproved = true;
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unproved\" choice."));
+
+	auto const& showUnsupported = m_reader.stringSetting("SMTShowUnsupported", "yes");
+	if (showUnsupported == "no")
+		m_modelCheckerSettings.showUnsupported = false;
+	else if (showUnsupported == "yes")
+		m_modelCheckerSettings.showUnsupported = true;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unsupported\" choice."));
 
 	m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "z3");
@@ -51,8 +65,13 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	m_modelCheckerSettings.solvers &= ModelChecker::availableSolvers();
 
 	/// Underflow and Overflow are not enabled by default for Solidity >=0.8.7,
-	/// so we explicitly enable all targets for the tests.
-	m_modelCheckerSettings.targets = ModelCheckerTargets::All();
+	/// so we explicitly enable all targets for the tests,
+	/// if the targets were not explicitly set by the test.
+	auto targets = ModelCheckerTargets::fromString(m_reader.stringSetting("SMTTargets", "all"));
+	if (targets)
+		m_modelCheckerSettings.targets = *targets;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT targets."));
 
 	auto engine = ModelCheckerEngine::fromString(m_reader.stringSetting("SMTEngine", "all"));
 	if (engine)
@@ -103,6 +122,9 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 			m_shouldRun = false;
 #endif
 	}
+
+	auto const& bmcLoopIterations = m_reader.sizetSetting("BMCLoopIterations", 1);
+	m_modelCheckerSettings.bmcLoopIterations = std::optional<unsigned>{bmcLoopIterations};
 }
 
 TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)

@@ -47,7 +47,7 @@ def writeSourceToFile(lines):
         for idx, line in enumerate(lines[1:]):
             # write to file
             if line[:12] != "==== Source:":
-                f.write(line)
+                f.write(line + '\n')
 
             # recursive call if there is another source
             else:

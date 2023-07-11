@@ -22,7 +22,7 @@
 set -e
 
 source scripts/common.sh
-source test/externalTests/common.sh
+source scripts/externalTests/common.sh
 
 REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
@@ -45,11 +45,12 @@ function prb_math_test
     local config_file="hardhat.config.ts"
     local config_var="config"
 
-    local compile_only_presets=()
+    local compile_only_presets=(
+        ir-no-optimize            # Tests fail with "Error: Transaction reverted: trying to deploy a contract whose code is too large"
+    )
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_y_1960 is 8 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_y_1960 is 8 slot(s) too deep inside the stack."
+        ir-optimize-evm-only
         ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -95,6 +96,14 @@ function prb_math_test
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     yarn install --no-lock-file
     yarn add hardhat-gas-reporter
+
+    # Workaround for error caused by the last release of hardhat-waffle@2.0.6 that bumps ethereum-waffle
+    # to version 4.0.10 and breaks prb-math build with the following error:
+    #
+    #  Cannot find module 'ethereum-waffle/dist/cjs/src/deployContract'
+    #
+    # See: https://github.com/NomicFoundation/hardhat-waffle/commit/83ee9cb36ee59d0bedacbbd00043f030af104ad0
+    yarn add '@nomiclabs/hardhat-waffle@2.0.5'
 
     replace_version_pragmas
 

@@ -12,9 +12,6 @@ contract test {
         else return f(3, 7);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // g(bool): true -> 3
 // g(bool): false -> 10

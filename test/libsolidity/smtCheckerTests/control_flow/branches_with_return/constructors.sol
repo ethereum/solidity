@@ -26,6 +26,7 @@ contract C is B {
 // SMTEngine: all
 // ----
 // Warning 5740: (119-124): Unreachable code.
-// Warning 6328: (277-291): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 1\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (310-324): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 1\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (343-357): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\na = 0\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (277-291): CHC: Assertion violation happens here.
+// Warning 6328: (310-324): CHC: Assertion violation happens here.
+// Warning 6328: (343-357): CHC: Assertion violation happens here.
+// Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

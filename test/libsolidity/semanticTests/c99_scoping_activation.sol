@@ -34,8 +34,6 @@ contract test {
         }
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 3
 // g() -> 0

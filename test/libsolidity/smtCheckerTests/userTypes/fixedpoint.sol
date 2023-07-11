@@ -73,3 +73,4 @@ contract TestFixedMath {
 // Warning 6328: (2165-2266): CHC: Assertion violation happens here.
 // Warning 6328: (2675-2791): CHC: Assertion violation happens here.
 // Warning 6328: (3161-3212): CHC: Assertion violation happens here.
+// Info 1391: CHC: 12 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

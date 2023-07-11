@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
 			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
+			"--ir", "--ir-ast-json", "--ir-optimized", "--ir-optimized-ast-json", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 			"--gas",
 			"--combined-json="
 				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
@@ -140,16 +140,21 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--metadata-hash=swarm",
 			"--metadata-literal",
 			"--optimize",
+			"--optimize-yul",
 			"--optimize-runs=1000",
 			"--yul-optimizations=agf",
+			"--model-checker-bmc-loop-iterations=2",
 			"--model-checker-contracts=contract1.yul:A,contract2.yul:B",
 			"--model-checker-div-mod-no-slacks",
 			"--model-checker-engine=bmc",
+			"--model-checker-ext-calls=trusted",
 			"--model-checker-invariants=contract,reentrancy",
+			"--model-checker-show-proved-safe",
 			"--model-checker-show-unproved",
+			"--model-checker-show-unsupported",
 			"--model-checker-solvers=z3,smtlib2",
 			"--model-checker-targets=underflow,divByZero",
-			"--model-checker-timeout=5",
+			"--model-checker-timeout=5"
 		};
 
 		if (inputMode == InputMode::CompilerWithASTImport)
@@ -192,7 +197,6 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			true, true, true, true, true,
 			true,
 		};
-		expectedOptions.compiler.outputs.ewasmIR = false;
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
 			true, true, true, true, true,
@@ -202,16 +206,22 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		};
 		expectedOptions.metadata.hash = CompilerStack::MetadataHash::Bzzr1;
 		expectedOptions.metadata.literalSources = true;
-		expectedOptions.optimizer.enabled = true;
+		expectedOptions.optimizer.optimizeEvmasm = true;
+		expectedOptions.optimizer.optimizeYul = true;
 		expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		expectedOptions.optimizer.yulSteps = "agf";
 
 		expectedOptions.modelChecker.initialize = true;
 		expectedOptions.modelChecker.settings = {
+			2,
 			{{{"contract1.yul", {"A"}}, {"contract2.yul", {"B"}}}},
 			true,
 			{true, false},
+			{ModelCheckerExtCalls::Mode::TRUSTED},
 			{{InvariantType::Contract, InvariantType::Reentrancy}},
+			false, // --model-checker-print-query
+			true,
+			true,
 			true,
 			{false, false, true, true},
 			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
@@ -243,13 +253,6 @@ BOOST_AUTO_TEST_CASE(via_ir_options)
 BOOST_AUTO_TEST_CASE(assembly_mode_options)
 {
 	static vector<tuple<vector<string>, YulStack::Machine, YulStack::Language>> const allowedCombinations = {
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--assemble"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--yul"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=ewasm", "--strict-assembly"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--assemble"}, YulStack::Machine::Ewasm, YulStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--yul"}, YulStack::Machine::Ewasm, YulStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--yul-dialect=evm", "--strict-assembly"}, YulStack::Machine::Ewasm, YulStack::Language::StrictAssembly},
-		{{"--machine=ewasm", "--strict-assembly"}, YulStack::Machine::Ewasm, YulStack::Language::Ewasm},
 		{{"--machine=evm", "--yul-dialect=evm", "--assemble"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--yul-dialect=evm", "--yul"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--yul-dialect=evm", "--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
@@ -293,11 +296,10 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--asm",
 			"--bin",
 			"--ir-optimized",
-			"--ewasm",
-			"--ewasm-ir",
+			"--ast-compact-json",
 		};
 		commandLine += assemblyOptions;
-		if (expectedLanguage == YulStack::Language::StrictAssembly || expectedLanguage == YulStack::Language::Ewasm)
+		if (expectedLanguage == YulStack::Language::StrictAssembly)
 			commandLine += vector<string>{
 				"--optimize",
 				"--optimize-runs=1000",
@@ -334,11 +336,11 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.asm_ = true;
 		expectedOptions.compiler.outputs.binary = true;
 		expectedOptions.compiler.outputs.irOptimized = true;
-		expectedOptions.compiler.outputs.ewasm = true;
-		expectedOptions.compiler.outputs.ewasmIR = true;
-		if (expectedLanguage == YulStack::Language::StrictAssembly || expectedLanguage == YulStack::Language::Ewasm)
+		expectedOptions.compiler.outputs.astCompactJson = true;
+		if (expectedLanguage == YulStack::Language::StrictAssembly)
 		{
-			expectedOptions.optimizer.enabled = true;
+			expectedOptions.optimizer.optimizeEvmasm = true;
+			expectedOptions.optimizer.optimizeYul = true;
 			expectedOptions.optimizer.yulSteps = "agf";
 			expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		}
@@ -408,7 +410,9 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 		{"--via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--metadata-literal", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--metadata-hash=swarm", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-show-proved-safe", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-show-unproved", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-show-unsupported", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-div-mod-no-slacks", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-engine=bmc", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--model-checker-invariants=contract,reentrancy", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
@@ -432,6 +436,39 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 			auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
 
 			BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+		}
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_flags)
+{
+	OptimiserSettings yulOnly = OptimiserSettings::minimal();
+	yulOnly.runYulOptimiser = true;
+	yulOnly.optimizeStackAllocation = true;
+
+	OptimiserSettings evmasmOnly = OptimiserSettings::standard();
+	evmasmOnly.runYulOptimiser = false;
+
+	map<vector<string>, OptimiserSettings> settingsMap = {
+		{{}, OptimiserSettings::minimal()},
+		{{"--optimize"}, OptimiserSettings::standard()},
+		{{"--no-optimize-yul"}, OptimiserSettings::minimal()},
+		{{"--optimize-yul"}, yulOnly},
+		{{"--optimize", "--no-optimize-yul"}, evmasmOnly},
+		{{"--optimize", "--optimize-yul"}, OptimiserSettings::standard()},
+	};
+
+	map<InputMode, string> inputModeFlagMap = {
+		{InputMode::Compiler, ""},
+		{InputMode::CompilerWithASTImport, "--import-ast"},
+		{InputMode::Assembler, "--strict-assembly"},
+	};
+
+	for (auto const& [inputMode, inputModeFlag]: inputModeFlagMap)
+		for (auto const& [optimizerFlags, expectedOptimizerSettings]: settingsMap)
+		{
+			vector<string> commandLine = {"solc", inputModeFlag, "file"};
+			commandLine += optimizerFlags;
+			BOOST_CHECK(parseCommandLine(commandLine).optimiserSettings() == expectedOptimizerSettings);
 		}
 }
 

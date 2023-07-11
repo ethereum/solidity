@@ -23,7 +23,6 @@ contract C {
         return abi.encode(s[i][j].a);
     }
 }
-
 // ====
 // revertStrings: debug
 // ----

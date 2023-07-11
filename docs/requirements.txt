@@ -4,7 +4,7 @@
 sphinx_rtd_theme>=0.5.2
 
 pygments-lexer-solidity>=0.7.0
-sphinx-a4doc>=1.2.1
+sphinx-a4doc>=1.6.0
 
 # Sphinx 2.1.0 is the oldest version that accepts a lexer class in add_lexer()
-sphinx>=2.1.0
+sphinx>=2.1.0, <6.0

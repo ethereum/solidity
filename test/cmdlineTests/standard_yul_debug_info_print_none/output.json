@@ -12,10 +12,10 @@
   tag_1
   jump\t// in
 tag_2:
-  jump(tag_3)
+  stop
 tag_1:
+  sstore(0x00, 0x2a)
   jump\t// out
-tag_3:
 "
                 }
             }

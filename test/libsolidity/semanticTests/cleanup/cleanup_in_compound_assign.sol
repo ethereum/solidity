@@ -8,7 +8,5 @@ contract C {
         return (x, y);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 0xff, 0xff

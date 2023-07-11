@@ -40,11 +40,8 @@ contract C {
             y == 0x07;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> true
-// gas irOptimized: 132506
-// gas legacy: 136036
-// gas legacyOptimized: 133480
+// gas irOptimized: 132505
+// gas legacy: 136009
+// gas legacyOptimized: 133478

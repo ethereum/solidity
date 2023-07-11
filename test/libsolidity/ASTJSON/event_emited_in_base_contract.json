@@ -1,0 +1,289 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "B":
+    [
+      16
+    ],
+    "C":
+    [
+      19
+    ],
+    "L":
+    [
+      5
+    ]
+  },
+  "id": 20,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "canonicalName": "L",
+      "contractDependencies": [],
+      "contractKind": "library",
+      "fullyImplemented": true,
+      "id": 5,
+      "linearizedBaseContracts":
+      [
+        5
+      ],
+      "name": "L",
+      "nameLocation": "10:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "eventSelector": "870e3024466c178150e2490c7cfb455e33c0db877113af040f89189d07946664",
+          "id": 4,
+          "name": "E",
+          "nameLocation": "20:1:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 3,
+            "nodeType": "ParameterList",
+            "parameters":
+            [
+              {
+                "constant": false,
+                "id": 2,
+                "indexed": false,
+                "mutability": "mutable",
+                "name": "",
+                "nameLocation": "-1:-1:-1",
+                "nodeType": "VariableDeclaration",
+                "scope": 4,
+                "src": "22:5:1",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_uint8",
+                  "typeString": "uint8"
+                },
+                "typeName":
+                {
+                  "id": 1,
+                  "name": "uint8",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "22:5:1",
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "src": "21:7:1"
+          },
+          "src": "14:15:1"
+        }
+      ],
+      "scope": 20,
+      "src": "0:31:1",
+      "usedErrors": [],
+      "usedEvents":
+      [
+        4
+      ]
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "canonicalName": "B",
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 16,
+      "linearizedBaseContracts":
+      [
+        16
+      ],
+      "name": "B",
+      "nameLocation": "41:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 14,
+            "nodeType": "Block",
+            "src": "63:28:1",
+            "statements":
+            [
+              {
+                "eventCall":
+                {
+                  "arguments":
+                  [
+                    {
+                      "hexValue": "30",
+                      "id": 11,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "number",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "82:1:1",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": "t_rational_0_by_1",
+                        "typeString": "int_const 0"
+                      },
+                      "value": "0"
+                    }
+                  ],
+                  "expression":
+                  {
+                    "argumentTypes":
+                    [
+                      {
+                        "typeIdentifier": "t_rational_0_by_1",
+                        "typeString": "int_const 0"
+                      }
+                    ],
+                    "expression":
+                    {
+                      "id": 8,
+                      "name": "L",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 5,
+                      "src": "78:1:1",
+                      "typeDescriptions":
+                      {
+                        "typeIdentifier": "t_type$_t_contract$_L_$5_$",
+                        "typeString": "type(library L)"
+                      }
+                    },
+                    "id": 10,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "memberLocation": "80:1:1",
+                    "memberName": "E",
+                    "nodeType": "MemberAccess",
+                    "referencedDeclaration": 4,
+                    "src": "78:3:1",
+                    "typeDescriptions":
+                    {
+                      "typeIdentifier": "t_function_event_nonpayable$_t_uint8_$returns$__$",
+                      "typeString": "function (uint8)"
+                    }
+                  },
+                  "id": 12,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": false,
+                  "kind": "functionCall",
+                  "lValueRequested": false,
+                  "nameLocations": [],
+                  "names": [],
+                  "nodeType": "FunctionCall",
+                  "src": "78:6:1",
+                  "tryCall": false,
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_tuple$__$",
+                    "typeString": "tuple()"
+                  }
+                },
+                "id": 13,
+                "nodeType": "EmitStatement",
+                "src": "73:11:1"
+              }
+            ]
+          },
+          "id": 15,
+          "implemented": true,
+          "kind": "constructor",
+          "modifiers": [],
+          "name": "",
+          "nameLocation": "-1:-1:-1",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 6,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "60:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 7,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "63:0:1"
+          },
+          "scope": 16,
+          "src": "49:42:1",
+          "stateMutability": "nonpayable",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "scope": 20,
+      "src": "32:61:1",
+      "usedErrors": [],
+      "usedEvents":
+      [
+        4
+      ]
+    },
+    {
+      "abstract": false,
+      "baseContracts":
+      [
+        {
+          "baseName":
+          {
+            "id": 17,
+            "name": "B",
+            "nameLocations":
+            [
+              "108:1:1"
+            ],
+            "nodeType": "IdentifierPath",
+            "referencedDeclaration": 16,
+            "src": "108:1:1"
+          },
+          "id": 18,
+          "nodeType": "InheritanceSpecifier",
+          "src": "108:1:1"
+        }
+      ],
+      "canonicalName": "C",
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 19,
+      "linearizedBaseContracts":
+      [
+        19,
+        16
+      ],
+      "name": "C",
+      "nameLocation": "103:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes": [],
+      "scope": 20,
+      "src": "94:18:1",
+      "usedErrors": [],
+      "usedEvents":
+      [
+        4
+      ]
+    }
+  ],
+  "src": "0:113:1"
+}

@@ -23,3 +23,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 2072: (240-246): Unused local variable.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

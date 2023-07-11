@@ -12,6 +12,8 @@ object "a" {
 }
 // ----
 // Assembly:
+//     /* "source":20:22   */
+//   stop
 // stop
 // data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421
 //
@@ -22,6 +24,8 @@ object "a" {
 //       0x00
 //         /* "source":143:155   */
 //       sstore
+//         /* "source":141:157   */
+//       stop
 //     stop
 //
 //     sub_0: assembly {
@@ -31,10 +35,12 @@ object "a" {
 //           0x02
 //             /* "source":193:205   */
 //           sstore
+//             /* "source":191:207   */
+//           stop
 //         stop
 //         data_6adf031833174bbe4c85eafe59ddb54e6584648c2c962c6f94791ab49caa0ad4 123456
 //     }
 // }
-// Bytecode: fe
-// Opcodes: INVALID
-// SourceMappings:
+// Bytecode: 00fe
+// Opcodes: STOP INVALID
+// SourceMappings: 20:2:0:-:0

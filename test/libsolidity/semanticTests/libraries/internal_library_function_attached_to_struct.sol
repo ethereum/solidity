@@ -21,6 +21,5 @@ contract C {
         return x.data[3];
     }
 }
-
 // ----
 // f() -> 2

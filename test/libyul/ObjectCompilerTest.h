@@ -55,7 +55,6 @@ private:
 	void disambiguate();
 
 	frontend::OptimisationPreset m_optimisationPreset;
-	bool m_wasm = false;
 };
 
 }

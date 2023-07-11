@@ -8,7 +8,6 @@ contract C {
       }
   }
 }
-
 // ====
 // SMTEngine: all
 // ----

@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "settings.modelChecker.showProvedSafe must be a Boolean value.",
+            "message": "settings.modelChecker.showProvedSafe must be a Boolean value.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

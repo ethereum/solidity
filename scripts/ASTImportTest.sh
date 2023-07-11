@@ -19,6 +19,7 @@
 # (c) solidity contributors.
 # ------------------------------------------------------------------------------
 # Bash script to test the import/exports.
+#
 # ast import/export tests:
 #   - first exporting a .sol file to JSON, then loading it into the compiler
 #     and exporting it again. The second JSON should be identical to the first.
@@ -100,6 +101,7 @@ function test_ast_import_export_equivalence
 
     local export_command=("$SOLC" --combined-json ast --pretty-json --json-indent 4 "${input_files[@]}")
     local import_command=("$SOLC" --import-ast --combined-json ast --pretty-json --json-indent 4 expected.json)
+    local import_via_standard_json_command=("$SOLC" --combined-json ast --pretty-json --json-indent 4 --standard-json standard_json_input.json)
 
     # export ast - save ast json as expected result (silently)
     if ! "${export_command[@]}" > expected.json 2> stderr_export.txt
@@ -117,8 +119,28 @@ function test_ast_import_export_equivalence
         return 1
     fi
 
+    echo ". += {\"sources\":" > _ast_json.json
+    jq .sources expected.json >> _ast_json.json
+    echo "}" >> _ast_json.json
+    echo "{\"language\": \"SolidityAST\", \"settings\": {\"outputSelection\": {\"*\": {\"\": [\"ast\"]}}}}" > standard_json.json
+    jq --from-file _ast_json.json standard_json.json > standard_json_input.json
+
+    # (re)import ast via standard json - and export it again as obtained result (silently)
+    if ! "${import_via_standard_json_command[@]}" > obtained_standard_json.json 2> stderr_import.txt
+    then
+        print_stderr_stdout "ERROR: AST reimport failed (import) for input file ${sol_file}." ./stderr_import.txt ./obtained_standard_json.json
+        print_used_commands "$(pwd)" "${export_command[*]} > expected.json" "${import_command[*]}"
+        return 1
+    fi
+
+    jq .sources expected.json > expected_standard_json.json
+    jq .sources obtained_standard_json.json >  obtained_standard_json_.json
+    jq 'walk(if type == "object" and has("ast") then .AST = .ast | del(.ast) else . end)' < obtained_standard_json_.json > obtained_standard_json.json
+    jq --sort-keys . < obtained_standard_json.json > obtained_standard_json_.json
+    mv obtained_standard_json_.json obtained_standard_json.json
+
     # compare expected and obtained ASTs
-    if ! diff_files expected.json obtained.json
+    if ! diff_files expected.json obtained.json || ! diff_files expected_standard_json.json obtained_standard_json.json
     then
         printError "ERROR: AST reimport failed for ${sol_file}"
         if (( EXIT_ON_ERROR == 1 ))
@@ -187,7 +209,7 @@ esac
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
 # bug. Since the test involves a malformed path, there is no point in running
 # tests on it. See https://github.com/boostorg/filesystem/issues/176
-IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
+IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and -not -name "boost_filesystem_bug.sol" -not -path "*/experimental/*")
 
 NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
 echo "Looking at ${NSOURCES} .sol files..."

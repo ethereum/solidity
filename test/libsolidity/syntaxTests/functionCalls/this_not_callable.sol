@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5704: (72-78): Type is not callable
+// TypeError 5704: (72-78): This expression is not callable.

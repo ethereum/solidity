@@ -5,8 +5,6 @@ contract A {
         x++;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // ()
 // x() -> 1

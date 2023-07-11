@@ -37,6 +37,8 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/action/remove.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -156,7 +158,8 @@ map<YulString, size_t> FullInliner::callDepths() const
 		}
 
 		for (auto& call: cg.functionCalls)
-			call.second -= removed;
+			for (YulString toBeRemoved: removed)
+				ranges::actions::remove(call.second, toBeRemoved);
 
 		currentDepth++;
 

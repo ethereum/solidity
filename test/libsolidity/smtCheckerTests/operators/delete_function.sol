@@ -28,5 +28,5 @@ contract C
 // ====
 // SMTEngine: all
 // ----
-// Info 1180: Contract invariant(s) for :C:\n!(a.length <= 2)\n
+// Info 1391: CHC: 6 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
 // Warning 6838: (262-263): BMC: Condition is always true.

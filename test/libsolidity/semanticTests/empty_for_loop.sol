@@ -7,7 +7,5 @@ contract test {
         }
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 10

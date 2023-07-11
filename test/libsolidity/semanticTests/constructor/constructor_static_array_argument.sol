@@ -7,12 +7,11 @@ contract C {
         b = _b;
     }
 }
-
 // ----
 // constructor(): 1, 2, 3, 4 ->
-// gas irOptimized: 172948
-// gas legacy: 221377
-// gas legacyOptimized: 177671
+// gas irOptimized: 172314
+// gas legacy: 218378
+// gas legacyOptimized: 176195
 // a() -> 1
 // b(uint256): 0 -> 2
 // b(uint256): 1 -> 3

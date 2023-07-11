@@ -168,6 +168,9 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocu
 	/// List of contracts whose bytecode is referenced by this contract, e.g. through "new".
 	/// The Value represents the ast node that referenced the contract.
 	std::map<ContractDefinition const*, ASTNode const*, ASTCompareByID<ContractDefinition>> contractDependencies;
+
+	// Per-contract map from function AST IDs to internal dispatch function IDs.
+	std::map<FunctionDefinition const*, uint64_t> internalFunctionIDs;
 };
 
 struct CallableDeclarationAnnotation: DeclarationAnnotation
@@ -312,7 +315,12 @@ struct MemberAccessAnnotation: ExpressionAnnotation
 	util::SetOnce<VirtualLookup> requiredLookup;
 };
 
-struct BinaryOperationAnnotation: ExpressionAnnotation
+struct OperationAnnotation: ExpressionAnnotation
+{
+	util::SetOnce<FunctionDefinition const*> userDefinedFunction;
+};
+
+struct BinaryOperationAnnotation: OperationAnnotation
 {
 	/// The common type that is used for the operation, not necessarily the result type (which
 	/// e.g. for comparisons is bool).

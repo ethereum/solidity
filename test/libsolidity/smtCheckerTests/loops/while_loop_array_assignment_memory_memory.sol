@@ -30,3 +30,4 @@ contract LoopFor2 {
 // ----
 // Warning 2072: (202-217): Unused local variable.
 // Warning 2072: (225-231): Unused local variable.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -108,13 +108,11 @@ void CommonOptions::addOptions()
 		("eof-version", po::value<uint64_t>()->implicit_value(1u), "which EOF version to use")
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("vm", po::value<std::vector<fs::path>>(&vmPaths), "path to evmc library, can be supplied multiple times.")
-		("ewasm", po::bool_switch(&ewasm)->default_value(ewasm), "tries to automatically find an ewasm vm and enable ewasm test-execution.")
 		("batches", po::value<size_t>(&this->batches)->default_value(1), "set number of batches to split the tests into")
 		("selected-batch", po::value<size_t>(&this->selectedBatch)->default_value(0), "zero-based number of batch to execute")
 		("no-semantic-tests", po::bool_switch(&disableSemanticTests)->default_value(disableSemanticTests), "disable semantic tests")
 		("no-smt", po::bool_switch(&disableSMT)->default_value(disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize)->default_value(optimize), "enables optimization")
-		("enforce-compile-to-ewasm", po::bool_switch(&enforceCompileToEwasm)->default_value(enforceCompileToEwasm), "Enforce compiling all tests to Ewasm to see if additional tests can be activated.")
 		("enforce-gas-cost", po::value<bool>(&enforceGasTest)->default_value(enforceGasTest)->implicit_value(true), "Enforce checking gas cost in semantic tests.")
 		("enforce-gas-cost-min-value", po::value(&enforceGasTestMinValue)->default_value(enforceGasTestMinValue), "Threshold value to enforce adding gas checks to a test.")
 		("abiencoderv1", po::bool_switch(&useABIEncoderV1)->default_value(useABIEncoderV1), "enables abi encoder v1")
@@ -209,14 +207,6 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 			vmPaths.emplace_back(*repoPath);
 		else
 			vmPaths.emplace_back(evmoneFilename);
-		if (ewasm) {
-			if (auto envPath = getenv("ETH_HERA"))
-				vmPaths.emplace_back(envPath);
-			else if (auto repoPath = findInDefaultPath(heraFilename))
-				vmPaths.emplace_back(*repoPath);
-			else
-				vmPaths.emplace_back(heraFilename);
-		}
 	}
 
 	return true;
@@ -234,8 +224,6 @@ string CommonOptions::toString(vector<string> const& _selectedOptions) const
 		{"optimize", boolToString(optimize)},
 		{"useABIEncoderV1", boolToString(useABIEncoderV1)},
 		{"batch", to_string(selectedBatch + 1) + "/" + to_string(batches)},
-		{"ewasm", boolToString(ewasm)},
-		{"enforceCompileToEwasm", boolToString(enforceCompileToEwasm)},
 		{"enforceGasTest", boolToString(enforceGasTest)},
 		{"enforceGasTestMinValue", enforceGasTestMinValue.str()},
 		{"disableSemanticTests", boolToString(disableSemanticTests)},
@@ -303,24 +291,16 @@ bool isValidSemanticTestPath(boost::filesystem::path const& _testPath)
 
 bool loadVMs(CommonOptions const& _options)
 {
-	if (_options.disableSemanticTests && !_options.ewasm)
+	if (_options.disableSemanticTests)
 		return true;
 
-	auto [evmSupported, ewasmSupported] = solidity::test::EVMHost::checkVmPaths(_options.vmPaths);
+	bool evmSupported = solidity::test::EVMHost::checkVmPaths(_options.vmPaths);
 	if (!_options.disableSemanticTests && !evmSupported)
 	{
 		std::cerr << "Unable to find " << solidity::test::evmoneFilename;
 		std::cerr << ". Please disable semantics tests with --no-semantic-tests or provide a path using --vm <path>." << std::endl;
 		std::cerr << "You can download it at" << std::endl;
 		std::cerr << solidity::test::evmoneDownloadLink << std::endl;
-		return false;
-	}
-	if (_options.ewasm && !ewasmSupported)
-	{
-		std::cerr << "Unable to find " << solidity::test::heraFilename;
-		std::cerr << ". To be able to enable ewasm tests, please provide the path using --vm <path>." << std::endl;
-		std::cerr << "You can download it at" << std::endl;
-		std::cerr << solidity::test::heraDownloadLink << std::endl;
 		return false;
 	}
 	return true;

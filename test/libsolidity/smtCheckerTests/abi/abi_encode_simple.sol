@@ -21,6 +21,7 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreOS: macos
 // ----
-// Warning 6328: (298-328): CHC: Assertion violation happens here.\nCounterexample:\n\nt = false\nx = 0\ny = 0\nz = 0\nb4 = []\nb5 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSimple(false, 0, 0, 0, a, b)
-// Warning 6328: (389-419): CHC: Assertion violation happens here.\nCounterexample:\n\nt = false\nx = 0\ny = 0\nz = 0\nb5 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSimple(false, 0, 0, 0, a, b)
-// Warning 6328: (492-522): CHC: Assertion violation happens here.\nCounterexample:\n\nt = false\nx = 0\ny = 0\nz = 0\nb1 = []\nb2 = []\nb5 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSimple(false, 0, 0, 0, a, b)
+// Warning 6328: (298-328): CHC: Assertion violation happens here.
+// Warning 6328: (389-419): CHC: Assertion violation happens here.
+// Warning 6328: (492-522): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -3,6 +3,16 @@
     [
         {
             "component": "general",
+            "errorCode": "1391",
+            "formattedMessage": "Info: CHC: 1 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.
+
+",
+            "message": "CHC: 1 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.",
+            "severity": "info",
+            "type": "Info"
+        },
+        {
+            "component": "general",
             "errorCode": "1180",
             "formattedMessage": "Info: Contract invariant(s) for A:test:
 (!(x >= 1) || true)

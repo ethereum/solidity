@@ -11,7 +11,7 @@ visual diff of the assembly before and after a change is often very enlightening
 
 Consider the following contract (named, say ``contract.sol``):
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;

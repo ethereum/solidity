@@ -17,13 +17,13 @@ contract C {
 // optimize-yul: true
 // ----
 // creation:
-//   codeDepositCost: 659000
-//   executionCost: 689
-//   totalCost: 659689
+//   codeDepositCost: 640600
+//   executionCost: 674
+//   totalCost: 641274
 // external:
-//   a(): 2285
-//   b(uint256): 4652
-//   f1(uint256): 307
+//   a(): 2283
+//   b(uint256): 4649
+//   f1(uint256): 304
 //   f2(uint256[],string[],uint16,address): infinite
 //   f3(uint16[],string[],uint16,address): infinite
 //   f4(uint32[],string[12],bytes[2][],address): infinite

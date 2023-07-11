@@ -4,6 +4,8 @@ Warning: Return value of low-level calls not used.
 6 | 		_a.call("");
   | 		^^^^^^^^^^^
 
+Info: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+
 Info: Reentrancy property(ies) for model_checker_invariants_reentrancy/input.sol:test:
 (((!(x <= 0) || !(x' >= 1)) && (!(x <= 0) || !(<errorCode> >= 1))) || true)
 <errorCode> = 0 -> no errors

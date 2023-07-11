@@ -7,7 +7,7 @@ Modular Contracts
 A modular approach to building your contracts helps you reduce the complexity
 and improve the readability which will help to identify bugs and vulnerabilities
 during development and code review.
-If you specify and control the behaviour of each module in isolation, the
+If you specify and control the behavior of each module in isolation, the
 interactions you have to consider are only those between the module specifications
 and not every other moving part of the contract.
 In the example below, the contract uses the ``move`` method
@@ -34,7 +34,7 @@ and the sum of all balances is an invariant across the lifetime of the contract.
     contract Token {
         mapping(address => uint256) balances;
         using Balances for *;
-        mapping(address => mapping (address => uint256)) allowed;
+        mapping(address => mapping(address => uint256)) allowed;
 
         event Transfer(address from, address to, uint amount);
         event Approval(address owner, address spender, uint amount);

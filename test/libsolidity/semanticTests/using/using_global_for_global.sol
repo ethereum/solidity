@@ -13,6 +13,5 @@ contract C {
         return r.f().g();
     }
 }
-
 // ----
 // f(uint256): 100 -> 111

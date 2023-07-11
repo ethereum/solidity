@@ -24,8 +24,6 @@ contract C {
 		inv  = internal1 != invalid;
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // equal() -> true, false, false
 // unequal() -> false, true, true

@@ -18,9 +18,9 @@ contract test {
 }
 // ----
 // set(uint8,uint8,uint8,uint8,uint8): 1, 21, 22, 42, 43 -> 0, 0, 0, 0
-// gas irOptimized: 111669
-// gas legacy: 113806
-// gas legacyOptimized: 111781
+// gas irOptimized: 111668
+// gas legacy: 113748
+// gas legacyOptimized: 111772
 // get(uint8): 1 -> 21, 22, 42, 43
 // set(uint8,uint8,uint8,uint8,uint8): 1, 10, 30, 11, 31 -> 21, 22, 42, 43
 // get(uint8): 1 -> 10, 30, 11, 31

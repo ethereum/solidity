@@ -1,0 +1,14 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_outputs_on_analysis_error_fatal_after_current_step/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {
+				"*": ["*"],
+				"": ["*"]
+			}
+		}
+	}
+}

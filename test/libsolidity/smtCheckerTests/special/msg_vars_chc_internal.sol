@@ -29,4 +29,5 @@ contract C {
 // ====
 // SMTEngine: chc
 // ----
-// Warning 6328: (645-668): CHC: Assertion violation happens here.\nCounterexample:\ndata = [0x26, 0x12, 0x1f, 0xf0], sender = 0x0, sig = 0x26121ff0, value = 42\n\nTransaction trace:\nC.constructor()\nState: data = [], sender = 0x0, sig = 0x0, value = 0\nC.f(){ msg.data: [0x26, 0x12, 0x1f, 0xf0], msg.sender: 0x0, msg.sig: 0x26121ff0, msg.value: 42 }\n    C.g() -- internal call
+// Warning 6328: (645-668): CHC: Assertion violation happens here.
+// Info 1391: CHC: 8 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

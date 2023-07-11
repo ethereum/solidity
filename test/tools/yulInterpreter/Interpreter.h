@@ -94,6 +94,7 @@ struct InterpreterState
 	u256 timestamp = 0x88888888;
 	u256 blockNumber = 1024;
 	u256 difficulty = 0x9999999;
+	u256 prevrandao = (u256(1) << 64) + 1;
 	u256 gaslimit = 4000000;
 	u256 chainid = 0x01;
 	/// The minimum value of basefee: 7 wei.

@@ -6,18 +6,18 @@ Safe Remote Purchase
 
 Purchasing goods remotely currently requires multiple parties that need to trust each other.
 The simplest configuration involves a seller and a buyer. The buyer would like to receive
-an item from the seller and the seller would like to get money (or an equivalent)
+an item from the seller and the seller would like to get some compensation, e.g. Ether,
 in return. The problematic part is the shipment here: There is no way to determine for
 sure that the item arrived at the buyer.
 
 There are multiple ways to solve this problem, but all fall short in one or the other way.
 In the following example, both parties have to put twice the value of the item into the
-contract as escrow. As soon as this happened, the money will stay locked inside
+contract as escrow. As soon as this happened, the Ether will stay locked inside
 the contract until the buyer confirms that they received the item. After that,
 the buyer is returned the value (half of their deposit) and the seller gets three
 times the value (their deposit plus the value). The idea behind
 this is that both parties have an incentive to resolve the situation or otherwise
-their money is locked forever.
+their Ether is locked forever.
 
 This contract of course does not solve the problem, but gives an overview of how
 you can use state machine-like constructs inside a contract.

@@ -22,7 +22,5 @@ contract C is A {
         _;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // getData() -> 6

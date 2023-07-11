@@ -29,7 +29,6 @@
 #include <libyul/YulStack.h>
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/backends/wasm/WasmDialect.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
@@ -119,11 +118,6 @@ std::map<string const, yul::Dialect const& (*)(langutil::EVMVersion)> const vali
 		"yul",
 		[](langutil::EVMVersion) -> yul::Dialect const&
 		{ return yul::Dialect::yulDeprecated(); }
-	},
-	{
-		"ewasm",
-		[](langutil::EVMVersion) -> yul::Dialect const&
-		{ return yul::WasmDialect::instance(); }
 	}
 };
 

@@ -1,0 +1,1 @@
+--via-ir --ir-optimized --asm --debug-info none

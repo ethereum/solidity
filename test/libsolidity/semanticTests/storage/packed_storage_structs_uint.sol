@@ -25,8 +25,5 @@ contract C {
         return 1;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 1

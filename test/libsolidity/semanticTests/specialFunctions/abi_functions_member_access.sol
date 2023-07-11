@@ -7,7 +7,5 @@ contract C {
         abi.decode;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() ->

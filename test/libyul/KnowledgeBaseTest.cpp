@@ -58,7 +58,7 @@ protected:
 		for (auto const& [name, expression]: m_ssaValues.values())
 			m_values[name].value = expression;
 
-		return KnowledgeBase(m_dialect, [this](YulString _var) { return util::valueOrNullptr(m_values, _var); });
+		return KnowledgeBase([this](YulString _var) { return util::valueOrNullptr(m_values, _var); });
 	}
 
 	EVMDialect m_dialect{EVMVersion{}, true};
@@ -83,9 +83,11 @@ BOOST_AUTO_TEST_CASE(basic)
 	BOOST_CHECK(!kb.knownToBeDifferent("a"_yulstring, "b"_yulstring));
 	// This only works if the variable names are the same.
 	// It assumes that SSA+CSE+Simplifier actually replaces the variables.
-	BOOST_CHECK(!kb.knownToBeEqual("a"_yulstring, "b"_yulstring));
 	BOOST_CHECK(!kb.valueIfKnownConstant("a"_yulstring));
 	BOOST_CHECK(kb.valueIfKnownConstant("zero"_yulstring) == u256(0));
+	BOOST_CHECK(kb.differenceIfKnownConstant("a"_yulstring, "b"_yulstring) == u256(0));
+	BOOST_CHECK(kb.differenceIfKnownConstant("a"_yulstring, "c"_yulstring) == u256(0));
+	BOOST_CHECK(kb.valueIfKnownConstant("e"_yulstring) == u256(0));
 }
 
 BOOST_AUTO_TEST_CASE(difference)
@@ -94,7 +96,7 @@ BOOST_AUTO_TEST_CASE(difference)
 		let a := calldataload(0)
 		let b := add(a, 200)
 		let c := add(a, 220)
-		let d := add(c, 12)
+		let d := add(12, c)
 		let e := sub(c, 12)
 	})");
 

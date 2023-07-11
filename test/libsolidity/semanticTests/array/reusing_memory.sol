@@ -24,6 +24,6 @@ contract Main {
 }
 // ----
 // f(uint256): 0x34 -> 0x46bddb1178e94d7f2892ff5f366840eb658911794f2c3a44c450aa2c505186c1
-// gas irOptimized: 112757
-// gas legacy: 126596
-// gas legacyOptimized: 113823
+// gas irOptimized: 112161
+// gas legacy: 125162
+// gas legacyOptimized: 113012

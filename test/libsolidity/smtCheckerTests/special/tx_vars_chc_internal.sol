@@ -21,4 +21,5 @@ contract C {
 // SMTEngine: chc
 // SMTIgnoreOS: macos
 // ----
-// Warning 6328: (343-377): CHC: Assertion violation happens here.\nCounterexample:\ngas = 0, origin = 0x0\n\nTransaction trace:\nC.constructor()\nState: gas = 0, origin = 0x0\nC.f(){ tx.gasprice: 0, tx.origin: 0x0 }\n    C.g() -- internal call
+// Warning 6328: (343-377): CHC: Assertion violation happens here.
+// Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -1,0 +1,23 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n\ncontract test {
+					function f(uint8 x) public {
+						assert(x >= 0);
+						assert(x < 1000);
+					}
+				}"
+		}
+	},
+	"settings":
+	{
+		"modelChecker":
+		{
+			"engine": "all",
+			"showProvedSafe": "aaa"
+		}
+	}
+}

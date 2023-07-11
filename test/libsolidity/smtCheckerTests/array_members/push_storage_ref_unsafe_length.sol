@@ -28,8 +28,8 @@ contract C {
 // SMTIgnoreOS: macos
 // ----
 // Warning 6368: (238-242): CHC: Out of bounds access happens here.
-// Warning 6368: (238-245): CHC: Out of bounds access might happen here.
-// Warning 6368: (238-248): CHC: Out of bounds access might happen here.
+// Warning 6368: (238-245): CHC: Out of bounds access happens here.
+// Warning 6368: (238-248): CHC: Out of bounds access happens here.
 // Warning 6368: (311-315): CHC: Out of bounds access happens here.
 // Warning 6368: (343-347): CHC: Out of bounds access happens here.
 // Warning 6328: (336-360): CHC: Assertion violation happens here.
@@ -37,3 +37,4 @@ contract C {
 // Warning 6368: (513-520): CHC: Out of bounds access happens here.
 // Warning 6368: (513-523): CHC: Out of bounds access happens here.
 // Warning 6328: (506-530): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -10,5 +10,5 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (153-188): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor(){ msg.value: 101 }\nC.f()
-// Info 1180: Contract invariant(s) for :C:\n!((:var 0).balances[address(this)] <= 100)\n
+// Warning 6328: (153-188): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

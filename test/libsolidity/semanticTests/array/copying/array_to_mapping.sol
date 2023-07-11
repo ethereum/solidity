@@ -35,11 +35,10 @@ contract C {
         return m[0];
     }
 }
-
 // ----
 // from_storage() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14
-// gas irOptimized: 147913
-// gas legacy: 148965
-// gas legacyOptimized: 146935
+// gas irOptimized: 147892
+// gas legacy: 148896
+// gas legacyOptimized: 146908
 // from_storage_ptr() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14
 // from_memory() -> 0x20, 2, 0x40, 0xa0, 2, 10, 11, 3, 12, 13, 14

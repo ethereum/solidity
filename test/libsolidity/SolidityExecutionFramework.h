@@ -87,7 +87,6 @@ protected:
 	std::optional<uint8_t> m_eofVersion;
 	CompilerStack m_compiler;
 	bool m_compileViaYul = false;
-	bool m_compileToEwasm = false;
 	bool m_showMetadata = false;
 	bool m_appendCBORMetadata = true;
 	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;

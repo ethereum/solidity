@@ -5,8 +5,6 @@ contract test {
         return cond ? x : y;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(bool): true -> 0xcd
 // f(bool): false -> 0xabab

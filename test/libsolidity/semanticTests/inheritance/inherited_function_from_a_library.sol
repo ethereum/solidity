@@ -14,6 +14,5 @@ contract B {
         return A.f();
     }
 }
-
 // ----
 // g() -> 1

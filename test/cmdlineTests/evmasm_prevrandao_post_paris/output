@@ -1,0 +1,13 @@
+
+======= evmasm_prevrandao_post_paris/input.sol:C =======
+EVM assembly:
+  sstore(0x00, prevrandao)
+  stop
+stop
+
+sub_0: assembly {
+      stop
+}
+
+Opcodes:
+PREVRANDAO PUSH1 0x0 SSTORE STOP INVALID 

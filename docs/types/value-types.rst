@@ -4,8 +4,7 @@
 Value Types
 ===========
 
-The following types are also called value types because variables of these
-types will always be passed by value, i.e. they are always copied when they
+The following are called value types because their variables will always be passed by value, i.e. they are always copied when they
 are used as function arguments or in assignments.
 
 .. index:: ! bool, ! true, ! false
@@ -47,7 +46,7 @@ access the minimum and maximum value representable by the type.
 
   Integers in Solidity are restricted to a certain range. For example, with ``uint32``, this is ``0`` up to ``2**32 - 1``.
   There are two modes in which arithmetic is performed on these types: The "wrapping" or "unchecked" mode and the "checked" mode.
-  By default, arithmetic is always "checked", which mean that if the result of an operation falls outside the value range
+  By default, arithmetic is always "checked", meaning that if an operation's result falls outside the value range
   of the type, the call is reverted through a :ref:`failing assertion<assert-and-require>`. You can switch to "unchecked" mode
   using ``unchecked { ... }``. More details can be found in the section about :ref:`unchecked <unchecked>`.
 
@@ -141,7 +140,7 @@ Exponentiation
 
 Exponentiation is only available for unsigned types in the exponent. The resulting type
 of an exponentiation is always equal to the type of the base. Please take care that it is
-large enough to hold the result and prepare for potential assertion failures or wrapping behaviour.
+large enough to hold the result and prepare for potential assertion failures or wrapping behavior.
 
 .. note::
   In checked mode, exponentiation only uses the comparatively cheap ``exp`` opcode for small bases.
@@ -182,7 +181,7 @@ Operators:
 Address
 -------
 
-The address type comes in two flavours, which are largely identical:
+The address type comes in two largely identical flavors:
 
 - ``address``: Holds a 20 byte value (size of an Ethereum address).
 - ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
@@ -258,13 +257,13 @@ reverts on failure.
 
 * ``send``
 
-Send is the low-level counterpart of ``transfer``. If the execution fails, the current contract will not stop with an exception, but ``send`` will return ``false``.
+``send`` is the low-level counterpart of ``transfer``. If the execution fails, the current contract will not stop with an exception, but ``send`` will return ``false``.
 
 .. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
-    use a pattern where the recipient withdraws the money.
+    use a pattern where the recipient withdraws the Ether.
 
 * ``call``, ``delegatecall`` and ``staticcall``
 
@@ -424,7 +423,7 @@ Dynamically-sized byte array
 ``string``:
     Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
 
-.. index:: address, literal;address
+.. index:: address, ! literal;address
 
 .. _address_literals:
 
@@ -440,7 +439,7 @@ an error. You can prepend (for integer types) or append (for bytesNN types) zero
 .. note::
     The mixed-case address checksum format is defined in `EIP-55 <https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md>`_.
 
-.. index:: literal, literal;rational
+.. index:: integer, rational number, ! literal;rational
 
 .. _rational_literals:
 
@@ -518,7 +517,7 @@ regardless of the type of the right (exponent) operand.
     uint128 a = 1;
     uint128 b = 2.5 + a + 0.5;
 
-.. index:: literal, literal;string, string
+.. index:: ! literal;string, string
 .. _string_literals:
 
 String Literals and Types
@@ -565,6 +564,8 @@ character sequence ``abcdef``.
 Any Unicode line terminator which is not a newline (i.e. LF, VF, FF, CR, NEL, LS, PS) is considered to
 terminate the string literal. Newline only terminates the string literal if it is not preceded by a ``\``.
 
+.. index:: ! literal;unicode
+
 Unicode Literals
 ----------------
 
@@ -575,7 +576,7 @@ They also support the very same escape sequences as regular string literals.
 
     string memory a = unicode"Hello 😃";
 
-.. index:: literal, bytes
+.. index:: ! literal;hexadecimal, bytes
 
 Hexadecimal Literals
 --------------------
@@ -589,7 +590,8 @@ of the hexadecimal sequence.
 Multiple hexadecimal literals separated by whitespace are concatenated into a single literal:
 ``hex"00112233" hex"44556677"`` is equivalent to ``hex"0011223344556677"``
 
-Hexadecimal literals behave like :ref:`string literals <string_literals>` and have the same convertibility restrictions.
+Hexadecimal literals in some ways behave like :ref:`string literals <string_literals>` but are not
+implicitly convertible to the ``string`` type.
 
 .. index:: enum
 
@@ -653,13 +655,13 @@ smallest and respectively largest value of the given enum.
 
 .. _user-defined-value-types:
 
-User Defined Value Types
+User-defined Value Types
 ------------------------
 
-A user defined value type allows creating a zero cost abstraction over an elementary value type.
+A user-defined value type allows creating a zero cost abstraction over an elementary value type.
 This is similar to an alias, but with stricter type requirements.
 
-A user defined value type is defined using ``type C is V``, where ``C`` is the name of the newly
+A user-defined value type is defined using ``type C is V``, where ``C`` is the name of the newly
 introduced type and ``V`` has to be a built-in value type (the "underlying type"). The function
 ``C.wrap`` is used to convert from the underlying type to the custom type. Similarly, the
 function ``C.unwrap`` is used to convert from the custom type to the underlying type.
@@ -680,7 +682,7 @@ type with 18 decimals and a minimal library to do arithmetic operations on the t
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.8;
 
-    // Represent a 18 decimal, 256 bit wide fixed point type using a user defined value type.
+    // Represent a 18 decimal, 256 bit wide fixed point type using a user-defined value type.
     type UFixed256x18 is uint256;
 
     /// A minimal library to do fixed point operations on UFixed256x18.

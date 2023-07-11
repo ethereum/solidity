@@ -16,9 +16,6 @@ contract C {
         return x(_arg);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // use(uint16): 3 -> 0xfff9
 // result_in_constructor() -> 0xfffb

@@ -11,8 +11,6 @@ contract C {
 		unchecked { t(); }
 	}
 }
-
-
 // ====
 // SMTEngine: all
 // ----

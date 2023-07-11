@@ -5,8 +5,5 @@ contract C {
         }
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f() -> FAILURE

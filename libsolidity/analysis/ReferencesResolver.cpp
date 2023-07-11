@@ -173,6 +173,7 @@ void ReferencesResolver::endVisit(ModifierDefinition const&)
 
 void ReferencesResolver::endVisit(IdentifierPath const& _path)
 {
+	// Note that library/functions names in "using {} for" directive are resolved separately in visit(UsingForDirective)
 	std::vector<Declaration const*> declarations = m_resolver.pathFromCurrentScopeWithAllDeclarations(_path.path());
 	if (declarations.empty())
 	{
@@ -182,6 +183,38 @@ void ReferencesResolver::endVisit(IdentifierPath const& _path)
 
 	_path.annotation().referencedDeclaration = declarations.back();
 	_path.annotation().pathDeclarations = std::move(declarations);
+}
+
+bool ReferencesResolver::visit(UsingForDirective const& _usingFor)
+{
+	for (ASTPointer<IdentifierPath> const& path: _usingFor.functionsOrLibrary())
+	{
+		// _includeInvisibles is enabled here because external library functions are marked invisible.
+		// As unintended side-effects other invisible names (eg.: super, this) may be returned as well.
+		// DeclarationTypeChecker should detect and report such situations.
+		vector<Declaration const*> declarations = m_resolver.pathFromCurrentScopeWithAllDeclarations(path->path(), true /* _includeInvisibles */);
+		if (declarations.empty())
+		{
+			string libraryOrFunctionNameErrorMessage =
+				_usingFor.usesBraces() ?
+				"Identifier is not a function name or not unique." :
+				"Identifier is not a library name.";
+			m_errorReporter.fatalDeclarationError(
+				9589_error,
+				path->location(),
+				libraryOrFunctionNameErrorMessage
+			);
+			break;
+		}
+
+		path->annotation().referencedDeclaration = declarations.back();
+		path->annotation().pathDeclarations = std::move(declarations);
+	}
+
+	if (_usingFor.typeName())
+		_usingFor.typeName()->accept(*this);
+
+	return false;
 }
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)

@@ -20,3 +20,4 @@ contract C {
 // Warning 6368: (166-171): CHC: Out of bounds access might happen here.
 // Warning 6368: (166-174): CHC: Out of bounds access might happen here.
 // Warning 6328: (142-180): CHC: Assertion violation might happen here.
+// Info 6002: BMC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

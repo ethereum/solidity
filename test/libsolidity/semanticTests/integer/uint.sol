@@ -231,8 +231,6 @@ contract test {
 		return true;
 	}
 }
-// ====
-// compileToEwasm: also
 // ----
 // uintMinA() -> true
 // uintMinB() -> true

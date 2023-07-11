@@ -16,10 +16,6 @@ contract X is A
 
 	function set() public { test.v = 2; test.s = "statevar"; }
 }
-
-
-// ====
-// compileToEwasm: also
 // ----
 // test() -> 0, 64, 0
 // set() ->

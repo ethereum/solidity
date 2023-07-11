@@ -14,3 +14,4 @@ contract C {
 // ----
 // Warning 5740: (71-76): Unreachable code.
 // Warning 5740: (89-95): Unreachable code.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

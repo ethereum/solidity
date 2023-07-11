@@ -22,7 +22,7 @@
 set -e
 
 source scripts/common.sh
-source test/externalTests/common.sh
+source scripts/externalTests/common.sh
 
 REPO_ROOT=$(realpath "$(dirname "$0")/../..")
 
@@ -31,8 +31,8 @@ BINARY_TYPE="$1"
 BINARY_PATH="$(realpath "$2")"
 SELECTED_PRESETS="$3"
 
-function compile_fn { npx npm run build; }
-function test_fn { npx npm test; }
+function compile_fn { npm run build; }
+function test_fn { npm test; }
 
 function gnosis_safe_test
 {
@@ -45,9 +45,10 @@ function gnosis_safe_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize            # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        ir-optimize-evm+yul
+        #ir-no-optimize            # Compilation fails with "YulException: Variable var_txHash is 1 too deep in the stack". No memoryguard was present.
+        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_txHash is 1 too deep in the stack". No memoryguard was present.
+        # TODO: Uncomment the preset below when the issue: https://github.com/safe-global/safe-contracts/issues/544 is solved.
+        #ir-optimize-evm+yul       # Compilation fails with "YulException: Cannot swap Variable var_operation with Variable _1: too deep in the stack by 4 slots."
         legacy-no-optimize
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
@@ -66,61 +67,22 @@ function gnosis_safe_test
     sed -i 's|"@openzeppelin/contracts": "\^3\.4\.0"|"@openzeppelin/contracts": "^4.0.0"|g' package.json
 
     # Disable two tests failing due to Hardhat's heuristics not yet updated to handle solc 0.8.10.
-    # TODO: Remove this when Hardhat implements them (https://github.com/nomiclabs/hardhat/issues/2051).
-    sed -i "s|\(it\)\(('should revert if called directly', async () => {\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
+    # TODO: Remove this when Hardhat implements them (https://github.com/nomiclabs/hardhat/issues/2451).
+    sed -i "s|\(it\)\((\"should revert if called directly\"\)|\1.skip\2|g" test/handlers/CompatibilityFallbackHandler.spec.ts
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
     # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
-    sed -i "s|\(it\)\(('should not allow to call setup on singleton'\)|\1.skip\2|g" test/core/GnosisSafe.Setup.spec.ts
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
-    sed -i 's|\(it\)\(("changes the expected storage slot without touching the most important ones"\)|\1.skip\2|g' test/libraries/SignMessageLib.spec.ts
-    sed -i "s|\(it\)\(('can be used only via DELEGATECALL opcode'\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
-    sed -i 's|\(describe\)\(("Upgrade from Safe 1.1.1"\)|\1.skip\2|g' test/migration/UpgradeFromSafe111.spec.ts
-    sed -i 's|\(describe\)\(("Upgrade from Safe 1.2.0"\)|\1.skip\2|g' test/migration/UpgradeFromSafe120.spec.ts
-
-    # TODO: Remove this when Gnosis merges https://github.com/gnosis/safe-contracts/pull/394
-    sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" contracts/handler/CompatibilityFallbackHandler.sol
-
-    # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
-    sed -i "s|it\(('should enforce delegatecall'\)|it.skip\1|g" test/accessors/SimulateTxAccessor.spec.ts
-    sed -i "s|it\(('can only be called from Safe itself'\)|it.skip\1|g" test/libraries/Migration.spec.ts
-    sed -i "s|it\(('should enforce delegatecall to MultiSend'\)|it.skip\1|g" test/libraries/MultiSend.spec.ts
-
-    # Force nested abstract-provider dependencies to be at version 5.6.0. Version 5.7.0 of @ethersproject/abstract-provider
-    # introduced a new field in FeeData, which causes clashes unless all dependency packages of abstract-provider are pegged
-    # to the same version. As we've already had to peg @ethersproject/contracts to 5.6.0 earlier, we are doing so now with
-    # @ethersproject/abstract-provider as well.
-    jq '.overrides."@ethersproject/abstract-provider"="5.6.0" |
-        .overrides."@ethersproject/abstract-signer@5.6.0"
-                  ."@ethersproject/abstract-provider"="5.6.0"' package.json > package.json.tmp
-    mv package.json.tmp package.json
+    sed -i "s|\(it\)\((\"should not allow to call setup on singleton\"\)|\1.skip\2|g" test/core/Safe.Setup.spec.ts
+    sed -i "s|\(it\)\((\"can be used only via DELEGATECALL opcode\"\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
+    sed -i "s|it\((\"can only be called from Safe itself\"\)|it.skip\1|g" test/libraries/Migration.spec.ts
 
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
-    # npm@8.3.0+ is required for `overrides` support
-    npm install npm@>8.3.0
-    npx npm install
-    npx npm install hardhat-gas-reporter
-
-    # Typescript compilation fails with typescript >= 4.7:
-    # Error: Debug Failure. False expression: Non-string value passed to `ts.resolveTypeReferenceDirective`
-    npx npm install "typescript@<4.7.0"
-
-    # With ethers.js 5.6.2 many tests for revert messages fail.
-    # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
-    npx npm install ethers@5.6.1
-
-    # Note that ethers@5.6.1 depends on @ethersproject/contracts@5.6.0 while the dependency on hardhat-deploy
-    # pulls @ethersproject/contracts@5.6.1 (latest). Force 5.6.0 to avoid errors due to having two copies.
-    npx npm install @ethersproject/contracts@5.6.0
-
-    # 2.1.1 started causing failures in safe-contracts external tests after a contract address check was introduced
-    # in https://github.com/NomicFoundation/hardhat/pull/2916, and so to avoid errors, the package is now pegged.
-    # TODO: Remove when https://github.com/safe-global/safe-contracts/issues/436 is resolved.
-    npx npm install @nomiclabs/hardhat-ethers@2.1.0
+    npm install
+    npm install hardhat-gas-reporter
 
     replace_version_pragmas
     [[ $BINARY_TYPE == solcjs ]] && force_solc_modules "${DIR}/solc/dist"

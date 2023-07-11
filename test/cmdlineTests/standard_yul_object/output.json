@@ -7,20 +7,17 @@
             {
                 "evm":
                 {
-                    "assembly": "    /* \"A\":39:61   */
-  data_4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
-    /* \"A\":80:81   */
+                    "assembly": "    /* \"A\":80:81   */
   0x00
-    /* \"A\":76:77   */
+    /* \"A\":39:61   */
   dup1
-    /* \"A\":73:74   */
-  dup3
+  data_4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
     /* \"A\":69:78   */
   add
     /* \"A\":62:82   */
   sstore
     /* \"A\":28:84   */
-  pop
+  stop
 stop
 data_4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45 616263
 ",
@@ -44,13 +41,145 @@ data_4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45 616263
 ",
                 "irOptimized": "object \"NamedObject\" {
     code {
-        let x := dataoffset(\"DataName\")
-        sstore(add(x, 0), 0)
+        {
+            let x := dataoffset(\"DataName\")
+            sstore(add(x, 0), 0)
+        }
     }
     data \"DataName\" hex\"616263\"
 }
 "
             }
+        }
+    },
+    "sources":
+    {
+        "A":
+        {
+            "ast":
+            {
+                "code":
+                {
+                    "block":
+                    {
+                        "nativeSrc": "28:56:0",
+                        "nodeType": "YulBlock",
+                        "src": "28:56:0",
+                        "statements":
+                        [
+                            {
+                                "nativeSrc": "30:31:0",
+                                "nodeType": "YulVariableDeclaration",
+                                "src": "30:31:0",
+                                "value":
+                                {
+                                    "arguments":
+                                    [
+                                        {
+                                            "hexValue": "446174614e616d65",
+                                            "kind": "string",
+                                            "nativeSrc": "50:10:0",
+                                            "nodeType": "YulLiteral",
+                                            "src": "50:10:0",
+                                            "type": "",
+                                            "value": "DataName"
+                                        }
+                                    ],
+                                    "functionName":
+                                    {
+                                        "name": "dataoffset",
+                                        "nativeSrc": "39:10:0",
+                                        "nodeType": "YulIdentifier",
+                                        "src": "39:10:0"
+                                    },
+                                    "nativeSrc": "39:22:0",
+                                    "nodeType": "YulFunctionCall",
+                                    "src": "39:22:0"
+                                },
+                                "variables":
+                                [
+                                    {
+                                        "name": "x",
+                                        "nativeSrc": "34:1:0",
+                                        "nodeType": "YulTypedName",
+                                        "src": "34:1:0",
+                                        "type": ""
+                                    }
+                                ]
+                            },
+                            {
+                                "expression":
+                                {
+                                    "arguments":
+                                    [
+                                        {
+                                            "arguments":
+                                            [
+                                                {
+                                                    "name": "x",
+                                                    "nativeSrc": "73:1:0",
+                                                    "nodeType": "YulIdentifier",
+                                                    "src": "73:1:0"
+                                                },
+                                                {
+                                                    "kind": "number",
+                                                    "nativeSrc": "76:1:0",
+                                                    "nodeType": "YulLiteral",
+                                                    "src": "76:1:0",
+                                                    "type": "",
+                                                    "value": "0"
+                                                }
+                                            ],
+                                            "functionName":
+                                            {
+                                                "name": "add",
+                                                "nativeSrc": "69:3:0",
+                                                "nodeType": "YulIdentifier",
+                                                "src": "69:3:0"
+                                            },
+                                            "nativeSrc": "69:9:0",
+                                            "nodeType": "YulFunctionCall",
+                                            "src": "69:9:0"
+                                        },
+                                        {
+                                            "kind": "number",
+                                            "nativeSrc": "80:1:0",
+                                            "nodeType": "YulLiteral",
+                                            "src": "80:1:0",
+                                            "type": "",
+                                            "value": "0"
+                                        }
+                                    ],
+                                    "functionName":
+                                    {
+                                        "name": "sstore",
+                                        "nativeSrc": "62:6:0",
+                                        "nodeType": "YulIdentifier",
+                                        "src": "62:6:0"
+                                    },
+                                    "nativeSrc": "62:20:0",
+                                    "nodeType": "YulFunctionCall",
+                                    "src": "62:20:0"
+                                },
+                                "nativeSrc": "62:20:0",
+                                "nodeType": "YulExpressionStatement",
+                                "src": "62:20:0"
+                            }
+                        ]
+                    },
+                    "nodeType": "YulCode"
+                },
+                "name": "NamedObject",
+                "nodeType": "YulObject",
+                "subObjects":
+                [
+                    {
+                        "nodeType": "YulData",
+                        "value": "616263"
+                    }
+                ]
+            },
+            "id": 1
         }
     }
 }

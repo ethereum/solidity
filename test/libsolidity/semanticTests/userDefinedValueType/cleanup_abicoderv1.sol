@@ -33,7 +33,6 @@ contract C {
         return (a, b, c);
     }
 }
-
 // ====
 // compileViaYul: false
 // ----

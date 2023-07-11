@@ -1,4 +1,4 @@
-.. index:: ! functions
+.. index:: ! functions, ! function;free
 
 .. _functions:
 
@@ -250,7 +250,7 @@ Reverting a state change is not considered a "state modification", as only chang
 state made previously in code that did not have the ``view`` or ``pure`` restriction
 are reverted and that code has the option to catch the ``revert`` and not pass it on.
 
-This behaviour is also in line with the ``STATICCALL`` opcode.
+This behavior is also in line with the ``STATICCALL`` opcode.
 
 .. warning::
   It is not possible to prevent functions from reading the state at the level
@@ -277,7 +277,7 @@ This behaviour is also in line with the ``STATICCALL`` opcode.
 Special Functions
 =================
 
-.. index:: ! receive ether function, function;receive ! receive
+.. index:: ! receive ether function, function;receive, ! receive
 
 .. _receive-ether-function:
 

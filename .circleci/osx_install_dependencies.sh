@@ -52,7 +52,6 @@ function validate_checksum {
 
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
-  brew unlink python
   brew install boost
   brew install cmake
   brew install wget
@@ -61,11 +60,11 @@ then
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3
-  z3_version="4.11.2"
+  z3_version="4.12.1"
   z3_dir="z3-${z3_version}-x64-osx-10.16"
   z3_package="${z3_dir}.zip"
   wget "https://github.com/Z3Prover/z3/releases/download/z3-${z3_version}/${z3_package}"
-  validate_checksum "$z3_package" a56b6c40d9251a963aabe1f15731dd88ad1cb801d0e7b16e45f8b232175e165c
+  validate_checksum "$z3_package" 7601f844de6d906235140d0f76cca58be7ac716f3e2c29c35845aa24b24f73b9
   unzip "$z3_package"
   rm "$z3_package"
   cp "${z3_dir}/bin/libz3.a" /usr/local/lib
@@ -74,18 +73,11 @@ then
   rm -r "$z3_dir"
 
   # evmone
-  evmone_version="0.9.1"
+  evmone_version="0.10.0"
   evmone_package="evmone-${evmone_version}-darwin-x86_64.tar.gz"
   wget "https://github.com/ethereum/evmone/releases/download/v${evmone_version}/${evmone_package}"
-  validate_checksum "$evmone_package" 70420a893a9b1036fcb63526b806d97658db8c373bcab1c3e8382594dc8593e4
+  validate_checksum "$evmone_package" 1b7773779287d7908baca6b8d556a98800cbd7d6e5c910b55fa507642bc0a15c
   tar xzpf "$evmone_package" -C /usr/local
   rm "$evmone_package"
 
-  # hera
-  hera_version="0.6.0"
-  hera_package="hera-${hera_version}-darwin-x86_64.tar.gz"
-  wget "https://github.com/ewasm/hera/releases/download/v${hera_version}/${hera_package}"
-  validate_checksum "$hera_package" 82ee57404862705ab314f7a4d04bf2cf29d71e8d209850d66c125527cd287f37
-  tar xzpf "$hera_package" -C /usr/local
-  rm "$hera_package"
 fi

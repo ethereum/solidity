@@ -51,7 +51,6 @@ contract C {
 	}
 }
 // ====
-// compileToEwasm: also
 // compileViaYul: true
 // ----
 // add() -> 1, 1

@@ -1,0 +1,1 @@
+--no-cbor-metadata --via-ir --optimize --opcodes --asm --debug-info none --evm-version paris

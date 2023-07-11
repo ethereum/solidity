@@ -15,8 +15,5 @@ contract C {
         return (s.a, s.b, s.c[1]);
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f(uint32,(uint256,uint64,bytes2),uint256): 1, 42, 23, "ab", 1 -> 42, 23, "b"

@@ -73,7 +73,7 @@ Tutorial
 Overflow
 ========
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -97,7 +97,7 @@ Overflow
 
 The contract above shows an overflow check example.
 The SMTChecker does not check underflow and overflow by default for Solidity >=0.8.7,
-so we need to use the command line option ``--model-checker-targets "underflow,overflow"``
+so we need to use the command-line option ``--model-checker-targets "underflow,overflow"``
 or the JSON option ``settings.modelChecker.targets = ["underflow", "overflow"]``.
 See :ref:`this section for targets configuration<smtchecker_targets>`.
 Here, it reports the following:
@@ -122,7 +122,7 @@ Here, it reports the following:
 If we add ``require`` statements that filter out overflow cases,
 the SMTChecker proves that no overflow is reachable (by not reporting warnings):
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -160,7 +160,7 @@ Since ``f`` is indeed monotonically increasing, the SMTChecker proves that our
 property is correct. You are encouraged to play with the property and the function
 definition to see what results come out!
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -182,7 +182,7 @@ The following code searches for the maximum element of an unrestricted array of
 numbers, and asserts the property that the found element must be greater or
 equal every element in the array.
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -216,7 +216,7 @@ All the properties are correctly proven safe. Feel free to change the
 properties and/or add restrictions on the array to see different results.
 For example, changing the code to
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -268,7 +268,7 @@ Let us place a robot at position (0, 0). The robot can only move diagonally, one
 and cannot move outside the grid. The robot's state machine can be represented by the smart contract
 below.
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -319,7 +319,7 @@ We can also trick the SMTChecker into giving us a path to a certain position we
 think might be reachable.  We can add the property that (2, 4) is *not*
 reachable, by adding the following function.
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     function reach_2_4() public view {
         assert(!(x == 2 && y == 4));
@@ -368,7 +368,7 @@ In some cases, it is possible to automatically infer properties over state
 variables that are still true even if the externally called code can do
 anything, including reenter the caller contract.
 
-.. code-block:: Solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -412,7 +412,7 @@ is already "locked", so it would not be possible to change the value of ``x``,
 regardless of what the unknown called code does.
 
 If we "forget" to use the ``mutex`` modifier on function ``set``, the
-SMTChecker is able to synthesize the behaviour of the externally called code so
+SMTChecker is able to synthesize the behavior of the externally called code so
 that the assertion fails:
 
 .. code-block:: text
@@ -483,6 +483,14 @@ All targets are checked by default, except underflow and overflow for Solidity >
 There is no precise heuristic on how and when to split verification targets,
 but it can be useful especially when dealing with large contracts.
 
+Proved Targets
+==============
+
+If there are any proved targets, the SMTChecker issues one warning per engine stating
+how many targets were proved. If the user wishes to see all the specific
+proved targets, the CLI option ``--model-checker-show-proved`` and
+the JSON option ``settings.modelChecker.showProved = true`` can be used.
+
 Unproved Targets
 ================
 
@@ -490,6 +498,23 @@ If there are any unproved targets, the SMTChecker issues one warning stating
 how many unproved targets there are. If the user wishes to see all the specific
 unproved targets, the CLI option ``--model-checker-show-unproved`` and
 the JSON option ``settings.modelChecker.showUnproved = true`` can be used.
+
+Unsupported Language Features
+=============================
+
+Certain Solidity language features are not completely supported by the SMT
+encoding that the SMTChecker applies, for example assembly blocks.
+The unsupported construct is abstracted via overapproximation to preserve
+soundness, meaning any properties reported safe are safe even though this
+feature is unsupported.
+However such abstraction may cause false positives when the target properties
+depend on the precise behavior of the unsupported feature.
+If the encoder encounters such cases it will by default report a generic warning
+stating how many unsupported features it has seen.
+If the user wishes to see all the specific unsupported features, the CLI option
+``--model-checker-show-unsupported`` and the JSON option
+``settings.modelChecker.showUnsupported = true`` can be used, where their default
+value is ``false``.
 
 Verified Contracts
 ==================
@@ -518,13 +543,195 @@ which has the following form:
         "source2.sol": ["contract2", "contract3"]
     }
 
+Trusted External Calls
+======================
+
+By default, the SMTChecker does not assume that compile-time available code
+is the same as the runtime code for external calls. Take the following contracts
+as an example:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0;
+
+    contract Ext {
+        uint public x;
+        function setX(uint _x) public { x = _x; }
+    }
+    contract MyContract {
+        function callExt(Ext _e) public {
+            _e.setX(42);
+            assert(_e.x() == 42);
+        }
+    }
+
+When ``MyContract.callExt`` is called, an address is given as the argument.
+At deployment time, we cannot know for sure that address ``_e`` actually
+contains a deployment of contract ``Ext``.
+Therefore, the SMTChecker will warn that the assertion above can be violated,
+which is true, if ``_e`` contains another contract than ``Ext``.
+
+However, it can be useful to treat these external calls as trusted, for example,
+to test that different implementations of an interface conform to the same property.
+This means assuming that address ``_e`` indeed was deployed as contract ``Ext``.
+This mode can be enabled via the CLI option ``--model-checker-ext-calls=trusted``
+or the JSON field ``settings.modelChecker.extCalls: "trusted"``.
+
+Please be aware that enabling this mode can make the SMTChecker analysis much more
+computationally costly.
+
+An important part of this mode is that it is applied to contract types and high
+level external calls to contracts, and not low level calls such as ``call`` and
+``delegatecall``. The storage of an address is stored per contract type, and
+the SMTChecker assumes that an externally called contract has the type of the
+caller expression.  Therefore, casting an ``address`` or a contract to
+different contract types will yield different storage values and can give
+unsound results if the assumptions are inconsistent, such as the example below:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0;
+
+    contract D {
+        constructor(uint _x) { x = _x; }
+        uint public x;
+        function setX(uint _x) public { x = _x; }
+    }
+
+    contract E {
+        constructor() { x = 2; }
+        uint public x;
+        function setX(uint _x) public { x = _x; }
+    }
+
+    contract C {
+        function f() public {
+            address d = address(new D(42));
+
+            // `d` was deployed as `D`, so its `x` should be 42 now.
+            assert(D(d).x() == 42); // should hold
+            assert(D(d).x() == 43); // should fail
+
+            // E and D have the same interface, so the following
+            // call would also work at runtime.
+            // However, the change to `E(d)` is not reflected in `D(d)`.
+            E(d).setX(1024);
+
+            // Reading from `D(d)` now will show old values.
+            // The assertion below should fail at runtime,
+            // but succeeds in this mode's analysis (unsound).
+            assert(D(d).x() == 42);
+            // The assertion below should succeed at runtime,
+            // but fails in this mode's analysis (false positive).
+            assert(D(d).x() == 1024);
+        }
+    }
+
+Due to the above, make sure that the trusted external calls to a certain
+variable of ``address`` or ``contract`` type always have the same caller
+expression type.
+
+It is also helpful to cast the called contract's variable as the type of the
+most derived type in case of inheritance.
+
+   .. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.8.0;
+
+    interface Token {
+        function balanceOf(address _a) external view returns (uint);
+        function transfer(address _to, uint _amt) external;
+    }
+
+    contract TokenCorrect is Token {
+        mapping (address => uint) balance;
+        constructor(address _a, uint _b) {
+            balance[_a] = _b;
+        }
+        function balanceOf(address _a) public view override returns (uint) {
+            return balance[_a];
+        }
+        function transfer(address _to, uint _amt) public override {
+            require(balance[msg.sender] >= _amt);
+            balance[msg.sender] -= _amt;
+            balance[_to] += _amt;
+        }
+    }
+
+    contract Test {
+        function property_transfer(address _token, address _to, uint _amt) public {
+            require(_to != address(this));
+
+            TokenCorrect t = TokenCorrect(_token);
+
+            uint xPre = t.balanceOf(address(this));
+            require(xPre >= _amt);
+            uint yPre = t.balanceOf(_to);
+
+            t.transfer(_to, _amt);
+            uint xPost = t.balanceOf(address(this));
+            uint yPost = t.balanceOf(_to);
+
+            assert(xPost == xPre - _amt);
+            assert(yPost == yPre + _amt);
+        }
+    }
+
+Note that in function ``property_transfer``, the external calls are
+performed on variable ``t``.
+
+Another caveat of this mode are calls to state variables of contract type
+outside the analyzed contract. In the code below, even though ``B`` deploys
+``A``, it is also possible for the address stored in ``B.a`` to be called by
+anyone outside of ``B`` in between transactions to ``B`` itself. To reflect the
+possible changes to ``B.a``, the encoding allows an unbounded number of calls
+to be made to ``B.a`` externally. The encoding will keep track of ``B.a``'s
+storage, therefore assertion (2) should hold. However, currently the encoding
+allows such calls to be made from ``B`` conceptually, therefore assertion (3)
+fails.  Making the encoding stronger logically is an extension of the trusted
+mode and is under development. Note that the encoding does not keep track of
+storage for ``address`` variables, therefore if ``B.a`` had type ``address``
+the encoding would assume that its storage does not change in between
+transactions to ``B``.
+
+   .. code-block:: solidity
+
+    pragma solidity >=0.8.0;
+
+    contract A {
+        uint public x;
+        address immutable public owner;
+        constructor() {
+            owner = msg.sender;
+        }
+        function setX(uint _x) public {
+            require(msg.sender == owner);
+            x = _x;
+        }
+    }
+
+    contract B {
+        A a;
+        constructor() {
+            a = new A();
+            assert(a.x() == 0); // (1) should hold
+        }
+        function g() public view {
+            assert(a.owner() == address(this)); // (2) should hold
+            assert(a.x() == 0); // (3) should hold, but fails due to a false positive
+        }
+    }
+
 Reported Inferred Inductive Invariants
 ======================================
 
 For properties that were proved safe with the CHC engine,
 the SMTChecker can retrieve inductive invariants that were inferred by the Horn
 solver as part of the proof.
-Currently two types of invariants can be reported to the user:
+Currently only two types of invariants can be reported to the user:
 
 - Contract Invariants: these are properties over the contract's state variables
   that are true before and after every possible transaction that the contract may ever run. For example, ``x >= y``, where ``x`` and ``y`` are a contract's state variables.
@@ -543,7 +750,7 @@ and modulo operations inside Horn rules. Because of that, by default the
 Solidity division and modulo operations are encoded using the constraint
 ``a = b * d + m`` where ``d = a / b`` and ``m = a % b``.
 However, other solvers, such as Eldarica, prefer the syntactically precise operations.
-The command line flag ``--model-checker-div-mod-no-slacks`` and the JSON option
+The command-line flag ``--model-checker-div-mod-no-slacks`` and the JSON option
 ``settings.modelChecker.divModNoSlacks`` can be used to toggle the encoding
 depending on the used solver preferences.
 
@@ -627,7 +834,7 @@ option ``--model-checker-solvers {all,cvc4,eld,smtlib2,z3}`` or the JSON option
 
   - if ``solc`` is compiled with it;
   - if a dynamic ``z3`` library of version >=4.8.x is installed in a Linux system (from Solidity 0.7.6);
-  - statically in ``soljson.js`` (from Solidity 0.6.9), that is, the Javascript binary of the compiler.
+  - statically in ``soljson.js`` (from Solidity 0.6.9), that is, the JavaScript binary of the compiler.
 
 .. note::
   z3 version 4.8.16 broke ABI compatibility with previous versions and cannot

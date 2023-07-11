@@ -3,9 +3,6 @@ contract C {
         return a >> b;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f(int32,uint32): -4266, 0 -> -4266
 // f(int32,uint32): -4266, 1 -> -2133

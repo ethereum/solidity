@@ -38,3 +38,4 @@ contract C
 // ----
 // Warning 6368: (706-720): CHC: Out of bounds access happens here.
 // Warning 6328: (699-730): CHC: Assertion violation happens here.
+// Info 1391: CHC: 8 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

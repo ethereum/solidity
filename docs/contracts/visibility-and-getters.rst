@@ -200,12 +200,12 @@ The next example is more complex:
         struct Data {
             uint a;
             bytes3 b;
-            mapping (uint => uint) map;
+            mapping(uint => uint) map;
             uint[3] c;
             uint[] d;
             bytes e;
         }
-        mapping (uint => mapping(bool => Data[])) public data;
+        mapping(uint => mapping(bool => Data[])) public data;
     }
 
 It generates a function of the following form. The mapping and arrays (with the

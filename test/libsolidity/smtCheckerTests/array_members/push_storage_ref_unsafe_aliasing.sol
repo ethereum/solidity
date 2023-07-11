@@ -12,9 +12,10 @@ contract C {
 }
 // ====
 // SMTEngine: all
-// SMTIgnoreOS: macos
 // SMTIgnoreCex: yes
+// SMTIgnoreOS: macos
 // ----
 // Warning 6368: (188-192): CHC: Out of bounds access happens here.
 // Warning 6368: (188-195): CHC: Out of bounds access happens here.
 // Warning 6328: (181-202): CHC: Assertion violation happens here.
+// Info 1391: CHC: 5 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

@@ -15,7 +15,6 @@ contract C {
         }
     }
 }
-
 // ====
 // EVMVersion: >=constantinople
 // ----

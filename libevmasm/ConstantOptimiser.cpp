@@ -24,7 +24,6 @@
 #include <libevmasm/Assembly.h>
 #include <libevmasm/GasMeter.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
@@ -39,11 +38,11 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 	AssemblyItems& _items = _assembly.items();
 
 	unsigned optimisations = 0;
-	map<AssemblyItem, size_t> pushes;
+	std::map<AssemblyItem, size_t> pushes;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
 			pushes[item]++;
-	map<u256, AssemblyItems> pendingReplacements;
+	std::map<u256, AssemblyItems> pendingReplacements;
 	for (auto it: pushes)
 	{
 		AssemblyItem const& item = it.first;
@@ -79,18 +78,18 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 	return optimisations;
 }
 
-bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
+bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items, langutil::EVMVersion _evmVersion)
 {
 	bigint gas = 0;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
-			gas += GasMeter::runGas(Instruction::PUSH1);
+			gas += GasMeter::runGas(Instruction::PUSH1, _evmVersion);
 		else if (item.type() == Operation)
 		{
 			if (item.instruction() == Instruction::EXP)
 				gas += GasCosts::expGas;
 			else
-				gas += GasMeter::runGas(item.instruction());
+				gas += GasMeter::runGas(item.instruction(), _evmVersion);
 		}
 	return gas;
 }
@@ -108,7 +107,7 @@ size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
 
 void ConstantOptimisationMethod::replaceConstants(
 	AssemblyItems& _items,
-	map<u256, AssemblyItems> const& _replacements
+	std::map<u256, AssemblyItems> const& _replacements
 )
 {
 	AssemblyItems replaced;
@@ -131,7 +130,7 @@ void ConstantOptimisationMethod::replaceConstants(
 bigint LiteralMethod::gasNeeded() const
 {
 	return combineGas(
-		simpleRunGas({Instruction::PUSH1}),
+		simpleRunGas({Instruction::PUSH1}, m_params.evmVersion),
 		// PUSHX plus data
 		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas) + dataGas(toCompactBigEndian(m_value, 1)),
 		0
@@ -142,7 +141,7 @@ bigint CodeCopyMethod::gasNeeded() const
 {
 	return combineGas(
 		// Run gas: we ignore memory increase costs
-		simpleRunGas(copyRoutine()) + GasCosts::copyGas,
+		simpleRunGas(copyRoutine(), m_params.evmVersion) + GasCosts::copyGas,
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
 		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		// Data gas for data itself
@@ -255,7 +254,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const& _routine) const
 {
 	// This is a tiny EVM that can only evaluate some instructions.
-	vector<u256> stack;
+	std::vector<u256> stack;
 	for (AssemblyItem const& item: _routine)
 	{
 		switch (item.type())
@@ -322,7 +321,7 @@ bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 {
 	auto numExps = static_cast<size_t>(count(_routine.begin(), _routine.end(), Instruction::EXP));
 	return combineGas(
-		simpleRunGas(_routine) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
+		simpleRunGas(_routine, m_params.evmVersion) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
 		bytesRequired(_routine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		0

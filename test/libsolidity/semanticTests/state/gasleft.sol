@@ -3,8 +3,6 @@ contract C {
         return gasleft() > 0;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> true
 // f() -> true

@@ -15,8 +15,6 @@ contract C {
         return "\u0024\u00A2\u20AC";
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // oneByteUTF8() -> 0x20, 7, "aaa$aaa"
 // twoBytesUTF8() -> 0x20, 8, "aaa\xc2\xa2aaa"

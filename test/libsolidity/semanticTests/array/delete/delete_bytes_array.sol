@@ -29,7 +29,6 @@ contract C {
         assert(size == 0);
     }
 }
-
 // ----
 // f() -> 0
 // g() -> 0

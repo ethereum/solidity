@@ -88,7 +88,7 @@ void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 
 void GasMeterVisitor::operator()(Literal const& _lit)
 {
-	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::PUSH1);
+	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::PUSH1, m_dialect.evmVersion());
 	m_dataGas +=
 		singleByteDataGas() +
 		evmasm::GasMeter::dataGas(
@@ -100,7 +100,7 @@ void GasMeterVisitor::operator()(Literal const& _lit)
 
 void GasMeterVisitor::operator()(Identifier const&)
 {
-	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::DUP1);
+	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::DUP1, m_dialect.evmVersion());
 	m_dataGas += singleByteDataGas();
 }
 
@@ -120,6 +120,6 @@ void GasMeterVisitor::instructionCostsInternal(evmasm::Instruction _instruction)
 		// Assumes that Keccak-256 is computed on a single word (rounded up).
 		m_runGas += evmasm::GasCosts::keccak256Gas + evmasm::GasCosts::keccak256WordGas;
 	else
-		m_runGas += evmasm::GasMeter::runGas(_instruction);
+		m_runGas += evmasm::GasMeter::runGas(_instruction, m_dialect.evmVersion());
 	m_dataGas += singleByteDataGas();
 }

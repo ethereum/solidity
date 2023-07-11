@@ -48,7 +48,6 @@
 #include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsmtutil/Exceptions.h>
@@ -93,7 +92,7 @@ namespace
 
 set<frontend::InputMode> const CompilerInputModes{
 	frontend::InputMode::Compiler,
-	frontend::InputMode::CompilerWithASTImport
+	frontend::InputMode::CompilerWithASTImport,
 };
 
 } // anonymous namespace
@@ -199,11 +198,11 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	if (!m_options.output.dir.empty())
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion));
 	else
 	{
 		sout() << "Opcodes:" << endl;
-		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode);
+		sout() << uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion);
 		sout() << endl;
 	}
 }
@@ -224,6 +223,31 @@ void CommandLineInterface::handleIR(string const& _contractName)
 	}
 }
 
+void CommandLineInterface::handleIRAst(string const& _contractName)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.irAstJson)
+		return;
+
+	if (!m_options.output.dir.empty())
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_yul_ast.json",
+			util::jsonPrint(
+				m_compiler->yulIRAst(_contractName),
+				m_options.formatting.json
+			)
+		);
+	else
+	{
+		sout() << "IR AST:" << endl;
+		sout() << util::jsonPrint(
+			m_compiler->yulIRAst(_contractName),
+			m_options.formatting.json
+		) << endl;
+	}
+}
+
 void CommandLineInterface::handleIROptimized(string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
@@ -232,7 +256,10 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 		return;
 
 	if (!m_options.output.dir.empty())
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul", m_compiler->yulIROptimized(_contractName));
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul",
+			m_compiler->yulIROptimized(_contractName)
+		);
 	else
 	{
 		sout() << "Optimized IR:" << endl;
@@ -240,26 +267,28 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 	}
 }
 
-void CommandLineInterface::handleEwasm(string const& _contractName)
+void CommandLineInterface::handleIROptimizedAst(string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
-	if (!m_options.compiler.outputs.ewasm)
+	if (!m_options.compiler.outputs.irOptimizedAstJson)
 		return;
 
 	if (!m_options.output.dir.empty())
-	{
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
 		createFile(
-			m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
-			asString(m_compiler->ewasmObject(_contractName).bytecode)
+			m_compiler->filesystemFriendlyName(_contractName) + "_opt_yul_ast.json",
+			util::jsonPrint(
+				m_compiler->yulIROptimizedAst(_contractName),
+				m_options.formatting.json
+			)
 		);
-	}
 	else
 	{
-		sout() << "Ewasm text:" << endl;
-		sout() << m_compiler->ewasm(_contractName) << endl;
-		sout() << "Ewasm binary (hex): " << m_compiler->ewasmObject(_contractName).toHex() << endl;
+		sout() << "Optimized IR AST:" << endl;
+		sout() << util::jsonPrint(
+			m_compiler->yulIROptimizedAst(_contractName),
+			m_options.formatting.json
+		) << endl;
 	}
 }
 
@@ -352,8 +381,8 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	bool enabled = false;
-	std::string suffix;
-	std::string title;
+	string suffix;
+	string title;
 
 	if (_natspecDev)
 	{
@@ -370,7 +399,7 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 
 	if (enabled)
 	{
-		std::string output = jsonPrint(
+		string output = jsonPrint(
 			removeNullMembers(
 				_natspecDev ?
 				m_compiler->natspecDev(_contract) :
@@ -462,7 +491,7 @@ void CommandLineInterface::readInputFiles()
 	for (boost::filesystem::path const& allowedDirectory: m_options.input.allowedDirectories)
 		m_fileReader.allowDirectory(allowedDirectory);
 
-	map<std::string, set<boost::filesystem::path>> collisions =
+	map<string, set<boost::filesystem::path>> collisions =
 		m_fileReader.detectSourceUnitNameCollisions(m_options.input.paths);
 	if (!collisions.empty())
 	{
@@ -552,7 +581,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 
 		for (auto& src: ast["sources"].getMemberNames())
 		{
-			std::string astKey = ast["sources"][src].isMember("ast") ? "ast" : "AST";
+			string astKey = ast["sources"][src].isMember("ast") ? "ast" : "AST";
 
 			astAssert(ast["sources"][src].isMember(astKey), "astkey is not member");
 			astAssert(ast["sources"][src][astKey]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
@@ -590,7 +619,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)
 {
-	createFile(boost::filesystem::basename(_fileName) + string(".json"), _json);
+	createFile(boost::filesystem::path(_fileName).stem().string() + string(".json"), _json);
 }
 
 bool CommandLineInterface::run(int _argc, char const* const* _argv)
@@ -662,7 +691,7 @@ void CommandLineInterface::processInput()
 		serveLSP();
 		break;
 	case InputMode::Assembler:
-		assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine);
+		assembleYul(m_options.assembly.inputLanguage, m_options.assembly.targetMachine);
 		break;
 	case InputMode::Linker:
 		link();
@@ -672,6 +701,7 @@ void CommandLineInterface::processInput()
 	case InputMode::CompilerWithASTImport:
 		compile();
 		outputCompilationResults();
+		break;
 	}
 }
 
@@ -713,9 +743,12 @@ void CommandLineInterface::compile()
 		if (m_options.output.debugInfoSelection.has_value())
 			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
 		// TODO: Perhaps we should not compile unless requested
-
-		m_compiler->enableIRGeneration(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized);
-		m_compiler->enableEwasmGeneration(m_options.compiler.outputs.ewasm);
+		m_compiler->enableIRGeneration(
+			m_options.compiler.outputs.ir ||
+			m_options.compiler.outputs.irOptimized ||
+			m_options.compiler.outputs.irAstJson ||
+			m_options.compiler.outputs.irOptimizedAstJson
+		);
 		m_compiler->enableEvmBytecodeGeneration(
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||
@@ -826,7 +859,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (m_options.compiler.combinedJsonRequests->binaryRuntime && m_compiler->compilationSuccessful())
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
 		if (m_options.compiler.combinedJsonRequests->opcodes && m_compiler->compilationSuccessful())
-			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
+			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode, m_options.output.evmVersion);
 		if (m_options.compiler.combinedJsonRequests->asm_ && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (m_options.compiler.combinedJsonRequests->storageLayout && m_compiler->compilationSuccessful())
@@ -879,9 +912,12 @@ void CommandLineInterface::handleCombinedJSON()
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
-			ASTJsonExporter converter(m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
-			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
+			output[g_strSources][sourceCode.first]["AST"] = ASTJsonExporter(
+				m_compiler->state(),
+				m_compiler->sourceIndices()
+			).toJson(m_compiler->ast(sourceCode.first));
+			output[g_strSources][sourceCode.first]["id"] = m_compiler->sourceIndices().at(sourceCode.first);
 		}
 	}
 
@@ -1030,7 +1066,7 @@ string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _
 	return out;
 }
 
-void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulStack::Machine _targetMachine)
+void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::YulStack::Machine _targetMachine)
 {
 	solAssert(m_options.input.mode == InputMode::Assembler);
 
@@ -1038,9 +1074,6 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 	map<string, yul::YulStack> yulStacks;
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
-		// --no-optimize-yul option is not accepted in assembly mode.
-		solAssert(!m_options.optimizer.noOptimizeYul);
-
 		auto& stack = yulStacks[src.first] = yul::YulStack(
 			m_options.output.evmVersion,
 			m_options.output.eofVersion,
@@ -1079,9 +1112,8 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
-		string machine =
-			_targetMachine == yul::YulStack::Machine::EVM ? "EVM" :
-			"Ewasm";
+		solAssert(_targetMachine == yul::YulStack::Machine::EVM);
+		string machine = "EVM";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
 		yul::YulStack& stack = yulStacks[src.first];
@@ -1092,19 +1124,6 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 			// 'ir' output in StandardCompiler works the same way.
 			sout() << endl << "Pretty printed source:" << endl;
 			sout() << stack.print() << endl;
-		}
-
-		if (_language != yul::YulStack::Language::Ewasm && _targetMachine == yul::YulStack::Machine::Ewasm)
-		{
-			stack.translate(yul::YulStack::Language::Ewasm);
-			stack.optimize();
-
-			if (m_options.compiler.outputs.ewasmIR)
-			{
-				sout() << endl << "==========================" << endl;
-				sout() << endl << "Translated source:" << endl;
-				sout() << stack.print() << endl;
-			}
 		}
 
 		yul::MachineAssemblyObject object;
@@ -1119,12 +1138,13 @@ void CommandLineInterface::assemble(yul::YulStack::Language _language, yul::YulS
 			else
 				serr() << "No binary representation found." << endl;
 		}
-
-		solAssert(_targetMachine == yul::YulStack::Machine::Ewasm || _targetMachine == yul::YulStack::Machine::EVM, "");
-		if (
-			(_targetMachine == yul::YulStack::Machine::EVM && m_options.compiler.outputs.asm_) ||
-			(_targetMachine == yul::YulStack::Machine::Ewasm && m_options.compiler.outputs.ewasm)
-		)
+		if (m_options.compiler.outputs.astCompactJson)
+		{
+			sout() << "AST:" <<  endl <<  endl;
+			sout() << util::jsonPrint(stack.astJson(), m_options.formatting.json) << endl;
+		}
+		solAssert(_targetMachine == yul::YulStack::Machine::EVM, "");
+		if (m_options.compiler.outputs.asm_)
 		{
 			sout() << endl << "Text representation:" << endl;
 			if (!object.assembly.empty())
@@ -1179,8 +1199,9 @@ void CommandLineInterface::outputCompilationResults()
 
 		handleBytecode(contract);
 		handleIR(contract);
+		handleIRAst(contract);
 		handleIROptimized(contract);
-		handleEwasm(contract);
+		handleIROptimizedAst(contract);
 		handleSignatureHashes(contract);
 		handleMetadata(contract);
 		handleABI(contract);
@@ -1193,8 +1214,10 @@ void CommandLineInterface::outputCompilationResults()
 	{
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
+		else if (contracts.empty())
+			sout() << "Compiler run successful. No contracts to compile." << endl;
 		else
-			serr() << "Compiler run successful, no output requested." << endl;
+			sout() << "Compiler run successful. No output generated." << endl;
 	}
 }
 

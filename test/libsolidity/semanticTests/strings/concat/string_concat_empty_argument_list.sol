@@ -3,7 +3,5 @@ contract C {
         return string.concat();
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f() -> 0x20, 0

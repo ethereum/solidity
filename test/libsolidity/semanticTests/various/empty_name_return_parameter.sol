@@ -3,8 +3,5 @@ contract test {
         return k;
     }
 }
-
-// ====
-// compileToEwasm: also
 // ----
 // f(uint256): 9 -> 9

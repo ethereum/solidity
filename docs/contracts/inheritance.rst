@@ -40,7 +40,7 @@ Details are given in the following example.
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
-
+    // This will report a warning due to deprecated selfdestruct
 
     contract Owned {
         constructor() { owner = payable(msg.sender); }
@@ -54,7 +54,7 @@ Details are given in the following example.
     // accessed externally via `this`, though.
     contract Destructible is Owned {
         // The keyword `virtual` means that the function can change
-        // its behaviour in derived classes ("overriding").
+        // its behavior in derived classes ("overriding").
         function destroy() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
@@ -115,7 +115,7 @@ Details are given in the following example.
 
         // Here, we only specify `override` and not `virtual`.
         // This means that contracts deriving from `PriceFeed`
-        // cannot change the behaviour of `destroy` anymore.
+        // cannot change the behavior of `destroy` anymore.
         function destroy() public override(Destructible, Named) { Named.destroy(); }
         function get() public view returns(uint r) { return info; }
 
@@ -130,6 +130,7 @@ seen in the following example:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
+    // This will report a warning due to deprecated selfdestruct
 
     contract owned {
         constructor() { owner = payable(msg.sender); }
@@ -162,6 +163,7 @@ explicitly in the final override, but this function will bypass
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
+    // This will report a warning due to deprecated selfdestruct
 
     contract owned {
         constructor() { owner = payable(msg.sender); }
@@ -291,7 +293,7 @@ and ends at a contract mentioning a function with that signature
 that does not override.
 
 If you do not mark a function that overrides as ``virtual``, derived
-contracts can no longer change the behaviour of that function.
+contracts can no longer change the behavior of that function.
 
 .. note::
 
@@ -434,11 +436,11 @@ You can use internal parameters in a constructor (for example storage pointers).
 the contract has to be marked :ref:`abstract <abstract-contract>`, because these parameters
 cannot be assigned valid values from outside but only through the constructors of derived contracts.
 
-.. warning ::
+.. warning::
     Prior to version 0.4.22, constructors were defined as functions with the same name as the contract.
     This syntax was deprecated and is not allowed anymore in version 0.5.0.
 
-.. warning ::
+.. warning::
     Prior to version 0.7.0, you had to specify the visibility of constructors as either
     ``internal`` or ``public``.
 
@@ -485,7 +487,7 @@ One way is directly in the inheritance list (``is Base(7)``).  The other is in
 the way a modifier is invoked as part of
 the derived constructor (``Base(y * y)``). The first way to
 do it is more convenient if the constructor argument is a
-constant and defines the behaviour of the contract or
+constant and defines the behavior of the contract or
 describes it. The second way has to be used if the
 constructor arguments of the base depend on those of the
 derived contract. Arguments have to be given either in the

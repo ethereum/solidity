@@ -12,8 +12,6 @@ contract C {
       return exp(base, exponent);
   }
 }
-// ====
-// compileToEwasm: also
 // ----
 // g(uint256,uint256): 0, 0 -> 1
 // g(uint256,uint256): 0, 1 -> 0x00

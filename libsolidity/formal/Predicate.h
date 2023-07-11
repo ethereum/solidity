@@ -115,6 +115,10 @@ public:
 	/// or nullptr otherwise.
 	FunctionCall const* programFunctionCall() const;
 
+	/// @returns the VariableDeclaration that this predicate represents
+	/// or nullptr otherwise.
+	VariableDeclaration const* programVariable() const;
+
 	/// @returns the program state variables in the scope of this predicate.
 	std::optional<std::vector<VariableDeclaration const*>> stateVariables() const;
 

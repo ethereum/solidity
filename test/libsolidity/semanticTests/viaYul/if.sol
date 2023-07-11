@@ -59,8 +59,6 @@ contract C {
         } while(false);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(bool): 0 -> 23
 // f(bool): 1 -> 42

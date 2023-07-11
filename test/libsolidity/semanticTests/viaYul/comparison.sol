@@ -36,8 +36,6 @@ contract C {
         return a != b;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(address): 0x1234 -> false
 // f(address): 0x00 -> true

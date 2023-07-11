@@ -4,8 +4,6 @@ contract C {
         return block.number;
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // constructor()
 // f() -> 2

@@ -7,4 +7,4 @@ function f(int8 storage x) pure returns (int) {
 using {f} for uint8;
 using {f} for int;
 // ----
-// DeclarationError 7920: (132-133): Identifier not found or not unique.
+// DeclarationError 9589: (132-133): Identifier is not a function name or not unique.

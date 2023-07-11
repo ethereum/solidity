@@ -73,7 +73,6 @@ contract C {
             //pop(coinbase())
             //pop(timestamp())
             //pop(number())
-            //pop(difficulty())
             //pop(gaslimit())
 
             // NOTE: msize() is allowed only with optimizer disabled

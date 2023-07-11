@@ -130,3 +130,12 @@ std::optional<ModelCheckerContracts> ModelCheckerContracts::fromString(string co
 
 	return ModelCheckerContracts{chosen};
 }
+
+std::optional<ModelCheckerExtCalls> ModelCheckerExtCalls::fromString(string const& _mode)
+{
+	if (_mode == "untrusted")
+		return ModelCheckerExtCalls{Mode::UNTRUSTED};
+	if (_mode == "trusted")
+		return ModelCheckerExtCalls{Mode::TRUSTED};
+	return {};
+}

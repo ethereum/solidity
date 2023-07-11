@@ -1,0 +1,14 @@
+Warning: CHC: Assertion violation happens here.
+Counterexample:
+
+e = 0
+x = 1
+
+Transaction trace:
+test.constructor()
+test.g(0)
+    e.f() -- untrusted external call
+  --> model_checker_ext_calls_untrusted_chc/input.sol:11:3:
+   |
+11 | 		assert(x == 0);
+   | 		^^^^^^^^^^^^^^

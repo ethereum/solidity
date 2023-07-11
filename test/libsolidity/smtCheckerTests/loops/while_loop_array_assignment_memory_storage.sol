@@ -34,3 +34,4 @@ contract LoopFor2 {
 // SMTSolvers: z3
 // ----
 // Warning 2072: (280-286): Unused local variable.
+// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

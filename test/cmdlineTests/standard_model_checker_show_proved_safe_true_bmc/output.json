@@ -1,0 +1,72 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "2018",
+            "formattedMessage": "Warning: Function state mutability can be restricted to pure
+ --> A:5:6:
+  |
+5 | \t\t\t\t\tfunction f(uint8 x) public {
+  | \t\t\t\t\t^ (Relevant source part starts here and spans across multiple lines).
+
+",
+            "message": "Function state mutability can be restricted to pure",
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 162,
+                "file": "A",
+                "start": 81
+            },
+            "type": "Warning"
+        },
+        {
+            "component": "general",
+            "errorCode": "2961",
+            "formattedMessage": "Info: BMC: Assertion violation check is safe!
+ --> A:6:7:
+  |
+6 | \t\t\t\t\t\tassert(x >= 0);
+  | \t\t\t\t\t\t^^^^^^^^^^^^^^
+
+",
+            "message": "BMC: Assertion violation check is safe!",
+            "severity": "info",
+            "sourceLocation":
+            {
+                "end": 130,
+                "file": "A",
+                "start": 116
+            },
+            "type": "Info"
+        },
+        {
+            "component": "general",
+            "errorCode": "2961",
+            "formattedMessage": "Info: BMC: Assertion violation check is safe!
+ --> A:7:7:
+  |
+7 | \t\t\t\t\t\tassert(x < 1000);
+  | \t\t\t\t\t\t^^^^^^^^^^^^^^^^
+
+",
+            "message": "BMC: Assertion violation check is safe!",
+            "severity": "info",
+            "sourceLocation":
+            {
+                "end": 154,
+                "file": "A",
+                "start": 138
+            },
+            "type": "Info"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

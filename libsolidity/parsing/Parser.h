@@ -89,7 +89,7 @@ private:
 	///@name Parsing functions for the AST nodes
 	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
 	ASTPointer<StructuredDocumentation> parseStructuredDocumentation();
-	ASTPointer<PragmaDirective> parsePragmaDirective();
+	ASTPointer<PragmaDirective> parsePragmaDirective(bool _finishedParsingTopLevelPragmas);
 	ASTPointer<ImportDirective> parseImportDirective();
 	/// @returns an std::pair<ContractKind, bool>, where
 	/// result.second is set to true, if an abstract contract was parsed, false otherwise.
@@ -159,6 +159,7 @@ private:
 	ASTPointer<Expression> parseLeftHandSideExpression(
 		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
+	ASTPointer<Expression> parseLiteral();
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 
@@ -218,6 +219,11 @@ private:
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
+	bool isQuotedPath() const;
+	bool isStdlibPath() const;
+
+	ASTPointer<ASTString> getStdlibImportPathAndAdvance();
+
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
 	ASTPointer<ParameterList> createEmptyParameterList();
 
@@ -226,6 +232,8 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	/// Counter for the next AST node ID
 	int64_t m_currentNodeID = 0;
+	/// Flag that indicates whether experimental mode is enabled in the current source unit
+	bool m_experimentalSolidityEnabledInCurrentSourceUnit = false;
 };
 
 }

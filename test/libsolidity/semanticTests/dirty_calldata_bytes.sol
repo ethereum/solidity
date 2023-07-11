@@ -8,7 +8,5 @@ contract C {
         correct = r == (0x64 << 248);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // f(bytes): 0x20, 0x04, "dead" -> true

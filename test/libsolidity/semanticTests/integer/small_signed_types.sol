@@ -3,7 +3,5 @@ contract test {
         return -int32(10) * -int64(20);
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // run() -> 200

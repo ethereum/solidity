@@ -3,8 +3,6 @@ contract test {
     int8 public y = 127;
     int16 public q = 250;
 }
-// ====
-// compileToEwasm: also
 // ----
 // x() -> 2
 // y() -> 127

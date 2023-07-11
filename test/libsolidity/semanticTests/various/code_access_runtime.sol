@@ -19,9 +19,8 @@ contract C {
         return 42;
     }
 }
-
 // ====
 // EVMVersion: >=constantinople
 // ----
 // test() -> 42
-// gas legacy: 101638
+// gas legacy: 100235

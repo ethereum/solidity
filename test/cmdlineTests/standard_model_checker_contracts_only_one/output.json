@@ -10,7 +10,7 @@ Counterexample:
 y = 0
 
 Transaction trace:
-A.constructor()
+B.constructor()
 B.g(0)
  --> Source:5:7:
   |
@@ -24,7 +24,7 @@ Counterexample:
 y = 0
 
 Transaction trace:
-A.constructor()
+B.constructor()
 B.g(0)",
             "severity": "warning",
             "sourceLocation":

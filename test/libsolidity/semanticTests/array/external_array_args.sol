@@ -6,7 +6,5 @@ contract c {
         cv = c[c_index];
     }
 }
-// ====
-// compileToEwasm: also
 // ----
 // test(uint256[8],uint256[],uint256[5],uint256,uint256,uint256): 1, 2, 3, 4, 5, 6, 7, 8, 0x220, 21, 22, 23, 24, 25, 0, 1, 2, 3, 11, 12, 13 -> 1, 12, 23

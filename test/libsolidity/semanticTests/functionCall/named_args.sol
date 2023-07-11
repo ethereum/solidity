@@ -3,8 +3,6 @@ contract test {
     function b() public returns (uint r) { r = a({a: 1, b: 2, c: 3}); }
     function c() public returns (uint r) { r = a({b: 2, c: 3, a: 1}); }
 }
-// ====
-// compileToEwasm: also
 // ----
 // b() -> 123
 // c() -> 123
