@@ -1,7 +1,7 @@
 ### 0.8.21 (unreleased)
 
 Important Bugfixes:
- * Code Generator: Always generate code for the expression in ``expression.selector``.
+ * Code Generator: Always generate code for the expression in ``<expression>.selector`` in the legacy code generation pipeline.
  * Yul Optimizer: Fix ``FullInliner`` step (``i``) not preserving the evaluation order of arguments passed into inlined functions in code that is not in expression-split form (i.e. when using a custom optimizer sequence in which the step not preceded by ``ExpressionSplitter`` (``x``)).
 
 
