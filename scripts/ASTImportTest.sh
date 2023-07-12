@@ -251,7 +251,7 @@ function test_evmjson_via_ir_and_yul_import_export
 
     mkdir yul
     # export found solidity contracts to yul.
-    run_solc --optimize --via-ir --ir-optimized "${input_files[@]}" -o yul/
+    run_solc --optimize --via-ir --ir-optimized "${input_files[@]}" --no-optimize-yul  -o yul/
     for filename in yul/*
     do
         if [[ -s "${filename}" ]]
@@ -270,7 +270,7 @@ function test_evmjson_via_ir_and_yul_import_export
     mkdir sol
     # create from a combined json from the supplied solidity contracts.
     export_command=("${SOLC}" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 --no-optimize-yul "${input_files[@]}" -o sol/)
-    run_solc --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 "${input_files[@]}" -o sol/
+    run_solc --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 "${input_files[@]}" --no-optimize-yul  -o sol/
     mkdir input
 
     # save the original supplied solidity contract sources for potential debugging purposes.
