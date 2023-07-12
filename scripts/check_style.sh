@@ -22,6 +22,7 @@ EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
 
 NAMESPACE_STD_FREE_FILES=(
     libevmasm/*
+    liblangutil/*
 )
 
 (

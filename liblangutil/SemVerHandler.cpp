@@ -29,18 +29,18 @@
 #include <limits>
 #include <fmt/format.h>
 
-using namespace std;
+using namespace std::string_literals;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
 
-SemVerMatchExpressionParser::SemVerMatchExpressionParser(vector<Token> _tokens, vector<string> _literals):
+SemVerMatchExpressionParser::SemVerMatchExpressionParser(std::vector<Token> _tokens, std::vector<std::string> _literals):
 	m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
 {
 	solAssert(m_tokens.size() == m_literals.size(), "");
 }
 
-SemVerVersion::SemVerVersion(string const& _versionString)
+SemVerVersion::SemVerVersion(std::string const& _versionString)
 {
 	auto i = _versionString.begin();
 	auto end = _versionString.end();
@@ -63,13 +63,13 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 	{
 		auto prereleaseStart = ++i;
 		while (i != end && *i != '+') ++i;
-		prerelease = string(prereleaseStart, i);
+		prerelease = std::string(prereleaseStart, i);
 	}
 	if (i != end && *i == '+')
 	{
 		auto buildStart = ++i;
 		while (i != end) ++i;
-		build = string(buildStart, i);
+		build = std::string(buildStart, i);
 	}
 	if (i != end)
 		solThrow(SemVerError, "Invalid versionString "s + _versionString);

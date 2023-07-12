@@ -28,7 +28,6 @@
 #include <string_view>
 #include <variant>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
@@ -114,15 +113,15 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 		return; // No line available, nothing else to print
 	}
 
-	string line = std::to_string(_ref.position.line + 1); // one-based line number as string
-	string leftpad = string(line.size(), ' ');
+	std::string line = std::to_string(_ref.position.line + 1); // one-based line number as string
+	std::string leftpad = std::string(line.size(), ' ');
 
 	// line 0: source name
 	m_stream << leftpad;
 	frameColored() << "-->";
 	m_stream << ' ' << _ref.sourceName << ':' << line << ':' << (_ref.position.column + 1) << ":\n";
 
-	string_view text = _ref.text;
+	std::string_view text = _ref.text;
 
 	if (m_charStreamProvider.charStream(_ref.sourceName).isImportedFromAST())
 		return;
