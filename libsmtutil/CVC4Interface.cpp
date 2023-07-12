@@ -23,12 +23,11 @@
 
 #include <cvc4/util/bitvector.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::smtutil;
 
-CVC4Interface::CVC4Interface(optional<unsigned> _queryTimeout):
+CVC4Interface::CVC4Interface(std::optional<unsigned> _queryTimeout):
 	SolverInterface(_queryTimeout),
 	m_solver(&m_context)
 {
@@ -56,7 +55,7 @@ void CVC4Interface::pop()
 	m_solver.pop();
 }
 
-void CVC4Interface::declareVariable(string const& _name, SortPointer const& _sort)
+void CVC4Interface::declareVariable(std::string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort, "");
 	m_variables[_name] = m_context.mkVar(_name.c_str(), cvc4Sort(*_sort));
@@ -86,10 +85,10 @@ void CVC4Interface::addAssertion(Expression const& _expr)
 	}
 }
 
-pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const& _expressionsToEvaluate)
+std::pair<CheckResult, std::vector<std::string>> CVC4Interface::check(std::vector<Expression> const& _expressionsToEvaluate)
 {
 	CheckResult result;
-	vector<string> values;
+	std::vector<std::string> values;
 	try
 	{
 		switch (m_solver.checkSat().isSat())
@@ -119,7 +118,7 @@ pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const&
 		values.clear();
 	}
 
-	return make_pair(result, values);
+	return std::make_pair(result, values);
 }
 
 CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
@@ -128,13 +127,13 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 	if (_expr.arguments.empty() && m_variables.count(_expr.name))
 		return m_variables.at(_expr.name);
 
-	vector<CVC4::Expr> arguments;
+	std::vector<CVC4::Expr> arguments;
 	for (auto const& arg: _expr.arguments)
 		arguments.push_back(toCVC4Expr(arg));
 
 	try
 	{
-		string const& n = _expr.name;
+		std::string const& n = _expr.name;
 		// Function application
 		if (!arguments.empty() && m_variables.count(_expr.name))
 			return m_context.mkExpr(CVC4::kind::APPLY_UF, m_variables.at(n), arguments);
@@ -145,7 +144,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 				return m_context.mkConst(true);
 			else if (n == "false")
 				return m_context.mkConst(false);
-			else if (auto sortSort = dynamic_pointer_cast<SortSort>(_expr.sort))
+			else if (auto sortSort = std::dynamic_pointer_cast<SortSort>(_expr.sort))
 				return m_context.mkVar(n, cvc4Sort(*sortSort->inner));
 			else
 				try
@@ -224,7 +223,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		}
 		else if (n == "bv2int")
 		{
-			auto intSort = dynamic_pointer_cast<IntSort>(_expr.sort);
+			auto intSort = std::dynamic_pointer_cast<IntSort>(_expr.sort);
 			smtAssert(intSort, "");
 			auto nat = m_context.mkExpr(CVC4::kind::BITVECTOR_TO_NAT, arguments[0]);
 			if (!intSort->isSigned)
@@ -254,13 +253,13 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
 		else if (n == "const_array")
 		{
-			shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
+			std::shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
 			smtAssert(sortSort, "");
 			return m_context.mkConst(CVC4::ArrayStoreAll(cvc4Sort(*sortSort->inner), arguments[1]));
 		}
 		else if (n == "tuple_get")
 		{
-			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.arguments[0].sort);
+			std::shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.arguments[0].sort);
 			smtAssert(tupleSort, "");
 			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
 			CVC4::Datatype const& dt = tt.getDatatype();
@@ -270,7 +269,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		}
 		else if (n == "tuple_constructor")
 		{
-			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.sort);
+			std::shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.sort);
 			smtAssert(tupleSort, "");
 			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
 			CVC4::Datatype const& dt = tt.getDatatype();
@@ -328,9 +327,9 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 	return m_context.integerType();
 }
 
-vector<CVC4::Type> CVC4Interface::cvc4Sort(vector<SortPointer> const& _sorts)
+std::vector<CVC4::Type> CVC4Interface::cvc4Sort(std::vector<SortPointer> const& _sorts)
 {
-	vector<CVC4::Type> cvc4Sorts;
+	std::vector<CVC4::Type> cvc4Sorts;
 	for (auto const& _sort: _sorts)
 		cvc4Sorts.push_back(cvc4Sort(*_sort));
 	return cvc4Sorts;

@@ -26,7 +26,6 @@
 #include <libsmtutil/Z3Loader.h>
 #endif
 
-using namespace std;
 using namespace solidity::smtutil;
 using namespace solidity::util;
 
@@ -69,7 +68,7 @@ void Z3Interface::pop()
 	m_solver.pop();
 }
 
-void Z3Interface::declareVariable(string const& _name, SortPointer const& _sort)
+void Z3Interface::declareVariable(std::string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort, "");
 	if (_sort->kind == Kind::Function)
@@ -80,7 +79,7 @@ void Z3Interface::declareVariable(string const& _name, SortPointer const& _sort)
 		m_constants.emplace(_name, m_context.constant(_name.c_str(), z3Sort(*_sort)));
 }
 
-void Z3Interface::declareFunction(string const& _name, Sort const& _sort)
+void Z3Interface::declareFunction(std::string const& _name, Sort const& _sort)
 {
 	smtAssert(_sort.kind == Kind::Function, "");
 	FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
@@ -95,10 +94,10 @@ void Z3Interface::addAssertion(Expression const& _expr)
 	m_solver.add(toZ3Expr(_expr));
 }
 
-pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _expressionsToEvaluate)
+std::pair<CheckResult, std::vector<std::string>> Z3Interface::check(std::vector<Expression> const& _expressionsToEvaluate)
 {
 	CheckResult result;
-	vector<string> values;
+	std::vector<std::string> values;
 	try
 	{
 		switch (m_solver.check())
@@ -123,7 +122,7 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 	}
 	catch (z3::exception const& _err)
 	{
-		set<string> msgs{
+		std::set<std::string> msgs{
 			/// Resource limit (rlimit) exhausted.
 			"max. resource limit exceeded",
 			/// User given timeout exhausted.
@@ -137,7 +136,7 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 		values.clear();
 	}
 
-	return make_pair(result, values);
+	return std::make_pair(result, values);
 }
 
 z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
@@ -150,7 +149,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 
 	try
 	{
-		string const& n = _expr.name;
+		std::string const& n = _expr.name;
 		if (m_functions.count(n))
 			return m_functions.at(n)(arguments);
 		else if (m_constants.count(n))
@@ -166,7 +165,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 				return m_context.bool_val(false);
 			else if (_expr.sort->kind == Kind::Sort)
 			{
-				auto sortSort = dynamic_pointer_cast<SortSort>(_expr.sort);
+				auto sortSort = std::dynamic_pointer_cast<SortSort>(_expr.sort);
 				smtAssert(sortSort, "");
 				return m_context.constant(n.c_str(), z3Sort(*sortSort->inner));
 			}
@@ -233,7 +232,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		}
 		else if (n == "bv2int")
 		{
-			auto intSort = dynamic_pointer_cast<IntSort>(_expr.sort);
+			auto intSort = std::dynamic_pointer_cast<IntSort>(_expr.sort);
 			smtAssert(intSort, "");
 			return z3::bv2int(arguments[0], intSort->isSigned);
 		}
@@ -243,9 +242,9 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return z3::store(arguments[0], arguments[1], arguments[2]);
 		else if (n == "const_array")
 		{
-			shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
+			std::shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
 			smtAssert(sortSort, "");
-			auto arraySort = dynamic_pointer_cast<ArraySort>(sortSort->inner);
+			auto arraySort = std::dynamic_pointer_cast<ArraySort>(sortSort->inner);
 			smtAssert(arraySort && arraySort->domain, "");
 			return z3::const_array(z3Sort(*arraySort->domain), arguments[1]);
 		}
@@ -285,7 +284,7 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 
 	if (_expr.is_quantifier())
 	{
-		string quantifierName;
+		std::string quantifierName;
 		if (_expr.is_exists())
 			quantifierName = "exists";
 		else if (_expr.is_forall())
@@ -297,7 +296,7 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		return Expression(quantifierName, {fromZ3Expr(_expr.body())}, sort);
 	}
 	smtAssert(_expr.is_app(), "");
-	vector<Expression> arguments;
+	std::vector<Expression> arguments;
 	for (unsigned i = 0; i < _expr.num_args(); ++i)
 		arguments.push_back(fromZ3Expr(_expr.arg(i)));
 
@@ -370,12 +369,12 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		return Expression::store(arguments[0], arguments[1], arguments[2]);
 	else if (kind == Z3_OP_CONST_ARRAY)
 	{
-		auto sortSort = make_shared<SortSort>(fromZ3Sort(_expr.get_sort()));
+		auto sortSort = std::make_shared<SortSort>(fromZ3Sort(_expr.get_sort()));
 		return Expression::const_array(Expression(sortSort), arguments[0]);
 	}
 	else if (kind == Z3_OP_DT_CONSTRUCTOR)
 	{
-		auto sortSort = make_shared<SortSort>(fromZ3Sort(_expr.get_sort()));
+		auto sortSort = std::make_shared<SortSort>(fromZ3Sort(_expr.get_sort()));
 		return Expression::tuple_constructor(Expression(sortSort), arguments);
 	}
 	else if (kind == Z3_OP_DT_ACCESSOR)
@@ -412,12 +411,12 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 	case Kind::Tuple:
 	{
 		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
-		vector<char const*> cMembers;
+		std::vector<char const*> cMembers;
 		for (auto const& member: tupleSort.members)
 			cMembers.emplace_back(member.c_str());
 		/// Using this instead of the function below because with that one
 		/// we can't use `&sorts[0]` here.
-		vector<z3::sort> sorts;
+		std::vector<z3::sort> sorts;
 		for (auto const& sort: tupleSort.components)
 			sorts.push_back(z3Sort(*sort));
 		z3::func_decl_vector projs(m_context);
@@ -439,7 +438,7 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 	return m_context.int_sort();
 }
 
-z3::sort_vector Z3Interface::z3Sort(vector<SortPointer> const& _sorts)
+z3::sort_vector Z3Interface::z3Sort(std::vector<SortPointer> const& _sorts)
 {
 	z3::sort_vector z3Sorts(m_context);
 	for (auto const& _sort: _sorts)
@@ -454,27 +453,27 @@ SortPointer Z3Interface::fromZ3Sort(z3::sort const& _sort)
 	if (_sort.is_int())
 		return SortProvider::sintSort;
 	if (_sort.is_bv())
-		return make_shared<BitVectorSort>(_sort.bv_size());
+		return std::make_shared<BitVectorSort>(_sort.bv_size());
 	if (_sort.is_array())
-		return make_shared<ArraySort>(fromZ3Sort(_sort.array_domain()), fromZ3Sort(_sort.array_range()));
+		return std::make_shared<ArraySort>(fromZ3Sort(_sort.array_domain()), fromZ3Sort(_sort.array_range()));
 	if (_sort.is_datatype())
 	{
 		auto name = _sort.name().str();
 		auto constructor = z3::func_decl(m_context, Z3_get_tuple_sort_mk_decl(m_context, _sort));
-		vector<string> memberNames;
-		vector<SortPointer> memberSorts;
+		std::vector<std::string> memberNames;
+		std::vector<SortPointer> memberSorts;
 		for (unsigned i = 0; i < constructor.arity(); ++i)
 		{
 			auto accessor = z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, _sort, i));
 			memberNames.push_back(accessor.name().str());
 			memberSorts.push_back(fromZ3Sort(accessor.range()));
 		}
-		return make_shared<TupleSort>(name, memberNames, memberSorts);
+		return std::make_shared<TupleSort>(name, memberNames, memberSorts);
 	}
 	smtAssert(false, "");
 }
 
-vector<SortPointer> Z3Interface::fromZ3Sort(z3::sort_vector const& _sorts)
+std::vector<SortPointer> Z3Interface::fromZ3Sort(z3::sort_vector const& _sorts)
 {
 	return applyMap(_sorts, [this](auto const& sort) { return fromZ3Sort(sort); });
 }
