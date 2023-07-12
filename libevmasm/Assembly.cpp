@@ -75,11 +75,11 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 	}
 }
 
-void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, vector<string> const& _sourceList)
+void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, std::vector<std::string> const& _sourceList)
 {
 	solAssert(m_items.empty());
 	solRequire(_code.isArray(), AssemblyImportException, "Supplied JSON is not an array.");
-	for (auto current = begin(_code); current != end(_code); ++current)
+	for (auto current = std::begin(_code); current != std::end(_code); ++current)
 	{
 		auto const& item = m_items.emplace_back(createAssemblyItemFromJSON(*current, _sourceList));
 		if (item == Instruction::JUMPDEST)
@@ -87,7 +87,7 @@ void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, vector<stri
 		else if (item.type() == AssemblyItemType::Tag)
 		{
 			++current;
-			if (current != end(_code) && createAssemblyItemFromJSON(*current, _sourceList) != Instruction::JUMPDEST)
+			if (current != std::end(_code) && createAssemblyItemFromJSON(*current, _sourceList) != Instruction::JUMPDEST)
 				solThrow(AssemblyImportException, "JUMPDEST expected after tag.");
 		}
 	}
@@ -96,7 +96,7 @@ void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, vector<stri
 AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList)
 {
 	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
-	static set<string> const validMembers{"name", "begin", "end", "source", "value", "modifierDepth", "jumpType"};
+	static std::set<std::string> const validMembers{"name", "begin", "end", "source", "value", "modifierDepth", "jumpType"};
 	for (auto const& member: _json.getMemberNames())
 		solRequire(
 			validMembers.count(member),
@@ -104,23 +104,23 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 			"Unknown member '" + member + "'. Valid members are " +
 			solidity::util::joinHumanReadable(validMembers, ", ") + "."
 		);
-	solRequire(isOfType<string>(_json["name"]), AssemblyImportException, "Member 'name' missing or not of type string.");
+	solRequire(isOfType<std::string>(_json["name"]), AssemblyImportException, "Member 'name' missing or not of type string.");
 	solRequire(isOfTypeIfExists<int>(_json, "begin"), AssemblyImportException, "Optional member 'begin' not of type int.");
 	solRequire(isOfTypeIfExists<int>(_json, "end"), AssemblyImportException, "Optional member 'end' not of type int.");
 	solRequire(isOfTypeIfExists<int>(_json, "source"), AssemblyImportException, "Optional member 'source' not of type int.");
-	solRequire(isOfTypeIfExists<string>(_json, "value"), AssemblyImportException, "Optional member 'value' not of type string.");
+	solRequire(isOfTypeIfExists<std::string>(_json, "value"), AssemblyImportException, "Optional member 'value' not of type string.");
 	solRequire(
 		isOfTypeIfExists<int>(_json, "modifierDepth"),
 		AssemblyImportException,
 		"Optional member 'modifierDepth' not of type int."
 	);
 	solRequire(
-		isOfTypeIfExists<string>(_json, "jumpType"),
+		isOfTypeIfExists<std::string>(_json, "jumpType"),
 		AssemblyImportException,
 		"Optional member 'jumpType' not of type string."
 	);
 
-	string name = get<string>(_json["name"]);
+	std::string name = get<std::string>(_json["name"]);
 	solRequire(!name.empty(), AssemblyImportException, "Member 'name' was empty.");
 
 	SourceLocation location;
@@ -128,16 +128,16 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 	location.end = get<int>(_json["end"]);
 	int srcIndex = getOrDefault<int>(_json["source"], -1);
 	size_t modifierDepth = static_cast<size_t>(getOrDefault<int>(_json["modifierDepth"], 0));
-	string value = getOrDefault<string>(_json["value"], "");
-	string jumpType = getOrDefault<string>(_json["jumpType"], "");
+	std::string value = getOrDefault<std::string>(_json["value"], "");
+	std::string jumpType = getOrDefault<std::string>(_json["jumpType"], "");
 
 	auto updateUsedTags = [&](u256 const& data)
 	{
-		m_usedTags = max(m_usedTags, static_cast<unsigned>(data) + 1);
+		m_usedTags = std::max(m_usedTags, static_cast<unsigned>(data) + 1);
 		return data;
 	};
 
-	auto storeImmutableHash = [&](string const& _immutableName) -> h256
+	auto storeImmutableHash = [&](std::string const& _immutableName) -> h256
 	{
 		h256 hash(util::keccak256(_immutableName));
 		solAssert(m_immutables.count(hash) == 0 || m_immutables[hash] == _immutableName);
@@ -145,7 +145,7 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 		return hash;
 	};
 
-	auto storeLibraryHash = [&](string const& _libraryName) -> h256
+	auto storeLibraryHash = [&](std::string const& _libraryName) -> h256
 	{
 		h256 hash(util::keccak256(_libraryName));
 		solAssert(m_libraries.count(hash) == 0 || m_libraries[hash] == _libraryName);
@@ -153,7 +153,7 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 		return hash;
 	};
 
-	auto requireValueDefinedForInstruction = [&](string const& _name, string const& _value)
+	auto requireValueDefinedForInstruction = [&](std::string const& _name, std::string const& _value)
 	{
 		solRequire(
 			!_value.empty(),
@@ -162,7 +162,7 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 		);
 	};
 
-	auto requireValueUndefinedForInstruction = [&](string const& _name, string const& _value)
+	auto requireValueUndefinedForInstruction = [&](std::string const& _name, std::string const& _value)
 	{
 		solRequire(
 			_value.empty(),
@@ -174,7 +174,7 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 	solRequire(srcIndex >= -1 && srcIndex < static_cast<int>(_sourceList.size()), AssemblyImportException, "srcIndex out of bound.");
 	if (srcIndex != -1)
 	{
-		static map<std::string, std::shared_ptr<std::string const>> sharedSourceNames;
+		static std::map<std::string, std::shared_ptr<std::string const>> sharedSourceNames;
 		if (sharedSourceNames.find(_sourceList[static_cast<size_t>(srcIndex)]) == sharedSourceNames.end())
 			sharedSourceNames[_sourceList[static_cast<size_t>(srcIndex)]] = std::make_shared<std::string>(_sourceList[static_cast<size_t>(srcIndex)]);
 		location.sourceName = sharedSourceNames[_sourceList[static_cast<size_t>(srcIndex)]];
@@ -492,8 +492,8 @@ Json::Value Assembly::assemblyJSON(std::vector<std::string> const& _sources, boo
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
-			stringstream hexStr;
-			hexStr << hex << i;
+			std::stringstream hexStr;
+			hexStr << std::hex << i;
 			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sources, false);
 			data[hexStr.str()]["index"] = static_cast<int>(i);
 		}
@@ -505,10 +505,10 @@ Json::Value Assembly::assemblyJSON(std::vector<std::string> const& _sources, boo
 	return root;
 }
 
-std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSON(Json::Value const& _json, vector<string> const& _sourceList, int _level)
+std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList, int _level)
 {
 	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
-	static set<string> const validMembers{".code", ".data", ".auxdata", "sourceList", "index"};
+	static std::set<std::string> const validMembers{".code", ".data", ".auxdata", "sourceList", "index"};
 	for (auto const& attribute: _json.getMemberNames())
 		solRequire(validMembers.count(attribute), AssemblyImportException, "Unknown attribute '" + attribute + "'.");
 	solRequire(_json.isMember(".code"), AssemblyImportException, "Member '.code' does not exist.");
@@ -531,8 +531,8 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 			"Member 'sourceList' is only allowed in root JSON object."
 		);
 
-	shared_ptr<Assembly> result = make_shared<Assembly>(langutil::EVMVersion(), _level == 0, "");
-	vector<string> sourceList;
+	std::shared_ptr<Assembly> result = std::make_shared<Assembly>(langutil::EVMVersion(), _level == 0, "");
+	std::vector<std::string> sourceList;
 	if (_json.isMember("sourceList"))
 	{
 		solAssert(_level == 0);
@@ -564,7 +564,7 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 		for (Json::ValueConstIterator dataIter = data.begin(); dataIter != data.end(); dataIter++)
 		{
 			solRequire(dataIter.key().isString(), AssemblyImportException, "Key inside '.data' is not of type string.");
-			string dataItemID = dataIter.key().asString();
+			std::string dataItemID = dataIter.key().asString();
 			Json::Value const& code = data[dataItemID];
 			if (code.isString())
 			{
@@ -584,7 +584,7 @@ std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSO
 				size_t index = static_cast<size_t>(code["index"].asInt());
 				if (result->m_subs.size() <= index)
 					result->m_subs.resize(index + 1);
-				shared_ptr<Assembly> subassembly(Assembly::fromJSON(code, sourceList, _level + 1).first);
+				std::shared_ptr<Assembly> subassembly(Assembly::fromJSON(code, sourceList, _level + 1).first);
 				solAssert(subassembly);
 				result->m_subs[index] = subassembly;
 			}
@@ -629,7 +629,7 @@ void Assembly::updatePaths(std::vector<Assembly*> const& _parents, std::vector<s
 	}
 }
 
-AssemblyItem Assembly::namedTag(string const& _name, size_t _params, size_t _returns, optional<uint64_t> _sourceID)
+AssemblyItem Assembly::namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID)
 {
 	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
 	if (m_namedTags.count(_name))

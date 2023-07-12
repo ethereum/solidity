@@ -25,12 +25,11 @@
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
-using namespace std;
 
 namespace solidity::evmasm
 {
 
-void EVMAssemblyStack::parseAndAnalyze(string const& _sourceName, string const& _source)
+void EVMAssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
 {
 	solAssert(!m_evmAssembly);
 	m_name = _sourceName;
@@ -51,29 +50,29 @@ void EVMAssemblyStack::assemble()
 	m_sourceMapping = AssemblyItem::computeSourceMapping(m_evmAssembly->items(), sourceIndices());
 	if (m_evmAssembly->numSubs() > 0)
 	{
-		m_evmRuntimeAssembly = make_shared<evmasm::Assembly>(m_evmAssembly->sub(0));
+		m_evmRuntimeAssembly = std::make_shared<evmasm::Assembly>(m_evmAssembly->sub(0));
 		solAssert(m_evmRuntimeAssembly && !m_evmRuntimeAssembly->isCreation());
 		m_runtimeSourceMapping = AssemblyItem::computeSourceMapping(m_evmRuntimeAssembly->items(), sourceIndices());
 		m_runtimeObject = m_evmRuntimeAssembly->assemble();
 	}
 }
 
-LinkerObject const& EVMAssemblyStack::object(string const& _contractName) const
+LinkerObject const& EVMAssemblyStack::object(std::string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
 	return m_object;
 }
 
-LinkerObject const& EVMAssemblyStack::runtimeObject(string const& _contractName) const
+LinkerObject const& EVMAssemblyStack::runtimeObject(std::string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
 	return m_runtimeObject;
 }
 
-map<string, unsigned> EVMAssemblyStack::sourceIndices() const
+std::map<std::string, unsigned> EVMAssemblyStack::sourceIndices() const
 {
 	solAssert(m_evmAssembly);
-	map<string, unsigned> indices;
+	std::map<std::string, unsigned> indices;
 	unsigned index = 0;
 	for (auto const& s: m_sourceList)
 		if (s != CompilerContext::yulUtilityFileName())
@@ -84,42 +83,42 @@ map<string, unsigned> EVMAssemblyStack::sourceIndices() const
 	return indices;
 }
 
-string const* EVMAssemblyStack::sourceMapping(string const& _contractName) const
+std::string const* EVMAssemblyStack::sourceMapping(std::string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
 	return &m_sourceMapping;
 }
 
-string const* EVMAssemblyStack::runtimeSourceMapping(string const& _contractName) const
+std::string const* EVMAssemblyStack::runtimeSourceMapping(std::string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
 	return &m_runtimeSourceMapping;
 }
 
-Json::Value EVMAssemblyStack::assemblyJSON(string const& _contractName) const
+Json::Value EVMAssemblyStack::assemblyJSON(std::string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
 	solAssert(m_evmAssembly);
-	vector<string> sources = sourceNames();
+	std::vector<std::string> sources = sourceNames();
 	if (find(sources.begin(), sources.end(), CompilerContext::yulUtilityFileName()) == sources.end())
 		sources.emplace_back(CompilerContext::yulUtilityFileName());
 	return m_evmAssembly->assemblyJSON(sources);
 }
 
-string EVMAssemblyStack::assemblyString(string const& _contractName, StringMap const& _sourceCodes) const
+std::string EVMAssemblyStack::assemblyString(std::string const& _contractName, StringMap const& _sourceCodes) const
 {
 	solAssert(_contractName == m_name);
 	solAssert(m_evmAssembly);
 	return m_evmAssembly->assemblyString(m_debugInfoSelection, _sourceCodes);
 }
 
-string const EVMAssemblyStack::filesystemFriendlyName(string const& _contractName) const
+std::string const EVMAssemblyStack::filesystemFriendlyName(std::string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
 	return m_name;
 }
 
-vector<string> EVMAssemblyStack::sourceNames() const
+std::vector<std::string> EVMAssemblyStack::sourceNames() const
 {
 	return m_sourceList;
 }
