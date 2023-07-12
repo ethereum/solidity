@@ -61,12 +61,11 @@
 #include <tuple>
 #include <array>
 
-using namespace std;
 
 namespace solidity::langutil
 {
 
-string to_string(ScannerError _errorCode)
+std::string to_string(ScannerError _errorCode)
 {
 	switch (_errorCode)
 	{
@@ -92,7 +91,7 @@ string to_string(ScannerError _errorCode)
 }
 
 
-ostream& operator<<(ostream& os, ScannerError _errorCode)
+std::ostream& operator<<(std::ostream& os, ScannerError _errorCode)
 {
 	return os << to_string(_errorCode);
 }
@@ -275,12 +274,12 @@ namespace
 ///          to the user.
 static ScannerError validateBiDiMarkup(CharStream& _stream, size_t _startPosition)
 {
-	static array<pair<string_view, int>, 5> constexpr directionalSequences{
-		pair<string_view, int>{"\xE2\x80\xAD", 1}, // U+202D (LRO - Left-to-Right Override)
-		pair<string_view, int>{"\xE2\x80\xAE", 1}, // U+202E (RLO - Right-to-Left Override)
-		pair<string_view, int>{"\xE2\x80\xAA", 1}, // U+202A (LRE - Left-to-Right Embedding)
-		pair<string_view, int>{"\xE2\x80\xAB", 1}, // U+202B (RLE - Right-to-Left Embedding)
-		pair<string_view, int>{"\xE2\x80\xAC", -1} // U+202C (PDF - Pop Directional Formatting
+	static std::array<std::pair<std::string_view, int>, 5> constexpr directionalSequences{
+		std::pair<std::string_view, int>{"\xE2\x80\xAD", 1}, // U+202D (LRO - Left-to-Right Override)
+		std::pair<std::string_view, int>{"\xE2\x80\xAE", 1}, // U+202E (RLO - Right-to-Left Override)
+		std::pair<std::string_view, int>{"\xE2\x80\xAA", 1}, // U+202A (LRE - Left-to-Right Embedding)
+		std::pair<std::string_view, int>{"\xE2\x80\xAB", 1}, // U+202B (RLE - Right-to-Left Embedding)
+		std::pair<std::string_view, int>{"\xE2\x80\xAC", -1} // U+202C (PDF - Pop Directional Formatting
 	};
 
 	size_t endPosition = _stream.position();
@@ -712,7 +711,7 @@ void Scanner::scanToken()
 		default:
 			if (isIdentifierStart(m_char))
 			{
-				tie(token, m, n) = scanIdentifierOrKeyword();
+				std::tie(token, m, n) = scanIdentifierOrKeyword();
 
 				// Special case for hexadecimal literals
 				if (token == Token::Hex)
@@ -757,7 +756,7 @@ void Scanner::scanToken()
 	m_tokens[NextNext].location.end = static_cast<int>(sourcePos());
 	m_tokens[NextNext].location.sourceName = m_sourceName;
 	m_tokens[NextNext].token = token;
-	m_tokens[NextNext].extendedTokenInfo = make_tuple(m, n);
+	m_tokens[NextNext].extendedTokenInfo = std::make_tuple(m, n);
 }
 
 bool Scanner::scanEscape()
@@ -1011,7 +1010,7 @@ Token Scanner::scanNumber(char _charSeen)
 	return Token::Number;
 }
 
-tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
+std::tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 {
 	solAssert(isIdentifierStart(m_char), "");
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
