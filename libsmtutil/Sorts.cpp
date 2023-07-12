@@ -19,22 +19,20 @@
 
 #include <libsmtutil/Sorts.h>
 
-using namespace std;
-
 namespace solidity::smtutil
 {
 
-shared_ptr<Sort> const SortProvider::boolSort{make_shared<Sort>(Kind::Bool)};
-shared_ptr<IntSort> const SortProvider::uintSort{make_shared<IntSort>(false)};
-shared_ptr<IntSort> const SortProvider::sintSort{make_shared<IntSort>(true)};
+std::shared_ptr<Sort> const SortProvider::boolSort{std::make_shared<Sort>(Kind::Bool)};
+std::shared_ptr<IntSort> const SortProvider::uintSort{std::make_shared<IntSort>(false)};
+std::shared_ptr<IntSort> const SortProvider::sintSort{std::make_shared<IntSort>(true)};
 
-shared_ptr<IntSort> SortProvider::intSort(bool _signed)
+std::shared_ptr<IntSort> SortProvider::intSort(bool _signed)
 {
 	if (_signed)
 		return sintSort;
 	return uintSort;
 }
 
-shared_ptr<BitVectorSort> const SortProvider::bitVectorSort{make_shared<BitVectorSort>(256)};
+std::shared_ptr<BitVectorSort> const SortProvider::bitVectorSort{std::make_shared<BitVectorSort>(256)};
 
 }

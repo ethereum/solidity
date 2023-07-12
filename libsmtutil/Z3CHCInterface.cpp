@@ -23,21 +23,20 @@
 #include <set>
 #include <stack>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::smtutil;
 
-Z3CHCInterface::Z3CHCInterface(optional<unsigned> _queryTimeout):
+Z3CHCInterface::Z3CHCInterface(std::optional<unsigned> _queryTimeout):
 	CHCSolverInterface(_queryTimeout),
-	m_z3Interface(make_unique<Z3Interface>(m_queryTimeout)),
+	m_z3Interface(std::make_unique<Z3Interface>(m_queryTimeout)),
 	m_context(m_z3Interface->context()),
 	m_solver(*m_context)
 {
 	Z3_get_version(
-		&get<0>(m_version),
-		&get<1>(m_version),
-		&get<2>(m_version),
-		&get<3>(m_version)
+		&std::get<0>(m_version),
+		&std::get<1>(m_version),
+		&std::get<2>(m_version),
+		&std::get<3>(m_version)
 	);
 
 	// These need to be set globally.
@@ -51,7 +50,7 @@ Z3CHCInterface::Z3CHCInterface(optional<unsigned> _queryTimeout):
 	setSpacerOptions();
 }
 
-void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
+void Z3CHCInterface::declareVariable(std::string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort, "");
 	m_z3Interface->declareVariable(_name, _sort);
@@ -62,7 +61,7 @@ void Z3CHCInterface::registerRelation(Expression const& _expr)
 	m_solver.register_relation(m_z3Interface->functions().at(_expr.name));
 }
 
-void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
+void Z3CHCInterface::addRule(Expression const& _expr, std::string const& _name)
 {
 	z3::expr rule = m_z3Interface->toZ3Expr(_expr);
 	if (m_z3Interface->constants().empty())
@@ -77,7 +76,7 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 	}
 }
 
-tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
+std::tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
 {
 	CheckResult result;
 	try
@@ -90,7 +89,7 @@ tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCInterface::que
 			result = CheckResult::SATISFIABLE;
 			// z3 version 4.8.8 modified Spacer to also return
 			// proofs containing nonlinear clauses.
-			if (m_version >= tuple(4, 8, 8, 0))
+			if (m_version >= std::tuple(4, 8, 8, 0))
 			{
 				auto proof = m_solver.get_answer();
 				return {result, Expression(true), cexGraph(proof)};
@@ -113,7 +112,7 @@ tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCInterface::que
 	}
 	catch (z3::exception const& _err)
 	{
-		set<string> msgs{
+		std::set<std::string> msgs{
 			/// Resource limit (rlimit) exhausted.
 			"max. resource limit exceeded",
 			/// User given timeout exhausted.
@@ -178,13 +177,13 @@ CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
 
 	CexGraph graph;
 
-	stack<z3::expr> proofStack;
+	std::stack<z3::expr> proofStack;
 	proofStack.push(_proof.arg(0));
 
 	auto const& root = proofStack.top();
 	graph.nodes.emplace(root.id(), m_z3Interface->fromZ3Expr(fact(root)));
 
-	set<unsigned> visited;
+	std::set<unsigned> visited;
 	visited.insert(root.id());
 
 	while (!proofStack.empty())
@@ -227,16 +226,16 @@ z3::expr Z3CHCInterface::fact(z3::expr const& _node)
 	return _node.arg(_node.num_args() - 1);
 }
 
-string Z3CHCInterface::name(z3::expr const& _predicate)
+std::string Z3CHCInterface::name(z3::expr const& _predicate)
 {
 	smtAssert(_predicate.is_app(), "");
 	return _predicate.decl().name().str();
 }
 
-vector<string> Z3CHCInterface::arguments(z3::expr const& _predicate)
+std::vector<std::string> Z3CHCInterface::arguments(z3::expr const& _predicate)
 {
 	smtAssert(_predicate.is_app(), "");
-	vector<string> args;
+	std::vector<std::string> args;
 	for (unsigned i = 0; i < _predicate.num_args(); ++i)
 		args.emplace_back(_predicate.arg(i).to_string());
 	return args;
