@@ -88,6 +88,7 @@ commands:
     steps:
       - run:
           name: Generate bytecode reports for the selected preset
+          no_output_timeout: 30m
           command: |
             .circleci/parallel_bytecode_report.sh \
                 "<< parameters.label >>" \
@@ -227,6 +228,8 @@ defaults:
       PRESETS:
         legacy-optimize
         legacy-no-optimize
+        via-ir-optimize
+        via-ir-no-optimize
 
   - bytecode_compare_preset_matrix: &bytecode_compare_preset_matrix
       parameters:
@@ -234,6 +237,8 @@ defaults:
           # NOTE: Keep in sync with preset list in bytecode_compare_env_presets
           - legacy-optimize
           - legacy-no-optimize
+          - via-ir-optimize
+          - via-ir-no-optimize
 
   # --------------------------------------------------------------------------
   # Artifacts Templates
