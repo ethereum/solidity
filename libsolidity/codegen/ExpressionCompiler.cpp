@@ -2231,7 +2231,7 @@ bool ExpressionCompiler::visit(IndexRangeAccess const& _indexAccess)
 
 	Type const& baseType = *_indexAccess.baseExpression().annotation().type;
 
-	ArrayType const *arrayType = dynamic_cast<ArrayType const*>(&baseType);
+	ArrayType const* arrayType = dynamic_cast<ArrayType const*>(&baseType);
 	if (!arrayType)
 		if (ArraySliceType const* sliceType = dynamic_cast<ArraySliceType const*>(&baseType))
 			arrayType = &sliceType->arrayType();

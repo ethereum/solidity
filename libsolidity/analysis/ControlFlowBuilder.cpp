@@ -582,7 +582,7 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 	solAssert(m_currentNode && m_inlineAssembly, "");
 	yul::ASTWalker::operator()(_functionCall);
 
-	if (auto const *builtinFunction = m_inlineAssembly->dialect().builtin(_functionCall.functionName.name))
+	if (auto const* builtinFunction = m_inlineAssembly->dialect().builtin(_functionCall.functionName.name))
 	{
 		if (builtinFunction->controlFlowSideEffects.canTerminate)
 			connect(m_currentNode, m_transactionReturnNode);

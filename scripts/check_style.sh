@@ -4,6 +4,16 @@ set -eu
 
 ERROR_LOG="$(mktemp -t check_style_XXXXXX.log)"
 
+if [ "$(uname)" == "Darwin" ]; then
+    if ! command -v ggrep &> /dev/null
+    then
+        brew install grep # install GNU grep on macOS
+    fi
+    grepCommand="ggrep"
+else
+    grepCommand="grep"
+fi
+
 EXCLUDE_FILES=(
     # The line below is left unquoted to allow the shell globbing path expansion
     test/cmdlineTests/*/{err,output}
@@ -57,7 +67,7 @@ REPO_ROOT="$(dirname "$0")"/..
 cd "$REPO_ROOT" || exit 1
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
-    grep -v "test/libsolidity/ASTJSON\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
+    ${grepCommand} -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
 )
 
 if [[ "$WHITESPACE" != "" ]]
@@ -70,27 +80,30 @@ fi
 
 function preparedGrep
 {
-    git grep -nIE "$1" -- '*.h' '*.cpp' | grep -v "${EXCLUDE_FILES_JOINED}"
+    git grep -nIE "$1" -- '*.h' '*.cpp' | ${grepCommand} -v "${EXCLUDE_FILES_JOINED}"
     return $?
 }
 
 FORMATERROR=$(
 (
-    preparedGrep "#include \"" | grep -E -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
+    preparedGrep "#include \"" | ${grepCommand} -E -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
     preparedGrep "\<(if|for|while|switch)\(" # no space after "if", "for", "while" or "switch"
-    preparedGrep "\<for\>\s*\([^=]*\>\s:\s.*\)" # no space before range based for-loop
-    preparedGrep "\<if\>\s*\(.*\)\s*\{\s*$" # "{\n" on same line as "if"
+    preparedGrep "\<for\>[[:space:]]*\([^=]*\>[[:space:]]:[[:space:]].*\)" # no space before range based for-loop
+    preparedGrep "\<if\>[[:space:]]*\(.*\)[[:space:]]*\{[[:space:]]*$" # "{\n" on same line as "if"
     preparedGrep "namespace .*\{"
-    preparedGrep "[,\(<]\s*const " # const on left side of type
-    preparedGrep "^\s*(static)?\s*const " # const on left side of type (beginning of line)
+    preparedGrep "[,\(<][[:space:]]*const " # const on left side of type
+    preparedGrep "^[[:space:]]*(static)?[[:space:]]*const " # const on left side of type (beginning of line)
     preparedGrep "^ [^*]|[^*] 	|	 [^*]" # uses spaces for indentation or mixes spaces and tabs
-    preparedGrep "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" | grep -E -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
+    preparedGrep "[a-zA-Z0-9_][[:space:]]*[&][a-zA-Z_]" | ${grepCommand} -E -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
     # right-aligned reference pointer star (needs to exclude return and comments)
-    preparedGrep "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" | grep -E -v -e "return [*]" -e "^* [*]" -e "^*//.*"
+    preparedGrep "[a-zA-Z0-9_][[:space:]]*[*][a-zA-Z_]" | ${grepCommand} -E -v -e "return [*]" -e ":[[:space:]]*[*]" -e ".*//.*"
     # unqualified move()/forward() checks, i.e. make sure that std::move() and std::forward() are used instead of move() and forward()
-    preparedGrep "move\(.+\)" | grep -v "std::move" | grep -E "[^a-z]move"
-    preparedGrep "forward\(.+\)" | grep -v "std::forward" | grep -E "[^a-z]forward"
-) | grep -E -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/" || true
+    preparedGrep "move\(.+\)" | ${grepCommand} -v "std::move" | ${grepCommand} -E "[^a-z]move"
+    preparedGrep "forward\(.+\)" | ${grepCommand} -v "std::forward" | ${grepCommand} -E "[^a-z]forward"
+    # make sure `using namespace std` is not used in INCLUDE_DIRECTORIES
+    # shellcheck disable=SC2068,SC2068
+    ${grepCommand} -nIE -d skip "using namespace std;" ${NAMESPACE_STD_FREE_FILES[@]}
+) | ${grepCommand} -E -v -e "^[a-zA-Z\./]*:[0-9]*:[[:space:]]*/(/|\*)" -e "^test/" || true
 )
 
 # Special error handling for `using namespace std;` exclusion, since said statement can be present in the test directory
