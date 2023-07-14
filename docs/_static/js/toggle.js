@@ -1,39 +1,47 @@
-document.addEventListener('DOMContentLoaded', function() {
+function toggleColorMode() {
+  // Check localStorage for previous color scheme preference, assign the opposite
+  var newMode = localStorage.getItem(LS_COLOR_SCHEME) == DARK ? LIGHT : DARK;
 
-    function toggleCssMode(isDay) {
-        var mode = (isDay ? "Day" : "Night");
-        localStorage.setItem("css-mode", mode);
+  // Update localStorage with new color scheme preference
+  localStorage.setItem(LS_COLOR_SCHEME, newMode);
 
-        var url_root = DOCUMENTATION_OPTIONS.URL_ROOT == "./" ? "" : DOCUMENTATION_OPTIONS.URL_ROOT;
-        var daysheet = $(`link[href="${url_root}_static/pygments.css"]`)[0].sheet;
-        daysheet.disabled = !isDay;
+  // Update the root element with the new color scheme preference
+  document
+    .querySelector(":root")
+    .setAttribute("style", `--color-scheme: ${newMode}`);
 
-        var nightsheet = $(`link[href="${url_root}_static/css/dark.css"]`)[0];
-        if (!isDay && nightsheet === undefined) {
-            var element = document.createElement("link");
-            element.setAttribute("rel", "stylesheet");
-            element.setAttribute("type", "text/css");
-            element.setAttribute("href", `${url_root}_static/css/dark.css`);
-            document.getElementsByTagName("head")[0].appendChild(element);
-            return;
-        }
-        if (nightsheet !== undefined) {
-            nightsheet.sheet.disabled = isDay;
-        }
+  // Update logo
+  document
+    .querySelector(`img.${SOLIDITY_LOGO_CLASS}`)
+    .setAttribute("src", newMode === LIGHT ? LIGHT_LOGO_PATH : DARK_LOGO_PATH);
+
+  // Update color mode toggle icon
+  document
+    .querySelector(`img.${COLOR_TOGGLE_ICON_CLASS}`)
+    .setAttribute("src", newMode === LIGHT ? MOON_ICON_PATH : SUN_ICON_PATH);
+
+  // Update hamburger menu icon color
+  document
+    .querySelector("button.mobile-menu-button img")
+    .setAttribute(
+      "src",
+      newMode === LIGHT ? LIGHT_HAMBURGER_PATH : DARK_HAMBURGER_PATH
+    );
+}
+
+function toggleMenu(options = {}) {
+  const handleClassToggle = ({ classList }, className) => {
+    if (typeof options.force !== "undefined") {
+      classList.toggle(className, options.force);
+    } else {
+      classList.toggle(className);
     }
-
-    var initial = localStorage.getItem("css-mode") != "Night";
-    var checkbox = document.querySelector('input[name=mode]');
-
-    toggleCssMode(initial);
-    checkbox.checked = initial;
-
-    checkbox.addEventListener('change', function() {
-        document.documentElement.classList.add('transition');
-        window.setTimeout(() => {
-            document.documentElement.classList.remove('transition');
-        }, 1000)
-        toggleCssMode(this.checked);
-    })
-
-});
+  };
+  document
+    .querySelectorAll('[data-toggle="rst-versions"]')
+    .forEach((e) => handleClassToggle(e, MOBILE_MENU_TOGGLE_CLASS));
+  document
+    .querySelectorAll('[data-toggle="wy-nav-shift"]')
+    .forEach((e) => handleClassToggle(e, MOBILE_MENU_TOGGLE_CLASS));
+  handleClassToggle(document.querySelector(`.${WRAPPER_CLASS}`), "menu-open");
+}
