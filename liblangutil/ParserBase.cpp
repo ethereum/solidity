@@ -25,7 +25,6 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 
@@ -44,7 +43,7 @@ Token ParserBase::peekNextToken() const
 	return m_scanner->peekNextToken();
 }
 
-string ParserBase::currentLiteral() const
+std::string ParserBase::currentLiteral() const
 {
 	return m_scanner->currentLiteral();
 }
@@ -54,7 +53,7 @@ Token ParserBase::advance()
 	return m_scanner->next();
 }
 
-string ParserBase::tokenName(Token _token)
+std::string ParserBase::tokenName(Token _token)
 {
 	if (_token == Token::Identifier)
 		return "identifier";
@@ -76,7 +75,7 @@ void ParserBase::expectToken(Token _value, bool _advance)
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
-		string const expectedToken = ParserBase::tokenName(_value);
+		std::string const expectedToken = ParserBase::tokenName(_value);
 		if (m_parserErrorRecovery)
 			parserError(6635_error, "Expected " + expectedToken + " but got " + tokenName(tok));
 		else
@@ -92,7 +91,7 @@ void ParserBase::expectToken(Token _value, bool _advance)
 		advance();
 }
 
-void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentNodeName, bool _advance)
+void ParserBase::expectTokenOrConsumeUntil(Token _value, std::string const& _currentNodeName, bool _advance)
 {
 	solAssert(m_inParserRecovery, "The function is supposed to be called during parser recovery only.");
 
@@ -104,12 +103,12 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 		while (m_scanner->currentToken() != _value && m_scanner->currentToken() != Token::EOS)
 			advance();
 
-		string const expectedToken = ParserBase::tokenName(_value);
+		std::string const expectedToken = ParserBase::tokenName(_value);
 		if (m_scanner->currentToken() == Token::EOS)
 		{
 			// rollback to where the token started, and raise exception to be caught at a higher level.
 			m_scanner->setPosition(static_cast<size_t>(startPosition));
-			string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " + ParserBase::tokenName(tok) + " instead.";
+			std::string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " + ParserBase::tokenName(tok) + " instead.";
 			fatalParserError(1957_error, errorLoc, msg);
 		}
 		else
@@ -120,7 +119,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 	}
 	else
 	{
-		string expectedToken = ParserBase::tokenName(_value);
+		std::string expectedToken = ParserBase::tokenName(_value);
 		parserWarning(3347_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
 		m_inParserRecovery = false;
 	}
@@ -142,32 +141,32 @@ void ParserBase::decreaseRecursionDepth()
 	m_recursionDepth--;
 }
 
-void ParserBase::parserWarning(ErrorId _error, string const& _description)
+void ParserBase::parserWarning(ErrorId _error, std::string const& _description)
 {
 	m_errorReporter.warning(_error, currentLocation(), _description);
 }
 
-void ParserBase::parserWarning(ErrorId _error, SourceLocation const& _location, string const& _description)
+void ParserBase::parserWarning(ErrorId _error, SourceLocation const& _location, std::string const& _description)
 {
 	m_errorReporter.warning(_error, _location, _description);
 }
 
-void ParserBase::parserError(ErrorId _error, SourceLocation const& _location, string const& _description)
+void ParserBase::parserError(ErrorId _error, SourceLocation const& _location, std::string const& _description)
 {
 	m_errorReporter.parserError(_error, _location, _description);
 }
 
-void ParserBase::parserError(ErrorId _error, string const& _description)
+void ParserBase::parserError(ErrorId _error, std::string const& _description)
 {
 	parserError(_error, currentLocation(), _description);
 }
 
-void ParserBase::fatalParserError(ErrorId _error, string const& _description)
+void ParserBase::fatalParserError(ErrorId _error, std::string const& _description)
 {
 	fatalParserError(_error, currentLocation(), _description);
 }
 
-void ParserBase::fatalParserError(ErrorId _error, SourceLocation const& _location, string const& _description)
+void ParserBase::fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description)
 {
 	m_errorReporter.fatalParserError(_error, _location, _description);
 }

@@ -65,7 +65,7 @@ inheritance.
 Types defined inside interfaces and other contract-like structures
 can be accessed from other contracts: ``Token.TokenType`` or ``Token.Coin``.
 
-.. warning:
+.. warning::
 
     Interfaces have supported ``enum`` types since :doc:`Solidity version 0.5.0 <050-breaking-changes>`, make
     sure the pragma version specifies this version as a minimum.

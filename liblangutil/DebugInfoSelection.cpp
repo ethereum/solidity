@@ -30,7 +30,6 @@
 
 #include <vector>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
@@ -50,7 +49,7 @@ DebugInfoSelection const DebugInfoSelection::Only(bool DebugInfoSelection::* _me
 	return result;
 }
 
-optional<DebugInfoSelection> DebugInfoSelection::fromString(string_view _input)
+std::optional<DebugInfoSelection> DebugInfoSelection::fromString(std::string_view _input)
 {
 	// TODO: Make more stuff constexpr and make it a static_assert().
 	solAssert(componentMap().count("all") == 0, "");
@@ -61,11 +60,11 @@ optional<DebugInfoSelection> DebugInfoSelection::fromString(string_view _input)
 	if (_input == "none")
 		return None();
 
-	return fromComponents(_input | ranges::views::split(',') | ranges::to<vector<string>>);
+	return fromComponents(_input | ranges::views::split(',') | ranges::to<std::vector<std::string>>);
 }
 
-optional<DebugInfoSelection> DebugInfoSelection::fromComponents(
-	vector<string> const& _componentNames,
+std::optional<DebugInfoSelection> DebugInfoSelection::fromComponents(
+	std::vector<std::string> const& _componentNames,
 	bool _acceptWildcards
 )
 {
@@ -75,16 +74,16 @@ optional<DebugInfoSelection> DebugInfoSelection::fromComponents(
 	for (auto const& component: _componentNames)
 	{
 		if (component == "*")
-			return (_acceptWildcards ? make_optional(DebugInfoSelection::All()) : nullopt);
+			return (_acceptWildcards ? std::make_optional(DebugInfoSelection::All()) : std::nullopt);
 
 		if (!selection.enable(component))
-			return nullopt;
+			return std::nullopt;
 	}
 
 	return selection;
 }
 
-bool DebugInfoSelection::enable(string _component)
+bool DebugInfoSelection::enable(std::string _component)
 {
 	auto memberIt = componentMap().find(boost::trim_copy(_component));
 	if (memberIt == componentMap().end())
@@ -146,9 +145,9 @@ bool DebugInfoSelection::operator==(DebugInfoSelection const& _other) const noex
 	return true;
 }
 
-ostream& langutil::operator<<(ostream& _stream, DebugInfoSelection const& _selection)
+std::ostream& langutil::operator<<(std::ostream& _stream, DebugInfoSelection const& _selection)
 {
-	vector<string> selectedComponentNames;
+	std::vector<std::string> selectedComponentNames;
 	for (auto const& [name, member]: _selection.componentMap())
 		if (_selection.*member)
 			selectedComponentNames.push_back(name);

@@ -25,14 +25,13 @@
 
 using namespace solidity;
 using namespace solidity::langutil;
-using namespace std;
 
-SourceLocation solidity::langutil::parseSourceLocation(string const& _input, vector<shared_ptr<string const>> const& _sourceNames)
+SourceLocation solidity::langutil::parseSourceLocation(std::string const& _input, std::vector<std::shared_ptr<std::string const>> const& _sourceNames)
 {
 	// Expected input: "start:length:sourceindex"
 	enum SrcElem: size_t { Start, Length, Index };
 
-	vector<string> pos;
+	std::vector<std::string> pos;
 
 	boost::algorithm::split(pos, _input, boost::is_any_of(":"));
 
