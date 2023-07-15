@@ -39,7 +39,7 @@ using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 SMTLib2Interface::SMTLib2Interface(
-	[[maybe_unused]] std::map<h256, string> _queryResponses,
+	[[maybe_unused]] std::map<h256, std::string> _queryResponses,
 	ReadCallback::Callback _smtCallback,
 	SMTSolverChoice _enabledSolvers,
 	std::optional<unsigned> _queryTimeout
@@ -136,23 +136,23 @@ namespace { // Helpers for querying solvers using SMT callback
 
     std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
 	{
-        std::vector<string> values;
+        std::vector<std::string> values;
 		while (_start < _end)
 		{
-			auto valStart = find(_start, _end, ' ');
+			auto valStart = std::find(_start, _end, ' ');
 			if (valStart < _end)
 				++valStart;
-			auto valEnd = find(valStart, _end, ')');
+			auto valEnd = std::find(valStart, _end, ')');
 			values.emplace_back(valStart, valEnd);
-			_start = find(valEnd, _end, '(');
+			_start = std::find(valEnd, _end, '(');
 		}
 
 		return values;
 	}
 
-    std::vector<string> parseValues(string const& solverAnswer)
+    std::vector<std::string> parseValues(std::string const& solverAnswer)
 	{
-		return parseValues(find(solverAnswer.cbegin(), solverAnswer.cend(), '\n'), solverAnswer.cend());
+		return parseValues(std::find(solverAnswer.cbegin(), solverAnswer.cend(), '\n'), solverAnswer.cend());
 	}
 }
 
@@ -168,7 +168,7 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 		solverCommands.emplace_back("cvc4");
 
 	CheckResult lastResult = CheckResult::ERROR;
-	std::vector<string> finalValues;
+	std::vector<std::string> finalValues;
 	smtAssert(m_smtCallback);
 	for (auto const& s: solverCommands)
 	{
