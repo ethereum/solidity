@@ -267,7 +267,7 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 	for (auto const& fileRequests: _outputSelection)
 		for (auto const& requests: fileRequests)
 			for (auto const& output: outputsThatRequireBinaries)
-				if (isArtifactRequested(requests, output, false))
+				if (isArtifactRequested(requests, output))
 					return true;
 	return false;
 }
@@ -286,7 +286,7 @@ bool isEvmBytecodeRequested(Json::Value const& _outputSelection)
 	for (auto const& fileRequests: _outputSelection)
 		for (auto const& requests: fileRequests)
 			for (auto const& output: outputsThatRequireEvmBinaries)
-				if (isArtifactRequested(requests, output, false))
+				if (isArtifactRequested(requests, output))
 					return true;
 	return false;
 }
@@ -1366,7 +1366,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		Json::Value contractData(Json::objectValue);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "abi"))
 			contractData["abi"] = compilerStack.contractABI(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "storageLayout", false))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "storageLayout"))
 			contractData["storageLayout"] = compilerStack.storageLayout(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "metadata"))
 			contractData["metadata"] = compilerStack.metadata(contractName);
