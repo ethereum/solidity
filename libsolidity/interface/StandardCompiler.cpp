@@ -177,9 +177,8 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 	}
 }
 
-bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact, bool _wildcardMatchesExperimental)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact)
 {
-	static set<string> experimental{"ir", "irAst", "irOptimized", "irOptimizedAst"};
 	for (auto const& selectedArtifactJson: _outputSelection)
 	{
 		string const& selectedArtifact = selectedArtifactJson.asString();
@@ -190,9 +189,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _art
 			return true;
 		else if (selectedArtifact == "*")
 		{
-			// "ir", "irOptimized" can only be matched by "*" if activated.
-			if (experimental.count(_artifact) == 0 || _wildcardMatchesExperimental)
-				return true;
+			return true;
 		}
 	}
 	return false;
@@ -211,7 +208,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _art
 ///
 /// @TODO optimise this. Perhaps flatten the structure upfront.
 ///
-bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, string const& _artifact, bool _wildcardMatchesExperimental)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, string const& _artifact)
 {
 	if (!_outputSelection.isObject())
 		return false;
@@ -228,7 +225,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 				if (
 					_outputSelection[file].isMember(contract) &&
 					_outputSelection[file][contract].isArray() &&
-					isArtifactRequested(_outputSelection[file][contract], _artifact, _wildcardMatchesExperimental)
+					isArtifactRequested(_outputSelection[file][contract], _artifact)
 				)
 					return true;
 		}
@@ -236,10 +233,10 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 	return false;
 }
 
-bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, vector<string> const& _artifacts, bool _wildcardMatchesExperimental)
+bool isArtifactRequested(Json::Value const& _outputSelection, string const& _file, string const& _contract, vector<string> const& _artifacts)
 {
 	for (auto const& artifact: _artifacts)
-		if (isArtifactRequested(_outputSelection, _file, _contract, artifact, _wildcardMatchesExperimental))
+		if (isArtifactRequested(_outputSelection, _file, _contract, artifact))
 			return true;
 	return false;
 }
@@ -1345,8 +1342,6 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		for (string const& query: compilerStack.unhandledSMTLib2Queries())
 			output["auxiliaryInputRequested"]["smtlib2queries"]["0x" + util::keccak256(query).hex()] = query;
 
-	bool const wildcardMatchesExperimental = false;
-
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
 	if (parsingSuccess && !analysisFailed && (!compilerStack.hasError() || _inputsAndSettings.parserErrorRecovery))
@@ -1354,7 +1349,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		{
 			Json::Value sourceResult = Json::objectValue;
 			sourceResult["id"] = sourceIndex++;
-			if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast", wildcardMatchesExperimental))
+			if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast"))
 				sourceResult["ast"] = ASTJsonExporter(compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
 			output["sources"][sourceName] = sourceResult;
 		}
@@ -1369,44 +1364,43 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 		// ABI, storage layout, documentation and metadata
 		Json::Value contractData(Json::objectValue);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "abi", wildcardMatchesExperimental))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "abi"))
 			contractData["abi"] = compilerStack.contractABI(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "storageLayout", false))
 			contractData["storageLayout"] = compilerStack.storageLayout(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "metadata", wildcardMatchesExperimental))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "metadata"))
 			contractData["metadata"] = compilerStack.metadata(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "userdoc", wildcardMatchesExperimental))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "userdoc"))
 			contractData["userdoc"] = compilerStack.natspecUser(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "devdoc", wildcardMatchesExperimental))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "devdoc"))
 			contractData["devdoc"] = compilerStack.natspecDev(contractName);
 
 		// IR
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ir", wildcardMatchesExperimental))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ir"))
 			contractData["ir"] = compilerStack.yulIR(contractName);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irAst", wildcardMatchesExperimental))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irAst"))
 			contractData["irAst"] = compilerStack.yulIRAst(contractName);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized", wildcardMatchesExperimental))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimized"))
 			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimizedAst", wildcardMatchesExperimental))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimizedAst"))
 			contractData["irOptimizedAst"] = compilerStack.yulIROptimizedAst(contractName);
 
 		// EVM
 		Json::Value evmData(Json::objectValue);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly", wildcardMatchesExperimental))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly"))
 			evmData["assembly"] = compilerStack.assemblyString(contractName, sourceList);
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly", wildcardMatchesExperimental))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly"))
 			evmData["legacyAssembly"] = compilerStack.assemblyJSON(contractName);
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers", wildcardMatchesExperimental))
+		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers"))
 			evmData["methodIdentifiers"] = compilerStack.interfaceSymbols(contractName)["methods"];
-		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.gasEstimates", wildcardMatchesExperimental))
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.gasEstimates"))
 			evmData["gasEstimates"] = compilerStack.gasEstimates(contractName);
 
 		if (compilationSuccess && isArtifactRequested(
 			_inputsAndSettings.outputSelection,
 			file,
 			name,
-			evmObjectComponents("bytecode"),
-			wildcardMatchesExperimental
+			evmObjectComponents("bytecode")
 		))
 			evmData["bytecode"] = collectEVMObject(
 				_inputsAndSettings.evmVersion,
@@ -1418,8 +1412,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 					_inputsAndSettings.outputSelection,
 					file,
 					name,
-					"evm.bytecode." + _element,
-					wildcardMatchesExperimental
+					"evm.bytecode." + _element
 				); }
 			);
 
@@ -1427,8 +1420,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			_inputsAndSettings.outputSelection,
 			file,
 			name,
-			evmObjectComponents("deployedBytecode"),
-			wildcardMatchesExperimental
+			evmObjectComponents("deployedBytecode")
 		))
 			evmData["deployedBytecode"] = collectEVMObject(
 				_inputsAndSettings.evmVersion,
@@ -1440,8 +1432,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 					_inputsAndSettings.outputSelection,
 					file,
 					name,
-					"evm.deployedBytecode." + _element,
-					wildcardMatchesExperimental
+					"evm.deployedBytecode." + _element
 				); }
 			);
 
@@ -1546,11 +1537,10 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	string contractName = stack.parserResult()->name.str();
 
-	bool const wildcardMatchesExperimental = true;
-	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir", wildcardMatchesExperimental))
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir"))
 		output["contracts"][sourceName][contractName]["ir"] = stack.print();
 
-	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ast", wildcardMatchesExperimental))
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ast"))
 	{
 		Json::Value sourceResult = Json::objectValue;
 		sourceResult["id"] = 1;
@@ -1573,8 +1563,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 			_inputsAndSettings.outputSelection,
 			sourceName,
 			contractName,
-			evmObjectComponents(kind),
-			wildcardMatchesExperimental
+			evmObjectComponents(kind)
 		))
 		{
 			MachineAssemblyObject const& o = isDeployed ? deployedObject : object;
@@ -1590,15 +1579,14 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 							_inputsAndSettings.outputSelection,
 							sourceName,
 							contractName,
-							"evm." + kind + "." + _element,
-							wildcardMatchesExperimental
+							"evm." + kind + "." + _element
 						); }
 					);
 		}
 
-	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized"))
 		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();
-	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "evm.assembly", wildcardMatchesExperimental))
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "evm.assembly"))
 		output["contracts"][sourceName][contractName]["evm"]["assembly"] = object.assembly;
 
 	return output;
