@@ -32,6 +32,14 @@ namespace solidity::smtutil
 class CHCSmtLib2Interface: public CHCSolverInterface
 {
 public:
+	struct SMTLib2Expression
+	{
+		using args_t = std::vector<SMTLib2Expression>;
+		std::variant<std::string, args_t> data;
+
+		std::string toString() const;
+	};
+
 	explicit CHCSmtLib2Interface(
 		std::map<util::h256, std::string> const& _queryResponses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
@@ -74,6 +82,10 @@ private:
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
+	CexGraph graphFromZ3Proof(std::string const& _proof);
+
+	CexGraph graphFromSMTLib2Expression(SMTLib2Expression const& _proof);
+
 	/// Used to access toSmtLibSort, SExpr, and handle variables.
 	std::unique_ptr<SMTLib2Interface> m_smtlib2;
 
@@ -87,6 +99,7 @@ private:
 	SMTSolverChoice m_enabledSolvers;
 
 	std::map<Sort const*, std::string> m_sortNames;
+	std::map<std::string, Sort const*> m_knownSorts;
 };
 
 }
