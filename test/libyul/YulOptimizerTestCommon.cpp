@@ -168,6 +168,12 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FullInliner::run(*m_context, *m_ast);
 			ExpressionJoiner::run(*m_context, *m_ast);
 		}},
+		{"fullInlinerWithoutSplitter", [&]() {
+			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
+			FunctionGrouper::run(*m_context, *m_ast);
+			FullInliner::run(*m_context, *m_ast);
+		}},
 		{"mainFunction", [&]() {
 			disambiguate();
 			FunctionGrouper::run(*m_context, *m_ast);

@@ -1422,6 +1422,7 @@
     },
     "0.6.10": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1436,6 +1437,7 @@
     },
     "0.6.11": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1450,6 +1452,7 @@
     },
     "0.6.12": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1548,6 +1551,7 @@
     },
     "0.6.7": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "NestedCalldataArrayAbiReencodingSizeValidation",
@@ -1564,6 +1568,7 @@
     },
     "0.6.8": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "NestedCalldataArrayAbiReencodingSizeValidation",
@@ -1577,6 +1582,7 @@
     },
     "0.6.9": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1592,6 +1598,7 @@
     },
     "0.7.0": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1606,6 +1613,7 @@
     },
     "0.7.1": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1621,6 +1629,7 @@
     },
     "0.7.2": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1635,6 +1644,7 @@
     },
     "0.7.3": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1648,6 +1658,7 @@
     },
     "0.7.4": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1660,6 +1671,7 @@
     },
     "0.7.5": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1672,6 +1684,7 @@
     },
     "0.7.6": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1684,6 +1697,7 @@
     },
     "0.8.0": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1696,6 +1710,7 @@
     },
     "0.8.1": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1708,6 +1723,7 @@
     },
     "0.8.10": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1717,6 +1733,7 @@
     },
     "0.8.11": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1727,6 +1744,7 @@
     },
     "0.8.12": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1737,6 +1755,7 @@
     },
     "0.8.13": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "StorageWriteRemovalBeforeConditionalTermination",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
@@ -1748,6 +1767,7 @@
     },
     "0.8.14": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "StorageWriteRemovalBeforeConditionalTermination",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
@@ -1757,6 +1777,7 @@
     },
     "0.8.15": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "StorageWriteRemovalBeforeConditionalTermination",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup"
         ],
@@ -1764,24 +1785,32 @@
     },
     "0.8.16": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "StorageWriteRemovalBeforeConditionalTermination"
         ],
         "released": "2022-08-08"
     },
     "0.8.17": {
-        "bugs": [],
+        "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder"
+        ],
         "released": "2022-09-08"
     },
     "0.8.18": {
-        "bugs": [],
+        "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder"
+        ],
         "released": "2023-02-01"
     },
     "0.8.19": {
-        "bugs": [],
+        "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder"
+        ],
         "released": "2023-02-22"
     },
     "0.8.2": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1793,11 +1822,14 @@
         "released": "2021-03-02"
     },
     "0.8.20": {
-        "bugs": [],
+        "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder"
+        ],
         "released": "2023-05-10"
     },
     "0.8.3": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1809,6 +1841,7 @@
     },
     "0.8.4": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1819,6 +1852,7 @@
     },
     "0.8.5": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1829,6 +1863,7 @@
     },
     "0.8.6": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1839,6 +1874,7 @@
     },
     "0.8.7": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1849,6 +1885,7 @@
     },
     "0.8.8": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
@@ -1860,6 +1897,7 @@
     },
     "0.8.9": {
         "bugs": [
+            "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
             "DirtyBytesArrayToStorage",
             "DataLocationChangeInInternalOverride",
