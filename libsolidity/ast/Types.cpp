@@ -3127,6 +3127,12 @@ BoolResult FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (convertTo.kind() != kind())
 		return BoolResult::err("Special functions cannot be converted to function types.");
 
+	if (
+		kind() == FunctionType::Kind::Declaration &&
+		m_declaration != convertTo.m_declaration
+	)
+		return BoolResult::err("Function declaration types referring to different functions cannot be converted to each other.");
+
 	if (!equalExcludingStateMutability(convertTo))
 		return false;
 
