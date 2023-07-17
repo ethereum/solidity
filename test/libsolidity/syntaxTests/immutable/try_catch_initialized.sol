@@ -31,12 +31,5 @@ contract B
         revert();
     }
 }
-
 // ====
 // EVMVersion: >=byzantium
-// ----
-// TypeError 4130: (108-116): Cannot write to immutable here: Immutable variables cannot be initialized inside a try/catch statement.
-// TypeError 4130: (144-152): Cannot write to immutable here: Immutable variables cannot be initialized inside a try/catch statement.
-// TypeError 4130: (216-224): Cannot write to immutable here: Immutable variables cannot be initialized inside a try/catch statement.
-// TypeError 4130: (297-305): Cannot write to immutable here: Immutable variables cannot be initialized inside a try/catch statement.
-// TypeError 4130: (357-365): Cannot write to immutable here: Immutable variables cannot be initialized inside a try/catch statement.

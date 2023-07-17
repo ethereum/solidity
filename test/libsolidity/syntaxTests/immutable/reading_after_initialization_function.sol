@@ -1,5 +1,5 @@
 contract C {
-    uint immutable x ;
+	uint immutable x;
 
 	constructor()
 	{
@@ -13,4 +13,3 @@ contract C {
 	}
 }
 // ----
-// TypeError 7733: (145-146): Immutable variables cannot be read before they are initialized.

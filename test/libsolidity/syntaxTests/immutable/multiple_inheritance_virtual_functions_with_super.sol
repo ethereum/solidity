@@ -13,7 +13,7 @@ contract B {
         return f();
     }
 
-    function f() internal virtual returns(uint) { return 3; }
+    function f() internal view virtual returns(uint) { return 3; }
 }
 
 contract C is A, B {
@@ -21,9 +21,8 @@ contract C is A, B {
         return super.xInit();
     }
 
-    function f() internal override(A, B) returns(uint) {
+    function f() internal view override(A, B) returns(uint) {
         return x;
     }
 }
 // ----
-// TypeError 7733: (493-494): Immutable variables cannot be read before they are initialized.
