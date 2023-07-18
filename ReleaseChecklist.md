@@ -5,7 +5,7 @@
        [solc-bin](https://github.com/ethereum/solc-bin), [homebrew-ethereum](https://github.com/ethereum/homebrew-ethereum),
        [solidity-blog](https://github.com/ethereum/solidity-blog) and [solidity-portal](https://github.com/ethereum/solidity-portal) repositories.
  - [ ] DockerHub account with push rights to the [``solc`` image](https://hub.docker.com/r/ethereum/solc).
- - [ ] Lauchpad (Ubuntu One) account with a membership in the ["Ethereum" team](https://launchpad.net/~ethereum) and
+ - [ ] Launchpad (Ubuntu One) account with a membership in the ["Ethereum" team](https://launchpad.net/~ethereum) and
        a gnupg key for your email in the ``ethereum.org`` domain (has to be version 1, gpg2 won't work).
  - [ ] Ubuntu/Debian dependencies of the PPA scripts: ``devscripts``, ``debhelper``, ``dput``, ``git``, ``wget``, ``ca-certificates``.
  - [ ] [npm Registry](https://www.npmjs.com) account added as a collaborator for the [``solc`` package](https://www.npmjs.com/package/solc).
