@@ -8,4 +8,5 @@ contract C {
 	}
 }
 // ----
-// TypeError 1080: (117-130): True expression's type function D.f() does not match false expression's type function D.g().
+// TypeError 9717: (121-124): Invalid mobile type in true expression.
+// TypeError 3703: (127-130): Invalid mobile type in false expression.
