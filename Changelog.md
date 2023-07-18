@@ -1,12 +1,14 @@
 ### 0.8.21 (unreleased)
 
 Important Bugfixes:
+ * Code Generator: Always generate code for the expression in ``<expression>.selector`` in the legacy code generation pipeline.
  * Yul Optimizer: Fix ``FullInliner`` step (``i``) not preserving the evaluation order of arguments passed into inlined functions in code that is not in expression-split form (i.e. when using a custom optimizer sequence in which the step not preceded by ``ExpressionSplitter`` (``x``)).
 
 
 Language Features:
  * Allow qualified access to events from other contracts.
  * Relax restrictions on initialization of immutable variables. Reads and writes may now happen at any point at construction time outside of functions and modifiers. Explicit initialization is no longer mandatory.
+
 
 Compiler Features:
  * Commandline Interface: Add ``--ast-compact-json`` output in assembler mode.
@@ -35,6 +37,7 @@ Bugfixes:
  * Yul Optimizer: Ensure that the assignment of memory slots for variables moved to memory does not depend on AST IDs that may depend on whether additional files are included during compilation.
  * Yul Optimizer: Fix ``FullInliner`` step not ignoring code that is not in expression-split form.
  * Yul Optimizer: Fix optimized IR being unnecessarily passed through the Yul optimizer again before bytecode generation.
+
 
 AST Changes:
  * AST: Add the ``experimentalSolidity`` field to the ``SourceUnit`` nodes, which indicate whether the experimental parsing mode has been enabled via ``pragma experimental solidity``.
