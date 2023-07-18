@@ -380,7 +380,7 @@ Prerequisites - macOS
 ---------------------
 
 For macOS builds, ensure that you have the latest version of
-`Xcode installed <https://developer.apple.com/xcode/download/>`_.
+`Xcode installed <https://developer.apple.com/xcode/resources/>`_.
 This contains the `Clang C++ compiler <https://en.wikipedia.org/wiki/Clang>`_, the
 `Xcode IDE <https://en.wikipedia.org/wiki/Xcode>`_ and other Apple development
 tools that are required for building C++ applications on OS X.
