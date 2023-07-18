@@ -8,6 +8,7 @@ Important Bugfixes:
 Language Features:
  * Allow qualified access to events from other contracts.
  * Relax restrictions on initialization of immutable variables. Reads and writes may now happen at any point at construction time outside of functions and modifiers. Explicit initialization is no longer mandatory.
+ * Make mixedCase the recommended naming style for constants.
 
 
 Compiler Features:

@@ -1260,8 +1260,11 @@ Use mixedCase. Examples: ``totalSupply``, ``remainingSupply``, ``balancesOf``, `
 Constants
 =========
 
-Constants should be named with all capital letters with underscores separating
-words. Examples: ``MAX_BLOCKS``, ``TOKEN_NAME``, ``TOKEN_TICKER``, ``CONTRACT_VERSION``.
+Constants should use mixedCase. Examples: ``maxBlocks``, ``tokenName``, ``tokenTicker``, ``contractVersion``.
+
+Names with all capital letters with underscores separating words are acceptable
+only in legacy code and for implementing existing interfaces requiring this convention.
+Examples: ``MAX_BLOCKS``, ``TOKEN_NAME``, ``TOKEN_TICKER``, ``CONTRACT_VERSION``.
 
 
 Modifier Names
