@@ -30,6 +30,8 @@ Bugfixes:
  * Commandline Interface: It is no longer possible to specify both ``--optimize-yul`` and ``--no-optimize-yul`` at the same time.
  * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
  * SMTChecker: Fix false negative when a verification target can be violated only by trusted external call from another public function.
+ * SMTChecker: Fix generation of invalid SMT-LIB2 scripts in BMC engine with trusted mode for external calls when CHC engine times out.
+ * SMTChecker: Fix internal error caused by incorrectly classifying external function call using function pointer as a public getter.
  * SMTChecker: Fix internal error caused by using external identifier to encode member access to functions that take an internal function as a parameter.
  * Standard JSON Interface: Fix an incomplete AST being returned when analysis is interrupted by certain kinds of fatal errors.
  * Type Checker: Disallow using certain unassignable function types in complex expressions.
