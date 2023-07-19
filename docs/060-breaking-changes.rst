@@ -112,7 +112,7 @@ New Error Reporter
 ~~~~~~~~~~~~~~~~~~
 
 A new error reporter was introduced, which aims at producing more accessible error messages on the command-line.
-It is enabled by default, but passing ``--old-reporter`` falls back to the the deprecated old error reporter.
+It is enabled by default, but passing ``--old-reporter`` falls back to the deprecated old error reporter.
 
 Metadata Hash Options
 ~~~~~~~~~~~~~~~~~~~~~
