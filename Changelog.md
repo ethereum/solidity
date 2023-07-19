@@ -1,4 +1,4 @@
-### 0.8.21 (unreleased)
+### 0.8.21 (2023-07-19)
 
 Important Bugfixes:
  * Code Generator: Always generate code for the expression in ``<expression>.selector`` in the legacy code generation pipeline.
