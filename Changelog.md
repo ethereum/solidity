@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * NatSpec: Fix internal error when requesting userdoc or devdoc for a contract that emits an event defined in a foreign contract or interface.
 
 
 ### 0.8.21 (2023-07-19)
