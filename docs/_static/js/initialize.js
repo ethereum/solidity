@@ -143,6 +143,19 @@ const updateActiveNavLink = () => {
 
 document.addEventListener("locationchange", updateActiveNavLink);
 
+function updateGitHubEditPath() {
+  // Replaces the version number in the GitHub edit path with "develop"
+  const gitHubEditAnchor = document.querySelector(".wy-breadcrumbs-aside > a");
+  const url = new URL(gitHubEditAnchor.href);
+  const split = url.pathname.split("/");
+  const versionIndex = split.indexOf("blob") + 1;
+  split[versionIndex] = "develop";
+  url.pathname = split.join("/");
+  gitHubEditAnchor.setAttribute("href", url.toString());
+  gitHubEditAnchor.setAttribute("target", "_blank");
+  gitHubEditAnchor.setAttribute("rel", "noopener noreferrer");
+}
+
 function initialize() {
   // Preload fonts
   const fonts = [
@@ -214,6 +227,9 @@ function initialize() {
 
   // Update active nav link
   updateActiveNavLink();
+
+  // Update GitHub edit path to direct to `develop` branch
+  updateGitHubEditPath();
 }
 
 document.addEventListener("DOMContentLoaded", initialize);
