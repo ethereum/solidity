@@ -328,13 +328,13 @@ bool BMC::visit(WhileStatement const& _node)
 				indicesBefore,
 				copyVariableIndices()
 			);
-			loopCondition = expr(_node.condition());
+			loopCondition = loopCondition && expr(_node.condition());
 			broke = broke || brokeInCurrentIteration;
 			m_loopCheckpoints.pop();
 		}
 	}
 	else {
-		smtutil::Expression loopConditionOnPreviousIteration(true);
+		smtutil::Expression loopConditionOnPreviousIterations(true);
 		for (unsigned int i = 0; i < bmcLoopIterations; ++i)
 		{
 			m_loopCheckpoints.emplace();
@@ -361,13 +361,13 @@ bool BMC::visit(WhileStatement const& _node)
 			// breaks in current iterations are handled when traversing loop checkpoints
 			// handles case when the loop condition no longer holds but bmc loop iterations still unrolls the loop
 			mergeVariables(
-				broke || !loopConditionOnPreviousIteration,
+				broke || !loopConditionOnPreviousIterations,
 				indicesBefore,
 				copyVariableIndices()
 			);
 			m_loopCheckpoints.pop();
 			broke = broke || brokeInCurrentIteration;
-			loopConditionOnPreviousIteration = loopCondition;
+			loopConditionOnPreviousIterations = loopConditionOnPreviousIterations && loopCondition;
 		}
 	}
 	if (bmcLoopIterations > 0)
@@ -384,7 +384,7 @@ bool BMC::visit(ForStatement const& _node)
 
 	smtutil::Expression broke(false);
 	smtutil::Expression forCondition(true);
-	smtutil::Expression forConditionOnPreviousIteration(true);
+	smtutil::Expression forConditionOnPreviousIterations(true);
 	unsigned int bmcLoopIterations = m_settings.bmcLoopIterations.value_or(1);
 	for (unsigned int i = 0; i < bmcLoopIterations; ++i)
 	{
@@ -427,13 +427,13 @@ bool BMC::visit(ForStatement const& _node)
 		// breaks in current iterations are handled when traversing loop checkpoints
 		// handles case when the loop condition no longer holds but bmc loop iterations still unrolls the loop
 		mergeVariables(
-			broke || !forConditionOnPreviousIteration,
+			broke || !forConditionOnPreviousIterations,
 			indicesBefore,
 			copyVariableIndices()
 		);
 		m_loopCheckpoints.pop();
 		broke = broke || brokeInCurrentIteration;
-		forConditionOnPreviousIteration = forCondition;
+		forConditionOnPreviousIterations = forConditionOnPreviousIterations && forCondition;
 	}
 	if (bmcLoopIterations > 0)
 		m_context.addAssertion(not(forCondition) || broke);

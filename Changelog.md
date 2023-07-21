@@ -8,6 +8,7 @@ Compiler Features:
 
 Bugfixes:
  * NatSpec: Fix internal error when requesting userdoc or devdoc for a contract that emits an event defined in a foreign contract or interface.
+ * SMTChecker: Fix encoding error that causes loops to unroll after completion.
 
 
 ### 0.8.21 (2023-07-19)
