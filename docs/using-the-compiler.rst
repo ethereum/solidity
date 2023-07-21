@@ -408,7 +408,7 @@ Input Description
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
         //
-        // Note that using a using `evm`, `evm.bytecode`, etc. will select every
+        // Note that using `evm`, `evm.bytecode`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
         //
         "outputSelection": {
