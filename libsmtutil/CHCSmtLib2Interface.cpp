@@ -29,6 +29,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <range/v3/view.hpp>
+#include <range/v3/algorithm/find.hpp>
+#include <range/v3/algorithm/find_if.hpp>
 
 #include <array>
 #include <fstream>
@@ -38,7 +40,6 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <variant>
-#include <range/v3/algorithm/find.hpp>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -66,8 +67,6 @@ void CHCSmtLib2Interface::reset()
 	m_accumulatedOutput.clear();
 	m_variables.clear();
 	m_unhandledQueries.clear();
-	m_sortNames.clear();
-	m_knownSorts.clear();
 }
 
 void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
@@ -134,22 +133,12 @@ void CHCSmtLib2Interface::declareVariable(std::string const& _name, SortPointer 
 
 std::string CHCSmtLib2Interface::toSmtLibSort(Sort const& _sort)
 {
-	if (!m_sortNames.count(&_sort))
-	{
-		auto smtLibName = m_smtlib2->toSmtLibSort(_sort);
-		m_sortNames[&_sort] = smtLibName;
-		m_knownSorts[smtLibName] = &_sort;
-	}
-	return m_sortNames.at(&_sort);
+	return m_smtlib2->toSmtLibSort(_sort);
 }
 
 std::string CHCSmtLib2Interface::toSmtLibSort(std::vector<SortPointer> const& _sorts)
 {
-	std::string ssort("(");
-	for (auto const& sort: _sorts)
-		ssort += toSmtLibSort(*sort) + " ";
-	ssort += ")";
-	return ssort;
+	return m_smtlib2->toSmtLibSort(_sorts);
 }
 
 std::string CHCSmtLib2Interface::forall()
@@ -295,66 +284,81 @@ namespace {
 		return std::get<SMTLib2Expression::args_t>(expr.data);
 	}
 
-	SortPointer toSort(SMTLib2Expression const& expr)
+	class SMTLibTranslationContext
 	{
-		if (isAtom(expr)) {
-			auto const& name = asAtom(expr);
-			if (name == "Int")
-				return SortProvider::sintSort;
-		} else {
-			auto const& args = asSubExpressions(expr);
-			if (asAtom(args[0]) == "Array") {
-				assert(args.size() == 3);
-				auto domainSort = toSort(args[1]);
-				auto codomainSort = toSort(args[2]);
-				return std::make_shared<ArraySort>(std::move(domainSort), std::move(codomainSort));
-			}
-		}
-		// FIXME: This is not correct, we need to track sorts properly!
-		return SortProvider::boolSort;
-//		smtAssert(false, "Unknown sort encountered");
+		SMTLib2Interface const& m_smtlib2Interface;
 
-	}
+	public:
+		SMTLibTranslationContext(SMTLib2Interface const& _smtlib2Interface) : m_smtlib2Interface(_smtlib2Interface) {}
 
-	smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr)
-	{
-		return std::visit(GenericVisitor{
-				[&](std::string const& _atom) {
-					if (_atom == "true" || _atom == "false")
-						return smtutil::Expression(_atom == "true");
-					else if (isNumber(_atom))
-						return smtutil::Expression(_atom, {}, SortProvider::sintSort);
-					else
-						return smtutil::Expression(_atom, {}, SortProvider::boolSort);
-				},
-				[&](std::vector<SMTLib2Expression> const& _subExpr) {
-					SortPointer sort;
-					std::vector<smtutil::Expression> arguments;
-					if (isAtom(_subExpr.front())) {
-						std::string const &op = std::get<std::string>(_subExpr.front().data);
-						std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=", "=>"};
-						for (size_t i = 1; i < _subExpr.size(); i++)
-							arguments.emplace_back(toSMTUtilExpression(_subExpr[i]));
-						sort = contains(boolOperators, op) ? SortProvider::boolSort : arguments.back().sort;
-						return smtutil::Expression(op, move(arguments), move(sort));
-					} else {
-						// check for const array
-						if (_subExpr.size() == 2 and !isAtom(_subExpr[0]))
-						{
-							auto const& typeArgs = asSubExpressions(_subExpr.front());
-							if (typeArgs.size() == 3 && typeArgs[0].toString() == "as" && typeArgs[1].toString() == "const")
-							{
-								auto arraySort = toSort(typeArgs[2]);
-								auto sortSort = std::make_shared<SortSort>(arraySort);
-								return smtutil::Expression::const_array(Expression(sortSort), toSMTUtilExpression(_subExpr[1]));
-							}
-						}
-
-						smtAssert(false, "Unhandled case in expression conversion");
-					}
+		SortPointer toSort(SMTLib2Expression const& expr)
+		{
+			if (isAtom(expr)) {
+				auto const& name = asAtom(expr);
+				if (name == "Int")
+					return SortProvider::sintSort;
+				if (name == "Bool")
+					return SortProvider::boolSort;
+				std::string quotedName = "|" + name + "|";
+				auto it = ranges::find_if(m_smtlib2Interface.sortNames(), [&](auto const& entry) {
+					return entry.second == name || entry.second == quotedName;
+				});
+				if (it != m_smtlib2Interface.sortNames().end())
+					return std::make_shared<Sort>(*it->first);
+			} else {
+				auto const& args = asSubExpressions(expr);
+				if (asAtom(args[0]) == "Array") {
+					assert(args.size() == 3);
+					auto domainSort = toSort(args[1]);
+					auto codomainSort = toSort(args[2]);
+					return std::make_shared<ArraySort>(std::move(domainSort), std::move(codomainSort));
 				}
-		}, _expr.data);
-	}
+			}
+			// FIXME: This is not correct, we need to track sorts properly!
+//			return SortProvider::boolSort;
+			 smtAssert(false, "Unknown sort encountered");
+		}
+
+		smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr)
+		{
+			return std::visit(GenericVisitor{
+					[&](std::string const& _atom) {
+						if (_atom == "true" || _atom == "false")
+							return smtutil::Expression(_atom == "true");
+						else if (isNumber(_atom))
+							return smtutil::Expression(_atom, {}, SortProvider::sintSort);
+						else
+							return smtutil::Expression(_atom, {}, SortProvider::boolSort);
+					},
+					[&](std::vector<SMTLib2Expression> const& _subExpr) {
+						SortPointer sort;
+						std::vector<smtutil::Expression> arguments;
+						if (isAtom(_subExpr.front())) {
+							std::string const &op = std::get<std::string>(_subExpr.front().data);
+							std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=", "=>"};
+							for (size_t i = 1; i < _subExpr.size(); i++)
+								arguments.emplace_back(toSMTUtilExpression(_subExpr[i]));
+							sort = contains(boolOperators, op) ? SortProvider::boolSort : arguments.back().sort;
+							return smtutil::Expression(op, move(arguments), move(sort));
+						} else {
+							// check for const array
+							if (_subExpr.size() == 2 and !isAtom(_subExpr[0]))
+							{
+								auto const& typeArgs = asSubExpressions(_subExpr.front());
+								if (typeArgs.size() == 3 && typeArgs[0].toString() == "as" && typeArgs[1].toString() == "const")
+								{
+									auto arraySort = toSort(typeArgs[2]);
+									auto sortSort = std::make_shared<SortSort>(arraySort);
+									return smtutil::Expression::const_array(Expression(sortSort), toSMTUtilExpression(_subExpr[1]));
+								}
+							}
+
+							smtAssert(false, "Unhandled case in expression conversion");
+						}
+					}
+			}, _expr.data);
+		}
+	};
 
 
 
@@ -563,6 +567,7 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromSMTLib2Expression(SMT
 		return {};
 
 	CHCSolverInterface::CexGraph graph;
+	SMTLibTranslationContext context(*m_smtlib2);
 
 	std::stack<SMTLib2Expression const*> proofStack;
 	proofStack.push(&asSubExpressions(proofNode).at(1));
@@ -572,11 +577,9 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromSMTLib2Expression(SMT
 
 
 	auto const* root = proofStack.top();
-	std::cout << root->toString() << std::endl;
 	auto const& derivedRootFact = fact(*root);
-	std::cout << derivedRootFact.toString() << std::endl;
 	visitedIds.insert({root, nextId++});
-	graph.nodes.emplace(visitedIds.at(root), toSMTUtilExpression(derivedRootFact));
+	graph.nodes.emplace(visitedIds.at(root), context.toSMTUtilExpression(derivedRootFact));
 
 	auto isHyperRes = [](SMTLib2Expression const& expr) {
 		if (isAtom(expr)) return false;
@@ -618,7 +621,7 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromSMTLib2Expression(SMT
 				auto childId = visitedIds.at(child);
 				if (!graph.nodes.count(childId))
 				{
-					graph.nodes.emplace(childId, toSMTUtilExpression(fact(*child)));
+					graph.nodes.emplace(childId, context.toSMTUtilExpression(fact(*child)));
 					graph.edges[childId] = {};
 				}
 
@@ -645,10 +648,10 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromZ3Proof(const std::st
 //		std::cout << command.toString() << '\n' << std::endl;
 		if (!isAtom(command)) {
 			auto const& head = std::get<SMTLib2Expression::args_t>(command.data)[0];
-			if(isAtom(head) && std::get<std::string>(head.data) == "proof") {
-				std::cout << "Proof expression!\n" << command.toString() << std::endl;
+			if (isAtom(head) && std::get<std::string>(head.data) == "proof") {
+//				std::cout << "Proof expression!\n" << command.toString() << std::endl;
 				inlineLetExpressions(command);
-				std::cout << "Cleaned Proof expression!\n" << command.toString() << std::endl;
+//				std::cout << "Cleaned Proof expression!\n" << command.toString() << std::endl;
 				return graphFromSMTLib2Expression(command);
 			}
 		}

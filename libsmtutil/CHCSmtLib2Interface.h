@@ -97,9 +97,6 @@ private:
 
 	frontend::ReadCallback::Callback m_smtCallback;
 	SMTSolverChoice m_enabledSolvers;
-
-	std::map<Sort const*, std::string> m_sortNames;
-	std::map<std::string, Sort const*> m_knownSorts;
 };
 
 }

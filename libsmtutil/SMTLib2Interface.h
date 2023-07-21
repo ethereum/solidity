@@ -69,9 +69,13 @@ public:
 
 	std::vector<std::pair<std::string, std::string>> const& userSorts() const { return m_userSorts; }
 
+	auto const& sortNames() const { return m_sortNames; }
+
 	std::string dumpQuery(std::vector<Expression> const& _expressionsToEvaluate);
 
 private:
+	std::string sortToString(Sort const& _sort);
+
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
 
 	void write(std::string _data);
@@ -86,6 +90,10 @@ private:
 	/// It needs to be a vector so that the declaration order is kept,
 	/// otherwise solvers cannot parse the queries.
 	std::vector<std::pair<std::string, std::string>> m_userSorts;
+	// TODO: Should this remember shared_pointer?
+	// TODO: Shouldn't sorts be unique objects?
+	std::map<Sort const*, std::string> m_sortNames;
+
 
 	std::vector<std::string> m_unhandledQueries;
 

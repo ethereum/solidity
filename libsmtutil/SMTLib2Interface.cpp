@@ -57,6 +57,7 @@ void SMTLib2Interface::reset()
 	m_accumulatedOutput.emplace_back();
 	m_variables.clear();
 	m_userSorts.clear();
+	m_sortNames.clear();
 	write("(set-option :produce-models true)");
 	if (m_queryTimeout)
 		write("(set-option :timeout " + std::to_string(*m_queryTimeout) + ")");
@@ -276,6 +277,16 @@ std::string SMTLib2Interface::toSExpr(Expression const& _expr)
 }
 
 std::string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
+{
+	if (!m_sortNames.count(&_sort))
+	{
+		auto smtLibName = sortToString(_sort);
+		m_sortNames[&_sort] = smtLibName;
+	}
+	return m_sortNames.at(&_sort);
+}
+
+std::string SMTLib2Interface::sortToString(Sort const& _sort)
 {
 	switch (_sort.kind)
 	{
