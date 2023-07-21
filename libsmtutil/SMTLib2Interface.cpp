@@ -115,7 +115,8 @@ void SMTLib2Interface::addAssertion(Expression const& _expr)
 	write("(assert " + toSExpr(_expr) + ")");
 }
 
-namespace { // Helpers for querying solvers using SMT callback
+namespace // Helpers for querying solvers using SMT callback
+{
 	auto resultFromSolverResponse (std::string const& response) {
 		CheckResult result;
 		// TODO proper parsing
@@ -135,9 +136,9 @@ namespace { // Helpers for querying solvers using SMT callback
 		return result == CheckResult::SATISFIABLE || result == CheckResult::UNSATISFIABLE;
 	}
 
-    std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
+	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
 	{
-        std::vector<std::string> values;
+		std::vector<std::string> values;
 		while (_start < _end)
 		{
 			auto valStart = std::find(_start, _end, ' ');
@@ -151,7 +152,7 @@ namespace { // Helpers for querying solvers using SMT callback
 		return values;
 	}
 
-    std::vector<std::string> parseValues(std::string const& solverAnswer)
+	std::vector<std::string> parseValues(std::string const& solverAnswer)
 	{
 		return parseValues(std::find(solverAnswer.cbegin(), solverAnswer.cend(), '\n'), solverAnswer.cend());
 	}
@@ -159,8 +160,7 @@ namespace { // Helpers for querying solvers using SMT callback
 
 std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::vector<Expression> const& _expressionsToEvaluate)
 {
-	auto query = boost::algorithm::join(m_accumulatedOutput, "\n") +
-				 checkSatAndGetValuesCommand(_expressionsToEvaluate);
+	auto query = boost::algorithm::join(m_accumulatedOutput, "\n") + checkSatAndGetValuesCommand(_expressionsToEvaluate);
 
 	std::vector<std::string> solverCommands;
 	if (m_enabledSolvers.z3)
@@ -195,9 +195,8 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 		else if (result == CheckResult::UNKNOWN && lastResult == CheckResult::ERROR)
 			lastResult = result;
 	}
-	if (lastResult == CheckResult::ERROR) {
+	if (lastResult == CheckResult::ERROR)
 		m_unhandledQueries.push_back(query);
-	}
 	return std::make_pair(lastResult, finalValues);
 }
 

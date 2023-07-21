@@ -22,7 +22,7 @@
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
 
-#include "liblangutil/Common.h"
+#include <liblangutil/Common.h>
 
 
 #include <boost/algorithm/string/join.hpp>
@@ -107,7 +107,8 @@ std::tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Inte
 	// TODO proper parsing
 	if (boost::starts_with(response, "sat"))
 		result = CheckResult::UNSATISFIABLE;
-	else if (boost::starts_with(response, "unsat")) {
+	else if (boost::starts_with(response, "unsat"))
+	{
 		result = CheckResult::SATISFIABLE;
 		return {result, Expression(true), graphFromZ3Proof(response)};
 	}
@@ -201,7 +202,8 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 	auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, _input);
 	if (result.success)
 	{
-		if (m_enabledSolvers.z3 and boost::starts_with(result.responseOrErrorMessage, "unsat")) {
+		if (m_enabledSolvers.z3 and boost::starts_with(result.responseOrErrorMessage, "unsat"))
+		{
 			solverBinary += " fp.xform.slice=false fp.xform.inline_linear=false fp.xform.inline_eager=false";
 			std::string extendedQuery = "(set-option :produce-proofs true)" + _input + "\n(get-proof)";
 			auto secondResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, extendedQuery);
@@ -257,7 +259,8 @@ std::string CHCSmtLib2Interface::SMTLib2Expression::toString() const
 	}, data);
 }
 
-namespace {
+namespace
+{
 	using SMTLib2Expression = CHCSmtLib2Interface::SMTLib2Expression;
 	bool isNumber(std::string const& _expr)
 	{
@@ -270,7 +273,7 @@ namespace {
 	bool isAtom(SMTLib2Expression const & expr)
 	{
 		return std::holds_alternative<std::string>(expr.data);
-	};
+	}
 
 	std::string const& asAtom(SMTLib2Expression const& expr)
 	{
@@ -293,7 +296,8 @@ namespace {
 
 		SortPointer toSort(SMTLib2Expression const& expr)
 		{
-			if (isAtom(expr)) {
+			if (isAtom(expr))
+			{
 				auto const& name = asAtom(expr);
 				if (name == "Int")
 					return SortProvider::sintSort;
@@ -307,7 +311,8 @@ namespace {
 					return std::make_shared<Sort>(*it->first);
 			} else {
 				auto const& args = asSubExpressions(expr);
-				if (asAtom(args[0]) == "Array") {
+				if (asAtom(args[0]) == "Array")
+				{
 					assert(args.size() == 3);
 					auto domainSort = toSort(args[1]);
 					auto codomainSort = toSort(args[2]);
@@ -316,7 +321,7 @@ namespace {
 			}
 			// FIXME: This is not correct, we need to track sorts properly!
 //			return SortProvider::boolSort;
-			 smtAssert(false, "Unknown sort encountered");
+			smtAssert(false, "Unknown sort encountered");
 		}
 
 		smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr)
@@ -333,13 +338,14 @@ namespace {
 					[&](std::vector<SMTLib2Expression> const& _subExpr) {
 						SortPointer sort;
 						std::vector<smtutil::Expression> arguments;
-						if (isAtom(_subExpr.front())) {
-							std::string const &op = std::get<std::string>(_subExpr.front().data);
+						if (isAtom(_subExpr.front()))
+						{
+							std::string const& op = std::get<std::string>(_subExpr.front().data);
 							std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=", "=>"};
 							for (size_t i = 1; i < _subExpr.size(); i++)
 								arguments.emplace_back(toSMTUtilExpression(_subExpr[i]));
 							sort = contains(boolOperators, op) ? SortProvider::boolSort : arguments.back().sort;
-							return smtutil::Expression(op, move(arguments), move(sort));
+							return smtutil::Expression(op, std::move(arguments), std::move(sort));
 						} else {
 							// check for const array
 							if (_subExpr.size() == 2 and !isAtom(_subExpr[0]))
@@ -387,7 +393,7 @@ namespace {
 				// simulate whitespace because we do not want to read the next token
 				// since it might block.
 				m_token = ' ';
-				return {move(subExpressions)};
+				return {std::move(subExpressions)};
 			}
 			else
 				return {parseToken()};
@@ -506,20 +512,20 @@ namespace {
 			if (isAtom(first) && std::get<std::string>(first.data) == "let")
 			{
 				assert(!isAtom(subexprs[1]));
-				auto & bindingExpressions = std::get<SMTLib2Expression::args_t>(subexprs[1].data);
+				auto& bindingExpressions = std::get<SMTLib2Expression::args_t>(subexprs[1].data);
 				// process new bindings
 				std::vector<std::pair<std::string, SMTLib2Expression>> newBindings;
-				for (auto & binding : bindingExpressions)
+				for (auto& binding: bindingExpressions)
 				{
 					assert(!isAtom(binding));
-					auto & bindingPair = std::get<SMTLib2Expression::args_t>(binding.data);
+					auto& bindingPair = std::get<SMTLib2Expression::args_t>(binding.data);
 					assert(bindingPair.size() == 2);
 					assert(isAtom(bindingPair.at(0)));
 					inlineLetExpressions(bindingPair.at(1), bindings);
 					newBindings.emplace_back(std::get<std::string>(bindingPair.at(0).data), bindingPair.at(1));
 				}
 				bindings.pushScope();
-				for (auto && [name, expr] : newBindings)
+				for (auto&& [name, expr] : newBindings)
 					bindings.addBinding(std::move(name), std::move(expr));
 				newBindings.clear();
 
@@ -534,7 +540,7 @@ namespace {
 				return;
 			}
 			// not a let expression, just process all arguments
-			for (auto& subexpr : subexprs)
+			for (auto& subexpr: subexprs)
 			{
 				inlineLetExpressions(subexpr, bindings);
 			}
@@ -632,7 +638,8 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromSMTLib2Expression(SMT
 	return graph;
 }
 
-CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromZ3Proof(const std::string & _proof) {
+CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromZ3Proof(std::string const& _proof)
+{
 	std::stringstream ss(_proof);
 	std::string answer;
 	ss >> answer;
@@ -644,11 +651,13 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromZ3Proof(const std::st
 	solAssert(parser.isEOF());
 	solAssert(!isAtom(all));
 	auto& commands = std::get<SMTLib2Expression::args_t>(all.data);
-	for (auto& command : commands) {
+	for (auto& command: commands) {
 //		std::cout << command.toString() << '\n' << std::endl;
-		if (!isAtom(command)) {
+		if (!isAtom(command))
+		{
 			auto const& head = std::get<SMTLib2Expression::args_t>(command.data)[0];
-			if (isAtom(head) && std::get<std::string>(head.data) == "proof") {
+			if (isAtom(head) && std::get<std::string>(head.data) == "proof")
+			{
 //				std::cout << "Proof expression!\n" << command.toString() << std::endl;
 				inlineLetExpressions(command);
 //				std::cout << "Cleaned Proof expression!\n" << command.toString() << std::endl;
