@@ -63,3 +63,7 @@ expected-line-ending-format=LF
 
 # Maximum number of characters on a single line.
 max-line-length=130
+
+[MISCELLANEOUS]
+
+notes=XXX,TMP
