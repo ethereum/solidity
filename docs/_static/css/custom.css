@@ -16,6 +16,7 @@
 
     --navHeight: 4.5rem;
     --sideWidth: 300px;
+    --currentVersionHeight: 45px;
 
     text-rendering: geometricPrecision;
     -webkit-font-smoothing: antialiased;
@@ -658,6 +659,8 @@ ul.search .context {
 .rst-other-versions {
     background: var(--white) !important;
     color: var(--color-a) !important;
+    max-height: calc(100vh - var(--navHeight) - var(--currentVersionHeight));
+    overflow-y: scroll;
 }
 
 .rst-other-versions a {
