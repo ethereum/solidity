@@ -140,6 +140,7 @@ TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePr
 void SMTCheckerTest::filterObtainedErrors()
 {
 	SyntaxTest::filterObtainedErrors();
+	m_unfilteredErrorList = m_errorList;
 
 	static auto removeCex = [](vector<SyntaxTestError>& errors) {
 		for (auto& e: errors)
@@ -155,4 +156,11 @@ void SMTCheckerTest::filterObtainedErrors()
 		removeCex(m_expectations);
 		removeCex(m_errorList);
 	}
+}
+
+void SMTCheckerTest::printUpdatedExpectations(ostream &_stream, const string &_linePrefix) const {
+	if (!m_unfilteredErrorList.empty())
+		printErrorList(_stream, m_unfilteredErrorList, _linePrefix, false);
+	else
+		CommonSyntaxTest::printUpdatedExpectations(_stream, _linePrefix);
 }
