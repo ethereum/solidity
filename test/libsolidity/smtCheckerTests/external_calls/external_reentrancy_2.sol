@@ -12,5 +12,6 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: no
 // ----
-// Warning 6328: (117-131): CHC: Assertion violation happens here.
+// Warning 6328: (117-131): CHC: Assertion violation happens here.\nCounterexample:\nlocked = false\ntarget = 0x0\n\nTransaction trace:\nC.constructor()\nState: locked = true\nC.call(0x0)\n    D(target).e() -- untrusted external call, synthesized as:\n        C.call(0x0) -- reentrant call

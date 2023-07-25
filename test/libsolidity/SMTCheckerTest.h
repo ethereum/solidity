@@ -42,6 +42,8 @@ public:
 
 	void filterObtainedErrors() override;
 
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
+
 protected:
 	/*
 	Options that can be set in the test:
@@ -62,6 +64,8 @@ protected:
 	ModelCheckerSettings m_modelCheckerSettings;
 
 	bool m_ignoreCex = false;
+
+	std::vector<SyntaxTestError> m_unfilteredErrorList;
 };
 
 }
