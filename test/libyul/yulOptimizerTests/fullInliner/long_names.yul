@@ -7,6 +7,8 @@
 	mstore(0, verylongfunctionname(verylongvariablename2))
 	mstore(1, verylongvariablename2)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullInliner
 //

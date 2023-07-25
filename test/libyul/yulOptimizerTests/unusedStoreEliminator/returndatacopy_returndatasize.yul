@@ -2,7 +2,7 @@
   returndatacopy(0,0,returndatasize())
 }
 // ====
-// EVMVersion: >homestead
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

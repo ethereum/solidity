@@ -7,6 +7,8 @@
     }
     sstore(c, 3)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

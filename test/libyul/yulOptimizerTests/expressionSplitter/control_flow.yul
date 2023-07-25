@@ -7,6 +7,8 @@
 		}
 	}
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSplitter
 //

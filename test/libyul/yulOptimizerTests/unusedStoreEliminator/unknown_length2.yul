@@ -8,6 +8,8 @@
     let x := mload(0)
     sstore(0, x)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

@@ -22,6 +22,8 @@
 		f(100)
 	}
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullInliner
 //

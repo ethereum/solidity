@@ -8,6 +8,8 @@
   pop(f())
   sstore(x, 10)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

@@ -7,6 +7,8 @@
     }
     f()
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

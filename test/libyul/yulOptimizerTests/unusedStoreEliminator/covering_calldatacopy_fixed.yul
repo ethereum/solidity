@@ -21,6 +21,8 @@
     }
     sstore(0, keccak256(0, 0x40))
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

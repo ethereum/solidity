@@ -9,6 +9,8 @@ object "main" {
     }
     data "abc" "Hello, World!"
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSplitter
 //

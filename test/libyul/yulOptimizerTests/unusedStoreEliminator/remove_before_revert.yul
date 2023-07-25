@@ -7,6 +7,8 @@
     let d := 0
     revert(d, d)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

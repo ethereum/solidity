@@ -6,6 +6,8 @@
     mstore(c, 9)
     mstore(add(c, 0x20), 20)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: unusedStoreEliminator
 //

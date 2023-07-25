@@ -7,7 +7,7 @@
     sstore(c, d)
 }
 // ====
-// EVMVersion: >=constantinople
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSimplifier
 //

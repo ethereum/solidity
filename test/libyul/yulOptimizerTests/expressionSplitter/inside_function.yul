@@ -5,6 +5,8 @@
 	}
 	sstore(x, f(mload(2), mload(2)))
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: expressionSplitter
 //

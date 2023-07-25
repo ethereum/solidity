@@ -8,6 +8,8 @@
 		r := add(a, calldatasize())
 	}
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullInliner
 //

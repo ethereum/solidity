@@ -18,6 +18,8 @@
     let d := keccak256(x, y)
     sstore(d, 2)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: loadResolver
 //

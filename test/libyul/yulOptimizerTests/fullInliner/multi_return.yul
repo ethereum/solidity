@@ -6,6 +6,8 @@
 	let r, s := f(mload(0))
 	mstore(r, s)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullInliner
 //

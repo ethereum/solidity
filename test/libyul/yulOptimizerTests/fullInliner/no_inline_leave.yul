@@ -4,6 +4,8 @@
     let a1 := calldataload(0)
     f(a1)
 }
+// ====
+// EVMVersion: >=shanghai
 // ----
 // step: fullInliner
 //
