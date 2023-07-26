@@ -454,7 +454,8 @@ namespace
 	};
 
 	struct LetBindings {
-		std::unordered_map<std::string, SMTLib2Expression> bindings;
+		using BindingRecord = std::vector<SMTLib2Expression>;
+		std::unordered_map<std::string, BindingRecord> bindings;
 		std::vector<std::string> varNames;
 		std::vector<std::size_t> scopeBounds;
 
@@ -467,7 +468,8 @@ namespace
 		{
 			auto it = bindings.find(varName);
 			assert(it != bindings.end());
-			return it->second;
+			assert(!it->second.empty());
+			return it->second.back();
 		}
 
 		void pushScope()
@@ -483,7 +485,11 @@ namespace
 				auto const& varName = varNames.back();
 				auto it = bindings.find(varName);
 				assert(it != bindings.end());
-				bindings.erase(it);
+				auto & record = it->second;
+				record.pop_back();
+				if (record.empty()) {
+					bindings.erase(it);
+				}
 				varNames.pop_back();
 			}
 			scopeBounds.pop_back();
@@ -491,8 +497,12 @@ namespace
 
 		void addBinding(std::string name, SMTLib2Expression expression)
 		{
-			assert(!has(name));
-			bindings.insert({name, std::move(expression)});
+			auto it = bindings.find(name);
+			if (it == bindings.end()) {
+				bindings.insert({name, {std::move(expression)}});
+			} else {
+				it->second.push_back(std::move(expression));
+			}
 			varNames.push_back(std::move(name));
 		}
 	};
