@@ -307,8 +307,14 @@ namespace
 				auto it = ranges::find_if(m_smtlib2Interface.sortNames(), [&](auto const& entry) {
 					return entry.second == name || entry.second == quotedName;
 				});
-				if (it != m_smtlib2Interface.sortNames().end())
-					return std::make_shared<Sort>(*it->first);
+				if (it != m_smtlib2Interface.sortNames().end()) {
+					if (it->first->kind == Kind::Tuple) {
+						auto const* tupleSort = dynamic_cast<TupleSort const*>(it->first);
+						smtAssert(tupleSort);
+						// TODO: This is cumbersome, we should really store shared_pointer instead of raw pointer in the sortNames
+						return std::make_shared<TupleSort>(tupleSort->name, tupleSort->members, tupleSort->components);
+					}
+				}
 			} else {
 				auto const& args = asSubExpressions(expr);
 				if (asAtom(args[0]) == "Array")
@@ -340,11 +346,18 @@ namespace
 						std::vector<smtutil::Expression> arguments;
 						if (isAtom(_subExpr.front()))
 						{
-							std::string const& op = std::get<std::string>(_subExpr.front().data);
-							std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=", "=>"};
 							for (size_t i = 1; i < _subExpr.size(); i++)
 								arguments.emplace_back(toSMTUtilExpression(_subExpr[i]));
-							sort = contains(boolOperators, op) ? SortProvider::boolSort : arguments.back().sort;
+							std::string const& op = asAtom(_subExpr.front());
+							if (boost::starts_with(op, "struct")) {
+								auto sort = toSort(_subExpr.front());
+								auto sortSort = std::make_shared<SortSort>(sort);
+								return Expression::tuple_constructor(Expression(sortSort), arguments);
+							} else {
+								std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=",
+																	"=>"};
+								sort = contains(boolOperators, op) ? SortProvider::boolSort : arguments.back().sort;
+							}
 							return smtutil::Expression(op, std::move(arguments), std::move(sort));
 						} else {
 							// check for const array
