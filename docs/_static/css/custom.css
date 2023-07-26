@@ -16,6 +16,9 @@
 
     --navHeight: 4.5rem;
     --sideWidth: 300px;
+    --maxWidth: 80rem;
+    --desktopInlinePadding: 2rem;
+    --mobileInlinePadding: 1rem;
     --currentVersionHeight: 45px;
 
     text-rendering: geometricPrecision;
@@ -57,7 +60,6 @@ html,
 body,
 .wy-grid-for-nav {
     background-color: var(--color-f) !important;
-    position: relative;
 }
 
 body {
@@ -66,6 +68,10 @@ body {
 
 a {
     color: var(--color-c);
+}
+
+a, section {
+    scroll-margin-top: calc(var(--navHeight) + 2rem);
 }
 
 hr {
@@ -328,7 +334,6 @@ ul.current ul,
 
 .wy-breadcrumbs-aside a,
 .wy-breadcrumbs-aside a:visited,
-/* .wy-breadcrumbs-aside a:not(:visited), */
 a.fa.fa-github,
 a.fa.fa-github:visited,
 a.fa.fa-github:not(:visited),
@@ -362,10 +367,11 @@ footer .rst-footer-buttons {
 
 /* Site wrapper, and two children: header and rest */
 .unified-wrapper {
-    position: fixed;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     inset: 0;
-    top: var(--navHeight);
-    max-width: 80rem;
+    max-width: var(--maxWidth);
     margin-inline: auto;
 }
 
@@ -378,17 +384,16 @@ footer .rst-footer-buttons {
     display: flex;
     align-items: center;
     box-shadow: var(--shadow);
-    backdrop-filter: blur(3px);
 }
 
 .unified-header .inner-header {
     display: flex;
     margin-inline: auto;
     width: 100%;
-    max-width: 80rem;
+    max-width: var(--maxWidth);
     align-items: center;
     justify-content: space-between;
-    padding-inline: 2rem;
+    padding-inline: var(--desktopInlinePadding);
     padding-block: 1rem;
 }
 
@@ -399,6 +404,7 @@ footer .rst-footer-buttons {
     opacity: 95%;
     background: var(--color-f);
     z-index: -1;
+    backdrop-filter: blur(3px);
 }
 
 .unified-header .home-link {
@@ -445,6 +451,7 @@ footer .rst-footer-buttons {
     font-weight: 400;
     box-sizing: content-box;
     border-bottom: 1px solid transparent;
+    white-space: nowrap;
 }
 
 .unified-header .nav-link.active {
@@ -456,34 +463,36 @@ footer .rst-footer-buttons {
     border-bottom: 1px solid var(--color-c);
 }
 
-/* Rest: Grid, with two children: side bar, and content */
+/* Rest: Flex-row, with two children: side bar, and content */
 .unified-wrapper .wy-grid-for-nav {
     position: relative !important;
-    display: grid !important;
-    grid-template-columns: var(--sideWidth) 1fr;
-    gap: 1rem;
+    display: flex;
+    margin-inline: auto;
 }
 
 /* First child: Side bar */
 .unified-wrapper .wy-grid-for-nav nav.wy-nav-side {
-    position: relative;
+    position: fixed;
     display: flex;
     flex-direction: column;
     background: var(--color-f);
     color: var(--color-a);
-    top: 0;
-    bottom: 0;
-    left: 0;
     padding-bottom: unset !important;
-    min-height: unset !important;
     z-index: 10 !important;
-    max-width: var(--sideWidth) !important;
+    min-height: unset !important;
+    width: var(--sideWidth) !important;
+    top: var(--navHeight);
+    bottom: 0;
+    left: auto;
+    overflow: auto;
 }
 
 .unified-wrapper .wy-grid-for-nav nav.wy-nav-side .wy-side-scroll {
-    position: relative !important;
-    width: fit-content !important;
+    position: static !important;
+    width: unset !important;
+    overflow: unset !important;
     height: unset !important;
+    padding-bottom: 2rem;
 }
 
 .unified-wrapper .wy-grid-for-nav nav.wy-nav-side .wy-side-scroll .wy-side-nav-search {
@@ -517,15 +526,15 @@ footer .rst-footer-buttons {
 
 /* Second child: Content */
 .unified-wrapper .wy-grid-for-nav .wy-nav-content {
-    position: relative !important;
-    overflow-y: scroll !important;
     width: 100%;
-    max-width: 100vw !important;
-    padding-inline: 2rem;
+    max-width: unset !important; /* override */
+    padding-inline: var(--desktopInlinePadding);
+    margin-inline-start: var(--sideWidth);
+    margin-top: var(--navHeight);
 }
 
 .unified-wrapper .wy-grid-for-nav .wy-nav-content .rst-content {
-    max-width: 70ch;
+    max-width: min(70ch, calc(100vw -  2 * var(--desktopInlinePadding) - var(--sideWidth)));
     margin-inline: auto;
 }
 
@@ -566,29 +575,15 @@ footer .rst-footer-buttons {
     }
 
     .unified-header .inner-header {
-        padding-inline: 1rem;
-    }
-
-    .unified-wrapper .wy-grid-for-nav {
-        grid-template-columns: 1fr;
+        padding-inline: var(--mobileInlinePadding);
     }
 
     .unified-wrapper .wy-grid-for-nav nav.wy-nav-side {
-        position: absolute;
-        inset-block: 0;
-        inset-inline-start: 0;
-        width: var(--sideWidth);
-        overflow-y: scroll;
         transform: translateX(-100%);
         transition: transform 200ms ease-in-out;
     }
 
     /* Menu open styles */
-    .unified-wrapper .wy-grid-for-nav nav.wy-nav-side {
-        position: absolute;
-
-    }
-
     .unified-wrapper.menu-open nav.wy-nav-side {
         transform: translateX(0);
         transition: transform 200ms ease-in-out;
@@ -612,6 +607,18 @@ footer .rst-footer-buttons {
 
     a.skip-to-content {
         display: none;
+    }
+
+    .wy-nav-content {
+        margin-inline-start: 0 !important;
+    }
+
+    .rst-content {
+        max-width: 100% !important;
+    }
+
+    .wy-side-scroll {
+        padding-bottom: 0 !important;
     }
 }
 
@@ -781,9 +788,8 @@ button.mobile-menu-button {
     font-family: 'Overpass Mono', monospace;
 }
 
-.wy-breadcrumbs-aside {
-    display: block;
-    padding-top: 0;
+.wy-breadcrumbs>li {
+    padding-top: 8px;
 }
 
 .wy-breadcrumbs-aside a {
@@ -804,8 +810,9 @@ a.skip-to-content {
     padding: 2px 4px;
     font-size: 14px;
     margin-inline-end: auto;
-    margin-inline-start: 2rem;
+    margin-inline-start: 1.5rem;
     color: var(--color-a);
+    white-space: nowrap;
 }
 
 a.skip-to-content:focus {

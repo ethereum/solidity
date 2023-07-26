@@ -63,7 +63,7 @@ function buildHeader() {
   const skipToContent = document.createElement("a");
   skipToContent.classList.add("skip-to-content");
   skipToContent.href = "#content";
-  skipToContent.innerText = "{ skip to content }";
+  skipToContent.innerText = "{skip to content}";
   innerHeader.appendChild(skipToContent);
 
   const navBar = document.createElement("nav");
@@ -157,22 +157,6 @@ function updateGitHubEditPath() {
 }
 
 function initialize() {
-  // Preload fonts
-  const fonts = [
-    "overpass-regular.otf",
-    "overpass-bold.otf",
-    "overpass-mono-regular.otf",
-    "overpass-mono-bold.otf",
-  ];
-  fonts.forEach((filename) => {
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "font";
-    link.href = `https://solidity-docs-dev.readthedocs.io/en/latest/_static/fonts/${filename}`;
-    link.crossOrigin = "";
-    document.head.appendChild(link);
-  });
-
   // Rearrange DOM elements for styling
   rearrangeDom();
 
