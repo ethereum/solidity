@@ -325,8 +325,6 @@ namespace
 					return std::make_shared<ArraySort>(std::move(domainSort), std::move(codomainSort));
 				}
 			}
-			// FIXME: This is not correct, we need to track sorts properly!
-//			return SortProvider::boolSort;
 			smtAssert(false, "Unknown sort encountered");
 		}
 
