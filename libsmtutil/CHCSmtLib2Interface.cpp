@@ -299,12 +299,11 @@ namespace
 			auto it = ranges::find_if(m_smtlib2Interface.sortNames(), [&](auto const& entry) {
 				return entry.second == name || entry.second == quotedName;
 			});
-			if (it != m_smtlib2Interface.sortNames().end()) {
-				if (it->first->kind == Kind::Tuple) {
-					auto tupleSort = std::dynamic_pointer_cast<TupleSort>(it->first);
-					smtAssert(tupleSort);
-					return tupleSort;
-				}
+			if (it != m_smtlib2Interface.sortNames().end() && it->first->kind == Kind::Tuple)
+			{
+				auto tupleSort = std::dynamic_pointer_cast<TupleSort>(it->first);
+				smtAssert(tupleSort);
+				return tupleSort;
 			}
 			return {};
 		}
@@ -505,9 +504,8 @@ namespace
 				assert(it != bindings.end());
 				auto & record = it->second;
 				record.pop_back();
-				if (record.empty()) {
+				if (record.empty())
 					bindings.erase(it);
-				}
 				varNames.pop_back();
 			}
 			scopeBounds.pop_back();
@@ -516,11 +514,10 @@ namespace
 		void addBinding(std::string name, SMTLib2Expression expression)
 		{
 			auto it = bindings.find(name);
-			if (it == bindings.end()) {
+			if (it == bindings.end())
 				bindings.insert({name, {std::move(expression)}});
-			} else {
+			else
 				it->second.push_back(std::move(expression));
-			}
 			varNames.push_back(std::move(name));
 		}
 	};
