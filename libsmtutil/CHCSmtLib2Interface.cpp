@@ -294,6 +294,21 @@ namespace
 	public:
 		SMTLibTranslationContext(SMTLib2Interface const& _smtlib2Interface) : m_smtlib2Interface(_smtlib2Interface) {}
 
+		std::optional<SortPointer> lookupKnownTupleSort(std::string const& name) {
+			std::string quotedName = "|" + name + "|";
+			auto it = ranges::find_if(m_smtlib2Interface.sortNames(), [&](auto const& entry) {
+				return entry.second == name || entry.second == quotedName;
+			});
+			if (it != m_smtlib2Interface.sortNames().end()) {
+				if (it->first->kind == Kind::Tuple) {
+					auto tupleSort = std::dynamic_pointer_cast<TupleSort>(it->first);
+					smtAssert(tupleSort);
+					return tupleSort;
+				}
+			}
+			return {};
+		}
+
 		SortPointer toSort(SMTLib2Expression const& expr)
 		{
 			if (isAtom(expr))
@@ -303,17 +318,9 @@ namespace
 					return SortProvider::sintSort;
 				if (name == "Bool")
 					return SortProvider::boolSort;
-				std::string quotedName = "|" + name + "|";
-				auto it = ranges::find_if(m_smtlib2Interface.sortNames(), [&](auto const& entry) {
-					return entry.second == name || entry.second == quotedName;
-				});
-				if (it != m_smtlib2Interface.sortNames().end()) {
-					if (it->first->kind == Kind::Tuple) {
-						auto tupleSort = std::dynamic_pointer_cast<TupleSort>(it->first);
-						smtAssert(tupleSort);
-						return tupleSort;
-					}
-				}
+				auto tupleSort = lookupKnownTupleSort(name);
+				if (tupleSort)
+					return tupleSort.value();
 			} else {
 				auto const& args = asSubExpressions(expr);
 				if (asAtom(args[0]) == "Array")
@@ -346,13 +353,9 @@ namespace
 							for (size_t i = 1; i < _subExpr.size(); i++)
 								arguments.emplace_back(toSMTUtilExpression(_subExpr[i]));
 							std::string const& op = asAtom(_subExpr.front());
-							if (boost::starts_with(op, "struct")) {
-								auto sort = toSort(_subExpr.front());
-								auto sortSort = std::make_shared<SortSort>(sort);
-								return Expression::tuple_constructor(Expression(sortSort), arguments);
-							} else if (op.find("array_tuple") != std::string::npos) {
-								auto sort = toSort(_subExpr.front());
-								auto sortSort = std::make_shared<SortSort>(sort);
+							if (auto tupleSort = lookupKnownTupleSort(op); tupleSort)
+							{
+								auto sortSort = std::make_shared<SortSort>(tupleSort.value());
 								return Expression::tuple_constructor(Expression(sortSort), arguments);
 							} else {
 								std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=",
