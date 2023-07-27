@@ -351,6 +351,10 @@ namespace
 								auto sort = toSort(_subExpr.front());
 								auto sortSort = std::make_shared<SortSort>(sort);
 								return Expression::tuple_constructor(Expression(sortSort), arguments);
+							} else if (op.find("array_tuple") != std::string::npos) {
+								auto sort = toSort(_subExpr.front());
+								auto sortSort = std::make_shared<SortSort>(sort);
+								return Expression::tuple_constructor(Expression(sortSort), arguments);
 							} else {
 								std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=",
 																	"=>"};
