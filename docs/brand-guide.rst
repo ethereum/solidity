@@ -67,7 +67,7 @@ When using the Solidity logo, please respect the Solidity logo guidelines.
 Solidity Logo Guidelines
 ========================
 
-.. image:: logo.svg
+.. image:: solidity_logo.svg
   :width: 256
 
 *(Right click on the logo to download it.)*
