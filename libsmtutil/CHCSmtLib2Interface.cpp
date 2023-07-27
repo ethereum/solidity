@@ -358,8 +358,9 @@ namespace
 								std::set<std::string> boolOperators{"and", "or", "not", "=", "<", ">", "<=", ">=",
 																	"=>"};
 								sort = contains(boolOperators, op) ? SortProvider::boolSort : arguments.back().sort;
+								return smtutil::Expression(op, std::move(arguments), std::move(sort));
 							}
-							return smtutil::Expression(op, std::move(arguments), std::move(sort));
+							smtAssert(false, "Unhandled case in expression conversion");
 						} else {
 							// check for const array
 							if (_subExpr.size() == 2 and !isAtom(_subExpr[0]))
