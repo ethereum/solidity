@@ -128,11 +128,11 @@ void CHCSmtLib2Interface::declareVariable(std::string const& _name, SortPointer 
 	else if (!m_variables.count(_name))
 	{
 		m_variables.insert(_name);
-		write("(declare-var |" + _name + "| " + toSmtLibSort(*_sort) + ')');
+		write("(declare-var |" + _name + "| " + toSmtLibSort(_sort) + ')');
 	}
 }
 
-std::string CHCSmtLib2Interface::toSmtLibSort(Sort const& _sort)
+std::string CHCSmtLib2Interface::toSmtLibSort(SortPointer _sort)
 {
 	return m_smtlib2->toSmtLibSort(_sort);
 }
@@ -149,7 +149,7 @@ std::string CHCSmtLib2Interface::forall()
 	{
 		solAssert(sort, "");
 		if (sort->kind != Kind::Function)
-			vars += " (" + name + " " + toSmtLibSort(*sort) + ")";
+			vars += " (" + name + " " + toSmtLibSort(sort) + ")";
 	}
 	vars += ")";
 	return vars;
@@ -165,7 +165,7 @@ void CHCSmtLib2Interface::declareFunction(std::string const& _name, SortPointer 
 		auto fSort = std::dynamic_pointer_cast<FunctionSort>(_sort);
 		smtAssert(fSort->codomain);
 		std::string domain = toSmtLibSort(fSort->domain);
-		std::string codomain = toSmtLibSort(*fSort->codomain);
+		std::string codomain = toSmtLibSort(fSort->codomain);
 		m_variables.insert(_name);
 		write(
 			"(declare-fun |" +
@@ -309,10 +309,9 @@ namespace
 				});
 				if (it != m_smtlib2Interface.sortNames().end()) {
 					if (it->first->kind == Kind::Tuple) {
-						auto const* tupleSort = dynamic_cast<TupleSort const*>(it->first);
+						auto tupleSort = std::dynamic_pointer_cast<TupleSort>(it->first);
 						smtAssert(tupleSort);
-						// TODO: This is cumbersome, we should really store shared_pointer instead of raw pointer in the sortNames
-						return std::make_shared<TupleSort>(tupleSort->name, tupleSort->members, tupleSort->components);
+						return tupleSort;
 					}
 				}
 			} else {

@@ -83,7 +83,7 @@ void SMTLib2Interface::declareVariable(std::string const& _name, SortPointer con
 	else if (!m_variables.count(_name))
 	{
 		m_variables.emplace(_name, _sort);
-		write("(declare-fun |" + _name + "| () " + toSmtLibSort(*_sort) + ')');
+		write("(declare-fun |" + _name + "| () " + toSmtLibSort(_sort) + ')');
 	}
 }
 
@@ -96,7 +96,7 @@ void SMTLib2Interface::declareFunction(std::string const& _name, SortPointer con
 	{
 		auto const& fSort = std::dynamic_pointer_cast<FunctionSort>(_sort);
 		std::string domain = toSmtLibSort(fSort->domain);
-		std::string codomain = toSmtLibSort(*fSort->codomain);
+		std::string codomain = toSmtLibSort(fSort->codomain);
 		m_variables.emplace(_name, _sort);
 		write(
 			"(declare-fun |" +
@@ -246,7 +246,7 @@ std::string SMTLib2Interface::toSExpr(Expression const& _expr)
 		smtAssert(sortSort, "");
 		auto arraySort = std::dynamic_pointer_cast<ArraySort>(sortSort->inner);
 		smtAssert(arraySort, "");
-		sexpr += "(as const " + toSmtLibSort(*arraySort) + ") ";
+		sexpr += "(as const " + toSmtLibSort(arraySort) + ") ";
 		sexpr += toSExpr(_expr.arguments.at(1));
 	}
 	else if (_expr.name == "tuple_get")
@@ -275,14 +275,14 @@ std::string SMTLib2Interface::toSExpr(Expression const& _expr)
 	return sexpr;
 }
 
-std::string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
+std::string SMTLib2Interface::toSmtLibSort(SortPointer _sort)
 {
-	if (!m_sortNames.count(&_sort))
+	if (!m_sortNames.count(_sort))
 	{
-		auto smtLibName = sortToString(_sort);
-		m_sortNames[&_sort] = smtLibName;
+		auto smtLibName = sortToString(*_sort);
+		m_sortNames[_sort] = smtLibName;
 	}
-	return m_sortNames.at(&_sort);
+	return m_sortNames.at(_sort);
 }
 
 std::string SMTLib2Interface::sortToString(Sort const& _sort)
@@ -299,7 +299,7 @@ std::string SMTLib2Interface::sortToString(Sort const& _sort)
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
 		smtAssert(arraySort.domain && arraySort.range, "");
-		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
+		return "(Array " + toSmtLibSort(arraySort.domain) + ' ' + toSmtLibSort(arraySort.range) + ')';
 	}
 	case Kind::Tuple:
 	{
@@ -311,7 +311,7 @@ std::string SMTLib2Interface::sortToString(Sort const& _sort)
 			std::string decl("(declare-datatypes ((" + tupleName + " 0)) (((" + tupleName);
 			smtAssert(tupleSort.members.size() == tupleSort.components.size(), "");
 			for (unsigned i = 0; i < tupleSort.members.size(); ++i)
-				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(*tupleSort.components.at(i)) + ")";
+				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(tupleSort.components.at(i)) + ")";
 			decl += "))))";
 			m_userSorts.emplace_back(tupleName, decl);
 			write(decl);
@@ -328,7 +328,7 @@ std::string SMTLib2Interface::toSmtLibSort(std::vector<SortPointer> const& _sort
 {
 	std::string ssort("(");
 	for (auto const& sort: _sorts)
-		ssort += toSmtLibSort(*sort) + " ";
+		ssort += toSmtLibSort(sort) + " ";
 	ssort += ")";
 	return ssort;
 }

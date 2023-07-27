@@ -62,7 +62,7 @@ public:
 
 	// Used by CHCSmtLib2Interface
 	std::string toSExpr(Expression const& _expr);
-	std::string toSmtLibSort(Sort const& _sort);
+	std::string toSmtLibSort(SortPointer _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	std::map<std::string, SortPointer> variables() { return m_variables; }
@@ -90,9 +90,8 @@ private:
 	/// It needs to be a vector so that the declaration order is kept,
 	/// otherwise solvers cannot parse the queries.
 	std::vector<std::pair<std::string, std::string>> m_userSorts;
-	// TODO: Should this remember shared_pointer?
 	// TODO: Shouldn't sorts be unique objects?
-	std::map<Sort const*, std::string> m_sortNames;
+	std::map<SortPointer, std::string> m_sortNames;
 
 
 	std::vector<std::string> m_unhandledQueries;

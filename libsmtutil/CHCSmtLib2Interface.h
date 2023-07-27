@@ -66,7 +66,7 @@ public:
 	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
 
 private:
-	std::string toSmtLibSort(Sort const& _sort);
+	std::string toSmtLibSort(SortPointer _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	void writeHeader();
