@@ -207,7 +207,7 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 			solverBinary += " fp.xform.slice=false fp.xform.inline_linear=false fp.xform.inline_eager=false";
 			std::string extendedQuery = "(set-option :produce-proofs true)" + _input + "\n(get-proof)";
 			auto secondResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, extendedQuery);
-			if (secondResult.success)
+			if (secondResult.success and boost::starts_with(secondResult.responseOrErrorMessage, "unsat"))
 				return secondResult.responseOrErrorMessage;
 		}
 		return result.responseOrErrorMessage;
@@ -670,7 +670,8 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromZ3Proof(std::string c
 	ss >> answer;
 	solAssert(answer == "unsat");
 	SMTLib2Parser parser(ss);
-	solAssert(!parser.isEOF());
+	if (parser.isEOF()) // No proof from Z3
+		return {};
 	// For some reason Z3 outputs everything as a single s-expression
 	auto all = parser.parseExpression();
 	solAssert(parser.isEOF());
