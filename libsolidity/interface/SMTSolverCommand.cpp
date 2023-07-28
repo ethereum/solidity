@@ -53,7 +53,7 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 
 		auto queryFile = boost::filesystem::ofstream(queryFileName);
 
-		queryFile << _query;
+		queryFile << _query << std::flush;
 
 		std::vector<std::string> commandArgs;
 		boost::split(commandArgs, solverCommand, boost::is_any_of(" "));
