@@ -84,6 +84,8 @@ set(libsolidity_sources
     libsolidity/Metadata.cpp
     libsolidity/MemoryGuardTest.cpp
     libsolidity/MemoryGuardTest.h
+    libsolidity/NatspecJSONTest.cpp
+    libsolidity/NatspecJSONTest.h
     libsolidity/SemanticTest.cpp
     libsolidity/SemanticTest.h
     libsolidity/SemVerMatcher.cpp
