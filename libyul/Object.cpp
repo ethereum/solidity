@@ -72,7 +72,7 @@ std::string Object::toString(
 	for (auto const& obj: subObjects)
 		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
 
-	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner, true /* _indentEmptyLines */) + "\n}";
+	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
 
 Json::Value Data::toJson() const
