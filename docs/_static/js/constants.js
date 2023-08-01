@@ -1,11 +1,18 @@
+// Site URL
+const SITE_URL = "https://docs.soliditylang.org"
+const { origin, pathname } = location;
+const pathSplit = pathname.split("/");
+const rootPath = origin.includes(SITE_URL) && pathSplit.length > 3 ? pathSplit.splice(1, 2).join("/") : ''
+const ROOT_URL = `${origin}/${rootPath}`;
+
 // Color mode constants
 const [DARK, LIGHT] = ["dark", "light"];
-const LIGHT_LOGO_PATH = "_static/img/logo.svg";
-const DARK_LOGO_PATH = "_static/img/logo-dark.svg";
-const SUN_ICON_PATH = "_static/img/sun.svg";
-const MOON_ICON_PATH = "_static/img/moon.svg";
-const LIGHT_HAMBURGER_PATH = "_static/img/hamburger-light.svg";
-const DARK_HAMBURGER_PATH = "_static/img/hamburger-dark.svg";
+const LIGHT_LOGO_PATH = `${ROOT_URL}/_static/img/logo.svg`;
+const DARK_LOGO_PATH = `${ROOT_URL}/_static/img/logo-dark.svg`;
+const SUN_ICON_PATH = `${ROOT_URL}/_static/img/sun.svg`;
+const MOON_ICON_PATH = `${ROOT_URL}/_static/img/moon.svg`;
+const LIGHT_HAMBURGER_PATH = `${ROOT_URL}/_static/img/hamburger-light.svg`;
+const DARK_HAMBURGER_PATH = `${ROOT_URL}/_static/img/hamburger-dark.svg`;
 const COLOR_TOGGLE_ICON_CLASS = "color-toggle-icon";
 const SOLIDITY_LOGO_CLASS = "solidity-logo";
 const LS_COLOR_SCHEME = "color-scheme";
