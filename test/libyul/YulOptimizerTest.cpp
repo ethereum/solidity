@@ -31,6 +31,7 @@
 #include <liblangutil/Scanner.h>
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/StringUtils.h>
 
 #include <fstream>
 
@@ -86,7 +87,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
 			<< _linePrefix << "Result after the optimiser:" << endl;
-		printIndented(_stream, printed, _linePrefix + "  ");
+		printPrefixed(_stream, printed, _linePrefix + "  ");
 		return TestResult::FatalError;
 	}
 

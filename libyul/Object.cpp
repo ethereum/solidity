@@ -30,8 +30,6 @@
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/replace.hpp>
 
 #include <range/v3/view/transform.hpp>
 
@@ -39,18 +37,6 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
-
-namespace
-{
-
-std::string indent(std::string const& _input)
-{
-	if (_input.empty())
-		return _input;
-	return boost::replace_all_copy("    " + _input, "\n", "\n    ");
-}
-
-}
 
 std::string Data::toString(Dialect const*, DebugInfoSelection const&, CharStreamProvider const*) const
 {
@@ -86,7 +72,7 @@ std::string Object::toString(
 	for (auto const& obj: subObjects)
 		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
 
-	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
+	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner, true /* _indentEmptyLines */) + "\n}";
 }
 
 Json::Value Data::toJson() const

@@ -647,11 +647,8 @@ void SemanticTest::printSource(std::ostream& _stream, std::string const& _linePr
 			else
 			{
 				if (outputNames)
-					_stream << _linePrefix << "==== Source: " + name << " ====" << std::endl;
-				std::stringstream stream(source);
-				std::string line;
-				while (getline(stream, line))
-					_stream << _linePrefix << line << std::endl;
+					printPrefixed(_stream, "==== Source: " + name + " ====", _linePrefix);
+				printPrefixed(_stream, source, _linePrefix);
 			}
 		}
 }

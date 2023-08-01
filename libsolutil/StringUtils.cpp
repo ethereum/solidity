@@ -23,6 +23,10 @@
  */
 
 #include <libsolutil/StringUtils.h>
+
+#include <boost/algorithm/string/trim.hpp>
+
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -190,3 +194,34 @@ std::string solidity::util::formatNumberReadable(bigint const& _value, bool _use
 	return sign + str;
 }
 
+std::string solidity::util::prefixLines(
+	std::string const& _input,
+	std::string const& _prefix,
+	bool _trimPrefix
+)
+{
+	std::ostringstream output;
+	printPrefixed(output, _input, _prefix, _trimPrefix, false /* _ensureFinalNewline */);
+	return output.str();
+}
+
+void solidity::util::printPrefixed(
+	std::ostream& _output,
+	std::string const& _input,
+	std::string const& _prefix,
+	bool _trimPrefix,
+	bool _ensureFinalNewline
+)
+{
+	std::istringstream input(_input);
+	std::string line;
+	while (std::getline(input, line))
+	{
+		if (line.empty() && _trimPrefix)
+			_output << boost::trim_right_copy(_prefix);
+		else
+			_output << _prefix << line;
+		if (!input.eof() || _ensureFinalNewline)
+			_output << '\n';
+	}
+}

@@ -100,8 +100,9 @@ void NatspecJSONTest::printExpectedResult(std::ostream& _stream, std::string con
 	if (!m_expectedNatspecJSON.empty())
 	{
 		_stream << _linePrefix << "----" << std::endl;
-		printIndented(_stream, formatNatspecExpectations(m_expectedNatspecJSON), _linePrefix);
+		printPrefixed(_stream, formatNatspecExpectations(m_expectedNatspecJSON), _linePrefix);
 	}
+
 }
 
 void NatspecJSONTest::printObtainedResult(std::ostream& _stream, std::string const& _linePrefix, bool _formatted) const
@@ -114,7 +115,7 @@ void NatspecJSONTest::printObtainedResult(std::ostream& _stream, std::string con
 		_stream << _linePrefix << "----" << std::endl;
 		// TODO: Diff both versions and highlight differences.
 		// We should have a helper for doing that in newly defined test cases without much effort.
-		printIndented(_stream, formatNatspecExpectations(natspecJSON), _linePrefix);
+		printPrefixed(_stream, formatNatspecExpectations(natspecJSON), _linePrefix);
 	}
 }
 
