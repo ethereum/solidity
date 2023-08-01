@@ -8,8 +8,8 @@ contract LoopFor2 {
 	function testUnboundedForLoop(uint n) public {
 		require(n < b.length);
 		require(n < c.length);
-		require(n > 0 && n < 100);
-		b[0] = 900;
+		require(n > 0 && n < 10);
+		//b[0] = 900; // Removed because of Spacer's nondeterminism
 		uint[] storage a = b;
 		uint i;
 		while (i < n) {
@@ -25,8 +25,7 @@ contract LoopFor2 {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6368: (288-292): CHC: Out of bounds access might happen here.
-// Warning 6368: (459-463): CHC: Out of bounds access happens here.
-// Warning 6328: (452-471): CHC: Assertion violation happens here.
-// Warning 6328: (475-494): CHC: Assertion violation happens here.
+// Warning 6368: (506-510): CHC: Out of bounds access happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\na = []\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6328: (499-518): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6328: (522-541): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [0, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
 // Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
