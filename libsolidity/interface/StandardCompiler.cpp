@@ -1553,7 +1553,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ast", wildcardMatchesExperimental))
 	{
 		Json::Value sourceResult = Json::objectValue;
-		sourceResult["id"] = 1;
+		sourceResult["id"] = 0;
 		sourceResult["ast"] = stack.astJson();
 		output["sources"][sourceName] = sourceResult;
 	}
