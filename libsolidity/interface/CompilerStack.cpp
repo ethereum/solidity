@@ -247,6 +247,13 @@ void CompilerStack::setModelCheckerSettings(ModelCheckerSettings _settings)
 	m_modelCheckerSettings = _settings;
 }
 
+void CompilerStack::setCallback(ReadCallback::Callback _callback)
+{
+	if (m_stackState >= ParsedAndImported)
+		solThrow(CompilerError, "Must set callback before parsing.");
+	m_readFile = std::move(_callback);
+}
+
 void CompilerStack::setLibraries(map<string, util::h160> const& _libraries)
 {
 	if (m_stackState >= ParsedAndImported)

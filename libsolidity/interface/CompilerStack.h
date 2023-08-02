@@ -197,6 +197,10 @@ public:
 		m_requestedContractNames = _contractNames;
 	}
 
+	/// Sets callback for reading from files or interactinng with SMT solvers.
+	/// Must be set before parsing.
+	void setCallback(ReadCallback::Callback _callback);
+
 	/// Enable EVM Bytecode generation. This is enabled by default.
 	void enableEvmBytecodeGeneration(bool _enable = true) { m_generateEvmBytecode = _enable; }
 
