@@ -7,7 +7,7 @@ contract C {
 				y = 1;
 			++x;
 		} while (x < 3 || y == 1);
-        // BMC loop iteration setting is not enough to leave the loop
+		// BMC loop iteration setting is not enough to leave the loop
 		assert(x == 0); // should hold - no assumptions on value if didn't complete loop
 		assert(y == 0); // should hold - no assumptions on value if didn't complete loop
 	}

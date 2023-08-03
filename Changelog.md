@@ -10,6 +10,7 @@ Bugfixes:
  * AST: Fix wrong initial ID for Yul nodes in the AST.
  * NatSpec: Fix internal error when requesting userdoc or devdoc for a contract that emits an event defined in a foreign contract or interface.
  * SMTChecker: Fix encoding error that causes loops to unroll after completion.
+ * SMTChecker: Fix inconsistency on constant condition checks when ``while`` or ``for`` loops are unrolled before the condition check.
 
 
 ### 0.8.21 (2023-07-19)
