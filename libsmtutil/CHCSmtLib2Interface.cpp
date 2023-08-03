@@ -277,13 +277,19 @@ namespace
 
 	std::string const& asAtom(SMTLib2Expression const& expr)
 	{
-		assert(isAtom(expr));
+		solAssert(isAtom(expr));
 		return std::get<std::string>(expr.data);
 	}
 
 	auto const& asSubExpressions(SMTLib2Expression const& expr)
 	{
-		assert(!isAtom(expr));
+		solAssert(!isAtom(expr));
+		return std::get<SMTLib2Expression::args_t>(expr.data);
+	}
+
+	auto& asSubExpressions(SMTLib2Expression& expr)
+	{
+		solAssert(!isAtom(expr));
 		return std::get<SMTLib2Expression::args_t>(expr.data);
 	}
 
@@ -496,12 +502,12 @@ namespace
 
 		void popScope()
 		{
-			assert(scopeBounds.size() > 0);
+			smtAssert(scopeBounds.size() > 0);
 			auto bound = scopeBounds.back();
 			while (varNames.size() > bound) {
 				auto const& varName = varNames.back();
 				auto it = bindings.find(varName);
-				assert(it != bindings.end());
+				smtAssert(it != bindings.end());
 				auto & record = it->second;
 				record.pop_back();
 				if (record.empty())
@@ -526,28 +532,28 @@ namespace
 	{
 		if (isAtom(expr))
 		{
-			auto const& atom = std::get<std::string>(expr.data);
+			auto const& atom = asAtom(expr);
 			if (bindings.has(atom))
 				expr = bindings[atom];
 		}
 		else
 		{
-			auto& subexprs = std::get<SMTLib2Expression::args_t>(expr.data);
+			auto& subexprs = asSubExpressions(expr);
 			auto const& first = subexprs[0];
-			if (isAtom(first) && std::get<std::string>(first.data) == "let")
+			if (isAtom(first) && asAtom(first) == "let")
 			{
 				solAssert(!isAtom(subexprs[1]));
-				auto& bindingExpressions = std::get<SMTLib2Expression::args_t>(subexprs[1].data);
+				auto& bindingExpressions = asSubExpressions(subexprs[1]);
 				// process new bindings
 				std::vector<std::pair<std::string, SMTLib2Expression>> newBindings;
 				for (auto& binding: bindingExpressions)
 				{
 					solAssert(!isAtom(binding));
-					auto& bindingPair = std::get<SMTLib2Expression::args_t>(binding.data);
+					auto& bindingPair = asSubExpressions(binding);
 					solAssert(bindingPair.size() == 2);
 					solAssert(isAtom(bindingPair.at(0)));
 					inlineLetExpressions(bindingPair.at(1), bindings);
-					newBindings.emplace_back(std::get<std::string>(bindingPair.at(0).data), bindingPair.at(1));
+					newBindings.emplace_back(asAtom(bindingPair.at(0)), bindingPair.at(1));
 				}
 				bindings.pushScope();
 				for (auto&& [name, expr] : newBindings)
@@ -582,6 +588,7 @@ namespace
 	{
 		if (isAtom(_node))
 			return _node;
+		solAssert(!asSubExpressions(_node).empty());
 		return asSubExpressions(_node).back();
 	}
 }
@@ -615,7 +622,7 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromSMTLib2Expression(SMT
 	auto isHyperRes = [](SMTLib2Expression const& expr) {
 		if (isAtom(expr)) return false;
 		auto const& subExprs = asSubExpressions(expr);
-		assert(!subExprs.empty());
+		solAssert(!subExprs.empty());
 		auto const& op = subExprs.at(0);
 		if (isAtom(op)) return false;
 		auto const& opExprs = asSubExpressions(op);
