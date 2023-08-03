@@ -536,16 +536,16 @@ namespace
 			auto const& first = subexprs[0];
 			if (isAtom(first) && std::get<std::string>(first.data) == "let")
 			{
-				assert(!isAtom(subexprs[1]));
+				solAssert(!isAtom(subexprs[1]));
 				auto& bindingExpressions = std::get<SMTLib2Expression::args_t>(subexprs[1].data);
 				// process new bindings
 				std::vector<std::pair<std::string, SMTLib2Expression>> newBindings;
 				for (auto& binding: bindingExpressions)
 				{
-					assert(!isAtom(binding));
+					solAssert(!isAtom(binding));
 					auto& bindingPair = std::get<SMTLib2Expression::args_t>(binding.data);
-					assert(bindingPair.size() == 2);
-					assert(isAtom(bindingPair.at(0)));
+					solAssert(bindingPair.size() == 2);
+					solAssert(isAtom(bindingPair.at(0)));
 					inlineLetExpressions(bindingPair.at(1), bindings);
 					newBindings.emplace_back(std::get<std::string>(bindingPair.at(0).data), bindingPair.at(1));
 				}
