@@ -146,7 +146,7 @@ string SolidityExecutionFramework::addPreamble(string const& _sourceCode)
 {
 	// Silence compiler version warning
 	string preamble = "pragma solidity >=0.0;\n";
-	if (_sourceCode.find("// SPDX-License-Identifier:") == string::npos)
+	if (_sourceCode.find("SPDX-License-Identifier:") == string::npos)
 		preamble += "// SPDX-License-Identifier: unlicensed\n";
 	if (
 		solidity::test::CommonOptions::get().useABIEncoderV1 &&
