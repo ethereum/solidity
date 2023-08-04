@@ -43,15 +43,6 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 	m_parserErrorRecovery = _parserErrorRecovery;
 }
 
-TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
-{
-	setupCompiler();
-	parseAndAnalyze();
-	filterObtainedErrors();
-
-	return conclude(_stream, _linePrefix, _formatted);
-}
-
 string SyntaxTest::addPreamble(string const& _sourceCode)
 {
 	// Silence compiler version warning
@@ -83,6 +74,8 @@ void SyntaxTest::setupCompiler()
 
 void SyntaxTest::parseAndAnalyze()
 {
+	setupCompiler();
+
 	if (compiler().parse() && compiler().analyze())
 		try
 		{
@@ -112,6 +105,8 @@ void SyntaxTest::parseAndAnalyze()
 				-1
 			});
 		}
+
+	filterObtainedErrors();
 }
 
 void SyntaxTest::filterObtainedErrors()
