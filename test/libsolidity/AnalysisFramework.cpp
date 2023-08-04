@@ -21,6 +21,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/libsolidity/util/Common.h>
 #include <test/Common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -51,13 +52,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 )
 {
 	compiler().reset();
-	// Do not insert license if it is already present.
-	bool insertLicense = _insertLicenseAndVersionPragma && _source.find("SPDX-License-Identifier:") == string::npos;
-	compiler().setSources({{"",
-		string{_insertLicenseAndVersionPragma ? "pragma solidity >=0.0;\n" : ""} +
-		string{insertLicense ? "// SPDX-License-Identifier: GPL-3.0\n" : ""} +
-		_source
-	}});
+	compiler().setSources({{"", _insertLicenseAndVersionPragma ? withPreamble(_source) : _source}});
 	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compiler().setParserErrorRecovery(_allowRecoveryErrors);
 	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;

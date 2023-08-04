@@ -112,6 +112,8 @@ set(libsolidity_util_sources
     libsolidity/util/BytesUtils.cpp
     libsolidity/util/BytesUtilsTests.cpp
     libsolidity/util/BytesUtils.h
+    libsolidity/util/Common.cpp
+    libsolidity/util/Common.h
     libsolidity/util/ContractABIUtils.cpp
     libsolidity/util/ContractABIUtils.h
     libsolidity/util/SoltestErrors.h

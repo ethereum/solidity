@@ -18,6 +18,7 @@
 
 #include <test/libsolidity/SyntaxTest.h>
 
+#include <test/libsolidity/util/Common.h>
 #include <test/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -43,24 +44,10 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 	m_parserErrorRecovery = _parserErrorRecovery;
 }
 
-string SyntaxTest::addPreamble(string const& _sourceCode)
-{
-	// Silence compiler version warning
-	string preamble = "pragma solidity >=0.0;\n";
-	// NOTE: this check is intentionally loose to match weird cases.
-	// We can manually adjust a test case where this causes problem.
-	if (_sourceCode.find("SPDX-License-Identifier:") == string::npos)
-		preamble += "// SPDX-License-Identifier: GPL-3.0\n";
-	return preamble + _sourceCode;
-}
-
 void SyntaxTest::setupCompiler()
 {
 	compiler().reset();
-	auto sourcesWithPragma = m_sources.sources;
-	for (auto& source: sourcesWithPragma)
-		source.second = addPreamble(source.second);
-	compiler().setSources(sourcesWithPragma);
+	compiler().setSources(withPreamble(m_sources.sources));
 	compiler().setEVMVersion(m_evmVersion);
 	compiler().setParserErrorRecovery(m_parserErrorRecovery);
 	compiler().setOptimiserSettings(

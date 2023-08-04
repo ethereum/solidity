@@ -19,6 +19,7 @@ add_executable(isoltest
 	../TestCase.cpp
 	../TestCaseReader.cpp
 	../libsolidity/util/BytesUtils.cpp
+	../libsolidity/util/Common.cpp
 	../libsolidity/util/ContractABIUtils.cpp
 	../libsolidity/util/TestFileParser.cpp
 	../libsolidity/util/TestFunctionCall.cpp
