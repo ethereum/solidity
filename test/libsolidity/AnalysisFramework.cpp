@@ -70,7 +70,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 
 	ErrorList errors = filteredErrors(_reportWarnings);
 	if (errors.size() > 1 && !_allowMultipleErrors)
-		BOOST_FAIL("Multiple errors found: " + formatErrors(compiler().errors()));
+		BOOST_FAIL("Multiple errors found: " + formatErrors(errors));
 
 	return make_pair(&compiler().ast(""), std::move(errors));
 }
