@@ -173,22 +173,6 @@ bool AnalysisFramework::stageSuccessful(PipelineStage _stage) const
 	unreachable();
 }
 
-SourceUnit const* AnalysisFramework::parseAndAnalyse(std::string const& _source)
-{
-	auto sourceAndError = parseAnalyseAndReturnError(_source);
-	BOOST_REQUIRE(!!sourceAndError.first);
-	std::string message;
-	if (!sourceAndError.second.empty())
-		message = "Unexpected error: " + formatErrors(compiler().errors());
-	BOOST_REQUIRE_MESSAGE(sourceAndError.second.empty(), message);
-	return sourceAndError.first;
-}
-
-bool AnalysisFramework::success(std::string const& _source)
-{
-	return parseAnalyseAndReturnError(_source).second.empty();
-}
-
 ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warning, bool _allowMultiple)
 {
 	auto sourceAndErrors = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);

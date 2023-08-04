@@ -58,8 +58,6 @@ protected:
 	);
 	virtual ~AnalysisFramework() = default;
 
-	SourceUnit const* parseAndAnalyse(std::string const& _source);
-	bool success(std::string const& _source);
 	langutil::ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
 
 public:
@@ -189,16 +187,19 @@ CHECK_ERROR_OR_WARNING(text, Warning, std::vector<std::string>{(substring)}, tru
 CHECK_ERROR_OR_WARNING(text, Warning, substrings, true, true)
 
 // [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
-#define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
+#define CHECK_SUCCESS(text) do { \
+	auto [ast, errors] = parseAnalyseAndReturnError((text)); \
+	BOOST_CHECK(errors.empty()); \
+} while(0)
 
 #define CHECK_SUCCESS_NO_WARNINGS(text) \
 do \
 { \
-	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
+	auto [ast, errors] = parseAnalyseAndReturnError((text), true); \
 	std::string message; \
-	if (!sourceAndError.second.empty()) \
-		message = formatErrors(compiler().errors());\
-	BOOST_CHECK_MESSAGE(sourceAndError.second.empty(), message); \
+	if (!errors.empty()) \
+		message = formatErrors(errors);\
+	BOOST_CHECK_MESSAGE(errors.empty(), message); \
 } \
 while(0)
 
