@@ -63,14 +63,14 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
 	if (!compiler().parse())
 	{
-		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors());
+		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors(compiler().errors()));
 	}
 
 	compiler().analyze();
 
 	ErrorList errors = filteredErrors(_reportWarnings);
 	if (errors.size() > 1 && !_allowMultipleErrors)
-		BOOST_FAIL("Multiple errors found: " + formatErrors());
+		BOOST_FAIL("Multiple errors found: " + formatErrors(compiler().errors()));
 
 	return make_pair(&compiler().ast(""), std::move(errors));
 }
@@ -123,7 +123,7 @@ SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
 	BOOST_REQUIRE(!!sourceAndError.first);
 	string message;
 	if (!sourceAndError.second.empty())
-		message = "Unexpected error: " + formatErrors();
+		message = "Unexpected error: " + formatErrors(compiler().errors());
 	BOOST_REQUIRE_MESSAGE(sourceAndError.second.empty(), message);
 	return sourceAndError.first;
 }
@@ -142,12 +142,13 @@ ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warni
 }
 
 string AnalysisFramework::formatErrors(
+	langutil::ErrorList _errors,
 	bool _colored,
 	bool _withErrorIds
 ) const
 {
 	string message;
-	for (auto const& error: compiler().errors())
+	for (auto const& error: _errors)
 		message += formatError(*error, _colored, _withErrorIds);
 	return message;
 }
