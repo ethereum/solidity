@@ -42,26 +42,20 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-std::pair<SourceUnit const*, ErrorList>
-AnalysisFramework::parseAnalyseAndReturnError(
+std::pair<SourceUnit const*, ErrorList> AnalysisFramework::runAnalysisAndExpectNoParsingErrors(
 	std::string const& _source,
-	bool _reportWarnings,
-	bool _insertLicenseAndVersionPragma,
-	bool _allowMultipleErrors
+	bool _includeWarningsAndInfos,
+	bool _addPreamble,
+	bool _allowMultiple
 )
 {
-	compiler().reset();
-	compiler().setSources({{"", _insertLicenseAndVersionPragma ? withPreamble(_source) : _source}});
-	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
-	if (!compiler().parse())
-	{
-		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors(compiler().errors()));
-	}
+	runFramework(_addPreamble ? withPreamble(_source) : _source, PipelineStage::Analysis);
 
-	compiler().analyze();
+	if (!stageSuccessful(PipelineStage::Parsing))
+		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors(m_compiler->errors()));
 
-	ErrorList errors = filteredErrors(_reportWarnings);
-	if (errors.size() > 1 && !_allowMultipleErrors)
+	ErrorList errors = filteredErrors(_includeWarningsAndInfos);
+	if (errors.size() > 1 && !_allowMultiple)
 		BOOST_FAIL("Multiple errors found: " + formatErrors(errors));
 
 	return make_pair(&compiler().ast(""), std::move(errors));
@@ -173,12 +167,16 @@ bool AnalysisFramework::stageSuccessful(PipelineStage _stage) const
 	unreachable();
 }
 
-ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warning, bool _allowMultiple)
+ErrorList AnalysisFramework::runAnalysisAndExpectError(
+	std::string const& _source,
+	bool _includeWarningsAndInfos,
+	bool _allowMultiple
+)
 {
-	auto sourceAndErrors = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
-	BOOST_REQUIRE(!sourceAndErrors.second.empty());
-	BOOST_REQUIRE_MESSAGE(!!sourceAndErrors.first, "Expected error, but no error happened.");
-	return sourceAndErrors.second;
+	auto [ast, errors] = runAnalysisAndExpectNoParsingErrors(_source, _includeWarningsAndInfos, true, _allowMultiple);
+	BOOST_REQUIRE(!errors.empty());
+	BOOST_REQUIRE_MESSAGE(ast, "Expected error, but no error happened.");
+	return errors;
 }
 
 std::string AnalysisFramework::formatErrors(

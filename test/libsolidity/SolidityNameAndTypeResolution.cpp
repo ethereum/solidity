@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 			function functionName(bytes32 input) public virtual returns (bytes32 out);
 		}
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 		abstract contract base { function foo() public virtual; }
 		contract derived is base { function foo() public override {} }
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 		abstract contract base { function foo(bool) public virtual; }
 		abstract contract derived is base { function foo(uint) public {} }
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
 		abstract contract base { function foo() public virtual; }
 		abstract contract foo is base { constructor() {} }
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 			}
 		}
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 			}
 		}
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			}
 		}
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 			}
 		}
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(external_struct_signatures)
 	// Ignore analysis errors. This test only checks that correct signatures
 	// are generated for external structs, but they are not yet supported
 	// in code generation and therefore cause an error in the TypeChecker.
-	SourceUnit const* sourceUnit = parseAnalyseAndReturnError(text, false, true, true).first;
+	SourceUnit const* sourceUnit = runAnalysisAndExpectNoParsingErrors(text, false, true, true).first;
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(external_struct_signatures_in_libraries)
 	// Ignore analysis errors. This test only checks that correct signatures
 	// are generated for external structs, but calldata structs are not yet supported
 	// in code generation and therefore cause an error in the TypeChecker.
-	SourceUnit const* sourceUnit = parseAnalyseAndReturnError(text, false, true, true).first;
+	SourceUnit const* sourceUnit = runAnalysisAndExpectNoParsingErrors(text, false, true, true).first;
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(struct_with_mapping_in_library)
 			function f(X storage x) external {}
 		}
 	)";
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 		}
 	)";
 
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 		}
 	)";
 
-	auto [sourceUnit, errors] = parseAnalyseAndReturnError(text);
+	auto [sourceUnit, errors] = runAnalysisAndExpectNoParsingErrors(text);
 	soltestAssert(sourceUnit);
 	soltestAssert(errors.empty(), "Unexpected error: " + formatErrors(errors));
 
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 		// SPDX-License-Identifier: GPL-3.0
 		contract C {}
 	)";
-	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);
+	auto sourceAndError = runAnalysisAndExpectNoParsingErrors(text, true, false);
 	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
 	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file does not specify required compiler version!"));
