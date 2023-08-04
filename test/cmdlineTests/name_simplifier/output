@@ -101,7 +101,7 @@ object "C_59" {
                         mstore(add(memPtr_1, _3), "longstringlongstringlongstringlo")
                         mstore(add(memPtr_1, _9), "ngstringlongstringlongstringlong")
                         let _11 := 96
-                        mstore(add(memPtr_1, _11), "stringlongstringlongstringlongst")
+                        mstore(add(memPtr_1, 96), "stringlongstringlongstringlongst")
                         mstore(add(memPtr_1, 128), "ring")
                         let memPos := mload(_9)
                         mstore(memPos, _10)
@@ -113,8 +113,8 @@ object "C_59" {
                         {
                             mstore(add(add(memPos, i), _11), mload(add(add(memPtr_1, i), _3)))
                         }
-                        mstore(add(add(memPos, length), _11), 0)
-                        return(memPos, add(sub(add(memPos, and(add(length, 31), _8)), memPos), _11))
+                        mstore(add(add(memPos, length), 96), 0)
+                        return(memPos, add(sub(add(memPos, and(add(length, 31), _8)), memPos), 96))
                     }
                 }
                 revert(0, 0)

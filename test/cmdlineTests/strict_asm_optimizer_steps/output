@@ -15,7 +15,6 @@ object "C_6" {
         code {
             {
                 mstore(64, 128)
-                pop(iszero(lt(calldatasize(), 4)))
                 sstore(0, iszero(calldatasize()))
                 revert(0, 0)
             }

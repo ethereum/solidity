@@ -714,19 +714,19 @@ object \"C_54\" {
                         if _7
                         {
                             let _8 := 32
-                            if gt(_8, returndatasize()) { _8 := returndatasize() }
+                            if gt(32, returndatasize()) { _8 := returndatasize() }
                             /// @src 0:79:435  \"contract C...\"
                             let newFreePtr := add(_6, and(add(_8, 31), not(31)))
                             if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _6))
                             {
-                                mstore(expr, shl(224, 0x4e487b71))
+                                mstore(0, shl(224, 0x4e487b71))
                                 mstore(4, 0x41)
-                                revert(expr, 0x24)
+                                revert(0, 0x24)
                             }
                             mstore(_2, newFreePtr)
                             if slt(sub(/** @src 0:410:418  \"this.f()\" */ add(_6, _8), /** @src 0:79:435  \"contract C...\" */ _6), /** @src 0:410:418  \"this.f()\" */ 32)
                             /// @src 0:79:435  \"contract C...\"
-                            { revert(expr, expr) }
+                            { revert(0, 0) }
                             /// @src 0:410:418  \"this.f()\"
                             expr := /** @src 0:79:435  \"contract C...\" */ mload(_6)
                         }
@@ -1559,19 +1559,19 @@ object \"D_72\" {
                         if _7
                         {
                             let _8 := 32
-                            if gt(_8, returndatasize()) { _8 := returndatasize() }
+                            if gt(32, returndatasize()) { _8 := returndatasize() }
                             /// @src 1:91:166  \"contract D is C(3)...\"
                             let newFreePtr := add(_6, and(add(_8, 31), not(31)))
                             if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _6))
                             {
-                                mstore(expr, shl(224, 0x4e487b71))
+                                mstore(0, shl(224, 0x4e487b71))
                                 mstore(4, 0x41)
-                                revert(expr, 0x24)
+                                revert(0, 0x24)
                             }
                             mstore(_2, newFreePtr)
                             if slt(sub(/** @src 0:410:418  \"this.f()\" */ add(_6, _8), /** @src 1:91:166  \"contract D is C(3)...\" */ _6), /** @src 0:410:418  \"this.f()\" */ 32)
                             /// @src 1:91:166  \"contract D is C(3)...\"
-                            { revert(expr, expr) }
+                            { revert(0, 0) }
                             /// @src 0:410:418  \"this.f()\"
                             expr := /** @src 1:91:166  \"contract D is C(3)...\" */ mload(_6)
                         }

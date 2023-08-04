@@ -27,4 +27,4 @@ contract test {
 // ====
 // EVMVersion: =shanghai
 // ----
-// Warning 3860: (20321-20415): Contract initcode size is 60893 bytes and exceeds 49152 bytes (a limit introduced in Shanghai). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+// Warning 3860: (20321-20415): Contract initcode size is 60896 bytes and exceeds 49152 bytes (a limit introduced in Shanghai). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
