@@ -68,7 +68,7 @@ AnalysisFramework::parseAnalyseAndReturnError(
 
 	compiler().analyze();
 
-	ErrorList errors = filterErrors(compiler().errors(), _reportWarnings);
+	ErrorList errors = filteredErrors(_reportWarnings);
 	if (errors.size() > 1 && !_allowMultipleErrors)
 		BOOST_FAIL("Multiple errors found: " + formatErrors());
 
