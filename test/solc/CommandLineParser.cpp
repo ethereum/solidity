@@ -116,7 +116,6 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--include-path=/home/user/include",
 			"--allow-paths=/tmp,/home,project,../contracts",
 			"--ignore-missing",
-			"--error-recovery",
 			"--output-dir=/tmp/out",
 			"--overwrite",
 			"--evm-version=spuriousDragon",
@@ -177,7 +176,6 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
 		expectedOptions.input.ignoreMissingFiles = true;
-		expectedOptions.input.errorRecovery = (inputMode == InputMode::Compiler);
 		expectedOptions.output.dir = "/tmp/out";
 		expectedOptions.output.overwriteFiles = true;
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
@@ -405,7 +403,6 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 {
 	map<string, vector<string>> invalidOptionInputModeCombinations = {
 		// TODO: This should eventually contain all options.
-		{"--error-recovery", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--metadata-literal", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},

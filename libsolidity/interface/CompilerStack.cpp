@@ -352,7 +352,7 @@ bool CompilerStack::parse()
 	if (SemVerVersion{std::string(VersionString)}.isPrerelease())
 		m_errorReporter.warning(3805_error, "This is a pre-release compiler version, please do not use it in production.");
 
-	Parser parser{m_errorReporter, m_evmVersion, m_parserErrorRecovery};
+	Parser parser{m_errorReporter, m_evmVersion};
 
 	std::vector<std::string> sourcesToParse;
 	for (auto const& s: m_sources)
@@ -1104,7 +1104,7 @@ SourceUnit const& CompilerStack::ast(std::string const& _sourceName) const
 {
 	if (m_stackState < Parsed)
 		solThrow(CompilerError, "Parsing not yet performed.");
-	if (!source(_sourceName).ast && !m_parserErrorRecovery)
+	if (!source(_sourceName).ast)
 		solThrow(CompilerError, "Parsing was not successful.");
 
 	return *source(_sourceName).ast;

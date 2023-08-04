@@ -159,14 +159,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			SemVerMatchExpressionParser parser(tokens, literals);
 			SemVerMatchExpression matchExpression = parser.parse();
 			static SemVerVersion const currentVersion{std::string(VersionString)};
-			if (!matchExpression.matches(currentVersion))
-				m_errorReporter.syntaxError(
-					3997_error,
-					_pragma.location(),
-					"Source file requires different compiler version (current compiler is " +
-					std::string(VersionString) + ") - note that nightly builds are considered to be "
-					"strictly less than the released version"
-				);
+			solAssert(matchExpression.matches(currentVersion));
 			m_versionPragmaFound = true;
 		}
 		catch (SemVerError const&)

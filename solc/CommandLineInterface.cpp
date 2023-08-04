@@ -792,10 +792,7 @@ void CommandLineInterface::compile()
 			}
 		}
 		else
-		{
 			m_compiler->setSources(m_fileReader.sourceUnits());
-			m_compiler->setParserErrorRecovery(m_options.input.errorRecovery);
-		}
 
 		bool successful = m_compiler->compile(m_options.output.stopAfter);
 

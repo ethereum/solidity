@@ -48,8 +48,7 @@ protected:
 		std::string const& _source,
 		bool _reportWarnings = false,
 		bool _insertLicenseAndVersionPragma = true,
-		bool _allowMultipleErrors = false,
-		bool _allowRecoveryErrors = false
+		bool _allowMultipleErrors = false
 	);
 	virtual ~AnalysisFramework() = default;
 
