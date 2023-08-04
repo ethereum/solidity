@@ -75,6 +75,11 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	return make_pair(&compiler().ast(""), std::move(errors));
 }
 
+std::unique_ptr<CompilerStack> AnalysisFramework::createStack() const
+{
+	return std::make_unique<CompilerStack>();
+}
+
 ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarningsAndInfos) const
 {
 	ErrorList errors;
