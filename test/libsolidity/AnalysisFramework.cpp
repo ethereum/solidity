@@ -141,17 +141,30 @@ ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warni
 	return sourceAndErrors.second;
 }
 
-string AnalysisFramework::formatErrors() const
+string AnalysisFramework::formatErrors(
+	bool _colored,
+	bool _withErrorIds
+) const
 {
 	string message;
 	for (auto const& error: compiler().errors())
-		message += formatError(*error);
+		message += formatError(*error, _colored, _withErrorIds);
 	return message;
 }
 
-string AnalysisFramework::formatError(Error const& _error) const
+string AnalysisFramework::formatError(
+	Error const& _error,
+	bool _colored,
+	bool _withErrorIds
+) const
 {
-	return SourceReferenceFormatter::formatErrorInformation(_error, *m_compiler);
+	return SourceReferenceFormatter::formatExceptionInformation(
+		_error,
+		_error.type(),
+		*m_compiler,
+		_colored,
+		_withErrorIds
+	);
 }
 
 ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)

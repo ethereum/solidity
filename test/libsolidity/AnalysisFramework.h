@@ -57,8 +57,15 @@ protected:
 	bool success(std::string const& _source);
 	langutil::ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
 
-	std::string formatErrors() const;
-	std::string formatError(langutil::Error const& _error) const;
+	std::string formatErrors(
+		bool _colored = false,
+		bool _withErrorIds = false
+	) const;
+	std::string formatError(
+		langutil::Error const& _error,
+		bool _colored = false,
+		bool _withErrorIds = false
+	) const;
 
 	static ContractDefinition const* retrieveContractByName(SourceUnit const& _source, std::string const& _name);
 	static FunctionTypePointer retrieveFunctionBySignature(
