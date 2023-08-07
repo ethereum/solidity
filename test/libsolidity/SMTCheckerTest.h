@@ -38,8 +38,7 @@ public:
 	}
 	SMTCheckerTest(std::string const& _filename);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
-
+	void setupCompiler() override;
 	void filterObtainedErrors() override;
 
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;

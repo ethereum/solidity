@@ -47,13 +47,11 @@ public:
 	}
 	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery = false);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
-
 protected:
 	/// Returns @param _sourceCode prefixed with the version pragma and the SPDX license identifier.
 	static std::string addPreamble(std::string const& _sourceCode);
 
-	void setupCompiler();
+	virtual void setupCompiler();
 	void parseAndAnalyze() override;
 	virtual void filterObtainedErrors();
 

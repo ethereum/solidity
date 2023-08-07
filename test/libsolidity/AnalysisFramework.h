@@ -76,7 +76,7 @@ protected:
 	solidity::frontend::CompilerStack& compiler()
 	{
 		if (!m_compiler)
-			m_compiler = std::make_unique<solidity::frontend::CompilerStack>();
+			m_compiler = createStack();
 		return *m_compiler;
 	}
 
@@ -84,9 +84,13 @@ protected:
 	solidity::frontend::CompilerStack const& compiler() const
 	{
 		if (!m_compiler)
-			m_compiler = std::make_unique<solidity::frontend::CompilerStack>();
+			m_compiler = createStack();
 		return *m_compiler;
 	}
+
+	/// Creates a new instance of @p CompilerStack. Override if your test case needs to pass in
+	/// custom constructor arguments.
+	virtual std::unique_ptr<CompilerStack> createStack() const;
 
 private:
 	mutable std::unique_ptr<solidity::frontend::CompilerStack> m_compiler;
