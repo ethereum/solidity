@@ -38,6 +38,8 @@ using namespace yul;
 
 void MemoryGuardTest::setupCompiler(CompilerStack& _compiler)
 {
+	AnalysisFramework::setupCompiler(_compiler);
+
 	_compiler.setViaIR(true);
 	_compiler.setOptimiserSettings(OptimiserSettings::none());
 }
