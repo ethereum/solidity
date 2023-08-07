@@ -715,8 +715,9 @@ ASTPointer<EnumValue> Parser::parseEnumValue()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<EnumValue>(expectIdentifierToken());
+	return nodeFactory.createNode<EnumValue>(expectIdentifierToken(), documentation);
 }
 
 ASTPointer<EnumDefinition> Parser::parseEnumDefinition()

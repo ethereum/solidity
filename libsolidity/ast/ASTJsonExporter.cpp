@@ -414,6 +414,7 @@ bool ASTJsonExporter::visit(EnumValue const& _node)
 	setJsonNode(_node, "EnumValue", {
 		make_pair("name", _node.name()),
 		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
+		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue)
 	});
 	return false;
 }
