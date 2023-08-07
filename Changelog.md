@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Yul Optimizer: If ``PUSH0`` is supported, favor zero literals over storing zero values in variables.
 
 
 Bugfixes:

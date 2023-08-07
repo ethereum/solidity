@@ -47,31 +47,30 @@ object "D_16" {
                 mstore(64, _1)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _2 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_2)))
+                    if eq(0x26121ff0, shr(224, calldataload(0)))
                     {
-                        if callvalue() { revert(_2, _2) }
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
                         /// @src 0:149:156  "new C()"
-                        let _3 := datasize("C_3")
-                        let _4 := add(_1, _3)
-                        if or(gt(_4, 0xffffffffffffffff), lt(_4, _1))
+                        let _2 := datasize("C_3")
+                        let _3 := add(_1, _2)
+                        if or(gt(_3, 0xffffffffffffffff), lt(_3, _1))
                         {
                             /// @src 0:96:165  "contract D {..."
-                            mstore(_2, shl(224, 0x4e487b71))
+                            mstore(0, shl(224, 0x4e487b71))
                             mstore(4, 0x41)
-                            revert(_2, 0x24)
+                            revert(0, 0x24)
                         }
                         /// @src 0:149:156  "new C()"
-                        datacopy(_1, dataoffset("C_3"), _3)
-                        if iszero(create(/** @src 0:96:165  "contract D {..." */ _2, /** @src 0:149:156  "new C()" */ _1, sub(_4, _1)))
+                        datacopy(_1, dataoffset("C_3"), _2)
+                        if iszero(create(/** @src 0:96:165  "contract D {..." */ 0, /** @src 0:149:156  "new C()" */ _1, sub(_3, _1)))
                         {
                             /// @src 0:96:165  "contract D {..."
                             let pos := mload(64)
-                            returndatacopy(pos, _2, returndatasize())
+                            returndatacopy(pos, 0, returndatasize())
                             revert(pos, returndatasize())
                         }
-                        return(_2, _2)
+                        return(0, 0)
                     }
                 }
                 revert(0, 0)
