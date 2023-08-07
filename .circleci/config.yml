@@ -265,6 +265,16 @@ commands:
             - test/soltest
             - test/tools/solfuzzer
 
+  persist_executables_to_workspace_osx:
+    description: Persist compiled target executables to workspace on macOS
+    steps:
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/solc/solc
+            - build/test/soltest
+            - build/test/tools/solfuzzer
+
   persist_ossfuzz_executables_to_workspace:
     description: Persist compiled OSSFUZZ executables to workspace
     steps:
@@ -1095,12 +1105,7 @@ jobs:
       - run_build
       - store_artifacts_solc
       - store_artifacts_yul_phaser
-      - persist_to_workspace:
-          root: .
-          paths:
-            - build/solc/solc
-            - build/test/soltest
-            - build/test/tools/solfuzzer
+      - persist_executables_to_workspace_osx
       - matrix_notify_failure_unless_pr
 
   t_osx_soltest: &t_osx_soltest
