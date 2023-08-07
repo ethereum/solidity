@@ -179,47 +179,67 @@ commands:
           paths:
             - << parameters.install_path >>
 
-defaults:
-
   # --------------------------------------------------------------------------
-  # Build Templates
+  # Build Commands
 
-  - setup_prerelease_commit_hash: &setup_prerelease_commit_hash
-      name: Store commit hash and prerelease
-      command: |
-        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
-        echo -n "$CIRCLE_SHA1" > commit_hash.txt
+  setup_prerelease_commit_hash:
+    steps:
+      - run:
+          name: Store commit hash and prerelease
+          command: |
+            if [[ $CIRCLE_BRANCH == release || -n $CIRCLE_TAG ]]; then
+              echo -n > prerelease.txt;
+            else
+              date -u +"nightly.%Y.%-m.%-d" > prerelease.txt;
+            fi
+            echo -n "$CIRCLE_SHA1" > commit_hash.txt
 
-  - run_build: &run_build
-      name: Build
-      command: scripts/ci/build.sh
+  run_build:
+    steps:
+      - run:
+          name: Build
+          command: scripts/ci/build.sh
 
-  - run_build_ossfuzz: &run_build_ossfuzz
-      name: Build_ossfuzz
-      command: scripts/ci/build_ossfuzz.sh
+  run_build_ossfuzz:
+    steps:
+      - run:
+          name: Build_ossfuzz
+          command: scripts/ci/build_ossfuzz.sh
 
-  - run_proofs: &run_proofs
-      name: Correctness proofs for optimization rules
-      command: scripts/run_proofs.sh
+  run_proofs:
+    steps:
+      - run:
+          name: Correctness proofs for optimization rules
+          command: scripts/run_proofs.sh
 
-  - run_soltest: &run_soltest
-      name: soltest
-      no_output_timeout: 30m
-      command: ./.circleci/soltest.sh
+  run_soltest:
+    steps:
+      - run:
+          name: soltest
+          no_output_timeout: 30m
+          command: ./.circleci/soltest.sh
 
-  - run_soltest_all: &run_soltest_all
-      name: soltest_all
-      no_output_timeout: 30m
-      command: ./.circleci/soltest_all.sh
+  run_soltest_all:
+    steps:
+      - run:
+          name: soltest_all
+          no_output_timeout: 30m
+          command: ./.circleci/soltest_all.sh
 
-  - run_cmdline_tests: &run_cmdline_tests
-      name: command line tests
-      no_output_timeout: 30m
-      command: .circleci/parallel_cli_tests.py
+  run_cmdline_tests:
+    steps:
+      - run:
+          name: command line tests
+          no_output_timeout: 30m
+          command: .circleci/parallel_cli_tests.py
 
-  - run_docs_pragma_min_version: &run_docs_pragma_min_version
-      name: docs pragma version check
-      command: ./scripts/docs_version_pragma_check.sh
+  run_docs_pragma_min_version:
+    steps:
+      - run:
+         name: docs pragma version check
+         command: ./scripts/docs_version_pragma_check.sh
+
+defaults:
 
   # --------------------------------------------------------------------------
   # Matrix templates
@@ -298,7 +318,7 @@ defaults:
         # NOTE: Different build jobs produce different soltest executables (release/debug,
         # clang/gcc, windows/linux/macos, etc.). The executable used by these steps comes from the
         # attached workspace and we only see the items added to the workspace by jobs we depend on.
-        - run: *run_soltest
+        - run_soltest
         - store_test_results:
             path: test_results/
         - store_artifacts: *artifacts_test_results
@@ -320,7 +340,7 @@ defaults:
   - steps_build: &steps_build
       steps:
         - checkout
-        - run: *run_build
+        - run_build
         - store_artifacts: *artifacts_solc
         - store_artifacts: *artifact_yul_phaser
         - persist_to_workspace: *artifacts_executables
@@ -331,7 +351,7 @@ defaults:
         - checkout
         - attach_workspace:
             at: build
-        - run: *run_soltest_all
+        - run_soltest_all
         - store_test_results:
             path: test_results/
         - store_artifacts: *artifacts_test_results
@@ -342,7 +362,7 @@ defaults:
         - checkout
         - attach_workspace:
             at: build
-        - run: *run_cmdline_tests
+        - run_cmdline_tests
         - store_test_results:
             path: test_results/
         - store_artifacts: *artifacts_test_results
@@ -867,14 +887,14 @@ jobs:
       - checkout
       - install_python3:
           packages: z3-solver
-      - run: *run_proofs
+      - run_proofs
       - matrix_notify_failure_unless_pr
 
   chk_docs_pragma_min_version:
     <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - run: *run_docs_pragma_min_version
+      - run_docs_pragma_min_version
       - matrix_notify_failure_unless_pr
 
   t_ubu_pyscripts:
@@ -947,7 +967,7 @@ jobs:
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
-      - run: *run_build
+      - run_build
       - run:
           name: strip binary
           command: strip build/solc/solc
@@ -970,7 +990,7 @@ jobs:
       CMAKE_BUILD_TYPE: Debug
     steps:
       - checkout
-      - run: *run_build
+      - run_build
       - persist_to_workspace: *artifacts_executables
       - matrix_notify_failure_unless_pr
 
@@ -990,7 +1010,7 @@ jobs:
       - run:
           name: "Code Coverage: Syntax Tests"
           command: codecov --flags syntax --gcov-root build
-      - run: *run_soltest
+      - run_soltest
       - run:
           name: "Coverage: All"
           command: codecov --flags all --gcov-root build
@@ -1008,15 +1028,15 @@ jobs:
       MAKEFLAGS: -j 10
     steps:
       - checkout
-      - run: *run_build
+      - run_build
       - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
     <<: *base_ubuntu_clang
     steps:
       - checkout
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build_ossfuzz
+      - setup_prerelease_commit_hash
+      - run_build_ossfuzz
       - persist_to_workspace: *artifacts_executables_ossfuzz
       - matrix_notify_failure_unless_pr
 
@@ -1048,7 +1068,7 @@ jobs:
           command: |
             pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake cvc4 git openssh tar
       - checkout
-      - run: *run_build
+      - run_build
       - store_artifacts: *artifacts_solc
       - persist_to_workspace: *artifacts_executables
       - matrix_notify_failure_unless_pr
@@ -1063,7 +1083,7 @@ jobs:
       - when:
           condition: true
           <<: *steps_install_dependencies_osx
-      - run: *run_build
+      - run_build
       - store_artifacts: *artifacts_solc
       - store_artifacts: *artifact_yul_phaser
       - persist_to_workspace:
@@ -1087,7 +1107,7 @@ jobs:
           <<: *steps_install_dependencies_osx
       - attach_workspace:
           at: .
-      - run: *run_soltest
+      - run_soltest
       - store_test_results:
           path: test_results/
       - store_artifacts: *artifacts_test_results
@@ -1103,7 +1123,7 @@ jobs:
           <<: *steps_install_dependencies_osx
       - attach_workspace:
           at: .
-      - run: *run_cmdline_tests
+      - run_cmdline_tests
       - store_artifacts: *artifacts_test_results
       - matrix_notify_failure_unless_pr
 
@@ -1135,7 +1155,7 @@ jobs:
     <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - run: *setup_prerelease_commit_hash
+      - setup_prerelease_commit_hash
       - run:
           name: Build documentation
           command: ./docs/docs.sh
