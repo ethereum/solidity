@@ -290,10 +290,6 @@ defaults:
   # --------------------------------------------------------------------------
   # Step Templates
 
-  # store_test_results helper
-  - store_test_results: &store_test_results
-      path: test_results/
-
   - steps_soltest: &steps_soltest
       steps:
         - checkout
@@ -303,7 +299,8 @@ defaults:
         # clang/gcc, windows/linux/macos, etc.). The executable used by these steps comes from the
         # attached workspace and we only see the items added to the workspace by jobs we depend on.
         - run: *run_soltest
-        - store_test_results: *store_test_results
+        - store_test_results:
+            path: test_results/
         - store_artifacts: *artifacts_test_results
         - matrix_notify_failure_unless_pr
 
@@ -335,7 +332,8 @@ defaults:
         - attach_workspace:
             at: build
         - run: *run_soltest_all
-        - store_test_results: *store_test_results
+        - store_test_results:
+            path: test_results/
         - store_artifacts: *artifacts_test_results
         - matrix_notify_failure_unless_pr
 
@@ -345,7 +343,8 @@ defaults:
         - attach_workspace:
             at: build
         - run: *run_cmdline_tests
-        - store_test_results: *store_test_results
+        - store_test_results:
+            path: test_results/
         - store_artifacts: *artifacts_test_results
         - matrix_notify_failure_unless_pr
 
@@ -1033,7 +1032,8 @@ jobs:
             git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
             scripts/regressions.py -o test_results
-      - store_test_results: *store_test_results
+      - store_test_results:
+          path: test_results/
       - store_artifacts: *artifacts_test_results
 
   b_archlinux:
@@ -1088,7 +1088,8 @@ jobs:
       - attach_workspace:
           at: .
       - run: *run_soltest
-      - store_test_results: *store_test_results
+      - store_test_results:
+          path: test_results/
       - store_artifacts: *artifacts_test_results
       - matrix_notify_failure_unless_pr
 
@@ -1509,7 +1510,8 @@ jobs:
           name: Executing solc LSP test suite
           command: python ./test/lsp.py .\build\solc\Release\solc.exe --non-interactive
           shell: powershell.exe
-      - store_test_results: *store_test_results
+      - store_test_results:
+          path: test_results/
       - store_artifacts: *artifacts_test_results
       - matrix_notify_failure_unless_pr
 
