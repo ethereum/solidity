@@ -249,12 +249,6 @@ commands:
           path: build/solc/solc
           destination: solc
 
-  store_artifacts_solc_windows:
-    description: Store compiled Windows solc executable as artifact
-    steps:
-      - store_artifacts:
-          path: upload/
-
   store_artifacts_yul_phaser:
     steps:
       - store_artifacts:
@@ -1517,7 +1511,8 @@ jobs:
           name: "Run solc.exe to make sure build was successful."
           command: .\build\solc\Release\solc.exe --version
           shell: powershell.exe
-      - store_artifacts_solc_windows
+      - store_artifacts:
+          path: upload/
       - persist_to_workspace:
           root: build
           paths:
