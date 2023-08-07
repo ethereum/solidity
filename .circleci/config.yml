@@ -239,6 +239,65 @@ commands:
          name: docs pragma version check
          command: ./scripts/docs_version_pragma_check.sh
 
+  # --------------------------------------------------------------------------
+  # Artifact Commands
+
+  store_artifacts_solc:
+    description: Store compiled solc executable as artifact
+    steps:
+      - store_artifacts:
+          path: build/solc/solc
+          destination: solc
+
+  store_artifacts_solc_windows:
+    description: Store compiled Windows solc executable as artifact
+    steps:
+      - store_artifacts:
+          path: upload/
+
+  store_artifacts_yul_phaser:
+    steps:
+      - store_artifacts:
+          path: build/tools/yul-phaser
+          destination: yul-phaser
+
+  persist_executables_to_workspace:
+    description: Persist compiled target executables to workspace
+    steps:
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
+            - test/soltest
+            - test/tools/solfuzzer
+
+  persist_ossfuzz_executables_to_workspace:
+    description: Persist compiled OSSFUZZ executables to workspace
+    steps:
+      - persist_to_workspace:
+          root: build
+          paths:
+            - test/tools/ossfuzz/abiv2_proto_ossfuzz
+            - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
+            - test/tools/ossfuzz/const_opt_ossfuzz
+            - test/tools/ossfuzz/solc_mutator_ossfuzz
+            - test/tools/ossfuzz/solc_ossfuzz
+            - test/tools/ossfuzz/stack_reuse_codegen_ossfuzz
+            - test/tools/ossfuzz/strictasm_assembly_ossfuzz
+            - test/tools/ossfuzz/strictasm_diff_ossfuzz
+            - test/tools/ossfuzz/strictasm_opt_ossfuzz
+            - test/tools/ossfuzz/yul_proto_diff_ossfuzz
+            - test/tools/ossfuzz/yul_proto_diff_custom_mutate_ossfuzz
+            - test/tools/ossfuzz/yul_proto_ossfuzz
+            - test/tools/ossfuzz/sol_proto_ossfuzz
+
+  store_artifacts_test_results:
+    description: Store test output dir as artifact
+    steps:
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
+
 defaults:
 
   # --------------------------------------------------------------------------
@@ -261,53 +320,6 @@ defaults:
           - via-ir-no-optimize
 
   # --------------------------------------------------------------------------
-  # Artifacts Templates
-
-  # compiled solc executable target
-  - artifacts_solc: &artifacts_solc
-      path: build/solc/solc
-      destination: solc
-
-  # windows artifacts
-  - artifact_solc_windows: &artifact_solc_windows
-      path: upload/
-
-  - artifact_yul_phaser: &artifact_yul_phaser
-      path: build/tools/yul-phaser
-      destination: yul-phaser
-
-  # compiled executable targets
-  - artifacts_executables: &artifacts_executables
-      root: build
-      paths:
-        - solc/solc
-        - test/soltest
-        - test/tools/solfuzzer
-
-  # compiled OSSFUZZ targets
-  - artifacts_executables_ossfuzz: &artifacts_executables_ossfuzz
-      root: build
-      paths:
-        - test/tools/ossfuzz/abiv2_proto_ossfuzz
-        - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
-        - test/tools/ossfuzz/const_opt_ossfuzz
-        - test/tools/ossfuzz/solc_mutator_ossfuzz
-        - test/tools/ossfuzz/solc_ossfuzz
-        - test/tools/ossfuzz/stack_reuse_codegen_ossfuzz
-        - test/tools/ossfuzz/strictasm_assembly_ossfuzz
-        - test/tools/ossfuzz/strictasm_diff_ossfuzz
-        - test/tools/ossfuzz/strictasm_opt_ossfuzz
-        - test/tools/ossfuzz/yul_proto_diff_ossfuzz
-        - test/tools/ossfuzz/yul_proto_diff_custom_mutate_ossfuzz
-        - test/tools/ossfuzz/yul_proto_ossfuzz
-        - test/tools/ossfuzz/sol_proto_ossfuzz
-
-  # test result output directory
-  - artifacts_test_results: &artifacts_test_results
-      path: test_results/
-      destination: test_results/
-
-  # --------------------------------------------------------------------------
   # Step Templates
 
   - steps_soltest: &steps_soltest
@@ -321,7 +333,7 @@ defaults:
         - run_soltest
         - store_test_results:
             path: test_results/
-        - store_artifacts: *artifacts_test_results
+        - store_artifacts_test_results
         - matrix_notify_failure_unless_pr
 
   - steps_test_lsp: &steps_test_lsp
@@ -341,9 +353,9 @@ defaults:
       steps:
         - checkout
         - run_build
-        - store_artifacts: *artifacts_solc
-        - store_artifacts: *artifact_yul_phaser
-        - persist_to_workspace: *artifacts_executables
+        - store_artifacts_solc
+        - store_artifacts_yul_phaser
+        - persist_executables_to_workspace
         - matrix_notify_failure_unless_pr
 
   - steps_soltest_all: &steps_soltest_all
@@ -354,7 +366,7 @@ defaults:
         - run_soltest_all
         - store_test_results:
             path: test_results/
-        - store_artifacts: *artifacts_test_results
+        - store_artifacts_test_results:
         - matrix_notify_failure_unless_pr
 
   - steps_cmdline_tests: &steps_cmdline_tests
@@ -365,7 +377,7 @@ defaults:
         - run_cmdline_tests
         - store_test_results:
             path: test_results/
-        - store_artifacts: *artifacts_test_results
+        - store_artifacts_test_results:
         - matrix_notify_failure_unless_pr
 
   - steps_install_dependencies_osx: &steps_install_dependencies_osx
@@ -991,7 +1003,7 @@ jobs:
     steps:
       - checkout
       - run_build
-      - persist_to_workspace: *artifacts_executables
+      - persist_executables_to_workspace
       - matrix_notify_failure_unless_pr
 
   t_ubu_codecov:
@@ -1014,7 +1026,7 @@ jobs:
       - run:
           name: "Coverage: All"
           command: codecov --flags all --gcov-root build
-      - store_artifacts: *artifacts_test_results
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   # Builds in C++20 mode and uses debug build in order to speed up.
@@ -1037,7 +1049,7 @@ jobs:
       - checkout
       - setup_prerelease_commit_hash
       - run_build_ossfuzz
-      - persist_to_workspace: *artifacts_executables_ossfuzz
+      - persist_ossfuzz_executables_to_workspace
       - matrix_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
@@ -1054,7 +1066,7 @@ jobs:
             scripts/regressions.py -o test_results
       - store_test_results:
           path: test_results/
-      - store_artifacts: *artifacts_test_results
+      - store_artifacts_test_results
 
   b_archlinux:
     <<: *base_archlinux_large
@@ -1069,8 +1081,8 @@ jobs:
             pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake cvc4 git openssh tar
       - checkout
       - run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
+      - store_artifacts_solc
+      - persist_executables_to_workspace
       - matrix_notify_failure_unless_pr
 
   b_osx:
@@ -1084,8 +1096,8 @@ jobs:
           condition: true
           <<: *steps_install_dependencies_osx
       - run_build
-      - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifact_yul_phaser
+      - store_artifacts_solc
+      - store_artifacts_yul_phaser
       - persist_to_workspace:
           root: .
           paths:
@@ -1110,7 +1122,7 @@ jobs:
       - run_soltest
       - store_test_results:
           path: test_results/
-      - store_artifacts: *artifacts_test_results
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   t_osx_cli:
@@ -1124,7 +1136,7 @@ jobs:
       - attach_workspace:
           at: .
       - run_cmdline_tests
-      - store_artifacts: *artifacts_test_results
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   b_ems:
@@ -1499,7 +1511,7 @@ jobs:
           name: "Run solc.exe to make sure build was successful."
           command: .\build\solc\Release\solc.exe --version
           shell: powershell.exe
-      - store_artifacts: *artifact_solc_windows
+      - store_artifacts_solc_windows
       - persist_to_workspace:
           root: build
           paths:
@@ -1532,7 +1544,7 @@ jobs:
           shell: powershell.exe
       - store_test_results:
           path: test_results/
-      - store_artifacts: *artifacts_test_results
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   # Note: b_bytecode_ubu_static is required because b_ubu_static and b_ubu
