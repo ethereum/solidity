@@ -22,6 +22,7 @@
 #include <test/libsolidity/AnalysisFramework.h>
 
 #include <test/libsolidity/util/Common.h>
+#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/Common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -66,9 +67,58 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	return make_pair(&compiler().ast(""), std::move(errors));
 }
 
+bool AnalysisFramework::runFramework(StringMap _sources, PipelineStage _targetStage)
+{
+	resetFramework();
+	m_targetStage = _targetStage;
+	soltestAssert(m_compiler);
+
+	m_compiler->setSources(std::move(_sources));
+	setupCompiler(*m_compiler);
+	executeCompilationPipeline();
+	return pipelineSuccessful();
+}
+
+void AnalysisFramework::resetFramework()
+{
+	compiler().reset();
+	m_targetStage = PipelineStage::Compilation;
+}
+
 std::unique_ptr<CompilerStack> AnalysisFramework::createStack() const
 {
 	return std::make_unique<CompilerStack>();
+}
+
+void AnalysisFramework::setupCompiler(CompilerStack& _compiler)
+{
+	_compiler.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+}
+
+void AnalysisFramework::executeCompilationPipeline()
+{
+	soltestAssert(m_compiler);
+
+	// If you add a new stage, remember to handle it below.
+	soltestAssert(
+		m_targetStage == PipelineStage::Parsing ||
+		m_targetStage == PipelineStage::Analysis ||
+		m_targetStage == PipelineStage::Compilation
+	);
+
+	bool parsingSuccessful = m_compiler->parse();
+	soltestAssert(parsingSuccessful || !filteredErrors(false /* _includeWarningsAndInfos */).empty());
+	if (!parsingSuccessful || stageSuccessful(m_targetStage))
+		return;
+
+	bool analysisSuccessful = m_compiler->analyze();
+	soltestAssert(analysisSuccessful || !filteredErrors(false /* _includeWarningsAndInfos */).empty());
+	if (!analysisSuccessful || stageSuccessful(m_targetStage))
+		return;
+
+	bool compilationSuccessful = m_compiler->compile();
+	soltestAssert(compilationSuccessful || !filteredErrors(false /* _includeWarningsAndInfos */).empty());
+	soltestAssert(stageSuccessful(m_targetStage) == compilationSuccessful);
 }
 
 ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarningsAndInfos) const
@@ -111,6 +161,16 @@ ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _inc
 	}
 
 	return errors;
+}
+
+bool AnalysisFramework::stageSuccessful(PipelineStage _stage) const
+{
+	switch (_stage) {
+		case PipelineStage::Parsing: return compiler().state() >= CompilerStack::Parsed;
+		case PipelineStage::Analysis: return compiler().state() >= CompilerStack::AnalysisSuccessful;
+		case PipelineStage::Compilation: return compiler().state() >= CompilerStack::CompilationSuccessful;
+	}
+	unreachable();
 }
 
 SourceUnit const* AnalysisFramework::parseAndAnalyse(std::string const& _source)

@@ -39,6 +39,12 @@ using FunctionTypePointer = FunctionType const*;
 namespace solidity::frontend::test
 {
 
+enum class PipelineStage {
+	Parsing,
+	Analysis,
+	Compilation,
+};
+
 class AnalysisFramework
 {
 
@@ -55,6 +61,25 @@ protected:
 	SourceUnit const* parseAndAnalyse(std::string const& _source);
 	bool success(std::string const& _source);
 	langutil::ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
+
+public:
+	/// Runs the full compiler pipeline on specified sources. This is the main function of the
+	/// framework. Resets the stack, configures it and runs either until the first failed stage or
+	/// until the @p _targetStage is reached.
+	/// Afterwards the caller can inspect the stack via @p compiler(). The framework provides a few
+	/// convenience helpers to check the state and error list, in general the caller can freely
+	/// access the stack, including generating outputs if the compilation succeeded.
+	bool runFramework(StringMap _sources, PipelineStage _targetStage = PipelineStage::Compilation);
+	bool runFramework(std::string _source, PipelineStage _targetStage = PipelineStage::Compilation)
+	{
+		return runFramework({{"", std::move(_source)}}, _targetStage);
+	}
+
+	void resetFramework();
+
+	PipelineStage targetStage() const { return m_targetStage; }
+	bool pipelineSuccessful() const { return stageSuccessful(m_targetStage); }
+	bool stageSuccessful(PipelineStage _stage) const;
 
 	std::string formatErrors(
 		langutil::ErrorList const& _errors,
@@ -80,9 +105,6 @@ protected:
 		return filterErrors(compiler().errors(), _includeWarningsAndInfos);
 	}
 
-	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
-	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};
-
 	/// @returns reference to lazy-instantiated CompilerStack.
 	solidity::frontend::CompilerStack& compiler()
 	{
@@ -99,12 +121,25 @@ protected:
 		return *m_compiler;
 	}
 
+protected:
 	/// Creates a new instance of @p CompilerStack. Override if your test case needs to pass in
 	/// custom constructor arguments.
 	virtual std::unique_ptr<CompilerStack> createStack() const;
 
+	/// Configures @p CompilerStack. The default implementation sets basic parameters based on
+	/// CLI options. Override if your test case needs extra configuration.
+	virtual void setupCompiler(CompilerStack& _compiler);
+
+	/// Executes the requested pipeline stages until @p m_targetStage is reached.
+	/// Stops at the first failed stage.
+	void executeCompilationPipeline();
+
+	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
+	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};
+
 private:
 	mutable std::unique_ptr<solidity::frontend::CompilerStack> m_compiler;
+	PipelineStage m_targetStage = PipelineStage::Compilation;
 };
 
 // Asserts that the compilation down to typechecking

@@ -48,7 +48,7 @@ public:
 	);
 
 protected:
-	virtual void setupCompiler();
+	void setupCompiler(CompilerStack& _compiler) override;
 	void parseAndAnalyze() override;
 	virtual void filterObtainedErrors();
 
