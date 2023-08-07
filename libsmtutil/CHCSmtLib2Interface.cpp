@@ -539,7 +539,8 @@ namespace
 		else
 		{
 			auto& subexprs = asSubExpressions(expr);
-			auto const& first = subexprs[0];
+			assert(!subexprs.empty());
+			auto const& first = subexprs.at(0);
 			if (isAtom(first) && asAtom(first) == "let")
 			{
 				solAssert(!isAtom(subexprs[1]));
