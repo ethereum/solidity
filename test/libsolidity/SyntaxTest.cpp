@@ -111,7 +111,7 @@ void SyntaxTest::parseAndAnalyze()
 
 void SyntaxTest::filterObtainedErrors()
 {
-	for (auto const& currentError: filterErrors(compiler().errors(), true))
+	for (auto const& currentError: filteredErrors())
 	{
 		int locationStart = -1;
 		int locationEnd = -1;

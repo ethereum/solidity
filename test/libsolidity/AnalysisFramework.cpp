@@ -63,14 +63,14 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
 	if (!compiler().parse())
 	{
-		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors());
+		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors(compiler().errors()));
 	}
 
 	compiler().analyze();
 
-	ErrorList errors = filterErrors(compiler().errors(), _reportWarnings);
+	ErrorList errors = filteredErrors(_reportWarnings);
 	if (errors.size() > 1 && !_allowMultipleErrors)
-		BOOST_FAIL("Multiple errors found: " + formatErrors());
+		BOOST_FAIL("Multiple errors found: " + formatErrors(errors));
 
 	return make_pair(&compiler().ast(""), std::move(errors));
 }
@@ -128,7 +128,7 @@ SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
 	BOOST_REQUIRE(!!sourceAndError.first);
 	string message;
 	if (!sourceAndError.second.empty())
-		message = "Unexpected error: " + formatErrors();
+		message = "Unexpected error: " + formatErrors(compiler().errors());
 	BOOST_REQUIRE_MESSAGE(sourceAndError.second.empty(), message);
 	return sourceAndError.first;
 }
@@ -146,17 +146,31 @@ ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warni
 	return sourceAndErrors.second;
 }
 
-string AnalysisFramework::formatErrors() const
+string AnalysisFramework::formatErrors(
+	langutil::ErrorList _errors,
+	bool _colored,
+	bool _withErrorIds
+) const
 {
 	string message;
-	for (auto const& error: compiler().errors())
-		message += formatError(*error);
+	for (auto const& error: _errors)
+		message += formatError(*error, _colored, _withErrorIds);
 	return message;
 }
 
-string AnalysisFramework::formatError(Error const& _error) const
+string AnalysisFramework::formatError(
+	Error const& _error,
+	bool _colored,
+	bool _withErrorIds
+) const
 {
-	return SourceReferenceFormatter::formatErrorInformation(_error, *m_compiler);
+	return SourceReferenceFormatter::formatExceptionInformation(
+		_error,
+		_error.type(),
+		*m_compiler,
+		_colored,
+		_withErrorIds
+	);
 }
 
 ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)

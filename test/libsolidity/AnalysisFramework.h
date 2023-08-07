@@ -57,8 +57,16 @@ protected:
 	bool success(std::string const& _source);
 	langutil::ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
 
-	std::string formatErrors() const;
-	std::string formatError(langutil::Error const& _error) const;
+	std::string formatErrors(
+		langutil::ErrorList _errors,
+		bool _colored = false,
+		bool _withErrorIds = false
+	) const;
+	std::string formatError(
+		langutil::Error const& _error,
+		bool _colored = false,
+		bool _withErrorIds = false
+	) const;
 
 	static ContractDefinition const* retrieveContractByName(SourceUnit const& _source, std::string const& _name);
 	static FunctionTypePointer retrieveFunctionBySignature(
@@ -66,8 +74,12 @@ protected:
 		std::string const& _signature
 	);
 
-	// filter out the warnings in m_warningsToFilter or all warnings and infos if _includeWarningsAndInfos is false
-	langutil::ErrorList filterErrors(langutil::ErrorList const& _errorList, bool _includeWarningsAndInfos) const;
+	/// filter out the warnings in m_warningsToFilter or all warnings and infos if _includeWarningsAndInfos is false
+	langutil::ErrorList filterErrors(langutil::ErrorList const& _errorList, bool _includeWarningsAndInfos = true) const;
+	langutil::ErrorList filteredErrors(bool _includeWarningsAndInfos = true) const
+	{
+		return filterErrors(compiler().errors(), _includeWarningsAndInfos);
+	}
 
 	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
 	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};
@@ -151,7 +163,7 @@ do \
 	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
 	std::string message; \
 	if (!sourceAndError.second.empty()) \
-		message = formatErrors();\
+		message = formatErrors(compiler().errors());\
 	BOOST_CHECK_MESSAGE(sourceAndError.second.empty(), message); \
 } \
 while(0)
