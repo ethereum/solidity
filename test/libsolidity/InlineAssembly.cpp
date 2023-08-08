@@ -85,12 +85,10 @@ std::optional<Error> parseAndReturnFirstError(
 		if (_allowWarnings && e->type() == Error::Type::Warning)
 			continue;
 		if (error)
-		{
-			string errors;
-			for (auto const& err: stack.errors())
-				errors += SourceReferenceFormatter::formatErrorInformation(*err, stack);
-			BOOST_FAIL("Found more than one error:\n" + errors);
-		}
+			BOOST_FAIL(
+				"Found more than one error:\n" +
+				SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack)
+			);
 		error = e;
 	}
 	if (!success)

@@ -90,14 +90,28 @@ public:
 
 	static std::string formatErrorInformation(
 		Error const& _error,
-		CharStreamProvider const& _charStreamProvider
+		CharStreamProvider const& _charStreamProvider,
+		bool _colored = false,
+		bool _withErrorIds = false
 	)
 	{
-		return formatExceptionInformation(
-			_error,
-			Error::errorSeverity(_error.type()),
-			_charStreamProvider
-		);
+		std::ostringstream errorOutput;
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		formatter.printErrorInformation(_error);
+		return errorOutput.str();
+	}
+
+	static std::string formatErrorInformation(
+		langutil::ErrorList const& _errors,
+		CharStreamProvider const& _charStreamProvider,
+		bool _colored = false,
+		bool _withErrorIds = false
+	)
+	{
+		std::ostringstream errorOutput;
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		formatter.printErrorInformation(_errors);
+		return errorOutput.str();
 	}
 
 	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream);
