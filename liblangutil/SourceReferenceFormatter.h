@@ -52,6 +52,10 @@ public:
 		m_withErrorIds(_withErrorIds)
 	{}
 
+	// WARNING: Use the xyzErrorInformation() variants over xyzExceptionInformation() when you
+	// do have access to an Error instance. Error is implicitly convertible to util::Exception
+	// but the conversion loses the error ID.
+
 	/// Prints source location if it is given.
 	void printSourceLocation(SourceReference const& _ref);
 	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);

@@ -827,7 +827,7 @@ void CommandLineInterface::compile()
 		else
 		{
 			m_hasOutput = true;
-			formatter.printExceptionInformation(_error, Error::errorSeverity(_error.type()));
+			formatter.printErrorInformation(_error);
 			solThrow(CommandLineExecutionError, "");
 		}
 	}
