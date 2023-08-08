@@ -2111,6 +2111,7 @@ public:
 	Token getOperator() const { return m_operator; }
 	bool isPrefixOperation() const { return m_isPrefix; }
 	Expression const& subExpression() const { return *m_subExpression; }
+	ASTPointer<Expression> const& argument() const { return m_subExpression; }
 
 	FunctionType const* userDefinedFunctionType() const;
 
@@ -2145,6 +2146,8 @@ public:
 
 	Expression const& leftExpression() const { return *m_left; }
 	Expression const& rightExpression() const { return *m_right; }
+	ASTPointer<Expression> leftArgument() const { return m_left; }
+	ASTPointer<Expression> rightArgument() const { return m_right; }
 	Token getOperator() const { return m_operator; }
 
 	FunctionType const* userDefinedFunctionType() const;

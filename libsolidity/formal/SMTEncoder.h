@@ -403,12 +403,17 @@ protected:
 
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
-	void createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
+	void createReturnedExpressions(FunctionDefinition const* _funDef, Expression const& _calledExpr);
 
 	/// @returns the symbolic arguments for a function call,
 	/// taking into account attached functions and
 	/// type conversion.
-	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
+	std::vector<smtutil::Expression> symbolicArguments(
+		FunctionDefinition const* _funDef,
+		Expression const* _calledExpr,
+		FunctionType const* _funType,
+		std::vector<ASTPointer<Expression const>> const& _arguments
+	);
 
 	smtutil::Expression constantExpr(Expression const& _expr, VariableDeclaration const& _var);
 

@@ -97,6 +97,7 @@ private:
 	bool visit(WhileStatement const& _node) override;
 	bool visit(ForStatement const& _node) override;
 	void endVisit(UnaryOperation const& _node) override;
+	void endVisit(BinaryOperation const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Return const& _node) override;
 	bool visit(TryStatement const& _node) override;
@@ -113,6 +114,13 @@ private:
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const& _funCall);
+	void inlineFunctionCall(
+		FunctionDefinition const* _funDef,
+		Expression const& _callStackExpr,
+		Expression const* _calledExpr,
+		FunctionType const* _funType,
+		std::vector<ASTPointer<Expression const>> const& _arguments
+	);
 	/// Inlines if the function call is internal or external to `this`.
 	/// Erases knowledge about state variables if external.
 	void internalOrExternalFunctionCall(FunctionCall const& _funCall);
