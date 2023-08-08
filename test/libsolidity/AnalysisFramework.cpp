@@ -147,15 +147,17 @@ ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warni
 }
 
 string AnalysisFramework::formatErrors(
-	langutil::ErrorList _errors,
+	langutil::ErrorList const& _errors,
 	bool _colored,
 	bool _withErrorIds
 ) const
 {
-	string message;
-	for (auto const& error: _errors)
-		message += formatError(*error, _colored, _withErrorIds);
-	return message;
+	return SourceReferenceFormatter::formatErrorInformation(
+		_errors,
+		*m_compiler,
+		_colored,
+		_withErrorIds
+	);
 }
 
 string AnalysisFramework::formatError(
@@ -164,9 +166,8 @@ string AnalysisFramework::formatError(
 	bool _withErrorIds
 ) const
 {
-	return SourceReferenceFormatter::formatExceptionInformation(
+	return SourceReferenceFormatter::formatErrorInformation(
 		_error,
-		_error.type(),
 		*m_compiler,
 		_colored,
 		_withErrorIds
