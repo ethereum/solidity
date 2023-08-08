@@ -46,7 +46,10 @@ public:
 		bool _colored,
 		bool _withErrorIds
 	):
-		m_stream(_stream), m_charStreamProvider(_charStreamProvider), m_colored(_colored), m_withErrorIds(_withErrorIds)
+		m_stream(_stream),
+		m_charStreamProvider(_charStreamProvider),
+		m_colored(_colored),
+		m_withErrorIds(_withErrorIds)
 	{}
 
 	/// Prints source location if it is given.

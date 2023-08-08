@@ -20,7 +20,6 @@
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
