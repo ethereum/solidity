@@ -64,12 +64,11 @@ public:
 		util::Exception const& _exception,
 		Error::Type _type,
 		CharStreamProvider const& _charStreamProvider,
-		bool _colored = false,
-		bool _withErrorIds = false
+		bool _colored = false
 	)
 	{
 		std::ostringstream errorOutput;
-		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, false /* _withErrorIds */);
 		formatter.printExceptionInformation(_exception, _type);
 		return errorOutput.str();
 	}
@@ -78,12 +77,11 @@ public:
 		util::Exception const& _exception,
 		Error::Severity _severity,
 		CharStreamProvider const& _charStreamProvider,
-		bool _colored = false,
-		bool _withErrorIds = false
+		bool _colored = false
 	)
 	{
 		std::ostringstream errorOutput;
-		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, false /* _withErrorIds */);
 		formatter.printExceptionInformation(_exception, _severity);
 		return errorOutput.str();
 	}

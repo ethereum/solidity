@@ -125,8 +125,7 @@ Json::Value formatErrorWithException(
 		_exception,
 		_type,
 		_charStreamProvider,
-		false, // colored
-		false // _withErrorIds
+		false // colored
 	);
 
 	if (string const* description = _exception.comment())
