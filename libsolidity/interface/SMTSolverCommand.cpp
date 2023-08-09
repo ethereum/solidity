@@ -22,12 +22,9 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/Keccak256.h>
-#include <libsolutil/TemporaryDirectory.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/process.hpp>
 
 using solidity::langutil::InternalCompilerError;
@@ -47,35 +44,36 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 		if (kind != ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
 			solAssert(false, "SMTQuery callback used as callback kind " + kind);
 
-		auto tempDir = solidity::util::TemporaryDirectory("smt");
-		util::h256 queryHash = util::keccak256(_query);
-		auto queryFileName = tempDir.path() / ("query_" + queryHash.hex() + ".smt2");
-
-		auto queryFile = boost::filesystem::ofstream(queryFileName);
-
-		queryFile << _query << std::flush;
-
 		std::vector<std::string> commandArgs;
 		boost::split(commandArgs, solverCommand, boost::is_any_of(" "));
 		solAssert(commandArgs.size() > 0, "SMT command was empty");
-		auto const& solverBinary = commandArgs[0];
+		auto solverBinary = commandArgs[0];
 		auto pathToBinary = boost::process::search_path(solverBinary);
 
 		if (pathToBinary.empty())
 			return ReadCallback::Result{false, solverBinary + " binary not found."};
 
 		commandArgs.erase(commandArgs.begin());
-		commandArgs.push_back(queryFileName.string());
-		boost::process::ipstream pipe;
+
+		if (solverBinary == "z3")
+			commandArgs.insert(commandArgs.begin(), "-in");
+
+		boost::process::opstream in;  // input to subprocess written to by main process
+		boost::process::ipstream out; // output from subprocess read by main process
 		boost::process::child solver(
 			pathToBinary,
 			boost::process::args(commandArgs),
-			boost::process::std_out > pipe
+			boost::process::std_out > out,
+			boost::process::std_in < in
 		);
+
+		in << _query << std::flush;
+		in.pipe().close();
+		in.close();
 
 		std::vector<std::string> data;
 		std::string line;
-		while (solver.running() && std::getline(pipe, line))
+		while (solver.running() && std::getline(out, line))
 			if (!line.empty())
 				data.push_back(line);
 
