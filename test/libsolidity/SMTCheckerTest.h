@@ -23,6 +23,7 @@
 #include <libsmtutil/SolverInterface.h>
 
 #include <libsolidity/formal/ModelChecker.h>
+#include <libsolidity/interface/SMTSolverCommand.h>
 
 #include <string>
 
@@ -39,6 +40,9 @@ public:
 	SMTCheckerTest(std::string const& _filename);
 
 	void setupCompiler() override;
+
+	std::unique_ptr<CompilerStack> createStack() const override;
+
 	void filterObtainedErrors() override;
 
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
@@ -65,6 +69,8 @@ protected:
 	bool m_ignoreCex = false;
 
 	std::vector<SyntaxTestError> m_unfilteredErrorList;
+
+	mutable SMTSolverCommand m_smtCommand;
 };
 
 }

@@ -133,6 +133,11 @@ void SMTCheckerTest::setupCompiler()
 	compiler().setModelCheckerSettings(m_modelCheckerSettings);
 }
 
+std::unique_ptr<CompilerStack> SMTCheckerTest::createStack() const
+{
+	return std::make_unique<CompilerStack>(m_smtCommand.solver());
+}
+
 void SMTCheckerTest::filterObtainedErrors()
 {
 	SyntaxTest::filterObtainedErrors();
