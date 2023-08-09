@@ -788,7 +788,7 @@ BOOST_AUTO_TEST_CASE(emit_same_signature_event_different_libraries)
 				"details": "This should not appear in Contract C dev doc"
 			}
 		},
-		"kind": "user",
+		"kind": "dev",
 		"methods": {},
 		"version": 1
 	}
@@ -1042,9 +1042,9 @@ BOOST_AUTO_TEST_CASE(event_inheritance_interface)
 		"methods": {}
 	}
 	)ABCDEF";
-	checkNatspec(sourceCode, "ERC20", devDoc, false);
 	checkNatspec(sourceCode, "A", devDoc, false);
 	checkNatspec(sourceCode, "B", devDoc, false);
+	checkNatspec(sourceCode, "ERC20", devDoc, false);
 
 	char const* userDoc = R"ABCDEF(
 	{
@@ -1058,9 +1058,9 @@ BOOST_AUTO_TEST_CASE(event_inheritance_interface)
 		"methods": {}
 	}
 	)ABCDEF";
-	checkNatspec(sourceCode, "ERC20", userDoc, true);
 	checkNatspec(sourceCode, "A", userDoc, true);
 	checkNatspec(sourceCode, "B", userDoc, true);
+	checkNatspec(sourceCode, "ERC20", userDoc, true);
 }
 
 BOOST_AUTO_TEST_CASE(event_inheritance)
@@ -1098,9 +1098,9 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 		"methods": {}
 	}
 	)ABCDEF";
-	checkNatspec(sourceCode, "ERC20", devDoc, false);
 	checkNatspec(sourceCode, "A", devDoc, false);
 	checkNatspec(sourceCode, "B", devDoc, false);
+	checkNatspec(sourceCode, "ERC20", devDoc, false);
 
 	char const* userDoc = R"ABCDEF(
 	{
@@ -1114,9 +1114,9 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 		"methods": {}
 	}
 	)ABCDEF";
-	checkNatspec(sourceCode, "ERC20", userDoc, true);
 	checkNatspec(sourceCode, "A", userDoc, true);
 	checkNatspec(sourceCode, "B", userDoc, true);
+	checkNatspec(sourceCode, "ERC20", userDoc, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
@@ -1578,7 +1578,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 	checkNatspec(sourceCode, "test", natspec, false);
 }
 
-BOOST_AUTO_TEST_CASE(dev_documenting_no_return_paramname)
+BOOST_AUTO_TEST_CASE(dev_documenting_no_return_param_name)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -1721,7 +1721,7 @@ BOOST_AUTO_TEST_CASE(enum_no_docs)
 	checkNatspec(sourceCode, "C", userDoc, true);
 }
 
-BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
+BOOST_AUTO_TEST_CASE(notice_without_tag)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -1745,7 +1745,7 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 	checkNatspec(sourceCode, "test", natspec, true);
 }
 
-BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
+BOOST_AUTO_TEST_CASE(multiline_notice_without_tag)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -1815,7 +1815,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_nonexistent_param)
 	expectNatspecError(sourceCode);
 }
 
-BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname)
+BOOST_AUTO_TEST_CASE(dev_documenting_no_param_name)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -1829,7 +1829,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname)
 	expectNatspecError(sourceCode);
 }
 
-BOOST_AUTO_TEST_CASE(dev_documenting_no_paramname_end)
+BOOST_AUTO_TEST_CASE(dev_documenting_no_param_name_end)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -2771,7 +2771,7 @@ BOOST_AUTO_TEST_CASE(user_inherit_parameter_mismatch)
 	checkNatspec(sourceCode, "Token", natspec2, true);
 }
 
-BOOST_AUTO_TEST_CASE(dev_explicit_inehrit_complex)
+BOOST_AUTO_TEST_CASE(dev_explicit_inherit_complex)
 {
 	char const *sourceCode1 = R"(
 		interface ERC20 {
