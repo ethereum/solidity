@@ -12,6 +12,7 @@ contract B is A {
 // ----
 // :A devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "g(int256)":
@@ -22,11 +23,13 @@ contract B is A {
 //                 "b": "value B"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :B devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "g(int256)":
@@ -37,5 +40,6 @@ contract B is A {
 //                 "z": "value A"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

@@ -25,6 +25,7 @@ contract Token is ERC21 {
 // ----
 // :ERC20 devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
@@ -36,11 +37,13 @@ contract Token is ERC21 {
 //                 "to": "address to transfer to"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Token devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
@@ -52,5 +55,6 @@ contract Token is ERC21 {
 //                 "to": "address to transfer to"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

@@ -21,22 +21,26 @@ contract D is C, B {
 // ----
 // :C userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "x()":
 //         {
 //             "notice": "Hello world"
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :D userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "x()":
 //         {
 //             "notice": "Hello world"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

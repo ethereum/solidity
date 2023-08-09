@@ -8,6 +8,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "constructor":
@@ -18,5 +19,6 @@ contract test {
 //                 "second": "the second parameter is not very useful, it just provides additional confusion"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

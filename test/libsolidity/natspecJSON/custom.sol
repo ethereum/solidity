@@ -17,6 +17,7 @@ contract A {
 //     "custom:t": "onetwo",
 //     "custom:x": "one two three",
 //     "custom:y": "line break",
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "g(int256)":
@@ -30,5 +31,6 @@ contract A {
 //         {
 //             "custom:note": "statevar"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

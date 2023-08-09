@@ -22,27 +22,33 @@ contract Token is Middle {
 // ----
 // :ERC20 userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
 //         {
 //             "notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Middle userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
 //         {
 //             "notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Token userdoc
 // {
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }

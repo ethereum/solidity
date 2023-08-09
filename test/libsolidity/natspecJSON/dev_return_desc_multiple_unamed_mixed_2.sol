@@ -17,6 +17,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "mul(uint256,uint256)":
@@ -34,5 +35,6 @@ contract test {
 //                 "_milk": "And milk with nutella"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

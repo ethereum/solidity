@@ -7,6 +7,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods": {},
 //     "stateVariables":
 //     {
@@ -14,10 +15,13 @@ contract test {
 //         {
 //             "details": "example of dev"
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :test userdoc
 // {
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }

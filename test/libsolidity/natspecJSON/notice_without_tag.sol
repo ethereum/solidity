@@ -7,11 +7,13 @@ contract test {
 // ----
 // :test userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "mul(uint256)":
 //         {
 //             "notice": "I do something awesome"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

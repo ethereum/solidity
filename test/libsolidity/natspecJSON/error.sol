@@ -24,7 +24,9 @@ contract test {
 //             }
 //         ]
 //     },
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :test userdoc
@@ -38,5 +40,7 @@ contract test {
 //             }
 //         ]
 //     },
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }

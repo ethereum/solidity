@@ -6,5 +6,7 @@ contract test
 // ----
 // :test userdoc
 // {
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }

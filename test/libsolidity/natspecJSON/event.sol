@@ -24,7 +24,9 @@ contract ERC20 {
 //             }
 //         }
 //     },
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :ERC20 userdoc
@@ -36,5 +38,7 @@ contract ERC20 {
 //             "notice": "This event is emitted when a transfer occurs."
 //         }
 //     },
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }

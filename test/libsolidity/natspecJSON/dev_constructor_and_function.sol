@@ -17,6 +17,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "constructor":
@@ -40,5 +41,6 @@ contract test {
 //                 "d": "The result of the multiplication and cookies with nutella"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

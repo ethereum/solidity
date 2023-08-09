@@ -17,6 +17,7 @@ contract Thing is IThing {
 // ----
 // :IThing devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "value()":
@@ -27,11 +28,13 @@ contract Thing is IThing {
 //                 "y": "another number"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Thing devdoc
 // {
+//     "kind": "dev",
 //     "methods": {},
 //     "stateVariables":
 //     {
@@ -43,5 +46,6 @@ contract Thing is IThing {
 //                 "b": "another number"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

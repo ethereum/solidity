@@ -15,6 +15,7 @@ contract Thing is IThing {
 // ----
 // :IThing devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "value(uint256)":
@@ -24,11 +25,13 @@ contract Thing is IThing {
 //                 "_0": ""
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Thing devdoc
 // {
+//     "kind": "dev",
 //     "methods": {},
 //     "stateVariables":
 //     {
@@ -40,5 +43,6 @@ contract Thing is IThing {
 //                 "x": ""
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

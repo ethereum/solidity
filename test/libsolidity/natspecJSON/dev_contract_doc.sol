@@ -10,6 +10,7 @@ contract test {
 // :test devdoc
 // {
 //     "author": "Lefteris",
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "mul(uint256,uint256)":
@@ -17,5 +18,6 @@ contract test {
 //             "details": "Mul function"
 //         }
 //     },
-//     "title": "Just a test contract"
+//     "title": "Just a test contract",
+//     "version": 1
 // }

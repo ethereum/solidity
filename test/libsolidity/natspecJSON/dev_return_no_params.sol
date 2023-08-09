@@ -7,6 +7,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "mul(uint256,uint256)":
@@ -16,5 +17,6 @@ contract test {
 //                 "d": "The result of the multiplication"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

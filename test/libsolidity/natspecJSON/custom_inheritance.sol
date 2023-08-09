@@ -10,16 +10,20 @@ contract B is A {
 // ----
 // :A devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "g(uint256)":
 //         {
 //             "custom:since": "2014"
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :B devdoc
 // {
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }

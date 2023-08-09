@@ -11,10 +11,14 @@ contract test {
 // ----
 // :test devdoc
 // {
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :test userdoc
 // {
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }

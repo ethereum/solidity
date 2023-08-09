@@ -10,11 +10,13 @@ contract test {
 // ----
 // :test userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "mul_and_add(uint256,uint256)":
 //         {
 //             "notice": "Multiplies `a` by 7 and then adds `b`"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

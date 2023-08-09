@@ -9,6 +9,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "mul(uint256,uint256)":
@@ -20,5 +21,6 @@ contract test {
 //                 "second": "Documentation for the second parameter"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

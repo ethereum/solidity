@@ -14,6 +14,7 @@ contract Bank {
 // ----
 // :Bank devdoc
 // {
+//     "kind": "dev",
 //     "methods": {},
 //     "stateVariables":
 //     {
@@ -25,16 +26,19 @@ contract Bank {
 //                 "reverseGraphicURL": "Back pic"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Bank userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "coinStack(uint256)":
 //         {
 //             "notice": "Get the n-th coin I own"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

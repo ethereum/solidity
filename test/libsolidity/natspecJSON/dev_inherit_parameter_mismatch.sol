@@ -22,6 +22,7 @@ contract Token is Middle {
 // ----
 // :ERC20 devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
@@ -33,11 +34,13 @@ contract Token is Middle {
 //                 "to": "address to transfer to"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Middle devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
@@ -49,10 +52,13 @@ contract Token is Middle {
 //                 "to": "address to transfer to"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Token devdoc
 // {
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }

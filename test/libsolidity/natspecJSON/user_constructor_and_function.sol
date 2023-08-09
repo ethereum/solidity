@@ -9,6 +9,7 @@ contract test {
 // ----
 // :test userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "constructor":
@@ -19,5 +20,6 @@ contract test {
 //         {
 //             "notice": "another multiplier"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

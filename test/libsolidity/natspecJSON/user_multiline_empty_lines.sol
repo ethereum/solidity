@@ -12,11 +12,13 @@ contract test {
 // ----
 // :test userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "f()":
 //         {
 //             "notice": "hello world"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

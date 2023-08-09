@@ -30,6 +30,7 @@ contract Token is myInterfaces.ERC20, myInterfaces.ERC21 {
 // ----
 // Testfile.sol:Token devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
@@ -41,5 +42,6 @@ contract Token is myInterfaces.ERC20, myInterfaces.ERC21 {
 //                 "to": "address to transfer to"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

@@ -22,6 +22,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "divide(uint256,uint256)":
@@ -50,5 +51,6 @@ contract test {
 //                 "input": "Documentation for the input parameter"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }

@@ -9,6 +9,7 @@ contract test {
 // ----
 // :test devdoc
 // {
+//     "kind": "dev",
 //     "methods": {},
 //     "stateVariables":
 //     {
@@ -21,16 +22,19 @@ contract test {
 //                 "_0": "returns state"
 //             }
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :test userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "state()":
 //         {
 //             "notice": "example of notice"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

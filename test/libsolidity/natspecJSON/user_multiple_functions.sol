@@ -19,6 +19,7 @@ contract test {
 // ----
 // :test userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "divide(uint256,uint256)":
@@ -33,5 +34,6 @@ contract test {
 //         {
 //             "notice": "Subtracts 3 from `input`"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

@@ -23,22 +23,26 @@ contract Token is ERC21, ERC20 {
 // ----
 // :ERC20 userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
 //         {
 //             "notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :Token userdoc
 // {
+//     "kind": "user",
 //     "methods":
 //     {
 //         "transfer(address,uint256)":
 //         {
 //             "notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
 //         }
-//     }
+//     },
+//     "version": 1
 // }

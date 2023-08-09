@@ -14,17 +14,20 @@ contract D is C {
 // ----
 // :C devdoc
 // {
+//     "kind": "dev",
 //     "methods":
 //     {
 //         "x()":
 //         {
 //             "details": "test"
 //         }
-//     }
+//     },
+//     "version": 1
 // }
 //
 // :D devdoc
 // {
+//     "kind": "dev",
 //     "methods": {},
 //     "stateVariables":
 //     {
@@ -32,5 +35,6 @@ contract D is C {
 //         {
 //             "details": "test"
 //         }
-//     }
+//     },
+//     "version": 1
 // }

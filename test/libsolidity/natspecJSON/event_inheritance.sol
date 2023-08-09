@@ -28,7 +28,9 @@ contract B is A {
 //             }
 //         }
 //     },
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :A userdoc
@@ -40,7 +42,9 @@ contract B is A {
 //             "notice": "This event is emitted when a transfer occurs."
 //         }
 //     },
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :B devdoc
@@ -58,7 +62,9 @@ contract B is A {
 //             }
 //         }
 //     },
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :B userdoc
@@ -70,7 +76,9 @@ contract B is A {
 //             "notice": "This event is emitted when a transfer occurs."
 //         }
 //     },
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :ERC20 devdoc
@@ -88,7 +96,9 @@ contract B is A {
 //             }
 //         }
 //     },
-//     "methods": {}
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
 // }
 //
 // :ERC20 userdoc
@@ -100,5 +110,7 @@ contract B is A {
 //             "notice": "This event is emitted when a transfer occurs."
 //         }
 //     },
-//     "methods": {}
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
 // }
