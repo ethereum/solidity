@@ -97,7 +97,6 @@ set(libsolidity_sources
     libsolidity/SolidityExecutionFramework.h
     libsolidity/SolidityExpressionCompiler.cpp
     libsolidity/SolidityNameAndTypeResolution.cpp
-    libsolidity/SolidityNatspecJSON.cpp
     libsolidity/SolidityOptimizer.cpp
     libsolidity/SolidityParser.cpp
     libsolidity/SolidityTypes.cpp
