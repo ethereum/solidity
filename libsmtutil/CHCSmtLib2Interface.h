@@ -84,7 +84,7 @@ private:
 
 	CexGraph graphFromZ3Proof(std::string const& _proof);
 
-	CexGraph graphFromSMTLib2Expression(SMTLib2Expression const& _proof);
+	smtutil::Expression invariantsFromSMTLib(std::string const& _invariants);
 
 	/// Used to access toSmtLibSort, SExpr, and handle variables.
 	std::unique_ptr<SMTLib2Interface> m_smtlib2;
