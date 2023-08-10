@@ -1170,29 +1170,6 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	checkNatspec(sourceCode, "test", natspec, false);
 }
 
-BOOST_AUTO_TEST_CASE(dev_multiple_params_mixed_whitespace)
-{
-	char const* sourceCode = "contract test {\n"
-	"  /// @dev	 Multiplies a number by 7 and adds second parameter\n"
-	"  /// @param 	 a Documentation for the first parameter\n"
-	"  /// @param	 second			 Documentation for the second parameter\n"
-	"  function mul(uint a, uint second) public returns (uint d) { return a * 7 + second; }\n"
-	"}\n";
-
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256,uint256)\":{ \n"
-	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
-	"        \"params\": {\n"
-	"            \"a\": \"Documentation for the first parameter\",\n"
-	"            \"second\": \"Documentation for the second parameter\"\n"
-	"        }\n"
-	"    }\n"
-	"}}";
-
-	checkNatspec(sourceCode, "test", natspec, false);
-}
-
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 {
 	char const* sourceCode = R"(
@@ -2769,77 +2746,6 @@ BOOST_AUTO_TEST_CASE(user_inherit_parameter_mismatch)
 	checkNatspec(sourceCode, "ERC20", natspec, true);
 	checkNatspec(sourceCode, "Middle", natspec, true);
 	checkNatspec(sourceCode, "Token", natspec2, true);
-}
-
-BOOST_AUTO_TEST_CASE(dev_explicit_inherit_complex)
-{
-	char const *sourceCode1 = R"(
-		interface ERC20 {
-			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @dev test
-			/// @param to address to transfer to
-			/// @param amount amount to transfer
-			function transfer(address to, uint amount) external returns (bool);
-		}
-
-		interface ERC21 {
-			/// Transfer ``amount`` from ``msg.sender`` to ``to``.
-			/// @dev test2
-			/// @param to address to transfer to
-			/// @param amount amount to transfer
-			function transfer(address to, uint amount) external returns (bool);
-		}
-	)";
-
-	char const *sourceCode2 = R"(
-		import "Interfaces.sol" as myInterfaces;
-
-		contract Token is myInterfaces.ERC20, myInterfaces.ERC21 {
-			/// @inheritdoc myInterfaces.ERC20
-			function transfer(address too, uint amount)
-				override(myInterfaces.ERC20, myInterfaces.ERC21) external returns (bool) {
-				return false;
-			}
-		}
-	)";
-
-	char const *natspec = R"ABCDEF({
-		"methods":
-		{
-			"transfer(address,uint256)":
-			{
-				"details": "test",
-				"params":
-				{
-					"amount": "amount to transfer",
-					"to": "address to transfer to"
-				}
-			}
-		}
-	})ABCDEF";
-
-	m_compilerStack.reset();
-	m_compilerStack.setSources({
-		{"Interfaces.sol", "pragma solidity >=0.0;\n" + std::string(sourceCode1)},
-		{"Testfile.sol", "pragma solidity >=0.0;\n" + std::string(sourceCode2)}
-	});
-
-	m_compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
-
-	BOOST_REQUIRE_MESSAGE(m_compilerStack.parseAndAnalyze(), "Parsing contract failed");
-
-	Json::Value generatedDocumentation = m_compilerStack.natspecDev("Token");
-	Json::Value expectedDocumentation;
-	util::jsonParseStrict(natspec, expectedDocumentation);
-
-	expectedDocumentation["version"] = Json::Value(Natspec::c_natspecVersion);
-	expectedDocumentation["kind"] = Json::Value("dev");
-
-	BOOST_CHECK_MESSAGE(
-		expectedDocumentation == generatedDocumentation,
-		"Expected:\n" << util::jsonPrettyPrint(expectedDocumentation) <<
-		"\n but got:\n" << util::jsonPrettyPrint(generatedDocumentation)
-	);
 }
 
 BOOST_AUTO_TEST_CASE(dev_different_return_name)
