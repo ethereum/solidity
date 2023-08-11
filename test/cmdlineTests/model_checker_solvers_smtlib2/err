@@ -1,7 +1,0 @@
-Warning: CHC: 1 verification condition(s) could not be proved. Enable the model checker option "show unproved" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
-
-Warning: CHC analysis was not possible. No Horn solver was available. None of the installed solvers was enabled.
-
-Warning: BMC: 1 verification condition(s) could not be proved. Enable the model checker option "show unproved" to see all of them. Consider choosing a specific contract to be verified in order to reduce the solving problems. Consider increasing the timeout per query.
-
-Warning: BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.

@@ -20,7 +20,7 @@
 		{
 			"engine": "all",
             "printQuery": true,
-			"solvers": ["smtlib2"],
+			"solvers": ["z3"],
 			"timeout": 1000
 		}
 	}

@@ -20,7 +20,7 @@
 		{
 			"engine": "bmc",
             "printQuery": true,
-			"solvers": ["smtlib2"]
+			"solvers": ["z3"]
 		}
 	}
 }
