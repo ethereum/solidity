@@ -484,8 +484,8 @@ namespace
 		SMTLib2Expression & operator[](std::string const& varName)
 		{
 			auto it = bindings.find(varName);
-			assert(it != bindings.end());
-			assert(!it->second.empty());
+			solAssert(it != bindings.end());
+			solAssert(!it->second.empty());
 			return it->second.back();
 		}
 
@@ -529,47 +529,46 @@ namespace
 			auto const& atom = asAtom(expr);
 			if (bindings.has(atom))
 				expr = bindings[atom];
+			return;
 		}
-		else
+		auto& subexprs = asSubExpressions(expr);
+		solAssert(!subexprs.empty());
+		auto const& first = subexprs.at(0);
+		if (isAtom(first) && asAtom(first) == "let")
 		{
-			auto& subexprs = asSubExpressions(expr);
-			assert(!subexprs.empty());
-			auto const& first = subexprs.at(0);
-			if (isAtom(first) && asAtom(first) == "let")
+			solAssert(subexprs.size() >= 3);
+			solAssert(!isAtom(subexprs[1]));
+			auto& bindingExpressions = asSubExpressions(subexprs[1]);
+			// process new bindings
+			std::vector<std::pair<std::string, SMTLib2Expression>> newBindings;
+			for (auto& binding: bindingExpressions)
 			{
-				solAssert(!isAtom(subexprs[1]));
-				auto& bindingExpressions = asSubExpressions(subexprs[1]);
-				// process new bindings
-				std::vector<std::pair<std::string, SMTLib2Expression>> newBindings;
-				for (auto& binding: bindingExpressions)
-				{
-					solAssert(!isAtom(binding));
-					auto& bindingPair = asSubExpressions(binding);
-					solAssert(bindingPair.size() == 2);
-					solAssert(isAtom(bindingPair.at(0)));
-					inlineLetExpressions(bindingPair.at(1), bindings);
-					newBindings.emplace_back(asAtom(bindingPair.at(0)), bindingPair.at(1));
-				}
-				bindings.pushScope();
-				for (auto&& [name, expr] : newBindings)
-					bindings.addBinding(std::move(name), std::move(expr));
-				newBindings.clear();
-
-				// get new subexpression
-				inlineLetExpressions(subexprs.at(2), bindings);
-				// remove the new bindings
-				bindings.popScope();
-
-				// update the expression
-				auto tmp = std::move(subexprs.at(2));
-				expr = std::move(tmp);
-				return;
+				solAssert(!isAtom(binding));
+				auto& bindingPair = asSubExpressions(binding);
+				solAssert(bindingPair.size() == 2);
+				solAssert(isAtom(bindingPair.at(0)));
+				inlineLetExpressions(bindingPair.at(1), bindings);
+				newBindings.emplace_back(asAtom(bindingPair.at(0)), bindingPair.at(1));
 			}
-			// not a let expression, just process all arguments
-			for (auto& subexpr: subexprs)
-			{
-				inlineLetExpressions(subexpr, bindings);
-			}
+			bindings.pushScope();
+			for (auto&& [name, expr]: newBindings)
+				bindings.addBinding(std::move(name), std::move(expr));
+			newBindings.clear();
+
+			// get new subexpression
+			inlineLetExpressions(subexprs.at(2), bindings);
+			// remove the new bindings
+			bindings.popScope();
+
+			// update the expression
+			auto tmp = std::move(subexprs.at(2));
+			expr = std::move(tmp);
+			return;
+		}
+		// not a let expression, just process all arguments
+		for (auto& subexpr: subexprs)
+		{
+			inlineLetExpressions(subexpr, bindings);
 		}
 	}
 
