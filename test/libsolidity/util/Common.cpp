@@ -22,25 +22,30 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-string test::withPreamble(string const& _sourceCode)
+string test::withPreamble(string const& _sourceCode, bool _addAbicoderV1Pragma)
 {
 	static string const versionPragma = "pragma solidity >=0.0;\n";
 	static string const licenseComment = "// SPDX-License-Identifier: GPL-3.0\n";
+	static string const abicoderPragma = "pragma abicoder v1;\n";
 
-	// NOTE: this check is intentionally loose to match weird cases.
+	// NOTE: These checks are intentionally loose to match weird cases.
 	// We can manually adjust a test case where this causes problem.
 	bool licenseMissing = _sourceCode.find("SPDX-License-Identifier:") == string::npos;
+	bool abicoderMissing =
+		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos &&
+		_sourceCode.find("pragma abicoder") == string::npos;
 
 	return
 		versionPragma +
 		(licenseMissing ? licenseComment : "") +
+		(abicoderMissing && _addAbicoderV1Pragma ? abicoderPragma : "") +
 		_sourceCode;
 }
 
-StringMap test::withPreamble(StringMap _sources)
+StringMap test::withPreamble(StringMap _sources, bool _addAbicoderV1Pragma)
 {
 	for (auto&& [sourceName, source]: _sources)
-		source = withPreamble(source);
+		source = withPreamble(source, _addAbicoderV1Pragma);
 
 	return _sources;
 }
