@@ -18,6 +18,8 @@
 
 #include <test/libsolidity/util/Common.h>
 
+#include <regex>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
@@ -48,4 +50,18 @@ StringMap test::withPreamble(StringMap _sources, bool _addAbicoderV1Pragma)
 		source = withPreamble(source, _addAbicoderV1Pragma);
 
 	return _sources;
+}
+
+string test::stripPreReleaseWarning(string const& _stderrContent)
+{
+	static regex const preReleaseWarningRegex{
+		R"(Warning( \(3805\))?: This is a pre-release compiler version, please do not use it in production\.\n)"
+		R"((\n)?)"
+	};
+	static regex const noOutputRegex{
+		R"(Compiler run successful, no output requested\.\n)"
+	};
+
+	string output = regex_replace(_stderrContent, preReleaseWarningRegex, "");
+	return regex_replace(std::move(output), noOutputRegex, "");
 }

@@ -32,4 +32,6 @@ std::string withPreamble(std::string const& _sourceCode, bool _addAbicoderV1Prag
 /// @returns a copy of @p _sources with preamble prepended to all sources.
 StringMap withPreamble(StringMap _sources, bool _addAbicoderV1Pragma = false);
 
+std::string stripPreReleaseWarning(std::string const& _stderrContent);
+
 } // namespace solidity::frontend::test
