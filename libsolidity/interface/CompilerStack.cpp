@@ -1486,16 +1486,13 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		m_optimiserSettings,
 		m_debugInfoSelection
 	);
-	if (!stack.parseAndAnalyze("", compiledContract.yulIR))
-	{
-		string errorMessage;
-		for (auto const& error: stack.errors())
-			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(
-				*error,
-				stack.charStream("")
-			);
-		solAssert(false, compiledContract.yulIR + "\n\nInvalid IR generated:\n" + errorMessage + "\n");
-	}
+	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIR);
+	solAssert(
+		yulAnalysisSuccessful,
+		compiledContract.yulIR + "\n\n"
+		"Invalid IR generated:\n" +
+		langutil::SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
+	);
 
 	compiledContract.yulIRAst = stack.astJson();
 	stack.optimize();

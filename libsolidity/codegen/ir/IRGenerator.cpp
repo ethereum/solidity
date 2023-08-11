@@ -38,8 +38,6 @@
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Whiskers.h>
 
-#include <liblangutil/SourceReferenceFormatter.h>
-
 #include <json/json.h>
 
 #include <sstream>

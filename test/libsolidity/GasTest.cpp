@@ -20,7 +20,6 @@
 #include <test/Common.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
