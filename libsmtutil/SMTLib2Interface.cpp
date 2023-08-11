@@ -18,6 +18,8 @@
 
 #include <libsmtutil/SMTLib2Interface.h>
 
+#include <libsmtutil/SMTLibParser.h>
+
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -136,25 +138,27 @@ namespace // Helpers for querying solvers using SMT callback
 		return result == CheckResult::SATISFIABLE || result == CheckResult::UNSATISFIABLE;
 	}
 
-	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
-	{
-		std::vector<std::string> values;
-		while (_start < _end)
-		{
-			auto valStart = std::find(_start, _end, ' ');
-			if (valStart < _end)
-				++valStart;
-			auto valEnd = std::find(valStart, _end, ')');
-			values.emplace_back(valStart, valEnd);
-			_start = std::find(valEnd, _end, '(');
-		}
-
-		return values;
-	}
-
 	std::vector<std::string> parseValues(std::string const& solverAnswer)
 	{
-		return parseValues(std::find(solverAnswer.cbegin(), solverAnswer.cend(), '\n'), solverAnswer.cend());
+		std::vector<std::string> parsedValues;
+		std::stringstream ss(solverAnswer);
+		std::string answer;
+		ss >> answer;
+		solAssert(answer == "sat");
+		SMTLib2Parser parser(ss);
+		if (parser.isEOF())
+			return parsedValues;
+		auto values = parser.parseExpression();
+		solAssert(!isAtom(values));
+		auto const& valuesExpr = asSubExpressions(values);
+		for (auto const& valueExpr: valuesExpr)
+		{
+			solAssert(!isAtom(valueExpr));
+			auto const& nameValuePair = asSubExpressions(valueExpr);
+			solAssert(nameValuePair.size() == 2);
+			parsedValues.push_back(nameValuePair[1].toString());
+		}
+		return parsedValues;
 	}
 }
 
