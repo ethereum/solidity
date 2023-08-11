@@ -18,6 +18,8 @@
 
 #include <libsmtutil/CHCSmtLib2Interface.h>
 
+#include <libsmtutil/SMTLibParser.h>
+
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
@@ -251,22 +253,8 @@ std::string CHCSmtLib2Interface::createQueryAssertion(std::string name) {
 	return "(assert\n(forall " + forall() + "\n" +	"(=> " + name + " false)))";
 }
 
-std::string CHCSmtLib2Interface::SMTLib2Expression::toString() const
-{
-	return std::visit(GenericVisitor{
-			[](std::string const& _sv) { return _sv; },
-			[](std::vector<SMTLib2Expression> const& _subExpr) {
-				std::vector<std::string> formatted;
-				for (auto const& item: _subExpr)
-					formatted.emplace_back(item.toString());
-				return "(" + joinHumanReadable(formatted, " ") + ")";
-			}
-	}, data);
-}
-
 namespace
 {
-	using SMTLib2Expression = CHCSmtLib2Interface::SMTLib2Expression;
 	bool isNumber(std::string const& _expr)
 	{
 		for (char c: _expr)
@@ -274,114 +262,6 @@ namespace
 				return false;
 		return true;
 	}
-
-	bool isAtom(SMTLib2Expression const & expr)
-	{
-		return std::holds_alternative<std::string>(expr.data);
-	}
-
-	std::string const& asAtom(SMTLib2Expression const& expr)
-	{
-		solAssert(isAtom(expr));
-		return std::get<std::string>(expr.data);
-	}
-
-	auto const& asSubExpressions(SMTLib2Expression const& expr)
-	{
-		solAssert(!isAtom(expr));
-		return std::get<SMTLib2Expression::args_t>(expr.data);
-	}
-
-	auto& asSubExpressions(SMTLib2Expression& expr)
-	{
-		solAssert(!isAtom(expr));
-		return std::get<SMTLib2Expression::args_t>(expr.data);
-	}
-
-	class SMTLib2Parser
-	{
-	public:
-		SMTLib2Parser(std::istream& _input):
-				m_input(_input),
-				m_token(static_cast<char>(m_input.get()))
-		{}
-
-		SMTLib2Expression parseExpression()
-		{
-			skipWhitespace();
-			if (token() == '(')
-			{
-				advance();
-				skipWhitespace();
-				std::vector<SMTLib2Expression> subExpressions;
-				while (token() != 0 && token() != ')')
-				{
-					subExpressions.emplace_back(parseExpression());
-					skipWhitespace();
-				}
-				solAssert(token() == ')');
-				// simulate whitespace because we do not want to read the next token
-				// since it might block.
-				m_token = ' ';
-				return {std::move(subExpressions)};
-			}
-			else
-				return {parseToken()};
-		}
-
-		bool isEOF()
-		{
-			skipWhitespace();
-			return m_input.eof();
-		}
-
-	private:
-		std::string parseToken()
-		{
-			std::string result;
-
-			skipWhitespace();
-			bool isPipe = token() == '|';
-			if (isPipe)
-				advance();
-			while (token() != 0)
-			{
-				char c = token();
-				if (isPipe && c == '|')
-				{
-					advance();
-					break;
-				}
-				else if (!isPipe && (isWhiteSpace(c) || c == '(' || c == ')'))
-					break;
-				result.push_back(c);
-				advance();
-			}
-			return result;
-		}
-
-		void skipWhitespace()
-		{
-			while (isWhiteSpace(token()))
-				advance();
-		}
-
-		char token() const
-		{
-			return m_token;
-		}
-
-		void advance()
-		{
-			m_token = static_cast<char>(m_input.get());
-			if (token() == ';')
-				while (token() != '\n' && token() != 0)
-					m_token = static_cast<char>(m_input.get());
-		}
-
-		std::istream& m_input;
-		char m_token = 0;
-	};
 
 	class SMTLibTranslationContext
 	{

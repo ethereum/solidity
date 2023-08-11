@@ -32,13 +32,6 @@ namespace solidity::smtutil
 class CHCSmtLib2Interface: public CHCSolverInterface
 {
 public:
-	struct SMTLib2Expression
-	{
-		using args_t = std::vector<SMTLib2Expression>;
-		std::variant<std::string, args_t> data;
-
-		std::string toString() const;
-	};
 
 	explicit CHCSmtLib2Interface(
 		std::map<util::h256, std::string> const& _queryResponses = {},
