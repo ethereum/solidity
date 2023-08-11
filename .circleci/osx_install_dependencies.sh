@@ -27,11 +27,14 @@
 
 # note that the following directories may be cached by circleci:
 # - /usr/local/bin
-# - /usr/local/sbin
 # - /usr/local/lib
 # - /usr/local/include
-# - /usr/local/Cellar
-# - /usr/local/Homebrew
+# - /usr/local/Cellar/boost
+# - /usr/local/Cellar/cmake
+# - /usr/local/Cellar/wget
+# - /usr/local/Cellar/coreutils
+# - /usr/local/Cellar/diffutils
+# - /Users/distiller/Library/Caches/Homebrew
 
 set -eu
 
@@ -54,11 +57,9 @@ if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not
 then
   brew update
   brew upgrade
-  brew install boost
-  brew install cmake
-  brew install wget
-  brew install coreutils
-  brew install diffutils
+  # Install dependencies kegs
+  brew install boost cmake wget coreutils diffutils
+
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3

@@ -364,11 +364,31 @@ commands:
 
   install_dependencies_osx:
     steps:
-      # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
-      # them each time. See https://github.com/ethereum/solidity/issues/12925.
+      - restore_cache:
+          keys:
+            - dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      - attach_workspace:
+          at: .
+        # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
+        # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
-          command: .circleci/osx_install_dependencies.sh
+          command: ./.circleci/osx_install_dependencies.sh
+      - run:
+          name: Cleaning outdated packages
+          command: brew cleanup
+      - save_cache:
+          key: dependencies-osx-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          paths:
+            - /usr/local/bin
+            - /usr/local/lib
+            - /usr/local/include
+            - /usr/local/Cellar/boost
+            - /usr/local/Cellar/cmake
+            - /usr/local/Cellar/wget
+            - /usr/local/Cellar/coreutils
+            - /usr/local/Cellar/diffutils
+            - /Users/distiller/Library/Caches/Homebrew
 
 defaults:
 
@@ -391,7 +411,6 @@ defaults:
           - via-ir-optimize
           - via-ir-no-optimize
 
-  # --------------------------------------------------------------------------
   # --------------------------------------------------------------------------
   # Base Image Templates
 
@@ -1112,8 +1131,6 @@ jobs:
     steps:
       - checkout
       - install_dependencies_osx
-      - attach_workspace:
-          at: .
       - run_soltest
       - store_test_results:
           path: test_results/
@@ -1126,8 +1143,6 @@ jobs:
     steps:
       - checkout
       - install_dependencies_osx
-      - attach_workspace:
-          at: .
       - run_cmdline_tests
       - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
