@@ -73,7 +73,7 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 
 		std::vector<std::string> data;
 		std::string line;
-		while (solver.running() && std::getline(out, line))
+		while (std::getline(out, line))
 			if (!line.empty())
 				data.push_back(line);
 
