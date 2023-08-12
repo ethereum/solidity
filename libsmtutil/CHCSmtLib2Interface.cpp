@@ -675,10 +675,19 @@ CHCSolverInterface::CexGraph CHCSmtLib2Interface::graphFromZ3Proof(std::string c
 	if (parser.isEOF()) // No proof from Z3
 		return {};
 	// For some reason Z3 outputs everything as a single s-expression
-	auto all = parser.parseExpression();
+	SMTLib2Expression parsedOutput;
+	try
+	{
+		parsedOutput = parser.parseExpression();
+	}
+	catch (SMTLib2Parser::ParsingException&)
+	{
+		// TODO: What should we do in this case?
+		smtAssert(false, "SMTLIb2Parser: Error parsing input");
+	}
 	solAssert(parser.isEOF());
-	solAssert(!isAtom(all));
-	auto& commands = std::get<SMTLib2Expression::args_t>(all.data);
+	solAssert(!isAtom(parsedOutput));
+	auto& commands = asSubExpressions(parsedOutput);
 	SMTLibTranslationContext context(*m_smtlib2);
 	for (auto& command: commands)
 	{
@@ -720,10 +729,17 @@ smtutil::Expression CHCSmtLib2Interface::invariantsFromSMTLib(std::string const&
 	if (parser.isEOF()) // No model
 		return Expression(true);
 	// For some reason Z3 outputs everything as a single s-expression
-	auto all = parser.parseExpression();
+	SMTLib2Expression parsedOutput;
+	try {
+		parsedOutput = parser.parseExpression();
+	} catch(SMTLib2Parser::ParsingException&)
+	{
+		// TODO: What should we do in this case?
+		smtAssert(false, "SMTLIb2Parser: Error parsing input");
+	}
 	solAssert(parser.isEOF());
-	solAssert(!isAtom(all));
-	auto& commands = std::get<SMTLib2Expression::args_t>(all.data);
+	solAssert(!isAtom(parsedOutput));
+	auto& commands = asSubExpressions(parsedOutput);
 	std::vector<Expression> definitions;
 	for (auto& command: commands)
 	{

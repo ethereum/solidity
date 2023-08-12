@@ -65,6 +65,8 @@ std::string SMTLib2Parser::parseToken() {
 }
 
 void SMTLib2Parser::advance() {
+	if (!m_input.good())
+		throw ParsingException{};
 	m_token = static_cast<char>(m_input.get());
 	if (token() == ';')
 		while (token() != '\n' && token() != 0)

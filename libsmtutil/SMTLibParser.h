@@ -60,6 +60,8 @@ inline auto& asSubExpressions(SMTLib2Expression& expr)
 
 class SMTLib2Parser {
 public:
+	class ParsingException {};
+
 	SMTLib2Parser(std::istream& _input) :
 			m_input(_input),
 			m_token(static_cast<char>(m_input.get())) {}
