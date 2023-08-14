@@ -25,13 +25,12 @@
 
 #include <algorithm>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
 
-set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<CallableDeclaration const*> const& _outerCallstack)
+std::set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, std::vector<CallableDeclaration const*> const& _outerCallstack)
 {
 	m_touchedVariables.clear();
 	m_callStack.clear();

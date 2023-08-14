@@ -29,7 +29,6 @@
 #include <vector>
 #include <string>
 
-using namespace std;
 using boost::algorithm::starts_with;
 using namespace solidity;
 using namespace solidity::util;
@@ -42,7 +41,7 @@ namespace solidity::frontend::smt
 namespace
 {
 
-string formatDatatypeAccessor(smtutil::Expression const& _expr, vector<string> const& _args)
+std::string formatDatatypeAccessor(smtutil::Expression const& _expr, std::vector<std::string> const& _args)
 {
 	auto const& op = _expr.name;
 
@@ -63,9 +62,9 @@ string formatDatatypeAccessor(smtutil::Expression const& _expr, vector<string> c
 	if (op == "dt_accessor_ecrecover")
 		return "ecrecover";
 
-	string accessorStr = "accessor_";
+	std::string accessorStr = "accessor_";
 	// Struct members have suffix "accessor_<memberName>".
-	string type = op.substr(op.rfind(accessorStr) + accessorStr.size());
+	std::string type = op.substr(op.rfind(accessorStr) + accessorStr.size());
 	solAssert(_expr.arguments.size() == 1, "");
 
 	if (type == "length")
@@ -87,22 +86,22 @@ string formatDatatypeAccessor(smtutil::Expression const& _expr, vector<string> c
 	return _args.at(0) + "." + type;
 }
 
-string formatGenericOp(smtutil::Expression const& _expr, vector<string> const& _args)
+std::string formatGenericOp(smtutil::Expression const& _expr, std::vector<std::string> const& _args)
 {
 	return _expr.name + "(" + boost::algorithm::join(_args, ", ") + ")";
 }
 
-string formatInfixOp(string const& _op, vector<string> const& _args)
+std::string formatInfixOp(std::string const& _op, std::vector<std::string> const& _args)
 {
 	return "(" + boost::algorithm::join(_args, " " + _op + " ") + ")";
 }
 
-string formatArrayOp(smtutil::Expression const& _expr, vector<string> const& _args)
+std::string formatArrayOp(smtutil::Expression const& _expr, std::vector<std::string> const& _args)
 {
 	if (_expr.name == "select")
 	{
 		auto const& a0 = _args.at(0);
-		static set<string> const ufs{"keccak256", "sha256", "ripemd160", "ecrecover"};
+		static std::set<std::string> const ufs{"keccak256", "sha256", "ripemd160", "ecrecover"};
 		if (ufs.count(a0) || starts_with(a0, "t_function_abi"))
 			return _args.at(0) + "(" + _args.at(1) + ")";
 		return _args.at(0) + "[" + _args.at(1) + "]";
@@ -112,7 +111,7 @@ string formatArrayOp(smtutil::Expression const& _expr, vector<string> const& _ar
 	return formatGenericOp(_expr, _args);
 }
 
-string formatUnaryOp(smtutil::Expression const& _expr, vector<string> const& _args)
+std::string formatUnaryOp(smtutil::Expression const& _expr, std::vector<std::string> const& _args)
 {
 	if (_expr.name == "not")
 		return "!" + _args.at(0);
@@ -122,7 +121,7 @@ string formatUnaryOp(smtutil::Expression const& _expr, vector<string> const& _ar
 
 }
 
-smtutil::Expression substitute(smtutil::Expression _from, map<string, string> const& _subst)
+smtutil::Expression substitute(smtutil::Expression _from, std::map<std::string, std::string> const& _subst)
 {
 	// TODO For now we ignore nested quantifier expressions,
 	// but we should support them in the future.
@@ -135,7 +134,7 @@ smtutil::Expression substitute(smtutil::Expression _from, map<string, string> co
 	return _from;
 }
 
-string toSolidityStr(smtutil::Expression const& _expr)
+std::string toSolidityStr(smtutil::Expression const& _expr)
 {
 	auto const& op = _expr.name;
 
@@ -150,7 +149,7 @@ string toSolidityStr(smtutil::Expression const& _expr)
 		return formatDatatypeAccessor(_expr, strArgs);
 
 	// Infix operators with format replacements.
-	static map<string, string> const infixOps{
+	static std::map<std::string, std::string> const infixOps{
 		{"and", "&&"},
 		{"or", "||"},
 		{"implies", "=>"},
@@ -170,7 +169,7 @@ string toSolidityStr(smtutil::Expression const& _expr)
 	if (infixOps.count(op))
 		return formatInfixOp(infixOps.at(op), strArgs);
 
-	static set<string> const arrayOps{"select", "store", "const_array"};
+	static std::set<std::string> const arrayOps{"select", "store", "const_array"};
 	if (arrayOps.count(op))
 		return formatArrayOp(_expr, strArgs);
 
