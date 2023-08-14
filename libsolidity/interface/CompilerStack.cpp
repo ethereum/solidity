@@ -608,12 +608,21 @@ bool CompilerStack::analyze()
 			if (m_modelCheckerSettings.engine.any())
 				m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
 
-			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
-			modelChecker.checkRequestedSourcesAndContracts(allSources);
-			for (Source const* source: m_sourceOrder)
-				if (source->ast)
-					modelChecker.analyze(*source->ast);
-			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
+			if (m_modelCheckerSettings.engine.any() && !m_readFile)
+				m_errorReporter.warning(
+						7126_error,
+						SourceLocation(),
+						"Model checker analysis requested but no callback for SMT queries was provided, ignoring!"
+				);
+			else
+			{
+				ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
+				modelChecker.checkRequestedSourcesAndContracts(allSources);
+				for (Source const* source: m_sourceOrder)
+					if (source->ast)
+						modelChecker.analyze(*source->ast);
+				m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
+			}
 		}
 	}
 	catch (FatalError const&)
