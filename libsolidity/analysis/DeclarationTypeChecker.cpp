@@ -29,7 +29,6 @@
 
 #include <range/v3/view/transform.hpp>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
@@ -336,10 +335,10 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 
 	if (Expression const* length = _typeName.length())
 	{
-		optional<rational> lengthValue;
+		std::optional<rational> lengthValue;
 		if (length->annotation().type && length->annotation().type->category() == Type::Category::RationalNumber)
 			lengthValue = dynamic_cast<RationalNumberType const&>(*length->annotation().type).value();
-		else if (optional<ConstantEvaluator::TypedRational> value = ConstantEvaluator::evaluate(m_errorReporter, *length))
+		else if (std::optional<ConstantEvaluator::TypedRational> value = ConstantEvaluator::evaluate(m_errorReporter, *length))
 			lengthValue = value->value;
 
 		if (!lengthValue)
@@ -399,10 +398,10 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	Location varLoc = _variable.referenceLocation();
 	DataLocation typeLoc = DataLocation::Memory;
 
-	set<Location> allowedDataLocations = _variable.allowedDataLocations();
+	std::set<Location> allowedDataLocations = _variable.allowedDataLocations();
 	if (!allowedDataLocations.count(varLoc))
 	{
-		auto locationToString = [](VariableDeclaration::Location _location) -> string
+		auto locationToString = [](VariableDeclaration::Location _location) -> std::string
 		{
 			switch (_location)
 			{
@@ -414,7 +413,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 			return {};
 		};
 
-		string errorString;
+		std::string errorString;
 		if (!_variable.hasReferenceOrMappingType())
 			errorString = "Data location can only be specified for array, struct or mapping types";
 		else
@@ -430,9 +429,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 			else if (_variable.isCallableOrCatchParameter())
 				errorString +=
 					" for " +
-					string(_variable.isReturnParameter() ? "return " : "") +
+					std::string(_variable.isReturnParameter() ? "return " : "") +
 					"parameter in" +
-					string(_variable.isExternalCallableParameter() ? " external" : "") +
+					std::string(_variable.isExternalCallableParameter() ? " external" : "") +
 					" function";
 			else
 				errorString += " for variable";

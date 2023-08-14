@@ -21,10 +21,8 @@
 #include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
-using namespace std;
 
 ControlFlowBuilder::ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, FunctionFlow const& _functionFlow, ContractDefinition const* _contract):
 	m_nodeContainer(_nodeContainer),
@@ -37,13 +35,13 @@ ControlFlowBuilder::ControlFlowBuilder(CFG::NodeContainer& _nodeContainer, Funct
 }
 
 
-unique_ptr<FunctionFlow> ControlFlowBuilder::createFunctionFlow(
+std::unique_ptr<FunctionFlow> ControlFlowBuilder::createFunctionFlow(
 	CFG::NodeContainer& _nodeContainer,
 	FunctionDefinition const& _function,
 	ContractDefinition const* _contract
 )
 {
-	auto functionFlow = make_unique<FunctionFlow>();
+	auto functionFlow = std::make_unique<FunctionFlow>();
 	functionFlow->entry = _nodeContainer.newNode();
 	functionFlow->exit = _nodeContainer.newNode();
 	functionFlow->revert = _nodeContainer.newNode();
