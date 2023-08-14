@@ -27,6 +27,8 @@ NAMESPACE_STD_FREE_FILES=(
     libsolc/*
     libsolidity/analysis/*
     libsolidity/ast/*
+    libsolidity/codegen/ir/*
+    libsolidity/codegen/*
 )
 
 (

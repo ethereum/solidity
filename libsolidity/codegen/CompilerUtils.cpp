@@ -33,7 +33,6 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StackTooDeepString.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
@@ -105,9 +104,9 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 }
 
 void CompilerUtils::revertWithError(
-	string const& _signature,
-	vector<Type const*> const& _parameterTypes,
-	vector<Type const*> const& _argumentTypes
+	std::string const& _signature,
+	std::vector<Type const*> const& _parameterTypes,
+	std::vector<Type const*> const& _argumentTypes
 )
 {
 	fetchFreeMemoryPointer();
@@ -215,7 +214,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		m_context << Instruction::DUP1;
 		storeStringData(bytesConstRef(str->value()));
 		if (_padToWordBoundaries)
-			m_context << u256(max<size_t>(32, ((str->value().size() + 31) / 32) * 32));
+			m_context << u256(std::max<size_t>(32, ((str->value().size() + 31) / 32) * 32));
 		else
 			m_context << u256(str->value().size());
 		m_context << Instruction::ADD;
@@ -264,7 +263,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 	Whiskers templ(R"({
 		if lt(len, <encodedSize>) { <revertString> }
 	})");
-	templ("encodedSize", to_string(encodedSize));
+	templ("encodedSize", std::to_string(encodedSize));
 	templ("revertString", m_context.revertReasonIfDebug("Calldata too short"));
 	m_context.appendInlineAssembly(templ.render(), {"len"});
 
@@ -320,7 +319,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 						mstore(dst, array_length)
 						dst := add(dst, 0x20)
 					})");
-					templ("item_size", to_string(arrayType.calldataStride()));
+					templ("item_size", std::to_string(arrayType.calldataStride()));
 					// TODO add test
 					templ("revertStringPointer", m_context.revertReasonIfDebug("ABI memory decoding: invalid data pointer"));
 					templ("revertStringStart", m_context.revertReasonIfDebug("ABI memory decoding: invalid data start"));
@@ -374,7 +373,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 					m_context.appendInlineAssembly(Whiskers(R"({
 						if or(
 							gt(array_length, 0x100000000),
-							gt(add(data_ptr, mul(array_length, )" + to_string(arrayType.calldataStride()) + R"()), input_end)
+							gt(add(data_ptr, mul(array_length, )" + std::to_string(arrayType.calldataStride()) + R"()), input_end)
 						) { <revertString> }
 					})")
 					("revertString", m_context.revertReasonIfDebug("ABI calldata decoding: invalid data pointer"))
@@ -618,7 +617,7 @@ void CompilerUtils::abiEncodeV2(
 
 	// stack: <$value0> <$value1> ... <$value(n-1)> <$headStart>
 
-	string encoderName =
+	std::string encoderName =
 		_padToWordBoundaries ?
 		m_context.abiFunctions().tupleEncoderReversed(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
 		m_context.abiFunctions().tupleEncoderPackedReversed(_givenTypes, _targetTypes);
@@ -631,7 +630,7 @@ void CompilerUtils::abiDecodeV2(TypePointers const& _parameterTypes, bool _fromM
 	m_context << Instruction::DUP2 << Instruction::ADD;
 	m_context << Instruction::SWAP1;
 	// stack: <end> <start>
-	string decoderName = m_context.abiFunctions().tupleDecoder(_parameterTypes, _fromMemory);
+	std::string decoderName = m_context.abiFunctions().tupleDecoder(_parameterTypes, _fromMemory);
 	m_context.callYulFunction(decoderName, 2, sizeOnStack(_parameterTypes));
 }
 
@@ -646,7 +645,7 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 			calldatacopy(memptr, calldatasize(), size)
 			memptr := add(memptr, size)
 		})");
-		templ("element_size", to_string(_type.memoryStride()));
+		templ("element_size", std::to_string(_type.memoryStride()));
 		m_context.appendInlineAssembly(templ.render(), {"length", "memptr"});
 	}
 	else
@@ -842,7 +841,7 @@ void CompilerUtils::convertType(
 				m_context << Instruction::POP << u256(0);
 			else if (targetType.numBytes() > typeOnStack.numBytes() || _cleanupNeeded)
 			{
-				unsigned bytes = min(typeOnStack.numBytes(), targetType.numBytes());
+				unsigned bytes = std::min(typeOnStack.numBytes(), targetType.numBytes());
 				m_context << ((u256(1) << (256 - bytes * 8)) - 1);
 				m_context << Instruction::NOT << Instruction::AND;
 			}
@@ -960,7 +959,7 @@ void CompilerUtils::convertType(
 	case Type::Category::StringLiteral:
 	{
 		auto const& literalType = dynamic_cast<StringLiteralType const&>(_typeOnStack);
-		string const& value = literalType.value();
+		std::string const& value = literalType.value();
 		bytesConstRef data(value);
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
@@ -1186,7 +1185,7 @@ void CompilerUtils::convertType(
 					for (auto const& member: typeOnStack->members(nullptr))
 					{
 						solAssert(!member.type->containsNestedMapping());
-						pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
+						std::pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
 						_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						_context << u256(offsets.second);
 						StorageItem(_context, *member.type).retrieveValue(SourceLocation(), true);
@@ -1268,7 +1267,7 @@ void CompilerUtils::convertType(
 				if (sourceSize > 0 || targetSize > 0)
 				{
 					// Move it back into its place.
-					for (unsigned j = 0; j < min(sourceSize, targetSize); ++j)
+					for (unsigned j = 0; j < std::min(sourceSize, targetSize); ++j)
 						m_context <<
 							swapInstruction(depth + targetSize - sourceSize) <<
 							Instruction::POP;
@@ -1375,7 +1374,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		[type](CompilerContext& _context) {
 			CompilerUtils utils(_context);
 
-			utils.allocateMemory(max<u256>(32u, type->memoryDataSize()));
+			utils.allocateMemory(std::max<u256>(32u, type->memoryDataSize()));
 			_context << Instruction::DUP1;
 
 			if (auto structType = dynamic_cast<StructType const*>(type))
@@ -1493,7 +1492,7 @@ void CompilerUtils::popAndJump(unsigned _toHeight, evmasm::AssemblyItem const& _
 	m_context.adjustStackOffset(static_cast<int>(amount));
 }
 
-unsigned CompilerUtils::sizeOnStack(vector<Type const*> const& _variableTypes)
+unsigned CompilerUtils::sizeOnStack(std::vector<Type const*> const& _variableTypes)
 {
 	unsigned size = 0;
 	for (Type const* type: _variableTypes)
@@ -1509,7 +1508,7 @@ void CompilerUtils::computeHashStatic()
 
 void CompilerUtils::copyContractCodeToMemory(ContractDefinition const& contract, bool _creation)
 {
-	string which = _creation ? "Creation" : "Runtime";
+	std::string which = _creation ? "Creation" : "Runtime";
 	m_context.callLowLevelFunction(
 		"$copyContract" + which + "CodeToMemory_" + contract.type()->identifier(),
 		1,
@@ -1517,7 +1516,7 @@ void CompilerUtils::copyContractCodeToMemory(ContractDefinition const& contract,
 		[&contract, _creation](CompilerContext& _context)
 		{
 			// copy the contract's code into memory
-			shared_ptr<evmasm::Assembly> assembly =
+			std::shared_ptr<evmasm::Assembly> assembly =
 				_creation ?
 				_context.compiledContract(contract) :
 				_context.compiledContractRuntime(contract);

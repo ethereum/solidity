@@ -36,7 +36,6 @@
 #include <libevmasm/Instruction.h>
 #include <liblangutil/Exceptions.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
@@ -314,7 +313,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		if (!_sourceType.isByteArrayOrString())
 			convertLengthToSize(_sourceType);
 
-		string routine = "calldatacopy(target, source, len)\n";
+		std::string routine = "calldatacopy(target, source, len)\n";
 		if (_padToWordBoundaries)
 			routine += R"(
 				// Set padding suffix to zero
@@ -890,7 +889,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 			sstore(ref, slot_value)
 		})");
 		code("panicSelector", util::selectorFromSignatureU256("Panic(uint256)").str());
-		code("emptyArrayPop", to_string(unsigned(util::PanicCode::EmptyArrayPop)));
+		code("emptyArrayPop", std::to_string(unsigned(util::PanicCode::EmptyArrayPop)));
 		m_context.appendInlineAssembly(code.render(), {"ref", "slot_value", "length"});
 		m_context << Instruction::POP << Instruction::POP << Instruction::POP;
 	}
