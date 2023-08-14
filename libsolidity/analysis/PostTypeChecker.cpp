@@ -27,7 +27,6 @@
 
 #include <memory>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -204,7 +203,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 			// Iterating through the dependencies needs to be deterministic and thus cannot
 			// depend on the memory layout.
 			// Because of that, we sort by AST node id.
-			vector<VariableDeclaration const*> dependencies(
+			std::vector<VariableDeclaration const*> dependencies(
 				m_constVariableDependencies[&_variable].begin(),
 				m_constVariableDependencies[&_variable].end()
 			);
@@ -427,10 +426,10 @@ struct ReservedErrorSelector: public PostTypeChecker::Checker
 
 PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
 {
-	m_checkers.push_back(make_shared<ConstStateVarCircularReferenceChecker>(_errorReporter));
-	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));
-	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
-	m_checkers.push_back(make_shared<EventOutsideEmitErrorOutsideRevertChecker>(_errorReporter));
-	m_checkers.push_back(make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
-	m_checkers.push_back(make_shared<ReservedErrorSelector>(_errorReporter));
+	m_checkers.push_back(std::make_shared<ConstStateVarCircularReferenceChecker>(_errorReporter));
+	m_checkers.push_back(std::make_shared<OverrideSpecifierChecker>(_errorReporter));
+	m_checkers.push_back(std::make_shared<ModifierContextChecker>(_errorReporter));
+	m_checkers.push_back(std::make_shared<EventOutsideEmitErrorOutsideRevertChecker>(_errorReporter));
+	m_checkers.push_back(std::make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
+	m_checkers.push_back(std::make_shared<ReservedErrorSelector>(_errorReporter));
 }
