@@ -18,7 +18,6 @@
 
 #include <libsolidity/ast/CallGraph.h>
 
-using namespace std;
 using namespace solidity::frontend;
 
 bool CallGraph::CompareByID::operator()(Node const& _lhs, Node const& _rhs) const
@@ -26,21 +25,21 @@ bool CallGraph::CompareByID::operator()(Node const& _lhs, Node const& _rhs) cons
 	if (_lhs.index() != _rhs.index())
 		return _lhs.index() < _rhs.index();
 
-	if (holds_alternative<SpecialNode>(_lhs))
-		return get<SpecialNode>(_lhs) < get<SpecialNode>(_rhs);
-	return get<CallableDeclaration const*>(_lhs)->id() < get<CallableDeclaration const*>(_rhs)->id();
+	if (std::holds_alternative<SpecialNode>(_lhs))
+		return std::get<SpecialNode>(_lhs) < std::get<SpecialNode>(_rhs);
+	return std::get<CallableDeclaration const*>(_lhs)->id() < std::get<CallableDeclaration const*>(_rhs)->id();
 }
 
 bool CallGraph::CompareByID::operator()(Node const& _lhs, int64_t _rhs) const
 {
-	solAssert(!holds_alternative<SpecialNode>(_lhs), "");
+	solAssert(!std::holds_alternative<SpecialNode>(_lhs), "");
 
-	return get<CallableDeclaration const*>(_lhs)->id() < _rhs;
+	return std::get<CallableDeclaration const*>(_lhs)->id() < _rhs;
 }
 
 bool CallGraph::CompareByID::operator()(int64_t _lhs, Node const& _rhs) const
 {
-	solAssert(!holds_alternative<SpecialNode>(_rhs), "");
+	solAssert(!std::holds_alternative<SpecialNode>(_rhs), "");
 
-	return _lhs < get<CallableDeclaration const*>(_rhs)->id();
+	return _lhs < std::get<CallableDeclaration const*>(_rhs)->id();
 }

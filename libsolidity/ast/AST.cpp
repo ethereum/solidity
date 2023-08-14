@@ -39,13 +39,12 @@
 #include <functional>
 #include <utility>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
 namespace
 {
-TryCatchClause const* findClause(vector<ASTPointer<TryCatchClause>> const& _clauses, optional<string> _errorName = {})
+TryCatchClause const* findClause(std::vector<ASTPointer<TryCatchClause>> const& _clauses, std::optional<std::string> _errorName = {})
 {
 	for (auto const& clause: ranges::views::tail(_clauses))
 		if (_errorName.has_value() ? clause->errorName() == _errorName : clause->errorName().empty())
@@ -119,7 +118,7 @@ FunctionDefinition const* ASTNode::resolveFunctionCall(FunctionCall const& _func
 ASTAnnotation& ASTNode::annotation() const
 {
 	if (!m_annotation)
-		m_annotation = make_unique<ASTAnnotation>();
+		m_annotation = std::make_unique<ASTAnnotation>();
 	return *m_annotation;
 }
 
@@ -128,9 +127,9 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 	return initAnnotation<SourceUnitAnnotation>();
 }
 
-set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<SourceUnit const*> _skipList) const
+std::set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, std::set<SourceUnit const*> _skipList) const
 {
-	set<SourceUnit const*> sourceUnits;
+	std::set<SourceUnit const*> sourceUnits;
 	for (ImportDirective const* importDirective: filteredNodes<ImportDirective>(nodes()))
 	{
 		auto const& sourceUnit = importDirective->annotation().sourceUnit;
@@ -161,11 +160,11 @@ bool ContractDefinition::derivesFrom(ContractDefinition const& _base) const
 	return util::contains(annotation().linearizedBaseContracts, &_base);
 }
 
-map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions(bool _includeInheritedFunctions) const
+std::map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions(bool _includeInheritedFunctions) const
 {
 	auto exportedFunctionList = interfaceFunctionList(_includeInheritedFunctions);
 
-	map<util::FixedHash<4>, FunctionTypePointer> exportedFunctions;
+	std::map<util::FixedHash<4>, FunctionTypePointer> exportedFunctions;
 	for (auto const& it: exportedFunctionList)
 		exportedFunctions.insert(it);
 
@@ -208,11 +207,11 @@ FunctionDefinition const* ContractDefinition::receiveFunction() const
 	return nullptr;
 }
 
-vector<EventDefinition const*> const& ContractDefinition::definedInterfaceEvents() const
+std::vector<EventDefinition const*> const& ContractDefinition::definedInterfaceEvents() const
 {
 	return m_interfaceEvents.init([&]{
-		set<string> eventsSeen;
-		vector<EventDefinition const*> interfaceEvents;
+		std::set<std::string> eventsSeen;
+		std::vector<EventDefinition const*> interfaceEvents;
 
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 			for (EventDefinition const* e: contract->events())
@@ -222,7 +221,7 @@ vector<EventDefinition const*> const& ContractDefinition::definedInterfaceEvents
 				///       and not to function encoding (jump vs. call)
 				FunctionType const* functionType = e->functionType(true);
 				solAssert(functionType, "");
-				string eventSignature = functionType->externalSignature();
+				std::string eventSignature = functionType->externalSignature();
 				if (eventsSeen.count(eventSignature) == 0)
 				{
 					eventsSeen.insert(eventSignature);
@@ -233,7 +232,7 @@ vector<EventDefinition const*> const& ContractDefinition::definedInterfaceEvents
 	});
 }
 
-vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() const
+std::vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() const
 {
 	solAssert(annotation().creationCallGraph.set(), "");
 
@@ -243,9 +242,9 @@ vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() c
 	);
 }
 
-vector<EventDefinition const*> ContractDefinition::interfaceEvents(bool _requireCallGraph) const
+std::vector<EventDefinition const*> ContractDefinition::interfaceEvents(bool _requireCallGraph) const
 {
-	set<EventDefinition const*, CompareByID> result;
+	std::set<EventDefinition const*, CompareByID> result;
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		result += contract->events();
 	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set());
@@ -255,12 +254,12 @@ vector<EventDefinition const*> ContractDefinition::interfaceEvents(bool _require
 		result += usedInterfaceEvents();
 	// We could filter out all events that do not have an external interface
 	// if _requireCallGraph is false.
-	return util::convertContainer<vector<EventDefinition const*>>(std::move(result));
+	return util::convertContainer<std::vector<EventDefinition const*>>(std::move(result));
 }
 
-vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
+std::vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
 {
-	set<ErrorDefinition const*, CompareByID> result;
+	std::set<ErrorDefinition const*, CompareByID> result;
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		result += filteredNodes<ErrorDefinition>(contract->m_subNodes);
 	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set(), "");
@@ -270,20 +269,20 @@ vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _require
 		result +=
 			(*annotation().creationCallGraph)->usedErrors +
 			(*annotation().deployedCallGraph)->usedErrors;
-	return util::convertContainer<vector<ErrorDefinition const*>>(std::move(result));
+	return util::convertContainer<std::vector<ErrorDefinition const*>>(std::move(result));
 }
 
-vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const
+std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const
 {
 	return m_interfaceFunctionList[_includeInheritedFunctions].init([&]{
-		set<string> signaturesSeen;
-		vector<pair<util::FixedHash<4>, FunctionTypePointer>> interfaceFunctionList;
+		std::set<std::string> signaturesSeen;
+		std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>> interfaceFunctionList;
 
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		{
 			if (_includeInheritedFunctions == false && contract != this)
 				continue;
-			vector<FunctionTypePointer> functions;
+			std::vector<FunctionTypePointer> functions;
 			for (FunctionDefinition const* f: contract->definedFunctions())
 				if (f->isPartOfExternalInterface())
 					functions.push_back(TypeProvider::function(*f, FunctionType::Kind::External));
@@ -295,7 +294,7 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 				if (!fun->interfaceFunctionType())
 					// Fails hopefully because we already registered the error
 					continue;
-				string functionSignature = fun->externalSignature();
+				std::string functionSignature = fun->externalSignature();
 				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					signaturesSeen.insert(functionSignature);
@@ -357,7 +356,7 @@ FunctionDefinition const* ContractDefinition::nextConstructor(ContractDefinition
 	return nullptr;
 }
 
-multimap<std::string, FunctionDefinition const*> const& ContractDefinition::definedFunctionsByName() const
+std::multimap<std::string, FunctionDefinition const*> const& ContractDefinition::definedFunctionsByName() const
 {
 	return m_definedFunctionsByName.init([&]{
 		std::multimap<std::string, FunctionDefinition const*> result;
@@ -386,7 +385,7 @@ TypeDeclarationAnnotation& UserDefinedValueTypeDefinition::annotation() const
 
 std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingForDirective::functionsAndOperators() const
 {
-	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<vector>;
+	return ranges::zip_view(m_functionsOrLibrary, m_operators) | ranges::to<std::vector>;
 }
 
 Type const* StructDefinition::type() const
@@ -484,12 +483,12 @@ Type const* FunctionDefinition::typeViaContractName() const
 		return TypeProvider::function(*this, FunctionType::Kind::Declaration);
 }
 
-string FunctionDefinition::externalSignature() const
+std::string FunctionDefinition::externalSignature() const
 {
 	return TypeProvider::function(*this)->externalSignature();
 }
 
-string FunctionDefinition::externalIdentifierHex() const
+std::string FunctionDefinition::externalIdentifierHex() const
 {
 	return TypeProvider::function(*this)->externalIdentifierHex();
 }
@@ -639,7 +638,7 @@ CallableDeclaration const* Scopable::functionOrModifierDefinition() const
 	return nullptr;
 }
 
-string Scopable::sourceUnitName() const
+std::string Scopable::sourceUnitName() const
 {
 	return *sourceUnit().annotation().path;
 }
@@ -701,7 +700,7 @@ bool VariableDeclaration::isCallableOrCatchParameter() const
 	if (isReturnParameter() || isTryCatchParameter())
 		return true;
 
-	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
+	std::vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
 
 	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
 		parameters = &funTypeName->parameterTypes();
@@ -722,7 +721,7 @@ bool VariableDeclaration::isLocalOrReturn() const
 
 bool VariableDeclaration::isReturnParameter() const
 {
-	vector<ASTPointer<VariableDeclaration>> const* returnParameters = nullptr;
+	std::vector<ASTPointer<VariableDeclaration>> const* returnParameters = nullptr;
 
 	if (auto const* funTypeName = dynamic_cast<FunctionTypeName const*>(scope()))
 		returnParameters = &funTypeName->returnParameterTypes();
@@ -813,15 +812,15 @@ bool VariableDeclaration::isFileLevelVariable() const
 	return dynamic_cast<SourceUnit const*>(scope());
 }
 
-set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() const
+std::set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() const
 {
 	using Location = VariableDeclaration::Location;
 
 	if (!hasReferenceOrMappingType() || isStateVariable() || isEventOrErrorParameter())
-		return set<Location>{ Location::Unspecified };
+		return std::set<Location>{ Location::Unspecified };
 	else if (isCallableOrCatchParameter())
 	{
-		set<Location> locations{ Location::Memory };
+		std::set<Location> locations{ Location::Memory };
 		if (
 			isConstructorParameter() ||
 			isInternalCallableParameter() ||
@@ -835,13 +834,13 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	}
 	else if (isLocalVariable())
 		// Further restrictions will be imposed later on.
-		return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
+		return std::set<Location>{ Location::Memory, Location::Storage, Location::CallData };
 	else
 		// Struct members etc.
-		return set<Location>{ Location::Unspecified };
+		return std::set<Location>{ Location::Unspecified };
 }
 
-string VariableDeclaration::externalIdentifierHex() const
+std::string VariableDeclaration::externalIdentifierHex() const
 {
 	solAssert(isStateVariable() && isPublic(), "Can only be called for public state variables");
 	return TypeProvider::function(*this)->externalIdentifierHex();
@@ -958,7 +957,7 @@ FunctionCallAnnotation& FunctionCall::annotation() const
 	return initAnnotation<FunctionCallAnnotation>();
 }
 
-vector<ASTPointer<Expression const>> FunctionCall::sortedArguments() const
+std::vector<ASTPointer<Expression const>> FunctionCall::sortedArguments() const
 {
 	// normal arguments
 	if (m_names.empty())
@@ -975,7 +974,7 @@ vector<ASTPointer<Expression const>> FunctionCall::sortedArguments() const
 	else
 		functionType = dynamic_cast<FunctionType const*>(m_expression->annotation().type);
 
-	vector<ASTPointer<Expression const>> sorted;
+	std::vector<ASTPointer<Expression const>> sorted;
 	for (auto const& parameterName: functionType->parameterNames())
 	{
 		bool found = false;
@@ -1030,13 +1029,13 @@ bool Literal::passesAddressChecksum() const
 	return util::passesAddressChecksum(valueWithoutUnderscores(), true);
 }
 
-string Literal::getChecksummedAddress() const
+std::string Literal::getChecksummedAddress() const
 {
 	solAssert(isHexNumber(), "Expected hex number");
 	/// Pad literal to be a proper hex address.
-	string address = valueWithoutUnderscores().substr(2);
+	std::string address = valueWithoutUnderscores().substr(2);
 	if (address.length() > 40)
-		return string();
+		return std::string();
 	address.insert(address.begin(), 40 - address.size(), '0');
 	return util::getChecksummedAddress(address);
 }

@@ -25,7 +25,8 @@ NAMESPACE_STD_FREE_FILES=(
     liblangutil/*
     libsmtutil/*
     libsolc/*
-	libsolidity/analysis/*
+    libsolidity/analysis/*
+    libsolidity/ast/*
 )
 
 (
