@@ -37,7 +37,6 @@
 #include <map>
 #include <memory>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
@@ -45,16 +44,16 @@ using namespace solidity::langutil;
 
 GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	AssemblyItems const& _items,
-	string const& _signature
+	std::string const& _signature
 ) const
 {
-	auto state = make_shared<KnownState>();
+	auto state = std::make_shared<KnownState>();
 
 	if (!_signature.empty())
 	{
 		ExpressionClasses& classes = state->expressionClasses();
 		using Id = ExpressionClasses::Id;
-		using Ids = vector<Id>;
+		using Ids = std::vector<Id>;
 		Id hashValue = classes.find(u256(util::selectorFromSignatureU32(_signature)));
 		Id calldata = classes.find(Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
 		if (!m_evmVersion.hasBitwiseShifting())
@@ -88,7 +87,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	FunctionDefinition const& _function
 ) const
 {
-	auto state = make_shared<KnownState>();
+	auto state = std::make_shared<KnownState>();
 
 	unsigned parametersSize = CompilerUtils::sizeOnStack(_function.parameters());
 	if (parametersSize > 16)
@@ -104,13 +103,13 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	return PathGasMeter::estimateMax(_items, m_evmVersion, _offset, state);
 }
 
-set<ASTNode const*> GasEstimator::finestNodesAtLocation(
-	vector<ASTNode const*> const& _roots
+std::set<ASTNode const*> GasEstimator::finestNodesAtLocation(
+	std::vector<ASTNode const*> const& _roots
 )
 {
-	map<SourceLocation, ASTNode const*> locations;
-	set<ASTNode const*> nodes;
-	SimpleASTVisitor visitor(function<bool(ASTNode const&)>(), [&](ASTNode const& _n)
+	std::map<SourceLocation, ASTNode const*> locations;
+	std::set<ASTNode const*> nodes;
+	SimpleASTVisitor visitor(std::function<bool(ASTNode const&)>(), [&](ASTNode const& _n)
 	{
 		if (!locations.count(_n.location()))
 		{

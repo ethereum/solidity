@@ -23,7 +23,6 @@
 
 #include <libsolidity/ast/AST.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
@@ -42,9 +41,9 @@ bool anyDataStoredInStorage(TypePointers const& _pointers)
 Json::Value ABI::generate(ContractDefinition const& _contractDef)
 {
 	auto compare = [](Json::Value const& _a, Json::Value const& _b) -> bool {
-		return make_tuple(_a["type"], _a["name"]) < make_tuple(_b["type"], _b["name"]);
+		return std::make_tuple(_a["type"], _a["name"]) < std::make_tuple(_b["type"], _b["name"]);
 	};
-	multiset<Json::Value, decltype(compare)> abi(compare);
+	std::multiset<Json::Value, decltype(compare)> abi(compare);
 
 	for (auto it: _contractDef.interfaceFunctions())
 	{
@@ -144,9 +143,9 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 }
 
 Json::Value ABI::formatTypeList(
-	vector<string> const& _names,
-	vector<Type const*> const& _encodingTypes,
-	vector<Type const*> const& _solidityTypes,
+	std::vector<std::string> const& _names,
+	std::vector<Type const*> const& _encodingTypes,
+	std::vector<Type const*> const& _solidityTypes,
 	bool _forLibrary
 )
 {
@@ -162,7 +161,7 @@ Json::Value ABI::formatTypeList(
 }
 
 Json::Value ABI::formatType(
-	string const& _name,
+	std::string const& _name,
 	Type const& _encodingType,
 	Type const& _solidityType,
 	bool _forLibrary
@@ -171,7 +170,7 @@ Json::Value ABI::formatType(
 	Json::Value ret{Json::objectValue};
 	ret["name"] = _name;
 	ret["internalType"] = _solidityType.toString(true);
-	string suffix = (_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)) ? " storage" : "";
+	std::string suffix = (_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)) ? " storage" : "";
 	if (_encodingType.isValueType() || (_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)))
 		ret["type"] = _encodingType.canonicalName() + suffix;
 	else if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(&_encodingType))
@@ -180,11 +179,11 @@ Json::Value ABI::formatType(
 			ret["type"] = _encodingType.canonicalName() + suffix;
 		else
 		{
-			string suffix;
+			std::string suffix;
 			if (arrayType->isDynamicallySized())
 				suffix = "[]";
 			else
-				suffix = string("[") + arrayType->length().str() + "]";
+				suffix = std::string("[") + arrayType->length().str() + "]";
 			solAssert(arrayType->baseType(), "");
 			Json::Value subtype = formatType(
 				"",

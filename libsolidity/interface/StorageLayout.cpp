@@ -20,7 +20,6 @@
 
 #include <libsolidity/ast/TypeProvider.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
@@ -112,7 +111,7 @@ void StorageLayout::generate(Type const* _type)
 	solAssert(typeInfo.isMember("encoding"), "");
 }
 
-string StorageLayout::typeKeyName(Type const* _type)
+std::string StorageLayout::typeKeyName(Type const* _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
 		return TypeProvider::withLocationIfReference(refType->location(), _type)->richIdentifier();
