@@ -43,7 +43,6 @@
 #include <numeric>
 #include <utility>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
@@ -242,7 +241,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			if (auto arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]))
 				if (!arrayType->isByteArrayOrString())
 					continue;
-			pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
+			std::pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
 			m_context << Instruction::DUP1 << u256(offsets.first) << Instruction::ADD << u256(offsets.second);
 			Type const* memberType = structType->memberType(names[i]);
 			StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true);
@@ -370,7 +369,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
 
 		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
-		utils().allocateMemory(max(u256(32u), arrayType.memoryDataSize()));
+		utils().allocateMemory(std::max(u256(32u), arrayType.memoryDataSize()));
 		m_context << Instruction::DUP1;
 
 		for (auto const& component: _tuple.components())
@@ -383,7 +382,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 	}
 	else
 	{
-		vector<unique_ptr<LValue>> lvalues;
+		std::vector<std::unique_ptr<LValue>> lvalues;
 		for (auto const& component: _tuple.components())
 			if (component)
 			{
@@ -395,13 +394,13 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 				}
 			}
 			else if (_tuple.annotation().willBeWrittenTo)
-				lvalues.push_back(unique_ptr<LValue>());
+				lvalues.push_back(std::unique_ptr<LValue>());
 		if (_tuple.annotation().willBeWrittenTo)
 		{
 			if (_tuple.components().size() == 1)
 				m_currentLValue = std::move(lvalues[0]);
 			else
-				m_currentLValue = make_unique<TupleObject>(m_context, std::move(lvalues));
+				m_currentLValue = std::make_unique<TupleObject>(m_context, std::move(lvalues));
 		}
 	}
 	return false;
@@ -524,7 +523,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			m_context << u256(0) << Instruction::SUB;
 		break;
 	default:
-		solAssert(false, "Invalid unary operator: " + string(TokenTraits::toString(_unaryOperation.getOperator())));
+		solAssert(false, "Invalid unary operator: " + std::string(TokenTraits::toString(_unaryOperation.getOperator())));
 	}
 	return false;
 }
@@ -659,14 +658,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 	TypePointers parameterTypes = functionType->parameterTypes();
 
-	vector<ASTPointer<Expression const>> const& arguments = _functionCall.sortedArguments();
+	std::vector<ASTPointer<Expression const>> const& arguments = _functionCall.sortedArguments();
 
 	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
 
-		utils().allocateMemory(max(u256(32u), structType.memoryDataSize()));
+		utils().allocateMemory(std::max(u256(32u), structType.memoryDataSize()));
 		m_context << Instruction::DUP1;
 
 		for (unsigned i = 0; i < arguments.size(); ++i)
@@ -992,7 +991,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Error:
 		{
 			_functionCall.expression().accept(*this);
-			vector<Type const*> argumentTypes;
+			std::vector<Type const*> argumentTypes;
 			for (ASTPointer<Expression const> const& arg: _functionCall.sortedArguments())
 			{
 				arg->accept(*this);
@@ -1060,7 +1059,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::RIPEMD160:
 		{
 			_functionCall.expression().accept(*this);
-			static map<FunctionType::Kind, u256> const contractAddresses{
+			static std::map<FunctionType::Kind, u256> const contractAddresses{
 				{FunctionType::Kind::ECRecover, 1},
 				{FunctionType::Kind::SHA256, 2},
 				{FunctionType::Kind::RIPEMD160, 3}
@@ -1151,8 +1150,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::BytesConcat:
 		{
 			_functionCall.expression().accept(*this);
-			vector<Type const*> argumentTypes;
-			vector<Type const*> targetTypes;
+			std::vector<Type const*> argumentTypes;
+			std::vector<Type const*> targetTypes;
 			for (auto const& argument: arguments)
 			{
 				argument->accept(*this);
@@ -1416,7 +1415,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// stack: <memory pointer> <selector>
 
 				// load current memory, mask and combine the selector
-				string mask = formatNumber((u256(-1) >> 32));
+				std::string mask = formatNumber((u256(-1) >> 32));
 				m_context.appendInlineAssembly(R"({
 					let data_start := add(mem_ptr, 0x20)
 					let data := mload(data_start)
@@ -1476,7 +1475,7 @@ bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
 	// Desired Stack: [salt], [gas], [value]
 	enum Option { Salt, Gas, Value };
 
-	vector<Option> presentOptions;
+	std::vector<Option> presentOptions;
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(
 		*_functionCallOptions.expression().annotation().type
 	);
@@ -1486,7 +1485,7 @@ bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
 
 	for (size_t i = 0; i < _functionCallOptions.options().size(); ++i)
 	{
-		string const& name = *_functionCallOptions.names()[i];
+		std::string const& name = *_functionCallOptions.names()[i];
 		Type const* requiredType = TypeProvider::uint256();
 		Option newOption;
 		if (name == "salt")
@@ -1818,7 +1817,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			m_context << Instruction::EXTCODEHASH;
 		}
-		else if ((set<string>{"send", "transfer"}).count(member))
+		else if ((std::set<std::string>{"send", "transfer"}).count(member))
 		{
 			solAssert(dynamic_cast<AddressType const&>(*_memberAccess.expression().annotation().type).stateMutability() == StateMutability::Payable, "");
 			utils().convertType(
@@ -1827,7 +1826,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				true
 			);
 		}
-		else if ((set<string>{"call", "callcode", "delegatecall", "staticcall"}).count(member))
+		else if ((std::set<std::string>{"call", "callcode", "delegatecall", "staticcall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				*TypeProvider::address(),
@@ -1910,7 +1909,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				Whiskers(R"({
 					mstore(start, sub(end, add(start, 0x20)))
 					mstore(<free>, and(add(end, 31), not(31)))
-				})")("free", to_string(CompilerUtils::freeMemoryPointer)).render(),
+				})")("free", std::to_string(CompilerUtils::freeMemoryPointer)).render(),
 				{"start", "end"}
 			);
 			m_context << Instruction::POP;
@@ -1946,7 +1945,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				solAssert(false, "min/max not available for the given type.");
 
 		}
-		else if ((set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
+		else if ((std::set<std::string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{
 			// no-op
 		}
@@ -1961,7 +1960,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 		case DataLocation::Storage:
 		{
-			pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
+			std::pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
 			m_context << offsets.first << Instruction::ADD << u256(offsets.second);
 			setLValueToStorageItem(_memberAccess);
 			break;
@@ -2454,7 +2453,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token _operator, Type cons
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	if (m_context.arithmetic() == Arithmetic::Checked)
 	{
-		string functionName;
+		std::string functionName;
 		switch (_operator)
 		{
 		case Token::Add:
@@ -2620,7 +2619,7 @@ void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type cons
 
 void ExpressionCompiler::appendExternalFunctionCall(
 	FunctionType const& _functionType,
-	vector<ASTPointer<Expression const>> const& _arguments,
+	std::vector<ASTPointer<Expression const>> const& _arguments,
 	bool _tryCall
 )
 {
