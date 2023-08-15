@@ -26,42 +26,41 @@
 
 #include <range/v3/view.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::smtutil;
 using namespace solidity::frontend::smt;
 
 BlockchainVariable::BlockchainVariable(
-	string _name,
-	map<string, smtutil::SortPointer> _members,
+	std::string _name,
+	std::map<std::string, smtutil::SortPointer> _members,
 	EncodingContext& _context
 ):
 	m_name(std::move(_name)),
 	m_members(std::move(_members)),
 	m_context(_context)
 {
-	vector<string> members;
-	vector<SortPointer> sorts;
+	std::vector<std::string> members;
+	std::vector<SortPointer> sorts;
 	for (auto const& [component, sort]: m_members)
 	{
 		members.emplace_back(component);
 		sorts.emplace_back(sort);
 		m_componentIndices[component] = static_cast<unsigned>(members.size() - 1);
 	}
-	m_tuple = make_unique<SymbolicTupleVariable>(
-		make_shared<smtutil::TupleSort>(m_name + "_type", members, sorts),
+	m_tuple = std::make_unique<SymbolicTupleVariable>(
+		std::make_shared<smtutil::TupleSort>(m_name + "_type", members, sorts),
 		m_name,
 		m_context
 	);
 }
 
-smtutil::Expression BlockchainVariable::member(string const& _member) const
+smtutil::Expression BlockchainVariable::member(std::string const& _member) const
 {
 	return m_tuple->component(m_componentIndices.at(_member));
 }
 
-smtutil::Expression BlockchainVariable::assignMember(string const& _member, smtutil::Expression const& _value)
+smtutil::Expression BlockchainVariable::assignMember(std::string const& _member, smtutil::Expression const& _value)
 {
 	smtutil::Expression newTuple = smt::assignMember(m_tuple->currentValue(), {{_member, _value}});
 	m_context.addAssertion(m_tuple->increaseIndex() == newTuple);
@@ -104,9 +103,9 @@ smtutil::Expression SymbolicState::blockhash(smtutil::Expression _blockNumber) c
 
 void SymbolicState::newBalances()
 {
-	auto tupleSort = dynamic_pointer_cast<TupleSort>(stateSort());
+	auto tupleSort = std::dynamic_pointer_cast<TupleSort>(stateSort());
 	auto balanceSort = tupleSort->components.at(tupleSort->memberToIndex.at("balances"));
-	SymbolicVariable newBalances(balanceSort, "fresh_balances_" + to_string(m_context.newUniqueId()), m_context);
+	SymbolicVariable newBalances(balanceSort, "fresh_balances_" + std::to_string(m_context.newUniqueId()), m_context);
 	m_state->assignMember("balances", newBalances.currentValue());
 }
 
@@ -158,7 +157,7 @@ void SymbolicState::newStorage()
 {
 	auto newStorageVar = SymbolicTupleVariable(
 		m_state->member("storage").sort,
-		"havoc_storage_" + to_string(m_context.newUniqueId()),
+		"havoc_storage_" + std::to_string(m_context.newUniqueId()),
 		m_context
 	);
 	m_state->assignMember("storage", newStorageVar.currentValue());
@@ -170,7 +169,7 @@ void SymbolicState::writeStateVars(ContractDefinition const& _contract, smtutil:
 	if (stateVars.empty())
 		return;
 
-	map<string, smtutil::Expression> values;
+	std::map<std::string, smtutil::Expression> values;
 	for (auto var: stateVars)
 		values.emplace(stateVarStorageKey(*var, _contract), m_context.variable(*var)->currentValue());
 
@@ -207,7 +206,7 @@ void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression
 	m_state->assignMember("balances", newBalances);
 }
 
-smtutil::Expression SymbolicState::txMember(string const& _member) const
+smtutil::Expression SymbolicState::txMember(std::string const& _member) const
 {
 	return m_tx.member(_member);
 }
@@ -268,8 +267,8 @@ void SymbolicState::prepareForSourceUnit(SourceUnit const& _source, bool _storag
 {
 	auto allSources = _source.referencedSourceUnits(true);
 	allSources.insert(&_source);
-	set<FunctionCall const*, ASTCompareByID<FunctionCall>> abiCalls;
-	set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> contracts;
+	std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> abiCalls;
+	std::set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> contracts;
 	for (auto const& source: allSources)
 	{
 		abiCalls += SMTEncoder::collectABICalls(source);
@@ -283,34 +282,34 @@ void SymbolicState::prepareForSourceUnit(SourceUnit const& _source, bool _storag
 
 /// Private helpers.
 
-string SymbolicState::contractSuffix(ContractDefinition const& _contract) const
+std::string SymbolicState::contractSuffix(ContractDefinition const& _contract) const
 {
-	return "_" + _contract.name() + "_" + to_string(_contract.id());
+	return "_" + _contract.name() + "_" + std::to_string(_contract.id());
 }
 
-string SymbolicState::contractStorageKey(ContractDefinition const& _contract) const
+std::string SymbolicState::contractStorageKey(ContractDefinition const& _contract) const
 {
 	return "storage" + contractSuffix(_contract);
 }
 
-string SymbolicState::stateVarStorageKey(VariableDeclaration const& _var, ContractDefinition const& _contract) const
+std::string SymbolicState::stateVarStorageKey(VariableDeclaration const& _var, ContractDefinition const& _contract) const
 {
-	return _var.name() + "_" + to_string(_var.id()) + contractSuffix(_contract);
+	return _var.name() + "_" + std::to_string(_var.id()) + contractSuffix(_contract);
 }
 
-void SymbolicState::buildState(set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> const& _contracts, bool _allStorages)
+void SymbolicState::buildState(std::set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> const& _contracts, bool _allStorages)
 {
-	map<string, SortPointer> stateMembers{
-		{"balances", make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort)}
+	std::map<std::string, SortPointer> stateMembers{
+		{"balances", std::make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort)}
 	};
 
 	if (_allStorages)
 	{
-		vector<string> memberNames;
-		vector<SortPointer> memberSorts;
+		std::vector<std::string> memberNames;
+		std::vector<SortPointer> memberSorts;
 		for (auto contract: _contracts)
 		{
-			string suffix = contractSuffix(*contract);
+			std::string suffix = contractSuffix(*contract);
 
 			// z3 doesn't like empty tuples, so if the contract has 0
 			// state vars we can't put it there.
@@ -319,16 +318,16 @@ void SymbolicState::buildState(set<ContractDefinition const*, ASTCompareByID<Con
 				continue;
 
 			auto names = applyMap(stateVars, [&](auto var) {
-				return var->name() + "_" + to_string(var->id()) + suffix;
+				return var->name() + "_" + std::to_string(var->id()) + suffix;
 			});
 			auto sorts = applyMap(stateVars, [](auto var) { return smtSortAbstractFunction(*var->type()); });
 
-			string name = "storage" + suffix;
-			auto storageTuple = make_shared<smtutil::TupleSort>(
+			std::string name = "storage" + suffix;
+			auto storageTuple = std::make_shared<smtutil::TupleSort>(
 				name + "_type", names, sorts
 			);
 
-			auto storageSort = make_shared<smtutil::ArraySort>(
+			auto storageSort = std::make_shared<smtutil::ArraySort>(
 				smtSort(*TypeProvider::address()),
 				storageTuple
 			);
@@ -339,26 +338,26 @@ void SymbolicState::buildState(set<ContractDefinition const*, ASTCompareByID<Con
 
 		stateMembers.emplace(
 			"isActive",
-			make_shared<smtutil::ArraySort>(smtSort(*TypeProvider::address()), smtutil::SortProvider::boolSort)
+			std::make_shared<smtutil::ArraySort>(smtSort(*TypeProvider::address()), smtutil::SortProvider::boolSort)
 		);
 		stateMembers.emplace(
 			"storage",
-			make_shared<smtutil::TupleSort>(
+			std::make_shared<smtutil::TupleSort>(
 				"storage_type", memberNames, memberSorts
 			)
 		);
 	}
 
-	m_state = make_unique<BlockchainVariable>(
+	m_state = std::make_unique<BlockchainVariable>(
 		"state",
 		std::move(stateMembers),
 		m_context
 	);
 }
 
-void SymbolicState::buildABIFunctions(set<FunctionCall const*, ASTCompareByID<FunctionCall>> const& _abiFunctions)
+void SymbolicState::buildABIFunctions(std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> const& _abiFunctions)
 {
-	map<string, SortPointer> functions;
+	std::map<std::string, SortPointer> functions;
 
 	for (auto const* funCall: _abiFunctions)
 	{
@@ -375,8 +374,8 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*, ASTCompareByID<Fu
 
 		/// Since each abi.* function may have a different number of input/output parameters,
 		/// we generically compute those types.
-		vector<frontend::Type const*> inTypes;
-		vector<frontend::Type const*> outTypes;
+		std::vector<frontend::Type const*> inTypes;
+		std::vector<frontend::Type const*> outTypes;
 		if (t->kind() == FunctionType::Kind::ABIDecode)
 		{
 			/// abi.decode : (bytes, tuple_of_types(return_types)) -> (return_types)
@@ -415,7 +414,7 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*, ASTCompareByID<Fu
 				/// abi.encodeWithSelector : (bytes4, one_or_more_types) -> bytes
 				/// abi.encodeWithSignature : (string, one_or_more_types) -> bytes
 				inTypes.emplace_back(paramTypes.front());
-				inTypes += argTypes(vector<ASTPointer<Expression const>>(args.begin() + 1, args.end()));
+				inTypes += argTypes(std::vector<ASTPointer<Expression const>>(args.begin() + 1, args.end()));
 			}
 			else
 			{
@@ -455,25 +454,25 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*, ASTCompareByID<Fu
 
 		/// If there is only one input or output parameter, we use that type directly.
 		/// Otherwise we create a tuple wrapping the necessary input or output types.
-		auto typesToSort = [](auto const& _types, string const& _name) -> shared_ptr<Sort> {
+		auto typesToSort = [](auto const& _types, std::string const& _name) -> std::shared_ptr<Sort> {
 			if (_types.size() == 1)
 				return smtSortAbstractFunction(*_types.front());
 
-			vector<string> inNames;
-			vector<SortPointer> sorts;
+			std::vector<std::string> inNames;
+			std::vector<SortPointer> sorts;
 			for (unsigned i = 0; i < _types.size(); ++i)
 			{
-				inNames.emplace_back(_name + "_input_" + to_string(i));
+				inNames.emplace_back(_name + "_input_" + std::to_string(i));
 				sorts.emplace_back(smtSortAbstractFunction(*_types.at(i)));
 			}
-			return make_shared<smtutil::TupleSort>(
+			return std::make_shared<smtutil::TupleSort>(
 				_name + "_input",
 				inNames,
 				sorts
 			);
 		};
 
-		auto functionSort = make_shared<smtutil::ArraySort>(
+		auto functionSort = std::make_shared<smtutil::ArraySort>(
 			typesToSort(inTypes, name),
 			typesToSort(outTypes, name)
 		);
@@ -481,13 +480,13 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*, ASTCompareByID<Fu
 		functions[name] = functionSort;
 	}
 
-	m_abi = make_unique<BlockchainVariable>("abi", std::move(functions), m_context);
+	m_abi = std::make_unique<BlockchainVariable>("abi", std::move(functions), m_context);
 }
 
 smtutil::Expression SymbolicState::abiFunction(frontend::FunctionCall const* _funCall)
 {
 	solAssert(m_abi, "");
-	return m_abi->member(get<0>(m_abiMembers.at(_funCall)));
+	return m_abi->member(std::get<0>(m_abiMembers.at(_funCall)));
 }
 
 SymbolicState::SymbolicABIFunction const& SymbolicState::abiFunctionTypes(FunctionCall const* _funCall) const

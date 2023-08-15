@@ -20,18 +20,17 @@
 
 #include <liblangutil/Exceptions.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::smtutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
 
-map<string, ArraySlicePredicate::SliceData> ArraySlicePredicate::m_slicePredicates;
+std::map<std::string, ArraySlicePredicate::SliceData> ArraySlicePredicate::m_slicePredicates;
 
-pair<bool, ArraySlicePredicate::SliceData const&> ArraySlicePredicate::create(SortPointer _sort, EncodingContext& _context)
+std::pair<bool, ArraySlicePredicate::SliceData const&> ArraySlicePredicate::create(SortPointer _sort, EncodingContext& _context)
 {
 	solAssert(_sort->kind == Kind::Tuple, "");
-	auto tupleSort = dynamic_pointer_cast<TupleSort>(_sort);
+	auto tupleSort = std::dynamic_pointer_cast<TupleSort>(_sort);
 	solAssert(tupleSort, "");
 
 	auto tupleName = tupleSort->name;
@@ -47,12 +46,12 @@ pair<bool, ArraySlicePredicate::SliceData const&> ArraySlicePredicate::create(So
 	smt::SymbolicIntVariable endVar{TypeProvider::uint256(), TypeProvider::uint256(), "end_" + tupleName, _context };
 	smt::SymbolicIntVariable iVar{TypeProvider::uint256(), TypeProvider::uint256(), "i_" + tupleName, _context};
 
-	vector<SortPointer> domain{sort, sort, startVar.sort(), endVar.sort()};
-	auto sliceSort = make_shared<FunctionSort>(domain, SortProvider::boolSort);
+	std::vector<SortPointer> domain{sort, sort, startVar.sort(), endVar.sort()};
+	auto sliceSort = std::make_shared<FunctionSort>(domain, SortProvider::boolSort);
 	Predicate const& slice = *Predicate::create(sliceSort, "array_slice_" + tupleName, PredicateType::Custom, _context);
 
 	domain.emplace_back(iVar.sort());
-	auto predSort = make_shared<FunctionSort>(domain, SortProvider::boolSort);
+	auto predSort = std::make_shared<FunctionSort>(domain, SortProvider::boolSort);
 	Predicate const& header = *Predicate::create(predSort, "array_slice_header_" + tupleName, PredicateType::Custom, _context);
 	Predicate const& loop = *Predicate::create(predSort, "array_slice_loop_" + tupleName, PredicateType::Custom, _context);
 

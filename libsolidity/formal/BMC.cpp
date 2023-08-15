@@ -31,7 +31,6 @@
 #include <z3_version.h>
 #endif
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -41,13 +40,13 @@ BMC::BMC(
 	smt::EncodingContext& _context,
 	UniqueErrorReporter& _errorReporter,
 	UniqueErrorReporter& _unsupportedErrorReporter,
-	map<h256, string> const& _smtlib2Responses,
+	std::map<h256, std::string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	ModelCheckerSettings _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
 	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
-	m_interface(make_unique<smtutil::SMTPortfolio>(
+	m_interface(std::make_unique<smtutil::SMTPortfolio>(
 		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout, _settings.printQuery
 	))
 {
@@ -65,7 +64,7 @@ BMC::BMC(
 #endif
 }
 
-void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
+void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
 {
 	// At this point every enabled solver is available.
 	if (!m_settings.solvers.cvc4 && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
@@ -97,7 +96,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 			2788_error,
 			{},
 			"BMC: " +
-			to_string(m_unprovedAmt) +
+			std::to_string(m_unprovedAmt) +
 			" verification condition(s) could not be proved." +
 			" Enable the model checker option \"show unproved\" to see all of them." +
 			" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
@@ -108,7 +107,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		m_errorReporter.info(
 			6002_error,
 			"BMC: " +
-			to_string(m_safeTargets.size()) +
+			std::to_string(m_safeTargets.size()) +
 			" verification condition(s) proved safe!" +
 			" Enable the model checker option \"show proved safe\" to see all of them."
 		);
@@ -138,7 +137,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 			"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
 			" None of the installed solvers was enabled."
 #ifdef HAVE_Z3_DLOPEN
-			" Install libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " to enable Z3."
+			" Install libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " to enable Z3."
 #endif
 		);
 }
@@ -504,11 +503,11 @@ bool BMC::visit(TryStatement const& _tryStatement)
 	if (_tryStatement.successClause()->parameters())
 		expressionToTupleAssignment(_tryStatement.successClause()->parameters()->parameters(), *externalCall);
 
-	smtutil::Expression clauseId = m_context.newVariable("clause_choice_" + to_string(m_context.newUniqueId()), smtutil::SortProvider::uintSort);
+	smtutil::Expression clauseId = m_context.newVariable("clause_choice_" + std::to_string(m_context.newUniqueId()), smtutil::SortProvider::uintSort);
 	auto const& clauses = _tryStatement.clauses();
 	m_context.addAssertion(clauseId >= 0 && clauseId < clauses.size());
 	solAssert(clauses[0].get() == _tryStatement.successClause(), "First clause of TryStatement should be the success clause");
-	vector<pair<VariableIndices, smtutil::Expression>> clausesVisitResults;
+	std::vector<std::pair<VariableIndices, smtutil::Expression>> clausesVisitResults;
 	for (size_t i = 0; i < clauses.size(); ++i)
 		clausesVisitResults.push_back(visitBranch(clauses[i].get()));
 
@@ -736,7 +735,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 	}
 }
 
-pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
+std::pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 	Token _op,
 	smtutil::Expression const& _left,
 	smtutil::Expression const& _right,
@@ -800,10 +799,10 @@ void BMC::reset()
 	m_loopExecutionHappened = false;
 }
 
-pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
+std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> BMC::modelExpressions()
 {
-	vector<smtutil::Expression> expressionsToEvaluate;
-	vector<string> expressionNames;
+	std::vector<smtutil::Expression> expressionsToEvaluate;
+	std::vector<std::string> expressionNames;
 	for (auto const& var: m_context.variables())
 		if (var.first->type()->isValueType())
 		{
@@ -826,7 +825,7 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 		if (uf->annotation().type->isValueType())
 		{
 			expressionsToEvaluate.emplace_back(expr(*uf));
-			string expressionName;
+			std::string expressionName;
 			if (uf->location().hasText())
 				expressionName = m_charStreamProvider.charStream(*uf->location().sourceName).text(
 					uf->location()
@@ -839,7 +838,7 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 
 /// Verification targets.
 
-string BMC::targetDescription(BMCVerificationTarget const& _target)
+std::string BMC::targetDescription(BMCVerificationTarget const& _target)
 {
 	if (
 		_target.type == VerificationTargetType::Underflow ||
@@ -1065,20 +1064,20 @@ void BMC::addVerificationTarget(
 void BMC::checkCondition(
 	BMCVerificationTarget const& _target,
 	smtutil::Expression _condition,
-	vector<SMTEncoder::CallStackEntry> const& _callStack,
-	pair<vector<smtutil::Expression>, vector<string>> const& _modelExpressions,
+	std::vector<SMTEncoder::CallStackEntry> const& _callStack,
+	std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> const& _modelExpressions,
 	SourceLocation const& _location,
 	ErrorId _errorHappens,
 	ErrorId _errorMightHappen,
-	string const& _additionalValueName,
+	std::string const& _additionalValueName,
 	smtutil::Expression const* _additionalValue
 )
 {
 	m_interface->push();
 	m_interface->addAssertion(_condition);
 
-	vector<smtutil::Expression> expressionsToEvaluate;
-	vector<string> expressionNames;
+	std::vector<smtutil::Expression> expressionsToEvaluate;
+	std::vector<std::string> expressionNames;
 	tie(expressionsToEvaluate, expressionNames) = _modelExpressions;
 	if (!_callStack.empty())
 		if (_additionalValue)
@@ -1087,10 +1086,10 @@ void BMC::checkCondition(
 			expressionNames.push_back(_additionalValueName);
 		}
 	smtutil::CheckResult result;
-	vector<string> values;
+	std::vector<std::string> values;
 	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
 
-	string extraComment = SMTEncoder::extraComment();
+	std::string extraComment = SMTEncoder::extraComment();
 	if (m_loopExecutionHappened)
 		extraComment +=
 			"False negatives are possible when unrolling loops.\n"
@@ -1119,7 +1118,7 @@ void BMC::checkCondition(
 		if (values.size() == expressionNames.size())
 		{
 			modelMessage << "Counterexample:\n";
-			map<string, string> sortedModel;
+			std::map<std::string, std::string> sortedModel;
 			for (size_t i = 0; i < values.size(); ++i)
 				if (expressionsToEvaluate.at(i).name != values.at(i))
 					sortedModel[expressionNames.at(i)] = values.at(i);
@@ -1165,7 +1164,7 @@ void BMC::checkBooleanNotConstant(
 	Expression const& _condition,
 	smtutil::Expression const& _constraints,
 	smtutil::Expression const& _value,
-	vector<SMTEncoder::CallStackEntry> const& _callStack
+	std::vector<SMTEncoder::CallStackEntry> const& _callStack
 )
 {
 	// Do not check for const-ness if this is a constant.
@@ -1198,7 +1197,7 @@ void BMC::checkBooleanNotConstant(
 		m_errorReporter.warning(2512_error, _condition.location(), "BMC: Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
 	else
 	{
-		string description;
+		std::string description;
 		if (positiveResult == smtutil::CheckResult::SATISFIABLE)
 		{
 			solAssert(negatedResult == smtutil::CheckResult::UNSATISFIABLE, "");
@@ -1219,17 +1218,17 @@ void BMC::checkBooleanNotConstant(
 	}
 }
 
-pair<smtutil::CheckResult, vector<string>>
-BMC::checkSatisfiableAndGenerateModel(vector<smtutil::Expression> const& _expressionsToEvaluate)
+std::pair<smtutil::CheckResult, std::vector<std::string>>
+BMC::checkSatisfiableAndGenerateModel(std::vector<smtutil::Expression> const& _expressionsToEvaluate)
 {
 	smtutil::CheckResult result;
-	vector<string> values;
+	std::vector<std::string> values;
 	try
 	{
 		if (m_settings.printQuery)
 		{
 			auto portfolio = dynamic_cast<smtutil::SMTPortfolio*>(m_interface.get());
-			string smtlibCode = portfolio->dumpQuery(_expressionsToEvaluate);
+			std::string smtlibCode = portfolio->dumpQuery(_expressionsToEvaluate);
 			m_errorReporter.info(
 				6240_error,
 				"BMC: Requested query:\n" + smtlibCode
@@ -1239,14 +1238,14 @@ BMC::checkSatisfiableAndGenerateModel(vector<smtutil::Expression> const& _expres
 	}
 	catch (smtutil::SolverError const& _e)
 	{
-		string description("BMC: Error querying SMT solver");
+		std::string description("BMC: Error querying SMT solver");
 		if (_e.comment())
 			description += ": " + *_e.comment();
 		m_errorReporter.warning(8140_error, description);
 		result = smtutil::CheckResult::ERROR;
 	}
 
-	for (string& value: values)
+	for (std::string& value: values)
 	{
 		try
 		{
