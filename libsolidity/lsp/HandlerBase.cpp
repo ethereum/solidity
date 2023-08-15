@@ -29,7 +29,6 @@
 using namespace solidity::langutil;
 using namespace solidity::lsp;
 using namespace solidity::util;
-using namespace std;
 
 Json::Value HandlerBase::toRange(SourceLocation const& _location) const
 {
@@ -52,10 +51,10 @@ Json::Value HandlerBase::toJson(SourceLocation const& _location) const
 	return item;
 }
 
-pair<string, LineColumn> HandlerBase::extractSourceUnitNameAndLineColumn(Json::Value const& _args) const
+std::pair<std::string, LineColumn> HandlerBase::extractSourceUnitNameAndLineColumn(Json::Value const& _args) const
 {
-	string const uri = _args["textDocument"]["uri"].asString();
-	string const sourceUnitName = fileRepository().uriToSourceUnitName(uri);
+	std::string const uri = _args["textDocument"]["uri"].asString();
+	std::string const sourceUnitName = fileRepository().uriToSourceUnitName(uri);
 	if (!fileRepository().sourceUnits().count(sourceUnitName))
 		BOOST_THROW_EXCEPTION(
 			RequestError(ErrorCode::RequestFailed) <<
