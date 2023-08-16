@@ -1859,7 +1859,7 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 		if (contract.fallbackFunction())
 			/// This needs to be set to an invalid signature in order to trigger the fallback,
 			/// without the shortcut (of CALLDATSIZE == 0), and therefore to receive the upper bound.
-			/// An empty std::string ("") would work to trigger the shortcut only.
+			/// An empty string ("") would work to trigger the shortcut only.
 			externalFunctions[""] = gasToJson(gasEstimator.functionalEstimation(*items, "INVALID"));
 
 		if (!externalFunctions.empty())

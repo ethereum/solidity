@@ -323,7 +323,7 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 		std::string const& fullname = ref.second;
 
 		// If the link reference does not contain a colon, assume that the file name is missing and
-		// the whole std::string represents the library name.
+		// the whole string represents the library name.
 		size_t colon = fullname.rfind(':');
 		std::string file = (colon != std::string::npos ? fullname.substr(0, colon) : "");
 		std::string name = (colon != std::string::npos ? fullname.substr(colon + 1) : fullname);

@@ -31,6 +31,8 @@ NAMESPACE_STD_FREE_FILES=(
     libsolidity/codegen/*
     libsolidity/formal/*
     libsolidity/interface/*
+    libsolidity/lsp/*
+    libsolidity/parsing/*
 )
 
 (
