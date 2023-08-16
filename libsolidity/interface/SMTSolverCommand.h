@@ -29,6 +29,7 @@ public:
 	SMTSolverCommand() = default;
 
 	/// Calls an SMT solver with the given query.
+	/// The whole command line for invoking the solver is part of @p _kind
 	frontend::ReadCallback::Result solve(std::string const& _kind, std::string const& _query);
 
 	frontend::ReadCallback::Callback solver()

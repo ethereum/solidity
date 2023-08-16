@@ -201,19 +201,19 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 		if (m_enabledSolvers.eld)
 			return "eld";
 		if (m_enabledSolvers.z3)
-			return "z3 rlimit=1000000 fp.spacer.q3.use_qgen=true fp.spacer.mbqi=false fp.spacer.ground_pobs=false";
+			return "z3 -in rlimit=1000000 fp.spacer.q3.use_qgen=true fp.spacer.mbqi=false fp.spacer.ground_pobs=false";
 		return "";
 	}();
 	std::string z3Input = _input + "(get-model)\n";
 	auto const& query = boost::starts_with(solverBinary, "z3") ? z3Input : _input;
-	auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, query);
+	auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + ":" + solverBinary, query);
 	if (result.success)
 	{
 		if (m_enabledSolvers.z3 and boost::starts_with(result.responseOrErrorMessage, "unsat"))
 		{
 			solverBinary += " fp.xform.slice=false fp.xform.inline_linear=false fp.xform.inline_eager=false";
 			std::string extendedQuery = "(set-option :produce-proofs true)" + _input + "\n(get-proof)";
-			auto secondResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + " " + solverBinary, extendedQuery);
+			auto secondResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + ":" + solverBinary, extendedQuery);
 			if (secondResult.success and boost::starts_with(secondResult.responseOrErrorMessage, "unsat"))
 				return secondResult.responseOrErrorMessage;
 		}

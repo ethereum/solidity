@@ -168,16 +168,16 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 
 	std::vector<std::string> solverCommands;
 	if (m_enabledSolvers.z3)
-		solverCommands.emplace_back("z3 rlimit=1000000");
+		solverCommands.emplace_back("z3 -in rlimit=1000000");
 	if (m_enabledSolvers.cvc4)
-		solverCommands.emplace_back("cvc4");
+		solverCommands.emplace_back("cvc4 --lang smtlib2.6 --output-lang smtlib2.6");
 
 	CheckResult lastResult = CheckResult::ERROR;
 	std::vector<std::string> finalValues;
 	smtAssert(m_smtCallback);
 	for (auto const& s: solverCommands)
 	{
-		auto callBackResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + ' ' + s, query);
+		auto callBackResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + ":" + s, query);
 		if (not callBackResult.success)
 			continue;
 		auto const& response = callBackResult.responseOrErrorMessage;

@@ -38,11 +38,11 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 {
 	try
 	{
-		auto pos = _kind.find(' ');
+		auto pos = _kind.find(":");
+		solAssert(pos != std::string::npos);
 		auto kind = _kind.substr(0, pos);
 		auto solverCommand = _kind.substr(pos + 1);
-		if (kind != ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
-			solAssert(false, "SMTQuery callback used as callback kind " + kind);
+		solAssert(kind == ReadCallback::kindString(ReadCallback::Kind::SMTQuery), "SMTQuery callback used as callback kind " + kind);
 
 		std::vector<std::string> commandArgs;
 		boost::split(commandArgs, solverCommand, boost::is_any_of(" "));
@@ -54,9 +54,6 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 			return ReadCallback::Result{false, solverBinary + " binary not found."};
 
 		commandArgs.erase(commandArgs.begin());
-
-		if (solverBinary == "z3")
-			commandArgs.insert(commandArgs.begin(), "-in");
 
 		boost::process::opstream in;  // input to subprocess written to by main process
 		boost::process::ipstream out; // output from subprocess read by main process
