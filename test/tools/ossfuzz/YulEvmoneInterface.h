@@ -47,6 +47,7 @@ public:
 		m_optimiseYul(_optSettings.runYulOptimiser)
 	{}
 	solidity::bytes assemble();
+	std::shared_ptr<yul::Object> object();
 private:
 	solidity::yul::YulStack m_stack;
 	std::string m_yulProgram;

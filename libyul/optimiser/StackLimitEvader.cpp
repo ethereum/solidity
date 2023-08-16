@@ -97,9 +97,9 @@ struct MemoryOffsetAllocator
 
 	/// Maps function names to the set of unreachable variables in that function.
 	/// An empty variable name means that the function has too many arguments or return variables.
-	map<YulString, set<YulString>> const& unreachableVariables;
+	map<YulString, vector<YulString>> const& unreachableVariables;
 	/// The graph of immediate function calls of all functions.
-	map<YulString, set<YulString>> const& callGraph;
+	map<YulString, vector<YulString>> const& callGraph;
 	/// Maps the name of each user-defined function to its definition.
 	map<YulString, FunctionDefinition const*> const& functionDefinitions;
 
@@ -149,18 +149,23 @@ void StackLimitEvader::run(
 	map<YulString, vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
 )
 {
-	map<YulString, set<YulString>> unreachableVariables;
+	map<YulString, vector<YulString>> unreachableVariables;
 	for (auto&& [function, stackTooDeepErrors]: _stackTooDeepErrors)
+	{
+		auto& unreachables = unreachableVariables[function];
 		// TODO: choose wisely.
 		for (auto const& stackTooDeepError: stackTooDeepErrors)
-			unreachableVariables[function] += stackTooDeepError.variableChoices | ranges::views::take(stackTooDeepError.deficit) | ranges::to<set<YulString>>;
+			for (auto variable: stackTooDeepError.variableChoices | ranges::views::take(stackTooDeepError.deficit))
+				if (!util::contains(unreachables, variable))
+					unreachables.emplace_back(variable);
+	}
 	run(_context, _object, unreachableVariables);
 }
 
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
 	Object& _object,
-	map<YulString, set<YulString>> const& _unreachableVariables
+	map<YulString, vector<YulString>> const& _unreachableVariables
 )
 {
 	yulAssert(_object.code, "");

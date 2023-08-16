@@ -304,7 +304,7 @@ Input Description
               // optimization-sequence:clean-up-sequence. For more information see
               // "The Optimizer > Selecting Optimizations".
               // This field is optional, and if not provided, the default sequences for both
-              // optimization and clean-up are used. If only one of the options is provivded
+              // optimization and clean-up are used. If only one of the sequences is provided
               // the other will not be run.
               // If only the delimiter ":" is provided then neither the optimization nor the clean-up
               // sequence will be run.
@@ -316,7 +316,8 @@ Input Description
         },
         // Version of the EVM to compile for.
         // Affects type checking and code generation. Can be homestead,
-        // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul, berlin, london or paris
+        // tangerineWhistle, spuriousDragon, byzantium, constantinople,
+        // petersburg, istanbul, berlin, london, paris or shanghai (default)
         "evmVersion": "byzantium",
         // Optional: Change compilation pipeline to go through the Yul intermediate representation.
         // This is false by default.
@@ -358,7 +359,7 @@ Input Description
         // Addresses of the libraries. If not all libraries are given here,
         // it can result in unlinked objects whose output data is different.
         "libraries": {
-          // The top level key is the the name of the source file where the library is used.
+          // The top level key is the name of the source file where the library is used.
           // If remappings are used, this source file should match the global path
           // after remappings were applied.
           // If this key is an empty string, that refers to a global level.
@@ -407,7 +408,7 @@ Input Description
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
         //
-        // Note that using a using `evm`, `evm.bytecode`, etc. will select every
+        // Note that using `evm`, `evm.bytecode`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
         //
         "outputSelection": {

@@ -128,8 +128,6 @@ add_library(yul
 	optimiser/LoadResolver.h
 	optimiser/LoopInvariantCodeMotion.cpp
 	optimiser/LoopInvariantCodeMotion.h
-	optimiser/MainFunction.cpp
-	optimiser/MainFunction.h
 	optimiser/Metrics.cpp
 	optimiser/Metrics.h
 	optimiser/NameCollector.cpp
@@ -143,8 +141,6 @@ add_library(yul
 	optimiser/OptimiserStep.h
 	optimiser/OptimizerUtilities.cpp
 	optimiser/OptimizerUtilities.h
-	optimiser/ReasoningBasedSimplifier.cpp
-	optimiser/ReasoningBasedSimplifier.h
 	optimiser/UnusedAssignEliminator.cpp
 	optimiser/UnusedAssignEliminator.h
 	optimiser/UnusedStoreBase.cpp
@@ -153,8 +149,6 @@ add_library(yul
 	optimiser/UnusedStoreEliminator.h
 	optimiser/Rematerialiser.cpp
 	optimiser/Rematerialiser.h
-	optimiser/SMTSolver.cpp
-	optimiser/SMTSolver.h
 	optimiser/SSAReverser.cpp
 	optimiser/SSAReverser.h
 	optimiser/SSATransform.cpp

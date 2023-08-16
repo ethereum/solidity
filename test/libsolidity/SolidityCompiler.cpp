@@ -42,7 +42,10 @@ BOOST_AUTO_TEST_CASE(does_not_include_creation_time_only_internal_functions)
 	)";
 	compiler().setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	BOOST_REQUIRE(success(sourceCode));
-	BOOST_REQUIRE_MESSAGE(compiler().compile(), "Compiling contract failed");
+	BOOST_REQUIRE_MESSAGE(
+		compiler().compile(),
+		"Contract compilation failed:\n" + formatErrors(filteredErrors(), true /* _colored */)
+	);
 	bytes const& creationBytecode = solidity::test::bytecodeSansMetadata(compiler().object("C").bytecode);
 	bytes const& runtimeBytecode = solidity::test::bytecodeSansMetadata(compiler().runtimeObject("C").bytecode);
 	BOOST_CHECK(creationBytecode.size() >= 90);

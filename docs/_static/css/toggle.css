@@ -9,6 +9,13 @@ input[type=checkbox] {
     padding: 10px;
     display: flex;
     justify-content: space-between;
+    background-color: var(--color-f);
+    border-top: 1px solid var(--color-c);
+}
+
+.fa-caret-down,
+.fa-book {
+    color: var(--color-a) !important;
 }
 
 .rst-versions .rst-current-version .fa-book,
@@ -76,8 +83,6 @@ html.transition *:after {
     transition-delay: 0 !important;
 }
 
-nav.wy-nav-side {
-    /* The default padding of 2em is too small and the "Keyword Index" link gets obscured
-     * by the version toggle. */
-    padding-bottom: 3em;
+.wy-menu-vertical a:hover {
+    background-color: #0002;
 }

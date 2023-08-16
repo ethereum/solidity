@@ -1,0 +1,26 @@
+{
+	"language": "Solidity",
+	"sources":
+	{
+		"A":
+		{
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n
+                contract C
+                {
+                    function f() public pure {
+                        uint x = 0;
+                        assert(x == 0);
+                    }
+                }"
+		}
+	},
+	"settings":
+	{
+		"modelChecker":
+		{
+			"engine": "bmc",
+            "printQuery": true,
+			"solvers": ["smtlib2"]
+		}
+	}
+}

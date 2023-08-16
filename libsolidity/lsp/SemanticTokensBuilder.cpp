@@ -23,7 +23,6 @@
 
 #include <fmt/format.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
@@ -33,10 +32,10 @@ namespace solidity::lsp
 namespace
 {
 
-optional<SemanticTokenType> semanticTokenTypeForType(frontend::Type const* _type)
+std::optional<SemanticTokenType> semanticTokenTypeForType(frontend::Type const* _type)
 {
 	if (!_type)
-		return nullopt;
+		return std::nullopt;
 
 	switch (_type->category())
 	{

@@ -24,7 +24,6 @@
 #include <cmath>
 #include <variant>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 
@@ -36,7 +35,7 @@ SourceReferenceExtractor::Message SourceReferenceExtractor::extract(
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 
-	string const* message = boost::get_error_info<util::errinfo_comment>(_exception);
+	std::string const* message = boost::get_error_info<util::errinfo_comment>(_exception);
 	SourceReference primary = extract(_charStreamProvider, location, message ? *message : "");
 
 	std::vector<SourceReference> secondary;
@@ -45,7 +44,7 @@ SourceReferenceExtractor::Message SourceReferenceExtractor::extract(
 		for (auto const& info: secondaryLocation->infos)
 			secondary.emplace_back(extract(_charStreamProvider, &info.second, info.first));
 
-	return Message{std::move(primary), _typeOrSeverity, std::move(secondary), nullopt};
+	return Message{std::move(primary), _typeOrSeverity, std::move(secondary), std::nullopt};
 }
 
 SourceReferenceExtractor::Message SourceReferenceExtractor::extract(
@@ -78,7 +77,7 @@ SourceReference SourceReferenceExtractor::extract(
 	LineColumn end = charStream.translatePositionToLineColumn(_location->end);
 	bool const isMultiline = start.line != end.line;
 
-	string line = charStream.lineAtPosition(_location->start);
+	std::string line = charStream.lineAtPosition(_location->start);
 
 	int locationLength =
 		isMultiline ?
@@ -88,7 +87,7 @@ SourceReference SourceReferenceExtractor::extract(
 	if (locationLength > 150)
 	{
 		auto const lhs = static_cast<size_t>(start.column) + 35;
-		string::size_type const rhs = (isMultiline ? line.length() : static_cast<size_t>(end.column)) - 35;
+		std::string::size_type const rhs = (isMultiline ? line.length() : static_cast<size_t>(end.column)) - 35;
 		line = line.substr(0, lhs) + " ... " + line.substr(rhs);
 		end.column = start.column + 75;
 		locationLength = 75;
@@ -98,9 +97,9 @@ SourceReference SourceReferenceExtractor::extract(
 	{
 		int const len = static_cast<int>(line.length());
 		line = line.substr(
-			static_cast<size_t>(max(0, start.column - 35)),
-			static_cast<size_t>(min(start.column, 35)) + static_cast<size_t>(
-				min(locationLength + 35, len - start.column)
+			static_cast<size_t>(std::max(0, start.column - 35)),
+			static_cast<size_t>(std::min(start.column, 35)) + static_cast<size_t>(
+				std::min(locationLength + 35, len - start.column)
 			)
 		);
 		if (start.column + locationLength + 35 < len)
@@ -119,7 +118,7 @@ SourceReference SourceReferenceExtractor::extract(
 		interest,
 		isMultiline,
 		line,
-		min(start.column, static_cast<int>(line.length())),
-		min(end.column, static_cast<int>(line.length()))
+		std::min(start.column, static_cast<int>(line.length())),
+		std::min(end.column, static_cast<int>(line.length()))
 	};
 }

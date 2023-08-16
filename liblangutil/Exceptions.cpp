@@ -26,7 +26,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 

@@ -30,12 +30,11 @@
 
 #include <range/v3/view/reverse.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
-vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
+std::vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
 	optimizeBreakingItem();
 
@@ -52,11 +51,11 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		m_state = std::move(nextState);
 	});
 
-	map<int, Id> initialStackContents;
-	map<int, Id> targetStackContents;
+	std::map<int, Id> initialStackContents;
+	std::map<int, Id> targetStackContents;
 	int minHeight = m_state.stackHeight() + 1;
 	if (!m_state.stackElements().empty())
-		minHeight = min(minHeight, m_state.stackElements().begin()->first);
+		minHeight = std::min(minHeight, m_state.stackElements().begin()->first);
 	for (int height = minHeight; height <= m_initialState.stackHeight(); ++height)
 		initialStackContents[height] = m_initialState.stackElement(height, SourceLocation());
 	for (int height = minHeight; height <= m_state.stackHeight(); ++height)
@@ -125,19 +124,19 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 
 CSECodeGenerator::CSECodeGenerator(
 	ExpressionClasses& _expressionClasses,
-	vector<CSECodeGenerator::StoreOperation> const& _storeOperations
+	std::vector<CSECodeGenerator::StoreOperation> const& _storeOperations
 ):
 	m_expressionClasses(_expressionClasses)
 {
 	for (auto const& store: _storeOperations)
-		m_storeOperations[make_pair(store.target, store.slot)].push_back(store);
+		m_storeOperations[std::make_pair(store.target, store.slot)].push_back(store);
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
 	unsigned _initialSequenceNumber,
 	int _initialStackHeight,
-	map<int, Id> const& _initialStack,
-	map<int, Id> const& _targetStackContents
+	std::map<int, Id> const& _initialStack,
+	std::map<int, Id> const& _targetStackContents
 )
 {
 	m_stackHeight = _initialStackHeight;
@@ -156,7 +155,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 	}
 
 	// store all needed sequenced expressions
-	set<pair<unsigned, Id>> sequencedExpressions;
+	std::set<std::pair<unsigned, Id>> sequencedExpressions;
 	for (auto const& p: m_neededBy)
 		for (auto id: {p.first, p.second})
 			if (unsigned seqNr = m_expressionClasses.representative(id).sequenceNumber)
@@ -165,7 +164,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 				// @todo quick fix for now. Proper fix needs to choose representative with higher
 				// sequence number during dependency analysis.
 				assertThrow(seqNr >= _initialSequenceNumber, StackTooDeepException, util::stackTooDeepString);
-				sequencedExpressions.insert(make_pair(seqNr, id));
+				sequencedExpressions.insert(std::make_pair(seqNr, id));
 			}
 
 	// Perform all operations on storage and memory in order, if they are needed.
@@ -230,7 +229,7 @@ void CSECodeGenerator::addDependencies(Id _c)
 	for (Id argument: expr.arguments)
 	{
 		addDependencies(argument);
-		m_neededBy.insert(make_pair(argument, _c));
+		m_neededBy.insert(std::make_pair(argument, _c));
 	}
 	if (expr.item && expr.item->type() == Operation && (
 		expr.item->instruction() == Instruction::SLOAD ||
@@ -294,7 +293,7 @@ void CSECodeGenerator::addDependencies(Id _c)
 				if (it->sequenceNumber < expr.sequenceNumber)
 					latestStore = it->expression;
 			addDependencies(latestStore);
-			m_neededBy.insert(make_pair(latestStore, _c));
+			m_neededBy.insert(std::make_pair(latestStore, _c));
 		}
 	}
 }
@@ -331,7 +330,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		OptimizerException,
 		"Undefined item requested but not available."
 	);
-	vector<Id> const& arguments = expr.arguments;
+	std::vector<Id> const& arguments = expr.arguments;
 	for (Id arg: arguments | ranges::views::reverse)
 		generateClassElement(arg);
 
@@ -495,7 +494,7 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 		m_classPositions[m_stack[m_stackHeight]].insert(_fromPosition);
 		m_classPositions[m_stack[_fromPosition]].erase(_fromPosition);
 		m_classPositions[m_stack[_fromPosition]].insert(m_stackHeight);
-		swap(m_stack[m_stackHeight], m_stack[_fromPosition]);
+		std::swap(m_stack[m_stackHeight], m_stack[_fromPosition]);
 	}
 	if (m_generatedItems.size() >= 2 &&
 		SemanticInformation::isSwapInstruction(m_generatedItems.back()) &&

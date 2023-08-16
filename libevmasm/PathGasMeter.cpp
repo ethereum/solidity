@@ -24,7 +24,6 @@
 #include <libevmasm/KnownState.h>
 #include <libevmasm/SemanticInformation.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
@@ -38,17 +37,17 @@ PathGasMeter::PathGasMeter(AssemblyItems const& _items, langutil::EVMVersion _ev
 
 GasMeter::GasConsumption PathGasMeter::estimateMax(
 	size_t _startIndex,
-	shared_ptr<KnownState> const& _state
+	std::shared_ptr<KnownState> const& _state
 )
 {
-	auto path = make_unique<GasPath>();
+	auto path = std::make_unique<GasPath>();
 	path->index = _startIndex;
 	path->state = _state->copy();
 	queue(std::move(path));
 
 	GasMeter::GasConsumption gas;
 	while (!m_queue.empty() && !gas.isInfinite)
-		gas = max(gas, handleQueueItem());
+		gas = std::max(gas, handleQueueItem());
 	return gas;
 }
 
@@ -67,10 +66,10 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 {
 	assertThrow(!m_queue.empty(), OptimizerException, "");
 
-	unique_ptr<GasPath> path = std::move(m_queue.rbegin()->second);
+	std::unique_ptr<GasPath> path = std::move(m_queue.rbegin()->second);
 	m_queue.erase(--m_queue.end());
 
-	shared_ptr<KnownState> state = path->state;
+	std::shared_ptr<KnownState> state = path->state;
 	GasMeter meter(state, m_evmVersion, path->largestMemoryAccess);
 	ExpressionClasses& classes = state->expressionClasses();
 	GasMeter::GasConsumption gas = path->gas;
@@ -82,7 +81,7 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 		// return the current gas value.
 		return gas;
 
-	set<u256> jumpTags;
+	std::set<u256> jumpTags;
 	for (; index < m_items.size() && !gas.isInfinite; ++index)
 	{
 		bool branchStops = false;
@@ -121,7 +120,7 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 
 		for (u256 const& tag: jumpTags)
 		{
-			auto newPath = make_unique<GasPath>();
+			auto newPath = std::make_unique<GasPath>();
 			newPath->index = m_items.size();
 			if (m_tagPositions.count(tag))
 				newPath->index = m_tagPositions.at(tag);

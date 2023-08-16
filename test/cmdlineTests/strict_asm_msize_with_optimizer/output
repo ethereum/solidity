@@ -1,0 +1,14 @@
+
+======= strict_asm_msize_with_optimizer/input.yul (EVM) =======
+
+Pretty printed source:
+object "object" {
+    code { { } }
+}
+
+
+Binary representation:
+00
+
+Text representation:
+  stop

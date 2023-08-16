@@ -43,15 +43,6 @@ SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion
 	m_parserErrorRecovery = _parserErrorRecovery;
 }
 
-TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
-{
-	setupCompiler();
-	parseAndAnalyze();
-	filterObtainedErrors();
-
-	return conclude(_stream, _linePrefix, _formatted);
-}
-
 string SyntaxTest::addPreamble(string const& _sourceCode)
 {
 	// Silence compiler version warning
@@ -83,6 +74,8 @@ void SyntaxTest::setupCompiler()
 
 void SyntaxTest::parseAndAnalyze()
 {
+	setupCompiler();
+
 	if (compiler().parse() && compiler().analyze())
 		try
 		{
@@ -112,36 +105,41 @@ void SyntaxTest::parseAndAnalyze()
 				-1
 			});
 		}
+
+	filterObtainedErrors();
 }
 
 void SyntaxTest::filterObtainedErrors()
 {
-	for (auto const& currentError: filterErrors(compiler().errors(), true))
+	for (auto const& currentError: filteredErrors())
 	{
 		int locationStart = -1;
 		int locationEnd = -1;
 		string sourceName;
 		if (SourceLocation const* location = currentError->sourceLocation())
 		{
+			locationStart = location->start;
+			locationEnd = location->end;
 			solAssert(location->sourceName, "");
 			sourceName = *location->sourceName;
-			solAssert(m_sources.sources.count(sourceName) == 1, "");
-
-			int preambleSize =
-				static_cast<int>(compiler().charStream(sourceName).size()) -
-				static_cast<int>(m_sources.sources[sourceName].size());
-			solAssert(preambleSize >= 0, "");
-
-			// ignore the version & license pragma inserted by the testing tool when calculating locations.
-			if (location->start != -1)
+			if(m_sources.sources.count(sourceName) == 1)
 			{
-				solAssert(location->start >= preambleSize, "");
-				locationStart = location->start - preambleSize;
-			}
-			if (location->end != -1)
-			{
-				solAssert(location->end >= preambleSize, "");
-				locationEnd = location->end - preambleSize;
+				int preambleSize =
+						static_cast<int>(compiler().charStream(sourceName).size()) -
+						static_cast<int>(m_sources.sources[sourceName].size());
+				solAssert(preambleSize >= 0, "");
+
+				// ignore the version & license pragma inserted by the testing tool when calculating locations.
+				if (location->start != -1)
+				{
+					solAssert(location->start >= preambleSize, "");
+					locationStart = location->start - preambleSize;
+				}
+				if (location->end != -1)
+				{
+					solAssert(location->end >= preambleSize, "");
+					locationEnd = location->end - preambleSize;
+				}
 			}
 		}
 		m_errorList.emplace_back(SyntaxTestError{

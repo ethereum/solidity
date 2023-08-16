@@ -30,8 +30,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
@@ -46,7 +44,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
 	{
-		string const value = extractDoc(constructorDefinition->annotation().docTags, "notice");
+		std::string const value = extractDoc(constructorDefinition->annotation().docTags, "notice");
 		if (!value.empty())
 		{
 			// add the constructor, only if we have any documentation to add
@@ -56,14 +54,14 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 		}
 	}
 
-	string notice = extractDoc(_contractDef.annotation().docTags, "notice");
+	std::string notice = extractDoc(_contractDef.annotation().docTags, "notice");
 	if (!notice.empty())
 		doc["notice"] = Json::Value(notice);
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
 		{
-			string value;
+			std::string value;
 
 			if (auto const* f = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 				value = extractDoc(f->annotation().docTags, "notice");
@@ -80,22 +78,14 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 
 	for (auto const& event: uniqueInterfaceEvents(_contractDef))
 	{
-		ContractDefinition const* eventOrigin = event->annotation().contract;
-		solAssert(eventOrigin);
-		solAssert(
-			*eventOrigin == _contractDef ||
-			(!eventOrigin->isLibrary() && _contractDef.derivesFrom(*eventOrigin)) ||
-			(eventOrigin->isLibrary() && !_contractDef.derivesFrom(*eventOrigin))
-		);
-
-		string value = extractDoc(event->annotation().docTags, "notice");
+		std::string value = extractDoc(event->annotation().docTags, "notice");
 		if (!value.empty())
 			doc["events"][event->functionType(true)->externalSignature()]["notice"] = value;
 	}
 
 	for (auto const& error: _contractDef.interfaceErrors())
 	{
-		string value = extractDoc(error->annotation().docTags, "notice");
+		std::string value = extractDoc(error->annotation().docTags, "notice");
 		if (!value.empty())
 		{
 			Json::Value errorDoc{Json::objectValue};
@@ -160,7 +150,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto devDoc = devDocumentation(varDecl->annotation().docTags); !devDoc.empty())
 			doc["stateVariables"][varDecl->name()] = devDoc;
 
-		auto const assignIfNotEmpty = [&](string const& _name, Json::Value const& _content)
+		auto const assignIfNotEmpty = [&](std::string const& _name, Json::Value const& _content)
 		{
 			if (!_content.empty())
 				doc["stateVariables"][varDecl->name()][_name] = _content;
@@ -178,16 +168,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 
 	for (auto const& event: uniqueInterfaceEvents(_contractDef))
 		if (auto devDoc = devDocumentation(event->annotation().docTags); !devDoc.empty())
-		{
-			ContractDefinition const* eventOrigin = event->annotation().contract;
-			solAssert(eventOrigin);
-			solAssert(
-				*eventOrigin == _contractDef ||
-				(!eventOrigin->isLibrary() && _contractDef.derivesFrom(*eventOrigin)) ||
-				(eventOrigin->isLibrary() && !_contractDef.derivesFrom(*eventOrigin))
-			);
 			doc["events"][event->functionType(true)->externalSignature()] = devDoc;
-		}
 	for (auto const& error: _contractDef.interfaceErrors())
 		if (auto devDoc = devDocumentation(error->annotation().docTags); !devDoc.empty())
 			doc["errors"][error->functionType(true)->externalSignature()].append(devDoc);
@@ -195,7 +176,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	return doc;
 }
 
-Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, vector<string> const& _returnParameterNames)
+Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames)
 {
 	Json::Value jsonReturn{Json::objectValue};
 	auto returnDocs = _tags.equal_range("return");
@@ -205,8 +186,8 @@ Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTa
 		size_t n = 0;
 		for (auto i = returnDocs.first; i != returnDocs.second; i++)
 		{
-			string paramName = _returnParameterNames.at(n);
-			string content = i->second.content;
+			std::string paramName = _returnParameterNames.at(n);
+			std::string content = i->second.content;
 
 			if (paramName.empty())
 				paramName = "_" + std::to_string(n);
@@ -226,18 +207,18 @@ Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTa
 	return jsonReturn;
 }
 
-string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)
+std::string Natspec::extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name)
 {
-	string value;
+	std::string value;
 	auto range = _tags.equal_range(_name);
 	for (auto i = range.first; i != range.second; i++)
 		value += i->second.content;
 	return value;
 }
 
-Json::Value Natspec::extractCustomDoc(multimap<string, DocTag> const& _tags)
+Json::Value Natspec::extractCustomDoc(std::multimap<std::string, DocTag> const& _tags)
 {
-	std::map<string, string> concatenated;
+	std::map<std::string, std::string> concatenated;
 	for (auto const& [tag, value]: _tags)
 		if (boost::starts_with(tag, "custom"))
 			concatenated[tag] += value.content;
@@ -272,9 +253,9 @@ Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const& 
 	return json;
 }
 
-vector<EventDefinition const*>  Natspec::uniqueInterfaceEvents(ContractDefinition const& _contract)
+std::vector<EventDefinition const*>  Natspec::uniqueInterfaceEvents(ContractDefinition const& _contract)
 {
-	auto eventSignature = [](EventDefinition const* _event) -> string {
+	auto eventSignature = [](EventDefinition const* _event) -> std::string {
 		FunctionType const* functionType = _event->functionType(true);
 		solAssert(functionType, "");
 		return functionType->externalSignature();
@@ -284,13 +265,13 @@ vector<EventDefinition const*>  Natspec::uniqueInterfaceEvents(ContractDefinitio
 			return eventSignature(_lhs) < eventSignature(_rhs);
 		};
 
-	set<EventDefinition const*, decltype(compareBySignature)> uniqueEvents{compareBySignature};
+	std::set<EventDefinition const*, decltype(compareBySignature)> uniqueEvents{compareBySignature};
 	// Insert events defined in the contract first so that in case of a conflict
 	// they're the ones that get selected.
 	uniqueEvents += _contract.definedInterfaceEvents();
 
-	set<EventDefinition const*, decltype(compareBySignature)> filteredUsedEvents{compareBySignature};
-	set<string> usedSignatures;
+	std::set<EventDefinition const*, decltype(compareBySignature)> filteredUsedEvents{compareBySignature};
+	std::set<std::string> usedSignatures;
 	for (EventDefinition const* event: _contract.usedInterfaceEvents())
 	{
 		auto&& [eventIt, eventInserted] = filteredUsedEvents.insert(event);
@@ -300,5 +281,5 @@ vector<EventDefinition const*>  Natspec::uniqueInterfaceEvents(ContractDefinitio
 	}
 
 	uniqueEvents += filteredUsedEvents;
-	return util::convertContainer<vector<EventDefinition const*>>(std::move(uniqueEvents));
+	return util::convertContainer<std::vector<EventDefinition const*>>(std::move(uniqueEvents));
 }

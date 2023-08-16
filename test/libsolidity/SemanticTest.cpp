@@ -410,7 +410,8 @@ TestCase::TestResult SemanticTest::runTest(
 
 			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(std::move(output));
-			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName(m_sources.mainSourceFile)));
+			if (test.call().kind != FunctionCall::Kind::LowLevel)
+				test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName(m_sources.mainSourceFile)));
 		}
 
 		vector<string> effects;

@@ -1,0 +1,54 @@
+{
+    "sources":
+    {
+        "C":
+        {
+            "ast":
+            {
+                "absolutePath": "C",
+                "id": 4,
+                "license": "GPL-3.0",
+                "nodeType": "SourceUnit",
+                "nodes":
+                [
+                    {
+                        "id": 1,
+                        "literals":
+                        [
+                            "solidity",
+                            "*"
+                        ],
+                        "nodeType": "PragmaDirective",
+                        "src": "36:18:0"
+                    },
+                    {
+                        "absolutePath": "A",
+                        "file": "A",
+                        "id": 2,
+                        "nameLocation": "-1:-1:-1",
+                        "nodeType": "ImportDirective",
+                        "src": "56:11:0",
+                        "symbolAliases": [],
+                        "unitAlias": ""
+                    },
+                    {
+                        "abstract": false,
+                        "baseContracts": [],
+                        "contractDependencies": [],
+                        "contractKind": "contract",
+                        "id": 3,
+                        "name": "C",
+                        "nameLocation": "78:1:0",
+                        "nodeType": "ContractDefinition",
+                        "nodes": [],
+                        "src": "69:13:0",
+                        "usedErrors": [],
+                        "usedEvents": []
+                    }
+                ],
+                "src": "36:47:0"
+            },
+            "id": 0
+        }
+    }
+}

@@ -32,7 +32,7 @@ namespace solidity::yul
 
 struct CallGraph
 {
-	std::map<YulString, std::set<YulString>> functionCalls;
+	std::map<YulString, std::vector<YulString>> functionCalls;
 	std::set<YulString> functionsWithLoops;
 	/// @returns the set of functions contained in cycles in the call graph, i.e.
 	/// functions that are part of a (mutual) recursion.

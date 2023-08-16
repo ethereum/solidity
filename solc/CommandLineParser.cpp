@@ -70,12 +70,14 @@ static string const g_strModelCheckerDivModNoSlacks = "model-checker-div-mod-no-
 static string const g_strModelCheckerEngine = "model-checker-engine";
 static string const g_strModelCheckerExtCalls = "model-checker-ext-calls";
 static string const g_strModelCheckerInvariants = "model-checker-invariants";
+static string const g_strModelCheckerPrintQuery = "model-checker-print-query";
 static string const g_strModelCheckerShowProvedSafe = "model-checker-show-proved-safe";
 static string const g_strModelCheckerShowUnproved = "model-checker-show-unproved";
 static string const g_strModelCheckerShowUnsupported = "model-checker-show-unsupported";
 static string const g_strModelCheckerSolvers = "model-checker-solvers";
 static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
+static string const g_strModelCheckerBMCLoopIterations = "model-checker-bmc-loop-iterations";
 static string const g_strNone = "none";
 static string const g_strNoOptimizeYul = "no-optimize-yul";
 static string const g_strOptimize = "optimize";
@@ -246,9 +248,9 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		metadata.format == _other.metadata.format &&
 		metadata.hash == _other.metadata.hash &&
 		metadata.literalSources == _other.metadata.literalSources &&
-		optimizer.enabled == _other.optimizer.enabled &&
+		optimizer.optimizeEvmasm == _other.optimizer.optimizeEvmasm &&
+		optimizer.optimizeYul == _other.optimizer.optimizeYul &&
 		optimizer.expectedExecutionsPerDeployment == _other.optimizer.expectedExecutionsPerDeployment &&
-		optimizer.noOptimizeYul == _other.optimizer.noOptimizeYul &&
 		optimizer.yulSteps == _other.optimizer.yulSteps &&
 		modelChecker.initialize == _other.modelChecker.initialize &&
 		modelChecker.settings == _other.modelChecker.settings;
@@ -258,13 +260,16 @@ OptimiserSettings CommandLineOptions::optimiserSettings() const
 {
 	OptimiserSettings settings;
 
-	if (optimizer.enabled)
+	if (optimizer.optimizeEvmasm)
 		settings = OptimiserSettings::standard();
 	else
 		settings = OptimiserSettings::minimal();
 
-	if (optimizer.noOptimizeYul)
-		settings.runYulOptimiser = false;
+	settings.runYulOptimiser = optimizer.optimizeYul;
+	if (optimizer.optimizeYul)
+		// NOTE: Standard JSON disables optimizeStackAllocation by default when yul optimizer is disabled.
+		// --optimize --no-optimize-yul on the CLI does not have that effect.
+		settings.optimizeStackAllocation = true;
 
 	if (optimizer.expectedExecutionsPerDeployment.has_value())
 		settings.expectedExecutionsPerDeployment = optimizer.expectedExecutionsPerDeployment.value();
@@ -643,21 +648,15 @@ General Information)").c_str(),
 		)
 		(
 			g_strAssemble.c_str(),
-			("Switch to assembly mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is assembly.").c_str()
+			"Switch to assembly mode and assume input is assembly."
 		)
 		(
 			g_strYul.c_str(),
-			("Switch to Yul mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is Yul.").c_str()
+			"Switch to Yul mode and assume input is Yul."
 		)
 		(
 			g_strStrictAssembly.c_str(),
-			("Switch to strict assembly mode, ignoring all options except "
-			"--" + g_strMachine + ", --" + g_strYulDialect + ", --" + g_strOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is strict assembly.").c_str()
+			"Switch to strict assembly mode and assume input is strict assembly."
 		)
 		(
 			g_strImportAst.c_str(),
@@ -783,7 +782,7 @@ General Information)").c_str(),
 	optimizerOptions.add_options()
 		(
 			g_strOptimize.c_str(),
-			"Enable bytecode optimizer."
+			"Enable optimizer."
 		)
 		(
 			g_strOptimizeRuns.c_str(),
@@ -795,16 +794,18 @@ General Information)").c_str(),
 		)
 		(
 			g_strOptimizeYul.c_str(),
-			("Legacy option, ignored. Use the general --" + g_strOptimize + " to enable Yul optimizer.").c_str()
+			("Enable Yul optimizer (independently of the EVM assembly optimizer). "
+			"The general --" + g_strOptimize + " option automatically enables this unless --" +
+			g_strNoOptimizeYul + " is specified.").c_str()
 		)
 		(
 			g_strNoOptimizeYul.c_str(),
-			"Disable Yul optimizer in Solidity."
+			"Disable Yul optimizer (independently of the EVM assembly optimizer)."
 		)
 		(
 			g_strYulOptimizations.c_str(),
 			po::value<string>()->value_name("steps"),
-			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
+			"Forces Yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
 		)
 	;
 	desc.add(optimizerOptions);
@@ -842,6 +843,10 @@ General Information)").c_str(),
 			" By default no invariants are reported."
 		)
 		(
+			g_strModelCheckerPrintQuery.c_str(),
+			"Print the queries created by the SMTChecker in the SMTLIB2 format."
+		)
+		(
 			g_strModelCheckerShowProvedSafe.c_str(),
 			"Show all targets that were proved safe separately."
 		)
@@ -861,16 +866,22 @@ General Information)").c_str(),
 		(
 			g_strModelCheckerTargets.c_str(),
 			po::value<string>()->value_name("default,all,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
-			"Select model checker verification targets. "
+			"Select model checker verification targets."
 			"Multiple targets can be selected at the same time, separated by a comma and no spaces."
 			" By default all targets except underflow and overflow are selected."
 		)
 		(
 			g_strModelCheckerTimeout.c_str(),
 			po::value<unsigned>()->value_name("ms"),
-			"Set model checker timeout per query in milliseconds. "
-			"The default is a deterministic resource limit. "
+			"Set model checker timeout per query in milliseconds."
+			"The default is a deterministic resource limit."
 			"A timeout of 0 means no resource/time restrictions for any query."
+		)
+		(
+			g_strModelCheckerBMCLoopIterations.c_str(),
+			po::value<unsigned>(),
+			"Set loop unrolling depth for BMC engine."
+			"Default is 1."
 		)
 	;
 	desc.add(smtCheckerOptions);
@@ -957,14 +968,17 @@ void CommandLineParser::processArgs()
 		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strNoCBORMetadata, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strMetadataHash, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strModelCheckerShowProvedSafe, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
-		{g_strModelCheckerShowUnsupported, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerContracts, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerDivModNoSlacks, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerEngine, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerInvariants, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerPrintQuery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowProvedSafe, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnproved, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerShowUnsupported, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerSolvers, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerTimeout, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
+		{g_strModelCheckerBMCLoopIterations, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerContracts, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strModelCheckerTargets, {InputMode::Compiler, InputMode::CompilerWithASTImport}}
 	};
@@ -990,21 +1004,11 @@ void CommandLineParser::processArgs()
 		return;
 
 	checkMutuallyExclusive({g_strColor, g_strNoColor});
+	checkMutuallyExclusive({g_strStopAfter, g_strGas});
 
-	array<string, 9> const conflictingWithStopAfter{
-		CompilerOutputs::componentName(&CompilerOutputs::binary),
-		CompilerOutputs::componentName(&CompilerOutputs::ir),
-		CompilerOutputs::componentName(&CompilerOutputs::irAstJson),
-		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
-		CompilerOutputs::componentName(&CompilerOutputs::irOptimizedAstJson),
-		g_strGas,
-		CompilerOutputs::componentName(&CompilerOutputs::asm_),
-		CompilerOutputs::componentName(&CompilerOutputs::asmJson),
-		CompilerOutputs::componentName(&CompilerOutputs::opcodes),
-	};
-
-	for (auto& option: conflictingWithStopAfter)
-		checkMutuallyExclusive({g_strStopAfter, option});
+	for (string const& option: CompilerOutputs::componentMap() | ranges::views::keys)
+		if (option != CompilerOutputs::componentName(&CompilerOutputs::astCompactJson))
+			checkMutuallyExclusive({g_strStopAfter, option});
 
 	if (
 		m_options.input.mode != InputMode::Compiler &&
@@ -1157,9 +1161,11 @@ void CommandLineParser::processArgs()
 			"Options --" + g_strOptimizeYul + " and --" + g_strNoOptimizeYul + " cannot be used together."
 		);
 
-	// We deliberately ignore --optimize-yul
-	m_options.optimizer.enabled = (m_args.count(g_strOptimize) > 0);
-	m_options.optimizer.noOptimizeYul = (m_args.count(g_strNoOptimizeYul) > 0);
+	m_options.optimizer.optimizeEvmasm = (m_args.count(g_strOptimize) > 0);
+	m_options.optimizer.optimizeYul = (
+		(m_args.count(g_strOptimize) > 0 && m_args.count(g_strNoOptimizeYul) == 0) ||
+		m_args.count(g_strOptimizeYul) > 0
+	);
 	if (!m_args[g_strOptimizeRuns].defaulted())
 		m_options.optimizer.expectedExecutionsPerDeployment = m_args.at(g_strOptimizeRuns).as<unsigned>();
 
@@ -1191,8 +1197,6 @@ void CommandLineParser::processArgs()
 			g_strOutputDir,
 			g_strGas,
 			g_strCombinedJson,
-			g_strOptimizeYul,
-			g_strNoOptimizeYul,
 		};
 		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
 		{
@@ -1200,9 +1204,6 @@ void CommandLineParser::processArgs()
 			auto enabledOptions = nonAssemblyModeOptions | ranges::views::filter(optionEnabled) | ranges::to_vector;
 
 			string message = "The following options are invalid in assembly mode: " + joinOptionNames(enabledOptions) + ".";
-			if (m_args.count(g_strOptimizeYul) || m_args.count(g_strNoOptimizeYul))
-				message += " Optimization is disabled by default and can be enabled with --" + g_strOptimize + ".";
-
 			solThrow(CommandLineValidationError, message);
 		}
 
@@ -1227,7 +1228,10 @@ void CommandLineParser::processArgs()
 			else
 				solThrow(CommandLineValidationError, "Invalid option for --" + g_strYulDialect + ": " + dialect);
 		}
-		if (m_options.optimizer.enabled && (m_options.assembly.inputLanguage != Input::StrictAssembly))
+		if (
+				(m_options.optimizer.optimizeEvmasm || m_options.optimizer.optimizeYul) &&
+				m_options.assembly.inputLanguage != Input::StrictAssembly
+			)
 			solThrow(
 				CommandLineValidationError,
 				"Optimizer can only be used for strict assembly. Use --"  + g_strStrictAssembly + "."
@@ -1325,6 +1329,13 @@ void CommandLineParser::processArgs()
 		m_options.modelChecker.settings.solvers = *solvers;
 	}
 
+	if (m_args.count(g_strModelCheckerPrintQuery))
+	{
+		if (!(m_options.modelChecker.settings.solvers == smtutil::SMTSolverChoice::SMTLIB2()))
+			solThrow(CommandLineValidationError, "Only SMTLib2 solver can be enabled to print queries");
+		m_options.modelChecker.settings.printQuery = true;
+	}
+
 	if (m_args.count(g_strModelCheckerTargets))
 	{
 		string targetsStr = m_args[g_strModelCheckerTargets].as<string>();
@@ -1336,6 +1347,13 @@ void CommandLineParser::processArgs()
 
 	if (m_args.count(g_strModelCheckerTimeout))
 		m_options.modelChecker.settings.timeout = m_args[g_strModelCheckerTimeout].as<unsigned>();
+
+	if (m_args.count(g_strModelCheckerBMCLoopIterations))
+	{
+		if (!m_options.modelChecker.settings.engine.bmc)
+			solThrow(CommandLineValidationError, "BMC loop unrolling requires the BMC engine to be enabled");
+		m_options.modelChecker.settings.bmcLoopIterations = m_args[g_strModelCheckerBMCLoopIterations].as<unsigned>();
+	}
 
 	m_options.metadata.literalSources = (m_args.count(g_strMetadataLiteral) > 0);
 	m_options.modelChecker.initialize =

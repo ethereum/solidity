@@ -31,27 +31,26 @@
 #include <range/v3/view.hpp>
 #include <utility>
 
-using namespace std;
 using boost::algorithm::starts_with;
 using namespace solidity;
 using namespace solidity::smtutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
 
-map<string, Predicate> Predicate::m_predicates;
+std::map<std::string, Predicate> Predicate::m_predicates;
 
 Predicate const* Predicate::create(
 	SortPointer _sort,
-	string _name,
+	std::string _name,
 	PredicateType _type,
 	EncodingContext& _context,
 	ASTNode const* _node,
 	ContractDefinition const* _contractContext,
-	vector<ScopeOpener const*> _scopeStack
+	std::vector<ScopeOpener const*> _scopeStack
 )
 {
 	smt::SymbolicFunctionVariable predicate{_sort, std::move(_name), _context};
-	string functorName = predicate.currentName();
+	std::string functorName = predicate.currentName();
 	solAssert(!m_predicates.count(functorName), "");
 	return &m_predicates.emplace(
 		std::piecewise_construct,
@@ -65,7 +64,7 @@ Predicate::Predicate(
 	PredicateType _type,
 	ASTNode const* _node,
 	ContractDefinition const* _contractContext,
-	vector<ScopeOpener const*> _scopeStack
+	std::vector<ScopeOpener const*> _scopeStack
 ):
 	m_predicate(std::move(_predicate)),
 	m_type(_type),
@@ -75,7 +74,7 @@ Predicate::Predicate(
 {
 }
 
-Predicate const* Predicate::predicate(string const& _name)
+Predicate const* Predicate::predicate(std::string const& _name)
 {
 	return &m_predicates.at(_name);
 }
@@ -85,7 +84,7 @@ void Predicate::reset()
 	m_predicates.clear();
 }
 
-smtutil::Expression Predicate::operator()(vector<smtutil::Expression> const& _args) const
+smtutil::Expression Predicate::operator()(std::vector<smtutil::Expression> const& _args) const
 {
 	return m_predicate(_args);
 }
@@ -149,12 +148,12 @@ VariableDeclaration  const* Predicate::programVariable() const
 	return dynamic_cast<VariableDeclaration const*>(m_node);
 }
 
-optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
+std::optional<std::vector<VariableDeclaration const*>> Predicate::stateVariables() const
 {
 	if (m_contractContext)
 		return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*m_contractContext);
 
-	return nullopt;
+	return std::nullopt;
 }
 
 bool Predicate::isSummary() const
@@ -211,8 +210,8 @@ bool Predicate::isNondetInterface() const
 	return m_type == PredicateType::NondetInterface;
 }
 
-string Predicate::formatSummaryCall(
-	vector<smtutil::Expression> const& _args,
+std::string Predicate::formatSummaryCall(
+	std::vector<smtutil::Expression> const& _args,
 	langutil::CharStreamProvider const& _charStreamProvider,
 	bool _appendTxVars
 ) const
@@ -225,7 +224,7 @@ string Predicate::formatSummaryCall(
 	if (auto funCall = programFunctionCall())
 	{
 		if (funCall->location().hasText())
-			return string(_charStreamProvider.charStream(*funCall->location().sourceName).text(funCall->location()));
+			return std::string(_charStreamProvider.charStream(*funCall->location().sourceName).text(funCall->location()));
 		else
 			return {};
 	}
@@ -233,11 +232,11 @@ string Predicate::formatSummaryCall(
 	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars to format the function call.
 
-	string txModel;
+	std::string txModel;
 
 	if (_appendTxVars)
 	{
-		set<string> txVars;
+		std::set<std::string> txVars;
 		if (isFunctionSummary())
 		{
 			solAssert(programFunction(), "");
@@ -276,7 +275,7 @@ string Predicate::formatSummaryCall(
 				return true;
 			}
 
-			set<string> txVars;
+			std::set<std::string> txVars;
 		} txVarsVisitor;
 
 		if (auto fun = programFunction())
@@ -287,7 +286,7 @@ string Predicate::formatSummaryCall(
 
 		// Here we are interested in txData from the summary predicate.
 		auto txValues = readTxVars(_args.at(4));
-		vector<string> values;
+		std::vector<std::string> values;
 		for (auto const& _var: txVars)
 			if (auto v = txValues.at(_var))
 				values.push_back(_var + ": " + *v);
@@ -309,8 +308,8 @@ string Predicate::formatSummaryCall(
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
 	auto inTypes = SMTEncoder::replaceUserTypes(FunctionType(*fun).parameterTypes());
-	vector<optional<string>> functionArgsCex = formatExpressions(vector<smtutil::Expression>(first, last), inTypes);
-	vector<string> functionArgs;
+	std::vector<std::optional<std::string>> functionArgsCex = formatExpressions(std::vector<smtutil::Expression>(first, last), inTypes);
+	std::vector<std::string> functionArgs;
 
 	auto const& params = fun->parameters();
 	solAssert(params.size() == functionArgsCex.size(), "");
@@ -320,12 +319,12 @@ string Predicate::formatSummaryCall(
 		else
 			functionArgs.emplace_back(params[i]->name());
 
-	string fName = fun->isConstructor() ? "constructor" :
+	std::string fName = fun->isConstructor() ? "constructor" :
 		fun->isFallback() ? "fallback" :
 		fun->isReceive() ? "receive" :
 		fun->name();
 
-	string prefix;
+	std::string prefix;
 	if (fun->isFree())
 		prefix = !fun->sourceUnitName().empty() ? (fun->sourceUnitName() + ":") : "";
 	else
@@ -336,7 +335,7 @@ string Predicate::formatSummaryCall(
 	return prefix + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")" + txModel;
 }
 
-vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expression> const& _args) const
+std::vector<std::optional<std::string>> Predicate::summaryStateValues(std::vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// The signature of the summary predicate of a contract without constructor is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, postBlockchainState, preStateVars, postStateVars).
@@ -344,8 +343,8 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 	auto stateVars = stateVariables();
 	solAssert(stateVars.has_value(), "");
 
-	vector<smtutil::Expression>::const_iterator stateFirst;
-	vector<smtutil::Expression>::const_iterator stateLast;
+	std::vector<smtutil::Expression>::const_iterator stateFirst;
+	std::vector<smtutil::Expression>::const_iterator stateLast;
 	if (auto const* function = programFunction())
 	{
 		stateFirst = _args.begin() + 6 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
@@ -364,13 +363,13 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 	solAssert(stateFirst >= _args.begin() && stateFirst <= _args.end(), "");
 	solAssert(stateLast >= _args.begin() && stateLast <= _args.end(), "");
 
-	vector<smtutil::Expression> stateArgs(stateFirst, stateLast);
+	std::vector<smtutil::Expression> stateArgs(stateFirst, stateLast);
 	solAssert(stateArgs.size() == stateVars->size(), "");
 	auto stateTypes = util::applyMap(*stateVars, [&](auto const& _var) { return _var->type(); });
 	return formatExpressions(stateArgs, stateTypes);
 }
 
-vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expression> const& _args) const
+std::vector<std::optional<std::string>> Predicate::summaryPostInputValues(std::vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in postInputVars.
@@ -388,13 +387,13 @@ vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expre
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
 
-	vector<smtutil::Expression> inValues(first, last);
+	std::vector<smtutil::Expression> inValues(first, last);
 	solAssert(inValues.size() == inParams.size(), "");
 	auto inTypes = SMTEncoder::replaceUserTypes(FunctionType(*function).parameterTypes());
 	return formatExpressions(inValues, inTypes);
 }
 
-vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expression> const& _args) const
+std::vector<std::optional<std::string>> Predicate::summaryPostOutputValues(std::vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in outputVars.
@@ -410,13 +409,13 @@ vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expr
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 
-	vector<smtutil::Expression> outValues(first, _args.end());
+	std::vector<smtutil::Expression> outValues(first, _args.end());
 	solAssert(outValues.size() == function->returnParameters().size(), "");
 	auto outTypes = SMTEncoder::replaceUserTypes(FunctionType(*function).returnParameterTypes());
 	return formatExpressions(outValues, outTypes);
 }
 
-pair<vector<optional<string>>, vector<VariableDeclaration const*>> Predicate::localVariableValues(vector<smtutil::Expression> const& _args) const
+std::pair<std::vector<std::optional<std::string>>, std::vector<VariableDeclaration const*>> Predicate::localVariableValues(std::vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a local block predicate is:
 	/// block(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars, localVars).
@@ -426,7 +425,7 @@ pair<vector<optional<string>>, vector<VariableDeclaration const*>> Predicate::lo
 
 	auto const& localVars = SMTEncoder::localVariablesIncludingModifiers(*function, m_contractContext);
 	auto first = _args.end() - static_cast<int>(localVars.size());
-	vector<smtutil::Expression> outValues(first, _args.end());
+	std::vector<smtutil::Expression> outValues(first, _args.end());
 
 	auto mask = util::applyMap(
 		localVars,
@@ -442,10 +441,10 @@ pair<vector<optional<string>>, vector<VariableDeclaration const*>> Predicate::lo
 	return {formatExpressions(outValuesInScope, outTypes), localVarsInScope};
 }
 
-map<string, string> Predicate::expressionSubstitution(smtutil::Expression const& _predExpr) const
+std::map<std::string, std::string> Predicate::expressionSubstitution(smtutil::Expression const& _predExpr) const
 {
-	map<string, string> subst;
-	string predName = functor().name;
+	std::map<std::string, std::string> subst;
+	std::string predName = functor().name;
 
 	solAssert(contextContract(), "");
 	auto const& stateVars = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*contextContract());
@@ -486,16 +485,16 @@ map<string, string> Predicate::expressionSubstitution(smtutil::Expression const&
 	return subst;
 }
 
-vector<optional<string>> Predicate::formatExpressions(vector<smtutil::Expression> const& _exprs, vector<Type const*> const& _types) const
+std::vector<std::optional<std::string>> Predicate::formatExpressions(std::vector<smtutil::Expression> const& _exprs, std::vector<Type const*> const& _types) const
 {
 	solAssert(_exprs.size() == _types.size(), "");
-	vector<optional<string>> strExprs;
+	std::vector<std::optional<std::string>> strExprs;
 	for (unsigned i = 0; i < _exprs.size(); ++i)
 		strExprs.push_back(expressionToString(_exprs.at(i), _types.at(i)));
 	return strExprs;
 }
 
-optional<string> Predicate::expressionToString(smtutil::Expression const& _expr, Type const* _type) const
+std::optional<std::string> Predicate::expressionToString(smtutil::Expression const& _expr, Type const* _type) const
 {
 	if (smt::isNumber(*_type))
 	{
@@ -514,10 +513,10 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 				// For some reason the code below returns "0x" for "0".
 				return util::toHex(toCompactBigEndian(bigint(_expr.name)), util::HexPrefix::Add, util::HexCase::Lower);
 			}
-			catch (out_of_range const&)
+			catch (std::out_of_range const&)
 			{
 			}
-			catch (invalid_argument const&)
+			catch (std::invalid_argument const&)
 			{
 			}
 		}
@@ -550,11 +549,11 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 		{
 			length = stoul(_expr.arguments.at(1).name);
 		}
-		catch(out_of_range const&)
+		catch(std::out_of_range const&)
 		{
 			return {};
 		}
-		catch(invalid_argument const&)
+		catch(std::invalid_argument const&)
 		{
 			return {};
 		}
@@ -567,12 +566,12 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 			return {};
 		try
 		{
-			vector<string> array(length);
+			std::vector<std::string> array(length);
 			if (!fillArray(_expr.arguments.at(0), array, arrayType))
 				return {};
 			return "[" + boost::algorithm::join(array, ", ") + "]";
 		}
-		catch (bad_alloc const&)
+		catch (std::bad_alloc const&)
 		{
 			// Solver gave a concrete array but length is too large.
 		}
@@ -585,10 +584,10 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 		auto members = structType.structDefinition().members();
 		solAssert(tupleSort.components.size() == members.size(), "");
 		solAssert(_expr.arguments.size() == members.size(), "");
-		vector<string> elements;
+		std::vector<std::string> elements;
 		for (unsigned i = 0; i < members.size(); ++i)
 		{
-			optional<string> elementStr = expressionToString(_expr.arguments.at(i), members[i]->type());
+			std::optional<std::string> elementStr = expressionToString(_expr.arguments.at(i), members[i]->type());
 			elements.push_back(members[i]->name() + (elementStr.has_value() ?  ": " + elementStr.value() : ""));
 		}
 		return "{" + boost::algorithm::join(elements, ", ") + "}";
@@ -597,13 +596,13 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 	return {};
 }
 
-bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _array, ArrayType const& _type) const
+bool Predicate::fillArray(smtutil::Expression const& _expr, std::vector<std::string>& _array, ArrayType const& _type) const
 {
 	// Base case
 	if (_expr.name == "const_array")
 	{
 		auto length = _array.size();
-		optional<string> elemStr = expressionToString(_expr.arguments.at(1), _type.baseType());
+		std::optional<std::string> elemStr = expressionToString(_expr.arguments.at(1), _type.baseType());
 		if (!elemStr)
 			return false;
 		_array.clear();
@@ -616,7 +615,7 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 	{
 		if (!fillArray(_expr.arguments.at(0), _array, _type))
 			return false;
-		optional<string> indexStr = expressionToString(_expr.arguments.at(1), TypeProvider::uint256());
+		std::optional<std::string> indexStr = expressionToString(_expr.arguments.at(1), TypeProvider::uint256());
 		if (!indexStr)
 			return false;
 		// Sometimes the solver assigns huge lengths that are not related,
@@ -626,15 +625,15 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 		{
 			index = stoul(*indexStr);
 		}
-		catch (out_of_range const&)
+		catch (std::out_of_range const&)
 		{
 			return true;
 		}
-		catch (invalid_argument const&)
+		catch (std::invalid_argument const&)
 		{
 			return true;
 		}
-		optional<string> elemStr = expressionToString(_expr.arguments.at(2), _type.baseType());
+		std::optional<std::string> elemStr = expressionToString(_expr.arguments.at(2), _type.baseType());
 		if (!elemStr)
 			return false;
 		if (index < _array.size())
@@ -652,9 +651,9 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 	solAssert(false, "");
 }
 
-map<string, optional<string>> Predicate::readTxVars(smtutil::Expression const& _tx) const
+std::map<std::string, std::optional<std::string>> Predicate::readTxVars(smtutil::Expression const& _tx) const
 {
-	map<string, Type const*> const txVars{
+	std::map<std::string, Type const*> const txVars{
 		{"block.basefee", TypeProvider::uint256()},
 		{"block.chainid", TypeProvider::uint256()},
 		{"block.coinbase", TypeProvider::address()},
@@ -670,7 +669,7 @@ map<string, optional<string>> Predicate::readTxVars(smtutil::Expression const& _
 		{"tx.gasprice", TypeProvider::uint256()},
 		{"tx.origin", TypeProvider::address()}
 	};
-	map<string, optional<string>> vars;
+	std::map<std::string, std::optional<std::string>> vars;
 	for (auto&& [i, v]: txVars | ranges::views::enumerate)
 		vars.emplace(v.first, expressionToString(_tx.arguments.at(i), v.second));
 	return vars;

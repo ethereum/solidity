@@ -39,7 +39,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -121,8 +120,8 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
 	if (declarations.empty())
 	{
-		string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
-		string errorMessage = "Undeclared identifier.";
+		std::string suggestions = m_resolver.similarNameSuggestions(_identifier.name());
+		std::string errorMessage = "Undeclared identifier.";
 		if (!suggestions.empty())
 		{
 			if ("\"" + _identifier.name() + "\"" == suggestions)
@@ -192,10 +191,10 @@ bool ReferencesResolver::visit(UsingForDirective const& _usingFor)
 		// _includeInvisibles is enabled here because external library functions are marked invisible.
 		// As unintended side-effects other invisible names (eg.: super, this) may be returned as well.
 		// DeclarationTypeChecker should detect and report such situations.
-		vector<Declaration const*> declarations = m_resolver.pathFromCurrentScopeWithAllDeclarations(path->path(), true /* _includeInvisibles */);
+		std::vector<Declaration const*> declarations = m_resolver.pathFromCurrentScopeWithAllDeclarations(path->path(), true /* _includeInvisibles */);
 		if (declarations.empty())
 		{
-			string libraryOrFunctionNameErrorMessage =
+			std::string libraryOrFunctionNameErrorMessage =
 				_usingFor.usesBraces() ?
 				"Identifier is not a function name or not unique." :
 				"Identifier is not a library name.";
@@ -253,9 +252,9 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
 	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
 
-	static set<string> suffixes{"slot", "offset", "length", "address", "selector"};
-	string suffix;
-	for (string const& s: suffixes)
+	static std::set<std::string> suffixes{"slot", "offset", "length", "address", "selector"};
+	std::string suffix;
+	for (std::string const& s: suffixes)
 		if (boost::algorithm::ends_with(_identifier.name.str(), "." + s))
 			suffix = s;
 
@@ -269,7 +268,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		if (!declarations.empty())
 			// the special identifier exists itself, we should not allow that.
 			return;
-		string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - suffix.size() - 1);
+		std::string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - suffix.size() - 1);
 		solAssert(!realName.empty(), "Empty name.");
 		declarations = m_resolver.nameFromCurrentScope(realName);
 		if (!declarations.empty())
@@ -350,7 +349,7 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 		break;
 	case 1:
 	{
-		string const& name = _annotation.docTags.find("inheritdoc")->second.content;
+		std::string const& name = _annotation.docTags.find("inheritdoc")->second.content;
 		if (name.empty())
 		{
 			m_errorReporter.docstringParsingError(
@@ -361,7 +360,7 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 			return;
 		}
 
-		vector<string> path;
+		std::vector<std::string> path;
 		boost::split(path, name, boost::is_any_of("."));
 		if (any_of(path.begin(), path.end(), [](auto& _str) { return _str.empty(); }))
 		{
@@ -421,7 +420,7 @@ void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceL
 			"User-defined identifiers in inline assembly cannot contain '.'."
 		);
 
-	if (set<string>{"this", "super", "_"}.count(_name.str()))
+	if (std::set<std::string>{"this", "super", "_"}.count(_name.str()))
 		m_errorReporter.declarationError(
 			4113_error,
 			_location,

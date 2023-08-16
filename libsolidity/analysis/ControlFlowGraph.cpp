@@ -20,7 +20,6 @@
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 

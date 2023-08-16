@@ -46,11 +46,12 @@ function zeppelin_test
     local ref="master"
     local config_file="hardhat.config.js"
 
-    local compile_only_presets=()
+    local compile_only_presets=(
+        #ir-no-optimize           # Compilation fails with "Contract initcode size is 49410 bytes and exceeds 49152 bytes (a limit introduced in Shanghai)."
+        ir-optimize-evm-only      # FIXME: A few tests fail with "Transaction: ... exited with an error (status 0) after consuming all gas."
+)
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize           # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_account_852 is 4 slot(s) too deep inside the stack."
         ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
@@ -82,10 +83,19 @@ function zeppelin_test
     sed -i "s|it(\('reverts if index is greater than supply'\)|it.skip(\1|g" test/token/ERC721/ERC721.behavior.js
     sed -i "s|it(\('burns all tokens'\)|it.skip(\1|g" test/token/ERC721/ERC721.behavior.js
     sed -i "s|it(\('guards transfer against invalid user'\)|it.skip(\1|g" test/access/Ownable2Step.test.js
-    sed -i "s|it(\('reverting initialization'\)|it.skip(\1|g" test/proxy/beacon/BeaconProxy.test.js
+    sed -i "s|it(\('reverting initialization function'\)|it.skip(\1|g" test/proxy/beacon/BeaconProxy.test.js
     sed -i "s|describe(\('reverting initialization'\)|describe.skip(\1|g" test/proxy/Proxy.behaviour.js
     sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/security/ReentrancyGuard.test.js
-    sed -i "s|shouldBehaveLikeAccessControlDefaultAdminRules|\/\/&|" test/access/AccessControlDefaultAdminRules.test.js
+
+    # TODO: Remove when hardhat properly handle reverts of custom errors with via-ir enabled
+    # and/or open-zeppelin fix https://github.com/OpenZeppelin/openzeppelin-contracts/issues/4349
+    sed -i "s|it(\('cannot nest reinitializers'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+    sed -i "s|it(\('prevents re-initialization'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+    sed -i "s|it(\('can lock contract after initialization'\)|it.skip(\1|g" test/proxy/utils/Initializable.test.js
+    sed -i "s|it(\('calling upgradeTo on the implementation reverts'\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('calling upgradeToAndCall on the implementation reverts'\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('calling upgradeTo from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('calling upgradeToAndCall from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
 
     # Here only the testToInt(248) and testToInt(256) cases fail so change the loop range to skip them
     sed -i "s|range(8, 256, 8)\(.forEach(bits => testToInt(bits));\)|range(8, 240, 8)\1|" test/utils/math/SafeCast.test.js

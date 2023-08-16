@@ -20,7 +20,6 @@
 #include <test/Common.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -118,8 +117,7 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 
 	if (!compiler().parseAndAnalyze() || !compiler().compile())
 	{
-		SourceReferenceFormatter{_stream, compiler(), _formatted, false}
-			.printErrorInformation(compiler().errors());
+		_stream << formatErrors(filteredErrors(), _formatted);
 		return TestResult::FatalError;
 	}
 

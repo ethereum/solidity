@@ -23,7 +23,6 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
-#include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
@@ -73,7 +72,6 @@ public:
 		langutil::EVMVersion _evmVersion,
 		ExecutionContext _executionContext,
 		RevertStrings _revertStrings,
-		OptimiserSettings _optimiserSettings,
 		std::map<std::string, unsigned> _sourceIndices,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
@@ -81,7 +79,6 @@ public:
 		m_evmVersion(_evmVersion),
 		m_executionContext(_executionContext),
 		m_revertStrings(_revertStrings),
-		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_sourceIndices(std::move(_sourceIndices)),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
@@ -176,7 +173,6 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	ExecutionContext m_executionContext;
 	RevertStrings m_revertStrings;
-	OptimiserSettings m_optimiserSettings;
 	std::map<std::string, unsigned> m_sourceIndices;
 	std::set<std::string> m_usedSourceNames;
 	ContractDefinition const* m_mostDerivedContract = nullptr;

@@ -103,8 +103,8 @@ struct OptimiserSettings
 			case OptimisationPreset::Minimal: return minimal();
 			case OptimisationPreset::Standard: return standard();
 			case OptimisationPreset::Full: return full();
-			default: solAssert(false, "");
 		}
+		util::unreachable();
 	}
 
 	bool operator==(OptimiserSettings const& _other) const

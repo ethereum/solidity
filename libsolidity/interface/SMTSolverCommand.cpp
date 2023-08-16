@@ -33,14 +33,13 @@
 using solidity::langutil::InternalCompilerError;
 using solidity::util::errinfo_comment;
 
-using namespace std;
 
 namespace solidity::frontend
 {
 
-SMTSolverCommand::SMTSolverCommand(string _solverCmd) : m_solverCmd(_solverCmd) {}
+SMTSolverCommand::SMTSolverCommand(std::string _solverCmd) : m_solverCmd(_solverCmd) {}
 
-ReadCallback::Result SMTSolverCommand::solve(string const& _kind, string const& _query)
+ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query)
 {
 	try
 	{
@@ -66,8 +65,8 @@ ReadCallback::Result SMTSolverCommand::solve(string const& _kind, string const& 
 			boost::process::std_out > pipe
 		);
 
-		vector<string> data;
-		string line;
+		std::vector<std::string> data;
+		std::string line;
 		while (eld.running() && std::getline(pipe, line))
 			if (!line.empty())
 				data.push_back(line);

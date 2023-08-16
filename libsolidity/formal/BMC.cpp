@@ -18,7 +18,6 @@
 
 #include <libsolidity/formal/BMC.h>
 
-#include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsmtutil/SMTPortfolio.h>
@@ -26,11 +25,12 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
 
+#include <utility>
+
 #ifdef HAVE_Z3_DLOPEN
 #include <z3_version.h>
 #endif
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -40,14 +40,17 @@ BMC::BMC(
 	smt::EncodingContext& _context,
 	UniqueErrorReporter& _errorReporter,
 	UniqueErrorReporter& _unsupportedErrorReporter,
-	map<h256, string> const& _smtlib2Responses,
+	std::map<h256, std::string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	ModelCheckerSettings _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
 	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
-	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout))
+	m_interface(std::make_unique<smtutil::SMTPortfolio>(
+		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout, _settings.printQuery
+	))
 {
+	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
@@ -61,7 +64,7 @@ BMC::BMC(
 #endif
 }
 
-void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
+void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
 {
 	// At this point every enabled solver is available.
 	if (!m_settings.solvers.cvc4 && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
@@ -77,13 +80,13 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 
 	SMTEncoder::resetSourceAnalysis();
 
+	state().prepareForSourceUnit(_source, false);
 	m_solvedTargets = std::move(_solvedTargets);
 	m_context.setSolver(m_interface.get());
 	m_context.reset();
 	m_context.setAssertionAccumulation(true);
 	m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
 	createFreeConstants(sourceDependencies(_source));
-	state().prepareForSourceUnit(_source, false);
 	m_unprovedAmt = 0;
 
 	_source.accept(*this);
@@ -93,7 +96,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 			2788_error,
 			{},
 			"BMC: " +
-			to_string(m_unprovedAmt) +
+			std::to_string(m_unprovedAmt) +
 			" verification condition(s) could not be proved." +
 			" Enable the model checker option \"show unproved\" to see all of them." +
 			" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
@@ -104,7 +107,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		m_errorReporter.info(
 			6002_error,
 			"BMC: " +
-			to_string(m_safeTargets.size()) +
+			std::to_string(m_safeTargets.size()) +
 			" verification condition(s) proved safe!" +
 			" Enable the model checker option \"show proved safe\" to see all of them."
 		);
@@ -134,7 +137,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 			"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
 			" None of the installed solvers was enabled."
 #ifdef HAVE_Z3_DLOPEN
-			" Install libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " to enable Z3."
+			" Install libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " to enable Z3."
 #endif
 		);
 }
@@ -245,7 +248,7 @@ bool BMC::visit(IfStatement const& _node)
 
 	// We ignore called functions here because they have
 	// specific input values.
-	if (isRootFunction())
+	if (isRootFunction() && !isInsideLoop())
 		addVerificationTarget(
 			VerificationTargetType::ConstantCondition,
 			expr(_node.condition()),
@@ -280,7 +283,7 @@ bool BMC::visit(Conditional const& _op)
 	m_context.pushSolver();
 	_op.condition().accept(*this);
 
-	if (isRootFunction())
+	if (isRootFunction() && !isInsideLoop())
 		addVerificationTarget(
 			VerificationTargetType::ConstantCondition,
 			expr(_op.condition()),
@@ -294,107 +297,201 @@ bool BMC::visit(Conditional const& _op)
 	return false;
 }
 
-// Here we consider the execution of two branches:
-// Branch 1 assumes the loop condition to be true and executes the loop once,
-// after resetting touched variables.
-// Branch 2 assumes the loop condition to be false and skips the loop after
-// visiting the condition (it might contain side-effects, they need to be considered)
-// and does not erase knowledge.
-// If the loop is a do-while, condition side-effects are lost since the body,
-// executed once before the condition, might reassign variables.
-// Variables touched by the loop are merged with Branch 2.
+// Unrolls while or do-while loop
 bool BMC::visit(WhileStatement const& _node)
 {
-	auto indicesBeforeLoop = copyVariableIndices();
-	m_context.resetVariables(touchedVariables(_node));
-	decltype(indicesBeforeLoop) indicesAfterLoop;
+	unsigned int bmcLoopIterations = m_settings.bmcLoopIterations.value_or(1);
+	smtutil::Expression broke(false);
+	smtutil::Expression loopCondition(true);
 	if (_node.isDoWhile())
 	{
-		indicesAfterLoop = visitBranch(&_node.body()).first;
-		// TODO the assertions generated in the body should still be active in the condition
-		_node.condition().accept(*this);
-		if (isRootFunction())
-			addVerificationTarget(
-				VerificationTargetType::ConstantCondition,
-				expr(_node.condition()),
-				&_node.condition()
-			);
-	}
-	else
-	{
-		_node.condition().accept(*this);
-		if (isRootFunction())
-			addVerificationTarget(
-				VerificationTargetType::ConstantCondition,
-				expr(_node.condition()),
-				&_node.condition()
+		for (unsigned int i = 0; i < bmcLoopIterations; ++i)
+		{
+			m_loopCheckpoints.emplace();
+
+			auto indicesBefore = copyVariableIndices();
+			_node.body().accept(*this);
+
+			auto brokeInCurrentIteration = mergeVariablesFromLoopCheckpoints();
+
+			auto indicesBreak = copyVariableIndices();
+			_node.condition().accept(*this);
+			mergeVariables(
+				!brokeInCurrentIteration,
+				copyVariableIndices(),
+				indicesBreak
 			);
 
-		indicesAfterLoop = visitBranch(&_node.body(), expr(_node.condition())).first;
+			mergeVariables(
+				broke || !loopCondition,
+				indicesBefore,
+				copyVariableIndices()
+			);
+			loopCondition = loopCondition && expr(_node.condition());
+			broke = broke || brokeInCurrentIteration;
+			m_loopCheckpoints.pop();
+		}
+		if (bmcLoopIterations > 0)
+			m_context.addAssertion(!loopCondition || broke);
 	}
+	else {
+		smtutil::Expression loopConditionOnPreviousIterations(true);
+		for (unsigned int i = 0; i < bmcLoopIterations; ++i)
+		{
+			m_loopCheckpoints.emplace();
+			auto indicesBefore = copyVariableIndices();
+			_node.condition().accept(*this);
+			loopCondition = expr(_node.condition());
 
-	// We reset the execution to before the loop
-	// and visit the condition in case it's not a do-while.
-	// A do-while's body might have non-precise information
-	// in its first run about variables that are touched.
-	resetVariableIndices(indicesBeforeLoop);
-	if (!_node.isDoWhile())
-		_node.condition().accept(*this);
+			auto indicesAfterCondition = copyVariableIndices();
 
-	mergeVariables(expr(_node.condition()), indicesAfterLoop, copyVariableIndices());
+			pushPathCondition(loopCondition);
+			_node.body().accept(*this);
+			popPathCondition();
 
+			auto brokeInCurrentIteration =	mergeVariablesFromLoopCheckpoints();
+
+			// merges indices modified when accepting loop condition that no longer holds
+			mergeVariables(
+				!loopCondition,
+				indicesAfterCondition,
+				copyVariableIndices()
+			);
+
+			// handles breaks in previous iterations
+			// breaks in current iterations are handled when traversing loop checkpoints
+			// handles case when the loop condition no longer holds but bmc loop iterations still unrolls the loop
+			mergeVariables(
+				broke || !loopConditionOnPreviousIterations,
+				indicesBefore,
+				copyVariableIndices()
+			);
+			m_loopCheckpoints.pop();
+			broke = broke || brokeInCurrentIteration;
+			loopConditionOnPreviousIterations = loopConditionOnPreviousIterations && loopCondition;
+		}
+		if (bmcLoopIterations > 0)
+		{
+			//after loop iterations are done, we check the loop condition last final time
+			auto indices = copyVariableIndices();
+			_node.condition().accept(*this);
+			loopCondition = expr(_node.condition());
+			// asseert that the loop is complete
+			m_context.addAssertion(!loopCondition || broke || !loopConditionOnPreviousIterations);
+			mergeVariables(
+				broke || !loopConditionOnPreviousIterations,
+				indices,
+				copyVariableIndices()
+			);
+		}
+	}
 	m_loopExecutionHappened = true;
 	return false;
 }
 
-// Here we consider the execution of two branches similar to WhileStatement.
+// Unrolls for loop
 bool BMC::visit(ForStatement const& _node)
 {
 	if (_node.initializationExpression())
 		_node.initializationExpression()->accept(*this);
 
-	auto indicesBeforeLoop = copyVariableIndices();
-
-	// Do not reset the init expression part.
-	auto touchedVars = touchedVariables(_node.body());
-	if (_node.condition())
-		touchedVars += touchedVariables(*_node.condition());
-	if (_node.loopExpression())
-		touchedVars += touchedVariables(*_node.loopExpression());
-
-	m_context.resetVariables(touchedVars);
-
-	if (_node.condition())
+	smtutil::Expression broke(false);
+	smtutil::Expression forCondition(true);
+	smtutil::Expression forConditionOnPreviousIterations(true);
+	unsigned int bmcLoopIterations = m_settings.bmcLoopIterations.value_or(1);
+	for (unsigned int i = 0; i < bmcLoopIterations; ++i)
 	{
-		_node.condition()->accept(*this);
-		if (isRootFunction())
-			addVerificationTarget(
-				VerificationTargetType::ConstantCondition,
-				expr(*_node.condition()),
-				_node.condition()
+		auto indicesBefore = copyVariableIndices();
+		if (_node.condition())
+		{
+			_node.condition()->accept(*this);
+			// values in loop condition might change during loop iteration
+			forCondition = expr(*_node.condition());
+		}
+		m_loopCheckpoints.emplace();
+		auto indicesAfterCondition = copyVariableIndices();
+
+		pushPathCondition(forCondition);
+		_node.body().accept(*this);
+
+		auto brokeInCurrentIteration =	mergeVariablesFromLoopCheckpoints();
+
+		// accept loop expression if there was no break
+		if (_node.loopExpression())
+		{
+			auto indicesBreak = copyVariableIndices();
+			_node.loopExpression()->accept(*this);
+			mergeVariables(
+				!brokeInCurrentIteration,
+				copyVariableIndices(),
+				indicesBreak
 			);
+		}
+		popPathCondition();
+
+		// merges indices modified when accepting loop condition that does no longer hold
+		mergeVariables(
+			!forCondition,
+			indicesAfterCondition,
+			copyVariableIndices()
+		);
+
+		// handles breaks in previous iterations
+		// breaks in current iterations are handled when traversing loop checkpoints
+		// handles case when the loop condition no longer holds but bmc loop iterations still unrolls the loop
+		mergeVariables(
+			broke || !forConditionOnPreviousIterations,
+			indicesBefore,
+			copyVariableIndices()
+		);
+		m_loopCheckpoints.pop();
+		broke = broke || brokeInCurrentIteration;
+		forConditionOnPreviousIterations = forConditionOnPreviousIterations && forCondition;
 	}
-
-	m_context.pushSolver();
-	if (_node.condition())
-		m_context.addAssertion(expr(*_node.condition()));
-	_node.body().accept(*this);
-	if (_node.loopExpression())
-		_node.loopExpression()->accept(*this);
-	m_context.popSolver();
-
-	auto indicesAfterLoop = copyVariableIndices();
-	// We reset the execution to before the loop
-	// and visit the condition.
-	resetVariableIndices(indicesBeforeLoop);
-	if (_node.condition())
-		_node.condition()->accept(*this);
-
-	auto forCondition = _node.condition() ? expr(*_node.condition()) : smtutil::Expression(true);
-	mergeVariables(forCondition, indicesAfterLoop, copyVariableIndices());
-
+	if (bmcLoopIterations > 0)
+	{
+		//after loop iterations are done, we check the loop condition last final time
+		auto indices = copyVariableIndices();
+		if (_node.condition())
+		{
+			_node.condition()->accept(*this);
+			forCondition = expr(*_node.condition());
+		}
+		// asseert that the loop is complete
+		m_context.addAssertion(!forCondition || broke || !forConditionOnPreviousIterations);
+		mergeVariables(
+			broke || !forConditionOnPreviousIterations,
+			indices,
+			copyVariableIndices()
+		);
+	}
 	m_loopExecutionHappened = true;
 	return false;
+}
+
+// merges variables based on loop control statements
+// returns expression indicating whether there was a break in current loop unroll iteration
+smtutil::Expression BMC::mergeVariablesFromLoopCheckpoints()
+{
+	smtutil::Expression continues(false);
+	smtutil::Expression brokeInCurrentIteration(false);
+	for (auto const& loopControl: m_loopCheckpoints.top())
+	{
+		// use SSAs associated with this break statement only if
+		// loop didn't break or continue earlier in the iteration
+		// loop condition is included in break path conditions
+		mergeVariables(
+			!brokeInCurrentIteration && !continues && loopControl.pathConditions,
+			loopControl.variableIndices,
+			copyVariableIndices()
+		);
+		if (loopControl.kind == LoopControlKind::Break)
+			brokeInCurrentIteration =
+				brokeInCurrentIteration || loopControl.pathConditions;
+		else if (loopControl.kind == LoopControlKind::Continue)
+			continues = continues || loopControl.pathConditions;
+	}
+	return brokeInCurrentIteration;
 }
 
 bool BMC::visit(TryStatement const& _tryStatement)
@@ -406,11 +503,11 @@ bool BMC::visit(TryStatement const& _tryStatement)
 	if (_tryStatement.successClause()->parameters())
 		expressionToTupleAssignment(_tryStatement.successClause()->parameters()->parameters(), *externalCall);
 
-	smtutil::Expression clauseId = m_context.newVariable("clause_choice_" + to_string(m_context.newUniqueId()), smtutil::SortProvider::uintSort);
+	smtutil::Expression clauseId = m_context.newVariable("clause_choice_" + std::to_string(m_context.newUniqueId()), smtutil::SortProvider::uintSort);
 	auto const& clauses = _tryStatement.clauses();
 	m_context.addAssertion(clauseId >= 0 && clauseId < clauses.size());
 	solAssert(clauses[0].get() == _tryStatement.successClause(), "First clause of TryStatement should be the success clause");
-	vector<pair<VariableIndices, smtutil::Expression>> clausesVisitResults;
+	std::vector<std::pair<VariableIndices, smtutil::Expression>> clausesVisitResults;
 	for (size_t i = 0; i < clauses.size(); ++i)
 		clausesVisitResults.push_back(visitBranch(clauses[i].get()));
 
@@ -425,6 +522,28 @@ bool BMC::visit(TryStatement const& _tryStatement)
 	}
 	setPathCondition(pathCondition);
 
+	return false;
+}
+
+bool BMC::visit(Break const&)
+{
+	LoopControl control = {
+		LoopControlKind::Break,
+		currentPathConditions(),
+		copyVariableIndices()
+	};
+	m_loopCheckpoints.top().emplace_back(control);
+	return false;
+}
+
+bool BMC::visit(Continue const&)
+{
+	LoopControl control = {
+		LoopControlKind::Continue,
+		currentPathConditions(),
+		copyVariableIndices()
+	};
+	m_loopCheckpoints.top().emplace_back(control);
 	return false;
 }
 
@@ -535,7 +654,7 @@ void BMC::visitRequire(FunctionCall const& _funCall)
 	auto const& args = _funCall.arguments();
 	solAssert(args.size() >= 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
-	if (isRootFunction())
+	if (isRootFunction() && !isInsideLoop())
 		addVerificationTarget(
 			VerificationTargetType::ConstantCondition,
 			expr(*args.front()),
@@ -616,7 +735,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 	}
 }
 
-pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
+std::pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 	Token _op,
 	smtutil::Expression const& _left,
 	smtutil::Expression const& _right,
@@ -680,10 +799,10 @@ void BMC::reset()
 	m_loopExecutionHappened = false;
 }
 
-pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
+std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> BMC::modelExpressions()
 {
-	vector<smtutil::Expression> expressionsToEvaluate;
-	vector<string> expressionNames;
+	std::vector<smtutil::Expression> expressionsToEvaluate;
+	std::vector<std::string> expressionNames;
 	for (auto const& var: m_context.variables())
 		if (var.first->type()->isValueType())
 		{
@@ -706,7 +825,7 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 		if (uf->annotation().type->isValueType())
 		{
 			expressionsToEvaluate.emplace_back(expr(*uf));
-			string expressionName;
+			std::string expressionName;
 			if (uf->location().hasText())
 				expressionName = m_charStreamProvider.charStream(*uf->location().sourceName).text(
 					uf->location()
@@ -719,7 +838,7 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 
 /// Verification targets.
 
-string BMC::targetDescription(BMCVerificationTarget const& _target)
+std::string BMC::targetDescription(BMCVerificationTarget const& _target)
 {
 	if (
 		_target.type == VerificationTargetType::Underflow ||
@@ -945,36 +1064,37 @@ void BMC::addVerificationTarget(
 void BMC::checkCondition(
 	BMCVerificationTarget const& _target,
 	smtutil::Expression _condition,
-	vector<SMTEncoder::CallStackEntry> const& _callStack,
-	pair<vector<smtutil::Expression>, vector<string>> const& _modelExpressions,
+	std::vector<SMTEncoder::CallStackEntry> const& _callStack,
+	std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> const& _modelExpressions,
 	SourceLocation const& _location,
 	ErrorId _errorHappens,
 	ErrorId _errorMightHappen,
-	string const& _additionalValueName,
+	std::string const& _additionalValueName,
 	smtutil::Expression const* _additionalValue
 )
 {
 	m_interface->push();
 	m_interface->addAssertion(_condition);
 
-	vector<smtutil::Expression> expressionsToEvaluate;
-	vector<string> expressionNames;
+	std::vector<smtutil::Expression> expressionsToEvaluate;
+	std::vector<std::string> expressionNames;
 	tie(expressionsToEvaluate, expressionNames) = _modelExpressions;
-	if (_callStack.size())
+	if (!_callStack.empty())
 		if (_additionalValue)
 		{
 			expressionsToEvaluate.emplace_back(*_additionalValue);
 			expressionNames.push_back(_additionalValueName);
 		}
 	smtutil::CheckResult result;
-	vector<string> values;
+	std::vector<std::string> values;
 	tie(result, values) = checkSatisfiableAndGenerateModel(expressionsToEvaluate);
 
-	string extraComment = SMTEncoder::extraComment();
+	std::string extraComment = SMTEncoder::extraComment();
 	if (m_loopExecutionHappened)
 		extraComment +=
-			"\nNote that some information is erased after the execution of loops.\n"
-			"You can re-introduce information using require().";
+			"False negatives are possible when unrolling loops.\n"
+			"This is due to the possibility that the BMC loop iteration setting is"
+			" smaller than the actual number of iterations needed to complete a loop.";
 	if (m_externalFunctionCallHappened)
 		extraComment +=
 			"\nNote that external function calls are not inlined,"
@@ -998,7 +1118,7 @@ void BMC::checkCondition(
 		if (values.size() == expressionNames.size())
 		{
 			modelMessage << "Counterexample:\n";
-			map<string, string> sortedModel;
+			std::map<std::string, std::string> sortedModel;
 			for (size_t i = 0; i < values.size(); ++i)
 				if (expressionsToEvaluate.at(i).name != values.at(i))
 					sortedModel[expressionNames.at(i)] = values.at(i);
@@ -1044,7 +1164,7 @@ void BMC::checkBooleanNotConstant(
 	Expression const& _condition,
 	smtutil::Expression const& _constraints,
 	smtutil::Expression const& _value,
-	vector<SMTEncoder::CallStackEntry> const& _callStack
+	std::vector<SMTEncoder::CallStackEntry> const& _callStack
 )
 {
 	// Do not check for const-ness if this is a constant.
@@ -1077,7 +1197,7 @@ void BMC::checkBooleanNotConstant(
 		m_errorReporter.warning(2512_error, _condition.location(), "BMC: Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
 	else
 	{
-		string description;
+		std::string description;
 		if (positiveResult == smtutil::CheckResult::SATISFIABLE)
 		{
 			solAssert(negatedResult == smtutil::CheckResult::UNSATISFIABLE, "");
@@ -1098,25 +1218,34 @@ void BMC::checkBooleanNotConstant(
 	}
 }
 
-pair<smtutil::CheckResult, vector<string>>
-BMC::checkSatisfiableAndGenerateModel(vector<smtutil::Expression> const& _expressionsToEvaluate)
+std::pair<smtutil::CheckResult, std::vector<std::string>>
+BMC::checkSatisfiableAndGenerateModel(std::vector<smtutil::Expression> const& _expressionsToEvaluate)
 {
 	smtutil::CheckResult result;
-	vector<string> values;
+	std::vector<std::string> values;
 	try
 	{
+		if (m_settings.printQuery)
+		{
+			auto portfolio = dynamic_cast<smtutil::SMTPortfolio*>(m_interface.get());
+			std::string smtlibCode = portfolio->dumpQuery(_expressionsToEvaluate);
+			m_errorReporter.info(
+				6240_error,
+				"BMC: Requested query:\n" + smtlibCode
+			);
+		}
 		tie(result, values) = m_interface->check(_expressionsToEvaluate);
 	}
 	catch (smtutil::SolverError const& _e)
 	{
-		string description("BMC: Error querying SMT solver");
+		std::string description("BMC: Error querying SMT solver");
 		if (_e.comment())
 			description += ": " + *_e.comment();
 		m_errorReporter.warning(8140_error, description);
 		result = smtutil::CheckResult::ERROR;
 	}
 
-	for (string& value: values)
+	for (std::string& value: values)
 	{
 		try
 		{
@@ -1145,3 +1274,7 @@ void BMC::assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& 
 	));
 }
 
+bool BMC::isInsideLoop() const
+{
+	return !m_loopCheckpoints.empty();
+}

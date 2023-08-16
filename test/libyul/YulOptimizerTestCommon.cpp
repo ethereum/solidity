@@ -40,7 +40,6 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
-#include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -49,7 +48,6 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/Semantics.h>
@@ -97,6 +95,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"blockFlattener", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
 		{"constantOptimiser", [&]() {
@@ -168,10 +167,11 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FullInliner::run(*m_context, *m_ast);
 			ExpressionJoiner::run(*m_context, *m_ast);
 		}},
-		{"mainFunction", [&]() {
+		{"fullInlinerWithoutSplitter", [&]() {
 			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
 			FunctionGrouper::run(*m_context, *m_ast);
-			MainFunction::run(*m_context, *m_ast);
+			FullInliner::run(*m_context, *m_ast);
 		}},
 		{"rematerialiser", [&]() {
 			disambiguate();
@@ -289,10 +289,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			LiteralRematerialiser::run(*m_context, *m_ast);
 			StructuralSimplifier::run(*m_context, *m_ast);
 		}},
-		{"reasoningBasedSimplifier", [&]() {
-			disambiguate();
-			ReasoningBasedSimplifier::run(*m_context, *m_object->code);
-		}},
 		{"equivalentFunctionCombiner", [&]() {
 			disambiguate();
 			ForLoopInitRewriter::run(*m_context, *m_ast);
@@ -349,7 +345,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
-				map<YulString, set<YulString>> fakeUnreachables;
+				map<YulString, vector<YulString>> fakeUnreachables;
 				using ASTWalker::operator();
 				void operator()(FunctionDefinition const& _function) override
 				{
@@ -365,7 +361,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				void visitVariableName(YulString _var)
 				{
 					if (!_var.empty() && _var.str().front() == '$')
-						fakeUnreachables[m_currentFunction].insert(_var);
+						if (!util::contains(fakeUnreachables[m_currentFunction], _var))
+							fakeUnreachables[m_currentFunction].emplace_back(_var);
 				}
 				void operator()(VariableDeclaration const& _varDecl) override
 				{
@@ -423,8 +420,7 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 			// it can sometimes drain memory.
 			if (
 				optimiserStep == "mainFunction"	||
-				optimiserStep == "wordSizeTransform" ||
-				optimiserStep == "reasoningBasedSimplifier"
+				optimiserStep == "wordSizeTransform"
 			)
 				// "Fullsuite" is fuzzed roughly four times more frequently than
 				// other steps because of the filtering in place above.

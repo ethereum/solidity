@@ -4,6 +4,12 @@ const fs = require('fs')
 
 const compiler = require('solc')
 
+SETTINGS_PRESETS = {
+    'legacy-optimize':    {optimize: true,  viaIR: false},
+    'legacy-no-optimize': {optimize: false, viaIR: false},
+    'via-ir-optimize':    {optimize: true,  viaIR: true},
+    'via-ir-no-optimize': {optimize: false, viaIR: true},
+}
 
 function loadSource(sourceFileName, stripSMTPragmas)
 {
@@ -23,96 +29,114 @@ function cleanString(string)
     return (string !== '' ? string : undefined)
 }
 
-
+let inputFiles = []
 let stripSMTPragmas = false
-let firstFileArgumentIndex = 2
+let presets = []
 
-if (process.argv.length >= 3 && process.argv[2] === '--strip-smt-pragmas')
+for (let i = 2; i < process.argv.length; ++i)
 {
-    stripSMTPragmas = true
-    firstFileArgumentIndex = 3
+    if (process.argv[i] === '--strip-smt-pragmas')
+        stripSMTPragmas = true
+    else if (process.argv[i] === '--preset')
+    {
+        if (i + 1 === process.argv.length)
+            throw Error("Option --preset was used, but no preset name given.")
+
+        presets.push(process.argv[i + 1])
+        ++i;
+    }
+    else
+        inputFiles.push(process.argv[i])
 }
 
-for (const optimize of [false, true])
+if (presets.length === 0)
+    presets = ['legacy-no-optimize', 'legacy-optimize']
+
+for (const preset of presets)
+    if (!(preset in SETTINGS_PRESETS))
+        throw Error(`Invalid preset name: ${preset}.`)
+
+for (const preset of presets)
 {
-    for (const filename of process.argv.slice(firstFileArgumentIndex))
+    settings = SETTINGS_PRESETS[preset]
+
+    for (const filename of inputFiles)
     {
-        if (filename !== undefined)
+        let input = {
+            language: 'Solidity',
+            sources: {
+                [filename]: {content: loadSource(filename, stripSMTPragmas)}
+            },
+            settings: {
+                optimizer: {enabled: settings.optimize},
+                // NOTE: We omit viaIR rather than set it to false to handle older versions that don't have it.
+                viaIR: settings.viaIR ? true : undefined,
+                outputSelection: {'*': {'*': ['evm.bytecode.object', 'metadata']}}
+            }
+        }
+        if (!stripSMTPragmas)
+            input['settings']['modelChecker'] = {engine: 'none'}
+
+        let serializedOutput
+        let result
+        const serializedInput = JSON.stringify(input)
+
+        let internalCompilerError = false
+        try
         {
-            let input = {
-                language: 'Solidity',
-                sources: {
-                    [filename]: {content: loadSource(filename, stripSMTPragmas)}
-                },
-                settings: {
-                    optimizer: {enabled: optimize},
-                    outputSelection: {'*': {'*': ['evm.bytecode.object', 'metadata']}}
-                }
-            }
-            if (!stripSMTPragmas)
-                input['settings']['modelChecker'] = {engine: 'none'}
+            serializedOutput = compiler.compile(serializedInput)
+        }
+        catch (exception)
+        {
+            internalCompilerError = true
+        }
 
-            let serializedOutput
-            let result
-            const serializedInput = JSON.stringify(input)
+        if (!internalCompilerError)
+        {
+            result = JSON.parse(serializedOutput)
 
-            let internalCompilerError = false
-            try
-            {
-                serializedOutput = compiler.compile(serializedInput)
-            }
-            catch (exception)
-            {
-                internalCompilerError = true
-            }
-
-            if (!internalCompilerError)
-            {
-                result = JSON.parse(serializedOutput)
-
-                if ('errors' in result)
-                    for (const error of result['errors'])
-                        // JSON interface still returns contract metadata in case of an internal compiler error while
-                        // CLI interface does not. To make reports comparable we must force this case to be detected as
-                        // an error in both cases.
-                        if (['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError'].includes(error['type']))
-                        {
-                            internalCompilerError = true
-                            break
-                        }
-            }
-
-            if (
-                internalCompilerError ||
-                !('contracts' in result) ||
-                Object.keys(result['contracts']).length === 0 ||
-                Object.keys(result['contracts']).every(file => Object.keys(result['contracts'][file]).length === 0)
-            )
-                // NOTE: do not exit here because this may be run on source which cannot be compiled
-                console.log(filename + ': <ERROR>')
-            else
-                for (const contractFile in result['contracts'])
-                    for (const contractName in result['contracts'][contractFile])
+            if ('errors' in result)
+                for (const error of result['errors'])
+                    // JSON interface still returns contract metadata in case of an internal compiler error while
+                    // CLI interface does not. To make reports comparable we must force this case to be detected as
+                    // an error in both cases.
+                    if (['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError', 'YulException'].includes(error['type']))
                     {
-                        const contractResults = result['contracts'][contractFile][contractName]
-
-                        let bytecode = '<NO BYTECODE>'
-                        let metadata = '<NO METADATA>'
-
-                        if (
-                            'evm' in contractResults &&
-                            'bytecode' in contractResults['evm'] &&
-                            'object' in contractResults['evm']['bytecode'] &&
-                            cleanString(contractResults.evm.bytecode.object) !== undefined
-                        )
-                            bytecode = cleanString(contractResults.evm.bytecode.object)
-
-                        if ('metadata' in contractResults && cleanString(contractResults.metadata) !== undefined)
-                            metadata = contractResults.metadata
-
-                        console.log(filename + ':' + contractName + ' ' + bytecode)
-                        console.log(filename + ':' + contractName + ' ' + metadata)
+                        internalCompilerError = true
+                        break
                     }
         }
+
+        if (
+            internalCompilerError ||
+            !('contracts' in result) ||
+            Object.keys(result['contracts']).length === 0 ||
+            Object.keys(result['contracts']).every(file => Object.keys(result['contracts'][file]).length === 0)
+        )
+            // NOTE: do not exit here because this may be run on source which cannot be compiled
+            console.log(filename + ': <ERROR>')
+        else
+            for (const contractFile in result['contracts'])
+                for (const contractName in result['contracts'][contractFile])
+                {
+                    const contractResults = result['contracts'][contractFile][contractName]
+
+                    let bytecode = '<NO BYTECODE>'
+                    let metadata = '<NO METADATA>'
+
+                    if (
+                        'evm' in contractResults &&
+                        'bytecode' in contractResults['evm'] &&
+                        'object' in contractResults['evm']['bytecode'] &&
+                        cleanString(contractResults.evm.bytecode.object) !== undefined
+                    )
+                        bytecode = cleanString(contractResults.evm.bytecode.object)
+
+                    if ('metadata' in contractResults && cleanString(contractResults.metadata) !== undefined)
+                        metadata = contractResults.metadata
+
+                    console.log(filename + ':' + contractName + ' ' + bytecode)
+                    console.log(filename + ':' + contractName + ' ' + metadata)
+                }
     }
 }

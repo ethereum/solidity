@@ -51,10 +51,10 @@ using namespace std;
 StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 {
 	StackLayout stackLayout;
-	StackLayoutGenerator{stackLayout}.processEntryPoint(*_cfg.entry);
+	StackLayoutGenerator{stackLayout, nullptr}.processEntryPoint(*_cfg.entry);
 
 	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
-		StackLayoutGenerator{stackLayout}.processEntryPoint(*functionInfo.entry, &functionInfo);
+		StackLayoutGenerator{stackLayout, &functionInfo}.processEntryPoint(*functionInfo.entry, &functionInfo);
 
 	return stackLayout;
 }
@@ -83,13 +83,15 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 		yulAssert(functionInfo, "Function not found.");
 	}
 
-	StackLayoutGenerator generator{stackLayout};
+	StackLayoutGenerator generator{stackLayout, functionInfo};
 	CFG::BasicBlock const* entry = functionInfo ? functionInfo->entry : _cfg.entry;
 	generator.processEntryPoint(*entry);
 	return generator.reportStackTooDeep(*entry);
 }
 
-StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout): m_layout(_layout)
+StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout, CFG::FunctionInfo const* _functionInfo):
+	m_layout(_layout),
+	m_currentFunctionInfo(_functionInfo)
 {
 }
 
@@ -740,7 +742,7 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 		});
 	};
 	/// @returns the number of operations required to transform @a _source to @a _target.
-	auto evaluateTransform = [](Stack _source, Stack const& _target) -> size_t {
+	auto evaluateTransform = [&](Stack _source, Stack const& _target) -> size_t {
 		size_t opGas = 0;
 		auto swap = [&](unsigned _swapDepth)
 		{
@@ -755,12 +757,23 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 				opGas += evmasm::GasMeter::runGas(evmasm::pushInstruction(32), langutil::EVMVersion());
 			else
 			{
-				auto depth = util::findOffset(_source | ranges::views::reverse, _slot);
-				yulAssert(depth);
-				if (*depth < 16)
-					opGas += evmasm::GasMeter::runGas(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)), langutil::EVMVersion());
+				if (auto depth = util::findOffset(_source | ranges::views::reverse, _slot))
+				{
+					if (*depth < 16)
+						opGas += evmasm::GasMeter::runGas(evmasm::dupInstruction(static_cast<unsigned>(*depth + 1)), langutil::EVMVersion());
+					else
+						opGas += 1000;
+				}
 				else
-					opGas += 1000;
+				{
+					// This has to be a previously unassigned return variable.
+					// We at least sanity-check that it is among the return variables at all.
+					yulAssert(m_currentFunctionInfo && holds_alternative<VariableSlot>(_slot));
+					yulAssert(util::contains(m_currentFunctionInfo->returnVariables, get<VariableSlot>(_slot)));
+					// Strictly speaking the cost of the PUSH0 depends on the targeted EVM version, but the difference
+					// will not matter here.
+					opGas += evmasm::GasMeter::runGas(evmasm::pushInstruction(0), langutil::EVMVersion());;
+				}
 			}
 		};
 		auto pop = [&]() { opGas += evmasm::GasMeter::runGas(evmasm::Instruction::POP,langutil::EVMVersion()); };

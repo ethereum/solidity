@@ -122,21 +122,22 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 			m_shouldRun = false;
 #endif
 	}
+
+	auto const& bmcLoopIterations = m_reader.sizetSetting("BMCLoopIterations", 1);
+	m_modelCheckerSettings.bmcLoopIterations = std::optional<unsigned>{bmcLoopIterations};
 }
 
-TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+void SMTCheckerTest::setupCompiler()
 {
-	setupCompiler();
-	compiler().setModelCheckerSettings(m_modelCheckerSettings);
-	parseAndAnalyze();
-	filterObtainedErrors();
+	SyntaxTest::setupCompiler();
 
-	return conclude(_stream, _linePrefix, _formatted);
+	compiler().setModelCheckerSettings(m_modelCheckerSettings);
 }
 
 void SMTCheckerTest::filterObtainedErrors()
 {
 	SyntaxTest::filterObtainedErrors();
+	m_unfilteredErrorList = m_errorList;
 
 	static auto removeCex = [](vector<SyntaxTestError>& errors) {
 		for (auto& e: errors)
@@ -152,4 +153,11 @@ void SMTCheckerTest::filterObtainedErrors()
 		removeCex(m_expectations);
 		removeCex(m_errorList);
 	}
+}
+
+void SMTCheckerTest::printUpdatedExpectations(ostream &_stream, const string &_linePrefix) const {
+	if (!m_unfilteredErrorList.empty())
+		printErrorList(_stream, m_unfilteredErrorList, _linePrefix, false);
+	else
+		CommonSyntaxTest::printUpdatedExpectations(_stream, _linePrefix);
 }

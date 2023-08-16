@@ -36,7 +36,7 @@ def detect_external_tests() -> dict:
     return {
         file_path.stem: file_path
         for file_path in Path(EXTERNAL_TESTS_DIR).iterdir()
-        if file_path.is_file() and file_path.suffix == ".sh"
+        if file_path.is_file() and file_path.suffix in (".sh", ".py")
     }
 
 

@@ -33,16 +33,15 @@
 #include <string>
 #include <utility>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 SMTLib2Interface::SMTLib2Interface(
-	map<h256, string> _queryResponses,
+	std::map<h256, std::string> _queryResponses,
 	ReadCallback::Callback _smtCallback,
-	optional<unsigned> _queryTimeout
+	std::optional<unsigned> _queryTimeout
 ):
 	SolverInterface(_queryTimeout),
 	m_queryResponses(std::move(_queryResponses)),
@@ -59,7 +58,7 @@ void SMTLib2Interface::reset()
 	m_userSorts.clear();
 	write("(set-option :produce-models true)");
 	if (m_queryTimeout)
-		write("(set-option :timeout " + to_string(*m_queryTimeout) + ")");
+		write("(set-option :timeout " + std::to_string(*m_queryTimeout) + ")");
 	write("(set-logic ALL)");
 }
 
@@ -74,7 +73,7 @@ void SMTLib2Interface::pop()
 	m_accumulatedOutput.pop_back();
 }
 
-void SMTLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
+void SMTLib2Interface::declareVariable(std::string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort, "");
 	if (_sort->kind == Kind::Function)
@@ -86,16 +85,16 @@ void SMTLib2Interface::declareVariable(string const& _name, SortPointer const& _
 	}
 }
 
-void SMTLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
+void SMTLib2Interface::declareFunction(std::string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort, "");
 	smtAssert(_sort->kind == Kind::Function, "");
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
-		auto const& fSort = dynamic_pointer_cast<FunctionSort>(_sort);
-		string domain = toSmtLibSort(fSort->domain);
-		string codomain = toSmtLibSort(*fSort->codomain);
+		auto const& fSort = std::dynamic_pointer_cast<FunctionSort>(_sort);
+		std::string domain = toSmtLibSort(fSort->domain);
+		std::string codomain = toSmtLibSort(*fSort->codomain);
 		m_variables.emplace(_name, _sort);
 		write(
 			"(declare-fun |" +
@@ -114,9 +113,9 @@ void SMTLib2Interface::addAssertion(Expression const& _expr)
 	write("(assert " + toSExpr(_expr) + ")");
 }
 
-pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> const& _expressionsToEvaluate)
+std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::vector<Expression> const& _expressionsToEvaluate)
 {
-	string response = querySolver(
+	std::string response = querySolver(
 		boost::algorithm::join(m_accumulatedOutput, "\n") +
 		checkSatAndGetValuesCommand(_expressionsToEvaluate)
 	);
@@ -132,13 +131,13 @@ pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> con
 	else
 		result = CheckResult::ERROR;
 
-	vector<string> values;
+	std::vector<std::string> values;
 	if (result == CheckResult::SATISFIABLE && !_expressionsToEvaluate.empty())
 		values = parseValues(find(response.cbegin(), response.cend(), '\n'), response.cend());
-	return make_pair(result, values);
+	return std::make_pair(result, values);
 }
 
-string SMTLib2Interface::toSExpr(Expression const& _expr)
+std::string SMTLib2Interface::toSExpr(Expression const& _expr)
 {
 	if (_expr.arguments.empty())
 		return _expr.name;
@@ -148,16 +147,16 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	{
 		size_t size = std::stoul(_expr.arguments[1].name);
 		auto arg = toSExpr(_expr.arguments.front());
-		auto int2bv = "(_ int2bv " + to_string(size) + ")";
+		auto int2bv = "(_ int2bv " + std::to_string(size) + ")";
 		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if needed.
-		sexpr += string("ite ") +
+		sexpr += std::string("ite ") +
 			"(>= " + arg + " 0) " +
 			"(" + int2bv + " " + arg + ") " +
 			"(bvneg (" + int2bv + " (- " + arg + ")))";
 	}
 	else if (_expr.name == "bv2int")
 	{
-		auto intSort = dynamic_pointer_cast<IntSort>(_expr.sort);
+		auto intSort = std::dynamic_pointer_cast<IntSort>(_expr.sort);
 		smtAssert(intSort, "");
 
 		auto arg = toSExpr(_expr.arguments.front());
@@ -166,13 +165,13 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		if (!intSort->isSigned)
 			return nat;
 
-		auto bvSort = dynamic_pointer_cast<BitVectorSort>(_expr.arguments.front().sort);
+		auto bvSort = std::dynamic_pointer_cast<BitVectorSort>(_expr.arguments.front().sort);
 		smtAssert(bvSort, "");
-		auto size = to_string(bvSort->size);
-		auto pos = to_string(bvSort->size - 1);
+		auto size = std::to_string(bvSort->size);
+		auto pos = std::to_string(bvSort->size - 1);
 
 		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if needed.
-		sexpr += string("ite ") +
+		sexpr += std::string("ite ") +
 			"(= ((_ extract " + pos + " " + pos + ")" + arg + ") #b0) " +
 			nat + " " +
 			"(- (bv2nat (bvneg " + arg + ")))";
@@ -182,7 +181,7 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		smtAssert(_expr.arguments.size() == 2, "");
 		auto sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments.at(0).sort);
 		smtAssert(sortSort, "");
-		auto arraySort = dynamic_pointer_cast<ArraySort>(sortSort->inner);
+		auto arraySort = std::dynamic_pointer_cast<ArraySort>(sortSort->inner);
 		smtAssert(arraySort, "");
 		sexpr += "(as const " + toSmtLibSort(*arraySort) + ") ";
 		sexpr += toSExpr(_expr.arguments.at(1));
@@ -190,14 +189,14 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	else if (_expr.name == "tuple_get")
 	{
 		smtAssert(_expr.arguments.size() == 2, "");
-		auto tupleSort = dynamic_pointer_cast<TupleSort>(_expr.arguments.at(0).sort);
+		auto tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.arguments.at(0).sort);
 		size_t index = std::stoul(_expr.arguments.at(1).name);
 		smtAssert(index < tupleSort->members.size(), "");
 		sexpr += "|" + tupleSort->members.at(index) + "| " + toSExpr(_expr.arguments.at(0));
 	}
 	else if (_expr.name == "tuple_constructor")
 	{
-		auto tupleSort = dynamic_pointer_cast<TupleSort>(_expr.sort);
+		auto tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.sort);
 		smtAssert(tupleSort, "");
 		sexpr += "|" + tupleSort->name + "|";
 		for (auto const& arg: _expr.arguments)
@@ -213,7 +212,7 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 	return sexpr;
 }
 
-string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
+std::string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 {
 	switch (_sort.kind)
 	{
@@ -222,7 +221,7 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	case Kind::Bool:
 		return "Bool";
 	case Kind::BitVector:
-		return "(_ BitVec " + to_string(dynamic_cast<BitVectorSort const&>(_sort).size) + ")";
+		return "(_ BitVec " + std::to_string(dynamic_cast<BitVectorSort const&>(_sort).size) + ")";
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
@@ -232,11 +231,11 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	case Kind::Tuple:
 	{
 		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
-		string tupleName = "|" + tupleSort.name + "|";
+		std::string tupleName = "|" + tupleSort.name + "|";
 		auto isName = [&](auto entry) { return entry.first == tupleName; };
 		if (ranges::find_if(m_userSorts, isName) == m_userSorts.end())
 		{
-			string decl("(declare-datatypes ((" + tupleName + " 0)) (((" + tupleName);
+			std::string decl("(declare-datatypes ((" + tupleName + " 0)) (((" + tupleName);
 			smtAssert(tupleSort.members.size() == tupleSort.components.size(), "");
 			for (unsigned i = 0; i < tupleSort.members.size(); ++i)
 				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(*tupleSort.components.at(i)) + ")";
@@ -252,24 +251,24 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	}
 }
 
-string SMTLib2Interface::toSmtLibSort(vector<SortPointer> const& _sorts)
+std::string SMTLib2Interface::toSmtLibSort(std::vector<SortPointer> const& _sorts)
 {
-	string ssort("(");
+	std::string ssort("(");
 	for (auto const& sort: _sorts)
 		ssort += toSmtLibSort(*sort) + " ";
 	ssort += ")";
 	return ssort;
 }
 
-void SMTLib2Interface::write(string _data)
+void SMTLib2Interface::write(std::string _data)
 {
 	smtAssert(!m_accumulatedOutput.empty(), "");
 	m_accumulatedOutput.back() += std::move(_data) + "\n";
 }
 
-string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _expressionsToEvaluate)
+std::string SMTLib2Interface::checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate)
 {
-	string command;
+	std::string command;
 	if (_expressionsToEvaluate.empty())
 		command = "(check-sat)\n";
 	else
@@ -279,22 +278,22 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
 			smtAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
-			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
+			command += "(declare-const |EVALEXPR_" + std::to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
+			command += "(assert (= |EVALEXPR_" + std::to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";
 		command += "(get-value (";
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
-			command += "|EVALEXPR_" + to_string(i) + "| ";
+			command += "|EVALEXPR_" + std::to_string(i) + "| ";
 		command += "))\n";
 	}
 
 	return command;
 }
 
-vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, string::const_iterator _end)
+std::vector<std::string> SMTLib2Interface::parseValues(std::string::const_iterator _start, std::string::const_iterator _end)
 {
-	vector<string> values;
+	std::vector<std::string> values;
 	while (_start < _end)
 	{
 		auto valStart = find(_start, _end, ' ');
@@ -308,7 +307,7 @@ vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, stri
 	return values;
 }
 
-string SMTLib2Interface::querySolver(string const& _input)
+std::string SMTLib2Interface::querySolver(std::string const& _input)
 {
 	h256 inputHash = keccak256(_input);
 	if (m_queryResponses.count(inputHash))
@@ -321,4 +320,10 @@ string SMTLib2Interface::querySolver(string const& _input)
 	}
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";
+}
+
+std::string SMTLib2Interface::dumpQuery(std::vector<Expression> const& _expressionsToEvaluate)
+{
+	return boost::algorithm::join(m_accumulatedOutput, "\n") +
+		checkSatAndGetValuesCommand(_expressionsToEvaluate);
 }

@@ -37,6 +37,10 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/action/remove.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/zip.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -156,7 +160,8 @@ map<YulString, size_t> FullInliner::callDepths() const
 		}
 
 		for (auto& call: cg.functionCalls)
-			call.second -= removed;
+			for (YulString toBeRemoved: removed)
+				ranges::actions::remove(call.second, toBeRemoved);
 
 		currentDepth++;
 
@@ -183,6 +188,12 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 
 	if (m_noInlineFunctions.count(_funCall.functionName.name) || recursive(*calledFunction))
 		return false;
+
+	// No inlining of calls where argument expressions may have side-effects.
+	// To avoid running into this, make sure that ExpressionSplitter runs before FullInliner.
+	for (auto const& argument: _funCall.arguments)
+		if (!holds_alternative<Literal>(argument) && !holds_alternative<Identifier>(argument))
+			return false;
 
 	// Inline really, really tiny functions
 	size_t size = m_functionSizes.at(calledFunction->name);
@@ -302,8 +313,8 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
-	for (size_t i = 0; i < _funCall.arguments.size(); ++i)
-		newVariable(function->parameters[i], &_funCall.arguments[i]);
+	for (auto&& [parameter, argument]: ranges::views::zip(function->parameters, _funCall.arguments) | ranges::views::reverse)
+		newVariable(parameter, &argument);
 	for (auto const& var: function->returnVariables)
 		newVariable(var, nullptr);
 

@@ -63,7 +63,9 @@ CompilabilityChecker::CompilabilityChecker(
 
 		for (StackTooDeepError const& error: transform.stackErrors())
 		{
-			unreachableVariables[error.functionName].emplace(error.variable);
+			auto& unreachables = unreachableVariables[error.functionName];
+			if (!util::contains(unreachables, error.variable))
+				unreachables.emplace_back(error.variable);
 			int& deficit = stackDeficit[error.functionName];
 			deficit = std::max(error.depth, deficit);
 		}

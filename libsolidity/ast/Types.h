@@ -1598,6 +1598,7 @@ public:
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool _withoutDataLocation) const override { return "type(" + m_actualType->toString(_withoutDataLocation) + ")"; }
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
+	Type const* mobileType() const override { return nullptr; }
 
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 protected:
@@ -1693,6 +1694,8 @@ public:
 	Kind kind() const { return m_kind; }
 
 	Type const* typeArgument() const;
+
+	Type const* mobileType() const override { return nullptr; }
 
 protected:
 	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }

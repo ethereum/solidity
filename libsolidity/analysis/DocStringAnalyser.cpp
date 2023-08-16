@@ -30,7 +30,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -38,7 +37,7 @@ using namespace solidity::frontend;
 namespace
 {
 
-void copyMissingTags(set<CallableDeclaration const*> const& _baseFunctions, StructurallyDocumentedAnnotation& _target, FunctionType const* _functionType = nullptr)
+void copyMissingTags(std::set<CallableDeclaration const*> const& _baseFunctions, StructurallyDocumentedAnnotation& _target, FunctionType const* _functionType = nullptr)
 {
 	// Only copy if there is exactly one direct base function.
 	if (_baseFunctions.size() != 1)
@@ -50,7 +49,7 @@ void copyMissingTags(set<CallableDeclaration const*> const& _baseFunctions, Stru
 
 	for (auto it = sourceDoc.docTags.begin(); it != sourceDoc.docTags.end();)
 	{
-		string const& tag = it->first;
+		std::string const& tag = it->first;
 		// Don't copy tag "inheritdoc", custom tags or already existing tags
 		if (tag == "inheritdoc" || _target.docTags.count(tag) || boost::starts_with(tag, "custom"))
 		{
@@ -68,7 +67,7 @@ void copyMissingTags(set<CallableDeclaration const*> const& _baseFunctions, Stru
 			if (_functionType && tag == "return")
 			{
 				size_t docParaNameEndPos = content.content.find_first_of(" \t");
-				string const docParameterName = content.content.substr(0, docParaNameEndPos);
+				std::string const docParameterName = content.content.substr(0, docParaNameEndPos);
 
 				if (
 					_functionType->returnParameterNames().size() > n &&
@@ -80,10 +79,10 @@ void copyMissingTags(set<CallableDeclaration const*> const& _baseFunctions, Stru
 						baseFunction.returnParameters().size() > n &&
 						baseFunction.returnParameters().at(n)->name().empty();
 
-					string paramName = _functionType->returnParameterNames().at(n);
+					std::string paramName = _functionType->returnParameterNames().at(n);
 					content.content =
 						(paramName.empty() ? "" : std::move(paramName) + " ") + (
-							string::npos == docParaNameEndPos || baseHasNoName ?
+							std::string::npos == docParaNameEndPos || baseHasNoName ?
 							content.content :
 							content.content.substr(docParaNameEndPos + 1)
 						);
@@ -95,7 +94,7 @@ void copyMissingTags(set<CallableDeclaration const*> const& _baseFunctions, Stru
 	}
 }
 
-CallableDeclaration const* findBaseCallable(set<CallableDeclaration const*> const& _baseFunctions, int64_t _contractId)
+CallableDeclaration const* findBaseCallable(std::set<CallableDeclaration const*> const& _baseFunctions, int64_t _contractId)
 {
 	for (CallableDeclaration const* baseFuncCandidate: _baseFunctions)
 		if (baseFuncCandidate->annotation().contract->id() == _contractId)
@@ -181,7 +180,7 @@ void DocStringAnalyser::handleCallable(
 }
 
 CallableDeclaration const* DocStringAnalyser::resolveInheritDoc(
-	set<CallableDeclaration const*> const& _baseFuncs,
+	std::set<CallableDeclaration const*> const& _baseFuncs,
 	StructurallyDocumented const& _node,
 	StructurallyDocumentedAnnotation& _annotation
 )

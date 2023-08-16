@@ -33,7 +33,6 @@
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/test/unit_test.hpp>
 

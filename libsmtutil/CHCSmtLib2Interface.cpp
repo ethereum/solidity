@@ -31,20 +31,19 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 CHCSmtLib2Interface::CHCSmtLib2Interface(
-	map<h256, string> const& _queryResponses,
+	std::map<h256, std::string> const& _queryResponses,
 	ReadCallback::Callback _smtCallback,
 	SMTSolverChoice _enabledSolvers,
-	optional<unsigned> _queryTimeout
+	std::optional<unsigned> _queryTimeout
 ):
 	CHCSolverInterface(_queryTimeout),
-	m_smtlib2(make_unique<SMTLib2Interface>(_queryResponses, _smtCallback, m_queryTimeout)),
+	m_smtlib2(std::make_unique<SMTLib2Interface>(_queryResponses, _smtCallback, m_queryTimeout)),
 	m_queryResponses(std::move(_queryResponses)),
 	m_smtCallback(_smtCallback),
 	m_enabledSolvers(_enabledSolvers)
@@ -66,8 +65,8 @@ void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
 	smtAssert(_expr.sort->kind == Kind::Function);
 	if (!m_variables.count(_expr.name))
 	{
-		auto fSort = dynamic_pointer_cast<FunctionSort>(_expr.sort);
-		string domain = toSmtLibSort(fSort->domain);
+		auto fSort = std::dynamic_pointer_cast<FunctionSort>(_expr.sort);
+		std::string domain = toSmtLibSort(fSort->domain);
 		// Relations are predicates which have implicit codomain Bool.
 		m_variables.insert(_expr.name);
 		write(
@@ -89,25 +88,10 @@ void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& /*
 	);
 }
 
-tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expression const& _block)
+std::tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expression const& _block)
 {
-	string accumulated{};
-	swap(m_accumulatedOutput, accumulated);
-	solAssert(m_smtlib2, "");
-	writeHeader();
-	for (auto const& decl: m_smtlib2->userSorts() | ranges::views::values)
-		write(decl);
-	m_accumulatedOutput += accumulated;
-
-	string queryRule = "(assert\n(forall " + forall() + "\n" +
-		"(=> " + _block.name + " false)"
-		"))";
-	string response = querySolver(
-		m_accumulatedOutput +
-		queryRule +
-		"\n(check-sat)"
-	);
-	swap(m_accumulatedOutput, accumulated);
+	std::string query = dumpQuery(_block);
+	std::string response = querySolver(query);
 
 	CheckResult result;
 	// TODO proper parsing
@@ -123,7 +107,7 @@ tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> CHCSmtLib2Interface
 	return {result, Expression(true), {}};
 }
 
-void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const& _sort)
+void CHCSmtLib2Interface::declareVariable(std::string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort);
 	if (_sort->kind == Kind::Function)
@@ -135,32 +119,25 @@ void CHCSmtLib2Interface::declareVariable(string const& _name, SortPointer const
 	}
 }
 
-string CHCSmtLib2Interface::toSmtLibSort(Sort const& _sort)
+std::string CHCSmtLib2Interface::toSmtLibSort(Sort const& _sort)
 {
 	if (!m_sortNames.count(&_sort))
 		m_sortNames[&_sort] = m_smtlib2->toSmtLibSort(_sort);
 	return m_sortNames.at(&_sort);
 }
 
-string CHCSmtLib2Interface::toSmtLibSort(vector<SortPointer> const& _sorts)
+std::string CHCSmtLib2Interface::toSmtLibSort(std::vector<SortPointer> const& _sorts)
 {
-	string ssort("(");
+	std::string ssort("(");
 	for (auto const& sort: _sorts)
 		ssort += toSmtLibSort(*sort) + " ";
 	ssort += ")";
 	return ssort;
 }
 
-void CHCSmtLib2Interface::writeHeader()
+std::string CHCSmtLib2Interface::forall()
 {
-	if (m_queryTimeout)
-		write("(set-option :timeout " + to_string(*m_queryTimeout) + ")");
-	write("(set-logic HORN)\n");
-}
-
-string CHCSmtLib2Interface::forall()
-{
-	string vars("(");
+	std::string vars("(");
 	for (auto const& [name, sort]: m_smtlib2->variables())
 	{
 		solAssert(sort, "");
@@ -171,17 +148,17 @@ string CHCSmtLib2Interface::forall()
 	return vars;
 }
 
-void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const& _sort)
+void CHCSmtLib2Interface::declareFunction(std::string const& _name, SortPointer const& _sort)
 {
 	smtAssert(_sort);
 	smtAssert(_sort->kind == Kind::Function);
 	// TODO Use domain and codomain as key as well
 	if (!m_variables.count(_name))
 	{
-		auto fSort = dynamic_pointer_cast<FunctionSort>(_sort);
+		auto fSort = std::dynamic_pointer_cast<FunctionSort>(_sort);
 		smtAssert(fSort->codomain);
-		string domain = toSmtLibSort(fSort->domain);
-		string codomain = toSmtLibSort(*fSort->codomain);
+		std::string domain = toSmtLibSort(fSort->domain);
+		std::string codomain = toSmtLibSort(*fSort->codomain);
 		m_variables.insert(_name);
 		write(
 			"(declare-fun |" +
@@ -195,12 +172,12 @@ void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const
 	}
 }
 
-void CHCSmtLib2Interface::write(string _data)
+void CHCSmtLib2Interface::write(std::string _data)
 {
 	m_accumulatedOutput += std::move(_data) + "\n";
 }
 
-string CHCSmtLib2Interface::querySolver(string const& _input)
+std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 {
 	util::h256 inputHash = util::keccak256(_input);
 	if (m_queryResponses.count(inputHash))
@@ -216,4 +193,33 @@ string CHCSmtLib2Interface::querySolver(string const& _input)
 
 	m_unhandledQueries.push_back(_input);
 	return "unknown\n";
+}
+
+std::string CHCSmtLib2Interface::dumpQuery(Expression const& _expr)
+{
+	std::stringstream s;
+
+	s
+		<< createHeaderAndDeclarations()
+		<< m_accumulatedOutput << std::endl
+		<< createQueryAssertion(_expr.name) << std::endl
+		<< "(check-sat)" << std::endl;
+
+	return s.str();
+}
+
+std::string CHCSmtLib2Interface::createHeaderAndDeclarations() {
+	std::stringstream s;
+	if (m_queryTimeout)
+		s << "(set-option :timeout " + std::to_string(*m_queryTimeout) + ")\n";
+	s << "(set-logic HORN)" << std::endl;
+
+	for (auto const& decl: m_smtlib2->userSorts() | ranges::views::values)
+		s << decl << std::endl;
+
+	return s.str();
+}
+
+std::string CHCSmtLib2Interface::createQueryAssertion(std::string name) {
+	return "(assert\n(forall " + forall() + "\n" +	"(=> " + name + " false)))";
 }

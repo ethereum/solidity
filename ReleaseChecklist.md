@@ -3,9 +3,9 @@
 ### Requirements
  - [ ] GitHub account with access to [solidity](https://github.com/ethereum/solidity), [solc-js](https://github.com/ethereum/solc-js),
        [solc-bin](https://github.com/ethereum/solc-bin), [homebrew-ethereum](https://github.com/ethereum/homebrew-ethereum),
-       [solidity-blog](https://github.com/ethereum/solidity-blog) and [solidity-portal](https://github.com/ethereum/solidity-portal) repositories.
+       [solidity-website](https://github.com/ethereum/solidity-website).
  - [ ] DockerHub account with push rights to the [``solc`` image](https://hub.docker.com/r/ethereum/solc).
- - [ ] Lauchpad (Ubuntu One) account with a membership in the ["Ethereum" team](https://launchpad.net/~ethereum) and
+ - [ ] Launchpad (Ubuntu One) account with a membership in the ["Ethereum" team](https://launchpad.net/~ethereum) and
        a gnupg key for your email in the ``ethereum.org`` domain (has to be version 1, gpg2 won't work).
  - [ ] Ubuntu/Debian dependencies of the PPA scripts: ``devscripts``, ``debhelper``, ``dput``, ``git``, ``wget``, ``ca-certificates``.
  - [ ] [npm Registry](https://www.npmjs.com) account added as a collaborator for the [``solc`` package](https://www.npmjs.com/package/solc).
@@ -37,8 +37,8 @@ At least a day before the release:
  - [ ] Prepare drafts of Twitter, Reddit and Solidity Forum announcements.
 
 ### Blog Post
- - [ ] Create a post on [solidity-blog](https://github.com/ethereum/solidity-blog) in the ``Releases`` category and explain some of the new features or concepts.
- - [ ] Create a post on [solidity-blog](https://github.com/ethereum/solidity-blog) in the ``Security Alerts`` category in case of important bug(s).
+ - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Releases`` category and explain some of the new features or concepts.
+ - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Security Alerts`` category in case of important bug(s).
 
 ### Changelog
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice. Commit it.
@@ -104,9 +104,9 @@ At least a day before the release:
  - [ ] Make sure the documentation for the new release has been published successfully.
        Go to the [documentation status page at ReadTheDocs](https://readthedocs.org/projects/solidity/) and verify that the new version is listed, works and is marked as default.
  - [ ] Remove "still in progress" warning from the [release notes](https://github.com/ethereum/solidity/releases).
- - [ ] Merge the [blog posts](https://github.com/ethereum/solidity-blog/pulls) related to the release.
+ - [ ] Merge the [blog posts](https://github.com/ethereum/solidity-website/pulls) related to the release.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
- - [ ] Update the release information section [in the source of soliditylang.org](https://github.com/ethereum/solidity-portal/blob/master/index.html).
+ - [ ] Update the release information section [in the source of soliditylang.org](https://github.com/ethereum/solidity-website/blob/main/src/pages/index.tsx).
  - [ ] Announce on [Twitter](https://twitter.com/solidity_lang), including links to the release and the blog post.
  - [ ] Announce on [Fosstodon](https://fosstodon.org/@solidity/), including links to the release and the blog post.
  - [ ] Share the announcement on Reddit in [``/r/ethdev``](https://reddit.com/r/ethdev/), cross-posted to [``/r/ethereum``](https://reddit.com/r/ethereum/).

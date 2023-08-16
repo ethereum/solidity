@@ -9,7 +9,7 @@ from unittest_helpers import FIXTURE_DIR, LIBSOLIDITY_TEST_DIR, load_fixture, lo
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
 # pragma pylint: disable=import-error
-from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SMTUse, Statistics
+from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SettingsPreset, SMTUse, Statistics
 from bytecodecompare.prepare_report import load_source, parse_cli_output, parse_standard_json_output, prepare_compiler_input
 # pragma pylint: enable=import-error
 
@@ -224,7 +224,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
-            optimize=True,
+            preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=False,
             interface=CompilerInterface.STANDARD_JSON,
             smt_use=SMTUse.DISABLE,
@@ -238,7 +238,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
-            optimize=True,
+            preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=False,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
@@ -265,6 +265,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             },
             'settings': {
                 'optimizer': {'enabled': True},
+                'viaIR': True,
                 'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}},
                 'modelChecker': {'engine': 'none'},
             }
@@ -273,7 +274,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
-            optimize=True,
+            preset=SettingsPreset.VIA_IR_OPTIMIZE,
             force_no_optimize_yul=False,
             interface=CompilerInterface.STANDARD_JSON,
             smt_use=SMTUse.DISABLE,
@@ -287,7 +288,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         (_command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
-            optimize=True,
+            preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=True,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
@@ -300,7 +301,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
-            optimize=False,
+            preset=SettingsPreset.LEGACY_NO_OPTIMIZE,
             force_no_optimize_yul=True,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
@@ -317,7 +318,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
-            optimize=True,
+            preset=SettingsPreset.VIA_IR_OPTIMIZE,
             force_no_optimize_yul=False,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.PRESERVE,
@@ -326,7 +327,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
 
         self.assertEqual(
             command_line,
-            ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--optimize'],
+            ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--optimize', '--via-ir'],
         )
         self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 

@@ -27,7 +27,6 @@
 #endif
 #include <dlfcn.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::smtutil;
 
@@ -41,7 +40,7 @@ void* Z3Loader::loadSymbol(char const* _name) const
 {
 	smtAssert(m_handle, "Attempted to use dynamically loaded Z3, even though it is not available.");
 	void* sym = dlsym(m_handle, _name);
-	smtAssert(sym, string("Symbol \"") + _name + "\" not found in libz3.so");
+	smtAssert(sym, std::string("Symbol \"") + _name + "\" not found in libz3.so");
 	return sym;
 }
 
@@ -59,7 +58,7 @@ bool Z3Loader::available() const
 
 Z3Loader::Z3Loader()
 {
-	string libname{"libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION)};
+	std::string libname{"libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION)};
 	m_handle = dlmopen(LM_ID_NEWLM, libname.c_str(), RTLD_NOW);
 }
 

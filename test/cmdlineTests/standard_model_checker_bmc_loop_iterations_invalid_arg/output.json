@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "settings.modelChecker.bmcLoopIterations must be an unsigned integer.",
+            "message": "settings.modelChecker.bmcLoopIterations must be an unsigned integer.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

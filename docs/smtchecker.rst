@@ -636,7 +636,7 @@ expression type.
 It is also helpful to cast the called contract's variable as the type of the
 most derived type in case of inheritance.
 
-   .. code-block:: solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -697,8 +697,9 @@ storage for ``address`` variables, therefore if ``B.a`` had type ``address``
 the encoding would assume that its storage does not change in between
 transactions to ``B``.
 
-   .. code-block:: solidity
+.. code-block:: solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
 
     contract A {

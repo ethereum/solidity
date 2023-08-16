@@ -827,7 +827,7 @@ void CommandLineInterface::compile()
 		else
 		{
 			m_hasOutput = true;
-			formatter.printExceptionInformation(_error, Error::errorSeverity(_error.type()));
+			formatter.printErrorInformation(_error);
 			solThrow(CommandLineExecutionError, "");
 		}
 	}
@@ -914,9 +914,9 @@ void CommandLineInterface::handleCombinedJSON()
 		{
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
 			output[g_strSources][sourceCode.first]["AST"] = ASTJsonExporter(
-																m_compiler->state(),
-																m_compiler->sourceIndices()
-															).toJson(m_compiler->ast(sourceCode.first));
+				m_compiler->state(),
+				m_compiler->sourceIndices()
+			).toJson(m_compiler->ast(sourceCode.first));
 			output[g_strSources][sourceCode.first]["id"] = m_compiler->sourceIndices().at(sourceCode.first);
 		}
 	}
@@ -1074,9 +1074,6 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 	map<string, yul::YulStack> yulStacks;
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
-		// --no-optimize-yul option is not accepted in assembly mode.
-		solAssert(!m_options.optimizer.noOptimizeYul);
-
 		auto& stack = yulStacks[src.first] = yul::YulStack(
 			m_options.output.evmVersion,
 			m_options.output.eofVersion,

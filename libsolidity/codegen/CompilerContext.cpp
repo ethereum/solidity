@@ -55,7 +55,6 @@
 #undef SOL_OUTPUT_ASM
 
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
@@ -68,7 +67,7 @@ void CompilerContext::addStateVariable(
 	unsigned _byteOffset
 )
 {
-	m_stateVariables[&_declaration] = make_pair(_storageOffset, _byteOffset);
+	m_stateVariables[&_declaration] = std::make_pair(_storageOffset, _byteOffset);
 }
 
 void CompilerContext::addImmutable(VariableDeclaration const& _variable)
@@ -88,14 +87,14 @@ size_t CompilerContext::immutableMemoryOffset(VariableDeclaration const& _variab
 	return m_immutableVariables.at(&_variable);
 }
 
-vector<string> CompilerContext::immutableVariableSlotNames(VariableDeclaration const& _variable)
+std::vector<std::string> CompilerContext::immutableVariableSlotNames(VariableDeclaration const& _variable)
 {
-	string baseName = to_string(_variable.id());
+	std::string baseName = std::to_string(_variable.id());
 	solAssert(_variable.annotation().type->sizeOnStack() > 0, "");
 	if (_variable.annotation().type->sizeOnStack() == 1)
 		return {baseName};
-	vector<string> names;
-	auto collectSlotNames = [&](string const& _baseName, Type const* type, auto const& _recurse) -> void {
+	std::vector<std::string> names;
+	auto collectSlotNames = [&](std::string const& _baseName, Type const* type, auto const& _recurse) -> void {
 		for (auto const& [slot, type]: type->stackItems())
 			if (type)
 				_recurse(_baseName + " " + slot, type, _recurse);
@@ -121,10 +120,10 @@ void CompilerContext::startFunction(Declaration const& _function)
 }
 
 void CompilerContext::callLowLevelFunction(
-	string const& _name,
+	std::string const& _name,
 	unsigned _inArgs,
 	unsigned _outArgs,
-	function<void(CompilerContext&)> const& _generator
+	std::function<void(CompilerContext&)> const& _generator
 )
 {
 	evmasm::AssemblyItem retTag = pushNewTag();
@@ -138,7 +137,7 @@ void CompilerContext::callLowLevelFunction(
 }
 
 void CompilerContext::callYulFunction(
-	string const& _name,
+	std::string const& _name,
 	unsigned _inArgs,
 	unsigned _outArgs
 )
@@ -152,10 +151,10 @@ void CompilerContext::callYulFunction(
 }
 
 evmasm::AssemblyItem CompilerContext::lowLevelFunctionTag(
-	string const& _name,
+	std::string const& _name,
 	unsigned _inArgs,
 	unsigned _outArgs,
-	function<void(CompilerContext&)> const& _generator
+	std::function<void(CompilerContext&)> const& _generator
 )
 {
 	auto it = m_lowLevelFunctions.find(_name);
@@ -174,10 +173,10 @@ void CompilerContext::appendMissingLowLevelFunctions()
 {
 	while (!m_lowLevelFunctionGenerationQueue.empty())
 	{
-		string name;
+		std::string name;
 		unsigned inArgs;
 		unsigned outArgs;
-		function<void(CompilerContext&)> generator;
+		std::function<void(CompilerContext&)> generator;
 		tie(name, inArgs, outArgs, generator) = m_lowLevelFunctionGenerationQueue.front();
 		m_lowLevelFunctionGenerationQueue.pop();
 
@@ -195,7 +194,7 @@ void CompilerContext::appendYulUtilityFunctions(OptimiserSettings const& _optimi
 	solAssert(!m_appendYulUtilityFunctionsRan, "requestedYulFunctions called more than once.");
 	m_appendYulUtilityFunctionsRan = true;
 
-	string code = m_yulFunctionCollector.requestedFunctions();
+	std::string code = m_yulFunctionCollector.requestedFunctions();
 	if (!code.empty())
 	{
 		appendInlineAssembly(
@@ -233,7 +232,7 @@ void CompilerContext::removeVariable(Declaration const& _declaration)
 
 void CompilerContext::removeVariablesAboveStackHeight(unsigned _stackHeight)
 {
-	vector<Declaration const*> toRemove;
+	std::vector<Declaration const*> toRemove;
 	for (auto _var: m_localVariables)
 	{
 		solAssert(!_var.second.empty(), "");
@@ -250,14 +249,14 @@ unsigned CompilerContext::numberOfLocalVariables() const
 	return static_cast<unsigned>(m_localVariables.size());
 }
 
-shared_ptr<evmasm::Assembly> CompilerContext::compiledContract(ContractDefinition const& _contract) const
+std::shared_ptr<evmasm::Assembly> CompilerContext::compiledContract(ContractDefinition const& _contract) const
 {
 	auto ret = m_otherCompilers.find(&_contract);
 	solAssert(ret != m_otherCompilers.end(), "Compiled contract not found.");
 	return ret->second->assemblyPtr();
 }
 
-shared_ptr<evmasm::Assembly> CompilerContext::compiledContractRuntime(ContractDefinition const& _contract) const
+std::shared_ptr<evmasm::Assembly> CompilerContext::compiledContractRuntime(ContractDefinition const& _contract) const
 {
 	auto ret = m_otherCompilers.find(&_contract);
 	solAssert(ret != m_otherCompilers.end(), "Compiled contract not found.");
@@ -320,7 +319,7 @@ unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 	return static_cast<unsigned>(m_asm->deposit()) - _offset - 1;
 }
 
-pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration const& _declaration) const
+std::pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration const& _declaration) const
 {
 	auto it = m_stateVariables.find(&_declaration);
 	solAssert(it != m_stateVariables.end(), "Variable not found in storage.");
@@ -349,13 +348,13 @@ CompilerContext& CompilerContext::appendConditionalPanic(util::PanicCode _code)
 	return *this;
 }
 
-CompilerContext& CompilerContext::appendRevert(string const& _message)
+CompilerContext& CompilerContext::appendRevert(std::string const& _message)
 {
 	appendInlineAssembly("{ " + revertReasonIfDebug(_message) + " }");
 	return *this;
 }
 
-CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData, string const& _message)
+CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData, std::string const& _message)
 {
 	if (_forwardReturnData && m_evmVersion.supportsReturndata())
 		appendInlineAssembly(R"({
@@ -372,24 +371,24 @@ CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnDat
 
 void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 {
-	stack<ASTNode const*> newStack;
+	std::stack<ASTNode const*> newStack;
 	newStack.push(_node);
 	std::swap(m_visitedNodes, newStack);
 	updateSourceLocation();
 }
 
 void CompilerContext::appendInlineAssembly(
-	string const& _assembly,
-	vector<string> const& _localVariables,
-	set<string> const& _externallyUsedFunctions,
+	std::string const& _assembly,
+	std::vector<std::string> const& _localVariables,
+	std::set<std::string> const& _externallyUsedFunctions,
 	bool _system,
 	OptimiserSettings const& _optimiserSettings,
-	string _sourceName
+	std::string _sourceName
 )
 {
 	unsigned startStackHeight = stackHeight();
 
-	set<yul::YulString> externallyUsedIdentifiers;
+	std::set<yul::YulString> externallyUsedIdentifiers;
 	for (auto const& fun: _externallyUsedFunctions)
 		externallyUsedIdentifiers.insert(yul::YulString(fun));
 	for (auto const& var: _localVariables)
@@ -438,19 +437,19 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	langutil::CharStream charStream(_assembly, _sourceName);
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-	optional<langutil::SourceLocation> locationOverride;
+	std::optional<langutil::SourceLocation> locationOverride;
 	if (!_system)
 		locationOverride = m_asm->currentSourceLocation();
-	shared_ptr<yul::Block> parserResult =
+	std::shared_ptr<yul::Block> parserResult =
 		yul::Parser(errorReporter, dialect, std::move(locationOverride))
 		.parse(charStream);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
 
-	auto reportError = [&](string const& _context)
+	auto reportError = [&](std::string const& _context)
 	{
-		string message =
+		std::string message =
 			"Error parsing/analyzing inline assembly block:\n" +
 			_context + "\n"
 			"------------------ Input: -----------------\n" +
@@ -483,7 +482,7 @@ void CompilerContext::appendInlineAssembly(
 	{
 		yul::Object obj;
 		obj.code = parserResult;
-		obj.analysisInfo = make_shared<yul::AsmAnalysisInfo>(analysisInfo);
+		obj.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(analysisInfo);
 
 		solAssert(!dialect.providesObjectAccess());
 		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
@@ -493,7 +492,7 @@ void CompilerContext::appendInlineAssembly(
 			// Store as generated sources, but first re-parse to update the source references.
 			solAssert(m_generatedYulUtilityCode.empty(), "");
 			m_generatedYulUtilityCode = yul::AsmPrinter(dialect)(*obj.code);
-			string code = yul::AsmPrinter{dialect}(*obj.code);
+			std::string code = yul::AsmPrinter{dialect}(*obj.code);
 			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
 			obj.code = yul::Parser(errorReporter, dialect).parse(charStream);
 			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(dialect, obj);
@@ -548,7 +547,7 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 		_optimiserSettings.optimizeStackAllocation,
 		_optimiserSettings.yulOptimiserSteps,
 		_optimiserSettings.yulOptimiserCleanupSteps,
-		isCreation? nullopt : make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
+		isCreation? std::nullopt : std::make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
 		_externalIdentifiers
 	);
 
@@ -558,11 +557,11 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 #endif
 }
 
-string CompilerContext::revertReasonIfDebug(string const& _message)
+std::string CompilerContext::revertReasonIfDebug(std::string const& _message)
 {
 	return YulUtilFunctions::revertReasonIfDebugBody(
 		m_revertStrings,
-		"mload(" + to_string(CompilerUtils::freeMemoryPointer) + ")",
+		"mload(" + std::to_string(CompilerUtils::freeMemoryPointer) + ")",
 		_message
 	);
 }
@@ -590,14 +589,14 @@ evmasm::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
 		}
 
 		// some name that cannot clash with yul function names.
-		string labelName = "@" + _declaration.name() + "_" + to_string(_declaration.id());
+		std::string labelName = "@" + _declaration.name() + "_" + std::to_string(_declaration.id());
 		evmasm::AssemblyItem tag = _context.namedTag(
 			labelName,
 			params,
 			returns,
 			_declaration.id()
 		);
-		m_entryLabels.insert(make_pair(&_declaration, tag));
+		m_entryLabels.insert(std::make_pair(&_declaration, tag));
 		m_functionsToCompile.push(&_declaration);
 		return tag.tag();
 	}

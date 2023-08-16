@@ -44,7 +44,10 @@ TestCase::TestResult MemoryGuardTest::run(ostream& _stream, string const& _lineP
 	compiler().setViaIR(true);
 	compiler().setOptimiserSettings(OptimiserSettings::none());
 	if (!compiler().compile())
+	{
+		_stream << formatErrors(filteredErrors(), _formatted);
 		return TestResult::FatalError;
+	}
 
 	m_obtainedResult.clear();
 	for (string contractName: compiler().contractNames())

@@ -150,7 +150,7 @@ Modifiers
 - ``view`` for functions: Disallows modification of state.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
 - ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
-- ``immutable`` for state variables: Allows exactly one assignment at construction time and is constant afterwards. Is stored in code.
+- ``immutable`` for state variables: Allows assignment at construction time and is constant when deployed. Is stored in code.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
 - ``virtual`` for functions and modifiers: Allows the function's or modifier's

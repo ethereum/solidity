@@ -640,7 +640,7 @@ void ProtoConverter::visit(UnaryOp const& _x)
 	{
 		m_output << "mod(";
 		visit(_x.operand());
-		m_output << ", " << to_string(s_maxMemory) << ")";
+		m_output << ", " << to_string(s_maxMemory - 32) << ")";
 	}
 	else
 		visit(_x.operand());
@@ -1125,11 +1125,20 @@ void ProtoConverter::visit(StoreFunc const& _x)
 	// Write to memory within bounds, storage is unbounded
 	if (storeType == StoreFunc::SSTORE)
 		visit(_x.loc());
-	else
+	else if (storeType == StoreFunc::MSTORE8)
 	{
 		m_output << "mod(";
 		visit(_x.loc());
 		m_output << ", " << to_string(s_maxMemory) << ")";
+	}
+	else if (storeType == StoreFunc::MSTORE)
+	{
+		// Since we write 32 bytes, ensure it does not exceed
+		// upper bound on memory.
+		m_output << "mod(";
+		visit(_x.loc());
+		m_output << ", " << to_string(s_maxMemory - 32) << ")";
+
 	}
 	m_output << ", ";
 	visit(_x.val());
@@ -1706,7 +1715,7 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 		case 1:
 		{
 			// Access memory within stipulated bounds
-			slot = "mod(" + dictionaryToken() + ", " + to_string(s_maxMemory) + ")";
+			slot = "mod(" + dictionaryToken() + ", " + to_string(s_maxMemory - 32) + ")";
 			m_output << "mload(" << slot << ")";
 			break;
 		}
@@ -1940,6 +1949,8 @@ void ProtoConverter::visit(Program const& _x)
 	{
 	case Program::kBlock:
 		m_output << "{\n";
+		m_output << "mstore(memoryguard(0x10000), 1)\n";
+		m_output << "sstore(mload(calldataload(0)), 1)\n";
 		visit(_x.block());
 		m_output << "}\n";
 		break;

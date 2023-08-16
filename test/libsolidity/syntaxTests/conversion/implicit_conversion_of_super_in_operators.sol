@@ -53,4 +53,4 @@ contract C {
 // TypeError 7366: (480-493): Operator -= not compatible with types type(contract super C) and contract C.
 // TypeError 4247: (503-508): Expression has to be an lvalue.
 // TypeError 7366: (503-516): Operator += not compatible with types type(contract super C) and contract C.
-// TypeError 1080: (527-546): True expression's type type(contract super C) does not match false expression's type contract C.
+// TypeError 9717: (534-539): Invalid mobile type in true expression.

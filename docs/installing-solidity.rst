@@ -132,11 +132,13 @@ The nightly version can be installed using these commands:
 Furthermore, some Linux distributions provide their own packages. These packages are not directly
 maintained by us but usually kept up-to-date by the respective package maintainers.
 
-For example, Arch Linux has packages for the latest development version:
+For example, Arch Linux has packages for the latest development version as AUR packages: `solidity <https://aur.archlinux.org/packages/solidity>`_
+and `solidity-bin <https://aur.archlinux.org/packages/solidity-bin>`_.
 
-.. code-block:: bash
+.. note::
 
-    pacman -S solidity
+    Please be aware that `AUR <https://wiki.archlinux.org/title/Arch_User_Repository>`_ packages
+    are user-produced content and unofficial packages. Exercise caution when using them.
 
 There is also a `snap package <https://snapcraft.io/solc>`_, however, it is **currently unmaintained**.
 It is installable in all the `supported Linux distros <https://snapcraft.io/docs/core/install>`_. To
@@ -378,7 +380,7 @@ Prerequisites - macOS
 ---------------------
 
 For macOS builds, ensure that you have the latest version of
-`Xcode installed <https://developer.apple.com/xcode/download/>`_.
+`Xcode installed <https://developer.apple.com/xcode/resources/>`_.
 This contains the `Clang C++ compiler <https://en.wikipedia.org/wiki/Clang>`_, the
 `Xcode IDE <https://en.wikipedia.org/wiki/Xcode>`_ and other Apple development
 tools that are required for building C++ applications on OS X.

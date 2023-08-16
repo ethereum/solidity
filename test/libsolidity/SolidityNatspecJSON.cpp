@@ -485,6 +485,179 @@ BOOST_AUTO_TEST_CASE(event)
 	checkNatspec(sourceCode, "ERC20", userDoc, true);
 }
 
+BOOST_AUTO_TEST_CASE(emit_event_from_foreign_contract)
+{
+	char const* sourceCode = R"(
+		contract X {
+			/// @notice Userdoc for event E.
+			/// @dev Devdoc for event E.
+			event E();
+		}
+
+		contract C {
+			function g() public {
+				emit X.E();
+			}
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"E()":
+			{
+				"details": "Devdoc for event E."
+			}
+		},
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"events":
+		{
+			"E()":
+			{
+				"notice": "Userdoc for event E."
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(emit_event_from_foreign_contract_with_same_signature)
+{
+	char const* sourceCode = R"(
+		contract C {
+			/// @notice C.E event
+			/// @dev C.E event
+			event E(uint256 value);
+		}
+
+		contract D {
+			/// @notice D.E event
+			/// @dev D.E event
+			event E(uint256 value);
+
+			function test() public {
+				emit C.E(1);
+				emit E(2);
+			}
+		}
+	)";
+
+	char const* devDocC = R"ABCDEF(
+	{
+		"events":
+		{
+			"E(uint256)":
+			{
+				"details": "C.E event"
+			}
+		},
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", devDocC, false);
+
+	char const* devDocD = R"ABCDEF(
+	{
+		"events":
+		{
+			"E(uint256)":
+			{
+				"details": "D.E event"
+			}
+		},
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "D", devDocD, false);
+
+	char const* userDocC = R"ABCDEF(
+	{
+		"events":
+		{
+			"E(uint256)":
+			{
+				"notice": "C.E event"
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "C", userDocC, true);
+
+	char const* userDocD = R"ABCDEF(
+	{
+		"events":
+		{
+			"E(uint256)":
+			{
+				"notice": "D.E event"
+			}
+		},
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "D", userDocD, true);
+}
+
+// Tests that emitting an event from contract C in contract D does not inherit natspec from C.E
+BOOST_AUTO_TEST_CASE(emit_event_from_foreign_contract_no_inheritance)
+{
+	char const* sourceCode = R"(
+		contract C {
+			/// @notice C.E event
+			/// @dev C.E event
+			event E();
+		}
+
+		contract D {
+			event E();
+
+			function test() public {
+				emit C.E();
+			}
+		}
+	)";
+
+	char const* devDoc = R"ABCDEF(
+	{
+		"kind": "dev",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "D", devDoc, false);
+
+	char const* userDoc = R"ABCDEF(
+	{
+		"kind": "user",
+		"methods": {},
+		"version": 1
+	}
+	)ABCDEF";
+	checkNatspec(sourceCode, "D", userDoc, true);
+}
+
 BOOST_AUTO_TEST_CASE(emit_same_signature_event_library_contract)
 {
 	char const* sourceCode = R"(

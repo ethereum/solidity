@@ -45,8 +45,8 @@ function gnosis_safe_test
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize            # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-no-optimize            # Compilation fails with "YulException: Variable var_txHash is 1 too deep in the stack". No memoryguard was present.
+        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_txHash is 1 too deep in the stack". No memoryguard was present.
         # TODO: Uncomment the preset below when the issue: https://github.com/safe-global/safe-contracts/issues/544 is solved.
         #ir-optimize-evm+yul       # Compilation fails with "YulException: Cannot swap Variable var_operation with Variable _1: too deep in the stack by 4 slots."
         legacy-no-optimize

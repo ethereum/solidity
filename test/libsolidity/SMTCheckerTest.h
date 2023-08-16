@@ -38,9 +38,10 @@ public:
 	}
 	SMTCheckerTest(std::string const& _filename);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
-
+	void setupCompiler() override;
 	void filterObtainedErrors() override;
+
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
 protected:
 	/*
@@ -55,11 +56,15 @@ protected:
 		Set in m_modelCheckerSettings.
 	SMTSolvers: `all`, `cvc4`, `z3`, `none`, where the default is `all`.
 		Set in m_modelCheckerSettings.
+	BMCLoopIterations: number of loop iterations for BMC engine, the default is 1.
+		Set in m_modelCheckerSettings.
 	*/
 
 	ModelCheckerSettings m_modelCheckerSettings;
 
 	bool m_ignoreCex = false;
+
+	std::vector<SyntaxTestError> m_unfilteredErrorList;
 };
 
 }

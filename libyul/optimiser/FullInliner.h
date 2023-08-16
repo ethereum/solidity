@@ -44,10 +44,10 @@ class NameCollector;
  * Optimiser component that modifies an AST in place, inlining functions.
  * Expressions are expected to be split, i.e. the component will only inline
  * function calls that are at the root of the expression and that only contains
- * variables as arguments. More specifically, it will inline
+ * variables or literals as arguments. More specifically, it will inline
  *  - let x1, ..., xn := f(a1, ..., am)
  *  - x1, ..., xn := f(a1, ..., am)
- * f(a1, ..., am)
+ *  - f(a1, ..., am)
  *
  * The transform changes code of the form
  *
@@ -58,8 +58,8 @@ class NameCollector;
  *
  * function f(a, b) -> c { ... }
  *
- * let f_a := x
  * let f_b := y
+ * let f_a := x
  * let f_c
  * code of f, with replacements: a -> f_a, b -> f_b, c -> f_c
  * let z := f_c

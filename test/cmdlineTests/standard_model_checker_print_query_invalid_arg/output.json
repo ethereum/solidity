@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "settings.modelChecker.printQuery must be a Boolean value.",
+            "message": "settings.modelChecker.printQuery must be a Boolean value.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}
