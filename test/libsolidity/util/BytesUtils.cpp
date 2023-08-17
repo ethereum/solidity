@@ -26,6 +26,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <algorithm>
+#include <iterator>
 #include <iomanip>
 #include <memory>
 #include <regex>
@@ -253,7 +255,8 @@ std::string BytesUtils::formatFixedPoint(bytes const& _bytes, bool _signed, size
 string BytesUtils::formatRawBytes(
 	bytes const& _bytes,
 	solidity::frontend::test::ParameterList const& _parameters,
-	string _linePrefix)
+	string _linePrefix
+)
 {
 	stringstream os;
 	ParameterList parameters;
@@ -263,16 +266,19 @@ string BytesUtils::formatRawBytes(
 		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
+	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
 
 	for (auto const& parameter: parameters)
 	{
-		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
+		long actualSize = min(distance(it, _bytes.end()), static_cast<long>(parameter.abiType.size));
+		bytes byteRange(parameter.abiType.size, 0);
+		copy(it, it + actualSize, byteRange.begin());
 
 		os << _linePrefix << byteRange;
 		if (&parameter != &parameters.back())
 			os << endl;
 
-		it += static_cast<long>(parameter.abiType.size);
+		it += actualSize;
 	}
 
 	return os.str();
@@ -368,11 +374,13 @@ string BytesUtils::formatBytesRange(
 		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
-
+	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
 
 	for (auto const& parameter: parameters)
 	{
-		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
+		long actualSize = min(distance(it, _bytes.end()), static_cast<long>(parameter.abiType.size));
+		bytes byteRange(parameter.abiType.size, 0);
+		copy(it, it + actualSize, byteRange.begin());
 
 		if (!parameter.matchesBytes(byteRange))
 			AnsiColorized(
@@ -386,7 +394,7 @@ string BytesUtils::formatBytesRange(
 		if (&parameter != &parameters.back())
 			os << ", ";
 
-		it += static_cast<long>(parameter.abiType.size);
+		it += actualSize;
 	}
 
 	return os.str();
