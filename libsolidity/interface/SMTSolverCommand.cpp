@@ -57,7 +57,8 @@ ReadCallback::Result solveWithTemporaryFile(
 	boost::process::child solver(
 			_pathToBinary,
 			boost::process::args(_commandArgs),
-			boost::process::std_out > out
+			boost::process::std_out > out,
+			boost::process::std_err > boost::process::null
 	);
 
 	std::vector<std::string> data;
@@ -83,7 +84,8 @@ ReadCallback::Result solveWithPipe(
 			_pathToBinary,
 			boost::process::args(_commandArgs),
 			boost::process::std_out > out,
-			boost::process::std_in < in
+			boost::process::std_in < in,
+			boost::process::std_err > boost::process::null
 	);
 
 	in << _query << std::flush;
