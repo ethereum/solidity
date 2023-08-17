@@ -263,7 +263,20 @@ string BytesUtils::formatRawBytes(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
+	{
+		// Interpret all full 32-byte values as integers.
+		parameters = ContractABIUtils::defaultParameters(_bytes.size() / 32);
+
+		// We'd introduce trailing zero bytes if we interpreted the final bit as an integer.
+		// We want a right-aligned sequence of bytes instead.
+		if (_bytes.size() % 32 != 0)
+			parameters.push_back({
+				bytes(),
+				"",
+				ABIType{ABIType::HexString, ABIType::AlignRight, _bytes.size() % 32},
+				FormatInfo{},
+			});
+	}
 	else
 		parameters = _parameters;
 	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
@@ -371,7 +384,20 @@ string BytesUtils::formatBytesRange(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
+	{
+		// Interpret all full 32-byte values as integers.
+		parameters = ContractABIUtils::defaultParameters(_bytes.size() / 32);
+
+		// We'd introduce trailing zero bytes if we interpreted the final bit as an integer.
+		// We want a right-aligned sequence of bytes instead.
+		if (_bytes.size() % 32 != 0)
+			parameters.push_back({
+				bytes(),
+				"",
+				ABIType{ABIType::HexString, ABIType::AlignRight, _bytes.size() % 32},
+				FormatInfo{},
+			});
+	}
 	else
 		parameters = _parameters;
 	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
