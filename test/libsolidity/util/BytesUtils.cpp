@@ -283,7 +283,10 @@ string BytesUtils::formatRawBytes(
 
 	for (auto const& parameter: parameters)
 	{
-		long actualSize = min(distance(it, _bytes.end()), static_cast<long>(parameter.abiType.size));
+		long actualSize = min(
+			distance(it, _bytes.end()),
+			static_cast<ParameterList::difference_type>(parameter.abiType.size)
+		);
 		bytes byteRange(parameter.abiType.size, 0);
 		copy(it, it + actualSize, byteRange.begin());
 
@@ -404,7 +407,10 @@ string BytesUtils::formatBytesRange(
 
 	for (auto const& parameter: parameters)
 	{
-		long actualSize = min(distance(it, _bytes.end()), static_cast<long>(parameter.abiType.size));
+		long actualSize = min(
+			distance(it, _bytes.end()),
+			static_cast<ParameterList::difference_type>(parameter.abiType.size)
+		);
 		bytes byteRange(parameter.abiType.size, 0);
 		copy(it, it + actualSize, byteRange.begin());
 
