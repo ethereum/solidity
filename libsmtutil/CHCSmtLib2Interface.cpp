@@ -199,7 +199,7 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 	smtAssert(m_smtCallback, "Callback must be set!");
 	std::string solverBinary = [&](){
 		if (m_enabledSolvers.eld)
-			return "eld";
+			return "eld -ssol"; // TODO: Use -scex to get counterexamples, but Eldarica uses different format than Z3
 		if (m_enabledSolvers.z3)
 			return "z3 -in rlimit=1000000 fp.spacer.q3.use_qgen=true fp.spacer.mbqi=false fp.spacer.ground_pobs=false";
 		return "";
@@ -216,6 +216,18 @@ std::string CHCSmtLib2Interface::querySolver(std::string const& _input)
 			auto secondResult = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery) + ":" + solverBinary, extendedQuery);
 			if (secondResult.success and boost::starts_with(secondResult.responseOrErrorMessage, "unsat"))
 				return secondResult.responseOrErrorMessage;
+		}
+		else if (m_enabledSolvers.eld and boost::starts_with(result.responseOrErrorMessage, "sat"))
+		{
+			// Wrap Eldarica model in a pair of parentheses to treat is a single (list) s-expression
+			// That's the SMTLIB way to print a model (i.e., respond to a get-model command).
+			auto afterSat = result.responseOrErrorMessage.find('\n');
+			if (afterSat != std::string::npos) // if there is more than just "sat"
+			{
+				result.responseOrErrorMessage.insert(afterSat + 1, "(");
+				result.responseOrErrorMessage.push_back(')');
+				return result.responseOrErrorMessage;
+			}
 		}
 		return result.responseOrErrorMessage;
 	}
