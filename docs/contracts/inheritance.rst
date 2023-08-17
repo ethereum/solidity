@@ -398,7 +398,7 @@ Constructors
 
 A constructor is an optional function declared with the ``constructor`` keyword
 which is executed upon contract creation, and where you can run contract
-initialisation code.
+initialization code.
 
 Before the constructor code is executed, state variables are initialised to
 their specified value if you initialise them inline, or their :ref:`default value<default-value>` if you do not.
