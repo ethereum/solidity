@@ -23,21 +23,20 @@
 #include <libsolutil/IndentedWriter.h>
 #include <libsolutil/Assertions.h>
 
-using namespace std;
 using namespace solidity::util;
 
-string IndentedWriter::format() const
+std::string IndentedWriter::format() const
 {
-	string result;
+	std::string result;
 	for (auto const& line: m_lines)
-		result += string(line.indentation * 4, ' ') + line.contents + "\n";
+		result += std::string(line.indentation * 4, ' ') + line.contents + "\n";
 	return result;
 }
 
 void IndentedWriter::newLine()
 {
 	if (!m_lines.back().contents.empty())
-		m_lines.emplace_back(Line{string(), m_lines.back().indentation});
+		m_lines.emplace_back(Line{std::string(), m_lines.back().indentation});
 }
 
 void IndentedWriter::indent()
@@ -53,12 +52,12 @@ void IndentedWriter::unindent()
 	m_lines.back().indentation--;
 }
 
-void IndentedWriter::add(string const& _str)
+void IndentedWriter::add(std::string const& _str)
 {
 	m_lines.back().contents += _str;
 }
 
-void IndentedWriter::addLine(string const& _line)
+void IndentedWriter::addLine(std::string const& _line)
 {
 	newLine();
 	add(_line);

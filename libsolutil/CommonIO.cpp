@@ -31,7 +31,6 @@
 #include <termios.h>
 #endif
 
-using namespace std;
 using namespace solidity::util;
 
 namespace
@@ -55,35 +54,35 @@ inline T readFile(boost::filesystem::path const& _file)
 
 	// get length of file:
 	is.seekg(0, is.end);
-	streamoff length = is.tellg();
+	std::streamoff length = is.tellg();
 	if (length == 0)
 		return ret; // do not read empty file (MSVC does not like it)
 	is.seekg(0, is.beg);
 
 	ret.resize((static_cast<size_t>(length) + c_elementSize - 1) / c_elementSize);
-	is.read(const_cast<char*>(reinterpret_cast<char const*>(ret.data())), static_cast<streamsize>(length));
+	is.read(const_cast<char*>(reinterpret_cast<char const*>(ret.data())), static_cast<std::streamsize>(length));
 	return ret;
 }
 
 }
 
-string solidity::util::readFileAsString(boost::filesystem::path const& _file)
+std::string solidity::util::readFileAsString(boost::filesystem::path const& _file)
 {
-	return readFile<string>(_file);
+	return readFile<std::string>(_file);
 }
 
-string solidity::util::readUntilEnd(istream& _stdin)
+std::string solidity::util::readUntilEnd(std::istream& _stdin)
 {
-	ostringstream ss;
+	std::ostringstream ss;
 	ss << _stdin.rdbuf();
 	return ss.str();
 }
 
-string solidity::util::readBytes(istream& _input, size_t _length)
+std::string solidity::util::readBytes(std::istream& _input, size_t _length)
 {
-	string output;
+	std::string output;
 	output.resize(_length);
-	_input.read(output.data(), static_cast<streamsize>(_length));
+	_input.read(output.data(), static_cast<std::streamsize>(_length));
 	// If read() reads fewer bytes it sets failbit in addition to eofbit.
 	if (_input.fail())
 		output.resize(static_cast<size_t>(_input.gcount()));
@@ -135,10 +134,10 @@ private:
 int solidity::util::readStandardInputChar()
 {
 	DisableConsoleBuffering disableConsoleBuffering;
-	return cin.get();
+	return std::cin.get();
 }
 
-string solidity::util::absolutePath(string const& _path, string const& _reference)
+std::string solidity::util::absolutePath(std::string const& _path, std::string const& _reference)
 {
 	boost::filesystem::path p(_path);
 	// Anything that does not start with `.` is an absolute path.
@@ -158,6 +157,6 @@ string solidity::util::absolutePath(string const& _path, string const& _referenc
 	return result.generic_string();
 }
 
-string solidity::util::sanitizePath(string const& _path) {
+std::string solidity::util::sanitizePath(std::string const& _path) {
 	return boost::filesystem::path(_path).generic_string();
 }

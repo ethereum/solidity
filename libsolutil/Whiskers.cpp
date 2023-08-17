@@ -28,16 +28,15 @@
 
 #include <regex>
 
-using namespace std;
 using namespace solidity::util;
 
-Whiskers::Whiskers(string _template):
+Whiskers::Whiskers(std::string _template):
 	m_template(std::move(_template))
 {
 	checkTemplateValid();
 }
 
-Whiskers& Whiskers::operator()(string _parameter, string _value)
+Whiskers& Whiskers::operator()(std::string _parameter, std::string _value)
 {
 	checkParameterValid(_parameter);
 	checkParameterUnknown(_parameter);
@@ -46,7 +45,7 @@ Whiskers& Whiskers::operator()(string _parameter, string _value)
 	return *this;
 }
 
-Whiskers& Whiskers::operator()(string _parameter, bool _value)
+Whiskers& Whiskers::operator()(std::string _parameter, bool _value)
 {
 	checkParameterValid(_parameter);
 	checkParameterUnknown(_parameter);
@@ -56,8 +55,8 @@ Whiskers& Whiskers::operator()(string _parameter, bool _value)
 }
 
 Whiskers& Whiskers::operator()(
-	string _listParameter,
-	vector<map<string, string>> _values
+	std::string _listParameter,
+	std::vector<std::map<std::string, std::string>> _values
 )
 {
 	checkParameterValid(_listParameter);
@@ -70,15 +69,15 @@ Whiskers& Whiskers::operator()(
 	return *this;
 }
 
-string Whiskers::render() const
+std::string Whiskers::render() const
 {
 	return replace(m_template, m_parameters, m_conditions, m_listParameters);
 }
 
 void Whiskers::checkTemplateValid() const
 {
-	regex validTemplate("<[#?!\\/]\\+{0,1}[a-zA-Z0-9_$-]+(?:[^a-zA-Z0-9_$>-]|$)");
-	smatch match;
+	std::regex validTemplate("<[#?!\\/]\\+{0,1}[a-zA-Z0-9_$-]+(?:[^a-zA-Z0-9_$>-]|$)");
+	std::smatch match;
 	assertThrow(
 		!regex_search(m_template, match, validTemplate),
 		WhiskersError,
@@ -86,9 +85,9 @@ void Whiskers::checkTemplateValid() const
 	);
 }
 
-void Whiskers::checkParameterValid(string const& _parameter) const
+void Whiskers::checkParameterValid(std::string const& _parameter) const
 {
-	static regex validParam("^" + paramRegex() + "$");
+	static std::regex validParam("^" + paramRegex() + "$");
 	assertThrow(
 		regex_match(_parameter, validParam),
 		WhiskersError,
@@ -96,7 +95,7 @@ void Whiskers::checkParameterValid(string const& _parameter) const
 	);
 }
 
-void Whiskers::checkParameterUnknown(string const& _parameter) const
+void Whiskers::checkParameterUnknown(std::string const& _parameter) const
 {
 	assertThrow(
 		!m_parameters.count(_parameter),
@@ -115,13 +114,13 @@ void Whiskers::checkParameterUnknown(string const& _parameter) const
 	);
 }
 
-void Whiskers::checkTemplateContainsTags(string const& _parameter, vector<string> const& _prefixes) const
+void Whiskers::checkTemplateContainsTags(std::string const& _parameter, std::vector<std::string> const& _prefixes) const
 {
 	for (auto const& prefix: _prefixes)
 	{
-		string tag{"<" + prefix + _parameter + ">"};
+		std::string tag{"<" + prefix + _parameter + ">"};
 		assertThrow(
-			m_template.find(tag) != string::npos,
+			m_template.find(tag) != std::string::npos,
 			WhiskersError,
 			"Tag '" + tag + "' not found in template:\n" + m_template
 		);
@@ -131,17 +130,17 @@ void Whiskers::checkTemplateContainsTags(string const& _parameter, vector<string
 namespace
 {
 template<class ReplaceCallback>
-string regex_replace(
-	string const& _source,
-	regex const& _pattern,
+std::string regex_replace(
+	std::string const& _source,
+	std::regex const& _pattern,
 	ReplaceCallback _replace,
-	regex_constants::match_flag_type _flags = regex_constants::match_default
+	std::regex_constants::match_flag_type _flags = std::regex_constants::match_default
 )
 {
-	sregex_iterator curMatch(_source.begin(), _source.end(), _pattern, _flags);
-	sregex_iterator matchEnd;
-	string::const_iterator lastMatchedPos(_source.cbegin());
-	string result;
+	std::sregex_iterator curMatch(_source.begin(), _source.end(), _pattern, _flags);
+	std::sregex_iterator matchEnd;
+	std::string::const_iterator lastMatchedPos(_source.cbegin());
+	std::string result;
 	while (curMatch != matchEnd)
 	{
 		result.append(curMatch->prefix().first, curMatch->prefix().second);
@@ -154,23 +153,23 @@ string regex_replace(
 }
 }
 
-string Whiskers::replace(
-	string const& _template,
+std::string Whiskers::replace(
+	std::string const& _template,
 	StringMap const& _parameters,
-	map<string, bool> const& _conditions,
-	map<string, vector<StringMap>> const& _listParameters
+	std::map<std::string, bool> const& _conditions,
+	std::map<std::string, std::vector<StringMap>> const& _listParameters
 )
 {
-	static regex listOrTag(
+	static std::regex listOrTag(
 		"<(" + paramRegex() + ")>|"
 		"<#(" + paramRegex() + ")>((?:.|\\r|\\n)*?)</\\2>|"
 		"<\\?(\\+?" + paramRegex() + ")>((?:.|\\r|\\n)*?)(<!\\4>((?:.|\\r|\\n)*?))?</\\4>"
 	);
-	return regex_replace(_template, listOrTag, [&](match_results<string::const_iterator> _match) -> string
+	return regex_replace(_template, listOrTag, [&](std::match_results<std::string::const_iterator> _match) -> std::string
 	{
-		string tagName(_match[1]);
-		string listName(_match[2]);
-		string conditionName(_match[4]);
+		std::string tagName(_match[1]);
+		std::string listName(_match[2]);
+		std::string conditionName(_match[4]);
 		if (!tagName.empty())
 		{
 			assertThrow(
@@ -184,12 +183,12 @@ string Whiskers::replace(
 		}
 		else if (!listName.empty())
 		{
-			string templ(_match[3]);
+			std::string templ(_match[3]);
 			assertThrow(
 				_listParameters.count(listName),
 				WhiskersError, "List parameter " + listName + " not set."
 			);
-			string replacement;
+			std::string replacement;
 			for (auto const& parameters: _listParameters.at(listName))
 				replacement += replace(templ, joinMaps(_parameters, parameters), _conditions);
 			return replacement;
@@ -200,7 +199,7 @@ string Whiskers::replace(
 			bool conditionValue = false;
 			if (conditionName[0] == '+')
 			{
-				string tag = conditionName.substr(1);
+				std::string tag = conditionName.substr(1);
 
 				if (_parameters.count(tag))
 					conditionValue = !_parameters.at(tag).empty();
