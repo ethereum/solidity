@@ -67,6 +67,4 @@ OptionsReaderAndMessages runCLI(
 	std::string const& _standardInputContent = ""
 );
 
-std::string stripPreReleaseWarning(std::string const& _stderrContent);
-
 } // namespace solidity::frontend::test

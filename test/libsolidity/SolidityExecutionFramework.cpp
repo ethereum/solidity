@@ -22,6 +22,7 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
+#include <test/libsolidity/util/Common.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/Exceptions.h>
@@ -48,12 +49,12 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 {
 	if (_mainSourceName.has_value())
 		solAssert(_sourceCode.find(_mainSourceName.value()) != _sourceCode.end(), "");
-	map<string, string> sourcesWithPreamble = _sourceCode;
-	for (auto& entry: sourcesWithPreamble)
-		entry.second = addPreamble(entry.second);
 
 	m_compiler.reset();
-	m_compiler.setSources(sourcesWithPreamble);
+	m_compiler.setSources(withPreamble(
+		_sourceCode,
+		solidity::test::CommonOptions::get().useABIEncoderV1 // _addAbicoderV1Pragma
+	));
 	m_compiler.setLibraries(_libraryAddresses);
 	m_compiler.setRevertStringBehaviour(m_revertStrings);
 	m_compiler.setEVMVersion(m_evmVersion);
@@ -140,19 +141,4 @@ bytes SolidityExecutionFramework::compileContract(
 		_contractName,
 		_libraryAddresses
 	);
-}
-
-string SolidityExecutionFramework::addPreamble(string const& _sourceCode)
-{
-	// Silence compiler version warning
-	string preamble = "pragma solidity >=0.0;\n";
-	if (_sourceCode.find("// SPDX-License-Identifier:") == string::npos)
-		preamble += "// SPDX-License-Identifier: unlicensed\n";
-	if (
-		solidity::test::CommonOptions::get().useABIEncoderV1 &&
-		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos &&
-		_sourceCode.find("pragma abicoder") == string::npos
-	)
-		preamble += "pragma abicoder v1;\n";
-	return preamble + _sourceCode;
 }

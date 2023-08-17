@@ -24,6 +24,7 @@
 #include <test/solc/Common.h>
 
 #include <test/Common.h>
+#include <test/libsolidity/util/Common.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <liblangutil/SemVerHandler.h>
 #include <test/FilesystemUtils.h>
@@ -921,10 +922,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
-	string const preamble =
-		"// SPDX-License-Identifier: GPL-3.0\n"
-		"pragma solidity >=0.0;\n";
-	string const mainContractSource = preamble +
+	string const mainContractSource = withPreamble(
 		"import \"contract.sol\";\n"
 		"import \"contract_via_callback.sol\";\n"
 		"import \"include.sol\";\n"
@@ -932,8 +930,10 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		"import \"nested.sol\";\n"
 		"import \"nested_via_callback.sol\";\n"
 		"import \"lib.sol\";\n"
-		"import \"lib_via_callback.sol\";\n";
+		"import \"lib_via_callback.sol\";\n"
+	);
 
+	string const onlyPreamble = withPreamble("");
 	createFilesWithParentDirs(
 		{
 			tempDir.path() / "base/contract.sol",
@@ -945,7 +945,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 			tempDir.path() / "lib/lib.sol",
 			tempDir.path() / "lib/lib_via_callback.sol",
 		},
-		preamble
+		onlyPreamble
 	);
 	createFilesWithParentDirs({tempDir.path() / "base/main.sol"}, mainContractSource);
 
@@ -985,14 +985,14 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 
 	map<string, string> expectedSources = {
 		{"main.sol", mainContractSource},
-		{"contract.sol", preamble},
-		{"contract_via_callback.sol", preamble},
-		{"include.sol", preamble},
-		{"include_via_callback.sol", preamble},
-		{"nested.sol", preamble},
-		{"nested_via_callback.sol", preamble},
-		{"lib.sol", preamble},
-		{"lib_via_callback.sol", preamble},
+		{"contract.sol", onlyPreamble},
+		{"contract_via_callback.sol", onlyPreamble},
+		{"include.sol", onlyPreamble},
+		{"include_via_callback.sol", onlyPreamble},
+		{"nested.sol", onlyPreamble},
+		{"nested_via_callback.sol", onlyPreamble},
+		{"lib.sol", onlyPreamble},
+		{"lib_via_callback.sol", onlyPreamble},
 	};
 
 	vector<boost::filesystem::path> expectedIncludePaths = {
@@ -1066,14 +1066,12 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
-	string const preamble =
-		"// SPDX-License-Identifier: GPL-3.0\n"
-		"pragma solidity >=0.0;\n";
-	string const mainContractSource = preamble +
+	string const mainContractSource = withPreamble(
 		"import 'contract_via_callback.sol';\n"
 		"import 'include_via_callback.sol';\n"
 		"import 'nested_via_callback.sol';\n"
-		"import 'lib_via_callback.sol';\n";
+		"import 'lib_via_callback.sol';\n"
+	);
 
 	string const standardJsonInput = R"(
 		{
@@ -1084,6 +1082,7 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 		}
 	)";
 
+	string const onlyPreamble = withPreamble("");
 	createFilesWithParentDirs(
 		{
 			tempDir.path() / "base/contract_via_callback.sol",
@@ -1091,7 +1090,7 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 			tempDir.path() / "lib/nested/nested_via_callback.sol",
 			tempDir.path() / "lib/lib_via_callback.sol",
 		},
-		preamble
+		onlyPreamble
 	);
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
@@ -1121,10 +1120,10 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 	// because FileReader is only used once to initialize the compiler stack and after that
 	// its sources are irrelevant (even though the callback still stores everything it loads).
 	map<string, string> expectedSources = {
-		{"contract_via_callback.sol", preamble},
-		{"include_via_callback.sol", preamble},
-		{"nested_via_callback.sol", preamble},
-		{"lib_via_callback.sol", preamble},
+		{"contract_via_callback.sol", onlyPreamble},
+		{"include_via_callback.sol", onlyPreamble},
+		{"nested_via_callback.sol", onlyPreamble},
+		{"lib_via_callback.sol", onlyPreamble},
 	};
 
 	vector<boost::filesystem::path> expectedIncludePaths = {
@@ -1335,14 +1334,10 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_ambiguous_import)
 	TemporaryDirectory tempDir({"base/", "include/"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
-	string const preamble =
-		"// SPDX-License-Identifier: GPL-3.0\n"
-		"pragma solidity >=0.0;\n";
-	string const mainContractSource = preamble +
-		// Ambiguous: both base/contract.sol and include/contract.sol match the import.
-		"import \"contract.sol\";";
+	// Ambiguous: both base/contract.sol and include/contract.sol match the import.
+	string const mainContractSource = withPreamble("import \"contract.sol\";");
 
-	createFilesWithParentDirs({"base/contract.sol", "include/contract.sol"}, preamble);
+	createFilesWithParentDirs({"base/contract.sol", "include/contract.sol"}, withPreamble(""));
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
 
