@@ -482,7 +482,7 @@ is transformed to
     }
 
 This eases the rest of the optimization process because we can ignore
-the complicated scoping rules of the for loop initialisation block.
+the complicated scoping rules of the for loop initialization block.
 
 .. _var-decl-initializer:
 
@@ -1217,7 +1217,7 @@ The FullInliner replaces certain calls of certain functions
 by the function's body. This is not very helpful in most cases, because
 it just increases the code size but does not have a benefit. Furthermore,
 code is usually very expensive and we would often rather have shorter
-code than more efficient code. In same cases, though, inlining a function
+code than more efficient code. In some cases, though, inlining a function
 can have positive effects on subsequent optimizer steps. This is the case
 if one of the function arguments is a constant, for example.
 

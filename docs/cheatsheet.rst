@@ -159,7 +159,7 @@ Modifiers
 - ``pure`` for functions: Disallows modification or access of state.
 - ``view`` for functions: Disallows modification of state.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
-- ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
+- ``constant`` for state variables: Disallows assignment (except initialization), does not occupy storage slot.
 - ``immutable`` for state variables: Allows assignment at construction time and is constant when deployed. Is stored in code.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
