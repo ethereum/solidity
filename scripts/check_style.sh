@@ -33,6 +33,7 @@ NAMESPACE_STD_FREE_FILES=(
     libsolidity/interface/*
     libsolidity/lsp/*
     libsolidity/parsing/*
+    libsolutil/*
 )
 
 (

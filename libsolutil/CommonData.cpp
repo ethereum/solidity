@@ -29,7 +29,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 
@@ -41,7 +40,7 @@ static char const* lowerHexChars = "0123456789abcdef";
 
 }
 
-string solidity::util::toHex(uint8_t _data, HexCase _case)
+std::string solidity::util::toHex(uint8_t _data, HexCase _case)
 {
 	assertThrow(_case != HexCase::Mixed, BadHexCase, "Mixed case can only be used for byte arrays.");
 
@@ -53,7 +52,7 @@ string solidity::util::toHex(uint8_t _data, HexCase _case)
 	};
 }
 
-string solidity::util::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
+std::string solidity::util::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
 {
 	std::string ret(_data.size() * 2 + (_prefix == HexPrefix::Add ? 2 : 0), 0);
 
@@ -90,7 +89,7 @@ int solidity::util::fromHex(char _i, WhenError _throw)
 	if (_i >= 'A' && _i <= 'F')
 		return _i - 'A' + 10;
 	if (_throw == WhenError::Throw)
-		assertThrow(false, BadHexCharacter, to_string(_i));
+		assertThrow(false, BadHexCharacter, std::to_string(_i));
 	else
 		return -1;
 }
@@ -125,31 +124,31 @@ bytes solidity::util::fromHex(std::string const& _s, WhenError _throw)
 }
 
 
-bool solidity::util::passesAddressChecksum(string const& _str, bool _strict)
+bool solidity::util::passesAddressChecksum(std::string const& _str, bool _strict)
 {
-	string s = _str.substr(0, 2) == "0x" ? _str : "0x" + _str;
+	std::string s = _str.substr(0, 2) == "0x" ? _str : "0x" + _str;
 
 	if (s.length() != 42)
 		return false;
 
 	if (!_strict && (
-		s.find_first_of("abcdef") == string::npos ||
-		s.find_first_of("ABCDEF") == string::npos
+		s.find_first_of("abcdef") == std::string::npos ||
+		s.find_first_of("ABCDEF") == std::string::npos
 	))
 		return true;
 
 	return s == solidity::util::getChecksummedAddress(s);
 }
 
-string solidity::util::getChecksummedAddress(string const& _addr)
+std::string solidity::util::getChecksummedAddress(std::string const& _addr)
 {
-	string s = _addr.substr(0, 2) == "0x" ? _addr.substr(2) : _addr;
+	std::string s = _addr.substr(0, 2) == "0x" ? _addr.substr(2) : _addr;
 	assertThrow(s.length() == 40, InvalidAddress, "");
-	assertThrow(s.find_first_not_of("0123456789abcdefABCDEF") == string::npos, InvalidAddress, "");
+	assertThrow(s.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos, InvalidAddress, "");
 
 	h256 hash = keccak256(boost::algorithm::to_lower_copy(s, std::locale::classic()));
 
-	string ret = "0x";
+	std::string ret = "0x";
 	for (unsigned i = 0; i < 40; ++i)
 	{
 		char addressCharacter = s[i];
@@ -162,16 +161,16 @@ string solidity::util::getChecksummedAddress(string const& _addr)
 	return ret;
 }
 
-bool solidity::util::isValidHex(string const& _string)
+bool solidity::util::isValidHex(std::string const& _string)
 {
 	if (_string.substr(0, 2) != "0x")
 		return false;
-	if (_string.find_first_not_of("0123456789abcdefABCDEF", 2) != string::npos)
+	if (_string.find_first_not_of("0123456789abcdefABCDEF", 2) != std::string::npos)
 		return false;
 	return true;
 }
 
-bool solidity::util::isValidDecimal(string const& _string)
+bool solidity::util::isValidDecimal(std::string const& _string)
 {
 	if (_string.empty())
 		return false;
@@ -180,12 +179,12 @@ bool solidity::util::isValidDecimal(string const& _string)
 	// No leading zeros
 	if (_string.front() == '0')
 		return false;
-	if (_string.find_first_not_of("0123456789") != string::npos)
+	if (_string.find_first_not_of("0123456789") != std::string::npos)
 		return false;
 	return true;
 }
 
-string solidity::util::formatAsStringOrNumber(string const& _value)
+std::string solidity::util::formatAsStringOrNumber(std::string const& _value)
 {
 	assertThrow(_value.length() <= 32, StringTooLong, "String to be formatted longer than 32 bytes.");
 
@@ -197,9 +196,9 @@ string solidity::util::formatAsStringOrNumber(string const& _value)
 }
 
 
-string solidity::util::escapeAndQuoteString(string const& _input)
+std::string solidity::util::escapeAndQuoteString(std::string const& _input)
 {
-	string out;
+	std::string out;
 
 	for (char c: _input)
 		if (c == '\\')
@@ -214,8 +213,8 @@ string solidity::util::escapeAndQuoteString(string const& _input)
 			out += "\\t";
 		else if (!isPrint(c))
 		{
-			ostringstream o;
-			o << "\\x" << std::hex << setfill('0') << setw(2) << (unsigned)(unsigned char)(c);
+			std::ostringstream o;
+			o << "\\x" << std::hex << std::setfill('0') << std::setw(2) << (unsigned)(unsigned char)(c);
 			out += o.str();
 		}
 		else
