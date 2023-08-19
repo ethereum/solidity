@@ -229,8 +229,8 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 			auto const NumExpectedMappings =
 				(
 					2 +                        // PUSH <a> PUSH <b>
-					(numActualRefs - 1) * 5 +  // DUP DUP PUSH <n> ADD MTOSRE
-					3                          // PUSH <n> ADD MSTORkhbE
+					(numActualRefs - 1) * 5 +  // DUP DUP PUSH <n> ADD MSTORE
+					3                          // PUSH <n> ADD MSTORE
 				) * numImmutables;
 
 			auto constexpr NumSubs = 1;
