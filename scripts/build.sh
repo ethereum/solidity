@@ -10,7 +10,7 @@ else
     BUILD_TYPE="$1"
 fi
 
-if [[ "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]; then
+if [[ "$(git tag --points-at HEAD 2>/dev/null | head -n 1)" == v* ]]; then
 	touch "${ROOTDIR}/prerelease.txt"
 fi
 
