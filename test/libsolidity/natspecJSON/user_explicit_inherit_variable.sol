@@ -19,6 +19,33 @@ contract D is C, B {
 
 // ----
 // ----
+// :B devdoc
+// {
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :B userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :C devdoc
+// {
+//     "kind": "dev",
+//     "methods":
+//     {
+//         "x()":
+//         {
+//             "details": "test"
+//         }
+//     },
+//     "version": 1
+// }
+//
 // :C userdoc
 // {
 //     "kind": "user",
@@ -27,6 +54,20 @@ contract D is C, B {
 //         "x()":
 //         {
 //             "notice": "Hello world"
+//         }
+//     },
+//     "version": 1
+// }
+//
+// :D devdoc
+// {
+//     "kind": "dev",
+//     "methods": {},
+//     "stateVariables":
+//     {
+//         "x":
+//         {
+//             "details": "test"
 //         }
 //     },
 //     "version": 1

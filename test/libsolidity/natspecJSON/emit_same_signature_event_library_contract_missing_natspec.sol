@@ -51,3 +51,39 @@ contract C {
 //     "methods": {},
 //     "version": 1
 // }
+//
+// :L devdoc
+// {
+//     "events":
+//     {
+//         "LibraryEvent(uint32)":
+//         {
+//             "details": "This should appear in contract C devdoc"
+//         },
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "details": "This should not appear in contract C devdoc"
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L userdoc
+// {
+//     "events":
+//     {
+//         "LibraryEvent(uint32)":
+//         {
+//             "notice": "This event is defined in library L"
+//         },
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "notice": "This event is defined in library L"
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

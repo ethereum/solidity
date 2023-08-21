@@ -7,3 +7,4 @@ contract test {
 }
 
 // ----
+// DocstringParsingError 6546: (73-119): Documentation tag @author not valid for functions.

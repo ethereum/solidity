@@ -7,3 +7,4 @@ contract test {
 }
 
 // ----
+// DocstringParsingError 5856: (20-211): Documentation tag "@return " does not contain the name of its return parameter.

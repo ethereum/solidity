@@ -39,6 +39,33 @@ contract Token is ERC21, ERC20 {
 //     "version": 1
 // }
 //
+// :ERC20 userdoc
+// {
+//     "kind": "user",
+//     "methods":
+//     {
+//         "transfer(address,uint256)":
+//         {
+//             "notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
+//         }
+//     },
+//     "version": 1
+// }
+//
+// :ERC21 devdoc
+// {
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :ERC21 userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
 // :Token devdoc
 // {
 //     "kind": "dev",
@@ -52,6 +79,19 @@ contract Token is ERC21, ERC20 {
 //                 "amount": "amount to transfer",
 //                 "to": "address to transfer to"
 //             }
+//         }
+//     },
+//     "version": 1
+// }
+//
+// :Token userdoc
+// {
+//     "kind": "user",
+//     "methods":
+//     {
+//         "transfer(address,uint256)":
+//         {
+//             "notice": "Transfer ``amount`` from ``msg.sender`` to ``to``."
 //         }
 //     },
 //     "version": 1

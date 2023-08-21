@@ -7,3 +7,4 @@ contract test {
 }
 
 // ----
+// DocstringParsingError 6546: (73-137): Documentation tag @title not valid for functions.

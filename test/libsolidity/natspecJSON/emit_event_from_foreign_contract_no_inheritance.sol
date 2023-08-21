@@ -16,6 +16,34 @@ contract D {
 
 // ----
 // ----
+// :C devdoc
+// {
+//     "events":
+//     {
+//         "E()":
+//         {
+//             "details": "C.E event"
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :C userdoc
+// {
+//     "events":
+//     {
+//         "E()":
+//         {
+//             "notice": "C.E event"
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
 // :D devdoc
 // {
 //     "kind": "dev",

@@ -34,3 +34,10 @@ contract A {
 //     },
 //     "version": 1
 // }
+//
+// :A userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

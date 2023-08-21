@@ -21,6 +21,43 @@ contract test {
 
 // ----
 // ----
+// :A devdoc
+// {
+//     "errors":
+//     {
+//         "E(uint256,uint256)":
+//         [
+//             {
+//                 "details": "an error.",
+//                 "params":
+//                 {
+//                     "x": "first parameter",
+//                     "y": "second parameter"
+//                 }
+//             }
+//         ]
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :A userdoc
+// {
+//     "errors":
+//     {
+//         "E(uint256,uint256)":
+//         [
+//             {
+//                 "notice": "Something failed."
+//             }
+//         ]
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
 // :test devdoc
 // {
 //     "errors":

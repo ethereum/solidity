@@ -32,6 +32,13 @@ contract Thing is IThing {
 //     "version": 1
 // }
 //
+// :IThing userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
 // :Thing devdoc
 // {
 //     "kind": "dev",
@@ -47,5 +54,12 @@ contract Thing is IThing {
 //             }
 //         }
 //     },
+//     "version": 1
+// }
+//
+// :Thing userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
 //     "version": 1
 // }

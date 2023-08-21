@@ -25,6 +25,13 @@ contract B is A {
 //     "version": 1
 // }
 //
+// :A userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
 // :B devdoc
 // {
 //     "kind": "dev",
@@ -38,5 +45,12 @@ contract B is A {
 //             }
 //         }
 //     },
+//     "version": 1
+// }
+//
+// :B userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
 //     "version": 1
 // }

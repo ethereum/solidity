@@ -64,3 +64,59 @@ contract C {
 //     "methods": {},
 //     "version": 1
 // }
+//
+// :L2 devdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "details": "This should not appear in Contract C dev doc"
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L2 userdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "notice": "This event is defined in Library L2"
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L3 devdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "details": "This should not appear in Contract C dev doc"
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L3 userdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "notice": "This event is defined in Library L3"
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

@@ -21,3 +21,10 @@ contract test {
 //     "title": "Just a test contract",
 //     "version": 1
 // }
+//
+// :test userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

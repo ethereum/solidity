@@ -44,3 +44,59 @@ contract C is D {
 //     "methods": {},
 //     "version": 1
 // }
+//
+// :D devdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "details": "This should appear in Contract C dev doc"
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :D userdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "notice": "This event is defined in contract D"
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L devdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "details": "This should not appear in Contract C"
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L userdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "notice": "This event is defined in Library L"
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

@@ -28,3 +28,45 @@ contract C is D {
 //     "methods": {},
 //     "version": 1
 // }
+//
+// :D devdoc
+// {
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :D userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L devdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "details": "This should not appear in contract C devdoc"
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :L userdoc
+// {
+//     "events":
+//     {
+//         "SameSignatureEvent(uint16)":
+//         {
+//             "notice": "This event is defined in library L"
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

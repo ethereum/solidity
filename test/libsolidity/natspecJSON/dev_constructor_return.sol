@@ -6,3 +6,5 @@ contract test {
 }
 
 // ----
+// DocstringParsingError 6546: (20-239): Documentation tag @return not valid for constructor.
+// DocstringParsingError 2604: (20-239): Documentation tag "@return return should not work within constructors" exceeds the number of return parameters.

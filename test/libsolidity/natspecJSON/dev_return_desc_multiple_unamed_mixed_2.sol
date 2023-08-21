@@ -38,3 +38,10 @@ contract test {
 //     },
 //     "version": 1
 // }
+//
+// :test userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

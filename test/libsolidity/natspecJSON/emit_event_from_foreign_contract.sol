@@ -39,3 +39,31 @@ contract C {
 //     "methods": {},
 //     "version": 1
 // }
+//
+// :X devdoc
+// {
+//     "events":
+//     {
+//         "E()":
+//         {
+//             "details": "Devdoc for event E."
+//         }
+//     },
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :X userdoc
+// {
+//     "events":
+//     {
+//         "E()":
+//         {
+//             "notice": "Userdoc for event E."
+//         }
+//     },
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
