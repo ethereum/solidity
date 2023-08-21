@@ -1317,21 +1317,18 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	}
 
 	bool parsingSuccess = compilerStack.state() >= CompilerStack::State::Parsed;
-	bool analysisPerformed = compilerStack.state() >= CompilerStack::State::AnalysisPerformed;
+	bool analysisSuccess = compilerStack.state() >= CompilerStack::State::AnalysisSuccessful;
 	bool compilationSuccess = compilerStack.state() == CompilerStack::State::CompilationSuccessful;
-
-	if (compilerStack.hasError() && !_inputsAndSettings.parserErrorRecovery)
-		analysisPerformed = false;
 
 	// If analysis fails, the artifacts inside CompilerStack are potentially incomplete and must not be returned.
 	// Note that not completing analysis due to stopAfter does not count as a failure. It's neither failure nor success.
-	bool analysisFailed = !analysisPerformed && _inputsAndSettings.stopAfter >= CompilerStack::State::AnalysisPerformed;
+	bool analysisFailed = !analysisSuccess && _inputsAndSettings.stopAfter >= CompilerStack::State::AnalysisSuccessful;
 	bool compilationFailed = !compilationSuccess && binariesRequested;
 
 	/// Inconsistent state - stop here to receive error reports from users
 	if (
-		(compilationFailed || !analysisPerformed) &&
-		(errors.empty() && _inputsAndSettings.stopAfter >= CompilerStack::State::AnalysisPerformed)
+		(compilationFailed || analysisFailed || !parsingSuccess) &&
+		errors.empty()
 	)
 		return formatFatalError(Error::Type::InternalCompilerError, "No error reported, but compilation failed.");
 
@@ -1348,7 +1345,9 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	if (parsingSuccess && !analysisFailed && (!compilerStack.hasError() || _inputsAndSettings.parserErrorRecovery))
+	// NOTE: A case that will pass `parsingSuccess && !analysisFailed` but not `analysisSuccess` is
+	// stopAfter: parsing with no parsing errors.
+	if (parsingSuccess && !analysisFailed)
 		for (std::string const& sourceName: compilerStack.sourceNames())
 		{
 			Json::Value sourceResult = Json::objectValue;
@@ -1359,7 +1358,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		}
 
 	Json::Value contractsOutput = Json::objectValue;
-	for (std::string const& contractName: analysisPerformed ? compilerStack.contractNames() : std::vector<std::string>())
+	for (std::string const& contractName: analysisSuccess ? compilerStack.contractNames() : std::vector<std::string>())
 	{
 		size_t colon = contractName.rfind(':');
 		solAssert(colon != std::string::npos, "");

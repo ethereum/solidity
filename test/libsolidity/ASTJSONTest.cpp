@@ -59,7 +59,7 @@ string compilerStateToString(CompilerStack::State _state)
 		case CompilerStack::State::SourcesSet: return "SourcesSet";
 		case CompilerStack::State::Parsed: return "Parsed";
 		case CompilerStack::State::ParsedAndImported: return "ParsedAndImported";
-		case CompilerStack::State::AnalysisPerformed: return "AnalysisPerformed";
+		case CompilerStack::State::AnalysisSuccessful: return "AnalysisSuccessful";
 		case CompilerStack::State::CompilationSuccessful: return "CompilationSuccessful";
 	}
 	soltestAssert(false, "Unexpected value of state parameter");
@@ -102,7 +102,7 @@ void ASTJSONTest::generateTestVariants(string const& _filename)
 
 	const std::vector<CompilerStack::State> variantCompileStates = {
 		CompilerStack::State::Parsed,
-		CompilerStack::State::AnalysisPerformed
+		CompilerStack::State::AnalysisSuccessful,
 	};
 
 	for (const auto state: variantCompileStates)
