@@ -171,6 +171,7 @@ def print_ids_per_file(ids, id_to_file_names, top_dir):
 
 def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     test_sub_dirs = [
+        path.join("test", "libsolidity", "natspecJSON"),
         path.join("test", "libsolidity", "smtCheckerTests"),
         path.join("test", "libsolidity", "syntaxTests"),
         path.join("test", "libyul", "yulSyntaxTests")
