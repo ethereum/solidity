@@ -48,7 +48,7 @@ protected:
 	void parseAndAnalyze() override;
 	virtual void filterObtainedErrors();
 
-	bool m_optimiseYul = true;
+	bool m_optimiseYul{};
 };
 
 }
