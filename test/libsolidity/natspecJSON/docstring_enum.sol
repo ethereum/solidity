@@ -9,3 +9,17 @@ contract C {
     }
 }
 // ----
+// ----
+// :C devdoc
+// {
+//     "kind": "dev",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :C userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }

@@ -12,3 +12,53 @@ contract Thing is IThing {
 
     Value public override value;
 }
+// ----
+// ----
+// :IThing devdoc
+// {
+//     "kind": "dev",
+//     "methods":
+//     {
+//         "value()":
+//         {
+//             "returns":
+//             {
+//                 "x": "a number",
+//                 "y": "another number"
+//             }
+//         }
+//     },
+//     "version": 1
+// }
+//
+// :IThing userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
+//
+// :Thing devdoc
+// {
+//     "kind": "dev",
+//     "methods": {},
+//     "stateVariables":
+//     {
+//         "value":
+//         {
+//             "returns":
+//             {
+//                 "x": "a number",
+//                 "y": "another number"
+//             }
+//         }
+//     },
+//     "version": 1
+// }
+//
+// :Thing userdoc
+// {
+//     "kind": "user",
+//     "methods": {},
+//     "version": 1
+// }
