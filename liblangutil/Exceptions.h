@@ -206,6 +206,7 @@ public:
 
 	ErrorId errorId() const { return m_errorId; }
 	Type type() const { return m_type; }
+	Severity severity() const { return errorSeverity(m_type); }
 
 	SourceLocation const* sourceLocation() const noexcept;
 	SecondarySourceLocation const* secondarySourceLocation() const noexcept;
