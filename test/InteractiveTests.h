@@ -21,6 +21,7 @@
 #include <test/TestCase.h>
 #include <test/libsolidity/ABIJsonTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
+#include <test/libsolidity/ASTPropertyTest.h>
 #include <test/libsolidity/GasTest.h>
 #include <test/libsolidity/MemoryGuardTest.h>
 #include <test/libsolidity/SyntaxTest.h>
@@ -76,7 +77,8 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"JSON ABI",               "libsolidity", "ABIJson",               false, false, &ABIJsonTest::create},
 	{"SMT Checker",            "libsolidity", "smtCheckerTests",       true,  false, &SMTCheckerTest::create},
 	{"Gas Estimates",          "libsolidity", "gasTests",              false, false, &GasTest::create},
-	{"Memory Guard Tests",     "libsolidity", "memoryGuardTests",     false, false, &MemoryGuardTest::create},
+	{"Memory Guard",           "libsolidity", "memoryGuardTests",      false, false, &MemoryGuardTest::create},
+	{"AST Properties",         "libsolidity", "astPropertyTests",      false, false, &ASTPropertyTest::create},
 };
 
 }
