@@ -24,7 +24,6 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/StringUtils.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend::experimental;
 using namespace solidity::util;

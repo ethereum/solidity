@@ -26,7 +26,6 @@
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AST.h>
 
-using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
@@ -61,7 +60,7 @@ bool TypeRegistration::visit(ElementaryTypeName const& _typeName)
 {
 	if (annotation(_typeName).typeConstructor)
 		return false;
-	annotation(_typeName).typeConstructor = [&]() -> optional<TypeConstructor> {
+	annotation(_typeName).typeConstructor = [&]() -> std::optional<TypeConstructor> {
 		switch(_typeName.typeName().token())
 		{
 		case Token::Void:
@@ -80,7 +79,7 @@ bool TypeRegistration::visit(ElementaryTypeName const& _typeName)
 			return m_typeSystem.constructor(PrimitiveType::Bool);
 		default:
 			m_errorReporter.fatalTypeError(0000_error, _typeName.location(), "Expected primitive type.");
-			return nullopt;
+			return std::nullopt;
 		}
 	}();
 	return true;
