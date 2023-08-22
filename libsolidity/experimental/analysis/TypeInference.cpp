@@ -33,7 +33,6 @@
 #include <boost/algorithm/string.hpp>
 #include <range/v3/view/transform.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
@@ -51,9 +50,9 @@ m_typeSystem(_analysis.typeSystem())
 			_name,
 			nullptr
 		);
-		if (auto error = get_if<string>(&result))
+		if (auto error = std::get_if<std::string>(&result))
 			solAssert(!error, *error);
-		TypeClass resultClass = get<TypeClass>(result);
+		TypeClass resultClass = std::get<TypeClass>(result);
 		// TODO: validation?
 		annotation().typeClassFunctions[resultClass] = _memberCreator(type);
 		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
@@ -111,7 +110,7 @@ m_typeSystem(_analysis.typeSystem())
 	m_env = &m_typeSystem.env();
 
 	{
-		auto [members, newlyInserted] = annotation().members.emplace(m_typeSystem.constructor(PrimitiveType::Bool), map<string, TypeMember>{});
+		auto [members, newlyInserted] = annotation().members.emplace(m_typeSystem.constructor(PrimitiveType::Bool), std::map<std::string, TypeMember>{});
 		solAssert(newlyInserted);
 		members->second.emplace("abs", TypeMember{helper.functionType(m_wordType, m_boolType)});
 		members->second.emplace("rep", TypeMember{helper.functionType(m_boolType, m_wordType)});
@@ -120,7 +119,7 @@ m_typeSystem(_analysis.typeSystem())
 		Type first = m_typeSystem.freshTypeVariable({});
 		Type second = m_typeSystem.freshTypeVariable({});
 		Type pairType = m_typeSystem.type(PrimitiveType::Pair, {first, second});
-		auto [members, newlyInserted] = annotation().members.emplace(m_typeSystem.constructor(PrimitiveType::Pair), map<string, TypeMember>{});
+		auto [members, newlyInserted] = annotation().members.emplace(m_typeSystem.constructor(PrimitiveType::Pair), std::map<std::string, TypeMember>{});
 		solAssert(newlyInserted);
 		members->second.emplace("first", TypeMember{helper.functionType(pairType, first)});
 		members->second.emplace("second", TypeMember{helper.functionType(pairType, second)});
@@ -140,7 +139,7 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	if (functionAnnotation.type)
 		return false;
 
-	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, nullopt);
+	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, std::nullopt);
 
 	Type argumentsType = m_typeSystem.freshTypeVariable({});
 	Type returnType = m_typeSystem.freshTypeVariable({});
@@ -174,7 +173,7 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 void TypeInference::endVisit(Return const& _return)
 {
 	solAssert(m_currentFunctionType);
-	Type functionReturnType = get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(*m_currentFunctionType));
+	Type functionReturnType = std::get<1>(TypeSystemHelpers{m_typeSystem}.destFunctionType(*m_currentFunctionType));
 	if (_return.expression())
 		unify(functionReturnType, getType(*_return.expression()), _return.location());
 	else
@@ -186,7 +185,7 @@ void TypeInference::endVisit(ParameterList const& _parameterList)
 	auto& listAnnotation = annotation(_parameterList);
 	solAssert(!listAnnotation.type);
 	listAnnotation.type = TypeSystemHelpers{m_typeSystem}.tupleType(
-		_parameterList.parameters() | ranges::views::transform([&](auto _arg) { return getType(*_arg); }) | ranges::to<vector<Type>>
+		_parameterList.parameters() | ranges::views::transform([&](auto _arg) { return getType(*_arg); }) | ranges::to<std::vector<Type>>
 	);
 }
 
@@ -202,7 +201,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		_typeClassDefinition.typeVariable().accept(*this);
 	}
 
-	map<string, Type> functionTypes;
+	std::map<std::string, Type> functionTypes;
 
 	Type typeVar = m_typeSystem.freshTypeVariable({});
 	auto& typeMembers = annotation().members[typeConstructor(&_typeClassDefinition)];
@@ -283,7 +282,7 @@ bool TypeInference::visit(InlineAssembly const& _inlineAssembly)
 		return true;
 	};
 	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
-	_inlineAssembly.annotation().analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+	_inlineAssembly.annotation().analysisInfo = std::make_shared<yul::AsmAnalysisInfo>();
 	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
@@ -306,7 +305,7 @@ bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 	case ExpressionContext::Type:
 		if (auto constructor = m_analysis.annotation<TypeRegistration>(_expression).typeConstructor)
 		{
-			vector<Type> arguments;
+			std::vector<Type> arguments;
 			std::generate_n(std::back_inserter(arguments), m_typeSystem.constructorInfo(*constructor).arguments(), [&]() {
 				return m_typeSystem.freshTypeVariable({});
 			});
@@ -631,7 +630,7 @@ void TypeInference::endVisit(TupleExpression const& _tupleExpression)
 		auto& componentAnnotation = annotation(*_expr);
 		solAssert(componentAnnotation.type);
 		return *componentAnnotation.type;
-	}) | ranges::to<vector<Type>>;
+	}) | ranges::to<std::vector<Type>>;
 	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
@@ -666,7 +665,7 @@ bool TypeInference::visit(IdentifierPath const& _identifierPath)
 
 bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 {
-	ScopedSaveAndRestore activeInstantiations{m_activeInstantiations, m_activeInstantiations + set<TypeClassInstantiation const*>{&_typeClassInstantiation}};
+	ScopedSaveAndRestore activeInstantiations{m_activeInstantiations, m_activeInstantiations + std::set<TypeClassInstantiation const*>{&_typeClassInstantiation}};
 	// Note: recursion is resolved due to special handling during unification.
 	auto& instantiationAnnotation = annotation(_typeClassInstantiation);
 	if (instantiationAnnotation.type)
@@ -686,7 +685,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			else
 			{
 				m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
-				return nullopt;
+				return std::nullopt;
 			}
 		},
 		[&](Token _token) -> std::optional<TypeClass> {
@@ -694,7 +693,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 				if (auto typeClass = util::valueOrNullptr(annotation().builtinClasses, *builtinClass))
 					return *typeClass;
 			m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Invalid type class name.");
-			return nullopt;
+			return std::nullopt;
 		}
 	}, _typeClassInstantiation.typeClass().name());
 	if (!typeClass)
@@ -708,7 +707,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		return false;
 	}
 
-	vector<Type> arguments;
+	std::vector<Type> arguments;
 	Arity arity{
 		{},
 		*typeClass
@@ -724,13 +723,13 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(*argumentSortAnnotation.type);
 			arity.argumentSorts = arguments | ranges::views::transform([&](Type _type) {
 				return m_env->sort(_type);
-			}) | ranges::to<vector<Sort>>;
+			}) | ranges::to<std::vector<Sort>>;
 		}
 	}
 
 	Type type{TypeConstant{*typeConstructor, arguments}};
 
-	map<string, Type> functionTypes;
+	std::map<std::string, Type> functionTypes;
 
 	for (auto subNode: _typeClassInstantiation.subNodes())
 	{
@@ -834,7 +833,7 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 		 underlyingType = annotation(*_typeDefinition.typeExpression()).type;
 	}
 
-	vector<Type> arguments;
+	std::vector<Type> arguments;
 	if (_typeDefinition.arguments())
 		 for (size_t i = 0; i < _typeDefinition.arguments()->parameters().size(); ++i)
 			arguments.emplace_back(m_typeSystem.freshTypeVariable({}));
@@ -846,7 +845,7 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 		typeDefinitionAnnotation.type = helper.typeFunctionType(helper.tupleType(arguments), definedType);
 
 	TypeConstructor constructor = typeConstructor(&_typeDefinition);
-	auto [members, newlyInserted] = annotation().members.emplace(constructor, map<string, TypeMember>{});
+	auto [members, newlyInserted] = annotation().members.emplace(constructor, std::map<std::string, TypeMember>{});
 	solAssert(newlyInserted);
 	if (underlyingType)
 	{
@@ -910,7 +909,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 namespace
 {
 
-optional<rational> parseRational(string const& _value)
+std::optional<rational> parseRational(std::string const& _value)
 {
 	rational value;
 	try
@@ -923,7 +922,7 @@ optional<rational> parseRational(string const& _value)
 				!all_of(radixPoint + 1, _value.end(), util::isDigit) ||
 				!all_of(_value.begin(), radixPoint, util::isDigit)
 			)
-				return nullopt;
+				return std::nullopt;
 
 			// Only decimal notation allowed here, leading zeros would switch to octal.
 			auto fractionalBegin = find_if_not(
@@ -935,12 +934,12 @@ optional<rational> parseRational(string const& _value)
 			rational numerator;
 			rational denominator(1);
 
-			denominator = bigint(string(fractionalBegin, _value.end()));
+			denominator = bigint(std::string(fractionalBegin, _value.end()));
 			denominator /= boost::multiprecision::pow(
 				bigint(10),
 				static_cast<unsigned>(distance(radixPoint + 1, _value.end()))
 			);
-			numerator = bigint(string(_value.begin(), radixPoint));
+			numerator = bigint(std::string(_value.begin(), radixPoint));
 			value = numerator + denominator;
 		 }
 		 else
@@ -949,7 +948,7 @@ optional<rational> parseRational(string const& _value)
 	}
 	catch (...)
 	{
-		 return nullopt;
+		 return std::nullopt;
 	}
 }
 
@@ -960,7 +959,7 @@ bool fitsPrecisionBase10(bigint const& _mantissa, uint32_t _expBase10)
 	return fitsPrecisionBaseX(_mantissa, log2Of10AwayFromZero, _expBase10);
 }
 
-optional<rational> rationalValue(Literal const& _literal)
+std::optional<rational> rationalValue(Literal const& _literal)
 {
 	rational value;
 	try
@@ -979,27 +978,27 @@ optional<rational> rationalValue(Literal const& _literal)
 		 else if (expPoint != valueString.end())
 		 {
 			// Parse mantissa and exponent. Checks numeric limit.
-			optional<rational> mantissa = parseRational(string(valueString.begin(), expPoint));
+			std::optional<rational> mantissa = parseRational(std::string(valueString.begin(), expPoint));
 
 			if (!mantissa)
-				return nullopt;
+				return std::nullopt;
 			value = *mantissa;
 
 			// 0E... is always zero.
 			if (value == 0)
-				return nullopt;
+				return std::nullopt;
 
-			bigint exp = bigint(string(expPoint + 1, valueString.end()));
+			bigint exp = bigint(std::string(expPoint + 1, valueString.end()));
 
-			if (exp > numeric_limits<int32_t>::max() || exp < numeric_limits<int32_t>::min())
-				return nullopt;
+			if (exp > std::numeric_limits<int32_t>::max() || exp < std::numeric_limits<int32_t>::min())
+				return std::nullopt;
 
 			uint32_t expAbs = bigint(abs(exp)).convert_to<uint32_t>();
 
 			if (exp < 0)
 			{
 				if (!fitsPrecisionBase10(abs(value.denominator()), expAbs))
-					return nullopt;
+					return std::nullopt;
 				value /= boost::multiprecision::pow(
 					bigint(10),
 					expAbs
@@ -1008,7 +1007,7 @@ optional<rational> rationalValue(Literal const& _literal)
 			else if (exp > 0)
 			{
 				if (!fitsPrecisionBase10(abs(value.numerator()), expAbs))
-					return nullopt;
+					return std::nullopt;
 				value *= boost::multiprecision::pow(
 					bigint(10),
 					expAbs
@@ -1018,15 +1017,15 @@ optional<rational> rationalValue(Literal const& _literal)
 		 else
 		 {
 			// parse as rational number
-			optional<rational> tmp = parseRational(valueString);
+			std::optional<rational> tmp = parseRational(valueString);
 			if (!tmp)
-				return nullopt;
+				return std::nullopt;
 			value = *tmp;
 		 }
 	}
 	catch (...)
 	{
-		 return nullopt;
+		 return std::nullopt;
 	}
 	switch (_literal.subDenomination())
 	{
@@ -1069,7 +1068,7 @@ bool TypeInference::visit(Literal const& _literal)
 		 m_errorReporter.typeError(0000_error, _literal.location(), "Only number literals are supported.");
 		 return false;
 	}
-	optional<rational> value = rationalValue(_literal);
+	std::optional<rational> value = rationalValue(_literal);
 	if (!value)
 	{
 		 m_errorReporter.typeError(0000_error, _literal.location(), "Invalid number literals.");
@@ -1127,7 +1126,7 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 		bool onlyMissingInstantiations = [&]() {
 			for (auto failure: unificationFailures)
 			{
-				if (auto* sortMismatch = get_if<TypeEnvironment::SortMismatch>(&failure))
+				if (auto* sortMismatch = std::get_if<TypeEnvironment::SortMismatch>(&failure))
 					if (helper.isTypeConstant(sortMismatch->type))
 					{
 						TypeConstructor constructor = std::get<0>(helper.destTypeConstant(sortMismatch->type));
@@ -1220,7 +1219,7 @@ TypeConstructor TypeInference::typeConstructor(Declaration const* _type) const
 	m_errorReporter.fatalTypeError(0000_error, _type->location(), "Unregistered type.");
 	util::unreachable();
 }
-experimental::Type TypeInference::type(Declaration const* _type, vector<Type> _arguments) const
+experimental::Type TypeInference::type(Declaration const* _type, std::vector<Type> _arguments) const
 {
 	return m_typeSystem.type(typeConstructor(_type), std::move(_arguments));
 }

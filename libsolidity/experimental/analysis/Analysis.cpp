@@ -22,7 +22,6 @@
 #include <libsolidity/experimental/analysis/TypeInference.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend::experimental;
 
@@ -121,7 +120,7 @@ std::tuple<std::integral_constant<size_t, Is>...> makeIndexTuple(std::index_sequ
 	return std::make_tuple( std::integral_constant<size_t, Is>{}...);
 }
 
-bool Analysis::check(vector<shared_ptr<SourceUnit const>> const& _sourceUnits)
+bool Analysis::check(std::vector<std::shared_ptr<SourceUnit const>> const& _sourceUnits)
 {
 	using AnalysisSteps = std::tuple<SyntaxRestrictor, TypeRegistration, TypeInference, DebugWarner>;
 

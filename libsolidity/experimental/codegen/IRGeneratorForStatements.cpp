@@ -33,7 +33,6 @@
 
 #include <range/v3/view/drop_last.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
@@ -54,7 +53,7 @@ struct CopyTranslate: public yul::ASTCopier
 	CopyTranslate(
 		IRGenerationContext const& _context,
 		yul::Dialect const& _dialect,
-		map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> _references
+		std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> _references
 	): m_context(_context), m_dialect(_dialect), m_references(std::move(_references)) {}
 
 	using ASTCopier::operator();
@@ -83,8 +82,8 @@ struct CopyTranslate: public yul::ASTCopier
 			return ASTCopier::translate(_identifier);
 
 		yul::Expression translated = translateReference(_identifier);
-		solAssert(holds_alternative<yul::Identifier>(translated));
-		return get<yul::Identifier>(std::move(translated));
+		solAssert(std::holds_alternative<yul::Identifier>(translated));
+		return std::get<yul::Identifier>(std::move(translated));
 	}
 
 private:
@@ -100,20 +99,20 @@ private:
 		auto type = m_context.analysis.annotation<TypeInference>(*varDecl).type;
 		solAssert(type);
 		solAssert(m_context.env->typeEquals(*type, m_context.analysis.typeSystem().type(PrimitiveType::Word, {})));
-		string value = IRNames::localVariable(*varDecl);
+		std::string value = IRNames::localVariable(*varDecl);
 		return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}
 
 	IRGenerationContext const& m_context;
 	yul::Dialect const& m_dialect;
-	map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> m_references;
+	std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> m_references;
 };
 
 }
 
 bool IRGeneratorForStatements::visit(TupleExpression const& _tupleExpression)
 {
-	std::vector<string> components;
+	std::vector<std::string> components;
 	for (auto const& component: _tupleExpression.components())
 	{
 		solUnimplementedAssert(component);
@@ -130,7 +129,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _assembly)
 {
 	CopyTranslate bodyCopier{m_context, _assembly.dialect(), _assembly.annotation().externalReferences};
 	yul::Statement modified = bodyCopier(_assembly.operations());
-	solAssert(holds_alternative<yul::Block>(modified));
+	solAssert(std::holds_alternative<yul::Block>(modified));
 	m_code << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
@@ -223,7 +222,7 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGener
 }
 }
 
-FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(TypeClass _class, string _name, Type _type)
+FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(TypeClass _class, std::string _name, Type _type)
 {
 	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
 
@@ -232,7 +231,7 @@ FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(Typ
 	auto typeVars = TypeEnvironmentHelpers{env}.typeVars(genericFunctionType);
 	solAssert(typeVars.size() == 1);
 	solAssert(env.unify(genericFunctionType, _type).empty());
-	auto typeClassInstantiation = get<0>(helper.destTypeConstant(env.resolve(typeVars.front())));
+	auto typeClassInstantiation = std::get<0>(helper.destTypeConstant(env.resolve(typeVars.front())));
 
 	auto const& instantiations = typeClassInstantiations(m_context, _class);
 	TypeClassInstantiation const* instantiation = instantiations.at(typeClassInstantiation);
@@ -271,7 +270,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	solAssert(declaration);
 	if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(declaration))
 	{
-		optional<TypeClass> typeClass = m_context.analysis.annotation<TypeInference>(*typeClassDefinition).typeClass;
+		std::optional<TypeClass> typeClass = m_context.analysis.annotation<TypeInference>(*typeClassDefinition).typeClass;
 		solAssert(typeClass);
 		solAssert(m_expressionDeclaration.emplace(
 			&_memberAccess,
@@ -299,7 +298,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
 	Type functionType = type(_functionCall.expression());
 	auto declaration = m_expressionDeclaration.at(&_functionCall.expression());
-	if (auto builtin = get_if<Builtins>(&declaration))
+	if (auto builtin = std::get_if<Builtins>(&declaration))
 	{
 		switch(*builtin)
 		{
@@ -315,7 +314,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 		solAssert(false);
 	}
-	FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(get<Declaration const*>(declaration));
+	FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(std::get<Declaration const*>(declaration));
 	solAssert(functionDefinition);
 	// TODO: get around resolveRecursive by passing the environment further down?
 	functionType = m_context.env->resolveRecursive(functionType);

@@ -24,7 +24,6 @@
 
 #include <libyul/AsmPrinter.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::util;
@@ -33,42 +32,42 @@ using namespace solidity::yul;
 namespace solidity::frontend::experimental
 {
 
-string IRNames::function(TypeEnvironment const& _env, FunctionDefinition const& _function, Type _type)
+std::string IRNames::function(TypeEnvironment const& _env, FunctionDefinition const& _function, Type _type)
 {
 	if (_function.isConstructor())
 		return constructor(*_function.annotation().contract);
 
-	return "fun_" + _function.name() + "_" + to_string(_function.id()) + "$" + TypeEnvironmentHelpers{_env}.canonicalTypeName(_type) + "$";
+	return "fun_" + _function.name() + "_" + std::to_string(_function.id()) + "$" + TypeEnvironmentHelpers{_env}.canonicalTypeName(_type) + "$";
 }
 
-string IRNames::function(VariableDeclaration const& _varDecl)
+std::string IRNames::function(VariableDeclaration const& _varDecl)
 {
-	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
+	return "getter_fun_" + _varDecl.name() + "_" + std::to_string(_varDecl.id());
 }
 
-string IRNames::creationObject(ContractDefinition const& _contract)
+std::string IRNames::creationObject(ContractDefinition const& _contract)
 {
 	return _contract.name() + "_" + toString(_contract.id());
 }
 
-string IRNames::deployedObject(ContractDefinition const& _contract)
+std::string IRNames::deployedObject(ContractDefinition const& _contract)
 {
 	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
 }
 
-string IRNames::constructor(ContractDefinition const& _contract)
+std::string IRNames::constructor(ContractDefinition const& _contract)
 {
-	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());
+	return "constructor_" + _contract.name() + "_" + std::to_string(_contract.id());
 }
 
-string IRNames::localVariable(VariableDeclaration const& _declaration)
+std::string IRNames::localVariable(VariableDeclaration const& _declaration)
 {
 	return "var_" + _declaration.name() + '_' + std::to_string(_declaration.id());
 }
 
-string IRNames::localVariable(Expression const& _expression)
+std::string IRNames::localVariable(Expression const& _expression)
 {
-	return "expr_" + to_string(_expression.id());
+	return "expr_" + std::to_string(_expression.id());
 }
 
 }

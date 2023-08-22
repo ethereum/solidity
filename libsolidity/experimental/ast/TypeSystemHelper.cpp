@@ -32,7 +32,6 @@
 
 #include <fmt/format.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
@@ -97,7 +96,7 @@ std::optional<BuiltinClass> experimental::builtinClassFromToken(langutil::Token 
 	case Token::GreaterThanOrEqual:
 		return BuiltinClass::GreaterOrEqual;
 	default:
-		return nullopt;
+		return std::nullopt;
 	}
 }
 /*
@@ -116,7 +115,7 @@ std::optional<TypeClass> experimental::typeClassFromTypeClassName(TypeClassName 
 	}, _typeClass.name());
 }
 */
-experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
+experimental::Type TypeSystemHelpers::tupleType(std::vector<Type> _elements) const
 {
 	if (_elements.empty())
 		return typeSystem.type(PrimitiveType::Unit, {});
@@ -128,7 +127,7 @@ experimental::Type TypeSystemHelpers::tupleType(vector<Type> _elements) const
 	return result;
 }
 
-vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) const
+std::vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) const
 {
 	if (!isTypeConstant(_tupleType))
 		return {_tupleType};
@@ -140,7 +139,7 @@ vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) con
 		return {_tupleType};
 	solAssert(arguments.size() == 2);
 
-	vector<Type> result;
+	std::vector<Type> result;
 	result.emplace_back(arguments.front());
 	Type tail = arguments.back();
 	while(true)
@@ -158,7 +157,7 @@ vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType) con
 	return result;
 }
 
-experimental::Type TypeSystemHelpers::sumType(vector<Type> _elements) const
+experimental::Type TypeSystemHelpers::sumType(std::vector<Type> _elements) const
 {
 	if (_elements.empty())
 		return typeSystem.type(PrimitiveType::Void, {});
@@ -170,7 +169,7 @@ experimental::Type TypeSystemHelpers::sumType(vector<Type> _elements) const
 	return result;
 }
 
-vector<experimental::Type> TypeSystemHelpers::destSumType(Type _tupleType) const
+std::vector<experimental::Type> TypeSystemHelpers::destSumType(Type _tupleType) const
 {
 	if (!isTypeConstant(_tupleType))
 		return {_tupleType};
@@ -182,7 +181,7 @@ vector<experimental::Type> TypeSystemHelpers::destSumType(Type _tupleType) const
 		return {_tupleType};
 	solAssert(arguments.size() == 2);
 
-	vector<Type> result;
+	std::vector<Type> result;
 	result.emplace_back(arguments.front());
 	Type tail = arguments.back();
 	while(true)
@@ -200,9 +199,9 @@ vector<experimental::Type> TypeSystemHelpers::destSumType(Type _tupleType) const
 	return result;
 }
 
-tuple<TypeConstructor, vector<experimental::Type>> TypeSystemHelpers::destTypeConstant(Type _type) const
+std::tuple<TypeConstructor, std::vector<experimental::Type>> TypeSystemHelpers::destTypeConstant(Type _type) const
 {
-	using ResultType = tuple<TypeConstructor, vector<Type>>;
+	using ResultType = std::tuple<TypeConstructor, std::vector<Type>>;
 	return std::visit(util::GenericVisitor{
 		[&](TypeConstant const& _type) -> ResultType {
 			return std::make_tuple(_type.constructor, _type.arguments);
@@ -230,19 +229,19 @@ experimental::Type TypeSystemHelpers::functionType(experimental::Type _argType, 
 	return typeSystem.type(PrimitiveType::Function, {_argType, _resultType});
 }
 
-tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFunctionType(Type _functionType) const
+std::tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFunctionType(Type _functionType) const
 {
 	auto [constructor, arguments] = destTypeConstant(_functionType);
 	solAssert(constructor == typeSystem.constructor(PrimitiveType::Function));
 	solAssert(arguments.size() == 2);
-	return make_tuple(arguments.front(), arguments.back());
+	return std::make_tuple(arguments.front(), arguments.back());
 }
 
 bool TypeSystemHelpers::isFunctionType(Type _type) const
 {
 	if (!isTypeConstant(_type))
 		return false;
-	auto constructor = get<0>(destTypeConstant(_type));
+	auto constructor = std::get<0>(destTypeConstant(_type));
 	return constructor == typeSystem.constructor(PrimitiveType::Function);
 }
 
@@ -251,26 +250,26 @@ experimental::Type TypeSystemHelpers::typeFunctionType(experimental::Type _argTy
 	return typeSystem.type(PrimitiveType::TypeFunction, {_argType, _resultType});
 }
 
-tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destTypeFunctionType(Type _functionType) const
+std::tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destTypeFunctionType(Type _functionType) const
 {
 	auto [constructor, arguments] = destTypeConstant(_functionType);
 	solAssert(constructor == typeSystem.constructor(PrimitiveType::TypeFunction));
 	solAssert(arguments.size() == 2);
-	return make_tuple(arguments.front(), arguments.back());
+	return std::make_tuple(arguments.front(), arguments.back());
 }
 
 bool TypeSystemHelpers::isTypeFunctionType(Type _type) const
 {
 	if (!isTypeConstant(_type))
 		return false;
-	auto constructor = get<0>(destTypeConstant(_type));
+	auto constructor = std::get<0>(destTypeConstant(_type));
 	return constructor == typeSystem.constructor(PrimitiveType::TypeFunction);
 }
 
-vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) const
+std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) const
 {
-	set<size_t> indices;
-	vector<Type> typeVars;
+	std::set<size_t> indices;
+	std::vector<Type> typeVars;
 	auto typeVarsImpl = [&](Type _type, auto _recurse) -> void {
 		std::visit(util::GenericVisitor{
 			[&](TypeConstant const& _type) {
@@ -310,10 +309,10 @@ std::string TypeSystemHelpers::sortToString(Sort _sort) const
 	}
 }
 
-string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
+std::string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 {
 	return visit(util::GenericVisitor{
-		[&](TypeConstant _type) -> string {
+		[&](TypeConstant _type) -> std::string {
 			std::stringstream stream;
 			stream << env.typeSystem().constructorInfo(_type.constructor).canonicalName;
 			if (!_type.arguments.empty())
@@ -326,10 +325,10 @@ string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 			}
 			return stream.str();
 		},
-		[](TypeVariable) -> string {
+		[](TypeVariable) -> std::string {
 			solAssert(false);
 		},
-		[](std::monostate) -> string {
+		[](std::monostate) -> std::string {
 			solAssert(false);
 		},
 	}, env.resolve(_type));
@@ -337,7 +336,7 @@ string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 
 std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 {
-	std::map<TypeConstructor, std::function<string(std::vector<Type>)>> formatters{
+	std::map<TypeConstructor, std::function<std::string(std::vector<Type>)>> formatters{
 		{env.typeSystem().constructor(PrimitiveType::Function), [&](auto const& _args) {
 			 solAssert(_args.size() == 2);
 			 return fmt::format("{} -> {}", typeToString(_args.front()), typeToString(_args.back()));
@@ -348,7 +347,7 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 		 }},
 		{env.typeSystem().constructor(PrimitiveType::Pair), [&](auto const& _arguments) {
 			 auto tupleTypes = TypeSystemHelpers{env.typeSystem()}.destTupleType(_arguments.back());
-			 string result = "(";
+			 std::string result = "(";
 			 result += typeToString(_arguments.front());
 			 for (auto type: tupleTypes)
 				 result += ", " + typeToString(type);
@@ -398,6 +397,6 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 			}
 			return stream.str();
 		},
-		[](std::monostate) -> string { solAssert(false); }
+		[](std::monostate) -> std::string { solAssert(false); }
 	}, env.resolve(_type));
 }

@@ -32,14 +32,13 @@
 
 #include <fmt/format.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
 
-vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type _b)
+std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type _b)
 {
-	vector<UnificationFailure> failures;
+	std::vector<UnificationFailure> failures;
 	auto unificationFailure = [&]() {
 		failures.emplace_back(UnificationFailure{TypeMismatch{_a, _b}});
 	};
@@ -151,9 +150,9 @@ TypeSystem::TypeSystem()
 	TypeClass classType = primitiveClass(PrimitiveClass::Type);
 	//TypeClass classKind = primitiveClass(PrimitiveClass::Kind);
 	Sort typeSort{{classType}};
-	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::TypeFunction).m_index).arities = {Arity{vector<Sort>{{typeSort},{typeSort}}, classType}};
-	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{vector<Sort>{{typeSort, typeSort}}, classType}};
-	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{vector<Sort>{{typeSort, typeSort}}, classType}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::TypeFunction).m_index).arities = {Arity{std::vector<Sort>{{typeSort},{typeSort}}, classType}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
 }
 
 experimental::Type TypeSystem::freshVariable(Sort _sort)
@@ -168,7 +167,7 @@ experimental::Type TypeSystem::freshTypeVariable(Sort _sort)
 	return freshVariable(_sort);
 }
 
-vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
+std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
 {
 	for (auto typeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
 		if (typeVar.index() == _variable.index())
@@ -201,7 +200,7 @@ experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 				_type.constructor,
 				_type.arguments | ranges::views::transform([&](Type _argType) {
 					return resolveRecursive(_argType);
-				}) | ranges::to<vector<Type>>
+				}) | ranges::to<std::vector<Type>>
 			};
 		},
 		[&](TypeVariable const&) -> Type {
@@ -221,7 +220,7 @@ Sort TypeEnvironment::sort(Type _type) const
 			auto const& constructorInfo = m_typeSystem.constructorInfo(_expression.constructor);
 			auto argumentSorts = _expression.arguments | ranges::views::transform([&](Type _argumentType) {
 				return sort(resolve(_argumentType));
-			}) | ranges::to<vector<Sort>>;
+			}) | ranges::to<std::vector<Sort>>;
 			Sort sort;
 			for (auto const& arity: constructorInfo.arities)
 			{
@@ -246,7 +245,7 @@ Sort TypeEnvironment::sort(Type _type) const
 	}, _type);
 }
 
-TypeConstructor TypeSystem::declareTypeConstructor(string _name, string _canonicalName, size_t _arguments, Declaration const* _declaration)
+TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::string _canonicalName, size_t _arguments, Declaration const* _declaration)
 {
 	solAssert(m_canonicalTypeNames.insert(_canonicalName).second, "Duplicate canonical type name.");
 	Sort baseSort{{primitiveClass(PrimitiveClass::Type)}};
@@ -254,7 +253,7 @@ TypeConstructor TypeSystem::declareTypeConstructor(string _name, string _canonic
 	m_typeConstructors.emplace_back(TypeConstructorInfo{
 		_name,
 		_canonicalName,
-		{Arity{vector<Sort>{_arguments, baseSort}, primitiveClass(PrimitiveClass::Type)}},
+		{Arity{std::vector<Sort>{_arguments, baseSort}, primitiveClass(PrimitiveClass::Type)}},
 		_declaration
 	});
 	TypeConstructor constructor{index};
@@ -277,7 +276,7 @@ TypeConstructor TypeSystem::declareTypeConstructor(string _name, string _canonic
 
 std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(Type _typeVariable, std::string _name, Declaration const* _declaration)
 {
-	TypeVariable const* typeVariable = get_if<TypeVariable>(&_typeVariable);
+	TypeVariable const* typeVariable = std::get_if<TypeVariable>(&_typeVariable);
 	if (!typeVariable)
 		return "Invalid type variable.";
 
@@ -310,13 +309,13 @@ experimental::Type TypeEnvironment::fresh(Type _type)
 					_type.constructor,
 					_type.arguments | ranges::views::transform([&](Type _argType) {
 						return _recurse(_argType, _recurse);
-					}) | ranges::to<vector<Type>>
+					}) | ranges::to<std::vector<Type>>
 				};
 			},
 			[&](TypeVariable const& _var) -> Type {
 				if (auto* mapped = util::valueOrNullptr(mapping, _var.index()))
 				{
-					auto* typeVariable = get_if<TypeVariable>(mapped);
+					auto* typeVariable = std::get_if<TypeVariable>(mapped);
 					solAssert(typeVariable);
 					// TODO: can there be a mismatch?
 					solAssert(typeVariable->sort() == _var.sort());
@@ -343,5 +342,5 @@ std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, 
 
 	typeConstructorInfo.arities.emplace_back(_arity);
 
-	return nullopt;
+	return std::nullopt;
 }

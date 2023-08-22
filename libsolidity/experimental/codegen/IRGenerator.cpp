@@ -40,7 +40,6 @@
 
 #include <variant>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
@@ -64,10 +63,10 @@ m_context{_analysis, &m_env, {}, {}}
 {
 }
 
-string IRGenerator::run(
+std::string IRGenerator::run(
 	ContractDefinition const& _contract,
 	bytes const& /*_cborMetadata*/,
-	map<ContractDefinition const*, string_view const> const& /*_otherYulSources*/
+	std::map<ContractDefinition const*, std::string_view const> const& /*_otherYulSources*/
 )
 {
 
@@ -91,7 +90,7 @@ string IRGenerator::run(
 	return t.render();
 }
 
-string IRGenerator::generate(ContractDefinition const& _contract)
+std::string IRGenerator::generate(ContractDefinition const& _contract)
 {
 	std::stringstream code;
 	code << "{\n";
@@ -110,7 +109,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	{
 		auto queueEntry = m_context.functionQueue.front();
 		m_context.functionQueue.pop_front();
-		auto& generatedTypes = m_context.generatedFunctions.insert(std::make_pair(queueEntry.function, vector<Type>{})).first->second;
+		auto& generatedTypes = m_context.generatedFunctions.insert(std::make_pair(queueEntry.function, std::vector<Type>{})).first->second;
 		if (!util::contains_if(generatedTypes, [&](auto const& _generatedType) { return m_context.env->typeEquals(_generatedType, queueEntry.type); }))
 		{
 			generatedTypes.emplace_back(queueEntry.type);
@@ -121,7 +120,7 @@ string IRGenerator::generate(ContractDefinition const& _contract)
 	return code.str();
 }
 
-string IRGenerator::generate(FunctionDefinition const& _function, Type _type)
+std::string IRGenerator::generate(FunctionDefinition const& _function, Type _type)
 {
 	TypeEnvironment newEnv = m_context.env->clone();
 	ScopedSaveAndRestore envRestore{m_context.env, &newEnv};
