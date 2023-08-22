@@ -344,7 +344,7 @@ struct FunctionCallAnnotation: ExpressionAnnotation
 };
 
 /// Experimental Solidity annotations.
-/// Used to intergrate with name and type resolution.
+/// Used to integrate with name and type resolution.
 /// @{
 struct TypeClassDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
