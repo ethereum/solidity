@@ -78,7 +78,7 @@ bool TypeRegistration::visit(ElementaryTypeName const& _typeName)
 		case Token::Bool:
 			return m_typeSystem.constructor(PrimitiveType::Bool);
 		default:
-			m_errorReporter.fatalTypeError(0000_error, _typeName.location(), "Expected primitive type.");
+			m_errorReporter.fatalTypeError(7758_error, _typeName.location(), "Expected primitive type.");
 			return std::nullopt;
 		}
 	}();
@@ -106,14 +106,14 @@ bool TypeRegistration::visit(UserDefinedTypeName const& _userDefinedTypeName)
 	if (!declaration)
 	{
 		// TODO: fatal/non-fatal
-		m_errorReporter.fatalTypeError(0000_error, _userDefinedTypeName.pathNode().location(), "Expected declaration.");
+		m_errorReporter.fatalTypeError(5096_error, _userDefinedTypeName.pathNode().location(), "Expected declaration.");
 		return false;
 	}
 	declaration->accept(*this);
 	if (!(annotation(_userDefinedTypeName).typeConstructor = annotation(*declaration).typeConstructor))
 	{
 		// TODO: fatal/non-fatal
-		m_errorReporter.fatalTypeError(0000_error, _userDefinedTypeName.pathNode().location(), "Expected type declaration.");
+		m_errorReporter.fatalTypeError(9831_error, _userDefinedTypeName.pathNode().location(), "Expected type declaration.");
 		return false;
 	}
 	return true;
@@ -127,7 +127,7 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 	auto typeConstructor = annotation(_typeClassInstantiation.typeConstructor()).typeConstructor;
 	if (!typeConstructor)
 	{
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type name.");
+		m_errorReporter.typeError(5577_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type name.");
 		return false;
 	}
 	auto* instantiations = std::visit(util::GenericVisitor{
@@ -135,14 +135,14 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 		{
 			if (TypeClassDefinition const* classDefinition = dynamic_cast<TypeClassDefinition const*>(_path->annotation().referencedDeclaration))
 				return &annotation(*classDefinition).instantiations;
-			m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
+			m_errorReporter.typeError(3570_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
 			return nullptr;
 		},
 		[&](Token _token) -> TypeClassInstantiations*
 		{
 			if (auto typeClass = builtinClassFromToken(_token))
 				return &annotation().builtinClassInstantiations[*typeClass];
-			m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
+			m_errorReporter.typeError(5262_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
 			return nullptr;
 		}
 	}, _typeClassInstantiation.typeClass().name());
@@ -157,7 +157,7 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 	{
 		SecondarySourceLocation ssl;
 		ssl.append("Previous instantiation.", instantiation->second->location());
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), ssl, "Duplicate type class instantiation.");
+		m_errorReporter.typeError(6620_error, _typeClassInstantiation.location(), ssl, "Duplicate type class instantiation.");
 	}
 
 	return true;

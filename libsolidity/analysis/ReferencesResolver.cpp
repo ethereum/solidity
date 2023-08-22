@@ -296,7 +296,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		if (splitName.size() > 2)
 		{
 			m_errorReporter.declarationError(
-				0000_error,
+				4955_error,
 				nativeLocationOf(_identifier),
 				"Unsupported identifier in inline assembly."
 			);
@@ -309,7 +309,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		case 0:
 			if (splitName.size() > 1)
 				m_errorReporter.declarationError(
-					0000_error,
+					7531_error,
 					nativeLocationOf(_identifier),
 					"Unsupported identifier in inline assembly."
 				);
@@ -320,7 +320,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			break;
 		default:
 			m_errorReporter.declarationError(
-				0000_error,
+				5387_error,
 				nativeLocationOf(_identifier),
 				"Multiple matching identifiers. Resolving overloaded identifiers is not supported."
 			);

@@ -214,10 +214,10 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		// TODO: need polymorphicInstance?
 		auto functionType = polymorphicInstance(getType(*functionDefinition));
 		if (!functionTypes.emplace(functionDefinition->name(), functionType).second)
-			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class declared multiple times.");
+			m_errorReporter.fatalTypeError(3195_error, functionDefinition->location(), "Function in type class declared multiple times.");
 		auto typeVars = TypeEnvironmentHelpers{*m_env}.typeVars(functionType);
 		if (typeVars.size() != 1)
-			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class may only depend on the type class variable.");
+			m_errorReporter.fatalTypeError(8379_error, functionDefinition->location(), "Function in type class may only depend on the type class variable.");
 		unify(typeVars.front(), typeVar, functionDefinition->location());
 		typeMembers[functionDefinition->name()] = TypeMember{functionType};
 	}
@@ -225,7 +225,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 	TypeClass typeClass = std::visit(util::GenericVisitor{
 		[](TypeClass _class) -> TypeClass { return _class; },
 		[&](std::string _error) -> TypeClass {
-			m_errorReporter.fatalTypeError(0000_error, _typeClassDefinition.location(), _error);
+			m_errorReporter.fatalTypeError(4767_error, _typeClassDefinition.location(), _error);
 			util::unreachable();
 		}
 	}, m_typeSystem.declareTypeClass(typeVar, _typeClassDefinition.name(), &_typeClassDefinition));
@@ -237,11 +237,11 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		TypeEnvironmentHelpers helper{*m_env};
 		auto typeVars = helper.typeVars(functionType);
 		if (typeVars.empty())
-			m_errorReporter.typeError(0000_error, _typeClassDefinition.location(), "Function " + functionName + " does not depend on class variable.");
+			m_errorReporter.typeError(1723_error, _typeClassDefinition.location(), "Function " + functionName + " does not depend on class variable.");
 		if (typeVars.size() > 2)
-			m_errorReporter.typeError(0000_error, _typeClassDefinition.location(), "Function " + functionName + " depends on multiple type variables.");
+			m_errorReporter.typeError(6387_error, _typeClassDefinition.location(), "Function " + functionName + " depends on multiple type variables.");
 		if (!m_env->typeEquals(typeVars.front(), typeVar))
-			m_errorReporter.typeError(0000_error, _typeClassDefinition.location(), "Function " + functionName + " depends on invalid type variable.");
+			m_errorReporter.typeError(1807_error, _typeClassDefinition.location(), "Function " + functionName + " depends on invalid type variable.");
 	}
 
 	unify(getType(_typeClassDefinition.typeVariable()), m_typeSystem.freshTypeVariable({{typeClass}}), _typeClassDefinition.location());
@@ -324,12 +324,12 @@ bool TypeInference::visit(ElementaryTypeNameExpression const& _expression)
 		}
 		else
 		{
-			m_errorReporter.typeError(0000_error, _expression.location(), "No type constructor registered for elementary type name.");
+			m_errorReporter.typeError(4107_error, _expression.location(), "No type constructor registered for elementary type name.");
 			expressionAnnotation.type = m_typeSystem.freshTypeVariable({});
 		}
 		break;
 	case ExpressionContext::Sort:
-		m_errorReporter.typeError(0000_error, _expression.location(), "Elementary type name expression not supported in sort context.");
+		m_errorReporter.typeError(2024_error, _expression.location(), "Elementary type name expression not supported in sort context.");
 		expressionAnnotation.type = m_typeSystem.freshTypeVariable({});
 		break;
 	}
@@ -373,7 +373,7 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		}
 		else
 		{
-			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Binary operation in term context not yet supported.");
+			m_errorReporter.typeError(4504_error, _binaryOperation.location(), "Binary operation in term context not yet supported.");
 			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
 		}
 		return false;
@@ -403,12 +403,12 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		}
 		else
 		{
-			m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Invalid binary operations in type context.");
+			m_errorReporter.typeError(1439_error, _binaryOperation.location(), "Invalid binary operations in type context.");
 			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
 		}
 		return false;
 	case ExpressionContext::Sort:
-		m_errorReporter.typeError(0000_error, _binaryOperation.location(), "Invalid binary operation in sort context.");
+		m_errorReporter.typeError(1017_error, _binaryOperation.location(), "Invalid binary operation in sort context.");
 		operationAnnotation.type = m_typeSystem.freshTypeVariable({});
 		return false;
 	}
@@ -420,7 +420,7 @@ void TypeInference::endVisit(VariableDeclarationStatement const& _variableDeclar
 	solAssert(m_expressionContext == ExpressionContext::Term);
 	if (_variableDeclarationStatement.declarations().size () != 1)
 	{
-		m_errorReporter.typeError(0000_error, _variableDeclarationStatement.location(), "Multi variable declaration not supported.");
+		m_errorReporter.typeError(2655_error, _variableDeclarationStatement.location(), "Multi variable declaration not supported.");
 		return;
 	}
 	Type variableType = getType(*_variableDeclarationStatement.declarations().front());
@@ -456,7 +456,7 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 		}
 		return false;
 	case ExpressionContext::Sort:
-		m_errorReporter.typeError(0000_error, _variableDeclaration.location(), "Variable declaration in sort context.");
+		m_errorReporter.typeError(2399_error, _variableDeclaration.location(), "Variable declaration in sort context.");
 		variableAnnotation.type = m_typeSystem.freshTypeVariable({});
 		return false;
 	}
@@ -470,7 +470,7 @@ void TypeInference::endVisit(IfStatement const& _ifStatement)
 
 	if (m_expressionContext != ExpressionContext::Term)
 	{
-		m_errorReporter.typeError(0000_error, _ifStatement.location(), "If statement outside term context.");
+		m_errorReporter.typeError(2015_error, _ifStatement.location(), "If statement outside term context.");
 		ifAnnotation.type = m_typeSystem.freshTypeVariable({});
 		return;
 	}
@@ -487,7 +487,7 @@ void TypeInference::endVisit(Assignment const& _assignment)
 
 	if (m_expressionContext != ExpressionContext::Term)
 	{
-		m_errorReporter.typeError(0000_error, _assignment.location(), "Assignment outside term context.");
+		m_errorReporter.typeError(4337_error, _assignment.location(), "Assignment outside term context.");
 		assignmentAnnotation.type = m_typeSystem.freshTypeVariable({});
 		return;
 	}
@@ -512,7 +512,7 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		{
 			SecondarySourceLocation ssl;
 			ssl.append("Referenced node.", _declaration.location());
-			m_errorReporter.fatalTypeError(0000_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
+			m_errorReporter.fatalTypeError(3101_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
 		}
 
 		auto& declarationAnnotation = annotation(_declaration);
@@ -548,7 +548,7 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		{
 			SecondarySourceLocation ssl;
 			ssl.append("Referenced node.", _declaration.location());
-			m_errorReporter.fatalTypeError(0000_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
+			m_errorReporter.fatalTypeError(2217_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
 		}
 
 		// TODO: Assert that this is a type class variable declaration?
@@ -574,14 +574,14 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 			typeClass->accept(*this);
 			if (!annotation(*typeClass).typeClass)
 			{
-				m_errorReporter.typeError(0000_error, _location, "Unregistered type class.");
+				m_errorReporter.typeError(2736_error, _location, "Unregistered type class.");
 				return m_typeSystem.freshTypeVariable({});
 			}
 			return m_typeSystem.freshTypeVariable(Sort{{*annotation(*typeClass).typeClass}});
 		}
 		else
 		{
-			m_errorReporter.typeError(0000_error, _location, "Expected type class.");
+			m_errorReporter.typeError(2599_error, _location, "Expected type class.");
 			return m_typeSystem.freshTypeVariable({});
 		}
 		break;
@@ -679,12 +679,12 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 				typeClass->accept(*this);
 				// TODO: more error handling? Should be covered by the visit above.
 				if (!annotation(*typeClass).typeClass)
-					m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
+					m_errorReporter.typeError(8503_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
 				return annotation(*typeClass).typeClass;
 			}
 			else
 			{
-				m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
+				m_errorReporter.typeError(9817_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
 				return std::nullopt;
 			}
 		},
@@ -692,7 +692,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			if (auto builtinClass = builtinClassFromToken(_token))
 				if (auto typeClass = util::valueOrNullptr(annotation().builtinClasses, *builtinClass))
 					return *typeClass;
-			m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Invalid type class name.");
+			m_errorReporter.typeError(2658_error, _typeClassInstantiation.location(), "Invalid type class name.");
 			return std::nullopt;
 		}
 	}, _typeClassInstantiation.typeClass().name());
@@ -703,7 +703,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	auto typeConstructor = m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
 	if (!typeConstructor)
 	{
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type constructor.");
+		m_errorReporter.typeError(2138_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type constructor.");
 		return false;
 	}
 
@@ -737,18 +737,18 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		solAssert(functionDefinition);
 		subNode->accept(*this);
 		if (!functionTypes.emplace(functionDefinition->name(), getType(*functionDefinition)).second)
-			m_errorReporter.typeError(0000_error, subNode->location(), "Duplicate definition of function " + functionDefinition->name() + " during type class instantiation.");
+			m_errorReporter.typeError(3654_error, subNode->location(), "Duplicate definition of function " + functionDefinition->name() + " during type class instantiation.");
 	}
 
 	if (auto error = m_typeSystem.instantiateClass(type, arity))
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), *error);
+		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
 
 	auto const& classFunctions = annotation().typeClassFunctions.at(*typeClass);
 
 	TypeEnvironment newEnv = m_env->clone();
 	if (!newEnv.unify(m_typeSystem.typeClassVariable(*typeClass), type).empty())
 	{
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Unification of class and instance variable failed.");
+		m_errorReporter.typeError(4686_error, _typeClassInstantiation.location(), "Unification of class and instance variable failed.");
 		return false;
 	}
 
@@ -756,18 +756,18 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	{
 		if (!functionTypes.count(name))
 		{
-			m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Missing function: " + name);
+			m_errorReporter.typeError(6948_error, _typeClassInstantiation.location(), "Missing function: " + name);
 			continue;
 		}
 		Type instanceFunctionType = functionTypes.at(name);
 		functionTypes.erase(name);
 
 		if (!newEnv.typeEquals(instanceFunctionType, classFunctionType))
-			m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Type mismatch for function " + name + " " + TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType) + " != " + TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType));
+			m_errorReporter.typeError(7428_error, _typeClassInstantiation.location(), "Type mismatch for function " + name + " " + TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType) + " != " + TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType));
 	}
 
 	if (!functionTypes.empty())
-		m_errorReporter.typeError(0000_error, _typeClassInstantiation.location(), "Additional functions in class instantiation.");
+		m_errorReporter.typeError(4873_error, _typeClassInstantiation.location(), "Additional functions in class instantiation.");
 
 	return false;
 }
@@ -776,7 +776,7 @@ bool TypeInference::visit(MemberAccess const& _memberAccess)
 {
 	if (m_expressionContext != ExpressionContext::Term)
 	{
-		m_errorReporter.typeError(0000_error, _memberAccess.location(), "Member access outside term context.");
+		m_errorReporter.typeError(5195_error, _memberAccess.location(), "Member access outside term context.");
 		annotation(_memberAccess).type = m_typeSystem.freshTypeVariable({});
 		return false;
 	}
@@ -794,13 +794,13 @@ experimental::Type TypeInference::memberType(Type _type, std::string _memberName
 			return polymorphicInstance(typeMember->type);
 		else
 		{
-			m_errorReporter.typeError(0000_error, _location, fmt::format("Member {} not found in type {}.", _memberName, TypeEnvironmentHelpers{*m_env}.typeToString(_type)));
+			m_errorReporter.typeError(5755_error, _location, fmt::format("Member {} not found in type {}.", _memberName, TypeEnvironmentHelpers{*m_env}.typeToString(_type)));
 			return m_typeSystem.freshTypeVariable({});
 		}
 	}
 	else
 	{
-		m_errorReporter.typeError(0000_error, _location, "Unsupported member access expression.");
+		m_errorReporter.typeError(5104_error, _location, "Unsupported member access expression.");
 		return m_typeSystem.freshTypeVariable({});
 	}
 }
@@ -872,7 +872,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 			argTypes.emplace_back(getType(*arg));
 			break;
 		case ExpressionContext::Sort:
-			m_errorReporter.typeError(0000_error, _functionCall.location(), "Function call in sort context.");
+			m_errorReporter.typeError(9173_error, _functionCall.location(), "Function call in sort context.");
 			functionCallAnnotation.type = m_typeSystem.freshTypeVariable({});
 			break;
 		}
@@ -1063,18 +1063,18 @@ bool TypeInference::visit(Literal const& _literal)
 	auto& literalAnnotation = annotation(_literal);
 	if (_literal.token() != Token::Number)
 	{
-		m_errorReporter.typeError(0000_error, _literal.location(), "Only number literals are supported.");
+		m_errorReporter.typeError(4316_error, _literal.location(), "Only number literals are supported.");
 		return false;
 	}
 	std::optional<rational> value = rationalValue(_literal);
 	if (!value)
 	{
-		m_errorReporter.typeError(0000_error, _literal.location(), "Invalid number literals.");
+		m_errorReporter.typeError(6739_error, _literal.location(), "Invalid number literals.");
 		return false;
 	}
 	if (value->denominator() != 1)
 	{
-		m_errorReporter.typeError(0000_error, _literal.location(), "Only integers are supported.");
+		m_errorReporter.typeError(2345_error, _literal.location(), "Only integers are supported.");
 		return false;
 	}
 	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{annotation().builtinClasses.at(BuiltinClass::Integer)}});
@@ -1138,7 +1138,7 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 									for (auto activeInstantiation: m_activeInstantiations)
 										ssl.append("Involved instantiation", activeInstantiation->location());
 									m_errorReporter.typeError(
-										0000_error,
+										3573_error,
 										_location,
 										ssl,
 										"Recursion during type class instantiation."
@@ -1175,7 +1175,7 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 		std::visit(util::GenericVisitor{
 			[&](TypeEnvironment::TypeMismatch _typeMismatch) {
 				m_errorReporter.typeError(
-					0000_error,
+					8456_error,
 					_location,
 					fmt::format(
 						"Cannot unify {} and {}.",
@@ -1184,7 +1184,7 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 				);
 			},
 			[&](TypeEnvironment::SortMismatch _sortMismatch) {
-				m_errorReporter.typeError(0000_error, _location, fmt::format(
+				m_errorReporter.typeError(3111_error, _location, fmt::format(
 					"{} does not have sort {}",
 					envHelper.typeToString(_sortMismatch.type),
 					TypeSystemHelpers{m_typeSystem}.sortToString(_sortMismatch.sort)
@@ -1192,7 +1192,7 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 			},
 			[&](TypeEnvironment::RecursiveUnification _recursiveUnification) {
 				m_errorReporter.typeError(
-					0000_error,
+					6460_error,
 					_location,
 					fmt::format(
 						"Recursive unification: {} occurs in {}.",
@@ -1214,7 +1214,7 @@ TypeConstructor TypeInference::typeConstructor(Declaration const* _type) const
 {
 	if (auto const& constructor = m_analysis.annotation<TypeRegistration>(*_type).typeConstructor)
 		return *constructor;
-	m_errorReporter.fatalTypeError(0000_error, _type->location(), "Unregistered type.");
+	m_errorReporter.fatalTypeError(5904_error, _type->location(), "Unregistered type.");
 	util::unreachable();
 }
 experimental::Type TypeInference::type(Declaration const* _type, std::vector<Type> _arguments) const
@@ -1224,7 +1224,7 @@ experimental::Type TypeInference::type(Declaration const* _type, std::vector<Typ
 
 bool TypeInference::visitNode(ASTNode const& _node)
 {
-	m_errorReporter.fatalTypeError(0000_error, _node.location(), "Unsupported AST node during type inference.");
+	m_errorReporter.fatalTypeError(5348_error, _node.location(), "Unsupported AST node during type inference.");
 	return false;
 }
 
