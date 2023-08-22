@@ -38,10 +38,9 @@ using namespace solidity::frontend::test;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
-SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery): CommonSyntaxTest(_filename, _evmVersion)
+SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion): CommonSyntaxTest(_filename, _evmVersion)
 {
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
-	m_parserErrorRecovery = _parserErrorRecovery;
 }
 
 void SyntaxTest::setupCompiler()
@@ -49,7 +48,6 @@ void SyntaxTest::setupCompiler()
 	compiler().reset();
 	compiler().setSources(withPreamble(m_sources.sources));
 	compiler().setEVMVersion(m_evmVersion);
-	compiler().setParserErrorRecovery(m_parserErrorRecovery);
 	compiler().setOptimiserSettings(
 		m_optimiseYul ?
 		OptimiserSettings::full() :

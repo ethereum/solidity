@@ -43,7 +43,6 @@ static string const g_strBasePath = "base-path";
 static string const g_strIncludePath = "include-path";
 static string const g_strAssemble = "assemble";
 static string const g_strCombinedJson = "combined-json";
-static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEOFVersion = "experimental-eof-version";
@@ -226,7 +225,6 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		input.includePaths == _other.input.includePaths &&
 		input.allowedDirectories == _other.input.allowedDirectories &&
 		input.ignoreMissingFiles == _other.input.ignoreMissingFiles &&
-		input.errorRecovery == _other.input.errorRecovery &&
 		output.dir == _other.output.dir &&
 		output.overwriteFiles == _other.output.overwriteFiles &&
 		output.evmVersion == _other.output.evmVersion &&
@@ -569,10 +567,6 @@ General Information)").c_str(),
 		(
 			g_strIgnoreMissingFiles.c_str(),
 			"Ignore missing files."
-		)
-		(
-			g_strErrorRecovery.c_str(),
-			"Enables additional parser error recovery."
 		)
 	;
 	desc.add(inputOptions);
@@ -962,7 +956,6 @@ void CommandLineParser::processArgs()
 
 	map<string, set<InputMode>> validOptionInputModeCombinations = {
 		// TODO: This should eventually contain all options.
-		{g_strErrorRecovery, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strExperimentalViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strViaIR, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
 		{g_strMetadataLiteral, {InputMode::Compiler, InputMode::CompilerWithASTImport}},
@@ -1369,8 +1362,6 @@ void CommandLineParser::processArgs()
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);
 	m_options.output.viaIR = (m_args.count(g_strExperimentalViaIR) > 0 || m_args.count(g_strViaIR) > 0);
-	if (m_options.input.mode == InputMode::Compiler)
-		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport);
 }

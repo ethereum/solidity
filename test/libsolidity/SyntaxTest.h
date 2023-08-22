@@ -39,13 +39,9 @@ class SyntaxTest: public AnalysisFramework, public solidity::test::CommonSyntaxT
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, false);
+		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
 	}
-	static std::unique_ptr<TestCase> createErrorRecovery(Config const& _config)
-	{
-		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, true);
-	}
-	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery = false);
+	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 
 protected:
 	virtual void setupCompiler();
@@ -53,7 +49,6 @@ protected:
 	virtual void filterObtainedErrors();
 
 	bool m_optimiseYul = true;
-	bool m_parserErrorRecovery = false;
 };
 
 }

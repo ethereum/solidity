@@ -173,16 +173,13 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, std::vector<Tok
 		static SemVerVersion const currentVersion{std::string(VersionString)};
 		// FIXME: only match for major version incompatibility
 		if (!matchExpression.matches(currentVersion))
-			// If m_parserErrorRecovery is true, the same message will appear from SyntaxChecker::visit(),
-			// so we don't need to report anything here.
-			if (!m_parserErrorRecovery)
-				m_errorReporter.fatalParserError(
-					5333_error,
-					_location,
-					"Source file requires different compiler version (current compiler is " +
-					std::string(VersionString) + ") - note that nightly builds are considered to be "
-					"strictly less than the released version"
-				);
+			m_errorReporter.fatalParserError(
+				5333_error,
+				_location,
+				"Source file requires different compiler version (current compiler is " +
+				std::string(VersionString) + ") - note that nightly builds are considered to be "
+				"strictly less than the released version"
+			);
 	}
 	catch (SemVerError const& matchError)
 	{
@@ -364,78 +361,62 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	std::vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	std::vector<ASTPointer<ASTNode>> subNodes;
 	std::pair<ContractKind, bool> contractKind{};
-	try
-	{
-		documentation = parseStructuredDocumentation();
-		contractKind = parseContractKind();
-		tie(name, nameLocation) = expectIdentifierWithLocation();
-		if (m_scanner->currentToken() == Token::Is)
-			do
-			{
-				advance();
-				baseContracts.push_back(parseInheritanceSpecifier());
-			}
-			while (m_scanner->currentToken() == Token::Comma);
-		expectToken(Token::LBrace);
-		while (true)
+	documentation = parseStructuredDocumentation();
+	contractKind = parseContractKind();
+	std::tie(name, nameLocation) = expectIdentifierWithLocation();
+	if (m_scanner->currentToken() == Token::Is)
+		do
 		{
-			Token currentTokenValue = m_scanner->currentToken();
-			if (currentTokenValue == Token::RBrace)
-				break;
-			else if (
-				(currentTokenValue == Token::Function && m_scanner->peekNextToken() != Token::LParen) ||
-				currentTokenValue == Token::Constructor ||
-				currentTokenValue == Token::Receive ||
-				currentTokenValue == Token::Fallback
-			)
-				subNodes.push_back(parseFunctionDefinition());
-			else if (currentTokenValue == Token::Struct)
-				subNodes.push_back(parseStructDefinition());
-			else if (currentTokenValue == Token::Enum)
-				subNodes.push_back(parseEnumDefinition());
-			else if (currentTokenValue == Token::Type)
-				subNodes.push_back(parseUserDefinedValueTypeDefinition());
-			else if (
-				// Workaround because `error` is not a keyword.
-				currentTokenValue == Token::Identifier &&
-				currentLiteral() == "error" &&
-				m_scanner->peekNextToken() == Token::Identifier &&
-				m_scanner->peekNextNextToken() == Token::LParen
-			)
-				subNodes.push_back(parseErrorDefinition());
-			else if (variableDeclarationStart())
-			{
-				VarDeclParserOptions options;
-				options.kind = VarDeclKind::State;
-				options.allowInitialValue = true;
-				subNodes.push_back(parseVariableDeclaration(options));
-				expectToken(Token::Semicolon);
-			}
-			else if (currentTokenValue == Token::Modifier)
-				subNodes.push_back(parseModifierDefinition());
-			else if (currentTokenValue == Token::Event)
-				subNodes.push_back(parseEventDefinition());
-			else if (currentTokenValue == Token::Using)
-				subNodes.push_back(parseUsingDirective());
-			else
-				fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
+			advance();
+			baseContracts.push_back(parseInheritanceSpecifier());
 		}
-	}
-	catch (FatalError const&)
+		while (m_scanner->currentToken() == Token::Comma);
+	expectToken(Token::LBrace);
+	while (true)
 	{
-		if (
-			!m_errorReporter.hasErrors() ||
-			!m_parserErrorRecovery ||
-			m_errorReporter.hasExcessiveErrors()
+		Token currentTokenValue = m_scanner->currentToken();
+		if (currentTokenValue == Token::RBrace)
+			break;
+		else if (
+			(currentTokenValue == Token::Function && m_scanner->peekNextToken() != Token::LParen) ||
+			currentTokenValue == Token::Constructor ||
+			currentTokenValue == Token::Receive ||
+			currentTokenValue == Token::Fallback
 		)
-			BOOST_THROW_EXCEPTION(FatalError()); /* Don't try to recover here. */
-		m_inParserRecovery = true;
+			subNodes.push_back(parseFunctionDefinition());
+		else if (currentTokenValue == Token::Struct)
+			subNodes.push_back(parseStructDefinition());
+		else if (currentTokenValue == Token::Enum)
+			subNodes.push_back(parseEnumDefinition());
+		else if (currentTokenValue == Token::Type)
+			subNodes.push_back(parseUserDefinedValueTypeDefinition());
+		else if (
+			// Workaround because `error` is not a keyword.
+			currentTokenValue == Token::Identifier &&
+			currentLiteral() == "error" &&
+			m_scanner->peekNextToken() == Token::Identifier &&
+			m_scanner->peekNextNextToken() == Token::LParen
+		)
+			subNodes.push_back(parseErrorDefinition());
+		else if (variableDeclarationStart())
+		{
+			VarDeclParserOptions options;
+			options.kind = VarDeclKind::State;
+			options.allowInitialValue = true;
+			subNodes.push_back(parseVariableDeclaration(options));
+			expectToken(Token::Semicolon);
+		}
+		else if (currentTokenValue == Token::Modifier)
+			subNodes.push_back(parseModifierDefinition());
+		else if (currentTokenValue == Token::Event)
+			subNodes.push_back(parseEventDefinition());
+		else if (currentTokenValue == Token::Using)
+			subNodes.push_back(parseUsingDirective());
+		else
+			fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
 	}
 	nodeFactory.markEndPosition();
-	if (m_inParserRecovery)
-		expectTokenOrConsumeUntil(Token::RBrace, "ContractDefinition");
-	else
-		expectToken(Token::RBrace);
+	expectToken(Token::RBrace);
 	return nodeFactory.createNode<ContractDefinition>(
 		name,
 		nameLocation,
@@ -1295,26 +1276,10 @@ ASTPointer<Block> Parser::parseBlock(bool _allowUnchecked, ASTPointer<ASTString>
 	}
 	expectToken(Token::LBrace);
 	std::vector<ASTPointer<Statement>> statements;
-	try
-	{
-		while (m_scanner->currentToken() != Token::RBrace)
-			statements.push_back(parseStatement(true));
-		nodeFactory.markEndPosition();
-	}
-	catch (FatalError const&)
-	{
-		if (
-			!m_errorReporter.hasErrors() ||
-			!m_parserErrorRecovery ||
-			m_errorReporter.hasExcessiveErrors()
-		)
-			BOOST_THROW_EXCEPTION(FatalError()); /* Don't try to recover here. */
-		m_inParserRecovery = true;
-	}
-	if (m_inParserRecovery)
-		expectTokenOrConsumeUntil(Token::RBrace, "Block");
-	else
-		expectToken(Token::RBrace);
+	while (m_scanner->currentToken() != Token::RBrace)
+		statements.push_back(parseStatement(true));
+	nodeFactory.markEndPosition();
+	expectToken(Token::RBrace);
 	return nodeFactory.createNode<Block>(_docString, unchecked, statements);
 }
 
@@ -1323,86 +1288,70 @@ ASTPointer<Statement> Parser::parseStatement(bool _allowUnchecked)
 	RecursionGuard recursionGuard(*this);
 	ASTPointer<ASTString> docString;
 	ASTPointer<Statement> statement;
-	try
+	if (m_scanner->currentCommentLiteral() != "")
+		docString = std::make_shared<ASTString>(m_scanner->currentCommentLiteral());
+	switch (m_scanner->currentToken())
 	{
-		if (m_scanner->currentCommentLiteral() != "")
-			docString = std::make_shared<ASTString>(m_scanner->currentCommentLiteral());
-		switch (m_scanner->currentToken())
-		{
-		case Token::If:
-			return parseIfStatement(docString);
-		case Token::While:
-			return parseWhileStatement(docString);
-		case Token::Do:
-			return parseDoWhileStatement(docString);
-		case Token::For:
-			return parseForStatement(docString);
-		case Token::Unchecked:
-		case Token::LBrace:
-			return parseBlock(_allowUnchecked, docString);
-		case Token::Continue:
-			statement = ASTNodeFactory(*this).createNode<Continue>(docString);
-			advance();
-			break;
-		case Token::Break:
-			statement = ASTNodeFactory(*this).createNode<Break>(docString);
-			advance();
-			break;
-		case Token::Return:
-		{
-			ASTNodeFactory nodeFactory(*this);
-			ASTPointer<Expression> expression;
-			if (advance() != Token::Semicolon)
-				{
-					expression = parseExpression();
-					nodeFactory.setEndPositionFromNode(expression);
-				}
-			statement = nodeFactory.createNode<Return>(docString, expression);
-				break;
-		}
-		case Token::Throw:
-		{
-			statement = ASTNodeFactory(*this).createNode<Throw>(docString);
-			advance();
-			break;
-		}
-		case Token::Try:
-			return parseTryStatement(docString);
-		case Token::Assembly:
-			return parseInlineAssembly(docString);
-		case Token::Emit:
-			statement = parseEmitStatement(docString);
-			break;
-		case Token::Identifier:
-			if (m_scanner->currentLiteral() == "revert" && m_scanner->peekNextToken() == Token::Identifier)
-				statement = parseRevertStatement(docString);
-			else if (m_insideModifier && m_scanner->currentLiteral() == "_")
+	case Token::If:
+		return parseIfStatement(docString);
+	case Token::While:
+		return parseWhileStatement(docString);
+	case Token::Do:
+		return parseDoWhileStatement(docString);
+	case Token::For:
+		return parseForStatement(docString);
+	case Token::Unchecked:
+	case Token::LBrace:
+		return parseBlock(_allowUnchecked, docString);
+	case Token::Continue:
+		statement = ASTNodeFactory(*this).createNode<Continue>(docString);
+		advance();
+		break;
+	case Token::Break:
+		statement = ASTNodeFactory(*this).createNode<Break>(docString);
+		advance();
+		break;
+	case Token::Return:
+	{
+		ASTNodeFactory nodeFactory(*this);
+		ASTPointer<Expression> expression;
+		if (advance() != Token::Semicolon)
 			{
-				statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
-				advance();
+				expression = parseExpression();
+				nodeFactory.setEndPositionFromNode(expression);
 			}
-			else
-				statement = parseSimpleStatement(docString);
+		statement = nodeFactory.createNode<Return>(docString, expression);
 			break;
-		default:
-			statement = parseSimpleStatement(docString);
-			break;
-		}
 	}
-	catch (FatalError const&)
+	case Token::Throw:
 	{
-		if (
-			!m_errorReporter.hasErrors() ||
-			!m_parserErrorRecovery ||
-			m_errorReporter.hasExcessiveErrors()
-		)
-			BOOST_THROW_EXCEPTION(FatalError()); /* Don't try to recover here. */
-		m_inParserRecovery = true;
+		statement = ASTNodeFactory(*this).createNode<Throw>(docString);
+		advance();
+		break;
 	}
-	if (m_inParserRecovery)
-		expectTokenOrConsumeUntil(Token::Semicolon, "Statement");
-	else
-		expectToken(Token::Semicolon);
+	case Token::Try:
+		return parseTryStatement(docString);
+	case Token::Assembly:
+		return parseInlineAssembly(docString);
+	case Token::Emit:
+		statement = parseEmitStatement(docString);
+		break;
+	case Token::Identifier:
+		if (m_scanner->currentLiteral() == "revert" && m_scanner->peekNextToken() == Token::Identifier)
+			statement = parseRevertStatement(docString);
+		else if (m_insideModifier && m_scanner->currentLiteral() == "_")
+		{
+			statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
+			advance();
+		}
+		else
+			statement = parseSimpleStatement(docString);
+		break;
+	default:
+		statement = parseSimpleStatement(docString);
+		break;
+	}
+	expectToken(Token::Semicolon);
 	return statement;
 }
 
