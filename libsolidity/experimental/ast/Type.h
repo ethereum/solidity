@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+#include <cstddef>
 #include <set>
 #include <variant>
 #include <vector>
@@ -86,8 +87,8 @@ public:
 	}
 private:
 	friend class TypeSystem;
-	TypeConstructor(size_t _index): m_index(_index) {}
-	size_t m_index = 0;
+	TypeConstructor(std::size_t _index): m_index(_index) {}
+	std::size_t m_index = 0;
 };
 
 struct TypeConstant
@@ -119,8 +120,8 @@ public:
 	}
 private:
 	friend class TypeSystem;
-	TypeClass(size_t _index): m_index(_index) {}
-	size_t m_index = 0;
+	TypeClass(std::size_t _index): m_index(_index) {}
+	std::size_t m_index = 0;
 };
 
 struct Sort
@@ -141,13 +142,13 @@ struct Arity
 
 struct TypeVariable
 {
-	size_t index() const { return m_index; }
+	std::size_t index() const { return m_index; }
 	Sort const& sort() const { return m_sort; }
 private:
 	friend class TypeSystem;
-	size_t m_index = 0;
+	std::size_t m_index = 0;
 	Sort m_sort;
-	TypeVariable(size_t _index, Sort _sort): m_index(_index), m_sort(std::move(_sort)) {}
+	TypeVariable(std::size_t _index, Sort _sort): m_index(_index), m_sort(std::move(_sort)) {}
 };
 
 }

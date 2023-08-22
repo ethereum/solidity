@@ -32,6 +32,8 @@
 
 #include <fmt/format.h>
 
+#include <unordered_map>
+
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
@@ -133,7 +135,7 @@ TypeSystem::TypeSystem()
 
 	m_primitiveTypeClasses.emplace(PrimitiveClass::Type, declarePrimitiveClass("type"));
 
-	for (auto [type, name, arity]: std::initializer_list<std::tuple<PrimitiveType, char const*, uint64_t>>{
+	for (auto [type, name, arity]: std::initializer_list<std::tuple<PrimitiveType, char const*, size_t>>{
 		{PrimitiveType::TypeFunction, "tfun", 2},
 		{PrimitiveType::Function, "fun", 2},
 		{PrimitiveType::Function, "itself", 1},
@@ -157,7 +159,7 @@ TypeSystem::TypeSystem()
 
 experimental::Type TypeSystem::freshVariable(Sort _sort)
 {
-	uint64_t index = m_numTypeVariables++;
+	size_t index = m_numTypeVariables++;
 	return TypeVariable(index, std::move(_sort));
 }
 
