@@ -669,14 +669,15 @@ void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) con
 void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePrefix)
 {
 	auto& settings = m_reader.settings();
-	if (settings.empty())
+	if (settings.empty() && m_requiresYulOptimizer == RequiresYulOptimizer::False)
 		return;
 
 	_stream << _linePrefix << "// ====" << endl;
+	if (m_requiresYulOptimizer != RequiresYulOptimizer::False)
+		_stream << _linePrefix << "// requiresYulOptimizer: " << m_requiresYulOptimizer << endl;
+
 	for (auto const& [settingName, settingValue]: settings)
-		if (settingName == "requiresYulOptimizer")
-			_stream << _linePrefix << "// " << settingName << ": " << m_requiresYulOptimizer << endl;
-		else
+		if (settingName != "requiresYulOptimizer")
 			_stream << _linePrefix << "// " << settingName << ": " << settingValue<< endl;
 }
 
