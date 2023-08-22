@@ -1118,7 +1118,12 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 
 	if (!m_activeInstantiations.empty())
 	{
-		// Attempt to resolve interdependencies between type class instantiations.
+		// TODO: This entire logic is superfluous - I thought mutually recursive dependencies between
+		// class instantiations are a problem, but in fact they're not, they just resolve to mutually recursive
+		// functions that are fine. So instead, all instantiations can be registered with the type system directly
+		// when visiting the type class (assuming that they all work out) - and then all instantiations can be checked
+		// individually, which should still catch all actual issues (while allowing recursions).
+		// Original comment: Attempt to resolve interdependencies between type class instantiations.
 		std::vector<TypeClassInstantiation const*> missingInstantiations;
 		bool recursion = false;
 		bool onlyMissingInstantiations = [&]() {
