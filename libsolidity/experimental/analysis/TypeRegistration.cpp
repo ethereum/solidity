@@ -61,7 +61,7 @@ bool TypeRegistration::visit(ElementaryTypeName const& _typeName)
 	if (annotation(_typeName).typeConstructor)
 		return false;
 	annotation(_typeName).typeConstructor = [&]() -> std::optional<TypeConstructor> {
-		switch(_typeName.typeName().token())
+		switch (_typeName.typeName().token())
 		{
 		case Token::Void:
 			return m_typeSystem.constructor(PrimitiveType::Void);

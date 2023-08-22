@@ -304,7 +304,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		}
 		std::string name = splitName.front();
 		auto declarations = m_resolver.nameFromCurrentScope(name);
-		switch(declarations.size())
+		switch (declarations.size())
 		{
 		case 0:
 			if (splitName.size() > 1)

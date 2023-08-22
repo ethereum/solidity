@@ -1063,7 +1063,7 @@ void TypeClassInstantiation::accept(ASTVisitor& _visitor)
 	if (_visitor.visit(*this))
 	{
 		m_typeConstructor->accept(_visitor);
-		if(m_argumentSorts)
+		if (m_argumentSorts)
 			m_argumentSorts->accept(_visitor);
 		m_class->accept(_visitor);
 		listAccept(m_subNodes, _visitor);
@@ -1076,7 +1076,7 @@ void TypeClassInstantiation::accept(ASTConstVisitor& _visitor) const
 	if (_visitor.visit(*this))
 	{
 		m_typeConstructor->accept(_visitor);
-		if(m_argumentSorts)
+		if (m_argumentSorts)
 			m_argumentSorts->accept(_visitor);
 		m_class->accept(_visitor);
 		listAccept(m_subNodes, _visitor);

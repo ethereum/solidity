@@ -2076,7 +2076,7 @@ int Parser::tokenPrecedence(Token _token) const
 {
 	if (m_experimentalSolidityEnabledInCurrentSourceUnit)
 	{
-		switch(_token)
+		switch (_token)
 		{
 		case Token::Colon:
 			return 1000;

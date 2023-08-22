@@ -307,8 +307,8 @@ namespace TokenTraits
 	constexpr bool isElementaryTypeName(Token tok)
 	{
 		return (Token::Int <= tok && tok < Token::TypesEnd) ||
-			   tok == Token::Word || tok == Token::Void || tok == Token::Integer ||
-			   tok == Token::Pair || tok == Token::Unit || tok == Token::Fun;
+			tok == Token::Word || tok == Token::Void || tok == Token::Integer ||
+			tok == Token::Pair || tok == Token::Unit || tok == Token::Fun;
 	}
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
@@ -344,7 +344,7 @@ namespace TokenTraits
 	constexpr bool isBuiltinTypeClassName(Token tok)
 	{
 		return tok == Token::Integer || (isBinaryOp(tok) && tok != Token::Comma) ||
-			   isCompareOp(tok) || isUnaryOp(tok) || (isAssignmentOp(tok) && tok != Token::Assign);
+			isCompareOp(tok) || isUnaryOp(tok) || (isAssignmentOp(tok) && tok != Token::Assign);
 	}
 	constexpr bool isExperimentalSolidityKeyword(Token tok)
 	{

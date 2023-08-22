@@ -46,7 +46,8 @@ std::string IRGeneratorForStatements::generate(ASTNode const& _node)
 }
 
 
-namespace {
+namespace
+{
 
 struct CopyTranslate: public yul::ASTCopier
 {
@@ -300,7 +301,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	auto declaration = m_expressionDeclaration.at(&_functionCall.expression());
 	if (auto builtin = std::get_if<Builtins>(&declaration))
 	{
-		switch(*builtin)
+		switch (*builtin)
 		{
 		case Builtins::FromBool:
 		case Builtins::Identity:

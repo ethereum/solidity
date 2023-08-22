@@ -2511,11 +2511,11 @@ public:
 		ASTPointer<TypeClassName> _class,
 		std::vector<ASTPointer<ASTNode>> _subNodes
 	):
-		   ASTNode(_id, _location),
-		   m_typeConstructor(std::move(_typeConstructor)),
-		   m_argumentSorts(std::move(_argumentSorts)),
-		   m_class(std::move(_class)),
-		   m_subNodes(std::move(_subNodes))
+		ASTNode(_id, _location),
+		m_typeConstructor(std::move(_typeConstructor)),
+		m_argumentSorts(std::move(_argumentSorts)),
+		m_class(std::move(_class)),
+		m_subNodes(std::move(_subNodes))
 	{}
 
 	void accept(ASTVisitor& _visitor) override;
