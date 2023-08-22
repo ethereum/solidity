@@ -295,7 +295,8 @@ optional<AnnotatedEventSignature> SemanticTest::matchEvent(util::h256 const& has
 
 frontend::OptimiserSettings SemanticTest::optimizerSettingsFor(RequiresYulOptimizer _requiresYulOptimizer)
 {
-	switch (_requiresYulOptimizer) {
+	switch (_requiresYulOptimizer)
+	{
 	case RequiresYulOptimizer::False:
 		return OptimiserSettings::minimal();
 	case RequiresYulOptimizer::MinimalStack:
