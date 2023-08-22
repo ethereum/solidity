@@ -54,7 +54,7 @@ using namespace solidity::frontend::experimental;
 std::optional<TypeConstructor> experimental::typeConstructorFromToken(Analysis const& _analysis, langutil::Token _token)
 {
 	TypeSystem const& typeSystem = _analysis.typeSystem();
-	switch(_token)
+	switch (_token)
 	{
 	case Token::Void:
 		return typeSystem.builtinConstructor(BuiltinType::Void);
@@ -142,7 +142,7 @@ std::vector<experimental::Type> TypeSystemHelpers::destTupleType(Type _tupleType
 	std::vector<Type> result;
 	result.emplace_back(arguments.front());
 	Type tail = arguments.back();
-	while(true)
+	while (true)
 	{
 		if (!isTypeConstant(tail))
 			break;
@@ -184,7 +184,7 @@ std::vector<experimental::Type> TypeSystemHelpers::destSumType(Type _tupleType) 
 	std::vector<Type> result;
 	result.emplace_back(arguments.front());
 	Type tail = arguments.back();
-	while(true)
+	while (true)
 	{
 		if (!isTypeConstant(tail))
 			break;
@@ -338,22 +338,22 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 {
 	std::map<TypeConstructor, std::function<std::string(std::vector<Type>)>> formatters{
 		{env.typeSystem().constructor(PrimitiveType::Function), [&](auto const& _args) {
-			 solAssert(_args.size() == 2);
-			 return fmt::format("{} -> {}", typeToString(_args.front()), typeToString(_args.back()));
-		 }},
+			solAssert(_args.size() == 2);
+			return fmt::format("{} -> {}", typeToString(_args.front()), typeToString(_args.back()));
+		}},
 		{env.typeSystem().constructor(PrimitiveType::Unit), [&](auto const& _args) {
-			 solAssert(_args.size() == 0);
-			 return "()";
-		 }},
+			solAssert(_args.size() == 0);
+			return "()";
+		}},
 		{env.typeSystem().constructor(PrimitiveType::Pair), [&](auto const& _arguments) {
-			 auto tupleTypes = TypeSystemHelpers{env.typeSystem()}.destTupleType(_arguments.back());
-			 std::string result = "(";
-			 result += typeToString(_arguments.front());
-			 for (auto type: tupleTypes)
-				 result += ", " + typeToString(type);
-			 result += ")";
-			 return result;
-		 }},
+			auto tupleTypes = TypeSystemHelpers{env.typeSystem()}.destTupleType(_arguments.back());
+			std::string result = "(";
+			result += typeToString(_arguments.front());
+			for (auto type: tupleTypes)
+				result += ", " + typeToString(type);
+			result += ")";
+			return result;
+		}},
 	};
 	return std::visit(util::GenericVisitor{
 		[&](TypeConstant const& _type) {

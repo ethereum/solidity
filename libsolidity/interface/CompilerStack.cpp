@@ -486,7 +486,7 @@ bool CompilerStack::analyze()
 			for (Source const* source: m_sourceOrder)
 				if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
 					noErrors = false;
- 		}
+		}
 
 		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)

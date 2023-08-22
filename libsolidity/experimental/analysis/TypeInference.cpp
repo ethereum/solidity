@@ -216,7 +216,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		if (!functionTypes.emplace(functionDefinition->name(), functionType).second)
 			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class declared multiple times.");
 		auto typeVars = TypeEnvironmentHelpers{*m_env}.typeVars(functionType);
-		if(typeVars.size() != 1)
+		if (typeVars.size() != 1)
 			m_errorReporter.fatalTypeError(0000_error, functionDefinition->location(), "Function in type class may only depend on the type class variable.");
 		unify(typeVars.front(), typeVar, functionDefinition->location());
 		typeMembers[functionDefinition->name()] = TypeMember{functionType};
@@ -499,7 +499,7 @@ void TypeInference::endVisit(Assignment const& _assignment)
 
 experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langutil::SourceLocation _location, Declaration const& _declaration)
 {
-	switch(m_expressionContext)
+	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
 	{
@@ -601,7 +601,7 @@ bool TypeInference::visit(Identifier const& _identifier)
 		return false;
 	}
 
-	switch(m_expressionContext)
+	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
 		// TODO: error handling
@@ -791,9 +791,7 @@ experimental::Type TypeInference::memberType(Type _type, std::string _memberName
 	{
 		auto constructor = std::get<0>(helper.destTypeConstant(type));
 		if (auto* typeMember = util::valueOrNullptr(annotation().members.at(constructor), _memberName))
-		{
 			return polymorphicInstance(typeMember->type);
-		}
 		else
 		{
 			m_errorReporter.typeError(0000_error, _location, fmt::format("Member {} not found in type {}.", _memberName, TypeEnvironmentHelpers{*m_env}.typeToString(_type)));
@@ -809,7 +807,7 @@ experimental::Type TypeInference::memberType(Type _type, std::string _memberName
 
 void TypeInference::endVisit(MemberAccess const& _memberAccess)
 {
-	auto &memberAccessAnnotation = annotation(_memberAccess);
+	auto& memberAccessAnnotation = annotation(_memberAccess);
 	solAssert(!memberAccessAnnotation.type);
 	Type expressionType = getType(_memberAccess.expression());
 	memberAccessAnnotation.type = memberType(expressionType, _memberAccess.memberName(), _memberAccess.location());
@@ -820,22 +818,22 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 	TypeSystemHelpers helper{m_typeSystem};
 	auto& typeDefinitionAnnotation = annotation(_typeDefinition);
 	if (typeDefinitionAnnotation.type)
-		 return false;
+		return false;
 
 	if (_typeDefinition.arguments())
-		 _typeDefinition.arguments()->accept(*this);
+		_typeDefinition.arguments()->accept(*this);
 
 	std::optional<Type> underlyingType;
 	if (_typeDefinition.typeExpression())
 	{
-		 ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		 _typeDefinition.typeExpression()->accept(*this);
-		 underlyingType = annotation(*_typeDefinition.typeExpression()).type;
+		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
+		_typeDefinition.typeExpression()->accept(*this);
+		underlyingType = annotation(*_typeDefinition.typeExpression()).type;
 	}
 
 	std::vector<Type> arguments;
 	if (_typeDefinition.arguments())
-		 for (size_t i = 0; i < _typeDefinition.arguments()->parameters().size(); ++i)
+		for (size_t i = 0; i < _typeDefinition.arguments()->parameters().size(); ++i)
 			arguments.emplace_back(m_typeSystem.freshTypeVariable({}));
 
 	Type definedType = type(&_typeDefinition, arguments);
@@ -865,43 +863,43 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 
 	TypeSystemHelpers helper{m_typeSystem};
 	std::vector<Type> argTypes;
-	for(auto arg: _functionCall.arguments())
+	for (auto arg: _functionCall.arguments())
 	{
-		 switch(m_expressionContext)
-		 {
-		 case ExpressionContext::Term:
-		 case ExpressionContext::Type:
+		switch (m_expressionContext)
+		{
+		case ExpressionContext::Term:
+		case ExpressionContext::Type:
 			argTypes.emplace_back(getType(*arg));
 			break;
-		 case ExpressionContext::Sort:
+		case ExpressionContext::Sort:
 			m_errorReporter.typeError(0000_error, _functionCall.location(), "Function call in sort context.");
 			functionCallAnnotation.type = m_typeSystem.freshTypeVariable({});
 			break;
-		 }
+		}
 	}
 
-	switch(m_expressionContext)
+	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
 	{
-		 Type argTuple = helper.tupleType(argTypes);
-		 Type resultType = m_typeSystem.freshTypeVariable({});
-		 Type genericFunctionType = helper.functionType(argTuple, resultType);
-		 unify(functionType, genericFunctionType, _functionCall.location());
-		 functionCallAnnotation.type = resultType;
-		 break;
+		Type argTuple = helper.tupleType(argTypes);
+		Type resultType = m_typeSystem.freshTypeVariable({});
+		Type genericFunctionType = helper.functionType(argTuple, resultType);
+		unify(functionType, genericFunctionType, _functionCall.location());
+		functionCallAnnotation.type = resultType;
+		break;
 	}
 	case ExpressionContext::Type:
 	{
-		 Type argTuple = helper.tupleType(argTypes);
-		 Type resultType = m_typeSystem.freshTypeVariable({});
-		 Type genericFunctionType = helper.typeFunctionType(argTuple, resultType);
-		 unify(functionType, genericFunctionType, _functionCall.location());
-		 functionCallAnnotation.type = resultType;
-		 break;
+		Type argTuple = helper.tupleType(argTypes);
+		Type resultType = m_typeSystem.freshTypeVariable({});
+		Type genericFunctionType = helper.typeFunctionType(argTuple, resultType);
+		unify(functionType, genericFunctionType, _functionCall.location());
+		functionCallAnnotation.type = resultType;
+		break;
 	}
 	case ExpressionContext::Sort:
-		 solAssert(false);
+		solAssert(false);
 	}
 }
 
@@ -914,10 +912,10 @@ std::optional<rational> parseRational(std::string const& _value)
 	rational value;
 	try
 	{
-		 auto radixPoint = find(_value.begin(), _value.end(), '.');
+		auto radixPoint = find(_value.begin(), _value.end(), '.');
 
-		 if (radixPoint != _value.end())
-		 {
+		if (radixPoint != _value.end())
+		{
 			if (
 				!all_of(radixPoint + 1, _value.end(), util::isDigit) ||
 				!all_of(_value.begin(), radixPoint, util::isDigit)
@@ -941,14 +939,14 @@ std::optional<rational> parseRational(std::string const& _value)
 			);
 			numerator = bigint(std::string(_value.begin(), radixPoint));
 			value = numerator + denominator;
-		 }
-		 else
+		}
+		else
 			value = bigint(_value);
-		 return value;
+		return value;
 	}
 	catch (...)
 	{
-		 return std::nullopt;
+		return std::nullopt;
 	}
 }
 
@@ -964,19 +962,19 @@ std::optional<rational> rationalValue(Literal const& _literal)
 	rational value;
 	try
 	{
-		 ASTString valueString = _literal.valueWithoutUnderscores();
+		ASTString valueString = _literal.valueWithoutUnderscores();
 
-		 auto expPoint = find(valueString.begin(), valueString.end(), 'e');
-		 if (expPoint == valueString.end())
+		auto expPoint = find(valueString.begin(), valueString.end(), 'e');
+		if (expPoint == valueString.end())
 			expPoint = find(valueString.begin(), valueString.end(), 'E');
 
-		 if (boost::starts_with(valueString, "0x"))
-		 {
+		if (boost::starts_with(valueString, "0x"))
+		{
 			// process as hex
 			value = bigint(valueString);
-		 }
-		 else if (expPoint != valueString.end())
-		 {
+		}
+		else if (expPoint != valueString.end())
+		{
 			// Parse mantissa and exponent. Checks numeric limit.
 			std::optional<rational> mantissa = parseRational(std::string(valueString.begin(), expPoint));
 
@@ -1013,47 +1011,47 @@ std::optional<rational> rationalValue(Literal const& _literal)
 					expAbs
 				);
 			}
-		 }
-		 else
-		 {
+		}
+		else
+		{
 			// parse as rational number
 			std::optional<rational> tmp = parseRational(valueString);
 			if (!tmp)
 				return std::nullopt;
 			value = *tmp;
-		 }
+		}
 	}
 	catch (...)
 	{
-		 return std::nullopt;
+		return std::nullopt;
 	}
 	switch (_literal.subDenomination())
 	{
 	case Literal::SubDenomination::None:
 	case Literal::SubDenomination::Wei:
 	case Literal::SubDenomination::Second:
-		 break;
+		break;
 	case Literal::SubDenomination::Gwei:
-		 value *= bigint("1000000000");
-		 break;
+		value *= bigint("1000000000");
+		break;
 	case Literal::SubDenomination::Ether:
-		 value *= bigint("1000000000000000000");
-		 break;
+		value *= bigint("1000000000000000000");
+		break;
 	case Literal::SubDenomination::Minute:
-		 value *= bigint("60");
-		 break;
+		value *= bigint("60");
+		break;
 	case Literal::SubDenomination::Hour:
-		 value *= bigint("3600");
-		 break;
+		value *= bigint("3600");
+		break;
 	case Literal::SubDenomination::Day:
-		 value *= bigint("86400");
-		 break;
+		value *= bigint("86400");
+		break;
 	case Literal::SubDenomination::Week:
-		 value *= bigint("604800");
-		 break;
+		value *= bigint("604800");
+		break;
 	case Literal::SubDenomination::Year:
-		 value *= bigint("31536000");
-		 break;
+		value *= bigint("31536000");
+		break;
 	}
 
 	return value;
@@ -1065,19 +1063,19 @@ bool TypeInference::visit(Literal const& _literal)
 	auto& literalAnnotation = annotation(_literal);
 	if (_literal.token() != Token::Number)
 	{
-		 m_errorReporter.typeError(0000_error, _literal.location(), "Only number literals are supported.");
-		 return false;
+		m_errorReporter.typeError(0000_error, _literal.location(), "Only number literals are supported.");
+		return false;
 	}
 	std::optional<rational> value = rationalValue(_literal);
 	if (!value)
 	{
-		 m_errorReporter.typeError(0000_error, _literal.location(), "Invalid number literals.");
-		 return false;
+		m_errorReporter.typeError(0000_error, _literal.location(), "Invalid number literals.");
+		return false;
 	}
 	if (value->denominator() != 1)
 	{
-		 m_errorReporter.typeError(0000_error, _literal.location(), "Only integers are supported.");
-		 return false;
+		m_errorReporter.typeError(0000_error, _literal.location(), "Only integers are supported.");
+		return false;
 	}
 	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{annotation().builtinClasses.at(BuiltinClass::Integer)}});
 	return false;
@@ -1091,7 +1089,7 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 {
 	auto const* typeClassDeclaration = _analysis.typeSystem().typeClassDeclaration(_class);
 	if (typeClassDeclaration)
-		 return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
+		return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
 	auto& annotation = _analysis.annotation<TypeRegistration>();
 	auto& inferenceAnnotation = _analysis.annotation<TypeInference>();

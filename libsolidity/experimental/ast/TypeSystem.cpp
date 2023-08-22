@@ -72,12 +72,12 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 			failures += instantiate(_var, _a);
 		},
 		[&](TypeConstant _left, TypeConstant _right) {
-		  if(_left.constructor != _right.constructor)
-			  return unificationFailure();
-		  if (_left.arguments.size() != _right.arguments.size())
-			  return unificationFailure();
-		   for (auto&& [left, right]: ranges::zip_view(_left.arguments, _right.arguments))
-			  failures += unify(left, right);
+			if (_left.constructor != _right.constructor)
+				return unificationFailure();
+			if (_left.arguments.size() != _right.arguments.size())
+				return unificationFailure();
+			for (auto&& [left, right]: ranges::zip_view(_left.arguments, _right.arguments))
+				failures += unify(left, right);
 		},
 		[&](auto, auto) {
 			unificationFailure();
@@ -98,14 +98,14 @@ bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
 			return false;
 		},
 		[&](TypeConstant _left, TypeConstant _right) {
-		  if(_left.constructor != _right.constructor)
-			  return false;
-		  if (_left.arguments.size() != _right.arguments.size())
-			  return false;
-		   for (auto&& [left, right]: ranges::zip_view(_left.arguments, _right.arguments))
-			  if (!typeEquals(left, right))
-				  return false;
-		   return true;
+			if (_left.constructor != _right.constructor)
+				return false;
+			if (_left.arguments.size() != _right.arguments.size())
+				return false;
+			for (auto&& [left, right]: ranges::zip_view(_left.arguments, _right.arguments))
+				if (!typeEquals(left, right))
+					return false;
+			return true;
 		},
 		[&](auto, auto) {
 			return false;
@@ -133,7 +133,7 @@ TypeSystem::TypeSystem()
 
 	m_primitiveTypeClasses.emplace(PrimitiveClass::Type, declarePrimitiveClass("type"));
 
-	for (auto [type, name, arity]: std::initializer_list<std::tuple<PrimitiveType, const char*, uint64_t>> {
+	for (auto [type, name, arity]: std::initializer_list<std::tuple<PrimitiveType, char const*, uint64_t>>{
 		{PrimitiveType::TypeFunction, "tfun", 2},
 		{PrimitiveType::Function, "fun", 2},
 		{PrimitiveType::Function, "itself", 1},
@@ -184,7 +184,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(Ty
 experimental::Type TypeEnvironment::resolve(Type _type) const
 {
 	Type result = _type;
-	while(auto const* var = std::get_if<TypeVariable>(&result))
+	while (auto const* var = std::get_if<TypeVariable>(&result))
 		if (Type const* resolvedType = util::valueOrNullptr(m_typeVariables, var->index()))
 			result = *resolvedType;
 		else

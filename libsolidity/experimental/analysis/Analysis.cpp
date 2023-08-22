@@ -128,20 +128,20 @@ bool Analysis::check(std::vector<std::shared_ptr<SourceUnit const>> const& _sour
 		return ([&](auto&& _step) {
 			for (auto source: _sourceUnits)
 				if (!_step.analyze(*source))
-				  return false;
+					return false;
 			return true;
 		}(std::tuple_element_t<decltype(_indexTuple)::value, AnalysisSteps>{*this}) && ...);
 	}, makeIndexTuple(std::make_index_sequence<std::tuple_size_v<AnalysisSteps>>{}));
 
 /*
- 	{
+	{
 		SyntaxRestrictor syntaxRestrictor{*this};
 		for (auto source: _sourceUnits)
 			if (!syntaxRestrictor.analyze(*source))
 				return false;
 	}
 
- 	{
+	{
 		TypeRegistration typeRegistration{*this};
 		for (auto source: _sourceUnits)
 			if (!typeRegistration.analyze(*source))
