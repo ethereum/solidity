@@ -217,14 +217,14 @@ commands:
       - run:
           name: soltest
           no_output_timeout: 30m
-          command: ./.circleci/soltest.sh
+          command: .circleci/soltest.sh
 
   run_soltest_all:
     steps:
       - run:
           name: soltest_all
           no_output_timeout: 30m
-          command: ./.circleci/soltest_all.sh
+          command: .circleci/soltest_all.sh
 
   run_cmdline_tests:
     steps:
@@ -237,7 +237,7 @@ commands:
     steps:
       - run:
          name: docs pragma version check
-         command: ./scripts/docs_version_pragma_check.sh
+         command: scripts/docs_version_pragma_check.sh
 
   # --------------------------------------------------------------------------
   # Artifact Commands
@@ -329,7 +329,7 @@ commands:
           command: pip install --user deepdiff colorama
       - run:
           name: Executing solc LSP test suite
-          command: ./test/lsp.py ./build/solc/solc --non-interactive
+          command: test/lsp.py build/solc/solc --non-interactive
       - matrix_notify_failure_unless_pr
 
   build:
@@ -369,7 +369,7 @@ commands:
       # them each time. See https://github.com/ethereum/solidity/issues/12925.
       - run:
           name: Install build dependencies
-          command: ./.circleci/osx_install_dependencies.sh
+          command: .circleci/osx_install_dependencies.sh
 
 defaults:
 
@@ -803,7 +803,11 @@ jobs:
             pip install --user codespell
       - run:
           name: Check spelling
-          command: ~/.local/bin/codespell --skip "*.enc,.git,Dockerfile*,LICENSE,codespell_whitelist.txt,codespell_ignored_lines.txt" --ignore-words ./scripts/codespell_whitelist.txt --exclude-file ./scripts/codespell_ignored_lines.txt
+          command: |
+            ~/.local/bin/codespell \
+              --skip "*.enc,.git,Dockerfile*,LICENSE,codespell_whitelist.txt,codespell_ignored_lines.txt" \
+              --ignore-words scripts/codespell_whitelist.txt \
+              --exclude-file scripts/codespell_ignored_lines.txt
       - matrix_notify_failure_unless_pr
 
   chk_docs_examples:
@@ -817,7 +821,7 @@ jobs:
           command: sudo npm install -g solhint
       - run:
           name: Test Docs examples
-          command: ./test/docsCodeStyle.sh
+          command: test/docsCodeStyle.sh
       - matrix_notify_failure_unless_pr
 
   chk_coding_style:
@@ -831,13 +835,13 @@ jobs:
             sudo apt install -y shellcheck
       - run:
           name: Check for C++ coding style
-          command: ./scripts/check_style.sh
+          command: scripts/check_style.sh
       - run:
           name: checking shell scripts
-          command: ./scripts/chk_shellscripts/chk_shellscripts.sh
+          command: scripts/chk_shellscripts/chk_shellscripts.sh
       - run:
           name: Check for broken symlinks
-          command: ./scripts/check_symlinks.sh
+          command: scripts/check_symlinks.sh
       - matrix_notify_failure_unless_pr
 
   chk_errorcodes:
@@ -846,7 +850,7 @@ jobs:
       - checkout
       - run:
           name: Check for error codes
-          command: ./scripts/error_codes.py --check
+          command: scripts/error_codes.py --check
       - matrix_notify_failure_unless_pr
 
   chk_pylint:
@@ -866,7 +870,7 @@ jobs:
       - run: pylint --version
       - run:
           name: Linting Python Scripts
-          command: ./scripts/pylint_all.py
+          command: scripts/pylint_all.py
       - matrix_notify_failure_unless_pr
 
   chk_antlr_grammar:
@@ -880,7 +884,7 @@ jobs:
             sudo apt install -y openjdk-17-jdk
       - run:
           name: Run tests
-          command: ./scripts/test_antlr_grammar.sh
+          command: scripts/test_antlr_grammar.sh
       - matrix_notify_failure_unless_pr
 
   chk_buglist:
@@ -895,7 +899,7 @@ jobs:
             npm install mktemp
       - run:
           name: Test buglist
-          command: ./test/buglistTests.js
+          command: test/buglistTests.js
       - matrix_notify_failure_unless_pr
 
   chk_proofs:
@@ -1168,7 +1172,7 @@ jobs:
       - setup_prerelease_commit_hash
       - run:
           name: Build documentation
-          command: ./docs/docs.sh
+          command: docs/docs.sh
       - store_artifacts:
           path: docs/_build/html/
           destination: docs-html
@@ -1546,7 +1550,7 @@ jobs:
           command: python -m pip install --user deepdiff colorama
       - run:
           name: Executing solc LSP test suite
-          command: python ./test/lsp.py .\build\solc\Release\solc.exe --non-interactive
+          command: python test/lsp.py build\solc\Release\solc.exe --non-interactive
           shell: powershell.exe
       - store_test_results:
           path: test_results/
