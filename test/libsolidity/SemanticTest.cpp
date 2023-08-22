@@ -45,6 +45,17 @@ using namespace boost::algorithm;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
+ostream& solidity::frontend::test::operator<<(ostream& _output, RequiresYulOptimizer _requiresYulOptimizer)
+{
+	switch (_requiresYulOptimizer)
+	{
+	case RequiresYulOptimizer::False: _output << "false"; break;
+	case RequiresYulOptimizer::MinimalStack: _output << "minimalStack"; break;
+	case RequiresYulOptimizer::Full: _output << "full"; break;
+	}
+	return _output;
+}
+
 SemanticTest::SemanticTest(
 	string const& _filename,
 	langutil::EVMVersion _evmVersion,
@@ -65,6 +76,16 @@ SemanticTest::SemanticTest(
 	static set<string> const compileViaYulAllowedValues{"also", "true", "false"};
 	static set<string> const yulRunTriggers{"also", "true"};
 	static set<string> const legacyRunTriggers{"also", "false", "default"};
+
+	m_requiresYulOptimizer = m_reader.enumSetting<RequiresYulOptimizer>(
+		"requiresYulOptimizer",
+		{
+			{toString(RequiresYulOptimizer::False), RequiresYulOptimizer::False},
+			{toString(RequiresYulOptimizer::MinimalStack), RequiresYulOptimizer::MinimalStack},
+			{toString(RequiresYulOptimizer::Full), RequiresYulOptimizer::Full},
+		},
+		toString(RequiresYulOptimizer::False)
+	);
 
 	m_runWithABIEncoderV1Only = m_reader.boolSetting("ABIEncoderV1Only", false);
 	if (m_runWithABIEncoderV1Only && !solidity::test::CommonOptions::get().useABIEncoderV1)
@@ -272,15 +293,38 @@ optional<AnnotatedEventSignature> SemanticTest::matchEvent(util::h256 const& has
 	return result;
 }
 
+frontend::OptimiserSettings SemanticTest::optimizerSettingsFor(RequiresYulOptimizer _requiresYulOptimizer)
+{
+	switch (_requiresYulOptimizer) {
+	case RequiresYulOptimizer::False:
+		return OptimiserSettings::minimal();
+	case RequiresYulOptimizer::MinimalStack:
+	{
+		OptimiserSettings settings = OptimiserSettings::minimal();
+		settings.runYulOptimiser = true;
+		settings.yulOptimiserSteps = "uljmul jmul";
+		return settings;
+	}
+	case RequiresYulOptimizer::Full:
+		return OptimiserSettings::full();
+	}
+	unreachable();
+}
+
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	TestResult result = TestResult::Success;
 
 	if (m_testCaseWantsLegacyRun && !m_eofVersion.has_value())
-		result = runTest(_stream, _linePrefix, _formatted, false);
+		result = runTest(_stream, _linePrefix, _formatted, false /* _isYulRun */);
 
 	if (m_testCaseWantsYulRun && result == TestResult::Success)
-		result = runTest(_stream, _linePrefix, _formatted, true);
+	{
+		if (solidity::test::CommonOptions::get().optimize)
+			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */);
+		else
+			result = tryRunTestWithYulOptimizer(_stream, _linePrefix, _formatted);
+	}
 
 	if (result != TestResult::Success)
 		solidity::test::CommonOptions::get().printSelectedOptions(
@@ -296,7 +340,8 @@ TestCase::TestResult SemanticTest::runTest(
 	ostream& _stream,
 	string const& _linePrefix,
 	bool _formatted,
-	bool _isYulRun)
+	bool _isYulRun
+)
 {
 	bool success = true;
 	m_gasCostFailure = false;
@@ -470,6 +515,53 @@ TestCase::TestResult SemanticTest::runTest(
 	return TestResult::Success;
 }
 
+TestCase::TestResult SemanticTest::tryRunTestWithYulOptimizer(
+	std::ostream& _stream,
+	std::string const& _linePrefix,
+	bool _formatted
+)
+{
+	TestResult result{};
+	for (auto requiresYulOptimizer: {
+		RequiresYulOptimizer::False,
+		RequiresYulOptimizer::MinimalStack,
+		RequiresYulOptimizer::Full,
+	})
+	{
+		ScopedSaveAndRestore optimizerSettings(
+			m_optimiserSettings,
+			optimizerSettingsFor(requiresYulOptimizer)
+		);
+
+		try
+		{
+			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */);
+		}
+		catch (yul::StackTooDeepError const&)
+		{
+			if (requiresYulOptimizer == RequiresYulOptimizer::Full)
+				throw;
+			else
+				continue;
+		}
+
+		if (m_requiresYulOptimizer != requiresYulOptimizer && result != TestResult::FatalError)
+		{
+			soltestAssert(result == TestResult::Success || result == TestResult::Failure);
+
+			AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+				<< _linePrefix << endl
+				<< _linePrefix << "requiresYulOptimizer is set to " << m_requiresYulOptimizer
+				<< " but should be " << requiresYulOptimizer << endl;
+			m_requiresYulOptimizer = requiresYulOptimizer;
+			return TestResult::Failure;
+		}
+
+		return result;
+	}
+	unreachable();
+}
+
 bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const
 {
 	string setting =
@@ -581,7 +673,10 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 
 	_stream << _linePrefix << "// ====" << endl;
 	for (auto const& [settingName, settingValue]: settings)
-		_stream << _linePrefix << "// " << settingName << ": " << settingValue<< endl;
+		if (settingName == "requiresYulOptimizer")
+			_stream << _linePrefix << "// " << settingName << ": " << m_requiresYulOptimizer << endl;
+		else
+			_stream << _linePrefix << "// " << settingName << ": " << settingValue<< endl;
 }
 
 void SemanticTest::parseExpectations(istream& _stream)
