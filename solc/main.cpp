@@ -29,7 +29,6 @@
 
 #include <iostream>
 
-using namespace std;
 using namespace solidity;
 
 
@@ -37,31 +36,31 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
+		solidity::frontend::CommandLineInterface cli(std::cin, std::cout, std::cerr);
 		return cli.run(argc, argv) ? 0 : 1;
 	}
 	catch (smtutil::SMTLogicError const& _exception)
 	{
-		cerr << "SMT logic error:" << endl;
-		cerr << boost::diagnostic_information(_exception);
+		std::cerr << "SMT logic error:" << std::endl;
+		std::cerr << boost::diagnostic_information(_exception);
 		return 2;
 	}
 	catch (langutil::UnimplementedFeatureError const& _exception)
 	{
-		cerr << "Unimplemented feature:" << endl;
-		cerr << boost::diagnostic_information(_exception);
+		std::cerr << "Unimplemented feature:" << std::endl;
+		std::cerr << boost::diagnostic_information(_exception);
 		return 2;
 	}
 	catch (langutil::InternalCompilerError const& _exception)
 	{
-		cerr << "Internal compiler error:" << endl;
-		cerr << boost::diagnostic_information(_exception);
+		std::cerr << "Internal compiler error:" << std::endl;
+		std::cerr << boost::diagnostic_information(_exception);
 		return 2;
 	}
 	catch (...)
 	{
-		cerr << "Uncaught exception:" << endl;
-		cerr << boost::current_exception_diagnostic_information() << endl;
+		std::cerr << "Uncaught exception:" << std::endl;
+		std::cerr << boost::current_exception_diagnostic_information() << std::endl;
 		return 2;
 	}
 }
