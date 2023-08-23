@@ -41,14 +41,19 @@ public:
 	{
 		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion);
 	}
-	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
+	SyntaxTest(
+		std::string const& _filename,
+		langutil::EVMVersion _evmVersion,
+		langutil::Error::Severity _minSeverity = langutil::Error::Severity::Info
+	);
 
 protected:
 	virtual void setupCompiler();
 	void parseAndAnalyze() override;
 	virtual void filterObtainedErrors();
 
-	bool m_optimiseYul = true;
+	bool m_optimiseYul{};
+	langutil::Error::Severity m_minSeverity{};
 };
 
 }

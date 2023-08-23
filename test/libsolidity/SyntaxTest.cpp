@@ -38,7 +38,13 @@ using namespace solidity::frontend::test;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
-SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion): CommonSyntaxTest(_filename, _evmVersion)
+SyntaxTest::SyntaxTest(
+	string const& _filename,
+	langutil::EVMVersion _evmVersion,
+	Error::Severity _minSeverity
+):
+	CommonSyntaxTest(_filename, _evmVersion),
+	m_minSeverity(_minSeverity)
 {
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
 }
@@ -98,6 +104,9 @@ void SyntaxTest::filterObtainedErrors()
 {
 	for (auto const& currentError: filteredErrors())
 	{
+		if (currentError->severity() < m_minSeverity)
+			continue;
+
 		int locationStart = -1;
 		int locationEnd = -1;
 		string sourceName;
