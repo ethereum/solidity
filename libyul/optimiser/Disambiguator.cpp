@@ -26,7 +26,6 @@
 #include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;

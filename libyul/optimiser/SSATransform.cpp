@@ -30,7 +30,6 @@
 
 #include <libyul/optimiser/TypeInfo.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::langutil;
@@ -47,7 +46,7 @@ class IntroduceSSA: public ASTModifier
 public:
 	explicit IntroduceSSA(
 		NameDispenser& _nameDispenser,
-		set<YulString> const& _variablesToReplace,
+		std::set<YulString> const& _variablesToReplace,
 		TypeInfo& _typeInfo
 	):
 		m_nameDispenser(_nameDispenser),
@@ -59,7 +58,7 @@ public:
 
 private:
 	NameDispenser& m_nameDispenser;
-	set<YulString> const& m_variablesToReplace;
+	std::set<YulString> const& m_variablesToReplace;
 	TypeInfo const& m_typeInfo;
 };
 
@@ -68,9 +67,9 @@ void IntroduceSSA::operator()(Block& _block)
 {
 	util::iterateReplacing(
 		_block.statements,
-		[&](Statement& _s) -> std::optional<vector<Statement>>
+		[&](Statement& _s) -> std::optional<std::vector<Statement>>
 		{
-			if (holds_alternative<VariableDeclaration>(_s))
+			if (std::holds_alternative<VariableDeclaration>(_s))
 			{
 				VariableDeclaration& varDecl = std::get<VariableDeclaration>(_s);
 				if (varDecl.value)
@@ -85,8 +84,8 @@ void IntroduceSSA::operator()(Block& _block)
 
 				// Replace "let a := v" by "let a_1 := v  let a := a_1"
 				// Replace "let a, b := v" by "let a_1, b_1 := v  let a := a_1 let b := b_2"
-				shared_ptr<DebugData const> debugData = varDecl.debugData;
-				vector<Statement> statements;
+				std::shared_ptr<DebugData const> debugData = varDecl.debugData;
+				std::vector<Statement> statements;
 				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(varDecl.value)});
 				TypedNameList newVariables;
 				for (auto const& var: varDecl.variables)
@@ -97,13 +96,13 @@ void IntroduceSSA::operator()(Block& _block)
 					statements.emplace_back(VariableDeclaration{
 						debugData,
 						{TypedName{debugData, oldName, var.type}},
-						make_unique<Expression>(Identifier{debugData, newName})
+						std::make_unique<Expression>(Identifier{debugData, newName})
 					});
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
 				return { std::move(statements) };
 			}
-			else if (holds_alternative<Assignment>(_s))
+			else if (std::holds_alternative<Assignment>(_s))
 			{
 				Assignment& assignment = std::get<Assignment>(_s);
 				visit(*assignment.value);
@@ -113,7 +112,7 @@ void IntroduceSSA::operator()(Block& _block)
 				// Replace "a := v" by "let a_1 := v  a := v"
 				// Replace "a, b := v" by "let a_1, b_1 := v  a := a_1 b := b_2"
 				std::shared_ptr<DebugData const> debugData = assignment.debugData;
-				vector<Statement> statements;
+				std::vector<Statement> statements;
 				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(assignment.value)});
 				TypedNameList newVariables;
 				for (auto const& var: assignment.variableNames)
@@ -127,7 +126,7 @@ void IntroduceSSA::operator()(Block& _block)
 					statements.emplace_back(Assignment{
 						debugData,
 						{Identifier{debugData, oldName}},
-						make_unique<Expression>(Identifier{debugData, newName})
+						std::make_unique<Expression>(Identifier{debugData, newName})
 					});
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
@@ -149,7 +148,7 @@ class IntroduceControlFlowSSA: public ASTModifier
 public:
 	explicit IntroduceControlFlowSSA(
 		NameDispenser& _nameDispenser,
-		set<YulString> const& _variablesToReplace,
+		std::set<YulString> const& _variablesToReplace,
 		TypeInfo const& _typeInfo
 	):
 		m_nameDispenser(_nameDispenser),
@@ -164,19 +163,19 @@ public:
 
 private:
 	NameDispenser& m_nameDispenser;
-	set<YulString> const& m_variablesToReplace;
+	std::set<YulString> const& m_variablesToReplace;
 	/// Variables (that are to be replaced) currently in scope.
-	set<YulString> m_variablesInScope;
+	std::set<YulString> m_variablesInScope;
 	/// Set of variables that do not have a specific value.
-	set<YulString> m_variablesToReassign;
+	std::set<YulString> m_variablesToReassign;
 	TypeInfo const& m_typeInfo;
 };
 
 void IntroduceControlFlowSSA::operator()(FunctionDefinition& _function)
 {
-	set<YulString> varsInScope;
+	std::set<YulString> varsInScope;
 	std::swap(varsInScope, m_variablesInScope);
-	set<YulString> toReassign;
+	std::set<YulString> toReassign;
 	std::swap(toReassign, m_variablesToReassign);
 
 	for (auto const& param: _function.parameters)
@@ -208,7 +207,7 @@ void IntroduceControlFlowSSA::operator()(Switch& _switch)
 {
 	yulAssert(m_variablesToReassign.empty(), "");
 
-	set<YulString> toReassign;
+	std::set<YulString> toReassign;
 	for (auto& c: _switch.cases)
 	{
 		(*this)(c.body);
@@ -220,27 +219,27 @@ void IntroduceControlFlowSSA::operator()(Switch& _switch)
 
 void IntroduceControlFlowSSA::operator()(Block& _block)
 {
-	set<YulString> variablesDeclaredHere;
-	set<YulString> assignedVariables;
+	std::set<YulString> variablesDeclaredHere;
+	std::set<YulString> assignedVariables;
 
 	util::iterateReplacing(
 		_block.statements,
-		[&](Statement& _s) -> std::optional<vector<Statement>>
+		[&](Statement& _s) -> std::optional<std::vector<Statement>>
 		{
-			vector<Statement> toPrepend;
+		std::vector<Statement> toPrepend;
 			for (YulString toReassign: m_variablesToReassign)
 			{
 				YulString newName = m_nameDispenser.newName(toReassign);
 				toPrepend.emplace_back(VariableDeclaration{
 					debugDataOf(_s),
 					{TypedName{debugDataOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
-					make_unique<Expression>(Identifier{debugDataOf(_s), toReassign})
+					std::make_unique<Expression>(Identifier{debugDataOf(_s), toReassign})
 				});
 				assignedVariables.insert(toReassign);
 			}
 			m_variablesToReassign.clear();
 
-			if (holds_alternative<VariableDeclaration>(_s))
+			if (std::holds_alternative<VariableDeclaration>(_s))
 			{
 				VariableDeclaration& varDecl = std::get<VariableDeclaration>(_s);
 				for (auto const& var: varDecl.variables)
@@ -250,7 +249,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 						m_variablesInScope.insert(var.name);
 					}
 			}
-			else if (holds_alternative<Assignment>(_s))
+			else if (std::holds_alternative<Assignment>(_s))
 			{
 				Assignment& assignment = std::get<Assignment>(_s);
 				for (auto const& var: assignment.variableNames)
@@ -281,7 +280,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 class PropagateValues: public ASTModifier
 {
 public:
-	explicit PropagateValues(set<YulString> const& _variablesToReplace):
+	explicit PropagateValues(std::set<YulString> const& _variablesToReplace):
 		m_variablesToReplace(_variablesToReplace)
 	{ }
 
@@ -294,9 +293,9 @@ public:
 private:
 	/// This is a set of all variables that are assigned to anywhere in the code.
 	/// Variables that are only declared but never re-assigned are not touched.
-	set<YulString> const& m_variablesToReplace;
-	map<YulString, YulString> m_currentVariableValues;
-	set<YulString> m_clearAtEndOfBlock;
+	std::set<YulString> const& m_variablesToReplace;
+	std::map<YulString, YulString> m_currentVariableValues;
+	std::set<YulString> m_clearAtEndOfBlock;
 };
 
 void PropagateValues::operator()(Identifier& _identifier)
@@ -316,11 +315,11 @@ void PropagateValues::operator()(VariableDeclaration& _varDecl)
 	if (m_variablesToReplace.count(variable))
 	{
 		// `let a := a_1` - regular declaration of non-SSA variable
-		yulAssert(holds_alternative<Identifier>(*_varDecl.value), "");
+		yulAssert(std::holds_alternative<Identifier>(*_varDecl.value), "");
 		m_currentVariableValues[variable] = std::get<Identifier>(*_varDecl.value).name;
 		m_clearAtEndOfBlock.insert(variable);
 	}
-	else if (_varDecl.value && holds_alternative<Identifier>(*_varDecl.value))
+	else if (_varDecl.value && std::holds_alternative<Identifier>(*_varDecl.value))
 	{
 		// `let a_1 := a` - assignment to SSA variable after a branch.
 		YulString value = std::get<Identifier>(*_varDecl.value).name;
@@ -345,7 +344,7 @@ void PropagateValues::operator()(Assignment& _assignment)
 	if (!m_variablesToReplace.count(name))
 		return;
 
-	yulAssert(_assignment.value && holds_alternative<Identifier>(*_assignment.value), "");
+	yulAssert(_assignment.value && std::holds_alternative<Identifier>(*_assignment.value), "");
 	m_currentVariableValues[name] = std::get<Identifier>(*_assignment.value).name;
 	m_clearAtEndOfBlock.insert(name);
 }
@@ -364,7 +363,7 @@ void PropagateValues::operator()(ForLoop& _for)
 
 void PropagateValues::operator()(Block& _block)
 {
-	set<YulString> clearAtParentBlock = std::move(m_clearAtEndOfBlock);
+	std::set<YulString> clearAtParentBlock = std::move(m_clearAtEndOfBlock);
 	m_clearAtEndOfBlock.clear();
 
 	ASTModifier::operator()(_block);
@@ -380,7 +379,7 @@ void PropagateValues::operator()(Block& _block)
 void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
 	TypeInfo typeInfo(_context.dialect, _ast);
-	set<YulString> assignedVariables = assignedVariableNames(_ast);
+	std::set<YulString> assignedVariables = assignedVariableNames(_ast);
 	IntroduceSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
 	IntroduceControlFlowSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
 	PropagateValues{assignedVariables}(_ast);

@@ -36,7 +36,6 @@
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/take.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -97,16 +96,16 @@ struct MemoryOffsetAllocator
 
 	/// Maps function names to the set of unreachable variables in that function.
 	/// An empty variable name means that the function has too many arguments or return variables.
-	map<YulString, vector<YulString>> const& unreachableVariables;
+	std::map<YulString, std::vector<YulString>> const& unreachableVariables;
 	/// The graph of immediate function calls of all functions.
-	map<YulString, vector<YulString>> const& callGraph;
+	std::map<YulString, std::vector<YulString>> const& callGraph;
 	/// Maps the name of each user-defined function to its definition.
-	map<YulString, FunctionDefinition const*> const& functionDefinitions;
+	std::map<YulString, FunctionDefinition const*> const& functionDefinitions;
 
 	/// Maps variable names to the memory slot the respective variable is assigned.
-	map<YulString, uint64_t> slotAllocations{};
+	std::map<YulString, uint64_t> slotAllocations{};
 	/// Maps function names to the number of memory slots the respective function requires.
-	map<YulString, uint64_t> slotsRequiredForFunction{};
+	std::map<YulString, uint64_t> slotsRequiredForFunction{};
 };
 
 u256 literalArgumentValue(FunctionCall const& _call)
@@ -131,7 +130,7 @@ void StackLimitEvader::run(
 	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _object);
-		unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, *_object.code);
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, *_object.code);
 		run(_context, _object, StackLayoutGenerator::reportStackTooDeep(*cfg));
 	}
 	else
@@ -146,10 +145,10 @@ void StackLimitEvader::run(
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
 	Object& _object,
-	map<YulString, vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
+	std::map<YulString, std::vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
 )
 {
-	map<YulString, vector<YulString>> unreachableVariables;
+	std::map<YulString, std::vector<YulString>> unreachableVariables;
 	for (auto&& [function, stackTooDeepErrors]: _stackTooDeepErrors)
 	{
 		auto& unreachables = unreachableVariables[function];
@@ -165,7 +164,7 @@ void StackLimitEvader::run(
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
 	Object& _object,
-	map<YulString, vector<YulString>> const& _unreachableVariables
+	std::map<YulString, std::vector<YulString>> const& _unreachableVariables
 )
 {
 	yulAssert(_object.code, "");
@@ -175,7 +174,7 @@ void StackLimitEvader::run(
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
 
-	vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
+	std::vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
 		*_object.code,
 		"memoryguard"_yulstring
 	);
@@ -198,7 +197,7 @@ void StackLimitEvader::run(
 		if (_unreachableVariables.count(function))
 			return;
 
-	map<YulString, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(*_object.code);
+	std::map<YulString, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(*_object.code);
 
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();

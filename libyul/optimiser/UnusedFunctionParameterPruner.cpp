@@ -36,14 +36,13 @@
 #include <optional>
 #include <variant>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::yul;
 using namespace solidity::yul::unusedFunctionsCommon;
 
 void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _ast)
 {
-	map<YulString, size_t> references = VariableReferencesCounter::countReferences(_ast);
+	std::map<YulString, size_t> references = VariableReferencesCounter::countReferences(_ast);
 	auto used = [&](auto v) -> bool { return references.count(v.name); };
 
 	// Function name and a pair of boolean masks, the first corresponds to parameters and the second
@@ -55,12 +54,12 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 	// Similarly for the second vector in the pair, a value `false` at index `i` indicates that the
 	// return parameter at index `i` in `FunctionDefinition::returnVariables` is unused inside
 	// function body.
-	map<YulString, pair<vector<bool>, vector<bool>>> usedParametersAndReturnVariables;
+	std::map<YulString, std::pair<std::vector<bool>, std::vector<bool>>> usedParametersAndReturnVariables;
 
 	// Step 1 of UnusedFunctionParameterPruner: Find functions whose parameters (both arguments and
 	// return-parameters) are not used in its body.
 	for (auto const& statement: _ast.statements)
-		if (holds_alternative<FunctionDefinition>(statement))
+		if (std::holds_alternative<FunctionDefinition>(statement))
 		{
 			FunctionDefinition const& f = std::get<FunctionDefinition>(statement);
 
@@ -73,7 +72,7 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 			};
 		}
 
-	set<YulString> functionNamesToFree = util::keys(usedParametersAndReturnVariables);
+	std::set<YulString> functionNamesToFree = util::keys(usedParametersAndReturnVariables);
 
 	// Step 2 of UnusedFunctionParameterPruner: Renames the function and replaces all references to
 	// the function, say `f`, by its new name, say `f_1`.
@@ -91,17 +90,17 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 	// For example: introduce a new 'linking' function `f` with the same the body as `f_1`, but with
 	// reduced parameters, i.e., `function f() -> y { y := 1 }`. Now replace the body of `f_1` with
 	// a call to `f`, i.e., `f_1(x) -> y { y := f() }`.
-	iterateReplacing(_ast.statements, [&](Statement& _s) -> optional<vector<Statement>> {
-		if (holds_alternative<FunctionDefinition>(_s))
+	iterateReplacing(_ast.statements, [&](Statement& _s) -> std::optional<std::vector<Statement>> {
+		if (std::holds_alternative<FunctionDefinition>(_s))
 		{
 			// The original function except that it has a new name (e.g., `f_1`)
-			FunctionDefinition& originalFunction = get<FunctionDefinition>(_s);
+			FunctionDefinition& originalFunction = std::get<FunctionDefinition>(_s);
 			if (newToOriginalNames.count(originalFunction.name))
 			{
 
 				YulString linkingFunctionName = originalFunction.name;
 				YulString originalFunctionName = newToOriginalNames.at(linkingFunctionName);
-				pair<vector<bool>, vector<bool>> used =
+				std::pair<std::vector<bool>, std::vector<bool>> used =
 					usedParametersAndReturnVariables.at(originalFunctionName);
 
 				FunctionDefinition linkingFunction = createLinkingFunction(
@@ -122,6 +121,6 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 			}
 		}
 
-		return nullopt;
+		return std::nullopt;
 	});
 }

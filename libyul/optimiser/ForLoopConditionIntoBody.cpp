@@ -22,7 +22,6 @@
 
 #include <libsolutil/CommonData.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -35,17 +34,17 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 {
 	if (
 		m_dialect.booleanNegationFunction() &&
-		!holds_alternative<Literal>(*_forLoop.condition) &&
-		!holds_alternative<Identifier>(*_forLoop.condition)
+		!std::holds_alternative<Literal>(*_forLoop.condition) &&
+		!std::holds_alternative<Identifier>(*_forLoop.condition)
 	)
 	{
-		shared_ptr<DebugData const> debugData = debugDataOf(*_forLoop.condition);
+		std::shared_ptr<DebugData const> debugData = debugDataOf(*_forLoop.condition);
 
 		_forLoop.body.statements.emplace(
 			begin(_forLoop.body.statements),
 			If {
 				debugData,
-				make_unique<Expression>(
+				std::make_unique<Expression>(
 					FunctionCall {
 						debugData,
 						{debugData, m_dialect.booleanNegationFunction()->name},
@@ -55,7 +54,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 				Block {debugData, util::make_vector<Statement>(Break{{}})}
 			}
 		);
-		_forLoop.condition = make_unique<Expression>(
+		_forLoop.condition = std::make_unique<Expression>(
 			Literal {
 				debugData,
 				LiteralKind::Boolean,

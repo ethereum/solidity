@@ -30,7 +30,6 @@
 
 #include <libyul/AST.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -50,14 +49,14 @@ void ExpressionInliner::operator()(FunctionDefinition& _fun)
 void ExpressionInliner::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
-	if (holds_alternative<FunctionCall>(_expression))
+	if (std::holds_alternative<FunctionCall>(_expression))
 	{
 		FunctionCall& funCall = std::get<FunctionCall>(_expression);
 		if (!m_inlinableFunctions.count(funCall.functionName.name))
 			return;
 		FunctionDefinition const& fun = *m_inlinableFunctions.at(funCall.functionName.name);
 
-		map<YulString, Expression const*> substitutions;
+		std::map<YulString, Expression const*> substitutions;
 		for (size_t i = 0; i < funCall.arguments.size(); i++)
 		{
 			Expression const& arg = funCall.arguments[i];

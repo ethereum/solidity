@@ -24,7 +24,6 @@
 
 #include <libyul/AST.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -50,11 +49,11 @@ void SSAValueTracker::operator()(VariableDeclaration const& _varDecl)
 		setValue(_varDecl.variables.front().name, _varDecl.value.get());
 }
 
-set<YulString> SSAValueTracker::ssaVariables(Block const& _ast)
+std::set<YulString> SSAValueTracker::ssaVariables(Block const& _ast)
 {
 	SSAValueTracker t;
 	t(_ast);
-	set<YulString> ssaVars;
+	std::set<YulString> ssaVars;
 	for (auto const& value: t.values())
 		ssaVars.insert(value.first);
 	return ssaVars;
