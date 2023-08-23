@@ -46,7 +46,6 @@
 
 using namespace solidity;
 using namespace solidity::yul;
-using namespace std;
 
 StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 {
@@ -59,9 +58,9 @@ StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 	return stackLayout;
 }
 
-map<YulString, vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg)
+std::map<YulString, std::vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg)
 {
-	map<YulString, vector<StackLayoutGenerator::StackTooDeep>> stackTooDeepErrors;
+	std::map<YulString, std::vector<StackLayoutGenerator::StackTooDeep>> stackTooDeepErrors;
 	stackTooDeepErrors[YulString{}] = reportStackTooDeep(_cfg, YulString{});
 	for (auto const& function: _cfg.functions)
 		if (auto errors = reportStackTooDeep(_cfg, function->name); !errors.empty())
@@ -69,7 +68,7 @@ map<YulString, vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator:
 	return stackTooDeepErrors;
 }
 
-vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulString _functionName)
+std::vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulString _functionName)
 {
 	StackLayout stackLayout;
 	CFG::FunctionInfo const* functionInfo = nullptr;
@@ -98,14 +97,14 @@ StackLayoutGenerator::StackLayoutGenerator(StackLayout& _layout, CFG::FunctionIn
 namespace
 {
 /// @returns all stack too deep errors that would occur when shuffling @a _source to @a _target.
-vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source, Stack const& _target)
+std::vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _source, Stack const& _target)
 {
 	Stack currentStack = _source;
-	vector<StackLayoutGenerator::StackTooDeep> stackTooDeepErrors;
+	std::vector<StackLayoutGenerator::StackTooDeep> stackTooDeepErrors;
 	auto getVariableChoices = [](auto&& _range) {
-		vector<YulString> result;
+		std::vector<YulString> result;
 		for (auto const& slot: _range)
-			if (auto const* variableSlot = get_if<VariableSlot>(&slot))
+			if (auto const* variableSlot = std::get_if<VariableSlot>(&slot))
 				if (!util::contains(result, variableSlot->variable.get().name))
 					result.push_back(variableSlot->variable.get().name);
 		return result;
@@ -160,7 +159,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 	// PreviousSlot{0}, ..., PreviousSlot{n}, [output<0>], ..., [output<m>]
 	auto layout = ranges::views::iota(0u, preOperationLayoutSize) |
 		ranges::views::transform([](size_t _index) { return PreviousSlot{_index}; }) |
-		ranges::to<vector<variant<PreviousSlot, StackSlot>>>;
+		ranges::to<std::vector<std::variant<PreviousSlot, StackSlot>>>;
 	layout += _operationOutput;
 
 	// Shortcut for trivial case.
@@ -171,23 +170,23 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 	// that are aware of PreviousSlot's.
 	struct ShuffleOperations
 	{
-		vector<variant<PreviousSlot, StackSlot>>& layout;
+		std::vector<std::variant<PreviousSlot, StackSlot>>& layout;
 		Stack const& post;
 		std::set<StackSlot> outputs;
 		Multiplicity multiplicity;
 		Callable generateSlotOnTheFly;
 		ShuffleOperations(
-			vector<variant<PreviousSlot, StackSlot>>& _layout,
+			std::vector<std::variant<PreviousSlot, StackSlot>>& _layout,
 			Stack const& _post,
 			Callable _generateSlotOnTheFly
 		): layout(_layout), post(_post), generateSlotOnTheFly(_generateSlotOnTheFly)
 		{
 			for (auto const& layoutSlot: layout)
-				if (StackSlot const* slot = get_if<StackSlot>(&layoutSlot))
+				if (StackSlot const* slot = std::get_if<StackSlot>(&layoutSlot))
 					outputs.insert(*slot);
 
 			for (auto const& layoutSlot: layout)
-				if (StackSlot const* slot = get_if<StackSlot>(&layoutSlot))
+				if (StackSlot const* slot = std::get_if<StackSlot>(&layoutSlot))
 					--multiplicity[*slot];
 			for (auto&& slot: post)
 				if (outputs.count(slot) || generateSlotOnTheFly(slot))
@@ -235,7 +234,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 		}
 		void swap(size_t _i)
 		{
-			yulAssert(!holds_alternative<PreviousSlot>(layout.at(layout.size() - _i - 1)) || !holds_alternative<PreviousSlot>(layout.back()), "");
+			yulAssert(!std::holds_alternative<PreviousSlot>(layout.at(layout.size() - _i - 1)) || !std::holds_alternative<PreviousSlot>(layout.back()), "");
 			std::swap(layout.at(layout.size() -  _i - 1), layout.back());
 		}
 		size_t sourceSize() { return layout.size(); }
@@ -250,7 +249,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 	// output in place. The resulting permutation of the PreviousSlot yields the ideal positions of slots
 	// before the operation, i.e. if PreviousSlot{2} is at a position at which _post contains VariableSlot{"tmp"},
 	// then we want the variable tmp in the slot at offset 2 in the layout before the operation.
-	vector<optional<StackSlot>> idealLayout(_post.size(), nullopt);
+	std::vector<std::optional<StackSlot>> idealLayout(_post.size(), std::nullopt);
 	for (auto&& [slot, idealPosition]: ranges::zip_view(_post, layout))
 		if (PreviousSlot* previousSlot = std::get_if<PreviousSlot>(&idealPosition))
 			idealLayout.at(previousSlot->slot) = slot;
@@ -261,7 +260,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 
 	yulAssert(idealLayout.size() == preOperationLayoutSize, "");
 
-	return idealLayout | ranges::views::transform([](optional<StackSlot> s) {
+	return idealLayout | ranges::views::transform([](std::optional<StackSlot> s) {
 		yulAssert(s, "");
 		return *s;
 	}) | ranges::to<Stack>;
@@ -271,7 +270,7 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation, bool _aggressiveStackCompression)
 {
 	// Enable aggressive stack compression for recursive calls.
-	if (auto const* functionCall = get_if<CFG::FunctionCall>(&_operation.operation))
+	if (auto const* functionCall = std::get_if<CFG::FunctionCall>(&_operation.operation))
 		if (functionCall->recursive)
 			_aggressiveStackCompression = true;
 
@@ -285,9 +284,9 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 	Stack stack = createIdealLayout(_operation.output, _exitStack, generateSlotOnTheFly);
 
 	// Make sure the resulting previous slots do not overlap with any assignmed variables.
-	if (auto const* assignment = get_if<CFG::Assignment>(&_operation.operation))
+	if (auto const* assignment = std::get_if<CFG::Assignment>(&_operation.operation))
 		for (auto& stackSlot: stack)
-			if (auto const* varSlot = get_if<VariableSlot>(&stackSlot))
+			if (auto const* varSlot = std::get_if<VariableSlot>(&stackSlot))
 				yulAssert(!util::contains(assignment->variables, *varSlot), "");
 
 	// Since stack+_operation.output can be easily shuffled to _exitLayout, the desired layout before the operation
@@ -335,11 +334,11 @@ Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::Ba
 
 void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG::FunctionInfo const* _functionInfo)
 {
-	list<CFG::BasicBlock const*> toVisit{&_entry};
-	set<CFG::BasicBlock const*> visited;
+	std::list<CFG::BasicBlock const*> toVisit{&_entry};
+	std::set<CFG::BasicBlock const*> visited;
 
 	// TODO: check whether visiting only a subset of these in the outer iteration below is enough.
-	list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps = collectBackwardsJumps(_entry);
+	std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps = collectBackwardsJumps(_entry);
 
 	while (!toVisit.empty())
 	{
@@ -407,10 +406,10 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG:
 	fillInJunk(_entry, _functionInfo);
 }
 
-optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
+std::optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 	CFG::BasicBlock const& _block,
-	set<CFG::BasicBlock const*> const& _visited,
-	list<CFG::BasicBlock const*>& _toVisit
+	std::set<CFG::BasicBlock const*> const& _visited,
+	std::list<CFG::BasicBlock const*>& _toVisit
 ) const
 {
 	return std::visit(util::GenericVisitor{
@@ -434,7 +433,7 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 				return m_layout.blockInfos.at(_jump.target).entryLayout;
 			// Otherwise stage the jump target for visit and defer the current block.
 			_toVisit.emplace_front(_jump.target);
-			return nullopt;
+			return std::nullopt;
 		},
 		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<Stack>
 		{
@@ -456,7 +455,7 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 				_toVisit.emplace_front(_conditionalJump.zero);
 			if (!nonZeroVisited)
 				_toVisit.emplace_front(_conditionalJump.nonZero);
-			return nullopt;
+			return std::nullopt;
 		},
 		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<Stack>
 		{
@@ -476,9 +475,9 @@ optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 	}, _block.exit);
 }
 
-list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator::collectBackwardsJumps(CFG::BasicBlock const& _entry) const
+std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayoutGenerator::collectBackwardsJumps(CFG::BasicBlock const& _entry) const
 {
-	list<pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps;
+	std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> backwardsJumps;
 	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_entry}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
 		std::visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::MainExit const&) {},
@@ -576,7 +575,7 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 		if (!util::contains(candidate, slot))
 			candidate.emplace_back(slot);
 	cxx20::erase_if(candidate, [](StackSlot const& slot) {
-		return holds_alternative<LiteralSlot>(slot) || holds_alternative<FunctionCallReturnLabelSlot>(slot);
+		return std::holds_alternative<LiteralSlot>(slot) || std::holds_alternative<FunctionCallReturnLabelSlot>(slot);
 	});
 
 	auto evaluate = [&](Stack const& _candidate) -> size_t {
@@ -633,9 +632,9 @@ Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _sta
 	return commonPrefix + bestCandidate;
 }
 
-vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG::BasicBlock const& _entry) const
+std::vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG::BasicBlock const& _entry) const
 {
-	vector<StackTooDeep> stackTooDeepErrors;
+	std::vector<StackTooDeep> stackTooDeepErrors;
 	util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{&_entry}};
 	breadthFirstSearch.run([&](CFG::BasicBlock const* _block, auto _addChild) {
 		Stack currentStack = m_layout.blockInfos.at(_block).entryLayout;
@@ -683,7 +682,7 @@ vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooD
 
 Stack StackLayoutGenerator::compressStack(Stack _stack)
 {
-	optional<size_t> firstDupOffset;
+	std::optional<size_t> firstDupOffset;
 	do
 	{
 		if (firstDupOffset)
@@ -768,8 +767,8 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 				{
 					// This has to be a previously unassigned return variable.
 					// We at least sanity-check that it is among the return variables at all.
-					yulAssert(m_currentFunctionInfo && holds_alternative<VariableSlot>(_slot));
-					yulAssert(util::contains(m_currentFunctionInfo->returnVariables, get<VariableSlot>(_slot)));
+					yulAssert(m_currentFunctionInfo && std::holds_alternative<VariableSlot>(_slot));
+					yulAssert(util::contains(m_currentFunctionInfo->returnVariables, std::get<VariableSlot>(_slot)));
 					// Strictly speaking the cost of the PUSH0 depends on the targeted EVM version, but the difference
 					// will not matter here.
 					opGas += evmasm::GasMeter::runGas(evmasm::pushInstruction(0), langutil::EVMVersion());;

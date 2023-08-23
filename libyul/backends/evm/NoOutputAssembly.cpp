@@ -28,7 +28,6 @@
 
 #include <range/v3/view/iota.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -60,12 +59,12 @@ NoOutputAssembly::LabelID NoOutputAssembly::newLabelId()
 	return 1;
 }
 
-AbstractAssembly::LabelID NoOutputAssembly::namedLabel(string const&, size_t, size_t, optional<size_t>)
+AbstractAssembly::LabelID NoOutputAssembly::namedLabel(std::string const&, size_t, size_t, std::optional<size_t>)
 {
 	return 1;
 }
 
-void NoOutputAssembly::appendLinkerSymbol(string const&)
+void NoOutputAssembly::appendLinkerSymbol(std::string const&)
 {
 	yulAssert(false, "Linker symbols not yet implemented.");
 }
@@ -98,7 +97,7 @@ void NoOutputAssembly::appendAssemblySize()
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(bool, std::string)
+std::pair<std::shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly(bool, std::string)
 {
 	yulAssert(false, "Sub assemblies not implemented.");
 	return {};
