@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Invalid library address (\"0x123456789012345678901234567890123456789T\") supplied.",
+            "message": "Invalid library address (\"0x123456789012345678901234567890123456789T\") supplied.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

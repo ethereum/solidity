@@ -399,6 +399,76 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	BOOST_TEST(parsedOptions == expectedOptions);
 }
 
+BOOST_AUTO_TEST_CASE(invalid_library_address_length)
+{
+	vector<string> commandLine = {
+		"solc",
+		"contract.sol",
+		"--libraries="
+		"dir1/file1.sol:L=0x"
+	};
+
+	string expectedMessage = "Invalid length for address for library \"dir1/file1.sol:L\": 0 instead of 40 characters.";
+	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) {
+		return _exception.what() == expectedMessage;
+	};
+
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_library_address_empty)
+{
+	vector<string> commandLine = {
+		"solc",
+		"contract.sol",
+		"--libraries="
+		"dir1/file1.sol:L="
+	};
+
+	string expectedMessage = "Empty address provided for library \"dir1/file1.sol:L\".\n"
+							 "Note that there should not be any whitespace after the equal sign." ;
+	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) {
+		return _exception.what() == expectedMessage;
+	};
+
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_library_address_prefix)
+{
+	vector<string> commandLine = {
+		"solc",
+		"contract.sol",
+		"--libraries="
+		"dir1/file1.sol:L=1111122222333334444455555666667777788888"
+	};
+
+	string expectedMessage = "The address 1111122222333334444455555666667777788888 is not prefixed with \"0x\".\n"
+										  "Note that the address must be prefixed with \"0x\"." ;
+	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) {
+		return _exception.what() == expectedMessage;
+	};
+
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_library_address_checksum)
+{
+	vector<string> commandLine = {
+		"solc",
+		"contract.sol",
+		"--libraries="
+		"dir1/file1.sol:L=0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaaa"
+	};
+
+	string expectedMessage = "Invalid checksum on address for library \"dir1/file1.sol:L\": aAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaaa\n"
+							   "The correct checksum is 0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa";
+	auto hasCorrectMessage
+		= [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
+
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+}
+
 BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 {
 	map<string, vector<string>> invalidOptionInputModeCombinations = {

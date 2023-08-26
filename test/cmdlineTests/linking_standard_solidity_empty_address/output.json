@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Library address is not prefixed with \"0x\".",
+            "message": "Library address is not prefixed with \"0x\".",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

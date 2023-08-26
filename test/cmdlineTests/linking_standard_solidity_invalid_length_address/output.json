@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Library address is of invalid length.",
+            "message": "Library address is of invalid length.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}
