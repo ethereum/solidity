@@ -430,7 +430,7 @@ void CommandLineParser::parseLibraryOption(std::string const& _input)
 				solThrow(
 					CommandLineValidationError,
 					"The address " + addrString + " is not prefixed with \"0x\".\n"
-												  "Note that the address must be prefixed with \"0x\"."
+																		"Note that the address must be prefixed with \"0x\"."
 				);
 				break;
 			case util::ValidationError::wrongAddressLength:
@@ -444,7 +444,7 @@ void CommandLineParser::parseLibraryOption(std::string const& _input)
 				solThrow(
 					CommandLineValidationError,
 					"Invalid checksum on address for library \"" + libName + "\": " + addrString + "\n"
-																								   "The correct checksum is " + util::getChecksummedAddress(addrString)
+																		"The correct checksum is " + util::getChecksummedAddress(addrString)
 				);
 				break;
 			case util::ValidationError::invalidAddress:

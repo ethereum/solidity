@@ -22,7 +22,7 @@
  * String routines
  */
 
-#include "FixedHash.h"
+#include <libsolutil/FixedHash.h>
 #include <libsolutil/StringUtils.h>
 #include <string>
 #include <vector>
