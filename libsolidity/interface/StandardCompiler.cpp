@@ -881,29 +881,31 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			if (!jsonSourceName[library].isString())
 				return formatFatalError(Error::Type::JSONError, "Library address must be a string.");
 			std::string address = jsonSourceName[library].asString();
+			util::h160 addr;
 
-			if (!boost::starts_with(address, "0x"))
+			util::ValidationError error = util::validateAddress(address, addr);
+
+			switch (error)
+			{
+			case util::ValidationError::emptyAddress:
+			case util::ValidationError::wrongPrefix:
 				return formatFatalError(
 					Error::Type::JSONError,
 					"Library address is not prefixed with \"0x\"."
 				);
-
-			if (address.length() != 42)
+			case util::ValidationError::wrongAddressLength:
 				return formatFatalError(
 					Error::Type::JSONError,
 					"Library address is of invalid length."
 				);
-
-			try
-			{
-				ret.libraries[sourceName + ":" + library] = util::h160(address);
-			}
-			catch (util::BadHexCharacter const&)
-			{
+			case util::ValidationError::checksumNotPassed:
+			case util::ValidationError::invalidAddress:
 				return formatFatalError(
 					Error::Type::JSONError,
-					"Invalid library address (\"" + address + "\") supplied."
+					"Invalid library address (\"0x" + address + "\") supplied."
 				);
+			case util::ValidationError::noError:
+				ret.libraries[sourceName + ":" + library] = addr;
 			}
 		}
 	}

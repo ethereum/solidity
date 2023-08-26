@@ -26,6 +26,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
+#include <libsolutil/FixedHash.h>
 
 #include <fmt/format.h>
 
@@ -114,6 +115,17 @@ std::string joinHumanReadablePrefixed
 /// @example formatNumberReadable((u256)0x7ffffff) = "2**27 - 1"
 /// @example formatNumberReadable(-57896044618658097711785492504343953926634992332820282019728792003956564819968) = -2**255
 std::string formatNumberReadable(bigint const& _value, bool _useTruncation = false);
+
+enum ValidationError {
+	noError = 0,
+	emptyAddress,
+	wrongPrefix,
+	wrongAddressLength,
+	checksumNotPassed,
+	invalidAddress
+};
+
+ValidationError validateAddress(std::string& addrString, util::h160& address);
 
 /// Safely converts an unsigned integer as string into an unsigned int type.
 ///

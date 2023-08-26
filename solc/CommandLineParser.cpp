@@ -23,6 +23,7 @@
 #include <libyul/optimiser/Suite.h>
 
 #include <liblangutil/EVMVersion.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -411,43 +412,51 @@ void CommandLineParser::parseLibraryOption(std::string const& _input)
 
 			std::string addrString(lib.begin() + static_cast<ptrdiff_t>(separator) + 1, lib.end());
 			boost::trim(addrString);
-			if (addrString.empty())
+
+			util::h160 address;
+			util::ValidationError error = util::validateAddress(addrString, address);
+
+			switch (error)
+			{
+			case util::ValidationError::emptyAddress:
 				solThrow(
 					CommandLineValidationError,
 					"Empty address provided for library \"" + libName + "\".\n"
-					"Note that there should not be any whitespace after the " +
+																		"Note that there should not be any whitespace after the " +
 					(isSeparatorEqualSign ? "equal sign" : "colon") + "."
 				);
-
-			if (addrString.substr(0, 2) == "0x")
-				addrString = addrString.substr(2);
-			else
+				break;
+			case util::ValidationError::wrongPrefix:
 				solThrow(
 					CommandLineValidationError,
 					"The address " + addrString + " is not prefixed with \"0x\".\n"
-					"Note that the address must be prefixed with \"0x\"."
+												  "Note that the address must be prefixed with \"0x\"."
 				);
-
-			if (addrString.length() != 40)
+				break;
+			case util::ValidationError::wrongAddressLength:
 				solThrow(
 					CommandLineValidationError,
 					"Invalid length for address for library \"" + libName + "\": " +
 					std::to_string(addrString.length()) + " instead of 40 characters."
 				);
-			if (!util::passesAddressChecksum(addrString, false))
+				break;
+			case util::ValidationError::checksumNotPassed:
 				solThrow(
 					CommandLineValidationError,
 					"Invalid checksum on address for library \"" + libName + "\": " + addrString + "\n"
-					"The correct checksum is " + util::getChecksummedAddress(addrString)
+																								   "The correct checksum is " + util::getChecksummedAddress(addrString)
 				);
-			bytes binAddr = util::fromHex(addrString);
-			util::h160 address(binAddr, util::h160::AlignRight);
-			if (binAddr.size() > 20 || address == util::h160())
+				break;
+			case util::ValidationError::invalidAddress:
 				solThrow(
 					CommandLineValidationError,
 					"Invalid address for library \"" + libName + "\": " + addrString
 				);
-			m_options.linker.libraries[libName] = address;
+				break;
+			case util::ValidationError::noError:
+				m_options.linker.libraries[libName] = address;
+				break;
+			}
 		}
 }
 

@@ -22,6 +22,7 @@
  * String routines
  */
 
+#include "FixedHash.h"
 #include <libsolutil/StringUtils.h>
 #include <string>
 #include <vector>
@@ -190,3 +191,26 @@ std::string solidity::util::formatNumberReadable(bigint const& _value, bool _use
 	return sign + str;
 }
 
+ValidationError solidity::util::validateAddress(std::string& addrString, util::h160& address)
+{
+	if (addrString.empty())
+		return ValidationError::emptyAddress;
+
+	if (addrString.substr(0, 2) != "0x")
+		return ValidationError::wrongPrefix;
+	addrString = addrString.substr(2);
+
+	if (addrString.length() != 40)
+		return ValidationError::wrongAddressLength;
+
+	if (!util::passesAddressChecksum(addrString, false))
+		return ValidationError::checksumNotPassed;
+
+	bytes binAddr = util::fromHex(addrString);
+	address = util::h160(binAddr, util::h160::AlignRight);
+
+	if (binAddr.size() > 20 || address == util::h160())
+		return ValidationError::invalidAddress;
+
+	return ValidationError::noError;
+}
