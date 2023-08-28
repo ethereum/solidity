@@ -27,12 +27,11 @@
 
 #include <range/v3/action/remove_if.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-using OptionalStatements = std::optional<vector<Statement>>;
+using OptionalStatements = std::optional<std::vector<Statement>>;
 
 namespace
 {
@@ -85,13 +84,13 @@ void ControlFlowSimplifier::operator()(Block& _block)
 void ControlFlowSimplifier::operator()(FunctionDefinition& _funDef)
 {
 	ASTModifier::operator()(_funDef);
-	if (!_funDef.body.statements.empty() && holds_alternative<Leave>(_funDef.body.statements.back()))
+	if (!_funDef.body.statements.empty() && std::holds_alternative<Leave>(_funDef.body.statements.back()))
 		_funDef.body.statements.pop_back();
 }
 
 void ControlFlowSimplifier::visit(Statement& _st)
 {
-	if (holds_alternative<ForLoop>(_st))
+	if (std::holds_alternative<ForLoop>(_st))
 	{
 		ForLoop& forLoop = std::get<ForLoop>(_st);
 		yulAssert(forLoop.pre.statements.empty(), "");
@@ -141,7 +140,7 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 		[&](If& _ifStmt) -> OptionalStatements {
 			if (_ifStmt.body.statements.empty() && m_dialect.discardFunction(m_dialect.boolType))
 			{
-				OptionalStatements s = vector<Statement>{};
+				OptionalStatements s = std::vector<Statement>{};
 				s->emplace_back(makeDiscardCall(
 					_ifStmt.debugData,
 					*m_dialect.discardFunction(m_dialect.boolType),
@@ -197,7 +196,7 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 	yulAssert(_switchStmt.cases.size() == 1, "Expected only one case!");
 
 	auto& switchCase = _switchStmt.cases.front();
-	shared_ptr<DebugData const> debugData = debugDataOf(*_switchStmt.expression);
+	std::shared_ptr<DebugData const> debugData = debugDataOf(*_switchStmt.expression);
 	YulString type = m_typeInfo.typeOf(*_switchStmt.expression);
 	if (switchCase.value)
 	{
@@ -205,7 +204,7 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 			return {};
 		return make_vector<Statement>(If{
 			std::move(_switchStmt.debugData),
-			make_unique<Expression>(FunctionCall{
+			std::make_unique<Expression>(FunctionCall{
 				debugData,
 				Identifier{debugData, m_dialect.equalityFunction(type)->name},
 				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}

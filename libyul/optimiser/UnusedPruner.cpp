@@ -30,7 +30,6 @@
 #include <libyul/Dialect.h>
 #include <libyul/SideEffects.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -44,8 +43,8 @@ UnusedPruner::UnusedPruner(
 	Dialect const& _dialect,
 	Block& _ast,
 	bool _allowMSizeOptimization,
-	map<YulString, SideEffects> const* _functionSideEffects,
-	set<YulString> const& _externallyUsedFunctions
+	std::map<YulString, SideEffects> const* _functionSideEffects,
+	std::set<YulString> const& _externallyUsedFunctions
 ):
 	m_dialect(_dialect),
 	m_allowMSizeOptimization(_allowMSizeOptimization),
@@ -60,7 +59,7 @@ UnusedPruner::UnusedPruner(
 	Dialect const& _dialect,
 	FunctionDefinition& _function,
 	bool _allowMSizeOptimization,
-	set<YulString> const& _externallyUsedFunctions
+	std::set<YulString> const& _externallyUsedFunctions
 ):
 	m_dialect(_dialect),
 	m_allowMSizeOptimization(_allowMSizeOptimization)
@@ -73,7 +72,7 @@ UnusedPruner::UnusedPruner(
 void UnusedPruner::operator()(Block& _block)
 {
 	for (auto&& statement: _block.statements)
-		if (holds_alternative<FunctionDefinition>(statement))
+		if (std::holds_alternative<FunctionDefinition>(statement))
 		{
 			FunctionDefinition& funDef = std::get<FunctionDefinition>(statement);
 			if (!used(funDef.name))
@@ -82,7 +81,7 @@ void UnusedPruner::operator()(Block& _block)
 				statement = Block{std::move(funDef.debugData), {}};
 			}
 		}
-		else if (holds_alternative<VariableDeclaration>(statement))
+		else if (std::holds_alternative<VariableDeclaration>(statement))
 		{
 			VariableDeclaration& varDecl = std::get<VariableDeclaration>(statement);
 			// Multi-variable declarations are special. We can only remove it
@@ -114,7 +113,7 @@ void UnusedPruner::operator()(Block& _block)
 					}};
 			}
 		}
-		else if (holds_alternative<ExpressionStatement>(statement))
+		else if (std::holds_alternative<ExpressionStatement>(statement))
 		{
 			ExpressionStatement& exprStmt = std::get<ExpressionStatement>(statement);
 			if (
@@ -136,8 +135,8 @@ void UnusedPruner::runUntilStabilised(
 	Dialect const& _dialect,
 	Block& _ast,
 	bool _allowMSizeOptimization,
-	map<YulString, SideEffects> const* _functionSideEffects,
-	set<YulString> const& _externallyUsedFunctions
+	std::map<YulString, SideEffects> const* _functionSideEffects,
+	std::set<YulString> const& _externallyUsedFunctions
 )
 {
 	while (true)
@@ -154,10 +153,10 @@ void UnusedPruner::runUntilStabilised(
 void UnusedPruner::runUntilStabilisedOnFullAST(
 	Dialect const& _dialect,
 	Block& _ast,
-	set<YulString> const& _externallyUsedFunctions
+	std::set<YulString> const& _externallyUsedFunctions
 )
 {
-	map<YulString, SideEffects> functionSideEffects =
+	std::map<YulString, SideEffects> functionSideEffects =
 		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast));
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _ast);
 	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, &functionSideEffects, _externallyUsedFunctions);
@@ -167,7 +166,7 @@ void UnusedPruner::runUntilStabilised(
 	Dialect const& _dialect,
 	FunctionDefinition& _function,
 	bool _allowMSizeOptimization,
-	set<YulString> const& _externallyUsedFunctions
+	std::set<YulString> const& _externallyUsedFunctions
 )
 {
 	while (true)
@@ -184,7 +183,7 @@ bool UnusedPruner::used(YulString _name) const
 	return m_references.count(_name) && m_references.at(_name) > 0;
 }
 
-void UnusedPruner::subtractReferences(map<YulString, size_t> const& _subtrahend)
+void UnusedPruner::subtractReferences(std::map<YulString, size_t> const& _subtrahend)
 {
 	for (auto const& ref: _subtrahend)
 	{

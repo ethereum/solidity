@@ -30,7 +30,6 @@
 
 #include <variant>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -48,9 +47,9 @@ struct MiniEVMInterpreter
 		return std::visit(*this, _expr);
 	}
 
-	u256 eval(evmasm::Instruction _instr, vector<Expression> const& _arguments)
+	u256 eval(evmasm::Instruction _instr, std::vector<Expression> const& _arguments)
 	{
-		vector<u256> args;
+		std::vector<u256> args;
 		for (auto const& arg: _arguments)
 			args.emplace_back(eval(arg));
 		switch (_instr)
@@ -92,7 +91,7 @@ struct MiniEVMInterpreter
 
 void ConstantOptimiser::visit(Expression& _e)
 {
-	if (holds_alternative<Literal>(_e))
+	if (std::holds_alternative<Literal>(_e))
 	{
 		Literal const& literal = std::get<Literal>(_e);
 		if (literal.kind != LiteralKind::Number)
@@ -115,7 +114,7 @@ Expression const* RepresentationFinder::tryFindRepresentation(u256 const& _value
 		return nullptr;
 
 	Representation const& repr = findRepresentation(_value);
-	if (holds_alternative<Literal>(*repr.expression))
+	if (std::holds_alternative<Literal>(*repr.expression))
 		return nullptr;
 	else
 		return repr.expression.get();
@@ -180,7 +179,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 Representation RepresentationFinder::represent(u256 const& _value) const
 {
 	Representation repr;
-	repr.expression = make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
+	repr.expression = std::make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
 	repr.cost = m_meter.costs(*repr.expression);
 	return repr;
 }
@@ -191,7 +190,7 @@ Representation RepresentationFinder::represent(
 ) const
 {
 	Representation repr;
-	repr.expression = make_unique<Expression>(FunctionCall{
+	repr.expression = std::make_unique<Expression>(FunctionCall{
 		m_debugData,
 		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_argument.expression)}
@@ -207,7 +206,7 @@ Representation RepresentationFinder::represent(
 ) const
 {
 	Representation repr;
-	repr.expression = make_unique<Expression>(FunctionCall{
+	repr.expression = std::make_unique<Expression>(FunctionCall{
 		m_debugData,
 		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}

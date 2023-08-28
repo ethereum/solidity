@@ -29,20 +29,19 @@
 #include <regex>
 #include <limits>
 
-using namespace std;
 using namespace solidity::yul;
 
 VarNameCleaner::VarNameCleaner(
 	Block const& _ast,
 	Dialect const& _dialect,
-	set<YulString> _namesToKeep
+	std::set<YulString> _namesToKeep
 ):
 	m_dialect{_dialect},
 	m_namesToKeep{std::move(_namesToKeep)},
 	m_translatedNames{}
 {
 	for (auto const& statement: _ast.statements)
-		if (holds_alternative<FunctionDefinition>(statement))
+		if (std::holds_alternative<FunctionDefinition>(statement))
 			m_namesToKeep.insert(std::get<FunctionDefinition>(statement).name);
 	m_usedNames = m_namesToKeep;
 }
@@ -52,9 +51,9 @@ void VarNameCleaner::operator()(FunctionDefinition& _funDef)
 	yulAssert(!m_insideFunction, "");
 	m_insideFunction = true;
 
-	set<YulString> globalUsedNames = std::move(m_usedNames);
+	std::set<YulString> globalUsedNames = std::move(m_usedNames);
 	m_usedNames = m_namesToKeep;
-	map<YulString, YulString> globalTranslatedNames;
+	std::map<YulString, YulString> globalTranslatedNames;
 	swap(globalTranslatedNames, m_translatedNames);
 
 	renameVariables(_funDef.parameters);
@@ -73,7 +72,7 @@ void VarNameCleaner::operator()(VariableDeclaration& _varDecl)
 	ASTModifier::operator()(_varDecl);
 }
 
-void VarNameCleaner::renameVariables(vector<TypedName>& _variables)
+void VarNameCleaner::renameVariables(std::vector<TypedName>& _variables)
 {
 	for (TypedName& typedName: _variables)
 	{
@@ -101,9 +100,9 @@ YulString VarNameCleaner::findCleanName(YulString const& _name) const
 		return newName;
 
 	// create new name with suffix (by finding a free identifier)
-	for (size_t i = 1; i < numeric_limits<decltype(i)>::max(); ++i)
+	for (size_t i = 1; i < std::numeric_limits<decltype(i)>::max(); ++i)
 	{
-		YulString newNameSuffixed = YulString{newName.str() + "_" + to_string(i)};
+		YulString newNameSuffixed = YulString{newName.str() + "_" + std::to_string(i)};
 		if (!isUsedName(newNameSuffixed))
 			return newNameSuffixed;
 	}
@@ -117,9 +116,9 @@ bool VarNameCleaner::isUsedName(YulString const& _name) const
 
 YulString VarNameCleaner::stripSuffix(YulString const& _name) const
 {
-	static regex const suffixRegex("(_+[0-9]+)+$");
+	static std::regex const suffixRegex("(_+[0-9]+)+$");
 
-	smatch suffixMatch;
+	std::smatch suffixMatch;
 	if (regex_search(_name.str(), suffixMatch, suffixRegex))
 		return {YulString{suffixMatch.prefix().str()}};
 	return _name;

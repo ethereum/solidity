@@ -28,7 +28,6 @@
 
 #include <libsolutil/Visitor.h>
 
-using namespace std;
 using namespace solidity::yul;
 using namespace solidity::util;
 
@@ -81,7 +80,7 @@ YulString TypeInfo::typeOf(Expression const& _expression) const
 	return std::visit(GenericVisitor{
 		[&](FunctionCall const& _funCall) {
 			YulString name = _funCall.functionName.name;
-			vector<YulString> const* retTypes = nullptr;
+			std::vector<YulString> const* retTypes = nullptr;
 			if (BuiltinFunction const* fun = m_dialect.builtin(name))
 				retTypes = &fun->returns;
 			else

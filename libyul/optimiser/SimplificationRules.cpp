@@ -32,7 +32,6 @@
 #include <libevmasm/RuleList.h>
 #include <libsolutil/StringUtils.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
@@ -41,7 +40,7 @@ using namespace solidity::yul;
 SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	function<AssignedValue const*(YulString)> const& _ssaValues
+	std::function<AssignedValue const*(YulString)> const& _ssaValues
 )
 {
 	auto instruction = instructionAndArguments(_dialect, _expr);
@@ -75,14 +74,14 @@ bool SimplificationRules::isInitialized() const
 	return !m_rules[uint8_t(evmasm::Instruction::ADD)].empty();
 }
 
-std::optional<std::pair<evmasm::Instruction, vector<Expression> const*>>
+std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
 	SimplificationRules::instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
 {
-	if (holds_alternative<FunctionCall>(_expr))
+	if (std::holds_alternative<FunctionCall>(_expr))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
 				if (builtin->instruction)
-					return make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
+					return std::make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
 
 	return {};
 }
@@ -122,14 +121,14 @@ SimplificationRules::SimplificationRules(std::optional<langutil::EVMVersion> _ev
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
-yul::Pattern::Pattern(evmasm::Instruction _instruction, initializer_list<Pattern> _arguments):
+yul::Pattern::Pattern(evmasm::Instruction _instruction, std::initializer_list<Pattern> _arguments):
 	m_kind(PatternKind::Operation),
 	m_instruction(_instruction),
 	m_arguments(_arguments)
 {
 }
 
-void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _matchGroups)
+void Pattern::setMatchGroup(unsigned _group, std::map<unsigned, Expression const*>& _matchGroups)
 {
 	m_matchGroup = _group;
 	m_matchGroups = &_matchGroups;
@@ -138,14 +137,14 @@ void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _
 bool Pattern::matches(
 	Expression const& _expr,
 	Dialect const& _dialect,
-	function<AssignedValue const*(YulString)> const& _ssaValues
+	std::function<AssignedValue const*(YulString)> const& _ssaValues
 ) const
 {
 	Expression const* expr = &_expr;
 
 	// Resolve the variable if possible.
 	// Do not do it for "Any" because we can check identity better for variables.
-	if (m_kind != PatternKind::Any && holds_alternative<Identifier>(_expr))
+	if (m_kind != PatternKind::Any && std::holds_alternative<Identifier>(_expr))
 	{
 		YulString varName = std::get<Identifier>(_expr).name;
 		if (AssignedValue const* value = _ssaValues(varName))
@@ -156,7 +155,7 @@ bool Pattern::matches(
 
 	if (m_kind == PatternKind::Constant)
 	{
-		if (!holds_alternative<Literal>(*expr))
+		if (!std::holds_alternative<Literal>(*expr))
 			return false;
 		Literal const& literal = std::get<Literal>(*expr);
 		if (literal.kind != LiteralKind::Number)
@@ -178,7 +177,7 @@ bool Pattern::matches(
 			// we reject the match because side-effects could prevent us from
 			// arbitrarily modifying the code.
 			if (
-				holds_alternative<FunctionCall>(arg) ||
+				std::holds_alternative<FunctionCall>(arg) ||
 				!m_arguments[i].matches(arg, _dialect, _ssaValues)
 			)
 				return false;
@@ -187,7 +186,7 @@ bool Pattern::matches(
 	else
 	{
 		assertThrow(m_arguments.empty(), OptimizerException, "\"Any\" should not have arguments.");
-		assertThrow(!holds_alternative<FunctionCall>(*expr), OptimizerException, "\"Any\" at top-level.");
+		assertThrow(!std::holds_alternative<FunctionCall>(*expr), OptimizerException, "\"Any\" at top-level.");
 	}
 
 	if (m_matchGroup)
@@ -209,8 +208,8 @@ bool Pattern::matches(
 			Expression const* firstMatch = (*m_matchGroups)[m_matchGroup];
 			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
 			assertThrow(
-				!holds_alternative<FunctionCall>(_expr) &&
-				!holds_alternative<FunctionCall>(*firstMatch),
+				!std::holds_alternative<FunctionCall>(_expr) &&
+				!std::holds_alternative<FunctionCall>(*firstMatch),
 				OptimizerException,
 				"Group matches have to be literals or variables."
 			);
@@ -235,7 +234,7 @@ evmasm::Instruction Pattern::instruction() const
 	return m_instruction;
 }
 
-Expression Pattern::toExpression(shared_ptr<DebugData const> const& _debugData, langutil::EVMVersion _evmVersion) const
+Expression Pattern::toExpression(std::shared_ptr<DebugData const> const& _debugData, langutil::EVMVersion _evmVersion) const
 {
 	if (matchGroup())
 		return ASTCopier().translate(matchGroupValue());
@@ -246,11 +245,11 @@ Expression Pattern::toExpression(shared_ptr<DebugData const> const& _debugData, 
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
-		vector<Expression> arguments;
+		std::vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
 			arguments.emplace_back(arg.toExpression(_debugData, _evmVersion));
 
-		string name = util::toLower(instructionInfo(m_instruction, _evmVersion).name);
+		std::string name = util::toLower(instructionInfo(m_instruction, _evmVersion).name);
 
 		return FunctionCall{_debugData,
 			Identifier{_debugData, YulString{name}},

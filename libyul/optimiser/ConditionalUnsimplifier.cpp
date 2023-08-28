@@ -23,7 +23,6 @@
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libsolutil/CommonData.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -39,7 +38,7 @@ void ConditionalUnsimplifier::run(OptimiserStepContext& _context, Block& _ast)
 void ConditionalUnsimplifier::operator()(Switch& _switch)
 {
 	visit(*_switch.expression);
-	if (!holds_alternative<Identifier>(*_switch.expression))
+	if (!std::holds_alternative<Identifier>(*_switch.expression))
 	{
 		ASTModifier::operator()(_switch);
 		return;
@@ -52,14 +51,14 @@ void ConditionalUnsimplifier::operator()(Switch& _switch)
 			(*this)(*_case.value);
 			if (
 				!_case.body.statements.empty() &&
-				holds_alternative<Assignment>(_case.body.statements.front())
+				std::holds_alternative<Assignment>(_case.body.statements.front())
 			)
 			{
 				Assignment const& assignment = std::get<Assignment>(_case.body.statements.front());
 				if (
 					assignment.variableNames.size() == 1 &&
 					assignment.variableNames.front().name == expr &&
-					holds_alternative<Literal>(*assignment.value) &&
+					std::holds_alternative<Literal>(*assignment.value) &&
 					valueOfLiteral(std::get<Literal>(*assignment.value)) == valueOfLiteral(*_case.value)
 				)
 					_case.body.statements.erase(_case.body.statements.begin());
@@ -74,19 +73,19 @@ void ConditionalUnsimplifier::operator()(Block& _block)
 	walkVector(_block.statements);
 	iterateReplacingWindow<2>(
 		_block.statements,
-		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<vector<Statement>>
+		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<std::vector<Statement>>
 		{
-			if (holds_alternative<If>(_stmt1))
+			if (std::holds_alternative<If>(_stmt1))
 			{
 				If& _if = std::get<If>(_stmt1);
 				if (
-					holds_alternative<Identifier>(*_if.condition) &&
+					std::holds_alternative<Identifier>(*_if.condition) &&
 					!_if.body.statements.empty()
 				)
 				{
 					YulString condition = std::get<Identifier>(*_if.condition).name;
 					if (
-						holds_alternative<Assignment>(_stmt2) &&
+						std::holds_alternative<Assignment>(_stmt2) &&
 						TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
 							TerminationFinder::ControlFlow::FlowOut
 					)
@@ -95,7 +94,7 @@ void ConditionalUnsimplifier::operator()(Block& _block)
 						if (
 							assignment.variableNames.size() == 1 &&
 							assignment.variableNames.front().name == condition &&
-							holds_alternative<Literal>(*assignment.value) &&
+							std::holds_alternative<Literal>(*assignment.value) &&
 							valueOfLiteral(std::get<Literal>(*assignment.value)) == 0
 						)
 							return {make_vector<Statement>(std::move(_stmt1))};
