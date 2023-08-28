@@ -29,7 +29,6 @@
 
 #include <range/v3/action/remove_if.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -50,7 +49,7 @@ void UnusedStoreBase::operator()(Switch const& _switch)
 	ActiveStores const preState{m_activeStores};
 
 	bool hasDefault = false;
-	vector<ActiveStores> branches;
+	std::vector<ActiveStores> branches;
 	for (auto const& c: _switch.cases)
 	{
 		if (!c.value)
@@ -146,15 +145,15 @@ void UnusedStoreBase::operator()(Continue const&)
 void UnusedStoreBase::merge(ActiveStores& _target, ActiveStores&& _other)
 {
 	util::joinMap(_target, std::move(_other), [](
-		set<Statement const*>& _storesHere,
-		set<Statement const*>&& _storesThere
+		std::set<Statement const*>& _storesHere,
+		std::set<Statement const*>&& _storesThere
 	)
 	{
 		_storesHere += _storesThere;
 	});
 }
 
-void UnusedStoreBase::merge(ActiveStores& _target, vector<ActiveStores>&& _source)
+void UnusedStoreBase::merge(ActiveStores& _target, std::vector<ActiveStores>&& _source)
 {
 	for (ActiveStores& ts: _source)
 		merge(_target, std::move(ts));

@@ -40,26 +40,25 @@
 
 #include <range/v3/algorithm/all_of.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
 /// Variable names for special constants that can never appear in actual Yul code.
-static string const zero{"@ 0"};
-static string const one{"@ 1"};
-static string const thirtyTwo{"@ 32"};
+static std::string const zero{"@ 0"};
+static std::string const one{"@ 1"};
+static std::string const thirtyTwo{"@ 32"};
 
 
 void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+	std::map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		_context.dialect,
 		CallGraphGenerator::callGraph(_ast)
 	);
 
 	SSAValueTracker ssaValues;
 	ssaValues(_ast);
-	map<YulString, AssignedValue> values;
+	std::map<YulString, AssignedValue> values;
 	for (auto const& [name, expression]: ssaValues.values())
 		values[name] = AssignedValue{expression, {}};
 	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
@@ -87,16 +86,16 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	rse.markActiveAsUsed(Location::Storage);
 	rse.m_storesToRemove += rse.m_allStores - rse.m_usedStores;
 
-	set<Statement const*> toRemove{rse.m_storesToRemove.begin(), rse.m_storesToRemove.end()};
+	std::set<Statement const*> toRemove{rse.m_storesToRemove.begin(), rse.m_storesToRemove.end()};
 	StatementRemover remover{toRemove};
 	remover(_ast);
 }
 
 UnusedStoreEliminator::UnusedStoreEliminator(
 	Dialect const& _dialect,
-	map<YulString, SideEffects> const& _functionSideEffects,
-	map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
-	map<YulString, AssignedValue> const& _ssaValues,
+	std::map<YulString, SideEffects> const& _functionSideEffects,
+	std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
+	std::map<YulString, AssignedValue> const& _ssaValues,
 	bool _ignoreMemory
 ):
 	UnusedStoreBase(_dialect),
@@ -148,18 +147,18 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 
 	UnusedStoreBase::visit(_statement);
 
-	auto const* exprStatement = get_if<ExpressionStatement>(&_statement);
+	auto const* exprStatement = std::get_if<ExpressionStatement>(&_statement);
 	if (!exprStatement)
 		return;
 
-	FunctionCall const* funCall = get_if<FunctionCall>(&exprStatement->expression);
+	FunctionCall const* funCall = std::get_if<FunctionCall>(&exprStatement->expression);
 	yulAssert(funCall);
-	optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName.name);
+	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName.name);
 	if (!instruction)
 		return;
 
 	if (!ranges::all_of(funCall->arguments, [](Expression const& _expr) -> bool {
-		return get_if<Identifier>(&_expr) || get_if<Literal>(&_expr);
+		return std::get_if<Identifier>(&_expr) || std::get_if<Literal>(&_expr);
 	}))
 		return;
 
@@ -195,7 +194,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 			auto length = identifierNameIfSSA(funCall->arguments.at(2));
 			if (length && startOffset)
 			{
-				FunctionCall const* lengthCall = get_if<FunctionCall>(m_ssaValues.at(*length).value);
+				FunctionCall const* lengthCall = std::get_if<FunctionCall>(m_ssaValues.at(*length).value);
 				if (
 					m_knowledgeBase.knownToBeZero(*startOffset) &&
 					lengthCall &&
@@ -207,7 +206,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 				return;
 		}
 		m_allStores.insert(&_statement);
-		vector<Operation> operations = operationsFromFunctionCall(*funCall);
+		std::vector<Operation> operations = operationsFromFunctionCall(*funCall);
 		yulAssert(operations.size() == 1, "");
 		if (operations.front().location == Location::Storage)
 			activeStorageStores().insert(&_statement);
@@ -217,7 +216,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 	}
 }
 
-vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFunctionCall(
+std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFunctionCall(
 	FunctionCall const& _functionCall
 ) const
 {
@@ -230,10 +229,10 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 	else
 		sideEffects = m_functionSideEffects.at(functionName);
 
-	optional<Instruction> instruction = toEVMInstruction(m_dialect, functionName);
+	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, functionName);
 	if (!instruction)
 	{
-		vector<Operation> result;
+		std::vector<Operation> result;
 		// Unknown read is worse than unknown write.
 		if (sideEffects.memory != SideEffects::Effect::None)
 			result.emplace_back(Operation{Location::Memory, Effect::Read, {}, {}});
@@ -269,7 +268,7 @@ vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsFromFu
 
 void UnusedStoreEliminator::applyOperation(UnusedStoreEliminator::Operation const& _operation)
 {
-	set<Statement const*>& active =
+	std::set<Statement const*>& active =
 		_operation.location == Location::Storage ?
 		activeStorageStores() :
 		activeMemoryStores();
@@ -324,9 +323,9 @@ bool UnusedStoreEliminator::knownUnrelated(
 
 		if (_op1.start && _op1.length && _op2.start)
 		{
-			optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
-			optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
-			optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
+			std::optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
+			std::optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
+			std::optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
 			if (
 				(length1 && start1 && start2) &&
 				*start1 + *length1 >= *start1 && // no overflow
@@ -336,9 +335,9 @@ bool UnusedStoreEliminator::knownUnrelated(
 		}
 		if (_op2.start && _op2.length && _op1.start)
 		{
-			optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
-			optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
-			optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
+			std::optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
+			std::optional<u256> start2 = m_knowledgeBase.valueIfKnownConstant(*_op2.start);
+			std::optional<u256> start1 = m_knowledgeBase.valueIfKnownConstant(*_op1.start);
 			if (
 				(length2 && start2 && start1) &&
 				*start2 + *length2 >= *start2 && // no overflow
@@ -349,8 +348,8 @@ bool UnusedStoreEliminator::knownUnrelated(
 
 		if (_op1.start && _op1.length && _op2.start && _op2.length)
 		{
-			optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
-			optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
+			std::optional<u256> length1 = m_knowledgeBase.valueIfKnownConstant(*_op1.length);
+			std::optional<u256> length2 = m_knowledgeBase.valueIfKnownConstant(*_op2.length);
 			if (
 				(length1 && *length1 <= 32) &&
 				(length2 && *length2 <= 32) &&
@@ -384,13 +383,13 @@ bool UnusedStoreEliminator::knownCovered(
 		// i.start <= e.start && e.start + e.length <= i.start + i.length
 		if (!_covered.start || !_covering.start || !_covered.length || !_covering.length)
 			return false;
-		optional<u256> coveredLength = m_knowledgeBase.valueIfKnownConstant(*_covered.length);
-		optional<u256> coveringLength = m_knowledgeBase.valueIfKnownConstant(*_covering.length);
+		std::optional<u256> coveredLength = m_knowledgeBase.valueIfKnownConstant(*_covered.length);
+		std::optional<u256> coveringLength = m_knowledgeBase.valueIfKnownConstant(*_covering.length);
 		if (*_covered.start == *_covering.start)
 			if (coveredLength && coveringLength && *coveredLength <= *coveringLength)
 				return true;
-		optional<u256> coveredStart = m_knowledgeBase.valueIfKnownConstant(*_covered.start);
-		optional<u256> coveringStart = m_knowledgeBase.valueIfKnownConstant(*_covering.start);
+		std::optional<u256> coveredStart = m_knowledgeBase.valueIfKnownConstant(*_covered.start);
+		std::optional<u256> coveringStart = m_knowledgeBase.valueIfKnownConstant(*_covering.start);
 		if (coveredStart && coveringStart && coveredLength && coveringLength)
 			if (
 				*coveringStart <= *coveredStart &&
@@ -408,32 +407,32 @@ bool UnusedStoreEliminator::knownCovered(
 }
 
 void UnusedStoreEliminator::markActiveAsUsed(
-	optional<UnusedStoreEliminator::Location> _onlyLocation
+	std::optional<UnusedStoreEliminator::Location> _onlyLocation
 )
 {
-	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+	if (_onlyLocation == std::nullopt || _onlyLocation == Location::Memory)
 		for (Statement const* statement: activeMemoryStores())
 			m_usedStores.insert(statement);
-	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+	if (_onlyLocation == std::nullopt || _onlyLocation == Location::Storage)
 		for (Statement const* statement: activeStorageStores())
 			m_usedStores.insert(statement);
 	clearActive(_onlyLocation);
 }
 
 void UnusedStoreEliminator::clearActive(
-	optional<UnusedStoreEliminator::Location> _onlyLocation
+	std::optional<UnusedStoreEliminator::Location> _onlyLocation
 )
 {
-	if (_onlyLocation == nullopt || _onlyLocation == Location::Memory)
+	if (_onlyLocation == std::nullopt || _onlyLocation == Location::Memory)
 		activeMemoryStores() = {};
-	if (_onlyLocation == nullopt || _onlyLocation == Location::Storage)
+	if (_onlyLocation == std::nullopt || _onlyLocation == Location::Storage)
 		activeStorageStores() = {};
 }
 
-optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const& _expression) const
+std::optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const& _expression) const
 {
-	if (Identifier const* identifier = get_if<Identifier>(&_expression))
+	if (Identifier const* identifier = std::get_if<Identifier>(&_expression))
 		if (m_ssaValues.count(identifier->name))
 			return {identifier->name};
-	return nullopt;
+	return std::nullopt;
 }

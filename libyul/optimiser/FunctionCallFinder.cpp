@@ -18,11 +18,10 @@
 #include <libyul/optimiser/FunctionCallFinder.h>
 #include <libyul/AST.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-vector<FunctionCall*> FunctionCallFinder::run(Block& _block, YulString _functionName)
+std::vector<FunctionCall*> FunctionCallFinder::run(Block& _block, YulString _functionName)
 {
 	FunctionCallFinder functionCallFinder(_functionName);
 	functionCallFinder(_block);
