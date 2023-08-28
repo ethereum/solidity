@@ -33,7 +33,6 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace solidity::yul;
-using namespace std;
 
 void EVMObjectCompiler::compile(
 	Object& _object,
@@ -91,12 +90,12 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		);
 		if (!stackErrors.empty())
 		{
-			vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
+			std::vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
 				*_object.code,
 				"memoryguard"_yulstring
 			);
 			auto stackError = stackErrors.front();
-			string msg = stackError.comment() ? *stackError.comment() : "";
+			std::string msg = stackError.comment() ? *stackError.comment() : "";
 			if (memoryGuardCalls.empty())
 				msg += "\nNo memoryguard was present. "
 					"Consider using memory-safe assembly only and annotating it via "

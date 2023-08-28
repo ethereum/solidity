@@ -31,7 +31,6 @@
 
 #include <libsolutil/CommonData.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -52,7 +51,7 @@ bigint GasMeter::combineCosts(std::pair<bigint, bigint> _costs) const
 }
 
 
-pair<bigint, bigint> GasMeterVisitor::costs(
+std::pair<bigint, bigint> GasMeterVisitor::costs(
 	Expression const& _expression,
 	EVMDialect const& _dialect,
 	bool _isCreation
@@ -63,7 +62,7 @@ pair<bigint, bigint> GasMeterVisitor::costs(
 	return {gmv.m_runGas, gmv.m_dataGas};
 }
 
-pair<bigint, bigint> GasMeterVisitor::instructionCosts(
+std::pair<bigint, bigint> GasMeterVisitor::instructionCosts(
 	evmasm::Instruction _instruction,
 	EVMDialect const& _dialect,
 	bool _isCreation

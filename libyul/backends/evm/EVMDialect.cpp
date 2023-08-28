@@ -38,7 +38,7 @@
 
 #include <regex>
 
-using namespace std;
+using namespace std::string_literals;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -46,9 +46,9 @@ using namespace solidity::util;
 namespace
 {
 
-pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
+std::pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	langutil::EVMVersion _evmVersion,
-	string const& _name,
+	std::string const& _name,
 	evmasm::Instruction _instruction
 )
 {
@@ -87,12 +87,12 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	return {name, std::move(f)};
 }
 
-pair<YulString, BuiltinFunctionForEVM> createFunction(
-	string _name,
+std::pair<YulString, BuiltinFunctionForEVM> createFunction(
+	std::string _name,
 	size_t _params,
 	size_t _returns,
 	SideEffects _sideEffects,
-	vector<optional<LiteralKind>> _literalArguments,
+	std::vector<std::optional<LiteralKind>> _literalArguments,
 	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&)> _generateCode
 )
 {
@@ -111,7 +111,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	return {name, f};
 }
 
-set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
+std::set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 {
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// basefee for VMs before london.
@@ -122,20 +122,20 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// prevrandao for VMs before paris.
-	auto prevRandaoException = [&](string const& _instrName) -> bool
+	auto prevRandaoException = [&](std::string const& _instrName) -> bool
 	{
 		// Using string comparison as the opcode is the same as for "difficulty"
 		return _instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris();
 	};
 
-	set<YulString> reserved;
+	std::set<YulString> reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
-		string name = toLower(instr.first);
+		std::string name = toLower(instr.first);
 		if (!baseFeeException(instr.second) && !prevRandaoException(name))
 			reserved.emplace(name);
 	}
-	reserved += vector<YulString>{
+	reserved += std::vector<YulString>{
 		"linkersymbol"_yulstring,
 		"datasize"_yulstring,
 		"dataoffset"_yulstring,
@@ -146,19 +146,19 @@ set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 	return reserved;
 }
 
-map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
+std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
 
 	// Exclude prevrandao as builtin for VMs before paris and difficulty for VMs after paris.
-	auto prevRandaoException = [&](string const& _instrName) -> bool
+	auto prevRandaoException = [&](std::string const& _instrName) -> bool
 	{
 		return (_instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris()) || (_instrName == "difficulty" && _evmVersion >= langutil::EVMVersion::paris());
 	};
 
-	map<YulString, BuiltinFunctionForEVM> builtins;
+	std::map<YulString, BuiltinFunctionForEVM> builtins;
 	for (auto const& instr: evmasm::c_instructions)
 	{
-		string name = toLower(instr.first);
+		std::string name = toLower(instr.first);
 		auto const opcode = instr.second;
 
 		if (
@@ -198,7 +198,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				BuiltinContext&
 			) {
 				yulAssert(_call.arguments.size() == 1, "");
-				Literal const* literal = get_if<Literal>(&_call.arguments.front());
+				Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
 				yulAssert(literal, "");
 				_assembly.appendConstant(valueOfLiteral(*literal));
 			})
@@ -217,10 +217,10 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendAssemblySize();
 			else
 			{
-				vector<size_t> subIdPath =
+			std::vector<size_t> subIdPath =
 					_context.subIDs.count(dataName) == 0 ?
 						_context.currentObject->pathToSubObject(dataName) :
-						vector<size_t>{_context.subIDs.at(dataName)};
+						std::vector<size_t>{_context.subIDs.at(dataName)};
 				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
 				_assembly.appendDataSize(subIdPath);
 			}
@@ -238,10 +238,10 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendConstant(0);
 			else
 			{
-				vector<size_t> subIdPath =
+			std::vector<size_t> subIdPath =
 					_context.subIDs.count(dataName) == 0 ?
 						_context.currentObject->pathToSubObject(dataName) :
-						vector<size_t>{_context.subIDs.at(dataName)};
+						std::vector<size_t>{_context.subIDs.at(dataName)};
 				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
 				_assembly.appendDataOffset(subIdPath);
 			}
@@ -295,9 +295,9 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 	return builtins;
 }
 
-regex const& verbatimPattern()
+std::regex const& verbatimPattern()
 {
-	regex static const pattern{"verbatim_([1-9]?[0-9])i_([1-9]?[0-9])o"};
+	std::regex static const pattern{"verbatim_([1-9]?[0-9])i_([1-9]?[0-9])o"};
 	return pattern;
 }
 
@@ -316,7 +316,7 @@ BuiltinFunctionForEVM const* EVMDialect::builtin(YulString _name) const
 {
 	if (m_objectAccess)
 	{
-		smatch match;
+		std::smatch match;
 		if (regex_match(_name.str(), match, verbatimPattern()))
 			return verbatimFunction(stoul(match[1]), stoul(match[2]));
 	}
@@ -337,19 +337,19 @@ bool EVMDialect::reservedIdentifier(YulString _name) const
 
 EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
 {
-	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialect const>> dialects;
 	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
-		dialects[_version] = make_unique<EVMDialect>(_version, false);
+		dialects[_version] = std::make_unique<EVMDialect>(_version, false);
 	return *dialects[_version];
 }
 
 EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
 {
-	static map<langutil::EVMVersion, unique_ptr<EVMDialect const>> dialects;
+	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialect const>> dialects;
 	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
-		dialects[_version] = make_unique<EVMDialect>(_version, true);
+		dialects[_version] = std::make_unique<EVMDialect>(_version, true);
 	return *dialects[_version];
 }
 
@@ -374,16 +374,16 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 
 BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, size_t _returnVariables) const
 {
-	pair<size_t, size_t> key{_arguments, _returnVariables};
-	shared_ptr<BuiltinFunctionForEVM const>& function = m_verbatimFunctions[key];
+	std::pair<size_t, size_t> key{_arguments, _returnVariables};
+	std::shared_ptr<BuiltinFunctionForEVM const>& function = m_verbatimFunctions[key];
 	if (!function)
 	{
 		BuiltinFunctionForEVM builtinFunction = createFunction(
-			"verbatim_" + to_string(_arguments) + "i_" + to_string(_returnVariables) + "o",
+			"verbatim_" + std::to_string(_arguments) + "i_" + std::to_string(_returnVariables) + "o",
 			1 + _arguments,
 			_returnVariables,
 			SideEffects::worst(),
-			vector<optional<LiteralKind>>{LiteralKind::String} + vector<optional<LiteralKind>>(_arguments),
+			std::vector<std::optional<LiteralKind>>{LiteralKind::String} + std::vector<std::optional<LiteralKind>>(_arguments),
 			[=](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
@@ -400,7 +400,7 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 			}
 		).second;
 		builtinFunction.isMSize = true;
-		function = make_shared<BuiltinFunctionForEVM const>(std::move(builtinFunction));
+		function = std::make_shared<BuiltinFunctionForEVM const>(std::move(builtinFunction));
 	}
 	return function.get();
 }
@@ -501,9 +501,9 @@ BuiltinFunctionForEVM const* EVMDialectTyped::equalityFunction(YulString _type) 
 
 EVMDialectTyped const& EVMDialectTyped::instance(langutil::EVMVersion _version)
 {
-	static map<langutil::EVMVersion, unique_ptr<EVMDialectTyped const>> dialects;
+	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialectTyped const>> dialects;
 	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
-		dialects[_version] = make_unique<EVMDialectTyped>(_version, true);
+		dialects[_version] = std::make_unique<EVMDialectTyped>(_version, true);
 	return *dialects[_version];
 }
