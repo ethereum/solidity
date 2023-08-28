@@ -34,6 +34,7 @@ NAMESPACE_STD_FREE_FILES=(
     libsolidity/lsp/*
     libsolidity/parsing/*
     libsolutil/*
+    libyul/*
     libyul/backends/evm/*
     libyul/optimiser/*
     solc/*
