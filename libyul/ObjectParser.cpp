@@ -32,27 +32,26 @@
 
 #include <regex>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
+std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
 	m_recursionDepth = 0;
 	try
 	{
-		shared_ptr<Object> object;
+		std::shared_ptr<Object> object;
 		m_scanner = _scanner;
 
 		if (currentToken() == Token::LBrace)
 		{
 			// Special case: Code-only form.
-			object = make_shared<Object>();
+			object = std::make_shared<Object>();
 			object->name = "object"_yulstring;
 			auto sourceNameMapping = tryParseSourceNameMapping();
-			object->debugData = make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
+			object->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
 			object->code = parseBlock(sourceNameMapping);
 			if (!object->code)
 				return nullptr;
@@ -71,14 +70,14 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 	return nullptr;
 }
 
-shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
+std::shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 {
 	RecursionGuard guard(*this);
 
-	shared_ptr<Object> ret = make_shared<Object>();
+	std::shared_ptr<Object> ret = std::make_shared<Object>();
 
 	auto sourceNameMapping = tryParseSourceNameMapping();
-	ret->debugData = make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
+	ret->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
 
 	if (currentToken() != Token::Identifier || currentLiteral() != "object")
 		fatalParserError(4294_error, "Expected keyword \"object\".");
@@ -107,7 +106,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 	return ret;
 }
 
-shared_ptr<Block> ObjectParser::parseCode(optional<SourceNameMap> _sourceNames)
+std::shared_ptr<Block> ObjectParser::parseCode(std::optional<SourceNameMap> _sourceNames)
 {
 	if (currentToken() != Token::Identifier || currentLiteral() != "code")
 		fatalParserError(4846_error, "Expected keyword \"code\".");
@@ -116,7 +115,7 @@ shared_ptr<Block> ObjectParser::parseCode(optional<SourceNameMap> _sourceNames)
 	return parseBlock(std::move(_sourceNames));
 }
 
-optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
+std::optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 {
 	// @use-src 0:"abc.sol", 1:"foo.sol", 2:"bar.sol"
 	//
@@ -131,7 +130,7 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 	);
 	std::smatch sm;
 	if (!std::regex_search(m_scanner->currentCommentLiteral(), sm, lineRE))
-		return nullopt;
+		return std::nullopt;
 
 	solAssert(sm.size() == 2, "");
 	auto text = m_scanner->currentCommentLiteral().substr(static_cast<size_t>(sm.position() + sm.length()));
@@ -152,7 +151,7 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 			break;
 		if (scanner.next() != Token::StringLiteral)
 			break;
-		sourceNames[*sourceIndex] = make_shared<string const>(scanner.currentLiteral());
+		sourceNames[*sourceIndex] = std::make_shared<std::string const>(scanner.currentLiteral());
 
 		Token const next = scanner.next();
 		if (next == Token::EOS)
@@ -167,13 +166,13 @@ optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 		m_scanner->currentCommentLocation(),
 		"Error parsing arguments to @use-src. Expected: <number> \":\" \"<filename>\", ..."
 	);
-	return nullopt;
+	return std::nullopt;
 }
 
-shared_ptr<Block> ObjectParser::parseBlock(optional<SourceNameMap> _sourceNames)
+std::shared_ptr<Block> ObjectParser::parseBlock(std::optional<SourceNameMap> _sourceNames)
 {
 	Parser parser(m_errorReporter, m_dialect, std::move(_sourceNames));
-	shared_ptr<Block> block = parser.parseInline(m_scanner);
+	std::shared_ptr<Block> block = parser.parseInline(m_scanner);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;
 }
@@ -192,7 +191,7 @@ void ObjectParser::parseData(Object& _containingObject)
 		expectToken(Token::HexStringLiteral, false);
 	else
 		expectToken(Token::StringLiteral, false);
-	addNamedSubObject(_containingObject, name, make_shared<Data>(name, asBytes(currentLiteral())));
+	addNamedSubObject(_containingObject, name, std::make_shared<Data>(name, asBytes(currentLiteral())));
 	advance();
 }
 
@@ -210,7 +209,7 @@ YulString ObjectParser::parseUniqueName(Object const* _containingObject)
 	return name;
 }
 
-void ObjectParser::addNamedSubObject(Object& _container, YulString _name, shared_ptr<ObjectNode> _subObject)
+void ObjectParser::addNamedSubObject(Object& _container, YulString _name, std::shared_ptr<ObjectNode> _subObject)
 {
 	_container.subIndexByName[_name] = _container.subObjects.size();
 	_container.subObjects.emplace_back(std::move(_subObject));

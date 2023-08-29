@@ -30,7 +30,6 @@
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 
-using namespace std;
 using namespace solidity::yul;
 
 
@@ -162,7 +161,7 @@ void ControlFlowBuilder::newConnectedNode()
 
 ControlFlowNode* ControlFlowBuilder::newNode()
 {
-	m_nodes.emplace_back(make_shared<ControlFlowNode>());
+	m_nodes.emplace_back(std::make_shared<ControlFlowNode>());
 	return m_nodes.back().get();
 }
 
@@ -230,9 +229,9 @@ ControlFlowSideEffectsCollector::ControlFlowSideEffectsCollector(
 	}
 }
 
-map<YulString, ControlFlowSideEffects> ControlFlowSideEffectsCollector::functionSideEffectsNamed() const
+std::map<YulString, ControlFlowSideEffects> ControlFlowSideEffectsCollector::functionSideEffectsNamed() const
 {
-	map<YulString, ControlFlowSideEffects> result;
+	std::map<YulString, ControlFlowSideEffects> result;
 	for (auto&& [function, sideEffects]: m_functionSideEffects)
 		yulAssert(result.insert({function->name, sideEffects}).second);
 	return result;
