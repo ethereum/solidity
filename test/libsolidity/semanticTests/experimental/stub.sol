@@ -85,6 +85,8 @@ contract C {
     }
 }
 // ====
+// EVMVersion: >=constantinople
+// ====
 // compileViaYul: true
 // ----
 // (): 0 -> 0
