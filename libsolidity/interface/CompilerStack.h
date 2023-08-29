@@ -240,6 +240,13 @@ public:
 	/// @returns false on error.
 	bool compile(State _stopAfter = State::CompilationSuccessful);
 
+	/// Checks whether experimental analysis is on; used in SyntaxTests to skip compilation in case it's ``true``.
+	/// @returns true if experimental analysis is set
+	bool isExperimentalAnalysis() const
+	{
+		return !!m_experimentalAnalysis;
+	}
+
 	/// @returns the list of sources (paths) used
 	std::vector<std::string> sourceNames() const;
 
