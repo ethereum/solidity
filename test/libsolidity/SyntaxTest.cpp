@@ -67,7 +67,7 @@ void SyntaxTest::parseAndAnalyze()
 {
 	setupCompiler();
 
-	if (compiler().parse() && compiler().analyze())
+	if (compiler().parse() && compiler().analyze() && !compiler().isExperimentalAnalysis())
 		try
 		{
 			if (!compiler().compile())
