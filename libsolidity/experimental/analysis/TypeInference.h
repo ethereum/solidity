@@ -64,6 +64,7 @@ public:
 	bool visit(SourceUnit const&) override { return true; }
 	bool visit(ContractDefinition const&) override { return true; }
 	bool visit(InlineAssembly const& _inlineAssembly) override;
+	bool visit(ImportDirective const&) override { return true; }
 	bool visit(PragmaDirective const&) override { return false; }
 
 	bool visit(IfStatement const&) override { return true; }
