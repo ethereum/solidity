@@ -25,7 +25,6 @@
 
 #include <fstream>
 
-using namespace std;
 using namespace boost::test_tools;
 
 namespace solidity::util::test
@@ -58,8 +57,8 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_delete_its_directory_even_if_not_
 		BOOST_TEST(boost::filesystem::is_directory(dirPath));
 
 		{
-			ofstream tmpFile((dirPath / "test-file.txt").string());
-			tmpFile << "Delete me!" << endl;
+			std::ofstream tmpFile((dirPath / "test-file.txt").string());
+			tmpFile << "Delete me!" << std::endl;
 		}
 		soltestAssert(boost::filesystem::is_regular_file(dirPath / "test-file.txt"), "");
 	}

@@ -25,7 +25,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 
 namespace solidity::util::test
 {
@@ -34,61 +33,61 @@ BOOST_AUTO_TEST_SUITE(IterateReplacing, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(no_replacement)
 {
-	vector<string> v{"abc", "def", "ghi"};
-	function<std::optional<vector<string>>(string&)> f = [](string&) -> std::optional<vector<string>> { return {}; };
+	std::vector<std::string> v{"abc", "def", "ghi"};
+	std::function<std::optional<std::vector<std::string>>(std::string&)> f = [](std::string&) -> std::optional<std::vector<std::string>> { return {}; };
 	iterateReplacing(v, f);
-	vector<string> expectation{"abc", "def", "ghi"};
+	std::vector<std::string> expectation{"abc", "def", "ghi"};
 	BOOST_CHECK(v == expectation);
 }
 
 BOOST_AUTO_TEST_CASE(empty_input)
 {
-	vector<string> v;
-	function<std::optional<vector<string>>(string&)> f = [](string&) -> std::optional<vector<string>> { return {}; };
+	std::vector<std::string> v;
+	std::function<std::optional<std::vector<std::string>>(std::string&)> f = [](std::string&) -> std::optional<std::vector<std::string>> { return {}; };
 	iterateReplacing(v, f);
-	vector<string> expectation;
+	std::vector<std::string> expectation;
 	BOOST_CHECK(v == expectation);
 }
 
 BOOST_AUTO_TEST_CASE(delete_some)
 {
-	vector<string> v{"abc", "def", "ghi"};
-	function<std::optional<vector<string>>(string&)> f = [](string& _s) -> std::optional<vector<string>> {
+	std::vector<std::string> v{"abc", "def", "ghi"};
+	std::function<std::optional<std::vector<std::string>>(std::string&)> f = [](std::string& _s) -> std::optional<std::vector<std::string>> {
 		if (_s == "def")
-			return vector<string>();
+			return std::vector<std::string>();
 		else
 			return {};
 	};
 	iterateReplacing(v, f);
-	vector<string> expectation{"abc", "ghi"};
+	std::vector<std::string> expectation{"abc", "ghi"};
 	BOOST_CHECK(v == expectation);
 }
 
 BOOST_AUTO_TEST_CASE(inject_some_start)
 {
-	vector<string> v{"abc", "def", "ghi"};
-	function<std::optional<vector<string>>(string&)> f = [](string& _s) -> std::optional<vector<string>> {
+	std::vector<std::string> v{"abc", "def", "ghi"};
+	std::function<std::optional<std::vector<std::string>>(std::string&)> f = [](std::string& _s) -> std::optional<std::vector<std::string>> {
 		if (_s == "abc")
-			return vector<string>{"x", "y"};
+			return std::vector<std::string>{"x", "y"};
 		else
 			return {};
 	};
 	iterateReplacing(v, f);
-	vector<string> expectation{"x", "y", "def", "ghi"};
+	std::vector<std::string> expectation{"x", "y", "def", "ghi"};
 	BOOST_CHECK(v == expectation);
 }
 
 BOOST_AUTO_TEST_CASE(inject_some_end)
 {
-	vector<string> v{"abc", "def", "ghi"};
-	function<std::optional<vector<string>>(string&)> f = [](string& _s) -> std::optional<vector<string>> {
+	std::vector<std::string> v{"abc", "def", "ghi"};
+	std::function<std::optional<std::vector<std::string>>(std::string&)> f = [](std::string& _s) -> std::optional<std::vector<std::string>> {
 		if (_s == "ghi")
-			return vector<string>{"x", "y"};
+			return std::vector<std::string>{"x", "y"};
 		else
 			return {};
 	};
 	iterateReplacing(v, f);
-	vector<string> expectation{"abc", "def", "x", "y"};
+	std::vector<std::string> expectation{"abc", "def", "x", "y"};
 	BOOST_CHECK(v == expectation);
 }
 

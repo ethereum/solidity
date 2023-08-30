@@ -40,23 +40,23 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace solidity;
-using namespace std;
+using namespace std::string_literals;
 
-ASTPropertyTest::ASTPropertyTest(string const& _filename):
+ASTPropertyTest::ASTPropertyTest(std::string const& _filename):
 	TestCase(_filename)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
-		BOOST_THROW_EXCEPTION(runtime_error("Not a Solidity file: \"" + _filename + "\"."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Not a Solidity file: \"" + _filename + "\"."));
 
 	m_source = m_reader.source();
 	readExpectations();
 	soltestAssert(m_tests.size() > 0, "No tests specified in " + _filename);
 }
 
-string ASTPropertyTest::formatExpectations(bool _obtainedResult)
+std::string ASTPropertyTest::formatExpectations(bool _obtainedResult)
 {
-	string expectations;
-	for (string const& testId: m_testOrder)
+	std::string expectations;
+	for (std::string const& testId: m_testOrder)
 	{
 		soltestAssert(m_tests.count(testId) > 0);
 		expectations +=
@@ -68,10 +68,10 @@ string ASTPropertyTest::formatExpectations(bool _obtainedResult)
 	return expectations;
 }
 
-vector<StringPair> ASTPropertyTest::readKeyValuePairs(string const& _input)
+std::vector<StringPair> ASTPropertyTest::readKeyValuePairs(std::string const& _input)
 {
-	vector<StringPair> result;
-	for (string line: _input | ranges::views::split('\n') | ranges::to<vector<string>>)
+	std::vector<StringPair> result;
+	for (std::string line: _input | ranges::views::split('\n') | ranges::to<std::vector<std::string>>)
 	{
 		boost::trim(line);
 		if (line.empty())
@@ -83,14 +83,14 @@ vector<StringPair> ASTPropertyTest::readKeyValuePairs(string const& _input)
 		);
 
 		auto colonPosition = line.find_first_of(':');
-		soltestAssert(colonPosition != string::npos, "Property test is missing a colon: " + line);
+		soltestAssert(colonPosition != std::string::npos, "Property test is missing a colon: " + line);
 
 		StringPair pair{
 			boost::trim_copy(line.substr(0, colonPosition)),
 			boost::trim_copy(line.substr(colonPosition + 1))
 		};
-		soltestAssert(!get<0>(pair).empty() != false, "Empty key in property test: " + line);
-		soltestAssert(!get<1>(pair).empty() != false, "Empty value in property test: " + line);
+		soltestAssert(!std::get<0>(pair).empty() != false, "Empty key in property test: " + line);
+		soltestAssert(!std::get<1>(pair).empty() != false, "Empty value in property test: " + line);
 
 		result.push_back(pair);
 	}
@@ -110,7 +110,7 @@ void ASTPropertyTest::readExpectations()
 
 void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
 {
-	queue<Json::Value> nodesToVisit;
+	std::queue<Json::Value> nodesToVisit;
 	nodesToVisit.push(_astJson);
 
 	while (!nodesToVisit.empty())
@@ -121,7 +121,7 @@ void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
 			for (auto&& member: node)
 				nodesToVisit.push(member);
 		else if (node.isObject())
-			for (string const& memberName: node.getMemberNames())
+			for (std::string const& memberName: node.getMemberNames())
 			{
 				if (memberName != "documentation")
 				{
@@ -129,12 +129,12 @@ void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
 					continue;
 				}
 
-				string nodeDocstring = node["documentation"].isObject() ?
+				std::string nodeDocstring = node["documentation"].isObject() ?
 					node["documentation"]["text"].asString() :
 					node["documentation"].asString();
 				soltestAssert(!nodeDocstring.empty());
 
-				vector<StringPair> pairs = readKeyValuePairs(nodeDocstring);
+				std::vector<StringPair> pairs = readKeyValuePairs(nodeDocstring);
 				if (pairs.empty())
 					continue;
 
@@ -151,7 +151,7 @@ void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
 					m_tests[testId].property = testedProperty;
 
 					soltestAssert(node.isMember("nodeType"));
-					optional<Json::Value> propertyNode = jsonValueByPath(node, testedProperty);
+					std::optional<Json::Value> propertyNode = jsonValueByPath(node, testedProperty);
 					soltestAssert(
 						propertyNode.has_value(),
 						node["nodeType"].asString() + " node does not have a property named \""s + testedProperty + "\""
@@ -179,7 +179,7 @@ void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
 	m_obtainedResult = formatExpectations(true /* _obtainedResult */);
 }
 
-TestCase::TestResult ASTPropertyTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ASTPropertyTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	CompilerStack compiler;
 
@@ -190,7 +190,7 @@ TestCase::TestResult ASTPropertyTest::run(ostream& _stream, string const& _lineP
 	compiler.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	if (!compiler.parseAndAnalyze())
-		BOOST_THROW_EXCEPTION(runtime_error(
+		BOOST_THROW_EXCEPTION(std::runtime_error(
 			"Parsing contract failed" +
 			SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler, _formatted)
 		));

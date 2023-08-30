@@ -27,7 +27,6 @@
 #include <string>
 #include <tuple>
 
-using namespace std;
 using namespace solidity::langutil;
 
 namespace solidity::frontend::test
@@ -37,7 +36,7 @@ BOOST_FIXTURE_TEST_SUITE(ViewPureChecker, AnalysisFramework)
 
 BOOST_AUTO_TEST_CASE(environment_access)
 {
-	vector<string> view{
+	std::vector<std::string> view{
 		"block.coinbase",
 		"block.timestamp",
 		"block.difficulty",
@@ -57,7 +56,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 
 	// ``block.blockhash`` and ``blockhash`` are tested separately below because their usage will
 	// produce warnings that can't be handled in a generic way.
-	vector<string> pure{
+	std::vector<std::string> pure{
 		"msg.data",
 		"msg.data[0]",
 		"msg.sig",
@@ -65,7 +64,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"block",
 		"tx"
 	};
-	for (string const& x: view)
+	for (std::string const& x: view)
 	{
 		CHECK_ERROR(
 			"contract C { function f() pure public { " + x + "; } }",
@@ -73,7 +72,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 			"Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires \"view\""
 		);
 	}
-	for (string const& x: pure)
+	for (std::string const& x: pure)
 	{
 		CHECK_WARNING(
 			"contract C { function f() view public { " + x + "; } }",
@@ -97,7 +96,7 @@ BOOST_AUTO_TEST_CASE(environment_access)
 
 BOOST_AUTO_TEST_CASE(address_staticcall)
 {
-	string text = R"(
+	std::string text = R"(
 		contract C {
 			function i() view public returns (bool) {
 				(bool success,) = address(0x4242).staticcall("");
@@ -114,7 +113,7 @@ BOOST_AUTO_TEST_CASE(address_staticcall)
 
 BOOST_AUTO_TEST_CASE(assembly_staticcall)
 {
-	string text = R"(
+	std::string text = R"(
 		contract C {
 			function i() view public {
 				assembly { pop(staticcall(gas(), 1, 2, 3, 4, 5)) }

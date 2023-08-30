@@ -30,7 +30,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::test;
 
@@ -226,12 +225,12 @@ BOOST_AUTO_TEST_CASE(normalizeCLIPathForVFS_stripping_root_name)
 		BOOST_CHECK_EQUAL(normalizedPath.root_directory(), "/");
 
 #if defined(_WIN32)
-		string root = workDir.root_path().string();
+		std::string root = workDir.root_path().string();
 		soltestAssert(root.length() == 3 && root[1] == ':' && root[2] == '\\', "");
 
-		for (auto convert: {boost::to_lower_copy<string>, boost::to_upper_copy<string>})
+		for (auto convert: {boost::to_lower_copy<std::string>, boost::to_upper_copy<std::string>})
 		{
-			boost::filesystem::path workDirWin = convert(root, locale()) / workDir.relative_path();
+			boost::filesystem::path workDirWin = convert(root, std::locale()) / workDir.relative_path();
 			normalizedPath = FileReader::normalizeCLIPathForVFS(
 				workDirWin,
 				resolveSymlinks
