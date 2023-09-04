@@ -26,7 +26,6 @@
 
 #include <cmath>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::langutil;
 using namespace solidity::evmasm;
@@ -168,7 +167,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 
 BOOST_AUTO_TEST_CASE(single_callvaluecheck)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		// All functions nonpayable, we can check callvalue at the beginning
 		contract Nonpayable {
 			address a;

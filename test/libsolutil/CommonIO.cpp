@@ -31,7 +31,6 @@
 #include <fstream>
 #include <string>
 
-using namespace std;
 using namespace solidity::test;
 
 #define TEST_CASE_NAME (boost::unit_test::framework::current_test_case().p_name)
@@ -68,31 +67,31 @@ BOOST_AUTO_TEST_CASE(readFileAsString_symlink)
 
 BOOST_AUTO_TEST_CASE(readUntilEnd_no_ending_newline)
 {
-	istringstream inputStream("ABC\ndef");
+	std::istringstream inputStream("ABC\ndef");
 	BOOST_TEST(readUntilEnd(inputStream) == "ABC\ndef");
 }
 
 BOOST_AUTO_TEST_CASE(readUntilEnd_with_ending_newline)
 {
-	istringstream inputStream("ABC\ndef\n");
+	std::istringstream inputStream("ABC\ndef\n");
 	BOOST_TEST(readUntilEnd(inputStream) == "ABC\ndef\n");
 }
 
 BOOST_AUTO_TEST_CASE(readUntilEnd_cr_lf_newline)
 {
-	istringstream inputStream("ABC\r\ndef");
+	std::istringstream inputStream("ABC\r\ndef");
 	BOOST_TEST(readUntilEnd(inputStream) == "ABC\r\ndef");
 }
 
 BOOST_AUTO_TEST_CASE(readUntilEnd_empty)
 {
-	istringstream inputStream("");
+	std::istringstream inputStream("");
 	BOOST_TEST(readUntilEnd(inputStream) == "");
 }
 
 BOOST_AUTO_TEST_CASE(readBytes_past_end)
 {
-	istringstream inputStream("abc");
+	std::istringstream inputStream("abc");
 	BOOST_CHECK_EQUAL(readBytes(inputStream, 0), "");
 	BOOST_CHECK_EQUAL(readBytes(inputStream, 1), "a");
 	BOOST_CHECK_EQUAL(readBytes(inputStream, 20), "bc");

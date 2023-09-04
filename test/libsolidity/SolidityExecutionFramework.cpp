@@ -39,13 +39,12 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace solidity::langutil;
 using namespace solidity::test;
-using namespace std;
 
 bytes SolidityExecutionFramework::multiSourceCompileContract(
-	map<string, string> const& _sourceCode,
-	optional<string> const& _mainSourceName,
-	string const& _contractName,
-	map<string, Address> const& _libraryAddresses
+	std::map<std::string, std::string> const& _sourceCode,
+	std::optional<std::string> const& _mainSourceName,
+	std::string const& _contractName,
+	std::map<std::string, Address> const& _libraryAddresses
 )
 {
 	if (_mainSourceName.has_value())
@@ -81,23 +80,23 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			.printErrorInformation(m_compiler.errors());
 		BOOST_ERROR("Compiling contract failed");
 	}
-	string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);
+	std::string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);
 	evmasm::LinkerObject obj = m_compiler.object(contractName);
 	BOOST_REQUIRE(obj.linkReferences.empty());
 	if (m_showMetadata)
-		cout << "metadata: " << m_compiler.metadata(contractName) << endl;
+		std::cout << "metadata: " << m_compiler.metadata(contractName) << std::endl;
 	return obj.bytecode;
 }
 
 bytes SolidityExecutionFramework::compileContract(
-	string const& _sourceCode,
-	string const& _contractName,
-	map<string, Address> const& _libraryAddresses
+	std::string const& _sourceCode,
+	std::string const& _contractName,
+	std::map<std::string, Address> const& _libraryAddresses
 )
 {
 	return multiSourceCompileContract(
 		{{"", _sourceCode}},
-		nullopt,
+		std::nullopt,
 		_contractName,
 		_libraryAddresses
 	);

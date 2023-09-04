@@ -40,7 +40,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
@@ -78,13 +77,13 @@ private:
 
 Declaration const& resolveDeclaration(
 	SourceUnit const& _sourceUnit,
-	vector<string> const& _namespacedName,
+	std::vector<std::string> const& _namespacedName,
 	NameAndTypeResolver const& _resolver
 )
 {
 	ASTNode const* scope = &_sourceUnit;
 	// bracers are required, cause msvc couldn't handle this macro in for statement
-	for (string const& namePart: _namespacedName)
+	for (std::string const& namePart: _namespacedName)
 	{
 		auto declarations = _resolver.resolveName(namePart, scope);
 		BOOST_REQUIRE(!declarations.empty());
@@ -95,12 +94,12 @@ Declaration const& resolveDeclaration(
 }
 
 bytes compileFirstExpression(
-	string const& _sourceCode,
-	vector<vector<string>> _functions = {},
-	vector<vector<string>> _localVariables = {}
+	std::string const& _sourceCode,
+	std::vector<std::vector<std::string>> _functions = {},
+	std::vector<std::vector<std::string>> _localVariables = {}
 )
 {
-	string sourceCode = "pragma solidity >=0.0; // SPDX-License-Identifier: GPL-3\n" + _sourceCode;
+	std::string sourceCode = "pragma solidity >=0.0; // SPDX-License-Identifier: GPL-3\n" + _sourceCode;
 	CharStream stream(sourceCode, "");
 
 	ASTPointer<SourceUnit> sourceUnit;
@@ -114,12 +113,12 @@ bytes compileFirstExpression(
 	}
 	catch (boost::exception const& _e)
 	{
-		string msg = "Parsing source code failed with:\n" + boost::diagnostic_information(_e);
+		std::string msg = "Parsing source code failed with:\n" + boost::diagnostic_information(_e);
 		BOOST_FAIL(msg);
 	}
 	catch (...)
 	{
-		string msg = "Parsing source code failed with:\n" + boost::current_exception_diagnostic_information();
+		std::string msg = "Parsing source code failed with:\n" + boost::current_exception_diagnostic_information();
 		BOOST_FAIL(msg);
 	}
 
@@ -151,7 +150,7 @@ bytes compileFirstExpression(
 			context.setArithmetic(Arithmetic::Wrapping);
 			size_t parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(static_cast<int>(parametersSize));
-			for (vector<string> const& variable: _localVariables)
+			for (std::vector<std::string> const& variable: _localVariables)
 				context.addVariable(
 					dynamic_cast<VariableDeclaration const&>(resolveDeclaration(*sourceUnit, variable, resolver)),
 					static_cast<unsigned>(parametersSize--)
@@ -162,7 +161,7 @@ bytes compileFirstExpression(
 				solidity::test::CommonOptions::get().optimize
 			).compile(*extractor.expression());
 
-			for (vector<string> const& function: _functions)
+			for (std::vector<std::string> const& function: _functions)
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(
 					resolveDeclaration(*sourceUnit, function, resolver)
 				));

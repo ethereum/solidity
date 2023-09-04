@@ -35,7 +35,6 @@
 #include <memory>
 #include <limits>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::evmasm;
 using namespace solidity::test;
@@ -79,9 +78,9 @@ public:
 		size_t optimizedSize = numInstructions(m_optimizedBytecode);
 		BOOST_CHECK_MESSAGE(
 			_optimizeRuns < 50 || optimizedSize < nonOptimizedSize,
-			string("Optimizer did not reduce bytecode size. Non-optimized size: ") +
-			to_string(nonOptimizedSize) + " - optimized size: " +
-			to_string(optimizedSize)
+			std::string("Optimizer did not reduce bytecode size. Non-optimized size: ") +
+			std::to_string(nonOptimizedSize) + " - optimized size: " +
+			std::to_string(optimizedSize)
 		);
 		m_optimizedContract = m_contractAddress;
 	}

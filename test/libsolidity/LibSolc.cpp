@@ -27,7 +27,6 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolc/libsolc.h>
 
-using namespace std;
 
 namespace solidity::frontend::test
 {
@@ -37,7 +36,7 @@ namespace
 
 /// TODO: share this between StandardCompiler.cpp
 /// Helper to match a specific error type and message
-bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
+bool containsError(Json::Value const& _compilerResult, std::string const& _type, std::string const& _message)
 {
 	if (!_compilerResult.isMember("errors"))
 		return false;
@@ -54,10 +53,10 @@ bool containsError(Json::Value const& _compilerResult, string const& _type, stri
 	return false;
 }
 
-Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nullptr)
+Json::Value compile(std::string const& _input, CStyleReadFileCallback _callback = nullptr)
 {
 	char* output_ptr = solidity_compile(_input.c_str(), _callback, nullptr);
-	string output(output_ptr);
+	std::string output(output_ptr);
 	solidity_free(output_ptr);
 	solidity_reset();
 	Json::Value ret;
@@ -65,7 +64,7 @@ Json::Value compile(string const& _input, CStyleReadFileCallback _callback = nul
 	return ret;
 }
 
-char* stringToSolidity(string const& _input)
+char* stringToSolidity(std::string const& _input)
 {
 	char* ptr = solidity_alloc(_input.length());
 	BOOST_REQUIRE(ptr != nullptr);
@@ -79,14 +78,14 @@ BOOST_AUTO_TEST_SUITE(LibSolc)
 
 BOOST_AUTO_TEST_CASE(read_version)
 {
-	string output(solidity_version());
+	std::string output(solidity_version());
 	BOOST_CHECK(output.find(VersionString) == 0);
 }
 
 BOOST_AUTO_TEST_CASE(read_license)
 {
-	string output(solidity_license());
-	BOOST_CHECK(output.find("GNU GENERAL PUBLIC LICENSE") != string::npos);
+	std::string output(solidity_license());
+	BOOST_CHECK(output.find("GNU GENERAL PUBLIC LICENSE") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(standard_compilation)
@@ -148,16 +147,16 @@ BOOST_AUTO_TEST_CASE(with_callback)
 			// Passed in a nullptr in the compile() helper above.
 			BOOST_REQUIRE(_context == nullptr);
 			// Caller frees the pointers.
-			BOOST_REQUIRE(string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
-			if (string(_path) == "found.sol")
+			BOOST_REQUIRE(std::string(_kind) == ReadCallback::kindString(ReadCallback::Kind::ReadFile));
+			if (std::string(_path) == "found.sol")
 			{
-				static string content{"import \"missing.sol\"; contract B {}"};
+				static std::string content{"import \"missing.sol\"; contract B {}"};
 				*o_contents = stringToSolidity(content);
 				*o_error = nullptr;
 			}
-			else if (string(_path) == "missing.sol")
+			else if (std::string(_path) == "missing.sol")
 			{
-				static string errorMsg{"Missing file."};
+				static std::string errorMsg{"Missing file."};
 				*o_error = stringToSolidity(errorMsg);
 				*o_contents = nullptr;
 			}

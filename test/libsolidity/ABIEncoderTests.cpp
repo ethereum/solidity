@@ -32,7 +32,6 @@
 #include <string>
 #include <tuple>
 
-using namespace std;
 using namespace std::placeholders;
 using namespace solidity::util;
 using namespace solidity::test;
@@ -50,7 +49,7 @@ BOOST_FIXTURE_TEST_SUITE(ABIEncoderTest, SolidityExecutionFramework)
 
 BOOST_AUTO_TEST_CASE(value_types)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(uint a, uint16 b, uint24 c, int24 d, bytes3 x, bool, C);
 			function f() public {
@@ -67,14 +66,14 @@ BOOST_AUTO_TEST_CASE(value_types)
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		REQUIRE_LOG_DATA(encodeArgs(
-			10, u256(65534), u256(0x121212), u256(-1), string("\x1b\xab\xab"), true, h160("fffffffffffffffffffffffffffffffffffffffb")
+			10, u256(65534), u256(0x121212), u256(-1), std::string("\x1b\xab\xab"), true, h160("fffffffffffffffffffffffffffffffffffffffb")
 		));
 	)
 }
 
 BOOST_AUTO_TEST_CASE(string_literal)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(string, bytes20, string);
 			function f() public {
@@ -86,9 +85,9 @@ BOOST_AUTO_TEST_CASE(string_literal)
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		REQUIRE_LOG_DATA(encodeArgs(
-			0x60, string("abcde"), 0xa0,
-			6, string("abcdef"),
-			0x8b, string("abcdefabcdefgehabcabcasdfjklabcdefabcedefghabcabcasdfjklabcdefabcdefghabcabcasdfjklabcdeefabcdefghabcabcasdefjklabcdefabcdefghabcabcasdfjkl")
+			0x60, std::string("abcde"), 0xa0,
+			6, std::string("abcdef"),
+			0x8b, std::string("abcdefabcdefgehabcabcasdfjklabcdefabcedefghabcabcasdfjklabcdefabcdefghabcabcasdfjklabcdeefabcdefghabcabcasdefjklabcdefabcdefghabcabcasdfjkl")
 		));
 	)
 }
@@ -96,7 +95,7 @@ BOOST_AUTO_TEST_CASE(string_literal)
 
 BOOST_AUTO_TEST_CASE(enum_type_cleanup)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			enum E { A, B }
 			function f(uint x) public returns (E en) {
@@ -114,7 +113,7 @@ BOOST_AUTO_TEST_CASE(enum_type_cleanup)
 
 BOOST_AUTO_TEST_CASE(conversion)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(bytes4, bytes4, uint16, uint8, int16, int8);
 			function f() public {
@@ -132,7 +131,7 @@ BOOST_AUTO_TEST_CASE(conversion)
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		REQUIRE_LOG_DATA(encodeArgs(
-			string(3, 0) + string("\x0a"), string("\xf1\xf2"),
+			std::string(3, 0) + std::string("\x0a"), std::string("\xf1\xf2"),
 			0xff, 0xff, u256(-1), u256(1)
 		));
 	)
@@ -140,7 +139,7 @@ BOOST_AUTO_TEST_CASE(conversion)
 
 BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(uint a, int16[] b, uint c);
 			function f() public {
@@ -172,7 +171,7 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 
 BOOST_AUTO_TEST_CASE(memory_array_two_dim)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(uint a, int16[][2] b, uint c);
 			function f() public {
@@ -197,7 +196,7 @@ BOOST_AUTO_TEST_CASE(memory_array_two_dim)
 
 BOOST_AUTO_TEST_CASE(memory_byte_array)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(uint a, bytes[] b, uint c);
 			function f() public {
@@ -214,15 +213,15 @@ BOOST_AUTO_TEST_CASE(memory_byte_array)
 		REQUIRE_LOG_DATA(encodeArgs(
 			10, 0x60, 11,
 			2, 0x40, 0xc0,
-			66, string("abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw"),
-			63, string("abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw")
+			66, std::string("abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw"),
+			63, std::string("abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw")
 		));
 	)
 }
 
 BOOST_AUTO_TEST_CASE(storage_byte_array)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			bytes short;
 			bytes long;
@@ -239,15 +238,15 @@ BOOST_AUTO_TEST_CASE(storage_byte_array)
 		callContractFunction("f()");
 		REQUIRE_LOG_DATA(encodeArgs(
 			0x40, 0x80,
-			31, string("123456789012345678901234567890a"),
-			75, string("ffff123456789012345678901234567890afffffffff123456789012345678901234567890a")
+			31, std::string("123456789012345678901234567890a"),
+			75, std::string("ffff123456789012345678901234567890afffffffff123456789012345678901234567890a")
 		));
 	)
 }
 
 BOOST_AUTO_TEST_CASE(storage_array)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			address[3] addr;
 			event E(address[3] a);
@@ -274,7 +273,7 @@ BOOST_AUTO_TEST_CASE(storage_array)
 
 BOOST_AUTO_TEST_CASE(storage_array_dyn)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			address[] addr;
 			event E(address[] a);
@@ -301,7 +300,7 @@ BOOST_AUTO_TEST_CASE(storage_array_dyn)
 
 BOOST_AUTO_TEST_CASE(storage_array_compact)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			int72[] x;
 			event E(int72[]);
@@ -329,7 +328,7 @@ BOOST_AUTO_TEST_CASE(storage_array_compact)
 
 BOOST_AUTO_TEST_CASE(external_function)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(function(uint) external returns (uint), function(uint) external returns (uint));
 			function(uint) external returns (uint) g;
@@ -342,14 +341,14 @@ BOOST_AUTO_TEST_CASE(external_function)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f(uint256)", u256(0));
-		string functionIdF = asString(m_contractAddress.ref()) + asString(util::selectorFromSignatureH32("f(uint256)").ref());
+		std::string functionIdF = asString(m_contractAddress.ref()) + asString(util::selectorFromSignatureH32("f(uint256)").ref());
 		REQUIRE_LOG_DATA(encodeArgs(functionIdF, functionIdF));
 	)
 }
 
 BOOST_AUTO_TEST_CASE(external_function_cleanup)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(function(uint) external returns (uint), function(uint) external returns (uint));
 			// This test relies on the fact that g is stored in slot zero.
@@ -364,13 +363,13 @@ BOOST_AUTO_TEST_CASE(external_function_cleanup)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f(uint256)", u256(0));
-		REQUIRE_LOG_DATA(encodeArgs(string(24, char(-1)), string(24, char(-1))));
+		REQUIRE_LOG_DATA(encodeArgs(std::string(24, char(-1)), std::string(24, char(-1))));
 	)
 }
 
 BOOST_AUTO_TEST_CASE(calldata)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			event E(bytes);
 			function f(bytes calldata a) external {
@@ -378,8 +377,8 @@ BOOST_AUTO_TEST_CASE(calldata)
 			}
 		}
 	)";
-	string s("abcdef");
-	string t("abcdefgggggggggggggggggggggggggggggggggggggggghhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeggg");
+	std::string s("abcdef");
+	std::string t("abcdefgggggggggggggggggggggggggggggggggggggggghhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeggg");
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f(bytes)", 0x20, s.size(), s);
@@ -393,7 +392,7 @@ BOOST_AUTO_TEST_CASE(function_name_collision)
 {
 	// This tests a collision between a function name used by inline assembly
 	// and by the ABI encoder
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			function f(uint x) public returns (uint) {
 				assembly {
@@ -417,7 +416,7 @@ BOOST_AUTO_TEST_CASE(function_name_collision)
 
 BOOST_AUTO_TEST_CASE(structs)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			struct S { uint16 a; uint16 b; T[] sub; uint16 c; }
 			struct T { uint64[2] x; }
@@ -452,13 +451,13 @@ BOOST_AUTO_TEST_CASE(structs)
 		);
 		BOOST_CHECK(callContractFunction("f()") == encoded);
 		REQUIRE_LOG_DATA(encoded);
-		BOOST_CHECK_EQUAL(logTopic(0, 0), keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
+		BOOST_CHECK_EQUAL(logTopic(0, 0), keccak256(std::string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
 	)
 }
 
 BOOST_AUTO_TEST_CASE(structs2)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			enum E {A, B, C}
 			struct T { uint x; E e; uint8 y; }
@@ -517,7 +516,7 @@ BOOST_AUTO_TEST_CASE(structs2)
 
 BOOST_AUTO_TEST_CASE(bool_arrays)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			bool[] x;
 			bool[4] y;
@@ -550,7 +549,7 @@ BOOST_AUTO_TEST_CASE(bool_arrays)
 
 BOOST_AUTO_TEST_CASE(bool_arrays_split)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			bool[] x;
 			bool[4] y;
@@ -587,7 +586,7 @@ BOOST_AUTO_TEST_CASE(bool_arrays_split)
 BOOST_AUTO_TEST_CASE(bytesNN_arrays)
 {
 	// This tests that encoding packed arrays from storage work correctly.
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			bytes8[] x;
 			bytesWIDTH[SIZE] y;
@@ -610,12 +609,12 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays)
 		{
 			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
-				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
-				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
-				source = boost::algorithm::replace_all_copy(source, "WIDTH", to_string(width));
+				std::string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", std::to_string(size));
+				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", std::to_string(width * 8));
+				source = boost::algorithm::replace_all_copy(source, "WIDTH", std::to_string(width));
 				compileAndRun(source, 0, "C");
 				ABI_CHECK(callContractFunction("store()"), bytes{});
-				vector<u256> arr;
+				std::vector<u256> arr;
 				for (size_t i = 0; i < size; i ++)
 					arr.emplace_back(u256(i + 1) << (8 * (32 - width)));
 				bytes encoded = encodeArgs(
@@ -632,7 +631,7 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays)
 BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
 {
 	// This tests that encoding packed arrays from storage work correctly.
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			bytes8[] x;
 			bytesWIDTH[] y;
@@ -655,12 +654,12 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
 		{
 			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
-				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
-				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
-				source = boost::algorithm::replace_all_copy(source, "WIDTH", to_string(width));
+				std::string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", std::to_string(size));
+				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", std::to_string(width * 8));
+				source = boost::algorithm::replace_all_copy(source, "WIDTH", std::to_string(width));
 				compileAndRun(source, 0, "C");
 				ABI_CHECK(callContractFunction("store()"), bytes{});
-				vector<u256> arr;
+				std::vector<u256> arr;
 				for (size_t i = 0; i < size; i ++)
 					arr.emplace_back(u256(i + 1) << (8 * (32 - width)));
 				bytes encoded = encodeArgs(
@@ -677,7 +676,7 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
 
 BOOST_AUTO_TEST_CASE(packed_structs)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			struct S { bool a; int8 b; function() external g; bytes3 d; int8 e; }
 			S s;
@@ -712,7 +711,7 @@ BOOST_AUTO_TEST_CASE(packed_structs)
 
 BOOST_AUTO_TEST_CASE(struct_in_constructor)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			struct S {
 				string a;
@@ -732,7 +731,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor)
 
 BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			struct S {
 				string a;
@@ -765,7 +764,7 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
 
 BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			struct S {
 				string a;

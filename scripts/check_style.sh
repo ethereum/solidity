@@ -38,6 +38,13 @@ NAMESPACE_STD_FREE_FILES=(
     libyul/backends/evm/*
     libyul/optimiser/*
     solc/*
+    test/contracts/*
+    test/libevmasm/*
+    test/liblangutil/*
+    test/libsolutil/*
+    test/libsolidity/*
+    test/libsolidity/analysis/*
+    test/libsolidity/interface/*
 )
 
 (

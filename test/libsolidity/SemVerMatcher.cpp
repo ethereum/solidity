@@ -31,7 +31,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::langutil;
 
 namespace solidity::frontend::test
@@ -42,16 +41,16 @@ BOOST_AUTO_TEST_SUITE(SemVerMatcher)
 namespace
 {
 
-SemVerMatchExpression parseExpression(string const& _input)
+SemVerMatchExpression parseExpression(std::string const& _input)
 {
 	CharStream stream(_input, "");
 	Scanner scanner{stream};
-	vector<string> literals;
-	vector<Token> tokens;
+	std::vector<std::string> literals;
+	std::vector<Token> tokens;
 	while (scanner.currentToken() != Token::EOS)
 	{
 		auto token = scanner.currentToken();
-		string literal = scanner.currentLiteral();
+		std::string literal = scanner.currentLiteral();
 		if (literal.empty() && TokenTraits::toString(token))
 			literal = TokenTraits::toString(token);
 		literals.push_back(literal);
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_CASE(exception_on_invalid_version_in_semverversion_constructor)
 BOOST_AUTO_TEST_CASE(positive_range)
 {
 	// Positive range tests
-	vector<pair<string, string>> tests = {
+	std::vector<std::pair<std::string, std::string>> tests = {
 		{"*", "1.2.3-foo"},
 		{"1.0.0 - 2.0.0", "1.2.3"},
 		{"1.0.0", "1.0.0"},
@@ -198,7 +197,7 @@ BOOST_AUTO_TEST_CASE(positive_range)
 BOOST_AUTO_TEST_CASE(negative_range)
 {
 	// Negative range tests
-	vector<pair<string, string>> tests = {
+	std::vector<std::pair<std::string, std::string>> tests = {
 		{"^0^1", "0.0.0"},
 		{"^0^1", "1.0.0"},
 		{"1.0.0 - 2.0.0", "2.2.3"},

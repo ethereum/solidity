@@ -28,7 +28,6 @@
 
 #include <test/libsolidity/ABITestsCommon.h>
 
-using namespace std;
 using namespace std::placeholders;
 using namespace solidity::test;
 
@@ -39,7 +38,7 @@ BOOST_FIXTURE_TEST_SUITE(ABIDecoderTest, SolidityExecutionFramework)
 
 BOOST_AUTO_TEST_CASE(value_types)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			function f(uint a, uint16 b, uint24 c, int24 d, bytes3 x, bool e, C g) public returns (uint) {
 				if (a != 1) return 1;
@@ -57,14 +56,14 @@ BOOST_AUTO_TEST_CASE(value_types)
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction(
 			"f(uint256,uint16,uint24,int24,bytes3,bool,address)",
-			1, 2, 3, 4, string("abc"), true, m_contractAddress
+			1, 2, 3, 4, std::string("abc"), true, m_contractAddress
 		), encodeArgs(u256(20)));
 	)
 }
 
 BOOST_AUTO_TEST_CASE(decode_from_memory_simple)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			uint public _a;
 			uint[] public _b;
@@ -90,7 +89,7 @@ BOOST_AUTO_TEST_CASE(decode_from_memory_simple)
 
 BOOST_AUTO_TEST_CASE(decode_function_type)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract D {
 			function () external returns (uint) public _a;
 			constructor(function () external returns (uint) a) {
@@ -124,7 +123,7 @@ BOOST_AUTO_TEST_CASE(decode_function_type)
 
 BOOST_AUTO_TEST_CASE(decode_function_type_array)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract D {
 			function () external returns (uint)[] public _a;
 			constructor(function () external returns (uint)[] memory a) {
@@ -190,7 +189,7 @@ BOOST_AUTO_TEST_CASE(decode_function_type_array)
 
 BOOST_AUTO_TEST_CASE(decode_from_memory_complex)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			uint public _a;
 			uint[] public _b;
@@ -209,23 +208,23 @@ BOOST_AUTO_TEST_CASE(decode_from_memory_complex)
 			3, 0x21, 0x22, 0x23,
 			// c
 			0x40, 0x80,
-			8, string("abcdefgh"),
-			52, string("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ")
+			8, std::string("abcdefgh"),
+			52, std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ")
 		));
 		ABI_CHECK(callContractFunction("_a()"), encodeArgs(7));
 		ABI_CHECK(callContractFunction("_b(uint256)", 0), encodeArgs(0x21));
 		ABI_CHECK(callContractFunction("_b(uint256)", 1), encodeArgs(0x22));
 		ABI_CHECK(callContractFunction("_b(uint256)", 2), encodeArgs(0x23));
 		ABI_CHECK(callContractFunction("_b(uint256)", 3), encodeArgs());
-		ABI_CHECK(callContractFunction("_c(uint256)", 0), encodeArgs(0x20, 8, string("abcdefgh")));
-		ABI_CHECK(callContractFunction("_c(uint256)", 1), encodeArgs(0x20, 52, string("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ")));
+		ABI_CHECK(callContractFunction("_c(uint256)", 0), encodeArgs(0x20, 8, std::string("abcdefgh")));
+		ABI_CHECK(callContractFunction("_c(uint256)", 1), encodeArgs(0x20, 52, std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ")));
 		ABI_CHECK(callContractFunction("_c(uint256)", 2), encodeArgs());
 	)
 }
 
 BOOST_AUTO_TEST_CASE(short_input_value_type)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			function f(uint a, uint b) public pure returns (uint) { return a; }
 		}
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(short_input_value_type)
 
 BOOST_AUTO_TEST_CASE(short_input_array)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			function f(uint[] memory a) public pure returns (uint) { return 7; }
 		}
@@ -257,7 +256,7 @@ BOOST_AUTO_TEST_CASE(short_input_array)
 
 BOOST_AUTO_TEST_CASE(short_dynamic_input_array)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			function f(bytes[1] memory a) public pure returns (uint) { return 7; }
 		}
@@ -270,7 +269,7 @@ BOOST_AUTO_TEST_CASE(short_dynamic_input_array)
 
 BOOST_AUTO_TEST_CASE(short_input_bytes)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			function e(bytes memory a) public pure returns (uint) { return 7; }
 			function f(bytes[] memory a) public pure returns (uint) { return 7; }
@@ -291,7 +290,7 @@ BOOST_AUTO_TEST_CASE(short_input_bytes)
 
 BOOST_AUTO_TEST_CASE(validation_int_inside_arrays)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			enum E { A, B }
 			function f(uint16[] memory a) public pure returns (uint r) { assembly { r := mload(add(a, 0x20)) } }
@@ -315,7 +314,7 @@ BOOST_AUTO_TEST_CASE(validation_int_inside_arrays)
 
 BOOST_AUTO_TEST_CASE(validation_function_type)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			function f(function () external) public pure returns (uint r) { r = 1; }
 			function g(function () external[] memory) public pure returns (uint r) { r = 2; }
@@ -324,8 +323,8 @@ BOOST_AUTO_TEST_CASE(validation_function_type)
 		}
 	)";
 	bool newDecoder = false;
-	string validFun{"01234567890123456789abcd"};
-	string invalidFun{"01234567890123456789abcdX"};
+	std::string validFun{"01234567890123456789abcd"};
+	std::string invalidFun{"01234567890123456789abcdX"};
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("f(function)", validFun), encodeArgs(1));
@@ -343,7 +342,7 @@ BOOST_AUTO_TEST_CASE(validation_function_type)
 
 BOOST_AUTO_TEST_CASE(struct_short)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			struct S { int a; uint b; bytes16 c; }
 			function f(S memory s) public pure returns (S memory q) {
@@ -370,7 +369,7 @@ BOOST_AUTO_TEST_CASE(struct_short)
 
 BOOST_AUTO_TEST_CASE(complex_struct)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 		contract C {
 			enum E {A, B, C}
 			struct T { uint x; E e; uint8 y; }
@@ -390,7 +389,7 @@ BOOST_AUTO_TEST_CASE(complex_struct)
 	)";
 	NEW_ENCODER(
 		compileAndRun(sourceCode, 0, "C");
-		string sig = "f(uint256,(address,(uint256,uint8,uint8)[])[2],(address,(uint256,uint8,uint8)[])[],uint256)";
+		std::string sig = "f(uint256,(address,(uint256,uint8,uint8)[])[2],(address,(uint256,uint8,uint8)[])[],uint256)";
 		bytes args = encodeArgs(
 			7, 0x80, 0x1e0, 8,
 			// S[2] s1

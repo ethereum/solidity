@@ -39,7 +39,6 @@
 #include <tuple>
 #include <memory>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::evmasm;
 
@@ -874,7 +873,7 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 	BlockDeduplicator deduplicator(input);
 	deduplicator.deduplicate();
 
-	set<u256> pushTags;
+	std::set<u256> pushTags;
 	for (AssemblyItem const& item: input)
 		if (item.type() == PushTag)
 			pushTags.insert(item.data());
@@ -968,7 +967,7 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 	BlockDeduplicator deduplicator(input);
 	deduplicator.deduplicate();
 
-	set<u256> pushTags;
+	std::set<u256> pushTags;
 	for (AssemblyItem const& item: input)
 		if (item.type() == PushTag)
 			pushTags.insert(item.data());
@@ -1051,7 +1050,7 @@ BOOST_AUTO_TEST_CASE(peephole_pop_calldatasize)
 
 BOOST_AUTO_TEST_CASE(peephole_commutative_swap1)
 {
-	vector<Instruction> ops{
+	std::vector<Instruction> ops{
 		Instruction::ADD,
 		Instruction::MUL,
 		Instruction::EQ,
@@ -1088,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(peephole_commutative_swap1)
 BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
 {
 	// NOTE: not comprehensive
-	vector<Instruction> ops{
+	std::vector<Instruction> ops{
 		Instruction::SUB,
 		Instruction::DIV,
 		Instruction::SDIV,
@@ -1125,7 +1124,7 @@ BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
 
 BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
 {
-	map<Instruction, Instruction> swappableOps{
+	std::map<Instruction, Instruction> swappableOps{
 		{ Instruction::LT, Instruction::GT },
 		{ Instruction::GT, Instruction::LT },
 		{ Instruction::SLT, Instruction::SGT },
@@ -1261,7 +1260,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	settings.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
 
 	Assembly main{settings.evmVersion, false, {}};
-	AssemblyPointer sub = make_shared<Assembly>(settings.evmVersion, true, string{});
+	AssemblyPointer sub = std::make_shared<Assembly>(settings.evmVersion, true, std::string{});
 
 	sub->append(u256(1));
 	auto t1 = sub->newTag();
@@ -1428,7 +1427,7 @@ BOOST_AUTO_TEST_CASE(verbatim_knownstate)
 			Instruction::DUP3,
 			Instruction::DUP4
 		});
-	map<int, unsigned> const& stackElements = state.stackElements();
+	std::map<int, unsigned> const& stackElements = state.stackElements();
 
 	BOOST_CHECK(state.stackHeight() == 4);
 	// One more than stack height because of the initial unknown element.
@@ -1540,7 +1539,7 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 
 BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 {
-	vector<Instruction> ops{
+	std::vector<Instruction> ops{
 		Instruction::ADDRESS,
 		Instruction::CALLER,
 		Instruction::ORIGIN,
