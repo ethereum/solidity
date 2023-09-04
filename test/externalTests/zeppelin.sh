@@ -85,7 +85,7 @@ function zeppelin_test
     sed -i "s|it(\('guards transfer against invalid user'\)|it.skip(\1|g" test/access/Ownable2Step.test.js
     sed -i "s|it(\('reverting initialization function'\)|it.skip(\1|g" test/proxy/beacon/BeaconProxy.test.js
     sed -i "s|describe(\('reverting initialization'\)|describe.skip(\1|g" test/proxy/Proxy.behaviour.js
-    sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/security/ReentrancyGuard.test.js
+    sed -i "s|it(\('does not allow remote callback'\)|it.skip(\1|g" test/utils/ReentrancyGuard.test.js
 
     # TODO: Remove when hardhat properly handle reverts of custom errors with via-ir enabled
     # and/or open-zeppelin fix https://github.com/OpenZeppelin/openzeppelin-contracts/issues/4349
