@@ -19,7 +19,7 @@ object "Arraysum_34" {
                 /// @src 0:80:429  "contract Arraysum {..."
                 mstore(64, memoryguard(0x80))
                 let _1 := 4
-                if iszero(lt(calldatasize(), _1))
+                if iszero(lt(calldatasize(), 4))
                 {
                     if eq(0x81d73423, shr(224, calldataload(0)))
                     {
@@ -27,8 +27,8 @@ object "Arraysum_34" {
                         if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
                         let var_sum := 0
                         /// @src 0:368:378  "uint i = 0"
-                        let var_i := /** @src 0:80:429  "contract Arraysum {..." */ var_sum
-                        let _2 := sload(var_sum)
+                        let var_i := /** @src 0:80:429  "contract Arraysum {..." */ 0
+                        let _2 := sload(0)
                         /// @src 0:364:423  "for(uint i = 0; i < values.length; i++)..."
                         for { }
                         /** @src 0:380:397  "i < values.length" */ lt(var_i, _2)

@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Parser: Remove the experimental error recovery mode (``--error-recovery`` / ``settings.parserErrorRecovery``).
  * Yul Optimizer: If ``PUSH0`` is supported, favor zero literals over storing zero values in variables.
+ * Yul Optimizer: Run the ``Rematerializer`` and ``UnusedPruner`` steps at the end of the default clean-up sequence.
 
 
 Bugfixes:

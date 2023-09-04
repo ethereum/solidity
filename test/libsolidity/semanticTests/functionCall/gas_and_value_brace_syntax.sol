@@ -37,7 +37,7 @@ contract test {
 }
 // ----
 // constructor(), 20 wei ->
-// gas irOptimized: 253950
+// gas irOptimized: 252642
 // gas legacy: 391588
 // gas legacyOptimized: 268089
 // sendAmount(uint256): 5 -> 5

@@ -29,6 +29,6 @@
 //     {
 //         if calldataload(0) { pop(mstore_(x)) }
 //         y := 8
-//         sstore(y, calldataload(y))
+//         sstore(8, calldataload(8))
 //     }
 // }
