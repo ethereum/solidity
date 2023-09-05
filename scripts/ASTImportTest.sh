@@ -215,6 +215,7 @@ EXCLUDE_FILES=(
   pragma_experimental_solidity.sol
 )
 EXCLUDE_FILES_JOINED=$(printf "! -name %s " "${EXCLUDE_FILES[@]}")
+# shellcheck disable=SC2086
 IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and $EXCLUDE_FILES_JOINED -not -path "*/experimental/*")
 
 NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
