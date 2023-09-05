@@ -39,9 +39,9 @@ using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
 
 TypeInference::TypeInference(Analysis& _analysis):
-m_analysis(_analysis),
-m_errorReporter(_analysis.errorReporter()),
-m_typeSystem(_analysis.typeSystem())
+	m_analysis(_analysis),
+	m_errorReporter(_analysis.errorReporter()),
+	m_typeSystem(_analysis.typeSystem())
 {
 	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class, auto _memberCreator, Sort _sort = {}) -> TypeClass {
 		Type type = m_typeSystem.freshTypeVariable(std::move(_sort));
@@ -195,6 +195,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 	auto& typeClassAnnotation = annotation(_typeClassDefinition);
 	if (typeClassAnnotation.type)
 		return false;
+
 	typeClassAnnotation.type = type(&_typeClassDefinition, {});
 	{
 		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};

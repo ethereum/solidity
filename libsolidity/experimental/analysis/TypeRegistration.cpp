@@ -31,9 +31,9 @@ using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
 
 TypeRegistration::TypeRegistration(Analysis& _analysis):
-m_analysis(_analysis),
-m_errorReporter(_analysis.errorReporter()),
-m_typeSystem(_analysis.typeSystem())
+	m_analysis(_analysis),
+	m_errorReporter(_analysis.errorReporter()),
+	m_typeSystem(_analysis.typeSystem())
 {
 }
 

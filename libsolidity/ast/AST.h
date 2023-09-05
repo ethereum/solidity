@@ -2500,6 +2500,7 @@ private:
 	ASTPointer<VariableDeclaration> m_typeVariable;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 };
+
 class TypeClassInstantiation: public ASTNode, public ScopeOpener
 {
 public:
@@ -2590,6 +2591,7 @@ public:
 	bool experimentalSolidityOnly() const override { return true; }
 
 	std::variant<Token, ASTPointer<IdentifierPath>> name() const { return m_name; }
+
 private:
 	std::variant<Token, ASTPointer<IdentifierPath>> m_name;
 };

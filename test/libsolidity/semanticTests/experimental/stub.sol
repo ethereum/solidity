@@ -60,29 +60,29 @@ function g(x:uint256) -> uint256
 }
 
 contract C {
-	fallback() external {
-	    let arg;
-	    assembly {
-	        arg := calldataload(0)
-	    }
-		let x : word;
-		if (bool.abs(arg)) {
-			assembly {
-				x := 0x10
-			}
-		}
+    fallback() external {
+        let arg;
+        assembly {
+            arg := calldataload(0)
+        }
+        let x : word;
+        if (bool.abs(arg)) {
+            assembly {
+                x := 0x10
+            }
+        }
         let w = uint256.abs(x);
 //        w = f(g, w);
         w = w * w + w;
-		let y : word;
-		let z : (uint256,uint256);
+        let y : word;
+        let z : (uint256,uint256);
         assembly { y := 2 }
         y = uint256.rep(w) * y;
-		assembly {
-			mstore(0, y)
-			return(0, 32)
-		}
-	}
+        assembly {
+            mstore(0, y)
+            return(0, 32)
+        }
+    }
 }
 // ====
 // EVMVersion: >=constantinople

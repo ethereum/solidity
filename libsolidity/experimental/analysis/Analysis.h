@@ -63,6 +63,7 @@ class Analysis
 {
 	struct AnnotationContainer;
 	struct GlobalAnnotationContainer;
+
 public:
 	Analysis(langutil::ErrorReporter& _errorReporter, uint64_t _maxAstId);
 	Analysis(Analysis const&) = delete;
@@ -73,30 +74,36 @@ public:
 	uint64_t maxAstId() const { return m_maxAstId; }
 	TypeSystem& typeSystem() { return m_typeSystem; }
 	TypeSystem const& typeSystem() const { return m_typeSystem; }
+
 	template<typename Step>
 	typename Step::Annotation& annotation(ASTNode const& _node)
 	{
 		return detail::AnnotationFetcher<Step>{*this}.get(_node);
 	}
+
 	template<typename Step>
 	typename Step::Annotation const& annotation(ASTNode const& _node) const
 	{
 		return detail::ConstAnnotationFetcher<Step>{*this}.get(_node);
 	}
+
 	template<typename Step>
 	typename Step::GlobalAnnotation& annotation()
 	{
 		return detail::AnnotationFetcher<Step>{*this}.get();
 	}
+
 	template<typename Step>
 	typename Step::GlobalAnnotation const& annotation() const
 	{
 		return detail::ConstAnnotationFetcher<Step>{*this}.get();
 	}
+
 	AnnotationContainer& annotationContainer(ASTNode const& _node);
 	AnnotationContainer const& annotationContainer(ASTNode const& _node) const;
 	GlobalAnnotationContainer& annotationContainer() { return *m_globalAnnotation; }
 	GlobalAnnotationContainer const& annotationContainer() const { return *m_globalAnnotation; }
+
 private:
 	langutil::ErrorReporter& m_errorReporter;
 	TypeSystem m_typeSystem;
