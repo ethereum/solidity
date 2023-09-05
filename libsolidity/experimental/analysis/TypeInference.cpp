@@ -792,6 +792,7 @@ experimental::Type TypeInference::memberType(Type _type, std::string _memberName
 	if (helper.isTypeConstant(type))
 	{
 		auto constructor = std::get<0>(helper.destTypeConstant(type));
+		solAssert(annotation().members.count(constructor) != 0);
 		if (auto* typeMember = util::valueOrNullptr(annotation().members.at(constructor), _memberName))
 			return polymorphicInstance(typeMember->type);
 		else
@@ -1095,7 +1096,11 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 	// TODO: better mechanism than fetching by name.
 	auto& annotation = _analysis.annotation<TypeRegistration>();
 	auto& inferenceAnnotation = _analysis.annotation<TypeInference>();
-	return annotation.builtinClassInstantiations.at(inferenceAnnotation.builtinClassesByName.at(_analysis.typeSystem().typeClassName(_class)));
+
+	std::string name = _analysis.typeSystem().typeClassName(_class);
+	solAssert(inferenceAnnotation.builtinClassesByName.count(name) != 0);
+	solAssert(annotation.builtinClassInstantiations.count(inferenceAnnotation.builtinClassesByName.at(name)) != 0);
+	return annotation.builtinClassInstantiations.at(inferenceAnnotation.builtinClassesByName.at(name));
 }
 }
 
