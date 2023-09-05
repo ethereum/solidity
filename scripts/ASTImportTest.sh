@@ -214,10 +214,8 @@ EXCLUDE_FILES=(
   boost_filesystem_bug.sol
   pragma_experimental_solidity.sol
 )
-IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and $(printf "! -name %s " ${EXCLUDE_FILES[@]}) -not -path "*/experimental/*")
-
-echo $IMPORT_TEST_FILES
-exit
+EXCLUDE_FILES_JOINED=$(printf "! -name %s " "${EXCLUDE_FILES[@]}")
+IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and $EXCLUDE_FILES_JOINED -not -path "*/experimental/*")
 
 NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
 echo "Looking at ${NSOURCES} .sol files..."
