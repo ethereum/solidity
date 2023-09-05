@@ -150,6 +150,12 @@ if __name__ == '__main__':
     options = parser.parse_args()
     path = options.path
 
+    # ignore the test with broken utf-8 encoding and experimental tests
+    exclude_files = {
+        "invalid_utf8_sequence.sol",
+        "stub.sol"
+    }
+
     if isfile(path):
         extract_and_write(path, options.language)
     else:
@@ -159,7 +165,7 @@ if __name__ == '__main__':
             if 'compilationTests' in subdirs:
                 subdirs.remove('compilationTests')
             for f in files:
-                if basename(f) == "invalid_utf8_sequence.sol":
-                    continue  # ignore the test with broken utf-8 encoding
+                if basename(f) in exclude_files:
+                    continue
                 path = join(root, f)
                 extract_and_write(path, options.language)
