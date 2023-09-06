@@ -636,6 +636,7 @@ or return values from calls to external contracts.
 
     It is currently not possible to use custom errors in combination
     with ``require``. Please use ``if (!condition) revert CustomError();`` instead.
+    See https://github.com/ethereum/solidity/issues/14442
 
 An ``Error(string)`` exception (or an exception without data) is generated
 by the compiler
