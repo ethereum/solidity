@@ -1,0 +1,33 @@
+# The Solidity Contract-Oriented Programming Language
+For a good overview and starting point, please check out the official (https://soliditylang.org)
+
+## Table of Contents
+
+## Background
+Smart contracts are programs that are executed inside a peer-to-peer
+network where nobody has special authority over the execution, and thus they allow anyone to implement tokens of value, ownership, voting, and other kinds of logic.
+
+## Build and Install
+Instructions about how to build and install 
+
+## Example
+Hello World programm in Solidity is of even less use than in other languages
+
+## Documentation
+The Solidity documentation is hosted using
+
+## Development
+Solidity is still under development. Contributions are always welcome!
+Please follow the if you want to help.
+You can find our current feature and bug priorities for forthcoming
+releases in the (https://github.com/ethereum/solidity/projects)
+
+## Maintainers
+The Solidity programming language and compiler are open-source community projects governed by a core team.
+The core team is sponsored by the (https://ethereum.foundation/)
+
+## License
+Solidity is licensed under (LICENSE.txt).Some third-party code has its (cmake/templates/license.h.in)
+
+## Security
+The security policy may be (SECURITY.si)
