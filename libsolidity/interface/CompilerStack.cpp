@@ -56,6 +56,8 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 
+#include <libsolidity/experimental/analysis/Analysis.h>
+
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
 
@@ -325,6 +327,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_metadataHash = MetadataHash::IPFS;
 		m_stopAfter = State::CompilationSuccessful;
 	}
+	m_experimentalAnalysis.reset();
 	m_globalContext.reset();
 	m_sourceOrder.clear();
 	m_contracts.clear();
@@ -449,6 +452,8 @@ bool CompilerStack::analyze()
 
 	try
 	{
+		bool experimentalSolidity = !m_sourceOrder.empty() && m_sourceOrder.front()->ast->experimentalSolidity();
+
 		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
@@ -480,141 +485,13 @@ bool CompilerStack::analyze()
 			if (source->ast && !resolver.resolveNamesAndTypes(*source->ast))
 				return false;
 
-		DeclarationTypeChecker declarationTypeChecker(m_errorReporter, m_evmVersion);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !declarationTypeChecker.check(*source->ast))
-				return false;
-
-		// Requires DeclarationTypeChecker to have run
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.validateDocStringsUsingTypes(*source->ast))
-				noErrors = false;
-
-		// Next, we check inheritance, overrides, function collisions and other things at
-		// contract or function level.
-		// This also calculates whether a contract is abstract, which is needed by the
-		// type checker.
-		ContractLevelChecker contractLevelChecker(m_errorReporter);
-
-		for (Source const* source: m_sourceOrder)
-			if (auto sourceAst = source->ast)
-				noErrors = contractLevelChecker.check(*sourceAst);
-
-		// Now we run full type checks that go down to the expression level. This
-		// cannot be done earlier, because we need cross-contract types and information
-		// about whether a contract is abstract for the `new` expression.
-		// This populates the `type` annotation for all expressions.
-		//
-		// Note: this does not resolve overloaded functions. In order to do that, types of arguments are needed,
-		// which is only done one step later.
-		TypeChecker typeChecker(m_evmVersion, m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
-				noErrors = false;
-
-		if (noErrors)
+		if (experimentalSolidity)
 		{
-			// Requires ContractLevelChecker and TypeChecker
-			DocStringAnalyser docStringAnalyser(m_errorReporter);
-			for (Source const* source: m_sourceOrder)
-				if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))
-					noErrors = false;
-		}
-
-		if (noErrors)
-		{
-			// Checks that can only be done when all types of all AST nodes are known.
-			PostTypeChecker postTypeChecker(m_errorReporter);
-			for (Source const* source: m_sourceOrder)
-				if (source->ast && !postTypeChecker.check(*source->ast))
-					noErrors = false;
-			if (!postTypeChecker.finalize())
+			if (!analyzeExperimental())
 				noErrors = false;
 		}
-
-		// Create & assign callgraphs and check for contract dependency cycles
-		if (noErrors)
-		{
-			createAndAssignCallGraphs();
-			annotateInternalFunctionIDs();
-			findAndReportCyclicContractDependencies();
-		}
-
-		if (noErrors)
-			for (Source const* source: m_sourceOrder)
-				if (source->ast && !PostTypeContractLevelChecker{m_errorReporter}.check(*source->ast))
-					noErrors = false;
-
-		// Check that immutable variables are never read in c'tors and assigned
-		// exactly once
-		if (noErrors)
-			for (Source const* source: m_sourceOrder)
-				if (source->ast)
-					for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-						if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-							ImmutableValidator(m_errorReporter, *contract).analyze();
-
-		if (noErrors)
-		{
-			// Control flow graph generator and analyzer. It can check for issues such as
-			// variable is used before it is assigned to.
-			CFG cfg(m_errorReporter);
-			for (Source const* source: m_sourceOrder)
-				if (source->ast && !cfg.constructFlow(*source->ast))
-					noErrors = false;
-
-			if (noErrors)
-			{
-				ControlFlowRevertPruner pruner(cfg);
-				pruner.run();
-
-				ControlFlowAnalyzer controlFlowAnalyzer(cfg, m_errorReporter);
-				if (!controlFlowAnalyzer.run())
-					noErrors = false;
-			}
-		}
-
-		if (noErrors)
-		{
-			// Checks for common mistakes. Only generates warnings.
-			StaticAnalyzer staticAnalyzer(m_errorReporter);
-			for (Source const* source: m_sourceOrder)
-				if (source->ast && !staticAnalyzer.analyze(*source->ast))
-					noErrors = false;
-		}
-
-		if (noErrors)
-		{
-			// Check for state mutability in every function.
-			std::vector<ASTPointer<ASTNode>> ast;
-			for (Source const* source: m_sourceOrder)
-				if (source->ast)
-					ast.push_back(source->ast);
-
-			if (!ViewPureChecker(ast, m_errorReporter).check())
-				noErrors = false;
-		}
-
-		if (noErrors)
-		{
-			// Run SMTChecker
-
-			auto allSources = util::applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
-			if (ModelChecker::isPragmaPresent(allSources))
-				m_modelCheckerSettings.engine = ModelCheckerEngine::All();
-
-			// m_modelCheckerSettings is spread to engines and solver interfaces,
-			// so we need to check whether the enabled ones are available before building the classes.
-			if (m_modelCheckerSettings.engine.any())
-				m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
-
-			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
-			modelChecker.checkRequestedSourcesAndContracts(allSources);
-			for (Source const* source: m_sourceOrder)
-				if (source->ast)
-					modelChecker.analyze(*source->ast);
-			m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
-		}
+		else if (!analyzeLegacy(noErrors))
+			noErrors = false;
 	}
 	catch (FatalError const&)
 	{
@@ -628,6 +505,162 @@ bool CompilerStack::analyze()
 
 	m_stackState = AnalysisSuccessful;
 	return true;
+}
+
+
+bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
+{
+	bool noErrors = _noErrorsSoFar;
+
+	DeclarationTypeChecker declarationTypeChecker(m_errorReporter, m_evmVersion);
+	for (Source const* source: m_sourceOrder)
+		if (source->ast && !declarationTypeChecker.check(*source->ast))
+			return false;
+
+	// Requires DeclarationTypeChecker to have run
+	DocStringTagParser docStringTagParser(m_errorReporter);
+	for (Source const* source: m_sourceOrder)
+		if (source->ast && !docStringTagParser.validateDocStringsUsingTypes(*source->ast))
+			noErrors = false;
+
+	// Next, we check inheritance, overrides, function collisions and other things at
+	// contract or function level.
+	// This also calculates whether a contract is abstract, which is needed by the
+	// type checker.
+	ContractLevelChecker contractLevelChecker(m_errorReporter);
+
+	for (Source const* source: m_sourceOrder)
+		if (auto sourceAst = source->ast)
+			noErrors = contractLevelChecker.check(*sourceAst);
+
+	// Now we run full type checks that go down to the expression level. This
+	// cannot be done earlier, because we need cross-contract types and information
+	// about whether a contract is abstract for the `new` expression.
+	// This populates the `type` annotation for all expressions.
+	//
+	// Note: this does not resolve overloaded functions. In order to do that, types of arguments are needed,
+	// which is only done one step later.
+	TypeChecker typeChecker(m_evmVersion, m_errorReporter);
+	for (Source const* source: m_sourceOrder)
+		if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
+			noErrors = false;
+
+	if (noErrors)
+	{
+		// Requires ContractLevelChecker and TypeChecker
+		DocStringAnalyser docStringAnalyser(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))
+				noErrors = false;
+	}
+
+	if (noErrors)
+	{
+		// Checks that can only be done when all types of all AST nodes are known.
+		PostTypeChecker postTypeChecker(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !postTypeChecker.check(*source->ast))
+				noErrors = false;
+		if (!postTypeChecker.finalize())
+			noErrors = false;
+	}
+
+	// Create & assign callgraphs and check for contract dependency cycles
+	if (noErrors)
+	{
+		createAndAssignCallGraphs();
+		annotateInternalFunctionIDs();
+		findAndReportCyclicContractDependencies();
+	}
+
+	if (noErrors)
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !PostTypeContractLevelChecker{m_errorReporter}.check(*source->ast))
+				noErrors = false;
+
+	// Check that immutable variables are never read in c'tors and assigned
+	// exactly once
+	if (noErrors)
+		for (Source const* source: m_sourceOrder)
+			if (source->ast)
+				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+						ImmutableValidator(m_errorReporter, *contract).analyze();
+
+	if (noErrors)
+	{
+		// Control flow graph generator and analyzer. It can check for issues such as
+		// variable is used before it is assigned to.
+		CFG cfg(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !cfg.constructFlow(*source->ast))
+				noErrors = false;
+
+		if (noErrors)
+		{
+			ControlFlowRevertPruner pruner(cfg);
+			pruner.run();
+
+			ControlFlowAnalyzer controlFlowAnalyzer(cfg, m_errorReporter);
+			if (!controlFlowAnalyzer.run())
+				noErrors = false;
+		}
+	}
+
+	if (noErrors)
+	{
+		// Checks for common mistakes. Only generates warnings.
+		StaticAnalyzer staticAnalyzer(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !staticAnalyzer.analyze(*source->ast))
+				noErrors = false;
+	}
+
+	if (noErrors)
+	{
+		// Check for state mutability in every function.
+		std::vector<ASTPointer<ASTNode>> ast;
+		for (Source const* source: m_sourceOrder)
+			if (source->ast)
+				ast.push_back(source->ast);
+
+		if (!ViewPureChecker(ast, m_errorReporter).check())
+			noErrors = false;
+	}
+
+	if (noErrors)
+	{
+		// Run SMTChecker
+
+		auto allSources = util::applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
+		if (ModelChecker::isPragmaPresent(allSources))
+			m_modelCheckerSettings.engine = ModelCheckerEngine::All();
+
+		// m_modelCheckerSettings is spread to engines and solver interfaces,
+		// so we need to check whether the enabled ones are available before building the classes.
+		if (m_modelCheckerSettings.engine.any())
+			m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
+
+		ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
+		modelChecker.checkRequestedSourcesAndContracts(allSources);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast)
+				modelChecker.analyze(*source->ast);
+		m_unhandledSMTLib2Queries += modelChecker.unhandledQueries();
+	}
+
+	return noErrors;
+}
+
+bool CompilerStack::analyzeExperimental()
+{
+	solAssert(!m_experimentalAnalysis);
+	m_experimentalAnalysis = std::make_unique<experimental::Analysis>(m_errorReporter);
+	std::vector<std::shared_ptr<SourceUnit const>> sourceAsts;
+	for (Source const* source: m_sourceOrder)
+		if (source->ast)
+			sourceAsts.emplace_back(source->ast);
+	return m_experimentalAnalysis->check(sourceAsts);
 }
 
 bool CompilerStack::parseAndAnalyze(State _stopAfter)
@@ -694,7 +727,11 @@ bool CompilerStack::compile(State _stopAfter)
 							if (m_viaIR)
 								generateEVMFromIR(*contract);
 							else
+							{
+								if (m_experimentalAnalysis)
+									solThrow(CompilerError, "Legacy codegen after experimental analysis is unsupported.");
 								compileContract(*contract, otherCompilers);
+							}
 						}
 					}
 					catch (Error const& _error)
@@ -1428,6 +1465,9 @@ void CompilerStack::compileContract(
 void CompilerStack::generateIR(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
+
+	if (m_experimentalAnalysis)
+		solThrow(CompilerError, "IR codegen after experimental analysis is unsupported.");
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())

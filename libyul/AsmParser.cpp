@@ -115,8 +115,9 @@ std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scan
 {
 	m_recursionDepth = 0;
 
+	auto previousScannerKind = _scanner->scannerKind();
 	_scanner->setScannerMode(ScannerKind::Yul);
-	ScopeGuard resetScanner([&]{ _scanner->setScannerMode(ScannerKind::Solidity); });
+	ScopeGuard resetScanner([&]{ _scanner->setScannerMode(previousScannerKind); });
 
 	try
 	{
