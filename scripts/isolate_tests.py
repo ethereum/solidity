@@ -153,19 +153,23 @@ if __name__ == '__main__':
     # ignore the test with broken utf-8 encoding and experimental tests
     exclude_files = {
         "invalid_utf8_sequence.sol",
-        "stub.sol"
+    }
+
+    exclude_subdirs = {
+        "_build",
+        "compilationTests",
+        "experimental"
     }
 
     if isfile(path):
         extract_and_write(path, options.language)
     else:
-        for root, subdirs, files in os.walk(path):
-            if '_build' in subdirs:
-                subdirs.remove('_build')
-            if 'compilationTests' in subdirs:
-                subdirs.remove('compilationTests')
+        for root, subdirs, files in os.walk(path, topdown=True):
+            # exclude specific directories from being recursed further
+            subdirs[:] = [d for d in subdirs if d not in exclude_subdirs]
             for f in files:
                 if basename(f) in exclude_files:
                     continue
                 path = join(root, f)
+                print(path)
                 extract_and_write(path, options.language)
