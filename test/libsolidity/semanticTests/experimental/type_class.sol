@@ -3,9 +3,9 @@ pragma experimental solidity;
 type Cat = word;
 type Dog = word;
 
-class A: Animal {
-    function new() -> A;
-    function alive(a: A) -> bool;
+class Self: Animal {
+    function new() -> Self;
+    function alive(self: Self) -> bool;
 }
 
 instantiation Cat: Animal {
@@ -14,7 +14,7 @@ instantiation Cat: Animal {
         return c;
     }
 
-    function alive(c: Cat) -> bool {
+    function alive(self: Cat) -> bool {
         // TODO: Boolean literals or operators not implemented.
         let w;
         assembly {
@@ -30,7 +30,7 @@ instantiation Dog: Animal {
         return d;
     }
 
-    function alive(d: Dog) -> bool {
+    function alive(self: Dog) -> bool {
         let b: bool;
         return b;
     }
