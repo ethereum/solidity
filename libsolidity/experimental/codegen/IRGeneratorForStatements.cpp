@@ -19,6 +19,7 @@
 #include <libsolidity/experimental/codegen/IRGeneratorForStatements.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/TypeClassRegistration.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 
@@ -271,11 +272,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	solAssert(declaration);
 	if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(declaration))
 	{
-		std::optional<TypeClass> typeClass = m_context.analysis.annotation<TypeInference>(*typeClassDefinition).typeClass;
-		solAssert(typeClass);
+		solAssert(m_context.analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
+		TypeClass typeClass = m_context.analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
 		solAssert(m_expressionDeclaration.emplace(
 			&_memberAccess,
-			&resolveTypeClassFunction(*typeClass, _memberAccess.memberName(), memberAccessType)
+			&resolveTypeClassFunction(typeClass, _memberAccess.memberName(), memberAccessType)
 		).second);
 	}
 	else if (dynamic_cast<TypeDefinition const*>(declaration))
