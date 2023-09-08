@@ -325,7 +325,10 @@ bool FileReader::isPathPrefix(boost::filesystem::path const& _prefix, boost::fil
 	// NOTE: On Windows paths starting with a slash (rather than a drive letter) are considered relative by boost.
 	solAssert(_prefix.is_absolute() || isUNCPath(_prefix) || _prefix.root_path() == "/", "");
 	solAssert(_path.is_absolute() || isUNCPath(_path) || _path.root_path() == "/", "");
-	solAssert(_prefix == _prefix.lexically_normal() && _path == _path.lexically_normal(), "");
+	// NOTE: On Windows before Boost 1.78 lexically_normal() would not replace the `//` UNC prefix with `\\\\`.
+	// Later versions do. Use generic_path() to normalize all slashes to `/` and ignore that difference.
+	// This does not make the assert weaker because == ignores slash type anyway.
+	solAssert(_prefix == _prefix.lexically_normal().generic_string() && _path == _path.lexically_normal().generic_string(), "");
 	solAssert(!hasDotDotSegments(_prefix) && !hasDotDotSegments(_path), "");
 
 	boost::filesystem::path strippedPath = _path.lexically_relative(
