@@ -84,6 +84,8 @@ set(libsolidity_sources
     libsolidity/Metadata.cpp
     libsolidity/MemoryGuardTest.cpp
     libsolidity/MemoryGuardTest.h
+    libsolidity/NatspecJSONTest.cpp
+    libsolidity/NatspecJSONTest.h
     libsolidity/SemanticTest.cpp
     libsolidity/SemanticTest.h
     libsolidity/SemVerMatcher.cpp
@@ -95,7 +97,6 @@ set(libsolidity_sources
     libsolidity/SolidityExecutionFramework.h
     libsolidity/SolidityExpressionCompiler.cpp
     libsolidity/SolidityNameAndTypeResolution.cpp
-    libsolidity/SolidityNatspecJSON.cpp
     libsolidity/SolidityOptimizer.cpp
     libsolidity/SolidityParser.cpp
     libsolidity/SolidityTypes.cpp
