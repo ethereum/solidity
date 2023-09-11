@@ -103,6 +103,9 @@ enum class Instruction: uint8_t
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
 
+	TLOAD = 0x5c,       ///< https://eips.ethereum.org/EIPS/eip-1153
+	TSTORE = 0x5d,      ///< https://eips.ethereum.org/EIPS/eip-1153
+
 	PUSH0 = 0x5f,       ///< place the value 0 on stack
 	PUSH1 = 0x60,		///< place 1 byte item on stack
 	PUSH2,				///< place 2 byte item on stack
@@ -177,8 +180,6 @@ enum class Instruction: uint8_t
 	LOG3,				///< Makes a log entry; 3 topics.
 	LOG4,				///< Makes a log entry; 4 topics.
 
-	TLOAD = 0x5c,       ///< https://eips.ethereum.org/EIPS/eip-1153
-	TSTORE = 0x5d,      ///< https://eips.ethereum.org/EIPS/eip-1153
 
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account
