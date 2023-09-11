@@ -221,7 +221,6 @@ json = re.sub(r"},(\n{0,1})\n*(\s*(]|}))", r"}\1\2", json)                      
 open("$stdout_path", "w").write(json)
 EOF
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
-        sed -i.bak -E -e 's/\"opcodes\":[[:space:]]*\"[^"]+\"/\"opcodes\":\"<OPCODES REMOVED>\"/g' "$stdout_path"
         sed -i.bak -E -e 's/\"sourceMap\":[[:space:]]*\"[0-9:;-]+\"/\"sourceMap\":\"<SOURCEMAP REMOVED>\"/g' "$stdout_path"
 
         # Remove bytecode (but not linker references).
