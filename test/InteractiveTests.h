@@ -24,6 +24,7 @@
 #include <test/libsolidity/ASTPropertyTest.h>
 #include <test/libsolidity/GasTest.h>
 #include <test/libsolidity/MemoryGuardTest.h>
+#include <test/libsolidity/NatspecJSONTest.h>
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/SemanticTest.h>
 #include <test/libsolidity/SMTCheckerTest.h>
@@ -74,6 +75,7 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Semantic",               "libsolidity", "semanticTests",         false, true,  &SemanticTest::create},
 	{"JSON AST",               "libsolidity", "ASTJSON",               false, false, &ASTJSONTest::create},
 	{"JSON ABI",               "libsolidity", "ABIJson",               false, false, &ABIJsonTest::create},
+	{"JSON Natspec",           "libsolidity", "natspecJSON",           false, false, &NatspecJSONTest::create},
 	{"SMT Checker",            "libsolidity", "smtCheckerTests",       true,  false, &SMTCheckerTest::create},
 	{"Gas Estimates",          "libsolidity", "gasTests",              false, false, &GasTest::create},
 	{"Memory Guard",           "libsolidity", "memoryGuardTests",      false, false, &MemoryGuardTest::create},
