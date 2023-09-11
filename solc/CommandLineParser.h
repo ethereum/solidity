@@ -72,7 +72,6 @@ struct CompilerOutputs
 			{"ast-compact-json", &CompilerOutputs::astCompactJson},
 			{"asm", &CompilerOutputs::asm_},
 			{"asm-json", &CompilerOutputs::asmJson},
-			{"opcodes", &CompilerOutputs::opcodes},
 			{"bin", &CompilerOutputs::binary},
 			{"bin-runtime", &CompilerOutputs::binaryRuntime},
 			{"abi", &CompilerOutputs::abi},
@@ -92,7 +91,6 @@ struct CompilerOutputs
 	bool astCompactJson = false;
 	bool asm_ = false;
 	bool asmJson = false;
-	bool opcodes = false;
 	bool binary = false;
 	bool binaryRuntime = false;
 	bool abi = false;
@@ -121,7 +119,6 @@ struct CombinedJsonRequests
 			{"metadata", &CombinedJsonRequests::metadata},
 			{"bin", &CombinedJsonRequests::binary},
 			{"bin-runtime", &CombinedJsonRequests::binaryRuntime},
-			{"opcodes", &CombinedJsonRequests::opcodes},
 			{"asm", &CombinedJsonRequests::asm_},
 			{"storage-layout", &CombinedJsonRequests::storageLayout},
 			{"generated-sources", &CombinedJsonRequests::generatedSources},
@@ -142,7 +139,6 @@ struct CombinedJsonRequests
 	bool metadata = false;
 	bool binary = false;
 	bool binaryRuntime = false;
-	bool opcodes = false;
 	bool asm_ = false;
 	bool storageLayout = false;
 	bool generatedSources = false;

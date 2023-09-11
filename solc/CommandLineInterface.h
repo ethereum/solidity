@@ -99,7 +99,6 @@ private:
 	void handleCombinedJSON();
 	void handleAst();
 	void handleBinary(std::string const& _contract);
-	void handleOpcode(std::string const& _contract);
 	void handleIR(std::string const& _contract);
 	void handleIRAst(std::string const& _contract);
 	void handleIROptimized(std::string const& _contract);
