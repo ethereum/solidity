@@ -35,7 +35,7 @@ public:
 	{
 		// For type class definitions.
 		TypeClassInstantiations instantiations;
-		// For type definitions, type class definitions, type names and type name expressions.
+		// For builtins, type definitions, type class definitions, type names and type name expressions.
 		std::optional<TypeConstructor> typeConstructor;
 	};
 	struct GlobalAnnotation
@@ -50,9 +50,10 @@ private:
 	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
 	bool visit(TypeClassInstantiation const& _typeClassInstantiation) override;
 	bool visit(TypeDefinition const& _typeDefinition) override;
+	void endVisit(TypeDefinition const& _typeDefinition) override;
 	bool visit(UserDefinedTypeName const& _typeName) override;
 	void endVisit(ElementaryTypeNameExpression const& _typeName) override;
-	bool visit(ElementaryTypeName const& _typeName) override;
+	bool visit(Builtin const& _builtin) override;
 	Annotation& annotation(ASTNode const& _node);
 	GlobalAnnotation& annotation();
 
