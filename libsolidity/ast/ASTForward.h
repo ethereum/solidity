@@ -105,6 +105,7 @@ class TypeClassDefinition;
 class TypeClassInstantiation;
 class TypeClassName;
 class TypeDefinition;
+class Builtin;
 /// @}
 
 class VariableScope;
