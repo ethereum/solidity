@@ -1834,7 +1834,22 @@ ASTPointer<TypeDefinition> Parser::parseTypeDefinition()
 	if (m_scanner->currentToken() == Token::Assign)
 	{
 		expectToken(Token::Assign);
-		expression = parseExpression();
+
+		if (m_scanner->currentToken() != Token::Builtin)
+			expression = parseExpression();
+		else
+		{
+			expectToken(Token::Builtin);
+			expectToken(Token::LParen);
+
+			expression = nodeFactory.createNode<Builtin>(
+				std::make_shared<std::string>(m_scanner->currentLiteral()),
+				m_scanner->currentLocation()
+			);
+
+			expectToken(Token::StringLiteral);
+			expectToken(Token::RParen);
+		}
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);

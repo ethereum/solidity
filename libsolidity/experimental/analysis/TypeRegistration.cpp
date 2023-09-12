@@ -56,32 +56,30 @@ bool TypeRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
 	return true;
 }
 
-bool TypeRegistration::visit(ElementaryTypeName const& _typeName)
+bool TypeRegistration::visit(Builtin const& _builtin)
 {
-	if (annotation(_typeName).typeConstructor)
+	if (annotation(_builtin).typeConstructor)
 		return false;
-	annotation(_typeName).typeConstructor = [&]() -> std::optional<TypeConstructor> {
-		switch (_typeName.typeName().token())
-		{
-		case Token::Void:
-			return m_typeSystem.constructor(PrimitiveType::Void);
-		case Token::Fun:
-			return m_typeSystem.constructor(PrimitiveType::Function);
-		case Token::Unit:
-			return m_typeSystem.constructor(PrimitiveType::Unit);
-		case Token::Pair:
-			return m_typeSystem.constructor(PrimitiveType::Pair);
-		case Token::Word:
-			return m_typeSystem.constructor(PrimitiveType::Word);
-		case Token::IntegerType:
-			return m_typeSystem.constructor(PrimitiveType::Integer);
-		case Token::Bool:
-			return m_typeSystem.constructor(PrimitiveType::Bool);
-		default:
-			m_errorReporter.fatalTypeError(7758_error, _typeName.location(), "Expected primitive type.");
-			return std::nullopt;
-		}
-	}();
+
+	auto primitiveType = [&](std::string _name) -> std::optional<PrimitiveType> {
+		if (_name == "void") return PrimitiveType::Void;
+		if (_name == "fun") return PrimitiveType::Function;
+		if (_name == "unit") return PrimitiveType::Unit;
+		if (_name == "pair") return PrimitiveType::Pair;
+		if (_name == "word") return PrimitiveType::Word;
+		if (_name == "integer") return PrimitiveType::Integer;
+		if (_name == "bool") return PrimitiveType::Bool;
+		return std::nullopt;
+	}(_builtin.nameParameter());
+
+	if (!primitiveType.has_value())
+		m_errorReporter.fatalTypeError(
+			7758_error,
+			_builtin.location(),
+			"Expected the name of a built-in primitive type."
+		);
+
+	annotation(_builtin).typeConstructor = m_typeSystem.constructor(primitiveType.value());
 	return true;
 }
 
@@ -165,15 +163,23 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 
 bool TypeRegistration::visit(TypeDefinition const& _typeDefinition)
 {
-	if (annotation(_typeDefinition).typeConstructor)
-		return false;
-	annotation(_typeDefinition).typeConstructor = m_typeSystem.declareTypeConstructor(
-		_typeDefinition.name(),
-		"t_" + *_typeDefinition.annotation().canonicalName + "_" + util::toString(_typeDefinition.id()),
-		_typeDefinition.arguments() ? _typeDefinition.arguments()->parameters().size() : 0,
-		&_typeDefinition
-	);
-	return true;
+	return !annotation(_typeDefinition).typeConstructor.has_value();
+}
+
+void TypeRegistration::endVisit(TypeDefinition const& _typeDefinition)
+{
+	if (annotation(_typeDefinition).typeConstructor.has_value())
+		return;
+
+	if (auto const* builtin = dynamic_cast<Builtin const*>(_typeDefinition.typeExpression()))
+		annotation(_typeDefinition).typeConstructor = annotation(*builtin).typeConstructor;
+	else
+		annotation(_typeDefinition).typeConstructor = m_typeSystem.declareTypeConstructor(
+			_typeDefinition.name(),
+			"t_" + *_typeDefinition.annotation().canonicalName + "_" + util::toString(_typeDefinition.id()),
+			_typeDefinition.arguments() ? _typeDefinition.arguments()->parameters().size() : 0,
+			&_typeDefinition
+		);
 }
 
 TypeRegistration::Annotation& TypeRegistration::annotation(ASTNode const& _node)
