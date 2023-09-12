@@ -2596,6 +2596,35 @@ private:
 	std::variant<Token, ASTPointer<IdentifierPath>> m_name;
 };
 
+class Builtin: public Expression
+{
+public:
+	Builtin(
+		int64_t _id,
+		SourceLocation _location,
+		ASTPointer<ASTString> _nameParameter,
+		SourceLocation _nameParameterLocation
+	):
+		Expression(_id, std::move(_location)),
+		m_nameParameter(std::move(_nameParameter)),
+		m_nameParameterLocation(std::move(_nameParameterLocation))
+	{
+		solAssert(m_nameParameter);
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	bool experimentalSolidityOnly() const override { return true; }
+
+	ASTString const& nameParameter() const { return *m_nameParameter; }
+	SourceLocation const& nameParameterLocation() const { return m_nameParameterLocation; }
+
+private:
+	ASTPointer<ASTString> m_nameParameter;
+	SourceLocation m_nameParameterLocation;
+};
+
 /// @}
 
 }
