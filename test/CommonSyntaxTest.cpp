@@ -19,6 +19,7 @@
 #include <test/CommonSyntaxTest.h>
 #include <test/Common.h>
 #include <test/TestCase.h>
+#include <libsolutil/CommonIO.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/test/unit_test.hpp>
@@ -29,6 +30,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -66,6 +68,7 @@ CommonSyntaxTest::CommonSyntaxTest(string const& _filename, langutil::EVMVersion
 
 TestCase::TestResult CommonSyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
+	parseCustomExpectations(m_reader.stream());
 	parseAndAnalyze();
 
 	return conclude(_stream, _linePrefix, _formatted);
@@ -73,7 +76,7 @@ TestCase::TestResult CommonSyntaxTest::run(ostream& _stream, string const& _line
 
 TestCase::TestResult CommonSyntaxTest::conclude(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-	if (m_expectations == m_errorList)
+	if (expectationsMatch())
 		return TestResult::Success;
 
 	printExpectationAndError(_stream, _linePrefix, _formatted);
@@ -84,9 +87,9 @@ void CommonSyntaxTest::printExpectationAndError(ostream& _stream, string const& 
 {
 	string nextIndentLevel = _linePrefix + "  ";
 	util::AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-	printErrorList(_stream, m_expectations, nextIndentLevel, _formatted);
+	printExpectedResult(_stream, nextIndentLevel, _formatted);
 	util::AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
-	printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
+	printObtainedResult(_stream, nextIndentLevel, _formatted);
 }
 
 void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
@@ -149,6 +152,30 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 		}
 }
 
+void CommonSyntaxTest::parseCustomExpectations(istream& _stream)
+{
+	string remainingExpectations = boost::trim_copy(readUntilEnd(_stream));
+	soltestAssert(
+		remainingExpectations.empty(),
+		"Found custom expectations not supported by the test case:\n" + remainingExpectations
+	);
+}
+
+bool CommonSyntaxTest::expectationsMatch()
+{
+	return m_expectations == m_errorList;
+}
+
+void CommonSyntaxTest::printExpectedResult(ostream& _stream, string const& _linePrefix, bool _formatted) const
+{
+	printErrorList(_stream, m_expectations, _linePrefix, _formatted);
+}
+
+void CommonSyntaxTest::printObtainedResult(ostream& _stream, string const& _linePrefix, bool _formatted) const
+{
+	printErrorList(_stream, m_errorList, _linePrefix, _formatted);
+}
+
 void CommonSyntaxTest::printErrorList(
 	ostream& _stream,
 	vector<SyntaxTestError> const& _errorList,
@@ -157,7 +184,10 @@ void CommonSyntaxTest::printErrorList(
 )
 {
 	if (_errorList.empty())
-		util::AnsiColorized(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
+	{
+		if (_formatted)
+			util::AnsiColorized(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "Success" << endl;
+	}
 	else
 		for (auto const& error: _errorList)
 		{
@@ -194,11 +224,19 @@ string CommonSyntaxTest::errorMessage(util::Exception const& _e)
 
 vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 {
+	static string const customExpectationsDelimiter("// ----");
+
 	vector<SyntaxTestError> expectations;
 	string line;
 	while (getline(_stream, line))
 	{
 		auto it = line.begin();
+
+		// Anything below the delimiter is left up to the derived class to process in a custom way.
+		// The delimiter is optional and identical to the one that starts error expectations in
+		// TestCaseReader::parseSourcesAndSettingsWithLineNumber().
+		if (boost::algorithm::starts_with(line, customExpectationsDelimiter))
+			break;
 
 		skipSlashes(it, line.end());
 		skipWhitespace(it, line.end());

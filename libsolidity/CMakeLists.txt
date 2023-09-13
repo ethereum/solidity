@@ -101,6 +101,8 @@ set(sources
 	codegen/ir/IRLValue.h
 	codegen/ir/IRVariable.cpp
 	codegen/ir/IRVariable.h
+	experimental/analysis/Analysis.cpp
+	experimental/analysis/Analysis.h
 	formal/ArraySlicePredicate.cpp
 	formal/ArraySlicePredicate.h
 	formal/BMC.cpp
@@ -186,4 +188,3 @@ set(sources
 
 add_library(solidity ${sources})
 target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost fmt::fmt-header-only Threads::Threads)
-

@@ -21,6 +21,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/libsolidity/util/Common.h>
 #include <test/Common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -34,33 +35,23 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-pair<SourceUnit const*, ErrorList>
+std::pair<SourceUnit const*, ErrorList>
 AnalysisFramework::parseAnalyseAndReturnError(
-	string const& _source,
+	std::string const& _source,
 	bool _reportWarnings,
 	bool _insertLicenseAndVersionPragma,
-	bool _allowMultipleErrors,
-	bool _allowRecoveryErrors
+	bool _allowMultipleErrors
 )
 {
 	compiler().reset();
-	// Do not insert license if it is already present.
-	bool insertLicense = _insertLicenseAndVersionPragma && _source.find("// SPDX-License-Identifier:") == string::npos;
-	compiler().setSources({{"",
-		string{_insertLicenseAndVersionPragma ? "pragma solidity >=0.0;\n" : ""} +
-		string{insertLicense ? "// SPDX-License-Identifier: GPL-3.0\n" : ""} +
-		_source
-	}});
+	compiler().setSources({{"", _insertLicenseAndVersionPragma ? withPreamble(_source) : _source}});
 	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
-	compiler().setParserErrorRecovery(_allowRecoveryErrors);
-	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
 	if (!compiler().parse())
 	{
 		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors(compiler().errors()));
@@ -107,7 +98,7 @@ ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _inc
 			{
 				SourceLocation const* location = currentError->sourceLocation();
 				// sufficient for now, but in future we might clone the error completely, including the secondary location
-				newError = make_shared<Error>(
+				newError = std::make_shared<Error>(
 					currentError->errorId(),
 					currentError->type(),
 					messagePrefix + " ....",
@@ -122,18 +113,18 @@ ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _inc
 	return errors;
 }
 
-SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
+SourceUnit const* AnalysisFramework::parseAndAnalyse(std::string const& _source)
 {
 	auto sourceAndError = parseAnalyseAndReturnError(_source);
 	BOOST_REQUIRE(!!sourceAndError.first);
-	string message;
+	std::string message;
 	if (!sourceAndError.second.empty())
 		message = "Unexpected error: " + formatErrors(compiler().errors());
 	BOOST_REQUIRE_MESSAGE(sourceAndError.second.empty(), message);
 	return sourceAndError.first;
 }
 
-bool AnalysisFramework::success(string const& _source)
+bool AnalysisFramework::success(std::string const& _source)
 {
 	return parseAnalyseAndReturnError(_source).second.empty();
 }
@@ -146,38 +137,39 @@ ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warni
 	return sourceAndErrors.second;
 }
 
-string AnalysisFramework::formatErrors(
-	langutil::ErrorList _errors,
+std::string AnalysisFramework::formatErrors(
+	langutil::ErrorList const& _errors,
 	bool _colored,
 	bool _withErrorIds
 ) const
 {
-	string message;
-	for (auto const& error: _errors)
-		message += formatError(*error, _colored, _withErrorIds);
-	return message;
-}
-
-string AnalysisFramework::formatError(
-	Error const& _error,
-	bool _colored,
-	bool _withErrorIds
-) const
-{
-	return SourceReferenceFormatter::formatExceptionInformation(
-		_error,
-		_error.type(),
+	return SourceReferenceFormatter::formatErrorInformation(
+		_errors,
 		*m_compiler,
 		_colored,
 		_withErrorIds
 	);
 }
 
-ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)
+std::string AnalysisFramework::formatError(
+	Error const& _error,
+	bool _colored,
+	bool _withErrorIds
+) const
+{
+	return SourceReferenceFormatter::formatErrorInformation(
+		_error,
+		*m_compiler,
+		_colored,
+		_withErrorIds
+	);
+}
+
+ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, std::string const& _name)
 {
 	ContractDefinition* contract = nullptr;
 
-	for (shared_ptr<ASTNode> const& node: _source.nodes())
+	for (std::shared_ptr<ASTNode> const& node: _source.nodes())
 		if ((contract = dynamic_cast<ContractDefinition*>(node.get())) && contract->name() == _name)
 			return contract;
 

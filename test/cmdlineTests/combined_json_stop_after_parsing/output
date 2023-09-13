@@ -1,0 +1,53 @@
+{
+    "contracts":
+    {
+        "combined_json_stop_after_parsing/input.sol:C": {}
+    },
+    "sourceList":
+    [
+        "combined_json_stop_after_parsing/input.sol"
+    ],
+    "sources":
+    {
+        "combined_json_stop_after_parsing/input.sol":
+        {
+            "AST":
+            {
+                "absolutePath": "combined_json_stop_after_parsing/input.sol",
+                "id": 3,
+                "license": "GPL-3.0",
+                "nodeType": "SourceUnit",
+                "nodes":
+                [
+                    {
+                        "id": 1,
+                        "literals":
+                        [
+                            "solidity",
+                            "*"
+                        ],
+                        "nodeType": "PragmaDirective",
+                        "src": "36:18:0"
+                    },
+                    {
+                        "abstract": false,
+                        "baseContracts": [],
+                        "contractDependencies": [],
+                        "contractKind": "contract",
+                        "id": 2,
+                        "name": "C",
+                        "nameLocation": "65:1:0",
+                        "nodeType": "ContractDefinition",
+                        "nodes": [],
+                        "src": "56:13:0",
+                        "usedErrors": [],
+                        "usedEvents": []
+                    }
+                ],
+                "src": "36:34:0"
+            },
+            "id": 0
+        }
+    },
+    "version": "<VERSION REMOVED>"
+}

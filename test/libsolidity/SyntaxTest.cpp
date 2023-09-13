@@ -18,6 +18,7 @@
 
 #include <test/libsolidity/SyntaxTest.h>
 
+#include <test/libsolidity/util/Common.h>
 #include <test/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -37,32 +38,22 @@ using namespace solidity::frontend::test;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
-SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery): CommonSyntaxTest(_filename, _evmVersion)
+SyntaxTest::SyntaxTest(
+	string const& _filename,
+	langutil::EVMVersion _evmVersion,
+	Error::Severity _minSeverity
+):
+	CommonSyntaxTest(_filename, _evmVersion),
+	m_minSeverity(_minSeverity)
 {
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
-	m_parserErrorRecovery = _parserErrorRecovery;
-}
-
-string SyntaxTest::addPreamble(string const& _sourceCode)
-{
-	// Silence compiler version warning
-	string preamble = "pragma solidity >=0.0;\n";
-	// NOTE: this check is intentionally loose to match weird cases.
-	// We can manually adjust a test case where this causes problem.
-	if (_sourceCode.find("SPDX-License-Identifier:") == string::npos)
-		preamble += "// SPDX-License-Identifier: GPL-3.0\n";
-	return preamble + _sourceCode;
 }
 
 void SyntaxTest::setupCompiler()
 {
 	compiler().reset();
-	auto sourcesWithPragma = m_sources.sources;
-	for (auto& source: sourcesWithPragma)
-		source.second = addPreamble(source.second);
-	compiler().setSources(sourcesWithPragma);
+	compiler().setSources(withPreamble(m_sources.sources));
 	compiler().setEVMVersion(m_evmVersion);
-	compiler().setParserErrorRecovery(m_parserErrorRecovery);
 	compiler().setOptimiserSettings(
 		m_optimiseYul ?
 		OptimiserSettings::full() :
@@ -113,6 +104,9 @@ void SyntaxTest::filterObtainedErrors()
 {
 	for (auto const& currentError: filteredErrors())
 	{
+		if (currentError->severity() < m_minSeverity)
+			continue;
+
 		int locationStart = -1;
 		int locationEnd = -1;
 		string sourceName;

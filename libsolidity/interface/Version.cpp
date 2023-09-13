@@ -25,19 +25,17 @@
 
 #include <solidity/BuildInfo.h>
 
-using namespace std;
-
 char const* solidity::frontend::VersionNumber = ETH_PROJECT_VERSION;
 
-string const solidity::frontend::VersionString =
-	string(solidity::frontend::VersionNumber) +
-	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
-	(string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
+std::string const solidity::frontend::VersionString =
+	std::string(solidity::frontend::VersionNumber) +
+	(std::string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + std::string(SOL_VERSION_PRERELEASE)) +
+	(std::string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + std::string(SOL_VERSION_BUILDINFO));
 
-string const solidity::frontend::VersionStringStrict =
-	string(solidity::frontend::VersionNumber) +
-	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
-	(string(SOL_VERSION_COMMIT).empty() ? "" : "+" + string(SOL_VERSION_COMMIT));
+std::string const solidity::frontend::VersionStringStrict =
+	std::string(solidity::frontend::VersionNumber) +
+	(std::string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + std::string(SOL_VERSION_PRERELEASE)) +
+	(std::string(SOL_VERSION_COMMIT).empty() ? "" : "+" + std::string(SOL_VERSION_COMMIT));
 
 solidity::bytes const solidity::frontend::VersionCompactBytes = {
 	ETH_PROJECT_VERSION_MAJOR,
@@ -45,4 +43,4 @@ solidity::bytes const solidity::frontend::VersionCompactBytes = {
 	ETH_PROJECT_VERSION_PATCH
 };
 
-bool const solidity::frontend::VersionIsRelease = string(SOL_VERSION_PRERELEASE).empty();
+bool const solidity::frontend::VersionIsRelease = std::string(SOL_VERSION_PRERELEASE).empty();

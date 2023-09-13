@@ -23,7 +23,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 
@@ -56,11 +55,11 @@ bytes encodeLinkData(bytes const& _data)
 	return bytes{0x12} + varintEncoding(_data.size()) + _data;
 }
 
-string base58Encode(bytes const& _data)
+std::string base58Encode(bytes const& _data)
 {
-	static string const alphabet{"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"};
+	static std::string const alphabet{"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"};
 	bigint data(util::toHex(_data, HexPrefix::Add));
-	string output;
+	std::string output;
 	while (data)
 	{
 		output += alphabet[static_cast<size_t>(data % alphabet.size())];
@@ -84,7 +83,7 @@ struct Chunk
 	size_t blockSize = 0;
 };
 
-using Chunks = vector<Chunk>;
+using Chunks = std::vector<Chunk>;
 
 Chunk combineLinks(Chunks& _links)
 {
@@ -153,7 +152,7 @@ bytes groupChunksBottomUp(Chunks _currentLevel)
 }
 }
 
-bytes solidity::util::ipfsHash(string _data)
+bytes solidity::util::ipfsHash(std::string _data)
 {
 	size_t const maxChunkSize = 1024 * 256;
 	size_t chunkCount = _data.length() / maxChunkSize + (_data.length() % maxChunkSize > 0 ? 1 : 0);
@@ -164,7 +163,7 @@ bytes solidity::util::ipfsHash(string _data)
 	for (size_t chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
 	{
 		bytes chunkBytes = asBytes(
-			_data.substr(chunkIndex * maxChunkSize, min(maxChunkSize, _data.length() - chunkIndex * maxChunkSize))
+			_data.substr(chunkIndex * maxChunkSize, std::min(maxChunkSize, _data.length() - chunkIndex * maxChunkSize))
 		);
 
 		bytes lengthAsVarint = varintEncoding(chunkBytes.size());
@@ -197,7 +196,7 @@ bytes solidity::util::ipfsHash(string _data)
 	return groupChunksBottomUp(std::move(allChunks));
 }
 
-string solidity::util::ipfsHashBase58(string _data)
+std::string solidity::util::ipfsHashBase58(std::string _data)
 {
 	return base58Encode(ipfsHash(std::move(_data)));
 }

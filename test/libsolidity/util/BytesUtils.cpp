@@ -26,6 +26,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <algorithm>
+#include <iterator>
 #include <iomanip>
 #include <memory>
 #include <regex>
@@ -253,26 +255,46 @@ std::string BytesUtils::formatFixedPoint(bytes const& _bytes, bool _signed, size
 string BytesUtils::formatRawBytes(
 	bytes const& _bytes,
 	solidity::frontend::test::ParameterList const& _parameters,
-	string _linePrefix)
+	string _linePrefix
+)
 {
 	stringstream os;
 	ParameterList parameters;
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
+	{
+		// Interpret all full 32-byte values as integers.
+		parameters = ContractABIUtils::defaultParameters(_bytes.size() / 32);
+
+		// We'd introduce trailing zero bytes if we interpreted the final bit as an integer.
+		// We want a right-aligned sequence of bytes instead.
+		if (_bytes.size() % 32 != 0)
+			parameters.push_back({
+				bytes(),
+				"",
+				ABIType{ABIType::HexString, ABIType::AlignRight, _bytes.size() % 32},
+				FormatInfo{},
+			});
+	}
 	else
 		parameters = _parameters;
+	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
 
 	for (auto const& parameter: parameters)
 	{
-		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
+		long actualSize = min(
+			distance(it, _bytes.end()),
+			static_cast<ParameterList::difference_type>(parameter.abiType.size)
+		);
+		bytes byteRange(parameter.abiType.size, 0);
+		copy(it, it + actualSize, byteRange.begin());
 
 		os << _linePrefix << byteRange;
 		if (&parameter != &parameters.back())
 			os << endl;
 
-		it += static_cast<long>(parameter.abiType.size);
+		it += actualSize;
 	}
 
 	return os.str();
@@ -365,14 +387,32 @@ string BytesUtils::formatBytesRange(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
+	{
+		// Interpret all full 32-byte values as integers.
+		parameters = ContractABIUtils::defaultParameters(_bytes.size() / 32);
+
+		// We'd introduce trailing zero bytes if we interpreted the final bit as an integer.
+		// We want a right-aligned sequence of bytes instead.
+		if (_bytes.size() % 32 != 0)
+			parameters.push_back({
+				bytes(),
+				"",
+				ABIType{ABIType::HexString, ABIType::AlignRight, _bytes.size() % 32},
+				FormatInfo{},
+			});
+	}
 	else
 		parameters = _parameters;
-
+	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
 
 	for (auto const& parameter: parameters)
 	{
-		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
+		long actualSize = min(
+			distance(it, _bytes.end()),
+			static_cast<ParameterList::difference_type>(parameter.abiType.size)
+		);
+		bytes byteRange(parameter.abiType.size, 0);
+		copy(it, it + actualSize, byteRange.begin());
 
 		if (!parameter.matchesBytes(byteRange))
 			AnsiColorized(
@@ -386,7 +426,7 @@ string BytesUtils::formatBytesRange(
 		if (&parameter != &parameters.back())
 			os << ", ";
 
-		it += static_cast<long>(parameter.abiType.size);
+		it += actualSize;
 	}
 
 	return os.str();

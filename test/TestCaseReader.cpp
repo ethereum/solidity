@@ -114,15 +114,17 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 	static string const sourceDelimiterEnd("====");
 	static string const comment("// ");
 	static string const settingsDelimiter("// ====");
-	static string const delimiter("// ----");
+	static string const expectationsDelimiter("// ----");
 	bool sourcePart = true;
 	while (getline(_stream, line))
 	{
 		lineNumber++;
 
-		if (boost::algorithm::starts_with(line, delimiter))
+		// Anything below the delimiter is left up to the test case to process in a custom way.
+		if (boost::algorithm::starts_with(line, expectationsDelimiter))
 			break;
-		else if (boost::algorithm::starts_with(line, settingsDelimiter))
+
+		if (boost::algorithm::starts_with(line, settingsDelimiter))
 			sourcePart = false;
 		else if (sourcePart)
 		{

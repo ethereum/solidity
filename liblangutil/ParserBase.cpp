@@ -74,56 +74,10 @@ void ParserBase::expectToken(Token _value, bool _advance)
 {
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
-	{
-		std::string const expectedToken = ParserBase::tokenName(_value);
-		if (m_parserErrorRecovery)
-			parserError(6635_error, "Expected " + expectedToken + " but got " + tokenName(tok));
-		else
-			fatalParserError(2314_error, "Expected " + expectedToken + " but got " + tokenName(tok));
-		// Do not advance so that recovery can sync or make use of the current token.
-		// This is especially useful if the expected token
-		// is the only one that is missing and is at the end of a construct.
-		// "{ ... ; }" is such an example.
-		//        ^
-		_advance = false;
-	}
-	if (_advance)
-		advance();
-}
-
-void ParserBase::expectTokenOrConsumeUntil(Token _value, std::string const& _currentNodeName, bool _advance)
-{
-	solAssert(m_inParserRecovery, "The function is supposed to be called during parser recovery only.");
-
-	Token tok = m_scanner->currentToken();
-	if (tok != _value)
-	{
-		SourceLocation errorLoc = currentLocation();
-		int startPosition = errorLoc.start;
-		while (m_scanner->currentToken() != _value && m_scanner->currentToken() != Token::EOS)
-			advance();
-
-		std::string const expectedToken = ParserBase::tokenName(_value);
-		if (m_scanner->currentToken() == Token::EOS)
-		{
-			// rollback to where the token started, and raise exception to be caught at a higher level.
-			m_scanner->setPosition(static_cast<size_t>(startPosition));
-			std::string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " + ParserBase::tokenName(tok) + " instead.";
-			fatalParserError(1957_error, errorLoc, msg);
-		}
-		else
-		{
-			parserWarning(3796_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
-			m_inParserRecovery = false;
-		}
-	}
-	else
-	{
-		std::string expectedToken = ParserBase::tokenName(_value);
-		parserWarning(3347_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
-		m_inParserRecovery = false;
-	}
-
+		fatalParserError(
+			2314_error,
+			"Expected " + ParserBase::tokenName(_value) + " but got " + tokenName(tok)
+		);
 	if (_advance)
 		advance();
 }

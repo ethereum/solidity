@@ -26,8 +26,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/UTF8.h>
 
-using namespace std;
-
 namespace solidity::yul
 {
 
@@ -183,14 +181,14 @@ Json::Value AsmJsonConverter::operator()(Leave const& _node) const
 	return createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulLeave");
 }
 
-Json::Value AsmJsonConverter::createAstNode(langutil::SourceLocation const& _originLocation, langutil::SourceLocation const& _nativeLocation, string _nodeType) const
+Json::Value AsmJsonConverter::createAstNode(langutil::SourceLocation const& _originLocation, langutil::SourceLocation const& _nativeLocation, std::string _nodeType) const
 {
 	Json::Value ret{Json::objectValue};
 	ret["nodeType"] = std::move(_nodeType);
-	auto srcLocation = [&](int start, int end) -> string
+	auto srcLocation = [&](int start, int end) -> std::string
 	{
 		int length = (start >= 0 && end >= 0 && end >= start) ? end - start : -1;
-		return to_string(start) + ":" + to_string(length) + ":" + (m_sourceIndex.has_value() ? to_string(m_sourceIndex.value()) : "-1");
+		return std::to_string(start) + ":" + std::to_string(length) + ":" + (m_sourceIndex.has_value() ? std::to_string(m_sourceIndex.value()) : "-1");
 	};
 	ret["src"] = srcLocation(_originLocation.start, _originLocation.end);
 	ret["nativeSrc"] = srcLocation(_nativeLocation.start, _nativeLocation.end);
@@ -198,7 +196,7 @@ Json::Value AsmJsonConverter::createAstNode(langutil::SourceLocation const& _ori
 }
 
 template <class T>
-Json::Value AsmJsonConverter::vectorOfVariantsToJson(vector<T> const& _vec) const
+Json::Value AsmJsonConverter::vectorOfVariantsToJson(std::vector<T> const& _vec) const
 {
 	Json::Value ret{Json::arrayValue};
 	for (auto const& var: _vec)

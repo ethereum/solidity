@@ -36,7 +36,6 @@
 
 #include <limits>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
@@ -65,8 +64,8 @@ void LoadResolver::visit(Expression& _e)
 			tryResolve(_e, StoreLoadLocation::Storage, funCall->arguments);
 		else if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction({}))
 		{
-			Identifier const* start = get_if<Identifier>(&funCall->arguments.at(0));
-			Identifier const* length = get_if<Identifier>(&funCall->arguments.at(1));
+			Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0));
+			Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1));
 			if (start && length)
 				if (auto const& value = keccakValue(start->name, length->name))
 					if (inScope(*value))
@@ -82,10 +81,10 @@ void LoadResolver::visit(Expression& _e)
 void LoadResolver::tryResolve(
 	Expression& _e,
 	StoreLoadLocation _location,
-	vector<Expression> const& _arguments
+	std::vector<Expression> const& _arguments
 )
 {
-	if (_arguments.empty() || !holds_alternative<Identifier>(_arguments.at(0)))
+	if (_arguments.empty() || !std::holds_alternative<Identifier>(_arguments.at(0)))
 		return;
 
 	YulString key = std::get<Identifier>(_arguments.at(0)).name;
@@ -126,7 +125,7 @@ void LoadResolver::tryEvaluateKeccak(
 			{},
 			LiteralKind::Number,
 			// a dummy 256-bit number to represent the Keccak256 hash.
-			YulString{numeric_limits<u256>::max().str()},
+			YulString{std::numeric_limits<u256>::max().str()},
 			{}
 		}
 	);
@@ -138,11 +137,11 @@ void LoadResolver::tryEvaluateKeccak(
 	if (costOfLiteral > costOfKeccak)
 		return;
 
-	optional<YulString> value = memoryValue(memoryKey->name);
+	std::optional<YulString> value = memoryValue(memoryKey->name);
 	if (value && inScope(*value))
 	{
-		optional<u256> memoryContent = valueOfIdentifier(*value);
-		optional<u256> byteLength = valueOfIdentifier(length->name);
+		std::optional<u256> memoryContent = valueOfIdentifier(*value);
+		std::optional<u256> byteLength = valueOfIdentifier(length->name);
 		if (memoryContent && byteLength && *byteLength <= 32)
 		{
 			bytes contentAsBytes = toBigEndian(*memoryContent);

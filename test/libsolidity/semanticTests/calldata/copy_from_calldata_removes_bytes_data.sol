@@ -9,9 +9,9 @@ contract c {
 // EVMVersion: >=byzantium
 // ----
 // (): 1, 2, 3, 4, 5 ->
-// gas irOptimized: 155131
+// gas irOptimized: 155130
 // gas legacy: 155473
-// gas legacyOptimized: 155298
+// gas legacyOptimized: 155295
 // checkIfDataIsEmpty() -> false
 // sendMessage() -> true, 0x40, 0
 // checkIfDataIsEmpty() -> true

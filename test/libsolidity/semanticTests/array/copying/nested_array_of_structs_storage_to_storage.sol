@@ -65,5 +65,5 @@ contract C {
 // test1()
 // gas irOptimized: 123202
 // test2()
-// gas irOptimized: 123030
+// gas irOptimized: 123027
 // test3()

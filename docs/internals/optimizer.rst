@@ -338,7 +338,7 @@ You can override this sequence and supply your own using the ``--yul-optimizatio
 
 .. code-block:: bash
 
-    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul:fDnTOc'
+    solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul:fDnTOcmu'
 
 The order of steps is significant and affects the quality of the output.
 Moreover, applying a step may uncover new optimization opportunities for others that were already applied,

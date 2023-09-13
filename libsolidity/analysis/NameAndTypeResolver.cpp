@@ -30,7 +30,6 @@
 #include <boost/algorithm/string.hpp>
 #include <unordered_set>
 
-using namespace std;
 using namespace solidity::langutil;
 
 namespace solidity::frontend
@@ -45,7 +44,7 @@ NameAndTypeResolver::NameAndTypeResolver(
 	m_errorReporter(_errorReporter),
 	m_globalContext(_globalContext)
 {
-	m_scopes[nullptr] = make_shared<DeclarationContainer>();
+	m_scopes[nullptr] = std::make_shared<DeclarationContainer>();
 	for (Declaration const* declaration: _globalContext.declarations())
 	{
 		solAssert(m_scopes[nullptr]->registerDeclaration(*declaration, false, false), "Unable to register global declaration.");
@@ -68,14 +67,14 @@ bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode 
 	return true;
 }
 
-bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, SourceUnit const*> const& _sourceUnits)
+bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits)
 {
 	DeclarationContainer& target = *m_scopes.at(&_sourceUnit);
 	bool error = false;
 	for (auto const& node: _sourceUnit.nodes())
 		if (auto imp = dynamic_cast<ImportDirective const*>(node.get()))
 		{
-			string const& path = *imp->annotation().absolutePath;
+			std::string const& path = *imp->annotation().absolutePath;
 			// The import resolution in CompilerStack enforces this.
 			solAssert(_sourceUnits.count(path), "");
 			auto scope = m_scopes.find(_sourceUnits.at(path));
@@ -127,7 +126,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(SourceUnit& _source)
 {
 	try
 	{
-		for (shared_ptr<ASTNode> const& node: _source.nodes())
+		for (std::shared_ptr<ASTNode> const& node: _source.nodes())
 		{
 			setScope(&_source);
 			if (!resolveNamesAndTypesInternal(*node, true))
@@ -159,7 +158,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 	return true;
 }
 
-void NameAndTypeResolver::activateVariable(string const& _name)
+void NameAndTypeResolver::activateVariable(std::string const& _name)
 {
 	solAssert(m_currentScope, "");
 	// Scoped local variables are invisible before activation.
@@ -171,15 +170,15 @@ void NameAndTypeResolver::activateVariable(string const& _name)
 		m_currentScope->activateVariable(_name);
 }
 
-vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, ASTNode const* _scope) const
+std::vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, ASTNode const* _scope) const
 {
 	auto iterator = m_scopes.find(_scope);
 	if (iterator == end(m_scopes))
-		return vector<Declaration const*>({});
+		return std::vector<Declaration const*>({});
 	return iterator->second->resolveName(_name);
 }
 
-vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles) const
+std::vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles) const
 {
 	ResolvingSettings settings;
 	settings.recursive = true;
@@ -187,7 +186,7 @@ vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString c
 	return m_currentScope->resolveName(_name, std::move(settings));
 }
 
-Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path) const
+Declaration const* NameAndTypeResolver::pathFromCurrentScope(std::vector<ASTString> const& _path) const
 {
 	if (auto declarations = pathFromCurrentScopeWithAllDeclarations(_path); !declarations.empty())
 		return declarations.back();
@@ -201,13 +200,13 @@ std::vector<Declaration const*> NameAndTypeResolver::pathFromCurrentScopeWithAll
 ) const
 {
 	solAssert(!_path.empty(), "");
-	vector<Declaration const*> pathDeclarations;
+	std::vector<Declaration const*> pathDeclarations;
 
 	ResolvingSettings settings;
 	settings.recursive = true;
 	settings.alsoInvisible = _includeInvisibles;
 	settings.onlyVisibleAsUnqualifiedNames = true;
-	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), settings);
+	std::vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), settings);
 
 	// inside the loop, use default settings, except for alsoInvisible
 	settings.recursive = false;
@@ -305,7 +304,7 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		if (success)
 		{
 			linearizeBaseContracts(*contract);
-			vector<ContractDefinition const*> properBases(
+			std::vector<ContractDefinition const*> properBases(
 				++contract->annotation().linearizedBaseContracts.begin(),
 				contract->annotation().linearizedBaseContracts.end()
 			);
@@ -405,7 +404,7 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
 {
 	// order in the lists is from derived to base
 	// list of lists to linearize, the last element is the list of direct bases
-	list<list<ContractDefinition const*>> input(1, list<ContractDefinition const*>{});
+	std::list<std::list<ContractDefinition const*>> input(1, std::list<ContractDefinition const*>{});
 	for (ASTPointer<InheritanceSpecifier> const& baseSpecifier: _contract.baseContracts())
 	{
 		IdentifierPath const& baseName = baseSpecifier->name();
@@ -415,25 +414,25 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
 		// "push_front" has the effect that bases mentioned later can overwrite members of bases
 		// mentioned earlier
 		input.back().push_front(base);
-		vector<ContractDefinition const*> const& basesBases = base->annotation().linearizedBaseContracts;
+		std::vector<ContractDefinition const*> const& basesBases = base->annotation().linearizedBaseContracts;
 		if (basesBases.empty())
 			m_errorReporter.fatalTypeError(2449_error, baseName.location(), "Definition of base has to precede definition of derived contract");
-		input.push_front(list<ContractDefinition const*>(basesBases.begin(), basesBases.end()));
+		input.push_front(std::list<ContractDefinition const*>(basesBases.begin(), basesBases.end()));
 	}
 	input.back().push_front(&_contract);
-	vector<ContractDefinition const*> result = cThreeMerge(input);
+	std::vector<ContractDefinition const*> result = cThreeMerge(input);
 	if (result.empty())
 		m_errorReporter.fatalTypeError(5005_error, _contract.location(), "Linearization of inheritance graph impossible");
 	_contract.annotation().linearizedBaseContracts = result;
 }
 
 template <class T>
-vector<T const*> NameAndTypeResolver::cThreeMerge(list<list<T const*>>& _toMerge)
+std::vector<T const*> NameAndTypeResolver::cThreeMerge(std::list<std::list<T const*>>& _toMerge)
 {
 	// returns true iff _candidate appears only as last element of the lists
 	auto appearsOnlyAtHead = [&](T const* _candidate) -> bool
 	{
-		for (list<T const*> const& bases: _toMerge)
+		for (std::list<T const*> const& bases: _toMerge)
 		{
 			solAssert(!bases.empty(), "");
 			if (find(++bases.begin(), bases.end(), _candidate) != bases.end())
@@ -444,7 +443,7 @@ vector<T const*> NameAndTypeResolver::cThreeMerge(list<list<T const*>>& _toMerge
 	// returns the next candidate to append to the linearized list or nullptr on failure
 	auto nextCandidate = [&]() -> T const*
 	{
-		for (list<T const*> const& bases: _toMerge)
+		for (std::list<T const*> const& bases: _toMerge)
 		{
 			solAssert(!bases.empty(), "");
 			if (appearsOnlyAtHead(bases.front()))
@@ -465,26 +464,26 @@ vector<T const*> NameAndTypeResolver::cThreeMerge(list<list<T const*>>& _toMerge
 		}
 	};
 
-	_toMerge.remove_if([](list<T const*> const& _bases) { return _bases.empty(); });
-	vector<T const*> result;
+	_toMerge.remove_if([](std::list<T const*> const& _bases) { return _bases.empty(); });
+	std::vector<T const*> result;
 	while (!_toMerge.empty())
 	{
 		T const* candidate = nextCandidate();
 		if (!candidate)
-			return vector<T const*>();
+			return std::vector<T const*>();
 		result.push_back(candidate);
 		removeCandidate(candidate);
 	}
 	return result;
 }
 
-string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
+	std::string NameAndTypeResolver::similarNameSuggestions(ASTString const& _name) const
 {
 	return util::quotedAlternativesList(m_currentScope->similarNames(_name));
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
-	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
+	std::map<ASTNode const*, std::shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
 	ErrorReporter& _errorReporter,
 	GlobalContext& _globalContext,
@@ -502,7 +501,7 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 bool DeclarationRegistrationHelper::registerDeclaration(
 	DeclarationContainer& _container,
 	Declaration const& _declaration,
-	string const* _name,
+	std::string const* _name,
 	SourceLocation const* _errorLocation,
 	bool _inactive,
 	ErrorReporter& _errorReporter
@@ -511,13 +510,13 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	if (!_errorLocation)
 		_errorLocation = &_declaration.location();
 
-	string name = _name ? *_name : _declaration.name();
+	std::string name = _name ? *_name : _declaration.name();
 
 	// We use "invisible" for both inactive variables in blocks and for members invisible in contracts.
 	// They cannot both be true at the same time.
 	solAssert(!(_inactive && !_declaration.isVisibleInContract()), "");
 
-	static set<string> illegalNames{"_", "super", "this"};
+	static std::set<std::string> illegalNames{"_", "super", "this"};
 
 	if (illegalNames.count(name))
 	{
@@ -580,7 +579,7 @@ bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
 {
 	if (!m_scopes[&_sourceUnit])
 		// By importing, it is possible that the container already exists.
-		m_scopes[&_sourceUnit] = make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get());
+		m_scopes[&_sourceUnit] = std::make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get());
 	return ASTVisitor::visit(_sourceUnit);
 }
 
@@ -594,7 +593,7 @@ bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
 	SourceUnit const* importee = _import.annotation().sourceUnit;
 	solAssert(!!importee, "");
 	if (!m_scopes[importee])
-		m_scopes[importee] = make_shared<DeclarationContainer>(nullptr, m_scopes[nullptr].get());
+		m_scopes[importee] = std::make_shared<DeclarationContainer>(nullptr, m_scopes[nullptr].get());
 	m_scopes[&_import] = m_scopes[importee];
 	ASTVisitor::visit(_import);
 	return false; // Do not recurse into child nodes (Identifier for symbolAliases)
@@ -641,7 +640,7 @@ bool DeclarationRegistrationHelper::visitNode(ASTNode& _node)
 
 	if (auto* annotation = dynamic_cast<TypeDeclarationAnnotation*>(&_node.annotation()))
 	{
-		string canonicalName = dynamic_cast<Declaration const&>(_node).name();
+		std::string canonicalName = dynamic_cast<Declaration const&>(_node).name();
 		solAssert(!canonicalName.empty(), "");
 
 		for (
@@ -684,7 +683,7 @@ void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _subScope)
 	{
 		bool newlyAdded = m_scopes.emplace(
 			&_subScope,
-			make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get())
+			std::make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get())
 		).second;
 		solAssert(newlyAdded, "Unable to add new scope.");
 	}

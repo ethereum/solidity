@@ -40,7 +40,6 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
-#include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -173,11 +172,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionHoister::run(*m_context, *m_ast);
 			FunctionGrouper::run(*m_context, *m_ast);
 			FullInliner::run(*m_context, *m_ast);
-		}},
-		{"mainFunction", [&]() {
-			disambiguate();
-			FunctionGrouper::run(*m_context, *m_ast);
-			MainFunction::run(*m_context, *m_ast);
 		}},
 		{"rematerialiser", [&]() {
 			disambiguate();

@@ -24,8 +24,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::langutil;
+using namespace std::string_literals;
 
 namespace solidity::langutil::test
 {
@@ -89,15 +89,15 @@ BOOST_AUTO_TEST_CASE(assembly_multiple_assign)
 BOOST_AUTO_TEST_CASE(string_printable)
 {
 	for (unsigned v = 0x20; v < 0x7e; v++) {
-		string lit{static_cast<char>(v)};
+		std::string lit{static_cast<char>(v)};
 		// Escape \ and " (since we are quoting with ")
 		if (v == '\\' || v == '"')
-			lit = string{'\\'} + lit;
+			lit = std::string{'\\'} + lit;
 		CharStream stream("  { \"" + lit + "\"", "");
 		Scanner scanner(stream);
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
-		BOOST_CHECK_EQUAL(scanner.currentLiteral(), string{static_cast<char>(v)});
+		BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string{static_cast<char>(v)});
 		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	}
 	// Special case of unescaped " for strings quoted with '
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(string_nonprintable)
 		// Skip the valid ones
 		if (v >= 0x20 && v <= 0x7e)
 			continue;
-		string lit{static_cast<char>(v)};
+		std::string lit{static_cast<char>(v)};
 		CharStream stream("  { \"" + lit + "\"", "");
 		Scanner scanner(stream);
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
@@ -148,14 +148,14 @@ BOOST_AUTO_TEST_CASE(string_escapes_all)
 
 struct TestScanner
 {
-	unique_ptr<CharStream> stream;
-	unique_ptr<Scanner> scanner;
-	explicit TestScanner(string _text) { reset(std::move(_text)); }
+	std::unique_ptr<CharStream> stream;
+	std::unique_ptr<Scanner> scanner;
+	explicit TestScanner(std::string _text) { reset(std::move(_text)); }
 
 	void reset(std::string _text)
 	{
-		stream = make_unique<CharStream>(std::move(_text), "");
-		scanner = make_unique<Scanner>(*stream);
+		stream = std::make_unique<CharStream>(std::move(_text), "");
+		scanner = std::make_unique<Scanner>(*stream);
 	}
 
 	decltype(auto) currentToken() { return scanner->currentToken(); }
@@ -801,7 +801,7 @@ BOOST_AUTO_TEST_CASE(regular_line_break_in_single_line_comment)
 {
 	for (auto const& nl: {"\r", "\n", "\r\n"})
 	{
-		TestScanner scanner("// abc " + string(nl) + " def ");
+		TestScanner scanner("// abc " + std::string(nl) + " def ");
 		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "");
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
@@ -813,10 +813,10 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_single_line_comment)
 {
 	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})
 	{
-		TestScanner scanner("// abc " + string(nl) + " def ");
+		TestScanner scanner("// abc " + std::string(nl) + " def ");
 		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "");
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
-		for (size_t i = 0; i < string(nl).size() - 1; i++)
+		for (size_t i = 0; i < std::string(nl).size() - 1; i++)
 			BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
@@ -828,7 +828,7 @@ BOOST_AUTO_TEST_CASE(regular_line_breaks_in_single_line_doc_comment)
 {
 	for (auto const& nl: {"\r", "\n", "\r\n"})
 	{
-		TestScanner scanner("/// abc " + string(nl) + " def ");
+		TestScanner scanner("/// abc " + std::string(nl) + " def ");
 		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "abc ");
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
@@ -856,10 +856,10 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_single_line_doc_comment)
 {
 	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})
 	{
-		TestScanner scanner("/// abc " + string(nl) + " def ");
+		TestScanner scanner("/// abc " + std::string(nl) + " def ");
 		BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "abc ");
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
-		for (size_t i = 0; i < string(nl).size() - 1; i++)
+		for (size_t i = 0; i < std::string(nl).size() - 1; i++)
 			BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
@@ -884,9 +884,9 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_strings)
 {
 	for (auto const& nl: {"\v", "\f", "\xE2\x80\xA8", "\xE2\x80\xA9"})
 	{
-		TestScanner scanner("\"abc " + string(nl) + " def\"");
+		TestScanner scanner("\"abc " + std::string(nl) + " def\"");
 		BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
-		for (size_t i = 0; i < string(nl).size(); i++)
+		for (size_t i = 0; i < std::string(nl).size(); i++)
 			BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 		BOOST_CHECK_EQUAL(scanner.currentLiteral(), "def");
@@ -898,7 +898,7 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_strings)
 BOOST_AUTO_TEST_CASE(solidity_keywords)
 {
 	// These are tokens which have a different meaning in Yul.
-	string keywords = "return byte bool address var in true false leave switch case default";
+	std::string keywords = "return byte bool address var in true false leave switch case default";
 	TestScanner scanner(keywords);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Return);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Byte);
@@ -962,7 +962,7 @@ BOOST_AUTO_TEST_CASE(yul_identifier_with_dots)
 
 BOOST_AUTO_TEST_CASE(yul_function)
 {
-	string sig = "function f(a, b) -> x, y";
+	std::string sig = "function f(a, b) -> x, y";
 	TestScanner scanner(sig);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
@@ -994,7 +994,7 @@ BOOST_AUTO_TEST_CASE(yul_function)
 
 BOOST_AUTO_TEST_CASE(yul_function_with_whitespace)
 {
-	string sig = "function f (a, b) - > x, y";
+	std::string sig = "function f (a, b) - > x, y";
 	TestScanner scanner(sig);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Function);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);

@@ -22,7 +22,6 @@
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libsolutil/CommonData.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -38,7 +37,7 @@ void ConditionalSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 void ConditionalSimplifier::operator()(Switch& _switch)
 {
 	visit(*_switch.expression);
-	if (!holds_alternative<Identifier>(*_switch.expression))
+	if (!std::holds_alternative<Identifier>(*_switch.expression))
 	{
 		ASTModifier::operator()(_switch);
 		return;
@@ -53,7 +52,7 @@ void ConditionalSimplifier::operator()(Switch& _switch)
 				Assignment{
 					_case.body.debugData,
 					{Identifier{_case.body.debugData, expr}},
-					make_unique<Expression>(*_case.value)
+					std::make_unique<Expression>(*_case.value)
 				}
 			);
 		}
@@ -65,14 +64,14 @@ void ConditionalSimplifier::operator()(Block& _block)
 {
 	iterateReplacing(
 		_block.statements,
-		[&](Statement& _s) -> std::optional<vector<Statement>>
+		[&](Statement& _s) -> std::optional<std::vector<Statement>>
 		{
 			visit(_s);
-			if (holds_alternative<If>(_s))
+			if (std::holds_alternative<If>(_s))
 			{
 				If& _if = std::get<If>(_s);
 				if (
-					holds_alternative<Identifier>(*_if.condition) &&
+					std::holds_alternative<Identifier>(*_if.condition) &&
 					!_if.body.statements.empty() &&
 					TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
 						TerminationFinder::ControlFlow::FlowOut
@@ -85,7 +84,7 @@ void ConditionalSimplifier::operator()(Block& _block)
 						Assignment{
 							debugData,
 							{Identifier{debugData, condition}},
-							make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
+							std::make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
 						}
 					);
 				}

@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <limits>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
@@ -54,7 +53,7 @@ void DeadCodeEliminator::operator()(Block& _block)
 {
 	TerminationFinder::ControlFlow controlFlowChange;
 	size_t index;
-	tie(controlFlowChange, index) = TerminationFinder{m_dialect, &m_functionSideEffects}.firstUnconditionalControlFlowChange(_block.statements);
+	std::tie(controlFlowChange, index) = TerminationFinder{m_dialect, &m_functionSideEffects}.firstUnconditionalControlFlowChange(_block.statements);
 
 	// Erase everything after the terminating statement that is not a function definition.
 	if (controlFlowChange != TerminationFinder::ControlFlow::FlowOut && index != std::numeric_limits<size_t>::max())
@@ -62,7 +61,7 @@ void DeadCodeEliminator::operator()(Block& _block)
 			remove_if(
 				_block.statements.begin() + static_cast<ptrdiff_t>(index) + 1,
 				_block.statements.end(),
-				[] (Statement const& _s) { return !holds_alternative<yul::FunctionDefinition>(_s); }
+				[] (Statement const& _s) { return !std::holds_alternative<yul::FunctionDefinition>(_s); }
 			),
 			_block.statements.end()
 		);

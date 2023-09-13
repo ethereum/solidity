@@ -48,8 +48,7 @@ protected:
 		std::string const& _source,
 		bool _reportWarnings = false,
 		bool _insertLicenseAndVersionPragma = true,
-		bool _allowMultipleErrors = false,
-		bool _allowRecoveryErrors = false
+		bool _allowMultipleErrors = false
 	);
 	virtual ~AnalysisFramework() = default;
 
@@ -58,7 +57,7 @@ protected:
 	langutil::ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
 
 	std::string formatErrors(
-		langutil::ErrorList _errors,
+		langutil::ErrorList const& _errors,
 		bool _colored = false,
 		bool _withErrorIds = false
 	) const;

@@ -26,7 +26,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 
 namespace solidity::util::test
 {
@@ -47,7 +46,7 @@ BOOST_AUTO_TEST_CASE(calculate)
 	BOOST_CHECK_THROW(getChecksummedAddress("0x5aaeb6053f3e94c9b9a09f33669435e7ef1beaeK"), InvalidAddress);
 
 	// the official test suite from EIP-55
-	vector<string> cases {
+	std::vector<std::string> cases {
 		// all upper case
 		"0x52908400098527886E0F7030069857D2E4169EE7",
 		"0x8617E340B3D01FA5F11F306F4090FD50E238070D",
@@ -103,10 +102,10 @@ BOOST_AUTO_TEST_CASE(homocaps_valid)
 
 BOOST_AUTO_TEST_CASE(homocaps_invalid)
 {
-	string upper = "0x00AA0000000012400000000DDEEFF000000000BB";
+	std::string upper = "0x00AA0000000012400000000DDEEFF000000000BB";
 	BOOST_CHECK(passesAddressChecksum(upper, false));
 	BOOST_CHECK(!passesAddressChecksum(upper, true));
-	string lower = "0x11aa000000000000000d00cc00000000000000bb";
+	std::string lower = "0x11aa000000000000000d00cc00000000000000bb";
 	BOOST_CHECK(passesAddressChecksum(lower, false));
 	BOOST_CHECK(!passesAddressChecksum(lower, true));
 }

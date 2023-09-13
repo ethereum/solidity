@@ -31,7 +31,6 @@
 
 #include <range/v3/action/remove_if.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
@@ -40,7 +39,7 @@ using namespace solidity::yul;
 void yul::removeEmptyBlocks(Block& _block)
 {
 	auto isEmptyBlock = [](Statement const& _st) -> bool {
-		return holds_alternative<Block>(_st) && std::get<Block>(_st).statements.empty();
+		return std::holds_alternative<Block>(_st) && std::get<Block>(_st).statements.empty();
 	};
 	ranges::actions::remove_if(_block.statements, isEmptyBlock);
 }
@@ -50,12 +49,12 @@ bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulString const& _iden
 	return _identifier.empty() || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier);
 }
 
-optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulString const& _name)
+std::optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulString const& _name)
 {
 	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 		if (BuiltinFunctionForEVM const* builtin = dialect->builtin(_name))
 			return builtin->instruction;
-	return nullopt;
+	return std::nullopt;
 }
 
 langutil::EVMVersion const yul::evmVersionFromDialect(Dialect const& _dialect)
@@ -69,12 +68,12 @@ void StatementRemover::operator()(Block& _block)
 {
 	util::iterateReplacing(
 		_block.statements,
-		[&](Statement& _statement) -> std::optional<vector<Statement>>
+		[&](Statement& _statement) -> std::optional<std::vector<Statement>>
 		{
 			if (m_toRemove.count(&_statement))
-				return {vector<Statement>{}};
+				return {std::vector<Statement>{}};
 			else
-				return nullopt;
+				return std::nullopt;
 		}
 	);
 	ASTModifier::operator()(_block);

@@ -32,14 +32,13 @@
 
 #include <range/v3/view/map.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
-string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefinition const& _function)
+std::string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefinition const& _function)
 {
-	string name = IRNames::function(_function);
+	std::string name = IRNames::function(_function);
 
 	if (!m_functions.contains(name))
 		m_functionGenerationQueue.insert(&_function);
@@ -121,12 +120,12 @@ void IRGenerationContext::addStateVariable(
 	unsigned _byteOffset
 )
 {
-	m_stateVariables[&_declaration] = make_pair(std::move(_storageOffset), _byteOffset);
+	m_stateVariables[&_declaration] = std::make_pair(std::move(_storageOffset), _byteOffset);
 }
 
-string IRGenerationContext::newYulVariable()
+std::string IRGenerationContext::newYulVariable()
 {
-	return "_" + to_string(++m_varCounter);
+	return "_" + std::to_string(++m_varCounter);
 }
 
 void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _internalDispatch)

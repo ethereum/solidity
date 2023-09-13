@@ -23,7 +23,6 @@
 #include <libyul/AST.h>
 
 using namespace solidity::yul;
-using namespace std;
 using namespace solidity::langutil;
 
 Literal Dialect::zeroLiteralForType(solidity::yul::YulString _type) const
@@ -52,13 +51,13 @@ bool Dialect::validTypeForLiteral(LiteralKind _kind, YulString, YulString _type)
 
 Dialect const& Dialect::yulDeprecated()
 {
-	static unique_ptr<Dialect> dialect;
+	static std::unique_ptr<Dialect> dialect;
 	static YulStringRepository::ResetCallback callback{[&] { dialect.reset(); }};
 
 	if (!dialect)
 	{
 		// TODO will probably change, especially the list of types.
-		dialect = make_unique<Dialect>();
+		dialect = std::make_unique<Dialect>();
 		dialect->defaultType = "u256"_yulstring;
 		dialect->boolType = "bool"_yulstring;
 		dialect->types = {

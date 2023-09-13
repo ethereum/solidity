@@ -170,6 +170,8 @@ class Error: virtual public util::Exception
 public:
 	enum class Type
 	{
+		Info,
+		Warning,
 		CodeGenerationError,
 		DeclarationError,
 		DocstringParsingError,
@@ -185,15 +187,14 @@ public:
 		UnimplementedFeatureError,
 		YulException,
 		SMTLogicException,
-		Warning,
-		Info
 	};
 
 	enum class Severity
 	{
-		Error,
+		// NOTE: We rely on these being ordered from least to most severe.
+		Info,
 		Warning,
-		Info
+		Error,
 	};
 
 	Error(
@@ -206,6 +207,7 @@ public:
 
 	ErrorId errorId() const { return m_errorId; }
 	Type type() const { return m_type; }
+	Severity severity() const { return errorSeverity(m_type); }
 
 	SourceLocation const* sourceLocation() const noexcept;
 	SecondarySourceLocation const* secondarySourceLocation() const noexcept;

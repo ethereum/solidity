@@ -32,5 +32,5 @@ contract C {
 // test(uint8[][][]): 0x20, 2, 0x40, 0x60, 0, 2, 0x40, 0x80, 1, 7, 2, 8, 9
 // gas irOptimized: 138040
 // test2(uint8[][]): 0x20, 2, 0x40, 0x80, 1, 7, 2, 8, 9
-// gas irOptimized: 164248
+// gas irOptimized: 164246
 // gas legacyOptimized: 120228

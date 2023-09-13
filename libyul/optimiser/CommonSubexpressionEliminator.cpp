@@ -31,7 +31,6 @@
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -47,7 +46,7 @@ void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	Dialect const& _dialect,
-	map<YulString, SideEffects> _functionSideEffects
+	std::map<YulString, SideEffects> _functionSideEffects
 ):
 	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {
@@ -69,7 +68,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	bool descend = true;
 	// If this is a function call to a function that requires literal arguments,
 	// do not try to simplify there.
-	if (holds_alternative<FunctionCall>(_e))
+	if (std::holds_alternative<FunctionCall>(_e))
 	{
 		FunctionCall& funCall = std::get<FunctionCall>(_e);
 
@@ -94,13 +93,13 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	if (descend)
 		DataFlowAnalyzer::visit(_e);
 
-	if (Identifier const* identifier = get_if<Identifier>(&_e))
+	if (Identifier const* identifier = std::get_if<Identifier>(&_e))
 	{
 		YulString identifierName = identifier->name;
 		if (AssignedValue const* assignedValue = variableValue(identifierName))
 		{
 			assertThrow(assignedValue->value, OptimizerException, "");
-			if (Identifier const* value = get_if<Identifier>(assignedValue->value))
+			if (Identifier const* value = std::get_if<Identifier>(assignedValue->value))
 				if (inScope(value->name))
 					_e = Identifier{debugDataOf(_e), value->name};
 		}
@@ -114,8 +113,8 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 				// instead of literal zeros.
 				if (
 					m_returnVariables.count(variable) &&
-					holds_alternative<Literal>(*value->value) &&
-					valueOfLiteral(get<Literal>(*value->value)) == 0
+					std::holds_alternative<Literal>(*value->value) &&
+					valueOfLiteral(std::get<Literal>(*value->value)) == 0
 				)
 					continue;
 				// We check for syntactic equality again because the value might have changed.

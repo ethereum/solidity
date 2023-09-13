@@ -29,7 +29,6 @@
 
 #include <libevmasm/SemanticInformation.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -49,8 +48,8 @@ void ExpressionSimplifier::visit(Expression& _expression)
 	))
 		_expression = match->action().toExpression(debugDataOf(_expression), evmVersionFromDialect(m_dialect));
 
-	if (auto* functionCall = get_if<FunctionCall>(&_expression))
-		if (optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
+	if (auto* functionCall = std::get_if<FunctionCall>(&_expression))
+		if (std::optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
 			for (auto op: evmasm::SemanticInformation::readWriteOperations(*instruction))
 				if (op.startParameter && op.lengthParameter)
 				{
@@ -59,7 +58,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 					if (
 						knownToBeZero(lengthArgument) &&
 						!knownToBeZero(startArgument) &&
-						!holds_alternative<FunctionCall>(startArgument)
+						!std::holds_alternative<FunctionCall>(startArgument)
 					)
 						startArgument = Literal{debugDataOf(startArgument), LiteralKind::Number, "0"_yulstring, {}};
 				}
@@ -67,9 +66,9 @@ void ExpressionSimplifier::visit(Expression& _expression)
 
 bool ExpressionSimplifier::knownToBeZero(Expression const& _expression) const
 {
-	if (auto const* literal = get_if<Literal>(&_expression))
+	if (auto const* literal = std::get_if<Literal>(&_expression))
 		return valueOfLiteral(*literal) == 0;
-	else if (auto const* identifier = get_if<Identifier>(&_expression))
+	else if (auto const* identifier = std::get_if<Identifier>(&_expression))
 		return valueOfIdentifier(identifier->name) == 0;
 	else
 		return false;

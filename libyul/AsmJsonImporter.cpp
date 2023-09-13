@@ -34,7 +34,6 @@
 
 #include <vector>
 
-using namespace std;
 using namespace solidity::langutil;
 
 namespace solidity::yul
@@ -62,7 +61,7 @@ T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 	return r;
 }
 
-Json::Value AsmJsonImporter::member(Json::Value const& _node, string const& _name)
+Json::Value AsmJsonImporter::member(Json::Value const& _node, std::string const& _name)
 {
 	if (!_node.isMember(_name))
 		return Json::nullValue;
@@ -81,7 +80,7 @@ Statement AsmJsonImporter::createStatement(Json::Value const& _node)
 {
 	Json::Value jsonNodeType = member(_node, "nodeType");
 	yulAssert(jsonNodeType.isString(), "Expected \"nodeType\" to be of type string!");
-	string nodeType = jsonNodeType.asString();
+	std::string nodeType = jsonNodeType.asString();
 
 	yulAssert(nodeType.substr(0, 3) == "Yul", "Invalid nodeType prefix");
 	nodeType = nodeType.substr(3);
@@ -119,7 +118,7 @@ Expression AsmJsonImporter::createExpression(Json::Value const& _node)
 {
 	Json::Value jsonNodeType = member(_node, "nodeType");
 	yulAssert(jsonNodeType.isString(), "Expected \"nodeType\" to be of type string!");
-	string nodeType = jsonNodeType.asString();
+	std::string nodeType = jsonNodeType.asString();
 
 	yulAssert(nodeType.substr(0, 3) == "Yul", "Invalid nodeType prefix");
 	nodeType = nodeType.substr(3);
@@ -137,17 +136,17 @@ Expression AsmJsonImporter::createExpression(Json::Value const& _node)
 	util::unreachable();
 }
 
-vector<Expression> AsmJsonImporter::createExpressionVector(Json::Value const& _array)
+std::vector<Expression> AsmJsonImporter::createExpressionVector(Json::Value const& _array)
 {
-	vector<Expression> ret;
+	std::vector<Expression> ret;
 	for (auto& var: _array)
 		ret.emplace_back(createExpression(var));
 	return ret;
 }
 
-vector<Statement> AsmJsonImporter::createStatementVector(Json::Value const& _array)
+std::vector<Statement> AsmJsonImporter::createStatementVector(Json::Value const& _array)
 {
-	vector<Statement> ret;
+	std::vector<Statement> ret;
 	for (auto& var: _array)
 		ret.emplace_back(createStatement(var));
 	return ret;
@@ -163,7 +162,7 @@ Block AsmJsonImporter::createBlock(Json::Value const& _node)
 Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 {
 	auto lit = createAsmNode<Literal>(_node);
-	string kind = member(_node, "kind").asString();
+	std::string kind = member(_node, "kind").asString();
 
 	solAssert(member(_node, "hexValue").isString() || member(_node, "value").isString(), "");
 	if (_node.isMember("hexValue"))
@@ -180,7 +179,7 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 		lit.kind = LiteralKind::Number;
 		yulAssert(
 			scanner.currentToken() == Token::Number,
-			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + string(" while scanning ") + lit.value.str()
+			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + std::string(" while scanning ") + lit.value.str()
 		);
 	}
 	else if (kind == "bool")
@@ -199,7 +198,7 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 		lit.kind = LiteralKind::String;
 		yulAssert(
 			lit.value.str().size() <= 32,
-			"String literal too long (" + to_string(lit.value.str().size()) + " > 32)"
+			"String literal too long (" + std::to_string(lit.value.str().size()) + " > 32)"
 		);
 	}
 	else
@@ -228,7 +227,7 @@ Assignment AsmJsonImporter::createAssignment(Json::Value const& _node)
 		for (auto const& var: member(_node, "variableNames"))
 			assignment.variableNames.emplace_back(createIdentifier(var));
 
-	assignment.value = make_unique<Expression>(createExpression(member(_node, "value")));
+	assignment.value = std::make_unique<Expression>(createExpression(member(_node, "value")));
 	return assignment;
 }
 
@@ -256,7 +255,7 @@ VariableDeclaration AsmJsonImporter::createVariableDeclaration(Json::Value const
 	auto varDec = createAsmNode<VariableDeclaration>(_node);
 	for (auto const& var: member(_node, "variables"))
 		varDec.variables.emplace_back(createTypedName(var));
-	varDec.value = make_unique<Expression>(createExpression(member(_node, "value")));
+	varDec.value = std::make_unique<Expression>(createExpression(member(_node, "value")));
 	return varDec;
 }
 
@@ -280,7 +279,7 @@ FunctionDefinition AsmJsonImporter::createFunctionDefinition(Json::Value const& 
 If AsmJsonImporter::createIf(Json::Value const& _node)
 {
 	auto ifStatement = createAsmNode<If>(_node);
-	ifStatement.condition = make_unique<Expression>(createExpression(member(_node, "condition")));
+	ifStatement.condition = std::make_unique<Expression>(createExpression(member(_node, "condition")));
 	ifStatement.body = createBlock(member(_node, "body"));
 	return ifStatement;
 }
@@ -292,7 +291,7 @@ Case AsmJsonImporter::createCase(Json::Value const& _node)
 	if (value.isString())
 		yulAssert(value.asString() == "default", "Expected default case");
 	else
-		caseStatement.value = make_unique<Literal>(createLiteral(value));
+		caseStatement.value = std::make_unique<Literal>(createLiteral(value));
 	caseStatement.body = createBlock(member(_node, "body"));
 	return caseStatement;
 }
@@ -300,7 +299,7 @@ Case AsmJsonImporter::createCase(Json::Value const& _node)
 Switch AsmJsonImporter::createSwitch(Json::Value const& _node)
 {
 	auto switchStatement = createAsmNode<Switch>(_node);
-	switchStatement.expression = make_unique<Expression>(createExpression(member(_node, "expression")));
+	switchStatement.expression = std::make_unique<Expression>(createExpression(member(_node, "expression")));
 	for (auto const& var: member(_node, "cases"))
 		switchStatement.cases.emplace_back(createCase(var));
 	return switchStatement;
@@ -310,7 +309,7 @@ ForLoop AsmJsonImporter::createForLoop(Json::Value const& _node)
 {
 	auto forLoop = createAsmNode<ForLoop>(_node);
 	forLoop.pre = createBlock(member(_node, "pre"));
-	forLoop.condition = make_unique<Expression>(createExpression(member(_node, "condition")));
+	forLoop.condition = std::make_unique<Expression>(createExpression(member(_node, "condition")));
 	forLoop.post = createBlock(member(_node, "post"));
 	forLoop.body = createBlock(member(_node, "body"));
 	return forLoop;

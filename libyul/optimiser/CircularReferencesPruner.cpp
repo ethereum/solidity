@@ -24,7 +24,6 @@
 
 #include <libsolutil/Algorithms.h>
 
-using namespace std;
 using namespace solidity::yul;
 
 void CircularReferencesPruner::run(OptimiserStepContext& _context, Block& _ast)
@@ -35,11 +34,11 @@ void CircularReferencesPruner::run(OptimiserStepContext& _context, Block& _ast)
 
 void CircularReferencesPruner::operator()(Block& _block)
 {
-	set<YulString> functionsToKeep =
+	std::set<YulString> functionsToKeep =
 		functionsCalledFromOutermostContext(CallGraphGenerator::callGraph(_block));
 
 	for (auto&& statement: _block.statements)
-		if (holds_alternative<FunctionDefinition>(statement))
+		if (std::holds_alternative<FunctionDefinition>(statement))
 		{
 			FunctionDefinition const& funDef = std::get<FunctionDefinition>(statement);
 			if (!functionsToKeep.count(funDef.name))
@@ -49,9 +48,9 @@ void CircularReferencesPruner::operator()(Block& _block)
 	removeEmptyBlocks(_block);
 }
 
-set<YulString> CircularReferencesPruner::functionsCalledFromOutermostContext(CallGraph const& _callGraph)
+std::set<YulString> CircularReferencesPruner::functionsCalledFromOutermostContext(CallGraph const& _callGraph)
 {
-	set<YulString> verticesToTraverse = m_reservedIdentifiers;
+	std::set<YulString> verticesToTraverse = m_reservedIdentifiers;
 	verticesToTraverse.insert(YulString(""));
 
 	return util::BreadthFirstSearch<YulString>{{verticesToTraverse.begin(), verticesToTraverse.end()}}.run(

@@ -23,7 +23,6 @@
 
 #include <fmt/format.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
@@ -33,10 +32,10 @@ namespace solidity::lsp
 namespace
 {
 
-optional<SemanticTokenType> semanticTokenTypeForType(frontend::Type const* _type)
+std::optional<SemanticTokenType> semanticTokenTypeForType(frontend::Type const* _type)
 {
 	if (!_type)
-		return nullopt;
+		return std::nullopt;
 
 	switch (_type->category())
 	{
@@ -119,7 +118,7 @@ void SemanticTokensBuilder::encode(
 	auto const [line, startChar] = m_charStream->translatePositionToLineColumn(_sourceLocation.start);
 	auto const length = _sourceLocation.end - _sourceLocation.start;
 
-	lspDebug(fmt::format("encode [{}:{}..{}] {}", line, startChar, length, _tokenType));
+	lspDebug(fmt::format("encode [{}:{}..{}] {}", line, startChar, length, static_cast<int>(_tokenType)));
 
 	m_encodedTokens.append(line - m_lastLine);
 	if (line == m_lastLine)

@@ -32,7 +32,6 @@
 
 #include <string>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -55,17 +54,17 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 {
 	if (!m_versionPragmaFound)
 	{
-		string errorString("Source file does not specify required compiler version!");
-		SemVerVersion recommendedVersion{string(VersionString)};
+		std::string errorString("Source file does not specify required compiler version!");
+		SemVerVersion recommendedVersion{std::string(VersionString)};
 		if (!recommendedVersion.isPrerelease())
 			errorString +=
 				" Consider adding \"pragma solidity ^" +
-				to_string(recommendedVersion.major()) +
-				string(".") +
-				to_string(recommendedVersion.minor()) +
-				string(".") +
-				to_string(recommendedVersion.patch()) +
-				string(";\"");
+				std::to_string(recommendedVersion.major()) +
+				std::string(".") +
+				std::to_string(recommendedVersion.minor()) +
+				std::string(".") +
+				std::to_string(recommendedVersion.patch()) +
+				std::string(";\"");
 
 		// when reporting the warning, print the source name only
 		m_errorReporter.warning(3420_error, {-1, -1, _sourceUnit.location().sourceName}, errorString);
@@ -84,7 +83,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	else if (_pragma.literals()[0] == "experimental")
 	{
 		solAssert(m_sourceUnit, "");
-		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
+		std::vector<std::string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 		if (literals.empty())
 			m_errorReporter.syntaxError(
 				9679_error,
@@ -99,7 +98,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 			);
 		else
 		{
-			string const literal = literals[0];
+			std::string const literal = literals[0];
 			if (literal.empty())
 				m_errorReporter.syntaxError(3250_error, _pragma.location(), "Empty experimental feature name is invalid.");
 			else if (!ExperimentalFeatureNames.count(literal))
@@ -135,7 +134,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		solAssert(m_sourceUnit, "");
 		if (
 			_pragma.literals().size() != 2 ||
-			!set<string>{"v1", "v2"}.count(_pragma.literals()[1])
+			!std::set<std::string>{"v1", "v2"}.count(_pragma.literals()[1])
 		)
 			m_errorReporter.syntaxError(
 				2745_error,
@@ -155,19 +154,12 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	{
 		try
 		{
-			vector<Token> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
-			vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
+			std::vector<Token> tokens(_pragma.tokens().begin() + 1, _pragma.tokens().end());
+			std::vector<std::string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 			SemVerMatchExpressionParser parser(tokens, literals);
 			SemVerMatchExpression matchExpression = parser.parse();
-			static SemVerVersion const currentVersion{string(VersionString)};
-			if (!matchExpression.matches(currentVersion))
-				m_errorReporter.syntaxError(
-					3997_error,
-					_pragma.location(),
-					"Source file requires different compiler version (current compiler is " +
-					string(VersionString) + ") - note that nightly builds are considered to be "
-					"strictly less than the released version"
-				);
+			static SemVerVersion const currentVersion{std::string(VersionString)};
+			solAssert(matchExpression.matches(currentVersion));
 			m_versionPragmaFound = true;
 		}
 		catch (SemVerError const&)
@@ -412,7 +404,7 @@ bool SyntaxChecker::visit(UsingForDirective const& _usingFor)
 	if (!_usingFor.usesBraces())
 		solAssert(
 			_usingFor.functionsAndOperators().size() == 1 &&
-			!get<1>(_usingFor.functionsAndOperators().front())
+			!std::get<1>(_usingFor.functionsAndOperators().front())
 		);
 
 	if (!m_currentContractKind && !_usingFor.typeName())
@@ -455,7 +447,7 @@ bool SyntaxChecker::visit(FunctionDefinition const& _function)
 
 	if (!_function.isFree() && !_function.isConstructor() && _function.noVisibilitySpecified())
 	{
-		string suggestedVisibility =
+		std::string suggestedVisibility =
 			_function.isFallback() ||
 			_function.isReceive() ||
 			m_currentContractKind == ContractKind::Interface

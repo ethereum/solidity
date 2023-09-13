@@ -24,7 +24,6 @@
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/Object.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/Visitor.h>

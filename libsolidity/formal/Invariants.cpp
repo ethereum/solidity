@@ -25,7 +25,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
 using boost::algorithm::starts_with;
 using namespace solidity;
 using namespace solidity::smtutil;
@@ -34,19 +33,19 @@ using namespace solidity::frontend::smt;
 namespace solidity::frontend::smt
 {
 
-map<Predicate const*, set<string>> collectInvariants(
+std::map<Predicate const*, std::set<std::string>> collectInvariants(
 	smtutil::Expression const& _proof,
-	set<Predicate const*> const& _predicates,
+	std::set<Predicate const*> const& _predicates,
 	ModelCheckerInvariants const& _invariantsSetting
 )
 {
-	set<string> targets;
+	std::set<std::string> targets;
 	if (_invariantsSetting.has(InvariantType::Contract))
 		targets.insert("interface_");
 	if (_invariantsSetting.has(InvariantType::Reentrancy))
 		targets.insert("nondet_interface_");
 
-	map<string, pair<smtutil::Expression, smtutil::Expression>> equalities;
+	std::map<std::string, std::pair<smtutil::Expression, smtutil::Expression>> equalities;
 	// Collect equalities where one of the sides is a predicate we're interested in.
 	util::BreadthFirstSearch<smtutil::Expression const*>{{&_proof}}.run([&](auto&& _expr, auto&& _addChild) {
 		if (_expr->name == "=")
@@ -63,7 +62,7 @@ map<Predicate const*, set<string>> collectInvariants(
 			_addChild(&arg);
 	});
 
-	map<Predicate const*, set<string>> invariants;
+	std::map<Predicate const*, std::set<std::string>> invariants;
 	for (auto pred: _predicates)
 	{
 		auto predName = pred->functor().name;
@@ -74,7 +73,7 @@ map<Predicate const*, set<string>> collectInvariants(
 
 		auto const& [predExpr, invExpr] = equalities.at(predName);
 
-		static set<string> const ignore{"true", "false"};
+		static std::set<std::string> const ignore{"true", "false"};
 		auto r = substitute(invExpr, pred->expressionSubstitution(predExpr));
 		// No point in reporting true/false as invariants.
 		if (!ignore.count(r.name))

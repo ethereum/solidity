@@ -23,7 +23,6 @@
 
 #include <functional>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -34,9 +33,9 @@ void BlockFlattener::operator()(Block& _block)
 
 	iterateReplacing(
 		_block.statements,
-		[](Statement& _s) -> std::optional<vector<Statement>>
+		[](Statement& _s) -> std::optional<std::vector<Statement>>
 		{
-			if (holds_alternative<Block>(_s))
+			if (std::holds_alternative<Block>(_s))
 				return std::move(std::get<Block>(_s).statements);
 			else
 				return {};
@@ -48,9 +47,9 @@ void BlockFlattener::run(OptimiserStepContext&, Block& _ast)
 {
 	BlockFlattener flattener;
 	for (auto& statement: _ast.statements)
-		if (auto* block = get_if<Block>(&statement))
+		if (auto* block = std::get_if<Block>(&statement))
 			flattener(*block);
-		else if (auto* function = get_if<FunctionDefinition>(&statement))
+		else if (auto* function = std::get_if<FunctionDefinition>(&statement))
 			flattener(function->body);
 		else
 			yulAssert(false, "BlockFlattener requires the FunctionGrouper.");

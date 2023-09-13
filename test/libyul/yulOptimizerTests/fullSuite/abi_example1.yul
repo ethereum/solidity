@@ -493,7 +493,7 @@
 //     function abi_decode_array_array_uint256_memory_dyn(offset, end) -> array
 //     {
 //         let _1 := 0x1f
-//         if iszero(slt(add(offset, _1), end)) { revert(0, 0) }
+//         if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
 //         let length := calldataload(offset)
 //         array := allocateMemory(array_allocation_size_array_address_dyn_memory(length))
 //         let dst := array

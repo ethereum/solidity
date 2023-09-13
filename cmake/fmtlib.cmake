@@ -4,9 +4,9 @@ FetchContent_Declare(
 	fmtlib
 	PREFIX "${PROJECT_BINARY_DIR}/deps"
 	DOWNLOAD_DIR "${PROJECT_SOURCE_DIR}/deps/downloads"
-	DOWNLOAD_NAME fmt-8.0.1.tar.gz
-	URL https://github.com/fmtlib/fmt/archive/8.0.1.tar.gz
-	URL_HASH SHA256=b06ca3130158c625848f3fb7418f235155a4d389b2abc3a6245fb01cb0eb1e01
+	DOWNLOAD_NAME fmt-9.1.0.tar.gz
+	URL https://github.com/fmtlib/fmt/archive/9.1.0.tar.gz
+	URL_HASH SHA256=5dea48d1fcddc3ec571ce2058e13910a0d4a6bab4cc09a809d8b1dd1c88ae6f2
 )
 
 if (CMAKE_VERSION VERSION_LESS "3.14.0")

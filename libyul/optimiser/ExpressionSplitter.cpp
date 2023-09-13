@@ -30,7 +30,6 @@
 
 #include <libsolutil/CommonData.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -75,11 +74,11 @@ void ExpressionSplitter::operator()(ForLoop& _loop)
 
 void ExpressionSplitter::operator()(Block& _block)
 {
-	vector<Statement> saved;
+	std::vector<Statement> saved;
 	swap(saved, m_statementsToPrefix);
 
-	function<std::optional<vector<Statement>>(Statement&)> f =
-			[&](Statement& _statement) -> std::optional<vector<Statement>> {
+	std::function<std::optional<std::vector<Statement>>(Statement&)> f =
+			[&](Statement& _statement) -> std::optional<std::vector<Statement>> {
 		m_statementsToPrefix.clear();
 		visit(_statement);
 		if (m_statementsToPrefix.empty())
@@ -94,18 +93,18 @@ void ExpressionSplitter::operator()(Block& _block)
 
 void ExpressionSplitter::outlineExpression(Expression& _expr)
 {
-	if (holds_alternative<Identifier>(_expr))
+	if (std::holds_alternative<Identifier>(_expr))
 		return;
 
 	visit(_expr);
 
-	shared_ptr<DebugData const> debugData = debugDataOf(_expr);
+	std::shared_ptr<DebugData const> debugData = debugDataOf(_expr);
 	YulString var = m_nameDispenser.newName({});
 	YulString type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		debugData,
 		{{TypedName{debugData, var, type}}},
-		make_unique<Expression>(std::move(_expr))
+		std::make_unique<Expression>(std::move(_expr))
 	});
 	_expr = Identifier{debugData, var};
 	m_typeInfo.setVariableType(var, type);

@@ -25,6 +25,26 @@ NAMESPACE_STD_FREE_FILES=(
     liblangutil/*
     libsmtutil/*
     libsolc/*
+    libsolidity/analysis/*
+    libsolidity/ast/*
+    libsolidity/codegen/ir/*
+    libsolidity/codegen/*
+    libsolidity/formal/*
+    libsolidity/interface/*
+    libsolidity/lsp/*
+    libsolidity/parsing/*
+    libsolutil/*
+    libyul/*
+    libyul/backends/evm/*
+    libyul/optimiser/*
+    solc/*
+    test/contracts/*
+    test/libevmasm/*
+    test/liblangutil/*
+    test/libsolutil/*
+    test/libsolidity/*
+    test/libsolidity/analysis/*
+    test/libsolidity/interface/*
 )
 
 (
@@ -32,7 +52,7 @@ REPO_ROOT="$(dirname "$0")"/..
 cd "$REPO_ROOT" || exit 1
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
-    grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
+    grep -v "test/libsolidity/ASTJSON\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
 )
 
 if [[ "$WHITESPACE" != "" ]]

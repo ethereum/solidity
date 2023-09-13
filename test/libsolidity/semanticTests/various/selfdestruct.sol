@@ -30,7 +30,7 @@ contract D {
 }
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 186970
+// gas irOptimized: 186958
 // gas legacy: 255973
 // gas legacyOptimized: 178919
 // c() -> 0x137aa4dfc0911524504fcd4d98501f179bc13b4a
