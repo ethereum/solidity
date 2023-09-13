@@ -138,7 +138,7 @@ TypeSystem::TypeSystem()
 	for (auto [type, name, arity]: std::initializer_list<std::tuple<PrimitiveType, char const*, size_t>>{
 		{PrimitiveType::TypeFunction, "tfun", 2},
 		{PrimitiveType::Function, "fun", 2},
-		{PrimitiveType::Function, "itself", 1},
+		{PrimitiveType::Itself, "itself", 1},
 		{PrimitiveType::Void, "void", 0},
 		{PrimitiveType::Unit, "unit", 0},
 		{PrimitiveType::Pair, "pair", 2},

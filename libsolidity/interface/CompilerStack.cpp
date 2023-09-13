@@ -1475,9 +1475,6 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
 
-	if (m_experimentalAnalysis)
-		solThrow(CompilerError, "IR codegen after experimental analysis is unsupported.");
-
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
 		return;
