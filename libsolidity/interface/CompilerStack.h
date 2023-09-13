@@ -81,6 +81,10 @@ class Compiler;
 class GlobalContext;
 class Natspec;
 class DeclarationContainer;
+namespace experimental
+{
+class Analysis;
+}
 
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
@@ -407,6 +411,14 @@ private:
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;
 
+	/// Perform the analysis steps of legacy language mode.
+	/// @returns false on error.
+	bool analyzeLegacy(bool _noErrorsSoFar);
+
+	/// Perform the analysis steps of experimental language mode.
+	/// @returns false on error.
+	bool analyzeExperimental();
+
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
 	void assembleYul(
@@ -500,6 +512,7 @@ private:
 
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
+	std::unique_ptr<experimental::Analysis> m_experimentalAnalysis;
 	bool m_metadataLiteralSources = false;
 	MetadataHash m_metadataHash = MetadataHash::IPFS;
 	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();

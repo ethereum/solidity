@@ -69,7 +69,8 @@ class ParserRecorder;
 enum class ScannerKind
 {
 	Solidity,
-	Yul
+	Yul,
+	ExperimentalSolidity
 };
 
 enum class ScannerError
