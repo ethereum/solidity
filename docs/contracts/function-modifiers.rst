@@ -132,7 +132,7 @@ variables are set to their :ref:`default values<default-value>` just as if the f
 body.
 
 The ``_`` symbol can appear in the modifier multiple times. Each occurrence is replaced with
-the function body.
+the function body, and the function returns the return value of the final occurrence.
 
 Arbitrary expressions are allowed for modifier arguments and in this context,
 all symbols visible from the function are visible in the modifier. Symbols
