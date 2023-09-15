@@ -590,9 +590,11 @@ One area where inheritance linearization is especially important and perhaps not
 Inheriting Different Kinds of Members of the Same Name
 ======================================================
 
-It is an error when any of the following pairs in a contract have the same name due to inheritance:
-  - a function and a modifier
-  - a function and an event
-  - an event and a modifier
+The only situations where, due to inheritance, a contract may contain multiple definitions sharing
+the same name are:
 
-As an exception, a state variable getter can override an external function.
+- Overloading of functions.
+- Overriding of virtual functions.
+- Overriding of external virtual functions by state variable getters.
+- Overriding of virtual modifiers.
+- Overloading of events.
