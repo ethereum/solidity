@@ -13,9 +13,6 @@ import sys
 import os
 import traceback
 
-hasMultipleSources = False
-createdSources = []
-
 
 def uncaught_exception_hook(exc_type, exc_value, exc_traceback):
     # The script `scripts/ASTImportTest.sh` will interpret return code 3
@@ -43,7 +40,6 @@ def writeSourceToFile(lines):
     if filePath:
         os.system("mkdir -p " + filePath)
     with open(srcName, mode='a+', encoding='utf8', newline='') as f:
-        createdSources.append(srcName)
         for idx, line in enumerate(lines[1:]):
             # write to file
             if line[:12] != "==== Source:":
@@ -51,12 +47,11 @@ def writeSourceToFile(lines):
 
             # recursive call if there is another source
             else:
-                writeSourceToFile(lines[1+idx:])
-                break
+                return [srcName] + writeSourceToFile(lines[1+idx:])
 
+    return [srcName]
 
-if __name__ == '__main__':
-    filePath = sys.argv[1]
+def split_sources(filePath, suppress_output = False):
     sys.excepthook = uncaught_exception_hook
 
     try:
@@ -64,20 +59,20 @@ if __name__ == '__main__':
         with open(filePath, mode='r', encoding='utf8', newline='') as f:
             lines = f.read().splitlines()
         if len(lines) >= 1 and lines[0][:12] == "==== Source:":
-            hasMultipleSources = True
-            writeSourceToFile(lines)
-
-        if hasMultipleSources:
             srcString = ""
-            for src in createdSources:
+            for src in writeSourceToFile(lines):
                 srcString += src + ' '
-            print(srcString)
-            sys.exit(0)
-        else:
-            sys.exit(1)
+            if not suppress_output:
+                print(srcString)
+            return 0
+        return 1
 
     except UnicodeDecodeError as ude:
         print("UnicodeDecodeError in '" + filePath + "': " + str(ude))
         print("This is expected for some tests containing invalid utf8 sequences. "
               "Exception will be ignored.")
-        sys.exit(2)
+        return 2
+
+
+if __name__ == '__main__':
+    sys.exit(split_sources(sys.argv[1]))
