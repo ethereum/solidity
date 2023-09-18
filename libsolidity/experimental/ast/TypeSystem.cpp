@@ -297,7 +297,10 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 {
 	// TODO: proper error handling
 	auto const& info = m_typeConstructors.at(_constructor.m_index);
-	solAssert(info.arguments() == _arguments.size(), "Invalid arity.");
+	solAssert(
+		info.arguments() == _arguments.size(),
+		fmt::format("Type constructor '{}' accepts {} type arguments (got {}).", constructorInfo(_constructor).name, info.arguments(), _arguments.size())
+	);
 	return TypeConstant{_constructor, _arguments};
 }
 

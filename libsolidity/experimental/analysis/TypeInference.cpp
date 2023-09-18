@@ -839,7 +839,7 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 
 	TypeConstructor constructor = typeConstructor(&_typeDefinition);
 	auto [members, newlyInserted] = annotation().members.emplace(constructor, std::map<std::string, TypeMember>{});
-	solAssert(newlyInserted);
+	solAssert(newlyInserted, fmt::format("Members of type '{}' are already defined.", m_typeSystem.constructorInfo(constructor).name));
 	if (underlyingType)
 	{
 		members->second.emplace("abs", TypeMember{helper.functionType(*underlyingType, definedType)});
