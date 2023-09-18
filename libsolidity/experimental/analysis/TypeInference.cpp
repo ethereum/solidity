@@ -780,11 +780,11 @@ bool TypeInference::visit(MemberAccess const& _memberAccess)
 
 experimental::Type TypeInference::memberType(Type _type, std::string _memberName, langutil::SourceLocation _location)
 {
-	Type type = m_env->resolve(_type);
+	Type resolvedType = m_env->resolve(_type);
 	TypeSystemHelpers helper{m_typeSystem};
-	if (helper.isTypeConstant(type))
+	if (helper.isTypeConstant(resolvedType))
 	{
-		auto constructor = std::get<0>(helper.destTypeConstant(type));
+		auto constructor = std::get<0>(helper.destTypeConstant(resolvedType));
 		if (auto* typeMember = util::valueOrNullptr(annotation().members.at(constructor), _memberName))
 			return polymorphicInstance(typeMember->type);
 		else
