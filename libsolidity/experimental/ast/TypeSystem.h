@@ -136,12 +136,14 @@ public:
 	{
 		return m_typeClasses.at(_class.m_index).typeVariable;
 	}
-private:
-	friend class TypeEnvironment;
+
 	TypeClassInfo const& typeClassInfo(TypeClass _class) const
 	{
 		return m_typeClasses.at(_class.m_index);
 	}
+
+private:
+	friend class TypeEnvironment;
 	size_t m_numTypeVariables = 0;
 	std::map<PrimitiveType, TypeConstructor> m_primitiveTypeConstructors;
 	std::map<PrimitiveClass, TypeClass> m_primitiveTypeClasses;

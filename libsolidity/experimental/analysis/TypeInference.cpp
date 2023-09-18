@@ -18,6 +18,8 @@
 
 
 #include <libsolidity/experimental/analysis/TypeInference.h>
+
+#include <libsolidity/experimental/analysis/TypeClassRegistration.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
@@ -205,7 +207,9 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 
 	std::map<std::string, Type> functionTypes;
 
-	Type typeVar = m_typeSystem.freshTypeVariable({});
+	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
+	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
+	Type typeVar = m_typeSystem.typeClassInfo(typeClass).typeVariable;
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
 	for (auto subNode: _typeClassDefinition.subNodes())
@@ -224,14 +228,6 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		typeMembersAnnotation[functionDefinition->name()] = TypeMember{functionType};
 	}
 
-	TypeClass typeClass = std::visit(util::GenericVisitor{
-		[](TypeClass _class) -> TypeClass { return _class; },
-		[&](std::string _error) -> TypeClass {
-			m_errorReporter.fatalTypeError(4767_error, _typeClassDefinition.location(), _error);
-			util::unreachable();
-		}
-	}, m_typeSystem.declareTypeClass(typeVar, _typeClassDefinition.name(), &_typeClassDefinition));
-	typeClassDefinitionAnnotation.typeClass = typeClass;
 	annotation().typeClassFunctions[typeClass] = std::move(functionTypes);
 
 	for (auto [functionName, functionType]: functionTypes)
@@ -574,12 +570,10 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		{
 			ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Term};
 			typeClassDefinition->accept(*this);
-			if (!annotation(*typeClassDefinition).typeClass)
-			{
-				m_errorReporter.typeError(2736_error, _location, "Unregistered type class.");
-				return m_typeSystem.freshTypeVariable({});
-			}
-			return m_typeSystem.freshTypeVariable(Sort{{*annotation(*typeClassDefinition).typeClass}});
+
+			solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
+			TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
+			return m_typeSystem.freshTypeVariable(Sort{{typeClass}});
 		}
 		else
 		{
@@ -680,9 +674,8 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 				// visiting the type class will re-visit this instantiation
 				typeClassDefinition->accept(*this);
 				// TODO: more error handling? Should be covered by the visit above.
-				if (!annotation(*typeClassDefinition).typeClass)
-					m_errorReporter.typeError(8503_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
-				return annotation(*typeClassDefinition).typeClass;
+				solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
+				return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
 			}
 			else
 			{

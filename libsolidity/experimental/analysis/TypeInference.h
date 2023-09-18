@@ -38,8 +38,6 @@ public:
 	{
 		/// Expressions, variable declarations, function declarations.
 		std::optional<Type> type;
-		// Type classes.
-		std::optional<TypeClass> typeClass;
 	};
 	struct TypeMember
 	{
