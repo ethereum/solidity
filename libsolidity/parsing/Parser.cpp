@@ -131,6 +131,9 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 			case Token::Function:
 				nodes.push_back(parseFunctionDefinition(true));
 				break;
+			case Token::Event:
+				nodes.push_back(parseEventDefinition());
+				break;
 			default:
 				if (
 					// Workaround because `error` is not a keyword.

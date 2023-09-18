@@ -1,6 +1,7 @@
 ### 0.8.22 (unreleased)
 
 Language Features:
+ * Allow defining events at file level.
 
 
 Compiler Features:

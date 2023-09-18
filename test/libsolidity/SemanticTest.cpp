@@ -274,7 +274,7 @@ std::optional<AnnotatedEventSignature> SemanticTest::matchEvent(util::h256 const
 	for (std::string& contractName: m_compiler.contractNames())
 	{
 		ContractDefinition const& contract = m_compiler.contractDefinition(contractName);
-		for (EventDefinition const* event: contract.events())
+		for (EventDefinition const* event: contract.events() + contract.usedInterfaceEvents())
 		{
 			FunctionTypePointer eventFunctionType = event->functionType(true);
 			if (!event->isAnonymous() && keccak256(eventFunctionType->externalSignature()) == hash)

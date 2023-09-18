@@ -22,6 +22,7 @@ sourceUnit: (
 	| enumDefinition
 	| userDefinedValueTypeDefinition
 	| errorDefinition
+	| eventDefinition
 )* EOF;
 
 //@doc: inline
