@@ -188,6 +188,8 @@ set(sources
 	experimental/analysis/Analysis.h
 	experimental/analysis/DebugWarner.cpp
 	experimental/analysis/DebugWarner.h
+	experimental/analysis/TypeClassRegistration.cpp
+	experimental/analysis/TypeClassRegistration.h
 	experimental/analysis/TypeInference.cpp
 	experimental/analysis/TypeInference.h
 	experimental/analysis/TypeRegistration.cpp
