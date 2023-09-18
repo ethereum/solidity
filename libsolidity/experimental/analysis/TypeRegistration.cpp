@@ -172,7 +172,25 @@ void TypeRegistration::endVisit(TypeDefinition const& _typeDefinition)
 		return;
 
 	if (auto const* builtin = dynamic_cast<Builtin const*>(_typeDefinition.typeExpression()))
-		annotation(_typeDefinition).typeConstructor = annotation(*builtin).typeConstructor;
+	{
+		auto [previousDefinitionIt, inserted] = annotation().builtinTypeDefinitions.try_emplace(
+			builtin->nameParameter(),
+			&_typeDefinition
+		);
+
+		if (inserted)
+			annotation(_typeDefinition).typeConstructor = annotation(*builtin).typeConstructor;
+		else
+		{
+			auto const& [builtinName, previousDefinition] = *previousDefinitionIt;
+			m_errorReporter.typeError(
+				9609_error,
+				_typeDefinition.location(),
+				SecondarySourceLocation{}.append("Previous definition:", previousDefinition->location()),
+				"Duplicate builtin type definition."
+			);
+		}
+	}
 	else
 		annotation(_typeDefinition).typeConstructor = m_typeSystem.declareTypeConstructor(
 			_typeDefinition.name(),
