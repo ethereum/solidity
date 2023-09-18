@@ -224,6 +224,14 @@ bool TypeSystemHelpers::isTypeConstant(Type _type) const
 	}, _type);
 }
 
+bool TypeSystemHelpers::isPrimitiveType(Type _type, PrimitiveType _primitiveType) const
+{
+	if (!isTypeConstant(_type))
+		return false;
+	auto constructor = std::get<0>(destTypeConstant(_type));
+	return constructor == typeSystem.constructor(_primitiveType);
+}
+
 experimental::Type TypeSystemHelpers::functionType(experimental::Type _argType, experimental::Type _resultType) const
 {
 	return typeSystem.type(PrimitiveType::Function, {_argType, _resultType});
@@ -239,10 +247,7 @@ std::tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destFuncti
 
 bool TypeSystemHelpers::isFunctionType(Type _type) const
 {
-	if (!isTypeConstant(_type))
-		return false;
-	auto constructor = std::get<0>(destTypeConstant(_type));
-	return constructor == typeSystem.constructor(PrimitiveType::Function);
+	return isPrimitiveType(_type, PrimitiveType::Function);
 }
 
 experimental::Type TypeSystemHelpers::typeFunctionType(experimental::Type _argType, experimental::Type _resultType) const
@@ -260,10 +265,7 @@ std::tuple<experimental::Type, experimental::Type> TypeSystemHelpers::destTypeFu
 
 bool TypeSystemHelpers::isTypeFunctionType(Type _type) const
 {
-	if (!isTypeConstant(_type))
-		return false;
-	auto constructor = std::get<0>(destTypeConstant(_type));
-	return constructor == typeSystem.constructor(PrimitiveType::TypeFunction);
+	return isPrimitiveType(_type, PrimitiveType::TypeFunction);
 }
 
 std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) const
