@@ -273,7 +273,8 @@ namespace solidity::langutil
 	K(Class, "class", 0)                                               \
 	K(Instantiation, "instantiation", 0)                               \
 	K(Word, "word", 0)                                                 \
-	K(Integer, "integer", 0)                                           \
+	K(IntegerType, "integer", 0)                                       \
+	K(Integer, "Integer", 0)                                           \
 	K(Itself, "itself", 0)                                             \
 	K(Void, "void", 0)                                                 \
 	K(Pair, "pair", 0)                                                 \
@@ -307,7 +308,7 @@ namespace TokenTraits
 	constexpr bool isElementaryTypeName(Token tok)
 	{
 		return (Token::Int <= tok && tok < Token::TypesEnd) ||
-			tok == Token::Word || tok == Token::Void || tok == Token::Integer ||
+			tok == Token::Word || tok == Token::Void || tok == Token::IntegerType ||
 			tok == Token::Pair || tok == Token::Unit || tok == Token::Fun;
 	}
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }

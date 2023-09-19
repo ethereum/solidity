@@ -66,7 +66,7 @@ std::optional<TypeConstructor> experimental::typeConstructorFromToken(Analysis c
 		return typeSystem.builtinConstructor(BuiltinType::Pair);
 	case Token::Word:
 		return typeSystem.builtinConstructor(BuiltinType::Word);
-	case Token::Integer:
+	case Token::IntegerType:
 		return typeSystem.builtinConstructor(BuiltinType::Integer);
 	case Token::Bool:
 		return typeSystem.builtinConstructor(BuiltinType::Bool);
