@@ -273,7 +273,8 @@ namespace solidity::langutil
 	K(Class, "class", 0)                                               \
 	K(Instantiation, "instantiation", 0)                               \
 	K(Word, "word", 0)                                                 \
-	K(Integer, "integer", 0)                                           \
+	K(IntegerType, "integer", 0)                                       \
+	K(Integer, "Integer", 0)                                           \
 	K(Itself, "itself", 0)                                             \
 	K(Void, "void", 0)                                                 \
 	K(Pair, "pair", 0)                                                 \
@@ -310,7 +311,7 @@ namespace TokenTraits
 			(Token::Int <= _token && _token < Token::TypesEnd) ||
 			_token == Token::Word ||
 			_token == Token::Void ||
-			_token == Token::Integer ||
+			_token == Token::IntegerType ||
 			_token == Token::Pair ||
 			_token == Token::Unit ||
 			_token == Token::Fun;
