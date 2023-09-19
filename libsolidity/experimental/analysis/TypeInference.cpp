@@ -54,11 +54,11 @@ TypeInference::TypeInference(Analysis& _analysis):
 		);
 		if (auto error = std::get_if<std::string>(&result))
 			solAssert(!error, *error);
-		TypeClass resultClass = std::get<TypeClass>(result);
+		TypeClass declaredClass = std::get<TypeClass>(result);
 		// TODO: validation?
-		annotation().typeClassFunctions[resultClass] = _memberCreator(type);
+		annotation().typeClassFunctions[declaredClass] = _memberCreator(type);
 		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
-		return annotation().builtinClasses.emplace(_class, resultClass).first->second;
+		return annotation().builtinClasses.emplace(_class, declaredClass).first->second;
 	};
 	TypeSystemHelpers helper{m_typeSystem};
 	using MemberList = std::map<std::string, Type>;
