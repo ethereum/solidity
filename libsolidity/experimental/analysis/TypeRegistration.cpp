@@ -73,7 +73,7 @@ bool TypeRegistration::visit(ElementaryTypeName const& _typeName)
 			return m_typeSystem.constructor(PrimitiveType::Pair);
 		case Token::Word:
 			return m_typeSystem.constructor(PrimitiveType::Word);
-		case Token::Integer:
+		case Token::IntegerType:
 			return m_typeSystem.constructor(PrimitiveType::Integer);
 		case Token::Bool:
 			return m_typeSystem.constructor(PrimitiveType::Bool);
