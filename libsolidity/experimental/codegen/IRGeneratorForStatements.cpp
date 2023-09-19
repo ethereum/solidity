@@ -219,7 +219,7 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGener
 		return _context.analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
 	auto& instantiations = _context.analysis.annotation<TypeRegistration>().builtinClassInstantiations;
-	auto& builtinClassesByName = _context.analysis.annotation<TypeInference>().builtinClassesByName;
+	auto& builtinClassesByName = _context.analysis.annotation<TypeClassRegistration>().builtinClassesByName;
 	return instantiations.at(builtinClassesByName.at(_context.analysis.typeSystem().typeClassName(_class)));
 }
 }

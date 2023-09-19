@@ -41,6 +41,8 @@ public:
 	};
 	struct GlobalAnnotation
 	{
+		std::map<BuiltinClass, TypeClass> builtinClasses;
+		std::map<std::string, BuiltinClass> builtinClassesByName;
 	};
 
 	TypeClassRegistration(Analysis& _analysis);
