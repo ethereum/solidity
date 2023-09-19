@@ -49,53 +49,51 @@ SyntaxTest::SyntaxTest(
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
 }
 
-void SyntaxTest::setupCompiler()
+void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 {
-	compiler().reset();
-	compiler().setSources(withPreamble(m_sources.sources));
-	compiler().setEVMVersion(m_evmVersion);
-	compiler().setOptimiserSettings(
+	AnalysisFramework::setupCompiler(_compiler);
+
+	_compiler.setEVMVersion(m_evmVersion);
+	_compiler.setOptimiserSettings(
 		m_optimiseYul ?
 		OptimiserSettings::full() :
 		OptimiserSettings::minimal()
 	);
-	compiler().setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
-	compiler().setMetadataHash(CompilerStack::MetadataHash::None);
+	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
+	_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
 }
 
 void SyntaxTest::parseAndAnalyze()
 {
-	setupCompiler();
-
-	if (compiler().parse() && compiler().analyze())
-		try
+	try
+	{
+		runFramework(withPreamble(m_sources.sources), PipelineStage::Compilation);
+		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
 		{
-			if (!compiler().compile())
-			{
-				ErrorList const& errors = compiler().errors();
-				auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
-					return error->type() == Error::Type::CodeGenerationError;
-				});
-				auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
-					return Error::isError(error->type());
-				});
-				// failing compilation after successful analysis is a rare case,
-				// it assumes that errors contain exactly one error, and the error is of type Error::Type::CodeGenerationError
-				if (codeGeneretionErrorCount != 1 || errorCount != 1)
-					BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
-			}
-		}
-		catch (UnimplementedFeatureError const& _e)
-		{
-			m_errorList.emplace_back(SyntaxTestError{
-				"UnimplementedFeatureError",
-				nullopt,
-				errorMessage(_e),
-				"",
-				-1,
-				-1
+			ErrorList const& errors = compiler().errors();
+			auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
+				return error->type() == Error::Type::CodeGenerationError;
 			});
+			auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
+				return Error::isError(error->type());
+			});
+			// failing compilation after successful analysis is a rare case,
+			// it assumes that errors contain exactly one error, and the error is of type Error::Type::CodeGenerationError
+			if (codeGeneretionErrorCount != 1 || errorCount != 1)
+				BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
 		}
+	}
+	catch (UnimplementedFeatureError const& _e)
+	{
+		m_errorList.emplace_back(SyntaxTestError{
+			"UnimplementedFeatureError",
+			nullopt,
+			errorMessage(_e),
+			"",
+			-1,
+			-1
+		});
+	}
 
 	filterObtainedErrors();
 }
@@ -146,4 +144,3 @@ void SyntaxTest::filterObtainedErrors()
 		});
 	}
 }
-

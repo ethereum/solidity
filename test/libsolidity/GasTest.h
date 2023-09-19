@@ -44,6 +44,9 @@ public:
 	void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool _formatted = false) const override;
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
+protected:
+	void setupCompiler(CompilerStack& _compiler) override;
+
 private:
 	void parseExpectations(std::istream& _stream);
 

@@ -39,22 +39,66 @@ using FunctionTypePointer = FunctionType const*;
 namespace solidity::frontend::test
 {
 
+enum class PipelineStage {
+	Parsing,
+	Analysis,
+	Compilation,
+};
+
 class AnalysisFramework
 {
 
 protected:
-	virtual std::pair<SourceUnit const*, langutil::ErrorList>
-	parseAnalyseAndReturnError(
-		std::string const& _source,
-		bool _reportWarnings = false,
-		bool _insertLicenseAndVersionPragma = true,
-		bool _allowMultipleErrors = false
-	);
 	virtual ~AnalysisFramework() = default;
 
-	SourceUnit const* parseAndAnalyse(std::string const& _source);
-	bool success(std::string const& _source);
-	langutil::ErrorList expectError(std::string const& _source, bool _warning = false, bool _allowMultiple = false);
+	/// Runs analysis via runFramework() and returns either an AST or a filtered list of errors.
+	/// Uses Boost test macros to fail if errors do not occur specifically at the analysis stage.
+	///
+	/// @deprecated This is a legacy helper. Use runFramework() directly in new tests.
+	///
+	/// @param _includeWarningsAndInfos Do not remove warning and info messages from the error list.
+	/// @param _addPreamble Apply withPreamble() to @p _source.
+	/// @param _allowMultiple When false, use Boost test macros to fail when there's more
+	///        than one item on the error list.
+	std::pair<SourceUnit const*, langutil::ErrorList> runAnalysisAndExpectNoParsingErrors(
+		std::string const& _source,
+		bool _includeWarningsAndInfos = false,
+		bool _addPreamble = true,
+		bool _allowMultiple = false
+	);
+
+	/// Runs analysis via runAnalysisAndExpectNoParsingErrors() and returns the list of errors.
+	/// Uses Boost test macros to fail if there are no errors.
+	///
+	/// @deprecated This is a legacy helper. Use runFramework() directly in new tests.
+	///
+	/// @param _includeWarningsAndInfos Do not remove warning and info messages from the error list.
+	/// @param _allowMultiple When false, use Boost test macros to fail when there's more
+	///        than one item on the error list.
+	langutil::ErrorList runAnalysisAndExpectError(
+		std::string const& _source,
+		bool _includeWarningsAndInfos = false,
+		bool _allowMultiple = false
+	);
+
+public:
+	/// Runs the full compiler pipeline on specified sources. This is the main function of the
+	/// framework. Resets the stack, configures it and runs either until the first failed stage or
+	/// until the @p _targetStage is reached.
+	/// Afterwards the caller can inspect the stack via @p compiler(). The framework provides a few
+	/// convenience helpers to check the state and error list, in general the caller can freely
+	/// access the stack, including generating outputs if the compilation succeeded.
+	bool runFramework(StringMap _sources, PipelineStage _targetStage = PipelineStage::Compilation);
+	bool runFramework(std::string _source, PipelineStage _targetStage = PipelineStage::Compilation)
+	{
+		return runFramework({{"", std::move(_source)}}, _targetStage);
+	}
+
+	void resetFramework();
+
+	PipelineStage targetStage() const { return m_targetStage; }
+	bool pipelineSuccessful() const { return stageSuccessful(m_targetStage); }
+	bool stageSuccessful(PipelineStage _stage) const;
 
 	std::string formatErrors(
 		langutil::ErrorList const& _errors,
@@ -80,9 +124,6 @@ protected:
 		return filterErrors(compiler().errors(), _includeWarningsAndInfos);
 	}
 
-	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
-	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};
-
 	/// @returns reference to lazy-instantiated CompilerStack.
 	solidity::frontend::CompilerStack& compiler()
 	{
@@ -99,12 +140,25 @@ protected:
 		return *m_compiler;
 	}
 
+protected:
 	/// Creates a new instance of @p CompilerStack. Override if your test case needs to pass in
 	/// custom constructor arguments.
 	virtual std::unique_ptr<CompilerStack> createStack() const;
 
+	/// Configures @p CompilerStack. The default implementation sets basic parameters based on
+	/// CLI options. Override if your test case needs extra configuration.
+	virtual void setupCompiler(CompilerStack& _compiler);
+
+	/// Executes the requested pipeline stages until @p m_targetStage is reached.
+	/// Stops at the first failed stage.
+	void executeCompilationPipeline();
+
+	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
+	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};
+
 private:
 	mutable std::unique_ptr<solidity::frontend::CompilerStack> m_compiler;
+	PipelineStage m_targetStage = PipelineStage::Compilation;
 };
 
 // Asserts that the compilation down to typechecking
@@ -112,15 +166,15 @@ private:
 #define CHECK_ALLOW_MULTI(text, expectations) \
 do \
 { \
-	ErrorList errors = expectError((text), true, true); \
+	ErrorList errors = runAnalysisAndExpectError((text), true, true); \
 	auto message = searchErrors(errors, (expectations)); \
 	BOOST_CHECK_MESSAGE(message.empty(), message); \
 } while(0)
 
-#define CHECK_ERROR_OR_WARNING(text, typ, substrings, warning, allowMulti) \
+#define CHECK_ERROR_OR_WARNING(text, typ, substrings, includeWarningsAndInfos, allowMulti) \
 do \
 { \
-	ErrorList errors = expectError((text), (warning), (allowMulti)); \
+	ErrorList errors = runAnalysisAndExpectError((text), (includeWarningsAndInfos), (allowMulti)); \
 	std::vector<std::pair<Error::Type, std::string>> expectations; \
 	for (auto const& str: substrings) \
 		expectations.emplace_back((Error::Type::typ), str); \
@@ -154,16 +208,19 @@ CHECK_ERROR_OR_WARNING(text, Warning, std::vector<std::string>{(substring)}, tru
 CHECK_ERROR_OR_WARNING(text, Warning, substrings, true, true)
 
 // [checkSuccess(text)] asserts that the compilation down to typechecking succeeds.
-#define CHECK_SUCCESS(text) do { BOOST_CHECK(success((text))); } while(0)
+#define CHECK_SUCCESS(text) do { \
+	auto [ast, errors] = runAnalysisAndExpectNoParsingErrors((text)); \
+	BOOST_CHECK(errors.empty()); \
+} while(0)
 
 #define CHECK_SUCCESS_NO_WARNINGS(text) \
 do \
 { \
-	auto sourceAndError = parseAnalyseAndReturnError((text), true); \
+	auto [ast, errors] = runAnalysisAndExpectNoParsingErrors((text), true); \
 	std::string message; \
-	if (!sourceAndError.second.empty()) \
-		message = formatErrors(compiler().errors());\
-	BOOST_CHECK_MESSAGE(sourceAndError.second.empty(), message); \
+	if (!errors.empty()) \
+		message = formatErrors(errors);\
+	BOOST_CHECK_MESSAGE(errors.empty(), message); \
 } \
 while(0)
 

@@ -48,6 +48,9 @@ public:
 	}
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+
+protected:
+	void setupCompiler(CompilerStack& _compiler) override;
 };
 
 }

@@ -97,13 +97,14 @@ void GasTest::printUpdatedExpectations(std::ostream& _stream, std::string const&
 	}
 }
 
-TestCase::TestResult GasTest::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
+void GasTest::setupCompiler(CompilerStack& _compiler)
 {
-	compiler().reset();
+	AnalysisFramework::setupCompiler(_compiler);
+
 	// Prerelease CBOR metadata varies in size due to changing version numbers and build dates.
 	// This leads to volatile creation cost estimates. Therefore we force the compiler to
 	// release mode for testing gas estimates.
-	compiler().setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
+	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	OptimiserSettings settings = m_optimise ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	if (m_optimiseYul)
 	{
@@ -111,10 +112,16 @@ TestCase::TestResult GasTest::run(std::ostream& _stream, std::string const& _lin
 		settings.optimizeStackAllocation = m_optimise;
 	}
 	settings.expectedExecutionsPerDeployment = m_optimiseRuns;
-	compiler().setOptimiserSettings(settings);
-	compiler().setSources({{"", withPreamble(m_source)}});
+	_compiler.setOptimiserSettings(settings);
 
-	if (!compiler().parseAndAnalyze() || !compiler().compile())
+	// Intentionally ignoring EVM version specified on the command line.
+	// Gas expectations are only valid for the default version.
+	_compiler.setEVMVersion(EVMVersion{});
+}
+
+TestCase::TestResult GasTest::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
+{
+	if (!runFramework(withPreamble(m_source), PipelineStage::Compilation))
 	{
 		_stream << formatErrors(filteredErrors(), _formatted);
 		return TestResult::FatalError;
