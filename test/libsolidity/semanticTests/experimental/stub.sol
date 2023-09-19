@@ -34,7 +34,7 @@ instantiation word: * {
     }
 }
 
-instantiation word: integer {
+instantiation word: Integer {
     function fromInteger(x:integer) -> word {
         //x + x;
     }
