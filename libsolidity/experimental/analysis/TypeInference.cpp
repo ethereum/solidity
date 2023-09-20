@@ -216,8 +216,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		subNode->accept(*this);
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
 		solAssert(functionDefinition);
-		// TODO: need polymorphicInstance?
-		auto functionType = polymorphicInstance(typeAnnotation(*functionDefinition));
+		auto functionType = typeAnnotation(*functionDefinition);
 		if (!functionTypes.emplace(functionDefinition->name(), functionType).second)
 			m_errorReporter.fatalTypeError(3195_error, functionDefinition->location(), "Function in type class declared multiple times.");
 		auto typeVars = TypeEnvironmentHelpers{*m_env}.typeVars(functionType);
