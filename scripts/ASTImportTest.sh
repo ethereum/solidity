@@ -121,9 +121,9 @@ function test_ast_import_export_equivalence
     local sol_file="$1"
     local input_files=( "${@:2}" )
 
-    local export_command=("$SOLC" --combined-json ast --pretty-json --json-indent 4 "${input_files[@]}")
-    local import_command=("$SOLC" --import-ast --combined-json ast --pretty-json --json-indent 4 expected.json)
-    local import_via_standard_json_command=("$SOLC" --combined-json ast --pretty-json --json-indent 4 --standard-json standard_json_input.json)
+    local export_command=("${SOLC}" --combined-json ast --pretty-json --json-indent 4 "${input_files[@]}")
+    local import_command=("${SOLC}" --import-ast --combined-json ast --pretty-json --json-indent 4 expected.json)
+    local import_via_standard_json_command=("${SOLC}" --combined-json ast --pretty-json --json-indent 4 --standard-json standard_json_input.json)
 
     # export ast - save ast json as expected result (silently)
     if ! "${export_command[@]}" > expected.json 2> stderr_export.txt
@@ -256,7 +256,7 @@ function test_evmjson_via_ir_and_yul_import_export
 
     mkdir yul
     # export found solidity contracts to yul.
-    run_solc --optimize --via-ir --ir-optimized "${input_files[@]}" --no-optimize-yul  -o yul/
+    run_solc --optimize --via-ir --ir-optimized "${input_files[@]}" --no-optimize-yul  -o yul
     for filename in yul/*
     do
         if [[ -s "${filename}" ]]
@@ -274,8 +274,8 @@ function test_evmjson_via_ir_and_yul_import_export
 
     mkdir sol
     # create from a combined json from the supplied solidity contracts.
-    export_command=("${SOLC}" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 --no-optimize-yul "${input_files[@]}" -o sol/)
-    run_solc --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 "${input_files[@]}" --no-optimize-yul  -o sol/
+    export_command=("${SOLC}" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 --no-optimize-yul "${input_files[@]}" -o sol)
+    run_solc --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --optimize --via-ir --pretty-json --json-indent 4 "${input_files[@]}" --no-optimize-yul  -o sol
     mkdir input
 
     # save the original supplied solidity contract sources for potential debugging purposes.
@@ -284,7 +284,7 @@ function test_evmjson_via_ir_and_yul_import_export
         cat "${file}" >> "input/$(basename "${file}")"
     done
     # split the combined json into different files.
-    split_combined_json sol/combined.json sol/
+    split_combined_json sol/combined.json sol
 
     # iterate through all yul files.
     for yulfile in yul/*
@@ -376,9 +376,9 @@ function test_evmjson_sol_import_export
     # create from a combined json from the supplied solidity contracts.
     local export_command
     local import_command
-    export_command=("${SOLC}" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --pretty-json --json-indent 4 "${input_files[@]}" -o sol/)
+    export_command=("${SOLC}" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --pretty-json --json-indent 4 "${input_files[@]}" -o sol)
 
-    run_solc --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --pretty-json --json-indent 4 "${input_files[@]}" -o sol/
+    run_solc --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --pretty-json --json-indent 4 "${input_files[@]}" -o sol
     mkdir input
     # save the original supplied solidity contract sources for potential debugging purposes.
     for file in "${input_files[@]}"
@@ -386,7 +386,7 @@ function test_evmjson_sol_import_export
         cat "${file}" >> "input/$(basename "${file}")"
     done
     # split the combined json into different files.
-    split_combined_json sol/combined.json sol/
+    split_combined_json sol/combined.json sol
 
     mkdir -p imported-from-sol
     for file in sol/*.asm
@@ -395,7 +395,7 @@ function test_evmjson_sol_import_export
         # import_command will just contain the last file in sol/*.asm - but it's still a good starting point ;)
         import_command=("${SOLC}" --import-ast --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --pretty-json --json-indent 4 --import-asm-json "${file}")
         run_solc_store_stdout "imported-from-sol/combined.json" --combined-json "bin,bin-runtime,opcodes,asm,srcmap,srcmap-runtime" --pretty-json --json-indent 4 --import-asm-json "${file}"
-        split_combined_json imported-from-sol/combined.json imported-from-sol/ "${name}"
+        split_combined_json imported-from-sol/combined.json imported-from-sol "${name}"
     done
 
     for file in sol/*
@@ -516,7 +516,7 @@ function test_import_export_equivalence {
 function test_evmjson_import_from_yul_export
 {
     local files="${*}"
-    for yulfile in $files
+    for yulfile in ${files}
     do
         local export_command
         local import_command
@@ -534,9 +534,9 @@ function test_evmjson_import_from_yul_export
         # if yul file got compiled with success.
         if (( solc_return_code == 0 ))
         then
-            yul_bin="$(basename "$yulfile").bin"
-            yul_json="$(basename "$yulfile").asm.json"
-            echo "$output" > "${yul_bin}"
+            yul_bin="$(basename "${yulfile}").bin"
+            yul_json="$(basename "${yulfile}").asm.json"
+            echo "${output}" > "${yul_bin}"
             # remove all lines starting with '=======' and 'Binary representation:'.
             grep -v -e '^=======' -e '^Binary representation:' "${yul_bin}" > tmpfile && mv tmpfile "${yul_bin}"
             # remove all white-spaces. we only want the binary.
