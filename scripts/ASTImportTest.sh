@@ -179,28 +179,33 @@ function split_combined_json
 {
     local json_file="$1"
     local output_path="$2"
-    local prefix="${3:-}"
-    for path_with_contract in $(jq '.contracts | keys | .[]' "${json_file}" 2> /dev/null)
+    local path_to_contract_file="${3:-}"
+    for path_with_contract in $(jq --raw-output '.contracts | keys | .[]' "${json_file}" 2> /dev/null)
     do
-        local path=${path_with_contract}
         local contract=""
-        local delimiter
-        delimiter=$("${EXPR}" index "${path}" ":") || true
-        if [[ -z "${prefix}" ]]
+        if [[ -z "${path_to_contract_file}" ]]
         then
-            path=${path_with_contract:0:((${delimiter} - 1))}
-            contract=${path_with_contract:((${delimiter})):((${#path_with_contract} - ${delimiter} - 1))}
+            if [[ ${path_with_contract} =~ ^([[:alpha:]]:[[:alpha:]]) ]]
+            then
+                # contract name with the format "A:C" to be saved as "A_C.{type}"
+                contract=$(echo "${BASH_REMATCH[1]/:/_}" | tr -d '"')
+            else
+                local delimiter
+                delimiter=$("${EXPR}" index "${path_with_contract}" ":") || true
+                # contract name with the format "<some-filepath>.sol:C" to be saved as "C.{type}"
+                contract=${path_with_contract:((${delimiter})):((${#path_with_contract} - ${delimiter}))}
+            fi
         else
-            path=${path_with_contract}
-            contract=""
+            # Otherwise the contract name will be given by the provided path to the file, e.g. "yul/A_C.yul.{type}"
+            contract="${path_to_contract_file}"
         fi
-        for type in $(jq --raw-output ".contracts.${path_with_contract} | keys | .[]" "${json_file}" 2> /dev/null)
+        for type in $(jq --raw-output ".contracts.\"${path_with_contract}\" | keys | .[]" "${json_file}" 2> /dev/null)
         do
             local output
-            output=$(jq --raw-output ".contracts.${path_with_contract}.\"${type}\"" "${json_file}")
+            output=$(jq --raw-output ".contracts.\"${path_with_contract}\".\"${type}\"" "${json_file}")
             if [[ -n "${output}" ]]
             then
-              echo "${output}" > "${output_path}/${prefix}${contract}.${type}"
+                echo "${output}" > "${output_path}/${contract}.${type}"
             fi
         done
     done
