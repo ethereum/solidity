@@ -232,7 +232,36 @@ Variables
 
 * Declaring empty structs is now disallowed for clarity.
 
+**Before v0.5.0 (Valid):**
+
+```solidity
+struct EmptyStruct {} // Allowed in older versions
+```
+**v0.5.0 and Later (Disallowed):**
+
+```solidity
+struct EmptyStruct {} // Disallowed
+```
+
+
 * The ``var`` keyword is now disallowed to favor explicitness.
+
+**Before v0.5.0 (Valid):**
+
+```solidity
+function example() {
+    var x = 42; // Allowed in older versions
+}
+```
+
+**v0.5.0 and Later (Disallowed):**
+
+```solidity
+function example() {
+    var x = 42; // Disallowed
+}
+```
+
 
 * Assignments between tuples with different number of components is now
   disallowed.
