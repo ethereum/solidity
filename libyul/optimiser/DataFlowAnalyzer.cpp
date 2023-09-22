@@ -351,13 +351,14 @@ void DataFlowAnalyzer::clearValues(std::set<YulString> _variables)
 	});
 
 	// Also clear variables that reference variables to be cleared.
+	std::set<YulString> referencingVariables;
 	for (auto const& variableToClear: _variables)
 		for (auto const& [ref, names]: m_state.references)
 			if (names.count(variableToClear))
-				_variables.emplace(ref);
+				referencingVariables.emplace(ref);
 
 	// Clear the value and update the reference relation.
-	for (auto const& name: _variables)
+	for (auto const& name: _variables + referencingVariables)
 	{
 		m_state.value.erase(name);
 		m_state.references.erase(name);

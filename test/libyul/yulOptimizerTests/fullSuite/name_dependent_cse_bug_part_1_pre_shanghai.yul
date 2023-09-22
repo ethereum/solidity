@@ -38,10 +38,9 @@
 //         {
 //             let _1 := add(a_1, a_1)
 //             let var := add(_1, _1)
-//             let mid := var
 //             switch a_1
 //             case 0 { a_1 := var }
-//             default { sstore(a, mid) }
+//             default { sstore(a, var) }
 //         }
 //     }
 // }
