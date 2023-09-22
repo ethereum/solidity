@@ -167,6 +167,7 @@ std::map<std::string, Instruction> const solidity::evmasm::c_instructions =
 	{ "CALL", Instruction::CALL },
 	{ "CALLCODE", Instruction::CALLCODE },
 	{ "STATICCALL", Instruction::STATICCALL },
+	{ "YIELD", Instruction::YIELD },
 	{ "RETURN", Instruction::RETURN },
 	{ "DELEGATECALL", Instruction::DELEGATECALL },
 	{ "CREATE2", Instruction::CREATE2 },
@@ -317,6 +318,7 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{ Instruction::RETURN,		{ "RETURN",			0, 2, 0, true, Tier::Zero } },
 	{ Instruction::DELEGATECALL,	{ "DELEGATECALL",	0, 6, 1, true, Tier::Special } },
 	{ Instruction::STATICCALL,	{ "STATICCALL",		0, 6, 1, true, Tier::Special } },
+	{ Instruction::YIELD,       { "YIELD",          0, 0, 0, true, Tier::VeryLow } }, // TODO: Gas & SideEffects
 	{ Instruction::CREATE2,		{ "CREATE2",		0, 4, 1, true, Tier::Special } },
 	{ Instruction::REVERT,		{ "REVERT",		0, 2, 0, true, Tier::Zero } },
 	{ Instruction::INVALID,		{ "INVALID",		0, 0, 0, true, Tier::Zero } },

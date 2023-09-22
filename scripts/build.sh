@@ -17,7 +17,7 @@ fi
 mkdir -p "${BUILDDIR}"
 cd "${BUILDDIR}"
 
-cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${@:2}"
+cmake .. -DUSE_Z3=OFF -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${@:2}"
 make -j2
 
 if [[ "${CI}" == "" ]]; then

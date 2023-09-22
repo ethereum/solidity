@@ -147,6 +147,7 @@ struct EVMBuiltins
 	static auto constexpr STATICCALL = PatternGenerator<Instruction::STATICCALL>{};
 	static auto constexpr RETURN = PatternGenerator<Instruction::RETURN>{};
 	static auto constexpr DELEGATECALL = PatternGenerator<Instruction::DELEGATECALL>{};
+	static auto constexpr YIELD = PatternGenerator<Instruction::YIELD>{};
 	static auto constexpr CREATE2 = PatternGenerator<Instruction::CREATE2>{};
 	static auto constexpr REVERT = PatternGenerator<Instruction::REVERT>{};
 	static auto constexpr INVALID = PatternGenerator<Instruction::INVALID>{};
