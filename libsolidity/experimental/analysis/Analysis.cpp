@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/analysis/DebugWarner.h>
+#include <libsolidity/experimental/analysis/FunctionDependencyGraph.h>
 #include <libsolidity/experimental/analysis/SyntaxRestrictor.h>
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
@@ -35,6 +36,7 @@ struct Analysis::AnnotationContainer
 
 struct Analysis::GlobalAnnotationContainer
 {
+	FunctionDependencyGraph::GlobalAnnotation functionCallGraphAnnotation;
 	TypeClassRegistration::GlobalAnnotation typeClassRegistrationAnnotation;
 	TypeRegistration::GlobalAnnotation typeRegistrationAnnotation;
 	TypeInference::GlobalAnnotation typeInferenceAnnotation;
@@ -52,7 +54,6 @@ TypeClassRegistration::GlobalAnnotation const& solidity::frontend::experimental:
 	return analysis.annotationContainer().typeClassRegistrationAnnotation;
 }
 
-
 template<>
 TypeClassRegistration::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeClassRegistration>::get()
 {
@@ -66,6 +67,18 @@ TypeClassRegistration::Annotation const& solidity::frontend::experimental::detai
 }
 
 template<>
+FunctionDependencyGraph::GlobalAnnotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<FunctionDependencyGraph>::get() const
+{
+	return analysis.annotationContainer().functionCallGraphAnnotation;
+}
+
+template<>
+FunctionDependencyGraph::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<FunctionDependencyGraph>::get()
+{
+	return analysis.annotationContainer().functionCallGraphAnnotation;
+}
+
+template<>
 TypeRegistration::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeRegistration>::get(ASTNode const& _node)
 {
 	return analysis.annotationContainer(_node).typeRegistrationAnnotation;
@@ -76,7 +89,6 @@ TypeRegistration::GlobalAnnotation const& solidity::frontend::experimental::deta
 {
 	return analysis.annotationContainer().typeRegistrationAnnotation;
 }
-
 
 template<>
 TypeRegistration::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeRegistration>::get()
@@ -107,7 +119,6 @@ TypeInference::GlobalAnnotation const& solidity::frontend::experimental::detail:
 {
 	return analysis.annotationContainer().typeInferenceAnnotation;
 }
-
 
 template<>
 TypeInference::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeInference>::get()
@@ -153,6 +164,8 @@ bool Analysis::check(std::vector<std::shared_ptr<SourceUnit const>> const& _sour
 		SyntaxRestrictor,
 		TypeClassRegistration,
 		TypeRegistration,
+		// TODO move after step introduced in https://github.com/ethereum/solidity/pull/14578, but before TypeInference
+		FunctionDependencyGraph,
 		TypeInference,
 		DebugWarner
 	>;

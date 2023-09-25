@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-/// Unit tests for libsolidity/analysis/FunctionCallGraph.h
+/// Unit tests for libsolidity/analysis/FunctionDependencyGraph.h
 
 #include <libsolidity/analysis/FunctionCallGraph.h>
 
