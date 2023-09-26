@@ -29,31 +29,59 @@ namespace solidity::frontend
 {
 class Declaration;
 }
+
 namespace solidity::frontend::experimental
 {
 
 class TypeEnvironment
 {
 public:
+	struct TypeMismatch
+	{
+		Type a;
+		Type b;
+	};
+
+	struct SortMismatch {
+		Type type;
+		Sort sort;
+	};
+
+	struct RecursiveUnification
+	{
+		Type var;
+		Type type;
+	};
+
+	using UnificationFailure = std::variant<
+		TypeMismatch,
+		SortMismatch,
+		RecursiveUnification
+	>;
+
 	TypeEnvironment(TypeSystem& _typeSystem): m_typeSystem(_typeSystem) {}
 	TypeEnvironment(TypeEnvironment const&) = delete;
 	TypeEnvironment& operator=(TypeEnvironment const&) = delete;
 	TypeEnvironment clone() const;
+
 	Type resolve(Type _type) const;
 	Type resolveRecursive(Type _type) const;
 	Type fresh(Type _type);
-	struct TypeMismatch { Type a; Type b; };
-	struct SortMismatch { Type type; Sort sort; };
-	struct RecursiveUnification { Type var; Type type; };
-	using UnificationFailure = std::variant<TypeMismatch, SortMismatch, RecursiveUnification>;
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
 	Sort sort(Type _type) const;
 	bool typeEquals(Type _lhs, Type _rhs) const;
+
 	TypeSystem& typeSystem() { return m_typeSystem; }
 	TypeSystem const& typeSystem() const { return m_typeSystem; }
+
 private:
-	TypeEnvironment(TypeEnvironment&& _env): m_typeSystem(_env.m_typeSystem), m_typeVariables(std::move(_env.m_typeVariables)) {}
+	TypeEnvironment(TypeEnvironment&& _env):
+		m_typeSystem(_env.m_typeSystem),
+		m_typeVariables(std::move(_env.m_typeVariables))
+	{}
+
 	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);
+
 	TypeSystem& m_typeSystem;
 	std::map<size_t, Type> m_typeVariables;
 };

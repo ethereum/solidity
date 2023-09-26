@@ -1088,7 +1088,11 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 	// TODO: better mechanism than fetching by name.
 	auto& annotation = _analysis.annotation<TypeRegistration>();
 	auto& inferenceAnnotation = _analysis.annotation<TypeInference>();
-	return annotation.builtinClassInstantiations.at(inferenceAnnotation.builtinClassesByName.at(_analysis.typeSystem().typeClassName(_class)));
+	return annotation.builtinClassInstantiations.at(
+		inferenceAnnotation.builtinClassesByName.at(
+			_analysis.typeSystem().typeClassName(_class)
+		)
+	);
 }
 }
 
@@ -1180,7 +1184,8 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 					fmt::format(
 						"Cannot unify {} and {}.",
 						envHelper.typeToString(_typeMismatch.a),
-						envHelper.typeToString(_typeMismatch.b))
+						envHelper.typeToString(_typeMismatch.b)
+					)
 				);
 			},
 			[&](TypeEnvironment::SortMismatch _sortMismatch) {
@@ -1197,7 +1202,8 @@ void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
 					fmt::format(
 						"Recursive unification: {} occurs in {}.",
 						envHelper.typeToString(_recursiveUnification.var),
-						envHelper.typeToString(_recursiveUnification.type))
+						envHelper.typeToString(_recursiveUnification.type)
+					)
 				);
 			}
 		}, failure);

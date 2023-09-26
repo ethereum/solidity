@@ -149,7 +149,13 @@ std::tuple<std::integral_constant<size_t, Is>...> makeIndexTuple(std::index_sequ
 
 bool Analysis::check(std::vector<std::shared_ptr<SourceUnit const>> const& _sourceUnits)
 {
-	using AnalysisSteps = std::tuple<SyntaxRestrictor, TypeClassRegistration, TypeRegistration, TypeInference, DebugWarner>;
+	using AnalysisSteps = std::tuple<
+		SyntaxRestrictor,
+		TypeClassRegistration,
+		TypeRegistration,
+		TypeInference,
+		DebugWarner
+	>;
 
 	return std::apply([&](auto... _indexTuple) {
 		return ([&](auto&& _step) {
