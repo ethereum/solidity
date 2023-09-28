@@ -45,8 +45,10 @@ TypeInference::TypeInference(Analysis& _analysis):
 	m_errorReporter(_analysis.errorReporter()),
 	m_typeSystem(_analysis.typeSystem())
 {
-	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class, auto _memberCreator, Sort _sort = {}) -> TypeClass {
-		Type type = m_typeSystem.freshTypeVariable(std::move(_sort));
+	TypeSystemHelpers helper{m_typeSystem};
+
+	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
+		Type type = m_typeSystem.freshTypeVariable({});
 		auto result = m_typeSystem.declareTypeClass(
 			type,
 			_name,
@@ -56,59 +58,74 @@ TypeInference::TypeInference(Analysis& _analysis):
 			solAssert(!error, *error);
 		TypeClass declaredClass = std::get<TypeClass>(result);
 		// TODO: validation?
-		annotation().typeClassFunctions[declaredClass] = _memberCreator(type);
 		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
 		return annotation().builtinClasses.emplace(_class, declaredClass).first->second;
 	};
-	TypeSystemHelpers helper{m_typeSystem};
-	using MemberList = std::map<std::string, Type>;
 
-	declareBuiltinClass("integer", BuiltinClass::Integer, [&](Type _typeVar) -> MemberList {
-		return {
-			{
-				"fromInteger",
-				helper.functionType(m_typeSystem.type(PrimitiveType::Integer, {}), _typeVar)
-			}
-		};
-	});
-
-	auto defineBinaryMonoidalOperator = [&](std::string _className, BuiltinClass _class, Token _token, std::string _functionName) {
-		TypeClass typeClass = declareBuiltinClass(_className, _class, [&](Type _typeVar) -> MemberList {
-			return {
-				{
-					_functionName,
-					helper.functionType(helper.tupleType({_typeVar, _typeVar}), _typeVar)
-				}
-			};
-		});
-		annotation().operators.emplace(_token, std::make_tuple(typeClass, _functionName));
+	auto registeredTypeClass = [&](BuiltinClass _builtinClass) -> TypeClass {
+		return annotation().builtinClasses.at(_builtinClass);
 	};
 
-	defineBinaryMonoidalOperator("*", BuiltinClass::Mul, Token::Mul, "mul");
-	defineBinaryMonoidalOperator("+", BuiltinClass::Add, Token::Add, "add");
-
-	auto defineBinaryCompareOperator = [&](std::string _className, BuiltinClass _class, Token _token, std::string _functionName) {
-		TypeClass typeClass = declareBuiltinClass(_className, _class, [&](Type _typeVar) -> MemberList {
-			return {
-				{
-					_functionName,
-					helper.functionType(helper.tupleType({_typeVar, _typeVar}), m_typeSystem.type(PrimitiveType::Bool, {}))
-				}
-			};
-		});
-		annotation().operators.emplace(_token, std::make_tuple(typeClass, _functionName));
+	auto defineConversion = [&](BuiltinClass _builtinClass, PrimitiveType _fromType, std::string _functionName) {
+		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
+			std::move(_functionName),
+			helper.functionType(
+				m_typeSystem.type(_fromType, {}),
+				m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable
+			),
+		}};
 	};
-	defineBinaryCompareOperator("==", BuiltinClass::Equal, Token::Equal, "eq");
-	defineBinaryCompareOperator("<", BuiltinClass::Less, Token::LessThan, "lt");
-	defineBinaryCompareOperator("<=", BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
-	defineBinaryCompareOperator(">", BuiltinClass::Greater, Token::GreaterThan, "gt");
-	defineBinaryCompareOperator(">=", BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
+
+	auto defineBinaryMonoidalOperator = [&](BuiltinClass _builtinClass, Token _token, std::string _functionName) {
+		Type typeVar = m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable;
+		annotation().operators.emplace(_token, std::make_tuple(registeredTypeClass(_builtinClass), _functionName));
+		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
+			std::move(_functionName),
+			helper.functionType(
+				helper.tupleType({typeVar, typeVar}),
+				typeVar
+			)
+		}};
+	};
+
+	auto defineBinaryCompareOperator = [&](BuiltinClass _builtinClass, Token _token, std::string _functionName) {
+		Type typeVar = m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable;
+		annotation().operators.emplace(_token, std::make_tuple(registeredTypeClass(_builtinClass), _functionName));
+		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
+			std::move(_functionName),
+			helper.functionType(
+				helper.tupleType({typeVar, typeVar}),
+				m_typeSystem.type(PrimitiveType::Bool, {})
+			)
+		}};
+	};
+
+	declareBuiltinClass("integer", BuiltinClass::Integer);
+	declareBuiltinClass("*", BuiltinClass::Mul);
+	declareBuiltinClass("+", BuiltinClass::Add);
+	declareBuiltinClass("==", BuiltinClass::Equal);
+	declareBuiltinClass("<", BuiltinClass::Less);
+	declareBuiltinClass("<=", BuiltinClass::LessOrEqual);
+	declareBuiltinClass(">", BuiltinClass::Greater);
+	declareBuiltinClass(">=", BuiltinClass::GreaterOrEqual);
+
+	defineConversion(BuiltinClass::Integer, PrimitiveType::Integer, "fromInteger");
+
+	defineBinaryMonoidalOperator(BuiltinClass::Mul, Token::Mul, "mul");
+	defineBinaryMonoidalOperator(BuiltinClass::Add, Token::Add, "add");
+
+	defineBinaryCompareOperator(BuiltinClass::Equal, Token::Equal, "eq");
+	defineBinaryCompareOperator(BuiltinClass::Less, Token::LessThan, "lt");
+	defineBinaryCompareOperator(BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
+	defineBinaryCompareOperator(BuiltinClass::Greater, Token::GreaterThan, "gt");
+	defineBinaryCompareOperator(BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
 
 	m_voidType = m_typeSystem.type(PrimitiveType::Void, {});
 	m_wordType = m_typeSystem.type(PrimitiveType::Word, {});
 	m_integerType = m_typeSystem.type(PrimitiveType::Integer, {});
 	m_unitType = m_typeSystem.type(PrimitiveType::Unit, {});
 	m_boolType = m_typeSystem.type(PrimitiveType::Bool, {});
+
 	m_env = &m_typeSystem.env();
 
 	{
