@@ -1086,8 +1086,8 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 	if (typeClassDeclaration)
 		return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
-	auto& annotation = _analysis.annotation<TypeRegistration>();
-	auto& inferenceAnnotation = _analysis.annotation<TypeInference>();
+	auto const& annotation = _analysis.annotation<TypeRegistration>();
+	auto const& inferenceAnnotation = _analysis.annotation<TypeInference>();
 	return annotation.builtinClassInstantiations.at(
 		inferenceAnnotation.builtinClassesByName.at(
 			_analysis.typeSystem().typeClassName(_class)
