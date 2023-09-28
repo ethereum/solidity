@@ -2162,6 +2162,9 @@ public:
 	Expression const& rightExpression() const { return *m_right; }
 	Token getOperator() const { return m_operator; }
 
+	/// @returns the given arguments in the order they were written.
+	std::vector<ASTPointer<Expression const>> arguments() const { return {m_left, m_right}; }
+
 	FunctionType const* userDefinedFunctionType() const;
 
 	BinaryOperationAnnotation& annotation() const override;

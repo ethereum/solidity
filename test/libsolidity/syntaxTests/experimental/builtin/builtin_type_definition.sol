@@ -12,7 +12,7 @@ type pair(T, U) = __builtin("pair");
 
 contract C {
     fallback() external {
-        let v: void;
+        let v: void->void;
 
         let b: bool;
         bool.abs(bool.rep(b));

@@ -837,6 +837,7 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 
 		members->second.emplace("abs", TypeMember{helper.functionType(*underlyingType, definedType)});
 		members->second.emplace("rep", TypeMember{helper.functionType(definedType, *underlyingType)});
+		annotation().underlyingTypes[constructor] = *underlyingType;
 	}
 
 	if (helper.isPrimitiveType(definedType, PrimitiveType::Pair))

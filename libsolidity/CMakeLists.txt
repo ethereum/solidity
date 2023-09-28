@@ -207,6 +207,8 @@ set(sources
 	experimental/ast/TypeSystemHelper.h
 	experimental/codegen/Common.h
 	experimental/codegen/Common.cpp
+	experimental/codegen/IRVariable.cpp
+	experimental/codegen/IRVariable.h
 	experimental/codegen/IRGenerationContext.h
 	experimental/codegen/IRGenerator.cpp
 	experimental/codegen/IRGenerator.h
