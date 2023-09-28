@@ -115,11 +115,18 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 				{
 					assert(static_cast<size_t>(error.locationStart) <= source.length());
 					assert(static_cast<size_t>(error.locationEnd) <= source.length());
-					bool isWarning = (error.type == Error::Type::Warning);
 					for (int i = error.locationStart; i < error.locationEnd; i++)
-						if (isWarning)
+						if (error.type == Error::Type::Info)
 						{
 							if (sourceFormatting[static_cast<size_t>(i)] == util::formatting::RESET)
+								sourceFormatting[static_cast<size_t>(i)] = util::formatting::GRAY_BACKGROUND;
+						}
+						else if (error.type == Error::Type::Warning)
+						{
+							if (
+								sourceFormatting[static_cast<size_t>(i)] == util::formatting::RESET ||
+								sourceFormatting[static_cast<size_t>(i)] == util::formatting::GRAY_BACKGROUND
+							)
 								sourceFormatting[static_cast<size_t>(i)] = util::formatting::ORANGE_BACKGROUND_256;
 						}
 						else
@@ -190,7 +197,11 @@ void CommonSyntaxTest::printErrorList(
 		for (auto const& error: _errorList)
 		{
 			{
-				util::AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == Error::Type::Warning) ? YELLOW : RED});
+				util::AnsiColorized scope(
+					_stream,
+					_formatted,
+					{BOLD, error.type == Error::Type::Info ? WHITE : (error.type == Error::Type::Warning ? YELLOW : RED)}
+				);
 				_stream << _linePrefix << Error::formatErrorType(error.type);
 				if (error.errorId.has_value())
 					_stream << ' ' << error.errorId->error;
