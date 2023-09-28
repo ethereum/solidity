@@ -45,8 +45,6 @@ public:
 	};
 	struct GlobalAnnotation
 	{
-		std::map<TypeClass, std::map<std::string, Type>> typeClassFunctions;
-		std::map<Token, std::tuple<TypeClass, std::string>> operators;
 		std::map<TypeConstructor, std::map<std::string, TypeMember>> members;
 	};
 	bool visit(Block const&) override { return true; }
