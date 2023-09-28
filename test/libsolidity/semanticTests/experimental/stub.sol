@@ -1,5 +1,9 @@
 pragma experimental solidity;
 
+type word = __builtin("word");
+type bool = __builtin("bool");
+type integer = __builtin("integer");
+
 type uint256 = word;
 
 instantiation uint256: + {
@@ -34,7 +38,7 @@ instantiation word: * {
     }
 }
 
-instantiation word: integer {
+instantiation word: Integer {
     function fromInteger(x:integer) -> word {
         //x + x;
     }

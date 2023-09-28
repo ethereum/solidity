@@ -1,5 +1,8 @@
 pragma experimental solidity;
 
+type word = __builtin("word");
+type bool = __builtin("bool");
+
 type Cat = word;
 type Dog = word;
 
@@ -59,7 +62,6 @@ contract C {
 
 // ====
 // EVMVersion: >=constantinople
-// ====
 // compileViaYul: true
 // ----
 // () -> 1, 0

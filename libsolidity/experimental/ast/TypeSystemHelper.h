@@ -35,6 +35,7 @@ struct TypeSystemHelpers
 	TypeSystem const& typeSystem;
 	std::tuple<TypeConstructor, std::vector<Type>> destTypeConstant(Type _type) const;
 	bool isTypeConstant(Type _type) const;
+	bool isPrimitiveType(Type _type, PrimitiveType _primitiveType) const;
 	Type tupleType(std::vector<Type> _elements) const;
 	std::vector<Type> destTupleType(Type _tupleType) const;
 	Type sumType(std::vector<Type> _elements) const;

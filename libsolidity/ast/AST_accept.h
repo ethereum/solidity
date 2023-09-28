@@ -1128,6 +1128,18 @@ void TypeClassName::accept(ASTConstVisitor& _visitor) const
 	}
 	_visitor.endVisit(*this);
 }
+
+void Builtin::accept(ASTVisitor& _visitor)
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
+void Builtin::accept(ASTConstVisitor& _visitor) const
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
 /// @}
 
 }
