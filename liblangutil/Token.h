@@ -269,17 +269,13 @@ namespace solidity::langutil
 	T(Leave, "leave", 0)                                               \
 	\
 	T(NonExperimentalEnd, nullptr, 0) /* used as non-experimental enum end marker */ \
-    /* Experimental Solidity specific keywords. */                     \
+	/* Experimental Solidity specific keywords. */                     \
 	K(Class, "class", 0)                                               \
 	K(Instantiation, "instantiation", 0)                               \
-	K(Word, "word", 0)                                                 \
-	K(Integer, "integer", 0)                                           \
+	K(Integer, "Integer", 0)                                           \
 	K(Itself, "itself", 0)                                             \
-	K(Void, "void", 0)                                                 \
-	K(Pair, "pair", 0)                                                 \
-	K(Fun, "fun", 0)                                                   \
-	K(Unit, "unit", 0)                                                 \
 	K(StaticAssert, "static_assert", 0)                                \
+	K(Builtin, "__builtin", 0)                                         \
 	T(ExperimentalEnd, nullptr, 0) /* used as experimental enum end marker */ \
 	\
 	/* Illegal token - not able to scan. */                            \
@@ -304,17 +300,7 @@ namespace TokenTraits
 	constexpr size_t count() { return static_cast<size_t>(Token::NUM_TOKENS); }
 
 	// Predicates
-	constexpr bool isElementaryTypeName(Token _token)
-	{
-		return
-			(Token::Int <= _token && _token < Token::TypesEnd) ||
-			_token == Token::Word ||
-			_token == Token::Void ||
-			_token == Token::Integer ||
-			_token == Token::Pair ||
-			_token == Token::Unit ||
-			_token == Token::Fun;
-	}
+	constexpr bool isElementaryTypeName(Token _token) { return Token::Int <= _token && _token < Token::TypesEnd; }
 	constexpr bool isAssignmentOp(Token tok) { return Token::Assign <= tok && tok <= Token::AssignMod; }
 	constexpr bool isBinaryOp(Token op) { return Token::Comma <= op && op <= Token::Exp; }
 	constexpr bool isCommutativeOp(Token op) { return op == Token::BitOr || op == Token::BitXor || op == Token::BitAnd ||
@@ -371,7 +357,6 @@ namespace TokenTraits
 			token == Token::Let ||
 			token == Token::Return ||
 			token == Token::Type ||
-			token == Token::Bool ||
 			token == Token::If ||
 			token == Token::Else ||
 			token == Token::Do ||
