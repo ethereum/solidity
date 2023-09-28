@@ -43,7 +43,13 @@ using namespace solidity::langutil;
 TypeInference::TypeInference(Analysis& _analysis):
 	m_analysis(_analysis),
 	m_errorReporter(_analysis.errorReporter()),
-	m_typeSystem(_analysis.typeSystem())
+	m_typeSystem(_analysis.typeSystem()),
+	m_env(&m_typeSystem.env()),
+	m_voidType(m_typeSystem.type(PrimitiveType::Void, {})),
+	m_wordType(m_typeSystem.type(PrimitiveType::Word, {})),
+	m_integerType(m_typeSystem.type(PrimitiveType::Integer, {})),
+	m_unitType(m_typeSystem.type(PrimitiveType::Unit, {})),
+	m_boolType(m_typeSystem.type(PrimitiveType::Bool, {}))
 {
 	TypeSystemHelpers helper{m_typeSystem};
 
@@ -119,14 +125,6 @@ TypeInference::TypeInference(Analysis& _analysis):
 	defineBinaryCompareOperator(BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
 	defineBinaryCompareOperator(BuiltinClass::Greater, Token::GreaterThan, "gt");
 	defineBinaryCompareOperator(BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
-
-	m_voidType = m_typeSystem.type(PrimitiveType::Void, {});
-	m_wordType = m_typeSystem.type(PrimitiveType::Word, {});
-	m_integerType = m_typeSystem.type(PrimitiveType::Integer, {});
-	m_unitType = m_typeSystem.type(PrimitiveType::Unit, {});
-	m_boolType = m_typeSystem.type(PrimitiveType::Bool, {});
-
-	m_env = &m_typeSystem.env();
 
 	{
 		auto [members, newlyInserted] = annotation().members.emplace(m_typeSystem.constructor(PrimitiveType::Bool), std::map<std::string, TypeMember>{});
