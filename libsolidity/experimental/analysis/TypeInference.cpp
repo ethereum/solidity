@@ -557,6 +557,9 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		[&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
 			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
 			{
+				// visiting the type class will re-visit this instantiation
+				typeClassDefinition->accept(*this);
+
 				// TODO: more error handling? Should be covered by the visit above.
 				solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
 				return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
