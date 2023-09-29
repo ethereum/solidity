@@ -249,7 +249,7 @@ Sort TypeEnvironment::sort(Type _type) const
 	}, _type);
 }
 
-TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::string _canonicalName, size_t _arguments, Declaration const* _declaration)
+TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::string _canonicalName, size_t _argumentCount, Declaration const* _declaration)
 {
 	solAssert(m_canonicalTypeNames.insert(_canonicalName).second, "Duplicate canonical type name.");
 	Sort baseSort{{primitiveClass(PrimitiveClass::Type)}};
@@ -257,16 +257,16 @@ TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::strin
 	m_typeConstructors.emplace_back(TypeConstructorInfo{
 		_name,
 		_canonicalName,
-		{Arity{std::vector<Sort>{_arguments, baseSort}, primitiveClass(PrimitiveClass::Type)}},
+		{Arity{std::vector<Sort>{_argumentCount, baseSort}, primitiveClass(PrimitiveClass::Type)}},
 		_declaration
 	});
 	TypeConstructor constructor{index};
-	if (_arguments)
+	if (_argumentCount > 0)
 	{
 		std::vector<Sort> argumentSorts;
-		std::generate_n(std::back_inserter(argumentSorts), _arguments, [&](){ return Sort{{primitiveClass(PrimitiveClass::Type)}}; });
+		std::generate_n(std::back_inserter(argumentSorts), _argumentCount, [&](){ return Sort{{primitiveClass(PrimitiveClass::Type)}}; });
 		std::vector<Type> argumentTypes;
-		std::generate_n(std::back_inserter(argumentTypes), _arguments, [&](){ return freshVariable({}); });
+		std::generate_n(std::back_inserter(argumentTypes), _argumentCount, [&](){ return freshVariable({}); });
 		auto error = instantiateClass(type(constructor, argumentTypes), Arity{argumentSorts, primitiveClass(PrimitiveClass::Type)});
 		solAssert(!error, *error);
 	}
@@ -300,8 +300,8 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 	// TODO: proper error handling
 	auto const& info = m_typeConstructors.at(_constructor.m_index);
 	solAssert(
-		info.arguments() == _arguments.size(),
-		fmt::format("Type constructor '{}' accepts {} type arguments (got {}).", constructorInfo(_constructor).name, info.arguments(), _arguments.size())
+		info.argumentCount() == _arguments.size(),
+		fmt::format("Type constructor '{}' accepts {} type arguments (got {}).", constructorInfo(_constructor).name, info.argumentCount(), _arguments.size())
 	);
 	return TypeConstant{_constructor, _arguments};
 }
@@ -342,9 +342,9 @@ std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, 
 		return "Invalid instance variable.";
 	auto [typeConstructor, typeArguments] = TypeSystemHelpers{*this}.destTypeConstant(_instanceVariable);
 	auto& typeConstructorInfo = m_typeConstructors.at(typeConstructor.m_index);
-	if (_arity.argumentSorts.size() != typeConstructorInfo.arguments())
+	if (_arity.argumentSorts.size() != typeConstructorInfo.argumentCount())
 		return "Invalid arity.";
-	if (typeArguments.size() != typeConstructorInfo.arguments())
+	if (typeArguments.size() != typeConstructorInfo.argumentCount())
 		return "Invalid arity.";
 
 	typeConstructorInfo.arities.emplace_back(_arity);

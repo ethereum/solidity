@@ -96,7 +96,7 @@ public:
 		std::vector<Arity> arities;
 		Declaration const* typeDeclaration = nullptr;
 
-		size_t arguments() const
+		size_t argumentCount() const
 		{
 			solAssert(!arities.empty());
 			return arities.front().argumentSorts.size();
@@ -129,7 +129,7 @@ public:
 		// TODO: proper error handling
 		return m_typeConstructors.at(_typeConstructor.m_index).canonicalName;
 	}
-	TypeConstructor declareTypeConstructor(std::string _name, std::string _canonicalName, size_t _arguments, Declaration const* _declaration);
+	TypeConstructor declareTypeConstructor(std::string _name, std::string _canonicalName, size_t _argumentCount, Declaration const* _declaration);
 	TypeConstructor constructor(PrimitiveType _type) const
 	{
 		return m_primitiveTypeConstructors.at(_type);
@@ -141,7 +141,7 @@ public:
 	size_t constructorArguments(TypeConstructor _typeConstructor) const
 	{
 		// TODO: error handling
-		return m_typeConstructors.at(_typeConstructor.m_index).arguments();
+		return m_typeConstructors.at(_typeConstructor.m_index).argumentCount();
 	}
 	TypeConstructorInfo const& constructorInfo(TypeConstructor _typeConstructor) const
 	{
