@@ -12,6 +12,7 @@ Compiler Features:
 
 Bugfixes:
  * AST: Fix wrong initial ID for Yul nodes in the AST.
+ * Code Generator: Fix output from via-IR code generator being dependent on which files were discovered by import callback. In some cases, a different AST ID assignment would alter the order of functions in internal dispatch, resulting in superficially different but semantically equivalent bytecode.
  * NatSpec: Fix internal error when requesting userdoc or devdoc for a contract that emits an event defined in a foreign contract or interface.
  * SMTChecker: Fix encoding error that causes loops to unroll after completion.
  * SMTChecker: Fix inconsistency on constant condition checks when ``while`` or ``for`` loops are unrolled before the condition check.

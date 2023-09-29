@@ -33,7 +33,7 @@ contract test {
 // EVMVersion: >=constantinople
 // ----
 // constructor()
-// gas irOptimized: 406679
+// gas irOptimized: 406691
 // gas legacy: 737652
 // gas legacyOptimized: 527036
 // encode_inline_asm(bytes): 0x20, 0 -> 0x20, 0
