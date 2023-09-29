@@ -115,7 +115,7 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 				{
 					assert(static_cast<size_t>(error.locationStart) <= source.length());
 					assert(static_cast<size_t>(error.locationEnd) <= source.length());
-					bool isWarning = error.type == "Warning";
+					bool isWarning = (error.type == Error::Type::Warning);
 					for (int i = error.locationStart; i < error.locationEnd; i++)
 						if (isWarning)
 						{
@@ -190,8 +190,8 @@ void CommonSyntaxTest::printErrorList(
 		for (auto const& error: _errorList)
 		{
 			{
-				util::AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
-				_stream << _linePrefix << error.type;
+				util::AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == Error::Type::Warning) ? YELLOW : RED});
+				_stream << _linePrefix << Error::formatErrorType(error.type);
 				if (error.errorId.has_value())
 					_stream << ' ' << error.errorId->error;
 				_stream << ": ";
@@ -244,7 +244,11 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		auto typeBegin = it;
 		while (it != line.end() && isalpha(*it, locale::classic()))
 			++it;
-		string errorType(typeBegin, it);
+
+		string errorTypeStr(typeBegin, it);
+		optional<Error::Type> errorType = Error::parseErrorType(errorTypeStr);
+		if (!errorType.has_value())
+			BOOST_THROW_EXCEPTION(runtime_error("Invalid error type: " + errorTypeStr));
 
 		skipWhitespace(it, line.end());
 
@@ -281,7 +285,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 
 		string errorMessage(it, line.end());
 		expectations.emplace_back(SyntaxTestError{
-			std::move(errorType),
+			errorType.value(),
 			std::move(errorId),
 			std::move(errorMessage),
 			std::move(sourceName),

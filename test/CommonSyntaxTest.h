@@ -34,7 +34,7 @@ namespace solidity::test
 
 struct SyntaxTestError
 {
-	std::string type;
+	langutil::Error::Type type;
 	std::optional<langutil::ErrorId> errorId;
 	std::string message;
 	std::string sourceName;
