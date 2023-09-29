@@ -19,12 +19,17 @@
 #include <test/CommonSyntaxTest.h>
 #include <test/Common.h>
 #include <test/TestCase.h>
+
+#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/StringUtils.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
+
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -116,21 +121,17 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 					assert(static_cast<size_t>(error.locationStart) <= source.length());
 					assert(static_cast<size_t>(error.locationEnd) <= source.length());
 					for (int i = error.locationStart; i < error.locationEnd; i++)
-						if (error.type == Error::Type::Info)
-						{
-							if (sourceFormatting[static_cast<size_t>(i)] == util::formatting::RESET)
-								sourceFormatting[static_cast<size_t>(i)] = util::formatting::GRAY_BACKGROUND;
-						}
-						else if (error.type == Error::Type::Warning)
-						{
-							if (
-								sourceFormatting[static_cast<size_t>(i)] == util::formatting::RESET ||
-								sourceFormatting[static_cast<size_t>(i)] == util::formatting::GRAY_BACKGROUND
-							)
-								sourceFormatting[static_cast<size_t>(i)] = util::formatting::ORANGE_BACKGROUND_256;
-						}
-						else
-							sourceFormatting[static_cast<size_t>(i)] = util::formatting::RED_BACKGROUND;
+					{
+						char const*& cellFormat = sourceFormatting[static_cast<size_t>(i)];
+						char const* infoBgColor = SourceReferenceFormatter::errorHighlightColor(Error::Severity::Info);
+
+						if (
+							(error.type != Error::Type::Warning && error.type != Error::Type::Info) ||
+							(error.type == Error::Type::Warning && (cellFormat == RESET || cellFormat == infoBgColor)) ||
+							(error.type == Error::Type::Info && cellFormat == RESET)
+						)
+							cellFormat = SourceReferenceFormatter::errorHighlightColor(Error::errorSeverity(error.type));
+					}
 				}
 
 			_stream << _linePrefix << sourceFormatting.front() << source.front();
@@ -200,7 +201,7 @@ void CommonSyntaxTest::printErrorList(
 				util::AnsiColorized scope(
 					_stream,
 					_formatted,
-					{BOLD, error.type == Error::Type::Info ? WHITE : (error.type == Error::Type::Warning ? YELLOW : RED)}
+					{BOLD, SourceReferenceFormatter::errorTextColor(Error::errorSeverity(error.type))}
 				);
 				_stream << _linePrefix << Error::formatErrorType(error.type);
 				if (error.errorId.has_value())
