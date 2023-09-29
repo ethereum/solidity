@@ -154,7 +154,7 @@ TypeSystem::TypeSystem()
 	Sort typeSort{{classType}};
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::TypeFunction).m_index).arities = {Arity{std::vector<Sort>{{typeSort},{typeSort}}, classType}};
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
-	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Itself).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
 }
 
 experimental::Type TypeSystem::freshVariable(Sort _sort)
