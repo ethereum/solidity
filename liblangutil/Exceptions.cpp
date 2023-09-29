@@ -29,6 +29,26 @@
 using namespace solidity;
 using namespace solidity::langutil;
 
+std::map<Error::Type, std::string> const Error::m_errorTypeNames = {
+	{Error::Type::IOError, "IOError"},
+	{Error::Type::FatalError, "FatalError"},
+	{Error::Type::JSONError, "JSONError"},
+	{Error::Type::InternalCompilerError, "InternalCompilerError"},
+	{Error::Type::CompilerError, "CompilerError"},
+	{Error::Type::Exception, "Exception"},
+	{Error::Type::CodeGenerationError, "CodeGenerationError"},
+	{Error::Type::DeclarationError, "DeclarationError"},
+	{Error::Type::DocstringParsingError, "DocstringParsingError"},
+	{Error::Type::ParserError, "ParserError"},
+	{Error::Type::SyntaxError, "SyntaxError"},
+	{Error::Type::TypeError, "TypeError"},
+	{Error::Type::UnimplementedFeatureError, "UnimplementedFeatureError"},
+	{Error::Type::YulException, "YulException"},
+	{Error::Type::SMTLogicException, "SMTLogicException"},
+	{Error::Type::Warning, "Warning"},
+	{Error::Type::Info, "Info"},
+};
+
 Error::Error(
 	ErrorId _errorId, Error::Type _type,
 	std::string const& _description,
