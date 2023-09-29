@@ -25,8 +25,6 @@
 #include <libsolutil/Visitor.h>
 
 #include <range/v3/to_container.hpp>
-#include <range/v3/view/drop_exactly.hpp>
-#include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/zip.hpp>
 
@@ -41,9 +39,11 @@ using namespace solidity::frontend::experimental;
 std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a, Type _b)
 {
 	std::vector<UnificationFailure> failures;
+
 	auto unificationFailure = [&]() {
 		failures.emplace_back(UnificationFailure{TypeMismatch{_a, _b}});
 	};
+
 	_a = resolve(_a);
 	_b = resolve(_b);
 	std::visit(util::GenericVisitor{
@@ -175,12 +175,13 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(Ty
 		if (auto const* typeVar = std::get_if<TypeVariable>(&maybeTypeVar))
 			if (typeVar->index() == _variable.index())
 				return {UnificationFailure{RecursiveUnification{_variable, _type}}};
+
 	Sort typeSort = sort(_type);
 	if (!(_variable.sort() <= typeSort))
-	{
 		return {UnificationFailure{SortMismatch{_type, _variable.sort() - typeSort}}};
-	}
-	solAssert(m_typeVariables.emplace(_variable.index(), _type).second);
+
+	auto [_, inserted] = m_typeVariables.emplace(_variable.index(), _type);
+	solAssert(inserted);
 	return {};
 }
 

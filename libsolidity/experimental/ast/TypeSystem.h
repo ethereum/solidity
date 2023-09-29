@@ -95,21 +95,25 @@ public:
 		std::string canonicalName;
 		std::vector<Arity> arities;
 		Declaration const* typeDeclaration = nullptr;
+
 		size_t arguments() const
 		{
 			solAssert(!arities.empty());
 			return arities.front().argumentSorts.size();
 		}
 	};
+
 	struct TypeClassInfo
 	{
 		Type typeVariable;
 		std::string name;
 		Declaration const* classDeclaration = nullptr;
 	};
+
 	TypeSystem();
 	TypeSystem(TypeSystem const&) = delete;
 	TypeSystem const& operator=(TypeSystem const&) = delete;
+
 	Type type(PrimitiveType _typeConstructor, std::vector<Type> _arguments) const
 	{
 		return type(m_primitiveTypeConstructors.at(_typeConstructor), std::move(_arguments));
@@ -172,6 +176,7 @@ public:
 
 private:
 	friend class TypeEnvironment;
+
 	size_t m_numTypeVariables = 0;
 	std::map<PrimitiveType, TypeConstructor> m_primitiveTypeConstructors;
 	std::map<PrimitiveClass, TypeClass> m_primitiveTypeClasses;

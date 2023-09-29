@@ -46,7 +46,7 @@ bool DebugWarner::visitNode(ASTNode const& _node)
 		Sort sort = m_analysis.typeSystem().env().sort(type);
 		std::string sortString;
 		if (sort.classes.size() != 1 || *sort.classes.begin() != m_analysis.typeSystem().primitiveClass(PrimitiveClass::Type))
-			sortString = ":" + TypeSystemHelpers{m_analysis.typeSystem()}.sortToString(m_analysis.typeSystem().env().sort(type));
+			sortString = ":" + TypeSystemHelpers{m_analysis.typeSystem()}.sortToString(sort);
 		m_errorReporter.info(
 			4164_error,
 			_node.location(),

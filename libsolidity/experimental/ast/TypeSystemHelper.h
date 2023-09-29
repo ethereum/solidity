@@ -33,6 +33,7 @@ std::optional<BuiltinClass> builtinClassFromToken(langutil::Token _token);
 struct TypeSystemHelpers
 {
 	TypeSystem const& typeSystem;
+
 	std::tuple<TypeConstructor, std::vector<Type>> destTypeConstant(Type _type) const;
 	bool isTypeConstant(Type _type) const;
 	bool isPrimitiveType(Type _type, PrimitiveType _primitiveType) const;
@@ -46,14 +47,17 @@ struct TypeSystemHelpers
 	Type typeFunctionType(Type _argType, Type _resultType) const;
 	std::tuple<Type, Type> destTypeFunctionType(Type _functionType) const;
 	bool isTypeFunctionType(Type _type) const;
+
 	std::string sortToString(Sort _sort) const;
 };
 
 struct TypeEnvironmentHelpers
 {
 	TypeEnvironment const& env;
+
 	std::string typeToString(Type const& _type) const;
 	std::string canonicalTypeName(Type _type) const;
+
 	std::vector<Type> typeVars(Type _type) const;
 };
 

@@ -85,10 +85,13 @@ public:
 	{
 		return m_index != _rhs.m_index;
 	}
+
 private:
 	friend class TypeSystem;
+
 	TypeConstructor(std::size_t _index): m_index(_index) {}
-	std::size_t m_index = 0;
+
+	std::size_t m_index{};
 };
 
 struct TypeConstant
@@ -118,20 +121,24 @@ public:
 	{
 		return m_index != _rhs.m_index;
 	}
+
 private:
 	friend class TypeSystem;
+
 	TypeClass(std::size_t _index): m_index(_index) {}
-	std::size_t m_index = 0;
+
+	std::size_t m_index{};
 };
 
 struct Sort
 {
-	std::set<TypeClass> classes;
 	bool operator==(Sort const& _rhs) const;
 	bool operator!=(Sort const& _rhs) const { return !operator==(_rhs); }
 	bool operator<=(Sort const& _rhs) const;
 	Sort operator+(Sort const& _rhs) const;
 	Sort operator-(Sort const& _rhs) const;
+
+	std::set<TypeClass> classes;
 };
 
 struct Arity
@@ -144,11 +151,17 @@ struct TypeVariable
 {
 	std::size_t index() const { return m_index; }
 	Sort const& sort() const { return m_sort; }
+
 private:
 	friend class TypeSystem;
-	std::size_t m_index = 0;
+
+	TypeVariable(std::size_t _index, Sort _sort):
+		m_index(_index),
+		m_sort(std::move(_sort))
+	{}
+
+	std::size_t m_index{};
 	Sort m_sort;
-	TypeVariable(std::size_t _index, Sort _sort): m_index(_index), m_sort(std::move(_sort)) {}
 };
 
 }

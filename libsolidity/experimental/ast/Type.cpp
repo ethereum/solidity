@@ -48,15 +48,14 @@ bool Sort::operator<=(Sort const& _rhs) const
 
 Sort Sort::operator+(Sort const& _rhs) const
 {
-	Sort result { classes };
+	Sort result{classes};
 	result.classes += _rhs.classes;
 	return result;
 }
 
-
 Sort Sort::operator-(Sort const& _rhs) const
 {
-	Sort result { classes };
+	Sort result{classes};
 	result.classes -= _rhs.classes;
 	return result;
 }
