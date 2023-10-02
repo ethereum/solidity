@@ -403,12 +403,11 @@ void StructDefinition::insertEip712EncodedSubtypes(std::set<std::string>& subtyp
 				declaration = m_members[i]->type()->typeDefinition();
 				break;
 			case Type::Category::Array:
+				if (auto const* arrayType = dynamic_cast<ArrayType const*>(m_members[i]->type()))
 				{
-					auto const* arrayType = dynamic_cast<ArrayType const*>(m_members[i]->type());
-					solAssert(!!arrayType);
-					if (auto finalyBaseType = dynamic_cast<StructType const*>(arrayType->finalBaseType(false)))
+					if (auto finalBaseType = dynamic_cast<StructType const*>(arrayType->finalBaseType(false)))
 					{
-						declaration = finalyBaseType->typeDefinition();
+						declaration = finalBaseType->typeDefinition();
 					}
 				}
 				break;

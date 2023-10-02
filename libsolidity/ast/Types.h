@@ -357,7 +357,11 @@ public:
 	/// @returns the canonical name of this type for use in library function signatures.
 	virtual std::string canonicalName() const { return toString(true); }
 	virtual std::string humanReadableName() const { return toString(); }
-	virtual std::string eip712TypeName() const { return encodingType()->toString(true); }
+	virtual std::string eip712TypeName() const
+	{
+		solAssert(isEIP712AllowedStructMemberType(), "Invalid type ...");
+		return encodingType()->toString(true);
+	}
 	virtual bool isEIP712AllowedStructMemberType() const { return false; }
 	/// @returns the signature of this type in external functions, i.e. `uint256` for integers
 	/// or `(uint256,bytes8)[2]` for an array of structs. If @a _structsByName,
