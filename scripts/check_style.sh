@@ -85,16 +85,27 @@ FORMATERROR=$(
     # unqualified move()/forward() checks, i.e. make sure that std::move() and std::forward() are used instead of move() and forward()
     preparedGrep "move\(.+\)" | grep -v "std::move" | grep -E "[^a-z]move"
     preparedGrep "forward\(.+\)" | grep -v "std::forward" | grep -E "[^a-z]forward"
-    # make sure `using namespace std` is not used in INCLUDE_DIRECTORIES
-    # shellcheck disable=SC2068,SC2068
-    grep -nIE -d skip "using namespace std;" ${NAMESPACE_STD_FREE_FILES[@]}
 ) | grep -E -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/" || true
 )
 
-if [[ "$FORMATERROR" != "" ]]
+# Special error handling for `using namespace std;` exclusion, since said statement can be present in the test directory
+# and its subdirectories, but is excluded in the above ruleset. In order to have consistent codestyle with regards to
+# std namespace usage, test directory must also be covered.
+FORMATSTDERROR=$(
+(
+    # make sure `using namespace std` is not used in INCLUDE_DIRECTORIES
+    # shellcheck disable=SC2068,SC2068
+    grep -nIE -d skip "using namespace std;" ${NAMESPACE_STD_FREE_FILES[@]}
+) || true
+)
+
+# Merge errors into single string
+FORMATEDERRORS="$FORMATERROR$FORMATSTDERROR"
+
+if [[ "$FORMATEDERRORS" != "" ]]
 then
     echo "Coding style error:" | tee -a "$ERROR_LOG"
-    echo "$FORMATERROR" | tee -a "$ERROR_LOG"
+    echo "$FORMATEDERRORS" | tee -a "$ERROR_LOG"
     scripts/ci/post_style_errors_on_github.sh "$ERROR_LOG"
     exit 1
 fi
