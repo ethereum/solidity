@@ -40,7 +40,6 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
 using Token = soltest::Token;
 
@@ -54,9 +53,9 @@ char TestFileParser::Scanner::peek() const noexcept
 	return *next;
 }
 
-vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
+std::vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
 {
-	vector<FunctionCall> calls;
+	std::vector<FunctionCall> calls;
 	if (!accept(Token::EOS))
 	{
 		soltestAssert(m_scanner.currentToken() == Token::Unknown, "");
@@ -84,8 +83,8 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						if (calls.empty())
 							BOOST_THROW_EXCEPTION(TestParserError("Expected function call before gas usage filter."));
 
-						string runType = m_scanner.currentLiteral();
-						if (set<string>{"ir", "irOptimized", "legacy", "legacyOptimized"}.count(runType) > 0)
+						std::string runType = m_scanner.currentLiteral();
+						if (std::set<std::string>{"ir", "irOptimized", "legacy", "legacyOptimized"}.count(runType) > 0)
 						{
 							m_scanner.scanNextToken();
 							expect(Token::Colon);
@@ -104,7 +103,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						if (accept(Token::Library, true))
 						{
 							expect(Token::Colon);
-							string libraryName;
+							std::string libraryName;
 							if (accept(Token::String))
 							{
 								call.libraryFile = m_scanner.currentLiteral();
@@ -184,7 +183,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 				catch (TestParserError const& _e)
 				{
 					BOOST_THROW_EXCEPTION(
-						TestParserError("Line " + to_string(_lineOffset + m_lineNumber) + ": " + _e.what())
+						TestParserError("Line " + std::to_string(_lineOffset + m_lineNumber) + ": " + _e.what())
 					);
 				}
 			}
@@ -193,12 +192,12 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 	return calls;
 }
 
-vector<string> TestFileParser::parseFunctionCallSideEffects()
+std::vector<std::string> TestFileParser::parseFunctionCallSideEffects()
 {
-	vector<string> result;
+	std::vector<std::string> result;
 	while (accept(Token::Tilde, false))
 	{
-		string effect = m_scanner.currentLiteral();
+		std::string effect = m_scanner.currentLiteral();
 		result.emplace_back(effect);
 		soltestAssert(m_scanner.currentToken() == Token::Tilde, "");
 		m_scanner.scanNextToken();
@@ -232,9 +231,9 @@ bool TestFileParser::expect(Token _token, bool const _advance)
 	return true;
 }
 
-pair<string, bool> TestFileParser::parseFunctionSignature()
+std::pair<std::string, bool> TestFileParser::parseFunctionSignature()
 {
-	string signature;
+	std::string signature;
 	bool hasName = false;
 
 	if (accept(Token::Identifier, false))
@@ -250,7 +249,7 @@ pair<string, bool> TestFileParser::parseFunctionSignature()
 	signature += formatToken(Token::LParen);
 	expect(Token::LParen);
 
-	string parameters;
+	std::string parameters;
 	if (!accept(Token::RParen, false))
 		parameters = parseIdentifierOrTuple();
 
@@ -367,7 +366,7 @@ Parameter TestFileParser::parseParameter()
 			BOOST_THROW_EXCEPTION(TestParserError("Invalid boolean literal."));
 
 		parameter.abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
-		string parsed = parseBoolean();
+		std::string parsed = parseBoolean();
 		parameter.rawString += parsed;
 		parameter.rawBytes = BytesUtils::applyAlign(
 			parameter.alignment,
@@ -381,7 +380,7 @@ Parameter TestFileParser::parseParameter()
 			BOOST_THROW_EXCEPTION(TestParserError("Invalid hex number literal."));
 
 		parameter.abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
-		string parsed = parseHexNumber();
+		std::string parsed = parseHexNumber();
 		parameter.rawString += parsed;
 		parameter.rawBytes = BytesUtils::applyAlign(
 			parameter.alignment,
@@ -396,7 +395,7 @@ Parameter TestFileParser::parseParameter()
 		if (parameter.alignment != Parameter::Alignment::None)
 			BOOST_THROW_EXCEPTION(TestParserError("Hex string literals cannot be aligned or padded."));
 
-		string parsed = parseString();
+		std::string parsed = parseString();
 		parameter.rawString += "hex\"" + parsed + "\"";
 		parameter.rawBytes = BytesUtils::convertHexNumber(parsed);
 		parameter.abiType = ABIType{
@@ -410,7 +409,7 @@ Parameter TestFileParser::parseParameter()
 		if (parameter.alignment != Parameter::Alignment::None)
 			BOOST_THROW_EXCEPTION(TestParserError("String literals cannot be aligned or padded."));
 
-		string parsed = parseString();
+		std::string parsed = parseString();
 		parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, parsed.size()};
 		parameter.rawString += "\"" + parsed + "\"";
 		parameter.rawBytes = BytesUtils::applyAlign(
@@ -424,12 +423,12 @@ Parameter TestFileParser::parseParameter()
 		auto type = isSigned ? ABIType::SignedDec : ABIType::UnsignedDec;
 
 		parameter.abiType = ABIType{type, ABIType::AlignRight, 32};
-		string parsed = parseDecimalNumber();
+		std::string parsed = parseDecimalNumber();
 		parameter.rawString += parsed;
 		if (isSigned)
 			parsed = "-" + parsed;
 
-		if (parsed.find('.') == string::npos)
+		if (parsed.find('.') == std::string::npos)
 			parameter.rawBytes = BytesUtils::applyAlign(
 				parameter.alignment,
 				parameter.abiType,
@@ -458,9 +457,9 @@ Parameter TestFileParser::parseParameter()
 	return parameter;
 }
 
-string TestFileParser::parseIdentifierOrTuple()
+std::string TestFileParser::parseIdentifierOrTuple()
 {
-	string identOrTuple;
+	std::string identOrTuple;
 
 	auto parseArrayDimensions = [&]()
 	{
@@ -499,43 +498,43 @@ string TestFileParser::parseIdentifierOrTuple()
 	return identOrTuple;
 }
 
-string TestFileParser::parseBoolean()
+std::string TestFileParser::parseBoolean()
 {
-	string literal = m_scanner.currentLiteral();
+	std::string literal = m_scanner.currentLiteral();
 	expect(Token::Boolean);
 	return literal;
 }
 
-string TestFileParser::parseComment()
+std::string TestFileParser::parseComment()
 {
-	string comment = m_scanner.currentLiteral();
+	std::string comment = m_scanner.currentLiteral();
 	if (accept(Token::Comment, true))
 		return comment;
-	return string{};
+	return std::string{};
 }
 
-string TestFileParser::parseDecimalNumber()
+std::string TestFileParser::parseDecimalNumber()
 {
-	string literal = m_scanner.currentLiteral();
+	std::string literal = m_scanner.currentLiteral();
 	expect(Token::Number);
 	return literal;
 }
 
-string TestFileParser::parseHexNumber()
+std::string TestFileParser::parseHexNumber()
 {
-	string literal = m_scanner.currentLiteral();
+	std::string literal = m_scanner.currentLiteral();
 	expect(Token::HexNumber);
 	return literal;
 }
 
-string TestFileParser::parseString()
+std::string TestFileParser::parseString()
 {
-	string literal = m_scanner.currentLiteral();
+	std::string literal = m_scanner.currentLiteral();
 	expect(Token::String);
 	return literal;
 }
 
-void TestFileParser::Scanner::readStream(istream& _stream)
+void TestFileParser::Scanner::readStream(std::istream& _stream)
 {
 	std::string line;
 	// TODO: std::getline(..) removes newlines '\n', if present. This could be improved.
@@ -644,16 +643,16 @@ void TestFileParser::Scanner::scanNextToken()
 				m_currentLiteral = "";
 			}
 			else
-				BOOST_THROW_EXCEPTION(TestParserError("Unexpected character: '" + string{current()} + "'"));
+				BOOST_THROW_EXCEPTION(TestParserError("Unexpected character: '" + std::string{current()} + "'"));
 			break;
 		}
 	}
 	while (m_currentToken == Token::Whitespace);
 }
 
-string TestFileParser::Scanner::readLine()
+std::string TestFileParser::Scanner::readLine()
 {
-	string line;
+	std::string line;
 	// Right now the scanner discards all (real) new-lines '\n' in TestFileParser::Scanner::readStream(..).
 	// Token::NewLine is defined as `//`, and NOT '\n'. We are just searching here for the next `/`.
 	// Note that `/` anywhere else than at the beginning of a line is currently forbidden (TODO: until we fix newline handling).
@@ -666,9 +665,9 @@ string TestFileParser::Scanner::readLine()
 	return line;
 }
 
-string TestFileParser::Scanner::scanComment()
+std::string TestFileParser::Scanner::scanComment()
 {
-	string comment;
+	std::string comment;
 	advance();
 
 	while (current() != '#')
@@ -679,9 +678,9 @@ string TestFileParser::Scanner::scanComment()
 	return comment;
 }
 
-string TestFileParser::Scanner::scanIdentifierOrKeyword()
+std::string TestFileParser::Scanner::scanIdentifierOrKeyword()
 {
-	string identifier;
+	std::string identifier;
 	identifier += current();
 	while (langutil::isIdentifierPart(peek()))
 	{
@@ -691,9 +690,9 @@ string TestFileParser::Scanner::scanIdentifierOrKeyword()
 	return identifier;
 }
 
-string TestFileParser::Scanner::scanDecimalNumber()
+std::string TestFileParser::Scanner::scanDecimalNumber()
 {
-	string number;
+	std::string number;
 	number += current();
 	while (langutil::isDecimalDigit(peek()) || '.' == peek())
 	{
@@ -703,9 +702,9 @@ string TestFileParser::Scanner::scanDecimalNumber()
 	return number;
 }
 
-string TestFileParser::Scanner::scanHexNumber()
+std::string TestFileParser::Scanner::scanHexNumber()
 {
-	string number;
+	std::string number;
 	number += current();
 	while (langutil::isHexDigit(peek()))
 	{
@@ -715,9 +714,9 @@ string TestFileParser::Scanner::scanHexNumber()
 	return number;
 }
 
-string TestFileParser::Scanner::scanString()
+std::string TestFileParser::Scanner::scanString()
 {
-	string str;
+	std::string str;
 	advance();
 
 	while (current() != '\"')
@@ -766,7 +765,7 @@ string TestFileParser::Scanner::scanString()
 // TODO: use fromHex() from CommonData
 char TestFileParser::Scanner::scanHexPart()
 {
-	auto toLower = [](char _c) -> char { return tolower(_c, locale::classic()); };
+	auto toLower = [](char _c) -> char { return tolower(_c, std::locale::classic()); };
 
 	advance(); // skip 'x'
 
