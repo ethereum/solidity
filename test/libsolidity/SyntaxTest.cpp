@@ -28,7 +28,6 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
@@ -39,7 +38,7 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 SyntaxTest::SyntaxTest(
-	string const& _filename,
+	std::string const& _filename,
 	langutil::EVMVersion _evmVersion,
 	Error::Severity _minSeverity
 ):
@@ -80,14 +79,14 @@ void SyntaxTest::parseAndAnalyze()
 			// failing compilation after successful analysis is a rare case,
 			// it assumes that errors contain exactly one error, and the error is of type Error::Type::CodeGenerationError
 			if (codeGeneretionErrorCount != 1 || errorCount != 1)
-				BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
+				BOOST_THROW_EXCEPTION(std::runtime_error("Compilation failed even though analysis was successful."));
 		}
 	}
 	catch (UnimplementedFeatureError const& _e)
 	{
 		m_errorList.emplace_back(SyntaxTestError{
 			"UnimplementedFeatureError",
-			nullopt,
+			std::nullopt,
 			errorMessage(_e),
 			"",
 			-1,
@@ -107,7 +106,7 @@ void SyntaxTest::filterObtainedErrors()
 
 		int locationStart = -1;
 		int locationEnd = -1;
-		string sourceName;
+		std::string sourceName;
 		if (SourceLocation const* location = currentError->sourceLocation())
 		{
 			locationStart = location->start;
