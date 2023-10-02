@@ -30,6 +30,8 @@ Semantic Only Changes
 This section lists the changes that are semantic-only, thus potentially
 hiding new and different behavior in existing code.
 
+.. _state-variable-initialization-order:
+
 - The order of state variable initialization has changed in case of inheritance.
 
   The order used to be:

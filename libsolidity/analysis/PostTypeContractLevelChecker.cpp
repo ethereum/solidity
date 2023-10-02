@@ -26,7 +26,6 @@
 #include <libsolutil/FunctionSelector.h>
 #include <liblangutil/ErrorReporter.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -48,10 +47,10 @@ bool PostTypeContractLevelChecker::check(ContractDefinition const& _contract)
 		""
 	);
 
-	map<uint32_t, map<string, SourceLocation>> errorHashes;
+	std::map<uint32_t, std::map<std::string, SourceLocation>> errorHashes;
 	for (ErrorDefinition const* error: _contract.interfaceErrors())
 	{
-		string signature = error->functionType(true)->externalSignature();
+		std::string signature = error->functionType(true)->externalSignature();
 		uint32_t hash = util::selectorFromSignatureU32(signature);
 		// Fail if there is a different signature for the same hash.
 		if (!errorHashes[hash].empty() && !errorHashes[hash].count(signature))

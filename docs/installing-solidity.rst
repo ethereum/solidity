@@ -323,7 +323,7 @@ The following are dependencies for all builds of Solidity:
 | `CMake`_ (version 3.21.3+ on      | Cross-platform build file generator.                  |
 | Windows, 3.13+ otherwise)         |                                                       |
 +-----------------------------------+-------------------------------------------------------+
-| `Boost`_ (version 1.77 on         | C++ libraries.                                        |
+| `Boost`_ (version 1.77+ on        | C++ libraries.                                        |
 | Windows, 1.65+ otherwise)         |                                                       |
 +-----------------------------------+-------------------------------------------------------+
 | `Git`_                            | Command-line tool for retrieving source code.         |
@@ -380,7 +380,7 @@ Prerequisites - macOS
 ---------------------
 
 For macOS builds, ensure that you have the latest version of
-`Xcode installed <https://developer.apple.com/xcode/download/>`_.
+`Xcode installed <https://developer.apple.com/xcode/resources/>`_.
 This contains the `Clang C++ compiler <https://en.wikipedia.org/wiki/Clang>`_, the
 `Xcode IDE <https://en.wikipedia.org/wiki/Xcode>`_ and other Apple development
 tools that are required for building C++ applications on OS X.
@@ -410,7 +410,7 @@ You need to install the following dependencies for Windows builds of Solidity:
 +-----------------------------------+-------------------------------------------------------+
 | `Visual Studio 2019`_  (Optional) | C++ compiler and dev environment.                     |
 +-----------------------------------+-------------------------------------------------------+
-| `Boost`_ (version 1.77)           | C++ libraries.                                        |
+| `Boost`_ (version 1.77+)          | C++ libraries.                                        |
 +-----------------------------------+-------------------------------------------------------+
 
 If you already have one IDE and only need the compiler and libraries,

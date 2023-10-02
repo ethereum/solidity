@@ -43,7 +43,6 @@
 #include <string>
 #include <iostream>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::evmasm;
 
@@ -90,7 +89,7 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 				RevertStrings::Default,
 				solidity::test::CommonOptions::get().optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal()
 			);
-			compiler.compileContract(*contract, map<ContractDefinition const*, shared_ptr<Compiler const>>{}, bytes());
+			compiler.compileContract(*contract, std::map<ContractDefinition const*, std::shared_ptr<Compiler const>>{}, bytes());
 
 			return compiler.runtimeAssembly().items();
 		}
@@ -102,7 +101,7 @@ void printAssemblyLocations(AssemblyItems const& _items)
 {
 	auto printRepeated = [](SourceLocation const& _loc, size_t _repetitions)
 	{
-		cout <<
+		std::cout <<
 			"\t\tvector<SourceLocation>(" <<
 			_repetitions <<
 			", SourceLocation{" <<
@@ -111,10 +110,10 @@ void printAssemblyLocations(AssemblyItems const& _items)
 			_loc.end <<
 			", make_shared<string>(\"" <<
 			*_loc.sourceName <<
-			"\")}) +" << endl;
+			"\")}) +" << std::endl;
 	};
 
-	vector<SourceLocation> locations;
+	std::vector<SourceLocation> locations;
 	for (auto const& item: _items)
 		locations.push_back(item.location());
 	size_t repetitions = 0;
@@ -136,15 +135,15 @@ void printAssemblyLocations(AssemblyItems const& _items)
 		printRepeated(*previousLoc, repetitions);
 }
 
-void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> const& _locations)
+void checkAssemblyLocations(AssemblyItems const& _items, std::vector<SourceLocation> const& _locations)
 {
 	BOOST_CHECK_EQUAL(_items.size(), _locations.size());
-	for (size_t i = 0; i < min(_items.size(), _locations.size()); ++i)
+	for (size_t i = 0; i < std::min(_items.size(), _locations.size()); ++i)
 	{
 		if (_items[i].location().start != _locations[i].start ||
 			_items[i].location().end != _locations[i].end)
 		{
-			BOOST_CHECK_MESSAGE(false, "Location mismatch for item " + to_string(i) + ". Found the following locations:");
+			BOOST_CHECK_MESSAGE(false, "Location mismatch for item " + std::to_string(i) + ". Found the following locations:");
 			printAssemblyLocations(_items);
 			return;
 		}
@@ -158,7 +157,7 @@ BOOST_AUTO_TEST_SUITE(Assembly)
 
 BOOST_AUTO_TEST_CASE(location_test)
 {
-	string sourceCode = R"(
+	std::string sourceCode = R"(
 	pragma abicoder v1;
 	contract test {
 		function f() public returns (uint256 a) {
@@ -166,34 +165,34 @@ BOOST_AUTO_TEST_CASE(location_test)
 		}
 	}
 	)";
-	AssemblyItems items = compileContract(make_shared<CharStream>(sourceCode, ""));
-	shared_ptr<string> sourceName = make_shared<string>();
+	AssemblyItems items = compileContract(std::make_shared<CharStream>(sourceCode, ""));
+	std::shared_ptr<std::string> sourceName = std::make_shared<std::string>();
 	bool hasShifts = solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting();
 
-	auto codegenCharStream = make_shared<CharStream>("", "--CODEGEN--");
+	auto codegenCharStream = std::make_shared<CharStream>("", "--CODEGEN--");
 
-	vector<SourceLocation> locations;
+	std::vector<SourceLocation> locations;
 	if (solidity::test::CommonOptions::get().optimize)
 		locations =
-			vector<SourceLocation>(31, SourceLocation{23, 103, sourceName}) +
-			vector<SourceLocation>(1, SourceLocation{41, 100, sourceName}) +
-			vector<SourceLocation>(1, SourceLocation{93, 95, sourceName}) +
-			vector<SourceLocation>(15, SourceLocation{41, 100, sourceName});
+			std::vector<SourceLocation>(31, SourceLocation{23, 103, sourceName}) +
+			std::vector<SourceLocation>(1, SourceLocation{41, 100, sourceName}) +
+			std::vector<SourceLocation>(1, SourceLocation{93, 95, sourceName}) +
+			std::vector<SourceLocation>(15, SourceLocation{41, 100, sourceName});
 	else
 		locations =
-			vector<SourceLocation>(hasShifts ? 31 : 32, SourceLocation{23, 103, sourceName}) +
-			vector<SourceLocation>(24, SourceLocation{41, 100, sourceName}) +
-			vector<SourceLocation>(1, SourceLocation{70, 79, sourceName}) +
-			vector<SourceLocation>(1, SourceLocation{93, 95, sourceName}) +
-			vector<SourceLocation>(2, SourceLocation{86, 95, sourceName}) +
-			vector<SourceLocation>(2, SourceLocation{41, 100, sourceName});
+			std::vector<SourceLocation>(hasShifts ? 31 : 32, SourceLocation{23, 103, sourceName}) +
+			std::vector<SourceLocation>(24, SourceLocation{41, 100, sourceName}) +
+			std::vector<SourceLocation>(1, SourceLocation{70, 79, sourceName}) +
+			std::vector<SourceLocation>(1, SourceLocation{93, 95, sourceName}) +
+			std::vector<SourceLocation>(2, SourceLocation{86, 95, sourceName}) +
+			std::vector<SourceLocation>(2, SourceLocation{41, 100, sourceName});
 	checkAssemblyLocations(items, locations);
 }
 
 
 BOOST_AUTO_TEST_CASE(jump_type)
 {
-	auto sourceCode = make_shared<CharStream>(R"(
+	auto sourceCode = std::make_shared<CharStream>(R"(
 	pragma abicoder v1;
 	contract C {
 		function f(uint a) public pure returns (uint t) {
@@ -206,7 +205,7 @@ BOOST_AUTO_TEST_CASE(jump_type)
 	)", "");
 	AssemblyItems items = compileContract(sourceCode);
 
-	string jumpTypes;
+	std::string jumpTypes;
 	for (AssemblyItem const& item: items)
 		if (item.getJumpType() != AssemblyItem::JumpType::Ordinary)
 			jumpTypes += item.getJumpTypeAsString() + "\n";

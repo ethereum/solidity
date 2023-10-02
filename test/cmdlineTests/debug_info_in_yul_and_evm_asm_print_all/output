@@ -189,12 +189,11 @@ object "C_6" {
                 /// @src 0:60:101  "contract C {..."
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_1)))
+                    if eq(0x26121ff0, shr(224, calldataload(0)))
                     {
-                        if callvalue() { revert(_1, _1) }
-                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        return(_1, _1)
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
+                        return(0, 0)
                     }
                 }
                 revert(0, 0)

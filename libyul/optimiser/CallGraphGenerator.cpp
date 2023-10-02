@@ -25,7 +25,6 @@
 #include <libsolutil/CommonData.h>
 #include <stack>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -36,9 +35,9 @@ namespace
 struct CallGraphCycleFinder
 {
 	CallGraph const& callGraph;
-	set<YulString> containedInCycle{};
-	set<YulString> visited{};
-	vector<YulString> currentPath{};
+	std::set<YulString> containedInCycle{};
+	std::set<YulString> visited{};
+	std::vector<YulString> currentPath{};
 
 	void visit(YulString _function)
 	{
@@ -62,7 +61,7 @@ struct CallGraphCycleFinder
 };
 }
 
-set<YulString> CallGraph::recursiveFunctions() const
+std::set<YulString> CallGraph::recursiveFunctions() const
 {
 	CallGraphCycleFinder cycleFinder{*this};
 	// Visiting the root only is not enough, since there may be disconnected recursive functions.

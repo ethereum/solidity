@@ -34,7 +34,6 @@
 #include <limits>
 #include <tuple>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
@@ -58,10 +57,10 @@ bool ExpressionClasses::Expression::operator==(ExpressionClasses::Expression con
 			std::tie(_other.item->data(), _other.arguments, _other.sequenceNumber);
 }
 
-std::size_t ExpressionClasses::Expression::ExpressionHash::operator()(Expression const& _expression) const
+size_t ExpressionClasses::Expression::ExpressionHash::operator()(Expression const& _expression) const
 {
 	assertThrow(!!_expression.item, OptimizerException, "");
-	std::size_t seed = 0;
+	size_t seed = 0;
 	auto type = _expression.item->type();
 	boost::hash_combine(seed, type);
 
@@ -171,7 +170,7 @@ bool ExpressionClasses::knownNonZero(Id _c)
 
 u256 const* ExpressionClasses::knownConstant(Id _c)
 {
-	map<unsigned, Expression const*> matchGroups;
+	std::map<unsigned, Expression const*> matchGroups;
 	Pattern constant(Push);
 	constant.setMatchGroup(1, matchGroups);
 	if (!constant.matches(representative(_c), *this))
@@ -181,15 +180,15 @@ u256 const* ExpressionClasses::knownConstant(Id _c)
 
 AssemblyItem const* ExpressionClasses::storeItem(AssemblyItem const& _item)
 {
-	m_spareAssemblyItems.push_back(make_shared<AssemblyItem>(_item));
+	m_spareAssemblyItems.push_back(std::make_shared<AssemblyItem>(_item));
 	return m_spareAssemblyItems.back().get();
 }
 
-string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
+std::string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
 {
 	Expression const& expr = representative(_id);
-	stringstream str;
-	str << dec << expr.id << ":";
+	std::stringstream str;
+	str << std::dec << expr.id << ":";
 	if (expr.item)
 	{
 		str << *expr.item << "(";
@@ -212,25 +211,25 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr)
 		_expr.item->type() != Operation ||
 		!SemanticInformation::isDeterministic(*_expr.item)
 	)
-		return numeric_limits<unsigned>::max();
+		return std::numeric_limits<unsigned>::max();
 
 	if (auto match = rules.findFirstMatch(_expr, *this))
 	{
 		// Debug info
 		if (false)
 		{
-			cout << "Simplifying " << *_expr.item << "(";
+			std::cout << "Simplifying " << *_expr.item << "(";
 			for (Id arg: _expr.arguments)
-				cout << fullDAGToString(arg) << ", ";
-			cout << ")" << endl;
-			cout << "with rule " << match->pattern.toString() << endl;
-			cout << "to " << match->action().toString() << endl;
+				std::cout << fullDAGToString(arg) << ", ";
+			std::cout << ")" << std::endl;
+			std::cout << "with rule " << match->pattern.toString() << std::endl;
+			std::cout << "to " << match->action().toString() << std::endl;
 		}
 
 		return rebuildExpression(ExpressionTemplate(match->action(), _expr.item->location()));
 	}
 
-	return numeric_limits<unsigned>::max();
+	return std::numeric_limits<unsigned>::max();
 }
 
 ExpressionClasses::Id ExpressionClasses::rebuildExpression(ExpressionTemplate const& _template)

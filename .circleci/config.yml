@@ -88,6 +88,7 @@ commands:
     steps:
       - run:
           name: Generate bytecode reports for the selected preset
+          no_output_timeout: 30m
           command: |
             .circleci/parallel_bytecode_report.sh \
                 "<< parameters.label >>" \
@@ -178,47 +179,199 @@ commands:
           paths:
             - << parameters.install_path >>
 
-defaults:
+  # --------------------------------------------------------------------------
+  # Build Commands
+
+  setup_prerelease_commit_hash:
+    steps:
+      - run:
+          name: Store commit hash and prerelease
+          command: |
+            if [[ $CIRCLE_BRANCH == release || -n $CIRCLE_TAG ]]; then
+              echo -n > prerelease.txt;
+            else
+              date -u +"nightly.%Y.%-m.%-d" > prerelease.txt;
+            fi
+            echo -n "$CIRCLE_SHA1" > commit_hash.txt
+
+  run_build:
+    steps:
+      - run:
+          name: Build
+          command: scripts/ci/build.sh
+
+  run_build_ossfuzz:
+    steps:
+      - run:
+          name: Build_ossfuzz
+          command: scripts/ci/build_ossfuzz.sh
+
+  run_proofs:
+    steps:
+      - run:
+          name: Correctness proofs for optimization rules
+          command: scripts/run_proofs.sh
+
+  run_soltest:
+    steps:
+      - run:
+          name: soltest
+          no_output_timeout: 30m
+          command: .circleci/soltest.sh
+
+  run_soltest_all:
+    steps:
+      - run:
+          name: soltest_all
+          no_output_timeout: 30m
+          command: .circleci/soltest_all.sh
+
+  run_cmdline_tests:
+    steps:
+      - run:
+          name: command line tests
+          no_output_timeout: 30m
+          command: .circleci/parallel_cli_tests.py
+
+  run_docs_pragma_min_version:
+    steps:
+      - run:
+         name: docs pragma version check
+         command: scripts/docs_version_pragma_check.sh
 
   # --------------------------------------------------------------------------
-  # Build Templates
+  # Artifact Commands
 
-  - setup_prerelease_commit_hash: &setup_prerelease_commit_hash
-      name: Store commit hash and prerelease
-      command: |
-        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
-        echo -n "$CIRCLE_SHA1" > commit_hash.txt
+  store_artifacts_solc:
+    description: Store compiled solc executable as artifact
+    steps:
+      - store_artifacts:
+          path: build/solc/solc
+          destination: solc
 
-  - run_build: &run_build
-      name: Build
-      command: scripts/ci/build.sh
+  store_artifacts_yul_phaser:
+    steps:
+      - store_artifacts:
+          path: build/tools/yul-phaser
+          destination: yul-phaser
 
-  - run_build_ossfuzz: &run_build_ossfuzz
-      name: Build_ossfuzz
-      command: scripts/ci/build_ossfuzz.sh
+  persist_executables_to_workspace:
+    description: Persist compiled target executables to workspace
+    steps:
+      - persist_to_workspace:
+          root: build
+          paths:
+            - solc/solc
+            - test/soltest
+            - test/tools/solfuzzer
 
-  - run_proofs: &run_proofs
-      name: Correctness proofs for optimization rules
-      command: scripts/run_proofs.sh
+  persist_executables_to_workspace_osx:
+    description: Persist compiled target executables to workspace on macOS
+    steps:
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/solc/solc
+            - build/test/soltest
+            - build/test/tools/solfuzzer
 
-  - run_soltest: &run_soltest
-      name: soltest
-      no_output_timeout: 30m
-      command: ./.circleci/soltest.sh
+  persist_ossfuzz_executables_to_workspace:
+    description: Persist compiled OSSFUZZ executables to workspace
+    steps:
+      - persist_to_workspace:
+          root: build
+          paths:
+            - test/tools/ossfuzz/abiv2_proto_ossfuzz
+            - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
+            - test/tools/ossfuzz/const_opt_ossfuzz
+            - test/tools/ossfuzz/solc_mutator_ossfuzz
+            - test/tools/ossfuzz/solc_ossfuzz
+            - test/tools/ossfuzz/stack_reuse_codegen_ossfuzz
+            - test/tools/ossfuzz/strictasm_assembly_ossfuzz
+            - test/tools/ossfuzz/strictasm_diff_ossfuzz
+            - test/tools/ossfuzz/strictasm_opt_ossfuzz
+            - test/tools/ossfuzz/yul_proto_diff_ossfuzz
+            - test/tools/ossfuzz/yul_proto_diff_custom_mutate_ossfuzz
+            - test/tools/ossfuzz/yul_proto_ossfuzz
+            - test/tools/ossfuzz/sol_proto_ossfuzz
 
-  - run_soltest_all: &run_soltest_all
-      name: soltest_all
-      no_output_timeout: 30m
-      command: ./.circleci/soltest_all.sh
+  store_artifacts_test_results:
+    description: Store test output dir as artifact
+    steps:
+      - store_artifacts:
+          path: test_results/
+          destination: test_results/
 
-  - run_cmdline_tests: &run_cmdline_tests
-      name: command line tests
-      no_output_timeout: 30m
-      command: .circleci/parallel_cli_tests.py
+  # --------------------------------------------------------------------------
+  # Complex Build Commands
 
-  - run_docs_pragma_min_version: &run_docs_pragma_min_version
-      name: docs pragma version check
-      command: ./scripts/docs_version_pragma_check.sh
+  soltest:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      # NOTE: Different build jobs produce different soltest executables (release/debug,
+      # clang/gcc, windows/linux/macos, etc.). The executable used by these steps comes from the
+      # attached workspace and we only see the items added to the workspace by jobs we depend on.
+      - run_soltest
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
+      - matrix_notify_failure_unless_pr
+
+  test_lsp:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: Install dependencies
+          command: pip install --user deepdiff colorama
+      - run:
+          name: Executing solc LSP test suite
+          command: test/lsp.py build/solc/solc --non-interactive
+      - matrix_notify_failure_unless_pr
+
+  build:
+    steps:
+      - checkout
+      - run_build
+      - store_artifacts_solc
+      - store_artifacts_yul_phaser
+      - persist_executables_to_workspace
+      - matrix_notify_failure_unless_pr
+
+  soltest_all:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run_soltest_all
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
+      - matrix_notify_failure_unless_pr
+
+  cmdline_tests:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run_cmdline_tests
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
+      - matrix_notify_failure_unless_pr
+
+  install_dependencies_osx:
+    steps:
+      # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
+      # them each time. See https://github.com/ethereum/solidity/issues/12925.
+      - run:
+          name: Install build dependencies
+          command: .circleci/osx_install_dependencies.sh
+
+defaults:
 
   # --------------------------------------------------------------------------
   # Matrix templates
@@ -227,6 +380,8 @@ defaults:
       PRESETS:
         legacy-optimize
         legacy-no-optimize
+        via-ir-optimize
+        via-ir-no-optimize
 
   - bytecode_compare_preset_matrix: &bytecode_compare_preset_matrix
       parameters:
@@ -234,124 +389,10 @@ defaults:
           # NOTE: Keep in sync with preset list in bytecode_compare_env_presets
           - legacy-optimize
           - legacy-no-optimize
+          - via-ir-optimize
+          - via-ir-no-optimize
 
   # --------------------------------------------------------------------------
-  # Artifacts Templates
-
-  # compiled solc executable target
-  - artifacts_solc: &artifacts_solc
-      path: build/solc/solc
-      destination: solc
-
-  # windows artifacts
-  - artifact_solc_windows: &artifact_solc_windows
-      path: upload/
-
-  - artifact_yul_phaser: &artifact_yul_phaser
-      path: build/tools/yul-phaser
-      destination: yul-phaser
-
-  # compiled executable targets
-  - artifacts_executables: &artifacts_executables
-      root: build
-      paths:
-        - solc/solc
-        - test/soltest
-        - test/tools/solfuzzer
-
-  # compiled OSSFUZZ targets
-  - artifacts_executables_ossfuzz: &artifacts_executables_ossfuzz
-      root: build
-      paths:
-        - test/tools/ossfuzz/abiv2_proto_ossfuzz
-        - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
-        - test/tools/ossfuzz/const_opt_ossfuzz
-        - test/tools/ossfuzz/solc_mutator_ossfuzz
-        - test/tools/ossfuzz/solc_ossfuzz
-        - test/tools/ossfuzz/stack_reuse_codegen_ossfuzz
-        - test/tools/ossfuzz/strictasm_assembly_ossfuzz
-        - test/tools/ossfuzz/strictasm_diff_ossfuzz
-        - test/tools/ossfuzz/strictasm_opt_ossfuzz
-        - test/tools/ossfuzz/yul_proto_diff_ossfuzz
-        - test/tools/ossfuzz/yul_proto_diff_custom_mutate_ossfuzz
-        - test/tools/ossfuzz/yul_proto_ossfuzz
-        - test/tools/ossfuzz/sol_proto_ossfuzz
-
-  # test result output directory
-  - artifacts_test_results: &artifacts_test_results
-      path: test_results/
-      destination: test_results/
-
-  # --------------------------------------------------------------------------
-  # Step Templates
-
-  # store_test_results helper
-  - store_test_results: &store_test_results
-      path: test_results/
-
-  - steps_soltest: &steps_soltest
-      steps:
-        - checkout
-        - attach_workspace:
-            at: build
-        # NOTE: Different build jobs produce different soltest executables (release/debug,
-        # clang/gcc, windows/linux/macos, etc.). The executable used by these steps comes from the
-        # attached workspace and we only see the items added to the workspace by jobs we depend on.
-        - run: *run_soltest
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
-        - matrix_notify_failure_unless_pr
-
-  - steps_test_lsp: &steps_test_lsp
-      steps:
-        - checkout
-        - attach_workspace:
-            at: build
-        - run:
-            name: Install dependencies
-            command: pip install --user deepdiff colorama
-        - run:
-            name: Executing solc LSP test suite
-            command: ./test/lsp.py ./build/solc/solc --non-interactive
-        - matrix_notify_failure_unless_pr
-
-  - steps_build: &steps_build
-      steps:
-        - checkout
-        - run: *run_build
-        - store_artifacts: *artifacts_solc
-        - store_artifacts: *artifact_yul_phaser
-        - persist_to_workspace: *artifacts_executables
-        - matrix_notify_failure_unless_pr
-
-  - steps_soltest_all: &steps_soltest_all
-      steps:
-        - checkout
-        - attach_workspace:
-            at: build
-        - run: *run_soltest_all
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
-        - matrix_notify_failure_unless_pr
-
-  - steps_cmdline_tests: &steps_cmdline_tests
-      steps:
-        - checkout
-        - attach_workspace:
-            at: build
-        - run: *run_cmdline_tests
-        - store_test_results: *store_test_results
-        - store_artifacts: *artifacts_test_results
-        - matrix_notify_failure_unless_pr
-
-  - steps_install_dependencies_osx: &steps_install_dependencies_osx
-      steps:
-        # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
-        # them each time. See https://github.com/ethereum/solidity/issues/12925.
-        - run:
-            name: Install build dependencies
-            command: ./.circleci/osx_install_dependencies.sh
-
   # --------------------------------------------------------------------------
   # Base Image Templates
 
@@ -361,6 +402,7 @@ defaults:
       environment: &base_archlinux_env
         TERM: xterm
         MAKEFLAGS: -j 3
+        CPUs: 3
 
   - base_archlinux_large: &base_archlinux_large
       <<: *base_archlinux
@@ -368,6 +410,7 @@ defaults:
       environment: &base_archlinux_large_env
         <<: *base_archlinux_env
         MAKEFLAGS: -j 5
+        CPUs: 5
 
   - base_cimg_small: &base_cimg_small
       docker:
@@ -376,6 +419,7 @@ defaults:
       environment: &base_cimg_small_env
         TERM: xterm
         MAKEFLAGS: -j 2
+        CPUs: 2
 
   - base_ems_large: &base_ems_large
       docker:
@@ -384,6 +428,7 @@ defaults:
       environment: &base_ems_large_env
         TERM: xterm
         MAKEFLAGS: -j 5
+        CPUs: 5
 
   - base_node_small: &base_node_small
       docker:
@@ -392,6 +437,7 @@ defaults:
       environment: &base_node_small_env
         TERM: xterm
         MAKEFLAGS: -j 2
+        CPUs: 2
 
   - base_osx: &base_osx
       macos:
@@ -400,6 +446,7 @@ defaults:
       environment: &base_osx_env
         TERM: xterm
         MAKEFLAGS: -j5
+        CPUs: 5
 
   - base_osx_large: &base_osx_large
       <<: *base_osx
@@ -407,6 +454,7 @@ defaults:
       environment: &base_osx_large_env
         <<: *base_osx_env
         MAKEFLAGS: -j10
+        CPUs: 10
 
   - base_python_small: &base_python_small
       docker:
@@ -415,6 +463,7 @@ defaults:
       environment: &base_python_small_env
         TERM: xterm
         MAKEFLAGS: -j 2
+        CPUs: 2
 
   - base_ubuntu_clang: &base_ubuntu_clang
       docker:
@@ -422,6 +471,7 @@ defaults:
       environment: &base_ubuntu_clang_env
         TERM: xterm
         MAKEFLAGS: -j 3
+        CPUs: 3
 
   - base_ubuntu_clang_small: &base_ubuntu_clang_small
       <<: *base_ubuntu_clang
@@ -429,6 +479,7 @@ defaults:
       environment: &base_ubuntu_clang_small_env
         <<: *base_ubuntu_clang_env
         MAKEFLAGS: -j 2
+        CPUs: 2
 
   - base_ubuntu2004: &base_ubuntu2004
       docker:
@@ -436,6 +487,7 @@ defaults:
       environment: &base_ubuntu2004_env
         TERM: xterm
         MAKEFLAGS: -j 3
+        CPUs: 3
 
   - base_ubuntu2004_small: &base_ubuntu2004_small
       <<: *base_ubuntu2004
@@ -443,6 +495,7 @@ defaults:
       environment: &base_ubuntu2004_small_env
         <<: *base_ubuntu2004_env
         MAKEFLAGS: -j 2
+        CPUs: 2
 
   - base_ubuntu2004_xlarge: &base_ubuntu2004_xlarge
       <<: *base_ubuntu2004
@@ -450,6 +503,7 @@ defaults:
       environment: &base_ubuntu2004_xlarge_env
         <<: *base_ubuntu2004_env
         MAKEFLAGS: -j 10
+        CPUs: 10
 
   - base_ubuntu2204: &base_ubuntu2204
       docker:
@@ -457,6 +511,7 @@ defaults:
       environment: &base_ubuntu2204_env
         TERM: xterm
         MAKEFLAGS: -j 3
+        CPUs: 3
 
   - base_ubuntu2204_clang: &base_ubuntu2204_clang
       docker:
@@ -466,6 +521,7 @@ defaults:
         CC: clang
         CXX: clang++
         MAKEFLAGS: -j 3
+        CPUs: 3
 
   - base_ubuntu2204_clang_large: &base_ubuntu2204_clang_large
       <<: *base_ubuntu2204_clang
@@ -473,6 +529,7 @@ defaults:
       environment: &base_ubuntu2204_clang_large_env
         <<: *base_ubuntu2204_clang_env
         MAKEFLAGS: -j 5
+        CPUs: 5
 
   - base_ubuntu2204_small: &base_ubuntu2204_small
       <<: *base_ubuntu2204
@@ -480,6 +537,7 @@ defaults:
       environment: &base_ubuntu2204_small_env
         <<: *base_ubuntu2204_env
         MAKEFLAGS: -j 2
+        CPUs: 2
 
   - base_ubuntu2204_large: &base_ubuntu2204_large
       <<: *base_ubuntu2204
@@ -487,6 +545,7 @@ defaults:
       environment: &base_ubuntu2204_large_env
         <<: *base_ubuntu2204_env
         MAKEFLAGS: -j 5
+        CPUs: 5
 
   - base_ubuntu2204_xlarge: &base_ubuntu2204_xlarge
       <<: *base_ubuntu2204
@@ -494,6 +553,7 @@ defaults:
       environment: &base_ubuntu2204_xlarge_env
         <<: *base_ubuntu2204_env
         MAKEFLAGS: -j 10
+        CPUs: 10
 
   - base_win: &base_win
       executor:
@@ -686,7 +746,7 @@ defaults:
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
-      image: cimg/node:18.16
+      image: cimg/rust:1.70
 
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
       <<: *requires_b_ubu_static
@@ -743,7 +803,11 @@ jobs:
             pip install --user codespell
       - run:
           name: Check spelling
-          command: ~/.local/bin/codespell --skip "*.enc,.git,Dockerfile*,LICENSE,codespell_whitelist.txt,codespell_ignored_lines.txt" --ignore-words ./scripts/codespell_whitelist.txt --exclude-file ./scripts/codespell_ignored_lines.txt
+          command: |
+            ~/.local/bin/codespell \
+              --skip "*.enc,.git,Dockerfile*,LICENSE,codespell_whitelist.txt,codespell_ignored_lines.txt" \
+              --ignore-words scripts/codespell_whitelist.txt \
+              --exclude-file scripts/codespell_ignored_lines.txt
       - matrix_notify_failure_unless_pr
 
   chk_docs_examples:
@@ -757,7 +821,7 @@ jobs:
           command: sudo npm install -g solhint
       - run:
           name: Test Docs examples
-          command: ./test/docsCodeStyle.sh
+          command: test/docsCodeStyle.sh
       - matrix_notify_failure_unless_pr
 
   chk_coding_style:
@@ -771,13 +835,13 @@ jobs:
             sudo apt install -y shellcheck
       - run:
           name: Check for C++ coding style
-          command: ./scripts/check_style.sh
+          command: scripts/check_style.sh
       - run:
           name: checking shell scripts
-          command: ./scripts/chk_shellscripts/chk_shellscripts.sh
+          command: scripts/chk_shellscripts/chk_shellscripts.sh
       - run:
           name: Check for broken symlinks
-          command: ./scripts/check_symlinks.sh
+          command: scripts/check_symlinks.sh
       - matrix_notify_failure_unless_pr
 
   chk_errorcodes:
@@ -786,7 +850,7 @@ jobs:
       - checkout
       - run:
           name: Check for error codes
-          command: ./scripts/error_codes.py --check
+          command: scripts/error_codes.py --check
       - matrix_notify_failure_unless_pr
 
   chk_pylint:
@@ -806,7 +870,7 @@ jobs:
       - run: pylint --version
       - run:
           name: Linting Python Scripts
-          command: ./scripts/pylint_all.py
+          command: scripts/pylint_all.py
       - matrix_notify_failure_unless_pr
 
   chk_antlr_grammar:
@@ -820,7 +884,7 @@ jobs:
             sudo apt install -y openjdk-17-jdk
       - run:
           name: Run tests
-          command: ./scripts/test_antlr_grammar.sh
+          command: scripts/test_antlr_grammar.sh
       - matrix_notify_failure_unless_pr
 
   chk_buglist:
@@ -835,7 +899,7 @@ jobs:
             npm install mktemp
       - run:
           name: Test buglist
-          command: ./test/buglistTests.js
+          command: test/buglistTests.js
       - matrix_notify_failure_unless_pr
 
   chk_proofs:
@@ -844,14 +908,14 @@ jobs:
       - checkout
       - install_python3:
           packages: z3-solver
-      - run: *run_proofs
+      - run_proofs
       - matrix_notify_failure_unless_pr
 
   chk_docs_pragma_min_version:
     <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - run: *run_docs_pragma_min_version
+      - run_docs_pragma_min_version
       - matrix_notify_failure_unless_pr
 
   t_ubu_pyscripts:
@@ -877,7 +941,8 @@ jobs:
     # this runs 2x faster on xlarge but takes 4x more resources (compared to medium).
     # Enough other jobs depend on it that it's worth it though.
     <<: *base_ubuntu2204_xlarge
-    <<: *steps_build
+    steps:
+      - build
 
   # x64 ASAN build, for testing for memory related bugs
   b_ubu_asan: &b_ubu_asan
@@ -887,14 +952,16 @@ jobs:
       <<: *base_ubuntu2204_env
       CMAKE_OPTIONS: -DSANITIZE=address
       CMAKE_BUILD_TYPE: Release
-    <<: *steps_build
+    steps:
+      - build
 
   b_ubu_clang: &b_ubu_clang
     <<: *base_ubuntu2204_clang_large
     environment:
       <<: *base_ubuntu2204_clang_large_env
       MAKEFLAGS: -j 10
-    <<: *steps_build
+    steps:
+      - build
 
   b_ubu_san_clang:
     # This runs a bit faster on large and xlarge but on nightly efficiency matters more.
@@ -905,7 +972,8 @@ jobs:
     environment:
       <<: *base_ubuntu2204_clang_env
       CMAKE_OPTIONS: << parameters.cmake_options >>
-    <<: *steps_build
+    steps:
+      - build
 
   b_ubu_force_release: &b_ubu_force_release
     <<: *b_ubu
@@ -924,7 +992,7 @@ jobs:
       CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
-      - run: *run_build
+      - run_build
       - run:
           name: strip binary
           command: strip build/solc/solc
@@ -947,8 +1015,8 @@ jobs:
       CMAKE_BUILD_TYPE: Debug
     steps:
       - checkout
-      - run: *run_build
-      - persist_to_workspace: *artifacts_executables
+      - run_build
+      - persist_executables_to_workspace
       - matrix_notify_failure_unless_pr
 
   t_ubu_codecov:
@@ -967,11 +1035,11 @@ jobs:
       - run:
           name: "Code Coverage: Syntax Tests"
           command: codecov --flags syntax --gcov-root build
-      - run: *run_soltest
+      - run_soltest
       - run:
           name: "Coverage: All"
           command: codecov --flags all --gcov-root build
-      - store_artifacts: *artifacts_test_results
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   # Builds in C++20 mode and uses debug build in order to speed up.
@@ -985,16 +1053,16 @@ jobs:
       MAKEFLAGS: -j 10
     steps:
       - checkout
-      - run: *run_build
+      - run_build
       - matrix_notify_failure_unless_pr
 
   b_ubu_ossfuzz: &b_ubu_ossfuzz
     <<: *base_ubuntu_clang
     steps:
       - checkout
-      - run: *setup_prerelease_commit_hash
-      - run: *run_build_ossfuzz
-      - persist_to_workspace: *artifacts_executables_ossfuzz
+      - setup_prerelease_commit_hash
+      - run_build_ossfuzz
+      - persist_ossfuzz_executables_to_workspace
       - matrix_notify_failure_unless_pr
 
   t_ubu_ossfuzz: &t_ubu_ossfuzz
@@ -1009,8 +1077,9 @@ jobs:
             git clone https://github.com/ethereum/solidity-fuzzing-corpus /tmp/solidity-fuzzing-corpus
             mkdir -p test_results
             scripts/regressions.py -o test_results
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
 
   b_archlinux:
     <<: *base_archlinux_large
@@ -1024,9 +1093,9 @@ jobs:
           command: |
             pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake cvc4 git openssh tar
       - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
+      - run_build
+      - store_artifacts_solc
+      - persist_executables_to_workspace
       - matrix_notify_failure_unless_pr
 
   b_osx:
@@ -1036,18 +1105,11 @@ jobs:
       CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
-      - when:
-          condition: true
-          <<: *steps_install_dependencies_osx
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - store_artifacts: *artifact_yul_phaser
-      - persist_to_workspace:
-          root: .
-          paths:
-            - build/solc/solc
-            - build/test/soltest
-            - build/test/tools/solfuzzer
+      - install_dependencies_osx
+      - run_build
+      - store_artifacts_solc
+      - store_artifacts_yul_phaser
+      - persist_executables_to_workspace_osx
       - matrix_notify_failure_unless_pr
 
   t_osx_soltest: &t_osx_soltest
@@ -1058,14 +1120,13 @@ jobs:
       OPTIMIZE: 0
     steps:
       - checkout
-      - when:
-          condition: true
-          <<: *steps_install_dependencies_osx
+      - install_dependencies_osx
       - attach_workspace:
           at: .
-      - run: *run_soltest
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+      - run_soltest
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   t_osx_cli:
@@ -1073,13 +1134,11 @@ jobs:
     parallelism: 7 # Should match number of tests in .circleci/cli.sh
     steps:
       - checkout
-      - when:
-          condition: true
-          <<: *steps_install_dependencies_osx
+      - install_dependencies_osx
       - attach_workspace:
           at: .
-      - run: *run_cmdline_tests
-      - store_artifacts: *artifacts_test_results
+      - run_cmdline_tests
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   b_ems:
@@ -1110,10 +1169,10 @@ jobs:
     <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - run: *setup_prerelease_commit_hash
+      - setup_prerelease_commit_hash
       - run:
           name: Build documentation
-          command: ./docs/docs.sh
+          command: docs/docs.sh
       - store_artifacts:
           path: docs/_build/html/
           destination: docs-html
@@ -1122,11 +1181,13 @@ jobs:
   t_ubu_soltest_all: &t_ubu_soltest_all
     <<: *base_ubuntu2204_large
     parallelism: 50
-    <<: *steps_soltest_all
+    steps:
+      - soltest_all
 
   t_ubu_lsp: &t_ubu_lsp
     <<: *base_ubuntu2204_small
-    <<: *steps_test_lsp
+    steps:
+      - test_lsp
 
   t_archlinux_soltest: &t_archlinux_soltest
     <<: *base_archlinux
@@ -1143,9 +1204,7 @@ jobs:
           name: Install runtime dependencies
           command: |
             pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
-      - when:
-          condition: true
-          <<: *steps_soltest
+      - soltest
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
     <<: *base_ubuntu2204_clang
@@ -1157,7 +1216,8 @@ jobs:
       # The high parallelism in this job is causing the SMT tests to run out of memory,
       # so disabling for now.
       SOLTEST_FLAGS: --no-smt
-    <<: *steps_soltest
+    steps:
+      - soltest
 
   t_ubu_force_release_soltest_all: &t_ubu_force_release_soltest_all
     # NOTE: This definition is identical to t_ubu_soltest_all but in the workflow we make it depend on
@@ -1167,7 +1227,8 @@ jobs:
   t_ubu_cli: &t_ubu_cli
     <<: *base_ubuntu2204_small
     parallelism: 7 # Should match number of tests in .circleci/cli.sh
-    <<: *steps_cmdline_tests
+    steps:
+      - cmdline_tests
 
   t_ubu_force_release_cli: &t_ubu_force_release_cli
     <<: *t_ubu_cli
@@ -1191,7 +1252,8 @@ jobs:
       # Suppress CLN memory leak.
       # See: https://github.com/ethereum/solidity/issues/13891 for details.
       LSAN_OPTIONS: suppressions=/root/project/.circleci/cln-asan.supp:print_suppressions=0
-    <<: *steps_cmdline_tests
+    steps:
+      - cmdline_tests
 
   t_ubu_asan_soltest:
     <<: *base_ubuntu2204
@@ -1205,7 +1267,8 @@ jobs:
       # Suppress CLN memory leak.
       # See: https://github.com/ethereum/solidity/issues/13891 for details.
       LSAN_OPTIONS: suppressions=/root/project/.circleci/cln-asan.supp
-    <<: *steps_soltest
+    steps:
+      - soltest
 
   t_ubu_asan_clang_soltest:
     <<: *base_ubuntu2204_clang
@@ -1216,7 +1279,8 @@ jobs:
       OPTIMIZE: 0
       SOLTEST_FLAGS: --no-smt
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
-    <<: *steps_soltest
+    steps:
+      - soltest
 
   t_ubu_ubsan_clang_soltest:
     <<: *base_ubuntu2204_clang
@@ -1225,12 +1289,14 @@ jobs:
       <<: *base_ubuntu2204_clang_env
       EVM: << pipeline.parameters.evm-version >>
       SOLTEST_FLAGS: --no-smt
-    <<: *steps_soltest
+    steps:
+      - soltest
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2204_clang
     parallelism: 7 # Should match number of tests in .circleci/cli.sh
-    <<: *steps_cmdline_tests
+    steps:
+      - cmdline_tests
 
   t_ems_solcjs:
     # Unlike other t_ems jobs this one actually runs 2x faster on medium (compared to small).
@@ -1454,7 +1520,8 @@ jobs:
           name: "Run solc.exe to make sure build was successful."
           command: .\build\solc\Release\solc.exe --version
           shell: powershell.exe
-      - store_artifacts: *artifact_solc_windows
+      - store_artifacts:
+          path: upload/
       - persist_to_workspace:
           root: build
           paths:
@@ -1483,10 +1550,11 @@ jobs:
           command: python -m pip install --user deepdiff colorama
       - run:
           name: Executing solc LSP test suite
-          command: python ./test/lsp.py .\build\solc\Release\solc.exe --non-interactive
+          command: python test/lsp.py build\solc\Release\solc.exe --non-interactive
           shell: powershell.exe
-      - store_test_results: *store_test_results
-      - store_artifacts: *artifacts_test_results
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
   # Note: b_bytecode_ubu_static is required because b_ubu_static and b_ubu
@@ -1719,11 +1787,13 @@ workflows:
             - t_native_test_ext_yield_liquidator
             - t_native_test_ext_perpetual_pools
             - t_native_test_ext_uniswap
-            - t_native_test_ext_prb_math
             - t_native_test_ext_elementfi
             - t_native_test_ext_brink
             # NOTE: We are disabling gp2 tests due to constant failures.
             #- t_native_test_ext_gp2
+            # TODO: Dropping prb-math from the benchmarks since it is not implemented yet
+            # in the new Foundry external testing infrastructure.
+            # - t_native_test_ext_prb_math
             # NOTE: The external tests below were commented because they
             # depend on a specific version of hardhat which does not support shanghai EVM.
             #- t_native_test_ext_trident

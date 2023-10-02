@@ -79,9 +79,6 @@ public:
 		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {}
 	);
 
-	/// Returns @param _sourceCode prefixed with the version pragma and the abi coder v1 pragma,
-	/// the latter only if it is forced.
-	static std::string addPreamble(std::string const& _sourceCode);
 protected:
 	using CompilerStack = solidity::frontend::CompilerStack;
 	std::optional<uint8_t> m_eofVersion;

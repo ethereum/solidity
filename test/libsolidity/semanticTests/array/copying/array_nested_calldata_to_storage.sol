@@ -38,10 +38,10 @@ contract c {
 // compileViaYul: true
 // ----
 // test1(uint256[][]): 0x20, 2, 0x40, 0x40, 2, 23, 42 -> 2, 65
-// gas irOptimized: 180759
+// gas irOptimized: 180716
 // test2(uint256[][2]): 0x20, 0x40, 0x40, 2, 23, 42 -> 2, 65
-// gas irOptimized: 157562
+// gas irOptimized: 157544
 // test3(uint256[2][]): 0x20, 2, 23, 42, 23, 42 -> 2, 65
-// gas irOptimized: 134637
+// gas irOptimized: 134634
 // test4(uint256[2][2]): 23, 42, 23, 42 -> 65
-// gas irOptimized: 111270
+// gas irOptimized: 111252

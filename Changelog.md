@@ -1,7 +1,34 @@
-### 0.8.21 (unreleased)
+### 0.8.22 (unreleased)
+
+Language Features:
+ * Allow defining events at file level.
+
+
+Compiler Features:
+ * Parser: Remove the experimental error recovery mode (``--error-recovery`` / ``settings.parserErrorRecovery``).
+ * Yul Optimizer: If ``PUSH0`` is supported, favor zero literals over storing zero values in variables.
+ * Yul Optimizer: Run the ``Rematerializer`` and ``UnusedPruner`` steps at the end of the default clean-up sequence.
+
+
+Bugfixes:
+ * AST: Fix wrong initial ID for Yul nodes in the AST.
+ * Code Generator: Fix output from via-IR code generator being dependent on which files were discovered by import callback. In some cases, a different AST ID assignment would alter the order of functions in internal dispatch, resulting in superficially different but semantically equivalent bytecode.
+ * NatSpec: Fix internal error when requesting userdoc or devdoc for a contract that emits an event defined in a foreign contract or interface.
+ * SMTChecker: Fix encoding error that causes loops to unroll after completion.
+ * SMTChecker: Fix inconsistency on constant condition checks when ``while`` or ``for`` loops are unrolled before the condition check.
+
+
+### 0.8.21 (2023-07-19)
+
+Important Bugfixes:
+ * Code Generator: Always generate code for the expression in ``<expression>.selector`` in the legacy code generation pipeline.
+ * Yul Optimizer: Fix ``FullInliner`` step (``i``) not preserving the evaluation order of arguments passed into inlined functions in code that is not in expression-split form (i.e. when using a custom optimizer sequence in which the step not preceded by ``ExpressionSplitter`` (``x``)).
+
 
 Language Features:
  * Allow qualified access to events from other contracts.
+ * Relax restrictions on initialization of immutable variables. Reads and writes may now happen at any point at construction time outside of functions and modifiers. Explicit initialization is no longer mandatory.
+
 
 Compiler Features:
  * Commandline Interface: Add ``--ast-compact-json`` output in assembler mode.
@@ -9,22 +36,30 @@ Compiler Features:
  * Commandline Interface: Respect ``--optimize-yul`` and ``--no-optimize-yul`` in compiler mode and accept them in assembler mode as well. ``--optimize --no-optimize-yul`` combination now allows enabling EVM assembly optimizer without enabling Yul optimizer.
  * EWasm: Remove EWasm backend.
  * Parser: Introduce ``pragma experimental solidity``, which will enable an experimental language mode that in particular has no stability guarantees between non-breaking releases and is not suited for production use.
- * SMTChecker: Add ``--model-checker-print-query`` CLI option and ``settings.modelChecker.printQuery`` JSON option to output the SMTChecker queries in the SMTLIB2 format. This requires using `smtlib2` solver only.
+ * SMTChecker: Add ``--model-checker-print-query`` CLI option and ``settings.modelChecker.printQuery`` JSON option to output the SMTChecker queries in the SMTLIB2 format. This requires using ``smtlib2`` solver only.
  * Standard JSON Interface: Add ``ast`` file-level output for Yul input.
  * Standard JSON Interface: Add ``irAst`` and ``irOptimizedAst`` contract-level outputs for Solidity input, providing AST in compact JSON format for IR and optimized IR.
- * Yul Optimizer: Remove experimental `ReasoningBasedSimplifier` optimization step.
+ * Yul Optimizer: Remove experimental ``ReasoningBasedSimplifier`` optimization step.
  * Yul Optimizer: Stack-to-memory mover is now enabled by default whenever possible for via IR code generation and pure Yul compilation.
 
 
 Bugfixes:
+ * Code Generator: Disallow complex expressions whose results are types, built-ins, modules or some unassignable functions. The legacy code generation pipeline would not actually evaluate them, discarding any side-effects they might have.
+ * Code Generator: Fix not entirely deterministic order of functions in unoptimized Yul output. The choice of C++ compiler in some cases would result in different (but equivalent) bytecode (especially from native binaries vs emscripten binaries).
  * Commandline Interface: Fix internal error when using ``--stop-after parsing`` and requesting some of the outputs that require full analysis or compilation.
  * Commandline Interface: It is no longer possible to specify both ``--optimize-yul`` and ``--no-optimize-yul`` at the same time.
  * SMTChecker: Fix encoding of side-effects inside ``if`` and ``ternary conditional``statements in the BMC engine.
  * SMTChecker: Fix false negative when a verification target can be violated only by trusted external call from another public function.
+ * SMTChecker: Fix generation of invalid SMT-LIB2 scripts in BMC engine with trusted mode for external calls when CHC engine times out.
+ * SMTChecker: Fix internal error caused by incorrectly classifying external function call using function pointer as a public getter.
  * SMTChecker: Fix internal error caused by using external identifier to encode member access to functions that take an internal function as a parameter.
  * Standard JSON Interface: Fix an incomplete AST being returned when analysis is interrupted by certain kinds of fatal errors.
+ * Type Checker: Disallow using certain unassignable function types in complex expressions.
+ * Type Checker: Function declaration types referring to different declarations are no longer convertible to each other.
  * Yul Optimizer: Ensure that the assignment of memory slots for variables moved to memory does not depend on AST IDs that may depend on whether additional files are included during compilation.
+ * Yul Optimizer: Fix ``FullInliner`` step not ignoring code that is not in expression-split form.
  * Yul Optimizer: Fix optimized IR being unnecessarily passed through the Yul optimizer again before bytecode generation.
+
 
 AST Changes:
  * AST: Add the ``experimentalSolidity`` field to the ``SourceUnit`` nodes, which indicate whether the experimental parsing mode has been enabled via ``pragma experimental solidity``.

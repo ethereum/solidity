@@ -38,9 +38,10 @@ public:
 	}
 	SMTCheckerTest(std::string const& _filename);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
-
+	void setupCompiler(CompilerStack& _compiler) override;
 	void filterObtainedErrors() override;
+
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
 protected:
 	/*
@@ -62,6 +63,8 @@ protected:
 	ModelCheckerSettings m_modelCheckerSettings;
 
 	bool m_ignoreCex = false;
+
+	std::vector<SyntaxTestError> m_unfilteredErrorList;
 };
 
 }

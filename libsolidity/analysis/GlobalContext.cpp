@@ -29,8 +29,6 @@
 #include <libsolidity/ast/Types.h>
 #include <memory>
 
-using namespace std;
-
 namespace solidity::frontend
 {
 
@@ -65,10 +63,10 @@ int magicVariableToID(std::string const& _name)
 		solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
 
-inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariables()
+inline std::vector<std::shared_ptr<MagicVariableDeclaration const>> constructMagicVariables()
 {
-	static auto const magicVarDecl = [](string const& _name, Type const* _type) {
-		return make_shared<MagicVariableDeclaration>(magicVariableToID(_name), _name, _type);
+	static auto const magicVarDecl = [](std::string const& _name, Type const* _type) {
+		return std::make_shared<MagicVariableDeclaration>(magicVariableToID(_name), _name, _type);
 	};
 
 	return {
@@ -116,9 +114,9 @@ void GlobalContext::setCurrentContract(ContractDefinition const& _contract)
 	m_currentContract = &_contract;
 }
 
-vector<Declaration const*> GlobalContext::declarations() const
+std::vector<Declaration const*> GlobalContext::declarations() const
 {
-	vector<Declaration const*> declarations;
+	std::vector<Declaration const*> declarations;
 	declarations.reserve(m_magicVariables.size());
 	for (ASTPointer<MagicVariableDeclaration const> const& variable: m_magicVariables)
 		declarations.push_back(variable.get());
@@ -133,7 +131,7 @@ MagicVariableDeclaration const* GlobalContext::currentThis() const
 		if (m_currentContract)
 			type = TypeProvider::contract(*m_currentContract);
 		m_thisPointer[m_currentContract] =
-			make_shared<MagicVariableDeclaration>(magicVariableToID("this"), "this", type);
+			std::make_shared<MagicVariableDeclaration>(magicVariableToID("this"), "this", type);
 	}
 	return m_thisPointer[m_currentContract].get();
 }
@@ -146,7 +144,7 @@ MagicVariableDeclaration const* GlobalContext::currentSuper() const
 		if (m_currentContract)
 			type = TypeProvider::typeType(TypeProvider::contract(*m_currentContract, true));
 		m_superPointer[m_currentContract] =
-			make_shared<MagicVariableDeclaration>(magicVariableToID("super"), "super", type);
+			std::make_shared<MagicVariableDeclaration>(magicVariableToID("super"), "super", type);
 	}
 	return m_superPointer[m_currentContract].get();
 }

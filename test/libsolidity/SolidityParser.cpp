@@ -39,14 +39,13 @@ namespace solidity::frontend::test
 
 namespace
 {
-ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors, bool errorRecovery = false)
+ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors)
 {
 	ErrorReporter errorReporter(_errors);
 	auto charStream = CharStream(_source, "");
 	ASTPointer<SourceUnit> sourceUnit = Parser(
 		errorReporter,
-		solidity::test::CommonOptions::get().evmVersion(),
-		errorRecovery
+		solidity::test::CommonOptions::get().evmVersion()
 	).parse(charStream);
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
@@ -78,12 +77,12 @@ bool successParse(std::string const& _source)
 	return true;
 }
 
-Error getError(std::string const& _source, bool errorRecovery = false)
+Error getError(std::string const& _source)
 {
 	ErrorList errors;
 	try
 	{
-		parseText(_source, errors, errorRecovery);
+		parseText(_source, errors);
 	}
 	catch (FatalError const& /*_exception*/)
 	{

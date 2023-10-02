@@ -34,9 +34,9 @@
 #include <string>
 #include <tuple>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::evmasm;
+using namespace std::string_literals;
 
 namespace solidity::frontend::test
 {
@@ -55,34 +55,34 @@ BOOST_AUTO_TEST_SUITE(Assembler)
 
 BOOST_AUTO_TEST_CASE(all_assembly_items)
 {
-	map<string, unsigned> indices = {
+	std::map<std::string, unsigned> indices = {
 		{ "root.asm", 0 },
 		{ "sub.asm", 1 },
 		{ "verbatim.asm", 2 }
 	};
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	Assembly _assembly{evmVersion, false, {}};
-	auto root_asm = make_shared<string>("root.asm");
+	auto root_asm = std::make_shared<std::string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
 	Assembly _subAsm{evmVersion, false, {}};
-	auto sub_asm = make_shared<string>("sub.asm");
+	auto sub_asm = std::make_shared<std::string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 
 	Assembly _verbatimAsm(evmVersion, true, "");
-	auto verbatim_asm = make_shared<string>("verbatim.asm");
+	auto verbatim_asm = std::make_shared<std::string>("verbatim.asm");
 	_verbatimAsm.setSourceLocation({8, 18, verbatim_asm});
 
 	// PushImmutable
 	_subAsm.appendImmutable("someImmutable");
 	_subAsm.append(AssemblyItem(PushTag, 0));
 	_subAsm.append(Instruction::INVALID);
-	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
+	std::shared_ptr<Assembly> _subAsmPtr = std::make_shared<Assembly>(_subAsm);
 
 	_verbatimAsm.appendVerbatim({0xff,0xff}, 0, 0);
 	_verbatimAsm.appendVerbatim({0x74, 0x65, 0x73, 0x74}, 0, 1);
 	_verbatimAsm.append(Instruction::MSTORE);
-	shared_ptr<Assembly> _verbatimAsmPtr = make_shared<Assembly>(_verbatimAsm);
+	std::shared_ptr<Assembly> _verbatimAsmPtr = std::make_shared<Assembly>(_verbatimAsm);
 
 	// Tag
 	auto tag = _assembly.newTag();
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"\n"
 		"auxdata: 0x4266eeaa\n"
 	);
-	string json{
+	std::string json{
 		"{\".auxdata\":\"4266eeaa\",\".code\":["
 		"{\"begin\":1,\"end\":3,\"name\":\"tag\",\"source\":0,\"value\":\"1\"},"
 		"{\"begin\":1,\"end\":3,\"name\":\"JUMPDEST\",\"source\":0},"
@@ -221,16 +221,16 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 	// Tests for 1, 2, 3 number of immutables.
 	for (int numImmutables = 1; numImmutables <= 3; ++numImmutables)
 	{
-		BOOST_TEST_MESSAGE("NumImmutables: "s + to_string(numImmutables));
+		BOOST_TEST_MESSAGE("NumImmutables: "s + std::to_string(numImmutables));
 		// Tests for the cases 1, 2, 3 occurrences of an immutable reference.
 		for (int numActualRefs = 1; numActualRefs <= 3; ++numActualRefs)
 		{
-			BOOST_TEST_MESSAGE("NumActualRefs: "s + to_string(numActualRefs));
+			BOOST_TEST_MESSAGE("NumActualRefs: "s + std::to_string(numActualRefs));
 			auto const NumExpectedMappings =
 				(
 					2 +                        // PUSH <a> PUSH <b>
-					(numActualRefs - 1) * 5 +  // DUP DUP PUSH <n> ADD MTOSRE
-					3                          // PUSH <n> ADD MSTORkhbE
+					(numActualRefs - 1) * 5 +  // DUP DUP PUSH <n> ADD MSTORE
+					3                          // PUSH <n> ADD MSTORE
 				) * numImmutables;
 
 			auto constexpr NumSubs = 1;
@@ -238,21 +238,21 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				NumSubs +                  // PUSH <addr> for every sub assembly
 				1;                         // INVALID
 
-			auto assemblyName = make_shared<string>("root.asm");
-			auto subName = make_shared<string>("sub.asm");
+			auto assemblyName = std::make_shared<std::string>("root.asm");
+			auto subName = std::make_shared<std::string>("sub.asm");
 
-			map<string, unsigned> indices = {
+			std::map<std::string, unsigned> indices = {
 				{ *assemblyName, 0 },
 				{ *subName, 1 }
 			};
 
-			auto subAsm = make_shared<Assembly>(evmVersion, false, string{});
+			auto subAsm = std::make_shared<Assembly>(evmVersion, false, std::string{});
 			for (char i = 0; i < numImmutables; ++i)
 			{
 				for (int r = 0; r < numActualRefs; ++r)
 				{
 					subAsm->setSourceLocation(SourceLocation{10*i, 10*i + 6 + r, subName});
-					subAsm->appendImmutable(string(1, char('a' + i))); // "a", "b", ...
+					subAsm->appendImmutable(std::string(1, char('a' + i))); // "a", "b", ...
 				}
 			}
 
@@ -262,34 +262,34 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 				assembly.setSourceLocation({10*i, 10*i + 3+i, assemblyName});
 				assembly.append(u256(0x71));              // immutble value
 				assembly.append(u256(0));                 // target... modules?
-				assembly.appendImmutableAssignment(string(1, char('a' + i - 1)));
+				assembly.appendImmutableAssignment(std::string(1, char('a' + i - 1)));
 			}
 
 			assembly.appendSubroutine(subAsm);
 
 			checkCompilation(assembly);
 
-			string const sourceMappings = AssemblyItem::computeSourceMapping(assembly.items(), indices);
+			std::string const sourceMappings = AssemblyItem::computeSourceMapping(assembly.items(), indices);
 			auto const numberOfMappings = std::count(sourceMappings.begin(), sourceMappings.end(), ';');
 
 			LinkerObject const& obj = assembly.assemble();
-			string const disassembly = disassemble(obj.bytecode, evmVersion, "\n");
+			std::string const disassembly = disassemble(obj.bytecode, evmVersion, "\n");
 			auto const numberOfOpcodes = std::count(disassembly.begin(), disassembly.end(), '\n');
 
 			#if 0 // {{{ debug prints
 			{
 				LinkerObject const& subObj = assembly.sub(0).assemble();
-				string const subDisassembly = disassemble(subObj.bytecode, "\n");
-				cout << '\n';
-				cout << "### immutables: " << numImmutables << ", refs: " << numActualRefs << '\n';
-				cout << " - srcmap: \"" << sourceMappings << "\"\n";
-				cout << " - src mappings: " << numberOfMappings << '\n';
-				cout << " - opcodes: " << numberOfOpcodes << '\n';
-				cout << " - subs: " << assembly.numSubs() << '\n';
-				cout << " - sub opcodes " << std::count(subDisassembly.begin(), subDisassembly.end(), '\n') << '\n';
-				cout << " - sub srcmaps " << AssemblyItem::computeSourceMapping(subAsm->items(), indices) << '\n';
-				cout << " - main bytecode:\n\t" << disassemble(obj.bytecode, "\n\t");
-				cout << "\r - sub bytecode:\n\t" << disassemble(subObj.bytecode, "\n\t");
+				std::string const subDisassembly = disassemble(subObj.bytecode, "\n");
+				std::cout << '\n';
+				std::cout << "### immutables: " << numImmutables << ", refs: " << numActualRefs << '\n';
+				std::cout << " - srcmap: \"" << sourceMappings << "\"\n";
+				std::cout << " - src mappings: " << numberOfMappings << '\n';
+				std::cout << " - opcodes: " << numberOfOpcodes << '\n';
+				std::cout << " - subs: " << assembly.numSubs() << '\n';
+				std::cout << " - sub opcodes " << std::count(subDisassembly.begin(), subDisassembly.end(), '\n') << '\n';
+				std::cout << " - sub srcmaps " << AssemblyItem::computeSourceMapping(subAsm->items(), indices) << '\n';
+				std::cout << " - main bytecode:\n\t" << disassemble(obj.bytecode, "\n\t");
+				std::cout << "\r - sub bytecode:\n\t" << disassemble(subObj.bytecode, "\n\t");
 			}
 			#endif // }}}
 
@@ -301,22 +301,22 @@ BOOST_AUTO_TEST_CASE(immutables_and_its_source_maps)
 
 BOOST_AUTO_TEST_CASE(immutable)
 {
-	map<string, unsigned> indices = {
+	std::map<std::string, unsigned> indices = {
 		{ "root.asm", 0 },
 		{ "sub.asm", 1 }
 	};
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	Assembly _assembly{evmVersion, true, {}};
-	auto root_asm = make_shared<string>("root.asm");
+	auto root_asm = std::make_shared<std::string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
 	Assembly _subAsm{evmVersion, false, {}};
-	auto sub_asm = make_shared<string>("sub.asm");
+	auto sub_asm = std::make_shared<std::string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 	_subAsm.appendImmutable("someImmutable");
 	_subAsm.appendImmutable("someOtherImmutable");
 	_subAsm.appendImmutable("someImmutable");
-	shared_ptr<Assembly> _subAsmPtr = make_shared<Assembly>(_subAsm);
+	std::shared_ptr<Assembly> _subAsmPtr = std::make_shared<Assembly>(_subAsm);
 
 	_assembly.append(u256(42));
 	_assembly.append(u256(0));
@@ -330,9 +330,9 @@ BOOST_AUTO_TEST_CASE(immutable)
 
 	checkCompilation(_assembly);
 
-	string genericPush0 = evmVersion.hasPush0() ? "5f" : "6000";
+	std::string genericPush0 = evmVersion.hasPush0() ? "5f" : "6000";
 	// PUSH1 0x1b v/s PUSH1 0x19
-	string dataOffset = evmVersion.hasPush0() ? "6019" : "601b" ;
+	std::string dataOffset = evmVersion.hasPush0() ? "6019" : "601b" ;
 
 	BOOST_CHECK_EQUAL(
 		_assembly.assemble().toHex(),
@@ -406,8 +406,8 @@ BOOST_AUTO_TEST_CASE(subobject_encode_decode)
 	EVMVersion evmVersion = solidity::test::CommonOptions::get().evmVersion();
 	Assembly assembly{evmVersion, true, {}};
 
-	shared_ptr<Assembly> subAsmPtr = make_shared<Assembly>(evmVersion, false, string{});
-	shared_ptr<Assembly> subSubAsmPtr = make_shared<Assembly>(evmVersion, false, string{});
+	std::shared_ptr<Assembly> subAsmPtr = std::make_shared<Assembly>(evmVersion, false, std::string{});
+	std::shared_ptr<Assembly> subSubAsmPtr = std::make_shared<Assembly>(evmVersion, false, std::string{});
 
 	assembly.appendSubroutine(subAsmPtr);
 	subAsmPtr->appendSubroutine(subSubAsmPtr);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(subobject_encode_decode)
 	BOOST_REQUIRE_THROW(assembly.encodeSubPath({1}), solidity::evmasm::AssemblyException);
 	BOOST_REQUIRE_THROW(assembly.decodeSubPath(1), solidity::evmasm::AssemblyException);
 
-	vector<size_t> subPath{0, 0};
+	std::vector<size_t> subPath{0, 0};
 	BOOST_CHECK(assembly.decodeSubPath(assembly.encodeSubPath(subPath)) == subPath);
 }
 

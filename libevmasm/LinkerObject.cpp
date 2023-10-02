@@ -24,7 +24,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Keccak256.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
@@ -36,24 +35,24 @@ void LinkerObject::append(LinkerObject const& _other)
 	bytecode += _other.bytecode;
 }
 
-void LinkerObject::link(map<string, h160> const& _libraryAddresses)
+void LinkerObject::link(std::map<std::string, h160> const& _libraryAddresses)
 {
 	std::map<size_t, std::string> remainingRefs;
 	for (auto const& linkRef: linkReferences)
 		if (h160 const* address = matchLibrary(linkRef.second, _libraryAddresses))
-			copy(address->data(), address->data() + 20, bytecode.begin() + vector<uint8_t>::difference_type(linkRef.first));
+			copy(address->data(), address->data() + 20, bytecode.begin() + std::vector<uint8_t>::difference_type(linkRef.first));
 		else
 			remainingRefs.insert(linkRef);
 	linkReferences.swap(remainingRefs);
 }
 
-string LinkerObject::toHex() const
+std::string LinkerObject::toHex() const
 {
-	string hex = solidity::util::toHex(bytecode);
+	std::string hex = solidity::util::toHex(bytecode);
 	for (auto const& ref: linkReferences)
 	{
 		size_t pos = ref.first * 2;
-		string hash = libraryPlaceholder(ref.second);
+		std::string hash = libraryPlaceholder(ref.second);
 		hex[pos] = hex[pos + 1] = hex[pos + 38] = hex[pos + 39] = '_';
 		for (size_t i = 0; i < 36; ++i)
 			hex[pos + 2 + i] = hash.at(i);
@@ -61,15 +60,15 @@ string LinkerObject::toHex() const
 	return hex;
 }
 
-string LinkerObject::libraryPlaceholder(string const& _libraryName)
+std::string LinkerObject::libraryPlaceholder(std::string const& _libraryName)
 {
 	return "$" + keccak256(_libraryName).hex().substr(0, 34) + "$";
 }
 
 h160 const*
 LinkerObject::matchLibrary(
-	string const& _linkRefName,
-	map<string, h160> const& _libraryAddresses
+	std::string const& _linkRefName,
+	std::map<std::string, h160> const& _libraryAddresses
 )
 {
 	auto it = _libraryAddresses.find(_linkRefName);

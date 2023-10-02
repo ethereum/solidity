@@ -28,7 +28,6 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/GasEstimator.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
@@ -40,7 +39,7 @@ namespace solidity::frontend::test
 class GasMeterTestFramework: public SolidityExecutionFramework
 {
 public:
-	void compile(string const& _sourceCode)
+	void compile(std::string const& _sourceCode)
 	{
 		m_compiler.reset();
 		m_compiler.setSources({{"", "pragma solidity >=0.0;\n"
@@ -50,10 +49,10 @@ public:
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
 	}
 
-	void testCreationTimeGas(string const& _sourceCode, u256 const& _tolerance = u256(0))
+	void testCreationTimeGas(std::string const& _sourceCode, u256 const& _tolerance = u256(0))
 	{
 		compileAndRun(_sourceCode);
-		auto state = make_shared<KnownState>();
+		auto state = std::make_shared<KnownState>();
 		PathGasMeter meter(*m_compiler.assemblyItems(m_compiler.lastContractName()), solidity::test::CommonOptions::get().evmVersion());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
 		u256 bytecodeSize(m_compiler.runtimeObject(m_compiler.lastContractName()).bytecode.size());
@@ -74,7 +73,7 @@ public:
 
 	/// Compares the gas computed by PathGasMeter for the given signature (but unknown arguments)
 	/// against the actual gas usage computed by the VM on the given set of argument variants.
-	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants, u256 const& _tolerance = u256(0))
+	void testRunTimeGas(std::string const& _sig, std::vector<bytes> _argumentVariants, u256 const& _tolerance = u256(0))
 	{
 		u256 gasUsed = 0;
 		GasMeter::GasConsumption gas;
@@ -83,8 +82,8 @@ public:
 		{
 			sendMessage(hash.asBytes() + arguments, false, 0);
 			BOOST_CHECK(m_transactionSuccessful);
-			gasUsed = max(gasUsed, m_gasUsed);
-			gas = max(gas, gasForTransaction(hash.asBytes() + arguments, false));
+			gasUsed = std::max(gasUsed, m_gasUsed);
+			gas = std::max(gas, gasForTransaction(hash.asBytes() + arguments, false));
 		}
 
 		gas += GasEstimator(solidity::test::CommonOptions::get().evmVersion()).functionalEstimation(
@@ -171,7 +170,7 @@ BOOST_AUTO_TEST_CASE(branches)
 		}
 	)";
 	testCreationTimeGas(sourceCode, 1);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)}, 1);
+	testRunTimeGas("f(uint256)", std::vector<bytes>{encodeArgs(2), encodeArgs(8)}, 1);
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
@@ -196,7 +195,7 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	// However, GasMeter always assumes cold costs.
 	testRunTimeGas(
 		"f(uint256)",
-		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		std::vector<bytes>{encodeArgs(2), encodeArgs(8)},
 		m_evmVersion < EVMVersion::berlin() ?
 		u256(0) :
 		u256(2100)
@@ -225,13 +224,13 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 	// However, GasMeter always assumes cold costs.
 	testRunTimeGas(
 		"f(uint256)",
-		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		std::vector<bytes>{encodeArgs(2), encodeArgs(8)},
 		m_evmVersion < EVMVersion::berlin() ?
 		u256(0) :
 		u256(2100)
 	);
 
-	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("g(uint256)", std::vector<bytes>{encodeArgs(2)});
 }
 
 BOOST_AUTO_TEST_CASE(exponent_size)
@@ -250,9 +249,9 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2)});
-	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
-	testRunTimeGas("h(uint256)", vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("f(uint256)", std::vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("g(uint256)", std::vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("h(uint256)", std::vector<bytes>{encodeArgs(2)});
 }
 
 BOOST_AUTO_TEST_CASE(balance_gas)
@@ -265,7 +264,7 @@ BOOST_AUTO_TEST_CASE(balance_gas)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("lookup_balance(address)", vector<bytes>{encodeArgs(2), encodeArgs(100)});
+	testRunTimeGas("lookup_balance(address)", std::vector<bytes>{encodeArgs(2), encodeArgs(100)});
 }
 
 BOOST_AUTO_TEST_CASE(extcodesize_gas)
@@ -280,7 +279,7 @@ BOOST_AUTO_TEST_CASE(extcodesize_gas)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f()", vector<bytes>{encodeArgs()});
+	testRunTimeGas("f()", std::vector<bytes>{encodeArgs()});
 }
 
 BOOST_AUTO_TEST_CASE(regular_functions_exclude_fallback)
@@ -294,7 +293,7 @@ BOOST_AUTO_TEST_CASE(regular_functions_exclude_fallback)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("x()", vector<bytes>{encodeArgs()});
+	testRunTimeGas("x()", std::vector<bytes>{encodeArgs()});
 }
 
 BOOST_AUTO_TEST_CASE(complex_control_flow)
@@ -335,7 +334,7 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	)";
 	testCreationTimeGas(sourceCode);
 	// max gas is used for small x
-	testRunTimeGas("ln(int128)", vector<bytes>{encodeArgs(0), encodeArgs(10), encodeArgs(105), encodeArgs(30000)});
+	testRunTimeGas("ln(int128)", std::vector<bytes>{encodeArgs(0), encodeArgs(10), encodeArgs(105), encodeArgs(30000)});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

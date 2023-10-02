@@ -20,12 +20,39 @@ EXCLUDE_FILES=(
 EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
 EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
 
+NAMESPACE_STD_FREE_FILES=(
+    libevmasm/*
+    liblangutil/*
+    libsmtutil/*
+    libsolc/*
+    libsolidity/analysis/*
+    libsolidity/ast/*
+    libsolidity/codegen/ir/*
+    libsolidity/codegen/*
+    libsolidity/formal/*
+    libsolidity/interface/*
+    libsolidity/lsp/*
+    libsolidity/parsing/*
+    libsolutil/*
+    libyul/*
+    libyul/backends/evm/*
+    libyul/optimiser/*
+    solc/*
+    test/contracts/*
+    test/libevmasm/*
+    test/liblangutil/*
+    test/libsolutil/*
+    test/libsolidity/*
+    test/libsolidity/analysis/*
+    test/libsolidity/interface/*
+)
+
 (
 REPO_ROOT="$(dirname "$0")"/..
 cd "$REPO_ROOT" || exit 1
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
-    grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
+    grep -v "test/libsolidity/ASTJSON\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
 )
 
 if [[ "$WHITESPACE" != "" ]]
@@ -58,6 +85,9 @@ FORMATERROR=$(
     # unqualified move()/forward() checks, i.e. make sure that std::move() and std::forward() are used instead of move() and forward()
     preparedGrep "move\(.+\)" | grep -v "std::move" | grep -E "[^a-z]move"
     preparedGrep "forward\(.+\)" | grep -v "std::forward" | grep -E "[^a-z]forward"
+    # make sure `using namespace std` is not used in INCLUDE_DIRECTORIES
+    # shellcheck disable=SC2068,SC2068
+    grep -nIE -d skip "using namespace std;" ${NAMESPACE_STD_FREE_FILES[@]}
 ) | grep -E -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/" || true
 )
 

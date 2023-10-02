@@ -32,7 +32,6 @@
 
 #include <variant>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::yul;
 
@@ -40,11 +39,11 @@ FunctionSpecializer::LiteralArguments FunctionSpecializer::specializableArgument
 	FunctionCall const& _f
 )
 {
-	auto heuristic = [&](Expression const& _e) -> optional<Expression>
+	auto heuristic = [&](Expression const& _e) -> std::optional<Expression>
 	{
-		if (holds_alternative<Literal>(_e))
+		if (std::holds_alternative<Literal>(_e))
 			return ASTCopier{}.translate(_e);
-		return nullopt;
+		return std::nullopt;
 	};
 
 	return applyMap(_f.arguments, heuristic);
@@ -68,7 +67,7 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 		YulString oldName = std::move(_f.functionName.name);
 		auto newName = m_nameDispenser.newName(oldName);
 
-		m_oldToNewMap[oldName].emplace_back(make_pair(newName, arguments));
+		m_oldToNewMap[oldName].emplace_back(std::make_pair(newName, arguments));
 
 		_f.functionName.name = newName;
 		_f.arguments = util::filter(
@@ -86,27 +85,27 @@ FunctionDefinition FunctionSpecializer::specialize(
 {
 	yulAssert(_arguments.size() == _f.parameters.size(), "");
 
-	map<YulString, YulString> translatedNames = applyMap(
+	std::map<YulString, YulString> translatedNames = applyMap(
 		NameCollector{_f, NameCollector::OnlyVariables}.names(),
-		[&](auto& _name) -> pair<YulString, YulString>
+		[&](auto& _name) -> std::pair<YulString, YulString>
 		{
-			return make_pair(_name, m_nameDispenser.newName(_name));
+			return std::make_pair(_name, m_nameDispenser.newName(_name));
 		},
-		map<YulString, YulString>{}
+		std::map<YulString, YulString>{}
 	);
 
-	FunctionDefinition newFunction = get<FunctionDefinition>(FunctionCopier{translatedNames}(_f));
+	FunctionDefinition newFunction = std::get<FunctionDefinition>(FunctionCopier{translatedNames}(_f));
 
 	// Function parameters that will be specialized inside the body are converted into variable
 	// declarations.
-	vector<Statement> missingVariableDeclarations;
+	std::vector<Statement> missingVariableDeclarations;
 	for (auto&& [index, argument]: _arguments | ranges::views::enumerate)
 		if (argument)
 			missingVariableDeclarations.emplace_back(
 				VariableDeclaration{
 					_f.debugData,
-					vector<TypedName>{newFunction.parameters[index]},
-					make_unique<Expression>(std::move(*argument))
+					std::vector<TypedName>{newFunction.parameters[index]},
+					std::make_unique<Expression>(std::move(*argument))
 				}
 			);
 
@@ -134,15 +133,15 @@ void FunctionSpecializer::run(OptimiserStepContext& _context, Block& _ast)
 	};
 	f(_ast);
 
-	iterateReplacing(_ast.statements, [&](Statement& _s) -> optional<vector<Statement>>
+	iterateReplacing(_ast.statements, [&](Statement& _s) -> std::optional<std::vector<Statement>>
 	{
-		if (holds_alternative<FunctionDefinition>(_s))
+		if (std::holds_alternative<FunctionDefinition>(_s))
 		{
-			auto& functionDefinition = get<FunctionDefinition>(_s);
+			auto& functionDefinition = std::get<FunctionDefinition>(_s);
 
 			if (f.m_oldToNewMap.count(functionDefinition.name))
 			{
-				vector<Statement> out = applyMap(
+				std::vector<Statement> out = applyMap(
 					f.m_oldToNewMap.at(functionDefinition.name),
 					[&](auto& _p) -> Statement
 					{
@@ -153,6 +152,6 @@ void FunctionSpecializer::run(OptimiserStepContext& _context, Block& _ast)
 			}
 		}
 
-		return nullopt;
+		return std::nullopt;
 	});
 }

@@ -12,6 +12,6 @@ contract c {
 }
 // ----
 // test(uint256[2][]): 32, 3, 7, 8, 9, 10, 11, 12 -> 10
-// gas irOptimized: 689714
+// gas irOptimized: 689656
 // gas legacy: 686178
 // gas legacyOptimized: 685628

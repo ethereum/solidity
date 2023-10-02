@@ -37,6 +37,15 @@ struct AnnotatedEventSignature
 	std::vector<std::string> nonIndexedTypes;
 };
 
+enum class RequiresYulOptimizer
+{
+	False,
+	MinimalStack,
+	Full,
+};
+
+std::ostream& operator<<(std::ostream& _output, RequiresYulOptimizer _requiresYulOptimizer);
+
 /**
  * Class that represents a semantic test (or end-to-end test) and allows running it as part of the
  * boost unit test environment or isoltest. It reads the Solidity source and an additional comment
@@ -83,13 +92,26 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
-	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun);
+	TestResult runTest(
+		std::ostream& _stream,
+		std::string const& _linePrefix,
+		bool _formatted,
+		bool _isYulRun
+	);
+	TestResult tryRunTestWithYulOptimizer(
+		std::ostream& _stream,
+		std::string const& _linePrefix,
+		bool _formatted
+	);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
 	std::map<std::string, Builtin> makeBuiltins();
 	std::vector<SideEffectHook> makeSideEffectHooks() const;
 	std::vector<std::string> eventSideEffectHook(FunctionCall const&) const;
 	std::optional<AnnotatedEventSignature> matchEvent(util::h256 const& hash) const;
 	static std::string formatEventParameter(std::optional<AnnotatedEventSignature> _signature, bool _indexed, size_t _index, bytes const& _data);
+
+	OptimiserSettings optimizerSettingsFor(RequiresYulOptimizer _requiresYulOptimizer);
+
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
@@ -101,6 +123,7 @@ private:
 	bool m_allowNonExistingFunctions = false;
 	bool m_gasCostFailure = false;
 	bool m_enforceGasCost = false;
+	RequiresYulOptimizer m_requiresYulOptimizer{};
 	u256 m_enforceGasCostMinValue;
 };
 

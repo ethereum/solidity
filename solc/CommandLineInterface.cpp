@@ -81,8 +81,7 @@
 	#define STDERR_FILENO 2
 #endif
 
-
-using namespace std;
+using namespace std::string_literals;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -90,7 +89,7 @@ using namespace solidity::langutil;
 namespace
 {
 
-set<frontend::InputMode> const CompilerInputModes{
+std::set<frontend::InputMode> const CompilerInputModes{
 	frontend::InputMode::Compiler,
 	frontend::InputMode::CompilerWithASTImport,
 };
@@ -100,14 +99,14 @@ set<frontend::InputMode> const CompilerInputModes{
 namespace solidity::frontend
 {
 
-ostream& CommandLineInterface::sout(bool _markAsUsed)
+std::ostream& CommandLineInterface::sout(bool _markAsUsed)
 {
 	if (_markAsUsed)
 		m_hasOutput = true;
 	return m_sout;
 }
 
-ostream& CommandLineInterface::serr(bool _markAsUsed)
+std::ostream& CommandLineInterface::serr(bool _markAsUsed)
 {
 	if (_markAsUsed)
 		m_hasOutput = true;
@@ -118,27 +117,27 @@ ostream& CommandLineInterface::serr(bool _markAsUsed)
 #define cout
 #define cerr
 
-static string const g_stdinFileName = "<stdin>";
-static string const g_strAbi = "abi";
-static string const g_strAsm = "asm";
-static string const g_strAst = "ast";
-static string const g_strBinary = "bin";
-static string const g_strBinaryRuntime = "bin-runtime";
-static string const g_strContracts = "contracts";
-static string const g_strFunDebug = "function-debug";
-static string const g_strFunDebugRuntime = "function-debug-runtime";
-static string const g_strGeneratedSources = "generated-sources";
-static string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
-static string const g_strNatspecDev = "devdoc";
-static string const g_strNatspecUser = "userdoc";
-static string const g_strOpcodes = "opcodes";
-static string const g_strSignatureHashes = "hashes";
-static string const g_strSourceList = "sourceList";
-static string const g_strSources = "sources";
-static string const g_strSrcMap = "srcmap";
-static string const g_strSrcMapRuntime = "srcmap-runtime";
-static string const g_strStorageLayout = "storage-layout";
-static string const g_strVersion = "version";
+static std::string const g_stdinFileName = "<stdin>";
+static std::string const g_strAbi = "abi";
+static std::string const g_strAsm = "asm";
+static std::string const g_strAst = "ast";
+static std::string const g_strBinary = "bin";
+static std::string const g_strBinaryRuntime = "bin-runtime";
+static std::string const g_strContracts = "contracts";
+static std::string const g_strFunDebug = "function-debug";
+static std::string const g_strFunDebugRuntime = "function-debug-runtime";
+static std::string const g_strGeneratedSources = "generated-sources";
+static std::string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
+static std::string const g_strNatspecDev = "devdoc";
+static std::string const g_strNatspecUser = "userdoc";
+static std::string const g_strOpcodes = "opcodes";
+static std::string const g_strSignatureHashes = "hashes";
+static std::string const g_strSourceList = "sourceList";
+static std::string const g_strSources = "sources";
+static std::string const g_strSrcMap = "srcmap";
+static std::string const g_strSrcMapRuntime = "srcmap-runtime";
+static std::string const g_strStorageLayout = "storage-layout";
+static std::string const g_strVersion = "version";
 
 static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 {
@@ -167,7 +166,7 @@ static bool coloredOutput(CommandLineOptions const& _options)
 		(_options.formatting.coloredOutput.has_value() && _options.formatting.coloredOutput.value());
 }
 
-void CommandLineInterface::handleBinary(string const& _contract)
+void CommandLineInterface::handleBinary(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -177,8 +176,8 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", objectWithLinkRefsHex(m_compiler->object(_contract)));
 		else
 		{
-			sout() << "Binary:" << endl;
-			sout() << objectWithLinkRefsHex(m_compiler->object(_contract)) << endl;
+			sout() << "Binary:" << std::endl;
+			sout() << objectWithLinkRefsHex(m_compiler->object(_contract)) << std::endl;
 		}
 	}
 	if (m_options.compiler.outputs.binaryRuntime)
@@ -187,13 +186,13 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)));
 		else
 		{
-			sout() << "Binary of the runtime part:" << endl;
-			sout() << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << endl;
+			sout() << "Binary of the runtime part:" << std::endl;
+			sout() << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << std::endl;
 		}
 	}
 }
 
-void CommandLineInterface::handleOpcode(string const& _contract)
+void CommandLineInterface::handleOpcode(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -201,13 +200,13 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion));
 	else
 	{
-		sout() << "Opcodes:" << endl;
-		sout() << uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion);
-		sout() << endl;
+		sout() << "Opcodes:" << std::endl;
+		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion);
+		sout() << std::endl;
 	}
 }
 
-void CommandLineInterface::handleIR(string const& _contractName)
+void CommandLineInterface::handleIR(std::string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -218,12 +217,12 @@ void CommandLineInterface::handleIR(string const& _contractName)
 		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
 	else
 	{
-		sout() << "IR:" << endl;
-		sout() << m_compiler->yulIR(_contractName) << endl;
+		sout() << "IR:" << std::endl;
+		sout() << m_compiler->yulIR(_contractName) << std::endl;
 	}
 }
 
-void CommandLineInterface::handleIRAst(string const& _contractName)
+void CommandLineInterface::handleIRAst(std::string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -240,15 +239,15 @@ void CommandLineInterface::handleIRAst(string const& _contractName)
 		);
 	else
 	{
-		sout() << "IR AST:" << endl;
+		sout() << "IR AST:" << std::endl;
 		sout() << util::jsonPrint(
 			m_compiler->yulIRAst(_contractName),
 			m_options.formatting.json
-		) << endl;
+		) << std::endl;
 	}
 }
 
-void CommandLineInterface::handleIROptimized(string const& _contractName)
+void CommandLineInterface::handleIROptimized(std::string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -262,12 +261,12 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 		);
 	else
 	{
-		sout() << "Optimized IR:" << endl;
-		sout() << m_compiler->yulIROptimized(_contractName) << endl;
+		sout() << "Optimized IR:" << std::endl;
+		sout() << m_compiler->yulIROptimized(_contractName) << std::endl;
 	}
 }
 
-void CommandLineInterface::handleIROptimizedAst(string const& _contractName)
+void CommandLineInterface::handleIROptimizedAst(std::string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -284,15 +283,15 @@ void CommandLineInterface::handleIROptimizedAst(string const& _contractName)
 		);
 	else
 	{
-		sout() << "Optimized IR AST:" << endl;
+		sout() << "Optimized IR AST:" << std::endl;
 		sout() << util::jsonPrint(
 			m_compiler->yulIROptimizedAst(_contractName),
 			m_options.formatting.json
-		) << endl;
+		) << std::endl;
 	}
 }
 
-void CommandLineInterface::handleBytecode(string const& _contract)
+void CommandLineInterface::handleBytecode(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -302,7 +301,7 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 		handleBinary(_contract);
 }
 
-void CommandLineInterface::handleSignatureHashes(string const& _contract)
+void CommandLineInterface::handleSignatureHashes(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
@@ -310,7 +309,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		return;
 
 	Json::Value interfaceSymbols = m_compiler->interfaceSymbols(_contract);
-	string out = "Function signatures:\n";
+	std::string out = "Function signatures:\n";
 	for (auto const& name: interfaceSymbols["methods"].getMemberNames())
 		out += interfaceSymbols["methods"][name].asString() + ": " + name + "\n";
 
@@ -334,55 +333,55 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		sout() << out;
 }
 
-void CommandLineInterface::handleMetadata(string const& _contract)
+void CommandLineInterface::handleMetadata(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	if (!m_options.compiler.outputs.metadata)
 		return;
 
-	string data = m_compiler->metadata(_contract);
+	std::string data = m_compiler->metadata(_contract);
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_meta.json", data);
 	else
-		sout() << "Metadata:" << endl << data << endl;
+		sout() << "Metadata:" << std::endl << data << std::endl;
 }
 
-void CommandLineInterface::handleABI(string const& _contract)
+void CommandLineInterface::handleABI(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	if (!m_options.compiler.outputs.abi)
 		return;
 
-	string data = jsonPrint(removeNullMembers(m_compiler->contractABI(_contract)), m_options.formatting.json);
+	std::string data = jsonPrint(removeNullMembers(m_compiler->contractABI(_contract)), m_options.formatting.json);
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + ".abi", data);
 	else
-		sout() << "Contract JSON ABI" << endl << data << endl;
+		sout() << "Contract JSON ABI" << std::endl << data << std::endl;
 }
 
-void CommandLineInterface::handleStorageLayout(string const& _contract)
+void CommandLineInterface::handleStorageLayout(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	if (!m_options.compiler.outputs.storageLayout)
 		return;
 
-	string data = jsonPrint(removeNullMembers(m_compiler->storageLayout(_contract)), m_options.formatting.json);
+	std::string data = jsonPrint(removeNullMembers(m_compiler->storageLayout(_contract)), m_options.formatting.json);
 	if (!m_options.output.dir.empty())
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
 	else
-		sout() << "Contract Storage Layout:" << endl << data << endl;
+		sout() << "Contract Storage Layout:" << std::endl << data << std::endl;
 }
 
-void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contract)
+void CommandLineInterface::handleNatspec(bool _natspecDev, std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	bool enabled = false;
-	string suffix;
-	string title;
+	std::string suffix;
+	std::string title;
 
 	if (_natspecDev)
 	{
@@ -399,7 +398,7 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 
 	if (enabled)
 	{
-		string output = jsonPrint(
+		std::string output = jsonPrint(
 			removeNullMembers(
 				_natspecDev ?
 				m_compiler->natspecDev(_contract) :
@@ -412,51 +411,51 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
 		else
 		{
-			sout() << title << endl;
-			sout() << output << endl;
+			sout() << title << std::endl;
+			sout() << output << std::endl;
 		}
 
 	}
 }
 
-void CommandLineInterface::handleGasEstimation(string const& _contract)
+void CommandLineInterface::handleGasEstimation(std::string const& _contract)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
 	Json::Value estimates = m_compiler->gasEstimates(_contract);
-	sout() << "Gas estimation:" << endl;
+	sout() << "Gas estimation:" << std::endl;
 
 	if (estimates["creation"].isObject())
 	{
 		Json::Value creation = estimates["creation"];
-		sout() << "construction:" << endl;
+		sout() << "construction:" << std::endl;
 		sout() << "   " << creation["executionCost"].asString();
 		sout() << " + " << creation["codeDepositCost"].asString();
-		sout() << " = " << creation["totalCost"].asString() << endl;
+		sout() << " = " << creation["totalCost"].asString() << std::endl;
 	}
 
 	if (estimates["external"].isObject())
 	{
 		Json::Value externalFunctions = estimates["external"];
-		sout() << "external:" << endl;
+		sout() << "external:" << std::endl;
 		for (auto const& name: externalFunctions.getMemberNames())
 		{
 			if (name.empty())
 				sout() << "   fallback:\t";
 			else
 				sout() << "   " << name << ":\t";
-			sout() << externalFunctions[name].asString() << endl;
+			sout() << externalFunctions[name].asString() << std::endl;
 		}
 	}
 
 	if (estimates["internal"].isObject())
 	{
 		Json::Value internalFunctions = estimates["internal"];
-		sout() << "internal:" << endl;
+		sout() << "internal:" << std::endl;
 		for (auto const& name: internalFunctions.getMemberNames())
 		{
 			sout() << "   " << name << ":\t";
-			sout() << internalFunctions[name].asString() << endl;
+			sout() << internalFunctions[name].asString() << std::endl;
 		}
 	}
 }
@@ -465,7 +464,7 @@ void CommandLineInterface::readInputFiles()
 {
 	solAssert(!m_standardJsonInput.has_value());
 
-	static set<frontend::InputMode> const noInputFiles{
+	static std::set<frontend::InputMode> const noInputFiles{
 		frontend::InputMode::Help,
 		frontend::InputMode::License,
 		frontend::InputMode::Version
@@ -491,13 +490,13 @@ void CommandLineInterface::readInputFiles()
 	for (boost::filesystem::path const& allowedDirectory: m_options.input.allowedDirectories)
 		m_fileReader.allowDirectory(allowedDirectory);
 
-	map<string, set<boost::filesystem::path>> collisions =
+	std::map<std::string, std::set<boost::filesystem::path>> collisions =
 		m_fileReader.detectSourceUnitNameCollisions(m_options.input.paths);
 	if (!collisions.empty())
 	{
 		auto pathToQuotedString = [](boost::filesystem::path const& _path){ return "\"" + _path.string() + "\""; };
 
-		string message =
+		std::string message =
 			"Source unit name collision detected. "
 			"The specified values of base path and/or include paths would result in multiple "
 			"input files being assigned the same source unit name:\n";
@@ -518,7 +517,7 @@ void CommandLineInterface::readInputFiles()
 			if (!m_options.input.ignoreMissingFiles)
 				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not found.");
 			else
-				serr() << infile << " is not found. Skipping." << endl;
+				serr() << infile << " is not found. Skipping." << std::endl;
 
 			continue;
 		}
@@ -528,13 +527,13 @@ void CommandLineInterface::readInputFiles()
 			if (!m_options.input.ignoreMissingFiles)
 				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not a valid file.");
 			else
-				serr() << infile << " is not a valid file. Skipping." << endl;
+				serr() << infile << " is not a valid file. Skipping." << std::endl;
 
 			continue;
 		}
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		string fileContent = readFileAsString(infile);
+		std::string fileContent = readFileAsString(infile);
 		if (m_options.input.mode == InputMode::StandardJson)
 		{
 			solAssert(!m_standardJsonInput.has_value());
@@ -566,12 +565,12 @@ void CommandLineInterface::readInputFiles()
 		solThrow(CommandLineValidationError, "All specified input files either do not exist or are not regular files.");
 }
 
-map<string, Json::Value> CommandLineInterface::parseAstFromInput()
+std::map<std::string, Json::Value> CommandLineInterface::parseAstFromInput()
 {
 	solAssert(m_options.input.mode == InputMode::CompilerWithASTImport);
 
-	map<string, Json::Value> sourceJsons;
-	map<string, string> tmpSources;
+	std::map<std::string, Json::Value> sourceJsons;
+	std::map<std::string, std::string> tmpSources;
 
 	for (SourceCode const& sourceCode: m_fileReader.sourceUnits() | ranges::views::values)
 	{
@@ -581,7 +580,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 
 		for (auto& src: ast["sources"].getMemberNames())
 		{
-			string astKey = ast["sources"][src].isMember("ast") ? "ast" : "AST";
+			std::string astKey = ast["sources"][src].isMember("ast") ? "ast" : "AST";
 
 			astAssert(ast["sources"][src].isMember(astKey), "astkey is not member");
 			astAssert(ast["sources"][src][astKey]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
@@ -596,7 +595,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 	return sourceJsons;
 }
 
-void CommandLineInterface::createFile(string const& _fileName, string const& _data)
+void CommandLineInterface::createFile(std::string const& _fileName, std::string const& _data)
 {
 	namespace fs = boost::filesystem;
 
@@ -607,19 +606,19 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	// The simplest workaround is to use an absolute path.
 	fs::create_directories(fs::absolute(m_options.output.dir));
 
-	string pathName = (m_options.output.dir / _fileName).string();
+	std::string pathName = (m_options.output.dir / _fileName).string();
 	if (fs::exists(pathName) && !m_options.output.overwriteFiles)
 		solThrow(CommandLineOutputError, "Refusing to overwrite existing file \"" + pathName + "\" (use --overwrite to force).");
 
-	ofstream outFile(pathName);
+	std::ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
 		solThrow(CommandLineOutputError, "Could not write to file \"" + pathName + "\".");
 }
 
-void CommandLineInterface::createJson(string const& _fileName, string const& _json)
+void CommandLineInterface::createJson(std::string const& _fileName, std::string const& _json)
 {
-	createFile(boost::filesystem::path(_fileName).stem().string() + string(".json"), _json);
+	createFile(boost::filesystem::path(_fileName).stem().string() + std::string(".json"), _json);
 }
 
 bool CommandLineInterface::run(int _argc, char const* const* _argv)
@@ -640,7 +639,7 @@ bool CommandLineInterface::run(int _argc, char const* const* _argv)
 		// There might be no message in the exception itself if the error output is bulky and has
 		// already been printed to stderr (this happens e.g. for compiler errors).
 		if (_exception.what() != ""s)
-			serr() << _exception.what() << endl;
+			serr() << _exception.what() << std::endl;
 
 		return false;
 	}
@@ -683,7 +682,7 @@ void CommandLineInterface::processInput()
 		solAssert(m_standardJsonInput.has_value());
 
 		StandardCompiler compiler(m_universalCallback.callback(), m_options.formatting.json);
-		sout() << compiler.compile(std::move(m_standardJsonInput.value())) << endl;
+		sout() << compiler.compile(std::move(m_standardJsonInput.value())) << std::endl;
 		m_standardJsonInput.reset();
 		break;
 	}
@@ -707,22 +706,22 @@ void CommandLineInterface::processInput()
 
 void CommandLineInterface::printVersion()
 {
-	sout() << "solc, the solidity compiler commandline interface" << endl;
-	sout() << "Version: " << solidity::frontend::VersionString << endl;
+	sout() << "solc, the solidity compiler commandline interface" << std::endl;
+	sout() << "Version: " << solidity::frontend::VersionString << std::endl;
 }
 
 void CommandLineInterface::printLicense()
 {
-	sout() << otherLicenses << endl;
+	sout() << otherLicenses << std::endl;
 	// This is a static variable generated by cmake from LICENSE.txt
-	sout() << licenseText << endl;
+	sout() << licenseText << std::endl;
 }
 
 void CommandLineInterface::compile()
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
 
-	m_compiler = make_unique<CompilerStack>(m_universalCallback.callback());
+	m_compiler = std::make_unique<CompilerStack>(m_universalCallback.callback());
 
 	SourceReferenceFormatter formatter(serr(false), *m_compiler, coloredOutput(m_options), m_options.formatting.withErrorIds);
 
@@ -792,10 +791,7 @@ void CommandLineInterface::compile()
 			}
 		}
 		else
-		{
 			m_compiler->setSources(m_fileReader.sourceUnits());
-			m_compiler->setParserErrorRecovery(m_options.input.errorRecovery);
-		}
 
 		bool successful = m_compiler->compile(m_options.output.stopAfter);
 
@@ -805,7 +801,7 @@ void CommandLineInterface::compile()
 			formatter.printErrorInformation(*error);
 		}
 
-		if (!successful && !m_options.input.errorRecovery)
+		if (!successful)
 			solThrow(CommandLineExecutionError, "");
 	}
 	catch (CompilerError const& _exception)
@@ -827,7 +823,7 @@ void CommandLineInterface::compile()
 		else
 		{
 			m_hasOutput = true;
-			formatter.printExceptionInformation(_error, Error::errorSeverity(_error.type()));
+			formatter.printErrorInformation(_error);
 			solThrow(CommandLineExecutionError, "");
 		}
 	}
@@ -843,54 +839,58 @@ void CommandLineInterface::handleCombinedJSON()
 	Json::Value output(Json::objectValue);
 
 	output[g_strVersion] = frontend::VersionString;
-	vector<string> contracts = m_compiler->contractNames();
+	std::vector<std::string> contracts = m_compiler->contractNames();
+
+	// NOTE: The state checks here are more strict that in Standard JSON. There we allow
+	// requesting certain outputs even if compilation fails as long as analysis went ok.
+	bool compilationSuccess = m_compiler->state() >= CompilerStack::State::CompilationSuccessful;
 
 	if (!contracts.empty())
 		output[g_strContracts] = Json::Value(Json::objectValue);
-	for (string const& contractName: contracts)
+	for (std::string const& contractName: contracts)
 	{
 		Json::Value& contractData = output[g_strContracts][contractName] = Json::objectValue;
-		if (m_options.compiler.combinedJsonRequests->abi)
+		if (m_options.compiler.combinedJsonRequests->abi && compilationSuccess)
 			contractData[g_strAbi] = m_compiler->contractABI(contractName);
-		if (m_options.compiler.combinedJsonRequests->metadata)
+		if (m_options.compiler.combinedJsonRequests->metadata && compilationSuccess)
 			contractData["metadata"] = m_compiler->metadata(contractName);
-		if (m_options.compiler.combinedJsonRequests->binary && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->binary && compilationSuccess)
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
-		if (m_options.compiler.combinedJsonRequests->binaryRuntime && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->binaryRuntime && compilationSuccess)
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
-		if (m_options.compiler.combinedJsonRequests->opcodes && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->opcodes && compilationSuccess)
 			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode, m_options.output.evmVersion);
-		if (m_options.compiler.combinedJsonRequests->asm_ && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->asm_ && compilationSuccess)
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
-		if (m_options.compiler.combinedJsonRequests->storageLayout && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->storageLayout && compilationSuccess)
 			contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
-		if (m_options.compiler.combinedJsonRequests->generatedSources && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->generatedSources && compilationSuccess)
 			contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
-		if (m_options.compiler.combinedJsonRequests->generatedSourcesRuntime && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->generatedSourcesRuntime && compilationSuccess)
 			contractData[g_strGeneratedSourcesRuntime] = m_compiler->generatedSources(contractName, true);
-		if (m_options.compiler.combinedJsonRequests->srcMap && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->srcMap && compilationSuccess)
 		{
 			auto map = m_compiler->sourceMapping(contractName);
 			contractData[g_strSrcMap] = map ? *map : "";
 		}
-		if (m_options.compiler.combinedJsonRequests->srcMapRuntime && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->srcMapRuntime && compilationSuccess)
 		{
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
-		if (m_options.compiler.combinedJsonRequests->funDebug && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->funDebug && compilationSuccess)
 			contractData[g_strFunDebug] = StandardCompiler::formatFunctionDebugData(
 				m_compiler->object(contractName).functionDebugData
 			);
-		if (m_options.compiler.combinedJsonRequests->funDebugRuntime && m_compiler->compilationSuccessful())
+		if (m_options.compiler.combinedJsonRequests->funDebugRuntime && compilationSuccess)
 			contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
 				m_compiler->runtimeObject(contractName).functionDebugData
 			);
-		if (m_options.compiler.combinedJsonRequests->signatureHashes)
+		if (m_options.compiler.combinedJsonRequests->signatureHashes && compilationSuccess)
 			contractData[g_strSignatureHashes] = m_compiler->interfaceSymbols(contractName)["methods"];
-		if (m_options.compiler.combinedJsonRequests->natspecDev)
+		if (m_options.compiler.combinedJsonRequests->natspecDev && compilationSuccess)
 			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
-		if (m_options.compiler.combinedJsonRequests->natspecUser)
+		if (m_options.compiler.combinedJsonRequests->natspecUser && compilationSuccess)
 			contractData[g_strNatspecUser] = m_compiler->natspecUser(contractName);
 	}
 
@@ -921,11 +921,11 @@ void CommandLineInterface::handleCombinedJSON()
 		}
 	}
 
-	string json = jsonPrint(removeNullMembers(std::move(output)), m_options.formatting.json);
+	std::string json = jsonPrint(removeNullMembers(std::move(output)), m_options.formatting.json);
 	if (!m_options.output.dir.empty())
 		createJson("combined", json);
 	else
-		sout() << json << endl;
+		sout() << json << std::endl;
 }
 
 void CommandLineInterface::handleAst()
@@ -935,7 +935,7 @@ void CommandLineInterface::handleAst()
 	if (!m_options.compiler.outputs.astCompactJson)
 		return;
 
-	vector<ASTNode const*> asts;
+	std::vector<ASTNode const*> asts;
 	for (auto const& sourceCode: m_fileReader.sourceUnits())
 		asts.push_back(&m_compiler->ast(sourceCode.first));
 
@@ -943,8 +943,8 @@ void CommandLineInterface::handleAst()
 	{
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
-			stringstream data;
-			string postfix = "";
+			std::stringstream data;
+			std::string postfix = "";
 			ASTJsonExporter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first), m_options.formatting.json);
 			postfix += "_json";
 			boost::filesystem::path path(sourceCode.first);
@@ -953,10 +953,10 @@ void CommandLineInterface::handleAst()
 	}
 	else
 	{
-		sout() << "JSON AST (compact format):" << endl << endl;
+		sout() << "JSON AST (compact format):" << std::endl << std::endl;
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
-			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
+			sout() << std::endl << "======= " << sourceCode.first << " =======" << std::endl;
 			ASTJsonExporter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first), m_options.formatting.json);
 		}
 	}
@@ -974,11 +974,11 @@ void CommandLineInterface::link()
 	solAssert(m_options.input.mode == InputMode::Linker);
 
 	// Map from how the libraries will be named inside the bytecode to their addresses.
-	map<string, h160> librariesReplacements;
+	std::map<std::string, h160> librariesReplacements;
 	int const placeholderSize = 40; // 20 bytes or 40 hex characters
 	for (auto const& library: m_options.linker.libraries)
 	{
-		string const& name = library.first;
+		std::string const& name = library.first;
 		// Library placeholders are 40 hex digits (20 bytes) that start and end with '__'.
 		// This leaves 36 characters for the library identifier. The identifier used to
 		// be just the cropped or '_'-padded library name, but this changed to
@@ -986,7 +986,7 @@ void CommandLineInterface::link()
 		// We support both ways of linking here.
 		librariesReplacements["__" + evmasm::LinkerObject::libraryPlaceholder(name) + "__"] = library.second;
 
-		string replacement = "__";
+		std::string replacement = "__";
 		for (size_t i = 0; i < placeholderSize - 4; ++i)
 			replacement.push_back(i < name.size() ? name[i] : '_');
 		replacement += "__";
@@ -1009,18 +1009,18 @@ void CommandLineInterface::link()
 			)
 				solThrow(
 					CommandLineExecutionError,
-					"Error in binary object file " + src.first + " at position " + to_string(it - src.second.begin()) + "\n" +
-					'"' + string(it, it + min(placeholderSize, static_cast<int>(end - it))) + "\" is not a valid link reference."
+					"Error in binary object file " + src.first + " at position " + std::to_string(it - src.second.begin()) + "\n" +
+					'"' + std::string(it, it + std::min(placeholderSize, static_cast<int>(end - it))) + "\" is not a valid link reference."
 				);
 
-			string foundPlaceholder(it, it + placeholderSize);
+			std::string foundPlaceholder(it, it + placeholderSize);
 			if (librariesReplacements.count(foundPlaceholder))
 			{
-				string hexStr(util::toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
+				std::string hexStr(util::toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
-				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << endl;
+				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << std::endl;
 			it += placeholderSize;
 		}
 		// Remove hints for resolved libraries.
@@ -1038,25 +1038,25 @@ void CommandLineInterface::writeLinkedFiles()
 
 	for (auto const& src: m_fileReader.sourceUnits())
 		if (src.first == g_stdinFileName)
-			sout() << src.second << endl;
+			sout() << src.second << std::endl;
 		else
 		{
-			ofstream outFile(src.first);
+			std::ofstream outFile(src.first);
 			outFile << src.second;
 			if (!outFile)
 				solThrow(CommandLineOutputError, "Could not write to file " + src.first + ". Aborting.");
 		}
-	sout() << "Linking completed." << endl;
+	sout() << "Linking completed." << std::endl;
 }
 
-string CommandLineInterface::libraryPlaceholderHint(string const& _libraryName)
+std::string CommandLineInterface::libraryPlaceholderHint(std::string const& _libraryName)
 {
 	return "// " + evmasm::LinkerObject::libraryPlaceholder(_libraryName) + " -> " + _libraryName;
 }
 
-string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _obj)
+std::string CommandLineInterface::objectWithLinkRefsHex(evmasm::LinkerObject const& _obj)
 {
-	string out = _obj.toHex();
+	std::string out = _obj.toHex();
 	if (!_obj.linkReferences.empty())
 	{
 		out += "\n";
@@ -1071,7 +1071,7 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 	solAssert(m_options.input.mode == InputMode::Assembler);
 
 	bool successful = true;
-	map<string, yul::YulStack> yulStacks;
+	std::map<std::string, yul::YulStack> yulStacks;
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		auto& stack = yulStacks[src.first] = yul::YulStack(
@@ -1113,8 +1113,8 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 	for (auto const& src: m_fileReader.sourceUnits())
 	{
 		solAssert(_targetMachine == yul::YulStack::Machine::EVM);
-		string machine = "EVM";
-		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
+		std::string machine = "EVM";
+		sout() << std::endl << "======= " << src.first << " (" << machine << ") =======" << std::endl;
 
 		yul::YulStack& stack = yulStacks[src.first];
 
@@ -1122,8 +1122,8 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 		{
 			// NOTE: This actually outputs unoptimized code when the optimizer is disabled but
 			// 'ir' output in StandardCompiler works the same way.
-			sout() << endl << "Pretty printed source:" << endl;
-			sout() << stack.print() << endl;
+			sout() << std::endl << "Pretty printed source:" << std::endl;
+			sout() << stack.print() << std::endl;
 		}
 
 		yul::MachineAssemblyObject object;
@@ -1132,25 +1132,25 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 
 		if (m_options.compiler.outputs.binary)
 		{
-			sout() << endl << "Binary representation:" << endl;
+			sout() << std::endl << "Binary representation:" << std::endl;
 			if (object.bytecode)
-				sout() << object.bytecode->toHex() << endl;
+				sout() << object.bytecode->toHex() << std::endl;
 			else
-				serr() << "No binary representation found." << endl;
+				serr() << "No binary representation found." << std::endl;
 		}
 		if (m_options.compiler.outputs.astCompactJson)
 		{
-			sout() << "AST:" <<  endl <<  endl;
-			sout() << util::jsonPrint(stack.astJson(), m_options.formatting.json) << endl;
+			sout() << "AST:" << std::endl << std::endl;
+			sout() << util::jsonPrint(stack.astJson(), m_options.formatting.json) << std::endl;
 		}
 		solAssert(_targetMachine == yul::YulStack::Machine::EVM, "");
 		if (m_options.compiler.outputs.asm_)
 		{
-			sout() << endl << "Text representation:" << endl;
+			sout() << std::endl << "Text representation:" << std::endl;
 			if (!object.assembly.empty())
-				sout() << object.assembly << endl;
+				sout() << object.assembly << std::endl;
 			else
-				serr() << "No text representation found." << endl;
+				serr() << "No text representation found." << std::endl;
 		}
 	}
 }
@@ -1164,60 +1164,59 @@ void CommandLineInterface::outputCompilationResults()
 	// do we need AST output?
 	handleAst();
 
-	if (
-		!m_compiler->compilationSuccessful() &&
-		m_options.output.stopAfter == CompilerStack::State::CompilationSuccessful
-	)
+	CompilerOutputs astOutputSelection;
+	astOutputSelection.astCompactJson = true;
+	if (m_options.compiler.outputs != CompilerOutputs() && m_options.compiler.outputs != astOutputSelection)
 	{
-		serr() << endl << "Compilation halted after AST generation due to errors." << endl;
-		return;
-	}
+		// Currently AST is the only output allowed with --stop-after parsing. For all of the others
+		// we can safely assume that full compilation was performed and successful.
+		solAssert(m_options.output.stopAfter >= CompilerStack::State::CompilationSuccessful);
 
-	vector<string> contracts = m_compiler->contractNames();
-	for (string const& contract: contracts)
-	{
-		if (needsHumanTargetedStdout(m_options))
-			sout() << endl << "======= " << contract << " =======" << endl;
-
-		// do we need EVM assembly?
-		if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
+		for (std::string const& contract: m_compiler->contractNames())
 		{
-			string ret;
-			if (m_options.compiler.outputs.asmJson)
-				ret = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
-			else
-				ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
+			if (needsHumanTargetedStdout(m_options))
+				sout() << std::endl << "======= " << contract << " =======" << std::endl;
 
-			if (!m_options.output.dir.empty())
-				createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
-			else
-				sout() << "EVM assembly:" << endl << ret << endl;
-		}
+			// do we need EVM assembly?
+			if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
+			{
+				std::string ret;
+				if (m_options.compiler.outputs.asmJson)
+					ret = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
+				else
+					ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
 
-		if (m_options.compiler.estimateGas)
-			handleGasEstimation(contract);
+				if (!m_options.output.dir.empty())
+					createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
+				else
+					sout() << "EVM assembly:" << std::endl << ret << std::endl;
+			}
 
-		handleBytecode(contract);
-		handleIR(contract);
-		handleIRAst(contract);
-		handleIROptimized(contract);
-		handleIROptimizedAst(contract);
-		handleSignatureHashes(contract);
-		handleMetadata(contract);
-		handleABI(contract);
-		handleStorageLayout(contract);
-		handleNatspec(true, contract);
-		handleNatspec(false, contract);
-	} // end of contracts iteration
+			if (m_options.compiler.estimateGas)
+				handleGasEstimation(contract);
+
+			handleBytecode(contract);
+			handleIR(contract);
+			handleIRAst(contract);
+			handleIROptimized(contract);
+			handleIROptimizedAst(contract);
+			handleSignatureHashes(contract);
+			handleMetadata(contract);
+			handleABI(contract);
+			handleStorageLayout(contract);
+			handleNatspec(true, contract);
+			handleNatspec(false, contract);
+		} // end of contracts iteration
+	}
 
 	if (!m_hasOutput)
 	{
 		if (!m_options.output.dir.empty())
-			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
-		else if (contracts.empty())
-			sout() << "Compiler run successful. No contracts to compile." << endl;
+			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << std::endl;
+		else if (m_compiler->contractNames().empty())
+			sout() << "Compiler run successful. No contracts to compile." << std::endl;
 		else
-			sout() << "Compiler run successful. No output generated." << endl;
+			sout() << "Compiler run successful. No output generated." << std::endl;
 	}
 }
 

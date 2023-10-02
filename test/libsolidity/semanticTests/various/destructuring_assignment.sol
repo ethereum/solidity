@@ -33,6 +33,6 @@ contract C {
 }
 // ----
 // f(bytes): 0x20, 0x5, "abcde" -> 0
-// gas irOptimized: 241853
+// gas irOptimized: 241837
 // gas legacy: 243284
-// gas legacyOptimized: 242421
+// gas legacyOptimized: 242420

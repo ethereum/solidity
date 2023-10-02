@@ -12,7 +12,7 @@ contract C {
 }
 // ----
 // constructor()
-// gas irOptimized: 109878
+// gas irOptimized: 108150
 // gas legacy: 152179
 // gas legacyOptimized: 106750
 // genesisHash() -> 0x3737373737373737373737373737373737373737373737373737373737373737

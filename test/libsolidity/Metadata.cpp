@@ -29,7 +29,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 
 namespace solidity::frontend::test
 {
@@ -37,13 +36,13 @@ namespace solidity::frontend::test
 namespace
 {
 
-map<string, string> requireParsedCBORMetadata(bytes const& _bytecode, CompilerStack::MetadataFormat _metadataFormat)
+std::map<std::string, std::string> requireParsedCBORMetadata(bytes const& _bytecode, CompilerStack::MetadataFormat _metadataFormat)
 {
 	bytes cborMetadata = solidity::test::onlyMetadata(_bytecode);
 	if (_metadataFormat != CompilerStack::MetadataFormat::NoMetadata)
 	{
 		BOOST_REQUIRE(!cborMetadata.empty());
-		std::optional<map<string, string>> tmp = solidity::test::parseCBORMetadata(cborMetadata);
+		std::optional<std::map<std::string, std::string>> tmp = solidity::test::parseCBORMetadata(cborMetadata);
 		BOOST_REQUIRE(tmp);
 		return *tmp;
 	}
@@ -51,13 +50,13 @@ map<string, string> requireParsedCBORMetadata(bytes const& _bytecode, CompilerSt
 	return {};
 }
 
-optional<string> compileAndCheckLicenseMetadata(string const& _contractName, char const* _sourceCode)
+std::optional<std::string> compileAndCheckLicenseMetadata(std::string const& _contractName, char const* _sourceCode)
 {
 	CompilerStack compilerStack;
 	compilerStack.setSources({{"A.sol", _sourceCode}});
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
-	string const& serialisedMetadata = compilerStack.metadata(_contractName);
+	std::string const& serialisedMetadata = compilerStack.metadata(_contractName);
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
@@ -71,7 +70,7 @@ optional<string> compileAndCheckLicenseMetadata(string const& _contractName, cha
 		return metadata["sources"]["A.sol"]["license"].asString();
 	}
 	else
-		return nullopt;
+		return std::nullopt;
 }
 
 }
@@ -93,7 +92,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 		CompilerStack::MetadataFormat::WithReleaseVersionTag,
 		CompilerStack::MetadataFormat::WithPrereleaseVersionTag
 	})
-		for (auto metadataHash: set<CompilerStack::MetadataHash>{
+		for (auto metadataHash: std::set<CompilerStack::MetadataHash>{
 			CompilerStack::MetadataHash::IPFS,
 			CompilerStack::MetadataHash::Bzzr1,
 			CompilerStack::MetadataHash::None
@@ -107,7 +106,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 			compilerStack.setMetadataHash(metadataHash);
 			BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 			bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
-			string const& metadata = compilerStack.metadata("test");
+			std::string const& metadata = compilerStack.metadata("test");
 			BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 			auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
@@ -116,7 +115,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 			else
 			{
 				bytes hash;
-				string hashMethod;
+				std::string hashMethod;
 				if (metadataHash == CompilerStack::MetadataHash::IPFS)
 				{
 					hash = util::ipfsHash(metadata);
@@ -166,7 +165,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			CompilerStack::MetadataFormat::WithReleaseVersionTag,
 			CompilerStack::MetadataFormat::WithPrereleaseVersionTag
 	})
-		for (auto metadataHash: set<CompilerStack::MetadataHash>{
+		for (auto metadataHash: std::set<CompilerStack::MetadataHash>{
 			CompilerStack::MetadataHash::IPFS,
 			CompilerStack::MetadataHash::Bzzr1,
 			CompilerStack::MetadataHash::None
@@ -180,7 +179,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			compilerStack.setMetadataHash(metadataHash);
 			BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 			bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
-			string const& metadata = compilerStack.metadata("test");
+			std::string const& metadata = compilerStack.metadata("test");
 			BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 			auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
@@ -189,7 +188,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			else
 			{
 				bytes hash;
-				string hashMethod;
+				std::string hashMethod;
 				if (metadataHash == CompilerStack::MetadataHash::IPFS)
 				{
 					hash = util::ipfsHash(metadata);
@@ -250,7 +249,7 @@ BOOST_AUTO_TEST_CASE(metadata_eof_experimental)
 		compilerStack.setOptimiserSettings(true);
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 		bytes const& bytecode = compilerStack.runtimeObject("test").bytecode;
-		string const& metadata = compilerStack.metadata("test");
+		std::string const& metadata = compilerStack.metadata("test");
 		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
 		auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
@@ -288,7 +287,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources)
 	compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
-	string const& serialisedMetadata = compilerStack.metadata("A");
+	std::string const& serialisedMetadata = compilerStack.metadata("A");
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
@@ -329,7 +328,7 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 	compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
-	string const& serialisedMetadata = compilerStack.metadata("C");
+	std::string const& serialisedMetadata = compilerStack.metadata("C");
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
@@ -357,7 +356,7 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 		compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 		compilerStack.useMetadataLiteralSources(_literal);
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
-		string metadata_str = compilerStack.metadata("test");
+		std::string metadata_str = compilerStack.metadata("test");
 		Json::Value metadata;
 		BOOST_REQUIRE(util::jsonParseStrict(metadata_str, metadata));
 		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
@@ -407,7 +406,7 @@ BOOST_AUTO_TEST_CASE(metadata_viair)
 		BOOST_CHECK(compilerStack.cborMetadata("test") == compilerStack.cborMetadata("test", _viaIR));
 		BOOST_CHECK(compilerStack.cborMetadata("test") != compilerStack.cborMetadata("test", !_viaIR));
 
-		map<string, string> const parsedCBORMetadata = requireParsedCBORMetadata(
+		std::map<std::string, std::string> const parsedCBORMetadata = requireParsedCBORMetadata(
 			compilerStack.runtimeObject("test").bytecode,
 			CompilerStack::MetadataFormat::WithReleaseVersionTag
 		);
@@ -431,7 +430,7 @@ BOOST_AUTO_TEST_CASE(metadata_revert_strings)
 	compilerStack.setRevertStringBehaviour(RevertStrings::Strip);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
-	string const& serialisedMetadata = compilerStack.metadata("A");
+	std::string const& serialisedMetadata = compilerStack.metadata("A");
 	Json::Value metadata;
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 	BOOST_CHECK(solidity::test::isValidMetadata(metadata));
@@ -447,7 +446,7 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 		}
 	)";
 
-	vector<tuple<string, string>> sequences =
+	std::vector<std::tuple<std::string, std::string>> sequences =
 	{
 		// {"<optimizer sequence>", "<optimizer cleanup sequence>"}
 		{"", ""},
@@ -456,7 +455,7 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 		{"dhfoDgvulfnTUtnIf", "fDn"}
 	};
 
-	auto check = [sourceCode](string const& _optimizerSequence, string const& _optimizerCleanupSequence)
+	auto check = [sourceCode](std::string const& _optimizerSequence, std::string const& _optimizerCleanupSequence)
 	{
 		OptimiserSettings optimizerSettings = OptimiserSettings::minimal();
 		optimizerSettings.runYulOptimiser = true;
@@ -469,7 +468,7 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 
 		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
 
-		string const& serialisedMetadata = compilerStack.metadata("C");
+		std::string const& serialisedMetadata = compilerStack.metadata("C");
 		Json::Value metadata;
 		BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 		BOOST_CHECK(solidity::test::isValidMetadata(metadata));
@@ -477,8 +476,8 @@ BOOST_AUTO_TEST_CASE(metadata_optimiser_sequence)
 		BOOST_CHECK(metadata["settings"]["optimizer"]["details"].isMember("yulDetails"));
 		BOOST_CHECK(metadata["settings"]["optimizer"]["details"]["yulDetails"].isMember("optimizerSteps"));
 
-		string const metadataOptimizerSteps = metadata["settings"]["optimizer"]["details"]["yulDetails"]["optimizerSteps"].asString();
-		string const expectedMetadataOptimiserSteps = _optimizerSequence + ":" + _optimizerCleanupSequence;
+		std::string const metadataOptimizerSteps = metadata["settings"]["optimizer"]["details"]["yulDetails"]["optimizerSteps"].asString();
+		std::string const expectedMetadataOptimiserSteps = _optimizerSequence + ":" + _optimizerCleanupSequence;
 		BOOST_CHECK_EQUAL(metadataOptimizerSteps, expectedMetadataOptimiserSteps);
 	};
 
@@ -493,7 +492,7 @@ BOOST_AUTO_TEST_CASE(metadata_license_missing)
 		contract C {
 		}
 	)";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == std::nullopt);
 }
 
 BOOST_AUTO_TEST_CASE(metadata_license_gpl3)
@@ -544,7 +543,7 @@ BOOST_AUTO_TEST_CASE(metadata_license_bidi_marks)
 		"// NOTE: The text above is reversed using Unicode directional marks. In raw form it would look like this:\n"
 		"// <LRO>0.3-LPG :reifitnedI-esneciL-XDPS<PDF>\n"
 		"contract C {}\n";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == std::nullopt);
 }
 
 BOOST_AUTO_TEST_CASE(metadata_license_bottom)
@@ -579,7 +578,7 @@ BOOST_AUTO_TEST_CASE(metadata_license_in_string)
 			bytes license = "// SPDX-License-Identifier: GPL-3.0";
 		}
 	)";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == std::nullopt);
 }
 
 BOOST_AUTO_TEST_CASE(metadata_license_in_contract)
@@ -589,7 +588,7 @@ BOOST_AUTO_TEST_CASE(metadata_license_in_contract)
 		// SPDX-License-Identifier: GPL-3.0
 		}
 	)";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == std::nullopt);
 }
 
 BOOST_AUTO_TEST_CASE(metadata_license_missing_colon)
@@ -598,7 +597,7 @@ BOOST_AUTO_TEST_CASE(metadata_license_missing_colon)
 		// SPDX-License-Identifier GPL-3.0
 		contract C {}
 	)";
-	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == std::nullopt);
 }
 
 BOOST_AUTO_TEST_CASE(metadata_license_multiline)

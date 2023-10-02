@@ -12,7 +12,7 @@ contract C {
 }
 // ----
 // constructor(), 2 wei: 3 ->
-// gas irOptimized: 106374
+// gas irOptimized: 104412
 // gas legacy: 148308
 // gas legacyOptimized: 106727
 // state() -> 3

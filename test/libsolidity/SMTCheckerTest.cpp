@@ -21,13 +21,12 @@
 
 #include <range/v3/action/remove_if.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, EVMVersion{})
+SMTCheckerTest::SMTCheckerTest(std::string const& _filename): SyntaxTest(_filename, EVMVersion{})
 {
 	auto contract = m_reader.stringSetting("SMTContract", "");
 	if (!contract.empty())
@@ -37,7 +36,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	if (extCallsMode)
 		m_modelCheckerSettings.externalCalls = *extCallsMode;
 	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT external calls mode."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT external calls mode."));
 
 	auto const& showUnproved = m_reader.stringSetting("SMTShowUnproved", "yes");
 	if (showUnproved == "no")
@@ -45,7 +44,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else if (showUnproved == "yes")
 		m_modelCheckerSettings.showUnproved = true;
 	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unproved\" choice."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT \"show unproved\" choice."));
 
 	auto const& showUnsupported = m_reader.stringSetting("SMTShowUnsupported", "yes");
 	if (showUnsupported == "no")
@@ -53,14 +52,14 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else if (showUnsupported == "yes")
 		m_modelCheckerSettings.showUnsupported = true;
 	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT \"show unsupported\" choice."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT \"show unsupported\" choice."));
 
 	m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "z3");
 	if (choice == "none")
 		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	else if (!m_modelCheckerSettings.solvers.setSolver(choice))
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT solver choice."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT solver choice."));
 
 	m_modelCheckerSettings.solvers &= ModelChecker::availableSolvers();
 
@@ -71,13 +70,13 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	if (targets)
 		m_modelCheckerSettings.targets = *targets;
 	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT targets."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT targets."));
 
 	auto engine = ModelCheckerEngine::fromString(m_reader.stringSetting("SMTEngine", "all"));
 	if (engine)
 		m_modelCheckerSettings.engine = *engine;
 	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT engine choice."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT engine choice."));
 
 	if (m_modelCheckerSettings.solvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
@@ -88,10 +87,10 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else if (ignoreCex == "yes")
 		m_ignoreCex = true;
 	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT counterexample choice."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT counterexample choice."));
 
-	static auto removeInv = [](vector<SyntaxTestError>&& errors) {
-		vector<SyntaxTestError> filtered;
+	static auto removeInv = [](std::vector<SyntaxTestError>&& errors) {
+		std::vector<SyntaxTestError> filtered;
 		for (auto&& e: errors)
 			if (e.errorId != 1180_error)
 				filtered.emplace_back(e);
@@ -106,10 +105,10 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else if (ignoreInv == "yes")
 		m_modelCheckerSettings.invariants = ModelCheckerInvariants::None();
 	else
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT invariant choice."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT invariant choice."));
 
 	auto const& ignoreOSSetting = m_reader.stringSetting("SMTIgnoreOS", "none");
-	for (string const& os: ignoreOSSetting | ranges::views::split(',') | ranges::to<vector<string>>())
+	for (std::string const& os: ignoreOSSetting | ranges::views::split(',') | ranges::to<std::vector<std::string>>())
 	{
 #ifdef __APPLE__
 		if (os == "macos")
@@ -127,25 +126,23 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	m_modelCheckerSettings.bmcLoopIterations = std::optional<unsigned>{bmcLoopIterations};
 }
 
-TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+void SMTCheckerTest::setupCompiler(CompilerStack& _compiler)
 {
-	setupCompiler();
-	compiler().setModelCheckerSettings(m_modelCheckerSettings);
-	parseAndAnalyze();
-	filterObtainedErrors();
+	SyntaxTest::setupCompiler(_compiler);
 
-	return conclude(_stream, _linePrefix, _formatted);
+	_compiler.setModelCheckerSettings(m_modelCheckerSettings);
 }
 
 void SMTCheckerTest::filterObtainedErrors()
 {
 	SyntaxTest::filterObtainedErrors();
+	m_unfilteredErrorList = m_errorList;
 
-	static auto removeCex = [](vector<SyntaxTestError>& errors) {
+	static auto removeCex = [](std::vector<SyntaxTestError>& errors) {
 		for (auto& e: errors)
 			if (
 				auto cexPos = e.message.find("\\nCounterexample");
-				cexPos != string::npos
+				cexPos != std::string::npos
 			)
 				e.message = e.message.substr(0, cexPos);
 	};
@@ -155,4 +152,11 @@ void SMTCheckerTest::filterObtainedErrors()
 		removeCex(m_expectations);
 		removeCex(m_errorList);
 	}
+}
+
+void SMTCheckerTest::printUpdatedExpectations(std::ostream &_stream, const std::string &_linePrefix) const {
+	if (!m_unfilteredErrorList.empty())
+		printErrorList(_stream, m_unfilteredErrorList, _linePrefix, false);
+	else
+		CommonSyntaxTest::printUpdatedExpectations(_stream, _linePrefix);
 }

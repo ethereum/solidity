@@ -109,7 +109,7 @@ public:
 
 	/// Resets any knowledge about storage.
 	void resetStorage() { m_storageContent.clear(); }
-	/// Resets any knowledge about storage.
+	/// Resets any knowledge about memory.
 	void resetMemory() { m_memoryContent.clear(); }
 	/// Resets known Keccak-256 hashes
 	void resetKnownKeccak256Hashes() { m_knownKeccak256Hashes.clear(); }

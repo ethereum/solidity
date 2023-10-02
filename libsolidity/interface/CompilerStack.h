@@ -81,13 +81,15 @@ class Compiler;
 class GlobalContext;
 class Natspec;
 class DeclarationContainer;
+namespace experimental
+{
+class Analysis;
+}
 
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
  * It holds state and can be used to either step through the compilation stages (and abort e.g.
  * before compilation to bytecode) or run the whole compilation in one call.
- * If error recovery is active, it is possible to progress through the stages even when
- * there are errors. In any case, producing code is only possible without errors.
  */
 class CompilerStack: public langutil::CharStreamProvider
 {
@@ -101,7 +103,7 @@ public:
 		SourcesSet,
 		Parsed,
 		ParsedAndImported,
-		AnalysisPerformed,
+		AnalysisSuccessful,
 		CompilationSuccessful
 	};
 
@@ -137,10 +139,6 @@ public:
 	/// @returns the current state.
 	State state() const { return m_stackState; }
 
-	bool hasError() const { return m_hasError; }
-
-	bool compilationSuccessful() const { return m_stackState >= CompilationSuccessful; }
-
 	/// Resets the compiler to an empty state. Unless @a _keepSettings is set to true,
 	/// all settings are reset as well.
 	void reset(bool _keepSettings = false);
@@ -163,14 +161,6 @@ public:
 
 	/// Sets whether to strip revert strings, add additional strings or do nothing at all.
 	void setRevertStringBehaviour(RevertStrings _revertStrings);
-
-	/// Set whether or not parser error is desired.
-	/// When called without an argument it will revert to the default.
-	/// Must be set before parsing.
-	void setParserErrorRecovery(bool _wantErrorRecovery = false)
-	{
-		m_parserErrorRecovery = _wantErrorRecovery;
-	}
 
 	/// Sets the pipeline to go through the Yul IR or not.
 	/// Must be set before parsing.
@@ -421,6 +411,14 @@ private:
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;
 
+	/// Perform the analysis steps of legacy language mode.
+	/// @returns false on error.
+	bool analyzeLegacy(bool _noErrorsSoFar);
+
+	/// Perform the analysis steps of experimental language mode.
+	/// @returns false on error.
+	bool analyzeExperimental();
+
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
 	void assembleYul(
@@ -514,15 +512,12 @@ private:
 
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
+	std::unique_ptr<experimental::Analysis> m_experimentalAnalysis;
 	bool m_metadataLiteralSources = false;
 	MetadataHash m_metadataHash = MetadataHash::IPFS;
 	langutil::DebugInfoSelection m_debugInfoSelection = langutil::DebugInfoSelection::Default();
-	bool m_parserErrorRecovery = false;
 	State m_stackState = Empty;
 	CompilationSourceType m_compilationSourceType = CompilationSourceType::Solidity;
-	/// Whether or not there has been an error during processing.
-	/// If this is true, the stack will refuse to generate code.
-	bool m_hasError = false;
 	MetadataFormat m_metadataFormat = defaultMetadataFormat();
 };
 

@@ -6,8 +6,7 @@ object "C_8" {
             /// @src 0:80:221  "contract C {..."
             mstore(64, memoryguard(0x80))
             /// @src 0:129:213  "assembly (\"memory-safe\") {..."
-            let usr$a := 0
-            revert(usr$a, usr$a)
+            revert(0, 0)
         }
     }
     /// @use-src 0:"yul_optimizer_steps_short_sequence/input.sol"

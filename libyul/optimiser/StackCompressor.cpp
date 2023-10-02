@@ -40,7 +40,6 @@
 
 #include <libsolutil/CommonData.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -61,9 +60,9 @@ public:
 	/// @returns a map from function name to rematerialisation costs to a vector of variables to rematerialise
 	/// and variables that occur in their expression.
 	/// While the map is sorted by cost, the contained vectors are sorted by the order of occurrence.
-	map<YulString, map<size_t, vector<YulString>>> candidates()
+	std::map<YulString, std::map<size_t, std::vector<YulString>>> candidates()
 	{
-		map<YulString, map<size_t, vector<YulString>>> cand;
+		std::map<YulString, std::map<size_t, std::vector<YulString>>> cand;
 		for (auto const& [functionName, candidate]: m_candidates)
 		{
 			if (size_t const* cost = util::valueOrNullptr(m_expressionCodeCost, candidate))
@@ -110,7 +109,7 @@ public:
 	// get called on left-hand-sides of assignments.
 	void visit(Expression& _e) override
 	{
-		if (holds_alternative<Identifier>(_e))
+		if (std::holds_alternative<Identifier>(_e))
 		{
 			YulString name = std::get<Identifier>(_e).name;
 			if (m_expressionCodeCost.count(name))
@@ -134,20 +133,20 @@ public:
 	YulString m_currentFunctionName = {};
 
 	/// All candidate variables by function name, in order of occurrence.
-	vector<pair<YulString, YulString>> m_candidates;
+	std::vector<std::pair<YulString, YulString>> m_candidates;
 	/// Candidate variables and the code cost of their value.
-	map<YulString, size_t> m_expressionCodeCost;
+	std::map<YulString, size_t> m_expressionCodeCost;
 	/// Number of references to each candidate variable.
-	map<YulString, size_t> m_numReferences;
+	std::map<YulString, size_t> m_numReferences;
 };
 
 /// Selects at most @a _numVariables among @a _candidates.
-set<YulString> chooseVarsToEliminate(
-	map<size_t, vector<YulString>> const& _candidates,
+std::set<YulString> chooseVarsToEliminate(
+	std::map<size_t, std::vector<YulString>> const& _candidates,
 	size_t _numVariables
 )
 {
-	set<YulString> varsToEliminate;
+	std::set<YulString> varsToEliminate;
 	for (auto&& [cost, candidates]: _candidates)
 		for (auto&& candidate: candidates)
 		{
@@ -161,15 +160,15 @@ set<YulString> chooseVarsToEliminate(
 void eliminateVariables(
 	Dialect const& _dialect,
 	Block& _ast,
-	map<YulString, int> const& _numVariables,
+	std::map<YulString, int> const& _numVariables,
 	bool _allowMSizeOptimization
 )
 {
 	RematCandidateSelector selector{_dialect};
 	selector(_ast);
-	map<YulString, map<size_t, vector<YulString>>> candidates = selector.candidates();
+	std::map<YulString, std::map<size_t, std::vector<YulString>>> candidates = selector.candidates();
 
-	set<YulString> varsToEliminate;
+	std::set<YulString> varsToEliminate;
 	for (auto const& [functionName, numVariables]: _numVariables)
 	{
 		yulAssert(numVariables > 0);
@@ -178,14 +177,14 @@ void eliminateVariables(
 
 	Rematerialiser::run(_dialect, _ast, std::move(varsToEliminate));
 	// Do not remove functions.
-	set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
+	std::set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
 	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);
 }
 
 void eliminateVariablesOptimizedCodegen(
 	Dialect const& _dialect,
 	Block& _ast,
-	map<YulString, vector<StackLayoutGenerator::StackTooDeep>> const& _unreachables,
+	std::map<YulString, std::vector<StackLayoutGenerator::StackTooDeep>> const& _unreachables,
 	bool _allowMSizeOptimization
 )
 {
@@ -195,19 +194,19 @@ void eliminateVariablesOptimizedCodegen(
 	RematCandidateSelector selector{_dialect};
 	selector(_ast);
 
-	map<YulString, size_t> candidates;
+	std::map<YulString, size_t> candidates;
 	for (auto const& [functionName, candidatesInFunction]: selector.candidates())
 		for (auto [cost, candidatesWithCost]: candidatesInFunction)
 			for (auto candidate: candidatesWithCost)
 				candidates[candidate] = cost;
 
-	set<YulString> varsToEliminate;
+	std::set<YulString> varsToEliminate;
 
 	// TODO: this currently ignores the fact that variables may reference other variables we want to eliminate.
 	for (auto const& [functionName, unreachables]: _unreachables)
 		for (auto const& unreachable: unreachables)
 		{
-			map<size_t, vector<YulString>> suitableCandidates;
+			std::map<size_t, std::vector<YulString>> suitableCandidates;
 			size_t neededSlots = unreachable.deficit;
 			for (auto varName: unreachable.variableChoices)
 			{
@@ -230,7 +229,7 @@ void eliminateVariablesOptimizedCodegen(
 		}
 	Rematerialiser::run(_dialect, _ast, std::move(varsToEliminate), true);
 	// Do not remove functions.
-	set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
+	std::set<YulString> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
 	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);
 }
 
@@ -245,7 +244,7 @@ bool StackCompressor::run(
 {
 	yulAssert(
 		_object.code &&
-		_object.code->statements.size() > 0 && holds_alternative<Block>(_object.code->statements.at(0)),
+		_object.code->statements.size() > 0 && std::holds_alternative<Block>(_object.code->statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool usesOptimizedCodeGenerator = false;
@@ -258,7 +257,7 @@ bool StackCompressor::run(
 	if (usesOptimizedCodeGenerator)
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
-		unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, *_object.code);
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, *_object.code);
 		eliminateVariablesOptimizedCodegen(
 			_dialect,
 			*_object.code,
@@ -269,7 +268,7 @@ bool StackCompressor::run(
 	else
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
+			std::map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
 			if (stackSurplus.empty())
 				return true;
 			eliminateVariables(

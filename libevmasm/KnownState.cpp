@@ -28,17 +28,16 @@
 
 #include <functional>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
-ostream& KnownState::stream(ostream& _out) const
+std::ostream& KnownState::stream(std::ostream& _out) const
 {
-	auto streamExpressionClass = [this](ostream& _out, Id _id)
+	auto streamExpressionClass = [this](std::ostream& _out, Id _id)
 	{
 		auto const& expr = m_expressionClasses->representative(_id);
-		_out << "  " << dec << _id << ": ";
+		_out << "  " << std::dec << _id << ": ";
 		if (!expr.item)
 			_out << " no item";
 		else if (expr.item->type() == UndefinedItem)
@@ -46,26 +45,26 @@ ostream& KnownState::stream(ostream& _out) const
 		else
 			_out << *expr.item;
 		if (expr.sequenceNumber)
-			_out << "@" << dec << expr.sequenceNumber;
+			_out << "@" << std::dec << expr.sequenceNumber;
 		_out << "(";
 		for (Id arg: expr.arguments)
-			_out << dec << arg << ",";
-		_out << ")" << endl;
+			_out << std::dec << arg << ",";
+		_out << ")" << std::endl;
 	};
 
-	_out << "=== State ===" << endl;
-	_out << "Stack height: " << dec << m_stackHeight << endl;
-	_out << "Equivalence classes:" << endl;
+	_out << "=== State ===" << std::endl;
+	_out << "Stack height: " << std::dec << m_stackHeight << std::endl;
+	_out << "Equivalence classes:" << std::endl;
 	for (Id eqClass = 0; eqClass < m_expressionClasses->size(); ++eqClass)
 		streamExpressionClass(_out, eqClass);
 
-	_out << "Stack:" << endl;
+	_out << "Stack:" << std::endl;
 	for (auto const& it: m_stackElements)
 	{
-		_out << "  " << dec << it.first << ": ";
+		_out << "  " << std::dec << it.first << ": ";
 		streamExpressionClass(_out, it.second);
 	}
-	_out << "Storage:" << endl;
+	_out << "Storage:" << std::endl;
 	for (auto const& it: m_storageContent)
 	{
 		_out << "  ";
@@ -73,7 +72,7 @@ ostream& KnownState::stream(ostream& _out) const
 		_out << ": ";
 		streamExpressionClass(_out, it.second);
 	}
-	_out << "Memory:" << endl;
+	_out << "Memory:" << std::endl;
 	for (auto const& it: m_memoryContent)
 	{
 		_out << "  ";
@@ -149,7 +148,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 			);
 		else if (instruction != Instruction::POP)
 		{
-			vector<Id> arguments(static_cast<size_t>(info.args));
+			std::vector<Id> arguments(static_cast<size_t>(info.args));
 			for (size_t i = 0; i < static_cast<size_t>(info.args); ++i)
 				arguments[i] = stackElement(m_stackHeight - static_cast<int>(i), _item.location());
 			switch (_item.instruction())
@@ -233,8 +232,8 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 				++it;
 			else
 			{
-				set<u256> theseTags = tagsInExpression(it->second);
-				set<u256> otherTags = tagsInExpression(other);
+				std::set<u256> theseTags = tagsInExpression(it->second);
+				std::set<u256> otherTags = tagsInExpression(other);
 				if (!theseTags.empty() && !otherTags.empty())
 				{
 					theseTags.insert(otherTags.begin(), otherTags.end());
@@ -251,7 +250,7 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 	// Use the smaller stack height. Essential to terminate in case of loops.
 	if (m_stackHeight > _other.m_stackHeight)
 	{
-		map<int, Id> shiftedStack;
+		std::map<int, Id> shiftedStack;
 		for (auto const& stackElement: m_stackElements)
 			shiftedStack[stackElement.first - stackDiff] = stackElement.second;
 		m_stackElements = std::move(shiftedStack);
@@ -261,7 +260,7 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 	intersect(m_storageContent, _other.m_storageContent);
 	intersect(m_memoryContent, _other.m_memoryContent);
 	if (_combineSequenceNumbers)
-		m_sequenceNumber = max(m_sequenceNumber, _other.m_sequenceNumber);
+		m_sequenceNumber = std::max(m_sequenceNumber, _other.m_sequenceNumber);
 }
 
 bool KnownState::operator==(KnownState const& _other) const
@@ -316,7 +315,7 @@ void KnownState::swapStackElements(
 	stackElement(_stackHeightA, _location);
 	stackElement(_stackHeightB, _location);
 
-	swap(m_stackElements[_stackHeightA], m_stackElements[_stackHeightB]);
+	std::swap(m_stackElements[_stackHeightA], m_stackElements[_stackHeightB]);
 }
 
 KnownState::StoreOperation KnownState::storeInStorage(
@@ -400,7 +399,7 @@ KnownState::Id KnownState::applyKeccak256(
 	if (!l || *l > 128)
 		return m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
 	unsigned length = unsigned(*l);
-	vector<Id> arguments;
+	std::vector<Id> arguments;
 	for (unsigned i = 0; i < length; i += 32)
 	{
 		Id slot = m_expressionClasses->find(
@@ -426,19 +425,19 @@ KnownState::Id KnownState::applyKeccak256(
 	return m_knownKeccak256Hashes[{arguments, length}] = v;
 }
 
-set<u256> KnownState::tagsInExpression(KnownState::Id _expressionId)
+std::set<u256> KnownState::tagsInExpression(KnownState::Id _expressionId)
 {
 	if (m_tagUnions.left.count(_expressionId))
 		return m_tagUnions.left.at(_expressionId);
 	// Might be a tag, then return the set of itself.
 	ExpressionClasses::Expression expr = m_expressionClasses->representative(_expressionId);
 	if (expr.item && expr.item->type() == PushTag)
-		return set<u256>({expr.item->data()});
+		return std::set<u256>({expr.item->data()});
 	else
-		return set<u256>();
+		return std::set<u256>();
 }
 
-KnownState::Id KnownState::tagUnion(set<u256> _tags)
+KnownState::Id KnownState::tagUnion(std::set<u256> _tags)
 {
 	if (m_tagUnions.right.count(_tags))
 		return m_tagUnions.right.at(_tags);

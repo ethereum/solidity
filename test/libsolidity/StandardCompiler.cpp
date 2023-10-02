@@ -282,43 +282,6 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_CHECK(containsAtMostWarnings(result));
 }
 
-BOOST_AUTO_TEST_CASE(error_recovery_field)
-{
-	auto input = R"(
-	{
-		"language": "Solidity",
-		"settings": {
-			"parserErrorRecovery": "1"
-		},
-		"sources": {
-			"empty": {
-				"content": ""
-			}
-		}
-	}
-	)";
-
-	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "\"settings.parserErrorRecovery\" must be a Boolean."));
-
-	input = R"(
-	{
-		"language": "Solidity",
-		"settings": {
-			"parserErrorRecovery": true
-		},
-		"sources": {
-			"empty": {
-				"content": ""
-			}
-		}
-	}
-	)";
-
-	result = compile(input);
-	BOOST_CHECK(containsAtMostWarnings(result));
-}
-
 BOOST_AUTO_TEST_CASE(optimizer_enabled_not_boolean)
 {
 	char const* input = R"(

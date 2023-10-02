@@ -1,0 +1,194 @@
+{
+  "absolutePath": "a",
+  "id": 20,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 5,
+      "name": "C",
+      "nameLocation": "9:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "id": 4,
+          "name": "E",
+          "nameLocation": "23:1:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 3,
+            "nodeType": "ParameterList",
+            "parameters":
+            [
+              {
+                "constant": false,
+                "id": 2,
+                "indexed": true,
+                "mutability": "mutable",
+                "name": "sender",
+                "nameLocation": "41:6:1",
+                "nodeType": "VariableDeclaration",
+                "src": "25:22:1",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {},
+                "typeName":
+                {
+                  "id": 1,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "25:7:1",
+                  "stateMutability": "nonpayable",
+                  "typeDescriptions": {}
+                },
+                "visibility": "internal"
+              }
+            ],
+            "src": "24:24:1"
+          },
+          "src": "17:32:1"
+        }
+      ],
+      "src": "0:51:1",
+      "usedErrors": [],
+      "usedEvents": []
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 19,
+      "name": "D",
+      "nameLocation": "61:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "body":
+          {
+            "id": 17,
+            "nodeType": "Block",
+            "src": "106:37:1",
+            "statements":
+            [
+              {
+                "eventCall":
+                {
+                  "arguments":
+                  [
+                    {
+                      "expression":
+                      {
+                        "id": 13,
+                        "name": "msg",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "src": "125:3:1",
+                        "typeDescriptions": {}
+                      },
+                      "id": 14,
+                      "memberLocation": "129:6:1",
+                      "memberName": "sender",
+                      "nodeType": "MemberAccess",
+                      "src": "125:10:1",
+                      "typeDescriptions": {}
+                    }
+                  ],
+                  "expression":
+                  {
+                    "expression":
+                    {
+                      "id": 10,
+                      "name": "C",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "src": "121:1:1",
+                      "typeDescriptions": {}
+                    },
+                    "id": 12,
+                    "memberLocation": "123:1:1",
+                    "memberName": "E",
+                    "nodeType": "MemberAccess",
+                    "src": "121:3:1",
+                    "typeDescriptions": {}
+                  },
+                  "id": 15,
+                  "nameLocations": [],
+                  "names": [],
+                  "nodeType": "FunctionCall",
+                  "src": "121:15:1",
+                  "tryCall": false,
+                  "typeDescriptions": {}
+                },
+                "id": 16,
+                "nodeType": "EmitStatement",
+                "src": "116:20:1"
+              }
+            ]
+          },
+          "id": 18,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "test",
+          "nameLocation": "78:4:1",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 8,
+            "nodeType": "ParameterList",
+            "parameters":
+            [
+              {
+                "constant": false,
+                "id": 7,
+                "mutability": "mutable",
+                "name": "sender",
+                "nameLocation": "91:6:1",
+                "nodeType": "VariableDeclaration",
+                "src": "83:14:1",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {},
+                "typeName":
+                {
+                  "id": 6,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "83:7:1",
+                  "stateMutability": "nonpayable",
+                  "typeDescriptions": {}
+                },
+                "visibility": "internal"
+              }
+            ],
+            "src": "82:16:1"
+          },
+          "returnParameters":
+          {
+            "id": 9,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "106:0:1"
+          },
+          "src": "69:74:1",
+          "stateMutability": "nonpayable",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "src": "52:93:1",
+      "usedErrors": [],
+      "usedEvents": []
+    }
+  ],
+  "src": "0:146:1"
+}

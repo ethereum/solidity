@@ -46,8 +46,15 @@ public:
 		bool _colored,
 		bool _withErrorIds
 	):
-		m_stream(_stream), m_charStreamProvider(_charStreamProvider), m_colored(_colored), m_withErrorIds(_withErrorIds)
+		m_stream(_stream),
+		m_charStreamProvider(_charStreamProvider),
+		m_colored(_colored),
+		m_withErrorIds(_withErrorIds)
 	{}
+
+	// WARNING: Use the xyzErrorInformation() variants over xyzExceptionInformation() when you
+	// do have access to an Error instance. Error is implicitly convertible to util::Exception
+	// but the conversion loses the error ID.
 
 	/// Prints source location if it is given.
 	void printSourceLocation(SourceReference const& _ref);
@@ -61,12 +68,11 @@ public:
 		util::Exception const& _exception,
 		Error::Type _type,
 		CharStreamProvider const& _charStreamProvider,
-		bool _colored = false,
-		bool _withErrorIds = false
+		bool _colored = false
 	)
 	{
 		std::ostringstream errorOutput;
-		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, false /* _withErrorIds */);
 		formatter.printExceptionInformation(_exception, _type);
 		return errorOutput.str();
 	}
@@ -75,26 +81,39 @@ public:
 		util::Exception const& _exception,
 		Error::Severity _severity,
 		CharStreamProvider const& _charStreamProvider,
-		bool _colored = false,
-		bool _withErrorIds = false
+		bool _colored = false
 	)
 	{
 		std::ostringstream errorOutput;
-		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, false /* _withErrorIds */);
 		formatter.printExceptionInformation(_exception, _severity);
 		return errorOutput.str();
 	}
 
 	static std::string formatErrorInformation(
 		Error const& _error,
-		CharStreamProvider const& _charStreamProvider
+		CharStreamProvider const& _charStreamProvider,
+		bool _colored = false,
+		bool _withErrorIds = false
 	)
 	{
-		return formatExceptionInformation(
-			_error,
-			Error::errorSeverity(_error.type()),
-			_charStreamProvider
-		);
+		std::ostringstream errorOutput;
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		formatter.printErrorInformation(_error);
+		return errorOutput.str();
+	}
+
+	static std::string formatErrorInformation(
+		langutil::ErrorList const& _errors,
+		CharStreamProvider const& _charStreamProvider,
+		bool _colored = false,
+		bool _withErrorIds = false
+	)
+	{
+		std::ostringstream errorOutput;
+		SourceReferenceFormatter formatter(errorOutput, _charStreamProvider, _colored, _withErrorIds);
+		formatter.printErrorInformation(_errors);
+		return errorOutput.str();
 	}
 
 	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream);

@@ -190,7 +190,7 @@ private:
 	smtutil::CheckResult checkSatisfiable();
 	//@}
 
-	std::tuple<smtutil::Expression, smtutil::Expression> mergeVariablesFromLoopCheckpoints();
+	smtutil::Expression mergeVariablesFromLoopCheckpoints();
 	bool isInsideLoop() const;
 
 	std::unique_ptr<smtutil::SolverInterface> m_interface;

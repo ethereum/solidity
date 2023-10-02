@@ -42,7 +42,6 @@
 #include <fstream>
 #include <limits>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
@@ -77,7 +76,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 namespace
 {
 
-string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
+std::string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location)
 {
 	if (!_location.hasText() || _sourceCodes.empty())
 		return {};
@@ -92,7 +91,7 @@ string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& 
 class Functionalizer
 {
 public:
-	Functionalizer (ostream& _out, string const& _prefix, StringMap const& _sourceCodes, Assembly const& _assembly):
+	Functionalizer (std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes, Assembly const& _assembly):
 		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes), m_assembly(_assembly)
 	{}
 
@@ -105,7 +104,7 @@ public:
 			printLocation(_debugInfoSelection);
 		}
 
-		string expression = _item.toAssemblyText(m_assembly);
+		std::string expression = _item.toAssemblyText(m_assembly);
 
 		if (!(
 			_item.canBeFunctional() &&
@@ -114,7 +113,7 @@ public:
 		))
 		{
 			flush();
-			m_out << m_prefix << (_item.type() == Tag ? "" : "  ") << expression << endl;
+			m_out << m_prefix << (_item.type() == Tag ? "" : "  ") << expression << std::endl;
 			return;
 		}
 		if (_item.arguments() > 0)
@@ -137,8 +136,8 @@ public:
 
 	void flush()
 	{
-		for (string const& expression: m_pending)
-			m_out << m_prefix << "  " << expression << endl;
+		for (std::string const& expression: m_pending)
+			m_out << m_prefix << "  " << expression << std::endl;
 		m_pending.clear();
 	}
 
@@ -154,7 +153,7 @@ public:
 			if (m_location.sourceName)
 				m_out << " " + escapeAndQuoteString(*m_location.sourceName);
 			if (m_location.hasText())
-				m_out << ":" << to_string(m_location.start) + ":" + to_string(m_location.end);
+				m_out << ":" << std::to_string(m_location.start) + ":" + std::to_string(m_location.end);
 		}
 
 		if (_debugInfoSelection.snippet)
@@ -165,15 +164,15 @@ public:
 			m_out << locationFromSources(m_sourceCodes, m_location);
 		}
 
-		m_out << " */" << endl;
+		m_out << " */" << std::endl;
 	}
 
 private:
 	strings m_pending;
 	SourceLocation m_location;
 
-	ostream& m_out;
-	string const& m_prefix;
+	std::ostream& m_out;
+	std::string const& m_prefix;
 	StringMap const& m_sourceCodes;
 	Assembly const& m_assembly;
 };
@@ -181,9 +180,9 @@ private:
 }
 
 void Assembly::assemblyStream(
-	ostream& _out,
+	std::ostream& _out,
 	DebugInfoSelection const& _debugInfoSelection,
-	string const& _prefix,
+	std::string const& _prefix,
 	StringMap const& _sourceCodes
 ) const
 {
@@ -195,34 +194,34 @@ void Assembly::assemblyStream(
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
-		_out << _prefix << "stop" << endl;
+		_out << _prefix << "stop" << std::endl;
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
-				_out << _prefix << "data_" << toHex(u256(i.first)) << " " << util::toHex(i.second) << endl;
+				_out << _prefix << "data_" << toHex(u256(i.first)) << " " << util::toHex(i.second) << std::endl;
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
-			_out << endl << _prefix << "sub_" << i << ": assembly {\n";
+			_out << std::endl << _prefix << "sub_" << i << ": assembly {\n";
 			m_subs[i]->assemblyStream(_out, _debugInfoSelection, _prefix + "    ", _sourceCodes);
-			_out << _prefix << "}" << endl;
+			_out << _prefix << "}" << std::endl;
 		}
 	}
 
 	if (m_auxiliaryData.size() > 0)
-		_out << endl << _prefix << "auxdata: 0x" << util::toHex(m_auxiliaryData) << endl;
+		_out << std::endl << _prefix << "auxdata: 0x" << util::toHex(m_auxiliaryData) << std::endl;
 }
 
-string Assembly::assemblyString(
+std::string Assembly::assemblyString(
 	DebugInfoSelection const& _debugInfoSelection,
 	StringMap const& _sourceCodes
 ) const
 {
-	ostringstream tmp;
+	std::ostringstream tmp;
 	assemblyStream(tmp, _debugInfoSelection, "", _sourceCodes);
 	return tmp.str();
 }
 
-Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, bool _includeSourceList) const
+Json::Value Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourceIndices, bool _includeSourceList) const
 {
 	Json::Value root;
 	root[".code"] = Json::arrayValue;
@@ -244,7 +243,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 		jsonItem["end"] = item.location().end;
 		if (item.m_modifierDepth != 0)
 			jsonItem["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
-		string jumpType = item.getJumpTypeAsString();
+		std::string jumpType = item.getJumpTypeAsString();
 		if (!jumpType.empty())
 			jsonItem["jumpType"] = jumpType;
 		if (name == "PUSHLIB")
@@ -286,8 +285,8 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
-			stringstream hexStr;
-			hexStr << hex << i;
+			std::stringstream hexStr;
+			hexStr << std::hex << i;
 			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices, /*_includeSourceList = */false);
 		}
 	}
@@ -298,7 +297,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, 
 	return root;
 }
 
-AssemblyItem Assembly::namedTag(string const& _name, size_t _params, size_t _returns, optional<uint64_t> _sourceID)
+AssemblyItem Assembly::namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID)
 {
 	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
 	if (m_namedTags.count(_name))
@@ -312,21 +311,21 @@ AssemblyItem Assembly::namedTag(string const& _name, size_t _params, size_t _ret
 	return AssemblyItem{Tag, m_namedTags.at(_name).id};
 }
 
-AssemblyItem Assembly::newPushLibraryAddress(string const& _identifier)
+AssemblyItem Assembly::newPushLibraryAddress(std::string const& _identifier)
 {
 	h256 h(util::keccak256(_identifier));
 	m_libraries[h] = _identifier;
 	return AssemblyItem{PushLibraryAddress, h};
 }
 
-AssemblyItem Assembly::newPushImmutable(string const& _identifier)
+AssemblyItem Assembly::newPushImmutable(std::string const& _identifier)
 {
 	h256 h(util::keccak256(_identifier));
 	m_immutables[h] = _identifier;
 	return AssemblyItem{PushImmutable, h};
 }
 
-AssemblyItem Assembly::newImmutableAssignment(string const& _identifier)
+AssemblyItem Assembly::newImmutableAssignment(std::string const& _identifier)
 {
 	h256 h(util::keccak256(_identifier));
 	m_immutables[h] = _identifier;
@@ -339,9 +338,9 @@ Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 	return *this;
 }
 
-map<u256, u256> const& Assembly::optimiseInternal(
+std::map<u256, u256> const& Assembly::optimiseInternal(
 	OptimiserSettings const& _settings,
-	set<size_t> _tagsReferencedFromOutside
+	std::set<size_t> _tagsReferencedFromOutside
 )
 {
 	if (m_tagReplacements)
@@ -352,7 +351,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 	{
 		OptimiserSettings settings = _settings;
 		Assembly& sub = *m_subs[subId];
-		map<u256, u256> const& subTagReplacements = sub.optimiseInternal(
+		std::map<u256, u256> const& subTagReplacements = sub.optimiseInternal(
 			settings,
 			JumpdestRemover::referencedTags(m_items, subId)
 		);
@@ -360,7 +359,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
 	}
 
-	map<u256, u256> tagReplacements;
+	std::map<u256, u256> tagReplacements;
 	// Iterate until no new optimisation possibilities are found.
 	for (unsigned count = 1; count > 0;)
 	{
@@ -401,7 +400,7 @@ map<u256, u256> const& Assembly::optimiseInternal(
 				for (auto const& replacement: deduplicator.replacedTags())
 				{
 					assertThrow(
-						replacement.first <= numeric_limits<size_t>::max() && replacement.second <= numeric_limits<size_t>::max(),
+						replacement.first <= std::numeric_limits<size_t>::max() && replacement.second <= std::numeric_limits<size_t>::max(),
 						OptimizerException,
 						"Invalid tag replacement."
 					);
@@ -494,7 +493,7 @@ LinkerObject const& Assembly::assemble() const
 	LinkerObject& ret = m_assembledObject;
 
 	size_t subTagSize = 1;
-	map<u256, pair<string, vector<size_t>>> immutableReferencesBySub;
+	std::map<u256, std::pair<std::string, std::vector<size_t>>> immutableReferencesBySub;
 	for (auto const& sub: m_subs)
 	{
 		auto const& linkerObject = sub->assemble();
@@ -508,7 +507,7 @@ LinkerObject const& Assembly::assemble() const
 			immutableReferencesBySub = linkerObject.immutableReferences;
 		}
 		for (size_t tagPos: sub->m_tagPositionsInBytecode)
-			if (tagPos != numeric_limits<size_t>::max() && tagPos > subTagSize)
+			if (tagPos != std::numeric_limits<size_t>::max() && tagPos > subTagSize)
 				subTagSize = tagPos;
 	}
 
@@ -531,11 +530,11 @@ LinkerObject const& Assembly::assemble() const
 		);
 
 	unsigned bytesRequiredForCode = codeSize(static_cast<unsigned>(subTagSize));
-	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
-	map<size_t, pair<size_t, size_t>> tagRef;
-	multimap<h256, unsigned> dataRef;
-	multimap<size_t, size_t> subRef;
-	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
+	m_tagPositionsInBytecode = std::vector<size_t>(m_usedTags, std::numeric_limits<size_t>::max());
+	std::map<size_t, std::pair<size_t, size_t>> tagRef;
+	std::multimap<h256, unsigned> dataRef;
+	std::multimap<size_t, size_t> subRef;
+	std::vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
@@ -550,7 +549,7 @@ LinkerObject const& Assembly::assemble() const
 	for (AssemblyItem const& i: m_items)
 	{
 		// store position of the invalid jump destination
-		if (i.type() != Tag && m_tagPositionsInBytecode[0] == numeric_limits<size_t>::max())
+		if (i.type() != Tag && m_tagPositionsInBytecode[0] == std::numeric_limits<size_t>::max())
 			m_tagPositionsInBytecode[0] = ret.bytecode.size();
 
 		switch (i.type())
@@ -583,21 +582,21 @@ LinkerObject const& Assembly::assemble() const
 		}
 		case PushData:
 			ret.bytecode.push_back(dataRefPush);
-			dataRef.insert(make_pair(h256(i.data()), ret.bytecode.size()));
+			dataRef.insert(std::make_pair(h256(i.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSub:
-			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
+			assertThrow(i.data() <= std::numeric_limits<size_t>::max(), AssemblyException, "");
 			ret.bytecode.push_back(dataRefPush);
-			subRef.insert(make_pair(static_cast<size_t>(i.data()), ret.bytecode.size()));
+			subRef.insert(std::make_pair(static_cast<size_t>(i.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSubSize:
 		{
-			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
+			assertThrow(i.data() <= std::numeric_limits<size_t>::max(), AssemblyException, "");
 			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
-			unsigned b = max<unsigned>(1, numberEncodingSize(s));
+			unsigned b = std::max<unsigned>(1, numberEncodingSize(s));
 			ret.bytecode.push_back(static_cast<uint8_t>(pushInstruction(b)));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
@@ -618,7 +617,7 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case PushImmutable:
 			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH32));
-			// Maps keccak back to the "identifier" string of that immutable.
+			// Maps keccak back to the "identifier" std::string of that immutable.
 			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
 			// Record the bytecode offset of the PUSH32 argument.
 			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
@@ -661,10 +660,10 @@ LinkerObject const& Assembly::assemble() const
 		case Tag:
 		{
 			assertThrow(i.data() != 0, AssemblyException, "Invalid tag position.");
-			assertThrow(i.splitForeignPushTag().first == numeric_limits<size_t>::max(), AssemblyException, "Foreign tag.");
+			assertThrow(i.splitForeignPushTag().first == std::numeric_limits<size_t>::max(), AssemblyException, "Foreign tag.");
 			size_t tagId = static_cast<size_t>(i.data());
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
-			assertThrow(m_tagPositionsInBytecode[tagId] == numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
+			assertThrow(m_tagPositionsInBytecode[tagId] == std::numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
 			m_tagPositionsInBytecode[tagId] = ret.bytecode.size();
 			ret.bytecode.push_back(static_cast<uint8_t>(Instruction::JUMPDEST));
 			break;
@@ -686,7 +685,7 @@ LinkerObject const& Assembly::assemble() const
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 
-	map<LinkerObject, size_t> subAssemblyOffsets;
+	std::map<LinkerObject, size_t> subAssemblyOffsets;
 	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{
 		LinkerObject subObject = subAssemblyById(subIdPath)->assemble();
@@ -709,15 +708,15 @@ LinkerObject const& Assembly::assemble() const
 	{
 		size_t subId;
 		size_t tagId;
-		tie(subId, tagId) = i.second;
-		assertThrow(subId == numeric_limits<size_t>::max() || subId < m_subs.size(), AssemblyException, "Invalid sub id");
-		vector<size_t> const& tagPositions =
-			subId == numeric_limits<size_t>::max() ?
+		std::tie(subId, tagId) = i.second;
+		assertThrow(subId == std::numeric_limits<size_t>::max() || subId < m_subs.size(), AssemblyException, "Invalid sub id");
+		std::vector<size_t> const& tagPositions =
+			subId == std::numeric_limits<size_t>::max() ?
 			m_tagPositionsInBytecode :
 			m_subs[subId]->m_tagPositionsInBytecode;
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
-		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
+		assertThrow(pos != std::numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
 		assertThrow(numberEncodingSize(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);
@@ -725,7 +724,7 @@ LinkerObject const& Assembly::assemble() const
 	for (auto const& [name, tagInfo]: m_namedTags)
 	{
 		size_t position = m_tagPositionsInBytecode.at(tagInfo.id);
-		optional<size_t> tagIndex;
+		std::optional<size_t> tagIndex;
 		for (auto&& [index, item]: m_items | ranges::views::enumerate)
 			if (item.type() == Tag && static_cast<size_t>(item.data()) == tagInfo.id)
 			{
@@ -733,7 +732,7 @@ LinkerObject const& Assembly::assemble() const
 				break;
 			}
 		ret.functionDebugData[name] = {
-			position == numeric_limits<size_t>::max() ? nullopt : optional<size_t>{position},
+			position == std::numeric_limits<size_t>::max() ? std::nullopt : std::optional<size_t>{position},
 			tagIndex,
 			tagInfo.sourceID,
 			tagInfo.params,
@@ -764,7 +763,7 @@ LinkerObject const& Assembly::assemble() const
 	return ret;
 }
 
-vector<size_t> Assembly::decodeSubPath(size_t _subObjectId) const
+std::vector<size_t> Assembly::decodeSubPath(size_t _subObjectId) const
 {
 	if (_subObjectId < m_subs.size())
 		return {_subObjectId};
@@ -779,7 +778,7 @@ vector<size_t> Assembly::decodeSubPath(size_t _subObjectId) const
 	return subIdPathIt->first;
 }
 
-size_t Assembly::encodeSubPath(vector<size_t> const& _subPath)
+size_t Assembly::encodeSubPath(std::vector<size_t> const& _subPath)
 {
 	assertThrow(!_subPath.empty(), AssemblyException, "");
 	if (_subPath.size() == 1)
@@ -790,7 +789,7 @@ size_t Assembly::encodeSubPath(vector<size_t> const& _subPath)
 
 	if (m_subPaths.find(_subPath) == m_subPaths.end())
 	{
-		size_t objectId = numeric_limits<size_t>::max() - m_subPaths.size();
+		size_t objectId = std::numeric_limits<size_t>::max() - m_subPaths.size();
 		assertThrow(objectId >= m_subs.size(), AssemblyException, "");
 		m_subPaths[_subPath] = objectId;
 	}
@@ -800,7 +799,7 @@ size_t Assembly::encodeSubPath(vector<size_t> const& _subPath)
 
 Assembly const* Assembly::subAssemblyById(size_t _subId) const
 {
-	vector<size_t> subIds = decodeSubPath(_subId);
+	std::vector<size_t> subIds = decodeSubPath(_subId);
 	Assembly const* currentAssembly = this;
 	for (size_t currentSubId: subIds)
 	{

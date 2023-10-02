@@ -741,7 +741,7 @@ EVM Dialect
 -----------
 
 The default dialect of Yul currently is the EVM dialect for the currently selected version of the EVM.
-with a version of the EVM. The only type available in this dialect
+The only type available in this dialect
 is ``u256``, the 256-bit native type of the Ethereum Virtual Machine.
 Since it is the default type of this dialect, it can be omitted.
 

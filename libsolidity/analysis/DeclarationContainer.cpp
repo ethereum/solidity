@@ -29,7 +29,6 @@
 #include <range/v3/view/filter.hpp>
 #include <range/v3/range/conversion.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
@@ -41,7 +40,7 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 	if (!_name)
 		_name = &_declaration.name();
 	solAssert(!_name->empty(), "");
-	vector<Declaration const*> declarations;
+	std::vector<Declaration const*> declarations;
 	if (m_declarations.count(*_name))
 		declarations += m_declarations.at(*_name);
 	if (m_invisibleDeclarations.count(*_name))
@@ -127,7 +126,7 @@ bool DeclarationContainer::registerDeclaration(
 			m_homonymCandidates.emplace_back(*_name, _location ? _location : &_declaration.location());
 	}
 
-	vector<Declaration const*>& decls = _invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];
+	std::vector<Declaration const*>& decls = _invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];
 	if (!util::contains(decls, &_declaration))
 		decls.push_back(&_declaration);
 	return true;
@@ -142,13 +141,13 @@ bool DeclarationContainer::registerDeclaration(
 	return registerDeclaration(_declaration, nullptr, nullptr, _invisible, _update);
 }
 
-vector<Declaration const*> DeclarationContainer::resolveName(
+std::vector<Declaration const*> DeclarationContainer::resolveName(
 	ASTString const& _name,
 	ResolvingSettings _settings
 ) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
-	vector<Declaration const*> result;
+	std::vector<Declaration const*> result;
 
 	if (m_declarations.count(_name))
 	{
@@ -172,24 +171,24 @@ vector<Declaration const*> DeclarationContainer::resolveName(
 	return result;
 }
 
-vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) const
+std::vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) const
 {
 
 	// because the function below has quadratic runtime - it will not magically improve once a better algorithm is discovered ;)
 	// since 80 is the suggested line length limit, we use 80^2 as length threshold
 	static size_t const MAXIMUM_LENGTH_THRESHOLD = 80 * 80;
 
-	vector<ASTString> similar;
+	std::vector<ASTString> similar;
 	size_t maximumEditDistance = _name.size() > 3 ? 2 : _name.size() / 2;
 	for (auto const& declaration: m_declarations)
 	{
-		string const& declarationName = declaration.first;
+		std::string const& declarationName = declaration.first;
 		if (util::stringWithinDistance(_name, declarationName, maximumEditDistance, MAXIMUM_LENGTH_THRESHOLD))
 			similar.push_back(declarationName);
 	}
 	for (auto const& declaration: m_invisibleDeclarations)
 	{
-		string const& declarationName = declaration.first;
+		std::string const& declarationName = declaration.first;
 		if (util::stringWithinDistance(_name, declarationName, maximumEditDistance, MAXIMUM_LENGTH_THRESHOLD))
 			similar.push_back(declarationName);
 	}
@@ -200,7 +199,7 @@ vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) con
 	return similar;
 }
 
-void DeclarationContainer::populateHomonyms(back_insert_iterator<Homonyms> _it) const
+void DeclarationContainer::populateHomonyms(std::back_insert_iterator<Homonyms> _it) const
 {
 	for (DeclarationContainer const* innerContainer: m_innerContainers)
 		innerContainer->populateHomonyms(_it);
@@ -210,7 +209,7 @@ void DeclarationContainer::populateHomonyms(back_insert_iterator<Homonyms> _it) 
 		ResolvingSettings settings;
 		settings.recursive = true;
 		settings.alsoInvisible = true;
-		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, std::move(settings));
+		std::vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, std::move(settings));
 		if (!declarations.empty())
 			_it = make_pair(location, declarations);
 	}

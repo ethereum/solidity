@@ -32,7 +32,6 @@
 
 #include <string>
 
-using namespace std;
 
 namespace solidity::frontend::test
 {
@@ -42,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(SolidityImports)
 BOOST_AUTO_TEST_CASE(remappings)
 {
 	CompilerStack c;
-	c.setRemappings(vector<ImportRemapper::Remapping>{{"", "s", "s_1.4.6"},{"", "t", "Tee"}});
+	c.setRemappings(std::vector<ImportRemapper::Remapping>{{"", "s", "s_1.4.6"},{"", "t", "Tee"}});
 	c.setSources({
 		{"a", "import \"s/s.sol\"; contract A is S {} pragma solidity >=0.0;"},
 		{"b", "import \"t/tee.sol\"; contract A is Tee {} pragma solidity >=0.0;"},
@@ -56,7 +55,7 @@ BOOST_AUTO_TEST_CASE(remappings)
 BOOST_AUTO_TEST_CASE(context_dependent_remappings)
 {
 	CompilerStack c;
-	c.setRemappings(vector<ImportRemapper::Remapping>{{"a", "s", "s_1.4.6"}, {"b", "s", "s_1.4.7"}});
+	c.setRemappings(std::vector<ImportRemapper::Remapping>{{"a", "s", "s_1.4.6"}, {"b", "s", "s_1.4.7"}});
 	c.setSources({
 		{"a/a.sol", "import \"s/s.sol\"; contract A is SSix {} pragma solidity >=0.0;"},
 		{"b/b.sol", "import \"s/s.sol\"; contract B is SSeven {} pragma solidity >=0.0;"},
@@ -70,7 +69,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings)
 BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_preserved)
 {
 	CompilerStack c;
-	c.setRemappings(vector<ImportRemapper::Remapping>{
+	c.setRemappings(std::vector<ImportRemapper::Remapping>{
 		{"", "foo", "vendor/foo_2.0.0"},
 		{"vendor/bar", "foo", "vendor/foo_1.0.0"},
 		{"", "bar", "vendor/bar"}
@@ -88,7 +87,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_ensure_default_and_module_pres
 BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent_1)
 {
 	CompilerStack c;
-	c.setRemappings(vector<ImportRemapper::Remapping>{{"a", "x/y/z", "d"}, {"a/b", "x", "e"}});
+	c.setRemappings(std::vector<ImportRemapper::Remapping>{{"a", "x/y/z", "d"}, {"a/b", "x", "e"}});
 	c.setSources({
 		{"a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;"},
 		{"a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;"},
@@ -102,7 +101,7 @@ BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent_1)
 BOOST_AUTO_TEST_CASE(context_dependent_remappings_order_independent_2)
 {
 	CompilerStack c;
-	c.setRemappings(vector<ImportRemapper::Remapping>{{"a/b", "x", "e"}, {"a", "x/y/z", "d"}});
+	c.setRemappings(std::vector<ImportRemapper::Remapping>{{"a/b", "x", "e"}, {"a", "x/y/z", "d"}});
 	c.setSources({
 		{"a/main.sol", "import \"x/y/z/z.sol\"; contract Main is D {} pragma solidity >=0.0;"},
 		{"a/b/main.sol", "import \"x/y/z/z.sol\"; contract Main is E {} pragma solidity >=0.0;"},

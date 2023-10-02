@@ -19,29 +19,20 @@
 #include <libsolutil/CommonIO.h>
 #include <liblangutil/Exceptions.h>
 
-using std::equal;
-using std::find;
-using std::move;
-using std::nullopt;
-using std::optional;
-using std::string;
-using std::string_view;
-using std::vector;
-
 namespace solidity::frontend
 {
 
-void ImportRemapper::setRemappings(vector<Remapping> _remappings)
+void ImportRemapper::setRemappings(std::vector<Remapping> _remappings)
 {
 	for (auto const& remapping: _remappings)
 		solAssert(!remapping.prefix.empty(), "");
 	m_remappings = std::move(_remappings);
 }
 
-SourceUnitName ImportRemapper::apply(ImportPath const& _path, string const& _context) const
+SourceUnitName ImportRemapper::apply(ImportPath const& _path, std::string const& _context) const
 {
 	// Try to find the longest prefix match in all remappings that are active in the current context.
-	auto isPrefixOf = [](string const& _a, string const& _b)
+	auto isPrefixOf = [](std::string const& _a, std::string const& _b)
 	{
 		if (_a.length() > _b.length())
 			return false;
@@ -50,12 +41,12 @@ SourceUnitName ImportRemapper::apply(ImportPath const& _path, string const& _con
 
 	size_t longestPrefix = 0;
 	size_t longestContext = 0;
-	string bestMatchTarget;
+	std::string bestMatchTarget;
 
 	for (auto const& redir: m_remappings)
 	{
-		string context = util::sanitizePath(redir.context);
-		string prefix = util::sanitizePath(redir.prefix);
+		std::string context = util::sanitizePath(redir.context);
+		std::string prefix = util::sanitizePath(redir.prefix);
 
 		// Skip if current context is closer
 		if (context.length() < longestContext)
@@ -74,32 +65,32 @@ SourceUnitName ImportRemapper::apply(ImportPath const& _path, string const& _con
 		longestPrefix = prefix.length();
 		bestMatchTarget = util::sanitizePath(redir.target);
 	}
-	string path = bestMatchTarget;
-	path.append(_path.begin() + static_cast<string::difference_type>(longestPrefix), _path.end());
+	std::string path = bestMatchTarget;
+	path.append(_path.begin() + static_cast<std::string::difference_type>(longestPrefix), _path.end());
 	return path;
 }
 
-bool ImportRemapper::isRemapping(string_view _input)
+bool ImportRemapper::isRemapping(std::string_view _input)
 {
-	return _input.find("=") != string::npos;
+	return _input.find("=") != std::string::npos;
 }
 
-optional<ImportRemapper::Remapping> ImportRemapper::parseRemapping(string_view _input)
+	std::optional<ImportRemapper::Remapping> ImportRemapper::parseRemapping(std::string_view _input)
 {
-	auto equals = find(_input.cbegin(), _input.cend(), '=');
+	auto equals = std::find(_input.cbegin(), _input.cend(), '=');
 	if (equals == _input.end())
-		return nullopt;
+		return std::nullopt;
 
-	auto const colon = find(_input.cbegin(), equals, ':');
+	auto const colon = std::find(_input.cbegin(), equals, ':');
 
 	Remapping remapping{
-		(colon == equals ? "" : string(_input.cbegin(), colon)),
-		(colon == equals ? string(_input.cbegin(), equals) : string(colon + 1, equals)),
-		string(equals + 1, _input.cend()),
+		(colon == equals ? "" : std::string(_input.cbegin(), colon)),
+		(colon == equals ? std::string(_input.cbegin(), equals) : std::string(colon + 1, equals)),
+		std::string(equals + 1, _input.cend()),
 	};
 
 	if (remapping.prefix.empty())
-		return nullopt;
+		return std::nullopt;
 
 	return remapping;
 }

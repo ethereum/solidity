@@ -12,13 +12,14 @@
 //         let a_8 := 3
 //         let x_9 := 0
 //         x_9 := add(a_8, a_8)
-//         let b_10 := x_9
-//         let c_11 := _1
+//         let _3 := x_9
+//         let c_10 := _1
+//         let b_11 := _3
 //         let y_12 := 0
-//         let a_6_13 := b_10
+//         let a_6_13 := b_11
 //         let x_7_14 := 0
 //         x_7_14 := add(a_6_13, a_6_13)
-//         y_12 := mul(mload(c_11), x_7_14)
+//         y_12 := mul(mload(c_10), x_7_14)
 //         let y_1 := y_12
 //     }
 //     function f(a) -> x

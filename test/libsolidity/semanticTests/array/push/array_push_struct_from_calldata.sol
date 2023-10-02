@@ -16,6 +16,6 @@ contract c {
 }
 // ----
 // test((uint16,uint16,uint16[3],uint16[])): 0x20, 2, 3, 0, 0, 4, 0xC0, 4, 0, 0, 5, 0, 0 -> 2, 3, 4, 5
-// gas irOptimized: 137087
+// gas irOptimized: 137061
 // gas legacy: 142423
-// gas legacyOptimized: 137993
+// gas legacyOptimized: 137991

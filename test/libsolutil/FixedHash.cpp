@@ -25,7 +25,6 @@
 #include <cstdint>
 #include <sstream>
 
-using namespace std;
 
 namespace solidity::util::test
 {
