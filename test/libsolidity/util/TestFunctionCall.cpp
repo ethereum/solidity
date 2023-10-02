@@ -28,33 +28,32 @@
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend::test;
-using namespace std;
 
 using Token = soltest::Token;
 
-string TestFunctionCall::format(
+std::string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
-	string const& _linePrefix,
+	std::string const& _linePrefix,
 	RenderMode _renderMode,
 	bool const _highlight,
 	bool const _interactivePrint
 ) const
 {
-	stringstream stream;
+	std::stringstream stream;
 
 	bool highlight = !matchesExpectation() && _highlight;
 
 	auto formatOutput = [&](bool const _singleLine)
 	{
-		string ws = " ";
-		string arrow = formatToken(Token::Arrow);
-		string colon = formatToken(Token::Colon);
-		string comma = formatToken(Token::Comma);
-		string comment = formatToken(Token::Comment);
-		string ether = formatToken(Token::Ether);
-		string wei = formatToken(Token::Wei);
-		string newline = formatToken(Token::Newline);
-		string failure = formatToken(Token::Failure);
+		std::string ws = " ";
+		std::string arrow = formatToken(Token::Arrow);
+		std::string colon = formatToken(Token::Colon);
+		std::string comma = formatToken(Token::Comma);
+		std::string comment = formatToken(Token::Comment);
+		std::string ether = formatToken(Token::Ether);
+		std::string wei = formatToken(Token::Wei);
+		std::string newline = formatToken(Token::Newline);
+		std::string failure = formatToken(Token::Failure);
 
 		if (m_call.kind == FunctionCall::Kind::Library)
 		{
@@ -83,7 +82,7 @@ string TestFunctionCall::format(
 		}
 		if (!m_call.arguments.rawBytes().empty())
 		{
-			string output = formatRawParameters(m_call.arguments.parameters, _linePrefix);
+			std::string output = formatRawParameters(m_call.arguments.parameters, _linePrefix);
 			stream << colon;
 			if (!m_call.arguments.parameters.at(0).format.newline)
 				stream << ws;
@@ -107,17 +106,17 @@ string TestFunctionCall::format(
 		}
 		else
 		{
-			stream << endl << _linePrefix << newline << ws;
+			stream << std::endl << _linePrefix << newline << ws;
 			if (!m_call.arguments.comment.empty())
 			{
 				 stream << comment << m_call.arguments.comment << comment;
-				 stream << endl << _linePrefix << newline << ws;
+				 stream << std::endl << _linePrefix << newline << ws;
 			}
 			stream << arrow;
 		}
 
 		/// Format either the expected output or the actual result output
-		string result;
+		std::string result;
 		if (_renderMode != RenderMode::ActualValuesExpectedGas)
 		{
 			bool const isFailure = m_call.expectations.failure;
@@ -162,7 +161,7 @@ string TestFunctionCall::format(
 						m_call.signature
 					);
 
-				string bytesOutput = abiParams ?
+				std::string bytesOutput = abiParams ?
 					BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix) :
 					BytesUtils::formatRawBytes(
 						output,
@@ -194,12 +193,12 @@ string TestFunctionCall::format(
 		{
 			if (!m_call.expectations.comment.empty())
 			{
-				stream << endl << _linePrefix << newline << ws;
+				stream << std::endl << _linePrefix << newline << ws;
 				stream << comment << m_call.expectations.comment << comment;
 			}
 		}
 
-		vector<string> sideEffects;
+		std::vector<std::string> sideEffects;
 		if (_renderMode == RenderMode::ExpectedValuesExpectedGas || _renderMode == RenderMode::ExpectedValuesActualGas)
 			sideEffects = m_call.expectedSideEffects;
 		else
@@ -221,10 +220,10 @@ string TestFunctionCall::format(
 	return stream.str();
 }
 
-string TestFunctionCall::formatBytesParameters(
+std::string TestFunctionCall::formatBytesParameters(
 	ErrorReporter& _errorReporter,
 	bytes const& _bytes,
-	string const& _signature,
+	std::string const& _signature,
 	solidity::frontend::test::ParameterList const& _parameters,
 	bool _highlight,
 	bool _failure
@@ -232,7 +231,7 @@ string TestFunctionCall::formatBytesParameters(
 {
 	using ParameterList = solidity::frontend::test::ParameterList;
 
-	stringstream os;
+	std::stringstream os;
 
 	if (_bytes.empty())
 		return {};
@@ -281,7 +280,7 @@ string TestFunctionCall::formatBytesParameters(
 	}
 }
 
-string TestFunctionCall::formatFailure(
+std::string TestFunctionCall::formatFailure(
 	ErrorReporter& _errorReporter,
 	solidity::frontend::test::FunctionCall const& _call,
 	bytes const& _output,
@@ -289,7 +288,7 @@ string TestFunctionCall::formatFailure(
 	bool _highlight
 ) const
 {
-	stringstream os;
+	std::stringstream os;
 
 	os << formatToken(Token::Failure);
 
@@ -311,34 +310,34 @@ string TestFunctionCall::formatFailure(
 	return os.str();
 }
 
-string TestFunctionCall::formatRawParameters(
+std::string TestFunctionCall::formatRawParameters(
 	solidity::frontend::test::ParameterList const& _params,
 	std::string const& _linePrefix
 ) const
 {
-	stringstream os;
+	std::stringstream os;
 	for (auto const& param: _params)
 		if (!param.rawString.empty())
 		{
 			if (param.format.newline)
-				os << endl << _linePrefix << "// ";
+				os << std::endl << _linePrefix << "// ";
 			for (auto const c: param.rawString)
 				// NOTE: Even though we have a toHex() overload specifically for uint8_t, the compiler
 				// chooses the one for bytes if the second argument is omitted.
-				os << (c >= ' ' ? string(1, c) : "\\x" + util::toHex(static_cast<uint8_t>(c), HexCase::Lower));
+				os << (c >= ' ' ? std::string(1, c) : "\\x" + util::toHex(static_cast<uint8_t>(c), HexCase::Lower));
 			if (&param != &_params.back())
 				os << ", ";
 		}
 	return os.str();
 }
 
-string TestFunctionCall::formatGasExpectations(
-	string const& _linePrefix,
+std::string TestFunctionCall::formatGasExpectations(
+	std::string const& _linePrefix,
 	bool _useActualCost,
 	bool _showDifference
 ) const
 {
-	stringstream os;
+	std::stringstream os;
 	for (auto const& [runType, gasUsed]: (_useActualCost ? m_gasCosts : m_call.expectations.gasUsed))
 		if (!runType.empty())
 		{
@@ -357,9 +356,9 @@ string TestFunctionCall::formatGasExpectations(
 				percent = static_cast<int>(
 					100.0 * (static_cast<double>(difference) / static_cast<double>(m_call.expectations.gasUsed.at(runType)))
 				);
-			os << endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
+			os << std::endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
 			if (_showDifference && differentResults && _useActualCost)
-				os << " [" << showpos << difference << " (" << percent << "%)]";
+				os << " [" << std::showpos << difference << " (" << percent << "%)]";
 		}
 	return os.str();
 }

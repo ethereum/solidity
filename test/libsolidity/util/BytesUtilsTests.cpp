@@ -22,7 +22,6 @@
 
 #include <libsolutil/CommonData.h>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::test;
 
