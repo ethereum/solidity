@@ -29,11 +29,11 @@
 
 #include <vector>
 
-using namespace std;
 using namespace solidity::frontend::test;
 using namespace solidity::util;
+using namespace std::string_literals;
 
-ostream& solidity::frontend::test::operator<<(ostream& _output, NatspecJSONKind _kind)
+std::ostream& solidity::frontend::test::operator<<(std::ostream& _output, NatspecJSONKind _kind)
 {
 	switch (_kind) {
 	case NatspecJSONKind::Devdoc: _output << "devdoc"; break;
@@ -42,12 +42,12 @@ ostream& solidity::frontend::test::operator<<(ostream& _output, NatspecJSONKind 
 	return _output;
 }
 
-unique_ptr<TestCase> NatspecJSONTest::create(Config const& _config)
+std::unique_ptr<TestCase> NatspecJSONTest::create(Config const& _config)
 {
-	return make_unique<NatspecJSONTest>(_config.filename, _config.evmVersion);
+	return std::make_unique<NatspecJSONTest>(_config.filename, _config.evmVersion);
 }
 
-void NatspecJSONTest::parseCustomExpectations(istream& _stream)
+void NatspecJSONTest::parseCustomExpectations(std::istream& _stream)
 {
 	soltestAssert(m_expectedNatspecJSON.empty());
 
@@ -56,21 +56,21 @@ void NatspecJSONTest::parseCustomExpectations(istream& _stream)
 	//     // <qualified contract name> <devdoc|userdoc>
 	//     // <json>
 
-	string line;
+	std::string line;
 	while (getline(_stream, line))
 	{
-		string_view strippedLine = expectLinePrefix(line);
+		std::string_view strippedLine = expectLinePrefix(line);
 		if (strippedLine.empty())
 			continue;
 
 		auto [contractName, kind] = parseExpectationHeader(strippedLine);
 
-		string rawJSON = extractExpectationJSON(_stream);
-		string jsonErrors;
+		std::string rawJSON = extractExpectationJSON(_stream);
+		std::string jsonErrors;
 		Json::Value parsedJSON;
 		bool jsonParsingSuccessful = jsonParseStrict(rawJSON, parsedJSON, &jsonErrors);
 		if (!jsonParsingSuccessful)
-			BOOST_THROW_EXCEPTION(runtime_error(fmt::format(
+			BOOST_THROW_EXCEPTION(std::runtime_error(fmt::format(
 				"Malformed JSON in {} expectation for contract {}.\n"
 				"Note that JSON expectations must be pretty-printed to be split correctly. "
 				"The object is assumed to and at the first unindented closing brace.\n"
@@ -80,7 +80,7 @@ void NatspecJSONTest::parseCustomExpectations(istream& _stream)
 				rawJSON
 			)));
 
-		m_expectedNatspecJSON[string(contractName)][kind] = parsedJSON;
+		m_expectedNatspecJSON[std::string(contractName)][kind] = parsedJSON;
 	}
 }
 
@@ -94,51 +94,51 @@ bool NatspecJSONTest::expectationsMatch()
 		prettyPrinted(obtainedNatspec()) == prettyPrinted(m_expectedNatspecJSON);
 }
 
-void NatspecJSONTest::printExpectedResult(ostream& _stream, string const& _linePrefix, bool _formatted) const
+void NatspecJSONTest::printExpectedResult(std::ostream& _stream, std::string const& _linePrefix, bool _formatted) const
 {
 	SyntaxTest::printExpectedResult(_stream, _linePrefix, _formatted);
 	if (!m_expectedNatspecJSON.empty())
 	{
-		_stream << _linePrefix << "----" << endl;
+		_stream << _linePrefix << "----" << std::endl;
 		printIndented(_stream, formatNatspecExpectations(m_expectedNatspecJSON), _linePrefix);
 	}
 }
 
-void NatspecJSONTest::printObtainedResult(ostream& _stream, string const& _linePrefix, bool _formatted) const
+void NatspecJSONTest::printObtainedResult(std::ostream& _stream, std::string const& _linePrefix, bool _formatted) const
 {
 	SyntaxTest::printObtainedResult(_stream, _linePrefix, _formatted);
 
 	NatspecMap natspecJSON = obtainedNatspec();
 	if (!natspecJSON.empty())
 	{
-		_stream << _linePrefix << "----" << endl;
+		_stream << _linePrefix << "----" << std::endl;
 		// TODO: Diff both versions and highlight differences.
 		// We should have a helper for doing that in newly defined test cases without much effort.
 		printIndented(_stream, formatNatspecExpectations(natspecJSON), _linePrefix);
 	}
 }
 
-tuple<string_view, NatspecJSONKind> NatspecJSONTest::parseExpectationHeader(string_view _line)
+std::tuple<std::string_view, NatspecJSONKind> NatspecJSONTest::parseExpectationHeader(std::string_view _line)
 {
 	for (NatspecJSONKind kind: {NatspecJSONKind::Devdoc, NatspecJSONKind::Userdoc})
 	{
-		string kindSuffix = " " + toString(kind);
+		std::string kindSuffix = " " + toString(kind);
 		if (boost::algorithm::ends_with(_line, kindSuffix))
 			return {_line.substr(0, _line.size() - kindSuffix.size()), kind};
 	}
 
-	BOOST_THROW_EXCEPTION(runtime_error(
+	BOOST_THROW_EXCEPTION(std::runtime_error(
 		"Natspec kind (devdoc/userdoc) not present in the expectation: "s.append(_line)
 	));
 }
 
-string NatspecJSONTest::extractExpectationJSON(istream& _stream)
+std::string NatspecJSONTest::extractExpectationJSON(std::istream& _stream)
 {
-	string rawJSON;
-	string line;
+	std::string rawJSON;
+	std::string line;
 	while (getline(_stream, line))
 	{
-		string_view strippedLine = expectLinePrefix(line);
+		std::string_view strippedLine = expectLinePrefix(line);
 		rawJSON += strippedLine;
 		rawJSON += "\n";
 
@@ -149,11 +149,11 @@ string NatspecJSONTest::extractExpectationJSON(istream& _stream)
 	return rawJSON;
 }
 
-string_view NatspecJSONTest::expectLinePrefix(string_view _line)
+std::string_view NatspecJSONTest::expectLinePrefix(std::string_view _line)
 {
 	size_t startPosition = 0;
 	if (!boost::algorithm::starts_with(_line, "//"))
-		BOOST_THROW_EXCEPTION(runtime_error(
+		BOOST_THROW_EXCEPTION(std::runtime_error(
 			"Expectation line is not a comment: "s.append(_line)
 		));
 
@@ -164,9 +164,9 @@ string_view NatspecJSONTest::expectLinePrefix(string_view _line)
 	return _line.substr(startPosition, _line.size() - startPosition);
 }
 
-string NatspecJSONTest::formatNatspecExpectations(NatspecMap const& _expectations) const
+std::string NatspecJSONTest::formatNatspecExpectations(NatspecMap const& _expectations) const
 {
-	string output;
+	std::string output;
 	bool first = true;
 	// NOTE: Not sorting explicitly because CompilerStack seems to put contracts roughly in the
 	// order in which they appear in the source, which is much better than alphabetical order.
@@ -190,7 +190,7 @@ NatspecMap NatspecJSONTest::obtainedNatspec() const
 		return {};
 
 	NatspecMap result;
-	for (string contractName: compiler().contractNames())
+	for (std::string contractName: compiler().contractNames())
 	{
 		result[contractName][NatspecJSONKind::Devdoc]  = compiler().natspecDev(contractName);
 		result[contractName][NatspecJSONKind::Userdoc] = compiler().natspecUser(contractName);

@@ -30,7 +30,6 @@
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libsolidity/util/TestFileParser.h>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::test;
 
@@ -43,23 +42,23 @@ using Mode = FunctionCall::DisplayMode;
 namespace
 {
 
-vector<FunctionCall> parse(string const& _source, std::map<std::string, Builtin> const& _builtins = {})
+std::vector<FunctionCall> parse(std::string const& _source, std::map<std::string, Builtin> const& _builtins = {})
 {
-	istringstream stream{_source, ios_base::out};
+	std::istringstream stream{_source, std::ios_base::out};
 	return TestFileParser{stream, _builtins}.parseFunctionCalls(0);
 }
 
 void testFunctionCall(
 		FunctionCall const& _call,
 		FunctionCall::DisplayMode _mode,
-		string _signature = "",
+		std::string _signature = "",
 		bool _failure = true,
 		bytes _arguments = bytes{},
 		bytes _expectations = bytes{},
 		FunctionValue _value = { 0 },
-		string _argumentComment = "",
-		string _expectationComment = "",
-		vector<string> _rawArguments = vector<string>{},
+		std::string _argumentComment = "",
+		std::string _expectationComment = "",
+		std::vector<std::string> _rawArguments = std::vector<std::string>{},
 		bool _isConstructor = false,
 		bool _isLibrary = false
 )
@@ -242,7 +241,7 @@ BOOST_AUTO_TEST_CASE(call_revert_message)
 		"f()",
 		true,
 		fmt::encodeArgs(),
-		fromHex("08c379a0") + fmt::encodeDyn(string{"Revert"})
+		fromHex("08c379a0") + fmt::encodeDyn(std::string{"Revert"})
 	);
 }
 
@@ -364,7 +363,7 @@ BOOST_AUTO_TEST_CASE(scanner_hex_values)
 	)";
 	auto const calls = parse(source);
 	BOOST_REQUIRE_EQUAL(calls.size(), 1);
-	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x20\x00\xff", 3)));
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(std::string("\x20\x00\xff", 3)));
 }
 
 BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid1)
@@ -382,7 +381,7 @@ BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid2)
 	)";
 	auto const calls = parse(source);
 	BOOST_REQUIRE_EQUAL(calls.size(), 1);
-	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x1", 1)));
+	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(std::string("\x1", 1)));
 }
 
 BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid3)
@@ -447,7 +446,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_string)
 		Mode::SingleLine,
 		"f(string)",
 		false,
-		fmt::encodeDyn(string{"any"})
+		fmt::encodeDyn(std::string{"any"})
 	);
 }
 
@@ -485,7 +484,7 @@ BOOST_AUTO_TEST_CASE(call_return_string)
 		"f()",
 		false,
 		fmt::encodeArgs(),
-		fmt::encodeDyn(string{"any"})
+		fmt::encodeDyn(std::string{"any"})
 	);
 }
 
@@ -976,7 +975,7 @@ BOOST_AUTO_TEST_CASE(call_effects)
 		// ~ bla bla
 		// ~ bla bla bla
 	)";
-	vector<FunctionCall> calls = parse(source, builtins);
+	std::vector<FunctionCall> calls = parse(source, builtins);
 	BOOST_REQUIRE_EQUAL(calls.size(), 1);
 	BOOST_REQUIRE_EQUAL(calls[0].expectedSideEffects.size(), 3);
 	BOOST_REQUIRE_EQUAL(boost::trim_copy(calls[0].expectedSideEffects[0]), "bla");

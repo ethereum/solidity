@@ -31,6 +31,7 @@
 #include <libsolutil/StringUtils.h>
 
 #include <range/v3/view/map.hpp>
+#include <range/v3/algorithm/find.hpp>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -41,7 +42,7 @@ std::string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefini
 	std::string name = IRNames::function(_function);
 
 	if (!m_functions.contains(name))
-		m_functionGenerationQueue.insert(&_function);
+		m_functionGenerationQueue.push_back(&_function);
 
 	return name;
 }
@@ -50,8 +51,8 @@ FunctionDefinition const* IRGenerationContext::dequeueFunctionForCodeGeneration(
 {
 	solAssert(!m_functionGenerationQueue.empty(), "");
 
-	FunctionDefinition const* result = *m_functionGenerationQueue.begin();
-	m_functionGenerationQueue.erase(m_functionGenerationQueue.begin());
+	FunctionDefinition const* result = m_functionGenerationQueue.front();
+	m_functionGenerationQueue.pop_front();
 	return result;
 }
 
@@ -132,7 +133,7 @@ void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _intern
 {
 	solAssert(internalDispatchClean(), "");
 
-	for (DispatchSet const& functions: _internalDispatch | ranges::views::values)
+	for (DispatchQueue const& functions: _internalDispatch | ranges::views::values)
 		for (auto function: functions)
 			enqueueFunctionForCodeGeneration(*function);
 
@@ -149,16 +150,15 @@ InternalDispatchMap IRGenerationContext::consumeInternalDispatchMap()
 void IRGenerationContext::addToInternalDispatch(FunctionDefinition const& _function)
 {
 	FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
-	solAssert(functionType, "");
+	solAssert(functionType);
 
 	YulArity arity = YulArity::fromType(*functionType);
-
-	if (m_internalDispatchMap.count(arity) != 0 && m_internalDispatchMap[arity].count(&_function) != 0)
-		// Note that m_internalDispatchMap[arity] is a set with a custom comparator, which looks at function IDs not definitions
-		solAssert(*m_internalDispatchMap[arity].find(&_function) == &_function, "Different definitions with the same function ID");
-
-	m_internalDispatchMap[arity].insert(&_function);
-	enqueueFunctionForCodeGeneration(_function);
+	DispatchQueue& dispatchQueue = m_internalDispatchMap[arity];
+	if (ranges::find(dispatchQueue, &_function) == ranges::end(dispatchQueue))
+	{
+		dispatchQueue.push_back(&_function);
+		enqueueFunctionForCodeGeneration(_function);
+	}
 }
 
 
