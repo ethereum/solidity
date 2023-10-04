@@ -87,6 +87,8 @@ public:
 	bool visit(BinaryOperation const& _operation) override;
 
 	bool visit(Literal const& _literal) override;
+
+	bool visit(Builtin const&) override;
 private:
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;

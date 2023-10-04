@@ -804,6 +804,8 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	}
 }
 
+bool TypeInference::visit(Builtin const&) { return false; }
+
 // TODO: clean up rational parsing
 namespace
 {

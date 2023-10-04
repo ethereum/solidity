@@ -58,7 +58,10 @@ bool TypeRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
 
 bool TypeRegistration::visit(Builtin const& _builtin)
 {
-	if (annotation(_builtin).typeConstructor)
+	if (
+		_builtin.typeClassFunctionParameter().has_value() ||
+		annotation(_builtin).typeConstructor
+	)
 		return false;
 
 	auto primitiveType = [&](std::string _name) -> std::optional<PrimitiveType> {
