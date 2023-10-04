@@ -2619,10 +2619,13 @@ public:
 
 	ASTString const& nameParameter() const { return *m_nameParameter; }
 	SourceLocation const& nameParameterLocation() const { return m_nameParameterLocation; }
+	std::optional<ASTPointer<IdentifierPath>> const& typeClassFunctionParameter() const { return m_typeClassFunctionParameter; }
+	void setTypeClassFunctionParameter(ASTPointer<IdentifierPath> _typeClassFunctionParameter) { m_typeClassFunctionParameter = _typeClassFunctionParameter; }
 
 private:
 	ASTPointer<ASTString> m_nameParameter;
 	SourceLocation m_nameParameterLocation;
+	std::optional<ASTPointer<IdentifierPath>> m_typeClassFunctionParameter;
 };
 
 /// @}

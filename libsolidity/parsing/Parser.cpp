@@ -148,6 +148,11 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 				solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
 				nodes.push_back(parseTypeClassInstantiation());
 				break;
+			case Token::Builtin:
+				solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+				nodes.push_back(parseBuiltin());
+				expectToken(Token::Semicolon);
+				break;
 			default:
 				if (
 					// Workaround because `error` is not a keyword.
@@ -1838,18 +1843,7 @@ ASTPointer<TypeDefinition> Parser::parseTypeDefinition()
 		if (m_scanner->currentToken() != Token::Builtin)
 			expression = parseExpression();
 		else
-		{
-			expectToken(Token::Builtin);
-			expectToken(Token::LParen);
-
-			expression = nodeFactory.createNode<Builtin>(
-				std::make_shared<std::string>(m_scanner->currentLiteral()),
-				m_scanner->currentLocation()
-			);
-
-			expectToken(Token::StringLiteral);
-			expectToken(Token::RParen);
-		}
+			expression = parseBuiltin();
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
@@ -1859,6 +1853,41 @@ ASTPointer<TypeDefinition> Parser::parseTypeDefinition()
 		std::move(arguments),
 		std::move(expression)
 	);
+}
+
+ASTPointer<Builtin> Parser::parseBuiltin()
+{
+	solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Builtin);
+	expectToken(Token::LParen);
+
+	auto builtin = nodeFactory.createNode<Builtin>(
+		std::make_shared<std::string>(m_scanner->currentLiteral()),
+		m_scanner->currentLocation()
+	);
+
+	expectToken(Token::StringLiteral);
+
+	if (m_scanner->currentToken() == Token::Comma)
+	{
+		expectToken(Token::Comma);
+		// TODO: Consider if other ASTNode would be more adequate (MemberAccess?)
+		auto typeClassFunctionNameParameter = parseIdentifierPath();
+		// TODO: write a decent error message
+		if (typeClassFunctionNameParameter->path().size() != 2)
+			m_errorReporter.fatalParserError(
+				42_error,
+				typeClassFunctionNameParameter->location(),
+				"Invalid function! Expected <TypeClassName.FunctionName> format."
+			);
+
+		builtin->setTypeClassFunctionParameter(typeClassFunctionNameParameter);
+	}
+
+	expectToken(Token::RParen);
+
+	return builtin;
 }
 
 ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& _docString)
