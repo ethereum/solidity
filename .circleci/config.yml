@@ -448,14 +448,6 @@ defaults:
         MAKEFLAGS: -j5
         CPUs: 5
 
-  - base_osx_large: &base_osx_large
-      <<: *base_osx
-      resource_class: large
-      environment: &base_osx_large_env
-        <<: *base_osx_env
-        MAKEFLAGS: -j10
-        CPUs: 10
-
   - base_python_small: &base_python_small
       docker:
         - image: cimg/python:3.6
@@ -1099,9 +1091,9 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   b_osx:
-    <<: *base_osx_large
+    <<: *base_osx
     environment:
-      <<: *base_osx_large_env
+      <<: *base_osx_env
       CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
