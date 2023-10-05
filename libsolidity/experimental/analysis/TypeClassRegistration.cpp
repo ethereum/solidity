@@ -43,7 +43,7 @@ bool TypeClassRegistration::analyze(SourceUnit const& _sourceUnit)
 bool TypeClassRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
 {
 	std::variant<TypeClass, std::string> typeClassOrError = m_typeSystem.declareTypeClass(
-		m_typeSystem.freshTypeVariable({}),
+		m_typeSystem.freshGenericTypeVariable({}),
 		_typeClassDefinition.name(),
 		&_typeClassDefinition
 	);

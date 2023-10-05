@@ -271,7 +271,7 @@ bool TypeSystemHelpers::isTypeFunctionType(Type _type) const
 
 std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) const
 {
-	std::set<size_t> indices;
+	std::set<size_t> genericVarIndices;
 	std::vector<Type> typeVars;
 	auto typeVarsImpl = [&](Type _type, auto _recurse) -> void {
 		std::visit(util::GenericVisitor{
@@ -279,8 +279,8 @@ std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) con
 				for (auto arg: _type.arguments)
 					_recurse(arg, _recurse);
 			},
-			[&](TypeVariable const& _var) {
-				if (indices.emplace(_var.index()).second)
+			[&](GenericTypeVariable const& _var) {
+				if (genericVarIndices.emplace(_var.index()).second)
 					typeVars.emplace_back(_var);
 			},
 			[](std::monostate) { solAssert(false); }
@@ -327,7 +327,7 @@ std::string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 			}
 			return stream.str();
 		},
-		[](TypeVariable const&) -> std::string {
+		[](GenericTypeVariable const&) -> std::string {
 			solAssert(false);
 		},
 		[](std::monostate) -> std::string {
@@ -395,8 +395,8 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type, bool _resolv
 				}))
 			);
 		},
-		[&](TypeVariable const& _typeVar) {
-			return "'" + base26Encode(_typeVar.index()) + formatSortSuffix(_typeVar.sort(), env);
+		[&](GenericTypeVariable const& _genericTypeVar) {
+			return "'" + base26Encode(_genericTypeVar.index()) + formatSortSuffix(_genericTypeVar.sort(), env);
 		},
 		[](std::monostate) -> std::string { solAssert(false); }
 	}, _resolve ? env.resolve(_type) : _type);

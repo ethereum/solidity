@@ -55,7 +55,7 @@ TypeInference::TypeInference(Analysis& _analysis):
 
 	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
 		auto result = m_typeSystem.declareTypeClass(
-			m_typeSystem.freshTypeVariable({}),
+			m_typeSystem.freshGenericTypeVariable({}),
 			_name,
 			nullptr
 		);
@@ -141,8 +141,8 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 
 	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, std::nullopt);
 
-	Type argumentsType = m_typeSystem.freshTypeVariable({});
-	Type returnType = m_typeSystem.freshTypeVariable({});
+	Type argumentsType = m_typeSystem.freshGenericTypeVariable({});
+	Type returnType = m_typeSystem.freshGenericTypeVariable({});
 	Type functionType = TypeSystemHelpers{m_typeSystem}.functionType(argumentsType, returnType);
 
 	m_currentFunctionType = functionType;
@@ -207,7 +207,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 
 	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
 	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
-	TypeVariable typeVar = m_typeSystem.typeClassVariable(typeClass);
+	GenericTypeVariable typeVar = m_typeSystem.typeClassVariable(typeClass);
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
 	for (auto subNode: _typeClassDefinition.subNodes())
@@ -239,7 +239,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 			m_errorReporter.typeError(1807_error, _typeClassDefinition.location(), "Function " + functionName + " depends on invalid type variable.");
 	}
 
-	unify(typeAnnotation(_typeClassDefinition.typeVariable()), m_typeSystem.freshTypeVariable({{typeClass}}), _typeClassDefinition.location());
+	unify(typeAnnotation(_typeClassDefinition.typeVariable()), m_typeSystem.freshGenericTypeVariable({{typeClass}}), _typeClassDefinition.location());
 	for (auto instantiation: m_analysis.annotation<TypeRegistration>(_typeClassDefinition).instantiations | ranges::views::values)
 		// TODO: recursion-safety? Order of instantiation?
 		instantiation->accept(*this);
@@ -307,7 +307,7 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 			_binaryOperation.rightExpression().accept(*this);
 
 			Type argTuple = helper.tupleType({typeAnnotation(_binaryOperation.leftExpression()), typeAnnotation(_binaryOperation.rightExpression())});
-			Type resultType = m_typeSystem.freshTypeVariable({});
+			Type resultType = m_typeSystem.freshGenericTypeVariable({});
 			Type genericFunctionType = helper.functionType(argTuple, resultType);
 			unify(functionType, genericFunctionType, _binaryOperation.location());
 
@@ -327,7 +327,7 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		else
 		{
 			m_errorReporter.typeError(4504_error, _binaryOperation.location(), "Binary operation in term context not yet supported.");
-			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
+			operationAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		}
 		return false;
 	case ExpressionContext::Type:
@@ -357,12 +357,12 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		else
 		{
 			m_errorReporter.typeError(1439_error, _binaryOperation.location(), "Invalid binary operations in type context.");
-			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
+			operationAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		}
 		return false;
 	case ExpressionContext::Sort:
 		m_errorReporter.typeError(1017_error, _binaryOperation.location(), "Invalid binary operation in sort context.");
-		operationAnnotation.type = m_typeSystem.freshTypeVariable({});
+		operationAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		return false;
 	}
 	return false;
@@ -397,10 +397,10 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 			variableAnnotation.type = typeAnnotation(*_variableDeclaration.typeExpression());
 			return false;
 		}
-		variableAnnotation.type = m_typeSystem.freshTypeVariable({});
+		variableAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		return false;
 	case ExpressionContext::Type:
-		variableAnnotation.type = m_typeSystem.freshTypeVariable({});
+		variableAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		if (_variableDeclaration.typeExpression())
 		{
 			ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Sort};
@@ -410,7 +410,7 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 		return false;
 	case ExpressionContext::Sort:
 		m_errorReporter.typeError(2399_error, _variableDeclaration.location(), "Variable declaration in sort context.");
-		variableAnnotation.type = m_typeSystem.freshTypeVariable({});
+		variableAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		return false;
 	}
 	util::unreachable();
@@ -424,7 +424,7 @@ void TypeInference::endVisit(IfStatement const& _ifStatement)
 	if (m_expressionContext != ExpressionContext::Term)
 	{
 		m_errorReporter.typeError(2015_error, _ifStatement.location(), "If statement outside term context.");
-		ifAnnotation.type = m_typeSystem.freshTypeVariable({});
+		ifAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		return;
 	}
 
@@ -441,7 +441,7 @@ void TypeInference::endVisit(Assignment const& _assignment)
 	if (m_expressionContext != ExpressionContext::Term)
 	{
 		m_errorReporter.typeError(4337_error, _assignment.location(), "Assignment outside term context.");
-		assignmentAnnotation.type = m_typeSystem.freshTypeVariable({});
+		assignmentAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		return;
 	}
 
@@ -531,12 +531,12 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 
 			solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
 			TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
-			return m_typeSystem.freshTypeVariable(Sort{{typeClass}});
+			return m_typeSystem.freshGenericTypeVariable(Sort{{typeClass}});
 		}
 		else
 		{
 			m_errorReporter.typeError(2599_error, _location, "Expected type class.");
-			return m_typeSystem.freshTypeVariable({});
+			return m_typeSystem.freshGenericTypeVariable({});
 		}
 		break;
 	}
@@ -563,7 +563,7 @@ bool TypeInference::visit(Identifier const& _identifier)
 		break;
 	case ExpressionContext::Type:
 		// TODO: register free type variable name!
-		identifierAnnotation.type = m_typeSystem.freshTypeVariable({});
+		identifierAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 		return false;
 	case ExpressionContext::Sort:
 		// TODO: error handling
@@ -593,7 +593,7 @@ void TypeInference::endVisit(TupleExpression const& _tupleExpression)
 		break;
 	case ExpressionContext::Sort:
 	{
-		Type type = m_typeSystem.freshTypeVariable({});
+		Type type = m_typeSystem.freshGenericTypeVariable({});
 		for (auto componentType: componentTypes)
 			unify(type, componentType, _tupleExpression.location());
 		expressionAnnotation.type = type;
@@ -739,7 +739,7 @@ bool TypeInference::visit(MemberAccess const& _memberAccess)
 	if (m_expressionContext != ExpressionContext::Term)
 	{
 		m_errorReporter.typeError(5195_error, _memberAccess.location(), "Member access outside term context.");
-		annotation(_memberAccess).type = m_typeSystem.freshTypeVariable({});
+		annotation(_memberAccess).type = m_typeSystem.freshGenericTypeVariable({});
 		return false;
 	}
 	return true;
@@ -757,13 +757,13 @@ experimental::Type TypeInference::memberType(Type _type, std::string _memberName
 		else
 		{
 			m_errorReporter.typeError(5755_error, _location, fmt::format("Member {} not found in type {}.", _memberName, TypeEnvironmentHelpers{*m_env}.typeToString(_type)));
-			return m_typeSystem.freshTypeVariable({});
+			return m_typeSystem.freshGenericTypeVariable({});
 		}
 	}
 	else
 	{
 		m_errorReporter.typeError(5104_error, _location, "Unsupported member access expression.");
-		return m_typeSystem.freshTypeVariable({});
+		return m_typeSystem.freshGenericTypeVariable({});
 	}
 }
 
@@ -790,7 +790,7 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 	std::vector<Type> arguments;
 	if (_typeDefinition.arguments())
 		for (size_t i = 0; i < _typeDefinition.arguments()->parameters().size(); ++i)
-			arguments.emplace_back(m_typeSystem.freshTypeVariable({}));
+			arguments.emplace_back(m_typeSystem.freshGenericTypeVariable({}));
 
 	Type definedType = type(&_typeDefinition, arguments);
 	if (arguments.empty())
@@ -851,7 +851,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 			break;
 		case ExpressionContext::Sort:
 			m_errorReporter.typeError(9173_error, _functionCall.location(), "Function call in sort context.");
-			functionCallAnnotation.type = m_typeSystem.freshTypeVariable({});
+			functionCallAnnotation.type = m_typeSystem.freshGenericTypeVariable({});
 			break;
 		}
 	}
@@ -861,7 +861,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	case ExpressionContext::Term:
 	{
 		Type argTuple = helper.tupleType(argTypes);
-		Type resultType = m_typeSystem.freshTypeVariable({});
+		Type resultType = m_typeSystem.freshGenericTypeVariable({});
 		Type genericFunctionType = helper.functionType(argTuple, resultType);
 		unify(functionType, genericFunctionType, _functionCall.location());
 		functionCallAnnotation.type = resultType;
@@ -870,7 +870,7 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	case ExpressionContext::Type:
 	{
 		Type argTuple = helper.tupleType(argTypes);
-		Type resultType = m_typeSystem.freshTypeVariable({});
+		Type resultType = m_typeSystem.freshGenericTypeVariable({});
 		Type genericFunctionType = helper.typeFunctionType(argTuple, resultType);
 		unify(functionType, genericFunctionType, _functionCall.location());
 		functionCallAnnotation.type = resultType;
@@ -1055,7 +1055,7 @@ bool TypeInference::visit(Literal const& _literal)
 		m_errorReporter.typeError(2345_error, _literal.location(), "Only integers are supported.");
 		return false;
 	}
-	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{annotation().builtinClasses.at(BuiltinClass::Integer)}});
+	literalAnnotation.type = m_typeSystem.freshGenericTypeVariable(Sort{{annotation().builtinClasses.at(BuiltinClass::Integer)}});
 	return false;
 }
 

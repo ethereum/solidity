@@ -77,13 +77,13 @@ public:
 private:
 	TypeEnvironment(TypeEnvironment&& _env):
 		m_typeSystem(_env.m_typeSystem),
-		m_typeVariables(std::move(_env.m_typeVariables))
+		m_genericTypeVariables(std::move(_env.m_genericTypeVariables))
 	{}
 
-	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);
+	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(GenericTypeVariable _variable, Type _type);
 
 	TypeSystem& m_typeSystem;
-	std::map<size_t, Type> m_typeVariables;
+	std::map<size_t, Type> m_genericTypeVariables;
 };
 
 class TypeSystem
@@ -105,7 +105,7 @@ public:
 
 	struct TypeClassInfo
 	{
-		TypeVariable typeVariable;
+		GenericTypeVariable typeVariable;
 		std::string name;
 		Declaration const* classDeclaration = nullptr;
 	};
@@ -153,18 +153,18 @@ public:
 		return constructorInfo(constructor(_typeConstructor));
 	}
 
-	std::variant<TypeClass, std::string> declareTypeClass(TypeVariable _typeVariable, std::string _name, Declaration const* _declaration);
+	std::variant<TypeClass, std::string> declareTypeClass(GenericTypeVariable _typeVariable, std::string _name, Declaration const* _declaration);
 	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity);
 
-	TypeVariable freshTypeVariable(Sort _sort);
+	GenericTypeVariable freshGenericTypeVariable(Sort _sort);
 
 	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
 	TypeEnvironment& env() { return m_globalTypeEnvironment; }
 
-	TypeVariable freshVariable(Sort _sort);
+	GenericTypeVariable freshGenericVariable(Sort _sort);
 	std::string typeClassName(TypeClass _class) const { return m_typeClasses.at(_class.m_index).name; }
 	Declaration const* typeClassDeclaration(TypeClass _class) const { return m_typeClasses.at(_class.m_index).classDeclaration; }
-	TypeVariable const& typeClassVariable(TypeClass _class) const
+	GenericTypeVariable const& typeClassVariable(TypeClass _class) const
 	{
 		return m_typeClasses.at(_class.m_index).typeVariable;
 	}
@@ -177,7 +177,7 @@ public:
 private:
 	friend class TypeEnvironment;
 
-	size_t m_numTypeVariables = 0;
+	size_t m_numGenericTypeVariables = 0;
 	std::map<PrimitiveType, TypeConstructor> m_primitiveTypeConstructors;
 	std::map<PrimitiveClass, TypeClass> m_primitiveTypeClasses;
 	std::set<std::string> m_canonicalTypeNames;

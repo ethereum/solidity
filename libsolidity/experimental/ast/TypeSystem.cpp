@@ -47,7 +47,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 	_a = resolve(_a);
 	_b = resolve(_b);
 	std::visit(util::GenericVisitor{
-		[&](TypeVariable const& _left, TypeVariable const& _right) {
+		[&](GenericTypeVariable const& _left, GenericTypeVariable const& _right) {
 			if (_left.index() == _right.index())
 				solAssert(_left.sort() == _right.sort());
 			else
@@ -58,16 +58,16 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 					failures += instantiate(_right, _left);
 				else
 				{
-					Type newVar = m_typeSystem.freshVariable(_left.sort() + _right.sort());
+					Type newVar = m_typeSystem.freshGenericVariable(_left.sort() + _right.sort());
 					failures += instantiate(_left, newVar);
 					failures += instantiate(_right, newVar);
 				}
 			}
 		},
-		[&](TypeVariable const& _var, auto const&) {
+		[&](GenericTypeVariable const& _var, auto const&) {
 			failures += instantiate(_var, _b);
 		},
-		[&](auto const&, TypeVariable const& _var) {
+		[&](auto const&, GenericTypeVariable const& _var) {
 			failures += instantiate(_var, _a);
 		},
 		[&](TypeConstant const& _left, TypeConstant const& _right) {
@@ -88,7 +88,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
 {
 	return std::visit(util::GenericVisitor{
-		[&](TypeVariable const& _left, TypeVariable const& _right) {
+		[&](GenericTypeVariable const& _left, GenericTypeVariable const& _right) {
 			if (_left.index() == _right.index())
 			{
 				solAssert(_left.sort() == _right.sort());
@@ -115,7 +115,7 @@ bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
 TypeEnvironment TypeEnvironment::clone() const
 {
 	TypeEnvironment result{m_typeSystem};
-	result.m_typeVariables = m_typeVariables;
+	result.m_genericTypeVariables = m_genericTypeVariables;
 	return result;
 }
 
@@ -127,7 +127,7 @@ TypeSystem::TypeSystem()
 				solAssert(false, _error);
 			},
 			[](TypeClass _class) -> TypeClass { return _class; }
-		}, declareTypeClass(freshVariable({}), _name, nullptr));
+		}, declareTypeClass(freshGenericVariable({}), _name, nullptr));
 	};
 
 	m_primitiveTypeClasses.emplace(PrimitiveClass::Type, declarePrimitiveClass("type"));
@@ -154,30 +154,30 @@ TypeSystem::TypeSystem()
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Itself).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
 }
 
-TypeVariable TypeSystem::freshVariable(Sort _sort)
+GenericTypeVariable TypeSystem::freshGenericVariable(Sort _sort)
 {
-	size_t index = m_numTypeVariables++;
-	return TypeVariable(index, std::move(_sort));
+	size_t index = m_numGenericTypeVariables++;
+	return GenericTypeVariable(index, std::move(_sort));
 }
 
-TypeVariable TypeSystem::freshTypeVariable(Sort _sort)
+GenericTypeVariable TypeSystem::freshGenericTypeVariable(Sort _sort)
 {
 	_sort.classes.emplace(primitiveClass(PrimitiveClass::Type));
-	return freshVariable(_sort);
+	return freshGenericVariable(_sort);
 }
 
-std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
+std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(GenericTypeVariable _variable, Type _type)
 {
-	for (auto const& maybeTypeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
-		if (auto const* typeVar = std::get_if<TypeVariable>(&maybeTypeVar))
-			if (typeVar->index() == _variable.index())
+	for (auto const& typeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
+		if (auto const* genericTypeVar = std::get_if<GenericTypeVariable>(&typeVar))
+			if (genericTypeVar->index() == _variable.index())
 				return {UnificationFailure{RecursiveUnification{_variable, _type}}};
 
 	Sort typeSort = sort(_type);
 	if (!(_variable.sort() <= typeSort))
 		return {UnificationFailure{SortMismatch{_type, _variable.sort() - typeSort}}};
 
-	auto [_, inserted] = m_typeVariables.emplace(_variable.index(), _type);
+	auto [_, inserted] = m_genericTypeVariables.emplace(_variable.index(), _type);
 	solAssert(inserted);
 	return {};
 }
@@ -185,8 +185,8 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(Ty
 experimental::Type TypeEnvironment::resolve(Type _type) const
 {
 	Type result = _type;
-	while (auto const* var = std::get_if<TypeVariable>(&result))
-		if (Type const* resolvedType = util::valueOrNullptr(m_typeVariables, var->index()))
+	while (auto const* var = std::get_if<GenericTypeVariable>(&result))
+		if (Type const* resolvedType = util::valueOrNullptr(m_genericTypeVariables, var->index()))
 			result = *resolvedType;
 		else
 			break;
@@ -204,8 +204,8 @@ experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 				}) | ranges::to<std::vector<Type>>
 			};
 		},
-		[](TypeVariable const& _typeVar) -> Type {
-			return _typeVar;
+		[](GenericTypeVariable const& _genericTypeVar) -> Type {
+			return _genericTypeVar;
 		},
 		[](std::monostate const& _nothing) -> Type {
 			return _nothing;
@@ -241,7 +241,7 @@ Sort TypeEnvironment::sort(Type _type) const
 			}
 			return sort;
 		},
-		[](TypeVariable const& _variable) -> Sort { return _variable.sort(); },
+		[](GenericTypeVariable const& _variable) -> Sort { return _variable.sort(); },
 		[](std::monostate) -> Sort { solAssert(false); }
 	}, _type);
 }
@@ -263,7 +263,7 @@ TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::strin
 		std::vector<Sort> argumentSorts;
 		std::generate_n(std::back_inserter(argumentSorts), _argumentCount, [&](){ return Sort{{primitiveClass(PrimitiveClass::Type)}}; });
 		std::vector<Type> argumentTypes;
-		std::generate_n(std::back_inserter(argumentTypes), _argumentCount, [&](){ return freshVariable({}); });
+		std::generate_n(std::back_inserter(argumentTypes), _argumentCount, [&](){ return freshGenericVariable({}); });
 		auto error = instantiateClass(type(constructor, argumentTypes), Arity{argumentSorts, primitiveClass(PrimitiveClass::Type)});
 		solAssert(!error, *error);
 	}
@@ -275,7 +275,7 @@ TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::strin
 	return constructor;
 }
 
-std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(TypeVariable _typeVariable, std::string _name, Declaration const* _declaration)
+std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(GenericTypeVariable _typeVariable, std::string _name, Declaration const* _declaration)
 {
 	size_t index = m_typeClasses.size();
 	m_typeClasses.emplace_back(TypeClassInfo{
@@ -301,7 +301,7 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 
 experimental::Type TypeEnvironment::fresh(Type _type)
 {
-	std::unordered_map<size_t, TypeVariable> freshReplacements;
+	std::unordered_map<size_t, GenericTypeVariable> genericFreshReplacements;
 
 	auto freshImpl = [&](Type const& _type, auto _recurse) -> Type {
 		return std::visit(util::GenericVisitor{
@@ -313,21 +313,22 @@ experimental::Type TypeEnvironment::fresh(Type _type)
 					}) | ranges::to<std::vector<Type>>
 				};
 			},
-			[&](TypeVariable const& _var) -> Type {
-				if (TypeVariable const* typeVariable = util::valueOrNullptr(freshReplacements, _var.index()))
+			[&](GenericTypeVariable const& _genericVar) -> Type {
+				if (GenericTypeVariable const* typeVariable = util::valueOrNullptr(genericFreshReplacements, _genericVar.index()))
 				{
 					// TODO: can there be a mismatch?
-					solAssert(typeVariable->sort() == _var.sort());
+					solAssert(typeVariable->sort() == _genericVar.sort());
 					return *typeVariable;
 				}
 
-				TypeVariable freshVariable = m_typeSystem.freshTypeVariable(_var.sort());
-				freshReplacements.emplace(_var.index(), freshVariable);
+				GenericTypeVariable freshVariable = m_typeSystem.freshGenericTypeVariable(_genericVar.sort());
+				genericFreshReplacements.emplace(_genericVar.index(), freshVariable);
 				return freshVariable;
 			},
 			[](std::monostate) -> Type { solAssert(false); }
 		}, resolve(_type));
 	};
+
 	return freshImpl(_type, freshImpl);
 }
 

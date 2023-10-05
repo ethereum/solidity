@@ -28,9 +28,13 @@ namespace solidity::frontend::experimental
 class TypeSystem;
 
 struct TypeConstant;
-struct TypeVariable;
+struct GenericTypeVariable;
 
-using Type = std::variant<std::monostate, TypeConstant, TypeVariable>;
+using Type = std::variant<
+	std::monostate,
+	TypeConstant,
+	GenericTypeVariable
+>;
 
 enum class PrimitiveType
 {
@@ -147,7 +151,7 @@ struct Arity
 	TypeClass typeClass;
 };
 
-struct TypeVariable
+struct GenericTypeVariable
 {
 	std::size_t index() const { return m_index; }
 	Sort const& sort() const { return m_sort; }
@@ -155,7 +159,7 @@ struct TypeVariable
 private:
 	friend class TypeSystem;
 
-	TypeVariable(std::size_t _index, Sort _sort):
+	GenericTypeVariable(std::size_t _index, Sort _sort):
 		m_index(_index),
 		m_sort(std::move(_sort))
 	{}
