@@ -32,6 +32,7 @@
 
 #include <fmt/format.h>
 
+using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::experimental;
@@ -293,6 +294,12 @@ std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) con
 
 std::string TypeSystemHelpers::sortToString(Sort _sort) const
 {
+	using ranges::views::transform;
+
+	auto typeClassName = [&](TypeClass const& _class) {
+		return typeSystem.typeClassName(_class);
+	};
+
 	switch (_sort.classes.size())
 	{
 	case 0:
@@ -300,14 +307,7 @@ std::string TypeSystemHelpers::sortToString(Sort _sort) const
 	case 1:
 		return typeSystem.typeClassName(*_sort.classes.begin());
 	default:
-	{
-		std::stringstream stream;
-		stream << "(";
-		for (auto typeClass: _sort.classes | ranges::views::drop_last(1))
-			stream << typeSystem.typeClassName(typeClass) << ", ";
-		stream << typeSystem.typeClassName(*_sort.classes.rbegin()) << ")";
-		return stream.str();
-	}
+		return fmt::format("({})", util::joinHumanReadable(_sort.classes | transform(typeClassName)));
 	}
 }
 
@@ -336,8 +336,30 @@ std::string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 	}, env.resolve(_type));
 }
 
+namespace
+{
+
+std::string base26Encode(size_t _value)
+{
+	std::string encoding(1, static_cast<char>('a' + (_value % 26)));
+	while (_value /= 26)
+		encoding += static_cast<char>('a' + (_value % 26));
+	reverse(encoding.begin(), encoding.end());
+	return encoding;
+}
+
+std::string formatSortSuffix(Sort const& _sort, TypeEnvironment const& env)
+{
+	std::string formattedSort = TypeSystemHelpers{env.typeSystem()}.sortToString(_sort);
+	return (formattedSort.empty() ? "" : ":") + formattedSort;
+}
+
+}
+
 std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 {
+	using ranges::views::transform;
+
 	std::map<TypeConstructor, std::function<std::string(std::vector<Type>)>> formatters{
 		{env.typeSystem().constructor(PrimitiveType::Function), [&](auto const& _args) {
 			solAssert(_args.size() == 2);
@@ -361,43 +383,20 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 		[&](TypeConstant const& _type) {
 			if (auto* formatter = util::valueOrNullptr(formatters, _type.constructor))
 				return (*formatter)(_type.arguments);
-			std::stringstream stream;
-			stream << env.typeSystem().constructorInfo(_type.constructor).name;
-			if (!_type.arguments.empty())
-			{
-				stream << "(";
-				for (auto type: _type.arguments | ranges::views::drop_last(1))
-					stream << typeToString(type) << ", ";
-				stream << typeToString(_type.arguments.back());
-				stream << ")";
-			}
-			return stream.str();
+
+			if (_type.arguments.empty())
+				return env.typeSystem().constructorInfo(_type.constructor).name;
+
+			return fmt::format(
+				"{}({})",
+				env.typeSystem().constructorInfo(_type.constructor).name,
+				util::joinHumanReadable(_type.arguments | transform([&](Type const& _type) {
+					return typeToString(_type);
+				}))
+			);
 		},
-		[&](TypeVariable const& _type) {
-			std::stringstream stream;
-			std::string varName;
-			size_t index = _type.index();
-			varName += static_cast<char>('a' + (index%26));
-			while (index /= 26)
-				varName += static_cast<char>('a' + (index%26));
-			reverse(varName.begin(), varName.end());
-			stream << '\'' << varName;
-			switch (_type.sort().classes.size())
-			{
-			case 0:
-				break;
-			case 1:
-				stream << ":" << env.typeSystem().typeClassName(*_type.sort().classes.begin());
-				break;
-			default:
-				stream << ":(";
-				for (auto typeClass: _type.sort().classes | ranges::views::drop_last(1))
-					stream << env.typeSystem().typeClassName(typeClass) << ", ";
-				stream << env.typeSystem().typeClassName(*_type.sort().classes.rbegin());
-				stream << ")";
-				break;
-			}
-			return stream.str();
+		[&](TypeVariable const& _typeVar) {
+			return "'" + base26Encode(_typeVar.index()) + formatSortSuffix(_typeVar.sort(), env);
 		},
 		[](std::monostate) -> std::string { solAssert(false); }
 	}, env.resolve(_type));
