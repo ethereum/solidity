@@ -147,14 +147,14 @@ Target Options
 Below is a list of target EVM versions and the compiler-relevant changes introduced
 at each version. Backward compatibility is not guaranteed between each version.
 
-- ``homestead``
+- ``homestead`` (*support deprecated*)
    - (oldest version)
-- ``tangerineWhistle``
+- ``tangerineWhistle`` (*support deprecated*)
    - Gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
    - All gas sent by default for external calls, previously a certain amount had to be retained.
-- ``spuriousDragon``
+- ``spuriousDragon`` (*support deprecated*)
    - Gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
-- ``byzantium``
+- ``byzantium`` (*support deprecated*)
    - Opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
    - The ``staticcall`` opcode is used when calling non-library view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
    - It is possible to access dynamic data returned from function calls.
@@ -318,7 +318,7 @@ Input Description
         // Affects type checking and code generation. Can be homestead,
         // tangerineWhistle, spuriousDragon, byzantium, constantinople,
         // petersburg, istanbul, berlin, london, paris or shanghai (default)
-        "evmVersion": "byzantium",
+        "evmVersion": "shanghai",
         // Optional: Change compilation pipeline to go through the Yul intermediate representation.
         // This is false by default.
         "viaIR": true,
