@@ -3137,29 +3137,25 @@ void SMTEncoder::createReturnedExpressions(FunctionDefinition const* _funDef, Ex
 }
 
 std::vector<smtutil::Expression> SMTEncoder::symbolicArguments(
-	FunctionDefinition const* _funDef,
-	Expression const* _calledExpr,
-	FunctionType const* _funType,
-	std::vector<ASTPointer<Expression const>> const& _arguments)
+	std::vector<ASTPointer<VariableDeclaration>> const& _funParameters,
+	std::optional<Expression const*> _calledExpr,
+	std::vector<Expression const*> const& _arguments)
 {
-	solAssert(_funDef, "");
-	solAssert(_funType, "");
-
 	std::vector<smtutil::Expression> args;
-	auto functionParams = _funDef->parameters();
 	unsigned firstParam = 0;
-	if (_funType->hasBoundFirstArgument())
+	if (_calledExpr)
 	{
-		_calledExpr = innermostTuple(*_calledExpr);
-		auto const& attachedFunction = dynamic_cast<MemberAccess const*>(_calledExpr);
+		Expression const* calledExpr = innermostTuple(*_calledExpr.value());
+		auto const& attachedFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 		solAssert(attachedFunction, "");
-		args.push_back(expr(attachedFunction->expression(), functionParams.front()->type()));
+		args.push_back(expr(attachedFunction->expression(), _funParameters.front()->type()));
 		firstParam = 1;
 	}
 
-	solAssert((_arguments.size() + firstParam) == functionParams.size(), "");
+	solAssert((_arguments.size() + firstParam) == _funParameters.size(), "");
+
 	for (unsigned i = 0; i < _arguments.size(); ++i)
-		args.push_back(expr(*_arguments.at(i), functionParams.at(i + firstParam)->type()));
+		args.push_back(expr(*_arguments.at(i), _funParameters.at(i + firstParam)->type()));
 
 	return args;
 }

@@ -554,9 +554,11 @@ void BMC::endVisit(UnaryOperation const& _op)
 	// User-defined operators are essentially function calls.
 	if (auto funDef = *_op.annotation().userDefinedFunction)
 	{
-		std::vector<ASTPointer<Expression const>> arguments;
-		arguments.push_back(_op.argument());
-		inlineFunctionCall(funDef, _op, &_op, _op.userDefinedFunctionType(), arguments);
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.subExpression());
+		// pushCallStack and defineExpr inside createReturnedExpression should be called on the expression
+		// in case of a user-defined operator call
+		inlineFunctionCall(funDef, _op, std::nullopt, arguments);
 		return;
 	}
 
@@ -580,10 +582,13 @@ void BMC::endVisit(BinaryOperation const& _op)
 
 	if (auto funDef = *_op.annotation().userDefinedFunction)
 	{
-		std::vector<ASTPointer<Expression const>> arguments;
-		arguments.push_back(_op.leftArgument());
-		arguments.push_back(_op.rightArgument());
-		inlineFunctionCall(funDef, _op, &_op, _op.userDefinedFunctionType(), arguments);
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.leftExpression());
+		arguments.push_back(&_op.rightExpression());
+
+		// pushCallStack and defineExpr inside createReturnedExpression should be called on the expression
+		// in case of a user-defined operator call
+		inlineFunctionCall(funDef, _op, std::nullopt, arguments);
 	}
 }
 
@@ -699,14 +704,11 @@ void BMC::visitAddMulMod(FunctionCall const& _funCall)
 void BMC::inlineFunctionCall(
 	FunctionDefinition const* _funDef,
 	Expression const& _callStackExpr,
-	Expression const* _calledExpr,
-	FunctionType const* _funType,
-	std::vector<ASTPointer<Expression const>> const& _arguments
+	std::optional<Expression const*> _calledExpr,
+	std::vector<Expression const*> const& _arguments
 )
 {
 	solAssert(_funDef, "");
-	solAssert(_funType, "");
-	solAssert(_calledExpr, "");
 
 	if (visitedFunction(_funDef))
 	{
@@ -719,7 +721,7 @@ void BMC::inlineFunctionCall(
 	}
 	else
 	{
-		initializeFunctionCallParameters(*_funDef, symbolicArguments(_funDef, _calledExpr, _funType, _arguments));
+		initializeFunctionCallParameters(*_funDef, symbolicArguments(_funDef->parameters(), _calledExpr, _arguments));
 
 		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)
 		// is that there we don't have `_callStackExpr`.
@@ -739,11 +741,18 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	solAssert(shouldInlineFunctionCall(_funCall, currentScopeContract(), m_currentContract), "");
 
 	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
-	Expression const* calledExpr = &_funCall.expression();
-	auto funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
-	std::vector<ASTPointer<Expression const>> arguments = _funCall.sortedArguments();
+	Expression const* expr = &_funCall.expression();
+	auto funType = dynamic_cast<FunctionType const*>(expr->annotation().type);
+	std::optional<Expression const*> calledExpr =
+		funType->hasBoundFirstArgument() ? std::make_optional(expr) : std::nullopt;
 
-	inlineFunctionCall(funDef, _funCall, calledExpr, funType, arguments);
+	std::vector<Expression const*> arguments;
+	for (auto& arg: _funCall.sortedArguments())
+		arguments.push_back(&(*arg));
+
+	// pushCallStack and defineExpr inside createReturnedExpression should be called
+	// on the FunctionCall object for the normal function call case
+	inlineFunctionCall(funDef, _funCall, calledExpr, arguments);
 }
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)

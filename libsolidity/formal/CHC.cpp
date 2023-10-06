@@ -549,8 +549,8 @@ void CHC::endVisit(UnaryOperation const& _op)
 
 	if (auto funDef = *_op.annotation().userDefinedFunction)
 	{
-		std::vector<ASTPointer<Expression const>> arguments;
-		arguments.push_back(_op.argument());
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.subExpression());
 		internalFunctionCall(funDef, &_op, _op.userDefinedFunctionType(), arguments, state().thisAddress());
 
 		createReturnedExpressions(funDef, _op);
@@ -563,9 +563,9 @@ void CHC::endVisit(BinaryOperation const& _op)
 
 	if (auto funDef = *_op.annotation().userDefinedFunction)
 	{
-		std::vector<ASTPointer<Expression const>> arguments;
-		arguments.push_back(_op.leftArgument());
-		arguments.push_back(_op.rightArgument());
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.leftExpression());
+		arguments.push_back(&_op.rightExpression());
 		internalFunctionCall(funDef, &_op, _op.userDefinedFunctionType(), arguments, state().thisAddress());
 
 		createReturnedExpressions(funDef, _op);
@@ -853,7 +853,7 @@ void CHC::internalFunctionCall(
 	FunctionDefinition const* _funDef,
 	Expression const* _calledExpr,
 	FunctionType const* _funType,
-	std::vector<ASTPointer<Expression const>> const& _arguments,
+	std::vector<Expression const*> const& _arguments,
 	smtutil::Expression _contractAddressValue
 )
 {
@@ -896,7 +896,6 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 
 	Expression const* calledExpr = &_funCall.expression();
 	auto funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
-	std::vector<ASTPointer<Expression const>> arguments = _funCall.sortedArguments();
 
 	auto contractAddressValue = [this](FunctionCall const& _f) {
 		auto [callExpr, callOptions] = functionCallExpression(_f);
@@ -909,6 +908,9 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 		solAssert(false, "Unreachable!");
 	};
 
+	std::vector<Expression const*> arguments;
+	for (auto& arg: _funCall.sortedArguments())
+		arguments.push_back(&(*arg));
 	internalFunctionCall(funDef, calledExpr, funType, arguments, contractAddressValue(_funCall));
 }
 
@@ -1095,7 +1097,10 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 		state().readStateVars(*function->annotation().contract, contractAddressValue(_funCall));
 	}
 
-	smtutil::Expression pred = predicate(function, callExpr, &funType, _funCall.sortedArguments(), calledAddress);
+	std::vector<Expression const*> arguments;
+	for (auto& arg: _funCall.sortedArguments())
+		arguments.push_back(&(*arg));
+	smtutil::Expression pred = predicate(function, callExpr, &funType, arguments, calledAddress);
 
 	auto txConstraints = state().txTypeConstraints() && state().txFunctionConstraints(*function);
 	m_context.addAssertion(pred && txConstraints);
@@ -1810,7 +1815,7 @@ smtutil::Expression CHC::predicate(
 	FunctionDefinition const* _funDef,
 	Expression const* _calledExpr,
 	FunctionType const* _funType,
-	std::vector<ASTPointer<Expression const>> _arguments,
+	std::vector<Expression const*> _arguments,
 	smtutil::Expression _contractAddressValue
 )
 {
@@ -1833,7 +1838,10 @@ smtutil::Expression CHC::predicate(
 		contract = m_currentContract;
 
 	args += currentStateVariables(*contract);
-	args += symbolicArguments(_funDef, _calledExpr, _funType, _arguments);
+
+	std::optional<Expression const*> calledExpr =
+		_funType->hasBoundFirstArgument() ? std::make_optional(_calledExpr) : std::nullopt;
+	args += symbolicArguments(_funDef->parameters(), calledExpr, _arguments);
 	if (!usesStaticCall(_funDef, _funType))
 	{
 		state().newState();

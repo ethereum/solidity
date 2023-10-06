@@ -117,9 +117,8 @@ private:
 	void inlineFunctionCall(
 		FunctionDefinition const* _funDef,
 		Expression const& _callStackExpr,
-		Expression const* _calledExpr,
-		FunctionType const* _funType,
-		std::vector<ASTPointer<Expression const>> const& _arguments
+		std::optional<Expression const*> _calledExpr,
+		std::vector<Expression const*> const& _arguments
 	);
 	/// Inlines if the function call is internal or external to `this`.
 	/// Erases knowledge about state variables if external.

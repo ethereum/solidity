@@ -133,7 +133,7 @@ private:
 		FunctionDefinition const* _funDef,
 		Expression const* _calledExpr,
 		FunctionType const* _funType,
-		std::vector<ASTPointer<Expression const>> const& _arguments,
+		std::vector<Expression const*> const& _arguments,
 		smtutil::Expression _contractAddressValue
 	);
 	void externalFunctionCall(FunctionCall const& _funCall);
@@ -260,7 +260,7 @@ private:
 		FunctionDefinition const* _funDef,
 		Expression const* _calledExpr,
 		FunctionType const* _funType,
-		std::vector<ASTPointer<Expression const>> _arguments,
+		std::vector<Expression const*> _arguments,
 		smtutil::Expression _contractAddressValue
 	);
 	/// @returns a predicate that defines a contract initializer for _contract in the context of _contractContext.
