@@ -1,1 +1,1 @@
-Invalid optimizer step sequence in --yul-optimizations: Unbalanced brackets
+Error: Invalid optimizer step sequence in --yul-optimizations: Unbalanced brackets

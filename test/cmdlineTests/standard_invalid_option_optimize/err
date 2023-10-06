@@ -1,1 +1,1 @@
-Option --optimize is only valid in compiler and assembler modes.
+Error: Option --optimize is only valid in compiler and assembler modes.

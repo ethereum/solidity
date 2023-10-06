@@ -241,9 +241,10 @@ BOOST_AUTO_TEST_CASE(cli_ignore_missing_some_files_exist)
 		(tempDir1.path() / "input1.sol").string(),
 		(tempDir2.path() / "input2.sol").string(),
 		"--ignore-missing",
+		"--no-color",
 	});
 	BOOST_TEST(result.success);
-	BOOST_TEST(result.stderrContent == "\"" + (tempDir2.path() / "input2.sol").string() + "\" is not found. Skipping.\n");
+	BOOST_TEST(result.stderrContent == "Info: \"" + (tempDir2.path() / "input2.sol").string() + "\" is not found. Skipping.\n");
 	BOOST_TEST(result.options.input.mode == InputMode::Compiler);
 	BOOST_TEST(!result.options.input.addStdin);
 	BOOST_CHECK_EQUAL(result.reader.sourceUnits(), expectedSources);
@@ -255,15 +256,16 @@ BOOST_AUTO_TEST_CASE(cli_ignore_missing_no_files_exist)
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
 
 	string expectedMessage =
-		"\"" + (tempDir.path() / "input1.sol").string() + "\" is not found. Skipping.\n"
-		"\"" + (tempDir.path() / "input2.sol").string() + "\" is not found. Skipping.\n"
-		"All specified input files either do not exist or are not regular files.\n";
+		"Info: \"" + (tempDir.path() / "input1.sol").string() + "\" is not found. Skipping.\n"
+		"Info: \"" + (tempDir.path() / "input2.sol").string() + "\" is not found. Skipping.\n"
+		"Error: All specified input files either do not exist or are not regular files.\n";
 
 	OptionsReaderAndMessages result = runCLI({
 		"solc",
 		(tempDir.path() / "input1.sol").string(),
 		(tempDir.path() / "input2.sol").string(),
 		"--ignore-missing",
+		"--no-color",
 	});
 	BOOST_TEST(!result.success);
 	BOOST_TEST(result.stderrContent == expectedMessage);
