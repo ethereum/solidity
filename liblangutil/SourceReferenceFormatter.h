@@ -118,14 +118,26 @@ public:
 
 	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream);
 
+	static void printPrimaryMessage(
+		std::ostream& _stream,
+		std::string _message,
+		std::variant<Error::Type, Error::Severity> _typeOrSeverity,
+		std::optional<ErrorId> _errorId = std::nullopt,
+		bool _colored = false,
+		bool _withErrorIds = false
+	);
+
 private:
 	util::AnsiColorized normalColored() const;
 	util::AnsiColorized frameColored() const;
-	util::AnsiColorized errorColored(langutil::Error::Severity _severity) const;
-	util::AnsiColorized messageColored() const;
+	util::AnsiColorized errorColored(Error::Severity _severity) const { return errorColored(m_stream, m_colored, _severity); }
+	util::AnsiColorized messageColored() const { return messageColored(m_stream, m_colored); }
 	util::AnsiColorized secondaryColored() const;
 	util::AnsiColorized highlightColored() const;
 	util::AnsiColorized diagColored() const;
+
+	static util::AnsiColorized errorColored(std::ostream& _stream, bool _colored, langutil::Error::Severity _severity);
+	static util::AnsiColorized messageColored(std::ostream& _stream, bool _colored);
 
 private:
 	std::ostream& m_stream;
