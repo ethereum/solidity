@@ -27,6 +27,8 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 
+#include <fmt/format.h>
+
 using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
 
@@ -41,6 +43,62 @@ bool TypeClassMemberRegistration::analyze(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
 	return !m_errorReporter.hasErrors();
+}
+
+void TypeClassMemberRegistration::endVisit(Builtin const& _builtin)
+{
+	// Builtin may be used to register user defined types, which is handled earlier at TypeRegistration step
+	if (!_builtin.typeClassFunctionParameter().has_value())
+		return;
+
+	// TODO: consider using a map of string-Token and ranges::find instead of ifs
+	auto operatorToken = [](std::string const& _name) -> std::optional<Token> {
+		if (_name == "+") return Token::Add;
+		if (_name == "*") return Token::Mul;
+		if (_name == "==") return Token::Equal;
+		if (_name == "<") return Token::LessThan;
+		if (_name == "<=") return Token::LessThanOrEqual;
+		if (_name == ">") return Token::GreaterThan;
+		if (_name == ">=") return Token::GreaterThanOrEqual;
+		return std::nullopt;
+	}(_builtin.nameParameter());
+
+	// TODO: Handle conversion "fromInteger" (and other possible functions?)
+	if (!operatorToken.has_value())
+		m_errorReporter.fatalTypeError(
+			77_error,
+			_builtin.nameParameterLocation(),
+			"Only operators +, *, ==, <, <=, >, >= are allowed as members of a type class."
+		);
+
+	ASTPointer<IdentifierPath> typeClassFunctionName = *_builtin.typeClassFunctionParameter();
+	solAssert(typeClassFunctionName->path().size() == 2);
+	std::string const& typeClassName = typeClassFunctionName->path()[0];
+	std::string const& functionName = typeClassFunctionName->path()[1];
+
+	std::optional<TypeClass> typeClass = m_typeSystem.typeClass(typeClassName);
+
+	if (!typeClass.has_value())
+		m_errorReporter.fatalTypeError(
+			78_error,
+			typeClassFunctionName->pathLocations()[0],
+			"Cannot find type class named " + typeClassName + '.'
+		);
+
+	auto registrationResult = annotation().operators.emplace(
+		operatorToken.value(),
+		std::make_tuple(typeClass.value(),
+		functionName)
+	);
+	if (!registrationResult.second)
+		m_errorReporter.fatalTypeError(
+			79_error,
+			_builtin.location(),
+			fmt::format(
+				"Type class {} already has a previous definition for {}",
+				typeClassName, functionName
+			)
+		);
 }
 
 void TypeClassMemberRegistration::endVisit(TypeClassDefinition const& _typeClassDefinition)

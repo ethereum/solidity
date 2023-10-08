@@ -24,6 +24,8 @@
 
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/algorithm/find_if.hpp>
+#include <range/v3/iterator/operations.hpp>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/drop_exactly.hpp>
 #include <range/v3/view/drop_last.hpp>
@@ -347,5 +349,16 @@ std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, 
 
 	typeConstructorInfo.arities.emplace_back(_arity);
 
+	return std::nullopt;
+}
+
+std::optional<TypeClass> TypeSystem::typeClass(std::string _typeClassName) const
+{
+	auto typeClassInfoIterator = ranges::find_if(m_typeClasses, [&](TypeClassInfo const& _typeClassInfo) {
+		return _typeClassInfo.name == _typeClassName;
+	});
+
+	if (typeClassInfoIterator != ranges::end(m_typeClasses))
+		return TypeClass{static_cast<size_t>(ranges::distance(ranges::begin(m_typeClasses), typeClassInfoIterator))};
 	return std::nullopt;
 }

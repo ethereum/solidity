@@ -49,6 +49,7 @@ public:
 
 private:
 	void endVisit(TypeClassDefinition const& _typeClassDefinition) override;
+	void endVisit(Builtin const& _builtin) override;
 
 	Annotation& annotation(ASTNode const& _node);
 	Annotation const& annotation(ASTNode const& _node) const;
