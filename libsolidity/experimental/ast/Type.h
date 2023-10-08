@@ -51,19 +51,6 @@ enum class PrimitiveClass
 	Type
 };
 
-// TODO: move elsewhere?
-enum class BuiltinClass
-{
-	Integer,
-	Mul,
-	Add,
-	Equal,
-	Less,
-	LessOrEqual,
-	Greater,
-	GreaterOrEqual
-};
-
 struct TypeConstructor
 {
 public:

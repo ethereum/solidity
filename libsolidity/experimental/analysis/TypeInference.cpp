@@ -553,33 +553,19 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	if (instantiationAnnotation.type)
 		return false;
 	instantiationAnnotation.type = m_voidType;
-	std::optional<TypeClass> typeClass = std::visit(util::GenericVisitor{
-		[&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
-			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
-			{
-				// visiting the type class will re-visit this instantiation
-				typeClassDefinition->accept(*this);
+	std::optional<TypeClass> typeClass = [&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
+		if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
+		{
+			// visiting the type class will re-visit this instantiation
+			typeClassDefinition->accept(*this);
 
-				// TODO: more error handling? Should be covered by the visit above.
-				solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
-				return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
-			}
-			else
-			{
-				m_errorReporter.typeError(9817_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
-				return std::nullopt;
-			}
-		},
-		[&](Token _token) -> std::optional<TypeClass> {
-			auto const& classRegistrationAnnotation = m_analysis.annotation<TypeClassRegistration>();
-
-			if (auto builtinClass = builtinClassFromToken(_token))
-				if (auto typeClass = util::valueOrNullptr(classRegistrationAnnotation.builtinClasses, *builtinClass))
-					return *typeClass;
-			m_errorReporter.typeError(2658_error, _typeClassInstantiation.location(), "Invalid type class name.");
-			return std::nullopt;
+			// TODO: more error handling? Should be covered by the visit above.
+			solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
+			return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
 		}
-	}, _typeClassInstantiation.typeClass().name());
+		m_errorReporter.typeError(9817_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
+		return std::nullopt;
+	}(_typeClassInstantiation.typeClass().name());
 	if (!typeClass)
 		return false;
 
@@ -963,7 +949,7 @@ std::optional<rational> rationalValue(Literal const& _literal)
 
 bool TypeInference::visit(Literal const& _literal)
 {
-	auto& literalAnnotation = annotation(_literal);
+	//auto& literalAnnotation = annotation(_literal);
 	if (_literal.token() != Token::Number)
 	{
 		m_errorReporter.typeError(4316_error, _literal.location(), "Only number literals are supported.");
@@ -981,8 +967,8 @@ bool TypeInference::visit(Literal const& _literal)
 		return false;
 	}
 
-	TypeClass integerClass = m_analysis.annotation<TypeClassRegistration>().builtinClasses.at(BuiltinClass::Integer);
-	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{integerClass}});
+	//TypeClass integerClass = m_analysis.annotation<TypeClassRegistration>().builtinClasses.at(BuiltinClass::Integer);
+	//literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{}});
 	return false;
 }
 
@@ -993,16 +979,7 @@ namespace
 TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysis const& _analysis, TypeClass _class)
 {
 	auto const* typeClassDeclaration = _analysis.typeSystem().typeClassDeclaration(_class);
-	if (typeClassDeclaration)
-		return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
-	// TODO: better mechanism than fetching by name.
-	auto const& typeRegistrationAnnotation = _analysis.annotation<TypeRegistration>();
-	auto const& classRegistrationAnnotation = _analysis.annotation<TypeClassRegistration>();
-	return typeRegistrationAnnotation.builtinClassInstantiations.at(
-		classRegistrationAnnotation.builtinClassesByName.at(
-			_analysis.typeSystem().typeClassName(_class)
-		)
-	);
+	return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 }
 }
 

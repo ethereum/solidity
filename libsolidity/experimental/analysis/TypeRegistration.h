@@ -41,7 +41,6 @@ public:
 	struct GlobalAnnotation
 	{
 		std::map<PrimitiveClass, TypeClassInstantiations> primitiveClassInstantiations;
-		std::map<BuiltinClass, TypeClassInstantiations> builtinClassInstantiations;
 		std::map<std::string, TypeDefinition const*> builtinTypeDefinitions;
 	};
 	TypeRegistration(Analysis& _analysis);

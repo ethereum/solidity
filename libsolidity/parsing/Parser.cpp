@@ -1769,19 +1769,9 @@ ASTPointer<TypeClassName> Parser::parseTypeClassName()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
-	std::variant<Token, ASTPointer<IdentifierPath>> name;
-	if (TokenTraits::isBuiltinTypeClassName(m_scanner->currentToken()))
-	{
-		nodeFactory.markEndPosition();
-		name = m_scanner->currentToken();
-		advance();
-	}
-	else
-	{
-		auto identifierPath = parseIdentifierPath();
-		name = identifierPath;
-		nodeFactory.setEndPositionFromNode(identifierPath);
-	}
+	ASTPointer<IdentifierPath> name = parseIdentifierPath();
+	nodeFactory.setEndPositionFromNode(name);
+
 	return nodeFactory.createNode<TypeClassName>(name);
 }
 

@@ -2576,13 +2576,11 @@ public:
 	TypeClassName(
 		int64_t _id,
 		SourceLocation const& _location,
-		std::variant<Token, ASTPointer<IdentifierPath>> _name
+		ASTPointer<IdentifierPath> _name
 	):
 		ASTNode(_id, _location),
 		m_name(std::move(_name))
 	{
-		if (Token const* token = std::get_if<Token>(&_name))
-			solAssert(TokenTraits::isBuiltinTypeClassName(*token));
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -2590,10 +2588,10 @@ public:
 
 	bool experimentalSolidityOnly() const override { return true; }
 
-	std::variant<Token, ASTPointer<IdentifierPath>> name() const { return m_name; }
+	ASTPointer<IdentifierPath> name() const { return m_name; }
 
 private:
-	std::variant<Token, ASTPointer<IdentifierPath>> m_name;
+	ASTPointer<IdentifierPath> m_name;
 };
 
 class Builtin: public Expression

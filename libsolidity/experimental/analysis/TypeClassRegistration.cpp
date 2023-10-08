@@ -32,30 +32,6 @@ TypeClassRegistration::TypeClassRegistration(Analysis& _analysis):
 	m_errorReporter(_analysis.errorReporter()),
 	m_typeSystem(_analysis.typeSystem())
 {
-	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
-		Type type = m_typeSystem.freshTypeVariable({});
-		auto result = m_typeSystem.declareTypeClass(
-			type,
-			_name,
-			nullptr
-		);
-		if (auto error = std::get_if<std::string>(&result))
-			solAssert(!error, *error);
-		TypeClass declaredClass = std::get<TypeClass>(result);
-		// TODO: validation?
-		GlobalAnnotation& annotation = m_analysis.annotation<TypeClassRegistration>();
-		solAssert(annotation.builtinClassesByName.emplace(_name, _class).second);
-		return annotation.builtinClasses.emplace(_class, declaredClass).first->second;
-	};
-
-	declareBuiltinClass("integer", BuiltinClass::Integer);
-	declareBuiltinClass("*", BuiltinClass::Mul);
-	declareBuiltinClass("+", BuiltinClass::Add);
-	declareBuiltinClass("==", BuiltinClass::Equal);
-	declareBuiltinClass("<", BuiltinClass::Less);
-	declareBuiltinClass("<=", BuiltinClass::LessOrEqual);
-	declareBuiltinClass(">", BuiltinClass::Greater);
-	declareBuiltinClass(">=", BuiltinClass::GreaterOrEqual);
 }
 
 bool TypeClassRegistration::analyze(SourceUnit const& _sourceUnit)

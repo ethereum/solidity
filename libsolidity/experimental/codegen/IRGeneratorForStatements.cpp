@@ -216,12 +216,8 @@ namespace
 TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGenerationContext const& _context, TypeClass _class)
 {
 	auto const* typeClassDeclaration = _context.analysis.typeSystem().typeClassDeclaration(_class);
-	if (typeClassDeclaration)
-		return _context.analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
-	// TODO: better mechanism than fetching by name.
-	auto& instantiations = _context.analysis.annotation<TypeRegistration>().builtinClassInstantiations;
-	auto& builtinClassesByName = _context.analysis.annotation<TypeClassRegistration>().builtinClassesByName;
-	return instantiations.at(builtinClassesByName.at(_context.analysis.typeSystem().typeClassName(_class)));
+	solAssert(typeClassDeclaration);
+	return _context.analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 }
 }
 

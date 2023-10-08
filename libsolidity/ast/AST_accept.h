@@ -1112,20 +1112,14 @@ void TypeDefinition::accept(ASTConstVisitor& _visitor) const
 void TypeClassName::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
-		if (auto* path = std::get_if<ASTPointer<IdentifierPath>>(&m_name))
-			(*path)->accept(_visitor);
-	}
+		m_name->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 
 void TypeClassName::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
-	{
-		if (auto* path = std::get_if<ASTPointer<IdentifierPath>>(&m_name))
-			(*path)->accept(_visitor);
-	}
+		m_name->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 

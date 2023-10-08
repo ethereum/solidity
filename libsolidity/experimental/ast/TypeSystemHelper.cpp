@@ -74,31 +74,6 @@ std::optional<TypeConstructor> experimental::typeConstructorFromToken(Analysis c
 		return nullopt;
 	}
 }*/
-
-std::optional<BuiltinClass> experimental::builtinClassFromToken(langutil::Token _token)
-{
-	switch (_token)
-	{
-	case Token::Integer:
-		return BuiltinClass::Integer;
-	case Token::Mul:
-		return BuiltinClass::Mul;
-	case Token::Add:
-		return BuiltinClass::Add;
-	case Token::Equal:
-		return BuiltinClass::Equal;
-	case Token::LessThan:
-		return BuiltinClass::Less;
-	case Token::LessThanOrEqual:
-		return BuiltinClass::LessOrEqual;
-	case Token::GreaterThan:
-		return BuiltinClass::Greater;
-	case Token::GreaterThanOrEqual:
-		return BuiltinClass::GreaterOrEqual;
-	default:
-		return std::nullopt;
-	}
-}
 /*
 std::optional<TypeClass> experimental::typeClassFromTypeClassName(TypeClassName const& _typeClass)
 {
