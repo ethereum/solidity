@@ -47,7 +47,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 	_a = resolve(_a);
 	_b = resolve(_b);
 	std::visit(util::GenericVisitor{
-		[&](TypeVariable _left, TypeVariable _right) {
+		[&](TypeVariable const& _left, TypeVariable const& _right) {
 			if (_left.index() == _right.index())
 			{
 				if (_left.sort() != _right.sort())
@@ -67,13 +67,13 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 				}
 			}
 		},
-		[&](TypeVariable _var, auto) {
+		[&](TypeVariable const& _var, auto const&) {
 			failures += instantiate(_var, _b);
 		},
-		[&](auto, TypeVariable _var) {
+		[&](auto const&, TypeVariable const& _var) {
 			failures += instantiate(_var, _a);
 		},
-		[&](TypeConstant _left, TypeConstant _right) {
+		[&](TypeConstant const& _left, TypeConstant const& _right) {
 			if (_left.constructor != _right.constructor)
 				return unificationFailure();
 			if (_left.arguments.size() != _right.arguments.size())
@@ -81,7 +81,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 			for (auto&& [left, right]: ranges::zip_view(_left.arguments, _right.arguments))
 				failures += unify(left, right);
 		},
-		[&](auto, auto) {
+		[&](auto const&, auto const&) {
 			unificationFailure();
 		}
 	}, _a, _b);
@@ -91,7 +91,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
 {
 	return std::visit(util::GenericVisitor{
-		[&](TypeVariable _left, TypeVariable _right) {
+		[&](TypeVariable const& _left, TypeVariable const& _right) {
 			if (_left.index() == _right.index())
 			{
 				solAssert(_left.sort() == _right.sort());
@@ -99,7 +99,7 @@ bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
 			}
 			return false;
 		},
-		[&](TypeConstant _left, TypeConstant _right) {
+		[&](TypeConstant const& _left, TypeConstant const& _right) {
 			if (_left.constructor != _right.constructor)
 				return false;
 			if (_left.arguments.size() != _right.arguments.size())
@@ -109,7 +109,7 @@ bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
 					return false;
 			return true;
 		},
-		[&](auto, auto) {
+		[&](auto const&, auto const&) {
 			return false;
 		}
 	}, resolve(_lhs), resolve(_rhs));
@@ -202,7 +202,7 @@ experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 		[&](TypeConstant const& _type) -> Type {
 			return TypeConstant{
 				_type.constructor,
-				_type.arguments | ranges::views::transform([&](Type _argType) {
+				_type.arguments | ranges::views::transform([&](Type const& _argType) {
 					return resolveRecursive(_argType);
 				}) | ranges::to<std::vector<Type>>
 			};
@@ -309,12 +309,12 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 experimental::Type TypeEnvironment::fresh(Type _type)
 {
 	std::unordered_map<uint64_t, Type> mapping;
-	auto freshImpl = [&](Type _type, auto _recurse) -> Type {
+	auto freshImpl = [&](Type const& _type, auto _recurse) -> Type {
 		return std::visit(util::GenericVisitor{
 			[&](TypeConstant const& _type) -> Type {
 				return TypeConstant{
 					_type.constructor,
-					_type.arguments | ranges::views::transform([&](Type _argType) {
+					_type.arguments | ranges::views::transform([&](Type const& _argType) {
 						return _recurse(_argType, _recurse);
 					}) | ranges::to<std::vector<Type>>
 				};

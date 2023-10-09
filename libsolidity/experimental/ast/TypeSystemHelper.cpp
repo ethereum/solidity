@@ -292,7 +292,7 @@ std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) con
 }
 
 
-std::string TypeSystemHelpers::sortToString(Sort _sort) const
+std::string TypeSystemHelpers::sortToString(Sort const& _sort) const
 {
 	using ranges::views::transform;
 
@@ -314,7 +314,7 @@ std::string TypeSystemHelpers::sortToString(Sort _sort) const
 std::string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 {
 	return visit(util::GenericVisitor{
-		[&](TypeConstant _type) -> std::string {
+		[&](TypeConstant const& _type) -> std::string {
 			std::stringstream stream;
 			stream << env.typeSystem().constructorInfo(_type.constructor).canonicalName;
 			if (!_type.arguments.empty())
@@ -327,7 +327,7 @@ std::string TypeEnvironmentHelpers::canonicalTypeName(Type _type) const
 			}
 			return stream.str();
 		},
-		[](TypeVariable) -> std::string {
+		[](TypeVariable const&) -> std::string {
 			solAssert(false);
 		},
 		[](std::monostate) -> std::string {

@@ -48,7 +48,7 @@ struct TypeSystemHelpers
 	std::tuple<Type, Type> destTypeFunctionType(Type _functionType) const;
 	bool isTypeFunctionType(Type _type) const;
 
-	std::string sortToString(Sort _sort) const;
+	std::string sortToString(Sort const& _sort) const;
 };
 
 struct TypeEnvironmentHelpers
