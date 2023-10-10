@@ -917,10 +917,10 @@ void CommandLineParser::parseArgs(int _argc, char const* const* _argv)
 
 void CommandLineParser::processArgs()
 {
-	if (m_args.count(g_strColor) > 0)
-		m_options.formatting.coloredOutput = true;
-	else if (m_args.count(g_strNoColor) > 0)
+	if (m_args.count(g_strNoColor) > 0)
 		m_options.formatting.coloredOutput = false;
+	else if (m_args.count(g_strColor) > 0)
+		m_options.formatting.coloredOutput = true;
 
 	checkMutuallyExclusive({
 		g_strHelp,
