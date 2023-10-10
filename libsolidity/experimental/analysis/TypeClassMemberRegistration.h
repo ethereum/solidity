@@ -31,26 +31,28 @@ namespace solidity::frontend::experimental
 class Analysis;
 class TypeSystem;
 
-class TypeClassRegistration: public ASTConstVisitor
+class TypeClassMemberRegistration: public ASTConstVisitor
 {
 public:
 	struct Annotation
 	{
-		// Type classes.
-		std::optional<TypeClass> typeClass;
 	};
 	struct GlobalAnnotation
 	{
-		std::map<BuiltinClass, TypeClass> builtinClasses;
-		std::map<std::string, BuiltinClass> builtinClassesByName;
+		std::map<TypeClass, std::map<std::string, Type>> typeClassFunctions;
+		std::map<Token, std::tuple<TypeClass, std::string>> operators;
 	};
 
-	TypeClassRegistration(Analysis& _analysis);
+	TypeClassMemberRegistration(Analysis& _analysis);
 
 	bool analyze(SourceUnit const& _sourceUnit);
 
 private:
-	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
+	void endVisit(TypeClassDefinition const& _typeClassDefinition) override;
+
+	Annotation& annotation(ASTNode const& _node);
+	Annotation const& annotation(ASTNode const& _node) const;
+	GlobalAnnotation& annotation();
 
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;

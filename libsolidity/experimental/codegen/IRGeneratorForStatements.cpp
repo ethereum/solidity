@@ -20,6 +20,7 @@
 
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
+#include <libsolidity/experimental/analysis/TypeClassMemberRegistration.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 
@@ -199,7 +200,7 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binaryOperation)
 	Type rightType = type(_binaryOperation.rightExpression());
 	Type resultType = type(_binaryOperation);
 	Type functionType = helper.functionType(helper.tupleType({leftType, rightType}), resultType);
-	auto [typeClass, memberName] = m_context.analysis.annotation<TypeInference>().operators.at(_binaryOperation.getOperator());
+	auto [typeClass, memberName] = m_context.analysis.annotation<TypeClassMemberRegistration>().operators.at(_binaryOperation.getOperator());
 	auto const& functionDefinition = resolveTypeClassFunction(typeClass, memberName, functionType);
 	// TODO: deduplicate with FunctionCall
 	// TODO: get around resolveRecursive by passing the environment further down?
@@ -219,7 +220,7 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGener
 		return _context.analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
 	auto& instantiations = _context.analysis.annotation<TypeRegistration>().builtinClassInstantiations;
-	auto& builtinClassesByName = _context.analysis.annotation<TypeInference>().builtinClassesByName;
+	auto& builtinClassesByName = _context.analysis.annotation<TypeClassRegistration>().builtinClassesByName;
 	return instantiations.at(builtinClassesByName.at(_context.analysis.typeSystem().typeClassName(_class)));
 }
 }
@@ -229,7 +230,7 @@ FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(Typ
 	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
 
 	TypeEnvironment env = m_context.env->clone();
-	Type genericFunctionType = env.fresh(m_context.analysis.annotation<TypeInference>().typeClassFunctions.at(_class).at(_name));
+	Type genericFunctionType = env.fresh(m_context.analysis.annotation<TypeClassMemberRegistration>().typeClassFunctions.at(_class).at(_name));
 	auto typeVars = TypeEnvironmentHelpers{env}.typeVars(genericFunctionType);
 	solAssert(typeVars.size() == 1);
 	solAssert(env.unify(genericFunctionType, _type).empty());

@@ -18,6 +18,7 @@
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/analysis/DebugWarner.h>
 #include <libsolidity/experimental/analysis/SyntaxRestrictor.h>
+#include <libsolidity/experimental/analysis/TypeClassMemberRegistration.h>
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
@@ -28,6 +29,7 @@ using namespace solidity::frontend::experimental;
 // TODO: creating all of them for all nodes up front may be wasteful, we should improve the mechanism.
 struct Analysis::AnnotationContainer
 {
+	TypeClassMemberRegistration::Annotation typeClassMemberRegistrationAnnotation;
 	TypeClassRegistration::Annotation typeClassRegistrationAnnotation;
 	TypeRegistration::Annotation typeRegistrationAnnotation;
 	TypeInference::Annotation typeInferenceAnnotation;
@@ -35,10 +37,36 @@ struct Analysis::AnnotationContainer
 
 struct Analysis::GlobalAnnotationContainer
 {
+	TypeClassMemberRegistration::GlobalAnnotation typeClassMemberRegistrationAnnotation;
 	TypeClassRegistration::GlobalAnnotation typeClassRegistrationAnnotation;
 	TypeRegistration::GlobalAnnotation typeRegistrationAnnotation;
 	TypeInference::GlobalAnnotation typeInferenceAnnotation;
 };
+
+template<>
+TypeClassMemberRegistration::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeClassMemberRegistration>::get(ASTNode const& _node)
+{
+	return analysis.annotationContainer(_node).typeClassMemberRegistrationAnnotation;
+}
+
+template<>
+TypeClassMemberRegistration::GlobalAnnotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeClassMemberRegistration>::get() const
+{
+	return analysis.annotationContainer().typeClassMemberRegistrationAnnotation;
+}
+
+
+template<>
+TypeClassMemberRegistration::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeClassMemberRegistration>::get()
+{
+	return analysis.annotationContainer().typeClassMemberRegistrationAnnotation;
+}
+
+template<>
+TypeClassMemberRegistration::Annotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeClassMemberRegistration>::get(ASTNode const& _node) const
+{
+	return analysis.annotationContainer(_node).typeClassMemberRegistrationAnnotation;
+}
 
 template<>
 TypeClassRegistration::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeClassRegistration>::get(ASTNode const& _node)
@@ -153,6 +181,7 @@ bool Analysis::check(std::vector<std::shared_ptr<SourceUnit const>> const& _sour
 		SyntaxRestrictor,
 		TypeClassRegistration,
 		TypeRegistration,
+		TypeClassMemberRegistration,
 		TypeInference,
 		DebugWarner
 	>;

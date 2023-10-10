@@ -20,6 +20,7 @@
 #include <libsolidity/experimental/analysis/TypeInference.h>
 
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
+#include <libsolidity/experimental/analysis/TypeClassMemberRegistration.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
@@ -51,80 +52,6 @@ TypeInference::TypeInference(Analysis& _analysis):
 	m_unitType(m_typeSystem.type(PrimitiveType::Unit, {})),
 	m_boolType(m_typeSystem.type(PrimitiveType::Bool, {}))
 {
-	TypeSystemHelpers helper{m_typeSystem};
-
-	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
-		Type type = m_typeSystem.freshTypeVariable({});
-		auto result = m_typeSystem.declareTypeClass(
-			type,
-			_name,
-			nullptr
-		);
-		if (auto error = std::get_if<std::string>(&result))
-			solAssert(!error, *error);
-		TypeClass declaredClass = std::get<TypeClass>(result);
-		// TODO: validation?
-		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
-		return annotation().builtinClasses.emplace(_class, declaredClass).first->second;
-	};
-
-	auto registeredTypeClass = [&](BuiltinClass _builtinClass) -> TypeClass {
-		return annotation().builtinClasses.at(_builtinClass);
-	};
-
-	auto defineConversion = [&](BuiltinClass _builtinClass, PrimitiveType _fromType, std::string _functionName) {
-		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
-			std::move(_functionName),
-			helper.functionType(
-				m_typeSystem.type(_fromType, {}),
-				m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable
-			),
-		}};
-	};
-
-	auto defineBinaryMonoidalOperator = [&](BuiltinClass _builtinClass, Token _token, std::string _functionName) {
-		Type typeVar = m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable;
-		annotation().operators.emplace(_token, std::make_tuple(registeredTypeClass(_builtinClass), _functionName));
-		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
-			std::move(_functionName),
-			helper.functionType(
-				helper.tupleType({typeVar, typeVar}),
-				typeVar
-			)
-		}};
-	};
-
-	auto defineBinaryCompareOperator = [&](BuiltinClass _builtinClass, Token _token, std::string _functionName) {
-		Type typeVar = m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable;
-		annotation().operators.emplace(_token, std::make_tuple(registeredTypeClass(_builtinClass), _functionName));
-		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
-			std::move(_functionName),
-			helper.functionType(
-				helper.tupleType({typeVar, typeVar}),
-				m_typeSystem.type(PrimitiveType::Bool, {})
-			)
-		}};
-	};
-
-	declareBuiltinClass("integer", BuiltinClass::Integer);
-	declareBuiltinClass("*", BuiltinClass::Mul);
-	declareBuiltinClass("+", BuiltinClass::Add);
-	declareBuiltinClass("==", BuiltinClass::Equal);
-	declareBuiltinClass("<", BuiltinClass::Less);
-	declareBuiltinClass("<=", BuiltinClass::LessOrEqual);
-	declareBuiltinClass(">", BuiltinClass::Greater);
-	declareBuiltinClass(">=", BuiltinClass::GreaterOrEqual);
-
-	defineConversion(BuiltinClass::Integer, PrimitiveType::Integer, "fromInteger");
-
-	defineBinaryMonoidalOperator(BuiltinClass::Mul, Token::Mul, "mul");
-	defineBinaryMonoidalOperator(BuiltinClass::Add, Token::Add, "add");
-
-	defineBinaryCompareOperator(BuiltinClass::Equal, Token::Equal, "eq");
-	defineBinaryCompareOperator(BuiltinClass::Less, Token::LessThan, "lt");
-	defineBinaryCompareOperator(BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
-	defineBinaryCompareOperator(BuiltinClass::Greater, Token::GreaterThan, "gt");
-	defineBinaryCompareOperator(BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
 }
 
 bool TypeInference::analyze(SourceUnit const& _sourceUnit)
@@ -136,19 +63,17 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
 	solAssert(m_expressionContext == ExpressionContext::Term);
-	auto& functionAnnotation = annotation(_functionDefinition);
-	if (functionAnnotation.type)
-		return false;
+
+	// For type class members the type annotation is filled by visit(TypeClassDefinition)
+	if (!annotation(_functionDefinition).type.has_value())
+		annotation(_functionDefinition).type = TypeSystemHelpers{m_typeSystem}.functionType(
+			m_typeSystem.freshTypeVariable({}),
+			m_typeSystem.freshTypeVariable({})
+		);
 
 	ScopedSaveAndRestore signatureRestore(m_currentFunctionType, std::nullopt);
-
-	Type argumentsType = m_typeSystem.freshTypeVariable({});
-	Type returnType = m_typeSystem.freshTypeVariable({});
-	Type functionType = TypeSystemHelpers{m_typeSystem}.functionType(argumentsType, returnType);
-
-	m_currentFunctionType = functionType;
-	functionAnnotation.type = functionType;
-
+	m_currentFunctionType = annotation(_functionDefinition).type;
+	auto [argumentsType, returnType] = TypeSystemHelpers{m_typeSystem}.destFunctionType(m_currentFunctionType.value());
 
 	_functionDefinition.parameterList().accept(*this);
 	unify(argumentsType, typeAnnotation(_functionDefinition.parameterList()), _functionDefinition.parameterList().location());
@@ -204,30 +129,33 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		_typeClassDefinition.typeVariable().accept(*this);
 	}
 
-	std::map<std::string, Type> functionTypes;
-
 	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
 	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
+
 	Type typeVar = m_typeSystem.typeClassInfo(typeClass).typeVariable;
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
+	std::map<std::string, Type> const& functionTypes = m_analysis.annotation<TypeClassMemberRegistration>().typeClassFunctions.at(typeClass);
+
 	for (auto subNode: _typeClassDefinition.subNodes())
 	{
-		subNode->accept(*this);
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(subNode.get());
 		solAssert(functionDefinition);
-		// TODO: need polymorphicInstance?
-		auto functionType = polymorphicInstance(typeAnnotation(*functionDefinition));
-		if (!functionTypes.emplace(functionDefinition->name(), functionType).second)
-			m_errorReporter.fatalTypeError(3195_error, functionDefinition->location(), "Function in type class declared multiple times.");
+
+		// For type class members the type is assigned by TypeClassMemberRegistration.
+		// Fill in the `type` annotation to avoid `visit(FunctionDefinition)` giving it a fresh one.
+		Type functionType = functionTypes.at(functionDefinition->name());
+		solAssert(!annotation(*functionDefinition).type.has_value());
+		annotation(*functionDefinition).type = functionType;
+
+		subNode->accept(*this);
+
 		auto typeVars = TypeEnvironmentHelpers{*m_env}.typeVars(functionType);
 		if (typeVars.size() != 1)
 			m_errorReporter.fatalTypeError(8379_error, functionDefinition->location(), "Function in type class may only depend on the type class variable.");
 		unify(typeVars.front(), typeVar, functionDefinition->location());
 		typeMembersAnnotation[functionDefinition->name()] = TypeMember{functionType};
 	}
-
-	annotation().typeClassFunctions[typeClass] = std::move(functionTypes);
 
 	for (auto [functionName, functionType]: functionTypes)
 	{
@@ -295,15 +223,16 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 {
 	auto& operationAnnotation = annotation(_binaryOperation);
 	solAssert(!operationAnnotation.type);
+	auto const& memberRegistrationAnnotation = m_analysis.annotation<TypeClassMemberRegistration>();
 	TypeSystemHelpers helper{m_typeSystem};
 	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
-		if (auto* operatorInfo = util::valueOrNullptr(annotation().operators, _binaryOperation.getOperator()))
+		if (auto* operatorInfo = util::valueOrNullptr(memberRegistrationAnnotation.operators, _binaryOperation.getOperator()))
 		{
 			auto [typeClass, functionName] = *operatorInfo;
 			// TODO: error robustness?
-			Type functionType = m_env->fresh(annotation().typeClassFunctions.at(typeClass).at(functionName));
+			Type functionType = m_env->fresh(memberRegistrationAnnotation.typeClassFunctions.at(typeClass).at(functionName));
 
 			_binaryOperation.leftExpression().accept(*this);
 			_binaryOperation.rightExpression().accept(*this);
@@ -630,6 +559,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			{
 				// visiting the type class will re-visit this instantiation
 				typeClassDefinition->accept(*this);
+
 				// TODO: more error handling? Should be covered by the visit above.
 				solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
 				return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
@@ -641,8 +571,10 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			}
 		},
 		[&](Token _token) -> std::optional<TypeClass> {
+			auto const& classRegistrationAnnotation = m_analysis.annotation<TypeClassRegistration>();
+
 			if (auto builtinClass = builtinClassFromToken(_token))
-				if (auto typeClass = util::valueOrNullptr(annotation().builtinClasses, *builtinClass))
+				if (auto typeClass = util::valueOrNullptr(classRegistrationAnnotation.builtinClasses, *builtinClass))
 					return *typeClass;
 			m_errorReporter.typeError(2658_error, _typeClassInstantiation.location(), "Invalid type class name.");
 			return std::nullopt;
@@ -695,7 +627,8 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	if (auto error = m_typeSystem.instantiateClass(type, arity))
 		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
 
-	auto const& classFunctions = annotation().typeClassFunctions.at(*typeClass);
+	auto const& memberRegistrationAnnotation = m_analysis.annotation<TypeClassMemberRegistration>();
+	auto const& classFunctions = memberRegistrationAnnotation.typeClassFunctions.at(*typeClass);
 
 	TypeEnvironment newEnv = m_env->clone();
 	if (!newEnv.unify(m_typeSystem.typeClassVariable(*typeClass), type).empty())
@@ -1045,7 +978,9 @@ bool TypeInference::visit(Literal const& _literal)
 		m_errorReporter.typeError(2345_error, _literal.location(), "Only integers are supported.");
 		return false;
 	}
-	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{annotation().builtinClasses.at(BuiltinClass::Integer)}});
+
+	TypeClass integerClass = m_analysis.annotation<TypeClassRegistration>().builtinClasses.at(BuiltinClass::Integer);
+	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{integerClass}});
 	return false;
 }
 
@@ -1059,10 +994,10 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 	if (typeClassDeclaration)
 		return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
-	auto const& annotation = _analysis.annotation<TypeRegistration>();
-	auto const& inferenceAnnotation = _analysis.annotation<TypeInference>();
-	return annotation.builtinClassInstantiations.at(
-		inferenceAnnotation.builtinClassesByName.at(
+	auto const& typeRegistrationAnnotation = _analysis.annotation<TypeRegistration>();
+	auto const& classRegistrationAnnotation = _analysis.annotation<TypeClassRegistration>();
+	return typeRegistrationAnnotation.builtinClassInstantiations.at(
+		classRegistrationAnnotation.builtinClassesByName.at(
 			_analysis.typeSystem().typeClassName(_class)
 		)
 	);
