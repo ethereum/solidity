@@ -1852,32 +1852,25 @@ ASTPointer<Builtin> Parser::parseBuiltin()
 	expectToken(Token::Builtin);
 	expectToken(Token::LParen);
 
-	auto builtin = nodeFactory.createNode<Builtin>(
-		std::make_shared<std::string>(m_scanner->currentLiteral()),
-		m_scanner->currentLocation()
-	);
-
+	ASTPointer<ASTString> name = std::make_shared<std::string>(m_scanner->currentLiteral());
+	SourceLocation nameLocation = m_scanner->currentLocation();
 	expectToken(Token::StringLiteral);
 
+	std::optional<ASTPointer<Expression>> functionParameter;
 	if (m_scanner->currentToken() == Token::Comma)
 	{
 		expectToken(Token::Comma);
-		// TODO: Consider if other ASTNode would be more adequate (MemberAccess?)
-		auto typeClassFunctionNameParameter = parseIdentifierPath();
-		// TODO: write a decent error message
-		if (typeClassFunctionNameParameter->path().size() != 2)
-			m_errorReporter.fatalParserError(
-				42_error,
-				typeClassFunctionNameParameter->location(),
-				"Invalid function! Expected <TypeClassName.FunctionName> format."
-			);
-
-		builtin->setTypeClassFunctionParameter(typeClassFunctionNameParameter);
+		functionParameter = parseExpression();
+		// TODO: validation ?
 	}
 
 	expectToken(Token::RParen);
 
-	return builtin;
+	return nodeFactory.createNode<Builtin>(
+		name,
+		nameLocation,
+		functionParameter
+	);
 }
 
 ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& _docString)

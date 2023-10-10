@@ -2601,11 +2601,13 @@ public:
 		int64_t _id,
 		SourceLocation _location,
 		ASTPointer<ASTString> _nameParameter,
-		SourceLocation _nameParameterLocation
+		SourceLocation _nameParameterLocation,
+		std::optional<ASTPointer<Expression>> _functionParameter = std::nullopt
 	):
 		Expression(_id, std::move(_location)),
 		m_nameParameter(std::move(_nameParameter)),
-		m_nameParameterLocation(std::move(_nameParameterLocation))
+		m_nameParameterLocation(std::move(_nameParameterLocation)),
+		m_functionParameter(std::move(_functionParameter))
 	{
 		solAssert(m_nameParameter);
 	}
@@ -2617,13 +2619,12 @@ public:
 
 	ASTString const& nameParameter() const { return *m_nameParameter; }
 	SourceLocation const& nameParameterLocation() const { return m_nameParameterLocation; }
-	std::optional<ASTPointer<IdentifierPath>> const& typeClassFunctionParameter() const { return m_typeClassFunctionParameter; }
-	void setTypeClassFunctionParameter(ASTPointer<IdentifierPath> _typeClassFunctionParameter) { m_typeClassFunctionParameter = _typeClassFunctionParameter; }
+	std::optional<ASTPointer<Expression>> const& functionParameter() const { return m_functionParameter; }
 
 private:
 	ASTPointer<ASTString> m_nameParameter;
 	SourceLocation m_nameParameterLocation;
-	std::optional<ASTPointer<IdentifierPath>> m_typeClassFunctionParameter;
+	std::optional<ASTPointer<Expression>> m_functionParameter;
 };
 
 /// @}

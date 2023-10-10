@@ -59,7 +59,7 @@ bool TypeRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
 bool TypeRegistration::visit(Builtin const& _builtin)
 {
 	if (
-		_builtin.typeClassFunctionParameter().has_value() ||
+		_builtin.functionParameter().has_value() ||
 		annotation(_builtin).typeConstructor
 	)
 		return false;
