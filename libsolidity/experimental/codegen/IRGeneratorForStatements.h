@@ -66,6 +66,7 @@ private:
 	Type type(ASTNode const& _node) const;
 
 	FunctionDefinition const& resolveTypeClassFunction(TypeClass _class, std::string _name, Type _type);
+	FunctionDefinition const& resolveFunctionExpression(Expression const& _expression, Type _type);
 };
 
 }

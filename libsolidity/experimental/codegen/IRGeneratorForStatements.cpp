@@ -200,8 +200,10 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binaryOperation)
 	Type rightType = type(_binaryOperation.rightExpression());
 	Type resultType = type(_binaryOperation);
 	Type functionType = helper.functionType(helper.tupleType({leftType, rightType}), resultType);
-	auto [typeClass, memberName] = m_context.analysis.annotation<TypeClassMemberRegistration>().operators.at(_binaryOperation.getOperator());
-	auto const& functionDefinition = resolveTypeClassFunction(typeClass, memberName, functionType);
+	//auto [typeClass, memberName] = m_context.analysis.annotation<TypeClassMemberRegistration>().operators.at(_binaryOperation.getOperator());
+	//auto const& functionDefinition = resolveTypeClassFunction(typeClass, memberName, functionType);
+	auto operatorFunctionExpression = m_context.analysis.annotation<TypeClassMemberRegistration>().operators.at(_binaryOperation.getOperator());
+	auto const& functionDefinition = resolveFunctionExpression(*operatorFunctionExpression, functionType);
 	// TODO: deduplicate with FunctionCall
 	// TODO: get around resolveRecursive by passing the environment further down?
 	functionType = m_context.env->resolveRecursive(functionType);
@@ -219,6 +221,25 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGener
 	solAssert(typeClassDeclaration);
 	return _context.analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 }
+}
+
+FunctionDefinition const& IRGeneratorForStatements::resolveFunctionExpression(Expression const& _expression, Type _type)
+{
+	FunctionDefinition const* functionDefinition = nullptr;
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
+	{
+		auto const* typeClassName = dynamic_cast<Identifier const*>(&memberAccess->expression());
+		solAssert(typeClassName);
+		auto typeClass = m_context.analysis.typeSystem().typeClass(typeClassName->name());
+		solAssert(typeClass);
+		functionDefinition = &resolveTypeClassFunction(
+			*typeClass,
+			memberAccess->memberName(),
+			_type
+		);
+	}
+	solAssert(functionDefinition);
+	return *functionDefinition;
 }
 
 FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(TypeClass _class, std::string _name, Type _type)
