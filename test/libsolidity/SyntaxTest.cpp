@@ -45,6 +45,11 @@ SyntaxTest::SyntaxTest(
 	CommonSyntaxTest(_filename, _evmVersion),
 	m_minSeverity(_minSeverity)
 {
+	static std::set<std::string> const compileViaYulAllowedValues{"true", "false"};
+
+	m_compileViaYul = m_reader.stringSetting("compileViaYul", "false");
+	if (!util::contains(compileViaYulAllowedValues, m_compileViaYul))
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileViaYul value: " + m_compileViaYul + "."));
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
 }
 
@@ -58,6 +63,7 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 		OptimiserSettings::full() :
 		OptimiserSettings::minimal()
 	);
+	_compiler.setViaIR(m_compileViaYul == "true");
 	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
 }
