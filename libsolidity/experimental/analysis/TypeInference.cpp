@@ -228,11 +228,14 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 	switch (m_expressionContext)
 	{
 	case ExpressionContext::Term:
-		if (auto* operatorInfo = util::valueOrNullptr(memberRegistrationAnnotation.operators, _binaryOperation.getOperator()))
+		if (auto* operatorFunction = util::valueOrNullptr(memberRegistrationAnnotation.operators, _binaryOperation.getOperator()))
 		{
-			auto [typeClass, functionName] = *operatorInfo;
-			// TODO: error robustness?
-			Type functionType = m_env->fresh(memberRegistrationAnnotation.typeClassFunctions.at(typeClass).at(functionName));
+			auto& functionExpressionAnnotation = annotation(**operatorFunction);
+			if (!functionExpressionAnnotation.type)
+				(*operatorFunction)->accept(*this);
+
+			solAssert(functionExpressionAnnotation.type);
+			Type functionType = functionExpressionAnnotation.type.value();
 
 			_binaryOperation.leftExpression().accept(*this);
 			_binaryOperation.rightExpression().accept(*this);
