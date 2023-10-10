@@ -658,7 +658,19 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 		return false;
 	}
 
-	parser.parse(_argc, _argv);
+	try
+	{
+		parser.parse(_argc, _argv);
+	}
+	catch (...)
+	{
+		// Even if the overall CLI parsing fails, the --color/--no-color options may have been
+		// successfully parsed, and if so, should be taken into account when printing errors.
+		// If no value is present, it's possible that --no-color is still there but parsing failed
+		// due to other, unrecognized options so play it safe and disable color in that case.
+		m_options.formatting.coloredOutput = parser.options().formatting.coloredOutput.value_or(false);
+		throw;
+	}
 	m_options = parser.options();
 
 	return true;

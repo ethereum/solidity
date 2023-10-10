@@ -917,6 +917,11 @@ void CommandLineParser::parseArgs(int _argc, char const* const* _argv)
 
 void CommandLineParser::processArgs()
 {
+	if (m_args.count(g_strColor) > 0)
+		m_options.formatting.coloredOutput = true;
+	else if (m_args.count(g_strNoColor) > 0)
+		m_options.formatting.coloredOutput = false;
+
 	checkMutuallyExclusive({
 		g_strHelp,
 		g_strLicense,
@@ -1030,11 +1035,6 @@ void CommandLineParser::processArgs()
 				"Option --" + g_strDebugInfo + " is only valid in compiler and assembler modes."
 			);
 	}
-
-	if (m_args.count(g_strColor) > 0)
-		m_options.formatting.coloredOutput = true;
-	else if (m_args.count(g_strNoColor) > 0)
-		m_options.formatting.coloredOutput = false;
 
 	m_options.formatting.withErrorIds = m_args.count(g_strErrorIds);
 
