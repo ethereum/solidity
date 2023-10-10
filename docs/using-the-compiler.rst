@@ -175,7 +175,7 @@ at each version. Backward compatibility is not guaranteed between each version.
 - ``paris``
    - Introduces ``prevrandao()`` and ``block.prevrandao``, and changes the semantics of the now deprecated ``block.difficulty``, disallowing ``difficulty()`` in inline assembly (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
 - ``shanghai`` (**default**)
-  - Smaller code size and gas savings due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
+   - Smaller code size and gas savings due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
