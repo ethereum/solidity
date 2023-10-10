@@ -31,7 +31,7 @@ BINARY_TYPE="$1"
 BINARY_PATH="$(realpath "$2")"
 SELECTED_PRESETS="$3"
 
-function compile_fn { yarn compile; }
+function compile_fn { yarn hardhat-compile; }
 function test_fn { SNAPSHOT_UPDATE=1 npx --no hardhat test; }
 
 function brink_test
@@ -63,7 +63,7 @@ function brink_test
     download_project "$repo" "$ref_type" "$ref" "$DIR"
 
     # TODO: Remove this when Brink merges https://github.com/brinktrade/brink-core/pull/52
-    sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" contracts/Test/MockEIP1271Validator.sol
+    sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" src/Test/MockEIP1271Validator.sol
 
     neutralize_package_lock
     neutralize_package_json_hooks
