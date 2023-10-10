@@ -896,6 +896,9 @@ void CommandLineParser::parseArgs(int _argc, char const* const* _argv)
 	po::options_description allOptions = optionsDescription();
 	po::positional_options_description filesPositions = positionalOptionsDescription();
 
+	m_options = {};
+	m_args = {};
+
 	// parse the compiler arguments
 	try
 	{
