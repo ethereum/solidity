@@ -48,7 +48,7 @@ bool TypeClassMemberRegistration::analyze(SourceUnit const& _sourceUnit)
 void TypeClassMemberRegistration::endVisit(Builtin const& _builtin)
 {
 	// Builtin may be used to register user defined types, which is handled earlier at TypeRegistration step
-	if (!_builtin.typeClassFunctionParameter().has_value())
+	if (!_builtin.functionParameter().has_value())
 		return;
 
 	// TODO: consider using a map of string-Token and ranges::find instead of ifs
@@ -71,32 +71,30 @@ void TypeClassMemberRegistration::endVisit(Builtin const& _builtin)
 			"Only operators +, *, ==, <, <=, >, >= are allowed as members of a type class."
 		);
 
-	ASTPointer<IdentifierPath> typeClassFunctionName = *_builtin.typeClassFunctionParameter();
-	solAssert(typeClassFunctionName->path().size() == 2);
-	std::string const& typeClassName = typeClassFunctionName->path()[0];
-	std::string const& functionName = typeClassFunctionName->path()[1];
+	ASTPointer<Expression> functionParameter = *_builtin.functionParameter();
+	// TODO: Remove
+	// solAssert(typeClassFunctionName->path().size() == 2);
+	// std::string const& typeClassName = typeClassFunctionName->path()[0];
+	// std::string const& functionName = typeClassFunctionName->path()[1];
+	//
+	// std::optional<TypeClass> typeClass = m_typeSystem.typeClass(typeClassName);
+	//
+	// if (!typeClass.has_value())
+	// 	m_errorReporter.fatalTypeError(
+	// 		78_error,
+	// 		typeClassFunctionName->pathLocations()[0],
+	// 		"Cannot find type class named " + typeClassName + '.'
+	// 	);
 
-	std::optional<TypeClass> typeClass = m_typeSystem.typeClass(typeClassName);
-
-	if (!typeClass.has_value())
-		m_errorReporter.fatalTypeError(
-			78_error,
-			typeClassFunctionName->pathLocations()[0],
-			"Cannot find type class named " + typeClassName + '.'
-		);
-
-	auto registrationResult = annotation().operators.emplace(
-		operatorToken.value(),
-		std::make_tuple(typeClass.value(),
-		functionName)
-	);
+	auto registrationResult = annotation().operators.emplace(operatorToken.value(),	functionParameter);
 	if (!registrationResult.second)
 		m_errorReporter.fatalTypeError(
 			79_error,
 			_builtin.location(),
+			// TODO: registrationResult.first->second->location(),
 			fmt::format(
-				"Type class {} already has a previous definition for {}",
-				typeClassName, functionName
+				"Previous expression already associated with operator {}.",
+				_builtin.nameParameter()
 			)
 		);
 }
