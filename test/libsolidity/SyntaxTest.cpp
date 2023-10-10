@@ -46,6 +46,7 @@ SyntaxTest::SyntaxTest(
 	m_minSeverity(_minSeverity)
 {
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
+	m_viaIr = m_reader.boolSetting("via-ir", false);
 }
 
 void SyntaxTest::setupCompiler(CompilerStack& _compiler)
@@ -58,6 +59,7 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 		OptimiserSettings::full() :
 		OptimiserSettings::minimal()
 	);
+	_compiler.setViaIR(m_viaIr);
 	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
 }
@@ -67,13 +69,13 @@ void SyntaxTest::parseAndAnalyze()
 	try
 	{
 		runFramework(withPreamble(m_sources.sources), PipelineStage::Compilation);
-		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis) && !compiler().isExperimentalAnalysis())
+		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
 		{
-			ErrorList const& errors = compiler().errors();
-			auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
+			ErrorList const &errors = compiler().errors();
+			auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const &error) {
 				return error->type() == Error::Type::CodeGenerationError;
 			});
-			auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
+			auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const &error) {
 				return Error::isError(error->type());
 			});
 			// failing compilation after successful analysis is a rare case,

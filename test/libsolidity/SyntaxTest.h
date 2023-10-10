@@ -53,6 +53,7 @@ protected:
 	virtual void filterObtainedErrors();
 
 	bool m_optimiseYul{};
+	bool m_viaIr{};
 	langutil::Error::Severity m_minSeverity{};
 };
 

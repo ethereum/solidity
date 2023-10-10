@@ -10,6 +10,7 @@ type fun1(T, U) = __builtin("fun");
 type fun2(T, U) = __builtin("fun");
 // ====
 // EVMVersion: >=constantinople
+// via-ir: true
 // ----
 // Warning 2264: (0-29): Experimental features are turned on. Do not use experimental features on live deployments.
 // TypeError 9609: (63-94): Duplicate builtin type definition.
