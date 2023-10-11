@@ -67,6 +67,13 @@ public:
 	Type resolve(Type _type) const;
 	Type resolveRecursive(Type _type) const;
 	Type fresh(Type _type);
+
+	/// Recursively replaces all generic type variables with fresh fixed type variables, preserving
+	/// sorts. All uses of a given variable in the input are guaranteed to still be represented
+	/// by a single variable in the output.
+	/// Existing fixed type variables remain unchanged.
+	Type fixTypeVariables(Type const& _type);
+
 	[[nodiscard]] std::vector<UnificationFailure> unify(Type _a, Type _b);
 	Sort sort(Type _type) const;
 	bool typeEquals(Type _lhs, Type _rhs) const;

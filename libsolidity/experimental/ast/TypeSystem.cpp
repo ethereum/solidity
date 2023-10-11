@@ -26,6 +26,7 @@
 
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
 
 #include <fmt/format.h>
@@ -377,6 +378,44 @@ experimental::Type TypeEnvironment::fresh(Type _type)
 	};
 
 	return freshImpl(_type, freshImpl);
+}
+
+experimental::Type TypeEnvironment::fixTypeVariables(Type const& _type)
+{
+	using ranges::views::transform;
+	using ranges::to;
+	using RecursiveHelper = std::function<Type(Type const&, std::map<size_t, FixedTypeVariable>&)>;
+
+	RecursiveHelper recursivelyFixTypeVariables = [&](auto const& _type, auto& _genericToFixed) {
+		auto recurse = [&](Type const& _type) { return recursivelyFixTypeVariables(_type, _genericToFixed); };
+
+		return visit(util::GenericVisitor{
+			[&](TypeConstant const& _typeConstant) -> Type {
+				return TypeConstant{
+					_typeConstant.constructor,
+					_typeConstant.arguments | transform(recurse) | to<std::vector<Type>>,
+				};
+			},
+			[&](GenericTypeVariable const& _genericVar) -> Type {
+				FixedTypeVariable const* fixedVar = util::valueOrNullptr(_genericToFixed, _genericVar.index());
+				if (fixedVar)
+					return *fixedVar;
+
+				FixedTypeVariable translatedVar = m_typeSystem.freshFixedVariable(_genericVar.sort());
+				_genericToFixed.emplace(_genericVar.index(), translatedVar);
+				return translatedVar;
+			},
+			[](FixedTypeVariable _fixedVar) -> Type {
+				return _fixedVar;
+			},
+			[](std::monostate) -> Type {
+				solAssert(false);
+			},
+		}, _type);
+	};
+
+	std::map<size_t, FixedTypeVariable> genericToFixed;
+	return recursivelyFixTypeVariables(_type, genericToFixed);
 }
 
 std::optional<std::string> TypeSystem::instantiateClass(Type _instanceVariable, Arity _arity)

@@ -170,6 +170,15 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	return false;
 }
 
+void TypeInference::endVisit(FunctionDefinition const& _functionDefinition)
+{
+	solAssert(m_expressionContext == ExpressionContext::Term);
+	solAssert(annotation(_functionDefinition).type.has_value());
+
+	Type& functionType = annotation(_functionDefinition).type.value();
+	functionType = m_env->fixTypeVariables(m_env->resolveRecursive(functionType));
+}
+
 void TypeInference::endVisit(Return const& _return)
 {
 	solAssert(m_currentFunctionType);
