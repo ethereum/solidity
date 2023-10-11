@@ -105,7 +105,7 @@ public:
 
 	struct TypeClassInfo
 	{
-		Type typeVariable;
+		TypeVariable typeVariable;
 		std::string name;
 		Declaration const* classDeclaration = nullptr;
 	};
@@ -153,18 +153,18 @@ public:
 		return constructorInfo(constructor(_typeConstructor));
 	}
 
-	std::variant<TypeClass, std::string> declareTypeClass(Type _typeVariable, std::string _name, Declaration const* _declaration);
+	std::variant<TypeClass, std::string> declareTypeClass(TypeVariable _typeVariable, std::string _name, Declaration const* _declaration);
 	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity);
 
-	Type freshTypeVariable(Sort _sort);
+	TypeVariable freshTypeVariable(Sort _sort);
 
 	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
 	TypeEnvironment& env() { return m_globalTypeEnvironment; }
 
-	Type freshVariable(Sort _sort);
+	TypeVariable freshVariable(Sort _sort);
 	std::string typeClassName(TypeClass _class) const { return m_typeClasses.at(_class.m_index).name; }
 	Declaration const* typeClassDeclaration(TypeClass _class) const { return m_typeClasses.at(_class.m_index).classDeclaration; }
-	Type typeClassVariable(TypeClass _class) const
+	TypeVariable const& typeClassVariable(TypeClass _class) const
 	{
 		return m_typeClasses.at(_class.m_index).typeVariable;
 	}

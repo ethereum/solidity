@@ -157,13 +157,13 @@ TypeSystem::TypeSystem()
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Itself).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
 }
 
-experimental::Type TypeSystem::freshVariable(Sort _sort)
+TypeVariable TypeSystem::freshVariable(Sort _sort)
 {
 	size_t index = m_numTypeVariables++;
 	return TypeVariable(index, std::move(_sort));
 }
 
-experimental::Type TypeSystem::freshTypeVariable(Sort _sort)
+TypeVariable TypeSystem::freshTypeVariable(Sort _sort)
 {
 	_sort.classes.emplace(primitiveClass(PrimitiveClass::Type));
 	return freshVariable(_sort);
@@ -278,12 +278,8 @@ TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::strin
 	return constructor;
 }
 
-std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(Type _typeVariable, std::string _name, Declaration const* _declaration)
+std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(TypeVariable _typeVariable, std::string _name, Declaration const* _declaration)
 {
-	TypeVariable const* typeVariable = std::get_if<TypeVariable>(&_typeVariable);
-	if (!typeVariable)
-		return "Invalid type variable.";
-
 	size_t index = m_typeClasses.size();
 	m_typeClasses.emplace_back(TypeClassInfo{
 		_typeVariable,

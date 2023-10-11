@@ -54,9 +54,8 @@ TypeInference::TypeInference(Analysis& _analysis):
 	TypeSystemHelpers helper{m_typeSystem};
 
 	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
-		Type type = m_typeSystem.freshTypeVariable({});
 		auto result = m_typeSystem.declareTypeClass(
-			type,
+			m_typeSystem.freshTypeVariable({}),
 			_name,
 			nullptr
 		);
@@ -208,7 +207,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 
 	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
 	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
-	Type typeVar = m_typeSystem.typeClassInfo(typeClass).typeVariable;
+	TypeVariable typeVar = m_typeSystem.typeClassInfo(typeClass).typeVariable;
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
 	for (auto subNode: _typeClassDefinition.subNodes())
@@ -1077,7 +1076,7 @@ void TypeInference::unifyGeneralized(Type _type, Type _scheme, std::vector<Type>
 
 experimental::Type TypeInference::polymorphicInstance(Type _scheme, langutil::SourceLocation _location)
 {
-	Type result = m_typeSystem.freshTypeVariable({});
+	TypeVariable result = m_typeSystem.freshTypeVariable({});
 	unifyGeneralized(result, _scheme, {}, _location);
 	return result;
 }
