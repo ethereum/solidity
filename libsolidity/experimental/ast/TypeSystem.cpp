@@ -307,7 +307,7 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 
 experimental::Type TypeEnvironment::fresh(Type _type)
 {
-	std::unordered_map<uint64_t, Type> mapping;
+	std::unordered_map<size_t, Type> mapping;
 	auto freshImpl = [&](Type _type, auto _recurse) -> Type {
 		return std::visit(util::GenericVisitor{
 			[&](TypeConstant const& _type) -> Type {
