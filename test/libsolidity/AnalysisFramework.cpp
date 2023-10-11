@@ -112,7 +112,7 @@ void AnalysisFramework::executeCompilationPipeline()
 
 	bool analysisSuccessful = m_compiler->analyze();
 	soltestAssert(analysisSuccessful || !filteredErrors(false /* _includeWarningsAndInfos */).empty());
-	if (!analysisSuccessful || stageSuccessful(m_targetStage))
+	if (!analysisSuccessful || stageSuccessful(m_targetStage) || m_compiler->isExperimentalAnalysis())
 		return;
 
 	bool compilationSuccessful = m_compiler->compile();
