@@ -157,11 +157,14 @@ public:
 	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity);
 
 	GenericTypeVariable freshGenericTypeVariable(Sort _sort);
+	FixedTypeVariable freshFixedTypeVariable(Sort _sort);
 
 	TypeEnvironment const& env() const { return m_globalTypeEnvironment; }
 	TypeEnvironment& env() { return m_globalTypeEnvironment; }
 
 	GenericTypeVariable freshGenericVariable(Sort _sort);
+	FixedTypeVariable freshFixedVariable(Sort _sort);
+
 	std::string typeClassName(TypeClass _class) const { return m_typeClasses.at(_class.m_index).name; }
 	Declaration const* typeClassDeclaration(TypeClass _class) const { return m_typeClasses.at(_class.m_index).classDeclaration; }
 	GenericTypeVariable const& typeClassVariable(TypeClass _class) const
@@ -178,6 +181,7 @@ private:
 	friend class TypeEnvironment;
 
 	size_t m_numGenericTypeVariables = 0;
+	size_t m_numFixedTypeVariables = 0;
 	std::map<PrimitiveType, TypeConstructor> m_primitiveTypeConstructors;
 	std::map<PrimitiveClass, TypeClass> m_primitiveTypeClasses;
 	std::set<std::string> m_canonicalTypeNames;

@@ -29,11 +29,13 @@ class TypeSystem;
 
 struct TypeConstant;
 struct GenericTypeVariable;
+struct FixedTypeVariable;
 
 using Type = std::variant<
 	std::monostate,
 	TypeConstant,
-	GenericTypeVariable
+	GenericTypeVariable,
+	FixedTypeVariable
 >;
 
 enum class PrimitiveType
@@ -151,21 +153,33 @@ struct Arity
 	TypeClass typeClass;
 };
 
-struct GenericTypeVariable
+struct TypeVariable
 {
 	std::size_t index() const { return m_index; }
 	Sort const& sort() const { return m_sort; }
 
-private:
+protected:
 	friend class TypeSystem;
 
-	GenericTypeVariable(std::size_t _index, Sort _sort):
+	TypeVariable(std::size_t _index, Sort _sort):
 		m_index(_index),
 		m_sort(std::move(_sort))
 	{}
 
 	std::size_t m_index{};
 	Sort m_sort;
+};
+
+struct GenericTypeVariable: public TypeVariable
+{
+private:
+	using TypeVariable::TypeVariable;
+};
+
+struct FixedTypeVariable: public TypeVariable
+{
+private:
+	using TypeVariable::TypeVariable;
 };
 
 }

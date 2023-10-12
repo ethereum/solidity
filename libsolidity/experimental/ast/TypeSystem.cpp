@@ -67,8 +67,26 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 		[&](GenericTypeVariable const& _var, auto const&) {
 			failures += instantiate(_var, _b);
 		},
+		[&](GenericTypeVariable const& _genericVar, FixedTypeVariable const&) {
+			failures += instantiate(_genericVar, _b);
+		},
 		[&](auto const&, GenericTypeVariable const& _var) {
 			failures += instantiate(_var, _a);
+		},
+		[&](FixedTypeVariable const&, GenericTypeVariable const& _genericVar) {
+			failures += instantiate(_genericVar, _a);
+		},
+		[&](FixedTypeVariable const& _left, FixedTypeVariable const& _right) {
+			if (_left.index() != _right.index())
+				unificationFailure();
+
+			solAssert(_left.sort() == _right.sort());
+		},
+		[&](FixedTypeVariable const&, auto const&) {
+			unificationFailure();
+		},
+		[&](auto const&, FixedTypeVariable const&) {
+			unificationFailure();
 		},
 		[&](TypeConstant const& _left, TypeConstant const& _right) {
 			if (_left.constructor != _right.constructor)
@@ -160,10 +178,22 @@ GenericTypeVariable TypeSystem::freshGenericVariable(Sort _sort)
 	return GenericTypeVariable(index, std::move(_sort));
 }
 
+FixedTypeVariable TypeSystem::freshFixedVariable(Sort _sort)
+{
+	size_t index = m_numFixedTypeVariables++;
+	return FixedTypeVariable(index, std::move(_sort));
+}
+
 GenericTypeVariable TypeSystem::freshGenericTypeVariable(Sort _sort)
 {
 	_sort.classes.emplace(primitiveClass(PrimitiveClass::Type));
 	return freshGenericVariable(_sort);
+}
+
+FixedTypeVariable TypeSystem::freshFixedTypeVariable(Sort _sort)
+{
+	_sort.classes.emplace(primitiveClass(PrimitiveClass::Type));
+	return freshFixedVariable(_sort);
 }
 
 std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(GenericTypeVariable _variable, Type _type)
@@ -207,6 +237,9 @@ experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 		[](GenericTypeVariable const& _genericTypeVar) -> Type {
 			return _genericTypeVar;
 		},
+		[](FixedTypeVariable const& _fixedTypeVar) -> Type {
+			return _fixedTypeVar;
+		},
 		[](std::monostate const& _nothing) -> Type {
 			return _nothing;
 		}
@@ -242,6 +275,7 @@ Sort TypeEnvironment::sort(Type _type) const
 			return sort;
 		},
 		[](GenericTypeVariable const& _variable) -> Sort { return _variable.sort(); },
+		[](FixedTypeVariable const& _variable) -> Sort { return _variable.sort(); },
 		[](std::monostate) -> Sort { solAssert(false); }
 	}, _type);
 }
@@ -324,6 +358,9 @@ experimental::Type TypeEnvironment::fresh(Type _type)
 				GenericTypeVariable freshVariable = m_typeSystem.freshGenericTypeVariable(_genericVar.sort());
 				genericFreshReplacements.emplace(_genericVar.index(), freshVariable);
 				return freshVariable;
+			},
+			[&](FixedTypeVariable const& _fixedVar) -> Type {
+				return _fixedVar;
 			},
 			[](std::monostate) -> Type { solAssert(false); }
 		}, resolve(_type));
