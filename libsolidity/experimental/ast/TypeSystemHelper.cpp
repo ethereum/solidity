@@ -356,14 +356,14 @@ std::string formatSortSuffix(Sort const& _sort, TypeEnvironment const& env)
 
 }
 
-std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
+std::string TypeEnvironmentHelpers::typeToString(Type const& _type, bool _resolve) const
 {
 	using ranges::views::transform;
 
 	std::map<TypeConstructor, std::function<std::string(std::vector<Type>)>> formatters{
 		{env.typeSystem().constructor(PrimitiveType::Function), [&](auto const& _args) {
 			solAssert(_args.size() == 2);
-			return fmt::format("{} -> {}", typeToString(_args.front()), typeToString(_args.back()));
+			return fmt::format("{} -> {}", typeToString(_args.front(), _resolve), typeToString(_args.back(), _resolve));
 		}},
 		{env.typeSystem().constructor(PrimitiveType::Unit), [&](auto const& _args) {
 			solAssert(_args.size() == 0);
@@ -372,9 +372,9 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 		{env.typeSystem().constructor(PrimitiveType::Pair), [&](auto const& _arguments) {
 			auto tupleTypes = TypeSystemHelpers{env.typeSystem()}.destTupleType(_arguments.back());
 			std::string result = "(";
-			result += typeToString(_arguments.front());
+			result += typeToString(_arguments.front(), _resolve);
 			for (auto type: tupleTypes)
-				result += ", " + typeToString(type);
+				result += ", " + typeToString(type, _resolve);
 			result += ")";
 			return result;
 		}},
@@ -391,7 +391,7 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 				"{}({})",
 				env.typeSystem().constructorInfo(_type.constructor).name,
 				util::joinHumanReadable(_type.arguments | transform([&](Type const& _type) {
-					return typeToString(_type);
+					return typeToString(_type, _resolve);
 				}))
 			);
 		},
@@ -399,5 +399,5 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 			return "'" + base26Encode(_typeVar.index()) + formatSortSuffix(_typeVar.sort(), env);
 		},
 		[](std::monostate) -> std::string { solAssert(false); }
-	}, env.resolve(_type));
+	}, _resolve ? env.resolve(_type) : _type);
 }
