@@ -171,9 +171,10 @@ experimental::Type TypeSystem::freshTypeVariable(Sort _sort)
 
 std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
 {
-	for (auto typeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
-		if (typeVar.index() == _variable.index())
-			return {UnificationFailure{RecursiveUnification{_variable, _type}}};
+	for (auto const& maybeTypeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
+		if (auto const* typeVar = std::get_if<TypeVariable>(&maybeTypeVar))
+			if (typeVar->index() == _variable.index())
+				return {UnificationFailure{RecursiveUnification{_variable, _type}}};
 	Sort typeSort = sort(_type);
 	if (!(_variable.sort() <= typeSort))
 	{
