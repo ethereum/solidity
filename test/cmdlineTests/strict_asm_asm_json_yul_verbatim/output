@@ -1,0 +1,18 @@
+
+======= <stdin> (EVM) =======
+
+EVM assembly:
+{
+    ".code": [
+        {
+            "begin": -1,
+            "end": -1,
+            "name": "VERBATIM",
+            "source": -1,
+            "value": "78797a"
+        }
+    ],
+    "sourceList": [
+        "abc.sol"
+    ]
+}

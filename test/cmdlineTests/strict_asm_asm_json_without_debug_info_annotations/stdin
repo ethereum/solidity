@@ -1,0 +1,34 @@
+/// @use-src 0: "abc.sol"
+object "C_23" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            sstore(0x00, 0x02)
+            sstore(0x01, 0x00)
+            let _2 := datasize("C_23_deployed")
+            codecopy(_1, dataoffset("C_23_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+    object "C_23_deployed" {
+        code {
+            {
+                let _1 := memoryguard(0x80)
+                mstore(64, _1)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _2 := 0
+                    switch shr(224, calldataload(_2))
+                    case 0xb4f40c61 {
+                        mstore(_1, sload(1))
+                        return(_1, 32)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data ".metadata" hex"1234abcd"
+    }
+}

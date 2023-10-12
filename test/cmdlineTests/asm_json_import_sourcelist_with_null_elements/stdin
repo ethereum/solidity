@@ -1,0 +1,17 @@
+{
+    ".code":
+    [
+        {
+            "begin": -1,
+            "end": -1,
+            "name": "STOP",
+            "source": -1
+        }
+    ],
+    "sourceList":
+    [
+        null,
+        null,
+        "L0.sol"
+    ]
+}

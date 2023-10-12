@@ -160,3 +160,33 @@ std::vector<size_t> Object::pathToSubObject(std::string_view _qualifiedName) con
 
 	return path;
 }
+
+void Object::collectSourceIndices(std::map<std::string, unsigned>& _indices) const
+{
+	if (debugData && debugData->sourceNames.has_value())
+		for (auto const& [sourceIndex, sourceName]: debugData->sourceNames.value())
+		{
+			solAssert(_indices.count(*sourceName) == 0 || _indices[*sourceName] == sourceIndex);
+			_indices[*sourceName] = sourceIndex;
+		}
+	for (std::shared_ptr<ObjectNode> const& subNode: subObjects)
+		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
+			subObject->collectSourceIndices(_indices);
+}
+
+bool Object::hasContiguousSourceIndices() const
+{
+	std::map<std::string, unsigned> sourceIndices;
+	collectSourceIndices(sourceIndices);
+
+	unsigned maxSourceIndex = 0;
+	std::set<unsigned> indices;
+	for (auto const& [sources, sourceIndex]: sourceIndices)
+	{
+		maxSourceIndex = std::max(sourceIndex, maxSourceIndex);
+		indices.insert(sourceIndex);
+	}
+
+	solAssert(maxSourceIndex + 1 >= indices.size());
+	return indices.size() == 0 || indices.size() == maxSourceIndex + 1;
+}

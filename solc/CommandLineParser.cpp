@@ -472,6 +472,7 @@ void CommandLineParser::parseOutputSelection()
 			CompilerOutputs::componentName(&CompilerOutputs::binary),
 			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
 			CompilerOutputs::componentName(&CompilerOutputs::astCompactJson),
+			CompilerOutputs::componentName(&CompilerOutputs::asmJson),
 		};
 		static std::set<std::string> const evmAssemblyJsonImportModeOutputs = {
 			CompilerOutputs::componentName(&CompilerOutputs::asm_),

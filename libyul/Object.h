@@ -129,6 +129,14 @@ public:
 
 	std::shared_ptr<ObjectDebugData const> debugData;
 
+	/// Collects names of all Solidity source units present in the debug data
+	/// of the Yul object (including sub-objects) and their assigned indices.
+	/// @param _indices map that will be filled with source indices of the current Yul object & its sub-objects.
+	void collectSourceIndices(std::map<std::string, unsigned>& _indices) const;
+
+	/// @returns true, if the range of source indices starts at zero and is contiguous, false otherwise.
+	bool hasContiguousSourceIndices() const;
+
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
 };

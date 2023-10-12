@@ -1694,7 +1694,7 @@ Json StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "evm.assembly", wildcardMatchesExperimental))
-		output["contracts"][sourceName][contractName]["evm"]["assembly"] = object.assembly;
+		output["contracts"][sourceName][contractName]["evm"]["assembly"] = object.assembly->assemblyString(stack.debugInfoSelection());
 
 	return output;
 }
