@@ -1750,7 +1750,9 @@ workflows:
 
       - t_ext: *job_ems_compile_ext_colony
 
-      - t_ext: *job_native_test_ext_gnosis
+      # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
+      #       Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
+      #- t_ext: *job_native_test_ext_gnosis
       - t_ext: *job_native_test_ext_zeppelin
       - t_ext: *job_native_test_ext_ens
       - t_ext: *job_native_test_ext_yield_liquidator
@@ -1773,7 +1775,9 @@ workflows:
           <<: *requires_nothing
           requires:
             - t_ems_compile_ext_colony
-            - t_native_test_ext_gnosis
+            # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
+            #       Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
+            #- t_native_test_ext_gnosis
             - t_native_test_ext_zeppelin
             - t_native_test_ext_ens
             - t_native_test_ext_yield_liquidator
