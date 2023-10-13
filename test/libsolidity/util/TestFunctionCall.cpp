@@ -207,10 +207,12 @@ std::string TestFunctionCall::format(
 		if (!sideEffects.empty())
 		{
 			stream << std::endl;
-			size_t i = 0;
-			for (; i < sideEffects.size() - 1; ++i)
-				stream << _linePrefix << "// ~ " << sideEffects[i] << std::endl;
-			stream << _linePrefix << "// ~ " << sideEffects[i];
+			for (string const& effect: sideEffects)
+			{
+				stream << _linePrefix << "// ~ " << effect;
+				if (effect != *sideEffects.rbegin())
+					stream << std::endl;
+			}
 		}
 
 		stream << formatGasExpectations(_linePrefix, _renderMode == RenderMode::ExpectedValuesActualGas, _interactivePrint);
