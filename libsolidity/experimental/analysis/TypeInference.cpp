@@ -54,11 +54,7 @@ TypeInference::TypeInference(Analysis& _analysis):
 	TypeSystemHelpers helper{m_typeSystem};
 
 	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
-		auto result = m_typeSystem.declareTypeClass(
-			m_typeSystem.freshGenericTypeVariable({}),
-			_name,
-			nullptr
-		);
+		auto result = m_typeSystem.declareTypeClass(_name, nullptr);
 		if (auto error = std::get_if<std::string>(&result))
 			solAssert(!error, *error);
 		TypeClass declaredClass = std::get<TypeClass>(result);
@@ -207,16 +203,15 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 
 	typeClassDefinitionAnnotation.type = type(&_typeClassDefinition, {});
 
-	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		_typeClassDefinition.typeVariable().accept(*this);
-	}
-
 	std::map<std::string, Type> functionTypes;
 
 	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
 	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
-	GenericTypeVariable typeVar = m_typeSystem.typeClassVariable(typeClass);
+	FixedTypeVariable typeVar = m_typeSystem.typeClassVariable(typeClass);
+
+	solAssert(!_typeClassDefinition.typeVariable().typeExpression());
+	annotation(_typeClassDefinition.typeVariable()).type = typeVar;
+
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
 	for (auto subNode: _typeClassDefinition.subNodes())
@@ -707,12 +702,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 
 	auto const& classFunctions = annotation().typeClassFunctions.at(*typeClass);
 
-	TypeEnvironment newEnv = m_env->clone();
-	if (!newEnv.unify(m_typeSystem.typeClassVariable(*typeClass), type).empty())
-	{
-		m_errorReporter.typeError(4686_error, _typeClassInstantiation.location(), "Unification of class and instance variable failed.");
-		return false;
-	}
+	FixedTypeVariable classVar = m_typeSystem.typeClassVariable(*typeClass);
 
 	for (auto [name, classFunctionType]: classFunctions)
 	{
@@ -721,18 +711,20 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			m_errorReporter.typeError(6948_error, _typeClassInstantiation.location(), "Instantiation function not declared in the type class: " + name);
 			continue;
 		}
+		Type instantiatedClassFunctionType = substitute(m_env->resolve(classFunctionType), classVar, type);
+
 		Type instanceFunctionType = functionTypes.at(name);
 		functionTypes.erase(name);
 
-		if (!newEnv.typeEquals(instanceFunctionType, classFunctionType))
+		if (!m_env->typeEquals(instanceFunctionType, instantiatedClassFunctionType))
 			m_errorReporter.typeError(
 				7428_error,
 				_typeClassInstantiation.location(),
 				fmt::format(
 					"Instantiation function '{}' does not match the declaration in the type class ({} != {}).",
 					name,
-					TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType),
-					TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType)
+					TypeEnvironmentHelpers{*m_env}.typeToString(instanceFunctionType),
+					TypeEnvironmentHelpers{*m_env}.typeToString(instantiatedClassFunctionType)
 				)
 			);
 	}

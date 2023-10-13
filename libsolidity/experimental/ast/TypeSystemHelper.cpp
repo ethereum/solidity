@@ -116,6 +116,37 @@ std::optional<TypeClass> experimental::typeClassFromTypeClassName(TypeClassName 
 	}, _typeClass.name());
 }
 */
+
+experimental::Type experimental::substitute(experimental::Type const& _type, FixedTypeVariable const& _variableToReplace, experimental::Type const& _replacement)
+{
+	using ranges::views::transform;
+	using ranges::to;
+
+	auto recurse = [&](experimental::Type const& _t) { return substitute(_t, _variableToReplace, _replacement); };
+
+	return visit(util::GenericVisitor{
+		[&](TypeConstant const& _typeConstant) -> experimental::Type {
+			return TypeConstant{
+				_typeConstant.constructor,
+				_typeConstant.arguments | transform(recurse) | to<std::vector<experimental::Type>>,
+			};
+		},
+		[&](FixedTypeVariable const& _fixedVar) -> experimental::Type {
+			if (_fixedVar.index() != _variableToReplace.index())
+				return _fixedVar;
+
+			solAssert(_fixedVar.sort() == _variableToReplace.sort());
+			return _replacement;
+		},
+		[](GenericTypeVariable _genericVar) -> experimental::Type {
+			return _genericVar;
+		},
+		[](std::monostate) -> experimental::Type {
+			solAssert(false);
+		},
+	}, _type);
+}
+
 experimental::Type TypeSystemHelpers::tupleType(std::vector<Type> _elements) const
 {
 	if (_elements.empty())

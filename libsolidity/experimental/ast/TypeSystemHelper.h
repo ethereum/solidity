@@ -30,6 +30,9 @@ enum class BuiltinClass;
 //std::optional<TypeClass> typeClassFromTypeClassName(TypeClassName const& _typeClass);
 std::optional<BuiltinClass> builtinClassFromToken(langutil::Token _token);
 
+// TODO: Extend to allow replacing arbitrary types, not just type variables.
+Type substitute(Type const& _type, FixedTypeVariable const& _variableToReplace, Type const& _replacement);
+
 struct TypeSystemHelpers
 {
 	TypeSystem const& typeSystem;

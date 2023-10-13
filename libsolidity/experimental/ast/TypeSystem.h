@@ -112,7 +112,7 @@ public:
 
 	struct TypeClassInfo
 	{
-		GenericTypeVariable typeVariable;
+		FixedTypeVariable typeVariable;
 		std::string name;
 		Declaration const* classDeclaration = nullptr;
 	};
@@ -160,7 +160,7 @@ public:
 		return constructorInfo(constructor(_typeConstructor));
 	}
 
-	std::variant<TypeClass, std::string> declareTypeClass(GenericTypeVariable _typeVariable, std::string _name, Declaration const* _declaration);
+	std::variant<TypeClass, std::string> declareTypeClass(std::string _name, Declaration const* _declaration, bool _primitive = false);
 	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity);
 
 	GenericTypeVariable freshGenericTypeVariable(Sort _sort);
@@ -174,7 +174,7 @@ public:
 
 	std::string typeClassName(TypeClass _class) const { return m_typeClasses.at(_class.m_index).name; }
 	Declaration const* typeClassDeclaration(TypeClass _class) const { return m_typeClasses.at(_class.m_index).classDeclaration; }
-	GenericTypeVariable const& typeClassVariable(TypeClass _class) const
+	FixedTypeVariable const& typeClassVariable(TypeClass _class) const
 	{
 		return m_typeClasses.at(_class.m_index).typeVariable;
 	}
