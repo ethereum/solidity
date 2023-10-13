@@ -37,6 +37,7 @@ option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libs
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
+option(BUILD_LIBS_ONLY "Only build Solidity libraries and discard command line tools." OFF)
 
 # Setup cccache.
 include(EthCcache)
@@ -141,9 +142,12 @@ add_subdirectory(libyul)
 add_subdirectory(libsolidity)
 add_subdirectory(libsolc)
 add_subdirectory(libstdlib)
-add_subdirectory(tools)
 
-if (NOT EMSCRIPTEN)
+if (NOT BUILD_LIBS_ONLY)
+  add_subdirectory(tools)
+endif()
+
+if (NOT EMSCRIPTEN AND NOT BUILD_LIBS_ONLY)
 	add_subdirectory(solc)
 endif()
 
