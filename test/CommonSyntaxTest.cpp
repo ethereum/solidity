@@ -20,6 +20,7 @@
 #include <test/Common.h>
 #include <test/TestCase.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/StringUtils.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/test/unit_test.hpp>
@@ -144,11 +145,8 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 		else
 		{
 			if (outputSourceNames)
-				_stream << _linePrefix << "==== Source: " + name << " ====" << endl;
-			stringstream stream(source);
-			string line;
-			while (getline(stream, line))
-				_stream << _linePrefix << line << endl;
+				printPrefixed(_stream, "==== Source: " + name + " ====", _linePrefix);
+			printPrefixed(_stream, source, _linePrefix);
 		}
 }
 

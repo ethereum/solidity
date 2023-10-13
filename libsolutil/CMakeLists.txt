@@ -13,8 +13,6 @@ set(sources
 	ErrorCodes.h
 	FixedHash.h
 	FunctionSelector.h
-	IndentedWriter.cpp
-	IndentedWriter.h
 	IpfsHash.cpp
 	IpfsHash.h
 	JSON.cpp

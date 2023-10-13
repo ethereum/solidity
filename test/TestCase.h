@@ -100,7 +100,6 @@ protected:
 			++_it;
 	}
 
-	void printIndented(std::ostream& _stream, std::string const& _output, std::string const& _linePrefix = "") const;
 	TestCase::TestResult checkResult(std::ostream& _stream, const std::string& _linePrefix, bool const _formatted);
 
 	std::string m_source;
