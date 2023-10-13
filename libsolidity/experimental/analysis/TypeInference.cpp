@@ -207,7 +207,7 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 
 	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
 	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
-	TypeVariable typeVar = m_typeSystem.typeClassInfo(typeClass).typeVariable;
+	TypeVariable typeVar = m_typeSystem.typeClassVariable(typeClass);
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
 	for (auto subNode: _typeClassDefinition.subNodes())
