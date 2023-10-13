@@ -195,19 +195,19 @@ experimental::Type TypeEnvironment::resolve(Type _type) const
 experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 {
 	return std::visit(util::GenericVisitor{
-		[&](TypeConstant const& _type) -> Type {
+		[&](TypeConstant const& _typeConstant) -> Type {
 			return TypeConstant{
-				_type.constructor,
-				_type.arguments | ranges::views::transform([&](Type _argType) {
+				_typeConstant.constructor,
+				_typeConstant.arguments | ranges::views::transform([&](Type const& _argType) {
 					return resolveRecursive(_argType);
 				}) | ranges::to<std::vector<Type>>
 			};
 		},
-		[&](TypeVariable const&) -> Type {
-			return _type;
+		[](TypeVariable const& _typeVar) -> Type {
+			return _typeVar;
 		},
-		[&](std::monostate) -> Type {
-			return _type;
+		[](std::monostate _nothing) -> Type {
+			return _nothing;
 		}
 	}, resolve(_type));
 }
