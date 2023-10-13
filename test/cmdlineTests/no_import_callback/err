@@ -1,0 +1,5 @@
+Error: Source "contract_2.sol" not found: No import callback.
+ --> no_import_callback/contract_1.sol:4:1:
+  |
+4 | import "contract_2.sol";
+  | ^^^^^^^^^^^^^^^^^^^^^^^^

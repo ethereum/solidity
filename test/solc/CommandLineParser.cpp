@@ -241,6 +241,25 @@ BOOST_AUTO_TEST_CASE(no_cbor_metadata)
 	BOOST_TEST(assert);
 }
 
+BOOST_AUTO_TEST_CASE(no_import_callback)
+{
+	std::vector<std::vector<std::string>> commandLinePerInputMode = {
+		{"solc", "--no-import-callback", "contract.sol"},
+		{"solc", "--standard-json", "--no-import-callback", "input.json"},
+		{"solc", "--assemble", "--no-import-callback", "input.yul"},
+		{"solc", "--strict-assembly", "--no-import-callback", "input.yul"},
+		{"solc", "--import-ast", "--no-import-callback", "ast.json"},
+		{"solc", "--link", "--no-import-callback", "input.bin"},
+		{"solc", "--yul", "--no-import-callback", "input.yul"},
+	};
+
+	for (auto const& commandLine: commandLinePerInputMode)
+	{
+		CommandLineOptions parsedOptions = parseCommandLine(commandLine);
+		BOOST_TEST(parsedOptions.input.noImportCallback);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(via_ir_options)
 {
 	BOOST_TEST(!parseCommandLine({"solc", "contract.sol"}).output.viaIR);
