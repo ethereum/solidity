@@ -158,11 +158,3 @@ TestCase::TestResult GasTest::run(std::ostream& _stream, std::string const& _lin
 		return TestResult::Failure;
 	}
 }
-
-void GasTest::printSource(std::ostream& _stream, std::string const& _linePrefix, bool) const
-{
-	std::string line;
-	std::istringstream input(m_source);
-	while (getline(input, line))
-		_stream << _linePrefix << line << std::endl;
-}

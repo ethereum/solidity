@@ -32,8 +32,8 @@
 #include <algorithm>
 #include <set>
 
-using namespace std;
 using namespace solidity::evmasm;
+using namespace std::string_literals;
 
 namespace solidity::frontend::test
 {
@@ -41,9 +41,9 @@ namespace solidity::frontend::test
 namespace
 {
 
-langutil::Error::Severity str2Severity(string const& _cat)
+langutil::Error::Severity str2Severity(std::string const& _cat)
 {
-	map<string, langutil::Error::Severity> cats{
+	std::map<std::string, langutil::Error::Severity> cats{
 		{"info", langutil::Error::Severity::Info},
 		{"Info", langutil::Error::Severity::Info},
 		{"warning", langutil::Error::Severity::Warning},
@@ -55,7 +55,7 @@ langutil::Error::Severity str2Severity(string const& _cat)
 }
 
 /// Helper to match a specific error type and message
-bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
+bool containsError(Json::Value const& _compilerResult, std::string const& _type, std::string const& _message)
 {
 	if (!_compilerResult.isMember("errors"))
 		return false;
@@ -88,7 +88,7 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 	return true;
 }
 
-Json::Value getContractResult(Json::Value const& _compilerResult, string const& _file, string const& _name)
+Json::Value getContractResult(Json::Value const& _compilerResult, std::string const& _file, std::string const& _name)
 {
 	if (
 		!_compilerResult["contracts"].isObject() ||
@@ -107,10 +107,10 @@ void checkLinkReferencesSchema(Json::Value const& _contractResult)
 	Json::Value const& linkReferenceResult = _contractResult["evm"]["bytecode"]["linkReferences"];
 	BOOST_TEST_REQUIRE(linkReferenceResult.isObject());
 
-	for (string const& fileName: linkReferenceResult.getMemberNames())
+	for (std::string const& fileName: linkReferenceResult.getMemberNames())
 	{
 		BOOST_TEST_REQUIRE(linkReferenceResult[fileName].isObject());
-		for (string const& libraryName: linkReferenceResult[fileName].getMemberNames())
+		for (std::string const& libraryName: linkReferenceResult[fileName].getMemberNames())
 		{
 			BOOST_TEST_REQUIRE(linkReferenceResult[fileName][libraryName].isArray());
 			BOOST_TEST_REQUIRE(!linkReferenceResult[fileName][libraryName].empty());
@@ -125,7 +125,7 @@ void checkLinkReferencesSchema(Json::Value const& _contractResult)
 	}
 }
 
-void expectLinkReferences(Json::Value const& _contractResult, map<string, set<string>> const& _expectedLinkReferences)
+void expectLinkReferences(Json::Value const& _contractResult, std::map<std::string, std::set<std::string>> const& _expectedLinkReferences)
 {
 	checkLinkReferencesSchema(_contractResult);
 
@@ -136,15 +136,15 @@ void expectLinkReferences(Json::Value const& _contractResult, map<string, set<st
 	{
 		BOOST_TEST(linkReferenceResult.isMember(fileName));
 		BOOST_TEST(linkReferenceResult[fileName].size() == libraries.size());
-		for (string const& libraryName: libraries)
+		for (std::string const& libraryName: libraries)
 			BOOST_TEST(linkReferenceResult[fileName].isMember(libraryName));
 	}
 }
 
-Json::Value compile(string _input)
+Json::Value compile(std::string _input)
 {
 	StandardCompiler compiler;
-	string output = compiler.compile(std::move(_input));
+	std::string output = compiler.compile(std::move(_input));
 	Json::Value ret;
 	BOOST_REQUIRE(util::jsonParseStrict(output, ret));
 	return ret;
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].isString());
 	BOOST_CHECK_EQUAL(
 		solidity::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
-		string("6080604052348015600e575f80fd5b5060") +
+		std::string("6080604052348015600e575f80fd5b5060") +
 		(VersionIsRelease ? "3e" : util::toHex(bytes{uint8_t(60 + VersionStringStrict.size())})) +
 		"80601a5f395ff3fe60806040525f80fdfe"
 	);
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(compilation_error)
 	{
 		BOOST_REQUIRE(error.isObject());
 		BOOST_REQUIRE(error["message"].isString());
-		if (error["message"].asString().find("pre-release compiler") == string::npos)
+		if (error["message"].asString().find("pre-release compiler") == std::string::npos)
 		{
 			BOOST_CHECK_EQUAL(
 				util::jsonCompactPrint(error),
@@ -1010,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(linking_yul_same_library_name_different_files)
 
 BOOST_AUTO_TEST_CASE(evm_version)
 {
-	auto inputForVersion = [](string const& _version)
+	auto inputForVersion = [](std::string const& _version)
 	{
 		return R"(
 			{
@@ -1029,30 +1029,30 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	};
 	Json::Value result;
 	result = compile(inputForVersion("\"evmVersion\": \"homestead\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"homestead\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"homestead\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"tangerineWhistle\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"tangerineWhistle\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"tangerineWhistle\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"spuriousDragon\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"spuriousDragon\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"spuriousDragon\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"byzantium\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"constantinople\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"constantinople\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"constantinople\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"petersburg\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"istanbul\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"berlin\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"berlin\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"berlin\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"london\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"london\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"london\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"paris\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"paris\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"paris\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"shanghai\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"shanghai\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"shanghai\"") != std::string::npos);
 	// test default
 	result = compile(inputForVersion(""));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"shanghai\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"shanghai\"") != std::string::npos);
 	// test invalid
 	result = compile(inputForVersion("\"evmVersion\": \"invalid\","));
 	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");
@@ -1211,8 +1211,8 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	BOOST_CHECK(optimizer["details"]["yul"].asBool() == true);
 	BOOST_CHECK(optimizer["details"]["yulDetails"].isObject());
 	BOOST_CHECK(
-		util::convertContainer<set<string>>(optimizer["details"]["yulDetails"].getMemberNames()) ==
-		(set<string>{"stackAllocation", "optimizerSteps"})
+		util::convertContainer<std::set<std::string>>(optimizer["details"]["yulDetails"].getMemberNames()) ==
+		(std::set<std::string>{"stackAllocation", "optimizerSteps"})
 	);
 	BOOST_CHECK(optimizer["details"]["yulDetails"]["stackAllocation"].asBool() == true);
 	BOOST_CHECK(
@@ -1259,7 +1259,7 @@ BOOST_AUTO_TEST_CASE(metadata_without_compilation)
 
 BOOST_AUTO_TEST_CASE(license_in_metadata)
 {
-	string const input = R"(
+	std::string const input = R"(
 			{
 				"language": "Solidity",
 				"sources": {
@@ -1387,7 +1387,7 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 
 	// Now disable stack optimizations and UnusedFunctionParameterPruner (p)
 	// results in "stack too deep"
-	string optimiserSteps = OptimiserSettings::DefaultYulOptimiserSteps;
+	std::string optimiserSteps = OptimiserSettings::DefaultYulOptimiserSteps;
 	optimiserSteps.erase(
 		remove_if(optimiserSteps.begin(), optimiserSteps.end(), [](char ch) { return ch == 'p'; }),
 		optimiserSteps.end()
@@ -1728,16 +1728,16 @@ BOOST_AUTO_TEST_CASE(dependency_tracking_of_abstract_contract_yul)
 	BOOST_REQUIRE(result["contracts"]["A.sol"]["C"].isObject());
 	BOOST_REQUIRE(result["contracts"]["A.sol"]["C"]["ir"].isString());
 
-	const string& irCode = result["contracts"]["A.sol"]["C"]["ir"].asString();
+	const std::string& irCode = result["contracts"]["A.sol"]["C"]["ir"].asString();
 
 	// Make sure C and B contracts are deployed
-	BOOST_REQUIRE(irCode.find("object \"C") != string::npos);
-	BOOST_REQUIRE(irCode.find("object \"B") != string::npos);
+	BOOST_REQUIRE(irCode.find("object \"C") != std::string::npos);
+	BOOST_REQUIRE(irCode.find("object \"B") != std::string::npos);
 
 	// Make sure A and D are NOT deployed as they were not requested and are not
 	// in any dependency
-	BOOST_REQUIRE(irCode.find("object \"A") == string::npos);
-	BOOST_REQUIRE(irCode.find("object \"D") == string::npos);
+	BOOST_REQUIRE(irCode.find("object \"A") == std::string::npos);
+	BOOST_REQUIRE(irCode.find("object \"D") == std::string::npos);
 
 
 	BOOST_REQUIRE(result["sources"].isObject());
@@ -1770,15 +1770,15 @@ BOOST_AUTO_TEST_CASE(source_location_of_bare_block)
 	solidity::frontend::StandardCompiler compiler;
 	Json::Value result = compiler.compile(parsedInput);
 
-	string sourceMap = result["contracts"]["A.sol"]["A"]["evm"]["bytecode"]["sourceMap"].asString();
+	std::string sourceMap = result["contracts"]["A.sol"]["A"]["evm"]["bytecode"]["sourceMap"].asString();
 
 	// Check that the bare block's source location is referenced.
-	string sourceRef =
+	std::string sourceRef =
 		";" +
-		to_string(string{"contract A { constructor() { uint x = 2; "}.size()) +
+		std::to_string(std::string{"contract A { constructor() { uint x = 2; "}.size()) +
 		":" +
-		to_string(string{"{ uint y = 3; }"}.size());
-	BOOST_REQUIRE(sourceMap.find(sourceRef) != string::npos);
+		std::to_string(std::string{"{ uint y = 3; }"}.size());
+	BOOST_REQUIRE(sourceMap.find(sourceRef) != std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

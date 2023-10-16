@@ -33,7 +33,6 @@ set(libsolutil_sources
     libsolutil/CommonIO.cpp
     libsolutil/FixedHash.cpp
     libsolutil/FunctionSelector.cpp
-    libsolutil/IndentedWriter.cpp
     libsolutil/IpfsHash.cpp
     libsolutil/IterateReplacing.cpp
     libsolutil/JSON.cpp

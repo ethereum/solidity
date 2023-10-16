@@ -20,22 +20,21 @@
 
 #include <regex>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
-string test::withPreamble(string const& _sourceCode, bool _addAbicoderV1Pragma)
+std::string test::withPreamble(std::string const& _sourceCode, bool _addAbicoderV1Pragma)
 {
-	static string const versionPragma = "pragma solidity >=0.0;\n";
-	static string const licenseComment = "// SPDX-License-Identifier: GPL-3.0\n";
-	static string const abicoderPragma = "pragma abicoder v1;\n";
+	static std::string const versionPragma = "pragma solidity >=0.0;\n";
+	static std::string const licenseComment = "// SPDX-License-Identifier: GPL-3.0\n";
+	static std::string const abicoderPragma = "pragma abicoder v1;\n";
 
 	// NOTE: These checks are intentionally loose to match weird cases.
 	// We can manually adjust a test case where this causes problem.
-	bool licenseMissing = _sourceCode.find("SPDX-License-Identifier:") == string::npos;
+	bool licenseMissing = _sourceCode.find("SPDX-License-Identifier:") == std::string::npos;
 	bool abicoderMissing =
-		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos &&
-		_sourceCode.find("pragma abicoder") == string::npos;
+		_sourceCode.find("pragma experimental ABIEncoderV2;") == std::string::npos &&
+		_sourceCode.find("pragma abicoder") == std::string::npos;
 
 	return
 		versionPragma +
@@ -52,16 +51,16 @@ StringMap test::withPreamble(StringMap _sources, bool _addAbicoderV1Pragma)
 	return _sources;
 }
 
-string test::stripPreReleaseWarning(string const& _stderrContent)
+std::string test::stripPreReleaseWarning(std::string const& _stderrContent)
 {
-	static regex const preReleaseWarningRegex{
+	static std::regex const preReleaseWarningRegex{
 		R"(Warning( \(3805\))?: This is a pre-release compiler version, please do not use it in production\.\n)"
 		R"((\n)?)"
 	};
-	static regex const noOutputRegex{
+	static std::regex const noOutputRegex{
 		R"(Compiler run successful, no output requested\.\n)"
 	};
 
-	string output = regex_replace(_stderrContent, preReleaseWarningRegex, "");
-	return regex_replace(std::move(output), noOutputRegex, "");
+	std::string output = std::regex_replace(_stderrContent, preReleaseWarningRegex, "");
+	return std::regex_replace(std::move(output), noOutputRegex, "");
 }

@@ -20,8 +20,8 @@
 #include <test/TestCase.h>
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/StringUtils.h>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <iostream>
@@ -31,6 +31,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::util;
 
 void TestCase::printSettings(ostream& _stream, const string& _linePrefix, const bool)
 {
@@ -69,26 +70,14 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 	++_it;
 }
 
-void TestCase::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		if (line.empty())
-			// Avoid trailing spaces.
-			_stream << boost::trim_right_copy(_linePrefix) << endl;
-		else
-			_stream << _linePrefix << line << endl;
-}
-
 void TestCase::printSource(ostream& _stream, string const& _linePrefix, bool const) const
 {
-	printIndented(_stream, m_source, _linePrefix);
+	printPrefixed(_stream, m_source, _linePrefix);
 }
 
 void TestCase::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
 {
-	printIndented(_stream, m_obtainedResult, _linePrefix);
+	printPrefixed(_stream, m_obtainedResult, _linePrefix);
 }
 
 TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::string& _linePrefix, bool const _formatted)
@@ -99,10 +88,10 @@ TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::str
 		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
 			<< _linePrefix << "Expected result:" << endl;
 		// TODO could compute a simple diff with highlighted lines
-		printIndented(_stream, m_expectation, nextIndentLevel);
+		printPrefixed(_stream, m_expectation, nextIndentLevel);
 		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
 			<< _linePrefix << "Obtained result:" << endl;
-		printIndented(_stream, m_obtainedResult, nextIndentLevel);
+		printPrefixed(_stream, m_obtainedResult, nextIndentLevel);
 		return TestResult::Failure;
 	}
 	return TestResult::Success;
