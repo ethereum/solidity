@@ -714,7 +714,16 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		functionTypes.erase(name);
 
 		if (!newEnv.typeEquals(instanceFunctionType, classFunctionType))
-			m_errorReporter.typeError(7428_error, _typeClassInstantiation.location(), "Type mismatch for function " + name + " " + TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType) + " != " + TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType));
+			m_errorReporter.typeError(
+				7428_error,
+				_typeClassInstantiation.location(),
+				fmt::format(
+					"Type mismatch for function {} {} != {}",
+					name,
+					TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType),
+					TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType)
+				)
+			);
 	}
 
 	if (!functionTypes.empty())
