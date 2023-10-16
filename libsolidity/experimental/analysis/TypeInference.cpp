@@ -707,7 +707,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	{
 		if (!functionTypes.count(name))
 		{
-			m_errorReporter.typeError(6948_error, _typeClassInstantiation.location(), "Missing function: " + name);
+			m_errorReporter.typeError(6948_error, _typeClassInstantiation.location(), "Instantiation function not declared in the type class: " + name);
 			continue;
 		}
 		Type instanceFunctionType = functionTypes.at(name);
@@ -718,7 +718,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 				7428_error,
 				_typeClassInstantiation.location(),
 				fmt::format(
-					"Type mismatch for function {} {} != {}",
+					"Instantiation function '{}' does not match the declaration in the type class ({} != {}).",
 					name,
 					TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType),
 					TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType)
