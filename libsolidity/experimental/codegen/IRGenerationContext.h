@@ -33,8 +33,12 @@ class Analysis;
 
 struct IRGenerationContext
 {
-	Analysis const& analysis;
-	TypeEnvironment const* env = nullptr;
+	struct QueuedFunction
+	{
+		FunctionDefinition const* function = nullptr;
+		Type type = std::monostate{};
+	};
+
 	void enqueueFunctionDefinition(FunctionDefinition const* _functionDefinition, Type _type)
 	{
 		QueuedFunction queue{_functionDefinition, env->resolve(_type)};
@@ -43,11 +47,9 @@ struct IRGenerationContext
 				return;
 		functionQueue.emplace_back(queue);
 	}
-	struct QueuedFunction
-	{
-		FunctionDefinition const* function = nullptr;
-		Type type = std::monostate{};
-	};
+
+	Analysis const& analysis;
+	TypeEnvironment const* env = nullptr;
 	std::list<QueuedFunction> functionQueue;
 	std::map<FunctionDefinition const*, std::vector<Type>> generatedFunctions;
 };

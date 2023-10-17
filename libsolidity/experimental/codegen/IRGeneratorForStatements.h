@@ -34,7 +34,15 @@ public:
 	IRGeneratorForStatements(IRGenerationContext& _context): m_context(_context) {}
 
 	std::string generate(ASTNode const& _node);
+
 private:
+	enum class Builtins
+	{
+		Identity,
+		FromBool,
+		ToBool
+	};
+
 	bool visit(ExpressionStatement const& _expressionStatement) override;
 	bool visit(Block const& _block) override;
 	bool visit(IfStatement const& _ifStatement) override;
@@ -54,18 +62,14 @@ private:
 	void endVisit(Return const& _return) override;
 	/// Default visit will reject all AST nodes that are not explicitly supported.
 	bool visitNode(ASTNode const& _node) override;
-	IRGenerationContext& m_context;
-	std::stringstream m_code;
-	enum class Builtins
-	{
-		Identity,
-		FromBool,
-		ToBool
-	};
-	std::map<Expression const*, std::variant<Declaration const*, Builtins>> m_expressionDeclaration;
+
 	Type typeAnnotation(ASTNode const& _node) const;
 
 	FunctionDefinition const& resolveTypeClassFunction(TypeClass _class, std::string _name, Type _type);
+
+	IRGenerationContext& m_context;
+	std::stringstream m_code;
+	std::map<Expression const*, std::variant<Declaration const*, Builtins>> m_expressionDeclaration;
 };
 
 }

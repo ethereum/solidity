@@ -56,7 +56,11 @@ struct CopyTranslate: public yul::ASTCopier
 		IRGenerationContext const& _context,
 		yul::Dialect const& _dialect,
 		std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> _references
-	): m_context(_context), m_dialect(_dialect), m_references(std::move(_references)) {}
+	):
+		m_context(_context),
+		m_dialect(_dialect),
+		m_references(std::move(_references))
+	{}
 
 	using ASTCopier::operator();
 
