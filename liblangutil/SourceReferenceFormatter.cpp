@@ -65,7 +65,7 @@ AnsiColorized SourceReferenceFormatter::frameColored() const
 	return AnsiColorized(m_stream, m_colored, {BOLD, BLUE});
 }
 
-AnsiColorized SourceReferenceFormatter::errorColored(Error::Severity _severity) const
+AnsiColorized SourceReferenceFormatter::errorColored(std::ostream& _stream, bool _colored, Error::Severity _severity)
 {
 	// We used to color messages of any severity as errors so this seems like a good default
 	// for cases where severity cannot be determined.
@@ -78,12 +78,12 @@ AnsiColorized SourceReferenceFormatter::errorColored(Error::Severity _severity) 
 	case Error::Severity::Info: textColor = WHITE; break;
 	}
 
-	return AnsiColorized(m_stream, m_colored, {BOLD, textColor});
+	return AnsiColorized(_stream, _colored, {BOLD, textColor});
 }
 
-AnsiColorized SourceReferenceFormatter::messageColored() const
+AnsiColorized SourceReferenceFormatter::messageColored(std::ostream& _stream, bool _colored)
 {
-	return AnsiColorized(m_stream, m_colored, {BOLD, WHITE});
+	return AnsiColorized(_stream, _colored, {BOLD, WHITE});
 }
 
 AnsiColorized SourceReferenceFormatter::secondaryColored() const
@@ -175,14 +175,26 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 	}
 }
 
+void SourceReferenceFormatter::printPrimaryMessage(
+	std::ostream& _stream,
+	std::string _message,
+	std::variant<Error::Type, Error::Severity> _typeOrSeverity,
+	std::optional<ErrorId> _errorId,
+	bool _colored,
+	bool _withErrorIds
+)
+{
+	errorColored(_stream, _colored, Error::errorSeverityOrType(_typeOrSeverity)) << Error::formatTypeOrSeverity(_typeOrSeverity);
+
+	if (_withErrorIds && _errorId.has_value())
+		errorColored(_stream, _colored, Error::errorSeverityOrType(_typeOrSeverity)) << " (" << _errorId.value().error << ")";
+
+	messageColored(_stream, _colored) << ": " << _message << '\n';
+}
+
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
 {
-	errorColored(Error::errorSeverityOrType(_msg._typeOrSeverity)) << Error::formatTypeOrSeverity(_msg._typeOrSeverity);
-
-	if (m_withErrorIds && _msg.errorId.has_value())
-		errorColored(Error::errorSeverityOrType(_msg._typeOrSeverity)) << " (" << _msg.errorId.value().error << ")";
-
-	messageColored() << ": " << _msg.primary.message << '\n';
+	printPrimaryMessage(m_stream, _msg.primary.message, _msg._typeOrSeverity, _msg.errorId, m_colored, m_withErrorIds);
 	printSourceLocation(_msg.primary);
 
 	for (auto const& secondary: _msg.secondary)

@@ -136,6 +136,8 @@ private:
 	/// stream has ever been used unless @arg _markAsUsed is set to false.
 	std::ostream& serr(bool _markAsUsed = true);
 
+	void report(langutil::Error::Severity _severity, std::string _message);
+
 	std::istream& m_sin;
 	std::ostream& m_sout;
 	std::ostream& m_serr;

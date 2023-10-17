@@ -517,7 +517,7 @@ void CommandLineInterface::readInputFiles()
 			if (!m_options.input.ignoreMissingFiles)
 				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not found.");
 			else
-				serr() << infile << " is not found. Skipping." << std::endl;
+				report(Error::Severity::Info, fmt::format("\"{}\" is not found. Skipping.", infile.string()));
 
 			continue;
 		}
@@ -527,7 +527,7 @@ void CommandLineInterface::readInputFiles()
 			if (!m_options.input.ignoreMissingFiles)
 				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not a valid file.");
 			else
-				serr() << infile << " is not a valid file. Skipping." << std::endl;
+				report(Error::Severity::Info, fmt::format("\"{}\" is not a valid file. Skipping.", infile.string()));
 
 			continue;
 		}
@@ -639,7 +639,7 @@ bool CommandLineInterface::run(int _argc, char const* const* _argv)
 		// There might be no message in the exception itself if the error output is bulky and has
 		// already been printed to stderr (this happens e.g. for compiler errors).
 		if (_exception.what() != ""s)
-			serr() << _exception.what() << std::endl;
+			report(Error::Severity::Error, _exception.what());
 
 		return false;
 	}
@@ -658,7 +658,19 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 		return false;
 	}
 
-	parser.parse(_argc, _argv);
+	try
+	{
+		parser.parse(_argc, _argv);
+	}
+	catch (...)
+	{
+		// Even if the overall CLI parsing fails, the --color/--no-color options may have been
+		// successfully parsed, and if so, should be taken into account when printing errors.
+		// If no value is present, it's possible that --no-color is still there but parsing failed
+		// due to other, unrecognized options so play it safe and disable color in that case.
+		m_options.formatting.coloredOutput = parser.options().formatting.coloredOutput.value_or(false);
+		throw;
+	}
 	m_options = parser.options();
 
 	return true;
@@ -817,7 +829,7 @@ void CommandLineInterface::compile()
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)
 		{
-			serr() << *boost::get_error_info<errinfo_comment>(_error);
+			report(Error::Severity::Error, *boost::get_error_info<errinfo_comment>(_error));
 			solThrow(CommandLineExecutionError, "Documentation parsing failed.");
 		}
 		else
@@ -1020,7 +1032,10 @@ void CommandLineInterface::link()
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
-				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << std::endl;
+				report(
+					Error::Severity::Warning,
+					fmt::format("Reference \"{}\" in file \"{}\" still unresolved.", foundPlaceholder, src.first)
+				);
 			it += placeholderSize;
 		}
 		// Remove hints for resolved libraries.
@@ -1136,7 +1151,7 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			if (object.bytecode)
 				sout() << object.bytecode->toHex() << std::endl;
 			else
-				serr() << "No binary representation found." << std::endl;
+				report(Error::Severity::Info, "No binary representation found.");
 		}
 		if (m_options.compiler.outputs.astCompactJson)
 		{
@@ -1150,7 +1165,7 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			if (!object.assembly.empty())
 				sout() << object.assembly << std::endl;
 			else
-				serr() << "No text representation found." << std::endl;
+				report(Error::Severity::Info, "No text representation found.");
 		}
 	}
 }
@@ -1218,6 +1233,18 @@ void CommandLineInterface::outputCompilationResults()
 		else
 			sout() << "Compiler run successful. No output generated." << std::endl;
 	}
+}
+
+void CommandLineInterface::report(langutil::Error::Severity _severity, std::string _message)
+{
+	SourceReferenceFormatter::printPrimaryMessage(
+		serr(),
+		_message,
+		_severity,
+		std::nullopt,
+		coloredOutput(m_options),
+		m_options.formatting.withErrorIds
+	);
 }
 
 }

@@ -1,1 +1,1 @@
---yul-optimizations is invalid if Yul optimizer is disabled
+Error: --yul-optimizations is invalid if Yul optimizer is disabled

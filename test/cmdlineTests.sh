@@ -318,14 +318,14 @@ EOF
 ## RUN
 
 printTask "Testing passing files that are not found..."
-test_solc_behaviour "file_not_found.sol" "" "" "" 1 "" "\"file_not_found.sol\" is not found." "" ""
+test_solc_behaviour "file_not_found.sol" "" "" "" 1 "" "Error: \"file_not_found.sol\" is not found." "" ""
 
 printTask "Testing passing files that are not files..."
-test_solc_behaviour "." "" "" "" 1 "" "\".\" is not a valid file." "" ""
+test_solc_behaviour "." "" "" "" 1 "" "Error: \".\" is not a valid file." "" ""
 
 printTask "Testing passing empty remappings..."
-test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "" "Invalid remapping: \"=/some/remapping/target\"." "" ""
-test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid remapping: \"ctx:=/some/remapping/target\"." "" ""
+test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "" "Error: Invalid remapping: \"=/some/remapping/target\"." "" ""
+test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Error: Invalid remapping: \"ctx:=/some/remapping/target\"." "" ""
 
 printTask "Running general commandline tests..."
 (
