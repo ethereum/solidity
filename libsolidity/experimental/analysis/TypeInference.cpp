@@ -691,8 +691,8 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			m_errorReporter.typeError(3654_error, subNode->location(), "Duplicate definition of function " + functionDefinition->name() + " during type class instantiation.");
 	}
 
-	if (auto error = m_typeSystem.instantiateClass(type, arity))
-		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
+	if (auto errorMsg = m_typeSystem.instantiateClass(type, arity))
+		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *errorMsg);
 
 	auto const& classFunctions = annotation().typeClassFunctions.at(*typeClass);
 
@@ -1196,16 +1196,16 @@ experimental::Type TypeInference::typeAnnotation(ASTNode const& _node) const
 	solAssert(result);
 	return *result;
 }
-TypeConstructor TypeInference::typeConstructor(Declaration const* _type) const
+TypeConstructor TypeInference::typeConstructor(Declaration const* _typeDeclaration) const
 {
-	if (auto const& constructor = m_analysis.annotation<TypeRegistration>(*_type).typeConstructor)
+	if (auto const& constructor = m_analysis.annotation<TypeRegistration>(*_typeDeclaration).typeConstructor)
 		return *constructor;
-	m_errorReporter.fatalTypeError(5904_error, _type->location(), "Unregistered type.");
+	m_errorReporter.fatalTypeError(5904_error, _typeDeclaration->location(), "Unregistered type.");
 	util::unreachable();
 }
-experimental::Type TypeInference::type(Declaration const* _type, std::vector<Type> _arguments) const
+experimental::Type TypeInference::type(Declaration const* _typeDeclaration, std::vector<Type> _arguments) const
 {
-	return m_typeSystem.type(typeConstructor(_type), std::move(_arguments));
+	return m_typeSystem.type(typeConstructor(_typeDeclaration), std::move(_arguments));
 }
 
 bool TypeInference::visitNode(ASTNode const& _node)

@@ -63,7 +63,7 @@ private:
 		ToBool
 	};
 	std::map<Expression const*, std::variant<Declaration const*, Builtins>> m_expressionDeclaration;
-	Type type(ASTNode const& _node) const;
+	Type typeAnnotation(ASTNode const& _node) const;
 
 	FunctionDefinition const& resolveTypeClassFunction(TypeClass _class, std::string _name, Type _type);
 };

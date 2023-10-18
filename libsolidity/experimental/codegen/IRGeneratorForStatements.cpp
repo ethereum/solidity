@@ -185,7 +185,7 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 	m_code << "leave\n";
 }
 
-experimental::Type IRGeneratorForStatements::type(ASTNode const& _node) const
+experimental::Type IRGeneratorForStatements::typeAnnotation(ASTNode const& _node) const
 {
 	auto type = m_context.analysis.annotation<TypeInference>(_node).type;
 	solAssert(type);
@@ -195,9 +195,9 @@ experimental::Type IRGeneratorForStatements::type(ASTNode const& _node) const
 void IRGeneratorForStatements::endVisit(BinaryOperation const& _binaryOperation)
 {
 	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
-	Type leftType = type(_binaryOperation.leftExpression());
-	Type rightType = type(_binaryOperation.rightExpression());
-	Type resultType = type(_binaryOperation);
+	Type leftType = typeAnnotation(_binaryOperation.leftExpression());
+	Type rightType = typeAnnotation(_binaryOperation.rightExpression());
+	Type resultType = typeAnnotation(_binaryOperation);
 	Type functionType = helper.functionType(helper.tupleType({leftType, rightType}), resultType);
 	auto [typeClass, memberName] = m_context.analysis.annotation<TypeInference>().operators.at(_binaryOperation.getOperator());
 	auto const& functionDefinition = resolveTypeClassFunction(typeClass, memberName, functionType);
@@ -240,11 +240,11 @@ FunctionDefinition const& IRGeneratorForStatements::resolveTypeClassFunction(Typ
 	FunctionDefinition const* functionDefinition = nullptr;
 	for (auto const& node: instantiation->subNodes())
 	{
-		auto const* def = dynamic_cast<FunctionDefinition const*>(node.get());
-		solAssert(def);
-		if (def->name() == _name)
+		auto const* candidateDefinition = dynamic_cast<FunctionDefinition const*>(node.get());
+		solAssert(candidateDefinition);
+		if (candidateDefinition->name() == _name)
 		{
-			functionDefinition = def;
+			functionDefinition = candidateDefinition;
 			break;
 		}
 	}
@@ -256,9 +256,9 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 {
 	TypeSystemHelpers helper{m_context.analysis.typeSystem()};
 	// TODO: avoid resolve?
-	auto expressionType = m_context.env->resolve(type(_memberAccess.expression()));
+	auto expressionType = m_context.env->resolve(typeAnnotation(_memberAccess.expression()));
 	auto constructor = std::get<0>(helper.destTypeConstant(expressionType));
-	auto memberAccessType = type(_memberAccess);
+	auto memberAccessType = typeAnnotation(_memberAccess);
 	// TODO: better mechanism
 	if (constructor == m_context.analysis.typeSystem().constructor(PrimitiveType::Bool))
 	{
@@ -298,7 +298,7 @@ bool IRGeneratorForStatements::visit(ElementaryTypeNameExpression const&)
 
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
-	Type functionType = type(_functionCall.expression());
+	Type functionType = typeAnnotation(_functionCall.expression());
 	auto declaration = m_expressionDeclaration.at(&_functionCall.expression());
 	if (auto builtin = std::get_if<Builtins>(&declaration))
 	{
