@@ -479,7 +479,10 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		else if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 			return m_env->fresh(*declarationAnnotation.type);
 		else if (dynamic_cast<TypeClassDefinition const*>(&_declaration))
-			return m_env->fresh(*declarationAnnotation.type);
+		{
+			solAssert(TypeEnvironmentHelpers{*m_env}.typeVars(*declarationAnnotation.type).size() == 0);
+			return *declarationAnnotation.type;
+		}
 		else if (dynamic_cast<TypeDefinition const*>(&_declaration))
 		{
 			// TODO: can we avoid this?
