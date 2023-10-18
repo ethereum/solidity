@@ -49,10 +49,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 	std::visit(util::GenericVisitor{
 		[&](TypeVariable _left, TypeVariable _right) {
 			if (_left.index() == _right.index())
-			{
-				if (_left.sort() != _right.sort())
-					unificationFailure();
-			}
+				solAssert(_left.sort() == _right.sort());
 			else
 			{
 				if (_left.sort() <= _right.sort())
