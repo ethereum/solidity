@@ -12,12 +12,9 @@
 // {
 //     {
 //         let x_1
-//         {
-//             let _2 := calldataload(x_1)
-//             let _3 := 1
-//             x_1 := add(_3, _2)
-//         }
-//         let _4 := 1
-//         pop(call(2, 0, _4, addmod(_3, _2, 8), _4, _4, _4))
+//         let _2 := calldataload(x_1)
+//         let _3 := 1
+//         x_1 := add(_3, _2)
+//         pop(call(2, 0, _3, addmod(_3, _2, 8), _3, _3, _3))
 //     }
 // }

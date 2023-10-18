@@ -194,6 +194,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"fullSimplify", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
+			BlockFlattener::run(*m_context, *m_ast);
 			ExpressionSplitter::run(*m_context, *m_ast);
 			ForLoopInitRewriter::run(*m_context, *m_ast);
 			FunctionHoister::run(*m_context, *m_ast);
@@ -259,6 +261,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"loadResolver", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
+			BlockFlattener::run(*m_context, *m_ast);
 			ForLoopInitRewriter::run(*m_context, *m_ast);
 			FunctionHoister::run(*m_context, *m_ast);
 			ExpressionSplitter::run(*m_context, *m_ast);

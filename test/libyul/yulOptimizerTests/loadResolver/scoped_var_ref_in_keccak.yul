@@ -12,11 +12,9 @@
 // {
 //     {
 //         let x
-//         {
-//             let y := msize()
-//             let _1 := 4
-//             x := add(_1, y)
-//         }
+//         let y := msize()
+//         let _1 := 4
+//         x := add(_1, y)
 //         x := keccak256(0, addmod(_1, y, 2))
 //     }
 // }
