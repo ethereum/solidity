@@ -480,7 +480,10 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		else if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 			return polymorphicInstance(*declarationAnnotation.type);
 		else if (dynamic_cast<TypeClassDefinition const*>(&_declaration))
-			return polymorphicInstance(*declarationAnnotation.type);
+		{
+			solAssert(TypeEnvironmentHelpers{*m_env}.typeVars(*declarationAnnotation.type).empty());
+			return *declarationAnnotation.type;
+		}
 		else if (dynamic_cast<TypeDefinition const*>(&_declaration))
 		{
 			// TODO: can we avoid this?
