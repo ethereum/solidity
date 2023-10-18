@@ -336,6 +336,7 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 experimental::Type TypeEnvironment::fresh(Type _type)
 {
 	std::unordered_map<size_t, GenericTypeVariable> genericFreshReplacements;
+	std::unordered_map<size_t, GenericTypeVariable> fixedFreshReplacements;
 
 	auto freshImpl = [&](Type const& _type, auto _recurse) -> Type {
 		return std::visit(util::GenericVisitor{
@@ -360,7 +361,16 @@ experimental::Type TypeEnvironment::fresh(Type _type)
 				return freshVariable;
 			},
 			[&](FixedTypeVariable const& _fixedVar) -> Type {
-				return _fixedVar;
+				if (GenericTypeVariable const* typeVariable = util::valueOrNullptr(fixedFreshReplacements, _fixedVar.index()))
+				{
+					// TODO: can there be a mismatch?
+					solAssert(typeVariable->sort() == _fixedVar.sort());
+					return *typeVariable;
+				}
+
+				GenericTypeVariable freshVariable = m_typeSystem.freshGenericTypeVariable(_fixedVar.sort());
+				fixedFreshReplacements.emplace(_fixedVar.index(), freshVariable);
+				return freshVariable;
 			},
 			[](std::monostate) -> Type { solAssert(false); }
 		}, resolve(_type));
