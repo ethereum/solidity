@@ -477,16 +477,16 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		if (dynamic_cast<VariableDeclaration const*>(&_declaration))
 			return *declarationAnnotation.type;
 		else if (dynamic_cast<FunctionDefinition const*>(&_declaration))
-			return polymorphicInstance(*declarationAnnotation.type);
+			return m_env->fresh(*declarationAnnotation.type);
 		else if (dynamic_cast<TypeClassDefinition const*>(&_declaration))
-			return polymorphicInstance(*declarationAnnotation.type);
+			return m_env->fresh(*declarationAnnotation.type);
 		else if (dynamic_cast<TypeDefinition const*>(&_declaration))
 		{
 			// TODO: can we avoid this?
 			Type type = *declarationAnnotation.type;
 			if (TypeSystemHelpers{m_typeSystem}.isTypeFunctionType(type))
 				type = std::get<1>(TypeSystemHelpers{m_typeSystem}.destTypeFunctionType(type));
-			return polymorphicInstance(type);
+			return m_env->fresh(type);
 		}
 		else
 			solAssert(false);
@@ -514,7 +514,7 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 		if (dynamic_cast<VariableDeclaration const*>(&_declaration))
 			return *declarationAnnotation.type;
 		else if (dynamic_cast<TypeDefinition const*>(&_declaration))
-			return polymorphicInstance(*declarationAnnotation.type);
+			return m_env->fresh(*declarationAnnotation.type);
 		else
 			solAssert(false);
 		break;
@@ -750,7 +750,7 @@ experimental::Type TypeInference::memberType(Type _type, std::string _memberName
 	{
 		auto constructor = std::get<0>(helper.destTypeConstant(resolvedType));
 		if (auto* typeMember = util::valueOrNullptr(annotation().members.at(constructor), _memberName))
-			return polymorphicInstance(typeMember->type);
+			return m_env->fresh(typeMember->type);
 		else
 		{
 			m_errorReporter.typeError(5755_error, _location, fmt::format("Member {} not found in type {}.", _memberName, TypeEnvironmentHelpers{*m_env}.typeToString(_type)));
@@ -1074,19 +1074,6 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 		)
 	);
 }
-}
-
-void TypeInference::unifyGeneralized(Type _type, Type _scheme, std::vector<Type> _monomorphicTypes, langutil::SourceLocation _location)
-{
-	solUnimplementedAssert(_monomorphicTypes.empty(), "unsupported");
-	unify(_type, m_env->fresh(_scheme), _location);
-}
-
-experimental::Type TypeInference::polymorphicInstance(Type _scheme, langutil::SourceLocation _location)
-{
-	TypeVariable result = m_typeSystem.freshTypeVariable({});
-	unifyGeneralized(result, _scheme, {}, _location);
-	return result;
 }
 
 void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
