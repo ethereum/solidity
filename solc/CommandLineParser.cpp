@@ -78,6 +78,7 @@ static std::string const g_strModelCheckerTimeout = "model-checker-timeout";
 static std::string const g_strModelCheckerBMCLoopIterations = "model-checker-bmc-loop-iterations";
 static std::string const g_strNone = "none";
 static std::string const g_strNoOptimizeYul = "no-optimize-yul";
+static std::string const g_strNoImportCallback = "no-import-callback";
 static std::string const g_strOptimize = "optimize";
 static std::string const g_strOptimizeRuns = "optimize-runs";
 static std::string const g_strOptimizeYul = "optimize-yul";
@@ -224,6 +225,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		input.includePaths == _other.input.includePaths &&
 		input.allowedDirectories == _other.input.allowedDirectories &&
 		input.ignoreMissingFiles == _other.input.ignoreMissingFiles &&
+		input.noImportCallback == _other.input.noImportCallback &&
 		output.dir == _other.output.dir &&
 		output.overwriteFiles == _other.output.overwriteFiles &&
 		output.evmVersion == _other.output.evmVersion &&
@@ -566,6 +568,11 @@ General Information)").c_str(),
 		(
 			g_strIgnoreMissingFiles.c_str(),
 			"Ignore missing files."
+		)
+		(
+			g_strNoImportCallback.c_str(),
+			"Disable the default import callback to prevent the compiler from loading any source "
+			"files not listed on the command line or given in the Standard JSON input."
 		)
 	;
 	desc.add(inputOptions);
@@ -1103,6 +1110,11 @@ void CommandLineParser::processArgs()
 			m_options.input.includePaths.push_back(includePath);
 		}
 	}
+
+	checkMutuallyExclusive({g_strNoImportCallback, g_strAllowPaths});
+
+	if (m_args.count(g_strNoImportCallback))
+		m_options.input.noImportCallback = true;
 
 	if (m_args.count(g_strAllowPaths))
 	{

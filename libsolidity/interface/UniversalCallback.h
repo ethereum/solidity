@@ -29,7 +29,7 @@ namespace solidity::frontend
 class UniversalCallback
 {
 public:
-	UniversalCallback(FileReader&  _fileReader, SMTSolverCommand& _solver) :
+	UniversalCallback(FileReader* _fileReader, SMTSolverCommand& _solver) :
 		m_fileReader{_fileReader},
 		m_solver{_solver}
 	{}
@@ -38,15 +38,20 @@ public:
 	{
 		return [this](std::string const& _kind, std::string const& _data) -> ReadCallback::Result {
 			if (_kind == ReadCallback::kindString(ReadCallback::Kind::ReadFile))
-				return m_fileReader.readFile(_kind, _data);
+				if (!m_fileReader)
+					return ReadCallback::Result{false, "No import callback."};
+				else
+					return m_fileReader->readFile(_kind, _data);
 			else if (_kind == ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
 				return m_solver.solve(_kind, _data);
 			solAssert(false, "Unknown callback kind.");
 		};
 	}
 
+	void resetImportCallback() { m_fileReader = nullptr; }
+
 private:
-	FileReader& m_fileReader;
+	FileReader* m_fileReader;
 	SMTSolverCommand& m_solver;
 };
 

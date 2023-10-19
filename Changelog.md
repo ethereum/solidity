@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Commandline Interface: Add ``--no-import-callback`` option that prevents the compiler from loading source files not given explicitly on the CLI or in Standard JSON input.
  * Commandline Interface: Use proper severity and coloring also for error messages produced outside of the compilation pipeline.
  * Parser: Remove the experimental error recovery mode (``--error-recovery`` / ``settings.parserErrorRecovery``).
  * Yul Optimizer: If ``PUSH0`` is supported, favor zero literals over storing zero values in variables.

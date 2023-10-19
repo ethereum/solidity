@@ -464,6 +464,9 @@ void CommandLineInterface::readInputFiles()
 {
 	solAssert(!m_standardJsonInput.has_value());
 
+	if (m_options.input.noImportCallback)
+		m_universalCallback.resetImportCallback();
+
 	static std::set<frontend::InputMode> const noInputFiles{
 		frontend::InputMode::Help,
 		frontend::InputMode::License,

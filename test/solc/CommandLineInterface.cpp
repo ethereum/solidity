@@ -175,6 +175,25 @@ BOOST_AUTO_TEST_CASE(multiple_input_modes)
 				);
 }
 
+BOOST_AUTO_TEST_CASE(no_import_callback_allowed_paths)
+{
+	array<string, 2> options = {
+		"--no-import-callback",
+		"--allow-paths"
+	};
+
+	string expectedMessage =
+		"The following options are mutually exclusive: "
+		"--no-import-callback, --allow-paths. "
+		"Select at most one.";
+
+	BOOST_CHECK_EXCEPTION(
+		parseCommandLineAndReadInputFiles({"solc", options[0], options[1], "."}),
+		CommandLineValidationError,
+		[&](auto const& _exception) { BOOST_TEST(_exception.what() == expectedMessage); return true; }
+	);
+}
+
 BOOST_AUTO_TEST_CASE(cli_input)
 {
 	TemporaryDirectory tempDir1(TEST_CASE_NAME);
