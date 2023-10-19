@@ -55,6 +55,28 @@ std::string SourceReferenceFormatter::formatErrorInformation(Error const& _error
 	);
 }
 
+char const* SourceReferenceFormatter::errorTextColor(Error::Severity _severity)
+{
+	switch (_severity)
+	{
+	case Error::Severity::Error: return RED;
+	case Error::Severity::Warning: return YELLOW;
+	case Error::Severity::Info: return WHITE;
+	}
+	util::unreachable();
+}
+
+char const* SourceReferenceFormatter::errorHighlightColor(Error::Severity _severity)
+{
+	switch (_severity)
+	{
+	case Error::Severity::Error: return RED_BACKGROUND;
+	case Error::Severity::Warning: return ORANGE_BACKGROUND_256;
+	case Error::Severity::Info: return GRAY_BACKGROUND;
+	}
+	util::unreachable();
+}
+
 AnsiColorized SourceReferenceFormatter::normalColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {WHITE});
@@ -67,18 +89,7 @@ AnsiColorized SourceReferenceFormatter::frameColored() const
 
 AnsiColorized SourceReferenceFormatter::errorColored(std::ostream& _stream, bool _colored, Error::Severity _severity)
 {
-	// We used to color messages of any severity as errors so this seems like a good default
-	// for cases where severity cannot be determined.
-	char const* textColor = RED;
-
-	switch (_severity)
-	{
-	case Error::Severity::Error: textColor = RED; break;
-	case Error::Severity::Warning: textColor = YELLOW; break;
-	case Error::Severity::Info: textColor = WHITE; break;
-	}
-
-	return AnsiColorized(_stream, _colored, {BOLD, textColor});
+	return AnsiColorized(_stream, _colored, {BOLD, errorTextColor(_severity)});
 }
 
 AnsiColorized SourceReferenceFormatter::messageColored(std::ostream& _stream, bool _colored)
