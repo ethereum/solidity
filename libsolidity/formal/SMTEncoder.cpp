@@ -3138,14 +3138,15 @@ void SMTEncoder::createReturnedExpressions(FunctionDefinition const* _funDef, Ex
 
 std::vector<smtutil::Expression> SMTEncoder::symbolicArguments(
 	std::vector<ASTPointer<VariableDeclaration>> const& _funParameters,
-	std::optional<Expression const*> _calledExpr,
-	std::vector<Expression const*> const& _arguments)
+	std::vector<Expression const*> const& _arguments,
+	std::optional<Expression const*> _boundArgumentCall
+)
 {
 	std::vector<smtutil::Expression> args;
 	unsigned firstParam = 0;
-	if (_calledExpr)
+	if (_boundArgumentCall)
 	{
-		Expression const* calledExpr = innermostTuple(*_calledExpr.value());
+		Expression const* calledExpr = innermostTuple(*_boundArgumentCall.value());
 		auto const& attachedFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 		solAssert(attachedFunction, "");
 		args.push_back(expr(attachedFunction->expression(), _funParameters.front()->type()));

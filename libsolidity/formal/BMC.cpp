@@ -704,7 +704,7 @@ void BMC::visitAddMulMod(FunctionCall const& _funCall)
 void BMC::inlineFunctionCall(
 	FunctionDefinition const* _funDef,
 	Expression const& _callStackExpr,
-	std::optional<Expression const*> _calledExpr,
+	std::optional<Expression const*> _boundArgumentCall,
 	std::vector<Expression const*> const& _arguments
 )
 {
@@ -721,7 +721,7 @@ void BMC::inlineFunctionCall(
 	}
 	else
 	{
-		initializeFunctionCallParameters(*_funDef, symbolicArguments(_funDef->parameters(), _calledExpr, _arguments));
+		initializeFunctionCallParameters(*_funDef, symbolicArguments(_funDef->parameters(), _arguments, _boundArgumentCall));
 
 		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)
 		// is that there we don't have `_callStackExpr`.
@@ -743,7 +743,7 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	Expression const* expr = &_funCall.expression();
 	auto funType = dynamic_cast<FunctionType const*>(expr->annotation().type);
-	std::optional<Expression const*> calledExpr =
+	std::optional<Expression const*> boundArgumentCall =
 		funType->hasBoundFirstArgument() ? std::make_optional(expr) : std::nullopt;
 
 	std::vector<Expression const*> arguments;
@@ -752,7 +752,7 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 
 	// pushCallStack and defineExpr inside createReturnedExpression should be called
 	// on the FunctionCall object for the normal function call case
-	inlineFunctionCall(funDef, _funCall, calledExpr, arguments);
+	inlineFunctionCall(funDef, _funCall, boundArgumentCall, arguments);
 }
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)

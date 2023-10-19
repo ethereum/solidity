@@ -131,7 +131,7 @@ private:
 	void internalFunctionCall(FunctionCall const& _funCall);
 	void internalFunctionCall(
 		FunctionDefinition const* _funDef,
-		Expression const* _calledExpr,
+		std::optional<Expression const*> _boundArgumentCall,
 		FunctionType const* _funType,
 		std::vector<Expression const*> const& _arguments,
 		smtutil::Expression _contractAddressValue
@@ -258,7 +258,7 @@ private:
 	/// @returns the summary predicate for the called function.
 	smtutil::Expression predicate(
 		FunctionDefinition const* _funDef,
-		Expression const* _calledExpr,
+		std::optional<Expression const*> _boundArgumentCall,
 		FunctionType const* _funType,
 		std::vector<Expression const*> _arguments,
 		smtutil::Expression _contractAddressValue

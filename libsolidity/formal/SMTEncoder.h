@@ -410,8 +410,8 @@ protected:
 	/// type conversion.
 	std::vector<smtutil::Expression> symbolicArguments(
 		std::vector<ASTPointer<VariableDeclaration>> const& _funParameters,
-		std::optional<Expression const*> _calledExpr,
-		std::vector<Expression const*> const& _arguments
+		std::vector<Expression const*> const& _arguments,
+		std::optional<Expression const*> _calledExpr
 	);
 
 	smtutil::Expression constantExpr(Expression const& _expr, VariableDeclaration const& _var);

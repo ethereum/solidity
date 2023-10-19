@@ -551,7 +551,7 @@ void CHC::endVisit(UnaryOperation const& _op)
 	{
 		std::vector<Expression const*> arguments;
 		arguments.push_back(&_op.subExpression());
-		internalFunctionCall(funDef, &_op, _op.userDefinedFunctionType(), arguments, state().thisAddress());
+		internalFunctionCall(funDef, std::nullopt, _op.userDefinedFunctionType(), arguments, state().thisAddress());
 
 		createReturnedExpressions(funDef, _op);
 	}
@@ -566,7 +566,7 @@ void CHC::endVisit(BinaryOperation const& _op)
 		std::vector<Expression const*> arguments;
 		arguments.push_back(&_op.leftExpression());
 		arguments.push_back(&_op.rightExpression());
-		internalFunctionCall(funDef, &_op, _op.userDefinedFunctionType(), arguments, state().thisAddress());
+		internalFunctionCall(funDef, std::nullopt, _op.userDefinedFunctionType(), arguments, state().thisAddress());
 
 		createReturnedExpressions(funDef, _op);
 	}
@@ -851,14 +851,13 @@ void CHC::visitDeployment(FunctionCall const& _funCall)
 
 void CHC::internalFunctionCall(
 	FunctionDefinition const* _funDef,
-	Expression const* _calledExpr,
+	std::optional<Expression const*> _boundArgumentCall,
 	FunctionType const* _funType,
 	std::vector<Expression const*> const& _arguments,
 	smtutil::Expression _contractAddressValue
 )
 {
 	solAssert(m_currentContract, "");
-	solAssert(_calledExpr, "");
 	solAssert(_funType, "");
 
 	if (_funDef)
@@ -869,7 +868,7 @@ void CHC::internalFunctionCall(
 			m_callGraph[m_currentContract].insert(_funDef);
 	}
 
-	m_context.addAssertion(predicate(_funDef, _calledExpr, _funType, _arguments, _contractAddressValue));
+	m_context.addAssertion(predicate(_funDef, _boundArgumentCall, _funType, _arguments, _contractAddressValue));
 
 	solAssert(m_errorDest, "");
 	connectBlocks(
@@ -911,7 +910,10 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 	std::vector<Expression const*> arguments;
 	for (auto& arg: _funCall.sortedArguments())
 		arguments.push_back(&(*arg));
-	internalFunctionCall(funDef, calledExpr, funType, arguments, contractAddressValue(_funCall));
+
+	std::optional<Expression const*> boundArgumentCall =
+		funType->hasBoundFirstArgument() ? std::make_optional(calledExpr) : std::nullopt;
+	internalFunctionCall(funDef, boundArgumentCall, funType, arguments, contractAddressValue(_funCall));
 }
 
 void CHC::addNondetCalls(ContractDefinition const& _contract)
@@ -1813,13 +1815,12 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 
 smtutil::Expression CHC::predicate(
 	FunctionDefinition const* _funDef,
-	Expression const* _calledExpr,
+	std::optional<Expression const*> _boundArgumentCall,
 	FunctionType const* _funType,
 	std::vector<Expression const*> _arguments,
 	smtutil::Expression _contractAddressValue
 )
 {
-	solAssert(_calledExpr, "");
 	solAssert(_funType, "");
 	auto kind = _funType->kind();
 	solAssert(kind == FunctionType::Kind::Internal || kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
@@ -1838,10 +1839,7 @@ smtutil::Expression CHC::predicate(
 		contract = m_currentContract;
 
 	args += currentStateVariables(*contract);
-
-	std::optional<Expression const*> calledExpr =
-		_funType->hasBoundFirstArgument() ? std::make_optional(_calledExpr) : std::nullopt;
-	args += symbolicArguments(_funDef->parameters(), calledExpr, _arguments);
+	args += symbolicArguments(_funDef->parameters(), _arguments, _boundArgumentCall);
 	if (!usesStaticCall(_funDef, _funType))
 	{
 		state().newState();
