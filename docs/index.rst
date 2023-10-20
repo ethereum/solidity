@@ -1,14 +1,14 @@
 Solidity
 ========
 
-Solidity is an object-oriented, high-level language for implementing smart contracts.
+Solidity is an object-oriented, statically typed, high-level language for implementing smart contracts.
 Smart contracts are programs that govern the behavior of accounts within the Ethereum state.
 
 Solidity is a `curly-bracket language <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_ designed to target the Ethereum Virtual Machine (EVM).
 It is influenced by C++, Python, and JavaScript.
 You can find more details about which languages Solidity has been inspired by in the :doc:`language influences <language-influences>` section.
 
-Solidity is statically typed, supports inheritance, libraries, and complex user-defined types, among other features.
+Solidity supports inheritance, libraries, and complex user-defined types.
 
 With Solidity, you can create contracts for uses such as voting, crowdfunding, blind auctions, and multi-signature wallets.
 
@@ -28,7 +28,7 @@ read our :doc:`contributors guide <contributing>` for more details.
 
 .. Hint::
 
-  You can download this documentation as PDF, HTML or Epub
+  You can download this documentation as PDF, HTML, or Epub
   by clicking on the versions flyout menu in the bottom-left corner and selecting the preferred download format.
 
 
@@ -37,7 +37,7 @@ Getting Started
 
 **1. Understand the Smart Contract Basics**
 
-If you are new to the concept of smart contracts, we recommend you to get started by digging into the "Introduction to Smart Contracts" section, which covers the following:
+If you are new to the concept of smart contracts, we recommend you get started by digging into the "Introduction to Smart Contracts" section, which covers the following:
 
 * :ref:`A simple example smart contract <simple-smart-contract>` written in Solidity.
 * :ref:`Blockchain Basics <blockchain-basics>`.
@@ -56,7 +56,7 @@ simply choose your preferred option and follow the steps outlined on the :ref:`i
 .. hint::
   You can try out code examples directly in your browser with the
   `Remix IDE <https://remix.ethereum.org>`_.
-  Remix is a web browser-based IDE that allows you to write, deploy and administer Solidity smart contracts,
+  Remix is a web browser-based IDE that allows you to write, deploy, and administer Solidity smart contracts
   without the need to install Solidity locally.
 
 .. warning::
