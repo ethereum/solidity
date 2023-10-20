@@ -1102,7 +1102,7 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 	std::vector<Expression const*> arguments;
 	for (auto& arg: _funCall.sortedArguments())
 		arguments.push_back(&(*arg));
-	smtutil::Expression pred = predicate(function, callExpr, &funType, arguments, calledAddress);
+	smtutil::Expression pred = predicate(function, std::nullopt, &funType, arguments, calledAddress);
 
 	auto txConstraints = state().txTypeConstraints() && state().txFunctionConstraints(*function);
 	m_context.addAssertion(pred && txConstraints);
