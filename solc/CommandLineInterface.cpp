@@ -1204,11 +1204,11 @@ void CommandLineInterface::outputCompilationResults()
 					ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
 				if (m_options.compiler.outputs.asmJson)
 					retJson = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
-				
+
 				if (!m_options.output.dir.empty()) {
 					if (m_options.compiler.outputs.asm_)
 						createFile(m_compiler->filesystemFriendlyName(contract) + ".evm", ret);
-					if (m_options.compiler.outputs.asmJson)	
+					if (m_options.compiler.outputs.asmJson)
 						createFile(m_compiler->filesystemFriendlyName(contract) + "_evm.json", retJson);
 				}
 				else
