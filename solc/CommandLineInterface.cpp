@@ -1204,16 +1204,22 @@ void CommandLineInterface::outputCompilationResults()
 			// do we need EVM assembly?
 			if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
 			{
-				std::string ret;
-				if (m_options.compiler.outputs.asmJson)
-					ret = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
-				else
+				std::string ret = "";
+				std::string retJson = "";
+				if (m_options.compiler.outputs.asm_)
 					ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
+				if (m_options.compiler.outputs.asmJson)
+					retJson = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
 
 				if (!m_options.output.dir.empty())
-					createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
+				{
+					if (m_options.compiler.outputs.asm_)
+						createFile(m_compiler->filesystemFriendlyName(contract) + ".evm", ret);
+					if (m_options.compiler.outputs.asmJson)
+						createFile(m_compiler->filesystemFriendlyName(contract) + "_evm.json", retJson);
+				}
 				else
-					sout() << "EVM assembly:" << std::endl << ret << std::endl;
+					sout() << "EVM assembly:" << std::endl << ret << std::endl << retJson << std::endl;
 			}
 
 			if (m_options.compiler.estimateGas)
