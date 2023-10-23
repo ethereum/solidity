@@ -8,12 +8,5 @@
             "severity": "warning",
             "type": "Warning"
         }
-    ],
-    "sources":
-    {
-        "A":
-        {
-            "id": 0
-        }
-    }
+    ]
 }
