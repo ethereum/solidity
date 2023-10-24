@@ -238,6 +238,7 @@ struct TryCatchClauseAnnotation: ASTAnnotation, ScopableAnnotation
 
 struct ForStatementAnnotation: StatementAnnotation, ScopableAnnotation
 {
+	util::SetOnce<bool> isSimpleCounterLoop;
 };
 
 struct ReturnAnnotation: StatementAnnotation

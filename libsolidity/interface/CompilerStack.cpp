@@ -1498,7 +1498,8 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		m_revertStrings,
 		sourceIndices(),
 		m_debugInfoSelection,
-		this
+		this,
+		m_optimiserSettings
 	);
 	compiledContract.yulIR = generator.run(
 		_contract,
@@ -1664,6 +1665,7 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 		details["deduplicate"] = m_optimiserSettings.runDeduplicate;
 		details["cse"] = m_optimiserSettings.runCSE;
 		details["constantOptimizer"] = m_optimiserSettings.runConstantOptimiser;
+		details["simpleCounterForLoopUncheckedIncrement"] = m_optimiserSettings.simpleCounterForLoopUncheckedIncrement;
 		details["yul"] = m_optimiserSettings.runYulOptimiser;
 		if (m_optimiserSettings.runYulOptimiser)
 		{

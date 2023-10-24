@@ -34,15 +34,8 @@ object "Arraysum_34" {
                         /** @src 0:380:397  "i < values.length" */ lt(var_i, _2)
                         /// @src 0:368:378  "uint i = 0"
                         {
-                            /// @src 0:80:429  "contract Arraysum {..."
-                            if eq(var_i, not(0))
-                            {
-                                mstore(0, shl(224, 0x4e487b71))
-                                mstore(_1, 0x11)
-                                revert(0, 0x24)
-                            }
                             /// @src 0:399:402  "i++"
-                            var_i := /** @src 0:80:429  "contract Arraysum {..." */ add(var_i, 1)
+                            var_i := /** @src 0:80:429  "contract Arraysum {..." */ add(/** @src 0:399:402  "i++" */ var_i, /** @src 0:80:429  "contract Arraysum {..." */ 1)
                         }
                         /// @src 0:399:402  "i++"
                         {

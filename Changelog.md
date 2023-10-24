@@ -5,6 +5,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Remove redundant overflow checks of certain ``for`` loops when the counter variable cannot overflow.
  * Commandline Interface: Add ``--no-import-callback`` option that prevents the compiler from loading source files not given explicitly on the CLI or in Standard JSON input.
  * Commandline Interface: Use proper severity and coloring also for error messages produced outside of the compilation pipeline.
  * EVM: Deprecate support for "homestead", "tangerineWhistle", "spuriousDragon" and "byzantium" EVM versions.

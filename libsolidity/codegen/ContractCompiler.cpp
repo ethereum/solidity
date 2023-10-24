@@ -1245,7 +1245,16 @@ bool ContractCompiler::visit(ForStatement const& _forStatement)
 
 	// for's loop expression if existing
 	if (_forStatement.loopExpression())
+	{
+		Arithmetic previousArithmetic = m_context.arithmetic();
+		if (
+			*_forStatement.annotation().isSimpleCounterLoop &&
+			m_optimiserSettings.simpleCounterForLoopUncheckedIncrement
+		)
+			m_context.setArithmetic(Arithmetic::Wrapping);
 		_forStatement.loopExpression()->accept(*this);
+		m_context.setArithmetic(previousArithmetic);
+	}
 
 	m_context.appendJumpTo(loopStart);
 
