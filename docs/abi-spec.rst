@@ -816,8 +816,7 @@ This encoding is defined as follows:
 - the encoding of an array (both dynamically- and statically-sized) is
   the concatenation of the encoding of its elements, always padded to a multiple
   of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
-- The encoding of indexed event parameters is different from the encoding of function arguments.
-  Function arguments are encoded to be compact but not designed to be searchable. Indexed event parameters, on the other hand, 
+- The encoding of indexed event parameters is different from the encoding of function arguments. Function arguments are encoded to be compact but not designed to be searchable. Indexed event parameters, on the other hand, 
   are encoded in a way that makes them searchable. This is because indexed event parameters can be used to filter events for specific needs.
 
 In the above, as usual, a negative number is padded by sign extension and not zero padded.
