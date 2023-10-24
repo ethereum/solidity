@@ -74,7 +74,6 @@
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libevmasm/Exceptions.h>
 
 #include <libsolutil/SwarmHash.h>
 #include <libsolutil/IpfsHash.h>
