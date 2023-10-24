@@ -805,8 +805,9 @@ Encoding of Indexed Event Parameters
 ====================================
 
 Indexed event parameters that are not value types, i.e. arrays and structs are not
-stored directly but instead a Keccak-256 hash of an encoding is stored. This encoding
-is defined as follows:
+stored directly but instead a Keccak-256 hash of an encoding is stored. 
+This format is designed to make indexed event parameters searchable. 
+This encoding is defined as follows:
 
 - the encoding of a ``bytes`` and ``string`` value is just the string contents
   without any padding or length prefix.
@@ -815,6 +816,9 @@ is defined as follows:
 - the encoding of an array (both dynamically- and statically-sized) is
   the concatenation of the encoding of its elements, always padded to a multiple
   of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
+- The encoding of indexed event parameters is different from the encoding of function arguments.
+  Function arguments are encoded to be compact but not designed to be searchable. Indexed event parameters, on the other hand, 
+  are encoded in a way that makes them searchable. This is because indexed event parameters can be used to filter events for specific needs.
 
 In the above, as usual, a negative number is padded by sign extension and not zero padded.
 ``bytesNN`` types are padded on the right while ``uintNN`` / ``intNN`` are padded on the left.
