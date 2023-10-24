@@ -196,8 +196,6 @@ function test_import_export_equivalence {
     fi
 }
 
-WORKINGDIR=$PWD
-
 command_available "$SOLC" --version
 command_available jq --version
 
@@ -214,12 +212,17 @@ IMPORT_TEST_FILES=$(find "${TEST_DIRS[@]}" -name "*.sol" -and -not -name "boost_
 NSOURCES="$(echo "${IMPORT_TEST_FILES}" | wc -l)"
 echo "Looking at ${NSOURCES} .sol files..."
 
+COUNTER=0
+TEST_DIR=$(mktemp -d -t "import-export-test-XXXXXX")
+pushd "$TEST_DIR" > /dev/null
+
 for solfile in $IMPORT_TEST_FILES
 do
     echo -n "·"
-    # create a temporary sub-directory
-    FILETMP=$(mktemp -d)
-    cd "$FILETMP"
+
+    TEST_SUBDIR="$(printf "%05d" "$COUNTER")-$(basename "$solfile")"
+    mkdir "$TEST_SUBDIR"
+    pushd "$TEST_SUBDIR" > /dev/null
 
     set +e
     OUTPUT=$("$SPLITSOURCES" "$solfile")
@@ -244,18 +247,15 @@ do
         # All other return codes will be treated as critical errors. The script will exit.
         printError "\n\nGot unexpected return code ${SPLITSOURCES_RC} from '${SPLITSOURCES} ${solfile}'. Aborting."
         printError "\n\n${OUTPUT}\n\n"
-
-        cd "$WORKINGDIR"
-        # Delete temporary files
-        rm -rf "$FILETMP"
-
         exit 1
     fi
 
-    cd "$WORKINGDIR"
-    # Delete temporary files
-    rm -rf "$FILETMP"
+    popd > /dev/null
+    ((++COUNTER))
 done
+
+popd > /dev/null
+rm -r "$TEST_DIR"
 
 echo
 
