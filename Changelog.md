@@ -1,4 +1,4 @@
-### 0.8.22 (unreleased)
+### 0.8.22 (2023-10-25)
 
 Language Features:
  * Allow defining events at file level.
