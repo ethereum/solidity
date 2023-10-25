@@ -58,6 +58,7 @@ At least a day before the release:
        Remove different variants of the same name manually before using the output.
  - [ ] Check that all tests on the latest commit in ``develop`` are green.
  - [ ] Click the ``Publish release`` button on the release page, creating the tag.
+       **Important: Must not be done before all the PRs, including changelog cleanup and date, are merged.**
  - [ ] Wait for the CI runs on the tag itself.
 
 ### Upload Release Artifacts and Publish Binaries
