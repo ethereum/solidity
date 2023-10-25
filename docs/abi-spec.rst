@@ -804,20 +804,16 @@ for prepending a function selector. Since the encoding is ambiguous, there is no
 Encoding of Indexed Event Parameters
 ====================================
 
-Indexed event parameters that are not value types, i.e. arrays and structs are not
-stored directly but instead a Keccak-256 hash of an encoding is stored. 
-This format is designed to make indexed event parameters searchable. 
-This encoding is defined as follows:
+Indexed event parameters that are not value types (i.e., arrays and structs) are not stored directly but instead as a Keccak-256 hash of an encoding. This format is designed to make indexed event parameters searchable.
 
-- the encoding of a ``bytes`` and ``string`` value is just the string contents
-  without any padding or length prefix.
-- the encoding of a struct is the concatenation of the encoding of its members,
-  always padded to a multiple of 32 bytes (even ``bytes`` and ``string``).
-- the encoding of an array (both dynamically- and statically-sized) is
-  the concatenation of the encoding of its elements, always padded to a multiple
-  of 32 bytes (even ``bytes`` and ``string``) and without any length prefix
-- The encoding of indexed event parameters is different from the encoding of function arguments. Function arguments are encoded to be compact but not designed to be searchable. Indexed event parameters, on the other hand, 
-  are encoded in a way that makes them searchable. This is because indexed event parameters can be used to filter events for specific needs.
+The encoding is defined as follows:
+
+- The encoding of a ``bytes`` or ``string`` value is just the string contents without any padding or length prefix.
+- The encoding of a struct is the concatenation of the encoding of its members, always padded to a multiple of 32 bytes (even for ``bytes`` and ``string``).
+- The encoding of an array (both dynamically and statically sized) is the concatenation of the encoding of its elements, always padded to a multiple of 32 bytes (even for ``bytes`` and ``string``) and without any length prefix.
+
+The encoding of indexed event parameters is different from the encoding of function arguments. Function arguments are encoded to be compact but not designed to be searchable. Indexed event parameters, on the other hand, are encoded in a way that makes them searchable. This is because indexed event parameters can be used to filter events for specific needs.
+
 
 In the above, as usual, a negative number is padded by sign extension and not zero padded.
 ``bytesNN`` types are padded on the right while ``uintNN`` / ``intNN`` are padded on the left.
