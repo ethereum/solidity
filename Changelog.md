@@ -1,5 +1,9 @@
 ### 0.8.23 (unreleased)
 
+Important Bugfixes:
+ * Optimizer: Fix block deduplicator bug which led to blocks which are identical apart from the contents of ``verbatim`` instructions to be treated as equivalent and thus collapsed into a single one.
+
+
 Language Features:
 
 
