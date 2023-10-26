@@ -1,7 +1,7 @@
 {
     "language": "Solidity",
     "sources": {
-        "A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_with_cleanup_sequence/in.sol"]}
+        "A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_with_empty_optimisation_sequence/in.sol"]}
     },
     "settings": {
         "optimizer": {
