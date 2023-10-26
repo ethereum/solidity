@@ -247,6 +247,18 @@ std::string AssemblyItem::getJumpTypeAsString() const
 	}
 }
 
+std::optional<AssemblyItem::JumpType> AssemblyItem::parseJumpType(std::string const& _jumpType)
+{
+	if (_jumpType == "[in]")
+		return JumpType::IntoFunction;
+	else if (_jumpType == "[out]")
+		return JumpType::OutOfFunction;
+	else if (_jumpType.empty())
+		return JumpType::Ordinary;
+
+	return std::nullopt;
+}
+
 std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 {
 	std::string text;

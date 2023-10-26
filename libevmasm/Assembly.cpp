@@ -34,18 +34,26 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
 
-#include <json/json.h>
+#include <libsolutil/JSON.h>
+#include <libsolutil/StringUtils.h>
+
+#include <fmt/format.h>
 
 #include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/view/drop_exactly.hpp>
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/map.hpp>
 
 #include <fstream>
 #include <limits>
+#include <iterator>
 
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 using namespace solidity::util;
+
+std::map<std::string, std::shared_ptr<std::string const>> Assembly::s_sharedSourceNames;
 
 AssemblyItem const& Assembly::append(AssemblyItem _i)
 {
@@ -71,6 +79,205 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
+}
+
+void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, std::vector<std::string> const& _sourceList)
+{
+	solAssert(m_items.empty());
+	solRequire(_code.isArray(), AssemblyImportException, "Supplied JSON is not an array.");
+	for (auto jsonItemIter = std::begin(_code); jsonItemIter != std::end(_code); ++jsonItemIter)
+	{
+		AssemblyItem const& newItem = m_items.emplace_back(createAssemblyItemFromJSON(*jsonItemIter, _sourceList));
+		if (newItem == Instruction::JUMPDEST)
+			solThrow(AssemblyImportException, "JUMPDEST instruction without a tag");
+		else if (newItem.type() == AssemblyItemType::Tag)
+		{
+			++jsonItemIter;
+			if (jsonItemIter != std::end(_code) && createAssemblyItemFromJSON(*jsonItemIter, _sourceList) != Instruction::JUMPDEST)
+				solThrow(AssemblyImportException, "JUMPDEST expected after tag.");
+		}
+	}
+}
+
+AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList)
+{
+	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
+	static std::set<std::string> const validMembers{"name", "begin", "end", "source", "value", "modifierDepth", "jumpType"};
+	for (std::string const& member: _json.getMemberNames())
+		solRequire(
+			validMembers.count(member),
+			AssemblyImportException,
+			fmt::format(
+				"Unknown member '{}'. Valid members are: {}.",
+				member,
+				solidity::util::joinHumanReadable(validMembers, ", ")
+			)
+		);
+	solRequire(isOfType<std::string>(_json["name"]), AssemblyImportException, "Member 'name' missing or not of type string.");
+	solRequire(isOfTypeIfExists<int>(_json, "begin"), AssemblyImportException, "Optional member 'begin' not of type int.");
+	solRequire(isOfTypeIfExists<int>(_json, "end"), AssemblyImportException, "Optional member 'end' not of type int.");
+	solRequire(isOfTypeIfExists<int>(_json, "source"), AssemblyImportException, "Optional member 'source' not of type int.");
+	solRequire(isOfTypeIfExists<std::string>(_json, "value"), AssemblyImportException, "Optional member 'value' not of type string.");
+	solRequire(isOfTypeIfExists<int>(_json, "modifierDepth"), AssemblyImportException, "Optional member 'modifierDepth' not of type int.");
+	solRequire(isOfTypeIfExists<std::string>(_json, "jumpType"), AssemblyImportException, "Optional member 'jumpType' not of type string.");
+
+	std::string name = get<std::string>(_json["name"]);
+	solRequire(!name.empty(), AssemblyImportException, "Member 'name' is empty.");
+
+	SourceLocation location;
+	location.start = get<int>(_json["begin"]);
+	location.end = get<int>(_json["end"]);
+	int srcIndex = getOrDefault<int>(_json["source"], -1);
+	size_t modifierDepth = static_cast<size_t>(getOrDefault<int>(_json["modifierDepth"], 0));
+	std::string value = getOrDefault<std::string>(_json["value"], "");
+	std::string jumpType = getOrDefault<std::string>(_json["jumpType"], "");
+
+	auto updateUsedTags = [&](u256 const& data)
+	{
+		m_usedTags = std::max(m_usedTags, static_cast<unsigned>(data) + 1);
+		return data;
+	};
+
+	auto storeImmutableHash = [&](std::string const& _immutableName) -> h256
+	{
+		h256 hash(util::keccak256(_immutableName));
+		solAssert(m_immutables.count(hash) == 0 || m_immutables[hash] == _immutableName);
+		m_immutables[hash] = _immutableName;
+		return hash;
+	};
+
+	auto storeLibraryHash = [&](std::string const& _libraryName) -> h256
+	{
+		h256 hash(util::keccak256(_libraryName));
+		solAssert(m_libraries.count(hash) == 0 || m_libraries[hash] == _libraryName);
+		m_libraries[hash] = _libraryName;
+		return hash;
+	};
+
+	auto requireValueDefinedForInstruction = [&](std::string const& _name, std::string const& _value)
+	{
+		solRequire(
+			!_value.empty(),
+			AssemblyImportException,
+			"Member 'value' is missing for instruction '" + _name + "', but the instruction needs a value."
+		);
+	};
+
+	auto requireValueUndefinedForInstruction = [&](std::string const& _name, std::string const& _value)
+	{
+		solRequire(
+			_value.empty(),
+			AssemblyImportException,
+			"Member 'value' defined for instruction '" + _name + "', but the instruction does not need a value."
+		);
+	};
+
+	solRequire(srcIndex >= -1 && srcIndex < static_cast<int>(_sourceList.size()), AssemblyImportException, "Source index out of bounds.");
+	if (srcIndex != -1)
+		location.sourceName = sharedSourceName(_sourceList[static_cast<size_t>(srcIndex)]);
+
+	AssemblyItem result(0);
+
+	if (c_instructions.count(name))
+	{
+		AssemblyItem item{c_instructions.at(name), location};
+		if (!jumpType.empty())
+		{
+			if (item.instruction() == Instruction::JUMP || item.instruction() == Instruction::JUMPI)
+			{
+				std::optional<AssemblyItem::JumpType> parsedJumpType = AssemblyItem::parseJumpType(jumpType);
+				if (!parsedJumpType.has_value())
+					solThrow(AssemblyImportException, "Invalid jump type.");
+				item.setJumpType(parsedJumpType.value());
+			}
+			else
+				solThrow(
+					AssemblyImportException,
+					"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
+				);
+		}
+		requireValueUndefinedForInstruction(name, value);
+		result = item;
+	}
+	else
+	{
+		solRequire(
+			jumpType.empty(),
+			AssemblyImportException,
+			"Member 'jumpType' set on instruction different from JUMP or JUMPI (was set on instruction '" + name + "')"
+		);
+		if (name == "PUSH")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::Push, u256("0x" + value)};
+		}
+		else if (name == "PUSH [ErrorTag]")
+		{
+			requireValueUndefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushTag, 0};
+		}
+		else if (name == "PUSH [tag]")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushTag, updateUsedTags(u256(value))};
+		}
+		else if (name == "PUSH [$]")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushSub, u256("0x" + value)};
+		}
+		else if (name == "PUSH #[$]")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushSubSize, u256("0x" + value)};
+		}
+		else if (name == "PUSHSIZE")
+		{
+			requireValueUndefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushProgramSize, 0};
+		}
+		else if (name == "PUSHLIB")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushLibraryAddress, storeLibraryHash(value)};
+		}
+		else if (name == "PUSHDEPLOYADDRESS")
+		{
+			requireValueUndefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushDeployTimeAddress, 0};
+		}
+		else if (name == "PUSHIMMUTABLE")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushImmutable, storeImmutableHash(value)};
+		}
+		else if (name == "ASSIGNIMMUTABLE")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::AssignImmutable, storeImmutableHash(value)};
+		}
+		else if (name == "tag")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::Tag, updateUsedTags(u256(value))};
+		}
+		else if (name == "PUSH data")
+		{
+			requireValueDefinedForInstruction(name, value);
+			result = {AssemblyItemType::PushData, u256("0x" + value)};
+		}
+		else if (name == "VERBATIM")
+		{
+			requireValueDefinedForInstruction(name, value);
+			AssemblyItem item(fromHex(value), 0, 0);
+			result = item;
+		}
+		else
+			solThrow(InvalidOpcode, "Invalid opcode: " + name);
+	}
+	result.setLocation(location);
+	result.m_modifierDepth = modifierDepth;
+	return result;
 }
 
 namespace
@@ -295,6 +502,154 @@ Json::Value Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourc
 		root[".auxdata"] = util::toHex(m_auxiliaryData);
 
 	return root;
+}
+
+std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSON(
+	Json::Value const& _json,
+	std::vector<std::string> const& _sourceList,
+	size_t _level
+)
+{
+	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
+	static std::set<std::string> const validMembers{".code", ".data", ".auxdata", "sourceList"};
+	for (std::string const& attribute: _json.getMemberNames())
+		solRequire(validMembers.count(attribute), AssemblyImportException, "Unknown attribute '" + attribute + "'.");
+
+	if (_level == 0)
+	{
+		if (_json.isMember("sourceList"))
+		{
+			solRequire(_json["sourceList"].isArray(), AssemblyImportException, "Optional member 'sourceList' is not an array.");
+			for (Json::Value const& sourceName: _json["sourceList"])
+				solRequire(sourceName.isString(), AssemblyImportException, "The 'sourceList' array contains an item that is not a string.");
+		}
+	}
+	else
+		solRequire(
+			!_json.isMember("sourceList"),
+			AssemblyImportException,
+			"Member 'sourceList' may only be present in the root JSON object."
+		);
+
+	auto result = std::make_shared<Assembly>(EVMVersion{}, _level == 0 /* _creation */, "" /* _name */);
+	std::vector<std::string> parsedSourceList;
+	if (_json.isMember("sourceList"))
+	{
+		solAssert(_level == 0);
+		solAssert(_sourceList.empty());
+		for (Json::Value const& sourceName: _json["sourceList"])
+		{
+			solRequire(
+				std::find(parsedSourceList.begin(), parsedSourceList.end(), sourceName.asString()) == parsedSourceList.end(),
+				AssemblyImportException,
+				"Items in 'sourceList' array are not unique."
+			);
+			parsedSourceList.emplace_back(sourceName.asString());
+		}
+	}
+
+	solRequire(_json.isMember(".code"), AssemblyImportException, "Member '.code' is missing.");
+	solRequire(_json[".code"].isArray(), AssemblyImportException, "Member '.code' is not an array.");
+	for (Json::Value const& codeItem: _json[".code"])
+		solRequire(codeItem.isObject(), AssemblyImportException, "The '.code' array contains an item that is not an object.");
+
+	result->importAssemblyItemsFromJSON(_json[".code"], _level == 0 ? parsedSourceList : _sourceList);
+
+	if (_json[".auxdata"])
+	{
+		solRequire(_json[".auxdata"].isString(), AssemblyImportException, "Optional member '.auxdata' is not a string.");
+		result->m_auxiliaryData = fromHex(_json[".auxdata"].asString());
+		solRequire(!result->m_auxiliaryData.empty(), AssemblyImportException, "Optional member '.auxdata' is not a valid hexadecimal string.");
+	}
+
+	if (_json.isMember(".data"))
+	{
+		solRequire(_json[".data"].isObject(), AssemblyImportException, "Optional member '.data' is not an object.");
+		Json::Value const& data = _json[".data"];
+		std::map<size_t, std::shared_ptr<Assembly>> subAssemblies;
+		for (Json::ValueConstIterator dataIter = data.begin(); dataIter != data.end(); dataIter++)
+		{
+			solAssert(dataIter.key().isString());
+			std::string dataItemID = dataIter.key().asString();
+			Json::Value const& dataItem = data[dataItemID];
+			if (dataItem.isString())
+			{
+				solRequire(
+					dataItem.asString().empty() || !fromHex(dataItem.asString()).empty(),
+					AssemblyImportException,
+					"The value for key '" + dataItemID + "' inside '.data' is not a valid hexadecimal string."
+				);
+				result->m_data[h256(fromHex(dataItemID))] = fromHex(dataItem.asString());
+			}
+			else if (dataItem.isObject())
+			{
+				size_t index{};
+				try
+				{
+					// Using signed variant because stoul() still accepts negative numbers and
+					// just lets them wrap around.
+					int parsedDataItemID = std::stoi(dataItemID, nullptr, 16);
+					solRequire(parsedDataItemID >= 0, AssemblyImportException, "The key '" + dataItemID + "' inside '.data' is out of the supported integer range.");
+					index = static_cast<size_t>(parsedDataItemID);
+				}
+				catch (std::invalid_argument const&)
+				{
+					solThrow(AssemblyImportException, "The key '" + dataItemID + "' inside '.data' is not an integer.");
+				}
+				catch (std::out_of_range const&)
+				{
+					solThrow(AssemblyImportException, "The key '" + dataItemID + "' inside '.data' is out of the supported integer range.");
+				}
+
+				auto [subAssembly, emptySourceList] = Assembly::fromJSON(dataItem, _level == 0 ? parsedSourceList : _sourceList, _level + 1);
+				solAssert(subAssembly);
+				solAssert(emptySourceList.empty());
+				solAssert(subAssemblies.count(index) == 0);
+				subAssemblies[index] = subAssembly;
+			}
+			else
+				solThrow(AssemblyImportException, "The value of key '" + dataItemID + "' inside '.data' is neither a hex string nor an object.");
+		}
+
+		if (!subAssemblies.empty())
+			solRequire(
+				ranges::max(subAssemblies | ranges::views::keys) == subAssemblies.size() - 1,
+				AssemblyImportException,
+				fmt::format(
+					"Invalid subassembly indices in '.data'. Not all numbers between 0 and {} are present.",
+					subAssemblies.size() - 1
+				)
+			);
+
+		result->m_subs = subAssemblies | ranges::views::values | ranges::to<std::vector>;
+	}
+
+	if (_level == 0)
+		result->encodeAllPossibleSubPathsInAssemblyTree();
+
+	return std::make_pair(result, _level == 0 ? parsedSourceList : std::vector<std::string>{});
+}
+
+void Assembly::encodeAllPossibleSubPathsInAssemblyTree(std::vector<size_t> _pathFromRoot, std::vector<Assembly*> _assembliesOnPath)
+{
+	_assembliesOnPath.push_back(this);
+	for (_pathFromRoot.push_back(0); _pathFromRoot.back() < m_subs.size(); ++_pathFromRoot.back())
+	{
+		for (size_t distanceFromRoot = 0; distanceFromRoot < _assembliesOnPath.size(); ++distanceFromRoot)
+			_assembliesOnPath[distanceFromRoot]->encodeSubPath(
+				_pathFromRoot | ranges::views::drop_exactly(distanceFromRoot) | ranges::to<std::vector>
+			);
+
+		m_subs[_pathFromRoot.back()]->encodeAllPossibleSubPathsInAssemblyTree(_pathFromRoot, _assembliesOnPath);
+	}
+}
+
+std::shared_ptr<std::string const> Assembly::sharedSourceName(std::string const& _name) const
+{
+	if (s_sharedSourceNames.find(_name) == s_sharedSourceNames.end())
+		s_sharedSourceNames[_name] = std::make_shared<std::string>(_name);
+
+	return s_sharedSourceNames[_name];
 }
 
 AssemblyItem Assembly::namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID)
