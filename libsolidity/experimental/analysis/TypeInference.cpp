@@ -1071,18 +1071,9 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 }
 }
 
-void TypeInference::unifyGeneralized(Type _type, Type _scheme, std::vector<Type> _monomorphicTypes, langutil::SourceLocation _location)
+experimental::Type TypeInference::polymorphicInstance(Type const& _scheme)
 {
-	solUnimplementedAssert(_monomorphicTypes.empty(), "unsupported");
-	Type fresh = m_env->fresh(_scheme);
-	unify(_type, fresh, _location);
-}
-
-experimental::Type TypeInference::polymorphicInstance(Type _scheme, langutil::SourceLocation _location)
-{
-	Type result = m_typeSystem.freshTypeVariable({});
-	unifyGeneralized(result, _scheme, {}, _location);
-	return result;
+	return m_env->fresh(_scheme);
 }
 
 void TypeInference::unify(Type _a, Type _b, langutil::SourceLocation _location)
