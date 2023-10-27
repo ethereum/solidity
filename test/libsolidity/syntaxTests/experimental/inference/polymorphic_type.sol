@@ -29,19 +29,19 @@ function run() {
 // Info 4164: (88-92): Inferred type: 'bg:(type, D)
 // Info 4164: (100-170): Inferred type: () -> ()
 // Info 4164: (112-114): Inferred type: ()
-// Info 4164: (125-141): Inferred type: T(U, 'bo:type, 'bq:(type, C))
-// Info 4164: (128-141): Inferred type: T(U, 'bo:type, 'bq:(type, C))
-// Info 4164: (128-129): Inferred type: tfun((U, 'bo:type, 'bq:(type, C)), T(U, 'bo:type, 'bq:(type, C)))
+// Info 4164: (125-141): Inferred type: T(U, 'bm:type, 'bo:(type, C))
+// Info 4164: (128-141): Inferred type: T(U, 'bm:type, 'bo:(type, C))
+// Info 4164: (128-129): Inferred type: tfun((U, 'bm:type, 'bo:(type, C)), T(U, 'bm:type, 'bo:(type, C)))
 // Info 4164: (130-131): Inferred type: U
-// Info 4164: (133-134): Inferred type: 'bo:type
-// Info 4164: (136-140): Inferred type: 'bq:(type, C)
-// Info 4164: (136-137): Inferred type: 'bq:(type, C)
-// Info 4164: (139-140): Inferred type: 'bq:(type, C)
-// Info 4164: (151-167): Inferred type: T(V, 'bx:type, 'bz:(type, D))
-// Info 4164: (154-167): Inferred type: T(V, 'bx:type, 'bz:(type, D))
-// Info 4164: (154-155): Inferred type: tfun((V, 'bx:type, 'bz:(type, D)), T(V, 'bx:type, 'bz:(type, D)))
+// Info 4164: (133-134): Inferred type: 'bm:type
+// Info 4164: (136-140): Inferred type: 'bo:(type, C)
+// Info 4164: (136-137): Inferred type: 'bo:(type, C)
+// Info 4164: (139-140): Inferred type: 'bo:(type, C)
+// Info 4164: (151-167): Inferred type: T(V, 'bt:type, 'bv:(type, D))
+// Info 4164: (154-167): Inferred type: T(V, 'bt:type, 'bv:(type, D))
+// Info 4164: (154-155): Inferred type: tfun((V, 'bt:type, 'bv:(type, D)), T(V, 'bt:type, 'bv:(type, D)))
 // Info 4164: (156-157): Inferred type: V
-// Info 4164: (159-160): Inferred type: 'bx:type
-// Info 4164: (162-166): Inferred type: 'bz:(type, D)
-// Info 4164: (162-163): Inferred type: 'bz:(type, D)
-// Info 4164: (165-166): Inferred type: 'bz:(type, D)
+// Info 4164: (159-160): Inferred type: 'bt:type
+// Info 4164: (162-166): Inferred type: 'bv:(type, D)
+// Info 4164: (162-163): Inferred type: 'bv:(type, D)
+// Info 4164: (165-166): Inferred type: 'bv:(type, D)
