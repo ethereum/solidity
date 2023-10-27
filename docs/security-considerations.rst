@@ -466,7 +466,7 @@ This is achieved by using the NatSpec custom tag with the name "security-contact
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity ^0.8.0;
 
     /**
      * @title Example contract
