@@ -86,6 +86,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/map.hpp>
 
@@ -453,7 +454,7 @@ bool CompilerStack::analyze()
 
 	try
 	{
-		bool experimentalSolidity = !m_sourceOrder.empty() && m_sourceOrder.front()->ast->experimentalSolidity();
+		bool experimentalSolidity = isExperimentalSolidity();
 
 		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
@@ -923,6 +924,8 @@ std::string const& CompilerStack::yulIR(std::string const& _contractName) const
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
+	solAssert(!isExperimentalSolidity());
+
 	return contract(_contractName).yulIR;
 }
 
@@ -930,6 +933,8 @@ Json::Value const& CompilerStack::yulIRAst(std::string const& _contractName) con
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
+
+	solAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).yulIRAst;
 }
@@ -939,6 +944,8 @@ std::string const& CompilerStack::yulIROptimized(std::string const& _contractNam
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
+	solAssert(!isExperimentalSolidity());
+
 	return contract(_contractName).yulIROptimized;
 }
 
@@ -946,6 +953,8 @@ Json::Value const& CompilerStack::yulIROptimizedAst(std::string const& _contract
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
+
+	solAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).yulIROptimizedAst;
 }
@@ -955,6 +964,8 @@ evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractNa
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
+	solAssert(!isExperimentalSolidity());
+
 	return contract(_contractName).object;
 }
 
@@ -962,6 +973,8 @@ evmasm::LinkerObject const& CompilerStack::runtimeObject(std::string const& _con
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
+
+	solAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).runtimeObject;
 }
@@ -971,6 +984,8 @@ std::string CompilerStack::assemblyString(std::string const& _contractName, Stri
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
+
+	solAssert(!isExperimentalSolidity());
 
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
@@ -984,6 +999,8 @@ Json::Value CompilerStack::assemblyJSON(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
+
+	solAssert(!isExperimentalSolidity());
 
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
@@ -1022,6 +1039,7 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solAssert(_contract.contract, "");
+	solAssert(!isExperimentalSolidity());
 
 	return _contract.abi.init([&]{ return ABI::generate(*_contract.contract); });
 }
@@ -1040,6 +1058,7 @@ Json::Value const& CompilerStack::storageLayout(Contract const& _contract) const
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solAssert(_contract.contract, "");
+	solAssert(!isExperimentalSolidity());
 
 	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract); });
 }
@@ -1058,6 +1077,7 @@ Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solAssert(_contract.contract, "");
+	solAssert(!isExperimentalSolidity());
 
 	return _contract.userDocumentation.init([&]{ return Natspec::userDocumentation(*_contract.contract); });
 }
@@ -1077,6 +1097,8 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
+	solAssert(!isExperimentalSolidity());
+
 	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
 }
 
@@ -1084,6 +1106,8 @@ Json::Value CompilerStack::interfaceSymbols(std::string const& _contractName) co
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
+
+	solAssert(!isExperimentalSolidity());
 
 	Json::Value interfaceSymbols(Json::objectValue);
 	// Always have a methods object
@@ -1125,6 +1149,8 @@ std::string const& CompilerStack::metadata(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
+	solAssert(!isExperimentalSolidity());
+
 	return _contract.metadata.init([&]{ return createMetadata(_contract, m_viaIR); });
 }
 
@@ -1144,6 +1170,8 @@ SourceUnit const& CompilerStack::ast(std::string const& _sourceName) const
 		solThrow(CompilerError, "Parsing not yet performed.");
 	if (!source(_sourceName).ast)
 		solThrow(CompilerError, "Parsing was not successful.");
+
+	solAssert(!isExperimentalSolidity());
 
 	return *source(_sourceName).ast;
 }
@@ -1867,6 +1895,8 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
+	solAssert(!isExperimentalSolidity());
+
 	if (!assemblyItems(_contractName) && !runtimeAssemblyItems(_contractName))
 		return Json::Value();
 
@@ -1937,4 +1967,14 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 	}
 
 	return output;
+}
+
+bool CompilerStack::isExperimentalSolidity() const
+{
+	return
+		!m_sourceOrder.empty() &&
+		// TODO: Does it make sense to check for any source or just the front?
+		//m_sourceOrder.front()->ast->experimentalSolidity()
+		ranges::all_of(m_sourceOrder, [](auto const* _source) { return _source->ast->experimentalSolidity(); } )
+	;
 }

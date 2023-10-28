@@ -348,6 +348,8 @@ public:
 	/// Changes the format of the metadata appended at the end of the bytecode.
 	void setMetadataFormat(MetadataFormat _metadataFormat) { m_metadataFormat = _metadataFormat; }
 
+	bool isExperimentalSolidity() const;
+
 	static MetadataFormat defaultMetadataFormat()
 	{
 		return VersionIsRelease ? MetadataFormat::WithReleaseVersionTag : MetadataFormat::WithPrereleaseVersionTag;
