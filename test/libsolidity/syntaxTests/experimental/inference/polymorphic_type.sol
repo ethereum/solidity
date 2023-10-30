@@ -24,24 +24,24 @@ function run() {
 // Info 4164: (48-55): Inferred type: U
 // Info 4164: (56-63): Inferred type: V
 // Info 4164: (65-81): Inferred type: C
-// Info 4164: (71-75): Inferred type: ?be:(type, C)
+// Info 4164: (71-75): Inferred type: 'k:(type, C)
 // Info 4164: (82-98): Inferred type: D
-// Info 4164: (88-92): Inferred type: ?bg:(type, D)
+// Info 4164: (88-92): Inferred type: 'l:(type, D)
 // Info 4164: (100-170): Inferred type: () -> ()
 // Info 4164: (112-114): Inferred type: ()
-// Info 4164: (125-141): Inferred type: T(U, ?bm:type, ?bo:(type, C))
-// Info 4164: (128-141): Inferred type: T(U, ?bm:type, ?bo:(type, C))
-// Info 4164: (128-129): Inferred type: tfun((U, ?bm:type, ?bo:(type, C)), T(U, ?bm:type, ?bo:(type, C)))
+// Info 4164: (125-141): Inferred type: T(U, ?bk:type, ?bm:(type, C))
+// Info 4164: (128-141): Inferred type: T(U, ?bk:type, ?bm:(type, C))
+// Info 4164: (128-129): Inferred type: tfun((U, ?bk:type, ?bm:(type, C)), T(U, ?bk:type, ?bm:(type, C)))
 // Info 4164: (130-131): Inferred type: U
-// Info 4164: (133-134): Inferred type: ?bm:type
-// Info 4164: (136-140): Inferred type: ?bo:(type, C)
-// Info 4164: (136-137): Inferred type: ?bo:(type, C)
-// Info 4164: (139-140): Inferred type: ?bo:(type, C)
-// Info 4164: (151-167): Inferred type: T(V, ?bt:type, ?bv:(type, D))
-// Info 4164: (154-167): Inferred type: T(V, ?bt:type, ?bv:(type, D))
-// Info 4164: (154-155): Inferred type: tfun((V, ?bt:type, ?bv:(type, D)), T(V, ?bt:type, ?bv:(type, D)))
+// Info 4164: (133-134): Inferred type: ?bk:type
+// Info 4164: (136-140): Inferred type: ?bm:(type, C)
+// Info 4164: (136-137): Inferred type: ?bm:(type, C)
+// Info 4164: (139-140): Inferred type: ?bm:(type, C)
+// Info 4164: (151-167): Inferred type: T(V, ?br:type, ?bt:(type, D))
+// Info 4164: (154-167): Inferred type: T(V, ?br:type, ?bt:(type, D))
+// Info 4164: (154-155): Inferred type: tfun((V, ?br:type, ?bt:(type, D)), T(V, ?br:type, ?bt:(type, D)))
 // Info 4164: (156-157): Inferred type: V
-// Info 4164: (159-160): Inferred type: ?bt:type
-// Info 4164: (162-166): Inferred type: ?bv:(type, D)
-// Info 4164: (162-163): Inferred type: ?bv:(type, D)
-// Info 4164: (165-166): Inferred type: ?bv:(type, D)
+// Info 4164: (159-160): Inferred type: ?br:type
+// Info 4164: (162-166): Inferred type: ?bt:(type, D)
+// Info 4164: (162-163): Inferred type: ?bt:(type, D)
+// Info 4164: (165-166): Inferred type: ?bt:(type, D)

@@ -308,6 +308,8 @@ std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(std::string _n
 	Type typeVariable = (_primitive ? freshVariable({{typeClass}}) : freshTypeVariable({{typeClass}}));
 	solAssert(std::holds_alternative<TypeVariable>(typeVariable));
 
+	m_globalTypeEnvironment.fixTypeVars({typeVariable});
+
 	m_typeClasses.emplace_back(TypeClassInfo{
 		typeVariable,
 		_name,
