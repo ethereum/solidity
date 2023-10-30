@@ -49,10 +49,7 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 	std::visit(util::GenericVisitor{
 		[&](TypeVariable _left, TypeVariable _right) {
 			if (_left.index() == _right.index())
-			{
-				if (_left.sort() != _right.sort())
-					unificationFailure();
-			}
+				solAssert(_left.sort() == _right.sort());
 			else
 			{
 				if (_left.sort() <= _right.sort())
@@ -154,7 +151,7 @@ TypeSystem::TypeSystem()
 	Sort typeSort{{classType}};
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::TypeFunction).m_index).arities = {Arity{std::vector<Sort>{{typeSort},{typeSort}}, classType}};
 	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
-	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Function).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
+	m_typeConstructors.at(m_primitiveTypeConstructors.at(PrimitiveType::Itself).m_index).arities = {Arity{std::vector<Sort>{{typeSort, typeSort}}, classType}};
 }
 
 experimental::Type TypeSystem::freshVariable(Sort _sort)
@@ -171,9 +168,10 @@ experimental::Type TypeSystem::freshTypeVariable(Sort _sort)
 
 std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::instantiate(TypeVariable _variable, Type _type)
 {
-	for (auto typeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
-		if (typeVar.index() == _variable.index())
-			return {UnificationFailure{RecursiveUnification{_variable, _type}}};
+	for (auto const& maybeTypeVar: TypeEnvironmentHelpers{*this}.typeVars(_type))
+		if (auto const* typeVar = std::get_if<TypeVariable>(&maybeTypeVar))
+			if (typeVar->index() == _variable.index())
+				return {UnificationFailure{RecursiveUnification{_variable, _type}}};
 	Sort typeSort = sort(_type);
 	if (!(_variable.sort() <= typeSort))
 	{
@@ -197,19 +195,19 @@ experimental::Type TypeEnvironment::resolve(Type _type) const
 experimental::Type TypeEnvironment::resolveRecursive(Type _type) const
 {
 	return std::visit(util::GenericVisitor{
-		[&](TypeConstant const& _type) -> Type {
+		[&](TypeConstant const& _typeConstant) -> Type {
 			return TypeConstant{
-				_type.constructor,
-				_type.arguments | ranges::views::transform([&](Type _argType) {
+				_typeConstant.constructor,
+				_typeConstant.arguments | ranges::views::transform([&](Type const& _argType) {
 					return resolveRecursive(_argType);
 				}) | ranges::to<std::vector<Type>>
 			};
 		},
-		[&](TypeVariable const&) -> Type {
-			return _type;
+		[](TypeVariable const& _typeVar) -> Type {
+			return _typeVar;
 		},
-		[&](std::monostate) -> Type {
-			return _type;
+		[](std::monostate _nothing) -> Type {
+			return _nothing;
 		}
 	}, resolve(_type));
 }
@@ -306,7 +304,7 @@ experimental::Type TypeSystem::type(TypeConstructor _constructor, std::vector<Ty
 
 experimental::Type TypeEnvironment::fresh(Type _type)
 {
-	std::unordered_map<uint64_t, Type> mapping;
+	std::unordered_map<size_t, Type> mapping;
 	auto freshImpl = [&](Type _type, auto _recurse) -> Type {
 		return std::visit(util::GenericVisitor{
 			[&](TypeConstant const& _type) -> Type {
