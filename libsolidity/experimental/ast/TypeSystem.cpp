@@ -50,18 +50,21 @@ std::vector<TypeEnvironment::UnificationFailure> TypeEnvironment::unify(Type _a,
 		[&](TypeVariable _left, TypeVariable _right) {
 			if (_left.index() == _right.index())
 				solAssert(_left.sort() == _right.sort());
+			else if (isFixedTypeVar(_left) && isFixedTypeVar(_right))
+				unificationFailure();
+			else if (isFixedTypeVar(_left))
+				failures += instantiate(_right, _left);
+			else if (isFixedTypeVar(_right))
+				failures += instantiate(_left, _right);
+			else if (_left.sort() <= _right.sort())
+				failures += instantiate(_left, _right);
+			else if (_right.sort() <= _left.sort())
+				failures += instantiate(_right, _left);
 			else
 			{
-				if (_left.sort() <= _right.sort())
-					failures += instantiate(_left, _right);
-				else if (_right.sort() <= _left.sort())
-					failures += instantiate(_right, _left);
-				else
-				{
-					Type newVar = m_typeSystem.freshVariable(_left.sort() + _right.sort());
-					failures += instantiate(_left, newVar);
-					failures += instantiate(_right, newVar);
-				}
+				Type newVar = m_typeSystem.freshVariable(_left.sort() + _right.sort());
+				failures += instantiate(_left, newVar);
+				failures += instantiate(_right, newVar);
 			}
 		},
 		[&](TypeVariable _var, auto) {
@@ -110,6 +113,30 @@ bool TypeEnvironment::typeEquals(Type _lhs, Type _rhs) const
 			return false;
 		}
 	}, resolve(_lhs), resolve(_rhs));
+}
+
+
+bool TypeEnvironment::isFixedTypeVar(Type const& _typeVar) const
+{
+	return
+		std::holds_alternative<TypeVariable>(_typeVar) &&
+		m_fixedTypeVariables.count(std::get<TypeVariable>(_typeVar).index()) != 0;
+}
+
+bool TypeEnvironment::isGenericTypeVar(Type const& _typeVar) const
+{
+	return
+		std::holds_alternative<TypeVariable>(_typeVar) &&
+		m_fixedTypeVariables.count(std::get<TypeVariable>(_typeVar).index()) == 0;
+}
+
+void TypeEnvironment::fixTypeVars(std::vector<Type> const& _typeVars)
+{
+	for (Type const& typeVar: _typeVars)
+	{
+		solAssert(std::holds_alternative<TypeVariable>(typeVar));
+		m_fixedTypeVariables.insert(std::get<TypeVariable>(typeVar).index());
+	}
 }
 
 TypeEnvironment TypeEnvironment::clone() const

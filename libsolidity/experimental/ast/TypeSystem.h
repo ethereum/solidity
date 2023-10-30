@@ -74,6 +74,10 @@ public:
 	TypeSystem& typeSystem() { return m_typeSystem; }
 	TypeSystem const& typeSystem() const { return m_typeSystem; }
 
+	bool isFixedTypeVar(Type const& _typeVar) const;
+	bool isGenericTypeVar(Type const& _typeVar) const;
+	void fixTypeVars(std::vector<Type> const& _typeVars);
+
 private:
 	TypeEnvironment(TypeEnvironment&& _env):
 		m_typeSystem(_env.m_typeSystem),
@@ -83,7 +87,15 @@ private:
 	[[nodiscard]] std::vector<TypeEnvironment::UnificationFailure> instantiate(TypeVariable _variable, Type _type);
 
 	TypeSystem& m_typeSystem;
+
+	/// For each @a TypeVariable (identified by its index) stores the type is has been successfully
+	/// unified with. Used for type resolution. Note that @a Type may itself be a type variable
+	/// or may contain type variables so resolution must be recursive.
 	std::map<size_t, Type> m_typeVariables;
+
+	/// Type variables marked as fixed free type variables (as opposed to generic type variables).
+	/// Identified by their indices.
+	std::set<size_t> m_fixedTypeVariables;
 };
 
 class TypeSystem
