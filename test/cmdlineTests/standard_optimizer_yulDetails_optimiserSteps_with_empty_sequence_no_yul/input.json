@@ -1,0 +1,16 @@
+{
+  	"language": "Solidity",
+  	"sources": {
+		"A": {"urls": ["standard_optimizer_yulDetails_optimiserSteps_with_empty_sequence_no_yul/in.sol"]}
+  	},
+  	"settings": {
+		"optimizer": {
+	  		"details": {
+				"yul": false,
+				"yulDetails": {
+		  			"optimizerSteps": ":"
+				}
+	  		}
+		}
+  	}
+}

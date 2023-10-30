@@ -4,7 +4,8 @@ Language Features:
 
 
 Compiler Features:
-
+ * Commandline Interface: An empty ``--yul-optimizations`` sequence can now be always provided.
+ * Standard JSON Interface: An empty ``optimizerSteps`` sequence can now always be provided.
 
 Bugfixes:
 

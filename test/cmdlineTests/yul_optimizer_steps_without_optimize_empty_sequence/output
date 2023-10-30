@@ -1,0 +1,133 @@
+
+======= yul_optimizer_steps_without_optimize_empty_sequence/input.sol:C =======
+Optimized IR:
+/// @use-src 0:"yul_optimizer_steps_without_optimize_empty_sequence/input.sol"
+object "C_28" {
+    code {
+        {
+            /// @src 0:60:410  "contract C..."
+            mstore(64, memoryguard(0x80))
+            if callvalue()
+            {
+                revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+            }
+            constructor_C()
+            let _1 := allocate_unbounded()
+            codecopy(_1, dataoffset("C_28_deployed"), datasize("C_28_deployed"))
+            return(_1, datasize("C_28_deployed"))
+        }
+        function allocate_unbounded() -> memPtr
+        { memPtr := mload(64) }
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+        { revert(0, 0) }
+        /// @ast-id 5 @src 0:77:93  "constructor() {}"
+        function constructor_C()
+        { }
+    }
+    /// @use-src 0:"yul_optimizer_steps_without_optimize_empty_sequence/input.sol"
+    object "C_28_deployed" {
+        code {
+            {
+                /// @src 0:60:410  "contract C..."
+                mstore(64, memoryguard(0x80))
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let selector := shift_right_unsigned(calldataload(0))
+                    switch selector
+                    case 0xc2985578 { external_fun_foo() }
+                    default { }
+                }
+                revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            }
+            function shift_right_unsigned(value) -> newValue
+            { newValue := shr(224, value) }
+            function allocate_unbounded() -> memPtr
+            { memPtr := mload(64) }
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+            { revert(0, 0) }
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b()
+            { revert(0, 0) }
+            function abi_decode(headStart, dataEnd)
+            {
+                if slt(sub(dataEnd, headStart), 0)
+                {
+                    revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b()
+                }
+            }
+            function cleanup_bool(value) -> cleaned
+            {
+                cleaned := iszero(iszero(value))
+            }
+            function abi_encode_bool_to_bool(value, pos)
+            {
+                mstore(pos, cleanup_bool(value))
+            }
+            function abi_encode_bool(headStart, value0) -> tail
+            {
+                tail := add(headStart, 32)
+                abi_encode_bool_to_bool(value0, add(headStart, 0))
+            }
+            function external_fun_foo()
+            {
+                if callvalue()
+                {
+                    revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb()
+                }
+                abi_decode(4, calldatasize())
+                let ret := fun_foo()
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_bool(memPos, ret)
+                return(memPos, sub(memEnd, memPos))
+            }
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+            { revert(0, 0) }
+            function zero_value_for_split_bool() -> ret
+            { ret := 0 }
+            function cleanup_rational_by(value) -> cleaned
+            { cleaned := value }
+            function cleanup_uint256(value) -> cleaned
+            { cleaned := value }
+            function identity(value) -> ret
+            { ret := value }
+            function convert_rational_by_to_uint256(value) -> converted
+            {
+                converted := cleanup_uint256(identity(cleanup_rational_by(value)))
+            }
+            /// @ast-id 27 @src 0:99:408  "function foo() public pure returns (bool)..."
+            function fun_foo() -> var
+            {
+                /// @src 0:135:139  "bool"
+                let zero_bool := zero_value_for_split_bool()
+                var := zero_bool
+                /// @src 0:332:335  "100"
+                let expr := 0x64
+                /// @src 0:323:335  "uint a = 100"
+                let var_a := convert_rational_by_to_uint256(expr)
+                /// @src 0:354:355  "a"
+                let _1 := var_a
+                let expr_1 := _1
+                /// @src 0:345:355  "uint b = a"
+                let var_b := expr_1
+                /// @src 0:374:375  "a"
+                let _2 := var_a
+                let expr_2 := _2
+                /// @src 0:365:375  "uint c = a"
+                let var_c := expr_2
+                /// @src 0:393:394  "a"
+                let _3 := var_a
+                let expr_3 := _3
+                /// @src 0:398:401  "100"
+                let expr_4 := 0x64
+                /// @src 0:393:401  "a == 100"
+                let expr_5 := eq(cleanup_uint256(expr_3), convert_rational_by_to_uint256(expr_4))
+                /// @src 0:386:401  "return a == 100"
+                var := expr_5
+                leave
+            }
+        }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}
+
+Metadata:
+{"compiler":{"version": "<VERSION REMOVED>"},"language":"Solidity","output":{"abi":[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"foo","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"pure","type":"function"}],"devdoc":{"kind":"dev","methods":{},"version":1},"userdoc":{"kind":"user","methods":{},"version":1}},"settings":{"compilationTarget":{"yul_optimizer_steps_without_optimize_empty_sequence/input.sol":"C"},"evmVersion":"shanghai","libraries":{},"metadata":{"bytecodeHash":"ipfs"},"optimizer":{"details":{"constantOptimizer":false,"cse":false,"deduplicate":false,"inliner":false,"jumpdestRemover":true,"orderLiterals":false,"peephole":true,"simpleCounterForLoopUncheckedIncrement":true,"yul":false,"yulDetails":{"optimizerSteps":":"}},"runs":200},"remappings":[]},"sources":{"yul_optimizer_steps_without_optimize_empty_sequence/input.sol":{"keccak256":"0x3fc910e345ce1ee62bfa6b0f66931ee632c08265b25b6139cfbbfe4d2f8d5dd8","license":"GPL-3.0","urls":["bzz-raw://e557e9ad2c2e420a669c06ae456b0b790d77d2d6d492cd8540e6b244388a5140","dweb:/ipfs/QmaNiZmC2Mo3YxGiehs1n3dVTjZwD7FguX7EUtpeshMVuR"]}},"version":1}

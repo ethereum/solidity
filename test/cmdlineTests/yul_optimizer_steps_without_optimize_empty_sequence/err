@@ -1,0 +1,11 @@
+Warning: Unused local variable.
+  --> yul_optimizer_steps_without_optimize_empty_sequence/input.sol:13:9:
+   |
+13 |         uint b = a;
+   |         ^^^^^^
+
+Warning: Unused local variable.
+  --> yul_optimizer_steps_without_optimize_empty_sequence/input.sol:14:9:
+   |
+14 |         uint c = a;
+   |         ^^^^^^

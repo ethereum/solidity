@@ -30,6 +30,11 @@ for a stand-alone Yul mode.
     The `peephole optimizer <https://en.wikipedia.org/wiki/Peephole_optimization>`_ is always
     enabled by default and can only be turned off via the :ref:`Standard JSON <compiler-api>`.
 
+.. note::
+    An empty optimizer sequence is accepted even without ``--optimize`` in order to fully disable
+    the user-supplied portion of the Yul :ref:`optimizer sequence <selecting-optimizations>`, as by default,
+    even when the optimizer is not turned on, the :ref:`unused pruner <unused-pruner>` step will be run.
+
 You can find more details on both optimizer modules and their optimization steps below.
 
 Benefits of Optimizing Solidity Code
@@ -329,6 +334,7 @@ Abbreviation Full name
 Some steps depend on properties ensured by ``BlockFlattener``, ``FunctionGrouper``, ``ForLoopInitRewriter``.
 For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
 
+.. _selecting-optimizations:
 
 Selecting Optimizations
 -----------------------

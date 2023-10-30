@@ -76,6 +76,10 @@ public:
 	/// Ensures that specified sequence of step abbreviations is well-formed and can be executed.
 	/// @throw OptimizerException if the sequence is invalid
 	static void validateSequence(std::string_view _stepAbbreviations);
+	/// Check whether the provided sequence is empty provided that the allowed characters are
+	/// whitespace, newline and :
+	static bool isEmptyOptimizerSequence(std::string const& _sequence);
+
 
 	void runSequence(std::vector<std::string> const& _steps, Block& _ast);
 	void runSequence(std::string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable = false);
