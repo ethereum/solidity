@@ -166,6 +166,13 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	return false;
 }
 
+void TypeInference::endVisit(FunctionDefinition const& _functionDefinition)
+{
+	solAssert(m_expressionContext == ExpressionContext::Term);
+
+	m_env->fixTypeVars(TypeEnvironmentHelpers{*m_env}.typeVars(type(_functionDefinition)));
+}
+
 void TypeInference::endVisit(Return const& _return)
 {
 	solAssert(m_currentFunctionType);
@@ -204,6 +211,8 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
 	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
 	Type typeVar = m_typeSystem.typeClassVariable(typeClass);
+	unify(type(_typeClassDefinition.typeVariable()), typeVar, _typeClassDefinition.location());
+
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
 	for (auto subNode: _typeClassDefinition.subNodes())
@@ -235,7 +244,6 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 			m_errorReporter.typeError(1807_error, _typeClassDefinition.location(), "Function " + functionName + " depends on invalid type variable.");
 	}
 
-	unify(type(_typeClassDefinition.typeVariable()), m_typeSystem.freshTypeVariable({{typeClass}}), _typeClassDefinition.location());
 	for (auto instantiation: m_analysis.annotation<TypeRegistration>(_typeClassDefinition).instantiations | ranges::views::values)
 		// TODO: recursion-safety? Order of instantiation?
 		instantiation->accept(*this);
@@ -663,6 +671,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			}) | ranges::to<std::vector<Sort>>;
 		}
 	}
+	m_env->fixTypeVars(arguments);
 
 	Type instanceType{TypeConstant{*typeConstructor, arguments}};
 
@@ -682,12 +691,8 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 
 	auto const& classFunctions = annotation().typeClassFunctions.at(typeClass);
 
-	TypeEnvironment newEnv = m_env->clone();
-	if (!newEnv.unify(m_typeSystem.typeClassVariable(typeClass), instanceType).empty())
-	{
-		m_errorReporter.typeError(4686_error, _typeClassInstantiation.location(), "Unification of class and instance variable failed.");
-		return false;
-	}
+	solAssert(std::holds_alternative<TypeVariable>(m_typeSystem.typeClassVariable(typeClass)));
+	TypeVariable classVar = std::get<TypeVariable>(m_typeSystem.typeClassVariable(typeClass));
 
 	for (auto [name, classFunctionType]: classFunctions)
 	{
@@ -696,11 +701,22 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			m_errorReporter.typeError(6948_error, _typeClassInstantiation.location(), "Missing function: " + name);
 			continue;
 		}
+		Type instantiatedClassFunctionType = TypeEnvironmentHelpers{*m_env}.substitute(classFunctionType, classVar, instanceType);
+
 		Type instanceFunctionType = functionTypes.at(name);
 		functionTypes.erase(name);
 
-		if (!newEnv.typeEquals(instanceFunctionType, classFunctionType))
-			m_errorReporter.typeError(7428_error, _typeClassInstantiation.location(), "Type mismatch for function " + name + " " + TypeEnvironmentHelpers{newEnv}.typeToString(instanceFunctionType) + " != " + TypeEnvironmentHelpers{newEnv}.typeToString(classFunctionType));
+		if (!m_env->typeEquals(instanceFunctionType, instantiatedClassFunctionType))
+			m_errorReporter.typeError(
+				7428_error,
+				_typeClassInstantiation.location(),
+				fmt::format(
+					"Instantiation function '{}' does not match the declaration in the type class ({} != {}).",
+					name,
+					TypeEnvironmentHelpers{*m_env}.typeToString(instanceFunctionType),
+					TypeEnvironmentHelpers{*m_env}.typeToString(instantiatedClassFunctionType)
+				)
+			);
 	}
 
 	if (!functionTypes.empty())
