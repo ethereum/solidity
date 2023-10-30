@@ -56,6 +56,8 @@ struct TypeEnvironmentHelpers
 	std::string canonicalTypeName(Type _type) const;
 	std::vector<Type> typeVars(Type _type) const;
 
+	bool hasGenericTypeVars(Type const& _type) const;
+
 	Type substitute(Type const& _type, Type const& _partToReplace, Type const& _replacement) const;
 };
 
