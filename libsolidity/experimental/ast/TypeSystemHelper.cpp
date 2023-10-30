@@ -416,7 +416,7 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 			while (index /= 26)
 				varName += static_cast<char>('a' + (index%26));
 			reverse(varName.begin(), varName.end());
-			stream << '\'' << varName;
+			stream << (env.isFixedTypeVar(_type) ? "'" : "?") << varName;
 			switch (_type.sort().classes.size())
 			{
 			case 0:
