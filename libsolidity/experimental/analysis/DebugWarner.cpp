@@ -39,19 +39,12 @@ bool DebugWarner::analyze(ASTNode const& _astRoot)
 
 bool DebugWarner::visitNode(ASTNode const& _node)
 {
-	auto const& typeInferenceAnnotation = m_analysis.annotation<TypeInference>(_node);
-	if (typeInferenceAnnotation.type)
-	{
-		Type type = *typeInferenceAnnotation.type;
-		Sort sort = m_analysis.typeSystem().env().sort(type);
-		std::string sortString;
-		if (sort.classes.size() != 1 || *sort.classes.begin() != m_analysis.typeSystem().primitiveClass(PrimitiveClass::Type))
-			sortString = ":" + TypeSystemHelpers{m_analysis.typeSystem()}.sortToString(m_analysis.typeSystem().env().sort(type));
+	std::optional<Type> const& inferredType = m_analysis.annotation<TypeInference>(_node).type;
+	if (inferredType.has_value())
 		m_errorReporter.info(
 			4164_error,
 			_node.location(),
-			"Inferred type: " + TypeEnvironmentHelpers{m_analysis.typeSystem().env()}.typeToString(type) + sortString
+			"Inferred type: " + TypeEnvironmentHelpers{m_analysis.typeSystem().env()}.typeToString(*inferredType)
 		);
-	}
 	return true;
 }
