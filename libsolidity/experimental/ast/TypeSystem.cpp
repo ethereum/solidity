@@ -127,7 +127,7 @@ TypeSystem::TypeSystem()
 				solAssert(false, _error);
 			},
 			[](TypeClass _class) -> TypeClass { return _class; }
-		}, declareTypeClass(freshVariable({}), _name, nullptr));
+		}, declareTypeClass(_name, nullptr, true /* _primitive */));
 	};
 
 	m_primitiveTypeClasses.emplace(PrimitiveClass::Type, declarePrimitiveClass("type"));
@@ -274,20 +274,18 @@ TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::strin
 	return constructor;
 }
 
-std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(Type _typeVariable, std::string _name, Declaration const* _declaration)
+std::variant<TypeClass, std::string> TypeSystem::declareTypeClass(std::string _name, Declaration const* _declaration, bool _primitive)
 {
-	TypeVariable const* typeVariable = std::get_if<TypeVariable>(&_typeVariable);
-	if (!typeVariable)
-		return "Invalid type variable.";
+	TypeClass typeClass{m_typeClasses.size()};
 
-	size_t index = m_typeClasses.size();
+	Type typeVariable = (_primitive ? freshVariable({{typeClass}}) : freshTypeVariable({{typeClass}}));
+	solAssert(std::holds_alternative<TypeVariable>(typeVariable));
+
 	m_typeClasses.emplace_back(TypeClassInfo{
-		_typeVariable,
+		typeVariable,
 		_name,
 		_declaration
 	});
-	TypeClass typeClass{index};
-
 	return typeClass;
 }
 
