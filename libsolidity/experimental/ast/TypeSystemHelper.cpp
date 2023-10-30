@@ -287,9 +287,34 @@ std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) con
 	};
 	typeVarsImpl(_type, typeVarsImpl);
 	return typeVars;
-
 }
 
+experimental::Type TypeEnvironmentHelpers::substitute(
+	Type const& _type,
+	Type const& _partToReplace,
+	Type const& _replacement
+) const
+{
+	using ranges::views::transform;
+	using ranges::to;
+
+	if (env.typeEquals(_type, _partToReplace))
+		return _replacement;
+
+	auto recurse = [&](Type const& _t) { return substitute(_t, _partToReplace, _replacement); };
+
+	return visit(util::GenericVisitor{
+		[&](TypeConstant const& _typeConstant) -> Type {
+			return TypeConstant{
+				_typeConstant.constructor,
+				_typeConstant.arguments | transform(recurse) | to<std::vector<Type>>,
+			};
+		},
+		[&](auto const& _type) -> Type {
+			return _type;
+		},
+	}, env.resolve(_type));
+}
 
 std::string TypeSystemHelpers::sortToString(Sort _sort) const
 {
