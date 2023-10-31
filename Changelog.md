@@ -1,7 +1,7 @@
 ### 0.8.23 (unreleased)
 
 Language Features:
-
+ * Support the use of the `delete` operator for user-defined value types.
 
 Compiler Features:
 
