@@ -33,6 +33,7 @@ contract C {
 // EVMVersion: >=constantinople
 // compileViaYul: true
 // ----
+// UnimplementedFeatureError: No support for calling functions pointers yet.
 // Warning 2264: (0-29): Experimental features are turned on. Do not use experimental features on live deployments.
 // Info 4164: (31-61): Inferred type: void
 // Info 4164: (63-93): Inferred type: bool
