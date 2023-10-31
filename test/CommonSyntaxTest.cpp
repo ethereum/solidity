@@ -19,12 +19,17 @@
 #include <test/CommonSyntaxTest.h>
 #include <test/Common.h>
 #include <test/TestCase.h>
+
+#include <liblangutil/SourceReferenceFormatter.h>
+
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/StringUtils.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
+
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -115,15 +120,18 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 				{
 					assert(static_cast<size_t>(error.locationStart) <= source.length());
 					assert(static_cast<size_t>(error.locationEnd) <= source.length());
-					bool isWarning = error.type == "Warning";
 					for (int i = error.locationStart; i < error.locationEnd; i++)
-						if (isWarning)
-						{
-							if (sourceFormatting[static_cast<size_t>(i)] == util::formatting::RESET)
-								sourceFormatting[static_cast<size_t>(i)] = util::formatting::ORANGE_BACKGROUND_256;
-						}
-						else
-							sourceFormatting[static_cast<size_t>(i)] = util::formatting::RED_BACKGROUND;
+					{
+						char const*& cellFormat = sourceFormatting[static_cast<size_t>(i)];
+						char const* infoBgColor = SourceReferenceFormatter::errorHighlightColor(Error::Severity::Info);
+
+						if (
+							(error.type != Error::Type::Warning && error.type != Error::Type::Info) ||
+							(error.type == Error::Type::Warning && (cellFormat == RESET || cellFormat == infoBgColor)) ||
+							(error.type == Error::Type::Info && cellFormat == RESET)
+						)
+							cellFormat = SourceReferenceFormatter::errorHighlightColor(Error::errorSeverity(error.type));
+					}
 				}
 
 			_stream << _linePrefix << sourceFormatting.front() << source.front();
@@ -190,8 +198,12 @@ void CommonSyntaxTest::printErrorList(
 		for (auto const& error: _errorList)
 		{
 			{
-				util::AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
-				_stream << _linePrefix << error.type;
+				util::AnsiColorized scope(
+					_stream,
+					_formatted,
+					{BOLD, SourceReferenceFormatter::errorTextColor(Error::errorSeverity(error.type))}
+				);
+				_stream << _linePrefix << Error::formatErrorType(error.type);
 				if (error.errorId.has_value())
 					_stream << ' ' << error.errorId->error;
 				_stream << ": ";
@@ -244,7 +256,11 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		auto typeBegin = it;
 		while (it != line.end() && isalpha(*it, locale::classic()))
 			++it;
-		string errorType(typeBegin, it);
+
+		string errorTypeStr(typeBegin, it);
+		optional<Error::Type> errorType = Error::parseErrorType(errorTypeStr);
+		if (!errorType.has_value())
+			BOOST_THROW_EXCEPTION(runtime_error("Invalid error type: " + errorTypeStr));
 
 		skipWhitespace(it, line.end());
 
@@ -281,7 +297,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 
 		string errorMessage(it, line.end());
 		expectations.emplace_back(SyntaxTestError{
-			std::move(errorType),
+			errorType.value(),
 			std::move(errorId),
 			std::move(errorMessage),
 			std::move(sourceName),

@@ -1,0 +1,9 @@
+{
+	"language": "Yul",
+	"sources": {
+		"input.yul": {"content": "{}"}
+	},
+	"settings": {
+		"evmVersion": "byzantium"
+	}
+}

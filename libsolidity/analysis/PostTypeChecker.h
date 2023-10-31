@@ -97,6 +97,9 @@ private:
 	bool visit(ModifierInvocation const& _modifierInvocation) override;
 	void endVisit(ModifierInvocation const& _modifierInvocation) override;
 
+	bool visit(ForStatement const& _forStatement) override;
+	void endVisit(ForStatement const& _forStatement) override;
+
 	template <class T>
 	bool callVisit(T const& _node)
 	{
