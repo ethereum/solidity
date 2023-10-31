@@ -299,6 +299,7 @@ bool IRGeneratorForStatements::visit(ElementaryTypeNameExpression const&)
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
 	Type functionType = type(_functionCall.expression());
+	solUnimplementedAssert(m_expressionDeclaration.count(&_functionCall.expression()) != 0, "No support for calling functions pointers yet.");
 	auto declaration = m_expressionDeclaration.at(&_functionCall.expression());
 	if (auto builtin = std::get_if<Builtins>(&declaration))
 	{
