@@ -16,4 +16,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6756: (271-276): User-defined operators are not yet supported by SMTChecker. This invocation of operator / has been ignored, which may lead to incorrect results.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

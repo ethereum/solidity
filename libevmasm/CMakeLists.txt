@@ -1,8 +1,11 @@
 set(sources
+	AbstractAssemblyStack.h
 	Assembly.cpp
 	Assembly.h
 	AssemblyItem.cpp
 	AssemblyItem.h
+	EVMAssemblyStack.cpp
+	EVMAssemblyStack.h
 	BlockDeduplicator.cpp
 	BlockDeduplicator.h
 	CommonSubexpressionEliminator.cpp

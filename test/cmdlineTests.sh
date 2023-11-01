@@ -240,9 +240,9 @@ EOF
         sed -i.bak -e 's/\(\\"version\\":[ ]*\\"\)[^"\\]*\(\\"\)/\1<VERSION REMOVED>\2/' "$stdout_path"
         rm "$stdout_path.bak"
     else
-        sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+        sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./,+1d' "$stderr_path"
         sed -i.bak -e '/^Compiler run successful, no output requested\.$/d' "$stderr_path"
-        sed -i.bak -e '/^Warning (3805): This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+        sed -i.bak -e '/^Warning (3805): This is a pre-release compiler version, please do not use it in production./,+1d' "$stderr_path"
         sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
         sed -i.bak -e 's/\(Unimplemented feature error.* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
