@@ -299,6 +299,7 @@ bool IRGeneratorForStatements::visit(ElementaryTypeNameExpression const&)
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
 	Type functionType = type(_functionCall.expression());
+	solUnimplementedAssert(m_expressionDeclaration.count(&_functionCall.expression()) != 0, "No support for calling functions pointers yet.");
 	auto declaration = m_expressionDeclaration.at(&_functionCall.expression());
 	if (auto builtin = std::get_if<Builtins>(&declaration))
 	{
@@ -322,7 +323,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	functionType = m_context.env->resolveRecursive(functionType);
 	m_context.enqueueFunctionDefinition(functionDefinition, functionType);
 	// TODO: account for return stack size
-	m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::function(*m_context.env, *functionDefinition, functionType) << "(";
+	solAssert(!functionDefinition->returnParameterList());
+	if (functionDefinition->experimentalReturnExpression())
+		m_code << "let " << IRNames::localVariable(_functionCall) << " := ";
+	m_code << IRNames::function(*m_context.env, *functionDefinition, functionType) << "(";
 	auto const& arguments = _functionCall.arguments();
 	if (arguments.size() > 1)
 		for (auto arg: arguments | ranges::views::drop_last(1))
