@@ -98,7 +98,7 @@ of votes.
                 "Only chairperson can give right to vote."
             );
             require(
-                !voters[voter].voted,
+                voters[voter].voted == false,
                 "The voter already voted."
             );
             require(voters[voter].weight == 0);
