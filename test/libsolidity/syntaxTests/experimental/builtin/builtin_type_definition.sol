@@ -84,9 +84,9 @@ contract C {
 // Info 4164: (525-529): Inferred type: word
 // Info 4164: (540-553): Inferred type: bool
 // Info 4164: (540-550): Inferred type: (bool, word) -> bool
-// Info 4164: (540-544): Inferred type: ('cb:type, 'cc:type)
+// Info 4164: (540-544): Inferred type: ('bl:type, 'bm:type)
 // Info 4164: (551-552): Inferred type: (bool, word)
 // Info 4164: (563-577): Inferred type: word
 // Info 4164: (563-574): Inferred type: (bool, word) -> word
-// Info 4164: (563-567): Inferred type: ('ci:type, 'cj:type)
+// Info 4164: (563-567): Inferred type: ('bq:type, 'br:type)
 // Info 4164: (575-576): Inferred type: (bool, word)
