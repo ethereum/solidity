@@ -110,8 +110,8 @@ private:
 	GlobalAnnotation& annotation();
 
 	void unify(Type _a, Type _b, langutil::SourceLocation _location = {});
-	void unifyGeneralized(Type _type, Type _scheme, std::vector<Type> _monomorphicTypes, langutil::SourceLocation _location = {});
-	Type polymorphicInstance(Type _scheme, langutil::SourceLocation _location = {});
+	/// Creates a polymorphic instance of a global type scheme
+	Type polymorphicInstance(Type const& _scheme);
 	Type memberType(Type _type, std::string _memberName, langutil::SourceLocation _location = {});
 	enum class ExpressionContext { Term, Type, Sort };
 	Type handleIdentifierByReferencedDeclaration(langutil::SourceLocation _location, Declaration const& _declaration);
