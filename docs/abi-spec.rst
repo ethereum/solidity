@@ -252,7 +252,21 @@ Given the contract:
     }
 
 
-Thus, for our ``Foo`` example if we wanted to call ``baz`` with the parameters ``69`` and
+Thus, for our ``Foo`` example, if we wanted to call ``bar`` with the argument ``["abc", "def"]``, we would pass 68 bytes total, broken down into:
+
+- ``0xfce353f6``: the Method ID. This is derived from the signature ``bar(bytes3[2])``.
+- ``0x6162630000000000000000000000000000000000000000000000000000000000``: the first part of the first
+  parameter, a ``bytes3`` value ``"abc"`` (left-aligned).
+- ``0x6465660000000000000000000000000000000000000000000000000000000000``: the second part of the first
+  parameter, a ``bytes3`` value ``"def"`` (left-aligned).
+
+In total:
+
+.. code-block:: none
+
+    0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
+
+If we wanted to call ``baz`` with the parameters ``69`` and
 ``true``, we would pass 68 bytes total, which can be broken down into:
 
 - ``0xcdcd77c0``: the Method ID. This is derived as the first 4 bytes of the Keccak hash of
@@ -270,20 +284,6 @@ In total:
 
 It returns a single ``bool``. If, for example, it were to return ``false``, its output would be
 the single byte array ``0x0000000000000000000000000000000000000000000000000000000000000000``, a single bool.
-
-If we wanted to call ``bar`` with the argument ``["abc", "def"]``, we would pass 68 bytes total, broken down into:
-
-- ``0xfce353f6``: the Method ID. This is derived from the signature ``bar(bytes3[2])``.
-- ``0x6162630000000000000000000000000000000000000000000000000000000000``: the first part of the first
-  parameter, a ``bytes3`` value ``"abc"`` (left-aligned).
-- ``0x6465660000000000000000000000000000000000000000000000000000000000``: the second part of the first
-  parameter, a ``bytes3`` value ``"def"`` (left-aligned).
-
-In total:
-
-.. code-block:: none
-
-    0xfce353f661626300000000000000000000000000000000000000000000000000000000006465660000000000000000000000000000000000000000000000000000000000
 
 If we wanted to call ``sam`` with the arguments ``"dave"``, ``true`` and ``[1,2,3]``, we would
 pass 292 bytes total, broken down into:
