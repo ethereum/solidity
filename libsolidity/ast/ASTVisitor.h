@@ -116,6 +116,7 @@ public:
 	virtual bool visit(TypeDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(TypeClassName& _node) { return visitNode(_node); }
 	virtual bool visit(Builtin& _node) { return visitNode(_node); }
+	virtual bool visit(ForAllQuantifier& _node) { return visitNode(_node); }
 	///  @}
 
 	virtual void endVisit(SourceUnit& _node) { endVisitNode(_node); }
@@ -180,6 +181,7 @@ public:
 	virtual void endVisit(TypeDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(TypeClassName& _node) { endVisitNode(_node); }
 	virtual void endVisit(Builtin& _node) { endVisitNode(_node); }
+	virtual void endVisit(ForAllQuantifier& _node) { endVisitNode(_node); }
 	///  @}
 
 protected:
@@ -266,6 +268,7 @@ public:
 	virtual bool visit(TypeDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(TypeClassName const& _node) { return visitNode(_node); }
 	virtual bool visit(Builtin const& _node) { return visitNode(_node); }
+	virtual bool visit(ForAllQuantifier const& _node) { return visitNode(_node); }
 	///  @}
 
 	virtual void endVisit(SourceUnit const& _node) { endVisitNode(_node); }
@@ -330,6 +333,7 @@ public:
 	virtual void endVisit(TypeDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(TypeClassName const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Builtin const& _node) { endVisitNode(_node); }
+	virtual void endVisit(ForAllQuantifier const& _node) { endVisitNode(_node); }
 	///  @}
 
 protected:
