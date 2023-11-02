@@ -137,6 +137,9 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 			case Token::Function:
 				nodes.push_back(parseFunctionDefinition(true));
 				break;
+			case Token::ForAll:
+				nodes.push_back(parseQuantifiedFunctionDefinition());
+				break;
 			case Token::Event:
 				nodes.push_back(parseEventDefinition());
 				break;
@@ -625,6 +628,27 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 			result.returnParameters = createEmptyParameterList();
 	}
 	return result;
+}
+
+ASTPointer<ForAllQuantifier> Parser::parseQuantifiedFunctionDefinition()
+{
+	solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+
+	expectToken(Token::ForAll);
+	ASTPointer<ParameterList> typeVariableDeclarations = parseParameterList();
+	nodeFactory.markEndPosition();
+
+	if (m_scanner->currentToken() != Token::Function)
+		fatalParserError(5709_error, "Expected a function definition.");
+
+	ASTPointer<FunctionDefinition> quantifiedFunction = parseFunctionDefinition(true /* _freeFunction */, true /* _allowBody */);
+
+	return nodeFactory.createNode<ForAllQuantifier>(
+		std::move(typeVariableDeclarations),
+		std::move(quantifiedFunction)
+	);
 }
 
 ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _freeFunction, bool _allowBody)

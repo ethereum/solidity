@@ -129,6 +129,19 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 	return !m_errorReporter.hasErrors();
 }
 
+bool TypeInference::visit(ForAllQuantifier const& _quantifier)
+{
+	solAssert(m_expressionContext == ExpressionContext::Term);
+
+	{
+		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
+		_quantifier.typeVariableDeclarations().accept(*this);
+	}
+
+	_quantifier.quantifiedDeclaration().accept(*this);
+	return false;
+}
+
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
 	solAssert(m_expressionContext == ExpressionContext::Term);
