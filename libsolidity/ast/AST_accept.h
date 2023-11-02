@@ -1140,6 +1140,26 @@ void Builtin::accept(ASTConstVisitor& _visitor) const
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
 }
+
+void ForAllQuantifier::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_typeVariableDeclarations->accept(_visitor);
+		m_quantifiedDeclaration->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void ForAllQuantifier::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_typeVariableDeclarations->accept(_visitor);
+		m_quantifiedDeclaration->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
 /// @}
 
 }

@@ -350,6 +350,10 @@ struct FunctionCallAnnotation: ExpressionAnnotation
 struct TypeClassDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 };
+
+struct ForAllQuantifierAnnotation: StatementAnnotation, ScopableAnnotation
+{
+};
 /// @}
 
 }
