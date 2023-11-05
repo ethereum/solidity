@@ -459,17 +459,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	// User-defined operators are essentially function calls.
 	if (*_op.annotation().userDefinedFunction)
-	{
-		// TODO: Implement user-defined operators properly.
-		m_unsupportedErrors.warning(
-			6156_error,
-			_op.location(),
-			"User-defined operators are not yet supported by SMTChecker. "s +
-			"This invocation of operator " + TokenTraits::friendlyName(_op.getOperator()) +
-			" has been ignored, which may lead to incorrect results."
-		);
 		return;
-	}
 
 	auto const* subExpr = innermostTuple(_op.subExpression());
 	auto type = _op.annotation().type;
@@ -561,17 +551,7 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 
 	// User-defined operators are essentially function calls.
 	if (*_op.annotation().userDefinedFunction)
-	{
-		// TODO: Implement user-defined operators properly.
-		m_unsupportedErrors.warning(
-			6756_error,
-			_op.location(),
-			"User-defined operators are not yet supported by SMTChecker. "s +
-			"This invocation of operator " + TokenTraits::friendlyName(_op.getOperator()) +
-			" has been ignored, which may lead to incorrect results."
-		);
 		return;
-	}
 
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
@@ -3141,47 +3121,42 @@ std::set<SourceUnit const*, ASTNode::CompareByID> SMTEncoder::sourceDependencies
 	return sources;
 }
 
-void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contextContract)
+void SMTEncoder::createReturnedExpressions(FunctionDefinition const* _funDef, Expression const& _callStackExpr)
 {
-	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), _contextContract);
-	if (!funDef)
+	if (!_funDef)
 		return;
 
-	auto const& returnParams = funDef->returnParameters();
+	auto const& returnParams = _funDef->returnParameters();
 	for (auto param: returnParams)
 		createVariable(*param);
 	auto returnValues = applyMap(returnParams, [this](auto const& param) -> std::optional<smtutil::Expression> {
 		solAssert(param && m_context.knownVariable(*param), "");
 		return currentValue(*param);
 	});
-	defineExpr(_funCall, returnValues);
+	defineExpr(_callStackExpr, returnValues);
 }
 
-std::vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract)
+std::vector<smtutil::Expression> SMTEncoder::symbolicArguments(
+	std::vector<ASTPointer<VariableDeclaration>> const& _funParameters,
+	std::vector<Expression const*> const& _arguments,
+	std::optional<Expression const*> _boundArgumentCall
+)
 {
-	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), _contextContract);
-	solAssert(funDef, "");
-
 	std::vector<smtutil::Expression> args;
-	Expression const* calledExpr = &_funCall.expression();
-	auto funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
-	solAssert(funType, "");
-
-	std::vector<ASTPointer<Expression const>> arguments = _funCall.sortedArguments();
-	auto functionParams = funDef->parameters();
 	unsigned firstParam = 0;
-	if (funType->hasBoundFirstArgument())
+	if (_boundArgumentCall)
 	{
-		calledExpr = innermostTuple(*calledExpr);
+		Expression const* calledExpr = innermostTuple(*_boundArgumentCall.value());
 		auto const& attachedFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 		solAssert(attachedFunction, "");
-		args.push_back(expr(attachedFunction->expression(), functionParams.front()->type()));
+		args.push_back(expr(attachedFunction->expression(), _funParameters.front()->type()));
 		firstParam = 1;
 	}
 
-	solAssert((arguments.size() + firstParam) == functionParams.size(), "");
-	for (unsigned i = 0; i < arguments.size(); ++i)
-		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
+	solAssert((_arguments.size() + firstParam) == _funParameters.size(), "");
+
+	for (unsigned i = 0; i < _arguments.size(); ++i)
+		args.push_back(expr(*_arguments.at(i), _funParameters.at(i + firstParam)->type()));
 
 	return args;
 }

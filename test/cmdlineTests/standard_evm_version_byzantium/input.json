@@ -1,0 +1,9 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"input.sol": {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *;"}
+	},
+	"settings": {
+		"evmVersion": "byzantium"
+	}
+}

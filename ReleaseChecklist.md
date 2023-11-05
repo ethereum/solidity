@@ -2,8 +2,7 @@
 
 ### Requirements
  - [ ] GitHub account with access to [solidity](https://github.com/ethereum/solidity), [solc-js](https://github.com/ethereum/solc-js),
-       [solc-bin](https://github.com/ethereum/solc-bin), [homebrew-ethereum](https://github.com/ethereum/homebrew-ethereum),
-       [solidity-website](https://github.com/ethereum/solidity-website).
+       [solc-bin](https://github.com/ethereum/solc-bin), [solidity-website](https://github.com/ethereum/solidity-website).
  - [ ] DockerHub account with push rights to the [``solc`` image](https://hub.docker.com/r/ethereum/solc).
  - [ ] Launchpad (Ubuntu One) account with a membership in the ["Ethereum" team](https://launchpad.net/~ethereum) and
        a gnupg key for your email in the ``ethereum.org`` domain (has to be version 1, gpg2 won't work).
@@ -21,7 +20,6 @@ At least a day before the release:
  - [ ] Rerun CI on the top commits of main branches in all repositories that do not have daily activity by creating a test branch or PR:
       - [ ] ``solc-js``
       - [ ] ``solc-bin`` (make sure the bytecode comparison check did run)
-      - [ ] ``homebrew-ethereum``
  - [ ] (Optional) Create a prerelease in our Ubuntu PPA by following the steps in the PPA section below on ``develop`` rather than on a tag.
        This is recommended especially when dealing with PPA for the first time, when we add a new Ubuntu version or when the PPA scripts were modified in this release cycle.
  - [ ] Verify that the release tarball of ``solc-js`` works.
@@ -58,6 +56,7 @@ At least a day before the release:
        Remove different variants of the same name manually before using the output.
  - [ ] Check that all tests on the latest commit in ``develop`` are green.
  - [ ] Click the ``Publish release`` button on the release page, creating the tag.
+       **Important: Must not be done before all the PRs, including changelog cleanup and date, are merged.**
  - [ ] Wait for the CI runs on the tag itself.
 
 ### Upload Release Artifacts and Publish Binaries
@@ -73,7 +72,6 @@ At least a day before the release:
 
 ### Homebrew and MacOS
  - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in the [``solidity`` formula in Homebrew core repository](https://github.com/Homebrew/homebrew-core/blob/master/Formula/solidity.rb).
- - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in [our custom ``solidity`` Homebrew formula](https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb).
 
 ### Docker
  - [ ] Run ``./scripts/docker_deploy_manual.sh v$VERSION``.

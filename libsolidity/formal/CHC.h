@@ -111,6 +111,8 @@ private:
 	bool visit(ForStatement const&) override;
 	void endVisit(ForStatement const&) override;
 	void endVisit(FunctionCall const& _node) override;
+	void endVisit(BinaryOperation const& _op) override;
+	void endVisit(UnaryOperation const& _op) override;
 	void endVisit(Break const& _node) override;
 	void endVisit(Continue const& _node) override;
 	void endVisit(IndexRangeAccess const& _node) override;
@@ -127,6 +129,13 @@ private:
 	void visitAddMulMod(FunctionCall const& _funCall) override;
 	void visitDeployment(FunctionCall const& _funCall);
 	void internalFunctionCall(FunctionCall const& _funCall);
+	void internalFunctionCall(
+		FunctionDefinition const* _funDef,
+		std::optional<Expression const*> _boundArgumentCall,
+		FunctionType const* _funType,
+		std::vector<Expression const*> const& _arguments,
+		smtutil::Expression _contractAddressValue
+	);
 	void externalFunctionCall(FunctionCall const& _funCall);
 	void externalFunctionCallToTrustedCode(FunctionCall const& _funCall);
 	void addNondetCalls(ContractDefinition const& _contract);
@@ -152,6 +161,7 @@ private:
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
 	void setCurrentBlock(Predicate const& _block);
 	std::set<unsigned> transactionVerificationTargetsIds(ASTNode const* _txRoot);
+	bool usesStaticCall(FunctionDefinition const* _funDef, FunctionType const* _funType);
 	bool usesStaticCall(FunctionCall const& _funCall);
 	//@}
 
@@ -246,7 +256,13 @@ private:
 	/// @returns a predicate application after checking the predicate's type.
 	smtutil::Expression predicate(Predicate const& _block);
 	/// @returns the summary predicate for the called function.
-	smtutil::Expression predicate(FunctionCall const& _funCall);
+	smtutil::Expression predicate(
+		FunctionDefinition const* _funDef,
+		std::optional<Expression const*> _boundArgumentCall,
+		FunctionType const* _funType,
+		std::vector<Expression const*> _arguments,
+		smtutil::Expression _contractAddressValue
+	);
 	/// @returns a predicate that defines a contract initializer for _contract in the context of _contractContext.
 	smtutil::Expression initializer(ContractDefinition const& _contract, ContractDefinition const& _contractContext);
 	/// @returns a predicate that defines a constructor summary.

@@ -551,6 +551,17 @@ void BMC::endVisit(UnaryOperation const& _op)
 {
 	SMTEncoder::endVisit(_op);
 
+	// User-defined operators are essentially function calls.
+	if (auto funDef = *_op.annotation().userDefinedFunction)
+	{
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.subExpression());
+		// pushCallStack and defineExpr inside createReturnedExpression should be called on the expression
+		// in case of a user-defined operator call
+		inlineFunctionCall(funDef, _op, std::nullopt, arguments);
+		return;
+	}
+
 	if (
 		_op.annotation().type->category() == Type::Category::RationalNumber ||
 		_op.annotation().type->category() == Type::Category::FixedPoint
@@ -563,6 +574,22 @@ void BMC::endVisit(UnaryOperation const& _op)
 			expr(_op),
 			&_op
 		);
+}
+
+void BMC::endVisit(BinaryOperation const& _op)
+{
+	SMTEncoder::endVisit(_op);
+
+	if (auto funDef = *_op.annotation().userDefinedFunction)
+	{
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.leftExpression());
+		arguments.push_back(&_op.rightExpression());
+
+		// pushCallStack and defineExpr inside createReturnedExpression should be called on the expression
+		// in case of a user-defined operator call
+		inlineFunctionCall(funDef, _op, std::nullopt, arguments);
+	}
 }
 
 void BMC::endVisit(FunctionCall const& _funCall)
@@ -674,15 +701,18 @@ void BMC::visitAddMulMod(FunctionCall const& _funCall)
 	SMTEncoder::visitAddMulMod(_funCall);
 }
 
-void BMC::inlineFunctionCall(FunctionCall const& _funCall)
+void BMC::inlineFunctionCall(
+	FunctionDefinition const* _funDef,
+	Expression const& _callStackExpr,
+	std::optional<Expression const*> _boundArgumentCall,
+	std::vector<Expression const*> const& _arguments
+)
 {
-	solAssert(shouldInlineFunctionCall(_funCall, currentScopeContract(), m_currentContract), "");
-	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
-	solAssert(funDef, "");
+	solAssert(_funDef, "");
 
-	if (visitedFunction(funDef))
+	if (visitedFunction(_funDef))
 	{
-		auto const& returnParams = funDef->returnParameters();
+		auto const& returnParams = _funDef->returnParameters();
 		for (auto param: returnParams)
 		{
 			m_context.newValue(*param);
@@ -691,19 +721,38 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	}
 	else
 	{
-		initializeFunctionCallParameters(*funDef, symbolicArguments(_funCall, m_currentContract));
+		initializeFunctionCallParameters(*_funDef, symbolicArguments(_funDef->parameters(), _arguments, _boundArgumentCall));
 
 		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)
-		// is that there we don't have `_funCall`.
-		pushCallStack({funDef, &_funCall});
+		// is that there we don't have `_callStackExpr`.
+		pushCallStack({_funDef, &_callStackExpr});
 		pushPathCondition(currentPathConditions());
 		auto oldChecked = std::exchange(m_checked, true);
-		funDef->accept(*this);
+		_funDef->accept(*this);
 		m_checked = oldChecked;
 		popPathCondition();
 	}
 
-	createReturnedExpressions(_funCall, m_currentContract);
+	createReturnedExpressions(_funDef, _callStackExpr);
+}
+
+void BMC::inlineFunctionCall(FunctionCall const& _funCall)
+{
+	solAssert(shouldInlineFunctionCall(_funCall, currentScopeContract(), m_currentContract), "");
+
+	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
+	Expression const* expr = &_funCall.expression();
+	auto funType = dynamic_cast<FunctionType const*>(expr->annotation().type);
+	std::optional<Expression const*> boundArgumentCall =
+		funType->hasBoundFirstArgument() ? std::make_optional(expr) : std::nullopt;
+
+	std::vector<Expression const*> arguments;
+	for (auto& arg: _funCall.sortedArguments())
+		arguments.push_back(&(*arg));
+
+	// pushCallStack and defineExpr inside createReturnedExpression should be called
+	// on the FunctionCall object for the normal function call case
+	inlineFunctionCall(funDef, _funCall, boundArgumentCall, arguments);
 }
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)

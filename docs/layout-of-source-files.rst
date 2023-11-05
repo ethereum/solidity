@@ -40,7 +40,7 @@ The comment is recognized by the compiler anywhere in the file at the
 file level, but it is recommended to put it at the top of the file.
 
 More information about how to use SPDX license identifiers
-can be found at the `SPDX website <https://spdx.org/ids-how>`_.
+can be found at the `SPDX website <https://spdx.dev/learn/handling-license-info/#how>`_.
 
 
 .. index:: ! pragma
