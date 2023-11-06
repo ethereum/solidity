@@ -582,9 +582,11 @@ bool TypeInference::visit(Identifier const& _identifier)
 		solAssert(false);
 		break;
 	case ExpressionContext::Type:
-		// TODO: register free type variable name!
+		m_errorReporter.typeError(5934_error, _identifier.location(), "Undeclared type variable.");
+
+		// Assign it a fresh variable anyway just so that we can continue analysis.
 		identifierAnnotation.type = m_typeSystem.freshTypeVariable({});
-		return false;
+		break;
 	case ExpressionContext::Sort:
 		// TODO: error handling
 		solAssert(false);

@@ -703,11 +703,34 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 	solAssert(m_currentScope && m_scopes.count(m_currentScope), "No current scope.");
 	solAssert(m_currentScope == _declaration.scope(), "Unexpected current scope.");
 
-	// Register declaration as inactive if we are in block scope.
-	bool inactive =
-		(dynamic_cast<Block const*>(m_currentScope) || dynamic_cast<ForStatement const*>(m_currentScope));
+	// Functions defined inside quantifiers should be visible in the scope containing the quantifier
+	// TODO: Turn it into a more generic mechanism in the same vein as Scopable and ScopeOpener if
+	// it turns out we need more special-casing here.
+	auto const* quantifier = dynamic_cast<ForAllQuantifier const*>(m_currentScope);
+	auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(&_declaration);
+	if (quantifier && functionDefinition)
+	{
+		solAssert(quantifier->scope());
+		solAssert(
+			// forall quantifiers cannot be used in block scope so the declaration is always active.
+			!dynamic_cast<Block const*>(quantifier->scope()) &&
+			!dynamic_cast<ForStatement const*>(quantifier->scope())
+		);
 
-	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, inactive, m_errorReporter);
+		// NOTE: We're registering the function outside of its scope(). This will only affect
+		// name lookups. An more general alternative would be to modify Scoper to simply assign it
+		// that scope in the first place, but this would complicate the AST traversal here, which
+		// currently assumes that scopes follow ScopeOpener nesting.
+		registerDeclaration(*m_scopes.at(quantifier->scope()), _declaration, nullptr, nullptr, false /* inactive */, m_errorReporter);
+	}
+	else
+	{
+		// Register declaration as inactive if we are in block scope.
+		bool inactive =
+			(dynamic_cast<Block const*>(m_currentScope) || dynamic_cast<ForStatement const*>(m_currentScope));
+
+		registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, inactive, m_errorReporter);
+	}
 
 	solAssert(_declaration.annotation().scope == m_currentScope, "");
 	solAssert(_declaration.annotation().contract == m_currentContract, "");
