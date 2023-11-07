@@ -6,7 +6,7 @@
 [![X Follow](https://img.shields.io/twitter/follow/solidity_lang?style=plastic&logo=x)](https://X.com/solidity_lang)
 [![Mastodon Follow](https://img.shields.io/mastodon/follow/000335908?domain=https%3A%2F%2Ffosstodon.org%2F&logo=mastodon&style=plastic)](https://fosstodon.org/@solidity)
 
-You can talk to us on Gitter and Matrix, post on X or create a new topic in the Solidity forum. Questions, feedback, and suggestions are welcome!
+You can talk to us on Gitter and Matrix, tweet at us on X (previously Twitter) or create a new topic in the Solidity forum. Questions, feedback, and suggestions are welcome!
 
 Solidity is a statically typed, contract-oriented, high-level language for implementing smart contracts on the Ethereum platform.
 
