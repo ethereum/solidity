@@ -33,6 +33,7 @@
 #include <fmt/format.h>
 
 using namespace solidity::langutil;
+using namespace solidity::yul;
 
 namespace po = boost::program_options;
 
@@ -1228,8 +1229,8 @@ void CommandLineParser::processArgs()
 	if (m_args.count(g_strYulOptimizations))
 	{
 		OptimiserSettings optimiserSettings = m_options.optimiserSettings();
-		if (!optimiserSettings.runYulOptimiser)
-			solThrow(CommandLineValidationError, "--" + g_strYulOptimizations + " is invalid if Yul optimizer is disabled");
+		if (!optimiserSettings.runYulOptimiser && !OptimiserSuite::isEmptyOptimizerSequence(m_args[g_strYulOptimizations].as<std::string>()))
+			solThrow(CommandLineValidationError, "--" + g_strYulOptimizations + " is invalid with a non-empty sequence if Yul optimizer is disabled.");
 
 		try
 		{

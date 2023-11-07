@@ -69,6 +69,7 @@
 #include <libyul/YulStack.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
+#include <libyul/optimiser/Suite.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
@@ -99,6 +100,7 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::stdlib;
+using namespace solidity::yul;
 using namespace std::string_literals;
 
 using solidity::util::errinfo_comment;
@@ -1671,6 +1673,21 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 			details["yulDetails"] = Json::objectValue;
 			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
 			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps;
+		}
+		else if (
+			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps) &&
+			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserCleanupSteps)
+		)
+		{
+			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
+			details["yulDetails"] = Json::objectValue;
+			details["yulDetails"]["optimizerSteps"] = ":";
+		}
+		else
+		{
+			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
+			solAssert(m_optimiserSettings.yulOptimiserSteps == OptimiserSettings::DefaultYulOptimiserSteps);
+			solAssert(m_optimiserSettings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
 		}
 
 		meta["settings"]["optimizer"]["details"] = std::move(details);
