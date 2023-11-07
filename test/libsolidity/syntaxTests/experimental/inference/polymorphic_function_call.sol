@@ -15,18 +15,18 @@ function run(a: T, b: U(T), c: U(U(T))) {
 // ----
 // Warning 2264: (0-29): Experimental features are turned on. Do not use experimental features on live deployments.
 // Info 4164: (31-38): Inferred type: T
-// Info 4164: (39-49): Inferred type: tfun(?u:type, U(?u:type))
-// Info 4164: (45-48): Inferred type: ?t:type
-// Info 4164: (46-47): Inferred type: ?t:type
-// Info 4164: (51-82): Inferred type: ('x:type, 'y:type, U('ba:type)) -> ()
-// Info 4164: (61-79): Inferred type: ('x:type, 'y:type, U('ba:type))
-// Info 4164: (62-63): Inferred type: 'x:type
-// Info 4164: (65-69): Inferred type: 'y:type
-// Info 4164: (68-69): Inferred type: 'y:type
-// Info 4164: (71-78): Inferred type: U('ba:type)
-// Info 4164: (74-78): Inferred type: U('ba:type)
-// Info 4164: (74-75): Inferred type: tfun('ba:type, U('ba:type))
-// Info 4164: (76-77): Inferred type: 'ba:type
+// Info 4164: (39-49): Inferred type: tfun('t:type, U('t:type))
+// Info 4164: (45-48): Inferred type: 't:type
+// Info 4164: (46-47): Inferred type: 't:type
+// Info 4164: (51-82): Inferred type: ('w:type, 'x:type, U('z:type)) -> ()
+// Info 4164: (61-79): Inferred type: ('w:type, 'x:type, U('z:type))
+// Info 4164: (62-63): Inferred type: 'w:type
+// Info 4164: (65-69): Inferred type: 'x:type
+// Info 4164: (68-69): Inferred type: 'x:type
+// Info 4164: (71-78): Inferred type: U('z:type)
+// Info 4164: (74-78): Inferred type: U('z:type)
+// Info 4164: (74-75): Inferred type: tfun('z:type, U('z:type))
+// Info 4164: (76-77): Inferred type: 'z:type
 // Info 4164: (84-159): Inferred type: (T, U(T), U(U(T))) -> ()
 // Info 4164: (96-123): Inferred type: (T, U(T), U(U(T)))
 // Info 4164: (97-101): Inferred type: T

@@ -33,6 +33,7 @@
 #include <libyul/AST.h>
 
 #include <boost/algorithm/string.hpp>
+
 #include <range/v3/view/transform.hpp>
 
 using namespace solidity;
@@ -776,12 +777,21 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 		return false;
 
 	if (_typeDefinition.arguments())
+	{
+		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
 		_typeDefinition.arguments()->accept(*this);
+	}
 
 	std::vector<Type> arguments;
 	if (_typeDefinition.arguments())
-		for (size_t i = 0; i < _typeDefinition.arguments()->parameters().size(); ++i)
-			arguments.emplace_back(m_typeSystem.freshTypeVariable({}));
+		for (ASTPointer<VariableDeclaration> argumentDeclaration: _typeDefinition.arguments()->parameters())
+		{
+			solAssert(argumentDeclaration);
+			Type typeVar = type(*argumentDeclaration);
+			solAssert(std::holds_alternative<TypeVariable>(typeVar));
+			arguments.emplace_back(typeVar);
+		}
+	m_env->fixTypeVars(arguments);
 
 	Type definedType = type(&_typeDefinition, arguments);
 	if (arguments.empty())
@@ -807,6 +817,9 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 	solAssert(newlyInserted, fmt::format("Members of type '{}' are already defined.", m_typeSystem.constructorInfo(constructor).name));
 	if (underlyingType)
 	{
+		// Undeclared type variables are not allowed in type definitions and we fixed all the declared ones.
+		solAssert(!TypeEnvironmentHelpers{*m_env}.hasGenericTypeVars(*underlyingType));
+
 		members->second.emplace("abs", TypeMember{helper.functionType(*underlyingType, definedType)});
 		members->second.emplace("rep", TypeMember{helper.functionType(definedType, *underlyingType)});
 	}
