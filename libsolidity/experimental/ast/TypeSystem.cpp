@@ -290,6 +290,7 @@ TypeConstructor TypeSystem::declareTypeConstructor(std::string _name, std::strin
 		std::generate_n(std::back_inserter(argumentSorts), _arguments, [&](){ return Sort{{primitiveClass(PrimitiveClass::Type)}}; });
 		std::vector<Type> argumentTypes;
 		std::generate_n(std::back_inserter(argumentTypes), _arguments, [&](){ return freshVariable({}); });
+		m_globalTypeEnvironment.fixTypeVars(argumentTypes);
 		auto error = instantiateClass(type(constructor, argumentTypes), Arity{argumentSorts, primitiveClass(PrimitiveClass::Type)});
 		solAssert(!error, *error);
 	}
