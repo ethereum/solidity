@@ -1,4 +1,4 @@
-### 0.8.23 (unreleased)
+### 0.8.23 (2023-11-08)
 
 Important Bugfixes:
  * Optimizer: Fix block deduplicator bug which led to blocks which are identical apart from the contents of ``verbatim`` instructions to be treated as equivalent and thus collapsed into a single one.
