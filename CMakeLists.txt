@@ -133,13 +133,12 @@ if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
   \nPlease install Z3 or CVC4 or remove the option disabling them (USE_Z3, USE_CVC4).")
 endif()
 
-add_subdirectory(libsolutil)
-add_subdirectory(liblangutil)
-add_subdirectory(libsmtutil)
-add_subdirectory(libevmasm)
-add_subdirectory(libyul)
-add_subdirectory(libsolidity)
-add_subdirectory(libsolc)
+set(ETH_COMPONENTS "libsolutil;liblangutil;libsmtutil;libevmasm;libyul;libsolidity;libsolc")
+
+foreach (ETH_COMPONENT IN LISTS ETH_COMPONENTS)
+  add_subdirectory(${ETH_COMPONENT})
+endforeach()
+
 add_subdirectory(libstdlib)
 add_subdirectory(tools)
 
@@ -150,3 +149,9 @@ endif()
 if (TESTS AND NOT EMSCRIPTEN)
 	add_subdirectory(test)
 endif()
+
+if (INSTALL_INTERNAL_LIBS)
+  message(STATUS "INSTALL_INTERNAL_LIBS turned on. This feature is expected to work, but NOT supported.")
+  include(EthInstallation)
+endif()
+

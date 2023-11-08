@@ -12,6 +12,9 @@ macro(configure_project)
 	eth_default_option(TESTS ON)
 	eth_default_option(TOOLS ON)
 
+	# installation
+	eth_default_option(INSTALL_INTERNAL_LIBS OFF)
+
 	# Define a matching property name of each of the "features".
 	foreach(FEATURE ${ARGN})
 		set(SUPPORT_${FEATURE} TRUE)
@@ -41,6 +44,8 @@ if (SUPPORT_TOOLS)
 endif()
 	message("------------------------------------------------------------------ flags")
 	message("-- OSSFUZZ                                                   ${OSSFUZZ}")
+	message("----------------------------------------------------------  installation")
+	message("-- INSTALL_INTERNAL_LIBS                                     ${INSTALL_INTERNAL_LIBS}")
 	message("------------------------------------------------------------------------")
 	message("")
 endmacro()
