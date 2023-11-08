@@ -140,7 +140,7 @@ public:
 		else if (type() == Operation)
 			return instruction() < _other.instruction();
 		else if (type() == VerbatimBytecode)
-			return *m_verbatimBytecode == *_other.m_verbatimBytecode;
+			return *m_verbatimBytecode < *_other.m_verbatimBytecode;
 		else
 			return data() < _other.data();
 	}

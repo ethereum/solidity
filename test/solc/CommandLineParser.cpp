@@ -572,6 +572,42 @@ BOOST_AUTO_TEST_CASE(invalid_optimiser_sequences)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(valid_empty_optimizer_sequences_without_optimize)
+{
+	vector<string> const validSequenceInputs {
+		"   :",
+		": ",
+		"\n : \n",
+		":"
+	};
+
+	vector<tuple<string, string>> const expectedParsedSequences {
+		{"   ", ""},
+		{"", " "},
+		{"\n ", " \n"},
+		{"", ""}
+	};
+
+	BOOST_CHECK_EQUAL(validSequenceInputs.size(), expectedParsedSequences.size());
+
+	for (size_t i = 0; i < validSequenceInputs.size(); ++i)
+	{
+		CommandLineOptions const& commandLineOptions = parseCommandLine({"solc", "contract.sol", "--yul-optimizations=" + validSequenceInputs[i]});
+		auto const& [expectedYulOptimiserSteps, expectedYulCleanupSteps] = expectedParsedSequences[i];
+		BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserSteps, expectedYulOptimiserSteps);
+		BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserCleanupSteps, expectedYulCleanupSteps);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(invalid_optimizer_sequence_without_optimize)
+{
+	string const invalidSequence{"u: "};
+	string const expectedErrorMessage{"--yul-optimizations is invalid with a non-empty sequence if Yul optimizer is disabled."};
+	vector<string> commandLineOptions{"solc", "contract.sol", "--yul-optimizations=" + invalidSequence};
+	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedErrorMessage; };
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLineOptions), CommandLineValidationError, hasCorrectMessage);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::frontend::test

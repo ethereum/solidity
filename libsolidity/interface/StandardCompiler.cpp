@@ -456,12 +456,16 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 	return {};
 }
 
-std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, std::string& _optimiserSetting, std::string& _cleanupSetting)
+std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, std::string& _optimiserSetting, std::string& _cleanupSetting, bool _runYulOptimizer)
 {
 	if (_details.isMember(_name))
 	{
 		if (_details[_name].isString())
 		{
+			std::string const fullSequence = _details[_name].asString();
+			if (!_runYulOptimizer && !OptimiserSuite::isEmptyOptimizerSequence(fullSequence))
+				return formatFatalError(Error::Type::JSONError, "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.");
+
 			try
 			{
 				yul::OptimiserSuite::validateSequence(_details[_name].asString());
@@ -474,7 +478,6 @@ std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details
 				);
 			}
 
-			std::string const fullSequence = _details[_name].asString();
 			auto const delimiterPos = fullSequence.find(":");
 			_optimiserSetting = fullSequence.substr(0, delimiterPos);
 
@@ -605,21 +608,26 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 		if (details.isMember("yulDetails"))
 		{
 			if (!settings.runYulOptimiser)
-				return formatFatalError(Error::Type::JSONError, "\"Providing yulDetails requires Yul optimizer to be enabled.");
+			{
+				if (checkKeys(details["yulDetails"], {"optimizerSteps"}, "settings.optimizer.details.yulDetails"))
+					return formatFatalError(Error::Type::JSONError, "Only optimizerSteps can be set in yulDetails when Yul optimizer is disabled.");
+				if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps, settings.yulOptimiserCleanupSteps, settings.runYulOptimiser))
+					return *error;
+				return {std::move(settings)};
+			}
 
 			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation", "optimizerSteps"}, "settings.optimizer.details.yulDetails"))
 				return *result;
 			if (auto error = checkOptimizerDetail(details["yulDetails"], "stackAllocation", settings.optimizeStackAllocation))
 				return *error;
-			if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps, settings.yulOptimiserCleanupSteps))
+			if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps, settings.yulOptimiserCleanupSteps, settings.runYulOptimiser))
 				return *error;
 		}
 	}
-	return { std::move(settings) };
+	return {std::move(settings)};
 }
 
 }
-
 
 std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler::parseInput(Json::Value const& _input)
 {

@@ -1743,6 +1743,7 @@
     },
     "0.8.10": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
@@ -1754,6 +1755,7 @@
     },
     "0.8.11": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
@@ -1766,6 +1768,7 @@
     },
     "0.8.12": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
@@ -1778,6 +1781,7 @@
     },
     "0.8.13": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "StorageWriteRemovalBeforeConditionalTermination",
@@ -1791,6 +1795,7 @@
     },
     "0.8.14": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "StorageWriteRemovalBeforeConditionalTermination",
@@ -1802,6 +1807,7 @@
     },
     "0.8.15": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "StorageWriteRemovalBeforeConditionalTermination",
@@ -1811,6 +1817,7 @@
     },
     "0.8.16": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "StorageWriteRemovalBeforeConditionalTermination"
@@ -1819,6 +1826,7 @@
     },
     "0.8.17": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess"
         ],
@@ -1826,6 +1834,7 @@
     },
     "0.8.18": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess"
         ],
@@ -1833,6 +1842,7 @@
     },
     "0.8.19": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess"
         ],
@@ -1854,18 +1864,27 @@
     },
     "0.8.20": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess"
         ],
         "released": "2023-05-10"
     },
     "0.8.21": {
-        "bugs": [],
+        "bugs": [
+            "VerbatimInvalidDeduplication"
+        ],
         "released": "2023-07-19"
     },
     "0.8.22": {
-        "bugs": [],
+        "bugs": [
+            "VerbatimInvalidDeduplication"
+        ],
         "released": "2023-10-25"
+    },
+    "0.8.23": {
+        "bugs": [],
+        "released": "2023-11-08"
     },
     "0.8.3": {
         "bugs": [
@@ -1894,6 +1913,7 @@
     },
     "0.8.5": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
@@ -1906,6 +1926,7 @@
     },
     "0.8.6": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
@@ -1918,6 +1939,7 @@
     },
     "0.8.7": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
@@ -1930,6 +1952,7 @@
     },
     "0.8.8": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
@@ -1943,6 +1966,7 @@
     },
     "0.8.9": {
         "bugs": [
+            "VerbatimInvalidDeduplication",
             "FullInlinerNonExpressionSplitArgumentEvaluationOrder",
             "MissingSideEffectsOnSelectorAccess",
             "AbiReencodingHeadOverflowWithStaticArrayCleanup",
