@@ -88,7 +88,6 @@ commands:
     steps:
       - run:
           name: Generate bytecode reports for the selected preset
-          no_output_timeout: 30m
           command: |
             .circleci/parallel_bytecode_report.sh \
                 "<< parameters.label >>" \

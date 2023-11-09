@@ -130,8 +130,11 @@ for (const preset of presets)
             Object.keys(result['contracts']).length === 0 ||
             Object.keys(result['contracts']).every(file => Object.keys(result['contracts'][file]).length === 0)
         )
+        {
             // NOTE: do not exit here because this may be run on source which cannot be compiled
             reportFile.write(filename + ': <ERROR>\n')
+            process.stdout.write('E')
+        }
         else
             for (const contractFile in result['contracts'])
                 for (const contractName in result['contracts'][contractFile])
@@ -140,6 +143,12 @@ for (const preset of presets)
 
                     let bytecode = '<NO BYTECODE>'
                     let metadata = '<NO METADATA>'
+                    let progressIndicator = '.'
+
+                    if ('metadata' in contractResults && cleanString(contractResults.metadata) !== undefined)
+                        metadata = contractResults.metadata
+                    else
+                        progressIndicator = 'M'
 
                     if (
                         'evm' in contractResults &&
@@ -148,12 +157,12 @@ for (const preset of presets)
                         cleanString(contractResults.evm.bytecode.object) !== undefined
                     )
                         bytecode = cleanString(contractResults.evm.bytecode.object)
-
-                    if ('metadata' in contractResults && cleanString(contractResults.metadata) !== undefined)
-                        metadata = contractResults.metadata
+                    else
+                        progressIndicator = 'B'
 
                     reportFile.write(filename + ':' + contractName + ' ' + bytecode + '\n')
                     reportFile.write(filename + ':' + contractName + ' ' + metadata + '\n')
+                    process.stdout.write(progressIndicator)
                 }
     }
 }
