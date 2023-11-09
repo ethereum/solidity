@@ -32,6 +32,7 @@ function cleanString(string)
 let inputFiles = []
 let stripSMTPragmas = false
 let presets = []
+let reportFilePath = undefined
 
 for (let i = 2; i < process.argv.length; ++i)
 {
@@ -45,9 +46,25 @@ for (let i = 2; i < process.argv.length; ++i)
         presets.push(process.argv[i + 1])
         ++i;
     }
+    else if (process.argv[i] === '--report-file')
+    {
+        if (reportFilePath !== undefined)
+            throw Error("Option --report-file was specified multiple times.")
+
+        if (i + 1 === process.argv.length)
+            throw Error("Option --report-file was used, but no file name given.")
+
+        reportFilePath = process.argv[i + 1]
+        ++i;
+    }
     else
         inputFiles.push(process.argv[i])
 }
+
+if (reportFilePath === undefined)
+    throw Error("Use --report-file option to specify the report file path.")
+
+let reportFile = fs.createWriteStream(reportFilePath, {flags : 'w'});
 
 if (presets.length === 0)
     presets = ['legacy-no-optimize', 'legacy-optimize']
@@ -114,7 +131,7 @@ for (const preset of presets)
             Object.keys(result['contracts']).every(file => Object.keys(result['contracts'][file]).length === 0)
         )
             // NOTE: do not exit here because this may be run on source which cannot be compiled
-            console.log(filename + ': <ERROR>')
+            reportFile.write(filename + ': <ERROR>\n')
         else
             for (const contractFile in result['contracts'])
                 for (const contractName in result['contracts'][contractFile])
@@ -135,8 +152,8 @@ for (const preset of presets)
                     if ('metadata' in contractResults && cleanString(contractResults.metadata) !== undefined)
                         metadata = contractResults.metadata
 
-                    console.log(filename + ':' + contractName + ' ' + bytecode)
-                    console.log(filename + ':' + contractName + ' ' + metadata)
+                    reportFile.write(filename + ':' + contractName + ' ' + bytecode + '\n')
+                    reportFile.write(filename + ':' + contractName + ' ' + metadata + '\n')
                 }
     }
 }
