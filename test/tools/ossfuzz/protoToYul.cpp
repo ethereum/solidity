@@ -261,6 +261,9 @@ void ProtoConverter::visit(Expression const& _x)
 		else
 			m_output << dictionaryToken();
 		break;
+	case Expression::kVerbatim:
+		m_output << "verbatim_0i_1o(hex\"602A\")";
+		break;
 	case Expression::EXPR_ONEOF_NOT_SET:
 		m_output << dictionaryToken();
 		break;

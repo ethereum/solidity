@@ -251,6 +251,10 @@ message LogFunc {
   required Expression t4 = 7;
 }
 
+message Verbatim0i10 {
+  required bytes bytecode = 1;
+}
+
 message Expression {
   oneof expr_oneof {
     VarRef varref = 1;
@@ -263,6 +267,7 @@ message Expression {
     LowLevelCall lowcall = 8;
     Create create = 9;
     UnaryOpData unopdata = 10;
+    Verbatim0i10 verbatim = 11;
   }
 }
 
