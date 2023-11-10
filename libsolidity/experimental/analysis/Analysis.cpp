@@ -20,6 +20,7 @@
 #include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
 #include <libsolidity/experimental/analysis/SyntaxRestrictor.h>
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
+#include <libsolidity/experimental/analysis/TypeContextAnalysis.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 
@@ -30,6 +31,7 @@ using namespace solidity::frontend::experimental;
 struct Analysis::AnnotationContainer
 {
 	TypeClassRegistration::Annotation typeClassRegistrationAnnotation;
+	TypeContextAnalysis::Annotation typeContextAnalysisAnnotation;
 	TypeRegistration::Annotation typeRegistrationAnnotation;
 	TypeInference::Annotation typeInferenceAnnotation;
 };
@@ -38,6 +40,7 @@ struct Analysis::GlobalAnnotationContainer
 {
 	FunctionDependencyAnalysis::GlobalAnnotation functionDependencyGraphAnnotation;
 	TypeClassRegistration::GlobalAnnotation typeClassRegistrationAnnotation;
+	TypeContextAnalysis::GlobalAnnotation typeContextAnalysisAnnotation;
 	TypeRegistration::GlobalAnnotation typeRegistrationAnnotation;
 	TypeInference::GlobalAnnotation typeInferenceAnnotation;
 };
@@ -76,6 +79,30 @@ template<>
 FunctionDependencyAnalysis::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<FunctionDependencyAnalysis>::get()
 {
 	return analysis.annotationContainer().functionDependencyGraphAnnotation;
+}
+
+template<>
+TypeContextAnalysis::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeContextAnalysis>::get(ASTNode const& _node)
+{
+	return analysis.annotationContainer(_node).typeContextAnalysisAnnotation;
+}
+
+template<>
+TypeContextAnalysis::Annotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeContextAnalysis>::get(ASTNode const& _node) const
+{
+	return analysis.annotationContainer(_node).typeContextAnalysisAnnotation;
+}
+
+template<>
+TypeContextAnalysis::GlobalAnnotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<TypeContextAnalysis>::get() const
+{
+	return analysis.annotationContainer().typeContextAnalysisAnnotation;
+}
+
+template<>
+TypeContextAnalysis::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeContextAnalysis>::get()
+{
+	return analysis.annotationContainer().typeContextAnalysisAnnotation;
 }
 
 template<>
@@ -164,7 +191,7 @@ bool Analysis::check(std::vector<std::shared_ptr<SourceUnit const>> const& _sour
 		SyntaxRestrictor,
 		TypeClassRegistration,
 		TypeRegistration,
-		// TODO move after step introduced in https://github.com/ethereum/solidity/pull/14578, but before TypeInference
+		TypeContextAnalysis,
 		FunctionDependencyAnalysis,
 		TypeInference,
 		DebugWarner
