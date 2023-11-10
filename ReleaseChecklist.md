@@ -29,6 +29,7 @@ At least a day before the release:
 At least a day before the release:
  - [ ] Create a draft PR to sort the changelog.
  - [ ] Create draft PRs to bump version in ``solidity`` and ``solc-js``.
+       **Note**: The ``solc-js`` PR won't pass CI checks yet because it depends on the soljson binary from ``solc-bin``.
  - [ ] Create a draft of the release on github.
  - [ ] Create a draft PR to update soliditylang.org.
  - [ ] Create drafts of blog posts.
@@ -94,9 +95,11 @@ At least a day before the release:
 ### Release solc-js
  - [ ] Wait until solc-bin was properly deployed. You can test this via remix - a test run through remix is advisable anyway.
  - [ ] Increment the version number, create a pull request for that, merge it after tests succeeded.
- - [ ] Run ``npm run build:tarball`` in the updated ``solc-js`` repository to create ``solc-<version>.tgz``. Inspect the tarball to ensure that it contains an up to date compiler binary.
- - [ ] Run ``npm run publish:tarball`` to publish the newly created tarball.
  - [ ] Create a tag using ``git tag --annotate v$VERSION`` and push it with ``git push --tags``.
+ - [ ] Wait for the CI runs on the tag itself.
+ - [ ] Take the ``solc-x.y.z.tgz`` artifact from ``build-package`` run on the tagged commit in circle-ci.
+       Inspect the tarball to ensure that it contains an up-to-date compiler binary (``soljson.js``).
+ - [ ] Run ``npm publish solc-x.y.z.tgz`` to publish the newly created tarball.
 
 ### Post-release
  - [ ] Make sure the documentation for the new release has been published successfully.
