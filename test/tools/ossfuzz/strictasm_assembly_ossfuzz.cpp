@@ -37,11 +37,14 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	YulStringRepository::reset();
 
 	string input(reinterpret_cast<char const*>(_data), _size);
+	
+	auto optSequence = solidity::frontend::OptimiserSettings::randomYulOptimiserSequence(_size);
+	auto settings = solidity::frontend::OptimiserSettings::fuzz(optSequence);
 	YulStack stack(
 		langutil::EVMVersion(),
 		nullopt,
 		YulStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::minimal(),
+		settings,
 		langutil::DebugInfoSelection::All()
 	);
 

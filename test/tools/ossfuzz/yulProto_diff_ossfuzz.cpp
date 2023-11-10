@@ -22,8 +22,6 @@
 #include <test/tools/fuzzer_common.h>
 #include <test/tools/ossfuzz/protoToYul.h>
 
-#include <test/libyul/YulOptimizerTestCommon.h>
-
 #include <src/libfuzzer/libfuzzer_macro.h>
 
 #include <libyul/YulStack.h>
@@ -59,13 +57,14 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 
 	YulStringRepository::reset();
-
+	auto optSequence = solidity::frontend::OptimiserSettings::randomYulOptimiserSequence(_input.seed());
+	auto settings = solidity::frontend::OptimiserSettings::fuzz(optSequence);
 	// YulStack entry point
 	YulStack stack(
 		version,
 		nullopt,
 		YulStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full(),
+		settings,
 		DebugInfoSelection::All()
 	);
 
@@ -97,16 +96,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
-	YulOptimizerTestCommon optimizerTest(
-		stack.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
-	);
-	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	yulAssert(astBlock != nullptr, "Optimiser error.");
+	stack.optimize();
 	termReason = yulFuzzerUtil::interpret(
 		os2,
-		astBlock,
+		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version),
 		true
 	);

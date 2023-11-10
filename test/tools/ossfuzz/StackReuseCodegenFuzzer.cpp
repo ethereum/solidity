@@ -95,7 +95,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	YulStringRepository::reset();
 
-	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::full();
+	auto optSequence = solidity::frontend::OptimiserSettings::randomYulOptimiserSequence(_input.seed());
+	cout << "Trying the following optimizer sequence" << endl;
+	cout << optSequence << endl;
+	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::fuzz(optSequence);
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = false;
 	bytes unoptimisedByteCode;

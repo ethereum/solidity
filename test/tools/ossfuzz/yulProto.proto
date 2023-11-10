@@ -405,6 +405,7 @@ message Program {
   }
   required Version ver = 3;
   required uint32 step = 4;
+  required uint64 seed = 5;
 }
 
 package solidity.yul.test.yul_fuzzer;

@@ -61,7 +61,6 @@ if (OSSFUZZ)
 	    yulProtoFuzzer.cpp
 	    protoToYul.cpp
 	    yulProto.pb.cc
-	    ../../libyul/YulOptimizerTestCommon.cpp
     )
     target_include_directories(yul_proto_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
     target_link_libraries(yul_proto_ossfuzz PRIVATE yul
@@ -82,7 +81,6 @@ if (OSSFUZZ)
 	    yulFuzzerCommon.cpp
 	    protoToYul.cpp
 	    yulProto.pb.cc
-	    ../../libyul/YulOptimizerTestCommon.cpp
     )
     target_include_directories(yul_proto_diff_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
     target_link_libraries(yul_proto_diff_ossfuzz PRIVATE yul
@@ -100,7 +98,6 @@ if (OSSFUZZ)
             protoToYul.cpp
             yulProto.pb.cc
             protomutators/YulProtoMutator.cpp
-            ../../libyul/YulOptimizerTestCommon.cpp
     )
     target_include_directories(yul_proto_diff_custom_mutate_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
     target_link_libraries(yul_proto_diff_custom_mutate_ossfuzz PRIVATE yul

@@ -23,8 +23,6 @@
 
 #include <test/tools/fuzzer_common.h>
 
-#include <test/libyul/YulOptimizerTestCommon.h>
-
 #include <libyul/YulStack.h>
 #include <libyul/Exceptions.h>
 
@@ -60,13 +58,14 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		return;
 
 	YulStringRepository::reset();
-
+	auto optSequence = solidity::frontend::OptimiserSettings::randomYulOptimiserSequence(_input.seed());
+	auto settings = solidity::frontend::OptimiserSettings::fuzz(optSequence);
 	// YulStack entry point
 	YulStack stack(
 		version,
 		nullopt,
 		YulStack::Language::StrictAssembly,
-		solidity::frontend::OptimiserSettings::full(),
+		settings,
 		DebugInfoSelection::All()
 	);
 
@@ -80,11 +79,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		yulAssert(false, "Proto fuzzer generated malformed program");
 
 	// Optimize
-	YulOptimizerTestCommon optimizerTest(
-		stack.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
-	);
-	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	yulAssert(astBlock != nullptr, "Optimiser error.");
+	stack.optimize();
+	yulAssert(stack.parserResult()->code != nullptr, "Optimiser error.");
 }

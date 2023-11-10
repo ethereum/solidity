@@ -60,7 +60,9 @@ DEFINE_PROTO_FUZZER(Contract const& _contract)
 		EVMHost hostContext(version, evmone);
 		string contractName = "C";
 		StringMap source({{"test.sol", contractSource}});
-		CompilerInput cInput(version, source, contractName, OptimiserSettings::minimal(), {});
+		auto optSequence = solidity::frontend::OptimiserSettings::randomYulOptimiserSequence(_input.seed());
+		auto settings = solidity::frontend::OptimiserSettings::fuzz(optSequence);	
+		CompilerInput cInput(version, source, contractName, settings, {});
 		EvmoneUtility evmoneUtil(
 			hostContext,
 			cInput,
