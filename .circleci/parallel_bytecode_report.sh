@@ -75,5 +75,5 @@ else
     # shellcheck disable=SC2035
     ./prepare_report.js \
         --preset "$preset" \
-        *.sol > "../bytecode-report-${label}-${preset}.txt"
+        *.sol --report-file "../bytecode-report-${label}-${preset}.txt"
 fi
