@@ -25,7 +25,10 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <algorithm>
 #include <cstddef>
+#include <random>
+#include <stack>
 #include <string>
 
 namespace solidity::frontend
@@ -95,6 +98,112 @@ struct OptimiserSettings
 	static OptimiserSettings full()
 	{
 		return standard();
+	}
+
+	/// Create valid sequence
+	static std::string createValidSequence(std::string& _result)
+	{
+		std::stack<char> stk;
+		// Remove unmatched brackets
+		for (auto it = _result.begin(); it != _result.end(); /* no increment here */)
+		{
+			if (*it == '[')
+		        {
+				stk.push(*it);
+				++it;
+		        }
+		        else if (*it == ']')
+		        {
+			        if (stk.empty())
+				        it = _result.erase(it); // Erase returns the new iterator position
+				else
+			        {
+					stk.pop();
+					++it;
+			        }
+			}
+		        else
+			        ++it;
+		}
+		// Add matching brackets
+		while (!stk.empty())
+		{
+			_result += ']';
+			stk.pop();
+		}
+		// Remove colon inside brackets
+		std::stack<bool> insideBrackets;
+
+		// Remove colon within brackets
+		for (auto it = _result.begin(); it != _result.end(); /* no increment here */)
+		{
+			if (*it == '[') {
+			        insideBrackets.push(true);
+			        ++it; // Move to the next character
+		        }
+			else if (*it == ']')
+			{
+				insideBrackets.pop();
+			        ++it; // Move to the next character
+			}
+			else if (*it == ':' && !insideBrackets.empty())
+			{
+				// Erase the colon if we're inside brackets
+				it = _result.erase(it); // Erase returns the new iterator position
+			}
+			else
+				++it; // Move to the next character
+		}
+		assert(insideBrackets.empty());
+		std::string output;
+		bool wasColon = false;
+
+		// Keep at most one colon
+		for (auto& c: _result)
+		{
+			if (c == ':')
+			{
+			        if (!wasColon)
+				{
+			                output += c; // Append the first colon
+			                wasColon = true;
+			        }
+			        // Skip if the last character was also a colon
+			}
+		        else
+				output += c; // Append non-colon characters
+		}
+		return output;
+	}
+
+	/// Generate random Yul optimiser sequence
+	static std::string generateRandomPermutation(std::string const& input, size_t _seed)
+	{
+		std::string result = input;
+		std::mt19937 g(_seed);
+		std::shuffle(result.begin(), result.end(), g);
+
+		// Generate a random length for the substring
+		std::uniform_int_distribution<size_t> lengthDistribution(1, result.length());
+		size_t substringLength = lengthDistribution(g);
+
+		// Extract a substring from the shuffled result
+		std::string shuffledSubstring = result.substr(0, substringLength);
+		return createValidSequence(shuffledSubstring);
+	}
+
+	/// Get random Yul optimiser sequence
+	static std::string randomYulOptimiserSequence(size_t _seed)
+	{
+		return generateRandomPermutation(DefaultYulOptimiserSteps, _seed);
+	}
+
+	/// Fuzz Yul optimiser sequence
+	static OptimiserSettings fuzz(std::string const& _optSequence)
+	{
+		OptimiserSettings s = standard();
+		s.yulOptimiserSteps = _optSequence;
+		return s;
 	}
 
 	static OptimiserSettings preset(OptimisationPreset _preset)
