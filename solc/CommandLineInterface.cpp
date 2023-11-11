@@ -123,7 +123,6 @@ static string const g_strGeneratedSources = "generated-sources";
 static string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
-static string const g_strOpcodes = "opcodes";
 static string const g_strSignatureHashes = "hashes";
 static string const g_strSourceList = "sourceList";
 static string const g_strSources = "sources";
@@ -147,7 +146,6 @@ static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 		_options.compiler.outputs.metadata ||
 		_options.compiler.outputs.natspecUser ||
 		_options.compiler.outputs.natspecDev ||
-		_options.compiler.outputs.opcodes ||
 		_options.compiler.outputs.signatureHashes ||
 		_options.compiler.outputs.storageLayout;
 }
@@ -182,20 +180,6 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			sout() << "Binary of the runtime part:" << endl;
 			sout() << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << endl;
 		}
-	}
-}
-
-void CommandLineInterface::handleOpcode(string const& _contract)
-{
-	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
-
-	if (!m_options.output.dir.empty())
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode));
-	else
-	{
-		sout() << "Opcodes:" << endl;
-		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode);
-		sout() << endl;
 	}
 }
 
@@ -258,8 +242,6 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 {
 	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
 
-	if (m_options.compiler.outputs.opcodes)
-		handleOpcode(_contract);
 	if (m_options.compiler.outputs.binary || m_options.compiler.outputs.binaryRuntime)
 		handleBinary(_contract);
 }
@@ -707,13 +689,11 @@ void CommandLineInterface::compile()
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||
 			m_options.compiler.outputs.asmJson ||
-			m_options.compiler.outputs.opcodes ||
 			m_options.compiler.outputs.binary ||
 			m_options.compiler.outputs.binaryRuntime ||
 			(m_options.compiler.combinedJsonRequests && (
 				m_options.compiler.combinedJsonRequests->binary ||
 				m_options.compiler.combinedJsonRequests->binaryRuntime ||
-				m_options.compiler.combinedJsonRequests->opcodes ||
 				m_options.compiler.combinedJsonRequests->asm_ ||
 				m_options.compiler.combinedJsonRequests->generatedSources ||
 				m_options.compiler.combinedJsonRequests->generatedSourcesRuntime ||
@@ -809,8 +789,6 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
 		if (m_options.compiler.combinedJsonRequests->binaryRuntime && m_compiler->compilationSuccessful())
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
-		if (m_options.compiler.combinedJsonRequests->opcodes && m_compiler->compilationSuccessful())
-			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
 		if (m_options.compiler.combinedJsonRequests->asm_ && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (m_options.compiler.combinedJsonRequests->storageLayout && m_compiler->compilationSuccessful())
