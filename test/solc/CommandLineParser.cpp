@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 			"--gas",
 			"--combined-json="
-				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
+				"abi,metadata,bin,bin-runtime,asm,storage-layout,generated-sources,generated-sources-runtime,"
 				"srcmap,srcmap-runtime,function-debug,function-debug-runtime,hashes,devdoc,userdoc,ast",
 			"--metadata-hash=swarm",
 			"--metadata-literal",
