@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--libraries="
 				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
-			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
+			"--ast-compact-json", "--asm", "--asm-json", "--bin", "--bin-runtime", "--abi",
 			"--ir", "--ir-optimized", "--ewasm", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 			"--gas",
 			"--combined-json="
