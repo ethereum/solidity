@@ -63,12 +63,15 @@ contract C {
 // Warning 4984: (953-982): CHC: Overflow (resulting value larger than 32767) might happen here.
 // Warning 4984: (1051-1080): CHC: Overflow (resulting value larger than 32767) might happen here.
 // Warning 4281: (1051-1080): CHC: Division by zero might happen here.
-// Warning 4281: (1149-1178): CHC: Division by zero happens here.
+// Warning 4281: (1149-1178): CHC: Division by zero might happen here.
+// Warning 6328: (2069-2095): CHC: Assertion violation might happen here.
 // Warning 6328: (2105-2131): CHC: Assertion violation might happen here.
 // Warning 6328: (2141-2163): CHC: Assertion violation might happen here.
+// Warning 6328: (2173-2199): CHC: Assertion violation might happen here.
 // Warning 6328: (2209-2235): CHC: Assertion violation might happen here.
 // Warning 6328: (2245-2271): CHC: Assertion violation might happen here.
-// Info 1391: CHC: 12 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Info 1391: CHC: 10 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
 // Warning 3046: (1051-1080): BMC: Division by zero happens here.
+// Warning 3046: (1149-1178): BMC: Division by zero happens here.
 // Warning 7812: (2245-2271): BMC: Assertion violation might happen here.
-// Info 6002: BMC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Info 6002: BMC: 6 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

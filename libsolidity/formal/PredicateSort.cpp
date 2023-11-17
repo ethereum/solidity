@@ -30,7 +30,10 @@ namespace solidity::frontend::smt
 SortPointer interfaceSort(ContractDefinition const& _contract, SymbolicState& _state)
 {
 	return std::make_shared<FunctionSort>(
-		std::vector<SortPointer>{_state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.stateSort()} + stateSorts(_contract),
+		std::vector<SortPointer>{_state.thisAddressSort()} +
+			getBuiltInFunctionsSorts(_state) +
+			std::vector<SortPointer>{_state.stateSort()} +
+			stateSorts(_contract),
 		SortProvider::boolSort
 	);
 }
@@ -40,7 +43,8 @@ SortPointer nondetInterfaceSort(ContractDefinition const& _contract, SymbolicSta
 	auto varSorts = stateSorts(_contract);
 	std::vector<SortPointer> stateSort{_state.stateSort()};
 	return std::make_shared<FunctionSort>(
-		std::vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort()} +
+		std::vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort()} +
+			getBuiltInFunctionsSorts(_state) +
 			stateSort +
 			varSorts +
 			stateSort +
@@ -57,7 +61,10 @@ SortPointer constructorSort(ContractDefinition const& _contract, SymbolicState& 
 	auto varSorts = stateSorts(_contract);
 	std::vector<SortPointer> stateSort{_state.stateSort()};
 	return std::make_shared<FunctionSort>(
-		std::vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.txSort(), _state.stateSort(), _state.stateSort()} + varSorts + varSorts,
+		std::vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort()} +
+			getBuiltInFunctionsSorts(_state) +
+			std::vector<SortPointer>{_state.txSort(), _state.stateSort(), _state.stateSort()} +
+			varSorts + varSorts,
 		SortProvider::boolSort
 	);
 }
@@ -69,7 +76,9 @@ SortPointer functionSort(FunctionDefinition const& _function, ContractDefinition
 	auto inputSorts = applyMap(_function.parameters(), smtSort);
 	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
 	return std::make_shared<FunctionSort>(
-		std::vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort(), _state.txSort(), _state.stateSort()} +
+		std::vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort()} +
+			getBuiltInFunctionsSorts(_state) +
+			std::vector<SortPointer>{_state.txSort(), _state.stateSort()} +
 			varSorts +
 			inputSorts +
 			std::vector<SortPointer>{_state.stateSort()} +
@@ -110,4 +119,10 @@ std::vector<SortPointer> stateSorts(ContractDefinition const& _contract)
 	);
 }
 
+std::vector<SortPointer> getBuiltInFunctionsSorts(SymbolicState& _state)
+{
+	if (_state.hasBytesConcatFunction())
+		return {_state.abiSort(), _state.bytesConcatSort(), _state.cryptoSort()};
+	return {_state.abiSort(), _state.cryptoSort()};
+}
 }

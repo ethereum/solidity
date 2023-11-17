@@ -55,13 +55,15 @@ Predicate const* Predicate::create(
 	return &m_predicates.emplace(
 		std::piecewise_construct,
 		std::forward_as_tuple(functorName),
-		std::forward_as_tuple(std::move(predicate), _type, _node, _contractContext, std::move(_scopeStack))
+		std::forward_as_tuple(std::move(predicate), _type, _context.state().hasBytesConcatFunction(),
+			_node, _contractContext, std::move(_scopeStack))
 	).first->second;
 }
 
 Predicate::Predicate(
 	smt::SymbolicFunctionVariable&& _predicate,
 	PredicateType _type,
+	bool _bytesConcatFunctionInContext,
 	ASTNode const* _node,
 	ContractDefinition const* _contractContext,
 	std::vector<ScopeOpener const*> _scopeStack
@@ -70,7 +72,8 @@ Predicate::Predicate(
 	m_type(_type),
 	m_node(_node),
 	m_contractContext(_contractContext),
-	m_scopeStack(_scopeStack)
+	m_scopeStack(_scopeStack),
+	m_bytesConcatFunctionInContext(_bytesConcatFunctionInContext)
 {
 }
 
@@ -229,7 +232,7 @@ std::string Predicate::formatSummaryCall(
 			return {};
 	}
 
-	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars to format the function call.
 
 	std::string txModel;
@@ -285,7 +288,7 @@ std::string Predicate::formatSummaryCall(
 		}
 
 		// Here we are interested in txData from the summary predicate.
-		auto txValues = readTxVars(_args.at(4));
+		auto txValues = readTxVars(_args.at(txValuesIndex()));
 		std::vector<std::string> values;
 		for (auto const& _var: txVars)
 			if (auto v = txValues.at(_var))
@@ -303,7 +306,7 @@ std::string Predicate::formatSummaryCall(
 	auto const* fun = programFunction();
 	solAssert(fun, "");
 
-	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size());
+	auto first = _args.begin() + static_cast<int>(firstArgIndex()) + static_cast<int>(stateVars->size());
 	auto last = first + static_cast<int>(fun->parameters().size());
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
@@ -337,8 +340,8 @@ std::string Predicate::formatSummaryCall(
 
 std::vector<std::optional<std::string>> Predicate::summaryStateValues(std::vector<smtutil::Expression> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
-	/// The signature of the summary predicate of a contract without constructor is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, postBlockchainState, preStateVars, postStateVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of the summary predicate of a contract without constructor is: summary(error, this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, txData, preBlockchainState, postBlockchainState, preStateVars, postStateVars).
 	/// Here we are interested in postStateVars.
 	auto stateVars = stateVariables();
 	solAssert(stateVars.has_value(), "");
@@ -347,12 +350,12 @@ std::vector<std::optional<std::string>> Predicate::summaryStateValues(std::vecto
 	std::vector<smtutil::Expression>::const_iterator stateLast;
 	if (auto const* function = programFunction())
 	{
-		stateFirst = _args.begin() + 6 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
+		stateFirst = _args.begin() + static_cast<int>(firstArgIndex()) + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else if (programContract())
 	{
-		stateFirst = _args.begin() + 7 + static_cast<int>(stateVars->size());
+		stateFirst = _args.begin() + static_cast<int>(firstStateVarIndex()) + static_cast<int>(stateVars->size());
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else if (programVariable())
@@ -371,7 +374,7 @@ std::vector<std::optional<std::string>> Predicate::summaryStateValues(std::vecto
 
 std::vector<std::optional<std::string>> Predicate::summaryPostInputValues(std::vector<smtutil::Expression> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in postInputVars.
 	auto const* function = programFunction();
 	solAssert(function, "");
@@ -381,7 +384,7 @@ std::vector<std::optional<std::string>> Predicate::summaryPostInputValues(std::v
 
 	auto const& inParams = function->parameters();
 
-	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
+	auto first = _args.begin() + static_cast<int>(firstArgIndex()) + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
 	auto last = first + static_cast<int>(inParams.size());
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
@@ -395,7 +398,7 @@ std::vector<std::optional<std::string>> Predicate::summaryPostInputValues(std::v
 
 std::vector<std::optional<std::string>> Predicate::summaryPostOutputValues(std::vector<smtutil::Expression> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in outputVars.
 	auto const* function = programFunction();
 	solAssert(function, "");
@@ -405,7 +408,7 @@ std::vector<std::optional<std::string>> Predicate::summaryPostOutputValues(std::
 
 	auto const& inParams = function->parameters();
 
-	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
+	auto first = _args.begin() + static_cast<int>(firstArgIndex()) + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 
@@ -418,7 +421,7 @@ std::vector<std::optional<std::string>> Predicate::summaryPostOutputValues(std::
 std::pair<std::vector<std::optional<std::string>>, std::vector<VariableDeclaration const*>> Predicate::localVariableValues(std::vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a local block predicate is:
-	/// block(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars, localVars).
+	/// block(error, this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars, localVars).
 	/// Here we are interested in localVars.
 	auto const* function = programFunction();
 	solAssert(function, "");
@@ -452,19 +455,20 @@ std::map<std::string, std::string> Predicate::expressionSubstitution(smtutil::Ex
 	auto nArgs = _predExpr.arguments.size();
 
 	// The signature of an interface predicate is
-	// interface(this, abiFunctions, cryptoFunctions, blockchainState, stateVariables).
+	// interface(this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, blockchainState, stateVariables).
 	// An invariant for an interface predicate is a contract
 	// invariant over its state, for example `x <= 0`.
 	if (isInterface())
 	{
+		size_t shift = txValuesIndex();
 		solAssert(starts_with(predName, "interface"), "");
 		subst[_predExpr.arguments.at(0).name] = "address(this)";
-		solAssert(nArgs == stateVars.size() + 4, "");
+		solAssert(nArgs == stateVars.size() + shift, "");
 		for (size_t i = nArgs - stateVars.size(); i < nArgs; ++i)
-			subst[_predExpr.arguments.at(i).name] = stateVars.at(i - 4)->name();
+			subst[_predExpr.arguments.at(i).name] = stateVars.at(i - shift)->name();
 	}
 	// The signature of a nondet interface predicate is
-	// nondet_interface(error, this, abiFunctions, cryptoFunctions, blockchainState, stateVariables, blockchainState', stateVariables').
+	// nondet_interface(error, this, abiFunctions, (optionally) bytesConcatFunctions, cryptoFunctions, blockchainState, stateVariables, blockchainState', stateVariables').
 	// An invariant for a nondet interface predicate is a reentrancy property
 	// over the pre and post state variables of a contract, where pre state vars
 	// are represented by the variable's name and post state vars are represented
@@ -475,7 +479,7 @@ std::map<std::string, std::string> Predicate::expressionSubstitution(smtutil::Ex
 		solAssert(starts_with(predName, "nondet_interface"), "");
 		subst[_predExpr.arguments.at(0).name] = "<errorCode>";
 		subst[_predExpr.arguments.at(1).name] = "address(this)";
-		solAssert(nArgs == stateVars.size() * 2 + 6, "");
+		solAssert(nArgs == stateVars.size() * 2 + firstArgIndex(), "");
 		for (size_t i = nArgs - stateVars.size(), s = 0; i < nArgs; ++i, ++s)
 			subst[_predExpr.arguments.at(i).name] = stateVars.at(s)->name() + "'";
 		for (size_t i = nArgs - (stateVars.size() * 2 + 1), s = 0; i < nArgs - (stateVars.size() + 1); ++i, ++s)
