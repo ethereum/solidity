@@ -20,6 +20,7 @@
  */
 
 #include <libyul/AsmAnalysis.h>
+#include <libyul/AsmPrinter.h>
 
 #include <libyul/AST.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -43,6 +44,7 @@
 
 #include <memory>
 #include <functional>
+#include <iostream>
 
 using namespace std::string_literals;
 using namespace solidity;
@@ -94,6 +96,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 		{},
 		_object.qualifiedDataNames()
 	).analyze(*_object.code);
+	std::cout << AsmPrinter{}(*_object.code) << std::endl;
 	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;
 }

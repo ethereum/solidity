@@ -18,6 +18,7 @@
 
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmAnalysis.h>
+#include <libyul/AsmPrinter.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/YulStack.h>
@@ -35,6 +36,8 @@
 #include <string>
 #include <memory>
 #include <iostream>
+#include <fstream>
+#include <iterator>
 
 using namespace std;
 using namespace solidity;
@@ -42,25 +45,50 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul::test::yul_fuzzer;
+using namespace solidity::frontend;
 
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
-	if (_size > 600)
+	if (_size > 6000)
 		return 0;
 
-	string input(reinterpret_cast<char const*>(_data), _size);
+	string optimizerSequence;
+	string testProgram;
+	// Fuzz sequence
+	if (const char* crashFileEnv = std::getenv("CRASH_FILE"))
+	{
+		std::ifstream ifs(crashFileEnv);
+		testProgram = std::string(std::istreambuf_iterator<char>{ifs}, {});
+		auto fuzzedSequence = string(reinterpret_cast<char const*>(_data), _size);
+		auto cleanedSequence = OptimiserSettings::removeInvalidCharacters(fuzzedSequence);
+		optimizerSequence = OptimiserSettings::createValidSequence(cleanedSequence);
+	}
+	// Fuzz program
+	else if (const char* optSeqEnv = std::getenv("OPT_SEQ"))
+	{
+		optimizerSequence = optSeqEnv;
+		testProgram = string(reinterpret_cast<char const*>(_data), _size);
+	}
+	// Fuzz program and sequence
+	else
+	{
+		testProgram = string(reinterpret_cast<char const*>(_data), _size);
+		optimizerSequence = OptimiserSettings::randomYulOptimiserSequence(_size);
+	}
 
-	if (std::any_of(input.begin(), input.end(), [](char c) {
+	if (std::any_of(testProgram.begin(), testProgram.end(), [](char c) {
 		return ((static_cast<unsigned char>(c) > 127) || !(isPrint(c) || (c == '\n') || (c == '\t')));
 	}))
 		return 0;
 
 	YulStringRepository::reset();
-	auto optSequence = solidity::frontend::OptimiserSettings::randomYulOptimiserSequence(_size);
-	auto settings = solidity::frontend::OptimiserSettings::fuzz(optSequence);
+
+	cout << "Optimizer sequence: " << optimizerSequence << endl;
+
+	auto settings = solidity::frontend::OptimiserSettings::fuzz(optimizerSequence);
 	YulStack stack(
 		langutil::EVMVersion(),
 		nullopt,
@@ -71,7 +99,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	try
 	{
 		if (
-			!stack.parseAndAnalyze("source", input) ||
+			!stack.parseAndAnalyze("source", testProgram) ||
 			!stack.parserResult()->code ||
 			!stack.parserResult()->analysisInfo
 		)
@@ -98,6 +126,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		return 0;
 
 	stack.optimize();
+	cout << "------ Optmized Yul code ------" << endl;
+	cout << AsmPrinter{}(*stack.parserResult()->code) << endl; 
 	termReason = yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
@@ -109,6 +139,13 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		return 0;
 
 	bool isTraceEq = (os1.str() == os2.str());
-	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");
+	if (!isTraceEq)
+	{
+		cout << "------ Unoptimized trace ------" << endl;
+		cout << os1.str() << endl;
+		cout << "------ Optimized trace ------" << endl;
+		cout << os2.str() << endl;
+		yulAssert(false, "Interpreted traces for optimized and unoptimized code differ.");
+	}
 	return 0;
 }

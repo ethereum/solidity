@@ -100,6 +100,16 @@ struct OptimiserSettings
 		return standard();
 	}
 
+	static std::string removeInvalidCharacters(const std::string& _input)
+	{
+		std::string result;
+		const std::string validCharacters = "flcCUncDEvejsxIOoighFTLMrMaptSuud[]:";
+		for (char c : _input)
+			if (validCharacters.find(c) != std::string::npos)
+				result += c;
+		return result;
+	}
+
 	/// Create valid sequence
 	static std::string createValidSequence(std::string& _result)
 	{

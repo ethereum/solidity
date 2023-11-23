@@ -86,6 +86,9 @@
 #include <fmt/format.h>
 #endif
 
+#include <stdexcept>
+#include <iostream>
+
 using namespace solidity;
 using namespace solidity::yul;
 #ifdef PROFILE_OPTIMIZER_STEPS
@@ -451,7 +454,15 @@ void OptimiserSuite::runSequence(std::string_view _stepAbbreviations, Block& _as
 		std::vector<std::string> steps;
 		for (char abbreviation: _sequence)
 			if (abbreviation != ' ' && abbreviation != '\n')
-				steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+			{
+				try {
+					steps.emplace_back(stepAbbreviationToNameMap().at(abbreviation));
+				}
+				catch (const std::out_of_range& _e)
+				{
+			                std::cout << "Key not found: " << abbreviation << std::endl;
+				}
+			}
 		return steps;
 	};
 
