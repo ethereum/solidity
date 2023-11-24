@@ -549,9 +549,6 @@ experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langut
 	{
 		if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(&_declaration))
 		{
-			ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Term};
-			typeClassDefinition->accept(*this);
-
 			solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
 			TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
 			return m_typeSystem.freshTypeVariable(Sort{{typeClass}});
