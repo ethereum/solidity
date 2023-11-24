@@ -20,9 +20,14 @@
 
 #include <test/TestCaseReader.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
+#include <fstream>
+#include <iterator>
 #include <sstream>
 
 using namespace solidity::frontend::test;
+using namespace solidity::frontend;
 using namespace std;
 
 // Prototype as we can't use the FuzzerInterface.h header.
@@ -30,25 +35,44 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
-	if (_size <= 600)
+	if (_size <= 6000)
 	{
-		string input(reinterpret_cast<char const*>(_data), _size);
+		string optimizerSequence;
+		string testProgram;
+		// Fuzz sequence
+		if (const char* crashFileEnv = std::getenv("CRASH_FILE"))
+		{
+			std::ifstream ifs(crashFileEnv);
+			testProgram = std::string(std::istreambuf_iterator<char>{ifs}, {});
+			auto fuzzedSequence = string(reinterpret_cast<char const*>(_data), _size);
+			auto cleanedSequence = OptimiserSettings::removeInvalidCharacters(fuzzedSequence);
+			optimizerSequence = OptimiserSettings::createValidSequence(cleanedSequence);
+		}
+		// Fuzz program
+		else if (const char* optSeqEnv = std::getenv("OPT_SEQ"))
+		{
+			optimizerSequence = optSeqEnv;
+			testProgram = string(reinterpret_cast<char const*>(_data), _size);
+		}
+		// Fuzz program and sequence
+		else
+		{
+			testProgram = string(reinterpret_cast<char const*>(_data), _size);
+			optimizerSequence = OptimiserSettings::randomYulOptimiserSequence(_size);
+		}
+
 		map<string, string> sourceCode;
 		try
 		{
-			TestCaseReader t = TestCaseReader(std::istringstream(input));
+			TestCaseReader t = TestCaseReader(std::istringstream(testProgram));
 			sourceCode = t.sources().sources;
-			map<string, string> settings = t.settings();
-			bool compileViaYul =
-				settings.count("compileViaYul") &&
-				(settings.at("compileViaYul") == "also" || settings.at("compileViaYul") == "true");
-			bool optimize = settings.count("optimize") && settings.at("optimize") == "true";
+			cout << optimizerSequence << endl;
 			FuzzerUtil::testCompiler(
 				sourceCode,
-				optimize,
-				/*_rand=*/static_cast<unsigned>(_size),
-				/*forceSMT=*/true,
-				compileViaYul
+				/*optimize=*/true,
+				/*forceSMT=*/false,
+				/*compileViaYul=*/_size % 2 == 0,
+				/*yulOptimizerSteps=*/optimizerSequence
 			);
 		}
 		catch (runtime_error const&)

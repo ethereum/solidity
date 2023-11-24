@@ -89,16 +89,16 @@ void FuzzerUtil::forceSMT(StringMap& _input)
 void FuzzerUtil::testCompiler(
 	StringMap& _input,
 	bool _optimize,
-	unsigned _rand,
 	bool _forceSMT,
-	bool _compileViaYul
+	bool _compileViaYul,
+	string _yulOptimizerSteps
 )
 {
 	frontend::CompilerStack compiler;
-	EVMVersion evmVersion = s_evmVersions[_rand % s_evmVersions.size()];
+	EVMVersion evmVersion;
 	frontend::OptimiserSettings optimiserSettings;
 	if (_optimize)
-		optimiserSettings = frontend::OptimiserSettings::standard();
+		optimiserSettings = frontend::OptimiserSettings::fuzz(_yulOptimizerSteps);
 	else
 		optimiserSettings = frontend::OptimiserSettings::minimal();
 	if (_forceSMT)
