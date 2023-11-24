@@ -387,7 +387,8 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		operationAnnotation.type = m_typeSystem.freshTypeVariable({});
 		return false;
 	}
-	return false;
+
+	util::unreachable();
 }
 
 void TypeInference::endVisit(VariableDeclarationStatement const& _variableDeclarationStatement)
@@ -582,7 +583,6 @@ bool TypeInference::visit(Identifier const& _identifier)
 	case ExpressionContext::Term:
 		// TODO: error handling
 		solAssert(false);
-		break;
 	case ExpressionContext::Type:
 		m_errorReporter.typeError(5934_error, _identifier.location(), "Undeclared type variable.");
 
@@ -592,7 +592,6 @@ bool TypeInference::visit(Identifier const& _identifier)
 	case ExpressionContext::Sort:
 		// TODO: error handling
 		solAssert(false);
-		break;
 	}
 
 	return false;
