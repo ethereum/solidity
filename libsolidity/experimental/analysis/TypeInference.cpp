@@ -174,6 +174,8 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	else
 		unify(returnType, m_unitType, _functionDefinition.location());
 
+	solAssert(!_functionDefinition.returnParameterList());
+
 	if (_functionDefinition.isImplemented())
 		_functionDefinition.body().accept(*this);
 
