@@ -6,6 +6,7 @@ add_dependencies(ossfuzz
         strictasm_diff_ossfuzz
         strictasm_opt_ossfuzz
         strictasm_assembly_ossfuzz
+	yul_evm_native_ossfuzz
 )
 
 if (OSSFUZZ)
@@ -134,6 +135,17 @@ if (OSSFUZZ)
             -Wno-suggest-destructor-override
             -Wno-shorten-64-to-32
     )
+
+    add_executable(yul_evm_native_ossfuzz
+	    YulEvmNativeDifferentialFuzzer.cpp
+            ../../EVMHost.cpp
+            YulEvmoneInterface.cpp
+    )
+    target_link_libraries(yul_evm_native_ossfuzz PRIVATE yul
+            evmc
+            evmone-standalone
+    )
+    set_target_properties(yul_evm_native_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(abiv2_proto_ossfuzz
             ../../EVMHost.cpp

@@ -1202,6 +1202,20 @@ void EVMHostPrinter::storage()
 				<< endl;
 }
 
+std::string EVMHostPrinter::storageOnly()
+{
+	ostringstream os;
+	for (auto const& [slot, value]: m_host.get_address_storage(m_account))
+		if (m_host.get_storage(m_account, slot))
+			os << "  "
+			<< m_host.convertFromEVMC(slot)
+			<< ": "
+			<< m_host.convertFromEVMC(value.current)
+			<< endl;
+	return os.str();
+}
+
+
 void EVMHostPrinter::balance()
 {
 	m_stateStream << "BALANCE "

@@ -144,6 +144,7 @@ public:
 	{}
 	/// @returns state at account maintained by host.
 	std::string state();
+	std::string storageOnly();
 private:
 	/// Outputs storage at account to stateStream.
 	void storage();
