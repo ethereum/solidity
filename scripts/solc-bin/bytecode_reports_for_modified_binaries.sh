@@ -160,7 +160,7 @@ for binary_name in $platform_binaries; do
                 "$solidity_version_and_commit"
 
             # shellcheck disable=SC2035
-            ./prepare_report.js --strip-smt-pragmas *.sol > "${report_dir}/report-${binary_name}.txt"
+            ./prepare_report.js --strip-smt-pragmas *.sol --report-file "${report_dir}/report-${binary_name}.txt"
         else
             yul_optimizer_flags=()
             if [[ $solidity_version == 0.6.0 ]] || [[ $solidity_version == 0.6.1 ]]; then
