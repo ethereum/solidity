@@ -1258,7 +1258,7 @@ In Solidity mode, the Yul optimizer is activated together with the regular optim
 Optimization Step Sequence
 --------------------------
 
-Detailed information regrading the optimization sequence as well a list of abbreviations is
+Detailed information regarding the optimization sequence as well as a list of abbreviations is
 available in the :ref:`optimizer docs <optimizer-steps>`.
 
 .. _erc20yul:
