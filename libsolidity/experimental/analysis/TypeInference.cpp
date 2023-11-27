@@ -20,6 +20,7 @@
 #include <libsolidity/experimental/analysis/TypeInference.h>
 
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
+#include <libsolidity/experimental/analysis/TypeContextAnalysis.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
@@ -46,9 +47,7 @@ TypeInference::TypeInference(Analysis& _analysis):
 	m_errorReporter(_analysis.errorReporter()),
 	m_typeSystem(_analysis.typeSystem()),
 	m_env(&m_typeSystem.env()),
-	m_voidType(m_typeSystem.type(PrimitiveType::Void, {})),
 	m_wordType(m_typeSystem.type(PrimitiveType::Word, {})),
-	m_integerType(m_typeSystem.type(PrimitiveType::Integer, {})),
 	m_unitType(m_typeSystem.type(PrimitiveType::Unit, {})),
 	m_boolType(m_typeSystem.type(PrimitiveType::Bool, {}))
 {
@@ -129,22 +128,8 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 	return !m_errorReporter.hasErrors();
 }
 
-bool TypeInference::visit(ForAllQuantifier const& _quantifier)
-{
-	solAssert(m_expressionContext == ExpressionContext::Term);
-
-	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		_quantifier.typeVariableDeclarations().accept(*this);
-	}
-
-	_quantifier.quantifiedDeclaration().accept(*this);
-	return false;
-}
-
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
-	solAssert(m_expressionContext == ExpressionContext::Term);
 	auto& functionAnnotation = annotation(_functionDefinition);
 	if (functionAnnotation.type)
 		return false;
@@ -162,15 +147,12 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	_functionDefinition.parameterList().accept(*this);
 	unify(argumentsType, typeAnnotation(_functionDefinition.parameterList()), _functionDefinition.parameterList().location());
 	if (_functionDefinition.experimentalReturnExpression())
-	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		_functionDefinition.experimentalReturnExpression()->accept(*this);
+		// NOTE: Not visiting the return type. Nothing in term context there.
 		unify(
 			returnType,
-			typeAnnotation(*_functionDefinition.experimentalReturnExpression()),
+			explicitType(*_functionDefinition.experimentalReturnExpression()),
 			_functionDefinition.experimentalReturnExpression()->location()
 		);
-	}
 	else
 		unify(returnType, m_unitType, _functionDefinition.location());
 
@@ -184,7 +166,6 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 
 void TypeInference::endVisit(FunctionDefinition const& _functionDefinition)
 {
-	solAssert(m_expressionContext == ExpressionContext::Term);
 	solAssert(annotation(_functionDefinition).type.has_value());
 
 	Type& functionType = *annotation(_functionDefinition).type;
@@ -212,24 +193,18 @@ void TypeInference::endVisit(ParameterList const& _parameterList)
 
 bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 {
-	solAssert(m_expressionContext == ExpressionContext::Term);
 	auto& typeClassDefinitionAnnotation = annotation(_typeClassDefinition);
+	// TMP: This guard is ineffective now
 	if (typeClassDefinitionAnnotation.type)
 		return false;
 
-	typeClassDefinitionAnnotation.type = type(&_typeClassDefinition, {});
-
-	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		_typeClassDefinition.typeVariable().accept(*this);
-	}
+	// NOTE: Not visiting the class type variable. Already visited in type context.
 
 	std::map<std::string, Type> functionTypes;
 
 	solAssert(m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.has_value());
 	TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(_typeClassDefinition).typeClass.value();
 	Type typeVar = m_typeSystem.typeClassVariable(typeClass);
-	unify(typeAnnotation(_typeClassDefinition.typeVariable()), typeVar, _typeClassDefinition.location());
 
 	auto& typeMembersAnnotation = annotation().members[typeConstructor(&_typeClassDefinition)];
 
@@ -316,84 +291,41 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 	auto& operationAnnotation = annotation(_binaryOperation);
 	solAssert(!operationAnnotation.type);
 	TypeSystemHelpers helper{m_typeSystem};
-	switch (m_expressionContext)
+
+	if (auto* operatorInfo = util::valueOrNullptr(annotation().operators, _binaryOperation.getOperator()))
 	{
-	case ExpressionContext::Term:
-		if (auto* operatorInfo = util::valueOrNullptr(annotation().operators, _binaryOperation.getOperator()))
-		{
-			auto [typeClass, functionName] = *operatorInfo;
-			// TODO: error robustness?
-			Type functionType = m_env->fresh(annotation().typeClassFunctions.at(typeClass).at(functionName));
+		auto [typeClass, functionName] = *operatorInfo;
+		// TODO: error robustness?
+		Type functionType = m_env->fresh(annotation().typeClassFunctions.at(typeClass).at(functionName));
 
-			_binaryOperation.leftExpression().accept(*this);
-			_binaryOperation.rightExpression().accept(*this);
+		_binaryOperation.leftExpression().accept(*this);
+		_binaryOperation.rightExpression().accept(*this);
 
-			Type argTuple = helper.tupleType({typeAnnotation(_binaryOperation.leftExpression()), typeAnnotation(_binaryOperation.rightExpression())});
-			Type resultType = m_typeSystem.freshTypeVariable({});
-			Type genericFunctionType = helper.functionType(argTuple, resultType);
-			unify(functionType, genericFunctionType, _binaryOperation.location());
+		Type argTuple = helper.tupleType({typeAnnotation(_binaryOperation.leftExpression()), typeAnnotation(_binaryOperation.rightExpression())});
+		Type resultType = m_typeSystem.freshTypeVariable({});
+		Type genericFunctionType = helper.functionType(argTuple, resultType);
+		unify(functionType, genericFunctionType, _binaryOperation.location());
 
-			operationAnnotation.type = resultType;
-		}
-		else if (_binaryOperation.getOperator() == Token::Colon)
-		{
-			_binaryOperation.leftExpression().accept(*this);
-			{
-				ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-				_binaryOperation.rightExpression().accept(*this);
-			}
-			Type leftType = typeAnnotation(_binaryOperation.leftExpression());
-			unify(leftType, typeAnnotation(_binaryOperation.rightExpression()), _binaryOperation.location());
-			operationAnnotation.type = leftType;
-		}
-		else
-		{
-			m_errorReporter.typeError(4504_error, _binaryOperation.location(), "Binary operation in term context not yet supported.");
-			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
-		}
-		return false;
-	case ExpressionContext::Type:
-		if (_binaryOperation.getOperator() == Token::Colon)
-		{
-			_binaryOperation.leftExpression().accept(*this);
-			{
-				ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Sort};
-				_binaryOperation.rightExpression().accept(*this);
-			}
-			Type leftType = typeAnnotation(_binaryOperation.leftExpression());
-			unify(leftType, typeAnnotation(_binaryOperation.rightExpression()), _binaryOperation.location());
-			operationAnnotation.type = leftType;
-		}
-		else if (_binaryOperation.getOperator() == Token::RightArrow)
-		{
-			_binaryOperation.leftExpression().accept(*this);
-			_binaryOperation.rightExpression().accept(*this);
-			operationAnnotation.type = helper.functionType(typeAnnotation(_binaryOperation.leftExpression()), typeAnnotation(_binaryOperation.rightExpression()));
-		}
-		else if (_binaryOperation.getOperator() == Token::BitOr)
-		{
-			_binaryOperation.leftExpression().accept(*this);
-			_binaryOperation.rightExpression().accept(*this);
-			operationAnnotation.type = helper.sumType({typeAnnotation(_binaryOperation.leftExpression()), typeAnnotation(_binaryOperation.rightExpression())});
-		}
-		else
-		{
-			m_errorReporter.typeError(1439_error, _binaryOperation.location(), "Invalid binary operations in type context.");
-			operationAnnotation.type = m_typeSystem.freshTypeVariable({});
-		}
-		return false;
-	case ExpressionContext::Sort:
-		m_errorReporter.typeError(1017_error, _binaryOperation.location(), "Invalid binary operation in sort context.");
-		operationAnnotation.type = m_typeSystem.freshTypeVariable({});
-		return false;
+		operationAnnotation.type = resultType;
 	}
-
-	util::unreachable();
+	else if (_binaryOperation.getOperator() == Token::Colon)
+	{
+		// NOTE: Not visiting the right expression. Already visited in type context.
+		_binaryOperation.leftExpression().accept(*this);
+		Type leftType = typeAnnotation(_binaryOperation.leftExpression());
+		unify(leftType, explicitType(_binaryOperation.rightExpression()), _binaryOperation.location());
+		operationAnnotation.type = leftType;
+	}
+	else
+	{
+		m_errorReporter.typeError(4504_error, _binaryOperation.location(), "Binary operation in term context not yet supported.");
+		operationAnnotation.type = m_typeSystem.freshTypeVariable({});
+	}
+	return false;
 }
 
 void TypeInference::endVisit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
-	solAssert(m_expressionContext == ExpressionContext::Term);
 	if (_variableDeclarationStatement.declarations().size () != 1)
 	{
 		m_errorReporter.typeError(2655_error, _variableDeclarationStatement.location(), "Multi variable declaration not supported.");
@@ -406,50 +338,30 @@ void TypeInference::endVisit(VariableDeclarationStatement const& _variableDeclar
 
 bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 {
+	// TMP: Add handler for forall and make it not visit this in type inference since it's type context there
+
 	solAssert(!_variableDeclaration.value());
 	auto& variableAnnotation = annotation(_variableDeclaration);
 	solAssert(!variableAnnotation.type);
 
-	switch (m_expressionContext)
+	if (_variableDeclaration.typeExpression())
 	{
-	case ExpressionContext::Term:
-		if (_variableDeclaration.typeExpression())
-		{
-			ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-			_variableDeclaration.typeExpression()->accept(*this);
-			variableAnnotation.type = typeAnnotation(*_variableDeclaration.typeExpression());
-			return false;
-		}
-		variableAnnotation.type = m_typeSystem.freshTypeVariable({});
-		return false;
-	case ExpressionContext::Type:
-		variableAnnotation.type = m_typeSystem.freshTypeVariable({});
-		if (_variableDeclaration.typeExpression())
-		{
-			ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Sort};
-			_variableDeclaration.typeExpression()->accept(*this);
-			unify(*variableAnnotation.type, typeAnnotation(*_variableDeclaration.typeExpression()), _variableDeclaration.typeExpression()->location());
-		}
-		return false;
-	case ExpressionContext::Sort:
-		m_errorReporter.typeError(2399_error, _variableDeclaration.location(), "Variable declaration in sort context.");
-		variableAnnotation.type = m_typeSystem.freshTypeVariable({});
+		// NOTE: Not visiting the type. Nothing in term context there.
+
+		variableAnnotation.type = explicitType(*_variableDeclaration.typeExpression());
+		solAssert(variableAnnotation.type.has_value());
 		return false;
 	}
-	util::unreachable();
+
+	variableAnnotation.type = m_typeSystem.freshTypeVariable({});
+	return false;
 }
 
 void TypeInference::endVisit(IfStatement const& _ifStatement)
 {
 	auto& ifAnnotation = annotation(_ifStatement);
 	solAssert(!ifAnnotation.type);
-
-	if (m_expressionContext != ExpressionContext::Term)
-	{
-		m_errorReporter.typeError(2015_error, _ifStatement.location(), "If statement outside term context.");
-		ifAnnotation.type = m_typeSystem.freshTypeVariable({});
-		return;
-	}
+	// TMP: If used in type context is not a fatal error. Can we reach here after all?
 
 	unify(typeAnnotation(_ifStatement.condition()), m_boolType, _ifStatement.condition().location());
 
@@ -461,13 +373,6 @@ void TypeInference::endVisit(Assignment const& _assignment)
 	auto& assignmentAnnotation = annotation(_assignment);
 	solAssert(!assignmentAnnotation.type);
 
-	if (m_expressionContext != ExpressionContext::Term)
-	{
-		m_errorReporter.typeError(4337_error, _assignment.location(), "Assignment outside term context.");
-		assignmentAnnotation.type = m_typeSystem.freshTypeVariable({});
-		return;
-	}
-
 	Type leftType = typeAnnotation(_assignment.leftHandSide());
 	unify(leftType, typeAnnotation(_assignment.rightHandSide()), _assignment.location());
 	assignmentAnnotation.type = leftType;
@@ -475,93 +380,43 @@ void TypeInference::endVisit(Assignment const& _assignment)
 
 experimental::Type TypeInference::handleIdentifierByReferencedDeclaration(langutil::SourceLocation _location, Declaration const& _declaration)
 {
-	switch (m_expressionContext)
+	if (
+		!dynamic_cast<FunctionDefinition const*>(&_declaration) &&
+		!dynamic_cast<VariableDeclaration const*>(&_declaration) &&
+		!dynamic_cast<TypeClassDefinition const*>(&_declaration) &&
+		!dynamic_cast<TypeDefinition const*>(&_declaration)
+	)
 	{
-	case ExpressionContext::Term:
+		SecondarySourceLocation ssl;
+		ssl.append("Referenced node.", _declaration.location());
+		m_errorReporter.fatalTypeError(3101_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
+	}
+
+	auto& declarationAnnotation = annotation(_declaration);
+	if (!declarationAnnotation.type)
+		_declaration.accept(*this);
+
+	solAssert(declarationAnnotation.type);
+
+	if (dynamic_cast<VariableDeclaration const*>(&_declaration))
+		return *declarationAnnotation.type;
+	else if (dynamic_cast<FunctionDefinition const*>(&_declaration))
+		return polymorphicInstance(*declarationAnnotation.type);
+	else if (dynamic_cast<TypeClassDefinition const*>(&_declaration))
 	{
-		if (
-			!dynamic_cast<FunctionDefinition const*>(&_declaration) &&
-			!dynamic_cast<VariableDeclaration const*>(&_declaration) &&
-			!dynamic_cast<TypeClassDefinition const*>(&_declaration) &&
-			!dynamic_cast<TypeDefinition const*>(&_declaration)
-		)
-		{
-			SecondarySourceLocation ssl;
-			ssl.append("Referenced node.", _declaration.location());
-			m_errorReporter.fatalTypeError(3101_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
-		}
-
-		auto& declarationAnnotation = annotation(_declaration);
-		if (!declarationAnnotation.type)
-			_declaration.accept(*this);
-
-		solAssert(declarationAnnotation.type);
-
-		if (dynamic_cast<VariableDeclaration const*>(&_declaration))
-			return *declarationAnnotation.type;
-		else if (dynamic_cast<FunctionDefinition const*>(&_declaration))
-			return polymorphicInstance(*declarationAnnotation.type);
-		else if (dynamic_cast<TypeClassDefinition const*>(&_declaration))
-		{
-			solAssert(TypeEnvironmentHelpers{*m_env}.typeVars(*declarationAnnotation.type).empty());
-			return *declarationAnnotation.type;
-		}
-		else if (dynamic_cast<TypeDefinition const*>(&_declaration))
-		{
-			// TODO: can we avoid this?
-			Type type = *declarationAnnotation.type;
-			if (TypeSystemHelpers{m_typeSystem}.isTypeFunctionType(type))
-				type = std::get<1>(TypeSystemHelpers{m_typeSystem}.destTypeFunctionType(type));
-			return polymorphicInstance(type);
-		}
-		else
-			solAssert(false);
-		break;
+		solAssert(TypeEnvironmentHelpers{*m_env}.typeVars(*declarationAnnotation.type).empty());
+		return *declarationAnnotation.type;
 	}
-	case ExpressionContext::Type:
+	else if (dynamic_cast<TypeDefinition const*>(&_declaration))
 	{
-		if (
-			!dynamic_cast<VariableDeclaration const*>(&_declaration) &&
-			!dynamic_cast<TypeDefinition const*>(&_declaration)
-		)
-		{
-			SecondarySourceLocation ssl;
-			ssl.append("Referenced node.", _declaration.location());
-			m_errorReporter.fatalTypeError(2217_error, _location, ssl, "Attempt to type identifier referring to unexpected node.");
-		}
-
-		// TODO: Assert that this is a type class variable declaration?
-		auto& declarationAnnotation = annotation(_declaration);
-		if (!declarationAnnotation.type)
-			_declaration.accept(*this);
-
-		solAssert(declarationAnnotation.type);
-
-		if (dynamic_cast<VariableDeclaration const*>(&_declaration))
-			return *declarationAnnotation.type;
-		else if (dynamic_cast<TypeDefinition const*>(&_declaration))
-			return polymorphicInstance(*declarationAnnotation.type);
-		else
-			solAssert(false);
-		break;
+		// TODO: can we avoid this?
+		Type type = *declarationAnnotation.type;
+		if (TypeSystemHelpers{m_typeSystem}.isTypeFunctionType(type))
+			type = std::get<1>(TypeSystemHelpers{m_typeSystem}.destTypeFunctionType(type));
+		return polymorphicInstance(type);
 	}
-	case ExpressionContext::Sort:
-	{
-		if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(&_declaration))
-		{
-			solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
-			TypeClass typeClass = m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
-			return m_typeSystem.freshTypeVariable(Sort{{typeClass}});
-		}
-		else
-		{
-			m_errorReporter.typeError(2599_error, _location, "Expected type class.");
-			return m_typeSystem.freshTypeVariable({});
-		}
-		break;
-	}
-	}
-	util::unreachable();
+	else
+		solAssert(false);
 }
 
 bool TypeInference::visit(Identifier const& _identifier)
@@ -569,29 +424,16 @@ bool TypeInference::visit(Identifier const& _identifier)
 	auto& identifierAnnotation = annotation(_identifier);
 	solAssert(!identifierAnnotation.type);
 
+	// TMP: Is this reachable in non-term context?
+
 	if (auto const* referencedDeclaration = _identifier.annotation().referencedDeclaration)
 	{
 		identifierAnnotation.type = handleIdentifierByReferencedDeclaration(_identifier.location(), *referencedDeclaration);
 		return false;
 	}
 
-	switch (m_expressionContext)
-	{
-	case ExpressionContext::Term:
-		// TODO: error handling
-		solAssert(false);
-	case ExpressionContext::Type:
-		m_errorReporter.typeError(5934_error, _identifier.location(), "Undeclared type variable.");
-
-		// Assign it a fresh variable anyway just so that we can continue analysis.
-		identifierAnnotation.type = m_typeSystem.freshTypeVariable({});
-		break;
-	case ExpressionContext::Sort:
-		// TODO: error handling
-		solAssert(false);
-	}
-
-	return false;
+	// TODO: error handling
+	solAssert(false);
 }
 
 void TypeInference::endVisit(TupleExpression const& _tupleExpression)
@@ -599,33 +441,24 @@ void TypeInference::endVisit(TupleExpression const& _tupleExpression)
 	auto& expressionAnnotation = annotation(_tupleExpression);
 	solAssert(!expressionAnnotation.type);
 
+	// TMP: Is this reachable in non-term context?
+
 	TypeSystemHelpers helper{m_typeSystem};
 	auto componentTypes = _tupleExpression.components() | ranges::views::transform([&](auto _expr) -> Type {
 		auto& componentAnnotation = annotation(*_expr);
 		solAssert(componentAnnotation.type);
 		return *componentAnnotation.type;
 	}) | ranges::to<std::vector<Type>>;
-	switch (m_expressionContext)
-	{
-	case ExpressionContext::Term:
-	case ExpressionContext::Type:
-		expressionAnnotation.type = helper.tupleType(componentTypes);
-		break;
-	case ExpressionContext::Sort:
-	{
-		Type type = m_typeSystem.freshTypeVariable({});
-		for (auto componentType: componentTypes)
-			unify(type, componentType, _tupleExpression.location());
-		expressionAnnotation.type = type;
-		break;
-	}
-	}
+
+	expressionAnnotation.type = helper.tupleType(componentTypes);
 }
 
 bool TypeInference::visit(IdentifierPath const& _identifierPath)
 {
 	auto& identifierAnnotation = annotation(_identifierPath);
 	solAssert(!identifierAnnotation.type);
+
+	// TMP: Is this reachable in non-term context?
 
 	if (auto const* referencedDeclaration = _identifierPath.annotation().referencedDeclaration)
 	{
@@ -644,7 +477,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	auto& instantiationAnnotation = annotation(_typeClassInstantiation);
 	if (instantiationAnnotation.type)
 		return false;
-	instantiationAnnotation.type = m_voidType;
+
 	std::optional<TypeClass> typeClass = std::visit(util::GenericVisitor{
 		[&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
 			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
@@ -686,18 +519,14 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		*typeClass
 	};
 
+	if (_typeClassInstantiation.argumentSorts())
 	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		if (_typeClassInstantiation.argumentSorts())
-		{
-			_typeClassInstantiation.argumentSorts()->accept(*this);
-			auto& argumentSortAnnotation = annotation(*_typeClassInstantiation.argumentSorts());
-			solAssert(argumentSortAnnotation.type);
-			arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(*argumentSortAnnotation.type);
-			arity.argumentSorts = arguments | ranges::views::transform([&](Type _type) {
-				return m_env->sort(_type);
-			}) | ranges::to<std::vector<Sort>>;
-		}
+		// NOTE: Not visiting the argument sorts. Nothing in term context there.
+
+		arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(explicitType(*_typeClassInstantiation.argumentSorts()));
+		arity.argumentSorts = arguments | ranges::views::transform([&](Type _type) {
+			return m_env->sort(_type);
+		}) | ranges::to<std::vector<Sort>>;
 	}
 	m_env->fixTypeVars(arguments);
 
@@ -753,17 +582,6 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	return false;
 }
 
-bool TypeInference::visit(MemberAccess const& _memberAccess)
-{
-	if (m_expressionContext != ExpressionContext::Term)
-	{
-		m_errorReporter.typeError(5195_error, _memberAccess.location(), "Member access outside term context.");
-		annotation(_memberAccess).type = m_typeSystem.freshTypeVariable({});
-		return false;
-	}
-	return true;
-}
-
 experimental::Type TypeInference::memberType(Type _type, std::string _memberName, langutil::SourceLocation _location)
 {
 	Type resolvedType = m_env->resolve(_type);
@@ -796,48 +614,19 @@ void TypeInference::endVisit(MemberAccess const& _memberAccess)
 
 bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 {
-	bool isBuiltIn = dynamic_cast<Builtin const*>(_typeDefinition.typeExpression());
-
 	TypeSystemHelpers helper{m_typeSystem};
 	auto& typeDefinitionAnnotation = annotation(_typeDefinition);
 	if (typeDefinitionAnnotation.type)
 		return false;
 
-	if (_typeDefinition.arguments())
-	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		_typeDefinition.arguments()->accept(*this);
-	}
+	// NOTE: Not visiting type arguments. Already processed by type context analysis.
 
-	std::vector<Type> arguments;
-	if (_typeDefinition.arguments())
-		for (ASTPointer<VariableDeclaration> argumentDeclaration: _typeDefinition.arguments()->parameters())
-		{
-			solAssert(argumentDeclaration);
-			Type typeVar = typeAnnotation(*argumentDeclaration);
-			solAssert(std::holds_alternative<TypeVariable>(typeVar));
-			arguments.emplace_back(typeVar);
-		}
-	m_env->fixTypeVars(arguments);
-
-	Type definedType = type(&_typeDefinition, arguments);
-	if (arguments.empty())
-		typeDefinitionAnnotation.type = definedType;
-	else
-		typeDefinitionAnnotation.type = helper.typeFunctionType(helper.tupleType(arguments), definedType);
-
+	Type definedType = explicitType(_typeDefinition);
 	std::optional<Type> underlyingType;
 
-	if (isBuiltIn)
-		// TODO: This special case should eventually become user-definable.
-		underlyingType = m_wordType;
-	else if (_typeDefinition.typeExpression())
-	{
-		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		_typeDefinition.typeExpression()->accept(*this);
+	// NOTE: Not visiting type expression. Already processed by type context analysis.
 
-		underlyingType = annotation(*_typeDefinition.typeExpression()).type;
-	}
+	underlyingType = explicitType(*_typeDefinition.typeExpression());
 
 	TypeConstructor constructor = typeConstructor(&_typeDefinition);
 	auto [members, newlyInserted] = annotation().members.emplace(constructor, std::map<std::string, TypeMember>{});
@@ -853,10 +642,11 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 
 	if (helper.isPrimitiveType(definedType, PrimitiveType::Pair))
 	{
-		solAssert(isBuiltIn);
-		solAssert(arguments.size() == 2);
-		members->second.emplace("first", TypeMember{helper.functionType(definedType, arguments[0])});
-		members->second.emplace("second", TypeMember{helper.functionType(definedType, arguments[1])});
+		solAssert(dynamic_cast<Builtin const*>(_typeDefinition.typeExpression()));
+		solAssert(_typeDefinition.arguments());
+		solAssert(_typeDefinition.arguments()->parameters().size() == 2);
+		members->second.emplace("first", TypeMember{helper.functionType(definedType, explicitType(*_typeDefinition.arguments()->parameters()[0]))});
+		members->second.emplace("second", TypeMember{helper.functionType(definedType, explicitType(*_typeDefinition.arguments()->parameters()[1]))});
 	}
 
 	return false;
@@ -873,43 +663,13 @@ void TypeInference::endVisit(FunctionCall const& _functionCall)
 	TypeSystemHelpers helper{m_typeSystem};
 	std::vector<Type> argTypes;
 	for (auto arg: _functionCall.arguments())
-	{
-		switch (m_expressionContext)
-		{
-		case ExpressionContext::Term:
-		case ExpressionContext::Type:
-			argTypes.emplace_back(typeAnnotation(*arg));
-			break;
-		case ExpressionContext::Sort:
-			m_errorReporter.typeError(9173_error, _functionCall.location(), "Function call in sort context.");
-			functionCallAnnotation.type = m_typeSystem.freshTypeVariable({});
-			break;
-		}
-	}
+		argTypes.emplace_back(typeAnnotation(*arg));
 
-	switch (m_expressionContext)
-	{
-	case ExpressionContext::Term:
-	{
-		Type argTuple = helper.tupleType(argTypes);
-		Type resultType = m_typeSystem.freshTypeVariable({});
-		Type genericFunctionType = helper.functionType(argTuple, resultType);
-		unify(functionType, genericFunctionType, _functionCall.location());
-		functionCallAnnotation.type = resultType;
-		break;
-	}
-	case ExpressionContext::Type:
-	{
-		Type argTuple = helper.tupleType(argTypes);
-		Type resultType = m_typeSystem.freshTypeVariable({});
-		Type genericFunctionType = helper.typeFunctionType(argTuple, resultType);
-		unify(functionType, genericFunctionType, _functionCall.location());
-		functionCallAnnotation.type = resultType;
-		break;
-	}
-	case ExpressionContext::Sort:
-		solAssert(false);
-	}
+	Type argTuple = helper.tupleType(argTypes);
+	Type resultType = m_typeSystem.freshTypeVariable({});
+	Type genericFunctionType = helper.functionType(argTuple, resultType);
+	unify(functionType, genericFunctionType, _functionCall.location());
+	functionCallAnnotation.type = resultType;
 }
 
 // TODO: clean up rational parsing
@@ -1221,6 +981,14 @@ experimental::Type TypeInference::typeAnnotation(ASTNode const& _node) const
 	solAssert(result);
 	return *result;
 }
+
+experimental::Type TypeInference::explicitType(ASTNode const& _node) const
+{
+	std::optional<Type> const& type = m_analysis.annotation<TypeContextAnalysis>(_node).type;
+	solAssert(type.has_value());
+	return *type;
+}
+
 TypeConstructor TypeInference::typeConstructor(Declaration const* _type) const
 {
 	if (auto const& constructor = m_analysis.annotation<TypeRegistration>(*_type).typeConstructor)

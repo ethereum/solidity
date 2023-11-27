@@ -56,7 +56,6 @@ public:
 	void endVisit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 
-	bool visit(ForAllQuantifier const& _forAllQuantifier) override;
 	bool visit(FunctionDefinition const& _functionDefinition) override;
 	void endVisit(FunctionDefinition const& _functionDefinition) override;
 	bool visit(ParameterList const&) override { return true; }
@@ -79,7 +78,6 @@ public:
 	bool visit(Return const&) override { return true; }
 	void endVisit(Return const& _return) override;
 
-	bool visit(MemberAccess const& _memberAccess) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
 
 	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
@@ -98,14 +96,13 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 	TypeSystem& m_typeSystem;
 	TypeEnvironment* m_env = nullptr;
-	Type m_voidType;
 	Type m_wordType;
-	Type m_integerType;
 	Type m_unitType;
 	Type m_boolType;
 	std::optional<Type> m_currentFunctionType;
 
 	Type typeAnnotation(ASTNode const& _node) const;
+	Type explicitType(ASTNode const& _node) const;
 
 	Annotation& annotation(ASTNode const& _node);
 	Annotation const& annotation(ASTNode const& _node) const;
@@ -115,11 +112,9 @@ private:
 	/// Creates a polymorphic instance of a global type scheme
 	Type polymorphicInstance(Type const& _scheme);
 	Type memberType(Type _type, std::string _memberName, langutil::SourceLocation _location = {});
-	enum class ExpressionContext { Term, Type, Sort };
 	Type handleIdentifierByReferencedDeclaration(langutil::SourceLocation _location, Declaration const& _declaration);
 	TypeConstructor typeConstructor(Declaration const* _type) const;
 	Type type(Declaration const* _type, std::vector<Type> _arguments) const;
-	ExpressionContext m_expressionContext = ExpressionContext::Term;
 	std::set<TypeClassInstantiation const*, ASTCompareByID<TypeClassInstantiation>> m_activeInstantiations;
 };
 
