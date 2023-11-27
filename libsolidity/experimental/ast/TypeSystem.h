@@ -149,7 +149,7 @@ public:
 		return constructorInfo(constructor(_typeConstructor));
 	}
 
-	std::variant<TypeClass, std::string> declareTypeClass(Type _typeVariable, std::string _name, Declaration const* _declaration);
+	std::variant<TypeClass, std::string> declareTypeClass(std::string _name, Declaration const* _declaration, bool _primitive = false);
 	[[nodiscard]] std::optional<std::string> instantiateClass(Type _instanceVariable, Arity _arity);
 
 	Type freshTypeVariable(Sort _sort);
