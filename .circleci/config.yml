@@ -1326,16 +1326,16 @@ jobs:
           name: Install dependencies
           command: |
             cd hardhat
-            yarn
+            pnpm install
       - run:
           name: Run hardhat-core test suite
           command: |
             HARDHAT_TESTS_SOLC_VERSION=$(scripts/get_version.sh)
             export HARDHAT_TESTS_SOLC_VERSION
 
-            # NOTE: This is expected to work without running `yarn build` first.
+            # NOTE: This is expected to work without running `pnpm build` first.
             cd hardhat/packages/hardhat-core
-            yarn test
+            pnpm test
       - matrix_notify_failure_unless_pr
 
   t_ext:
