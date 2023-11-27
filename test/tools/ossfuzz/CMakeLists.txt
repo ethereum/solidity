@@ -140,8 +140,10 @@ if (OSSFUZZ)
 	    YulEvmNativeDifferentialFuzzer.cpp
             ../../EVMHost.cpp
             YulEvmoneInterface.cpp
+	    yulFuzzerCommon.cpp
     )
     target_link_libraries(yul_evm_native_ossfuzz PRIVATE yul
+	    yulInterpreter
             evmc
             evmone-standalone
     )
