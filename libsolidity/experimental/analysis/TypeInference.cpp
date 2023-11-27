@@ -54,12 +54,7 @@ TypeInference::TypeInference(Analysis& _analysis):
 	TypeSystemHelpers helper{m_typeSystem};
 
 	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
-		Type type = m_typeSystem.freshTypeVariable({});
-		auto result = m_typeSystem.declareTypeClass(
-			type,
-			_name,
-			nullptr
-		);
+		auto result = m_typeSystem.declareTypeClass(_name, nullptr);
 		if (auto error = std::get_if<std::string>(&result))
 			solAssert(!error, *error);
 		TypeClass declaredClass = std::get<TypeClass>(result);
