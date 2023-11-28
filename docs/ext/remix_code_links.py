@@ -27,10 +27,10 @@ def remix_code_url(source_code, language, solidity_version):
 
 def build_remix_link_node(url):
     reference_node = docutils.nodes.reference('', 'open in Remix', internal=False, refuri=url, target='_blank')
-    reference_node.set_class('remix-link')
+    reference_node['classes'].append('remix-link')
 
     paragraph_node = docutils.nodes.paragraph()
-    paragraph_node.set_class('remix-link-container')
+    paragraph_node['classes'].append('remix-link-container')
     paragraph_node.append(reference_node)
     return paragraph_node
 
