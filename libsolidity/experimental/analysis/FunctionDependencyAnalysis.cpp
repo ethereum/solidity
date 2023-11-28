@@ -17,39 +17,42 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/experimental/analysis/Analysis.h>
-#include <libsolidity/experimental/analysis/FunctionDependencyGraph.h>
+#include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
 
 using namespace solidity::frontend::experimental;
 using namespace solidity::util;
 
-FunctionDependencyGraph::FunctionDependencyGraph(Analysis& _analysis):
+FunctionDependencyAnalysis::FunctionDependencyAnalysis(Analysis& _analysis):
 	m_analysis(_analysis),
 	m_errorReporter(_analysis.errorReporter())
 {
 }
 
-bool FunctionDependencyGraph::analyze(SourceUnit const& _sourceUnit)
+bool FunctionDependencyAnalysis::analyze(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
 	return !m_errorReporter.hasErrors();
 }
 
-bool FunctionDependencyGraph::visit(FunctionDefinition const& _functionDefinition)
+bool FunctionDependencyAnalysis::visit(FunctionDefinition const& _functionDefinition)
 {
 	solAssert(!m_currentFunction);
 	m_currentFunction = &_functionDefinition;
+	// Insert a function definition pointer that maps to an empty set; the pointed to set will later be
+	// populated in ``endVisit(Identifier const& _identifier)`` if ``m_currentFunction`` references another.
+	auto [_, inserted] = annotation().functionCallGraph.edges.try_emplace(
+		m_currentFunction, std::set<FunctionDefinition const*, ASTCompareByID<FunctionDefinition>>{}
+	);
+	solAssert(inserted);
 	return true;
 }
 
-void FunctionDependencyGraph::endVisit(FunctionDefinition const&)
+void FunctionDependencyAnalysis::endVisit(FunctionDefinition const&)
 {
-	// If we're done visiting a function declaration without said function referencing/calling
-	// another function in its body - insert it into the graph without child nodes.
-	annotation().functionCallGraph.edges.try_emplace(m_currentFunction, std::set<FunctionDefinition const*, CallGraph::CompareByID>{});
 	m_currentFunction = nullptr;
 }
 
-void FunctionDependencyGraph::endVisit(Identifier const& _identifier)
+void FunctionDependencyAnalysis::endVisit(Identifier const& _identifier)
 {
 	auto const* callee = dynamic_cast<FunctionDefinition const*>(_identifier.annotation().referencedDeclaration);
 	// Check that the identifier is within a function body and is a function, and add it to the graph
@@ -58,12 +61,12 @@ void FunctionDependencyGraph::endVisit(Identifier const& _identifier)
 		addEdge(m_currentFunction, callee);
 }
 
-void FunctionDependencyGraph::addEdge(FunctionDefinition const* _caller, FunctionDefinition const* _callee)
+void FunctionDependencyAnalysis::addEdge(FunctionDefinition const* _caller, FunctionDefinition const* _callee)
 {
 	annotation().functionCallGraph.edges[_caller].insert(_callee);
 }
 
-FunctionDependencyGraph::GlobalAnnotation& FunctionDependencyGraph::annotation()
+FunctionDependencyAnalysis::GlobalAnnotation& FunctionDependencyAnalysis::annotation()
 {
-	return m_analysis.annotation<FunctionDependencyGraph>();
+	return m_analysis.annotation<FunctionDependencyAnalysis>();
 }

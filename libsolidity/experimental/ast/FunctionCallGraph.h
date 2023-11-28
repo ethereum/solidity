@@ -16,24 +16,25 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/experimental/ast/CallGraph.h>
+/// Data structure representing a function dependency graph.
 
-using namespace solidity::frontend::experimental;
+#pragma once
 
-bool CallGraph::CompareByID::operator()(FunctionDefinition const* _lhs, FunctionDefinition const* _rhs) const
+#include <libsolidity/ast/AST.h>
+
+#include <map>
+#include <set>
+#include <ostream>
+
+namespace solidity::frontend::experimental
 {
-	solAssert(_lhs && _rhs);
-	return _lhs->id() < _rhs->id();
-}
 
-bool CallGraph::CompareByID::operator()(FunctionDefinition const* _lhs, int64_t _rhs) const
+struct FunctionDependencyGraph
 {
-	solAssert(_lhs);
-	return _lhs->id() < _rhs;
-}
+	/// Graph edges. Edges are directed and lead from the caller to the callee.
+	/// The map contains a key for every function, even if does not actually perform
+	/// any calls.
+	std::map<FunctionDefinition const*, std::set<FunctionDefinition const*, ASTCompareByID<FunctionDefinition>>, ASTCompareByID<FunctionDefinition>> edges;
+};
 
-bool CallGraph::CompareByID::operator()(int64_t _lhs, FunctionDefinition const* _rhs) const
-{
-	solAssert(_rhs);
-	return _lhs < _rhs->id();
 }

@@ -16,10 +16,10 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include "FunctionDependencyGraphTest.h"
+#include <test/libsolidity/FunctionDependencyGraphTest.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
-#include "libsolidity/experimental/analysis/FunctionDependencyGraph.h"
+#include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
 
@@ -46,7 +46,7 @@ TestCase::TestResult FunctionDependencyGraphTest::run(std::ostream& _stream, std
 	}
 
 	m_obtainedResult.clear();
-	for (auto [top, subs]: compiler().experimentalAnalysis().annotation<experimental::FunctionDependencyGraph>().functionCallGraph.edges)
+	for (auto [top, subs]: compiler().experimentalAnalysis().annotation<experimental::FunctionDependencyAnalysis>().functionCallGraph.edges)
 	{
 		std::string topName = top->name().empty() ? "fallback" : top->name();
 		m_obtainedResult += "(" + topName + ") --> {";

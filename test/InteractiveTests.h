@@ -22,7 +22,7 @@
 #include <test/libsolidity/ABIJsonTest.h>
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/libsolidity/ASTPropertyTest.h>
-#include "libsolidity/FunctionDependencyGraphTest.h"
+#include <libsolidity/FunctionDependencyGraphTest.h>
 #include <test/libsolidity/GasTest.h>
 #include <test/libsolidity/MemoryGuardTest.h>
 #include <test/libsolidity/NatspecJSONTest.h>

@@ -21,7 +21,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libsolidity/experimental/ast/CallGraph.h>
+#include <libsolidity/experimental/ast/FunctionCallGraph.h>
 
 #include <memory>
 
@@ -30,16 +30,16 @@ namespace solidity::frontend::experimental
 
 class Analysis;
 
-class FunctionDependencyGraph: private ASTConstVisitor
+class FunctionDependencyAnalysis: private ASTConstVisitor
 {
 public:
-	FunctionDependencyGraph(Analysis& _analysis);
+	FunctionDependencyAnalysis(Analysis& _analysis);
 	bool analyze(SourceUnit const& _sourceUnit);
 
 	struct Annotation {};
 	struct GlobalAnnotation
 	{
-		CallGraph functionCallGraph;
+		FunctionDependencyGraph functionCallGraph;
 	};
 
 private:

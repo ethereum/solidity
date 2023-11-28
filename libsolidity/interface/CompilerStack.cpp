@@ -57,7 +57,7 @@
 #include <libsolidity/parsing/Parser.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
-#include <libsolidity/experimental/analysis/FunctionDependencyGraph.h>
+#include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
 #include <libsolidity/experimental/codegen/IRGenerator.h>
 
 #include <libsolidity/codegen/ir/Common.h>
