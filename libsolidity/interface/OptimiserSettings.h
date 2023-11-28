@@ -103,7 +103,7 @@ struct OptimiserSettings
 	static std::string removeInvalidCharacters(const std::string& _input)
 	{
 		std::string result;
-		const std::string validCharacters = "flcCUncDEvejsxIOoighFTLMrMaptSuud[]:";
+		const std::string validCharacters = "flcCUnDEvejsxIOoighFTLMrmVatpSud[]:";
 		for (char c : _input)
 			if (validCharacters.find(c) != std::string::npos)
 				result += c;
