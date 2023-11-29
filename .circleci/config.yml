@@ -220,11 +220,18 @@ commands:
           command: .circleci/soltest.sh
 
   run_soltest_all:
+    parameters:
+      # NOTE: If not specified, soltest_all.sh will use the default values as specified in the script.
+      # In other words, it will execute for all EVM versions that are not marked as deprecated.
+      evm_versions:
+        description: "List of EVM versions (separated by space)."
+        type: string
+        default: ""
     steps:
       - run:
           name: soltest_all
           no_output_timeout: 30m
-          command: .circleci/soltest_all.sh
+          command: .circleci/soltest_all.sh "<< parameters.evm_versions >>"
 
   run_cmdline_tests:
     steps:
@@ -1267,6 +1274,20 @@ jobs:
     steps:
       - soltest_all
 
+  t_ubu_soltest_deprecated_evm_versions: &t_ubu_soltest_deprecated_evm_versions
+    <<: *base_ubuntu2204_large
+    parallelism: 50
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run_soltest_all:
+          evm_versions: homestead byzantium
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
+      - matrix_notify_failure_unless_pr
+
   t_ubu_lsp: &t_ubu_lsp
     <<: *base_ubuntu2204_small
     steps:
@@ -2003,6 +2024,10 @@ workflows:
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_soltest: *requires_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
+
+      # Deprecated EVM versions tests
+      - b_ubu: *requires_nothing
+      - t_ubu_soltest_deprecated_evm_versions: *requires_b_ubu
 
   nightly-ossfuzz:
 

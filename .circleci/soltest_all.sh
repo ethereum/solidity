@@ -31,9 +31,12 @@ REPODIR="$(realpath "$(dirname "$0")"/..)"
 # shellcheck source=scripts/common.sh
 source "${REPODIR}/scripts/common.sh"
 
-EVM_VALUES=(homestead byzantium constantinople petersburg istanbul berlin london paris shanghai cancun)
+DEFAULT_EVM_VALUES=(constantinople petersburg istanbul berlin london paris shanghai cancun)
+# Deserialize the EVM_VALUES array if it was provided as argument or
+# set EVM_VALUES to the default values.
+IFS=" " read -ra EVM_VALUES <<< "${1:-${DEFAULT_EVM_VALUES[@]}}"
+
 DEFAULT_EVM=shanghai
-[[ " ${EVM_VALUES[*]} " =~ $DEFAULT_EVM ]]
 OPTIMIZE_VALUES=(0 1)
 
 # Run for ABI encoder v1, without SMTChecker tests.
