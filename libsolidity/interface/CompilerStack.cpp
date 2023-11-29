@@ -1973,8 +1973,6 @@ bool CompilerStack::isExperimentalSolidity() const
 {
 	return
 		!m_sourceOrder.empty() &&
-		// TODO: Does it make sense to check for any source or just the front?
-		//m_sourceOrder.front()->ast->experimentalSolidity()
 		ranges::all_of(m_sourceOrder, [](auto const* _source) { return _source->ast->experimentalSolidity(); } )
 	;
 }
