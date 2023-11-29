@@ -422,6 +422,7 @@ void CompilerStack::importASTs(std::map<std::string, Json::Value> const& _source
 	std::map<std::string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_evmVersion).jsonToSourceUnit(_sources);
 	for (auto& src: reconstructedSources)
 	{
+		solUnimplementedAssert(!src.second->experimentalSolidity());
 		std::string const& path = src.first;
 		Source source;
 		source.ast = src.second;
