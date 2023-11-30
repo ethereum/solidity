@@ -27,7 +27,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::langutil;
 
 namespace solidity::yul::test
@@ -36,9 +35,9 @@ namespace solidity::yul::test
 namespace
 {
 
-size_t codeSize(string const& _source, CodeWeights const _weights = {})
+size_t codeSize(std::string const& _source, CodeWeights const _weights = {})
 {
-	shared_ptr<Block> ast = parse(_source, false).first;
+	std::shared_ptr<Block> ast = parse(_source, false).first;
 	BOOST_REQUIRE(ast);
 	return CodeSize::codeSize(*ast, _weights);
 }

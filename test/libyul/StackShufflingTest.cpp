@@ -25,9 +25,8 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
-using namespace std;
 
-bool StackShufflingTest::parse(string const& _source)
+bool StackShufflingTest::parse(std::string const& _source)
 {
 	CharStream stream(_source, "");
 	Scanner scanner(stream);
@@ -48,14 +47,14 @@ bool StackShufflingTest::parse(string const& _source)
 		while (scanner.currentToken() != Token::RBrack &&
 			   scanner.currentToken() != Token::EOS)
 		{
-			string literal = scanner.currentLiteral();
+			std::string literal = scanner.currentLiteral();
 			if (literal == "RET")
 			{
 				scanner.next();
 				if (scanner.currentToken() == Token::LBrack)
 				{
 					scanner.next();
-					string functionName = scanner.currentLiteral();
+					std::string functionName = scanner.currentLiteral();
 					auto call = yul::FunctionCall{
 						{},	yul::Identifier{{}, YulString(functionName)}, {}
 					};
@@ -77,7 +76,7 @@ bool StackShufflingTest::parse(string const& _source)
 			{
 				expectToken(Token::LBrack);
 				scanner.next();
-				string functionName = scanner.currentLiteral();
+				std::string functionName = scanner.currentLiteral();
 				auto call = yul::FunctionCall{
 				    {},	yul::Identifier{{}, YulString(functionName)}, {}
 			    };
@@ -90,7 +89,7 @@ bool StackShufflingTest::parse(string const& _source)
 				});
 				expectToken(Token::RBrack);
 			}
-			else if (literal.find("0x") != string::npos || scanner.currentToken() == Token::Number)
+			else if (literal.find("0x") != std::string::npos || scanner.currentToken() == Token::Number)
 			{
 				stack.emplace_back(LiteralSlot{u256(literal)});
 			}
@@ -102,10 +101,10 @@ bool StackShufflingTest::parse(string const& _source)
 			{
 				expectToken(Token::LBrack);
 				scanner.next(); // read number of ghost variables as ghostVariableId
-				string ghostVariableId = scanner.currentLiteral();
+				std::string ghostVariableId = scanner.currentLiteral();
 				Scope::Variable ghostVar = Scope::Variable{""_yulstring, YulString(literal + "[" + ghostVariableId + "]")};
 				stack.emplace_back(VariableSlot{
-						m_variables.insert(make_pair(ghostVar.name, ghostVar)).first->second
+						m_variables.insert(std::make_pair(ghostVar.name, ghostVar)).first->second
 				});
 				expectToken(Token::RBrack);
 			}
@@ -129,50 +128,50 @@ bool StackShufflingTest::parse(string const& _source)
 	return parseStack(m_targetStack);
 }
 
-StackShufflingTest::StackShufflingTest(string const& _filename):
+StackShufflingTest::StackShufflingTest(std::string const& _filename):
 	TestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult StackShufflingTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
 {
 	if (!parse(m_source))
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
 		return TestResult::FatalError;
 	}
 
-	ostringstream output;
+	std::ostringstream output;
 	createStackLayout(
 		m_sourceStack,
 		m_targetStack,
 		[&](unsigned _swapDepth) // swap
 		{
-			output << stackToString(m_sourceStack) << endl;
-			output << "SWAP" << _swapDepth << endl;
+			output << stackToString(m_sourceStack) << std::endl;
+			output << "SWAP" << _swapDepth << std::endl;
 		},
 		[&](StackSlot const& _slot) // dupOrPush
 		{
-			output << stackToString(m_sourceStack) << endl;
+			output << stackToString(m_sourceStack) << std::endl;
 			if (canBeFreelyGenerated(_slot))
-				output << "PUSH " << stackSlotToString(_slot) << endl;
+				output << "PUSH " << stackSlotToString(_slot) << std::endl;
 			else
 			{
 				if (auto depth = util::findOffset(m_sourceStack | ranges::views::reverse, _slot))
-					output << "DUP" << *depth + 1 << endl;
+					output << "DUP" << *depth + 1 << std::endl;
 				else
-					BOOST_THROW_EXCEPTION(runtime_error("Invalid DUP operation."));
+					BOOST_THROW_EXCEPTION(std::runtime_error("Invalid DUP operation."));
 			}
 		},
 		[&](){ // pop
-			output << stackToString(m_sourceStack) << endl;
-			output << "POP" << endl;
+			output << stackToString(m_sourceStack) << std::endl;
+			output << "POP" << std::endl;
 		}
     );
 
-	output << stackToString(m_sourceStack) << endl;
+	output << stackToString(m_sourceStack) << std::endl;
 	m_obtainedResult = output.str();
 
 	return checkResult(_stream, _linePrefix, _formatted);

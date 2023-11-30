@@ -33,7 +33,6 @@
 
 #include <boost/algorithm/string/join.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
@@ -41,14 +40,14 @@ using namespace solidity::yul::test;
 
 namespace
 {
-string inlinableFunctions(string const& _source)
+std::string inlinableFunctions(std::string const& _source)
 {
 	auto ast = disambiguate(_source);
 
 	InlinableExpressionFunctionFinder funFinder;
 	funFinder(ast);
 
-	vector<string> functionNames;
+	std::vector<std::string> functionNames;
 	for (auto const& f: funFinder.inlinableFunctions())
 		functionNames.emplace_back(f.first.str());
 	return boost::algorithm::join(functionNames, ",");

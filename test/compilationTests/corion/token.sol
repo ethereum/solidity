@@ -218,11 +218,11 @@ contract token is safeMath, module, announcementTypes {
             @success    Was the Function successful?
         */
         if ( from != msg.sender ) {
-            (bool _success, uint256 _reamining, uint256 _nonce) = db.getAllowance(from, msg.sender);
+            (bool _success, uint256 _remaining, uint256 _nonce) = db.getAllowance(from, msg.sender);
             require( _success );
-            _reamining = safeSub(_reamining, amount);
+            _remaining = safeSub(_remaining, amount);
             _nonce = safeAdd(_nonce, 1);
-            require( db.setAllowance(from, msg.sender, _reamining, _nonce) );
+            require( db.setAllowance(from, msg.sender, _remaining, _nonce) );
             emit AllowanceUsed(msg.sender, from, amount);
         }
         bytes memory _data;
