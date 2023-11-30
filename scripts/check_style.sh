@@ -46,6 +46,7 @@ NAMESPACE_STD_FREE_FILES=(
     test/libsolidity/analysis/*
     test/libsolidity/interface/*
     test/libsolidity/util/*
+    test/libyul/*
 )
 
 (

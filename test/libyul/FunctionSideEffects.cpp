@@ -40,13 +40,12 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
 namespace
 {
-string toString(SideEffects const& _sideEffects)
+std::string toString(SideEffects const& _sideEffects)
 {
-	vector<string> ret;
+	std::vector<std::string> ret;
 	if (_sideEffects.movable)
 		ret.emplace_back("movable");
 	if (_sideEffects.movableApartFromEffects)
@@ -74,21 +73,21 @@ string toString(SideEffects const& _sideEffects)
 }
 }
 
-FunctionSideEffects::FunctionSideEffects(string const& _filename):
+FunctionSideEffects::FunctionSideEffects(std::string const& _filename):
 	TestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult FunctionSideEffects::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
 {
 	Object obj;
 	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(m_source, false);
 	if (!obj.code)
-		BOOST_THROW_EXCEPTION(runtime_error("Parsing input failed."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
-	map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+	std::map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 		CallGraphGenerator::callGraph(*obj.code)
 	);

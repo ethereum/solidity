@@ -27,7 +27,6 @@
 #include <libyul/ControlFlowSideEffectsCollector.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
@@ -35,9 +34,9 @@ using namespace solidity::frontend::test;
 
 namespace
 {
-string toString(ControlFlowSideEffects const& _sideEffects)
+std::string toString(ControlFlowSideEffects const& _sideEffects)
 {
-	vector<string> r;
+	std::vector<std::string> r;
 	if (_sideEffects.canTerminate)
 		r.emplace_back("can terminate");
 	if (_sideEffects.canRevert)
@@ -48,19 +47,19 @@ string toString(ControlFlowSideEffects const& _sideEffects)
 }
 }
 
-ControlFlowSideEffectsTest::ControlFlowSideEffectsTest(string const& _filename):
+ControlFlowSideEffectsTest::ControlFlowSideEffectsTest(std::string const& _filename):
 	TestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult ControlFlowSideEffectsTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult ControlFlowSideEffectsTest::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
 {
 	Object obj;
 	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(m_source, false);
 	if (!obj.code)
-		BOOST_THROW_EXCEPTION(runtime_error("Parsing input failed."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
 	ControlFlowSideEffectsCollector sideEffects(
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
@@ -68,7 +67,7 @@ TestCase::TestResult ControlFlowSideEffectsTest::run(ostream& _stream, string co
 	);
 	m_obtainedResult.clear();
 	forEach<FunctionDefinition const>(*obj.code, [&](FunctionDefinition const& _fun) {
-		string effectStr = toString(sideEffects.functionSideEffects().at(&_fun));
+		std::string effectStr = toString(sideEffects.functionSideEffects().at(&_fun));
 		m_obtainedResult += _fun.name.str() + (effectStr.empty() ? ":" : ": " + effectStr) + "\n";
 	});
 

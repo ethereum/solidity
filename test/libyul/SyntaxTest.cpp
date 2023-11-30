@@ -30,7 +30,6 @@
 
 #include <test/Common.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -40,10 +39,10 @@ using namespace solidity::frontend::test;
 void SyntaxTest::parseAndAnalyze()
 {
 	if (m_sources.sources.size() != 1)
-		BOOST_THROW_EXCEPTION(runtime_error{"Expected only one source for yul test."});
+		BOOST_THROW_EXCEPTION(std::runtime_error{"Expected only one source for yul test."});
 
-	string const& name = m_sources.sources.begin()->first;
-	string const& source = m_sources.sources.begin()->second;
+	std::string const& name = m_sources.sources.begin()->first;
+	std::string const& source = m_sources.sources.begin()->second;
 
 	ErrorList errorList{};
 	soltestAssert(m_dialect, "");
@@ -72,9 +71,9 @@ void SyntaxTest::parseAndAnalyze()
 
 }
 
-SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):
+SyntaxTest::SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion):
 	CommonSyntaxTest(_filename, _evmVersion)
 {
-	string dialectName = m_reader.stringSetting("dialect", "evmTyped");
+	std::string dialectName = m_reader.stringSetting("dialect", "evmTyped");
 	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
 }

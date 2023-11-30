@@ -44,9 +44,8 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
-YulInterpreterTest::YulInterpreterTest(string const& _filename):
+YulInterpreterTest::YulInterpreterTest(std::string const& _filename):
 	EVMVersionRestrictedTestCase(_filename)
 {
 	m_source = m_reader.source();
@@ -54,7 +53,7 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename):
 	m_simulateExternalCallsToSelf = m_reader.boolSetting("simulateExternalCall", false);
 }
 
-TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulInterpreterTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
 		return TestResult::FatalError;
@@ -64,7 +63,7 @@ TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _li
 	return checkResult(_stream, _linePrefix, _formatted);
 }
 
-bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
+bool YulInterpreterTest::parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
@@ -81,14 +80,14 @@ bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool
 	}
 	else
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
 		SourceReferenceFormatter{_stream, stack, true, false}
 			.printErrorInformation(stack.errors());
 		return false;
 	}
 }
 
-string YulInterpreterTest::interpret()
+std::string YulInterpreterTest::interpret()
 {
 	InterpreterState state;
 	state.maxTraceSize = 32;
@@ -108,7 +107,7 @@ string YulInterpreterTest::interpret()
 	{
 	}
 
-	stringstream result;
+	std::stringstream result;
 	state.dumpTraceAndState(result, false);
 	return result.str();
 }
