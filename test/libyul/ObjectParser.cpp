@@ -43,9 +43,9 @@
 #include <string>
 #include <sstream>
 
-using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
+using namespace std::string_literals;
 
 namespace solidity::yul::test
 {
@@ -53,7 +53,7 @@ namespace solidity::yul::test
 namespace
 {
 
-pair<bool, ErrorList> parse(string const& _source)
+std::pair<bool, ErrorList> parse(std::string const& _source)
 {
 	try
 	{
@@ -74,7 +74,7 @@ pair<bool, ErrorList> parse(string const& _source)
 	return {false, {}};
 }
 
-optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarningsAndInfos = true)
+std::optional<Error> parseAndReturnFirstError(std::string const& _source, bool _allowWarningsAndInfos = true)
 {
 	bool success;
 	ErrorList errors;
@@ -99,12 +99,12 @@ optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarni
 	return {};
 }
 
-bool successParse(string const& _source, bool _allowWarningsAndInfos = true)
+bool successParse(std::string const& _source, bool _allowWarningsAndInfos = true)
 {
 	return !parseAndReturnFirstError(_source, _allowWarningsAndInfos);
 }
 
-Error expectError(string const& _source, bool _allowWarningsAndInfos = false)
+Error expectError(std::string const& _source, bool _allowWarningsAndInfos = false)
 {
 
 	auto error = parseAndReturnFirstError(_source, _allowWarningsAndInfos);
@@ -112,18 +112,18 @@ Error expectError(string const& _source, bool _allowWarningsAndInfos = false)
 	return *error;
 }
 
-tuple<optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(string _source)
+std::tuple<std::optional<SourceNameMap>, ErrorList> tryGetSourceLocationMapping(std::string _source)
 {
-	vector<string> lines;
+	std::vector<std::string> lines;
 	boost::split(lines, _source, boost::is_any_of("\n"));
-	string source = util::joinHumanReadablePrefixed(lines, "\n///") + "\n{}\n";
+	std::string source = util::joinHumanReadablePrefixed(lines, "\n///") + "\n{}\n";
 
 	ErrorList errors;
 	ErrorReporter reporter(errors);
 	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion::berlin());
 	ObjectParser objectParser{reporter, dialect};
 	CharStream stream(std::move(source), "");
-	auto object = objectParser.parse(make_shared<Scanner>(stream), false);
+	auto object = objectParser.parse(std::make_shared<Scanner>(stream), false);
 	BOOST_REQUIRE(object && object->debugData);
 	return {object->debugData->sourceNames, std::move(errors)};
 }
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(empty_code)
 
 BOOST_AUTO_TEST_CASE(recursion_depth)
 {
-	string input;
+	std::string input;
 	for (size_t i = 0; i < 20000; i++)
-		input += "object \"a" + to_string(i) + "\" { code {} ";
+		input += "object \"a" + std::to_string(i) + "\" { code {} ";
 	for (size_t i = 0; i < 20000; i++)
 		input += "}";
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(recursion_depth)
 
 BOOST_AUTO_TEST_CASE(to_string)
 {
-	string code = R"(
+	std::string code = R"(
 		object "O" {
 			code { let x := mload(0) if x { sstore(0, 1) } }
 			object "i" { code {} data "j" "def" }
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(to_string)
 			data "k" hex"010203"
 		}
 	)";
-	string expectation = R"(object "O" {
+	std::string expectation = R"(object "O" {
 	code {
 		let x := mload(0)
 		if x { sstore(0, 1) }

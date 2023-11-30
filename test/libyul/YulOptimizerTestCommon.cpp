@@ -72,10 +72,9 @@ using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
-using namespace std;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
-	shared_ptr<Object> _obj,
+	std::shared_ptr<Object> _obj,
 	Dialect const& _dialect
 )
 {
@@ -349,7 +348,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
-				map<YulString, vector<YulString>> fakeUnreachables;
+				std::map<YulString, std::vector<YulString>> fakeUnreachables;
 				using ASTWalker::operator();
 				void operator()(FunctionDefinition const& _function) override
 				{
@@ -388,7 +387,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 	};
 }
 
-void YulOptimizerTestCommon::setStep(string const& _optimizerStep)
+void YulOptimizerTestCommon::setStep(std::string const& _optimizerStep)
 {
 	m_optimizerStep = _optimizerStep;
 }
@@ -407,7 +406,7 @@ bool YulOptimizerTestCommon::runStep()
 	return true;
 }
 
-string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
+std::string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 {
 	std::mt19937 prng(_seed);
 	std::uniform_int_distribution<size_t> dist(1, m_namedSteps.size());
@@ -417,7 +416,7 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 	{
 		if (count == idx)
 		{
-			string optimiserStep = step.first;
+			std::string optimiserStep = step.first;
 			// Do not fuzz mainFunction and wordSizeTransform
 			// because they do not preserve yul code semantics.
 			// Do not fuzz reasoning based simplifier because
@@ -437,7 +436,7 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 	yulAssert(false, "Optimiser step selection failed.");
 }
 
-shared_ptr<Block> YulOptimizerTestCommon::run()
+std::shared_ptr<Block> YulOptimizerTestCommon::run()
 {
 	return runStep() ? m_ast : nullptr;
 }
@@ -451,8 +450,8 @@ void YulOptimizerTestCommon::disambiguate()
 
 void YulOptimizerTestCommon::updateContext()
 {
-	m_nameDispenser = make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
-	m_context = make_unique<OptimiserStepContext>(OptimiserStepContext{
+	m_nameDispenser = std::make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
+	m_context = std::make_unique<OptimiserStepContext>(OptimiserStepContext{
 		*m_dialect,
 		*m_nameDispenser,
 		m_reservedIdentifiers,

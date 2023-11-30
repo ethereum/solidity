@@ -39,9 +39,8 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
-ControlFlowGraphTest::ControlFlowGraphTest(string const& _filename):
+ControlFlowGraphTest::ControlFlowGraphTest(std::string const& _filename):
 	TestCase(_filename)
 {
 	m_source = m_reader.source();
@@ -195,13 +194,13 @@ private:
 	std::list<CFG::BasicBlock const*> m_blocksToPrint;
 };
 
-TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	ErrorList errors;
 	auto [object, analysisInfo] = parse(m_source, *m_dialect, errors);
 	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
 		return TestResult::FatalError;
 	}
 
