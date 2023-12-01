@@ -28,19 +28,17 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 
-using namespace std;
-
 namespace
 {
 
 void printVariable(YulString const& _name, u256 const& _value)
 {
-	cout << "\t" << _name.str() << " = " << _value.str();
+	std::cout << "\t" << _name.str() << " = " << _value.str();
 
 	if (_value != 0)
-		cout << " (" << toCompactHexWithPrefix(_value) << ")";
+		std::cout << " (" << toCompactHexWithPrefix(_value) << ")";
 
-	cout << endl;
+	std::cout << std::endl;
 }
 
 }
@@ -58,32 +56,32 @@ void InspectedInterpreter::run(
 	InspectedInterpreter{_inspector, _state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
 }
 
-Inspector::NodeAction Inspector::queryUser(DebugData const& _data, map<YulString, u256> const& _variables)
+Inspector::NodeAction Inspector::queryUser(DebugData const& _data, std::map<YulString, u256> const& _variables)
 {
 	if (m_stepMode == NodeAction::RunNode)
 	{
 		// Output instructions that are being skipped/run
-		cout << "Running " << currentSource(_data) << endl;
+		std::cout << "Running " << currentSource(_data) << std::endl;
 
 		return NodeAction::StepThroughNode;
 	}
 
-	string input;
+	std::string input;
 
 	while (true)
 	{
 		// Output sourcecode about to run.
-		cout << "> " << currentSource(_data) << endl;
+		std::cout << "> " << currentSource(_data) << std::endl;
 
 		// Ask user for action
-		cout << endl
+		std::cout << std::endl
 			<< "(s)tep/(n)ext/(i)nspect/(p)rint/all (v)ariables?"
-			<< endl
+			<< std::endl
 			<< "# ";
 
-		cout.flush();
+		std::cout.flush();
 
-		getline(cin, input);
+		std::getline(std::cin, input);
 		boost::algorithm::trim(input);
 
 		// Imitate GDB and repeat last cmd for empty string input.
@@ -97,12 +95,12 @@ Inspector::NodeAction Inspector::queryUser(DebugData const& _data, map<YulString
 		else if (input == "step" || input == "s")
 			return NodeAction::StepThroughNode;
 		else if (input == "inspect" || input == "i")
-			m_state.dumpTraceAndState(cout, false);
+			m_state.dumpTraceAndState(std::cout, false);
 		else if (input == "variables" || input == "v")
 		{
 			for (auto &&[yulStr, val]: _variables)
 				printVariable(yulStr, val);
-			cout << endl;
+			std::cout << std::endl;
 		}
 		else if (
 			boost::starts_with(input, "print") ||
@@ -111,12 +109,12 @@ Inspector::NodeAction Inspector::queryUser(DebugData const& _data, map<YulString
 		{
 			size_t whitespacePos = input.find(' ');
 
-			if (whitespacePos == string::npos)
-				cout << "Error parsing command! Expected variable name." << endl;
+			if (whitespacePos == std::string::npos)
+				std::cout << "Error parsing command! Expected variable name." << std::endl;
 
-			string const varname = input.substr(whitespacePos + 1);
+			std::string const varname = input.substr(whitespacePos + 1);
 
-			vector<string> candidates;
+			std::vector<std::string> candidates;
 
 			bool found = false;
 			for (auto &&[yulStr, val]: _variables)
@@ -128,7 +126,7 @@ Inspector::NodeAction Inspector::queryUser(DebugData const& _data, map<YulString
 				}
 
 			if (!found)
-				cout << varname << " not found." << endl;
+				std::cout << varname << " not found." << std::endl;
 		}
 	}
 }

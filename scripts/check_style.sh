@@ -48,6 +48,7 @@ NAMESPACE_STD_FREE_FILES=(
     test/libsolidity/util/*
     test/libyul/*
     test/solc/*
+    test/tools/yulInterpreter/*
 )
 
 (
