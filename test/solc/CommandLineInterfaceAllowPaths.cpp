@@ -35,7 +35,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::util;
 using namespace solidity::test;
@@ -63,19 +62,19 @@ struct ImportCheck
 	static ImportCheck const OK() { return {Result::OK, ""}; }
 	static ImportCheck const FileNotFound() { return {Result::FileNotFound, ""}; }
 	static ImportCheck const PathDisallowed() { return {Result::PathDisallowed, ""}; }
-	static ImportCheck const Unknown(const string& _message) { return {Result::Unknown, _message}; }
+	static ImportCheck const Unknown(const std::string& _message) { return {Result::Unknown, _message}; }
 
 	Result result;
 	std::string message;
 };
 
 ImportCheck checkImport(
-	string const& _import,
-	vector<string> const& _cliOptions
+	std::string const& _import,
+	std::vector<std::string> const& _cliOptions
 )
 {
-	soltestAssert(regex_match(_import, regex{R"(import '[^']*')"}), "");
-	for (string const& option: _cliOptions)
+	soltestAssert(regex_match(_import, std::regex{R"(import '[^']*')"}), "");
+	for (std::string const& option: _cliOptions)
 		soltestAssert(
 			boost::starts_with(option, "--base-path") ||
 			boost::starts_with(option, "--include-path") ||
@@ -84,7 +83,7 @@ ImportCheck checkImport(
 			""
 		);
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"-",
 		"--no-color",
@@ -92,7 +91,7 @@ ImportCheck checkImport(
 	};
 	commandLine += _cliOptions;
 
-	string standardInputContent =
+	std::string standardInputContent =
 		"// SPDX-License-Identifier: GPL-3.0\n"
 		"pragma solidity >=0.0;\n" +
 		_import + ";";
@@ -101,7 +100,7 @@ ImportCheck checkImport(
 	if (cliResult.success)
 		return ImportCheck::OK();
 
-	static regex const sourceNotFoundErrorRegex{
+	static std::regex const sourceNotFoundErrorRegex{
 		R"(^Error \(6275\): Source "[^"]+" not found: (.*)\.\n)"
 		R"(\s*--> .*<stdin>:\d+:\d+:\n)"
 		R"(\s*\|\n)"
@@ -109,15 +108,15 @@ ImportCheck checkImport(
 		R"(\s*\| \^+\n\s*$)"
 	};
 
-	smatch submatches;
+	std::smatch submatches;
 	if (!regex_match(cliResult.stderrContent, submatches, sourceNotFoundErrorRegex))
 		return ImportCheck::Unknown("Unexpected stderr content: '" + cliResult.stderrContent + "'");
-	if (submatches[1] != "File not found" && !boost::starts_with(string(submatches[1]), "File outside of allowed directories"))
+	if (submatches[1] != "File not found" && !boost::starts_with(std::string(submatches[1]), "File outside of allowed directories"))
 		return ImportCheck::Unknown("Unexpected error message: '" + cliResult.stderrContent + "'");
 
 	if (submatches[1] == "File not found")
 		return ImportCheck::FileNotFound();
-	else if (boost::starts_with(string(submatches[1]), "File outside of allowed directories"))
+	else if (boost::starts_with(std::string(submatches[1]), "File outside of allowed directories"))
 		return ImportCheck::PathDisallowed();
 	else
 		return ImportCheck::Unknown("Unexpected error message '" + submatches[1].str() + "'");
@@ -175,11 +174,11 @@ protected:
 	TemporaryWorkingDirectory m_tempWorkDir;
 	boost::filesystem::path const m_codeDir;
 	boost::filesystem::path const m_workDir;
-	string m_portablePrefix;
+	std::string m_portablePrefix;
 	bool m_caseSensitiveFilesystem = true;
 };
 
-ostream& operator<<(ostream& _out, ImportCheck const& _value)
+std::ostream& operator<<(std::ostream& _out, ImportCheck const& _value)
 {
 	switch (_value.result)
 	{
@@ -216,7 +215,7 @@ BOOST_AUTO_TEST_SUITE(CommandLineInterfaceAllowPathsTest)
 
 BOOST_FIXTURE_TEST_CASE(allow_path_multiple_paths, AllowPathsFixture)
 {
-	string allowedPaths =
+	std::string allowedPaths =
 		m_codeDir.generic_string() + "/a/b/X.sol," +
 		m_codeDir.generic_string() + "/X/," +
 		m_codeDir.generic_string() + "/z," +
@@ -230,7 +229,7 @@ BOOST_FIXTURE_TEST_CASE(allow_path_multiple_paths, AllowPathsFixture)
 
 BOOST_FIXTURE_TEST_CASE(allow_path_should_work_with_various_path_forms, AllowPathsFixture)
 {
-	string import = "import '" + m_portablePrefix + "/a/b/c.sol'";
+	std::string import = "import '" + m_portablePrefix + "/a/b/c.sol'";
 
 	// Without --allow-path
 	BOOST_TEST(checkImport(import, {}) == ImportCheck::PathDisallowed());
@@ -343,7 +342,7 @@ BOOST_FIXTURE_TEST_CASE(allow_path_should_work_with_various_import_forms, AllowP
 	// UNC paths in imports.
 	// Unfortunately can't test it on Windows without having an existing UNC path. On Linux we can
 	// at least rely on the fact that `//` works like `/`.
-	string uncImportPath = "/" + m_portablePrefix + "/a/b/c.sol";
+	std::string uncImportPath = "/" + m_portablePrefix + "/a/b/c.sol";
 	soltestAssert(FileReader::isUNCPath(uncImportPath), "");
 	BOOST_TEST(checkImport("import '" + uncImportPath + "'", {"--allow-paths", "../code/a/b/c.sol"}) == ImportCheck::PathDisallowed());
 #endif

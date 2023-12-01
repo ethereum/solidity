@@ -42,20 +42,19 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::test;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-using PathSet = set<boost::filesystem::path>;
+using PathSet = std::set<boost::filesystem::path>;
 
 #define TEST_CASE_NAME (boost::unit_test::framework::current_test_case().p_name)
 
 namespace
 {
 
-ostream& operator<<(ostream& _out, vector<ImportRemapper::Remapping> const& _remappings)
+std::ostream& operator<<(std::ostream& _out, std::vector<ImportRemapper::Remapping> const& _remappings)
 {
 	static auto remappingToString = [](auto const& _remapping)
 	{
@@ -66,17 +65,17 @@ ostream& operator<<(ostream& _out, vector<ImportRemapper::Remapping> const& _rem
 	return _out;
 }
 
-ostream& operator<<(ostream& _out, map<string, string> const& _map)
+std::ostream& operator<<(std::ostream& _out, std::map<std::string, std::string> const& _map)
 {
-	_out << "{" << endl;
+	_out << "{" << std::endl;
 	for (auto const& [key, value]: _map)
-		_out << "" << key << ": " << value << "," << endl;
+		_out << "" << key << ": " << value << "," << std::endl;
 	_out << "}";
 
 	return _out;
 }
 
-ostream& operator<<(ostream& _out, PathSet const& _paths)
+std::ostream& operator<<(std::ostream& _out, PathSet const& _paths)
 {
 	static auto pathString = [](auto const& _path) { return _path.string(); };
 
@@ -93,15 +92,15 @@ namespace boost::test_tools::tt_detail
 // The recommended solution is to overload print_log_value<> struct and make it use our operator.
 
 template<>
-struct print_log_value<vector<ImportRemapper::Remapping>>
+struct print_log_value<std::vector<ImportRemapper::Remapping>>
 {
-	void operator()(std::ostream& _out, vector<ImportRemapper::Remapping> const& _value) { ::operator<<(_out, _value); }
+	void operator()(std::ostream& _out, std::vector<ImportRemapper::Remapping> const& _value) { ::operator<<(_out, _value); }
 };
 
 template<>
-struct print_log_value<map<string, string>>
+struct print_log_value<std::map<std::string, std::string>>
 {
-	void operator()(std::ostream& _out, map<string, string> const& _value) { ::operator<<(_out, _value); }
+	void operator()(std::ostream& _out, std::map<std::string, std::string> const& _value) { ::operator<<(_out, _value); }
 };
 
 template<>
@@ -149,7 +148,7 @@ BOOST_AUTO_TEST_CASE(version)
 
 BOOST_AUTO_TEST_CASE(multiple_input_modes)
 {
-	array<string, 10> inputModeOptions = {
+	std::array<std::string, 10> inputModeOptions = {
 		"--help",
 		"--license",
 		"--version",
@@ -161,13 +160,13 @@ BOOST_AUTO_TEST_CASE(multiple_input_modes)
 		"--import-ast",
 		"--import-asm-json",
 	};
-	string expectedMessage =
+	std::string expectedMessage =
 		"The following options are mutually exclusive: "
 		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast, --lsp, --import-asm-json. "
 		"Select at most one.";
 
-	for (string const& mode1: inputModeOptions)
-		for (string const& mode2: inputModeOptions)
+	for (std::string const& mode1: inputModeOptions)
+		for (std::string const& mode2: inputModeOptions)
 			if (mode1 != mode2)
 				BOOST_CHECK_EXCEPTION(
 					parseCommandLineAndReadInputFiles({"solc", mode1, mode2}),
@@ -178,12 +177,12 @@ BOOST_AUTO_TEST_CASE(multiple_input_modes)
 
 BOOST_AUTO_TEST_CASE(no_import_callback_allowed_paths)
 {
-	array<string, 2> options = {
+	std::array<std::string, 2> options = {
 		"--no-import-callback",
 		"--allow-paths"
 	};
 
-	string expectedMessage =
+	std::string expectedMessage =
 		"The following options are mutually exclusive: "
 		"--no-import-callback, --allow-paths. "
 		"Select at most one.";
@@ -208,11 +207,11 @@ BOOST_AUTO_TEST_CASE(cli_input)
 	soltestAssert(expectedDir1.is_absolute() || expectedDir1.root_path() == "/", "");
 	soltestAssert(expectedDir2.is_absolute() || expectedDir2.root_path() == "/", "");
 
-	vector<ImportRemapper::Remapping> expectedRemappings = {
+	std::vector<ImportRemapper::Remapping> expectedRemappings = {
 		{"", "a", "b/c/d"},
 		{"a", "b", "c/d/e/"},
 	};
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{"<stdin>", ""},
 		{(expectedDir1 / "input1.sol").generic_string(), ""},
 		{(expectedDir2 / "input2.sol").generic_string(), ""},
@@ -253,7 +252,7 @@ BOOST_AUTO_TEST_CASE(cli_ignore_missing_some_files_exist)
 	soltestAssert(expectedDir1.is_absolute() || expectedDir1.root_path() == "/", "");
 
 	// NOTE: Allowed paths should not be added for skipped files.
-	map<string, string> expectedSources = {{(expectedDir1 / "input1.sol").generic_string(), ""}};
+	std::map<std::string, std::string> expectedSources = {{(expectedDir1 / "input1.sol").generic_string(), ""}};
 	PathSet expectedAllowedPaths = {boost::filesystem::canonical(tempDir1)};
 
 	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles({
@@ -275,7 +274,7 @@ BOOST_AUTO_TEST_CASE(cli_ignore_missing_no_files_exist)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
 
-	string expectedMessage =
+	std::string expectedMessage =
 		"Info: \"" + (tempDir.path() / "input1.sol").string() + "\" is not found. Skipping.\n"
 		"Info: \"" + (tempDir.path() / "input2.sol").string() + "\" is not found. Skipping.\n"
 		"Error: All specified input files either do not exist or are not regular files.\n";
@@ -295,7 +294,7 @@ BOOST_AUTO_TEST_CASE(cli_not_a_file)
 {
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
 
-	string expectedMessage = "\"" + tempDir.path().string() + "\" is not a valid file.";
+	std::string expectedMessage = "\"" + tempDir.path().string() + "\" is not a valid file.";
 
 	BOOST_CHECK_EXCEPTION(
 		parseCommandLineAndReadInputFiles({"solc", tempDir.path().string()}),
@@ -352,7 +351,7 @@ BOOST_AUTO_TEST_CASE(standard_json_one_input_file)
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
 	createFilesWithParentDirs({tempDir.path() / "input.json"});
 
-	vector<string> commandLine = {"solc", "--standard-json", (tempDir.path() / "input.json").string()};
+	std::vector<std::string> commandLine = {"solc", "--standard-json", (tempDir.path() / "input.json").string()};
 	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
 	BOOST_TEST(result.success);
 	BOOST_TEST(result.stderrContent == "");
@@ -364,7 +363,7 @@ BOOST_AUTO_TEST_CASE(standard_json_one_input_file)
 
 BOOST_AUTO_TEST_CASE(standard_json_two_input_files)
 {
-	string expectedMessage =
+	std::string expectedMessage =
 		"Too many input files for --standard-json.\n"
 		"Please either specify a single file name or provide its content on standard input.";
 
@@ -377,7 +376,7 @@ BOOST_AUTO_TEST_CASE(standard_json_two_input_files)
 
 BOOST_AUTO_TEST_CASE(standard_json_one_input_file_and_stdin)
 {
-	string expectedMessage =
+	std::string expectedMessage =
 		"Too many input files for --standard-json.\n"
 		"Please either specify a single file name or provide its content on standard input.";
 
@@ -393,7 +392,7 @@ BOOST_AUTO_TEST_CASE(standard_json_ignore_missing)
 	TemporaryDirectory tempDir(TEST_CASE_NAME);
 
 	// This option is pretty much useless Standard JSON mode.
-	string expectedMessage =
+	std::string expectedMessage =
 		"All specified input files either do not exist or are not regular files.";
 
 	BOOST_CHECK_EXCEPTION(
@@ -410,7 +409,7 @@ BOOST_AUTO_TEST_CASE(standard_json_ignore_missing)
 
 BOOST_AUTO_TEST_CASE(standard_json_remapping)
 {
-	string expectedMessage =
+	std::string expectedMessage =
 		"Import remappings are not accepted on the command line in Standard JSON mode.\n"
 		"Please put them under 'settings.remappings' in the JSON input.";
 
@@ -437,7 +436,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_no_base_path)
 	boost::filesystem::path expectedOtherDir = "/" / otherDirNoSymlinks.relative_path();
 	soltestAssert(expectedOtherDir.is_absolute() || expectedOtherDir.root_path() == "/", "");
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"contract1.sol",                                   // Relative path
 		"c/d/contract2.sol",                               // Relative path with subdirectories
@@ -454,7 +453,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_no_base_path)
 	};
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{"contract1.sol", ""},
 		{"c/d/contract2.sol", ""},
 		{"contract3.sol", ""},
@@ -497,7 +496,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_same_as_work_dir)
 	soltestAssert(expectedWorkDir.is_absolute() || expectedWorkDir.root_path() == "/", "");
 	soltestAssert(expectedOtherDir.is_absolute() || expectedOtherDir.root_path() == "/", "");
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"--base-path=" + currentDirNoSymlinks.string(),
 		"contract1.sol",                                   // Relative path
@@ -516,7 +515,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_same_as_work_dir)
 	expectedOptions.input.basePath = currentDirNoSymlinks;
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{"contract1.sol", ""},
 		{"c/d/contract2.sol", ""},
 		{"contract3.sol", ""},
@@ -566,7 +565,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_different_from_wor
 	soltestAssert(expectedOtherDir.is_absolute() || expectedOtherDir.root_path() == "/", "");
 	soltestAssert(expectedBaseDir.is_absolute() || expectedBaseDir.root_path() == "/", "");
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"--base-path=" + baseDirNoSymlinks.string(),
 		"contract1.sol",                                   // Relative path
@@ -587,7 +586,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_different_from_wor
 	expectedOptions.input.basePath = baseDirNoSymlinks;
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{expectedWorkDir.generic_string() + "/contract1.sol", ""},
 		{expectedWorkDir.generic_string() + "/c/d/contract2.sol", ""},
 		{expectedCurrentDir.generic_string() + "/contract3.sol", ""},
@@ -632,7 +631,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_relative_base_path)
 	soltestAssert(expectedWorkDir.is_absolute() || expectedWorkDir.root_path() == "/", "");
 	soltestAssert(expectedOtherDir.is_absolute() || expectedOtherDir.root_path() == "/", "");
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"--base-path=base",
 		"contract1.sol",                                       // Relative path outside of base path
@@ -655,7 +654,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_relative_base_path)
 	expectedOptions.input.basePath = "base";
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{expectedWorkDir.generic_string() + "/contract1.sol", ""},
 		{"contract2.sol", ""},
 		{expectedWorkDir.generic_string() + "/contract3.sol", ""},
@@ -689,7 +688,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_name
 	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "x/y/z");
 	soltestAssert(tempDir.path().is_absolute(), "");
 
-	string uncPath = "//" + tempDir.path().relative_path().generic_string();
+	std::string uncPath = "//" + tempDir.path().relative_path().generic_string();
 	soltestAssert(FileReader::isUNCPath(uncPath), "");
 
 	boost::filesystem::path tempDirNoSymlinks = boost::filesystem::canonical(tempDir);
@@ -697,7 +696,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_name
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 	soltestAssert(expectedWorkDir.is_absolute() || expectedWorkDir.root_path() == "/", "");
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 
 #if !defined(_WIN32)
@@ -785,7 +784,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_name
 	};
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 #if !defined(_WIN32)
 		{"file:/c/d/contract1.sol", ""},
 		{"file:/c/d/contract2.sol", ""},
@@ -865,7 +864,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 	soltestAssert(expectedWorkDir.is_absolute() || expectedWorkDir.root_path() == "/", "");
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 
 		"--base-path=../r/sym/z/",
@@ -885,7 +884,7 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
 	expectedOptions.input.basePath = "../r/sym/z/";
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{"contract.sol", ""},
 		{(expectedWorkDir.parent_path() / "x/y/z/contract.sol").generic_string(), ""},
 		{"contract_symlink.sol", ""},
@@ -915,14 +914,14 @@ BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_and_stdin)
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
 
-	vector<string> commandLine = {"solc", "--base-path=base", "-"};
+	std::vector<std::string> commandLine = {"solc", "--base-path=base", "-"};
 
 	CommandLineOptions expectedOptions;
 	expectedOptions.input.addStdin = true;
 	expectedOptions.input.basePath = "base";
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{"<stdin>", ""},
 	};
 	FileReader::FileSystemPathSet expectedAllowedDirectories = {};
@@ -944,7 +943,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
-	string const mainContractSource = withPreamble(
+	std::string const mainContractSource = withPreamble(
 		"import \"contract.sol\";\n"
 		"import \"contract_via_callback.sol\";\n"
 		"import \"include.sol\";\n"
@@ -955,7 +954,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		"import \"lib_via_callback.sol\";\n"
 	);
 
-	string const onlyPreamble = withPreamble("");
+	std::string const onlyPreamble = withPreamble("");
 	createFilesWithParentDirs(
 		{
 			tempDir.path() / "base/contract.sol",
@@ -974,7 +973,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 	boost::filesystem::path canonicalWorkDir = boost::filesystem::canonical(tempDir);
 	boost::filesystem::path expectedWorkDir = "/" / canonicalWorkDir.relative_path();
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"--no-color",
 		"--base-path=base/",
@@ -1005,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 	expectedOptions.formatting.coloredOutput = false;
 	expectedOptions.modelChecker.initialize = true;
 
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{"main.sol", mainContractSource},
 		{"contract.sol", onlyPreamble},
 		{"contract_via_callback.sol", onlyPreamble},
@@ -1017,7 +1016,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		{"lib_via_callback.sol", onlyPreamble},
 	};
 
-	vector<boost::filesystem::path> expectedIncludePaths = {
+	std::vector<boost::filesystem::path> expectedIncludePaths = {
 		expectedWorkDir / "include/",
 		expectedWorkDir / "lib/nested",
 		expectedWorkDir / "lib/",
@@ -1030,11 +1029,11 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 		canonicalWorkDir / "lib",
 	};
 
-	string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
+	std::string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
 	OptionsReaderAndMessages result = runCLI(commandLine, "");
 
 	BOOST_TEST(result.stderrContent == "");
-	if (SemVerVersion{string(VersionString)}.isPrerelease())
+	if (SemVerVersion{std::string(VersionString)}.isPrerelease())
 		BOOST_TEST(result.stdoutContent == "");
 	else
 		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
@@ -1048,16 +1047,16 @@ BOOST_AUTO_TEST_CASE(cli_include_paths)
 
 BOOST_AUTO_TEST_CASE(cli_no_contracts_to_compile)
 {
-	string const contractSource = R"(
+	std::string const contractSource = R"(
 		// SPDX-License-Identifier: GPL-3.0
 		pragma solidity >=0.0;
 		enum Status { test }
 	)";
 
-	string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
+	std::string const expectedStdoutContent = "Compiler run successful. No contracts to compile.\n";
 	OptionsReaderAndMessages result = runCLI({"solc", "-"}, contractSource);
 
-	if (SemVerVersion{string(VersionString)}.isPrerelease())
+	if (SemVerVersion{std::string(VersionString)}.isPrerelease())
 		BOOST_TEST(result.stdoutContent == "");
 	else
 		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
@@ -1066,17 +1065,17 @@ BOOST_AUTO_TEST_CASE(cli_no_contracts_to_compile)
 
 BOOST_AUTO_TEST_CASE(cli_no_output)
 {
-	string const contractSource = R"(
+	std::string const contractSource = R"(
 		// SPDX-License-Identifier: GPL-3.0
 		pragma solidity >=0.0;
 		abstract contract A {
 			function B() public virtual returns(uint);
 		})";
 
-	string const expectedStdoutContent = "Compiler run successful. No output generated.\n";
+	std::string const expectedStdoutContent = "Compiler run successful. No output generated.\n";
 	OptionsReaderAndMessages result = runCLI({"solc", "-"}, contractSource);
 
-	if (SemVerVersion{string(VersionString)}.isPrerelease())
+	if (SemVerVersion{std::string(VersionString)}.isPrerelease())
 		BOOST_TEST(result.stdoutContent == "");
 	else
 		BOOST_TEST(result.stdoutContent == expectedStdoutContent);
@@ -1088,14 +1087,14 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
-	string const mainContractSource = withPreamble(
+	std::string const mainContractSource = withPreamble(
 		"import 'contract_via_callback.sol';\n"
 		"import 'include_via_callback.sol';\n"
 		"import 'nested_via_callback.sol';\n"
 		"import 'lib_via_callback.sol';\n"
 	);
 
-	string const standardJsonInput = R"(
+	std::string const standardJsonInput = R"(
 		{
 			"language": "Solidity",
 			"sources": {
@@ -1104,7 +1103,7 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 		}
 	)";
 
-	string const onlyPreamble = withPreamble("");
+	std::string const onlyPreamble = withPreamble("");
 	createFilesWithParentDirs(
 		{
 			tempDir.path() / "base/contract_via_callback.sol",
@@ -1117,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"--base-path=base/",
 		"--include-path=include/",
@@ -1141,14 +1140,14 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 	// NOTE: Source code from Standard JSON does not end up in FileReader. This is not a problem
 	// because FileReader is only used once to initialize the compiler stack and after that
 	// its sources are irrelevant (even though the callback still stores everything it loads).
-	map<string, string> expectedSources = {
+	std::map<std::string, std::string> expectedSources = {
 		{"contract_via_callback.sol", onlyPreamble},
 		{"include_via_callback.sol", onlyPreamble},
 		{"nested_via_callback.sol", onlyPreamble},
 		{"lib_via_callback.sol", onlyPreamble},
 	};
 
-	vector<boost::filesystem::path> expectedIncludePaths = {
+	std::vector<boost::filesystem::path> expectedIncludePaths = {
 		expectedWorkDir / "include/",
 		expectedWorkDir / "lib/nested",
 		expectedWorkDir / "lib/",
@@ -1159,15 +1158,15 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 	OptionsReaderAndMessages result = runCLI(commandLine, standardJsonInput);
 
 	Json::Value parsedStdout;
-	string jsonParsingErrors;
+	std::string jsonParsingErrors;
 	BOOST_TEST(util::jsonParseStrict(result.stdoutContent, parsedStdout, &jsonParsingErrors));
 	BOOST_TEST(jsonParsingErrors == "");
 	for (Json::Value const& errorDict: parsedStdout["errors"])
 		// The error list might contain pre-release compiler warning
 		BOOST_TEST(errorDict["severity"] != "error");
 	BOOST_TEST(
-		(parsedStdout["sources"].getMemberNames() | ranges::to<set>) ==
-		(expectedSources | ranges::views::keys | ranges::to<set>) + set<string>{"main.sol"}
+		(parsedStdout["sources"].getMemberNames() | ranges::to<std::set>) ==
+		(expectedSources | ranges::views::keys | ranges::to<std::set>) + std::set<std::string>{"main.sol"}
 	);
 
 	BOOST_REQUIRE(result.success);
@@ -1184,7 +1183,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_empty_path)
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 	createFilesWithParentDirs({tempDir.path() / "base/main.sol"});
 
-	string expectedMessage = "Empty values are not allowed in --include-path.";
+	std::string expectedMessage = "Empty values are not allowed in --include-path.";
 
 	BOOST_CHECK_EXCEPTION(
 		parseCommandLineAndReadInputFiles({
@@ -1205,7 +1204,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_without_base_path)
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 	createFilesWithParentDirs({tempDir.path() / "contract.sol"});
 
-	string expectedMessage = "--include-path option requires a non-empty base path.";
+	std::string expectedMessage = "--include-path option requires a non-empty base path.";
 
 	BOOST_CHECK_EXCEPTION(
 		parseCommandLineAndReadInputFiles({"solc", "--include-path", "include/", "contract.sol"}),
@@ -1227,7 +1226,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_should_detect_source_unit_name_collisions
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
 
-	string expectedMessage =
+	std::string expectedMessage =
 		"Source unit name collision detected. "
 		"The specified values of base path and/or include paths would result in multiple "
 		"input files being assigned the same source unit name:\n"
@@ -1275,7 +1274,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_should_detect_source_unit_name_collisions
 
 	{
 		// No conflict if files with the same name exist but only one is given to the compiler.
-		vector<string> commandLine = {
+		std::vector<std::string> commandLine = {
 			"solc",
 			"--base-path=dir3/",
 			"--include-path=dir1/",
@@ -1290,7 +1289,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_should_detect_source_unit_name_collisions
 
 	{
 		// The same file specified multiple times is not a conflict.
-		vector<string> commandLine = {
+		std::vector<std::string> commandLine = {
 			"solc",
 			"--base-path=dir3/",
 			"--include-path=dir1/",
@@ -1314,7 +1313,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_should_allow_duplicate_paths)
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
 	boost::filesystem::path expectedTempDir = "/" / tempDir.path().relative_path();
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"--base-path=dir1/",
 		"--include-path", "dir1",
@@ -1330,7 +1329,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_should_allow_duplicate_paths)
 	};
 
 	// Duplicates do not affect the result but are not removed from the include path list.
-	vector<boost::filesystem::path> expectedIncludePaths = {
+	std::vector<boost::filesystem::path> expectedIncludePaths = {
 		expectedWorkDir / "dir1",
 		expectedWorkDir / "dir1",
 		expectedWorkDir / "dir1/",
@@ -1357,13 +1356,13 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_ambiguous_import)
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
 	// Ambiguous: both base/contract.sol and include/contract.sol match the import.
-	string const mainContractSource = withPreamble("import \"contract.sol\";");
+	std::string const mainContractSource = withPreamble("import \"contract.sol\";");
 
 	createFilesWithParentDirs({"base/contract.sol", "include/contract.sol"}, withPreamble(""));
 
 	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::canonical(tempDir).relative_path();
 
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"--no-color",
 		"--base-path=base/",
@@ -1371,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(cli_include_paths_ambiguous_import)
 		"-",
 	};
 
-	string expectedMessage =
+	std::string expectedMessage =
 		"Error: Source \"contract.sol\" not found: Ambiguous import. "
 		"Multiple matching files found inside base path and/or include paths: \"" +
 		(expectedWorkDir / "base/contract.sol").generic_string() + "\", \"" +
