@@ -34,7 +34,6 @@
 
 #include <limits>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::yul;
@@ -78,7 +77,7 @@ namespace solidity::yul::test
 /// @a _target at offset @a _targetOffset. Behaves as if @a _source would
 /// continue with an infinite sequence of zero bytes beyond its end.
 void copyZeroExtended(
-	map<u256, uint8_t>& _target, bytes const& _source,
+	std::map<u256, uint8_t>& _target, bytes const& _source,
 	size_t _targetOffset, size_t _sourceOffset, size_t _size
 )
 {
@@ -92,7 +91,7 @@ using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backen
 
 u256 EVMInstructionInterpreter::eval(
 	evmasm::Instruction _instruction,
-	vector<u256> const& _arguments
+	std::vector<u256> const& _arguments
 )
 {
 	using namespace solidity::evmasm;
@@ -457,18 +456,18 @@ u256 EVMInstructionInterpreter::eval(
 
 u256 EVMInstructionInterpreter::evalBuiltin(
 	BuiltinFunctionForEVM const& _fun,
-	vector<Expression> const& _arguments,
-	vector<u256> const& _evaluatedArguments
+	std::vector<Expression> const& _arguments,
+	std::vector<u256> const& _evaluatedArguments
 )
 {
 	if (_fun.instruction)
 		return eval(*_fun.instruction, _evaluatedArguments);
 
-	string fun = _fun.name.str();
+	std::string fun = _fun.name.str();
 	// Evaluate datasize/offset/copy instructions
 	if (fun == "datasize" || fun == "dataoffset")
 	{
-		string arg = std::get<Literal>(_arguments.at(0)).value.str();
+		std::string arg = std::get<Literal>(_arguments.at(0)).value.str();
 		if (arg.length() < 32)
 			arg.resize(32, 0);
 		if (fun == "datasize")
@@ -492,7 +491,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 				m_state.memory,
 				m_state.code,
 				size_t(_evaluatedArguments.at(0)),
-				size_t(_evaluatedArguments.at(1) & numeric_limits<size_t>::max()),
+				size_t(_evaluatedArguments.at(1) & std::numeric_limits<size_t>::max()),
 				size_t(_evaluatedArguments.at(2))
 			);
 		return 0;
@@ -512,10 +511,10 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 	else if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
 	{
 		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
-		m_state.msize = max(m_state.msize, newSize);
+		m_state.msize = std::max(m_state.msize, newSize);
 		// We only record accesses to contiguous memory chunks that are at most s_maxRangeSize bytes
 		// in size and at an offset of at most numeric_limits<size_t>::max() - s_maxRangeSize
-		return _size <= s_maxRangeSize && _offset <= u256(numeric_limits<size_t>::max() - s_maxRangeSize);
+		return _size <= s_maxRangeSize && _offset <= u256(std::numeric_limits<size_t>::max() - s_maxRangeSize);
 	}
 	else
 		m_state.msize = u256(-1);
@@ -567,7 +566,7 @@ void EVMInstructionInterpreter::logTrace(
 {
 	if (!(_writesToMemory && memWriteTracingDisabled()))
 	{
-		string message = _pseudoInstruction + "(";
+		std::string message = _pseudoInstruction + "(";
 		std::pair<bool, size_t> inputMemoryPtrModified = isInputMemoryPtrModified(_pseudoInstruction, _arguments);
 		for (size_t i = 0; i < _arguments.size(); ++i)
 		{
