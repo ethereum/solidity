@@ -82,14 +82,22 @@ bool TypeContextAnalysis::visit(FunctionDefinition const& _functionDefinition)
 	return false;
 }
 
+void TypeContextAnalysis::endVisit(ParameterList const& _parameterList)
+{
+	if (m_expressionContext == ExpressionContext::Term)
+		// Terms will be handled by TypeInference.
+		return;
+
+	auto& listAnnotation = annotation(_parameterList);
+	solAssert(!listAnnotation.type);
+	listAnnotation.type = TypeSystemHelpers{m_typeSystem}.tupleType(
+		_parameterList.parameters() | ranges::views::transform([&](auto _arg) { return typeAnnotation(*_arg); }) | ranges::to<std::vector<Type>>
+	);
+}
+
 bool TypeContextAnalysis::visit(TypeClassDefinition const& _typeClassDefinition)
 {
 	solAssert(m_expressionContext == ExpressionContext::Term);
-	auto& typeClassDefinitionAnnotation = annotation(_typeClassDefinition);
-	if (typeClassDefinitionAnnotation.type)
-		return false;
-
-	typeClassDefinitionAnnotation.type = type(&_typeClassDefinition, {});
 
 	{
 		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
@@ -351,7 +359,6 @@ bool TypeContextAnalysis::visit(TypeClassInstantiation const& _typeClassInstanti
 		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
 		_typeClassInstantiation.argumentSorts()->accept(*this);
 	}
-	m_env->fixTypeVars(arguments);
 
 	for (auto subNode: _typeClassInstantiation.subNodes())
 		subNode->accept(*this);

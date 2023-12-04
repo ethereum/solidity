@@ -39,10 +39,6 @@ public:
 		/// Expressions, variable declarations, function declarations.
 		std::optional<Type> type;
 	};
-	struct TypeMember
-	{
-		Type type;
-	};
 	struct GlobalAnnotation
 	{
 	};
@@ -51,6 +47,7 @@ public:
 
 	bool visit(ForAllQuantifier const& _forAllQuantifier) override;
 	bool visit(FunctionDefinition const& _functionDefinition) override;
+	void endVisit(ParameterList const& _parameterList) override;
 	bool visit(SourceUnit const&) override { return true; }
 	bool visit(ContractDefinition const&) override { return true; }
 	bool visit(ImportDirective const&) override { return true; }

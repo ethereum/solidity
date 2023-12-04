@@ -56,6 +56,7 @@ public:
 	void endVisit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	bool visit(VariableDeclaration const& _variableDeclaration) override;
 
+	bool visit(ForAllQuantifier const& _forAllQuantifier) override;
 	bool visit(FunctionDefinition const& _functionDefinition) override;
 	void endVisit(FunctionDefinition const& _functionDefinition) override;
 	bool visit(ParameterList const&) override { return true; }
@@ -78,6 +79,7 @@ public:
 	bool visit(Return const&) override { return true; }
 	void endVisit(Return const& _return) override;
 
+	bool visit(MemberAccess const&) override { return true; }
 	void endVisit(MemberAccess const& _memberAccess) override;
 
 	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
@@ -102,7 +104,7 @@ private:
 	std::optional<Type> m_currentFunctionType;
 
 	Type typeAnnotation(ASTNode const& _node) const;
-	Type explicitType(ASTNode const& _node) const;
+	Type typeFromTypeContext(ASTNode const& _node) const;
 
 	Annotation& annotation(ASTNode const& _node);
 	Annotation const& annotation(ASTNode const& _node) const;

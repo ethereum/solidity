@@ -23,6 +23,7 @@
 #include <libsolidity/experimental/codegen/Common.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/TypeContextAnalysis.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
 
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
@@ -141,7 +142,7 @@ std::string IRGenerator::generate(FunctionDefinition const& _function, Type _typ
 	code << ")";
 	if (_function.experimentalReturnExpression())
 	{
-		auto returnType = m_context.analysis.annotation<TypeInference>(*_function.experimentalReturnExpression()).type;
+		auto returnType = m_context.analysis.annotation<TypeContextAnalysis>(*_function.experimentalReturnExpression()).type;
 		solAssert(returnType);
 		if (!m_env.typeEquals(*returnType, m_context.analysis.typeSystem().type(PrimitiveType::Unit, {})))
 		{

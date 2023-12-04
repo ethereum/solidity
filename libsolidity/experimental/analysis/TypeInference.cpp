@@ -128,6 +128,14 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 	return !m_errorReporter.hasErrors();
 }
 
+bool TypeInference::visit(ForAllQuantifier const& _quantifier)
+{
+	// NOTE: Not visiting the type variable declarations. Already visited in type context.
+
+	_quantifier.quantifiedDeclaration().accept(*this);
+	return false;
+}
+
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
 	auto& functionAnnotation = annotation(_functionDefinition);
@@ -147,10 +155,10 @@ bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 	_functionDefinition.parameterList().accept(*this);
 	unify(argumentsType, typeAnnotation(_functionDefinition.parameterList()), _functionDefinition.parameterList().location());
 	if (_functionDefinition.experimentalReturnExpression())
-		// NOTE: Not visiting the return type. Nothing in term context there.
+		// NOTE: Not visiting the return type. Already visited in type context.
 		unify(
 			returnType,
-			explicitType(*_functionDefinition.experimentalReturnExpression()),
+			typeFromTypeContext(*_functionDefinition.experimentalReturnExpression()),
 			_functionDefinition.experimentalReturnExpression()->location()
 		);
 	else
@@ -197,6 +205,8 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 	// TMP: This guard is ineffective now
 	if (typeClassDefinitionAnnotation.type)
 		return false;
+
+	typeClassDefinitionAnnotation.type = type(&_typeClassDefinition, {});
 
 	// NOTE: Not visiting the class type variable. Already visited in type context.
 
@@ -313,7 +323,7 @@ bool TypeInference::visit(BinaryOperation const& _binaryOperation)
 		// NOTE: Not visiting the right expression. Already visited in type context.
 		_binaryOperation.leftExpression().accept(*this);
 		Type leftType = typeAnnotation(_binaryOperation.leftExpression());
-		unify(leftType, explicitType(_binaryOperation.rightExpression()), _binaryOperation.location());
+		unify(leftType, typeFromTypeContext(_binaryOperation.rightExpression()), _binaryOperation.location());
 		operationAnnotation.type = leftType;
 	}
 	else
@@ -348,7 +358,7 @@ bool TypeInference::visit(VariableDeclaration const& _variableDeclaration)
 	{
 		// NOTE: Not visiting the type. Nothing in term context there.
 
-		variableAnnotation.type = explicitType(*_variableDeclaration.typeExpression());
+		variableAnnotation.type = typeFromTypeContext(*_variableDeclaration.typeExpression());
 		solAssert(variableAnnotation.type.has_value());
 		return false;
 	}
@@ -523,7 +533,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	{
 		// NOTE: Not visiting the argument sorts. Nothing in term context there.
 
-		arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(explicitType(*_typeClassInstantiation.argumentSorts()));
+		arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(typeFromTypeContext(*_typeClassInstantiation.argumentSorts()));
 		arity.argumentSorts = arguments | ranges::views::transform([&](Type _type) {
 			return m_env->sort(_type);
 		}) | ranges::to<std::vector<Sort>>;
@@ -619,14 +629,19 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 	if (typeDefinitionAnnotation.type)
 		return false;
 
+	typeDefinitionAnnotation.type = typeFromTypeContext(_typeDefinition);
+
 	// NOTE: Not visiting type arguments. Already processed by type context analysis.
 
-	Type definedType = explicitType(_typeDefinition);
 	std::optional<Type> underlyingType;
+	Type definedType = typeFromTypeContext(_typeDefinition);
+	if (helper.isTypeFunctionType(definedType))
+		definedType = std::get<1>(helper.destTypeFunctionType(typeFromTypeContext(_typeDefinition)));
 
 	// NOTE: Not visiting type expression. Already processed by type context analysis.
 
-	underlyingType = explicitType(*_typeDefinition.typeExpression());
+	if (_typeDefinition.typeExpression())
+		underlyingType = typeFromTypeContext(*_typeDefinition.typeExpression());
 
 	TypeConstructor constructor = typeConstructor(&_typeDefinition);
 	auto [members, newlyInserted] = annotation().members.emplace(constructor, std::map<std::string, TypeMember>{});
@@ -645,8 +660,8 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 		solAssert(dynamic_cast<Builtin const*>(_typeDefinition.typeExpression()));
 		solAssert(_typeDefinition.arguments());
 		solAssert(_typeDefinition.arguments()->parameters().size() == 2);
-		members->second.emplace("first", TypeMember{helper.functionType(definedType, explicitType(*_typeDefinition.arguments()->parameters()[0]))});
-		members->second.emplace("second", TypeMember{helper.functionType(definedType, explicitType(*_typeDefinition.arguments()->parameters()[1]))});
+		members->second.emplace("first", TypeMember{helper.functionType(definedType, typeFromTypeContext(*_typeDefinition.arguments()->parameters()[0]))});
+		members->second.emplace("second", TypeMember{helper.functionType(definedType, typeFromTypeContext(*_typeDefinition.arguments()->parameters()[1]))});
 	}
 
 	return false;
@@ -982,7 +997,7 @@ experimental::Type TypeInference::typeAnnotation(ASTNode const& _node) const
 	return *result;
 }
 
-experimental::Type TypeInference::explicitType(ASTNode const& _node) const
+experimental::Type TypeInference::typeFromTypeContext(ASTNode const& _node) const
 {
 	std::optional<Type> const& type = m_analysis.annotation<TypeContextAnalysis>(_node).type;
 	solAssert(type.has_value());
