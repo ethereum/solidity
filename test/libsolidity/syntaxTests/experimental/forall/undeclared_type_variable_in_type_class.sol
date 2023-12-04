@@ -14,4 +14,3 @@ instantiation T(Y): C {
 // ----
 // Warning 2264: (0-29): Experimental features are turned on. Do not use experimental features on live deployments.
 // TypeError 5934: (137-138): Undeclared type variable.
-// TypeError 7428: (90-145): Instantiation function 'f' does not match the declaration in the type class (T('bc:type) -> () != T('y:type) -> ()).

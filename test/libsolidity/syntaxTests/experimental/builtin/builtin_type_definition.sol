@@ -41,19 +41,11 @@ contract C {
 // Info 4164: (125-161): Inferred type: integer
 // Info 4164: (162-192): Inferred type: ()
 // Info 4164: (194-228): Inferred type: tfun(('s:type, 't:type), 's:type -> 't:type)
-// Info 4164: (202-208): Inferred type: ('s:type, 't:type)
-// Info 4164: (203-204): Inferred type: 's:type
-// Info 4164: (206-207): Inferred type: 't:type
 // Info 4164: (229-265): Inferred type: tfun(('u:type, 'v:type), ('u:type, 'v:type))
-// Info 4164: (238-244): Inferred type: ('u:type, 'v:type)
-// Info 4164: (239-240): Inferred type: 'u:type
-// Info 4164: (242-243): Inferred type: 'v:type
 // Info 4164: (284-584): Inferred type: () -> ()
 // Info 4164: (292-294): Inferred type: ()
 // Info 4164: (318-325): Inferred type: void
-// Info 4164: (321-325): Inferred type: void
 // Info 4164: (340-347): Inferred type: bool
-// Info 4164: (343-347): Inferred type: bool
 // Info 4164: (357-378): Inferred type: bool
 // Info 4164: (357-365): Inferred type: word -> bool
 // Info 4164: (357-361): Inferred type: bool
@@ -62,26 +54,15 @@ contract C {
 // Info 4164: (366-370): Inferred type: bool
 // Info 4164: (375-376): Inferred type: bool
 // Info 4164: (393-400): Inferred type: word
-// Info 4164: (396-400): Inferred type: word
 // Info 4164: (414-424): Inferred type: integer
-// Info 4164: (417-424): Inferred type: integer
 // Info 4164: (438-445): Inferred type: ()
-// Info 4164: (441-445): Inferred type: ()
 // Info 4164: (460-478): Inferred type: word -> bool
-// Info 4164: (463-478): Inferred type: word -> bool
-// Info 4164: (463-466): Inferred type: tfun((word, bool), word -> bool)
-// Info 4164: (467-471): Inferred type: word
-// Info 4164: (473-477): Inferred type: bool
 // Info 4164: (488-496): Inferred type: bool
 // Info 4164: (488-489): Inferred type: bool
 // Info 4164: (492-496): Inferred type: bool
 // Info 4164: (492-493): Inferred type: word -> bool
 // Info 4164: (494-495): Inferred type: word
 // Info 4164: (511-530): Inferred type: (bool, word)
-// Info 4164: (514-530): Inferred type: (bool, word)
-// Info 4164: (514-518): Inferred type: tfun((bool, word), (bool, word))
-// Info 4164: (519-523): Inferred type: bool
-// Info 4164: (525-529): Inferred type: word
 // Info 4164: (540-553): Inferred type: bool
 // Info 4164: (540-550): Inferred type: (bool, word) -> bool
 // Info 4164: (540-544): Inferred type: (?bh:type, ?bi:type)
