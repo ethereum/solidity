@@ -123,11 +123,18 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		/*disableMemoryTracing=*/true
 	);
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
+	{
+		cout << "Resource limit exceeded" << endl;
 		return 0;
+	}
 
 	stack.optimize();
-	cout << "------ Optmized Yul code ------" << endl;
-	cout << AsmPrinter{}(*stack.parserResult()->code) << endl; 
+	if (std::getenv("FUZZER_DEBUG"))
+	{
+		cout << "------ Optmized Yul code ------" << endl;
+		cout << AsmPrinter{}(*stack.parserResult()->code) << endl;
+	}
+
 	termReason = yulFuzzerUtil::interpret(
 		os2,
 		stack.parserResult()->code,
@@ -141,10 +148,13 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	bool isTraceEq = (os1.str() == os2.str());
 	if (!isTraceEq)
 	{
-		cout << "------ Unoptimized trace ------" << endl;
-		cout << os1.str() << endl;
-		cout << "------ Optimized trace ------" << endl;
-		cout << os2.str() << endl;
+		if (std::getenv("FUZZER_DEBUG"))
+		{
+			cout << "------ Unoptimized trace ------" << endl;
+			cout << os1.str() << endl;
+			cout << "------ Optimized trace ------" << endl;
+			cout << os2.str() << endl;
+		}
 		yulAssert(false, "Interpreted traces for optimized and unoptimized code differ.");
 	}
 	return 0;

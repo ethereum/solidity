@@ -96,7 +96,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 		{},
 		_object.qualifiedDataNames()
 	).analyze(*_object.code);
-	std::cout << AsmPrinter{}(*_object.code) << std::endl;
+//	std::cout << AsmPrinter{}(*_object.code) << std::endl;
 	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;
 }

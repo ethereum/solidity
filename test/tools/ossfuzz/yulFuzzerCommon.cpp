@@ -71,6 +71,14 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	{
 		reason = TerminationReason::ExplicitlyTerminated;
 	}
+	catch (MemoryLimitReached const&)
+	{
+		reason = TerminationReason::MemoryLimitReached;
+	}
+	catch (OptimizerDivergence const&)
+	{
+		reason = TerminationReason::OptimizerDivergence;
+	}
 
 	if (_outputStorageOnly)
 		state.dumpStorage(_os);
@@ -84,5 +92,7 @@ bool yulFuzzerUtil::resourceLimitsExceeded(TerminationReason _reason)
 	return
 		_reason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
 		_reason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
-		_reason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached;
+		_reason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached ||
+		_reason == yulFuzzerUtil::TerminationReason::MemoryLimitReached ||
+		_reason == yulFuzzerUtil::TerminationReason::OptimizerDivergence;
 }

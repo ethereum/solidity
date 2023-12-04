@@ -15,17 +15,15 @@
     along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/tools/ossfuzz/yulProto.pb.h>
-#include <test/tools/ossfuzz/protoToYul.h>
-
 #include <test/EVMHost.h>
 
 #include <test/tools/ossfuzz/YulEvmoneInterface.h>
-
-#include <libyul/Exceptions.h>
+#include <test/tools/ossfuzz/yulFuzzerCommon.h>
+#include <libyul/Dialect.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/YulStack.h>
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/CompilabilityChecker.h>
@@ -33,10 +31,9 @@
 #include <libevmasm/Instruction.h>
 
 #include <liblangutil/EVMVersion.h>
+#include <liblangutil/Exceptions.h>
 
 #include <evmone/evmone.h>
-
-#include <src/libfuzzer/libfuzzer_macro.h>
 
 #include <fstream>
 
@@ -44,8 +41,9 @@ using namespace solidity;
 using namespace solidity::test;
 using namespace solidity::test::fuzzer;
 using namespace solidity::yul;
-using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::langutil;
+using namespace solidity::frontend;
+using namespace solidity::yul::test::yul_fuzzer;
 using namespace std;
 
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
@@ -68,37 +66,81 @@ bool recursiveFunctionExists(Dialect const& _dialect, yul::Object& _object)
 }
 }
 
-DEFINE_PROTO_FUZZER(Program const& _input)
-{
-	// Solidity creates an invalid instruction for subobjects, so we simply
-	// ignore them in this fuzzer.
-	if (_input.has_obj())
-		return;
-	bool filterStatefulInstructions = true;
-	bool filterUnboundedLoops = true;
-	ProtoConverter converter(
-		filterStatefulInstructions,
-		filterUnboundedLoops
-	);
-	string yul_source = converter.programToString(_input);
-	// Do not fuzz the EVM Version field.
-	// See https://github.com/ethereum/solidity/issues/12590
-	langutil::EVMVersion version;
-	EVMHost hostContext(version, evmone);
-	hostContext.reset();
+// Prototype as we can't use the FuzzerInterface.h header.
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
-	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
+{
+	string optimizerSequence;
+	string testProgram;
+	// Fuzz sequence
+	if (const char* crashFileEnv = std::getenv("CRASH_FILE"))
 	{
-		ofstream of(dump_path);
-		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
+		std::ifstream ifs(crashFileEnv);
+		testProgram = std::string(std::istreambuf_iterator<char>{ifs}, {});
+		auto fuzzedSequence = string(reinterpret_cast<char const*>(_data), _size);
+		auto cleanedSequence = OptimiserSettings::removeInvalidCharacters(fuzzedSequence);
+		optimizerSequence = OptimiserSettings::createValidSequence(cleanedSequence);
 	}
+	// Fuzz program
+	else if (const char* optSeqEnv = std::getenv("OPT_SEQ"))
+	{
+		optimizerSequence = optSeqEnv;
+		testProgram = string(reinterpret_cast<char const*>(_data), _size);
+	}
+	// Fuzz program and sequence
+	else
+	{
+		testProgram = string(reinterpret_cast<char const*>(_data), _size);
+		optimizerSequence = OptimiserSettings::randomYulOptimiserSequence(_size);
+	}
+
+	if (std::any_of(testProgram.begin(), testProgram.end(), [](char c) {
+		return ((static_cast<unsigned char>(c) > 127) || !(isprint(c) || (c == '\n') || (c == '\t')));
+	}))
+		return 0;
 
 	YulStringRepository::reset();
 
-	auto optSequence = solidity::frontend::OptimiserSettings::randomYulOptimiserSequence(_input.seed());
-	cout << "Trying the following optimizer sequence" << endl;
-	cout << optSequence << endl;
-	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::fuzz(optSequence);
+	langutil::EVMVersion version;
+	OptimiserSettings settings = OptimiserSettings::fuzz(optimizerSequence);
+
+	YulStack yulStack(
+		version,
+		nullopt,
+		YulStack::Language::StrictAssembly,
+		settings,
+		DebugInfoSelection::All()
+	);
+	if (
+		!yulStack.parseAndAnalyze("source", testProgram) ||
+		!yulStack.parserResult()->code ||
+		!yulStack.parserResult()->analysisInfo
+	)
+		return 0;
+
+	ostringstream testrun;
+	try
+	{
+		auto termReason = yulFuzzerUtil::interpret(
+			testrun,
+			yulStack.parserResult()->code,
+			EVMDialect::strictAssemblyForEVMObjects(version),
+			true
+		);
+		if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
+			return 0;
+	}
+	catch (solidity::yul::YulAssertion const&)
+	{
+		cout << "Ignoring failed assert while interpreting" << endl;
+	}
+
+	cout << "Optimizer sequence: " << optimizerSequence << endl;
+
+	EVMHost hostContext(version, evmone);
+	hostContext.reset();
+
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = false;
 	bytes unoptimisedByteCode;
@@ -106,17 +148,25 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bool unoptimizedStackTooDeep = false;
 	try
 	{
-		YulAssembler assembler{version, nullopt, settings, yul_source};
+		YulAssembler assembler{version, nullopt, settings, testProgram};
 		unoptimisedByteCode = assembler.assemble();
 		auto yulObject = assembler.object();
-		recursiveFunction = recursiveFunctionExists(
-			EVMDialect::strictAssemblyForEVMObjects(version),
-			*yulObject
-		);
+		try
+		{
+			recursiveFunction = recursiveFunctionExists(
+				EVMDialect::strictAssemblyForEVMObjects(version),
+				*yulObject
+			);
+		}
+		catch (solidity::yul::YulAssertion const&)
+		{
+			cout << "Ignoring failed assert during check for recursive function" << endl;
+		}
 	}
 	catch (solidity::yul::StackTooDeepError const&)
 	{
 		unoptimizedStackTooDeep = true;
+		cout << "Unoptimized stack too deep" << endl;
 	}
 
 	ostringstream unoptimizedState;
@@ -126,13 +176,13 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	{
 		evmc::Result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
 		if (deployResult.status_code != EVMC_SUCCESS)
-			return;
+			return 0;
 		auto callMessage = YulEvmoneUtility{}.callMessage(deployResult.create_address);
 		evmc::Result callResult = hostContext.call(callMessage);
 		// If the fuzzer synthesized input does not contain the revert opcode which
 		// we lazily check by string find, the EVM call should not revert.
-		noRevertInSource = yul_source.find("revert") == string::npos;
-		noInvalidInSource = yul_source.find("invalid") == string::npos;
+		noRevertInSource = testProgram.find("revert") == string::npos;
+		noInvalidInSource = testProgram.find("invalid") == string::npos;
 		if (noInvalidInSource)
 			solAssert(
 				callResult.status_code != EVMC_INVALID_INSTRUCTION,
@@ -145,7 +195,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			);
 		// Bail out on serious errors encountered during a call.
 		if (YulEvmoneUtility{}.seriousCallError(callResult.status_code))
-			return;
+			return 0;
+		cout << "Unoptimized call status" << endl;
+		cout << callResult.status_code << endl;
 		solAssert(
 			(callResult.status_code == EVMC_SUCCESS ||
 			(!noRevertInSource && callResult.status_code == EVMC_REVERT) ||
@@ -153,6 +205,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			"Unoptimised call failed."
 		);
 		unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
+		cout << unoptimizedState.str() << endl;
 	}
 
 	settings.runYulOptimiser = true;
@@ -160,18 +213,18 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bytes optimisedByteCode;
 	try
 	{
-		optimisedByteCode = YulAssembler{version, nullopt, settings, yul_source}.assemble();
+		optimisedByteCode = YulAssembler{version, nullopt, settings, testProgram}.assemble();
 	}
 	catch (solidity::yul::StackTooDeepError const&)
 	{
 		if (!recursiveFunction)
 			throw;
 		else
-			return;
+			return 0;
 	}
 
 	if (unoptimizedStackTooDeep)
-		return;
+		return 0;
 	// Reset host before running optimised code.
 	hostContext.reset();
 	evmc::Result deployResultOpt = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
@@ -191,6 +244,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			callResultOpt.status_code != EVMC_INVALID_INSTRUCTION,
 			"Invalid instruction."
 		);
+	cout << "Optimized call status" << endl;
+	cout << callResultOpt.status_code << endl;
 	solAssert(
 		(callResultOpt.status_code == EVMC_SUCCESS ||
 		 (!noRevertInSource && callResultOpt.status_code == EVMC_REVERT) ||
@@ -209,4 +264,5 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			"State of unoptimised and optimised stack reused code do not match."
 		);
 	}
+	return 0;
 }

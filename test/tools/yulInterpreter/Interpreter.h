@@ -65,6 +65,15 @@ class ExpressionNestingLimitReached: public InterpreterTerminatedGeneric
 {
 };
 
+class MemoryLimitReached: public InterpreterTerminatedGeneric
+{
+};
+
+class OptimizerDivergence: public InterpreterTerminatedGeneric
+{
+};
+
+
 enum class ControlFlowState
 {
 	Default,

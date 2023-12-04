@@ -29,6 +29,8 @@ struct yulFuzzerUtil
 		StepLimitReached,
 		TraceLimitReached,
 		ExpresionNestingLimitReached,
+		MemoryLimitReached,
+		OptimizerDivergence,
 		None
 	};
 

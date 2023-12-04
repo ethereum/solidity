@@ -113,22 +113,29 @@ struct OptimiserSettings
 	/// Create valid sequence
 	static std::string createValidSequence(std::string& _result)
 	{
-		std::stack<char> stk;
-		// Remove unmatched brackets
+		bool insideBracket = false;
+		// Remove unmatched and nested brackets
 		for (auto it = _result.begin(); it != _result.end(); /* no increment here */)
 		{
 			if (*it == '[')
 		        {
-				stk.push(*it);
-				++it;
+				if (insideBracket)
+				{
+					it = _result.erase(it);
+				}
+				else
+				{
+					insideBracket = true;
+					++it;
+				}
 		        }
 		        else if (*it == ']')
 		        {
-			        if (stk.empty())
-				        it = _result.erase(it); // Erase returns the new iterator position
+				if (!insideBracket)
+					it = _result.erase(it); // Erase returns the new iterator position
 				else
 			        {
-					stk.pop();
+					insideBracket = false;
 					++it;
 			        }
 			}
@@ -136,27 +143,30 @@ struct OptimiserSettings
 			        ++it;
 		}
 		// Add matching brackets
-		while (!stk.empty())
+		if (insideBracket)
 		{
 			_result += ']';
-			stk.pop();
+			insideBracket = false;
 		}
-		// Remove colon inside brackets
-		std::stack<bool> insideBrackets;
+
+		// Insert colon towards the end of the string
+		// Currently end is defined as 3/4 of length
+		auto colonIndex = (3 * _result.length()) / 4;
+		_result.insert(colonIndex, ":");
 
 		// Remove colon within brackets
 		for (auto it = _result.begin(); it != _result.end(); /* no increment here */)
 		{
 			if (*it == '[') {
-			        insideBrackets.push(true);
+			        insideBracket = true;
 			        ++it; // Move to the next character
 		        }
 			else if (*it == ']')
 			{
-				insideBrackets.pop();
+				insideBracket = false;
 			        ++it; // Move to the next character
 			}
-			else if (*it == ':' && !insideBrackets.empty())
+			else if (*it == ':' && insideBracket)
 			{
 				// Erase the colon if we're inside brackets
 				it = _result.erase(it); // Erase returns the new iterator position
@@ -164,7 +174,7 @@ struct OptimiserSettings
 			else
 				++it; // Move to the next character
 		}
-		assert(insideBrackets.empty());
+		assert(!insideBracket);
 		std::string output;
 		bool wasColon = false;
 
@@ -212,7 +222,12 @@ struct OptimiserSettings
 	static OptimiserSettings fuzz(std::string const& _optSequence)
 	{
 		OptimiserSettings s = standard();
-		s.yulOptimiserSteps = _optSequence;
+		auto const delimiterPos = _optSequence.find(":");
+		s.yulOptimiserSteps = _optSequence.substr(0, delimiterPos);
+		if (delimiterPos != std::string::npos)
+				s.yulOptimiserCleanupSteps = _optSequence.substr(delimiterPos + 1);
+		else
+				assert(s.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
 		return s;
 	}
 

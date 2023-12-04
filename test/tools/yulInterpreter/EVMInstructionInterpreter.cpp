@@ -218,15 +218,9 @@ u256 EVMInstructionInterpreter::eval(
 		logTrace(_instruction, arg);
 		return 0;
 	case Instruction::CODESIZE:
-		return m_state.code.size();
+		BOOST_THROW_EXCEPTION(OptimizerDivergence());
 	case Instruction::CODECOPY:
-		if (accessMemory(arg[0], arg[2]))
-			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
-			);
-		logTrace(_instruction, arg);
-		return 0;
+		BOOST_THROW_EXCEPTION(OptimizerDivergence());
 	case Instruction::GASPRICE:
 		return m_state.gasprice;
 	case Instruction::CHAINID:
@@ -273,15 +267,17 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.gaslimit;
 	// --------------- memory / storage / logs ---------------
 	case Instruction::MLOAD:
-		accessMemory(arg[0], 0x20);
-		return readMemoryWord(arg[0]);
+		if (accessMemory(arg[0], 0x20))
+			return readMemoryWord(arg[0]);
+		else
+			return u256(keccak256(h256(arg[0])));
 	case Instruction::MSTORE:
-		accessMemory(arg[0], 0x20);
-		writeMemoryWord(arg[0], arg[1]);
+		if (accessMemory(arg[0], 0x20))
+			writeMemoryWord(arg[0], arg[1]);
 		return 0;
 	case Instruction::MSTORE8:
-		accessMemory(arg[0], 1);
-		m_state.memory[arg[0]] = uint8_t(arg[1] & 0xff);
+		if (accessMemory(arg[0], 1))
+			m_state.memory[arg[0]] = uint8_t(arg[1] & 0xff);
 		return 0;
 	case Instruction::SLOAD:
 		return m_state.storage[h256(arg[0])];
@@ -289,51 +285,52 @@ u256 EVMInstructionInterpreter::eval(
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
 	case Instruction::PC:
-		return 0x77;
+		BOOST_THROW_EXCEPTION(OptimizerDivergence());
 	case Instruction::MSIZE:
 		return m_state.msize;
 	case Instruction::GAS:
-		return 0x99;
+		BOOST_THROW_EXCEPTION(OptimizerDivergence());
 	case Instruction::LOG0:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[0], arg[1]))
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG1:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[0], arg[1]))
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG2:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[0], arg[1]))
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG3:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[0], arg[1]))
+			logTrace(_instruction, arg);
 		return 0;
 	case Instruction::LOG4:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[0], arg[1]))
+			logTrace(_instruction, arg);
 		return 0;
 	// --------------- calls ---------------
 	case Instruction::CREATE:
-		accessMemory(arg[1], arg[2]);
-		logTrace(_instruction, arg);
-		if (arg[2] != 0)
-			return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
-		else
-			return 0xcccccc;
+		if (accessMemory(arg[1], arg[2]))
+		{
+			logTrace(_instruction, arg);
+			if (arg[2] != 0)
+				return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
+		}
+		return 0xcccccc;
 	case Instruction::CREATE2:
-		accessMemory(arg[1], arg[2]);
-		logTrace(_instruction, arg);
-		if (arg[2] != 0)
-			return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
-		else
-			return 0xdddddd;
+		if (accessMemory(arg[1], arg[2]))
+		{
+			logTrace(_instruction, arg);
+			if (arg[2] != 0)
+				return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
+		}
+		return 0xdddddd;
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
-		accessMemory(arg[3], arg[4]);
-		accessMemory(arg[5], arg[6]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[3], arg[4]) && accessMemory(arg[5], arg[6]))
+			logTrace(_instruction, arg);
 		// Randomly fail based on the called address if it isn't a call to self.
 		// Used for fuzzing.
 		return (
@@ -342,9 +339,8 @@ u256 EVMInstructionInterpreter::eval(
 		) ? 1 : 0;
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
-		accessMemory(arg[2], arg[3]);
-		accessMemory(arg[4], arg[5]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[2], arg[3]) && accessMemory(arg[4], arg[5]))
+			logTrace(_instruction, arg);
 		// Randomly fail based on the called address if it isn't a call to self.
 		// Used for fuzzing.
 		return (
@@ -355,13 +351,15 @@ u256 EVMInstructionInterpreter::eval(
 	{
 		m_state.returndata = {};
 		if (accessMemory(arg[0], arg[1]))
+		{
 			m_state.returndata = m_state.readMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg, m_state.returndata);
+			logTrace(_instruction, arg, m_state.returndata);
+		}
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminatedWithReturn());
 	}
 	case Instruction::REVERT:
-		accessMemory(arg[0], arg[1]);
-		logTrace(_instruction, arg);
+		if (accessMemory(arg[0], arg[1]))
+			logTrace(_instruction, arg);
 		m_state.storage.clear();
 		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::INVALID:
@@ -456,8 +454,8 @@ u256 EVMInstructionInterpreter::eval(
 
 u256 EVMInstructionInterpreter::evalBuiltin(
 	BuiltinFunctionForEVM const& _fun,
-	std::vector<Expression> const& _arguments,
-	std::vector<u256> const& _evaluatedArguments
+	vector<Expression> const&,
+	vector<u256> const& _evaluatedArguments
 )
 {
 	if (_fun.instruction)
@@ -465,37 +463,8 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 
 	std::string fun = _fun.name.str();
 	// Evaluate datasize/offset/copy instructions
-	if (fun == "datasize" || fun == "dataoffset")
-	{
-		std::string arg = std::get<Literal>(_arguments.at(0)).value.str();
-		if (arg.length() < 32)
-			arg.resize(32, 0);
-		if (fun == "datasize")
-			return u256(keccak256(arg)) & 0xfff;
-		else
-		{
-			// Force different value than for datasize
-			arg[31]++;
-			arg[31]++;
-			return u256(keccak256(arg)) & 0xfff;
-		}
-	}
-	else if (fun == "datacopy")
-	{
-		// This is identical to codecopy.
-		if (
-				_evaluatedArguments.at(2) != 0 &&
-				accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2))
-		)
-			copyZeroExtended(
-				m_state.memory,
-				m_state.code,
-				size_t(_evaluatedArguments.at(0)),
-				size_t(_evaluatedArguments.at(1) & std::numeric_limits<size_t>::max()),
-				size_t(_evaluatedArguments.at(2))
-			);
-		return 0;
-	}
+	if (fun == "datasize" || fun == "dataoffset" || fun == "datacopy")
+		BOOST_THROW_EXCEPTION(OptimizerDivergence());
 	else if (fun == "memoryguard")
 		return _evaluatedArguments.at(0);
 	else
@@ -506,6 +475,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 
 bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _size)
 {
+	bool memLimitExceeded = false;
 	if (_size == 0)
 		return true;
 	else if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
@@ -514,12 +484,19 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 		m_state.msize = std::max(m_state.msize, newSize);
 		// We only record accesses to contiguous memory chunks that are at most s_maxRangeSize bytes
 		// in size and at an offset of at most numeric_limits<size_t>::max() - s_maxRangeSize
-		return _size <= s_maxRangeSize && _offset <= u256(std::numeric_limits<size_t>::max() - s_maxRangeSize);
+		memLimitExceeded = _size > s_maxRangeSize || _offset > u256(numeric_limits<size_t>::max() - s_maxRangeSize);
 	}
 	else
+	{
+		memLimitExceeded = true;
 		m_state.msize = u256(-1);
+	}
 
-	return false;
+	// If memory limit exceeded, we throw
+	if (memLimitExceeded)
+		BOOST_THROW_EXCEPTION(MemoryLimitReached());
+	else
+		return true;		
 }
 
 bytes EVMInstructionInterpreter::readMemory(u256 const& _offset, u256 const& _size)

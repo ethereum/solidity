@@ -7,6 +7,7 @@ add_dependencies(ossfuzz
         strictasm_opt_ossfuzz
         strictasm_assembly_ossfuzz
 	yul_evm_native_ossfuzz
+	stack_reuse_codegen_ossfuzz
 )
 
 if (OSSFUZZ)
@@ -16,7 +17,7 @@ if (OSSFUZZ)
             yul_proto_ossfuzz
             yul_proto_diff_ossfuzz
             yul_proto_diff_custom_mutate_ossfuzz
-            stack_reuse_codegen_ossfuzz
+	    stack_reuse_codegen_ossfuzz
     )
 
     add_custom_target(ossfuzz_abiv2)
@@ -112,29 +113,16 @@ if (OSSFUZZ)
 
     add_executable(stack_reuse_codegen_ossfuzz
             StackReuseCodegenFuzzer.cpp
-            protoToYul.cpp
-            yulProto.pb.cc
             ../../EVMHost.cpp
             YulEvmoneInterface.cpp
+	    yulFuzzerCommon.cpp
     )
-    target_include_directories(stack_reuse_codegen_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
     target_link_libraries(stack_reuse_codegen_ossfuzz PRIVATE yul
+	    yulInterpreter
             evmc
             evmone-standalone
-            protobuf-mutator-libfuzzer.a
-            protobuf-mutator.a
-            protobuf.a
     )
     set_target_properties(stack_reuse_codegen_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
-    target_compile_options(stack_reuse_codegen_ossfuzz PUBLIC
-            ${COMPILE_OPTIONS}
-            -Wno-sign-conversion
-            -Wno-inconsistent-missing-destructor-override
-            -Wno-unused-parameter
-            -Wno-zero-length-array
-            -Wno-suggest-destructor-override
-            -Wno-shorten-64-to-32
-    )
 
     add_executable(yul_evm_native_ossfuzz
 	    YulEvmNativeDifferentialFuzzer.cpp
