@@ -57,6 +57,7 @@
 #include <libsolidity/parsing/Parser.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
 #include <libsolidity/experimental/codegen/IRGenerator.h>
 
 #include <libsolidity/codegen/ir/Common.h>
@@ -2002,4 +2003,10 @@ bool CompilerStack::isExperimentalSolidity() const
 		!m_sourceOrder.empty() &&
 		ranges::all_of(m_sourceOrder, [](auto const* _source) { return _source->ast->experimentalSolidity(); } )
 	;
+}
+
+experimental::Analysis const& CompilerStack::experimentalAnalysis() const
+{
+	solAssert(!!m_experimentalAnalysis);
+	return *m_experimentalAnalysis;
 }

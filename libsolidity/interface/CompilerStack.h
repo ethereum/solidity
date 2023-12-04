@@ -357,6 +357,8 @@ public:
 
 	bool isExperimentalSolidity() const;
 
+	experimental::Analysis const& experimentalAnalysis() const;
+
 	static MetadataFormat defaultMetadataFormat()
 	{
 		return VersionIsRelease ? MetadataFormat::WithReleaseVersionTag : MetadataFormat::WithPrereleaseVersionTag;

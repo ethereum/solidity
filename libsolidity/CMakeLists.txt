@@ -188,6 +188,8 @@ set(sources
 	experimental/analysis/Analysis.h
 	experimental/analysis/DebugWarner.cpp
 	experimental/analysis/DebugWarner.h
+	experimental/analysis/FunctionDependencyAnalysis.cpp
+	experimental/analysis/FunctionDependencyAnalysis.h
 	experimental/analysis/TypeClassRegistration.cpp
 	experimental/analysis/TypeClassRegistration.h
 	experimental/analysis/TypeInference.cpp
@@ -196,6 +198,7 @@ set(sources
 	experimental/analysis/TypeRegistration.h
 	experimental/analysis/SyntaxRestrictor.cpp
 	experimental/analysis/SyntaxRestrictor.h
+	experimental/ast/FunctionCallGraph.h
 	experimental/ast/Type.cpp
 	experimental/ast/Type.h
 	experimental/ast/TypeSystem.cpp
