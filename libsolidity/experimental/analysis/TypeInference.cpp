@@ -488,60 +488,6 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	if (instantiationAnnotation.type)
 		return false;
 
-	std::optional<TypeClass> typeClass = std::visit(util::GenericVisitor{
-		[&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
-			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
-			{
-				// visiting the type class will re-visit this instantiation
-				typeClassDefinition->accept(*this);
-				// TODO: more error handling? Should be covered by the visit above.
-				solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
-				return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
-			}
-			else
-			{
-				m_errorReporter.typeError(9817_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
-				return std::nullopt;
-			}
-		},
-		[&](Token _token) -> std::optional<TypeClass> {
-			if (auto builtinClass = builtinClassFromToken(_token))
-				if (auto typeClass = util::valueOrNullptr(annotation().builtinClasses, *builtinClass))
-					return *typeClass;
-			m_errorReporter.typeError(2658_error, _typeClassInstantiation.location(), "Invalid type class name.");
-			return std::nullopt;
-		}
-	}, _typeClassInstantiation.typeClass().name());
-	if (!typeClass)
-		return false;
-
-	// TODO: _typeClassInstantiation.typeConstructor().accept(*this); ?
-	auto typeConstructor = m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
-	if (!typeConstructor)
-	{
-		m_errorReporter.typeError(2138_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type constructor.");
-		return false;
-	}
-
-	std::vector<Type> arguments;
-	Arity arity{
-		{},
-		*typeClass
-	};
-
-	if (_typeClassInstantiation.argumentSorts())
-	{
-		// NOTE: Not visiting the argument sorts. Nothing in term context there.
-
-		arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(typeFromTypeContext(*_typeClassInstantiation.argumentSorts()));
-		arity.argumentSorts = arguments | ranges::views::transform([&](Type _type) {
-			return m_env->sort(_type);
-		}) | ranges::to<std::vector<Sort>>;
-	}
-	m_env->fixTypeVars(arguments);
-
-	Type type{TypeConstant{*typeConstructor, arguments}};
-
 	std::map<std::string, Type> functionTypes;
 
 	for (auto subNode: _typeClassInstantiation.subNodes())
@@ -553,13 +499,20 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			m_errorReporter.typeError(3654_error, subNode->location(), "Duplicate definition of function " + functionDefinition->name() + " during type class instantiation.");
 	}
 
-	if (auto error = m_typeSystem.instantiateClass(type, arity))
-		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
+	auto const& instantiationAnnotationInTypeContext = m_analysis.annotation<TypeContextAnalysis>(_typeClassInstantiation);
+	solAssert(instantiationAnnotationInTypeContext.typeClass.has_value());
 
-	auto const& classFunctions = annotation().typeClassFunctions.at(*typeClass);
+	auto const& classFunctions = annotation().typeClassFunctions.at(*instantiationAnnotationInTypeContext.typeClass);
 
-	solAssert(std::holds_alternative<TypeVariable>(m_typeSystem.typeClassVariable(*typeClass)));
-	TypeVariable classVar = std::get<TypeVariable>(m_typeSystem.typeClassVariable(*typeClass));
+	solAssert(std::holds_alternative<TypeVariable>(m_typeSystem.typeClassVariable(*instantiationAnnotationInTypeContext.typeClass)));
+	TypeVariable classVar = std::get<TypeVariable>(m_typeSystem.typeClassVariable(*instantiationAnnotationInTypeContext.typeClass));
+
+	std::vector<Type> arguments;
+	if (_typeClassInstantiation.argumentSorts())
+		arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(typeFromTypeContext(*_typeClassInstantiation.argumentSorts()));
+	std::optional<TypeConstructor> typeConstructor = m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
+	solAssert(typeConstructor);
+	Type type{TypeConstant{*typeConstructor, arguments}};
 
 	for (auto [name, classFunctionType]: classFunctions)
 	{

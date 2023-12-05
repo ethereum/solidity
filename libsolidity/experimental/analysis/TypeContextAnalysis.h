@@ -38,6 +38,9 @@ public:
 	{
 		/// Expressions, variable declarations, function declarations.
 		std::optional<Type> type;
+
+		/// Instantiations
+		std::optional<TypeClass> typeClass;
 	};
 	struct GlobalAnnotation
 	{

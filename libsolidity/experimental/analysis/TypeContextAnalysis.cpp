@@ -351,14 +351,62 @@ bool TypeContextAnalysis::visit(TypeClassInstantiation const& _typeClassInstanti
 
 	instantiationAnnotation.type = m_voidType;
 
-	// TMP: _typeClassInstantiation.typeConstructor().accept(*this); ?
+	instantiationAnnotation.typeClass = std::visit(util::GenericVisitor{
+		[&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
+			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
+			{
+				// TODO: more error handling? Should be covered by the visit above.
+				solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
+				return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
+			}
+			else
+			{
+				m_errorReporter.typeError(9817_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
+				return std::nullopt;
+			}
+		},
+		[&](Token _token) -> std::optional<TypeClass> {
+			if (auto builtinClass = builtinClassFromToken(_token))
+				if (auto typeClass = util::valueOrNullptr(annotation().builtinClasses, *builtinClass))
+					return *typeClass;
+			m_errorReporter.typeError(2658_error, _typeClassInstantiation.location(), "Invalid type class name.");
+			return std::nullopt;
+		}
+	}, _typeClassInstantiation.typeClass().name());
+	if (!instantiationAnnotation.typeClass)
+		return false;
+
 	// TMP: Visit class name?
+
+	// TODO: _typeClassInstantiation.typeConstructor().accept(*this); ?
+	std::optional<TypeConstructor> typeConstructor = m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
+	if (!typeConstructor)
+	{
+		m_errorReporter.typeError(2138_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type constructor.");
+		return false;
+	}
+
+	std::vector<Type> arguments;
+	Arity arity{
+		{},
+		*instantiationAnnotation.typeClass
+	};
 
 	if (_typeClassInstantiation.argumentSorts())
 	{
 		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
 		_typeClassInstantiation.argumentSorts()->accept(*this);
+
+		arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(typeAnnotation(*_typeClassInstantiation.argumentSorts()));
+		arity.argumentSorts = arguments | ranges::views::transform([&](Type _type) {
+			return m_env->sort(_type);
+		}) | ranges::to<std::vector<Sort>>;
 	}
+	m_env->fixTypeVars(arguments);
+
+	Type type{TypeConstant{*typeConstructor, arguments}};
+	if (auto error = m_typeSystem.instantiateClass(type, arity))
+		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
 
 	for (auto subNode: _typeClassInstantiation.subNodes())
 		subNode->accept(*this);
