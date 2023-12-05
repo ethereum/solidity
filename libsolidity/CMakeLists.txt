@@ -192,6 +192,8 @@ set(sources
 	experimental/analysis/FunctionDependencyAnalysis.h
 	experimental/analysis/TypeClassRegistration.cpp
 	experimental/analysis/TypeClassRegistration.h
+	experimental/analysis/TypeContextAnalysis.cpp
+	experimental/analysis/TypeContextAnalysis.h
 	experimental/analysis/TypeInference.cpp
 	experimental/analysis/TypeInference.h
 	experimental/analysis/TypeRegistration.cpp

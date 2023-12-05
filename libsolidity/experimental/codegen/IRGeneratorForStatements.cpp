@@ -20,6 +20,7 @@
 
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
+#include <libsolidity/experimental/analysis/TypeContextAnalysis.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 
@@ -219,7 +220,7 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(IRGener
 		return _context.analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
 	auto& instantiations = _context.analysis.annotation<TypeRegistration>().builtinClassInstantiations;
-	auto& builtinClassesByName = _context.analysis.annotation<TypeInference>().builtinClassesByName;
+	auto& builtinClassesByName = _context.analysis.annotation<TypeContextAnalysis>().builtinClassesByName;
 	return instantiations.at(builtinClassesByName.at(_context.analysis.typeSystem().typeClassName(_class)));
 }
 }
