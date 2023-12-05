@@ -44,6 +44,8 @@ public:
 	};
 	struct GlobalAnnotation
 	{
+		std::map<BuiltinClass, TypeClass> builtinClasses;
+		std::map<std::string, BuiltinClass> builtinClassesByName;
 	};
 	bool visit(Block const&) override { return true; }
 	bool visit(VariableDeclaration const& _variableDeclaration) override;

@@ -53,18 +53,9 @@ TypeInference::TypeInference(Analysis& _analysis):
 {
 	TypeSystemHelpers helper{m_typeSystem};
 
-	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
-		auto result = m_typeSystem.declareTypeClass(_name, nullptr);
-		if (auto error = std::get_if<std::string>(&result))
-			solAssert(!error, *error);
-		TypeClass declaredClass = std::get<TypeClass>(result);
-		// TODO: validation?
-		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
-		return annotation().builtinClasses.emplace(_class, declaredClass).first->second;
-	};
-
 	auto registeredTypeClass = [&](BuiltinClass _builtinClass) -> TypeClass {
-		return annotation().builtinClasses.at(_builtinClass);
+		auto const& typeContextAnnotation = m_analysis.annotation<TypeContextAnalysis>();
+		return typeContextAnnotation.builtinClasses.at(_builtinClass);
 	};
 
 	auto defineConversion = [&](BuiltinClass _builtinClass, PrimitiveType _fromType, std::string _functionName) {
@@ -100,15 +91,6 @@ TypeInference::TypeInference(Analysis& _analysis):
 			)
 		}};
 	};
-
-	declareBuiltinClass("integer", BuiltinClass::Integer);
-	declareBuiltinClass("*", BuiltinClass::Mul);
-	declareBuiltinClass("+", BuiltinClass::Add);
-	declareBuiltinClass("==", BuiltinClass::Equal);
-	declareBuiltinClass("<", BuiltinClass::Less);
-	declareBuiltinClass("<=", BuiltinClass::LessOrEqual);
-	declareBuiltinClass(">", BuiltinClass::Greater);
-	declareBuiltinClass(">=", BuiltinClass::GreaterOrEqual);
 
 	defineConversion(BuiltinClass::Integer, PrimitiveType::Integer, "fromInteger");
 
@@ -814,7 +796,8 @@ bool TypeInference::visit(Literal const& _literal)
 		m_errorReporter.typeError(2345_error, _literal.location(), "Only integers are supported.");
 		return false;
 	}
-	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{annotation().builtinClasses.at(BuiltinClass::Integer)}});
+	auto const& typeContextAnnotation = m_analysis.annotation<TypeContextAnalysis>();
+	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{typeContextAnnotation.builtinClasses.at(BuiltinClass::Integer)}});
 	return false;
 }
 
@@ -829,9 +812,9 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 		return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
 	auto const& annotation = _analysis.annotation<TypeRegistration>();
-	auto const& inferenceAnnotation = _analysis.annotation<TypeInference>();
+	auto const& typeContextAnnotation = _analysis.annotation<TypeContextAnalysis>();
 	return annotation.builtinClassInstantiations.at(
-		inferenceAnnotation.builtinClassesByName.at(
+		typeContextAnnotation.builtinClassesByName.at(
 			_analysis.typeSystem().typeClassName(_class)
 		)
 	);

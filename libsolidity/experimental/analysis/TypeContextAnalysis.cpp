@@ -41,6 +41,24 @@ TypeContextAnalysis::TypeContextAnalysis(Analysis& _analysis):
 	m_voidType(m_typeSystem.type(PrimitiveType::Void, {})),
 	m_wordType(m_typeSystem.type(PrimitiveType::Word, {}))
 {
+	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
+		auto result = m_typeSystem.declareTypeClass(_name, nullptr);
+		if (auto error = std::get_if<std::string>(&result))
+			solAssert(!error, *error);
+		TypeClass declaredClass = std::get<TypeClass>(result);
+		// TODO: validation?
+		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
+		return annotation().builtinClasses.emplace(_class, declaredClass).first->second;
+	};
+
+	declareBuiltinClass("integer", BuiltinClass::Integer);
+	declareBuiltinClass("*", BuiltinClass::Mul);
+	declareBuiltinClass("+", BuiltinClass::Add);
+	declareBuiltinClass("==", BuiltinClass::Equal);
+	declareBuiltinClass("<", BuiltinClass::Less);
+	declareBuiltinClass("<=", BuiltinClass::LessOrEqual);
+	declareBuiltinClass(">", BuiltinClass::Greater);
+	declareBuiltinClass(">=", BuiltinClass::GreaterOrEqual);
 }
 
 bool TypeContextAnalysis::analyze(SourceUnit const& _sourceUnit)
