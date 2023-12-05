@@ -629,17 +629,20 @@ bool TypeInference::visit(TypeDefinition const& _typeDefinition)
 	if (typeDefinitionAnnotation.type)
 		return false;
 
-	typeDefinitionAnnotation.type = typeFromTypeContext(_typeDefinition);
-
 	// NOTE: Not visiting type arguments. Already processed by type context analysis.
 
-	std::optional<Type> underlyingType;
 	Type definedType = typeFromTypeContext(_typeDefinition);
-	if (helper.isTypeFunctionType(definedType))
-		definedType = std::get<1>(helper.destTypeFunctionType(typeFromTypeContext(_typeDefinition)));
+	if (_typeDefinition.arguments() && !_typeDefinition.arguments()->parameters().empty())
+		typeDefinitionAnnotation.type = helper.typeFunctionType(
+			typeFromTypeContext(*_typeDefinition.arguments()),
+			definedType
+		);
+	else
+		typeDefinitionAnnotation.type = definedType;
 
 	// NOTE: Not visiting type expression. Already processed by type context analysis.
 
+	std::optional<Type> underlyingType;
 	if (_typeDefinition.typeExpression())
 		underlyingType = typeFromTypeContext(*_typeDefinition.typeExpression());
 
