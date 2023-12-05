@@ -385,6 +385,7 @@ bool TypeContextAnalysis::visit(MemberAccess const& _memberAccess)
 
 bool TypeContextAnalysis::visit(TypeDefinition const& _typeDefinition)
 {
+	TypeSystemHelpers helper{m_typeSystem};
 	auto& typeDefinitionAnnotation = annotation(_typeDefinition);
 	if (typeDefinitionAnnotation.type)
 		return false;
@@ -407,7 +408,10 @@ bool TypeContextAnalysis::visit(TypeDefinition const& _typeDefinition)
 	m_env->fixTypeVars(arguments);
 
 	Type definedType = type(&_typeDefinition, arguments);
-	typeDefinitionAnnotation.type = definedType;
+	if (arguments.empty())
+		typeDefinitionAnnotation.type = definedType;
+	else
+		typeDefinitionAnnotation.type = helper.typeFunctionType(helper.tupleType(arguments), definedType);
 
 	if (_typeDefinition.typeExpression())
 	{
