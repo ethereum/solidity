@@ -54,18 +54,9 @@ TypeInference::TypeInference(Analysis& _analysis):
 {
 	TypeSystemHelpers helper{m_typeSystem};
 
-	auto declareBuiltinClass = [&](std::string _name, BuiltinClass _class) -> TypeClass {
-		auto result = m_typeSystem.declareTypeClass(_name, nullptr);
-		if (auto error = std::get_if<std::string>(&result))
-			solAssert(!error, *error);
-		TypeClass declaredClass = std::get<TypeClass>(result);
-		// TODO: validation?
-		solAssert(annotation().builtinClassesByName.emplace(_name, _class).second);
-		return annotation().builtinClasses.emplace(_class, declaredClass).first->second;
-	};
-
 	auto registeredTypeClass = [&](BuiltinClass _builtinClass) -> TypeClass {
-		return annotation().builtinClasses.at(_builtinClass);
+		auto const& classRegistrationAnnotation = m_analysis.annotation<TypeClassRegistration>();
+		return classRegistrationAnnotation.builtinClasses.at(_builtinClass);
 	};
 
 	auto defineConversion = [&](BuiltinClass _builtinClass, PrimitiveType _fromType, std::string _functionName) {
@@ -101,15 +92,6 @@ TypeInference::TypeInference(Analysis& _analysis):
 			)
 		}};
 	};
-
-	declareBuiltinClass("integer", BuiltinClass::Integer);
-	declareBuiltinClass("*", BuiltinClass::Mul);
-	declareBuiltinClass("+", BuiltinClass::Add);
-	declareBuiltinClass("==", BuiltinClass::Equal);
-	declareBuiltinClass("<", BuiltinClass::Less);
-	declareBuiltinClass("<=", BuiltinClass::LessOrEqual);
-	declareBuiltinClass(">", BuiltinClass::Greater);
-	declareBuiltinClass(">=", BuiltinClass::GreaterOrEqual);
 
 	defineConversion(BuiltinClass::Integer, PrimitiveType::Integer, "fromInteger");
 
@@ -642,10 +624,11 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
 		},
 		[&](Token _token) -> TypeClass {
+			auto const& classRegistrationAnnotation = m_analysis.annotation<TypeClassRegistration>();
 			std::optional<BuiltinClass> builtinClass = builtinClassFromToken(_token);
 			solAssert(builtinClass.has_value());
-			solAssert(annotation().builtinClasses.count(*builtinClass) != 0);
-			return annotation().builtinClasses.at(*builtinClass);
+			solAssert(classRegistrationAnnotation.builtinClasses.count(*builtinClass) != 0);
+			return classRegistrationAnnotation.builtinClasses.at(*builtinClass);
 		}
 	}, _typeClassInstantiation.typeClass().name());
 
@@ -1059,7 +1042,8 @@ bool TypeInference::visit(Literal const& _literal)
 		m_errorReporter.typeError(2345_error, _literal.location(), "Only integers are supported.");
 		return false;
 	}
-	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{annotation().builtinClasses.at(BuiltinClass::Integer)}});
+	auto const& classRegistrationAnnotation = m_analysis.annotation<TypeClassRegistration>();
+	literalAnnotation.type = m_typeSystem.freshTypeVariable(Sort{{classRegistrationAnnotation.builtinClasses.at(BuiltinClass::Integer)}});
 	return false;
 }
 
@@ -1074,9 +1058,9 @@ TypeRegistration::TypeClassInstantiations const& typeClassInstantiations(Analysi
 		return _analysis.annotation<TypeRegistration>(*typeClassDeclaration).instantiations;
 	// TODO: better mechanism than fetching by name.
 	auto const& annotation = _analysis.annotation<TypeRegistration>();
-	auto const& inferenceAnnotation = _analysis.annotation<TypeInference>();
+	auto const& classRegistrationAnnotation = _analysis.annotation<TypeClassRegistration>();
 	return annotation.builtinClassInstantiations.at(
-		inferenceAnnotation.builtinClassesByName.at(
+		classRegistrationAnnotation.builtinClassesByName.at(
 			_analysis.typeSystem().typeClassName(_class)
 		)
 	);

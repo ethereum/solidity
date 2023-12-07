@@ -57,22 +57,22 @@ function fun(a: T(int: P3), b: T(str: P4)) {
 // Info 4164: (74-83): Inferred type: int
 // Info 4164: (84-93): Inferred type: str
 // Info 4164: (95-156): Inferred type: C
-// Info 4164: (101-105): Inferred type: 'k:(type, C)
-// Info 4164: (115-154): Inferred type: ('k:(type, C), 'k:(type, C)) -> 'k:(type, C)
-// Info 4164: (127-145): Inferred type: ('k:(type, C), 'k:(type, C))
-// Info 4164: (128-135): Inferred type: 'k:(type, C)
-// Info 4164: (131-135): Inferred type: 'k:(type, C)
-// Info 4164: (137-144): Inferred type: 'k:(type, C)
-// Info 4164: (140-144): Inferred type: 'k:(type, C)
-// Info 4164: (149-153): Inferred type: 'k:(type, C)
+// Info 4164: (101-105): Inferred type: 's:(type, C)
+// Info 4164: (115-154): Inferred type: ('s:(type, C), 's:(type, C)) -> 's:(type, C)
+// Info 4164: (127-145): Inferred type: ('s:(type, C), 's:(type, C))
+// Info 4164: (128-135): Inferred type: 's:(type, C)
+// Info 4164: (131-135): Inferred type: 's:(type, C)
+// Info 4164: (137-144): Inferred type: 's:(type, C)
+// Info 4164: (140-144): Inferred type: 's:(type, C)
+// Info 4164: (149-153): Inferred type: 's:(type, C)
 // Info 4164: (158-175): Inferred type: P1
-// Info 4164: (164-168): Inferred type: 'l:(type, P1)
+// Info 4164: (164-168): Inferred type: 't:(type, P1)
 // Info 4164: (176-193): Inferred type: P2
-// Info 4164: (182-186): Inferred type: 'm:(type, P2)
+// Info 4164: (182-186): Inferred type: 'u:(type, P2)
 // Info 4164: (194-211): Inferred type: P3
-// Info 4164: (200-204): Inferred type: 'n:(type, P3)
+// Info 4164: (200-204): Inferred type: 'v:(type, P3)
 // Info 4164: (212-229): Inferred type: P4
-// Info 4164: (218-222): Inferred type: 'o:(type, P4)
+// Info 4164: (218-222): Inferred type: 'w:(type, P4)
 // Info 4164: (231-255): Inferred type: void
 // Info 4164: (256-280): Inferred type: void
 // Info 4164: (281-305): Inferred type: void

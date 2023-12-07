@@ -41,6 +41,8 @@ public:
 	};
 	struct GlobalAnnotation
 	{
+		std::map<BuiltinClass, TypeClass> builtinClasses;
+		std::map<std::string, BuiltinClass> builtinClassesByName;
 	};
 
 	TypeClassRegistration(Analysis& _analysis);
@@ -49,6 +51,8 @@ public:
 
 private:
 	bool visit(TypeClassDefinition const& _typeClassDefinition) override;
+
+	TypeClass declareBuiltinClass(std::string _name, BuiltinClass _class);
 
 	Analysis& m_analysis;
 	langutil::ErrorReporter& m_errorReporter;
