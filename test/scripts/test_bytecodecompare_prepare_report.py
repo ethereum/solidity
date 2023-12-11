@@ -9,7 +9,8 @@ from unittest_helpers import FIXTURE_DIR, LIBSOLIDITY_TEST_DIR, load_fixture, lo
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
 # pragma pylint: disable=import-error
-from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SettingsPreset, SMTUse, Statistics
+from bytecodecompare.prepare_report import ExecutionArchitecture, CompilerInterface, FileReport, ContractReport
+from bytecodecompare.prepare_report import SettingsPreset, SMTUse, Statistics
 from bytecodecompare.prepare_report import load_source, parse_cli_output, parse_standard_json_output, prepare_compiler_input
 # pragma pylint: enable=import-error
 
@@ -223,6 +224,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
 
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=False,
@@ -237,6 +239,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_should_work_with_cli_interface(self):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=False,
@@ -273,6 +276,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
 
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             preset=SettingsPreset.VIA_IR_OPTIMIZE,
             force_no_optimize_yul=False,
@@ -287,6 +291,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_for_cli_preserves_newlines(self):
         (_command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=True,
@@ -300,6 +305,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_for_cli_should_handle_force_no_optimize_yul_flag(self):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.LEGACY_NO_OPTIMIZE,
             force_no_optimize_yul=True,
@@ -317,6 +323,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_for_cli_should_not_use_metadata_option_if_not_supported(self):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.VIA_IR_OPTIMIZE,
             force_no_optimize_yul=False,
