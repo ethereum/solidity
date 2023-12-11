@@ -975,8 +975,6 @@ evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractNa
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	return contract(_contractName).object;
 }
 
