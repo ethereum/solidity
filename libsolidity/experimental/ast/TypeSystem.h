@@ -170,6 +170,8 @@ public:
 		return m_typeClasses.at(_class.m_index);
 	}
 
+	std::optional<TypeClass> typeClass(std::string _typeClassName) const;
+
 private:
 	friend class TypeEnvironment;
 	size_t m_numTypeVariables = 0;

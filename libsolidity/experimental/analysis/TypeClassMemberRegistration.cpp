@@ -27,6 +27,8 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 
+#include <fmt/format.h>
+
 using namespace solidity::frontend::experimental;
 using namespace solidity::langutil;
 
@@ -35,62 +37,66 @@ TypeClassMemberRegistration::TypeClassMemberRegistration(Analysis& _analysis):
 	m_errorReporter(_analysis.errorReporter()),
 	m_typeSystem(_analysis.typeSystem())
 {
-	TypeSystemHelpers helper{m_typeSystem};
-
-	auto registeredTypeClass = [&](BuiltinClass _builtinClass) -> TypeClass {
-		return m_analysis.annotation<TypeClassRegistration>().builtinClasses.at(_builtinClass);
-	};
-
-	auto defineConversion = [&](BuiltinClass _builtinClass, PrimitiveType _fromType, std::string _functionName) {
-		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
-			std::move(_functionName),
-			helper.functionType(
-				m_typeSystem.type(_fromType, {}),
-				m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable
-			),
-		}};
-	};
-
-	auto defineBinaryMonoidalOperator = [&](BuiltinClass _builtinClass, Token _token, std::string _functionName) {
-		Type typeVar = m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable;
-		annotation().operators.emplace(_token, std::make_tuple(registeredTypeClass(_builtinClass), _functionName));
-		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
-			std::move(_functionName),
-			helper.functionType(
-				helper.tupleType({typeVar, typeVar}),
-				typeVar
-			)
-		}};
-	};
-
-	auto defineBinaryCompareOperator = [&](BuiltinClass _builtinClass, Token _token, std::string _functionName) {
-		Type typeVar = m_typeSystem.typeClassInfo(registeredTypeClass(_builtinClass)).typeVariable;
-		annotation().operators.emplace(_token, std::make_tuple(registeredTypeClass(_builtinClass), _functionName));
-		annotation().typeClassFunctions[registeredTypeClass(_builtinClass)] = {{
-			std::move(_functionName),
-			helper.functionType(
-				helper.tupleType({typeVar, typeVar}),
-				m_typeSystem.type(PrimitiveType::Bool, {})
-			)
-		}};
-	};
-
-	defineConversion(BuiltinClass::Integer, PrimitiveType::Integer, "fromInteger");
-
-	defineBinaryMonoidalOperator(BuiltinClass::Mul, Token::Mul, "mul");
-	defineBinaryMonoidalOperator(BuiltinClass::Add, Token::Add, "add");
-
-	defineBinaryCompareOperator(BuiltinClass::Equal, Token::Equal, "eq");
-	defineBinaryCompareOperator(BuiltinClass::Less, Token::LessThan, "lt");
-	defineBinaryCompareOperator(BuiltinClass::LessOrEqual, Token::LessThanOrEqual, "leq");
-	defineBinaryCompareOperator(BuiltinClass::Greater, Token::GreaterThan, "gt");
-	defineBinaryCompareOperator(BuiltinClass::GreaterOrEqual, Token::GreaterThanOrEqual, "geq");
 }
 
 bool TypeClassMemberRegistration::analyze(SourceUnit const& _sourceUnit)
 {
 	_sourceUnit.accept(*this);
 	return !m_errorReporter.hasErrors();
+}
+
+void TypeClassMemberRegistration::endVisit(Builtin const& _builtin)
+{
+	// Builtin may be used to register user defined types, which is handled earlier at TypeRegistration step
+	if (!_builtin.functionParameter().has_value())
+		return;
+
+	// TODO: consider using a map of string-Token and ranges::find instead of ifs
+	auto operatorToken = [](std::string const& _name) -> std::optional<Token> {
+		if (_name == "+") return Token::Add;
+		if (_name == "*") return Token::Mul;
+		if (_name == "==") return Token::Equal;
+		if (_name == "<") return Token::LessThan;
+		if (_name == "<=") return Token::LessThanOrEqual;
+		if (_name == ">") return Token::GreaterThan;
+		if (_name == ">=") return Token::GreaterThanOrEqual;
+		return std::nullopt;
+	}(_builtin.nameParameter());
+
+	// TODO: Handle conversion "fromInteger" (and other possible functions?)
+	if (!operatorToken.has_value())
+		m_errorReporter.fatalTypeError(
+			77_error,
+			_builtin.nameParameterLocation(),
+			"Only operators +, *, ==, <, <=, >, >= are allowed as members of a type class."
+		);
+
+	ASTPointer<Expression> functionParameter = *_builtin.functionParameter();
+	// TODO: Remove
+	// solAssert(typeClassFunctionName->path().size() == 2);
+	// std::string const& typeClassName = typeClassFunctionName->path()[0];
+	// std::string const& functionName = typeClassFunctionName->path()[1];
+	//
+	// std::optional<TypeClass> typeClass = m_typeSystem.typeClass(typeClassName);
+	//
+	// if (!typeClass.has_value())
+	// 	m_errorReporter.fatalTypeError(
+	// 		78_error,
+	// 		typeClassFunctionName->pathLocations()[0],
+	// 		"Cannot find type class named " + typeClassName + '.'
+	// 	);
+
+	auto registrationResult = annotation().operators.emplace(operatorToken.value(),	functionParameter);
+	if (!registrationResult.second)
+		m_errorReporter.fatalTypeError(
+			79_error,
+			_builtin.location(),
+			// TODO: registrationResult.first->second->location(),
+			fmt::format(
+				"Previous expression already associated with operator {}.",
+				_builtin.nameParameter()
+			)
+		);
 }
 
 void TypeClassMemberRegistration::endVisit(TypeClassDefinition const& _typeClassDefinition)

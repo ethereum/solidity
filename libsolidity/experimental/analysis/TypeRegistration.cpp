@@ -58,7 +58,10 @@ bool TypeRegistration::visit(TypeClassDefinition const& _typeClassDefinition)
 
 bool TypeRegistration::visit(Builtin const& _builtin)
 {
-	if (annotation(_builtin).typeConstructor)
+	if (
+		_builtin.functionParameter().has_value() ||
+		annotation(_builtin).typeConstructor
+	)
 		return false;
 
 	auto primitiveType = [&](std::string _name) -> std::optional<PrimitiveType> {
@@ -128,22 +131,12 @@ bool TypeRegistration::visit(TypeClassInstantiation const& _typeClassInstantiati
 		m_errorReporter.typeError(5577_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type name.");
 		return false;
 	}
-	auto* instantiations = std::visit(util::GenericVisitor{
-		[&](ASTPointer<IdentifierPath> _path) -> TypeClassInstantiations*
-		{
-			if (TypeClassDefinition const* classDefinition = dynamic_cast<TypeClassDefinition const*>(_path->annotation().referencedDeclaration))
-				return &annotation(*classDefinition).instantiations;
-			m_errorReporter.typeError(3570_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
-			return nullptr;
-		},
-		[&](Token _token) -> TypeClassInstantiations*
-		{
-			if (auto typeClass = builtinClassFromToken(_token))
-				return &annotation().builtinClassInstantiations[*typeClass];
-			m_errorReporter.typeError(5262_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
-			return nullptr;
-		}
-	}, _typeClassInstantiation.typeClass().name());
+	auto* instantiations = [&](ASTPointer<IdentifierPath> _path) -> TypeClassInstantiations* {
+		if (TypeClassDefinition const* classDefinition = dynamic_cast<TypeClassDefinition const*>(_path->annotation().referencedDeclaration))
+			return &annotation(*classDefinition).instantiations;
+		m_errorReporter.typeError(3570_error, _typeClassInstantiation.typeClass().location(), "Expected a type class.");
+		return nullptr;
+	}(_typeClassInstantiation.typeClass().name());
 
 	if (!instantiations)
 		return false;

@@ -180,6 +180,7 @@ private:
 	ASTPointer<TypeClassInstantiation> parseTypeClassInstantiation();
 	ASTPointer<TypeDefinition> parseTypeDefinition();
 	ASTPointer<TypeClassName> parseTypeClassName();
+	ASTPointer<Builtin> parseBuiltin();
 	///@}
 
 	///@{

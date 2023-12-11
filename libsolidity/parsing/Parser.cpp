@@ -148,6 +148,11 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 				solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
 				nodes.push_back(parseTypeClassInstantiation());
 				break;
+			case Token::Builtin:
+				solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+				nodes.push_back(parseBuiltin());
+				expectToken(Token::Semicolon);
+				break;
 			default:
 				if (
 					// Workaround because `error` is not a keyword.
@@ -1764,19 +1769,9 @@ ASTPointer<TypeClassName> Parser::parseTypeClassName()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
-	std::variant<Token, ASTPointer<IdentifierPath>> name;
-	if (TokenTraits::isBuiltinTypeClassName(m_scanner->currentToken()))
-	{
-		nodeFactory.markEndPosition();
-		name = m_scanner->currentToken();
-		advance();
-	}
-	else
-	{
-		auto identifierPath = parseIdentifierPath();
-		name = identifierPath;
-		nodeFactory.setEndPositionFromNode(identifierPath);
-	}
+	ASTPointer<IdentifierPath> name = parseIdentifierPath();
+	nodeFactory.setEndPositionFromNode(name);
+
 	return nodeFactory.createNode<TypeClassName>(name);
 }
 
@@ -1838,18 +1833,7 @@ ASTPointer<TypeDefinition> Parser::parseTypeDefinition()
 		if (m_scanner->currentToken() != Token::Builtin)
 			expression = parseExpression();
 		else
-		{
-			expectToken(Token::Builtin);
-			expectToken(Token::LParen);
-
-			expression = nodeFactory.createNode<Builtin>(
-				std::make_shared<std::string>(m_scanner->currentLiteral()),
-				m_scanner->currentLocation()
-			);
-
-			expectToken(Token::StringLiteral);
-			expectToken(Token::RParen);
-		}
+			expression = parseBuiltin();
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
@@ -1858,6 +1842,34 @@ ASTPointer<TypeDefinition> Parser::parseTypeDefinition()
 		std::move(nameLocation),
 		std::move(arguments),
 		std::move(expression)
+	);
+}
+
+ASTPointer<Builtin> Parser::parseBuiltin()
+{
+	solAssert(m_experimentalSolidityEnabledInCurrentSourceUnit);
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Builtin);
+	expectToken(Token::LParen);
+
+	ASTPointer<ASTString> name = std::make_shared<std::string>(m_scanner->currentLiteral());
+	SourceLocation nameLocation = m_scanner->currentLocation();
+	expectToken(Token::StringLiteral);
+
+	std::optional<ASTPointer<Expression>> functionParameter;
+	if (m_scanner->currentToken() == Token::Comma)
+	{
+		expectToken(Token::Comma);
+		functionParameter = parseExpression();
+		// TODO: validation ?
+	}
+
+	expectToken(Token::RParen);
+
+	return nodeFactory.createNode<Builtin>(
+		name,
+		nameLocation,
+		functionParameter
 	);
 }
 
