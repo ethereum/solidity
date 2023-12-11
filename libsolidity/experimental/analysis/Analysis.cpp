@@ -18,6 +18,7 @@
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/analysis/DebugWarner.h>
 #include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
+#include <libsolidity/experimental/analysis/InstantiationRegistration.h>
 #include <libsolidity/experimental/analysis/SyntaxRestrictor.h>
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
 #include <libsolidity/experimental/analysis/TypeInference.h>
@@ -29,6 +30,7 @@ using namespace solidity::frontend::experimental;
 // TODO: creating all of them for all nodes up front may be wasteful, we should improve the mechanism.
 struct Analysis::AnnotationContainer
 {
+	InstantiationRegistration::Annotation instantiationRegistrationAnnotation;
 	TypeClassRegistration::Annotation typeClassRegistrationAnnotation;
 	TypeRegistration::Annotation typeRegistrationAnnotation;
 	TypeInference::Annotation typeInferenceAnnotation;
@@ -37,10 +39,35 @@ struct Analysis::AnnotationContainer
 struct Analysis::GlobalAnnotationContainer
 {
 	FunctionDependencyAnalysis::GlobalAnnotation functionDependencyGraphAnnotation;
+	InstantiationRegistration::GlobalAnnotation instantiationRegistrationAnnotation;
 	TypeClassRegistration::GlobalAnnotation typeClassRegistrationAnnotation;
 	TypeRegistration::GlobalAnnotation typeRegistrationAnnotation;
 	TypeInference::GlobalAnnotation typeInferenceAnnotation;
 };
+
+template<>
+InstantiationRegistration::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<InstantiationRegistration>::get(ASTNode const& _node)
+{
+	return analysis.annotationContainer(_node).instantiationRegistrationAnnotation;
+}
+
+template<>
+InstantiationRegistration::Annotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<InstantiationRegistration>::get(ASTNode const& _node) const
+{
+	return analysis.annotationContainer(_node).instantiationRegistrationAnnotation;
+}
+
+template<>
+InstantiationRegistration::GlobalAnnotation const& solidity::frontend::experimental::detail::ConstAnnotationFetcher<InstantiationRegistration>::get() const
+{
+	return analysis.annotationContainer().instantiationRegistrationAnnotation;
+}
+
+template<>
+InstantiationRegistration::GlobalAnnotation& solidity::frontend::experimental::detail::AnnotationFetcher<InstantiationRegistration>::get()
+{
+	return analysis.annotationContainer().instantiationRegistrationAnnotation;
+}
 
 template<>
 TypeClassRegistration::Annotation& solidity::frontend::experimental::detail::AnnotationFetcher<TypeClassRegistration>::get(ASTNode const& _node)
@@ -164,6 +191,7 @@ bool Analysis::check(std::vector<std::shared_ptr<SourceUnit const>> const& _sour
 		SyntaxRestrictor,
 		TypeClassRegistration,
 		TypeRegistration,
+		InstantiationRegistration,
 		// TODO move after step introduced in https://github.com/ethereum/solidity/pull/14578, but before TypeInference
 		FunctionDependencyAnalysis,
 		TypeInference,

@@ -190,6 +190,8 @@ set(sources
 	experimental/analysis/DebugWarner.h
 	experimental/analysis/FunctionDependencyAnalysis.cpp
 	experimental/analysis/FunctionDependencyAnalysis.h
+	experimental/analysis/InstantiationRegistration.cpp
+	experimental/analysis/InstantiationRegistration.h
 	experimental/analysis/TypeClassRegistration.cpp
 	experimental/analysis/TypeClassRegistration.h
 	experimental/analysis/TypeInference.cpp

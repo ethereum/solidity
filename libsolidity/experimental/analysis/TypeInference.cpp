@@ -19,6 +19,7 @@
 
 #include <libsolidity/experimental/analysis/TypeInference.h>
 
+#include <libsolidity/experimental/analysis/InstantiationRegistration.h>
 #include <libsolidity/experimental/analysis/TypeClassRegistration.h>
 #include <libsolidity/experimental/analysis/TypeRegistration.h>
 #include <libsolidity/experimental/analysis/Analysis.h>
@@ -226,10 +227,6 @@ bool TypeInference::visit(TypeClassDefinition const& _typeClassDefinition)
 		if (!m_env->typeEquals(typeVars.front(), typeVar))
 			m_errorReporter.typeError(1807_error, _typeClassDefinition.location(), "Function " + functionName + " depends on invalid type variable.");
 	}
-
-	for (auto instantiation: m_analysis.annotation<TypeRegistration>(_typeClassDefinition).instantiations | ranges::views::values)
-		// TODO: recursion-safety? Order of instantiation?
-		instantiation->accept(*this);
 
 	return false;
 }
@@ -611,53 +608,44 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	auto& instantiationAnnotation = annotation(_typeClassInstantiation);
 	if (instantiationAnnotation.type)
 		return false;
+
 	instantiationAnnotation.type = m_voidType;
-	TypeClass typeClass = std::visit(util::GenericVisitor{
-		[&](ASTPointer<IdentifierPath> _typeClassName) -> TypeClass {
-			auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration);
-			solAssert(typeClassDefinition);
 
-			// visiting the type class will re-visit this instantiation
-			typeClassDefinition->accept(*this);
-			// TODO: more error handling? Should be covered by the visit above.
-			solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
-			return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
-		},
-		[&](Token _token) -> TypeClass {
-			auto const& classRegistrationAnnotation = m_analysis.annotation<TypeClassRegistration>();
-			std::optional<BuiltinClass> builtinClass = builtinClassFromToken(_token);
-			solAssert(builtinClass.has_value());
-			solAssert(classRegistrationAnnotation.builtinClasses.count(*builtinClass) != 0);
-			return classRegistrationAnnotation.builtinClasses.at(*builtinClass);
-		}
-	}, _typeClassInstantiation.typeClass().name());
+	auto const& instantiationRegistrationAnnotation = m_analysis.annotation<InstantiationRegistration>(_typeClassInstantiation);
+	auto const& classNameAnnotation = m_analysis.annotation<InstantiationRegistration>(_typeClassInstantiation.typeClass());
 
-	// TODO: _typeClassInstantiation.typeConstructor().accept(*this); ?
-	auto typeConstructor = m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
-	solAssert(typeConstructor);
+	solAssert(instantiationRegistrationAnnotation.instanceType.has_value());
+	Type instanceType = *instantiationRegistrationAnnotation.instanceType;
 
-	std::vector<Type> arguments;
-	Arity arity{
-		{},
-		typeClass
-	};
+	TypeClassDefinition const* typeClassDefinition = classNameAnnotation.typeClassDefinition;
+	if (typeClassDefinition)
+		// We may have not visited the type class definition yet. Do it just in case.
+		// TODO: Type classes should be processed in a separate pass to avoid this out-of-order visitation.
+		typeClassDefinition->accept(*this);
 
+	solAssert(classNameAnnotation.typeClass.has_value());
+	TypeClass typeClass = *classNameAnnotation.typeClass;
+
+	solAssert(m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor.has_value());
+	TypeConstructor typeConstructor = *m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
+
+	// NOTE: Not visiting the type constructor
+
+	if (_typeClassInstantiation.argumentSorts())
 	{
 		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
-		if (_typeClassInstantiation.argumentSorts())
-		{
-			_typeClassInstantiation.argumentSorts()->accept(*this);
-			auto& argumentSortAnnotation = annotation(*_typeClassInstantiation.argumentSorts());
-			solAssert(argumentSortAnnotation.type);
-			arguments = TypeSystemHelpers{m_typeSystem}.destTupleType(*argumentSortAnnotation.type);
-			arity.argumentSorts = arguments | ranges::views::transform([&](Type _type) {
-				return m_env->sort(_type);
-			}) | ranges::to<std::vector<Sort>>;
-		}
-	}
-	m_env->fixTypeVars(arguments);
+		_typeClassInstantiation.argumentSorts()->accept(*this);
 
-	Type instanceType{TypeConstant{*typeConstructor, arguments}};
+		// Visiting arguments assigns them fresh type variables.
+		// Unify with variables we used for them in the instantiation registration pass.
+		auto& argumentSortAnnotation = annotation(*_typeClassInstantiation.argumentSorts());
+		solAssert(argumentSortAnnotation.type);
+		unify(
+			instanceType,
+			Type{TypeConstant{typeConstructor, TypeSystemHelpers{m_typeSystem}.destTupleType(*argumentSortAnnotation.type)}},
+			_typeClassInstantiation.argumentSorts()->location()
+		);
+	}
 
 	std::map<std::string, Type> functionTypes;
 
@@ -669,9 +657,6 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		if (!functionTypes.emplace(functionDefinition->name(), type(*functionDefinition)).second)
 			m_errorReporter.typeError(3654_error, subNode->location(), "Duplicate definition of function " + functionDefinition->name() + " during type class instantiation.");
 	}
-
-	if (auto error = m_typeSystem.instantiateClass(instanceType, arity))
-		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
 
 	auto const& classFunctions = annotation().typeClassFunctions.at(typeClass);
 
