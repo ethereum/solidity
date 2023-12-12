@@ -935,8 +935,6 @@ std::string const& CompilerStack::yulIR(std::string const& _contractName) const
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	return contract(_contractName).yulIR;
 }
 
@@ -954,8 +952,6 @@ std::string const& CompilerStack::yulIROptimized(std::string const& _contractNam
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
-
-	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).yulIROptimized;
 }
@@ -975,8 +971,6 @@ evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractNa
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	return contract(_contractName).object;
 }
 
@@ -984,8 +978,6 @@ evmasm::LinkerObject const& CompilerStack::runtimeObject(std::string const& _con
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
-
-	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).runtimeObject;
 }
@@ -995,8 +987,6 @@ std::string CompilerStack::assemblyString(std::string const& _contractName, Stri
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
-
-	solUnimplementedAssert(!isExperimentalSolidity());
 
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
