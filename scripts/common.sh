@@ -307,9 +307,9 @@ function split_on_empty_lines_into_numbered_files
 function command_available
 {
     local program="$1"
-    local parameters=${*:2}
-    if ! "${program}" "${parameters}" > /dev/null 2>&1
+    local parameters=( "${@:2}" )
+    if ! "${program}" "${parameters[@]}" > /dev/null 2>&1
     then
-        fail "'${program}' not found or not executed successfully with parameter(s) '${parameters}'. aborting."
+        fail "'${program}' not found or not executed successfully with parameter(s) '${parameters[*]}'. aborting."
     fi
 }
