@@ -935,8 +935,6 @@ std::string const& CompilerStack::yulIR(std::string const& _contractName) const
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	return contract(_contractName).yulIR;
 }
 
