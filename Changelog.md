@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * AST import: Fix bug when importing inline assembly with empty ``let`` variable declaration.
 
 
 ### 0.8.23 (2023-11-08)
