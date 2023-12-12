@@ -953,8 +953,6 @@ std::string const& CompilerStack::yulIROptimized(std::string const& _contractNam
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	return contract(_contractName).yulIROptimized;
 }
 
