@@ -988,8 +988,6 @@ std::string CompilerStack::assemblyString(std::string const& _contractName, Stri
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
-	solUnimplementedAssert(!isExperimentalSolidity());
-
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
 		return currentContract.evmAssembly->assemblyString(m_debugInfoSelection, _sourceCodes);
