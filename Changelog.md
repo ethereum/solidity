@@ -4,7 +4,7 @@ Language Features:
 
 
 Compiler Features:
-
+ * EVM: Support for the EVM Version "Cancun".
 
 Bugfixes:
  * AST import: Fix bug when importing inline assembly with empty ``let`` variable declaration.
