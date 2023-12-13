@@ -103,7 +103,7 @@ private:
 	Type m_boolType;
 	std::optional<Type> m_currentFunctionType;
 
-	Type typeAnnotation(ASTNode const& _node) const;
+	Type type(ASTNode const& _node) const;
 
 	Annotation& annotation(ASTNode const& _node);
 	Annotation const& annotation(ASTNode const& _node) const;
