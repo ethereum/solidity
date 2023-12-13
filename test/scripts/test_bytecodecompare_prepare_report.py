@@ -487,19 +487,19 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        report = parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), LIBRARY_INHERITED2_SOL_CLI_OUTPUT)
+        report = parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), LIBRARY_INHERITED2_SOL_CLI_OUTPUT, 0)
         self.assertEqual(report, expected_report)
 
     def test_parse_cli_output_should_report_error_on_compiler_errors(self):
         expected_report = FileReport(file_name=Path('syntaxTests/pragma/unknown_pragma.sol'), contract_reports=None)
 
-        report = parse_cli_output(Path('syntaxTests/pragma/unknown_pragma.sol'), UNKNOWN_PRAGMA_SOL_CLI_OUTPUT)
+        report = parse_cli_output(Path('syntaxTests/pragma/unknown_pragma.sol'), UNKNOWN_PRAGMA_SOL_CLI_OUTPUT, 0)
         self.assertEqual(report, expected_report)
 
     def test_parse_cli_output_should_report_error_on_empty_output(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), ''), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), '', 0), expected_report)
 
     def test_parse_cli_output_should_report_missing_bytecode_and_metadata(self):
         compiler_output = dedent("""\
@@ -541,22 +541,25 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), compiler_output), expected_report)
+        self.assertEqual(
+            parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), compiler_output, 0),
+            expected_report
+        )
 
     def test_parse_cli_output_should_report_error_on_unimplemented_feature_error(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_report_error_on_stack_too_deep_error(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), STACK_TOO_DEEP_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), STACK_TOO_DEEP_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_report_error_on_code_generation_error(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), CODE_GENERATION_ERROR_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), CODE_GENERATION_ERROR_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_handle_output_from_solc_0_4_0(self):
         expected_report = FileReport(
@@ -571,7 +574,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_0_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_0_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_handle_output_from_solc_0_4_8(self):
         expected_report = FileReport(
@@ -588,7 +591,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_8_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_8_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_handle_leading_and_trailing_spaces(self):
         compiler_output = (
@@ -606,7 +609,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output, 0), expected_report)
 
     def test_parse_cli_output_should_handle_empty_bytecode_and_metadata_lines(self):
         compiler_output = dedent("""\
@@ -640,7 +643,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output, 0), expected_report)
 
     def test_parse_cli_output_should_handle_link_references_in_bytecode(self):
         compiler_output = dedent("""\
@@ -662,4 +665,4 @@ class TestParseCLIOutput(PrepareReportTestBase):
         )
         # pragma pylint: enable=line-too-long
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output, 0), expected_report)
