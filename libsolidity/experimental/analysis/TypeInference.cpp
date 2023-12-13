@@ -621,45 +621,33 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	if (instantiationAnnotation.type)
 		return false;
 	instantiationAnnotation.type = m_voidType;
-	std::optional<TypeClass> typeClass = std::visit(util::GenericVisitor{
-		[&](ASTPointer<IdentifierPath> _typeClassName) -> std::optional<TypeClass> {
-			if (auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration))
-			{
-				// visiting the type class will re-visit this instantiation
-				typeClassDefinition->accept(*this);
-				// TODO: more error handling? Should be covered by the visit above.
-				solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
-				return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
-			}
-			else
-			{
-				m_errorReporter.typeError(9817_error, _typeClassInstantiation.typeClass().location(), "Expected type class.");
-				return std::nullopt;
-			}
+	TypeClass typeClass = std::visit(util::GenericVisitor{
+		[&](ASTPointer<IdentifierPath> _typeClassName) -> TypeClass {
+			auto const* typeClassDefinition = dynamic_cast<TypeClassDefinition const*>(_typeClassName->annotation().referencedDeclaration);
+			solAssert(typeClassDefinition);
+
+			// visiting the type class will re-visit this instantiation
+			typeClassDefinition->accept(*this);
+			// TODO: more error handling? Should be covered by the visit above.
+			solAssert(m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.has_value());
+			return m_analysis.annotation<TypeClassRegistration>(*typeClassDefinition).typeClass.value();
 		},
-		[&](Token _token) -> std::optional<TypeClass> {
-			if (auto builtinClass = builtinClassFromToken(_token))
-				if (auto typeClass = util::valueOrNullptr(annotation().builtinClasses, *builtinClass))
-					return *typeClass;
-			m_errorReporter.typeError(2658_error, _typeClassInstantiation.location(), "Invalid type class name.");
-			return std::nullopt;
+		[&](Token _token) -> TypeClass {
+			std::optional<BuiltinClass> builtinClass = builtinClassFromToken(_token);
+			solAssert(builtinClass.has_value());
+			solAssert(annotation().builtinClasses.count(*builtinClass) != 0);
+			return annotation().builtinClasses.at(*builtinClass);
 		}
 	}, _typeClassInstantiation.typeClass().name());
-	if (!typeClass)
-		return false;
 
 	// TODO: _typeClassInstantiation.typeConstructor().accept(*this); ?
 	auto typeConstructor = m_analysis.annotation<TypeRegistration>(_typeClassInstantiation.typeConstructor()).typeConstructor;
-	if (!typeConstructor)
-	{
-		m_errorReporter.typeError(2138_error, _typeClassInstantiation.typeConstructor().location(), "Invalid type constructor.");
-		return false;
-	}
+	solAssert(typeConstructor);
 
 	std::vector<Type> arguments;
 	Arity arity{
 		{},
-		*typeClass
+		typeClass
 	};
 
 	{
@@ -692,10 +680,10 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 	if (auto error = m_typeSystem.instantiateClass(instanceType, arity))
 		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
 
-	auto const& classFunctions = annotation().typeClassFunctions.at(*typeClass);
+	auto const& classFunctions = annotation().typeClassFunctions.at(typeClass);
 
 	TypeEnvironment newEnv = m_env->clone();
-	if (!newEnv.unify(m_typeSystem.typeClassVariable(*typeClass), instanceType).empty())
+	if (!newEnv.unify(m_typeSystem.typeClassVariable(typeClass), instanceType).empty())
 	{
 		m_errorReporter.typeError(4686_error, _typeClassInstantiation.location(), "Unification of class and instance variable failed.");
 		return false;
