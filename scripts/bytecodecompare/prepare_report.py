@@ -183,7 +183,10 @@ def parse_standard_json_output(source_file_name: Path, standard_json_output: str
     return file_report
 
 
-def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
+def parse_cli_output(source_file_name: Path, cli_output: str, exit_code: int) -> FileReport:
+    if exit_code != 0:
+        return FileReport(file_name=source_file_name, contract_reports=None)
+
     # re.split() returns a list containing the text between pattern occurrences but also inserts the
     # content of matched groups in between. It also never omits the empty elements so the number of
     # list items is predictable (3 per match + the text before the first match)
@@ -312,7 +315,7 @@ def run_compiler(
             input=compiler_input,
             encoding='utf8',
             capture_output=True,
-            check=exit_on_error,
+            check=True,
         )
 
         return parse_standard_json_output(Path(source_file_name), process.stdout)
@@ -345,7 +348,7 @@ def run_compiler(
             check=exit_on_error,
         )
 
-        return parse_cli_output(Path(source_file_name), process.stdout)
+        return parse_cli_output(Path(source_file_name), process.stdout, process.returncode)
 
 
 def generate_report(
