@@ -315,7 +315,7 @@ def run_compiler(
             input=compiler_input,
             encoding='utf8',
             capture_output=True,
-            check=exit_on_error,
+            check=True,
         )
 
         return parse_standard_json_output(Path(source_file_name), process.stdout)
