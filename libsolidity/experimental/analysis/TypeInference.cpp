@@ -676,7 +676,7 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 		}
 	}
 
-	Type type{TypeConstant{*typeConstructor, arguments}};
+	Type instanceType{TypeConstant{*typeConstructor, arguments}};
 
 	std::map<std::string, Type> functionTypes;
 
@@ -689,13 +689,13 @@ bool TypeInference::visit(TypeClassInstantiation const& _typeClassInstantiation)
 			m_errorReporter.typeError(3654_error, subNode->location(), "Duplicate definition of function " + functionDefinition->name() + " during type class instantiation.");
 	}
 
-	if (auto error = m_typeSystem.instantiateClass(type, arity))
+	if (auto error = m_typeSystem.instantiateClass(instanceType, arity))
 		m_errorReporter.typeError(5094_error, _typeClassInstantiation.location(), *error);
 
 	auto const& classFunctions = annotation().typeClassFunctions.at(*typeClass);
 
 	TypeEnvironment newEnv = m_env->clone();
-	if (!newEnv.unify(m_typeSystem.typeClassVariable(*typeClass), type).empty())
+	if (!newEnv.unify(m_typeSystem.typeClassVariable(*typeClass), instanceType).empty())
 	{
 		m_errorReporter.typeError(4686_error, _typeClassInstantiation.location(), "Unification of class and instance variable failed.");
 		return false;
