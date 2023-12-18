@@ -59,6 +59,7 @@ then
   brew install wget
   brew install coreutils
   brew install diffutils
+  brew install grep
   ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 
   # z3

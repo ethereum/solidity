@@ -665,7 +665,7 @@ void Scanner::scanToken()
 		case '.':
 			// . Number
 			advance();
-			if (isDecimalDigit(m_char))
+			if (m_kind != ScannerKind::ExperimentalSolidity && isDecimalDigit(m_char))
 				token = scanNumber('.');
 			else
 				token = Token::Period;
