@@ -738,6 +738,7 @@ defaults:
       project: prb-math
       binary_type: native
       image: cimg/rust:1.74.0-node
+      resource_class: medium
 
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
       <<: *requires_b_ubu_static
