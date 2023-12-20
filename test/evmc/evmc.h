@@ -44,7 +44,7 @@ enum
      *
      * @see @ref versioning
      */
-    EVMC_ABI_VERSION = 10
+    EVMC_ABI_VERSION = 11
 };
 
 
@@ -202,6 +202,9 @@ struct evmc_tx_context
     evmc_uint256be block_prev_randao; /**< The block previous RANDAO (EIP-4399). */
     evmc_uint256be chain_id;          /**< The blockchain's ChainID. */
     evmc_uint256be block_base_fee;    /**< The block base fee per gas (EIP-1559, EIP-3198). */
+    evmc_uint256be blob_base_fee;     /**< The blob base fee (EIP-7516). */
+    const evmc_bytes32* blob_hashes;  /**< The array of blob hashes (EIP-4844). */
+    size_t blob_hashes_count;         /**< The number of blob hashes (EIP-4844). */
 };
 
 /**
@@ -503,6 +506,22 @@ typedef evmc_bytes32 (*evmc_get_storage_fn)(struct evmc_host_context* context,
                                             const evmc_address* address,
                                             const evmc_bytes32* key);
 
+/**
+ * Get transient storage callback function.
+ *
+ * This callback function is used by a VM to query
+ * the given account transient storage (EIP-1153) entry.
+ *
+ * @param context  The Host execution context.
+ * @param address  The address of the account.
+ * @param key      The index of the account's transient storage entry.
+ * @return         The transient storage value at the given storage key or null bytes
+ *                 if the account does not exist.
+ */
+typedef evmc_bytes32 (*evmc_get_transient_storage_fn)(struct evmc_host_context* context,
+                                                      const evmc_address* address,
+                                                      const evmc_bytes32* key);
+
 
 /**
  * The effect of an attempt to modify a contract storage item.
@@ -619,6 +638,25 @@ typedef enum evmc_storage_status (*evmc_set_storage_fn)(struct evmc_host_context
                                                         const evmc_address* address,
                                                         const evmc_bytes32* key,
                                                         const evmc_bytes32* value);
+
+/**
+ * Set transient storage callback function.
+ *
+ * This callback function is used by a VM to update
+ * the given account's transient storage (EIP-1153) entry.
+ * The VM MUST make sure that the account exists. This requirement is only a formality because
+ * VM implementations only modify storage of the account of the current execution context
+ * (i.e. referenced by evmc_message::recipient).
+ *
+ * @param context  The pointer to the Host execution context.
+ * @param address  The address of the account.
+ * @param key      The index of the transient storage entry.
+ * @param value    The value to be stored.
+ */
+typedef void (*evmc_set_transient_storage_fn)(struct evmc_host_context* context,
+                                              const evmc_address* address,
+                                              const evmc_bytes32* key,
+                                              const evmc_bytes32* value);
 
 /**
  * Get balance callback function.
@@ -825,6 +863,12 @@ struct evmc_host_interface
 
     /** Access storage callback function. */
     evmc_access_storage_fn access_storage;
+
+    /** Get transient storage callback function. */
+    evmc_get_transient_storage_fn get_transient_storage;
+
+    /** Set transient storage callback function. */
+    evmc_set_transient_storage_fn set_transient_storage;
 };
 
 
