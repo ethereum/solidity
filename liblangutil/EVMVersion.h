@@ -104,6 +104,7 @@ public:
 	bool hasBlobBaseFee() const { return *this >= cancun(); }
 	bool hasPrevRandao() const { return *this >= paris(); }
 	bool hasPush0() const { return *this >= shanghai(); }
+	bool hasBlobHash() const { return *this >= cancun(); }
 
 	bool hasOpcode(evmasm::Instruction _opcode) const;
 

@@ -135,14 +135,22 @@ std::set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 		return _instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris();
 	};
 
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// blobhash for VMs before cancun.
+	auto blobHashException = [&](evmasm::Instruction _instr) -> bool
+	{
+		return _instr == evmasm::Instruction::BLOBHASH && _evmVersion < langutil::EVMVersion::cancun();
+	};
+
 	std::set<YulString> reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
 		std::string name = toLower(instr.first);
 		if (
 			!baseFeeException(instr.second) &&
-			!blobBaseFeeException(instr.second) &&
-			!prevRandaoException(name)
+			!prevRandaoException(name) &&
+			!blobHashException(instr.second) &&
+			!blobBaseFeeException(instr.second)
 		)
 			reserved.emplace(name);
 	}

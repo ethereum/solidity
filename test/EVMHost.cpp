@@ -139,6 +139,13 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	// The minimum value of blobbasefee
 	tx_context.blob_base_fee = evmc::bytes32{1};
 
+	static evmc_bytes32 const blob_hashes_array[] = {
+		0x0100000000000000000000000000000000000000000000000000000000000001_bytes32,
+		0x0100000000000000000000000000000000000000000000000000000000000002_bytes32
+	};
+	tx_context.blob_hashes = blob_hashes_array;
+	tx_context.blob_hashes_count = sizeof(blob_hashes_array) / sizeof(blob_hashes_array[0]);
+
 	// Reserve space for recording calls.
 	if (!recorded_calls.capacity())
 		recorded_calls.reserve(max_recorded_calls);

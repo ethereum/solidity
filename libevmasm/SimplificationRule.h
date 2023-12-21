@@ -119,6 +119,7 @@ struct EVMBuiltins
 	static auto constexpr RETURNDATACOPY = PatternGenerator<Instruction::RETURNDATACOPY>{};
 	static auto constexpr EXTCODEHASH = PatternGenerator<Instruction::EXTCODEHASH>{};
 	static auto constexpr BLOCKHASH = PatternGenerator<Instruction::BLOCKHASH>{};
+	static auto constexpr BLOBHASH = PatternGenerator<Instruction::BLOBHASH>{};
 	static auto constexpr COINBASE = PatternGenerator<Instruction::COINBASE>{};
 	static auto constexpr TIMESTAMP = PatternGenerator<Instruction::TIMESTAMP>{};
 	static auto constexpr NUMBER = PatternGenerator<Instruction::NUMBER>{};

@@ -3,7 +3,7 @@
 Language Features:
  * Introduce global ``block.blobbasefee`` for retrieving the blob base fee of the current block.
  * Yul: Introduce builtin ``blobbasefee()`` for retrieving the blob base fee of the current block.
-
+ * Yul: Introduce builtin ``blobhash()`` for retrieving versioned hashes of blobs associated with the transaction.
 
 Compiler Features:
  * EVM: Support for the EVM Version "Cancun".
