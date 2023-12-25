@@ -23,6 +23,7 @@
 
 #include <fmt/format.h>
 
+#include <functional>
 #include <unordered_map>
 #include <vector>
 
@@ -180,7 +181,7 @@ private:
 	/// process a block of 4x4 bytes, this is the main part of the XXHash32 algorithm
 	static void process(const void* data, uint64_t& state0, uint64_t& state1, uint64_t& state2, uint64_t& state3)
 	{
-		const auto* block=static_cast<const uint64_t*>(data);
+		const auto* block = static_cast<const uint64_t*>(data);
 		state0 = processSingle(state0, block[0]);
 		state1 = processSingle(state1, block[1]);
 		state2 = processSingle(state2, block[2]);
@@ -341,7 +342,6 @@ struct formatter<solidity::yul::YulString>
 	}
 };
 }
-
 namespace std
 {
 template<> struct hash<solidity::yul::YulString>
