@@ -101,6 +101,7 @@ public:
 	bool hasChainID() const { return *this >= istanbul(); }
 	bool hasSelfBalance() const { return *this >= istanbul(); }
 	bool hasBaseFee() const { return *this >= london(); }
+	bool hasBlobBaseFee() const { return *this >= cancun(); }
 	bool hasPrevRandao() const { return *this >= paris(); }
 	bool hasPush0() const { return *this >= shanghai(); }
 

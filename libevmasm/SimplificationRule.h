@@ -127,6 +127,7 @@ struct EVMBuiltins
 	static auto constexpr CHAINID = PatternGenerator<Instruction::CHAINID>{};
 	static auto constexpr SELFBALANCE = PatternGenerator<Instruction::SELFBALANCE>{};
 	static auto constexpr BASEFEE = PatternGenerator<Instruction::BASEFEE>{};
+	static auto constexpr BLOBBASEFEE = PatternGenerator<Instruction::BLOBBASEFEE>{};
 	static auto constexpr POP = PatternGenerator<Instruction::POP>{};
 	static auto constexpr MLOAD = PatternGenerator<Instruction::MLOAD>{};
 	static auto constexpr MSTORE = PatternGenerator<Instruction::MSTORE>{};

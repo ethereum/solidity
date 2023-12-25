@@ -4116,7 +4116,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			{"number", TypeProvider::uint256()},
 			{"gaslimit", TypeProvider::uint256()},
 			{"chainid", TypeProvider::uint256()},
-			{"basefee", TypeProvider::uint256()}
+			{"basefee", TypeProvider::uint256()},
+			{"blobbasefee", TypeProvider::uint256()}
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
