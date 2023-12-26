@@ -99,7 +99,7 @@ RUN set -ex
 RUN rm -f /usr/lib/x86_64-linux-gnu/libgmp.*
 RUN rm -f /usr/include/x86_64-linux-gnu/gmp.h
 WORKDIR /usr/src
-RUN wget -q 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz' -O gmp.tar.xz
+RUN wget 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz' -O gmp.tar.xz
 RUN test "$(sha256sum gmp.tar.xz)" = "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2  gmp.tar.xz"
 RUN tar -xf gmp.tar.xz
 WORKDIR gmp-6.2.1
