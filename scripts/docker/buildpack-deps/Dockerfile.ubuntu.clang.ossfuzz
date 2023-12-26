@@ -91,23 +91,24 @@ RUN set -ex; \
 	rm -rf /usr/src/libprotobuf-mutator
 
 # gmp
-RUN set -ex; \
+RUN set -ex
     # Replace system installed libgmp static library
     # with sanitized version. Do not perform apt
     # remove because it removes mlton as well that
     # we need for building libabicoder
-    rm -f /usr/lib/x86_64-linux-gnu/libgmp.*; \
-    rm -f /usr/include/x86_64-linux-gnu/gmp.h; \
-    cd /usr/src; \
-    wget -q 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz' -O gmp.tar.xz; \
-    test "$(sha256sum gmp.tar.xz)" = "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2  gmp.tar.xz"; \
-    tar -xf gmp.tar.xz; \
-    cd gmp-6.2.1; \
-    ./configure --prefix=/usr --enable-static=yes; \
-    make -j; \
-    make install; \
-    rm -rf /usr/src/gmp-6.2.1; \
-    rm -f /usr/src/gmp.tar.xz
+RUN rm -f /usr/lib/x86_64-linux-gnu/libgmp.*
+RUN rm -f /usr/include/x86_64-linux-gnu/gmp.h
+WORKDIR /usr/src
+RUN wget -q 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz' -O gmp.tar.xz
+RUN test "$(sha256sum gmp.tar.xz)" = "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2  gmp.tar.xz"
+RUN tar -xf gmp.tar.xz
+WORKDIR gmp-6.2.1
+RUN ./configure --prefix=/usr --enable-static=yes
+RUN make -j
+RUN make install
+RUN rm -rf /usr/src/gmp-6.2.1
+RUN rm -f /usr/src/gmp.tar.xz
+WORKDIR /solidity
 
 # libabicoder
 RUN set -ex; \
