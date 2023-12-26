@@ -22,12 +22,13 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="2"
+LABEL version="3"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update; \
 	apt-get -qqy install --no-install-recommends \
+		automake libtool bison texinfo \
 		build-essential sudo \
 		software-properties-common \
 		ninja-build git wget \
@@ -108,18 +109,22 @@ RUN set -ex; \
     # with sanitized version. Do not perform apt
     # remove because it removes mlton as well that
     # we need for building libabicoder
+    cd /usr/src/; \
+    git clone --depth 1 --branch gmp-6.2.1 https://github.com/gmp-mirror/gmp-6.2 gmp/; \
+    rm -r gmp/.git/; \
+    test \
+        "$(tar --create gmp/ --sort=name --mtime=1970-01-01Z --owner=0 --group=0 --numeric-owner | sha256sum)" = \
+        "d606ff6a4ce98692f9920031e85ea8fcf4a65ce1426f6f0048b8794aefed174b  -"; \
+    # NOTE: This removes also libgmp.so, which git depends on
     rm -f /usr/lib/x86_64-linux-gnu/libgmp.*; \
     rm -f /usr/include/x86_64-linux-gnu/gmp.h; \
-    cd /usr/src; \
-    wget -q 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz' -O gmp.tar.xz; \
-    test "$(sha256sum gmp.tar.xz)" = "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2  gmp.tar.xz"; \
-    tar -xf gmp.tar.xz; \
-    cd gmp-6.2.1; \
-    ./configure --prefix=/usr --enable-static=yes; \
+    cd gmp/; \
+    autoreconf -i; \
+    ./configure --prefix=/usr --enable-static=yes --enable-maintainer-mode; \
     make -j; \
+    make check; \
     make install; \
-    rm -rf /usr/src/gmp-6.2.1; \
-    rm -f /usr/src/gmp.tar.xz
+    rm -rf /usr/src/gmp/
 
 # libabicoder
 RUN set -ex; \
