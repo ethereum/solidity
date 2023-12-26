@@ -22,7 +22,7 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="3"
+LABEL version="2"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -35,11 +35,11 @@ RUN apt-get update; \
 		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4 jq; \
     apt-get install -qy python3-pip;
 
-# Install cmake 3.21.3 (minimum requirement is cmake 3.10)
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.21.3/cmake-3.21.3-Linux-x86_64.sh; \
-    test "$(sha256sum cmake-3.21.3-Linux-x86_64.sh)" = "7b7052b09afb059dd64673ee4fedff0e7f6067e9f4adb76e23f09e6e9a304931  cmake-3.21.3-Linux-x86_64.sh"; \
-    chmod +x cmake-3.21.3-Linux-x86_64.sh; \
-    ./cmake-3.21.3-Linux-x86_64.sh --skip-license --prefix="/usr"
+# Install cmake 3.21.2 (minimum requirement is cmake 3.10)
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-Linux-x86_64.sh; \
+    test "$(sha256sum cmake-3.21.2-Linux-x86_64.sh)" = "3310362c6fe4d4b2dc00823835f3d4a7171bbd73deb7d059738494761f1c908c  cmake-3.21.2-Linux-x86_64.sh"; \
+    chmod +x cmake-3.21.2-Linux-x86_64.sh; \
+    ./cmake-3.21.2-Linux-x86_64.sh --skip-license --prefix="/usr"
 
 FROM base AS libraries
 
@@ -90,18 +90,6 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/libprotobuf-mutator
 
-# EVMONE
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.10.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
-	cd evmone; \
-	mkdir build; \
-	cd build; \
-	CXX=clang++ cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/evmone
-
 # gmp
 RUN set -ex; \
     # Replace system installed libgmp static library
@@ -131,6 +119,18 @@ RUN set -ex; \
     cp libabicoder.a /usr/lib; \
     cp abicoder.hpp /usr/include; \
     rm -rf /usr/src/Yul-Isabelle
+
+# EVMONE
+RUN set -ex; \
+	cd /usr/src; \
+	git clone --branch="v0.11.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	cd evmone; \
+	mkdir build; \
+	cd build; \
+	CXX=clang++ cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	ninja; \
+	ninja install/strip; \
+	rm -rf /usr/src/evmone
 
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
