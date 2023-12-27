@@ -1035,9 +1035,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 		case FunctionType::Kind::BlockHash:
+		case FunctionType::Kind::BlobHash:
 		{
 			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
-			m_context << Instruction::BLOCKHASH;
+			if (function.kind() == FunctionType::Kind::BlockHash)
+				m_context << Instruction::BLOCKHASH;
+			else
+				m_context << Instruction::BLOBHASH;
 			break;
 		}
 		case FunctionType::Kind::AddMod:

@@ -235,6 +235,9 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	if (m_stackState >= ParsedAndImported)
 		solThrow(CompilerError, "Must set EVM version before parsing.");
 	m_evmVersion = _version;
+	// GlobalContext depends on evmVersion since the Cancun hardfork.
+	// Therefore, we reset it whenever we set a new EVM version, ensuring that the context is never reused with a mismatched version.
+	m_globalContext.reset();
 }
 
 void CompilerStack::setEOFVersion(std::optional<uint8_t> _version)
@@ -469,7 +472,7 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		m_globalContext = std::make_shared<GlobalContext>();
+		m_globalContext = std::make_shared<GlobalContext>(m_evmVersion);
 		// We need to keep the same resolver during the whole process.
 		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter, experimentalSolidity);
 		for (Source const* source: m_sourceOrder)

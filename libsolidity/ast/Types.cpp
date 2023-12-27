@@ -3075,6 +3075,7 @@ std::string FunctionType::richIdentifier() const
 	case Kind::ABIEncodeCall: id += "abiencodecall"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
 	case Kind::ABIDecode: id += "abidecode"; break;
+	case Kind::BlobHash: id += "blobhash"; break;
 	case Kind::MetaType: id += "metatype"; break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
