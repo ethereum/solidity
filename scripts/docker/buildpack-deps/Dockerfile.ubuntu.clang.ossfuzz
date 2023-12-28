@@ -28,15 +28,16 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update; \
 	apt-get -qqy install --no-install-recommends \
+		automake libtool bison texinfo \
 		build-essential sudo \
 		software-properties-common \
-		ninja-build git \
+		ninja-build git wget \
 		libbz2-dev zlib1g-dev git curl uuid-dev \
 		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4 jq; \
     apt-get install -qy python3-pip;
 
 # Install cmake 3.21.2 (minimum requirement is cmake 3.10)
-RUN curl -sLO https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-Linux-x86_64.sh; \
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-Linux-x86_64.sh; \
     test "$(sha256sum cmake-3.21.2-Linux-x86_64.sh)" = "3310362c6fe4d4b2dc00823835f3d4a7171bbd73deb7d059738494761f1c908c  cmake-3.21.2-Linux-x86_64.sh"; \
     chmod +x cmake-3.21.2-Linux-x86_64.sh; \
     ./cmake-3.21.2-Linux-x86_64.sh --skip-license --prefix="/usr"
@@ -46,7 +47,7 @@ FROM base AS libraries
 # Boost
 RUN set -ex; \
     cd /usr/src; \
-    curl -sL 'https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.bz2' --output boost.tar.bz2; \
+    wget -q 'https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.bz2' -O boost.tar.bz2; \
     test "$(sha256sum boost.tar.bz2)" = "83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1  boost.tar.bz2" && \
     tar -xf boost.tar.bz2; \
     rm boost.tar.bz2; \
@@ -90,24 +91,38 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/libprotobuf-mutator
 
+# EVMONE
+WORKDIR cd /usr/src
+RUN set -ex; \
+	git clone --branch="v0.11.0" --recurse-submodules https://github.com/ethereum/evmone.git
+WORKDIR evmone/build
+RUN	CXX=clang++ cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
+	ninja; \
+	ninja install/strip; \
+	rm -rf /usr/src/evmone
+WORKDIR /solidity
+
 # gmp
-RUN set -ex
-    # Replace system installed libgmp static library
-    # with sanitized version. Do not perform apt
-    # remove because it removes mlton as well that
-    # we need for building libabicoder
-WORKDIR /usr/src
-RUN curl -sL 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz' --output gmp.tar.xz
-RUN test "$(sha256sum gmp.tar.xz)" = "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2  gmp.tar.xz"
-RUN tar -xf gmp.tar.xz
-RUN rm -f /usr/lib/x86_64-linux-gnu/libgmp.*
-RUN rm -f /usr/include/x86_64-linux-gnu/gmp.h
-WORKDIR gmp-6.2.1
-RUN ./configure --prefix=/usr --enable-static=yes
-RUN make -j
-RUN make install
-RUN rm -rf /usr/src/gmp-6.2.1
-RUN rm -f /usr/src/gmp.tar.xz
+WORKDIR cd /usr/src
+RUN set -ex; \
+	git clone --depth 1 --branch "gmp-6.2.1" https://github.com/gmp-mirror/gmp-6.2.git; \
+	tar -czf gmp-6.2.tar.gz gmp-6.2
+RUN test "$(sha256sum gmp-6.2.tar.gz)" = "b719f304ba51ddc13c76d8a51b739e5eeac5ac6062cb7e345fa2cf7d3d67bbea  gmp-6.2.tar.gz"; \
+	rm gmp-6.2.tar.gz
+	# Replace system installed libgmp static library
+	# with sanitized version. Do not perform apt
+	# remove because it removes mlton as well that
+	# we need for building libabicoder
+RUN	rm -f /usr/lib/x86_64-linux-gnu/libgmp.*; \
+	rm -f /usr/include/x86_64-linux-gnu/gmp.h
+WORKDIR gmp-6.2
+RUN autoreconf -i; \
+	./configure --prefix=/usr --enable-static=yes --enable-maintainer-mode; \
+    make -j; \
+    make check; \
+    make install
+RUN rm -rf /usr/src/gmp-6.2.1; \
+    rm -f /usr/src/gmp-6-2.tar.gz
 WORKDIR /solidity
 
 # libabicoder
@@ -120,18 +135,6 @@ RUN set -ex; \
     cp libabicoder.a /usr/lib; \
     cp abicoder.hpp /usr/include; \
     rm -rf /usr/src/Yul-Isabelle
-
-# EVMONE
-RUN set -ex; \
-	cd /usr/src; \
-	git clone --branch="v0.11.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
-	cd evmone; \
-	mkdir build; \
-	cd build; \
-	CXX=clang++ cmake -G Ninja -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="/usr" ..; \
-	ninja; \
-	ninja install/strip; \
-	rm -rf /usr/src/evmone
 
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
