@@ -22,7 +22,7 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="3"
+LABEL version="4"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -94,7 +94,7 @@ RUN set -ex; \
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.10.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	git clone --branch="v0.11.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \
