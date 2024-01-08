@@ -186,6 +186,7 @@ message CopyFunc {
     CODE = 1;
     RETURNDATA = 2;
     DATA = 3;
+    MEMORY = 4;
   }
   required CopyType ct = 1;
   required Expression target = 2;
