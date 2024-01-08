@@ -115,6 +115,16 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			gas += memoryGas(0, -2);
 			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-2));
 			break;
+		case Instruction::MCOPY:
+		{
+			GasConsumption memoryGasFromRead = memoryGas(-1, -2);
+			GasConsumption memoryGasFromWrite = memoryGas(0, -2);
+
+			gas = runGas(_item.instruction(), m_evmVersion);
+			gas += (memoryGasFromRead < memoryGasFromWrite ? memoryGasFromWrite : memoryGasFromRead);
+			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-2));
+			break;
+		}
 		case Instruction::EXTCODESIZE:
 			gas = GasCosts::extCodeGas(m_evmVersion);
 			break;

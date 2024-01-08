@@ -128,6 +128,13 @@ std::set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 	};
 
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// mcopy for VMs before london.
+	auto mcopyException = [&](evmasm::Instruction _instr) -> bool
+	{
+		return _instr == evmasm::Instruction::MCOPY && _evmVersion < langutil::EVMVersion::cancun();
+	};
+
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// prevrandao for VMs before paris.
 	auto prevRandaoException = [&](std::string const& _instrName) -> bool
 	{
@@ -150,7 +157,8 @@ std::set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 			!baseFeeException(instr.second) &&
 			!prevRandaoException(name) &&
 			!blobHashException(instr.second) &&
-			!blobBaseFeeException(instr.second)
+			!blobBaseFeeException(instr.second) &&
+			!mcopyException(instr.second)
 		)
 			reserved.emplace(name);
 	}

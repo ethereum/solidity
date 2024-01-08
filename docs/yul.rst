@@ -865,6 +865,8 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | returndatacopy(t, f, s) | `-` | B | copy s bytes from returndata at position f to mem at position t |
 +-------------------------+-----+---+-----------------------------------------------------------------+
+| mcopy(t, f, s)          | `-` | N | copy s bytes from mem at position f to mem at position t        |
++-------------------------+-----+---+-----------------------------------------------------------------+
 | extcodehash(a)          |     | C | code hash of address a                                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create(v, p, n)         |     | F | create new contract with code mem[p...(p+n)) and send v wei     |

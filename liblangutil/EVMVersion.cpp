@@ -53,6 +53,8 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 		return hasBlobHash();
 	case Instruction::BLOBBASEFEE:
 		return hasBlobBaseFee();
+	case Instruction::MCOPY:
+		return hasMcopy();
 	default:
 		return true;
 	}

@@ -736,6 +736,9 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 	else if (_instr == evmasm::Instruction::BLOBHASH && !m_evmVersion.hasBlobHash())
 		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
 		yulAssert(false);
+	else if (_instr == evmasm::Instruction::MCOPY && !m_evmVersion.hasMcopy())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.error(
 			2450_error,

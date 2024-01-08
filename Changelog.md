@@ -5,6 +5,7 @@ Language Features:
  * Introduce global function ``blobhash(uint)`` for retrieving versioned hashes of blobs, akin to the homonymous Yul builtin.
  * Yul: Introduce builtin ``blobbasefee()`` for retrieving the blob base fee of the current block.
  * Yul: Introduce builtin ``blobhash()`` for retrieving versioned hashes of blobs associated with the transaction.
+ * Yul: Introduce builtin ``mcopy()`` for cheaply copying data between memory areas.
 
 Compiler Features:
 * EVM: Support for the EVM Version "Cancun".
