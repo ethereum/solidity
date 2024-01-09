@@ -287,18 +287,23 @@ inline Instruction logInstruction(unsigned _number)
 	return Instruction(unsigned(Instruction::LOG0) + _number);
 }
 
+/// Gas price tiers representing static cost of an instruction.
+/// Opcodes whose cost is dynamic or depends on EVM version should use the `Special` tier and need
+/// dedicated logic in GasMeter (especially in estimateMax()).
+/// The tiers loosely follow opcode groups originally defined in the Yellow Paper.
 enum class Tier
 {
-	Zero = 0,	// 0, Zero
-	Base,		// 2, Quick
-	VeryLow,	// 3, Fastest
-	Low,		// 5, Fast
-	Mid,		// 8, Mid
-	High,		// 10, Slow
-	Ext,		// 20, Ext
-	WarmAccess,	// 100, Warm Access
-	Special,	// multiparam or otherwise special
-	Invalid		// Invalid.
+	// NOTE: Tiers should be ordered by cost, since we sometimes perform comparisons between them.
+	Zero = 0,   // 0, Zero
+	Base,       // 2, Quick
+	VeryLow,    // 3, Fastest
+	Low,        // 5, Fast
+	Mid,        // 8, Mid
+	High,       // 10, Slow
+	Ext,        // 20, Ext
+	WarmAccess, // 100, Warm Access
+	Special,    // multiparam or otherwise special
+	Invalid,    // Invalid.
 };
 
 /// Information structure for a particular instruction.
