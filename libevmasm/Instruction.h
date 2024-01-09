@@ -300,7 +300,7 @@ enum class Tier
 	Low,        // 5, Fast
 	Mid,        // 8, Mid
 	High,       // 10, Slow
-	Ext,        // 20, Ext
+	BlockHash,  // 20
 	WarmAccess, // 100, Warm Access
 	Special,    // multiparam or otherwise special
 	Invalid,    // Invalid.

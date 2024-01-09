@@ -280,7 +280,7 @@ unsigned GasMeter::runGas(Instruction _instruction, langutil::EVMVersion _evmVer
 	case Tier::Low:         return GasCosts::tier3Gas;
 	case Tier::Mid:         return GasCosts::tier4Gas;
 	case Tier::High:        return GasCosts::tier5Gas;
-	case Tier::Ext:         return GasCosts::tier6Gas;
+	case Tier::BlockHash:   return GasCosts::tier6Gas;
 	case Tier::WarmAccess:  return GasCosts::warmStorageReadCost;
 
 	case Tier::Special:
