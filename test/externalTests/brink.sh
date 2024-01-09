@@ -73,7 +73,9 @@ function brink_test
     yarn add hardhat-gas-reporter
 
     # TODO: Remove when https://github.com/brinktrade/brink-core/issues/48 is fixed.
-    yarn add chai
+    # TODO: Chai is ESM-only since version 5.x (see: https://github.com/chaijs/chai/issues/1561#issuecomment-1871134261),
+    # thus, we should stick to version 4.x until Brink and other dependencies also migrate to ESM.
+    yarn add chai@4.4.0
 
     replace_version_pragmas
 
