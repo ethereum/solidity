@@ -297,8 +297,6 @@ enum class Tier
 	High,		// 10, Slow
 	Ext,		// 20, Ext
 	WarmAccess,	// 100, Warm Access
-	ExtCode,	// 700, Extcode
-	Balance,	// 400, Balance
 	Special,	// multiparam or otherwise special
 	Invalid		// Invalid.
 };

@@ -29,7 +29,6 @@
 #include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
-#include <libevmasm/GasMeter.h>
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
