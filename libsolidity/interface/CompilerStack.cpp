@@ -1480,15 +1480,8 @@ void CompilerStack::compileContract(
 	solAssert(!m_viaIR, "");
 	bytes cborEncodedMetadata = createCBORMetadata(compiledContract, /* _forIR */ false);
 
-	try
-	{
-		// Run optimiser and compile the contract.
-		compiler->compileContract(_contract, _otherCompilers, cborEncodedMetadata);
-	}
-	catch(evmasm::OptimizerException const&)
-	{
-		solAssert(false, "Optimizer exception during compilation");
-	}
+	// Run optimiser and compile the contract.
+	compiler->compileContract(_contract, _otherCompilers, cborEncodedMetadata);
 
 	_otherCompilers[compiledContract.contract] = compiler;
 
