@@ -74,16 +74,17 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 
 namespace solidity::yul::test
 {
-/// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
-/// @a _target at offset @a _targetOffset. Behaves as if @a _source would
-/// continue with an infinite sequence of zero bytes beyond its end.
+
 void copyZeroExtended(
-	std::map<u256, uint8_t>& _target, bytes const& _source,
-	size_t _targetOffset, size_t _sourceOffset, size_t _size
+	std::map<u256, uint8_t>& _target,
+	bytes const& _source,
+	size_t _targetOffset,
+	size_t _sourceOffset,
+	size_t _size
 )
 {
 	for (size_t i = 0; i < _size; ++i)
-		_target[_targetOffset + i] = _sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
+		_target[_targetOffset + i] = (_sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0);
 }
 
 }
@@ -489,8 +490,8 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 	{
 		// This is identical to codecopy.
 		if (
-				_evaluatedArguments.at(2) != 0 &&
-				accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2))
+			_evaluatedArguments.at(2) != 0 &&
+			accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2))
 		)
 			copyZeroExtended(
 				m_state.memory,
@@ -513,17 +514,17 @@ bool EVMInstructionInterpreter::accessMemory(u256 const& _offset, u256 const& _s
 {
 	if (_size == 0)
 		return true;
-	else if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
+
+	if (_offset <= (_offset + _size) && (_offset + _size) <= (_offset + _size + 0x1f))
 	{
-		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
-		m_state.msize = std::max(m_state.msize, newSize);
+		u256 newMSize = (_offset + _size + 0x1f) & ~u256(0x1f);
+		m_state.msize = std::max(m_state.msize, newMSize);
 		// We only record accesses to contiguous memory chunks that are at most s_maxRangeSize bytes
 		// in size and at an offset of at most numeric_limits<size_t>::max() - s_maxRangeSize
 		return _size <= s_maxRangeSize && _offset <= u256(std::numeric_limits<size_t>::max() - s_maxRangeSize);
 	}
-	else
-		m_state.msize = u256(-1);
 
+	m_state.msize = u256(-1);
 	return false;
 }
 
