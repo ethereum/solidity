@@ -41,7 +41,6 @@
 #include <cstdlib>
 #include <limits>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::test;
@@ -52,7 +51,7 @@ ExecutionFramework::ExecutionFramework():
 {
 }
 
-ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion, vector<boost::filesystem::path> const& _vmPaths):
+ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _vmPaths):
 	m_evmVersion(_evmVersion),
 	m_optimiserSettings(solidity::frontend::OptimiserSettings::minimal()),
 	m_showMessages(solidity::test::CommonOptions::get().showMessages),
@@ -71,7 +70,7 @@ void ExecutionFramework::selectVM(evmc_capabilities _cap)
 		evmc::VM& vm = EVMHost::getVM(path.string());
 		if (vm.has_capability(_cap))
 		{
-			m_evmcHost = make_unique<EVMHost>(m_evmVersion, vm);
+			m_evmcHost = std::make_unique<EVMHost>(m_evmVersion, vm);
 			break;
 		}
 	}
@@ -87,7 +86,7 @@ void ExecutionFramework::reset()
 			EVMHost::convertToEVMC(u256(1) << 100);
 }
 
-std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
+std::pair<bool, std::string> ExecutionFramework::compareAndCreateMessage(
 	bytes const& _result,
 	bytes const& _expectation
 )
@@ -101,8 +100,8 @@ std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
 	auto expectedHex = boost::replace_all_copy(util::toHex(_expectation), "0", ".");
 	for (size_t i = 0; i < std::max(resultHex.size(), expectedHex.size()); i += 0x40)
 	{
-		std::string result{i >= resultHex.size() ? string{} : resultHex.substr(i, 0x40)};
-		std::string expected{i > expectedHex.size() ? string{} : expectedHex.substr(i, 0x40)};
+		std::string result{i >= resultHex.size() ? std::string{} : resultHex.substr(i, 0x40)};
+		std::string expected{i > expectedHex.size() ? std::string{} : expectedHex.substr(i, 0x40)};
 		message +=
 			(result == expected ? "   " : " X ") +
 			result +
@@ -137,7 +136,7 @@ u256 ExecutionFramework::gasPrice() const
 u256 ExecutionFramework::blockHash(u256 const& _number) const
 {
 	return u256{EVMHost::convertFromEVMC(
-		m_evmcHost->get_block_hash(static_cast<int64_t>(_number & numeric_limits<uint64_t>::max()))
+		m_evmcHost->get_block_hash(static_cast<int64_t>(_number & std::numeric_limits<uint64_t>::max()))
 	)};
 }
 
@@ -153,12 +152,12 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	if (m_showMessages)
 	{
 		if (_isCreation)
-			cout << "CREATE " << m_sender.hex() << ":" << endl;
+			std::cout << "CREATE " << m_sender.hex() << ":" << std::endl;
 		else
-			cout << "CALL   " << m_sender.hex() << " -> " << m_contractAddress.hex() << ":" << endl;
+			std::cout << "CALL   " << m_sender.hex() << " -> " << m_contractAddress.hex() << ":" << std::endl;
 		if (_value > 0)
-			cout << " value: " << _value << endl;
-		cout << " in:      " << util::toHex(_data) << endl;
+			std::cout << " value: " << _value << std::endl;
+		std::cout << " in:      " << util::toHex(_data) << std::endl;
 	}
 	evmc_message message{};
 	message.input_data = _data.data();
@@ -189,19 +188,19 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 
 	unsigned const refundRatio = (m_evmVersion >= langutil::EVMVersion::london() ? 5 : 2);
 	auto const totalGasUsed = InitialGas - result.gas_left;
-	auto const gasRefund = min(u256(result.gas_refund), totalGasUsed / refundRatio);
+	auto const gasRefund = std::min(u256(result.gas_refund), totalGasUsed / refundRatio);
 
 	m_gasUsed = totalGasUsed - gasRefund;
 	m_transactionSuccessful = (result.status_code == EVMC_SUCCESS);
 
 	if (m_showMessages)
 	{
-		cout << " out:                       " << util::toHex(m_output) << endl;
-		cout << " result:                    " << static_cast<size_t>(result.status_code) << endl;
-		cout << " gas used:                  " << m_gasUsed.str() << endl;
-		cout << " gas used (without refund): " << totalGasUsed.str() << endl;
-		cout << " gas refund (total):        " << result.gas_refund << endl;
-		cout << " gas refund (bound):        " << gasRefund.str() << endl;
+		std::cout << " out:                       " << util::toHex(m_output) << std::endl;
+		std::cout << " result:                    " << static_cast<size_t>(result.status_code) << std::endl;
+		std::cout << " gas used:                  " << m_gasUsed.str() << std::endl;
+		std::cout << " gas used (without refund): " << totalGasUsed.str() << std::endl;
+		std::cout << " gas refund (total):        " << result.gas_refund << std::endl;
+		std::cout << " gas refund (bound):        " << gasRefund.str() << std::endl;
 	}
 }
 
@@ -211,9 +210,9 @@ void ExecutionFramework::sendEther(h160 const& _addr, u256 const& _amount)
 
 	if (m_showMessages)
 	{
-		cout << "SEND_ETHER   " << m_sender.hex() << " -> " << _addr.hex() << ":" << endl;
+		std::cout << "SEND_ETHER   " << m_sender.hex() << " -> " << _addr.hex() << ":" << std::endl;
 		if (_amount > 0)
-			cout << " value: " << _amount << endl;
+			std::cout << " value: " << _amount << std::endl;
 	}
 	evmc_message message{};
 	message.sender = EVMHost::convertToEVMC(m_sender);
@@ -294,14 +293,14 @@ bool ExecutionFramework::storageEmpty(h160 const& _addr) const
 	return true;
 }
 
-vector<solidity::frontend::test::LogRecord> ExecutionFramework::recordedLogs() const
+std::vector<solidity::frontend::test::LogRecord> ExecutionFramework::recordedLogs() const
 {
-	vector<LogRecord> logs;
+	std::vector<LogRecord> logs;
 	for (evmc::MockedHost::log_record const& logRecord: m_evmcHost->recorded_logs)
 		logs.emplace_back(
 			EVMHost::convertFromEVMC(logRecord.creator),
 			bytes{logRecord.data.begin(), logRecord.data.end()},
-			logRecord.topics | ranges::views::transform([](evmc::bytes32 _bytes) { return EVMHost::convertFromEVMC(_bytes); }) | ranges::to<vector>
+			logRecord.topics | ranges::views::transform([](evmc::bytes32 _bytes) { return EVMHost::convertFromEVMC(_bytes); }) | ranges::to<std::vector>
 		);
 	return logs;
 }

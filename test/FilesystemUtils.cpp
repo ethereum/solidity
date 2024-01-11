@@ -22,11 +22,10 @@
 
 #include <fstream>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::test;
 
-void solidity::test::createFilesWithParentDirs(set<boost::filesystem::path> const& _paths, string const& _content)
+void solidity::test::createFilesWithParentDirs(std::set<boost::filesystem::path> const& _paths, std::string const& _content)
 {
 	for (boost::filesystem::path const& path: _paths)
 	{
@@ -34,23 +33,23 @@ void solidity::test::createFilesWithParentDirs(set<boost::filesystem::path> cons
 			boost::filesystem::create_directories(path.parent_path());
 
 		// Use binary mode to avoid line ending conversion on Windows.
-		ofstream newFile(path.string(), std::ofstream::binary);
+		std::ofstream newFile(path.string(), std::ofstream::binary);
 		newFile << _content;
 
 		if (newFile.fail() || !boost::filesystem::exists(path))
-			BOOST_THROW_EXCEPTION(runtime_error("Failed to create an empty file: \"" + path.string() + "\"."));
+			BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create an empty file: \"" + path.string() + "\"."));
 	}
 }
 
-void solidity::test::createFileWithContent(boost::filesystem::path const& _path, string const& _content)
+void solidity::test::createFileWithContent(boost::filesystem::path const& _path, std::string const& _content)
 {
 	if (boost::filesystem::is_regular_file(_path))
-		BOOST_THROW_EXCEPTION(runtime_error("File already exists: \"" + _path.string() + "\".")); \
+		BOOST_THROW_EXCEPTION(std::runtime_error("File already exists: \"" + _path.string() + "\".")); \
 
 	// Use binary mode to avoid line ending conversion on Windows.
-	ofstream newFile(_path.string(), std::ofstream::binary);
+	std::ofstream newFile(_path.string(), std::ofstream::binary);
 	if (newFile.fail() || !boost::filesystem::is_regular_file(_path))
-		BOOST_THROW_EXCEPTION(runtime_error("Failed to create a file: \"" + _path.string() + "\".")); \
+		BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create a file: \"" + _path.string() + "\".")); \
 
 	newFile << _content;
 }
@@ -80,7 +79,7 @@ bool solidity::test::createSymlinkIfSupportedByFilesystem(
 	)
 		return false;
 	else
-		BOOST_THROW_EXCEPTION(runtime_error(
+		BOOST_THROW_EXCEPTION(std::runtime_error(
 			"Failed to create a symbolic link: \"" + _linkName.string() + "\""
 			" -> " + _targetPath.string() + "\"."
 			" " + symlinkCreationError.message() + "."
