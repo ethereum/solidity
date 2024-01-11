@@ -50,6 +50,7 @@ NAMESPACE_STD_FREE_FILES=(
     test/libyul/*
     test/solc/*
     test/tools/yulInterpreter/*
+    test/yulPhaser/*
 )
 
 (
