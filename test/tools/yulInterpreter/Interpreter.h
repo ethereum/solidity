@@ -99,6 +99,8 @@ struct InterpreterState
 	u256 chainid = 0x01;
 	/// The minimum value of basefee: 7 wei.
 	u256 basefee = 0x07;
+	/// The minimum value of blobbasefee: 1 wei.
+	u256 blobbasefee = 0x01;
 	/// Log of changes / effects. Sholud be structured data in the future.
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.

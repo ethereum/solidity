@@ -727,6 +727,8 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		errorForVM(7721_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::BASEFEE && !m_evmVersion.hasBaseFee())
 		errorForVM(5430_error, "only available for London-compatible");
+	else if (_instr == evmasm::Instruction::BLOBBASEFEE && !m_evmVersion.hasBlobBaseFee())
+		errorForVM(6679_error, "only available for Cancun-compatible");
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.error(
 			2450_error,

@@ -56,7 +56,7 @@ Members of ``address``
   returns ``false`` on failure
 - ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
 
-.. index:: blockhash, block, block;basefree, block;chainid, block;coinbase, block;difficulty, block;gaslimit, block;number, block;prevrandao, block;timestamp
+.. index:: blockhash, block, block;basefee, block;blobbasefee, block;chainid, block;coinbase, block;difficulty, block;gaslimit, block;number, block;prevrandao, block;timestamp
 .. index:: gasleft, msg;data, msg;sender, msg;sig, msg;value, tx;gasprice, tx;origin
 
 Block and Transaction Properties
@@ -64,6 +64,7 @@ Block and Transaction Properties
 
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
 - ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
+- ``block.blobbasefee`` (``uint``): current block's blob base fee (`EIP-7516 <https://eips.ethereum.org/EIPS/eip-7516>`_ and `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_)
 - ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty (``EVM < Paris``). For other EVM versions it behaves as a deprecated alias for ``block.prevrandao`` that will be removed in the next breaking release

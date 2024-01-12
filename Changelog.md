@@ -1,6 +1,8 @@
 ### 0.8.24 (unreleased)
 
 Language Features:
+ * Introduce global ``block.blobbasefee`` for retrieving the blob base fee of the current block.
+ * Yul: Introduce builtin ``blobbasefee()`` for retrieving the blob base fee of the current block.
 
 
 Compiler Features:
