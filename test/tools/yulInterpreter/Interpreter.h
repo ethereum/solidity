@@ -81,6 +81,7 @@ struct InterpreterState
 	/// This is different than memory.size() because we ignore gas.
 	u256 msize;
 	std::map<util::h256, util::h256> storage;
+	std::map<util::h256, util::h256> transientStorage;
 	util::h160 address = util::h160("0x0000000000000000000000000000000011111111");
 	u256 balance = 0x22222222;
 	u256 selfbalance = 0x22223333;
@@ -125,6 +126,8 @@ struct InterpreterState
 	void dumpTraceAndState(std::ostream& _out, bool _disableMemoryTrace) const;
 	/// Prints non-zero storage to @param _out.
 	void dumpStorage(std::ostream& _out) const;
+	/// Prints non-zero transient storage to @param _out.
+	void dumpTransientStorage(std::ostream& _out) const;
 
 	bytes readMemory(u256 const& _offset, u256 const& _size)
 	{

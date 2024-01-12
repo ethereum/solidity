@@ -4,6 +4,7 @@ contract C {
             pop(blobhash(0))
             pop(blobbasefee())
             mcopy(1, 2, 3)
+            pop(tload(0))
         }
     }
 }

@@ -214,7 +214,10 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 		if (operations.front().location == Location::Storage)
 			activeStorageStores().insert(&_statement);
 		else
+		{
+			yulAssert(operations.front().location == Location::Memory, "");
 			activeMemoryStores().insert(&_statement);
+		}
 		m_storeOperations[&_statement] = std::move(operations.front());
 	}
 }

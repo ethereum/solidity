@@ -186,11 +186,16 @@ void EVMHost::newTransactionFrame()
 	recorded_account_accesses.clear();
 
 	for (auto& [address, account]: accounts)
+	{
 		for (auto& [slot, value]: account.storage)
 		{
 			value.access_status = EVMC_ACCESS_COLD; // Clear EIP-2929 storage access indicator
 			value.original = value.current;			// Clear EIP-2200 dirty slot
 		}
+
+		// Clear transient storage according to EIP 1153
+		account.transient_storage.clear();
+	}
 	// Process selfdestruct list
 	for (auto& [address, _]: recorded_selfdestructs)
 		accounts.erase(address);
