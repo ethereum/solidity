@@ -398,6 +398,7 @@ message Program {
     BERLIN = 7;
     LONDON = 8;
     PARIS = 9;
+    SHANGHAI = 10;
   }
   oneof program_oneof {
     Block block = 1;
