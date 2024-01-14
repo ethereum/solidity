@@ -208,9 +208,18 @@ void SemVerMatchExpressionParser::parseMatchExpression()
 	range.components.push_back(parseMatchComponent());
 	if (currentToken() == Token::Sub)
 	{
-		range.components[0].prefix = Token::GreaterThanOrEqual;
 		nextToken();
 		range.components.push_back(parseMatchComponent());
+
+		if (TokenTraits::isPragmaOp(range.components[0].prefix) || TokenTraits::isPragmaOp(range.components[1].prefix))
+		{
+			solThrow(
+				SemVerError,
+				"You cannot use operators (<, <=, >=, >, ^) with version ranges (-)."
+			);
+		}
+
+		range.components[0].prefix = Token::GreaterThanOrEqual;
 		range.components[1].prefix = Token::LessThanOrEqual;
 	}
 	else
