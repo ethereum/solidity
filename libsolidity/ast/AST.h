@@ -809,7 +809,7 @@ public:
  * User defined value types, i.e., custom types, for example, `type MyInt is int`. Allows creating a
  * zero cost abstraction over value type with stricter type requirements.
  */
-class UserDefinedValueTypeDefinition: public Declaration
+class UserDefinedValueTypeDefinition: public Declaration, public StructurallyDocumented
 {
 public:
 	UserDefinedValueTypeDefinition(
@@ -817,9 +817,11 @@ public:
 		SourceLocation const& _location,
 		ASTPointer<ASTString> _name,
 		SourceLocation _nameLocation,
-		ASTPointer<TypeName> _underlyingType
+		ASTPointer<TypeName> _underlyingType,
+		ASTPointer<StructuredDocumentation> _documentation
 	):
 		Declaration(_id, _location, _name, std::move(_nameLocation), Visibility::Default),
+		StructurallyDocumented(std::move(_documentation)),
 		m_underlyingType(std::move(_underlyingType))
 	{
 	}
