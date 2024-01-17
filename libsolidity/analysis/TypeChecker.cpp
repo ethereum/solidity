@@ -1890,6 +1890,27 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	_operation.annotation().isLValue = false;
 	_operation.annotation().isConstant = false;
 
+	if (_operation.getOperator() == Token::Equal || _operation.getOperator() == Token::NotEqual)
+	{
+		auto const* leftFunction = dynamic_cast<FunctionType const*>(leftType);
+		auto const* rightFunction = dynamic_cast<FunctionType const*>(rightType);
+		if (
+			leftFunction &&
+			rightFunction &&
+			leftFunction->kind() == FunctionType::Kind::Internal &&
+			rightFunction->kind() == FunctionType::Kind::Internal
+		)
+		{
+			m_errorReporter.warning(
+				3075_error,
+				_operation.location(),
+				"Comparison of internal function pointers can yield unexpected results "
+				"in the legacy pipeline with the optimizer enabled, and will be disallowed entirely "
+				"in the next breaking release."
+			);
+		}
+	}
+
 	if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
 		std::string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";

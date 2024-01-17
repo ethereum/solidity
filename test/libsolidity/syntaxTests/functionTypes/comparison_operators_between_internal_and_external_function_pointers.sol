@@ -19,5 +19,6 @@ contract C {
     }
 }
 // ----
+// Warning 3075: (509-566): Comparison of internal function pointers can yield unexpected results in the legacy pipeline with the optimizer enabled, and will be disallowed entirely in the next breaking release.
 // TypeError 2271: (606-672): Built-in binary operator != cannot be applied to types function () and function () external.
 // TypeError 2271: (688-741): Built-in binary operator != cannot be applied to types function () and function () external.
