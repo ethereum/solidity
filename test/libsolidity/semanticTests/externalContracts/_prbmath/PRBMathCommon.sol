@@ -255,7 +255,7 @@ library PRBMathCommon {
     ///
     /// Caveats:
     /// - The body is purposely left uncommented; see the NatSpec comments in "PRBMathCommon.mulDiv" to understand how this works.
-    /// - It is assumed that the result can never be type(uint256).max when x and y solve the following two queations:
+    /// - It is assumed that the result can never be type(uint256).max when x and y solve the following two equations:
     ///     1. x * y = type(uint256).max * SCALE
     ///     2. (x * y) % SCALE >= SCALE / 2
     ///
