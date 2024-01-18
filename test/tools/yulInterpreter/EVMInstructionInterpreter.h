@@ -24,6 +24,7 @@
 #include <libyul/ASTForward.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/FixedHash.h>
 #include <libsolutil/Numeric.h>
 
 #include <liblangutil/EVMVersion.h>
@@ -89,6 +90,9 @@ public:
 		std::vector<Expression> const& _arguments,
 		std::vector<u256> const& _evaluatedArguments
 	);
+
+	/// @returns the blob versioned hash
+	util::h256 blobHash(u256 const& _index);
 
 private:
 	/// Checks if the memory access is valid and adjusts msize accordingly.

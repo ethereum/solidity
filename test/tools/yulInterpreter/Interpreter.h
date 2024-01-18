@@ -113,6 +113,11 @@ struct InterpreterState
 	/// Number of the current state instance, used for recursion protection
 	size_t numInstance = 0;
 
+	// Blob commitment hash version
+	util::FixedHash<1> const blobHashVersion = util::FixedHash<1>(1);
+	// Blob commitments
+	std::array<u256, 2> const blobCommitments = {0x01, 0x02};
+
 	/// Prints execution trace and non-zero storage to @param _out.
 	/// Flag @param _disableMemoryTrace, if set, does not produce a memory dump. This
 	/// avoids false positives reports by the fuzzer when certain optimizer steps are

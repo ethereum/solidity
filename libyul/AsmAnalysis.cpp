@@ -670,6 +670,7 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 
 bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
+	// NOTE: This function uses the default EVM version instead of the currently selected one.
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
 	if (builtin && builtin->instruction.has_value())
 		return validateInstructions(builtin->instruction.value(), _location);
@@ -705,6 +706,9 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		);
 	};
 
+	// The errors below are meant to be issued when processing an undeclared identifier matching a builtin name
+	// present on the default EVM version but not on the currently selected one,
+	// since the other `validateInstructions()` overload uses the default EVM version.
 	if (_instr == evmasm::Instruction::RETURNDATACOPY && !m_evmVersion.supportsReturndata())
 		errorForVM(7756_error, "only available for Byzantium-compatible");
 	else if (_instr == evmasm::Instruction::RETURNDATASIZE && !m_evmVersion.supportsReturndata())
@@ -729,6 +733,9 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		errorForVM(5430_error, "only available for London-compatible");
 	else if (_instr == evmasm::Instruction::BLOBBASEFEE && !m_evmVersion.hasBlobBaseFee())
 		errorForVM(6679_error, "only available for Cancun-compatible");
+	else if (_instr == evmasm::Instruction::BLOBHASH && !m_evmVersion.hasBlobHash())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.error(
 			2450_error,

@@ -89,6 +89,7 @@ enum class Instruction: uint8_t
 	CHAINID,			///< get the config's chainid param
 	SELFBALANCE,		///< get balance of the current account
 	BASEFEE,            ///< get the block's basefee
+	BLOBHASH = 0x49,    ///< get a versioned hash of one of the blobs associated with the transaction
 	BLOBBASEFEE = 0x4a, ///< get the block's blob basefee
 
 	POP = 0x50,			///< remove item from stack
