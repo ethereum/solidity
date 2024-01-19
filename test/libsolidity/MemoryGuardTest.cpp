@@ -18,6 +18,7 @@
 
 #include <test/libsolidity/MemoryGuardTest.h>
 
+#include <test/Common.h>
 #include <test/libyul/Common.h>
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolutil/Algorithms.h>
@@ -35,6 +36,7 @@ using namespace solidity::util::formatting;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 using namespace yul;
 
 void MemoryGuardTest::setupCompiler(CompilerStack& _compiler)
@@ -59,7 +61,7 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		ErrorList errors;
 		auto [object, analysisInfo] = yul::test::parse(
 			compiler().yulIR(contractName),
-			EVMDialect::strictAssemblyForEVMObjects({}),
+			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()),
 			errors
 		);
 
