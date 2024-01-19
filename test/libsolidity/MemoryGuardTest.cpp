@@ -65,7 +65,8 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 
 		if (!object || !analysisInfo || Error::containsErrors(errors))
 		{
-			AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing IR." << std::endl;
+			AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing IR:" << std::endl;
+			printPrefixed(_stream, formatErrors(filterErrors(errors), _formatted), _linePrefix);
 			return TestResult::FatalError;
 		}
 
