@@ -337,7 +337,14 @@ userDefinableOperator:
  * Using directive to attach library functions and free functions to types.
  * Can occur within contracts and libraries and at the file level.
  */
-usingDirective: Using (identifierPath | (LBrace identifierPath (As userDefinableOperator)? (Comma identifierPath (As userDefinableOperator)?)* RBrace)) For (Mul | typeName) Global? Semicolon;
+usingDirective:
+  Using (
+    identifierPath
+    | (LBrace usingAliases (Comma usingAliases)* RBrace)
+  ) For (Mul | typeName) Global? Semicolon;
+
+usingAliases: identifierPath (As userDefinableOperator)?;
+
 /**
  * A type name can be an elementary type, a function type, a mapping type, a user-defined type
  * (e.g. a contract or struct) or an array type.
