@@ -118,6 +118,8 @@ EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 		return EVMVersion::paris();
 	case Program::SHANGHAI:
 		return EVMVersion::shanghai();
+	case Program::CANCUN:
+		return EVMVersion::cancun();
 	}
 }
 
@@ -758,6 +760,22 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		// token.
 		if (m_evmVersion.hasChainID())
 			m_output << "chainid()";
+		else
+			m_output << dictionaryToken();
+		break;
+	case NullaryOp::BASEFEE:
+		// Replace calls to basefee() on unsupported EVMs with a dictionary
+		// token.
+		if (m_evmVersion.hasBaseFee())
+			m_output << "basefee()";
+		else
+			m_output << dictionaryToken();
+		break;
+	case NullaryOp::BLOBBASEFEE:
+		// Replace calls to blobbasefee() on unsupported EVMs with a dictionary
+		// token.
+		if (m_evmVersion.hasBlobBaseFee())
+			m_output << "blobbasefee()";
 		else
 			m_output << dictionaryToken();
 		break;

@@ -219,6 +219,8 @@ message NullaryOp {
     GASLIMIT = 15;
     SELFBALANCE = 16;
     CHAINID = 17;
+    BASEFEE = 18;
+    BLOBBASEFEE = 19;
   }
   required NOp op = 1;
 }
@@ -399,6 +401,7 @@ message Program {
     LONDON = 8;
     PARIS = 9;
     SHANGHAI = 10;
+    CANCUN = 11;
   }
   oneof program_oneof {
     Block block = 1;
