@@ -34,14 +34,14 @@ namespace solidity::frontend::test
 
 using solidity::test::SyntaxTestError;
 
-class MemoryGuardTest: public AnalysisFramework, public TestCase
+class MemoryGuardTest: public AnalysisFramework, public EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
 		return std::make_unique<MemoryGuardTest>(_config.filename);
 	}
-	MemoryGuardTest(std::string const& _filename): TestCase(_filename)
+	MemoryGuardTest(std::string const& _filename): EVMVersionRestrictedTestCase(_filename)
 	{
 		m_source = m_reader.source();
 		m_expectation = m_reader.simpleExpectations();

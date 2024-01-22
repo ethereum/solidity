@@ -61,14 +61,9 @@ public:
 		// costs for transaction
 		gas += gasForTransaction(m_compiler.object(m_compiler.lastContractName()).bytecode, true);
 
-		// Skip the tests when we use ABIEncoderV2.
-		// TODO: We should enable this again once the yul optimizer is activated.
-		if (solidity::test::CommonOptions::get().useABIEncoderV1)
-		{
-			BOOST_REQUIRE(!gas.isInfinite);
-			BOOST_CHECK_LE(m_gasUsed, gas.value);
-			BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
-		}
+		BOOST_REQUIRE(!gas.isInfinite);
+		BOOST_CHECK_LE(m_gasUsed, gas.value);
+		BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
 	}
 
 	/// Compares the gas computed by PathGasMeter for the given signature (but unknown arguments)
@@ -90,14 +85,9 @@ public:
 			*m_compiler.runtimeAssemblyItems(m_compiler.lastContractName()),
 			_sig
 		);
-		// Skip the tests when we use ABIEncoderV2.
-		// TODO: We should enable this again once the yul optimizer is activated.
-		if (solidity::test::CommonOptions::get().useABIEncoderV1)
-		{
-			BOOST_REQUIRE(!gas.isInfinite);
-			BOOST_CHECK_LE(m_gasUsed, gas.value);
-			BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
-		}
+		BOOST_REQUIRE(!gas.isInfinite);
+		BOOST_CHECK_LE(m_gasUsed, gas.value);
+		BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
 	}
 
 	static GasMeter::GasConsumption gasForTransaction(bytes const& _data, bool _isCreation)
@@ -129,6 +119,9 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 BOOST_AUTO_TEST_CASE(store_keccak256)
 {
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract test {
 			bytes32 public shaValue;
 			constructor() {
@@ -205,6 +198,9 @@ BOOST_AUTO_TEST_CASE(function_calls)
 BOOST_AUTO_TEST_CASE(multiple_external_functions)
 {
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract test {
 			uint data;
 			uint data2;
@@ -236,6 +232,9 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 BOOST_AUTO_TEST_CASE(exponent_size)
 {
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract A {
 			function f(uint x) public returns (uint) {
 				unchecked { return x ** 0; }
@@ -302,6 +301,9 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	// Now we do not follow branches if they start out with lower gas costs than the ones
 	// we previously considered. This of course reduces accuracy.
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract log {
 			function ln(int128 x) public pure returns (int128 result) {
 				unchecked {

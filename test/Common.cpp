@@ -289,6 +289,13 @@ bool isValidSemanticTestPath(boost::filesystem::path const& _testPath)
 	return true;
 }
 
+boost::unit_test::precondition::predicate_t minEVMVersionCheck(langutil::EVMVersion _minEVMVersion)
+{
+	return [_minEVMVersion](boost::unit_test::test_unit_id) {
+		return test::CommonOptions::get().evmVersion() >= _minEVMVersion;
+	};
+}
+
 bool loadVMs(CommonOptions const& _options)
 {
 	if (_options.disableSemanticTests)

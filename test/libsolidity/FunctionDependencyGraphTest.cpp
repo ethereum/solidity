@@ -20,8 +20,11 @@
 
 #include <libsolidity/experimental/analysis/Analysis.h>
 #include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
+
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
+
+#include <libsolutil/StringUtils.h>
 
 #include <fstream>
 #include <stdexcept>
@@ -41,7 +44,7 @@ TestCase::TestResult FunctionDependencyGraphTest::run(std::ostream& _stream, std
 	compiler().setOptimiserSettings(OptimiserSettings::none());
 	if (!compiler().compile(CompilerStack::AnalysisSuccessful))
 	{
-		_stream << formatErrors(filteredErrors(), _formatted);
+		printPrefixed(_stream, formatErrors(filteredErrors(), _formatted), _linePrefix);
 		return TestResult::FatalError;
 	}
 
