@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	};
 	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 		view.emplace_back("address(0x4242).staticcall(\"\")");
+	if (solidity::test::CommonOptions::get().evmVersion().hasBlobHash())
+		view.emplace_back("blobhash(7)");
 
 	// ``block.blockhash`` and ``blockhash`` are tested separately below because their usage will
 	// produce warnings that can't be handled in a generic way.

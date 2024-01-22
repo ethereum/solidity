@@ -128,6 +128,7 @@ done < <(
       grep -v -E 'inlineAssembly/prevrandao_disallowed_function_post_paris.sol' |
       # Skipping a test with "let blobhash := ..."
       grep -v -E 'inlineAssembly/blobhash_pre_cancun.sol' |
+      grep -v -E 'inlineAssembly/blobhash_pre_cancun_not_reserved.sol' |
       # Skipping license error, unrelated to the grammar
       grep -v -E 'license/license_double5.sol' |
       grep -v -E 'license/license_hidden_unicode.sol' |

@@ -1498,11 +1498,13 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::GasLeft:
 	case FunctionType::Kind::Selfdestruct:
 	case FunctionType::Kind::BlockHash:
+	case FunctionType::Kind::BlobHash:
 	{
 		static std::map<FunctionType::Kind, std::string> functions = {
 			{FunctionType::Kind::GasLeft, "gas"},
 			{FunctionType::Kind::Selfdestruct, "selfdestruct"},
 			{FunctionType::Kind::BlockHash, "blockhash"},
+			{FunctionType::Kind::BlobHash, "blobhash"},
 		};
 		solAssert(functions.find(functionType->kind()) != functions.end());
 

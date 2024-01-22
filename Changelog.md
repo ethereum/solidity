@@ -2,6 +2,7 @@
 
 Language Features:
  * Introduce global ``block.blobbasefee`` for retrieving the blob base fee of the current block.
+ * Introduce global function ``blobhash(uint)`` for retrieving versioned hashes of blobs, akin to the homonymous Yul builtin.
  * Yul: Introduce builtin ``blobbasefee()`` for retrieving the blob base fee of the current block.
  * Yul: Introduce builtin ``blobhash()`` for retrieving versioned hashes of blobs associated with the transaction.
 
