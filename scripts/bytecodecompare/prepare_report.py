@@ -232,7 +232,7 @@ def prepare_compiler_input(
 
     command_line = []
     if execution_arch == ExecutionArchitecture.NATIVE_X86_64.value:
-        command_line = ["/usr/bin/arch", "-64"]
+        command_line = ["/usr/bin/arch", "-64", "-x86_64"]
 
     if interface == CompilerInterface.STANDARD_JSON:
         json_input: dict = {
