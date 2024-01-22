@@ -363,12 +363,63 @@ commands:
       - matrix_notify_failure_unless_pr
 
   install_dependencies_osx:
+    # An extra cache key is used to only save the flag that communicates whether the cache exists.
+    # if this flag was set (the cache exist) we remove all files located in /usr/local & /opt/homebrew.
+    # With this simple trick restoring the cache is much faster. Otherwise CircleCI is generating
+    # warning messages if a file from the cache is overwriting an already existing file on disk.
+    # Restoring the cache is much faster if we remove all potentially conflicting files beforehand.
     steps:
-      # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
-      # them each time. See https://github.com/ethereum/solidity/issues/12925.
+      - restore_cache:
+          keys:
+            - osx-dependencies-cached-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      - run:
+          name: Installing dependencies / Restoring dependency cache
+          command: |
+            if [[ -f ~/osx-dependencies-cached ]]; then
+              echo "Dependency flag exists. Removing /usr/local/ and /opt/homebrew/. These directories will be restored from cache."
+
+              # CircleCI is providing the circleci cli tools via some kind of symlink magic.
+              # So we just save the original symlinks and restore them later.
+              circleci_binary_path=$(command -v circleci)
+              circleci_agent_binary_path=$(command -v circleci-agent)
+              cp "${circleci_binary_path}" /tmp/circleci
+              cp "${circleci_agent_binary_path}" /tmp/circleci-agent
+
+              # Homebrew is installed in /usr/local on intel macs, but in /opt/homebrew on apple silicon.
+              if [[ -d /opt/homebrew ]]; then
+                sudo rm -rf /opt/homebrew
+                sudo mkdir -p /opt/homebrew/bin
+                sudo chmod 777 /opt/{homebrew,homebrew/bin}
+              fi
+              # under macos /usr/local itself is read-only, so we just remove its sub-directories.
+              sudo rm -rf /usr/local/*
+              sudo mkdir -p /usr/local/bin
+              sudo chmod 777 /usr/{local,local/bin}
+
+              mv /tmp/circleci "${circleci_binary_path}"
+              mv /tmp/circleci-agent "${circleci_agent_binary_path}"
+            fi
+      - restore_cache:
+          keys:
+            - osx-dependencies-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
           command: .circleci/osx_install_dependencies.sh
+      - run:
+          name: Mark dependencies as cached
+          command: touch ~/osx-dependencies-cached
+      - save_cache:
+          key: osx-dependencies-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          paths:
+            # Homebrew is installed in /usr/local on intel macs, but in /opt/homebrew on apple silicon.
+            - /usr/local
+            - /opt/homebrew
+      - save_cache:
+          key: osx-dependencies-cached-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          paths:
+            - ~/osx-dependencies-cached
 
 defaults:
 

@@ -26,12 +26,8 @@
 # ------------------------------------------------------------------------------
 
 # note that the following directories may be cached by circleci:
-# - /usr/local/bin
-# - /usr/local/sbin
-# - /usr/local/lib
-# - /usr/local/include
-# - /usr/local/Cellar
-# - /usr/local/Homebrew
+# - /usr/local
+# - /opt/homebrew
 
 set -eu
 
