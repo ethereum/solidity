@@ -363,12 +363,69 @@ commands:
       - matrix_notify_failure_unless_pr
 
   install_dependencies_osx:
+    # an extra cache is used to only save the flag that communicates whether the cache exists.
+    # if this flag was set (a cache exist) we will remove all files located in /usr/local & /opt/homebrew.
+    # with this simple trick restoring the cache is much faster. circleci is generating warning messages,
+    # if a file from the cache is overwriting an already existing file on disk.
+    # Restoring the cache is much faster, if removed all potentially conflicting files before.
     steps:
-      # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
-      # them each time. See https://github.com/ethereum/solidity/issues/12925.
+      - restore_cache:
+          keys:
+            - b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}-flag
       - run:
-          name: Install build dependencies
-          command: .circleci/osx_install_dependencies.sh
+          name: Installing dependencies / Restoring dependency cache
+          command: |
+            if test -f ~/b_osx-dependencies-flag
+            then
+              echo "Dependency flag exists: removing /usr/local and /opt/homebrew directories. These directories will be restored from cache."
+
+              # circleci is providing the circleci cli tools via some kind of symlink magic.
+              # so we just save the original symlinks and restore them later.
+              CIRCLECI_CMD=`which circleci`
+              CIRCLECI_AGENT_CMD=`which circleci-agent`
+              cp "${CIRCLECI_CMD}" /tmp/circleci
+              cp "${CIRCLECI_AGENT_CMD}" /tmp/circleci-agent
+
+              # homebrew is installed in /usr/local on intel macs, but in /opt/homebrew on apple silicon.
+              if test -d /opt/homebrew
+              then
+                sudo rm -rf /opt/homebrew
+                sudo mkdir -p /opt/homebrew/bin
+                sudo chmod 777 /opt/homebrew
+                sudo chmod 777 /opt/homebrew/bin
+              fi
+              sudo rm -rf /usr/local/*
+              sudo mkdir -p /usr/local/bin
+              sudo chmod 777 /usr/local
+              sudo chmod 777 /usr/local/bin
+
+              mv /tmp/circleci "${CIRCLECI_CMD}"
+              mv /tmp/circleci-agent "${CIRCLECI_AGENT_CMD}"
+            else
+              echo "Dependency flag didn't exist: installing dependencies."
+              .circleci/osx_install_dependencies.sh
+              if test -f /usr/local/lib/libz3.a
+              then
+                echo "/usr/local/lib/libz3.a found: setting dependency flag."
+                touch ~/b_osx-dependencies-flag
+              else
+                echo "Dependencies not build."
+                false
+              fi
+            fi
+      - restore_cache:
+          keys:
+            - b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      - save_cache:
+          key: b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          paths:
+            - /usr/local
+            - /opt/homebrew
+      - save_cache:
+          key: b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}-flag
+          paths:
+            - ~/b_osx-dependencies-flag
+
 
 defaults:
 
