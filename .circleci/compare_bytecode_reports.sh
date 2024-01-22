@@ -31,6 +31,7 @@ native_platforms=(
     ubuntu
     osx
     osx_x86_64
+    osx_x86_64h
     windows
 )
 interfaces=(

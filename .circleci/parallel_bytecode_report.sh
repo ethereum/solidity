@@ -33,7 +33,7 @@ binary_type="$2"
 binary_path="$3" # This path must be absolute
 preset="$4"
 
-[[ $binary_type == native || $binary_type == "native-x86-64" || $binary_type == solcjs ]] || { >&2 echo "Invalid binary type: ${binary_type}"; exit 1; }
+[[ $binary_type == native || $binary_type == "x86-64" || $binary_type == "x86-64h" || $binary_type == solcjs ]] || { >&2 echo "Invalid binary type: ${binary_type}"; exit 1; }
 
 # NOTE: Locale affects the order of the globbed files.
 export LC_ALL=C
@@ -47,7 +47,7 @@ python3 ../scripts/isolate_tests.py ../test/
 # FIXME: These cases crash because of https://github.com/ethereum/solidity/issues/13583
 rm ./*_bytecode_too_large_*.sol ./*_combined_too_large_*.sol
 
-if [[ $binary_type == native || $binary_type == "native-x86-64" ]]; then
+if [[ $binary_type == native || $binary_type == "x86-64" || $binary_type == "x86-64h" ]]; then
     interface=$(echo -e "standard-json\ncli" | circleci tests split)
     echo "Selected interface: ${interface}"
 

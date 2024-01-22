@@ -28,7 +28,8 @@ class CompilerInterface(Enum):
 
 class ExecutionArchitecture(Enum):
     NATIVE = 'native'
-    NATIVE_X86_64 = 'native-x86-64'
+    X86_64 = 'x86-64'
+    X86_64H = 'x86-64h'
 
 
 class SettingsPreset(Enum):
@@ -231,8 +232,10 @@ def prepare_compiler_input(
     settings = CompilerSettings.from_preset(preset)
 
     command_line = []
-    if execution_arch == ExecutionArchitecture.NATIVE_X86_64.value:
+    if execution_arch == ExecutionArchitecture.X86_64.value:
         command_line = ["/usr/bin/arch", "-64", "-x86_64"]
+    elif execution_arch == ExecutionArchitecture.X86_64H.value:
+        command_line = ["/usr/bin/arch", "-64", "-x86_64h"]
 
     if interface == CompilerInterface.STANDARD_JSON:
         json_input: dict = {

@@ -81,7 +81,8 @@ commands:
         enum:
           - solcjs
           - native
-          - native-x86-64
+          - x86-64
+          - x86-64h
       binary_path:
         type: string
       preset:
@@ -1678,7 +1679,23 @@ jobs:
           at: .
       - prepare_bytecode_report:
           label: "osx_x86_64"
-          binary_type: native-x86-64
+          binary_type: x86-64
+          binary_path: "build/solc/solc"
+          preset: "<< parameters.preset >>"
+
+  b_bytecode_osx_x86_64h:
+    parameters:
+      preset:
+        type: string
+    <<: *base_osx
+    parallelism: 2 # For prepare_bytecode_report
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - prepare_bytecode_report:
+          label: "osx_x86_64h"
+          binary_type: x86-64h
           binary_path: "build/solc/solc"
           preset: "<< parameters.preset >>"
 
@@ -1910,6 +1927,11 @@ workflows:
           matrix: *bytecode_compare_preset_matrix
           requires:
             - b_osx
+      - b_bytecode_osx_x86_64h:
+          <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
+          requires:
+            - b_osx
       - b_bytecode_ems:
           <<: *on_all_tags_and_branches
           matrix: *bytecode_compare_preset_matrix
@@ -1923,6 +1945,7 @@ workflows:
             - b_bytecode_win
             - b_bytecode_osx
             - b_bytecode_osx_x86_64
+            - b_bytecode_osx_x86_64h
             - b_bytecode_ems
 
       # Final artifacts
