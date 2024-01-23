@@ -423,7 +423,8 @@ bool ASTJsonExporter::visit(UserDefinedValueTypeDefinition const& _node)
 	std::vector<std::pair<std::string, Json::Value>> attributes = {
 		std::make_pair("name", _node.name()),
 		std::make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
-		std::make_pair("underlyingType", toJson(*_node.underlyingType()))
+		std::make_pair("underlyingType", toJson(*_node.underlyingType())),
+		std::make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue)
 	};
 	addIfSet(attributes, "canonicalName", _node.annotation().canonicalName);
 

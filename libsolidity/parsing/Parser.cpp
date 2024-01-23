@@ -1118,6 +1118,7 @@ ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 ASTPointer<UserDefinedValueTypeDefinition> Parser::parseUserDefinedValueTypeDefinition()
 {
 	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
 	expectToken(Token::Type);
 	auto&& [name, nameLocation] = expectIdentifierWithLocation();
 	expectToken(Token::Is);
@@ -1127,7 +1128,8 @@ ASTPointer<UserDefinedValueTypeDefinition> Parser::parseUserDefinedValueTypeDefi
 	return nodeFactory.createNode<UserDefinedValueTypeDefinition>(
 		name,
 		std::move(nameLocation),
-		typeName
+		typeName,
+		std::move(documentation)
 	);
 }
 
