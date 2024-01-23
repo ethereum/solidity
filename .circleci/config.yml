@@ -266,7 +266,7 @@ commands:
             - test/soltest
             - test/tools/solfuzzer
 
-  persist_executables_to_workspace_osx:
+  persist_executables_to_workspace_macos:
     description: Persist compiled target executables to workspace on macOS
     steps:
       - persist_to_workspace:
@@ -364,7 +364,7 @@ commands:
       - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
-  install_dependencies_osx:
+  install_dependencies_macos:
     # an extra cache is used to only save the flag that communicates whether the cache exists.
     # if this flag was set (a cache exist) we will remove all files located in /usr/local & /opt/homebrew.
     # with this simple trick restoring the cache is much faster. circleci is generating warning messages,
@@ -373,11 +373,11 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}-flag
+            - b_macos-dependencies.{{ arch }}{{ checksum ".circleci/macos_install_dependencies.sh" }}-flag
       - run:
           name: Installing dependencies / Restoring dependency cache
           command: |
-            if test -f ~/b_osx-dependencies-flag
+            if test -f ~/b_macos-dependencies-flag
             then
               echo "Dependency flag exists: removing /usr/local and /opt/homebrew directories. These directories will be restored from cache."
 
@@ -405,11 +405,11 @@ commands:
               mv /tmp/circleci-agent "${CIRCLECI_AGENT_CMD}"
             else
               echo "Dependency flag didn't exist: installing dependencies."
-              .circleci/osx_install_dependencies.sh
+              .circleci/macos_install_dependencies.sh
               if test -f /usr/local/lib/libz3.a
               then
                 echo "/usr/local/lib/libz3.a found: setting dependency flag."
-                touch ~/b_osx-dependencies-flag
+                touch ~/b_macos-dependencies-flag
               else
                 echo "Dependencies not build."
                 false
@@ -417,16 +417,16 @@ commands:
             fi
       - restore_cache:
           keys:
-            - b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - b_macos-dependencies.{{ arch }}{{ checksum ".circleci/macos_install_dependencies.sh" }}
       - save_cache:
-          key: b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: b_macos-dependencies.{{ arch }}{{ checksum ".circleci/macos_install_dependencies.sh" }}
           paths:
             - /usr/local
             - /opt/homebrew
       - save_cache:
-          key: b_osx-dependencies.{{ arch }}{{ checksum ".circleci/osx_install_dependencies.sh" }}-flag
+          key: b_macos-dependencies.{{ arch }}{{ checksum ".circleci/macos_install_dependencies.sh" }}-flag
           paths:
-            - ~/b_osx-dependencies-flag
+            - ~/b_macos-dependencies-flag
 
 
 defaults:
@@ -497,11 +497,11 @@ defaults:
         MAKEFLAGS: -j 2
         CPUs: 2
 
-  - base_osx: &base_osx
+  - base_macos: &base_macos
       macos:
         xcode: "15.0.0"
       resource_class: macos.m1.medium.gen1
-      environment: &base_osx_env
+      environment: &base_macos_env
         TERM: xterm
         MAKEFLAGS: -j5
         CPUs: 5
@@ -671,10 +671,10 @@ defaults:
       requires:
         - b_ubu_codecov
 
-  - requires_b_osx: &requires_b_osx
+  - requires_b_macos: &requires_b_macos
       <<: *on_all_tags_and_branches
       requires:
-        - b_osx
+        - b_macos
 
   - requires_b_ubu_asan: &requires_b_ubu_asan
       <<: *on_all_tags_and_branches
@@ -1150,30 +1150,30 @@ jobs:
       - persist_executables_to_workspace
       - matrix_notify_failure_unless_pr
 
-  b_osx:
-    <<: *base_osx
+  b_macos:
+    <<: *base_macos
     environment:
-      <<: *base_osx_env
+      <<: *base_macos_env
       CMAKE_BUILD_TYPE: Release
-      CMAKE_OPTIONS: -DCMAKE_OSX_ARCHITECTURES:STRING=x86_64;arm64
+      CMAKE_OPTIONS: -DCMAKE_macos_ARCHITECTURES:STRING=x86_64;arm64
     steps:
       - checkout
-      - install_dependencies_osx
+      - install_dependencies_macos
       - run_build
       - store_artifacts_solc
       - store_artifacts_yul_phaser
-      - persist_executables_to_workspace_osx
+      - persist_executables_to_workspace_macos
       - matrix_notify_failure_unless_pr
 
-  t_osx_soltest: &t_osx_soltest
-    <<: *base_osx
+  t_macos_soltest: &t_macos_soltest
+    <<: *base_macos
     environment:
-      <<: *base_osx_env
+      <<: *base_macos_env
       EVM: << pipeline.parameters.evm-version >>
       OPTIMIZE: 0
     steps:
       - checkout
-      - install_dependencies_osx
+      - install_dependencies_macos
       - attach_workspace:
           at: .
       - run_soltest
@@ -1182,12 +1182,12 @@ jobs:
       - store_artifacts_test_results
       - matrix_notify_failure_unless_pr
 
-  t_osx_cli:
-    <<: *base_osx
+  t_macos_cli:
+    <<: *base_macos
     parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - checkout
-      - install_dependencies_osx
+      - install_dependencies_macos
       - attach_workspace:
           at: .
       - run_cmdline_tests
@@ -1651,50 +1651,50 @@ jobs:
           binary_path: "build/solc/solc"
           preset: "<< parameters.preset >>"
 
-  b_bytecode_osx:
+  b_bytecode_macos:
     parameters:
       preset:
         type: string
-    <<: *base_osx
+    <<: *base_macos
     parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
       - attach_workspace:
           at: .
       - prepare_bytecode_report:
-          label: "osx"
+          label: "macos"
           binary_type: native
           binary_path: "build/solc/solc"
           preset: "<< parameters.preset >>"
 
-  b_bytecode_osx_x86_64:
+  b_bytecode_macos_x86_64:
     parameters:
       preset:
         type: string
-    <<: *base_osx
+    <<: *base_macos
     parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
       - attach_workspace:
           at: .
       - prepare_bytecode_report:
-          label: "osx_x86_64"
+          label: "macos_x86_64"
           binary_type: x86-64
           binary_path: "build/solc/solc"
           preset: "<< parameters.preset >>"
 
-  b_bytecode_osx_x86_64h:
+  b_bytecode_macos_x86_64h:
     parameters:
       preset:
         type: string
-    <<: *base_osx
+    <<: *base_macos
     parallelism: 2 # For prepare_bytecode_report
     steps:
       - checkout
       - attach_workspace:
           at: .
       - prepare_bytecode_report:
-          label: "osx_x86_64h"
+          label: "macos_x86_64h"
           binary_type: x86-64h
           binary_path: "build/solc/solc"
           preset: "<< parameters.preset >>"
@@ -1778,10 +1778,10 @@ jobs:
               sed -En 's/^Version: ([0-9.]+.*\+commit\.[0-9a-f]+(\.mod)?).*$/\1/p'
             )
 
-            mkdir -p solc-bin/{linux-amd64,macosx-amd64,windows-amd64,bin}
+            mkdir -p solc-bin/{linux-amd64,macmacos-amd64,windows-amd64,bin}
 
             mv github/solc-static-linux "solc-bin/linux-amd64/solc-linux-amd64-v${full_version}"
-            mv github/solc-macos        "solc-bin/macosx-amd64/solc-macosx-amd64-v${full_version}"
+            mv github/solc-macos        "solc-bin/macmacos-amd64/solc-macmacos-amd64-v${full_version}"
             mv github/solc-windows.exe  "solc-bin/windows-amd64/solc-windows-amd64-v${full_version}.exe"
             mv github/soljson.js        "solc-bin/bin/soljson-v${full_version}.js"
 
@@ -1817,9 +1817,9 @@ workflows:
       - b_ubu_ossfuzz: *requires_nothing
 
       # OS/X build and tests
-      - b_osx: *requires_nothing
-      - t_osx_cli: *requires_b_osx
-      - t_osx_soltest: *requires_b_osx
+      - b_macos: *requires_nothing
+      - t_macos_cli: *requires_b_macos
+      - t_macos_soltest: *requires_b_macos
 
       # ArchLinux build and tests
       - b_archlinux: *requires_nothing
@@ -1917,21 +1917,21 @@ workflows:
           matrix: *bytecode_compare_preset_matrix
           requires:
             - b_win
-      - b_bytecode_osx:
+      - b_bytecode_macos:
           <<: *on_all_tags_and_branches
           matrix: *bytecode_compare_preset_matrix
           requires:
-            - b_osx
-      - b_bytecode_osx_x86_64:
+            - b_macos
+      - b_bytecode_macos_x86_64:
           <<: *on_all_tags_and_branches
           matrix: *bytecode_compare_preset_matrix
           requires:
-            - b_osx
-      - b_bytecode_osx_x86_64h:
+            - b_macos
+      - b_bytecode_macos_x86_64h:
           <<: *on_all_tags_and_branches
           matrix: *bytecode_compare_preset_matrix
           requires:
-            - b_osx
+            - b_macos
       - b_bytecode_ems:
           <<: *on_all_tags_and_branches
           matrix: *bytecode_compare_preset_matrix
@@ -1943,9 +1943,9 @@ workflows:
             - b_bytecode_ubu_static
             - b_bytecode_ubu
             - b_bytecode_win
-            - b_bytecode_osx
-            - b_bytecode_osx_x86_64
-            - b_bytecode_osx_x86_64h
+            - b_bytecode_macos
+            - b_bytecode_macos_x86_64
+            - b_bytecode_macos_x86_64h
             - b_bytecode_ems
 
       # Final artifacts
@@ -1953,7 +1953,7 @@ workflows:
           <<: *on_version_tags
           requires:
             - b_ubu_static
-            - b_osx
+            - b_macos
             - b_win
             - b_ems
 
