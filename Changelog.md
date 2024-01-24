@@ -7,7 +7,8 @@ Language Features:
  * Yul: Introduce builtin ``blobhash()`` for retrieving versioned hashes of blobs associated with the transaction.
 
 Compiler Features:
- * EVM: Support for the EVM Version "Cancun".
+* EVM: Support for the EVM Version "Cancun".
+* SMTChecker: Support `bytes.concat` except when string literals are passed as arguments.
 
 Bugfixes:
  * AST import: Fix bug when importing inline assembly with empty ``let`` variable declaration.

@@ -122,6 +122,7 @@ public:
 	static RationalNumberType const* isConstant(Expression const& _expr);
 
 	static std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> collectABICalls(ASTNode const* _node);
+	static std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> collectBytesConcatCalls(ASTNode const* _node);
 
 	/// @returns all the sources that @param _source depends on,
 	/// including itself.
@@ -211,6 +212,7 @@ protected:
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
 	void visitABIFunction(FunctionCall const& _funCall);
+	void visitBytesConcat(FunctionCall const& _funCall);
 	void visitCryptoFunction(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
 	virtual void visitAddMulMod(FunctionCall const& _funCall);
@@ -500,6 +502,14 @@ protected:
 	langutil::CharStreamProvider const& m_charStreamProvider;
 
 	smt::SymbolicState& state();
+
+private:
+	smtutil::Expression createSelectExpressionForFunction(
+		smtutil::Expression symbFunction,
+		std::vector<frontend::ASTPointer<frontend::Expression const>> const& args,
+		frontend::TypePointers const& inTypes,
+		unsigned long argsActualLength
+	);
 };
 
 }

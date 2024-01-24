@@ -940,8 +940,6 @@ void CHC::nondetCall(ContractDefinition const& _contract, VariableDeclaration co
 	for (auto const* var: _contract.stateVariables())
 		m_context.variable(*var)->increaseIndex();
 
-	auto error = errorFlag().increaseIndex();
-
 	Predicate const& callPredicate = *createSymbolicBlock(
 		nondetInterfaceSort(_contract, state()),
 		"nondet_call_" + uniquePrefix(),
@@ -950,7 +948,7 @@ void CHC::nondetCall(ContractDefinition const& _contract, VariableDeclaration co
 		m_currentContract
 	);
 	auto postCallState = std::vector<smtutil::Expression>{state().state()} + currentStateVariables(_contract);
-	std::vector<smtutil::Expression> stateExprs{error, address, state().abi(), state().crypto()};
+	std::vector<smtutil::Expression> stateExprs = commonStateExpressions(errorFlag().increaseIndex(), address);
 
 	auto nondet = (*m_nondetInterfaces.at(&_contract))(stateExprs + preCallState + postCallState);
 	auto nondetCall = callPredicate(stateExprs + preCallState + postCallState);
@@ -1024,8 +1022,6 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 			m_context.variable(*var)->increaseIndex();
 	}
 
-	auto error = errorFlag().increaseIndex();
-
 	Predicate const& callPredicate = *createSymbolicBlock(
 		nondetInterfaceSort(*m_currentContract, state()),
 		"nondet_call_" + uniquePrefix(),
@@ -1033,7 +1029,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 		&_funCall
 	);
 	auto postCallState = std::vector<smtutil::Expression>{state().state()} + currentStateVariables();
-	std::vector<smtutil::Expression> stateExprs{error, state().thisAddress(), state().abi(), state().crypto()};
+	std::vector<smtutil::Expression> stateExprs = commonStateExpressions(errorFlag().increaseIndex(), state().thisAddress());
 
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(stateExprs + preCallState + postCallState);
 	auto nondetCall = callPredicate(stateExprs + preCallState + postCallState);
@@ -1464,7 +1460,9 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 					auto errorPost = errorFlag().increaseIndex();
 					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-					std::vector<smtutil::Expression> args{errorPost, state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
+					std::vector<smtutil::Expression> args =
+						commonStateExpressions(errorPost, state().thisAddress()) +
+						std::vector<smtutil::Expression>{state().tx(), state().state(1)};
 					args += state1 +
 						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 						std::vector<smtutil::Expression>{state().state(2)} +
@@ -1829,7 +1827,9 @@ smtutil::Expression CHC::predicate(
 
 	errorFlag().increaseIndex();
 
-	std::vector<smtutil::Expression> args{errorFlag().currentValue(), _contractAddressValue, state().abi(), state().crypto(), state().tx(), state().state()};
+	std::vector<smtutil::Expression> args =
+		commonStateExpressions(errorFlag().currentValue(), _contractAddressValue) +
+		std::vector<smtutil::Expression>{state().tx(), state().state()};
 
 	auto const* contract = _funDef->annotation().contract;
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
@@ -2311,7 +2311,6 @@ std::optional<std::string> CHC::generateCounterexample(CHCSolverInterface::CexGr
 					path.emplace_back("State: " + modelMsg);
 			}
 		}
-
 		std::string txCex = summaryPredicate->formatSummaryCall(summaryArgs, m_charStreamProvider);
 
 		std::list<std::string> calls;
@@ -2485,4 +2484,11 @@ frontend::Expression const* CHC::valueOption(FunctionCallOptions const* _options
 void CHC::decreaseBalanceFromOptionsValue(Expression const& _value)
 {
 	state().addBalance(state().thisAddress(), 0 - expr(_value));
+}
+
+std::vector<smtutil::Expression> CHC::commonStateExpressions(smtutil::Expression const& error, smtutil::Expression const& address)
+{
+	if (state().hasBytesConcatFunction())
+		return {error, address, state().abi(), state().bytesConcat(), state().crypto()};
+	return {error, address, state().abi(), state().crypto()};
 }
