@@ -32,6 +32,7 @@ using namespace solidity::langutil;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
@@ -337,6 +338,113 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	testCreationTimeGas(sourceCode);
 	// max gas is used for small x
 	testRunTimeGas("ln(int128)", std::vector<bytes>{encodeArgs(0), encodeArgs(10), encodeArgs(105), encodeArgs(30000)});
+}
+
+BOOST_AUTO_TEST_CASE(
+	mcopy_memory_expansion_gas,
+	*boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::cancun()))
+)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function no_expansion() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0, 0xffff, 1)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_write() public {
+				assembly {
+					mcopy(0xffff, 0, 1)
+					return(0xffff, 1)
+				}
+			}
+
+			function expansion_on_read() public {
+				assembly {
+					mcopy(0, 0xffff, 1)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_read_write() public {
+				assembly {
+					mcopy(0xffff, 0xffff, 1)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_zero_size() public {
+				assembly {
+					mcopy(0xffff, 0xffff, 0)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_0_0_0() public {
+				assembly {
+					mcopy(0, 0, 0)
+					return(0, 1)
+				}
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("no_expansion()", {encodeArgs()});
+	testRunTimeGas("expansion_on_write()", {encodeArgs()});
+	testRunTimeGas("expansion_on_read()", {encodeArgs()});
+	testRunTimeGas("expansion_on_read_write()", {encodeArgs()});
+	testRunTimeGas("expansion_on_zero_size()", {encodeArgs()});
+	testRunTimeGas("expansion_on_0_0_0()", {encodeArgs()});
+}
+
+BOOST_AUTO_TEST_CASE(
+	mcopy_word_gas,
+	*boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::cancun()))
+)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function no_overlap() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x4000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+
+			function overlap_right() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x3000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+
+			function overlap_left() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x1000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+
+			function overlap_full() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x2000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("no_overlap()", {encodeArgs()});
+	testRunTimeGas("overlap_right()", {encodeArgs()});
+	testRunTimeGas("overlap_left()", {encodeArgs()});
+	testRunTimeGas("overlap_full()", {encodeArgs()});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

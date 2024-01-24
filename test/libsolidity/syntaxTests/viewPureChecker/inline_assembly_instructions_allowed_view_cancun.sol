@@ -3,6 +3,7 @@ contract C {
         assembly {
             pop(blobhash(0))
             pop(blobbasefee())
+            mcopy(1, 2, 3)
         }
     }
 }

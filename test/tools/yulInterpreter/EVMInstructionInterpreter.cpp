@@ -87,6 +87,22 @@ void copyZeroExtended(
 		_target[_targetOffset + i] = (_sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0);
 }
 
+void copyZeroExtendedWithOverlap(
+	std::map<u256, uint8_t>& _target,
+	std::map<u256, uint8_t> const& _source,
+	size_t _targetOffset,
+	size_t _sourceOffset,
+	size_t _size
+)
+{
+	if (_targetOffset >= _sourceOffset)
+		for (size_t i = _size; i > 0; --i)
+			_target[_targetOffset + i - 1] = (_source.count(_sourceOffset + i - 1) != 0 ? _source.at(_sourceOffset + i - 1) : 0);
+	else
+		for (size_t i = 0; i < _size; ++i)
+			_target[_targetOffset + i] = (_source.count(_sourceOffset + i) != 0 ? _source.at(_sourceOffset + i) : 0);
+}
+
 }
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
@@ -259,6 +275,17 @@ u256 EVMInstructionInterpreter::eval(
 			copyZeroExtended(
 				m_state.memory, m_state.returndata,
 				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+			);
+		logTrace(_instruction, arg);
+		return 0;
+	case Instruction::MCOPY:
+		if (accessMemory(arg[1], arg[2]) && accessMemory(arg[0], arg[2]))
+			copyZeroExtendedWithOverlap(
+				m_state.memory,
+				m_state.memory,
+				static_cast<size_t>(arg[0]),
+				static_cast<size_t>(arg[1]),
+				static_cast<size_t>(arg[2])
 			);
 		logTrace(_instruction, arg);
 		return 0;

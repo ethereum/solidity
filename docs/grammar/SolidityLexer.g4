@@ -301,7 +301,7 @@ YulEVMBuiltin:
 	| 'pop' | 'mload' | 'mstore' | 'mstore8' | 'sload' | 'sstore' | 'msize' | 'gas'
 	| 'address' | 'balance' | 'selfbalance' | 'caller' | 'callvalue' | 'calldataload'
 	| 'calldatasize' | 'calldatacopy' | 'extcodesize' | 'extcodecopy' | 'returndatasize'
-	| 'returndatacopy' | 'extcodehash' | 'create' | 'create2' | 'call' | 'callcode'
+	| 'returndatacopy' | 'mcopy' | 'extcodehash' | 'create' | 'create2' | 'call' | 'callcode'
 	| 'delegatecall' | 'staticcall' | 'return' | 'revert' | 'selfdestruct' | 'invalid'
 	| 'log0' | 'log1' | 'log2' | 'log3' | 'log4' | 'chainid' | 'origin' | 'gasprice'
 	| 'blockhash' | 'blobhash' | 'coinbase' | 'timestamp' | 'number' | 'difficulty'

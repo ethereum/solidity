@@ -104,6 +104,7 @@ enum class Instruction: uint8_t
 	MSIZE,				///< get the size of active memory
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
+	MCOPY = 0x5e,       ///< copy between memory areas
 
 	PUSH0 = 0x5f,       ///< place the value 0 on stack
 	PUSH1 = 0x60,		///< place 1 byte item on stack

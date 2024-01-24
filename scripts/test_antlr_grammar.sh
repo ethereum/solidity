@@ -123,6 +123,8 @@ done < <(
       grep -v -E 'inlineAssembly/basefee_berlin_function.sol' |
       # Skipping a test with "let blobbasefee := ..."
       grep -v -E 'inlineAssembly/blobbasefee_shanghai_function.sol' |
+      # Skipping a test with "let mcopy := ..."
+      grep -v -E 'inlineAssembly/mcopy_as_identifier_pre_cancun.sol' |
       # Skipping tests with "let prevrandao := ..."
       grep -v -E 'inlineAssembly/prevrandao_allowed_function_pre_paris.sol' |
       grep -v -E 'inlineAssembly/prevrandao_disallowed_function_post_paris.sol' |

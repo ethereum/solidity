@@ -104,6 +104,25 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 		op.lengthParameter = 2;
 		return {op};
 	}
+	case Instruction::MCOPY:
+	{
+		assertThrow(memory(_instruction) != Effect::None, OptimizerException, "");
+		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+
+		Operation readOperation;
+		readOperation.effect = Read;
+		readOperation.location = Location::Memory;
+		readOperation.startParameter = 1;
+		readOperation.lengthParameter = 2;
+
+		Operation writeOperation;
+		writeOperation.effect = Write;
+		writeOperation.location = Location::Memory;
+		writeOperation.startParameter = 0;
+		writeOperation.lengthParameter = 2;
+
+		return {readOperation, writeOperation};
+	}
 	case Instruction::STATICCALL:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
@@ -188,7 +207,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 		))
 			return false;
 		//@todo: We do not handle the following memory instructions for now:
-		// calldatacopy, codecopy, extcodecopy, mstore8,
+		// calldatacopy, codecopy, extcodecopy, mcopy, mstore8,
 		// msize (note that msize also depends on memory read access)
 
 		// the second requirement will be lifted once it is implemented
@@ -363,6 +382,7 @@ SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction
 	case Instruction::CODECOPY:
 	case Instruction::EXTCODECOPY:
 	case Instruction::RETURNDATACOPY:
+	case Instruction::MCOPY:
 	case Instruction::MSTORE:
 	case Instruction::MSTORE8:
 	case Instruction::CALL:
