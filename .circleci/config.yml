@@ -81,6 +81,7 @@ commands:
         enum:
           - solcjs
           - native
+          - osx_intel
       binary_path:
         type: string
       preset:
@@ -491,12 +492,13 @@ defaults:
 
   - base_osx: &base_osx
       macos:
-        xcode: "14.2.0"
-      resource_class: macos.x86.medium.gen2
+        xcode: "15.0.0"
+      resource_class: macos.m1.medium.gen1
       environment: &base_osx_env
         TERM: xterm
         MAKEFLAGS: -j5
         CPUs: 5
+        ETH_EVMONE: /usr/local/lib/libevmone.dylib
 
   - base_python_small: &base_python_small
       docker:
@@ -1146,6 +1148,7 @@ jobs:
     environment:
       <<: *base_osx_env
       CMAKE_BUILD_TYPE: Release
+      CMAKE_OPTIONS: -DCMAKE_OSX_ARCHITECTURES:STRING=x86_64;arm64
     steps:
       - checkout
       - install_dependencies_osx
@@ -1657,6 +1660,22 @@ jobs:
           binary_path: "build/solc/solc"
           preset: "<< parameters.preset >>"
 
+  b_bytecode_osx_intel:
+    parameters:
+      preset:
+        type: string
+    <<: *base_osx
+    parallelism: 2 # For prepare_bytecode_report
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - prepare_bytecode_report:
+          label: "osx_intel"
+          binary_type: osx_intel
+          binary_path: "build/solc/solc"
+          preset: "<< parameters.preset >>"
+
   b_bytecode_win:
     parameters:
       preset:
@@ -1880,6 +1899,11 @@ workflows:
           matrix: *bytecode_compare_preset_matrix
           requires:
             - b_osx
+      - b_bytecode_osx_intel:
+          <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
+          requires:
+            - b_osx
       - b_bytecode_ems:
           <<: *on_all_tags_and_branches
           matrix: *bytecode_compare_preset_matrix
@@ -1892,6 +1916,7 @@ workflows:
             - b_bytecode_ubu
             - b_bytecode_win
             - b_bytecode_osx
+            - b_bytecode_osx_intel
             - b_bytecode_ems
 
       # Final artifacts
