@@ -20,7 +20,7 @@ cd "${BUILDDIR}"
 cmake .. -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "${@:2}"
 make -j2
 
-if [[ "${CI}" == "" ]]; then
-	echo "Installing ..."
-	sudo make install
-fi
+# if [[ "${CI}" == "" ]]; then
+# 	echo "Installing ..."
+# 	sudo make install
+# fi
