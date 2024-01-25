@@ -106,6 +106,7 @@ public:
 	bool hasPush0() const { return *this >= shanghai(); }
 	bool hasBlobHash() const { return *this >= cancun(); }
 	bool hasMcopy() const { return *this >= cancun(); }
+	bool supportsTransientStorage() const { return *this >= cancun(); }
 
 	bool hasOpcode(evmasm::Instruction _opcode) const;
 

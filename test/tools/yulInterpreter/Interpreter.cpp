@@ -45,9 +45,16 @@ using solidity::util::h256;
 
 void InterpreterState::dumpStorage(std::ostream& _out) const
 {
-	for (auto const& slot: storage)
-		if (slot.second != h256{})
-			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << std::endl;
+	for (auto const& [slot, value]: storage)
+		if (value != h256{})
+			_out << "  " << slot.hex() << ": " << value.hex() << std::endl;
+}
+
+void InterpreterState::dumpTransientStorage(std::ostream& _out) const
+{
+	for (auto const& [slot, value]: transientStorage)
+		if (value != h256{})
+			_out << "  " << slot.hex() << ": " << value.hex() << std::endl;
 }
 
 void InterpreterState::dumpTraceAndState(std::ostream& _out, bool _disableMemoryTrace) const
@@ -67,6 +74,9 @@ void InterpreterState::dumpTraceAndState(std::ostream& _out, bool _disableMemory
 	}
 	_out << "Storage dump:" << std::endl;
 	dumpStorage(_out);
+
+	_out << "Transient storage dump:" << std::endl;
+	dumpTransientStorage(_out);
 
 	if (!calldata.empty())
 	{

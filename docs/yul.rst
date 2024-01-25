@@ -756,7 +756,8 @@ Opcodes marked with ``F``, ``H``, ``B``, ``C``, ``I``, ``L``, ``P`` and ``N`` ar
 Homestead, Byzantium, Constantinople, Istanbul, London, Paris or Cancun respectively.
 
 In the following, ``mem[a...b)`` signifies the bytes of memory starting at position ``a`` up to
-but not including position ``b`` and ``storage[p]`` signifies the storage contents at slot ``p``.
+but not including position ``b``, ``storage[p]`` signifies the storage contents at slot ``p``, and
+similarly, ``transientStorage[p]`` signifies the transient storage contents at slot ``p``.
 
 Since Yul manages local variables and control-flow,
 opcodes that interfere with these features are not available. This includes
@@ -832,6 +833,10 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | sload(p)                |     | F | storage[p]                                                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | sstore(p, v)            | `-` | F | storage[p] := v                                                 |
++-------------------------+-----+---+-----------------------------------------------------------------+
+| tload(p)                |     | N | transientStorage[p]                                             |
++-------------------------+-----+---+-----------------------------------------------------------------+
+| tstore(p, v)            | `-` | N | transientStorage[p] := v                                        |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | msize()                 |     | F | size of memory, i.e. largest accessed memory index              |
 +-------------------------+-----+---+-----------------------------------------------------------------+

@@ -78,7 +78,8 @@ public:
 			!m_sideEffects.movableApartFromEffects ||
 			m_sideEffects.storage == SideEffects::Write ||
 			m_sideEffects.otherState == SideEffects::Write ||
-			m_sideEffects.memory == SideEffects::Write
+			m_sideEffects.memory == SideEffects::Write ||
+			m_sideEffects.transientStorage == SideEffects::Write
 		)
 			return false;
 
@@ -92,6 +93,10 @@ public:
 
 		if (m_sideEffects.memory == SideEffects::Read)
 			if (_codeContainsMSize || _other.memory == SideEffects::Write)
+				return false;
+
+		if (m_sideEffects.transientStorage == SideEffects::Read)
+			if (_other.transientStorage == SideEffects::Write)
 				return false;
 
 		return true;

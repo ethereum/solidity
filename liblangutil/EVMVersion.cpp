@@ -55,6 +55,9 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 		return hasBlobBaseFee();
 	case Instruction::MCOPY:
 		return hasMcopy();
+	case Instruction::TSTORE:
+	case Instruction::TLOAD:
+		return supportsTransientStorage();
 	default:
 		return true;
 	}

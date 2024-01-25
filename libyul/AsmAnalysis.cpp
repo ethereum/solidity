@@ -319,6 +319,20 @@ std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				"The underlying opcode will eventually undergo breaking changes, "
 				"and its use is not recommended."
 			);
+		else if (
+			m_evmVersion.supportsTransientStorage() &&
+			_funCall.functionName.name == "tstore"_yulstring
+		)
+			m_errorReporter.warning(
+				2394_error,
+				nativeLocationOf(_funCall.functionName),
+				"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
+				"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
+				"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
+				"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
+				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
+			);
+
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;
 		if (!f->literalArguments.empty())
@@ -737,6 +751,9 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
 		yulAssert(false);
 	else if (_instr == evmasm::Instruction::MCOPY && !m_evmVersion.hasMcopy())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
+	else if ((_instr == evmasm::Instruction::TSTORE || _instr == evmasm::Instruction::TLOAD) && !m_evmVersion.supportsTransientStorage())
 		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
 		yulAssert(false);
 	else if (_instr == evmasm::Instruction::PC)
