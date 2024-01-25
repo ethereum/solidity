@@ -32,6 +32,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include<unordered_set>
+
 namespace solidity::test
 {
 using Address = util::h160;
@@ -126,6 +128,9 @@ private:
 	/// @note The return value is only valid as long as @a _data is alive!
 	static evmc::Result resultWithGas(int64_t gas_limit, int64_t gas_required, bytes const& _data) noexcept;
 	static evmc::Result resultWithFailure() noexcept;
+
+	/// Store the accounts that have been created in the current transaction.
+	std::unordered_set<evmc::address> newlyCreatedAccounts;
 
 	evmc::VM& m_vm;
 	/// EVM version requested by the testing tool
