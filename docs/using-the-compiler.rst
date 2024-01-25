@@ -208,7 +208,7 @@ Input Description
 .. code-block:: javascript
 
     {
-      // Required: Source code language. Currently supported are "Solidity", "Yul" and "SolidityAST" (experimental).
+      // Required: Source code language. Currently supported are "Solidity", "Yul", "SolidityAST" (experimental), "EVMAssembly" (experimental).
       "language": "Solidity",
       // Required
       "sources":
@@ -235,14 +235,6 @@ Input Description
             // If files are used, their directories should be added to the command-line via
             // `--allow-paths <path>`.
           ]
-          // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key.
-          // Note that importing ASTs is experimental and in particular that:
-          // - importing invalid ASTs can produce undefined results and
-          // - no proper error reporting is available on invalid ASTs.
-          // Furthermore, note that the AST import only consumes the fields of the AST as
-          // produced by the compiler in "stopAfter": "parsing" mode and then re-performs
-          // analysis, so any analysis-based annotations of the AST are ignored upon import.
-          "ast": { ... } // formatted as the json ast requested with the ``ast`` output selection.
         },
         "destructible":
         {
@@ -250,6 +242,33 @@ Input Description
           "keccak256": "0x234...",
           // Required (unless "urls" is used): literal contents of the source file
           "content": "contract destructible is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
+        },
+        "myFile.sol_json.ast":
+        {
+          // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key
+          // and there can be only one source file present.
+          // The format is the same as used by the `ast` output.
+          // Note that importing ASTs is experimental and in particular that:
+          // - importing invalid ASTs can produce undefined results and
+          // - no proper error reporting is available on invalid ASTs.
+          // Furthermore, note that the AST import only consumes the fields of the AST as
+          // produced by the compiler in "stopAfter": "parsing" mode and then re-performs
+          // analysis, so any analysis-based annotations of the AST are ignored upon import.
+          "ast": { ... }
+        },
+        "myFile_evm.json":
+        {
+          // If language is set to "EVMAssembly", an EVM Assembly JSON object needs to be supplied
+          // under the "assemblyJson" key and there can be only one source file present.
+          // The format is the same as used by the `evm.legacyAssembly` output or `--asm-json`
+          // output on the command line.
+          // Note that importing EVM assembly is experimental.
+          "assemblyJson":
+          {
+            ".code": [ ... ],
+            ".data": { ... }, // optional
+            "sourceList": [ ... ] // optional (if no `source` node was defined in any `.code` object)
+          }
         }
       },
       // Optional
