@@ -1,4 +1,4 @@
-### 0.8.24 (unreleased)
+### 0.8.24 (2024-01-25)
 
 Language Features:
  * Introduce global ``block.blobbasefee`` for retrieving the blob base fee of the current block.
