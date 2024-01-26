@@ -796,6 +796,10 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	if (type == CopyFunc::RETURNDATA && !m_evmVersion.supportsReturndata())
 		return;
 
+	// Bail out if MCOPY is not supported for fuzzed EVM version
+	if (type == CopyFunc::MEMORY && !m_evmVersion.hasMcopy())
+		return;
+
 	// Code copy may change state if e.g., some byte of code
 	// is stored to storage via a sequence of mload and sstore.
 	if (m_filterStatefulInstructions && type == CopyFunc::CODE)
@@ -816,13 +820,22 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	case CopyFunc::DATA:
 		m_output << "datacopy";
 		break;
+	case CopyFunc::MEMORY:
+		m_output << "mcopy";
 	}
 	m_output << "(";
 	m_output << "mod(";
 	visit(_x.target());
 	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
-	visit(_x.source());
+	if (type == CopyFunc::MEMORY)
+	{
+		m_output << "mod(";
+		visit(_x.source());
+		m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
+	}
+	else
+		visit(_x.source());
 	m_output << ", ";
 	m_output << "mod(";
 	visit(_x.size());
