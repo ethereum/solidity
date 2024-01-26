@@ -70,7 +70,7 @@ protected:
 	virtual ~ConstantOptimisationMethod() = default;
 	virtual bigint gasNeeded() const = 0;
 	/// Executes the method, potentially appending to the assembly and returns a vector of
-	/// assembly items the constant should be relpaced with in one sweep.
+	/// assembly items the constant should be replaced with in one sweep.
 	/// If the vector is empty, the constants will not be deleted.
 	virtual AssemblyItems execute(Assembly& _assembly) const = 0;
 
