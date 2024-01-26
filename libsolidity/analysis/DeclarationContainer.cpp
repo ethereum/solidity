@@ -122,7 +122,11 @@ bool DeclarationContainer::registerDeclaration(
 		if (conflictingDeclaration(_declaration, _name))
 			return false;
 
-		if (m_enclosingContainer && _declaration.isVisibleAsUnqualifiedName())
+		if (
+			m_enclosingContainer &&
+			_declaration.isVisibleAsUnqualifiedName() &&
+			!_declaration.isParentInterface()
+		)
 			m_homonymCandidates.emplace_back(*_name, _location ? _location : &_declaration.location());
 	}
 

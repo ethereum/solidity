@@ -118,6 +118,9 @@ public:
 	///@todo make this const-safe by providing a different way to access the annotation
 	virtual ASTAnnotation& annotation() const;
 
+	/// Whether this node is a child of Interface contract.
+	virtual bool isParentInterface() const { return false; }
+
 	///@{
 	///@name equality operators
 	/// Equality relies on the fact that nodes cannot be copied.
@@ -963,6 +966,7 @@ public:
 		std::vector<ASTPointer<ModifierInvocation>> _modifiers,
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body,
+		bool _isParentInterface,
 		ASTPointer<Expression> const& _experimentalReturnExpression = {}
 	):
 		CallableDeclaration(_id, _location, _name, _nameLocation, _visibility, _parameters, _isVirtual, _overrides, _returnParameters),
@@ -973,6 +977,7 @@ public:
 		m_kind(_kind),
 		m_functionModifiers(std::move(_modifiers)),
 		m_body(_body),
+		m_isParentInterface(_isParentInterface),
 		m_experimentalReturnExpression(_experimentalReturnExpression)
 	{
 		solAssert(_kind == Token::Constructor || _kind == Token::Function || _kind == Token::Fallback || _kind == Token::Receive, "");
@@ -1036,6 +1041,8 @@ public:
 	) const override;
 
 	Expression const* experimentalReturnExpression() const { return m_experimentalReturnExpression.get(); }
+	/// Whether this node is a child of Interface contract.
+	bool isParentInterface() const override { return m_isParentInterface; }
 
 private:
 	StateMutability m_stateMutability;
@@ -1043,6 +1050,7 @@ private:
 	Token const m_kind;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;
+	bool m_isParentInterface;
 	ASTPointer<Expression> m_experimentalReturnExpression;
 };
 
