@@ -56,6 +56,7 @@ bool ReferencesResolver::visit(Block const& _block)
 	if (!m_resolveInsideCode)
 		return false;
 	m_resolver.setScope(&_block);
+	m_localAssemblyVariables.push({});
 	return true;
 }
 
@@ -65,6 +66,7 @@ void ReferencesResolver::endVisit(Block const& _block)
 		return;
 
 	m_resolver.setScope(_block.scope());
+	m_localAssemblyVariables.pop();
 }
 
 bool ReferencesResolver::visit(TryCatchClause const& _tryCatchClause)
@@ -363,10 +365,9 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	}
 	else if (declarations.size() == 0)
 	{
-		if (
-			boost::algorithm::ends_with(_identifier.name.str(), "_slot") ||
-			boost::algorithm::ends_with(_identifier.name.str(), "_offset")
-		)
+		if ((boost::algorithm::ends_with(_identifier.name.str(), "_slot")
+			 || boost::algorithm::ends_with(_identifier.name.str(), "_offset"))
+			&& m_localAssemblyVariables.top().count(_identifier.name.str()) == 0)
 			m_errorReporter.declarationError(
 				9467_error,
 				nativeLocationOf(_identifier),
@@ -396,10 +397,9 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 		solAssert(nativeLocationOf(identifier) == originLocationOf(identifier), "");
 		validateYulIdentifierName(identifier.name, nativeLocationOf(identifier));
 
-		if (
-			auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
-			!declarations.empty()
-		)
+		m_localAssemblyVariables.top().insert(identifier.name.str());
+
+		if (auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str()); !declarations.empty())
 		{
 			SecondarySourceLocation ssl;
 			for (auto const* decl: declarations)
