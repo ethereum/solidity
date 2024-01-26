@@ -122,7 +122,7 @@ protected:
 	/// the message body from the transport line.
 	virtual std::string readBytes(size_t _byteCount) = 0;
 
-	// Mimmicks std::getline() on this Transport API.
+	// Mimics std::getline() on this Transport API.
 	virtual std::string getline() = 0;
 
 	/// Writes the given payload @p _data to transport.
