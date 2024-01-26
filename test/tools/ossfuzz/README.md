@@ -69,7 +69,7 @@ To help oss-fuzz do this, we (as project maintainers) need to provide the follow
 
 To be consistent and aid better evaluation of the utility of the fuzzing dictionary, we stick to the following rules-of-thumb:
   - Full tokens such as `block.number` are preceded and followed by a whitespace
-  - Incomplete tokens including function calls such as `msg.sender.send()` are abbreviated `.send(` to provide some leeway to the fuzzer to sythesize variants such as `address(this).send()`
+  - Incomplete tokens including function calls such as `msg.sender.send()` are abbreviated `.send(` to provide some leeway to the fuzzer to synthesize variants such as `address(this).send()`
   - Language keywords are suffixed by a whitespace with the exception of those that end a line of code such as `break;` and `continue;`
 
 [1]: https://github.com/google/oss-fuzz

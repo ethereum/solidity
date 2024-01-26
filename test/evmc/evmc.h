@@ -1181,7 +1181,7 @@ struct evmc_vm
  *
  * @par Binaries naming convention
  * For VMs distributed as shared libraries, the name of the library SHOULD match the VM name.
- * The convetional library filename prefixes and extensions SHOULD be ignored by the Client.
+ * The conventional library filename prefixes and extensions SHOULD be ignored by the Client.
  * For example, the shared library with the "beta-interpreter" implementation may be named
  * `libbeta-interpreter.so`.
  *
