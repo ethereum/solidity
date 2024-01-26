@@ -593,6 +593,12 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		return;
 	}
 
+	if (op == UnaryOp::TLOAD && !m_evmVersion.supportsTransientStorage())
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
 	// The following instructions may lead to change of EVM state and are hence
 	// excluded to avoid false positives.
 	if (
@@ -619,6 +625,9 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		break;
 	case UnaryOp::SLOAD:
 		m_output << "sload";
+		break;
+	case UnaryOp::TLOAD:
+		m_output << "tload";
 		break;
 	case UnaryOp::ISZERO:
 		m_output << "iszero";
@@ -1154,9 +1163,12 @@ void ProtoConverter::visit(StoreFunc const& _x)
 	case StoreFunc::MSTORE8:
 		m_output << "mstore8(";
 		break;
+	case StoreFunc::TSTORE:
+		m_output << "tstore(";
+		break;
 	}
 	// Write to memory within bounds, storage is unbounded
-	if (storeType == StoreFunc::SSTORE)
+	if (storeType == StoreFunc::SSTORE || storeType == StoreFunc::TSTORE)
 		visit(_x.loc());
 	else if (storeType == StoreFunc::MSTORE8)
 	{
@@ -1768,18 +1780,29 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 
 void ProtoConverter::saveFunctionCallOutput(vector<string> const& _varsVec)
 {
-	for (auto const& var: _varsVec)
+	constexpr auto numSlots = 10;
+	constexpr auto slotSize = 32;
+
+	for (string const& var: _varsVec)
 	{
 		// Flip a dice to choose whether to save output values
 		// in storage or memory.
-		bool coinFlip = counter() % 2 == 0;
+		unsigned diceThrow = counter() % (m_evmVersion.supportsTransientStorage() ? 3 : 2);
 		// Pseudo-randomly choose one of the first ten 32-byte
 		// aligned slots.
-		string slot = to_string((counter() % 10) * 32);
-		if (coinFlip)
+		string slot = std::to_string((counter() % numSlots) * slotSize);
+		if (diceThrow == 0)
 			m_output << "sstore(" << slot << ", " << var << ")\n";
-		else
+		else if (diceThrow == 1)
 			m_output << "mstore(" << slot << ", " << var << ")\n";
+		else
+		{
+			yulAssert(
+				m_evmVersion.supportsTransientStorage(),
+				"Proto fuzzer: Invalid evm version"
+			);
+			m_output << "tstore(" << slot << ", " << var << ")\n";
+		}
 	}
 }
 
