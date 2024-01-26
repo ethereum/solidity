@@ -346,7 +346,9 @@ private:
 	static auto constexpr s_dataIdentifier = "datablock";
 	/// Upper bound on memory writes is 64KB in order to
 	/// preserve semantic equivalence in the presence of
-	/// memory guard
+	/// memory guard. Note that s_maxMemory must be much larger
+	/// than s_maxSize to create tests without significant overlap
+	/// of I/O memory regions.
 	static unsigned constexpr s_maxMemory = 65536;
 	/// Upper bound on size for range copy functions
 	static unsigned constexpr s_maxSize = 32768;
