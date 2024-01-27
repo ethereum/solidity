@@ -365,14 +365,20 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	}
 	else if (declarations.size() == 0)
 	{
-		if ((boost::algorithm::ends_with(_identifier.name.str(), "_slot")
-			 || boost::algorithm::ends_with(_identifier.name.str(), "_offset"))
-			&& m_localAssemblyVariables.top().count(_identifier.name.str()) == 0)
+		if (
+			(
+				boost::algorithm::ends_with(_identifier.name.str(), "_slot") ||
+				boost::algorithm::ends_with(_identifier.name.str(), "_offset")
+			) &&
+			m_localAssemblyVariables.top().count(_identifier.name.str()) == 0
+		)
+		{
 			m_errorReporter.declarationError(
 				9467_error,
 				nativeLocationOf(_identifier),
 				"Identifier not found. Use \".slot\" and \".offset\" to access storage variables."
 			);
+		}
 		return;
 	}
 	if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
