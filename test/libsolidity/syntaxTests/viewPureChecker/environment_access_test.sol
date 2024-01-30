@@ -1,5 +1,5 @@
 contract C {
-    function f() pure public {
+    function f() payable public {
         block.coinbase;
         block.timestamp;
         block.difficulty;
