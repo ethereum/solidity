@@ -25,6 +25,7 @@
 
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/to_container.hpp>
 #include <range/v3/view/drop_exactly.hpp>
 #include <range/v3/view/drop_last.hpp>
@@ -287,9 +288,46 @@ std::vector<experimental::Type> TypeEnvironmentHelpers::typeVars(Type _type) con
 	};
 	typeVarsImpl(_type, typeVarsImpl);
 	return typeVars;
-
 }
 
+
+bool TypeEnvironmentHelpers::hasGenericTypeVars(Type const& _type) const
+{
+	return ranges::any_of(
+		TypeEnvironmentHelpers{*this}.typeVars(_type),
+		[&](Type const& _maybeTypeVar) {
+			solAssert(std::holds_alternative<TypeVariable>(_maybeTypeVar));
+			return !env.isFixedTypeVar(_maybeTypeVar);
+		}
+	);
+}
+
+experimental::Type TypeEnvironmentHelpers::substitute(
+	Type const& _type,
+	Type const& _partToReplace,
+	Type const& _replacement
+) const
+{
+	using ranges::views::transform;
+	using ranges::to;
+
+	if (env.typeEquals(_type, _partToReplace))
+		return _replacement;
+
+	auto recurse = [&](Type const& _t) { return substitute(_t, _partToReplace, _replacement); };
+
+	return visit(util::GenericVisitor{
+		[&](TypeConstant const& _typeConstant) -> Type {
+			return TypeConstant{
+				_typeConstant.constructor,
+				_typeConstant.arguments | transform(recurse) | to<std::vector<Type>>,
+			};
+		},
+		[&](auto const& _type) -> Type {
+			return _type;
+		},
+	}, env.resolve(_type));
+}
 
 std::string TypeSystemHelpers::sortToString(Sort _sort) const
 {
@@ -381,7 +419,7 @@ std::string TypeEnvironmentHelpers::typeToString(Type const& _type) const
 			while (index /= 26)
 				varName += static_cast<char>('a' + (index%26));
 			reverse(varName.begin(), varName.end());
-			stream << '\'' << varName;
+			stream << (env.isFixedTypeVar(_type) ? "'" : "?") << varName;
 			switch (_type.sort().classes.size())
 			{
 			case 0:
