@@ -176,6 +176,11 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Introduces ``prevrandao()`` and ``block.prevrandao``, and changes the semantics of the now deprecated ``block.difficulty``, disallowing ``difficulty()`` in inline assembly (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
 - ``shanghai`` (**default**)
    - Smaller code size and gas savings due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
+- ``cancun``
+   - The block's blob base fee (`EIP-7516 <https://eips.ethereum.org/EIPS/eip-7516>`_ and `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_) can be accessed via the global ``block.blobbasefee`` or ``blobbasefee()`` in inline assembly.
+   - Introduces ``blobhash()`` in inline assembly and a corresponding global function to retrieve versioned hashes of blobs associated with the transaction (see `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_).
+   - Opcode ``mcopy`` is available in assembly (see `EIP-5656 <https://eips.ethereum.org/EIPS/eip-5656>`_).
+   - Opcodes ``tstore`` and ``tload`` are available in assembly (see `EIP-1153 <https://eips.ethereum.org/EIPS/eip-1153>`_).
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
@@ -203,7 +208,7 @@ Input Description
 .. code-block:: javascript
 
     {
-      // Required: Source code language. Currently supported are "Solidity", "Yul" and "SolidityAST" (experimental).
+      // Required: Source code language. Currently supported are "Solidity", "Yul", "SolidityAST" (experimental), "EVMAssembly" (experimental).
       "language": "Solidity",
       // Required
       "sources":
@@ -230,14 +235,6 @@ Input Description
             // If files are used, their directories should be added to the command-line via
             // `--allow-paths <path>`.
           ]
-          // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key.
-          // Note that importing ASTs is experimental and in particular that:
-          // - importing invalid ASTs can produce undefined results and
-          // - no proper error reporting is available on invalid ASTs.
-          // Furthermore, note that the AST import only consumes the fields of the AST as
-          // produced by the compiler in "stopAfter": "parsing" mode and then re-performs
-          // analysis, so any analysis-based annotations of the AST are ignored upon import.
-          "ast": { ... } // formatted as the json ast requested with the ``ast`` output selection.
         },
         "destructible":
         {
@@ -245,6 +242,33 @@ Input Description
           "keccak256": "0x234...",
           // Required (unless "urls" is used): literal contents of the source file
           "content": "contract destructible is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
+        },
+        "myFile.sol_json.ast":
+        {
+          // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key
+          // and there can be only one source file present.
+          // The format is the same as used by the `ast` output.
+          // Note that importing ASTs is experimental and in particular that:
+          // - importing invalid ASTs can produce undefined results and
+          // - no proper error reporting is available on invalid ASTs.
+          // Furthermore, note that the AST import only consumes the fields of the AST as
+          // produced by the compiler in "stopAfter": "parsing" mode and then re-performs
+          // analysis, so any analysis-based annotations of the AST are ignored upon import.
+          "ast": { ... }
+        },
+        "myFile_evm.json":
+        {
+          // If language is set to "EVMAssembly", an EVM Assembly JSON object needs to be supplied
+          // under the "assemblyJson" key and there can be only one source file present.
+          // The format is the same as used by the `evm.legacyAssembly` output or `--asm-json`
+          // output on the command line.
+          // Note that importing EVM assembly is experimental.
+          "assemblyJson":
+          {
+            ".code": [ ... ],
+            ".data": { ... }, // optional
+            "sourceList": [ ... ] // optional (if no `source` node was defined in any `.code` object)
+          }
         }
       },
       // Optional

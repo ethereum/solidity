@@ -74,6 +74,8 @@ smtutil::SortPointer arity0FunctionSort();
 
 /// Helpers
 
-std::vector<smtutil::SortPointer> stateSorts(ContractDefinition const& _contract) ;
+std::vector<smtutil::SortPointer> stateSorts(ContractDefinition const& _contract);
+
+std::vector<smtutil::SortPointer> getBuiltInFunctionsSorts(SymbolicState& _state);
 
 }

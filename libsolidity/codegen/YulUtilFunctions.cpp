@@ -3866,7 +3866,7 @@ std::string YulUtilFunctions::cleanupFunction(Type const& _type)
 		}
 		case Type::Category::Enum:
 		{
-			// Out of range enums cannot be truncated unambigiously and therefore it should be an error.
+			// Out of range enums cannot be truncated unambiguously and therefore it should be an error.
 			templ("body", "cleaned := value " + validatorFunction(_type, false) + "(value)");
 			break;
 		}

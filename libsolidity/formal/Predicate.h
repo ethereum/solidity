@@ -71,6 +71,7 @@ public:
 	Predicate(
 		smt::SymbolicFunctionVariable&& _predicate,
 		PredicateType _type,
+		bool _bytesConcatFunctionInContext,
 		ASTNode const* _node = nullptr,
 		ContractDefinition const* _contractContext = nullptr,
 		std::vector<ScopeOpener const*> _scopeStack = {}
@@ -179,7 +180,7 @@ public:
 
 	/// @returns a substitution map from the arguments of _predExpr
 	/// to a Solidity-like expression.
-	std::map<std::string, std::string> expressionSubstitution(smtutil::Expression const& _predExpr) const;
+	std::map<std::string, std::string> expressionSubstitution(smtutil::Expression const& _predExprs) const;
 
 private:
 	/// @returns the formatted version of the given SMT expressions. Those expressions must be SMT constants.
@@ -195,6 +196,13 @@ private:
 	bool fillArray(smtutil::Expression const& _expr, std::vector<std::string>& _array, ArrayType const& _type) const;
 
 	std::map<std::string, std::optional<std::string>> readTxVars(smtutil::Expression const& _tx) const;
+
+	/// @returns index at which transaction values start in args list
+	size_t txValuesIndex() const { return m_bytesConcatFunctionInContext ? 5 : 4; }
+	/// @returns index at which function arguments start in args list
+	size_t firstArgIndex() const { return m_bytesConcatFunctionInContext ? 7 : 6; }
+	/// @returns index at which state variables values start in args list
+	size_t firstStateVarIndex() const { return m_bytesConcatFunctionInContext ? 8 : 7; }
 
 	/// The actual SMT expression.
 	smt::SymbolicFunctionVariable m_predicate;
@@ -219,6 +227,9 @@ private:
 	/// The scope stack when the predicate was created.
 	/// Used to identify the subset of variables in scope.
 	std::vector<ScopeOpener const*> const m_scopeStack;
+
+	/// True iff there is a bytes concat function in contract scope
+	bool m_bytesConcatFunctionInContext;
 };
 
 struct PredicateCompare

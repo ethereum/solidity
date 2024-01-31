@@ -59,17 +59,18 @@ int magicVariableToID(std::string const& _name)
 	else if (_name == "tx") return -26;
 	else if (_name == "type") return -27;
 	else if (_name == "this") return -28;
+	else if (_name == "blobhash") return -29;
 	else
 		solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
 
-inline std::vector<std::shared_ptr<MagicVariableDeclaration const>> constructMagicVariables()
+inline std::vector<std::shared_ptr<MagicVariableDeclaration const>> constructMagicVariables(langutil::EVMVersion _evmVersion)
 {
 	static auto const magicVarDecl = [](std::string const& _name, Type const* _type) {
 		return std::make_shared<MagicVariableDeclaration>(magicVariableToID(_name), _name, _type);
 	};
 
-	return {
+	std::vector<std::shared_ptr<MagicVariableDeclaration const>> magicVariableDeclarations = {
 		magicVarDecl("abi", TypeProvider::magic(MagicType::Kind::ABI)),
 		magicVarDecl("addmod", TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::AddMod, StateMutability::Pure)),
 		magicVarDecl("assert", TypeProvider::function(strings{"bool"}, strings{}, FunctionType::Kind::Assert, StateMutability::Pure)),
@@ -101,11 +102,19 @@ inline std::vector<std::shared_ptr<MagicVariableDeclaration const>> constructMag
 			FunctionType::Options::withArbitraryParameters()
 		)),
 	};
+
+	if (_evmVersion >= langutil::EVMVersion::cancun())
+		magicVariableDeclarations.push_back(
+			magicVarDecl("blobhash", TypeProvider::function(strings{"uint256"}, strings{"bytes32"}, FunctionType::Kind::BlobHash, StateMutability::View))
+		);
+
+	return magicVariableDeclarations;
 }
 
 }
 
-GlobalContext::GlobalContext(): m_magicVariables{constructMagicVariables()}
+GlobalContext::GlobalContext(langutil::EVMVersion _evmVersion):
+	m_magicVariables{constructMagicVariables(_evmVersion)}
 {
 }
 

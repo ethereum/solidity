@@ -3075,6 +3075,7 @@ std::string FunctionType::richIdentifier() const
 	case Kind::ABIEncodeCall: id += "abiencodecall"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
 	case Kind::ABIDecode: id += "abidecode"; break;
+	case Kind::BlobHash: id += "blobhash"; break;
 	case Kind::MetaType: id += "metatype"; break;
 	}
 	id += "_" + stateMutabilityToString(m_stateMutability);
@@ -4116,7 +4117,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			{"number", TypeProvider::uint256()},
 			{"gaslimit", TypeProvider::uint256()},
 			{"chainid", TypeProvider::uint256()},
-			{"basefee", TypeProvider::uint256()}
+			{"basefee", TypeProvider::uint256()},
+			{"blobbasefee", TypeProvider::uint256()}
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({

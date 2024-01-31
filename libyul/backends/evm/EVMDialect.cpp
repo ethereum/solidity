@@ -121,6 +121,20 @@ std::set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 	};
 
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// blobbasefee for VMs before cancun.
+	auto blobBaseFeeException = [&](evmasm::Instruction _instr) -> bool
+	{
+		return _instr == evmasm::Instruction::BLOBBASEFEE && _evmVersion < langutil::EVMVersion::cancun();
+	};
+
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// mcopy for VMs before london.
+	auto mcopyException = [&](evmasm::Instruction _instr) -> bool
+	{
+		return _instr == evmasm::Instruction::MCOPY && _evmVersion < langutil::EVMVersion::cancun();
+	};
+
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// prevrandao for VMs before paris.
 	auto prevRandaoException = [&](std::string const& _instrName) -> bool
 	{
@@ -128,11 +142,33 @@ std::set<YulString> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 		return _instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris();
 	};
 
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
+	// blobhash for VMs before cancun.
+	auto blobHashException = [&](evmasm::Instruction _instr) -> bool
+	{
+		return _instr == evmasm::Instruction::BLOBHASH && _evmVersion < langutil::EVMVersion::cancun();
+	};
+	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the names
+	// tstore or tload for VMs before cancun.
+	auto transientStorageException = [&](evmasm::Instruction _instr) -> bool
+	{
+		return
+			_evmVersion < langutil::EVMVersion::cancun() &&
+			(_instr == evmasm::Instruction::TSTORE || _instr == evmasm::Instruction::TLOAD);
+	};
+
 	std::set<YulString> reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
 		std::string name = toLower(instr.first);
-		if (!baseFeeException(instr.second) && !prevRandaoException(name))
+		if (
+			!baseFeeException(instr.second) &&
+			!prevRandaoException(name) &&
+			!blobHashException(instr.second) &&
+			!blobBaseFeeException(instr.second) &&
+			!mcopyException(instr.second) &&
+			!transientStorageException(instr.second)
+		)
 			reserved.emplace(name);
 	}
 	reserved += std::vector<YulString>{
@@ -250,7 +286,17 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			"datacopy",
 			3,
 			0,
-			SideEffects{false, true, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
+			SideEffects{
+				false,				// movable
+				true,				// movableApartFromEffects
+				false,				// canBeRemoved
+				false,				// canBeRemovedIfNotMSize
+				true,				// cannotLoop
+				SideEffects::None,	// otherState
+				SideEffects::None,	// storage
+				SideEffects::Write,	// memory
+				SideEffects::None	// transientStorage
+			},
 			{},
 			[](
 				FunctionCall const&,
@@ -264,7 +310,17 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			"setimmutable",
 			3,
 			0,
-			SideEffects{false, false, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
+			SideEffects{
+				false,				// movable
+				false,				// movableApartFromEffects
+				false,				// canBeRemoved
+				false,				// canBeRemovedIfNotMSize
+				true,				// cannotLoop
+				SideEffects::None,	// otherState
+				SideEffects::None,	// storage
+				SideEffects::Write,	// memory
+				SideEffects::None	// transientStorage
+			},
 			{std::nullopt, LiteralKind::String, std::nullopt},
 			[](
 				FunctionCall const& _call,
@@ -369,6 +425,7 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 		translate(evmasm::SemanticInformation::otherState(_instruction)),
 		translate(evmasm::SemanticInformation::storage(_instruction)),
 		translate(evmasm::SemanticInformation::memory(_instruction)),
+		translate(evmasm::SemanticInformation::transientStorage(_instruction)),
 	};
 }
 

@@ -21,6 +21,7 @@
 #include <test/Common.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
+#include <libsolutil/StringUtils.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -123,7 +124,7 @@ TestCase::TestResult GasTest::run(std::ostream& _stream, std::string const& _lin
 {
 	if (!runFramework(withPreamble(m_source), PipelineStage::Compilation))
 	{
-		_stream << formatErrors(filteredErrors(), _formatted);
+		util::printPrefixed(_stream, formatErrors(filteredErrors(), _formatted), _linePrefix);
 		return TestResult::FatalError;
 	}
 

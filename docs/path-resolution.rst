@@ -41,7 +41,7 @@ that interprets a source unit name as a path in the local filesystem.
 This callback can be disabled using the ``--no-import-callback`` command-line option.
 The `JavaScript interface <https://github.com/ethereum/solc-js>`_ does not provide any by default,
 but one can be provided by the user.
-This mechanism can be used to obtain source code from locations other then the local filesystem
+This mechanism can be used to obtain source code from locations other than the local filesystem
 (which may not even be accessible, e.g. when the compiler is running in a browser).
 For example the `Remix IDE <https://remix.ethereum.org/>`_ provides a versatile callback that
 lets you `import files from HTTP, IPFS and Swarm URLs or refer directly to packages in NPM registry

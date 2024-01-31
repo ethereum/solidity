@@ -362,6 +362,8 @@ private:
 
 	/// Adds constraints that decrease the balance of the caller by _value.
 	void decreaseBalanceFromOptionsValue(Expression const& _value);
+
+	std::vector<smtutil::Expression> commonStateExpressions(smtutil::Expression const& error, smtutil::Expression const& address);
 	//@}
 
 	/// Predicates.

@@ -37,6 +37,7 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 	{
 		assertThrow(memory(_instruction) == Effect::None, OptimizerException, "");
 		assertThrow(storage(_instruction) != Effect::None, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 		Operation op;
 		op.effect = storage(_instruction);
 		op.location = Location::Storage;
@@ -51,6 +52,7 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 	{
 		assertThrow(memory(_instruction) != Effect::None, OptimizerException, "");
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 		Operation op;
 		op.effect = memory(_instruction);
 		op.location = Location::Memory;
@@ -60,6 +62,19 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 		else if (_instruction == Instruction::MSTORE8)
 			op.lengthConstant = 1;
 
+		return {op};
+	}
+	case Instruction::TSTORE:
+	case Instruction::TLOAD:
+	{
+		assertThrow(memory(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) != Effect::None, OptimizerException, "");
+		Operation op;
+		op.effect = transientStorage(_instruction);
+		op.location = Location::TransientStorage;
+		op.startParameter = 0;
+		op.lengthConstant = 1;
 		return {op};
 	}
 	case Instruction::REVERT:
@@ -72,6 +87,7 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 	case Instruction::LOG4:
 	{
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 		assertThrow(memory(_instruction) == Effect::Read, OptimizerException, "");
 		Operation op;
 		op.effect = memory(_instruction);
@@ -84,6 +100,7 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 	{
 		assertThrow(memory(_instruction) == Effect::Write, OptimizerException, "");
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 		Operation op;
 		op.effect = memory(_instruction);
 		op.location = Location::Memory;
@@ -97,12 +114,32 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 	{
 		assertThrow(memory(_instruction) == Effect::Write, OptimizerException, "");
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 		Operation op;
 		op.effect = memory(_instruction);
 		op.location = Location::Memory;
 		op.startParameter = 0;
 		op.lengthParameter = 2;
 		return {op};
+	}
+	case Instruction::MCOPY:
+	{
+		assertThrow(memory(_instruction) != Effect::None, OptimizerException, "");
+		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+
+		Operation readOperation;
+		readOperation.effect = Read;
+		readOperation.location = Location::Memory;
+		readOperation.startParameter = 1;
+		readOperation.lengthParameter = 2;
+
+		Operation writeOperation;
+		writeOperation.effect = Write;
+		writeOperation.location = Location::Memory;
+		writeOperation.startParameter = 0;
+		writeOperation.lengthParameter = 2;
+
+		return {readOperation, writeOperation};
 	}
 	case Instruction::STATICCALL:
 	case Instruction::CALL:
@@ -112,10 +149,14 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 		size_t paramCount = static_cast<size_t>(instructionInfo(_instruction, langutil::EVMVersion()).args);
 		std::vector<Operation> operations{
 			Operation{Location::Memory, Effect::Read, paramCount - 4, paramCount - 3, {}},
-			Operation{Location::Storage, Effect::Read, {}, {}, {}}
+			Operation{Location::Storage, Effect::Read, {}, {}, {}},
+			Operation{Location::TransientStorage, Effect::Read, {}, {}, {}}
 		};
 		if (_instruction != Instruction::STATICCALL)
+		{
 			operations.emplace_back(Operation{Location::Storage, Effect::Write, {}, {}, {}});
+			operations.emplace_back(Operation{Location::TransientStorage, Effect::Write, {}, {}, {}});
+		}
 		operations.emplace_back(Operation{
 			Location::Memory,
 			Effect::Write,
@@ -138,13 +179,15 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 				{}
 			},
 			Operation{Location::Storage, Effect::Read, {}, {}, {}},
-			Operation{Location::Storage, Effect::Write, {}, {}, {}}
+			Operation{Location::Storage, Effect::Write, {}, {}, {}},
+			Operation{Location::TransientStorage, Effect::Read, {}, {}, {}},
+			Operation{Location::TransientStorage, Effect::Write, {}, {}, {}}
 		};
 	case Instruction::MSIZE:
 		// This is just to satisfy the assert below.
 		return std::vector<Operation>{};
 	default:
-		assertThrow(storage(_instruction) == None && memory(_instruction) == None, AssemblyException, "");
+		assertThrow(storage(_instruction) == None && memory(_instruction) == None && transientStorage(_instruction) == None, AssemblyException, "");
 	}
 	return {};
 }
@@ -188,7 +231,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 		))
 			return false;
 		//@todo: We do not handle the following memory instructions for now:
-		// calldatacopy, codecopy, extcodecopy, mstore8,
+		// calldatacopy, codecopy, extcodecopy, mcopy, mstore8,
 		// msize (note that msize also depends on memory read access)
 
 		// the second requirement will be lifted once it is implemented
@@ -329,6 +372,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	case Instruction::EXTCODEHASH:
 	case Instruction::RETURNDATASIZE:
 	case Instruction::SLOAD:
+	case Instruction::TLOAD:
 	case Instruction::PC:
 	case Instruction::MSIZE:
 	case Instruction::GAS:
@@ -363,6 +407,7 @@ SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction
 	case Instruction::CODECOPY:
 	case Instruction::EXTCODECOPY:
 	case Instruction::RETURNDATACOPY:
+	case Instruction::MCOPY:
 	case Instruction::MSTORE:
 	case Instruction::MSTORE8:
 	case Instruction::CALL:
@@ -400,6 +445,7 @@ bool SemanticInformation::movableApartFromEffects(Instruction _instruction)
 	case Instruction::BALANCE:
 	case Instruction::SELFBALANCE:
 	case Instruction::SLOAD:
+	case Instruction::TLOAD:
 	case Instruction::KECCAK256:
 	case Instruction::MLOAD:
 		return true;
@@ -422,6 +468,27 @@ SemanticInformation::Effect SemanticInformation::storage(Instruction _instructio
 		return SemanticInformation::Write;
 
 	case Instruction::SLOAD:
+	case Instruction::STATICCALL:
+		return SemanticInformation::Read;
+
+	default:
+		return SemanticInformation::None;
+	}
+}
+
+SemanticInformation::Effect SemanticInformation::transientStorage(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
+	case Instruction::CREATE:
+	case Instruction::CREATE2:
+	case Instruction::TSTORE:
+		return SemanticInformation::Write;
+
+	case Instruction::TLOAD:
 	case Instruction::STATICCALL:
 		return SemanticInformation::Read;
 
@@ -473,12 +540,14 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::CALLVALUE:
 	case Instruction::CHAINID:
 	case Instruction::BASEFEE:
+	case Instruction::BLOBBASEFEE:
 	case Instruction::GAS:
 	case Instruction::GASPRICE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODECOPY:
 	case Instruction::EXTCODEHASH:
 	case Instruction::BLOCKHASH:
+	case Instruction::BLOBHASH:
 	case Instruction::COINBASE:
 	case Instruction::TIMESTAMP:
 	case Instruction::NUMBER:
@@ -486,6 +555,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::GASLIMIT:
 	case Instruction::STATICCALL:
 	case Instruction::SLOAD:
+	case Instruction::TLOAD:
 		return true;
 	default:
 		break;
@@ -498,6 +568,7 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	switch (_instruction)
 	{
 	case Instruction::SSTORE:
+	case Instruction::TSTORE:
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
 	case Instruction::LOG0:

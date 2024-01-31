@@ -149,12 +149,13 @@ message UnaryOp {
     NOT = 0;
     MLOAD = 1;
     SLOAD = 2;
-    ISZERO = 3;
-    CALLDATALOAD = 4;
-    EXTCODESIZE = 5;
-    EXTCODEHASH = 6;
-    BALANCE = 7;
-    BLOCKHASH = 8;
+    TLOAD = 3;
+    ISZERO = 4;
+    CALLDATALOAD = 5;
+    EXTCODESIZE = 6;
+    EXTCODEHASH = 7;
+    BALANCE = 8;
+    BLOCKHASH = 9;
   }
   required UOp op = 1;
   required Expression operand = 2;
@@ -186,6 +187,7 @@ message CopyFunc {
     CODE = 1;
     RETURNDATA = 2;
     DATA = 3;
+    MEMORY = 4;
   }
   required CopyType ct = 1;
   required Expression target = 2;
@@ -219,6 +221,8 @@ message NullaryOp {
     GASLIMIT = 15;
     SELFBALANCE = 16;
     CHAINID = 17;
+    BASEFEE = 18;
+    BLOBBASEFEE = 19;
   }
   required NOp op = 1;
 }
@@ -228,6 +232,7 @@ message StoreFunc {
     MSTORE = 0;
     SSTORE = 1;
     MSTORE8 = 2;
+    TSTORE = 3;
   }
   required Expression loc = 1;
   required Expression val = 2;
@@ -398,6 +403,8 @@ message Program {
     BERLIN = 7;
     LONDON = 8;
     PARIS = 9;
+    SHANGHAI = 10;
+    CANCUN = 11;
   }
   oneof program_oneof {
     Block block = 1;

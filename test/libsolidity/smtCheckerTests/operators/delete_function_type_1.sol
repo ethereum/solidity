@@ -1,10 +1,10 @@
 struct S {
-    function() e;
+    function() external e;
 }
 
 contract C {
     S s;
-    function() f;
+    function() external f;
 
     constructor() {
         delete s.e;
@@ -12,5 +12,5 @@ contract C {
     }
 }
 // ----
-// Warning 7229: (128-136): Assertion checker does not yet implement the type function () for comparisons
-// Warning 6328: (121-137): CHC: Assertion violation happens here.
+// Warning 7229: (146-154): Assertion checker does not yet implement the type function () external for comparisons
+// Warning 6328: (139-155): CHC: Assertion violation happens here.\nCounterexample:\ns = {e: 0}, f = 0\n\nTransaction trace:\nC.constructor()

@@ -73,7 +73,7 @@ Docker
 ======
 
 Docker images of Solidity builds are available using the ``solc`` image from the ``ethereum`` organization.
-Use the ``stable`` tag for the latest released version, and ``nightly`` for potentially unstable changes in the develop branch.
+Use the ``stable`` tag for the latest released version, and ``nightly`` for potentially unstable changes in the ``develop`` branch.
 
 The Docker image runs the compiler executable so that you can pass all compiler arguments to it.
 For example, the command below pulls the stable version of the ``solc`` image (if you do not have it already),

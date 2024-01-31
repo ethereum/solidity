@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_CASE(environment_access)
 	};
 	if (solidity::test::CommonOptions::get().evmVersion().hasStaticCall())
 		view.emplace_back("address(0x4242).staticcall(\"\")");
+	if (solidity::test::CommonOptions::get().evmVersion().hasBlobHash())
+		view.emplace_back("blobhash(7)");
 
 	// ``block.blockhash`` and ``blockhash`` are tested separately below because their usage will
 	// produce warnings that can't be handled in a generic way.
@@ -92,6 +94,26 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		TypeError,
 		"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
 	);
+
+	std::string baseFeeContract = "contract C { function f() view public { block.basefee; } }";
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBaseFee())
+		CHECK_ERROR(
+			baseFeeContract,
+			TypeError,
+			"\"basefee\" is not supported by the VM version."
+		);
+	else
+		CHECK_SUCCESS_NO_WARNINGS(baseFeeContract);
+
+	std::string blobBaseFeeContract = "contract C { function f() view public { block.blobbasefee; } }";
+	if (!solidity::test::CommonOptions::get().evmVersion().hasBlobBaseFee())
+		CHECK_ERROR(
+			blobBaseFeeContract,
+			TypeError,
+			"\"blobbasefee\" is not supported by the VM version."
+		);
+	else
+		CHECK_SUCCESS_NO_WARNINGS(blobBaseFeeContract);
 }
 
 BOOST_AUTO_TEST_CASE(address_staticcall)

@@ -1,4 +1,4 @@
-### 0.8.24 (unreleased)
+### 0.8.25 (unreleased)
 
 Language Features:
 
@@ -7,6 +7,28 @@ Compiler Features:
 
 
 Bugfixes:
+
+
+### 0.8.24 (2024-01-25)
+
+Language Features:
+ * Introduce global ``block.blobbasefee`` for retrieving the blob base fee of the current block.
+ * Introduce global function ``blobhash(uint)`` for retrieving versioned hashes of blobs, akin to the homonymous Yul builtin.
+ * Yul: Introduce builtin ``blobbasefee()`` for retrieving the blob base fee of the current block.
+ * Yul: Introduce builtin ``blobhash()`` for retrieving versioned hashes of blobs associated with the transaction.
+ * Yul: Introduce builtin ``mcopy()`` for cheaply copying data between memory areas.
+ * Yul: Introduce builtins ``tload()`` and ``tstore()`` for transient storage access.
+
+
+Compiler Features:
+ * EVM: Support for the EVM Version "Cancun".
+ * SMTChecker: Support `bytes.concat` except when string literals are passed as arguments.
+ * Standard JSON Interface: Add experimental support to import EVM assembly in the format used by ``--asm-json``.
+ * TypeChecker: Comparison of internal function pointers now yields a warning, as it can produce unexpected results with the legacy pipeline enabled.
+
+
+Bugfixes:
+ * AST import: Fix bug when importing inline assembly with empty ``let`` variable declaration.
 
 
 ### 0.8.23 (2023-11-08)

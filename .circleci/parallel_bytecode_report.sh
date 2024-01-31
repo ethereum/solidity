@@ -33,7 +33,7 @@ binary_type="$2"
 binary_path="$3" # This path must be absolute
 preset="$4"
 
-[[ $binary_type == native || $binary_type == solcjs ]] || { >&2 echo "Invalid binary type: ${binary_type}"; exit 1; }
+[[ $binary_type == native || $binary_type == "osx_intel" || $binary_type == solcjs ]] || { >&2 echo "Invalid binary type: ${binary_type}"; exit 1; }
 
 # NOTE: Locale affects the order of the globbed files.
 export LC_ALL=C
@@ -47,7 +47,7 @@ python3 ../scripts/isolate_tests.py ../test/
 # FIXME: These cases crash because of https://github.com/ethereum/solidity/issues/13583
 rm ./*_bytecode_too_large_*.sol ./*_combined_too_large_*.sol
 
-if [[ $binary_type == native ]]; then
+if [[ $binary_type == native || $binary_type == "osx_intel" ]]; then
     interface=$(echo -e "standard-json\ncli" | circleci tests split)
     echo "Selected interface: ${interface}"
 
@@ -56,6 +56,7 @@ if [[ $binary_type == native ]]; then
         "$binary_path" \
         --interface "$interface" \
         --preset "$preset" \
+        --execution-arch "$binary_type" \
         --report-file "../bytecode-report-${label}-${interface}-${preset}.txt"
 else
     echo "Installing solc-js"

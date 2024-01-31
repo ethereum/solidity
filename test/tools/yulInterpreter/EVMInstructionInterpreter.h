@@ -24,6 +24,7 @@
 #include <libyul/ASTForward.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/FixedHash.h>
 #include <libsolutil/Numeric.h>
 
 #include <liblangutil/EVMVersion.h>
@@ -48,8 +49,24 @@ namespace solidity::yul::test
 /// @a _target at offset @a _targetOffset. Behaves as if @a _source would
 /// continue with an infinite sequence of zero bytes beyond its end.
 void copyZeroExtended(
-	std::map<u256, uint8_t>& _target, bytes const& _source,
-	size_t _targetOffset, size_t _sourceOffset, size_t _size
+	std::map<u256, uint8_t>& _target,
+	bytes const& _source,
+	size_t _targetOffset,
+	size_t _sourceOffset,
+	size_t _size
+);
+
+/// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
+/// @a _target at offset @a _targetOffset. Behaves as if @a _source would
+/// continue with an infinite sequence of zero bytes beyond its end.
+/// When target and source areas overlap, behaves as if the data was copied
+/// using an intermediate buffer.
+void copyZeroExtendedWithOverlap(
+	std::map<u256, uint8_t>& _target,
+	std::map<u256, uint8_t> const& _source,
+	size_t _targetOffset,
+	size_t _sourceOffset,
+	size_t _size
 );
 
 struct InterpreterState;
@@ -89,6 +106,9 @@ public:
 		std::vector<Expression> const& _arguments,
 		std::vector<u256> const& _evaluatedArguments
 	);
+
+	/// @returns the blob versioned hash
+	util::h256 blobHash(u256 const& _index);
 
 private:
 	/// Checks if the memory access is valid and adjusts msize accordingly.

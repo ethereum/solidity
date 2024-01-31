@@ -1,0 +1,43 @@
+{
+    "contracts":
+    {
+        "A":
+        {
+            "":
+            {
+                "evm":
+                {
+                    "bytecode":
+                    {
+                        "functionDebugData": {},
+                        "linkReferences": {},
+                        "object": "<BYTECODE REMOVED>",
+                        "opcodes":"<OPCODES REMOVED>",
+                        "sourceMap": ""
+                    },
+                    "deployedBytecode":
+                    {
+                        "functionDebugData": {},
+                        "immutableReferences": {},
+                        "linkReferences":
+                        {
+                            "test.sol":
+                            {
+                                "L":
+                                [
+                                    {
+                                        "length": 20,
+                                        "start": 1
+                                    }
+                                ]
+                            }
+                        },
+                        "object": "<BYTECODE REMOVED>__$d553ddd21b3d8da0d69a6510c170f4a77b$__<BYTECODE REMOVED>",
+                        "opcodes":"<OPCODES REMOVED>",
+                        "sourceMap":"<SOURCEMAP REMOVED>"
+                    }
+                }
+            }
+        }
+    }
+}

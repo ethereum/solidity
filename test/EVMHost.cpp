@@ -118,6 +118,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_PARIS;
 	else if (_evmVersion == langutil::EVMVersion::shanghai())
 		m_evmRevision = EVMC_SHANGHAI;
+	else if (_evmVersion == langutil::EVMVersion::cancun())
+		m_evmRevision = EVMC_CANCUN;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 
@@ -134,6 +136,15 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	tx_context.chain_id = evmc::uint256be{1};
 	// The minimum value of basefee
 	tx_context.block_base_fee = evmc::bytes32{7};
+	// The minimum value of blobbasefee
+	tx_context.blob_base_fee = evmc::bytes32{1};
+
+	static evmc_bytes32 const blob_hashes_array[] = {
+		0x0100000000000000000000000000000000000000000000000000000000000001_bytes32,
+		0x0100000000000000000000000000000000000000000000000000000000000002_bytes32
+	};
+	tx_context.blob_hashes = blob_hashes_array;
+	tx_context.blob_hashes_count = sizeof(blob_hashes_array) / sizeof(blob_hashes_array[0]);
 
 	// Reserve space for recording calls.
 	if (!recorded_calls.capacity())
@@ -175,14 +186,24 @@ void EVMHost::newTransactionFrame()
 	recorded_account_accesses.clear();
 
 	for (auto& [address, account]: accounts)
+	{
 		for (auto& [slot, value]: account.storage)
 		{
 			value.access_status = EVMC_ACCESS_COLD; // Clear EIP-2929 storage access indicator
 			value.original = value.current;			// Clear EIP-2200 dirty slot
 		}
+
+		// Clear transient storage according to EIP 1153
+		account.transient_storage.clear();
+	}
 	// Process selfdestruct list
 	for (auto& [address, _]: recorded_selfdestructs)
-		accounts.erase(address);
+		if (m_evmVersion < langutil::EVMVersion::cancun() || newlyCreatedAccounts.count(address))
+			// EIP-6780: If SELFDESTRUCT is executed in a transaction different from the one
+			// in which it was created, we do NOT record it or clear any data.
+			// Otherwise, the previous behavior (pre-Cancun) is maintained.
+			accounts.erase(address);
+	newlyCreatedAccounts.clear();
 	recorded_selfdestructs.clear();
 }
 
@@ -197,6 +218,8 @@ bool EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _ben
 {
 	// TODO actual selfdestruct is even more complicated.
 
+	// NOTE: EIP-6780: The transfer of the entire account balance to the beneficiary should still happen
+	// after cancun.
 	transfer(accounts[_addr], accounts[_beneficiary], convertFromEVMC(accounts[_addr].balance));
 
 	// Record self destructs. Clearing will be done in newTransactionFrame().
@@ -332,6 +355,9 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		code = accounts[message.code_address].code;
 
 	auto& destination = accounts[message.recipient];
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+		// Mark account as created if it is a CREATE or CREATE2 call
+		newlyCreatedAccounts.emplace(message.recipient);
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{

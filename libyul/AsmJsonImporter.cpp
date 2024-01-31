@@ -255,7 +255,10 @@ VariableDeclaration AsmJsonImporter::createVariableDeclaration(Json::Value const
 	auto varDec = createAsmNode<VariableDeclaration>(_node);
 	for (auto const& var: member(_node, "variables"))
 		varDec.variables.emplace_back(createTypedName(var));
-	varDec.value = std::make_unique<Expression>(createExpression(member(_node, "value")));
+
+	if (_node.isMember("value"))
+		varDec.value = std::make_unique<Expression>(createExpression(member(_node, "value")));
+
 	return varDec;
 }
 

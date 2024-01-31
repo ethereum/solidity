@@ -316,9 +316,26 @@ std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				1699_error,
 				nativeLocationOf(_funCall.functionName),
 				"\"selfdestruct\" has been deprecated. "
-				"The underlying opcode will eventually undergo breaking changes, "
-				"and its use is not recommended."
+				"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
+				"data associated with an account and only transfers its Ether to the beneficiary, "
+				"unless executed in the same transaction in which the contract was created (see EIP-6780). "
+				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
+				"Future changes to the EVM might further reduce the functionality of the opcode."
 			);
+		else if (
+			m_evmVersion.supportsTransientStorage() &&
+			_funCall.functionName.name == "tstore"_yulstring
+		)
+			m_errorReporter.warning(
+				2394_error,
+				nativeLocationOf(_funCall.functionName),
+				"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
+				"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
+				"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
+				"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
+				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
+			);
+
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;
 		if (!f->literalArguments.empty())
@@ -670,6 +687,7 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 
 bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
+	// NOTE: This function uses the default EVM version instead of the currently selected one.
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
 	if (builtin && builtin->instruction.has_value())
 		return validateInstructions(builtin->instruction.value(), _location);
@@ -705,6 +723,9 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		);
 	};
 
+	// The errors below are meant to be issued when processing an undeclared identifier matching a builtin name
+	// present on the default EVM version but not on the currently selected one,
+	// since the other `validateInstructions()` overload uses the default EVM version.
 	if (_instr == evmasm::Instruction::RETURNDATACOPY && !m_evmVersion.supportsReturndata())
 		errorForVM(7756_error, "only available for Byzantium-compatible");
 	else if (_instr == evmasm::Instruction::RETURNDATASIZE && !m_evmVersion.supportsReturndata())
@@ -727,6 +748,17 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		errorForVM(7721_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::BASEFEE && !m_evmVersion.hasBaseFee())
 		errorForVM(5430_error, "only available for London-compatible");
+	else if (_instr == evmasm::Instruction::BLOBBASEFEE && !m_evmVersion.hasBlobBaseFee())
+		errorForVM(6679_error, "only available for Cancun-compatible");
+	else if (_instr == evmasm::Instruction::BLOBHASH && !m_evmVersion.hasBlobHash())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
+	else if (_instr == evmasm::Instruction::MCOPY && !m_evmVersion.hasMcopy())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
+	else if ((_instr == evmasm::Instruction::TSTORE || _instr == evmasm::Instruction::TLOAD) && !m_evmVersion.supportsTransientStorage())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.error(
 			2450_error,

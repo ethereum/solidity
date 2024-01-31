@@ -38,11 +38,13 @@ namespace solidity::frontend
 NameAndTypeResolver::NameAndTypeResolver(
 	GlobalContext& _globalContext,
 	langutil::EVMVersion _evmVersion,
-	ErrorReporter& _errorReporter
+	ErrorReporter& _errorReporter,
+	bool _experimentalSolidity
 ):
 	m_evmVersion(_evmVersion),
 	m_errorReporter(_errorReporter),
-	m_globalContext(_globalContext)
+	m_globalContext(_globalContext),
+	m_experimentalSolidity(_experimentalSolidity)
 {
 	m_scopes[nullptr] = std::make_shared<DeclarationContainer>();
 	for (Declaration const* declaration: _globalContext.declarations())

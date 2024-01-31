@@ -172,9 +172,12 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 		*instruction == Instruction::CODECOPY ||
 		*instruction == Instruction::CALLDATACOPY ||
 		*instruction == Instruction::RETURNDATACOPY ||
+		// TODO: Removing MCOPY is complicated because it's not just a store but also a load.
+		//*instruction == Instruction::MCOPY ||
 		*instruction == Instruction::MSTORE ||
 		*instruction == Instruction::MSTORE8;
 	bool isCandidateForRemoval =
+		*instruction != Instruction::MCOPY &&
 		SemanticInformation::otherState(*instruction) != SemanticInformation::Write && (
 			SemanticInformation::storage(*instruction) == SemanticInformation::Write ||
 			(!m_ignoreMemory && SemanticInformation::memory(*instruction) == SemanticInformation::Write)
@@ -211,7 +214,10 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 		if (operations.front().location == Location::Storage)
 			activeStorageStores().insert(&_statement);
 		else
+		{
+			yulAssert(operations.front().location == Location::Memory, "");
 			activeMemoryStores().insert(&_statement);
+		}
 		m_storeOperations[&_statement] = std::move(operations.front());
 	}
 }

@@ -39,8 +39,8 @@ class AssemblyItem;
  */
 struct SemanticInformation
 {
-	/// Corresponds to the effect that a YUL-builtin has on a generic data location (storage, memory
-	/// and other blockchain state).
+	/// Corresponds to the effect that a YUL-builtin has on a generic data location (storage, memory,
+	/// transient storage and other blockchain state).
 	enum Effect
 	{
 		None,
@@ -48,7 +48,7 @@ struct SemanticInformation
 		Write
 	};
 
-	enum class Location { Storage, Memory };
+	enum class Location { Storage, Memory, TransientStorage };
 
 	/**
 	 * Represents a read or write operation from or to one of the data locations.
@@ -87,10 +87,10 @@ struct SemanticInformation
 	static bool terminatesControlFlow(Instruction _instruction);
 	static bool reverts(Instruction _instruction);
 	/// @returns false if the value put on the stack by _item depends on anything else than
-	/// the information in the current block header, memory, storage or stack.
+	/// the information in the current block header, memory, storage, transient storage or stack.
 	static bool isDeterministic(AssemblyItem const& _item);
 	/// @returns true if the instruction can be moved or copied (together with its arguments)
-	/// without altering the semantics. This means it cannot depend on storage or memory,
+	/// without altering the semantics. This means it cannot depend on storage, transient storage or memory,
 	/// cannot have any side-effects, but it can depend on a call-constant state of the blockchain.
 	static bool movable(Instruction _instruction);
 	/// If true, the expressions in this code can be moved or copied (together with their arguments)
@@ -109,6 +109,7 @@ struct SemanticInformation
 	static bool canBeRemovedIfNoMSize(Instruction _instruction);
 	static Effect memory(Instruction _instruction);
 	static Effect storage(Instruction _instruction);
+	static Effect transientStorage(Instruction _instruction);
 	static Effect otherState(Instruction _instruction);
 	static bool invalidInPureFunctions(Instruction _instruction);
 	static bool invalidInViewFunctions(Instruction _instruction);

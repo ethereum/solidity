@@ -42,6 +42,7 @@
 
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
+using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
@@ -124,10 +125,10 @@ bytes compileFirstExpression(
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	GlobalContext globalContext;
+	GlobalContext globalContext(solidity::test::CommonOptions::get().evmVersion());
 	Scoper::assignScopes(*sourceUnit);
 	BOOST_REQUIRE(SyntaxChecker(errorReporter, false).checkSyntax(*sourceUnit));
-	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
+	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter, false);
 	resolver.registerDeclarations(*sourceUnit);
 	BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*sourceUnit), "Resolving names failed");
 	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
@@ -653,6 +654,28 @@ BOOST_AUTO_TEST_CASE(blockhash)
 
 	bytes expectation({uint8_t(Instruction::PUSH1), 0x03,
 					   uint8_t(Instruction::BLOCKHASH)});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(
+	blobhash,
+	*boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::cancun()))
+)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() public {
+				blobhash(3);
+			}
+		}
+	)";
+
+	bytes code = compileFirstExpression(sourceCode, {}, {});
+
+	bytes expectation({
+		uint8_t(Instruction::PUSH1), 0x03,
+		uint8_t(Instruction::BLOBHASH)
+	});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 

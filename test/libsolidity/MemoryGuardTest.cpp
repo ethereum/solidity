@@ -18,9 +18,11 @@
 
 #include <test/libsolidity/MemoryGuardTest.h>
 
+#include <test/Common.h>
 #include <test/libyul/Common.h>
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/StringUtils.h>
 #include <libyul/Object.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
@@ -34,6 +36,7 @@ using namespace solidity::util::formatting;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 using namespace yul;
 
 void MemoryGuardTest::setupCompiler(CompilerStack& _compiler)
@@ -48,7 +51,7 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 {
 	if (!runFramework(m_source, PipelineStage::Compilation))
 	{
-		_stream << formatErrors(filteredErrors(), _formatted);
+		printPrefixed(_stream, formatErrors(filteredErrors(), _formatted), _linePrefix);
 		return TestResult::FatalError;
 	}
 
@@ -58,13 +61,14 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		ErrorList errors;
 		auto [object, analysisInfo] = yul::test::parse(
 			compiler().yulIR(contractName),
-			EVMDialect::strictAssemblyForEVMObjects({}),
+			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()),
 			errors
 		);
 
 		if (!object || !analysisInfo || Error::containsErrors(errors))
 		{
-			AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing IR." << std::endl;
+			AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing IR:" << std::endl;
+			printPrefixed(_stream, formatErrors(filterErrors(errors), _formatted), _linePrefix);
 			return TestResult::FatalError;
 		}
 

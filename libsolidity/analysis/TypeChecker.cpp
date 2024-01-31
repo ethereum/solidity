@@ -1890,6 +1890,27 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	_operation.annotation().isLValue = false;
 	_operation.annotation().isConstant = false;
 
+	if (_operation.getOperator() == Token::Equal || _operation.getOperator() == Token::NotEqual)
+	{
+		auto const* leftFunction = dynamic_cast<FunctionType const*>(leftType);
+		auto const* rightFunction = dynamic_cast<FunctionType const*>(rightType);
+		if (
+			leftFunction &&
+			rightFunction &&
+			leftFunction->kind() == FunctionType::Kind::Internal &&
+			rightFunction->kind() == FunctionType::Kind::Internal
+		)
+		{
+			m_errorReporter.warning(
+				3075_error,
+				_operation.location(),
+				"Comparison of internal function pointers can yield unexpected results "
+				"in the legacy pipeline with the optimizer enabled, and will be disallowed entirely "
+				"in the next breaking release."
+			);
+		}
+	}
+
 	if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
 		std::string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
@@ -3409,6 +3430,12 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					_memberAccess.location(),
 					"\"basefee\" is not supported by the VM version."
 				);
+			else if (memberName == "blobbasefee" && !m_evmVersion.hasBlobBaseFee())
+				m_errorReporter.typeError(
+					1006_error,
+					_memberAccess.location(),
+					"\"blobbasefee\" is not supported by the VM version."
+				);
 			else if (memberName == "prevrandao" && !m_evmVersion.hasPrevRandao())
 				m_errorReporter.warning(
 					9432_error,
@@ -3761,8 +3788,11 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				5159_error,
 				_identifier.location(),
 				"\"selfdestruct\" has been deprecated. "
-				"The underlying opcode will eventually undergo breaking changes, "
-				"and its use is not recommended."
+				"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
+				"data associated with an account and only transfers its Ether to the beneficiary, "
+				"unless executed in the same transaction in which the contract was created (see EIP-6780). "
+				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
+				"Future changes to the EVM might further reduce the functionality of the opcode."
 			);
 	}
 
