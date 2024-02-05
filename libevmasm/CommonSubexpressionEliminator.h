@@ -77,6 +77,8 @@ public:
 	/// @returns the resulting items after optimization.
 	AssemblyItems getOptimizedItems();
 
+	KnownState const& getKnownState() const { return m_state; }
+
 private:
 	/// Feeds the item into the system for analysis.
 	void feedItem(AssemblyItem const& _item, bool _copyItem = false);

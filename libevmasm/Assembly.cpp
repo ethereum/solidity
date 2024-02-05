@@ -29,6 +29,7 @@
 #include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
+#include <libevmasm/GasMeter.h>
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
@@ -784,6 +785,15 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 				return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
 			});
 
+			auto runGas = [&](AssemblyItems const& items) {
+				GasMeter gasMeter{std::make_shared<KnownState>(), _settings.evmVersion};
+				GasMeter::GasConsumption gas;
+				for (auto const& item: items)
+					gas += gasMeter.estimateMax(item);
+				return gas;
+			};
+			auto runs = static_cast<bigint>(_settings.expectedExecutionsPerDeployment);
+
 			auto iter = m_items.begin();
 			while (iter != m_items.end())
 			{
@@ -796,7 +806,10 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 				try
 				{
 					optimisedChunk = eliminator.getOptimizedItems();
-					shouldReplace = (optimisedChunk.size() < static_cast<size_t>(iter - orig));
+					solAssert(iter >= orig);
+					auto originalCost = static_cast<bigint>(iter - orig) + runs * runGas(AssemblyItems(orig, iter)).value;
+					auto optimizedCost = static_cast<bigint>(optimisedChunk.size()) + runs * runGas(optimisedChunk).value;
+					shouldReplace = optimizedCost < originalCost;
 				}
 				catch (StackTooDeepException const&)
 				{
@@ -817,7 +830,9 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
-			if (optimisedItems.size() < m_items.size())
+			auto optimisedItemsCost = static_cast<bigint>(optimisedItems.size()) + runs * runGas(optimisedItems).value;
+			auto itemsCost = static_cast<bigint>(m_items.size()) + runs * runGas(m_items).value;
+			if (optimisedItemsCost < itemsCost)
 			{
 				m_items = std::move(optimisedItems);
 				count++;

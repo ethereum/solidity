@@ -30,6 +30,7 @@
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/Assembly.h>
+#include <libevmasm/GasMeter.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -111,8 +112,18 @@ namespace
 			iter = eliminator.feedItems(iter, _input.end(), usesMSize);
 			bool shouldReplace = false;
 			AssemblyItems optimisedChunk;
+			auto runGas = [&](AssemblyItems const& items) {
+				GasMeter gasMeter{std::make_shared<KnownState>(eliminator.getKnownState()), solidity::test::CommonOptions::get().evmVersion()};
+				GasMeter::GasConsumption gas;
+				for (auto const& item: items)
+					gas += gasMeter.estimateMax(item);
+				return gas;
+			};
 			optimisedChunk = eliminator.getOptimizedItems();
-			shouldReplace = (optimisedChunk.size() < static_cast<size_t>(iter - orig));
+			shouldReplace = (
+				optimisedChunk.size()  < static_cast<size_t>(iter - orig) &&
+				!(runGas(AssemblyItems(orig, iter)) < runGas(optimisedChunk))
+			);
 			if (shouldReplace)
 				optimisedItems += optimisedChunk;
 			else
@@ -1647,6 +1658,40 @@ BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 		u256(255),
 		Instruction::SHR
 	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_dup)
+{
+	AssemblyItems input{
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+	AssemblyItems output = input;
+
+	checkCSE(input, output);
+	checkFullCSE(input, output);
+}
+
+BOOST_AUTO_TEST_CASE(cse_push0)
+{
+	AssemblyItems input{
+		u256(0),
+		u256(0),
+		Instruction::REVERT
+	};
+	AssemblyItems output{
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+	// The CSE replaces with DUP1 PUSH0 because it does not take into account PUSH0 being cheaper
+	checkCSE(input, output);
+
+	// The full handling by the compiler (Assembly::optimiseInternal) does not replace
+	// because it checks code size, which is equal, and gas cost, which is cheaper for PUSH0
+	output = input;
+	checkFullCSE(input, output);
 }
 
 BOOST_AUTO_TEST_CASE(inliner)
