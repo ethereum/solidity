@@ -339,10 +339,11 @@ You can query the deployed code for any smart contract. Use ``.code`` to get the
 (as a ``bytes32``). Note that ``addr.codehash`` is cheaper than using ``keccak256(addr.code)``.
 
 .. warning::
-    The output of ``addr.codehash`` depends on the ``addr`` balance. If ``addr`` has no code deployed
-    and the balance is 0, ``addr.codehash`` will output 0. If the balance is greater than 0, then
-    ``addr.codehash`` will output ``keccak256("")``. See `EIP-1052 <https://eips.ethereum.org/EIPS/eip-1052>`_
-    and `EIP-161 <https://eips.ethereum.org/EIPS/eip-161>`_.
+    The output of ``addr.codehash`` also depends on the ``addr`` balance and nonce. If ``addr``
+    is empty or non-existent (it has no code, zero balance, and zero nonce), ``addr.codehash``
+    will output ``0``. If balance or nonce is greater than 0, then ``addr.codehash`` will output
+    ``keccak256("")``. See `EIP-1052 <https://eips.ethereum.org/EIPS/eip-1052>`_ for test cases
+    and `EIP-161 <https://eips.ethereum.org/EIPS/eip-161>`_ for the definition of an empty account.
 
 .. note::
     All contracts can be converted to ``address`` type, so it is possible to query the balance of the
