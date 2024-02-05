@@ -106,6 +106,10 @@ function zeppelin_test
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     npm install
 
+    # TODO: We fix the version to 2.0.3 instead of 2.0.4 since the latter does not work with ethers.js 6.10.0
+    # Maybe related to the use of dynamic imports here: https://github.com/NomicFoundation/hardhat/commit/16ae15642951ac324ef7093a3342f7cf3a2a49a4
+    npm install @nomicfoundation/hardhat-chai-matchers@2.0.3
+
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do
