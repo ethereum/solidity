@@ -301,6 +301,9 @@ public:
 	/// Format: [ { name: string, id: number, language: "Yul", contents: string }, ... ]
 	Json::Value generatedSources(std::string const& _contractName, bool _runtime = false) const;
 
+	/// @returns debug information in ethdebug format.
+	Json::Value debugInformation(std::string const& _contractName) const;
+
 	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
 	/// if the contract does not (yet) have bytecode.
 	virtual std::string const* sourceMapping(std::string const& _contractName) const override;

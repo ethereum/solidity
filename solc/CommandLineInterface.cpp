@@ -124,6 +124,7 @@ static std::string const g_strAst = "ast";
 static std::string const g_strBinary = "bin";
 static std::string const g_strBinaryRuntime = "bin-runtime";
 static std::string const g_strContracts = "contracts";
+static std::string const g_strDebug = "debug";
 static std::string const g_strFunDebug = "function-debug";
 static std::string const g_strFunDebugRuntime = "function-debug-runtime";
 static std::string const g_strGeneratedSources = "generated-sources";
@@ -975,6 +976,8 @@ void CommandLineInterface::handleCombinedJSON()
 				contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
 			if (m_options.compiler.combinedJsonRequests->natspecUser)
 				contractData[g_strNatspecUser] = m_compiler->natspecUser(contractName);
+			if (m_options.compiler.combinedJsonRequests->debug)
+				contractData[g_strDebug] = m_compiler->debugInformation(contractName);
 		}
 
 		if (m_assemblyStack->compilationSuccessful())
@@ -1311,6 +1314,8 @@ void CommandLineInterface::outputCompilationResults()
 			handleStorageLayout(contract);
 			handleNatspec(true, contract);
 			handleNatspec(false, contract);
+			if (m_options.output.debug)
+				handleDebug(contract);
 		} // end of contracts iteration
 	}
 
@@ -1322,6 +1327,26 @@ void CommandLineInterface::outputCompilationResults()
 			sout() << "Compiler run successful. No contracts to compile." << std::endl;
 		else
 			sout() << "Compiler run successful. No output generated." << std::endl;
+	}
+}
+
+void CommandLineInterface::handleDebug(std::string const& _contract)
+{
+	solAssert(m_assemblyStack);
+	solAssert(
+		CompilerInputModes.count(m_options.input.mode) == 1 ||
+		m_options.input.mode == frontend::InputMode::EVMAssemblerJSON
+	);
+
+	std::string debugInformation = jsonPrettyPrint(m_compiler->debugInformation(_contract));
+
+	if (!m_options.output.dir.empty())
+		createFile(m_assemblyStack->filesystemFriendlyName(_contract) + ".debug", debugInformation);
+	else
+	{
+		sout() << "Debug Information:" << std::endl;
+		sout() << debugInformation;
+		sout() << std::endl;
 	}
 }
 

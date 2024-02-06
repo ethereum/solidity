@@ -879,6 +879,14 @@ Json::Value CompilerStack::generatedSources(std::string const& _contractName, bo
 	});
 }
 
+Json::Value CompilerStack::debugInformation(std::string const& _contractName) const
+{
+	(void)_contractName;
+
+	Json::Value result = Json::objectValue;
+	return result;
+}
+
 std::string const* CompilerStack::sourceMapping(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)

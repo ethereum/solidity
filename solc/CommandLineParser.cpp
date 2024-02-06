@@ -92,6 +92,7 @@ static std::string const g_strOverwrite = "overwrite";
 static std::string const g_strRevertStrings = "revert-strings";
 static std::string const g_strStopAfter = "stop-after";
 static std::string const g_strParsing = "parsing";
+static std::string const g_strDebug = "debug";
 
 /// Possible arguments to for --revert-strings
 static std::set<std::string> const g_revertStringsArgs
@@ -760,6 +761,7 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose IPFS hash is stored on-chain.")
 		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables.")
+		(CompilerOutputs::componentName(&CompilerOutputs::debug).c_str(), "Output debug information.")
 	;
 	desc.add(outputComponents);
 
@@ -1211,6 +1213,8 @@ void CommandLineParser::processArgs()
 			solThrow(CommandLineValidationError, "Invalid option for --" + g_strEOFVersion + ": " + std::to_string(versionOption));
 		m_options.output.eofVersion = 1;
 	}
+
+	m_options.output.debug = m_args.count(g_strDebug);
 
 	if (m_args.count(g_strNoOptimizeYul) > 0 && m_args.count(g_strOptimizeYul) > 0)
 		solThrow(

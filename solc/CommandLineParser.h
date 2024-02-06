@@ -86,6 +86,7 @@ struct CompilerOutputs
 			{"devdoc", &CompilerOutputs::natspecDev},
 			{"metadata", &CompilerOutputs::metadata},
 			{"storage-layout", &CompilerOutputs::storageLayout},
+			{"debug", &CompilerOutputs::debug},
 		};
 		return components;
 	}
@@ -106,6 +107,7 @@ struct CompilerOutputs
 	bool natspecDev = false;
 	bool metadata = false;
 	bool storageLayout = false;
+	bool debug = false;
 };
 
 struct CombinedJsonRequests
@@ -135,6 +137,7 @@ struct CombinedJsonRequests
 			{"devdoc", &CombinedJsonRequests::natspecDev},
 			{"userdoc", &CombinedJsonRequests::natspecUser},
 			{"ast", &CombinedJsonRequests::ast},
+			{"debug", &CombinedJsonRequests::debug},
 		};
 		return components;
 	}
@@ -156,6 +159,7 @@ struct CombinedJsonRequests
 	bool natspecDev = false;
 	bool natspecUser = false;
 	bool ast = false;
+	bool debug = false;
 };
 
 struct CommandLineOptions
@@ -188,6 +192,7 @@ struct CommandLineOptions
 		std::optional<langutil::DebugInfoSelection> debugInfoSelection;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
 		std::optional<uint8_t> eofVersion;
+		bool debug = false;
 	} output;
 
 	struct
