@@ -8,7 +8,7 @@ contract C {
     }
 
     // To avoid dependency on exact length.
-    function f() public view returns (bool) { return address(this).code.length > 400; }
+    function f() public view returns (bool) { return address(this).code.length > 380; }
     function g() public view returns (uint) { return address(0).code.length; }
     function h() public view returns (uint) { return address(1).code.length; }
 }

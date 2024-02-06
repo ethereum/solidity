@@ -1,0 +1,51 @@
+Optimized IR:
+/// @use-src 0:"mcopy_string_literal_returned_from_function/input.sol"
+object "C_10" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize("C_10_deployed")
+            codecopy(_1, dataoffset("C_10_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:"mcopy_string_literal_returned_from_function/input.sol"
+    object "C_10_deployed" {
+        code {
+            {
+                let _1 := memoryguard(0x80)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    if eq(0xc2985578, shr(224, calldataload(0)))
+                    {
+                        if callvalue() { revert(0, 0) }
+                        if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
+                        let _2 := 64
+                        let newFreePtr := add(_1, _2)
+                        if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _1))
+                        {
+                            mstore(0, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(0, 0x24)
+                        }
+                        mstore(_2, newFreePtr)
+                        mstore(_1, 25)
+                        let _3 := add(_1, 0x20)
+                        mstore(_3, "MCOPY on Cancun vacation.")
+                        let memPos := mload(_2)
+                        mstore(memPos, 0x20)
+                        let length := mload(_1)
+                        mstore(add(memPos, 0x20), length)
+                        mcopy(add(memPos, _2), _3, length)
+                        mstore(add(add(memPos, length), _2), 0)
+                        return(memPos, add(sub(add(memPos, and(add(length, 31), not(31))), memPos), _2))
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        data ".metadata" hex""
+    }
+}
