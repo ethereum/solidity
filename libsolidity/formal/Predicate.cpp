@@ -316,11 +316,14 @@ std::string Predicate::formatSummaryCall(
 
 	auto const& params = fun->parameters();
 	solAssert(params.size() == functionArgsCex.size(), "");
+	bool paramNameInsteadOfValue = false;
 	for (unsigned i = 0; i < params.size(); ++i)
 		if (params.at(i) && functionArgsCex.at(i))
 			functionArgs.emplace_back(*functionArgsCex.at(i));
-		else
+		else {
+			paramNameInsteadOfValue = true;
 			functionArgs.emplace_back(params[i]->name());
+		}
 
 	std::string fName = fun->isConstructor() ? "constructor" :
 		fun->isFallback() ? "fallback" :
@@ -335,7 +338,11 @@ std::string Predicate::formatSummaryCall(
 		solAssert(fun->annotation().contract, "");
 		prefix = fun->annotation().contract->name() + ".";
 	}
-	return prefix + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")" + txModel;
+
+	std::string summary = prefix + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")" + txModel;
+	if (paramNameInsteadOfValue)
+		summary += " -- counterexample incomplete; parameter name used instead of value";
+	return summary;
 }
 
 std::vector<std::optional<std::string>> Predicate::summaryStateValues(std::vector<smtutil::Expression> const& _args) const
