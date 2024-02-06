@@ -131,14 +131,14 @@ private:
 	static evmc::Result resultWithGas(int64_t gas_limit, int64_t gas_required, bytes const& _data) noexcept;
 	static evmc::Result resultWithFailure() noexcept;
 
-	/// Store the accounts that have been created in the current transaction.
-	std::unordered_set<evmc::address> newlyCreatedAccounts;
-
 	evmc::VM& m_vm;
 	/// EVM version requested by the testing tool
 	langutil::EVMVersion m_evmVersion;
 	/// EVM version requested from EVMC (matches the above)
 	evmc_revision m_evmRevision;
+
+	/// Store the accounts that have been created in the current transaction.
+	std::unordered_set<evmc::address> m_newlyCreatedAccounts;
 
 	/// The part of the total cost of the current transaction that paid for the code deposits.
 	/// I.e. GAS_CODE_DEPOSIT times the total size of deployed code of all newly created contracts,
