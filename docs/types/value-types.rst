@@ -415,14 +415,6 @@ Members:
 .. note::
     Prior to version 0.8.0, ``byte`` used to be an alias for ``bytes1``.
 
-Dynamically-sized byte array
-----------------------------
-
-``bytes``:
-    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
-``string``:
-    Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
-
 .. index:: address, ! literal;address
 
 .. _address_literals:
