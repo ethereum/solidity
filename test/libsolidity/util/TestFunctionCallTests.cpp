@@ -250,6 +250,34 @@ BOOST_AUTO_TEST_CASE(format_failure_singleline)
 	BOOST_REQUIRE_EQUAL(test.format(), "// f(uint8): 1 -> FAILURE");
 }
 
+BOOST_AUTO_TEST_CASE(format_gas)
+{
+	FunctionCall call{
+		"f()",
+		FunctionValue{0},
+		FunctionCallArgs{},
+		FunctionCallExpectations{
+			std::vector<Parameter>{},
+			false, // failure
+			"some comment",
+			{
+				{"ir", 3245},
+				{"legacy", 5000},
+				{"legacy optimized", 0},
+			},
+		}
+	};
+	call.omitsArrow = false;
+
+	BOOST_REQUIRE_EQUAL(
+		TestFunctionCall(call).format(),
+		"// f() -> #some comment#\n"
+		"// gas ir: 3245\n"
+		"// gas legacy: 5000\n"
+		"// gas legacy optimized: 0"
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
