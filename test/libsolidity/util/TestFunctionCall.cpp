@@ -353,6 +353,16 @@ std::string formatGasDiff(std::optional<u256> const& _gasUsed, std::optional<u25
 	return fmt::format("{} ({:+}%)", difference.str(), percent);
 }
 
+// TODO: Convert this into a generic helper for getting optional form a map
+std::optional<u256> gasOrNullopt(std::map<std::string, u256> const& _map, std::string const& _key)
+{
+	auto it = _map.find(_key);
+	if (it == _map.end())
+		return std::nullopt;
+
+	return it->second;
+}
+
 }
 
 std::string TestFunctionCall::formatGasExpectations(
@@ -368,8 +378,8 @@ std::string TestFunctionCall::formatGasExpectations(
 
 		os << std::endl << _linePrefix << "// gas " << runType << ": " << gasUsed.str();
 		std::string gasDiff = formatGasDiff(
-			m_gasCosts.count(runType) > 0 ? std::make_optional<u256>(m_gasCosts.at(runType)) : std::nullopt,
-			m_call.expectations.gasUsed.count(runType) > 0 ? std::make_optional<u256>(m_call.expectations.gasUsed.at(runType)) : std::nullopt
+			gasOrNullopt(m_gasCosts, runType),
+			gasOrNullopt(m_call.expectations.gasUsed, runType)
 		);
 		if (_showDifference && !gasDiff.empty() && _useActualCost)
 			os << " [" << gasDiff << "]";
