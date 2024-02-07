@@ -21,6 +21,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <fmt/format.h>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -331,6 +332,23 @@ std::string TestFunctionCall::formatRawParameters(
 	return os.str();
 }
 
+namespace
+{
+
+std::string formatGasDiff(std::optional<u256> const& _gasUsed, std::optional<u256> const& _reference)
+{
+	if (!_reference.has_value() || !_gasUsed.has_value() || _gasUsed == _reference)
+		return "";
+
+	s256 difference = static_cast<s256>(*_gasUsed) - static_cast<s256>(*_reference);
+	int percent = static_cast<int>(
+		100.0 * (static_cast<double>(difference) / static_cast<double>(*_reference))
+	);
+	return fmt::format("{} ({:+}%)", difference.str(), percent);
+}
+
+}
+
 std::string TestFunctionCall::formatGasExpectations(
 	std::string const& _linePrefix,
 	bool _useActualCost,
@@ -342,24 +360,13 @@ std::string TestFunctionCall::formatGasExpectations(
 	{
 		soltestAssert(runType != "");
 
-		bool differentResults =
-			m_gasCosts.count(runType) > 0 &&
-			m_call.expectations.gasUsed.count(runType) > 0 &&
-			m_gasCosts.at(runType) != m_call.expectations.gasUsed.at(runType);
-
-		s256 difference = 0;
-		if (differentResults)
-			difference =
-				static_cast<s256>(m_gasCosts.at(runType)) -
-				static_cast<s256>(m_call.expectations.gasUsed.at(runType));
-		int percent = 0;
-		if (differentResults)
-			percent = static_cast<int>(
-				100.0 * (static_cast<double>(difference) / static_cast<double>(m_call.expectations.gasUsed.at(runType)))
-			);
-		os << std::endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
-		if (_showDifference && differentResults && _useActualCost)
-			os << " [" << std::showpos << difference << " (" << percent << "%)]";
+		os << std::endl << _linePrefix << "// gas " << runType << ": " << gasUsed.str();
+		std::string gasDiff = formatGasDiff(
+			m_gasCosts.count(runType) > 0 ? std::make_optional<u256>(m_gasCosts.at(runType)) : std::nullopt,
+			m_call.expectations.gasUsed.count(runType) > 0 ? std::make_optional<u256>(m_call.expectations.gasUsed.at(runType)) : std::nullopt
+		);
+		if (_showDifference && !gasDiff.empty() && _useActualCost)
+			os << " [" << gasDiff << "]";
 	}
 	return os.str();
 }
