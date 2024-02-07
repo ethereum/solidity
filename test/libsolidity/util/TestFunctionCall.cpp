@@ -340,7 +340,13 @@ std::string formatGasDiff(std::optional<u256> const& _gasUsed, std::optional<u25
 	if (!_reference.has_value() || !_gasUsed.has_value() || _gasUsed == _reference)
 		return "";
 
+	solUnimplementedAssert(*_gasUsed < u256(1) << 255);
+	solUnimplementedAssert(*_reference < u256(1) << 255);
 	s256 difference = static_cast<s256>(*_gasUsed) - static_cast<s256>(*_reference);
+
+	if (*_reference == 0)
+		return fmt::format("{}", difference.str());
+
 	int percent = static_cast<int>(
 		100.0 * (static_cast<double>(difference) / static_cast<double>(*_reference))
 	);
