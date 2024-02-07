@@ -339,27 +339,28 @@ std::string TestFunctionCall::formatGasExpectations(
 {
 	std::stringstream os;
 	for (auto const& [runType, gasUsed]: (_useActualCost ? m_gasCosts : m_call.expectations.gasUsed))
-		if (!runType.empty())
-		{
-			bool differentResults =
-				m_gasCosts.count(runType) > 0 &&
-				m_call.expectations.gasUsed.count(runType) > 0 &&
-				m_gasCosts.at(runType) != m_call.expectations.gasUsed.at(runType);
+	{
+		soltestAssert(runType != "");
 
-			s256 difference = 0;
-			if (differentResults)
-				difference =
-					static_cast<s256>(m_gasCosts.at(runType)) -
-					static_cast<s256>(m_call.expectations.gasUsed.at(runType));
-			int percent = 0;
-			if (differentResults)
-				percent = static_cast<int>(
-					100.0 * (static_cast<double>(difference) / static_cast<double>(m_call.expectations.gasUsed.at(runType)))
-				);
-			os << std::endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
-			if (_showDifference && differentResults && _useActualCost)
-				os << " [" << std::showpos << difference << " (" << percent << "%)]";
-		}
+		bool differentResults =
+			m_gasCosts.count(runType) > 0 &&
+			m_call.expectations.gasUsed.count(runType) > 0 &&
+			m_gasCosts.at(runType) != m_call.expectations.gasUsed.at(runType);
+
+		s256 difference = 0;
+		if (differentResults)
+			difference =
+				static_cast<s256>(m_gasCosts.at(runType)) -
+				static_cast<s256>(m_call.expectations.gasUsed.at(runType));
+		int percent = 0;
+		if (differentResults)
+			percent = static_cast<int>(
+				100.0 * (static_cast<double>(difference) / static_cast<double>(m_call.expectations.gasUsed.at(runType)))
+			);
+		os << std::endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
+		if (_showDifference && differentResults && _useActualCost)
+			os << " [" << std::showpos << difference << " (" << percent << "%)]";
+	}
 	return os.str();
 }
 
