@@ -40,14 +40,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::yul;
 using namespace solidity::util;
 
 namespace solidity::phaser::test
 {
 
-vector<string> const ChrOmOsoMeSteps{
+std::vector<std::string> const ChrOmOsoMeSteps{
 	ConditionalSimplifier::name,
 	FunctionHoister::name,
 	UnusedAssignEliminator::name,
@@ -76,10 +75,10 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_use_every_possible_step_with_the_same_pro
 	constexpr int samplesPerStep = 500;
 	constexpr double relativeTolerance = 0.02;
 
-	map<string, size_t> stepIndices = enumerateOptmisationSteps();
+	std::map<std::string, size_t> stepIndices = enumerateOptmisationSteps();
 	auto chromosome = Chromosome::makeRandom(stepIndices.size() * samplesPerStep);
 
-	vector<size_t> samples;
+	std::vector<size_t> samples;
 	for (auto& step: chromosome.optimisationSteps())
 		samples.push_back(stepIndices.at(step));
 
@@ -97,7 +96,7 @@ BOOST_AUTO_TEST_CASE(constructor_should_store_genes)
 
 BOOST_AUTO_TEST_CASE(constructor_should_store_optimisation_steps)
 {
-	vector<string> steps = {
+	std::vector<std::string> steps = {
 		StructuralSimplifier::name,
 		BlockFlattener::name,
 		UnusedPruner::name,
@@ -108,7 +107,7 @@ BOOST_AUTO_TEST_CASE(constructor_should_store_optimisation_steps)
 
 BOOST_AUTO_TEST_CASE(constructor_should_allow_duplicate_steps)
 {
-	vector<string> steps = {
+	std::vector<std::string> steps = {
 		StructuralSimplifier::name,
 		StructuralSimplifier::name,
 		BlockFlattener::name,
@@ -131,7 +130,7 @@ BOOST_AUTO_TEST_CASE(constructor_should_allow_genes_that_do_not_correspond_to_an
 
 BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_string_representation)
 {
-	vector<string> allSteps;
+	std::vector<std::string> allSteps;
 	for (auto const& step: OptimiserSuite::allSteps())
 		allSteps.push_back(step.first);
 	Chromosome chromosome(allSteps);
@@ -152,8 +151,8 @@ BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_pr
 	constexpr int samplesPerStep = 500;
 	constexpr double relativeTolerance = 0.02;
 
-	map<string, size_t> stepIndices = enumerateOptmisationSteps();
-	vector<size_t> samples;
+	std::map<std::string, size_t> stepIndices = enumerateOptmisationSteps();
+	std::vector<size_t> samples;
 	for (size_t i = 0; i <= stepIndices.size() * samplesPerStep; ++i)
 		samples.push_back(stepIndices.at(Chromosome::randomOptimisationStep()));
 
@@ -172,7 +171,7 @@ BOOST_AUTO_TEST_CASE(stepsToGenes_should_translate_optimisation_step_names_to_ab
 
 BOOST_AUTO_TEST_CASE(genesToSteps_should_translate_optimisation_step_abbreviations_to_names)
 {
-	BOOST_TEST(Chromosome::genesToSteps("") == vector<string>{});
+	BOOST_TEST(Chromosome::genesToSteps("") == std::vector<std::string>{});
 	BOOST_TEST(Chromosome::genesToSteps("ChrOmOsoMe") == ChrOmOsoMeSteps);
 }
 
