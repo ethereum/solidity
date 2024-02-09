@@ -17,6 +17,9 @@ contract C {
 }
 // ----
 // f(), 2000 ether -> true
-// gas irOptimized: 119441
-// gas legacy: 122621
-// gas legacyOptimized: 122490
+// gas irOptimized: 117641
+// gas irOptimized code: 1800
+// gas legacy: 117821
+// gas legacy code: 4800
+// gas legacyOptimized: 117690
+// gas legacyOptimized code: 4800

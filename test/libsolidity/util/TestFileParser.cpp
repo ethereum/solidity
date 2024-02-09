@@ -103,7 +103,7 @@ std::vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctio
 
 						std::map<std::string, u256>& gasExpectationMap = (isCodeDepositCost ?
 							calls.back().expectations.gasUsedForCodeDeposit :
-							calls.back().expectations.gasUsed
+							calls.back().expectations.gasUsedExcludingCode
 						);
 						if (gasExpectationMap.count(runType) > 0)
 							throw TestParserError("Gas usage expectation set multiple times.");
@@ -207,9 +207,9 @@ std::vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctio
 	{
 		// Ensure that each specified gas expectation has both components to simplify working with them.
 		for (auto const& [runType, gas]: call.expectations.gasUsedForCodeDeposit)
-			call.expectations.gasUsed.try_emplace({runType, 0});
+			call.expectations.gasUsedExcludingCode.try_emplace({runType, 0});
 
-		for (auto const& [runType, gas]: call.expectations.gasUsed)
+		for (auto const& [runType, gas]: call.expectations.gasUsedExcludingCode)
 			call.expectations.gasUsedForCodeDeposit.try_emplace({runType, 0});
 	}
 

@@ -215,11 +215,11 @@ struct FunctionCallExpectations
 			raw += param.rawBytes;
 		return raw;
 	}
-	/// Gas used by function call
-	/// Keys represent all distinct combinations of compilation settings that affect produced
+	/// Gas used by function call minus the portion spent on code deposits (which is tracked
+	/// separately, in @a gasUsedForCodeDeposit).
 	/// bytecode (and therefore the cost), except for EVM version. E.g. IR codegen without
 	/// optimization legacy codegen with optimization.
-	std::map<std::string, u256> gasUsed;
+	std::map<std::string, u256> gasUsedExcludingCode;
 
 	/// The portion of @a gasUsed spent on code deposits of newly created contracts.
 	/// May exceed @a gasUsed in rare corner cases due to refunds.

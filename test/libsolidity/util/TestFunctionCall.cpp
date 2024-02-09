@@ -377,20 +377,20 @@ std::string TestFunctionCall::formatGasExpectations(
 	using ranges::views::keys;
 	using ranges::views::set_symmetric_difference;
 
-	soltestAssert(set_symmetric_difference(m_codeDepositGasCosts | keys, m_gasCosts | keys).empty());
-	soltestAssert(set_symmetric_difference(m_call.expectations.gasUsedForCodeDeposit | keys, m_call.expectations.gasUsed | keys).empty());
+	soltestAssert(set_symmetric_difference(m_codeDepositGasCosts | keys, m_gasCostsExcludingCode | keys).empty());
+	soltestAssert(set_symmetric_difference(m_call.expectations.gasUsedForCodeDeposit | keys, m_call.expectations.gasUsedExcludingCode | keys).empty());
 
 	std::stringstream os;
-	for (auto const& [runType, gasUsed]: (_useActualCost ? m_gasCosts : m_call.expectations.gasUsed))
+	for (auto const& [runType, gasUsedExcludingCode]: (_useActualCost ? m_gasCostsExcludingCode : m_call.expectations.gasUsedExcludingCode))
 	{
 		soltestAssert(runType != "");
 
 		u256 gasUsedForCodeDeposit = (_useActualCost ? m_codeDepositGasCosts : m_call.expectations.gasUsedForCodeDeposit).at(runType);
 
-		os << std::endl << _linePrefix << "// gas " << runType << ": " << gasUsed.str();
+		os << std::endl << _linePrefix << "// gas " << runType << ": " << gasUsedExcludingCode.str();
 		std::string gasDiff = formatGasDiff(
-			gasOrNullopt(m_gasCosts, runType),
-			gasOrNullopt(m_call.expectations.gasUsed, runType)
+			gasOrNullopt(m_gasCostsExcludingCode, runType),
+			gasOrNullopt(m_call.expectations.gasUsedExcludingCode, runType)
 		);
 		if (_showDifference && !gasDiff.empty() && _useActualCost)
 			os << " [" << gasDiff << "]";

@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(format_gas_with_code_deposit)
 			"some comment",
 			{
 				{"ir", 0}, // Zero costs are shown
-				{"legacy", 5000},
+				{"legacy", 4875},
 				{"legacy optimized", 300},
 			},
 			{
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(format_gas_with_code_deposit)
 		TestFunctionCall(call).format(),
 		"// f() -> #some comment#\n"
 		"// gas ir: 0\n"
-		"// gas legacy: 5000\n"
+		"// gas legacy: 4875\n"
 		"// gas legacy code: 125\n"
 		"// gas legacy optimized: 300"
 	);

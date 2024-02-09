@@ -570,7 +570,7 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
 
 	soltestAssert(
-		io_test.call().expectations.gasUsed.count(setting) ==
+		io_test.call().expectations.gasUsedExcludingCode.count(setting) ==
 		io_test.call().expectations.gasUsedForCodeDeposit.count(setting)
 	);
 
@@ -584,19 +584,22 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 		!m_enforceGasCost ||
 		m_gasUsed < m_enforceGasCostMinValue ||
 		m_gasUsed >= InitialGas ||
-		(setting == "ir" && io_test.call().expectations.gasUsed.count(setting) == 0) ||
+		(setting == "ir" && io_test.call().expectations.gasUsedExcludingCode.count(setting) == 0) ||
 		io_test.call().kind == FunctionCall::Kind::Builtin
 	)
 		return true;
 
 	solAssert(!m_runWithABIEncoderV1Only, "");
 
-	io_test.setGasCost(setting, m_gasUsed);
+	// NOTE: Cost excluding code is unlikely to be negative but it may still be possible due to refunds.
+	// We'll deal with it when we actually have a test case like that.
+	solUnimplementedAssert(m_gasUsed >= m_gasUsedForCodeDeposit);
+	io_test.setGasCostExcludingCode(setting, m_gasUsed - m_gasUsedForCodeDeposit);
 	io_test.setCodeDepositGasCost(setting, m_gasUsedForCodeDeposit);
 
 	return
-		io_test.call().expectations.gasUsed.count(setting) > 0 &&
-		m_gasUsed == io_test.call().expectations.gasUsed.at(setting) &&
+		io_test.call().expectations.gasUsedExcludingCode.count(setting) > 0 &&
+		m_gasUsed - m_gasUsedForCodeDeposit == io_test.call().expectations.gasUsedExcludingCode.at(setting) &&
 		m_gasUsedForCodeDeposit == io_test.call().expectations.gasUsedForCodeDeposit.at(setting);
 }
 
