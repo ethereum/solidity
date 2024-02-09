@@ -48,7 +48,7 @@ library has to be updated by an external oracle.
     The suffix ``years`` has been removed in version 0.5.0 due to the reasons above.
 
 These suffixes cannot be applied to variables. For example, if you want to
-interpret a function parameter in days, you can in the following way:
+interpret a function parameter in days, you can do it in the following way:
 
 .. code-block:: solidity
 
