@@ -191,6 +191,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 	auto const gasRefund = std::min(u256(result.gas_refund), totalGasUsed / refundRatio);
 
 	m_gasUsed = totalGasUsed - gasRefund;
+	m_gasUsedForCodeDeposit = m_evmcHost->totalCodeDepositGas();
 	m_transactionSuccessful = (result.status_code == EVMC_SUCCESS);
 
 	if (m_showMessages)
@@ -199,6 +200,7 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		std::cout << " result:                    " << static_cast<size_t>(result.status_code) << std::endl;
 		std::cout << " gas used:                  " << m_gasUsed.str() << std::endl;
 		std::cout << " gas used (without refund): " << totalGasUsed.str() << std::endl;
+		std::cout << "     code deposits only:    " << m_gasUsedForCodeDeposit.str() << std::endl;
 		std::cout << " gas refund (total):        " << result.gas_refund << std::endl;
 		std::cout << " gas refund (bound):        " << gasRefund.str() << std::endl;
 	}

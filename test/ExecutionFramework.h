@@ -303,7 +303,13 @@ protected:
 	util::h160 m_sender = account(0);
 	util::h160 m_contractAddress;
 	bytes m_output;
+
+	/// Total gas used by the transaction, after refund.
 	u256 m_gasUsed;
+
+	/// The portion of @a m_gasUsed spent on code deposits of newly created contracts.
+	/// May exceed @a m_gasUsed in rare corner cases due to refunds.
+	u256 m_gasUsedForCodeDeposit;
 };
 
 #define ABI_CHECK(result, expectation) do { \
