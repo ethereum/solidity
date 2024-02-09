@@ -84,18 +84,31 @@ std::vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctio
 							BOOST_THROW_EXCEPTION(TestParserError("Expected function call before gas usage filter."));
 
 						std::string runType = m_scanner.currentLiteral();
-						if (std::set<std::string>{"ir", "irOptimized", "legacy", "legacyOptimized"}.count(runType) > 0)
-						{
-							m_scanner.scanNextToken();
-							expect(Token::Colon);
-							if (calls.back().expectations.gasUsed.count(runType) > 0)
-								throw TestParserError("Gas usage expectation set multiple times.");
-							calls.back().expectations.gasUsed[runType] = u256(parseDecimalNumber());
-						}
-						else
+						if (std::set<std::string>{"ir", "irOptimized", "legacy", "legacyOptimized"}.count(runType) == 0)
 							BOOST_THROW_EXCEPTION(TestParserError(
 								"Expected \"ir\", \"irOptimized\", \"legacy\", or \"legacyOptimized\"."
 							));
+						m_scanner.scanNextToken();
+
+						bool isCodeDepositCost = false;
+						if (accept(Token::Identifier))
+						{
+							if (m_scanner.currentLiteral() != "code")
+								BOOST_THROW_EXCEPTION(TestParserError("Expected \"code\" or \":\"."));
+							isCodeDepositCost = true;
+							m_scanner.scanNextToken();
+						}
+
+						expect(Token::Colon);
+
+						std::map<std::string, u256>& gasExpectationMap = (isCodeDepositCost ?
+							calls.back().expectations.gasUsedForCodeDeposit :
+							calls.back().expectations.gasUsed
+						);
+						if (gasExpectationMap.count(runType) > 0)
+							throw TestParserError("Gas usage expectation set multiple times.");
+
+						gasExpectationMap[runType] = u256(parseDecimalNumber());
 					}
 					else
 					{
@@ -189,6 +202,17 @@ std::vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctio
 			}
 		}
 	}
+
+	for (FunctionCall& call: calls)
+	{
+		// Ensure that each specified gas expectation has both components to simplify working with them.
+		for (auto const& [runType, gas]: call.expectations.gasUsedForCodeDeposit)
+			call.expectations.gasUsed.try_emplace({runType, 0});
+
+		for (auto const& [runType, gas]: call.expectations.gasUsed)
+			call.expectations.gasUsedForCodeDeposit.try_emplace({runType, 0});
+	}
+
 	return calls;
 }
 

@@ -22,6 +22,9 @@
 #include <boost/algorithm/string.hpp>
 
 #include <fmt/format.h>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/set_algorithm.hpp>
+
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -371,10 +374,18 @@ std::string TestFunctionCall::formatGasExpectations(
 	bool _showDifference
 ) const
 {
+	using ranges::views::keys;
+	using ranges::views::set_symmetric_difference;
+
+	soltestAssert(set_symmetric_difference(m_codeDepositGasCosts | keys, m_gasCosts | keys).empty());
+	soltestAssert(set_symmetric_difference(m_call.expectations.gasUsedForCodeDeposit | keys, m_call.expectations.gasUsed | keys).empty());
+
 	std::stringstream os;
 	for (auto const& [runType, gasUsed]: (_useActualCost ? m_gasCosts : m_call.expectations.gasUsed))
 	{
 		soltestAssert(runType != "");
+
+		u256 gasUsedForCodeDeposit = (_useActualCost ? m_codeDepositGasCosts : m_call.expectations.gasUsedForCodeDeposit).at(runType);
 
 		os << std::endl << _linePrefix << "// gas " << runType << ": " << gasUsed.str();
 		std::string gasDiff = formatGasDiff(
@@ -383,6 +394,17 @@ std::string TestFunctionCall::formatGasExpectations(
 		);
 		if (_showDifference && !gasDiff.empty() && _useActualCost)
 			os << " [" << gasDiff << "]";
+
+		if (gasUsedForCodeDeposit != 0)
+		{
+			os << std::endl << _linePrefix << "// gas " << runType << " code: " << gasUsedForCodeDeposit.str();
+			std::string codeGasDiff = formatGasDiff(
+				gasOrNullopt(m_codeDepositGasCosts, runType),
+				gasOrNullopt(m_call.expectations.gasUsedForCodeDeposit, runType)
+			);
+			if (_showDifference && !codeGasDiff.empty() && _useActualCost)
+				os << " [" << codeGasDiff << "]";
+			}
 	}
 	return os.str();
 }

@@ -220,6 +220,11 @@ struct FunctionCallExpectations
 	/// bytecode (and therefore the cost), except for EVM version. E.g. IR codegen without
 	/// optimization legacy codegen with optimization.
 	std::map<std::string, u256> gasUsed;
+
+	/// The portion of @a gasUsed spent on code deposits of newly created contracts.
+	/// May exceed @a gasUsed in rare corner cases due to refunds.
+	/// Keys must always match @a gasUsedExcludingCode.
+	std::map<std::string, u256> gasUsedForCodeDeposit;
 };
 
 /**

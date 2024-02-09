@@ -569,6 +569,11 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 		(_compileViaYul ? "ir"s : "legacy"s) +
 		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
 
+	soltestAssert(
+		io_test.call().expectations.gasUsed.count(setting) ==
+		io_test.call().expectations.gasUsedForCodeDeposit.count(setting)
+	);
+
 	// We don't check gas if enforce gas cost is not active
 	// or test is run with abi encoder v1 only
 	// or gas used less than threshold for enforcing feature
@@ -587,9 +592,12 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 	solAssert(!m_runWithABIEncoderV1Only, "");
 
 	io_test.setGasCost(setting, m_gasUsed);
+	io_test.setCodeDepositGasCost(setting, m_gasUsedForCodeDeposit);
+
 	return
 		io_test.call().expectations.gasUsed.count(setting) > 0 &&
-		m_gasUsed == io_test.call().expectations.gasUsed.at(setting);
+		m_gasUsed == io_test.call().expectations.gasUsed.at(setting) &&
+		m_gasUsedForCodeDeposit == io_test.call().expectations.gasUsedForCodeDeposit.at(setting);
 }
 
 void SemanticTest::printSource(std::ostream& _stream, std::string const& _linePrefix, bool _formatted) const

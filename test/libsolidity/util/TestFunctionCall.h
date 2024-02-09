@@ -51,7 +51,11 @@ public:
 		ExpectedValuesActualGas
 	};
 
-	TestFunctionCall(FunctionCall _call): m_call(std::move(_call)), m_gasCosts(m_call.expectations.gasUsed) {}
+	TestFunctionCall(FunctionCall _call):
+		m_call(std::move(_call)),
+		m_gasCosts(m_call.expectations.gasUsed),
+		m_codeDepositGasCosts(m_call.expectations.gasUsedForCodeDeposit)
+	{}
 
 	/// Formats this function call test and applies the format that was detected during parsing.
 	/// _renderMode determines the source of values to be inserted into the updated test expectations.
@@ -94,6 +98,7 @@ public:
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
 	void setGasCost(std::string const& _runType, u256 const& _gasCost) { m_gasCosts[_runType] = _gasCost; }
+	void setCodeDepositGasCost(std::string const& _runType, u256 const& _gasCost) { m_codeDepositGasCosts[_runType] = _gasCost; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
 	void setSideEffects(std::vector<std::string> _sideEffects) { m_call.actualSideEffects = _sideEffects; }
 
@@ -143,6 +148,8 @@ private:
 	bytes m_rawBytes = bytes{};
 	/// Actual gas costs
 	std::map<std::string, u256> m_gasCosts;
+	/// Actual code deposit gas costs
+	std::map<std::string, u256> m_codeDepositGasCosts;
 	/// Transaction status of the actual call. False in case of a REVERT or any other failure.
 	bool m_failure = true;
 	/// JSON object which holds the contract ABI and that is used to set the output formatting

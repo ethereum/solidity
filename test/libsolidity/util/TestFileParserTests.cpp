@@ -1079,6 +1079,11 @@ BOOST_AUTO_TEST_CASE(gas)
 		{"legacy", 5000},
 		{"legacyOptimized", 0},
 	}));
+	BOOST_TEST(calls[0].expectations.gasUsedForCodeDeposit == (std::map<std::string, u256>{
+		{"ir", 0},
+		{"legacy", 0},
+		{"legacyOptimized", 0},
+	}));
 }
 
 BOOST_AUTO_TEST_CASE(gas_before_call)
@@ -1109,6 +1114,103 @@ BOOST_AUTO_TEST_CASE(gas_duplicate_run_type)
 	)";
 	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
+
+BOOST_AUTO_TEST_CASE(gas_with_code_deposit_cost)
+{
+	char const* source = R"(
+		// f() ->
+		// gas legacyOptimized code: 1
+		// gas ir: 13000
+		// gas irOptimized: 6666
+		// gas irOptimized code: 666
+		// gas legacy code: 0
+		// gas legacyOptimized: 2
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	BOOST_REQUIRE_EQUAL(calls[0].expectations.failure, false);
+	BOOST_TEST(calls[0].expectations.gasUsed == (std::map<std::string, u256>{
+		{"ir", 13000},
+		{"irOptimized", 6666},
+		{"legacy", 0},
+		{"legacyOptimized", 2},
+	}));
+	BOOST_TEST(calls[0].expectations.gasUsedForCodeDeposit == (std::map<std::string, u256>{
+		{"ir", 0},
+		{"irOptimized", 666},
+		{"legacy", 0},
+		{"legacyOptimized", 1},
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(gas_with_code_deposit_cost_invalid_suffix)
+{
+	char const* source = R"(
+		// f() ->
+		// gas ir data: 3245
+	)";
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
+}
+
+BOOST_AUTO_TEST_CASE(gas_with_code_deposit_cost_tokens_after_suffix)
+{
+	char const* source = R"(
+		// f() ->
+		// gas ir code code: 3245
+	)";
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
+}
+
+BOOST_AUTO_TEST_CASE(gas_with_code_deposit_cost_double_code_gas)
+{
+	char const* source = R"(
+		// f() ->
+		// gas ir: 3245
+		// gas ir code: 1
+		// gas ir code: 1
+	)";
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
+}
+
+BOOST_AUTO_TEST_CASE(gas_with_code_deposit_cost_negative_non_code_cost)
+{
+	// NOTE: This arrangement is unlikely but may still be possible due to refunds.
+	char const* source = R"(
+		// f() ->
+		// gas ir: 10
+		// gas ir code: 20
+	)";
+	auto const calls = parse(source);
+	BOOST_REQUIRE_EQUAL(calls.size(), 1);
+	BOOST_REQUIRE_EQUAL(calls[0].expectations.failure, false);
+	BOOST_TEST(calls[0].expectations.gasUsed == (std::map<std::string, u256>{
+		{"ir", 10},
+	}));
+	BOOST_TEST(calls[0].expectations.gasUsedForCodeDeposit == (std::map<std::string, u256>{
+		{"ir", 20},
+	}));
+}
+
+BOOST_AUTO_TEST_CASE(gas_with_code_deposit_cost_negative_total_cost)
+{
+	char const* source = R"(
+		// f() ->
+		// gas ir: -10
+		// gas ir code: 20
+	)";
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
+}
+
+BOOST_AUTO_TEST_CASE(gas_with_code_deposit_cost_negative_code_cost)
+{
+	char const* source = R"(
+		// f() ->
+		// gas ir: 20
+		// gas ir code: -10
+	)";
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
