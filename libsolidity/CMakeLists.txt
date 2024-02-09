@@ -215,4 +215,4 @@ set(sources
 )
 
 add_library(solidity ${sources})
-target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost fmt::fmt-header-only Threads::Threads)
+target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil ethdebug Boost::boost fmt::fmt-header-only Threads::Threads)

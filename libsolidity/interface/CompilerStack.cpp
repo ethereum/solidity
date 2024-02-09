@@ -84,6 +84,8 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
 
+#include <libethdebug/ethdebug.h>
+
 #include <json/json.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -882,8 +884,19 @@ Json::Value CompilerStack::generatedSources(std::string const& _contractName, bo
 Json::Value CompilerStack::debugInformation(std::string const& _contractName) const
 {
 	(void)_contractName;
-
 	Json::Value result = Json::objectValue;
+	if (m_stackState == CompilationSuccessful)
+	{
+		Json::Value types = Json::objectValue;
+		ContractDefinition const& contract = contractDefinition(_contractName);
+		for (auto const& _enum : contract.definedEnums())
+			types[_enum->name()] = ethdebug::toJson(_enum);
+		for (auto const& _struct : contract.definedStructs())
+			types[_struct->name()] = ethdebug::toJson(_struct);
+		for (auto const& _function : contract.definedFunctions())
+			types[_function->name()] = ethdebug::toJson(_function);
+		result["types"] = types;
+	}
 	return result;
 }
 
