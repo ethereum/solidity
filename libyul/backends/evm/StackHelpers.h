@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
+#include <libyul/backends/evm/StackShuffle.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/Visitor.h>
@@ -55,69 +56,23 @@ inline std::string stackToString(Stack const& _stack)
 	return result;
 }
 
-
-// Abstraction of stack shuffling operations. Can be defined as actual concept once we switch to C++20.
-// Used as an interface for the stack shuffler below.
-// The shuffle operation class is expected to internally keep track of a current stack layout (the "source layout")
-// that the shuffler is supposed to shuffle to a fixed target stack layout.
-// The shuffler works iteratively. At each iteration it instantiates an instance of the shuffle operations and
-// queries it for various information about the current source stack layout and the target layout, as described
-// in the interface below.
-// Based on that information the shuffler decides which is the next optimal operation to perform on the stack
-// and calls the corresponding entry point in the shuffling operations (swap, pushOrDupTarget or pop).
-/*
-template<typename ShuffleOperations>
-concept ShuffleOperationConcept = requires(ShuffleOperations ops, size_t sourceOffset, size_t targetOffset, size_t depth) {
-	// Returns true, iff the current slot at sourceOffset in source layout is a suitable slot at targetOffset.
-	{ ops.isCompatible(sourceOffset, targetOffset) } -> std::convertible_to<bool>;
-	// Returns true, iff the slots at the two given source offsets are identical.
-	{ ops.sourceIsSame(sourceOffset, sourceOffset) } -> std::convertible_to<bool>;
-	// Returns a positive integer n, if the slot at the given source offset needs n more copies.
-	// Returns a negative integer -n, if the slot at the given source offsets occurs n times too many.
-	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given source offset
-	// matches the desired amount of occurrences in the target.
-	{ ops.sourceMultiplicity(sourceOffset) } -> std::convertible_to<int>;
-	// Returns a positive integer n, if the slot at the given target offset needs n more copies.
-	// Returns a negative integer -n, if the slot at the given target offsets occurs n times too many.
-	// Returns zero if the amount of occurrences, in the current source layout, of the slot at the given target offset
-	// matches the desired amount of occurrences in the target.
-	{ ops.targetMultiplicity(targetOffset) } -> std::convertible_to<int>;
-	// Returns true, iff any slot is compatible with the given target offset.
-	{ ops.targetIsArbitrary(targetOffset) } -> std::convertible_to<bool>;
-	// Returns the number of slots in the source layout.
-	{ ops.sourceSize() } -> std::convertible_to<size_t>;
-	// Returns the number of slots in the target layout.
-	{ ops.targetSize() } -> std::convertible_to<size_t>;
-	// Swaps the top most slot in the source with the slot `depth` slots below the top.
-	// In terms of EVM opcodes this is supposed to be a `SWAP<depth>`.
-	// In terms of vectors this is supposed to be `std::swap(source.at(source.size() - depth - 1, source.top))`.
-	{ ops.swap(depth) };
-	// Pops the top most slot in the source, i.e. the slot at offset ops.sourceSize() - 1.
-	// In terms of EVM opcodes this is `POP`.
-	// In terms of vectors this is `source.pop();`.
-	{ ops.pop() };
-	// Dups or pushes the slot that is supposed to end up at the given target offset.
-	{ ops.pushOrDupTarget(targetOffset) };
-};
-*/
+// TODO: move Shuffler to StackShuffle.h
 /// Helper class that can perform shuffling of a source stack layout to a target stack layout via
 /// abstracted shuffle operations.
-template</*ShuffleOperationConcept*/ typename ShuffleOperations>
 class Shuffler
 {
 public:
-	/// Executes the stack shuffling operations. Instantiates an instance of ShuffleOperations
-	/// in each iteration. Each iteration performs exactly one operation that modifies the stack.
+	/// Executes the stack shuffling operations.
+	/// Each iteration performs exactly one operation that modifies the stack.
 	/// After `shuffle`, source and target have the same size and all slots in the source layout are
 	/// compatible with the slots at the same target offset.
-	template<typename... Args>
-	static void shuffle(Args&&... args)
+	static void shuffle(ShuffleOperations& _ops)
 	{
 		bool needsMoreShuffling = true;
 		// The shuffling algorithm should always terminate in polynomial time, but we provide a limit
 		// in case it does not terminate due to a bug.
 		size_t iterationCount = 0;
-		while (iterationCount < 1000 && (needsMoreShuffling = shuffleStep(std::forward<Args>(args)...)))
+		while (iterationCount < 1000 && (needsMoreShuffling = shuffleStep(_ops)))
 			++iterationCount;
 		yulAssert(!needsMoreShuffling, "Could not create stack layout after 1000 iterations.");
 	}
@@ -210,165 +165,164 @@ private:
 		return false;
 	}
 	/// Performs a single stack operation, transforming the source layout closer to the target layout.
-	template<typename... Args>
-	static bool shuffleStep(Args&&... args)
+	static bool shuffleStep(ShuffleOperations& _ops)
 	{
-		ShuffleOperations ops{std::forward<Args>(args)...};
+		_ops.updateMultiplicity();
 
 		// All source slots are final.
 		if (ranges::all_of(
-			ranges::views::iota(0u, ops.sourceSize()),
-			[&](size_t _index) { return ops.isCompatible(_index, _index); }
+			ranges::views::iota(0u, _ops.sourceSize()),
+			[&](size_t _index) { return _ops.isCompatible(_index, _index); }
 		))
 		{
 			// Bring up all remaining target slots, if any, or terminate otherwise.
-			if (ops.sourceSize() < ops.targetSize())
+			if (_ops.sourceSize() < _ops.targetSize())
 			{
-				if (!dupDeepSlotIfRequired(ops))
-					yulAssert(bringUpTargetSlot(ops, ops.sourceSize()), "");
+				if (!dupDeepSlotIfRequired(_ops))
+					yulAssert(bringUpTargetSlot(_ops, _ops.sourceSize()), "");
 				return true;
 			}
 			return false;
 		}
 
-		size_t sourceTop = ops.sourceSize() - 1;
+		size_t sourceTop = _ops.sourceSize() - 1;
 		// If we no longer need the current stack top, we pop it, unless we need an arbitrary slot at this position
 		// in the target.
 		if (
-			ops.sourceMultiplicity(sourceTop) < 0 &&
-			!ops.targetIsArbitrary(sourceTop)
+			_ops.sourceMultiplicity(sourceTop) < 0 &&
+			!_ops.targetIsArbitrary(sourceTop)
 		)
 		{
-			ops.pop();
+			_ops.pop();
 			return true;
 		}
 
-		yulAssert(ops.targetSize() > 0, "");
+		yulAssert(_ops.targetSize() > 0, "");
 
 		// If the top is not supposed to be exactly what is on top right now, try to find a lower position to swap it to.
-		if (!ops.isCompatible(sourceTop, sourceTop) || ops.targetIsArbitrary(sourceTop))
-			for (size_t offset: ranges::views::iota(0u, std::min(ops.sourceSize(), ops.targetSize())))
+		if (!_ops.isCompatible(sourceTop, sourceTop) || _ops.targetIsArbitrary(sourceTop))
+			for (size_t offset: ranges::views::iota(0u, std::min(_ops.sourceSize(), _ops.targetSize())))
 				// It makes sense to swap to a lower position, if
 				if (
-					!ops.isCompatible(offset, offset) && // The lower slot is not already in position.
-					!ops.sourceIsSame(offset, sourceTop) && // We would not just swap identical slots.
-					ops.isCompatible(sourceTop, offset) // The lower position wants to have this slot.
+					!_ops.isCompatible(offset, offset) && // The lower slot is not already in position.
+					!_ops.sourceIsSame(offset, sourceTop) && // We would not just swap identical slots.
+					_ops.isCompatible(sourceTop, offset) // The lower position wants to have this slot.
 				)
 				{
 					// We cannot swap that deep.
-					if (ops.sourceSize() - offset - 1 > 16)
+					if (_ops.sourceSize() - offset - 1 > 16)
 					{
 						// If there is a reachable slot to be removed, park the current top there.
 						for (size_t swapDepth: ranges::views::iota(1u, 17u) | ranges::views::reverse)
-							if (ops.sourceMultiplicity(ops.sourceSize() - 1 - swapDepth) < 0)
+							if (_ops.sourceMultiplicity(_ops.sourceSize() - 1 - swapDepth) < 0)
 							{
-								ops.swap(swapDepth);
-								if (ops.targetIsArbitrary(sourceTop))
+								_ops.swap(swapDepth);
+								if (_ops.targetIsArbitrary(sourceTop))
 									// Usually we keep a slot that is to-be-removed, if the current top is arbitrary.
 									// However, since we are in a stack-too-deep situation, pop it immediately
 									// to compress the stack (we can always push back junk in the end).
-									ops.pop();
+									_ops.pop();
 								return true;
 							}
 						// Otherwise we rely on stack compression or stack-to-memory.
 					}
-					ops.swap(ops.sourceSize() - offset - 1);
+					_ops.swap(_ops.sourceSize() - offset - 1);
 					return true;
 				}
 
 		// ops.sourceSize() > ops.targetSize() cannot be true anymore, since if the source top is no longer required,
 		// we already popped it, and if it is required, we already swapped it down to a suitable target position.
-		yulAssert(ops.sourceSize() <= ops.targetSize(), "");
+		yulAssert(_ops.sourceSize() <= _ops.targetSize(), "");
 
 		// If a lower slot should be removed, try to bring up the slot that should end up there and bring it up.
 		// Note that after the cases above, there will always be a target slot to duplicate in this case.
-		for (size_t offset: ranges::views::iota(0u, ops.sourceSize()))
+		for (size_t offset: ranges::views::iota(0u, _ops.sourceSize()))
 			if (
-				!ops.isCompatible(offset, offset) && // The lower slot is not already in position.
-				ops.sourceMultiplicity(offset) < 0 && // We have too many copies of this slot.
-				offset <= ops.targetSize() && // There is a target slot at this position.
-				!ops.targetIsArbitrary(offset) // And that target slot is not arbitrary.
+				!_ops.isCompatible(offset, offset) && // The lower slot is not already in position.
+				_ops.sourceMultiplicity(offset) < 0 && // We have too many copies of this slot.
+				offset <= _ops.targetSize() && // There is a target slot at this position.
+				!_ops.targetIsArbitrary(offset) // And that target slot is not arbitrary.
 			)
 			{
-				if (!dupDeepSlotIfRequired(ops))
-					yulAssert(bringUpTargetSlot(ops, offset), "");
+				if (!dupDeepSlotIfRequired(_ops))
+					yulAssert(bringUpTargetSlot(_ops, offset), "");
 				return true;
 			}
 
 		// At this point we want to keep all slots.
-		for (size_t i = 0; i < ops.sourceSize(); ++i)
-			yulAssert(ops.sourceMultiplicity(i) >= 0, "");
-		yulAssert(ops.sourceSize() <= ops.targetSize(), "");
+		for (size_t i = 0; i < _ops.sourceSize(); ++i)
+			yulAssert(_ops.sourceMultiplicity(i) >= 0, "");
+		yulAssert(_ops.sourceSize() <= _ops.targetSize(), "");
 
 		// If the top is not in position, try to find a slot that wants to be at the top and swap it up.
-		if (!ops.isCompatible(sourceTop, sourceTop))
-			for (size_t sourceOffset: ranges::views::iota(0u, ops.sourceSize()))
+		if (!_ops.isCompatible(sourceTop, sourceTop))
+			for (size_t sourceOffset: ranges::views::iota(0u, _ops.sourceSize()))
 				if (
-					!ops.isCompatible(sourceOffset, sourceOffset) &&
-					ops.isCompatible(sourceOffset, sourceTop)
+					!_ops.isCompatible(sourceOffset, sourceOffset) &&
+					_ops.isCompatible(sourceOffset, sourceTop)
 				)
 				{
-					ops.swap(ops.sourceSize() - sourceOffset - 1);
+					_ops.swap(_ops.sourceSize() - sourceOffset - 1);
 					return true;
 				}
 
 		// If we still need more slots, produce a suitable one.
-		if (ops.sourceSize() < ops.targetSize())
+		if (_ops.sourceSize() < _ops.targetSize())
 		{
-			if (!dupDeepSlotIfRequired(ops))
-				yulAssert(bringUpTargetSlot(ops, ops.sourceSize()), "");
+			if (!dupDeepSlotIfRequired(_ops))
+				yulAssert(bringUpTargetSlot(_ops, _ops.sourceSize()), "");
 			return true;
 		}
 
 		// The stack has the correct size, each slot has the correct number of copies and the top is in position.
-		yulAssert(ops.sourceSize() == ops.targetSize(), "");
-		size_t size = ops.sourceSize();
-		for (size_t i = 0; i < ops.sourceSize(); ++i)
-			yulAssert(ops.sourceMultiplicity(i) == 0 && (ops.targetIsArbitrary(i) || ops.targetMultiplicity(i) == 0), "");
-		yulAssert(ops.isCompatible(sourceTop, sourceTop), "");
+		yulAssert(_ops.sourceSize() == _ops.targetSize(), "");
+		size_t size = _ops.sourceSize();
+		for (size_t i = 0; i < _ops.sourceSize(); ++i)
+			yulAssert(_ops.sourceMultiplicity(i) == 0 && (_ops.targetIsArbitrary(i) || _ops.targetMultiplicity(i) == 0), "");
+		yulAssert(_ops.isCompatible(sourceTop, sourceTop), "");
 
 		auto swappableOffsets = ranges::views::iota(size > 17 ? size - 17 : 0u, size);
 
 		// If we find a lower slot that is out of position, but also compatible with the top, swap that up.
 		for (size_t offset: swappableOffsets)
-			if (!ops.isCompatible(offset, offset) && ops.isCompatible(sourceTop, offset))
+			if (!_ops.isCompatible(offset, offset) && _ops.isCompatible(sourceTop, offset))
 			{
-				ops.swap(size - offset - 1);
+				_ops.swap(size - offset - 1);
 				return true;
 			}
 		// Swap up any reachable slot that is still out of position.
 		for (size_t offset: swappableOffsets)
-			if (!ops.isCompatible(offset, offset) && !ops.sourceIsSame(offset, sourceTop))
+			if (!_ops.isCompatible(offset, offset) && !_ops.sourceIsSame(offset, sourceTop))
 			{
-				ops.swap(size - offset - 1);
+				_ops.swap(size - offset - 1);
 				return true;
 			}
 		// We are in a stack-too-deep situation and try to reduce the stack size.
 		// If the current top is merely kept since the target slot is arbitrary, pop it.
-		if (ops.targetIsArbitrary(sourceTop) && ops.sourceMultiplicity(sourceTop) <= 0)
+		if (_ops.targetIsArbitrary(sourceTop) && _ops.sourceMultiplicity(sourceTop) <= 0)
 		{
-			ops.pop();
+			_ops.pop();
 			return true;
 		}
 		// If any reachable slot is merely kept, since the target slot is arbitrary, swap it up and pop it.
 		for (size_t offset: swappableOffsets)
-			if (ops.targetIsArbitrary(offset) && ops.sourceMultiplicity(offset) <= 0)
+			if (_ops.targetIsArbitrary(offset) && _ops.sourceMultiplicity(offset) <= 0)
 			{
-				ops.swap(size - offset - 1);
-				ops.pop();
+				_ops.swap(size - offset - 1);
+				_ops.pop();
 				return true;
 			}
 		// We cannot avoid a stack-too-deep error. Repeat the above without restricting to reachable slots.
 		for (size_t offset: ranges::views::iota(0u, size))
-			if (!ops.isCompatible(offset, offset) && ops.isCompatible(sourceTop, offset))
+			if (!_ops.isCompatible(offset, offset) && _ops.isCompatible(sourceTop, offset))
 			{
-				ops.swap(size - offset - 1);
+				_ops.swap(size - offset - 1);
 				return true;
 			}
 		for (size_t offset: ranges::views::iota(0u, size))
-			if (!ops.isCompatible(offset, offset) && !ops.sourceIsSame(offset, sourceTop))
+			if (!_ops.isCompatible(offset, offset) && !_ops.sourceIsSame(offset, sourceTop))
 			{
-				ops.swap(size - offset - 1);
+				_ops.swap(size - offset - 1);
 				return true;
 			}
 		yulAssert(false, "");
@@ -376,50 +330,6 @@ private:
 		// FIXME: Workaround for spurious GCC 12.1 warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105794)
 		throw std::exception();
 	}
-};
-
-class IndexingMap
-{
-public:
-	size_t operator[](StackSlot const& _slot)
-	{
-		if (auto* p = std::get_if<FunctionCallReturnLabelSlot>(&_slot))
-			return getIndex(m_functionCallReturnLabelSlotIndex, *p);
-		if (std::holds_alternative<FunctionReturnLabelSlot>(_slot))
-		{
-			m_indexedSlots[1] = _slot;
-			return 1;
-		}
-		if (auto* p = std::get_if<VariableSlot>(&_slot))
-			return getIndex(m_variableSlotIndex, *p);
-		if (auto* p = std::get_if<LiteralSlot>(&_slot))
-			return getIndex(m_literalSlotIndex, *p);
-		if (auto* p = std::get_if<TemporarySlot>(&_slot))
-			return getIndex(m_temporarySlotIndex, *p);
-		m_indexedSlots[0] = _slot;
-		return 0;
-	}
-	std::vector<StackSlot> indexedSlots()
-	{
-		return std::move(m_indexedSlots);
-	}
-private:
-	template<typename MapType, typename ElementType>
-	size_t getIndex(MapType&& _map, ElementType&& _element)
-	{
-		auto [element, newlyInserted] = _map.emplace(std::make_pair(_element, size_t(0u)));
-		if (newlyInserted)
-		{
-			element->second = m_indexedSlots.size();
-			m_indexedSlots.emplace_back(_element);
-		}
-		return element->second;
-	}
-	std::map<FunctionCallReturnLabelSlot, size_t> m_functionCallReturnLabelSlotIndex;
-	std::map<VariableSlot, size_t> m_variableSlotIndex;
-	std::map<LiteralSlot, size_t> m_literalSlotIndex;
-	std::map<TemporarySlot, size_t> m_temporarySlotIndex;
-	std::vector<StackSlot> m_indexedSlots{JunkSlot{}, JunkSlot{}};
 };
 
 /// Transforms @a _currentStack to @a _targetStack, invoking the provided shuffling operations.
@@ -432,9 +342,8 @@ private:
 template<typename Swap, typename PushOrDup, typename Pop>
 void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _swap, PushOrDup _pushOrDup, Pop _pop)
 {
+	// TODO: refactor IndexedStack
 	std::vector<StackSlot> indexedSlots;
-	using IndexedStack = std::vector<size_t>;
-	size_t junkIndex = 0;
 	IndexingMap indexer;
 	auto indexTransform = ranges::views::transform([&](auto const& _slot) { return indexer[_slot]; });
 	IndexedStack _targetStackIndexed = _targetStack | indexTransform | ranges::to<IndexedStack>;
@@ -454,87 +363,17 @@ void createStackLayout(Stack& _currentStack, Stack const& _targetStack, Swap _sw
 		_currentStack.pop_back();
 	};
 
-
-	struct ShuffleOperations
-	{
-		IndexedStack& currentStack;
-		IndexedStack const& targetStack;
-		decltype(swapIndexed) swapCallback;
-		decltype(pushOrDupIndexed) pushOrDupCallback;
-		decltype(popIndexed) popCallback;
-		std::vector<int> multiplicity;
-		size_t junkIndex = std::numeric_limits<size_t>::max();
-		ShuffleOperations(
-			IndexedStack& _currentStack,
-			IndexedStack const& _targetStack,
-			decltype(swapIndexed) _swap,
-			decltype(pushOrDupIndexed) _pushOrDup,
-			decltype(popIndexed) _pop,
-			size_t _numSlots,
-			size_t _junkIndex
-		):
-			currentStack(_currentStack),
-			targetStack(_targetStack),
-			swapCallback(_swap),
-			pushOrDupCallback(_pushOrDup),
-			popCallback(_pop),
-			junkIndex(_junkIndex)
-		{
-			multiplicity.resize(_numSlots, 0);
-			for (auto const& slot: currentStack)
-				--multiplicity[slot];
-			for (auto&& [offset, slot]: targetStack | ranges::views::enumerate)
-				if (slot == _junkIndex && offset < currentStack.size())
-					++multiplicity[currentStack.at(offset)];
-				else
-					++multiplicity[slot];
-		}
-		bool isCompatible(size_t _source, size_t _target)
-		{
-			return
-				_source < currentStack.size() &&
-				_target < targetStack.size() &&
-				(
-					junkIndex == targetStack.at(_target) ||
-					currentStack.at(_source) == targetStack.at(_target)
-				);
-		}
-		bool sourceIsSame(size_t _lhs, size_t _rhs) { return currentStack.at(_lhs) == currentStack.at(_rhs); }
-		int sourceMultiplicity(size_t _offset) { return multiplicity.at(currentStack.at(_offset)); }
-		int targetMultiplicity(size_t _offset) { return multiplicity.at(targetStack.at(_offset)); }
-		bool targetIsArbitrary(size_t offset)
-		{
-			return offset < targetStack.size() && junkIndex == targetStack.at(offset);
-		}
-		void swap(size_t _i)
-		{
-			swapCallback(static_cast<unsigned>(_i));
-			std::swap(currentStack.at(currentStack.size() - _i - 1), currentStack.back());
-		}
-		size_t sourceSize() { return currentStack.size(); }
-		size_t targetSize() { return targetStack.size(); }
-		void pop()
-		{
-			popCallback();
-			currentStack.pop_back();
-		}
-		void pushOrDupTarget(size_t _offset)
-		{
-			auto const& targetSlot = targetStack.at(_offset);
-			pushOrDupCallback(targetSlot);
-			currentStack.push_back(targetSlot);
-		}
-	};
-
-	Shuffler<ShuffleOperations>::shuffle(
+	StackShuffleOperations ops(
 		_currentStackIndexed,
 		_targetStackIndexed,
 		swapIndexed,
 		pushOrDupIndexed,
 		popIndexed,
 		indexedSlots.size(),
-		junkIndex
+		0 // junkIndex
 	);
+	Shuffler shuffler{};
+	shuffler.shuffle(ops);
 
 	yulAssert(_currentStack.size() == _targetStack.size(), "");
 	for (auto&& [current, target]: ranges::zip_view(_currentStack, _targetStack))
