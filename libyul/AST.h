@@ -38,26 +38,28 @@ using Type = YulString;
 
 struct DebugData
 {
+	typedef typename std::shared_ptr<DebugData const> ConstPtr;
+
 	explicit DebugData(
-		langutil::SourceLocation _nativeLocation,
+		langutil::SourceLocation _nativeLocation = {},
 		langutil::SourceLocation _originLocation = {},
 		std::optional<int64_t> _astID = {}
 	):
 		nativeLocation(std::move(_nativeLocation)),
 		originLocation(std::move(_originLocation)),
-		astID(std::move(_astID))
+		astID(_astID)
 	{}
 
-	static std::shared_ptr<DebugData const> create(
+	static DebugData::ConstPtr create(
 		langutil::SourceLocation _nativeLocation = {},
 		langutil::SourceLocation _originLocation = {},
 		std::optional<int64_t> _astID = {}
 	)
 	{
-		return std::make_shared<DebugData const>(
+		return std::make_shared<DebugData>(
 			std::move(_nativeLocation),
 			std::move(_originLocation),
-			std::move(_astID)
+			_astID
 		);
 	}
 
