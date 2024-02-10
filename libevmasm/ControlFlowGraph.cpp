@@ -275,7 +275,7 @@ void ControlFlowGraph::gatherKnowledge()
 			//@todo in the case of JUMPI, add knowledge about the condition to the state
 			// (for both values of the condition)
 			std::set<u256> tags = state->tagsInExpression(
-				state->stackElement(state->stackHeight(), langutil::SourceLocation{})
+				state->stackElement(state->stackHeight(), langutil::DebugData::create())
 			);
 			state->feedItem(m_items.at(pc++));
 

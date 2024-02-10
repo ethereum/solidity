@@ -305,7 +305,7 @@ std::string AsmPrinter::formatSourceLocation(
 	return sourceLocation + (solidityCodeSnippet.empty() ? "" : "  ") + solidityCodeSnippet;
 }
 
-std::string AsmPrinter::formatDebugData(std::shared_ptr<DebugData const> const& _debugData, bool _statement)
+std::string AsmPrinter::formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement)
 {
 	if (!_debugData || m_debugInfoSelection.none())
 		return "";

@@ -333,7 +333,7 @@ void ControlFlowGraphBuilder::operator()(If const& _if)
 void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
 	yulAssert(m_currentBlock, "");
-	std::shared_ptr<DebugData const> preSwitchDebugData = debugDataOf(_switch);
+	langutil::DebugData::ConstPtr preSwitchDebugData = debugDataOf(_switch);
 
 	auto ghostVariableId = m_graph.ghostVariables.size();
 	YulString ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
@@ -393,7 +393,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 
 void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 {
-	std::shared_ptr<DebugData const> preLoopDebugData = debugDataOf(_loop);
+	langutil::DebugData::ConstPtr preLoopDebugData = debugDataOf(_loop);
 	ScopedSaveAndRestore scopeRestore(m_scope, m_info.scopes.at(&_loop.pre).get());
 	(*this)(_loop.pre);
 
@@ -608,7 +608,7 @@ Scope::Variable const& ControlFlowGraphBuilder::lookupVariable(YulString _name) 
 }
 
 void ControlFlowGraphBuilder::makeConditionalJump(
-	std::shared_ptr<DebugData const> _debugData,
+	langutil::DebugData::ConstPtr _debugData,
 	StackSlot _condition,
 	CFG::BasicBlock& _nonZero,
 	CFG::BasicBlock& _zero
@@ -627,7 +627,7 @@ void ControlFlowGraphBuilder::makeConditionalJump(
 }
 
 void ControlFlowGraphBuilder::jump(
-	std::shared_ptr<DebugData const> _debugData,
+	langutil::DebugData::ConstPtr _debugData,
 	CFG::BasicBlock& _target,
 	bool backwards
 )

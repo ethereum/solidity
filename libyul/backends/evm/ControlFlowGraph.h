@@ -76,7 +76,7 @@ struct FunctionReturnLabelSlot
 struct VariableSlot
 {
 	std::reference_wrapper<Scope::Variable const> variable;
-	std::shared_ptr<DebugData const> debugData{};
+	langutil::DebugData::ConstPtr debugData{};
 	bool operator==(VariableSlot const& _rhs) const { return &variable.get() == &_rhs.variable.get(); }
 	bool operator<(VariableSlot const& _rhs) const { return &variable.get() < &_rhs.variable.get(); }
 	static constexpr bool canBeFreelyGenerated = false;
@@ -85,7 +85,7 @@ struct VariableSlot
 struct LiteralSlot
 {
 	u256 value;
-	std::shared_ptr<DebugData const> debugData{};
+	langutil::DebugData::ConstPtr debugData{};
 	bool operator==(LiteralSlot const& _rhs) const { return value == _rhs.value; }
 	bool operator<(LiteralSlot const& _rhs) const { return value < _rhs.value; }
 	static constexpr bool canBeFreelyGenerated = true;
@@ -132,7 +132,7 @@ struct CFG
 
 	struct BuiltinCall
 	{
-		std::shared_ptr<DebugData const> debugData;
+		langutil::DebugData::ConstPtr debugData;
 		std::reference_wrapper<BuiltinFunction const> builtin;
 		std::reference_wrapper<yul::FunctionCall const> functionCall;
 		/// Number of proper arguments with a position on the stack, excluding literal arguments.
@@ -142,7 +142,7 @@ struct CFG
 	};
 	struct FunctionCall
 	{
-		std::shared_ptr<DebugData const> debugData;
+		langutil::DebugData::ConstPtr debugData;
 		std::reference_wrapper<Scope::Function const> function;
 		std::reference_wrapper<yul::FunctionCall const> functionCall;
 		/// True, if the call is recursive, i.e. entering the function involves a control flow path (potentially involving
@@ -153,7 +153,7 @@ struct CFG
 	};
 	struct Assignment
 	{
-		std::shared_ptr<DebugData const> debugData;
+		langutil::DebugData::ConstPtr debugData;
 		/// The variables being assigned to also occur as ``output`` in the ``Operation`` containing
 		/// the assignment, but are also stored here for convenience.
 		std::vector<VariableSlot> variables;
@@ -176,25 +176,25 @@ struct CFG
 		struct MainExit {};
 		struct ConditionalJump
 		{
-			std::shared_ptr<DebugData const> debugData;
+			langutil::DebugData::ConstPtr debugData;
 			StackSlot condition;
 			BasicBlock* nonZero = nullptr;
 			BasicBlock* zero = nullptr;
 		};
 		struct Jump
 		{
-			std::shared_ptr<DebugData const> debugData;
+			langutil::DebugData::ConstPtr debugData;
 			BasicBlock* target = nullptr;
 			/// The only backwards jumps are jumps from loop post to loop condition.
 			bool backwards = false;
 		};
 		struct FunctionReturn
 		{
-			std::shared_ptr<DebugData const> debugData;
+			langutil::DebugData::ConstPtr debugData;
 			CFG::FunctionInfo* info = nullptr;
 		};
 		struct Terminated {};
-		std::shared_ptr<DebugData const> debugData;
+		langutil::DebugData::ConstPtr debugData;
 		std::vector<BasicBlock*> entries;
 		std::vector<Operation> operations;
 		/// True, if the block is the beginning of a disconnected subgraph. That is, if no block that is reachable
@@ -210,7 +210,7 @@ struct CFG
 
 	struct FunctionInfo
 	{
-		std::shared_ptr<DebugData const> debugData;
+		langutil::DebugData::ConstPtr debugData;
 		Scope::Function const& function;
 		FunctionDefinition const& functionDefinition;
 		BasicBlock* entry = nullptr;
@@ -238,7 +238,7 @@ struct CFG
 	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
 	std::list<yul::FunctionCall> ghostCalls;
 
-	BasicBlock& makeBlock(std::shared_ptr<DebugData const> _debugData)
+	BasicBlock& makeBlock(langutil::DebugData::ConstPtr _debugData)
 	{
 		return blocks.emplace_back(BasicBlock{std::move(_debugData), {}, {}});
 	}

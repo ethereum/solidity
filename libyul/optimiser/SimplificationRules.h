@@ -30,7 +30,7 @@
 #include <libsolutil/Numeric.h>
 
 #include <liblangutil/EVMVersion.h>
-#include <liblangutil/SourceLocation.h>
+#include <liblangutil/DebugData.h>
 
 #include <functional>
 #include <optional>
@@ -41,6 +41,8 @@ namespace solidity::yul
 struct Dialect;
 struct AssignedValue;
 class Pattern;
+
+using DebugData = langutil::DebugData;
 
 /**
  * Container for all simplification rules.
@@ -131,7 +133,7 @@ public:
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
-	Expression toExpression(std::shared_ptr<DebugData const> const& _debugData, langutil::EVMVersion _evmVersion) const;
+	Expression toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion) const;
 
 private:
 	Expression const& matchGroupValue() const;

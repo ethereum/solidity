@@ -78,7 +78,7 @@ void ConditionalSimplifier::operator()(Block& _block)
 				)
 				{
 					YulString condition = std::get<Identifier>(*_if.condition).name;
-					std::shared_ptr<DebugData const> debugData = _if.debugData;
+					langutil::DebugData::ConstPtr debugData = _if.debugData;
 					return make_vector<Statement>(
 						std::move(_s),
 						Assignment{

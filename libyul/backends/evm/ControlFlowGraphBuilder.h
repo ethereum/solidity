@@ -67,13 +67,13 @@ private:
 	Scope::Variable const& lookupVariable(YulString _name) const;
 	/// Resets m_currentBlock to enforce a subsequent explicit reassignment.
 	void makeConditionalJump(
-		std::shared_ptr<DebugData const> _debugData,
+		langutil::DebugData::ConstPtr _debugData,
 		StackSlot _condition,
 		CFG::BasicBlock& _nonZero,
 		CFG::BasicBlock& _zero
 	);
 	void jump(
-		std::shared_ptr<DebugData const> _debugData,
+		langutil::DebugData::ConstPtr _debugData,
 		CFG::BasicBlock& _target,
 		bool _backwards = false
 	);

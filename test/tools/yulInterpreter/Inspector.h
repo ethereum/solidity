@@ -53,13 +53,13 @@ public:
 	 * @returns NodeAction::RunNode if the current AST node (and all children nodes!) should be
 	 *          processed without stopping, else NodeAction::StepThroughNode.
 	 */
-	NodeAction queryUser(DebugData const& _data, std::map<YulString, u256> const& _variables);
+	NodeAction queryUser(langutil::DebugData const& _data, std::map<YulString, u256> const& _variables);
 
 	void stepMode(NodeAction _action) { m_stepMode = _action; }
 
 	std::string const& source() const { return m_source; }
 
-	void interactiveVisit(DebugData const& _debugData, std::map<YulString, u256> const& _variables, std::function<void()> _visitNode)
+	void interactiveVisit(langutil::DebugData const& _debugData, std::map<YulString, u256> const& _variables, std::function<void()> _visitNode)
 	{
 		Inspector::NodeAction action = queryUser(_debugData, _variables);
 
@@ -78,7 +78,7 @@ public:
 	}
 
 private:
-	std::string currentSource(DebugData const& _data) const;
+	std::string currentSource(langutil::DebugData const& _data) const;
 
 	/// Source of the file
 	std::string const& m_source;

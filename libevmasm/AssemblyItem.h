@@ -24,7 +24,8 @@
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Exceptions.h>
-#include <liblangutil/SourceLocation.h>
+#include <liblangutil/DebugData.h>
+#include <liblangutil/Exceptions.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Numeric.h>
 #include <libsolutil/Assertions.h>
@@ -64,16 +65,16 @@ class AssemblyItem
 public:
 	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
-	AssemblyItem(u256 _push, langutil::SourceLocation _location = langutil::SourceLocation()):
-		AssemblyItem(Push, std::move(_push), std::move(_location)) { }
-	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
+	AssemblyItem(u256 _push, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create()):
+		AssemblyItem(Push, std::move(_push), std::move(_debugData)) { }
+	AssemblyItem(Instruction _i, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create()):
 		m_type(Operation),
 		m_instruction(_i),
-		m_location(std::move(_location))
+		m_debugData(std::move(_debugData))
 	{}
-	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::SourceLocation _location = langutil::SourceLocation()):
+	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create()):
 		m_type(_type),
-		m_location(std::move(_location))
+		m_debugData(std::move(_debugData))
 	{
 		if (m_type == Operation)
 			m_instruction = Instruction(uint8_t(_data));
@@ -83,7 +84,8 @@ public:
 	explicit AssemblyItem(bytes _verbatimData, size_t _arguments, size_t _returnVariables):
 		m_type(VerbatimBytecode),
 		m_instruction{},
-		m_verbatimBytecode{{_arguments, _returnVariables, std::move(_verbatimData)}}
+		m_verbatimBytecode{{_arguments, _returnVariables, std::move(_verbatimData)}},
+		m_debugData{langutil::DebugData::create()}
 	{}
 
 	AssemblyItem(AssemblyItem const&) = default;
@@ -170,8 +172,29 @@ public:
 	/// @returns true if the assembly item can be used in a functional context.
 	bool canBeFunctional() const;
 
-	void setLocation(langutil::SourceLocation const& _location) { m_location = _location; }
-	langutil::SourceLocation const& location() const { return m_location; }
+	void setLocation(langutil::SourceLocation const& _location)
+	{
+		solAssert(m_debugData);
+		m_debugData = langutil::DebugData::create(
+			_location,
+			m_debugData->originLocation,
+			m_debugData->astID
+		);
+	}
+
+	langutil::SourceLocation const& location() const
+	{
+		solAssert(m_debugData);
+		return m_debugData->nativeLocation;
+	}
+
+	void setDebugData(langutil::DebugData::ConstPtr _debugData)
+	{
+		solAssert(_debugData);
+		m_debugData = std::move(_debugData);
+	}
+
+	langutil::DebugData::ConstPtr debugData() const { return m_debugData; }
 
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
 	static std::optional<JumpType> parseJumpType(std::string const& _jumpType);
@@ -196,7 +219,7 @@ private:
 	/// If m_type == VerbatimBytecode, this holds number of arguments, number of
 	/// return variables and verbatim bytecode.
 	std::optional<std::tuple<size_t, size_t, bytes>> m_verbatimBytecode;
-	langutil::SourceLocation m_location;
+	langutil::DebugData::ConstPtr m_debugData;
 	JumpType m_jumpType = JumpType::Ordinary;
 	/// Pushed value for operations with data to be determined during assembly stage,
 	/// e.g. PushSubSize, PushTag, PushSub, etc.
