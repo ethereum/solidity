@@ -144,7 +144,7 @@ def semantictest_statistics():
     if table:
         print("<details><summary>Click for a table of gas differences</summary>\n")
         table_header = ["File name", "IR optimized", "Legacy optimized", "Legacy"]
-        print(tabulate(table, headers=table_header, tablefmt="github"))
+        print(tabulate(sorted(table), headers=table_header, tablefmt="github"))
         print("</details>")
     else:
         print("No differences found.")
