@@ -35,6 +35,8 @@ class Diff(Enum):
     Minus = 1
     Plus = 2
 
+SEMANTIC_TEST_DIR = Path("test/libsolidity/semanticTests/")
+
 minus = string("-").result(Diff.Minus)
 plus = string("+").result(Diff.Plus)
 
@@ -119,7 +121,10 @@ def semantictest_statistics():
 
     table = []
 
-    for path in Path("test/libsolidity/semanticTests").rglob("*.sol"):
+    if not SEMANTIC_TEST_DIR.is_dir():
+        sys.exit(f"Semantic tests not found. '{SEMANTIC_TEST_DIR.absolute()}' is missing or not a directory.")
+
+    for path in SEMANTIC_TEST_DIR.rglob("*.sol"):
         fname = path.as_posix()
         parsed = try_parse_git_diff(fname)
         if parsed is None:
