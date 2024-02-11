@@ -143,18 +143,16 @@ void CommonOptions::validate() const
 		"Selected batch has to be less than number of batches."
 	);
 
-	if (enforceGasTest)
+	if (!enforceGasTest)
+		cout << endl << "WARNING :: Gas cost expectations are not being enforced" << endl << endl;
+	else if (evmVersion() != langutil::EVMVersion{} || useABIEncoderV1)
 	{
-		assertThrow(
-			evmVersion() == langutil::EVMVersion{},
-			ConfigException,
-			"Gas costs can only be enforced on latest evm version."
-		);
-		assertThrow(
-			useABIEncoderV1 == false,
-			ConfigException,
-			"Gas costs can only be enforced on abi encoder v2."
-		);
+		cout << endl << "WARNING :: Enforcing gas cost expectations with non-standard settings:" << endl;
+		if (evmVersion() != langutil::EVMVersion{})
+			cout << "- EVM version: " << evmVersion().name() << " (default: " << langutil::EVMVersion{}.name() << ")" << endl;
+		if (useABIEncoderV1)
+			cout << "- ABI coder: v1 (default: v2)" << endl;
+		cout << endl << "DO NOT COMMIT THE UPDATED EXPECTATIONS." << endl << endl;
 	}
 }
 
