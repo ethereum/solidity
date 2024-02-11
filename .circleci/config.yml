@@ -980,6 +980,9 @@ jobs:
       - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
+      - run:
+          name: Smoke test for gas_diff_stats.py
+          command: scripts/gas_diff_stats.py
       - matrix_notify_failure_unless_pr
 
   t_win_pyscripts:
