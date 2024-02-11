@@ -18,7 +18,9 @@ Assumes that there is a remote named ``origin`` pointing to the Solidity github
 repository. The changes are compared against ``origin/develop``.
 
 """
+
 import subprocess
+import sys
 from pathlib import Path
 from enum import Enum
 from parsec import generate, ParseError, regex, string
@@ -110,8 +112,8 @@ def semantictest_statistics():
             if diff_output:
                 return collect_statistics(diff_output)
         except subprocess.CalledProcessError as e:
-            print("Error in the git diff:")
-            print(e.output)
+            print("Error in the git diff:", file=sys.stderr)
+            print(e.output, file=sys.stderr)
         return None
     def stat(old, new):
         return ((new - old) / old) * 100  if old else 0
