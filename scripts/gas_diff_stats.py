@@ -114,7 +114,16 @@ def semantictest_statistics():
         return collect_statistics(diff_output)
 
     def stat(old, new):
-        return ((new - old) / old) * 100  if old else 0
+        if old == 0:
+            return ''
+        percentage = (new - old) / old * 100
+        prefix = (
+            # Distinguish actual zero from very small differences
+            '+' if round(percentage) == 0 and percentage > 0 else
+            '-' if round(percentage) == 0 and percentage < 0 else
+            ''
+        )
+        return f'{prefix}{round(percentage)}%'
 
     table = []
 
@@ -129,12 +138,12 @@ def semantictest_statistics():
         ir_optimized = stat(parsed[0], parsed[3])
         legacy_optimized = stat(parsed[1], parsed[4])
         legacy = stat(parsed[2], parsed[5])
-        fname = fname.split('/', 3)[-1]
-        table += [map(str, [fname, ir_optimized, legacy_optimized, legacy])]
+        fname = f"`{fname.split('/', 3)[-1]}`"
+        table += [[fname, ir_optimized, legacy_optimized, legacy]]
 
     if table:
         print("<details><summary>Click for a table of gas differences</summary>\n")
-        table_header = ["File name", "IR-optimized (%)", "Legacy-Optimized (%)", "Legacy (%)"]
+        table_header = ["File name", "IR optimized", "Legacy optimized", "Legacy"]
         print(tabulate(table, headers=table_header, tablefmt="github"))
         print("</details>")
     else:
