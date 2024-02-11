@@ -359,6 +359,7 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 	auto& destination = accounts[message.recipient];
 	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
 		// Mark account as created if it is a CREATE or CREATE2 call
+		// TODO: Should we roll changes back on failure like we do for `accounts`?
 		m_newlyCreatedAccounts.emplace(message.recipient);
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
