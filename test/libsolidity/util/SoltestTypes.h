@@ -216,7 +216,9 @@ struct FunctionCallExpectations
 		return raw;
 	}
 	/// Gas used by function call
-	/// Should have values for Yul, YulOptimized, Legacy and LegacyOptimized
+	/// Keys represent all distinct combinations of compilation settings that affect produced
+	/// bytecode (and therefore the cost), except for EVM version. E.g. IR codegen without
+	/// optimization legacy codegen with optimization.
 	std::map<std::string, u256> gasUsed;
 };
 
