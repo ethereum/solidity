@@ -27,9 +27,10 @@ from parsec import generate, ParseError, regex, string
 from tabulate import tabulate
 
 class Kind(Enum):
-    IrOptimized = 1
-    Legacy = 2
-    LegacyOptimized = 3
+    Ir = 1
+    IrOptimized = 2
+    Legacy = 3
+    LegacyOptimized = 4
 
 class Diff(Enum):
     Minus = 1
@@ -44,6 +45,7 @@ space = string(" ")
 comment = string("//")
 colon = string(":")
 
+gas_ir = string("gas ir").result(Kind.Ir)
 gas_ir_optimized = string("gas irOptimized").result(Kind.IrOptimized)
 gas_legacy_optimized = string("gas legacyOptimized").result(Kind.LegacyOptimized)
 gas_legacy = string("gas legacy").result(Kind.Legacy)
@@ -64,7 +66,7 @@ def diff_string() -> (Kind, Diff, int):
     diff_kind = yield minus | plus
     yield comment
     yield space
-    codegen_kind = yield gas_ir_optimized ^ gas_legacy_optimized ^ gas_legacy
+    codegen_kind = yield gas_ir_optimized ^ gas_ir ^ gas_legacy_optimized ^ gas_legacy
     yield colon
     yield space
     val = yield number()
