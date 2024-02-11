@@ -84,18 +84,11 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
     if not lines:
         raise RuntimeError("Empty list")
 
-    def try_parse(line):
-        try:
-            return diff_string.parse(line)
-        except ParseError:
-            pass
-        return None
-
     out = [
         parsed
         for line in lines
         if line.startswith('+// gas ') or line.startswith('-// gas ')
-        if (parsed := try_parse(line)) is not None
+        if (parsed := diff_string.parse(line)) is not None
     ]
     diff_kinds = [Diff.Minus, Diff.Plus]
     codegen_kinds = [Kind.IrOptimized, Kind.LegacyOptimized, Kind.Legacy]
@@ -111,18 +104,15 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
 
 def semantictest_statistics():
     """Prints the tabulated statistics that can be pasted in github."""
-    def try_parse_git_diff(fname):
-        try:
-            diff_output = subprocess.check_output(
-                ["git", "diff", "--unified=0", "origin/develop", "HEAD", fname],
-                universal_newlines=True
-            ).splitlines()
-            if diff_output:
-                return collect_statistics(diff_output)
-        except subprocess.CalledProcessError as e:
-            print("Error in the git diff:", file=sys.stderr)
-            print(e.output, file=sys.stderr)
-        return None
+    def parse_git_diff(fname):
+        diff_output = subprocess.check_output(
+            ["git", "diff", "--unified=0", "origin/develop", "HEAD", fname],
+            universal_newlines=True
+        ).splitlines()
+        if len(diff_output) == 0:
+            return None
+        return collect_statistics(diff_output)
+
     def stat(old, new):
         return ((new - old) / old) * 100  if old else 0
 
@@ -133,7 +123,7 @@ def semantictest_statistics():
 
     for path in SEMANTIC_TEST_DIR.rglob("*.sol"):
         fname = path.as_posix()
-        parsed = try_parse_git_diff(fname)
+        parsed = parse_git_diff(fname)
         if parsed is None:
             continue
         ir_optimized = stat(parsed[0], parsed[3])
@@ -150,5 +140,17 @@ def semantictest_statistics():
     else:
         print("No differences found.")
 
+def main():
+    try:
+        semantictest_statistics()
+    except subprocess.CalledProcessError as exception:
+        sys.exit(f"Error in the git diff:\n{exception.output}")
+    except ParseError as exception:
+        sys.exit(
+            f"ParseError: {exception}\n\n"
+            f"{exception.text}\n"
+            f"{' ' * exception.index}^\n"
+        )
+
 if __name__ == "__main__":
-    semantictest_statistics()
+    main()
