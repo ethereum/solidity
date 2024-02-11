@@ -89,7 +89,12 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
             pass
         return None
 
-    out = [parsed for line in lines if (parsed := try_parse(line)) is not None]
+    out = [
+        parsed
+        for line in lines
+        if line.startswith('+// gas ') or line.startswith('-// gas ')
+        if (parsed := try_parse(line)) is not None
+    ]
     diff_kinds = [Diff.Minus, Diff.Plus]
     codegen_kinds = [Kind.IrOptimized, Kind.LegacyOptimized, Kind.Legacy]
     return tuple(
