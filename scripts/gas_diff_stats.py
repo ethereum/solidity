@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """A script to collect gas statistics and print it.
 
 Useful to summarize gas differences to semantic tests for a PR / branch.
