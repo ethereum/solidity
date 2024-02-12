@@ -891,7 +891,12 @@ Prerequisites: Disambiguator, ForLoopInitRewriter.
 LiteralRematerialiser
 ^^^^^^^^^^^^^^^^^^^^^
 
-To be documented.
+If a variable referenced in an expression is known to have a literal value, replaces that use of
+the variable with the literal.
+
+This is mostly used so that other components do not have to rely on the DataflowAnalyzer.
+
+Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 .. _load-resolver:
 
@@ -1286,13 +1291,34 @@ into
     /* ... code of f, with replacements: a -> f_a, b -> f_b, c -> f_c */
     let z := f_c
 
-During inlining, a heuristic is used to tell if the function call
-should be inlined or not.
-The current heuristic does not inline into "large" functions unless
-the called function is tiny. Functions that are only used once
-are inlined, as well as medium-sized functions, while function
-calls with constant arguments allow slightly larger functions.
+During inlining, a heuristic is used to tell if the function call should be inlined or not.
 
+A function call will never be inlined if:
+
+- The function definition contains the ``leave`` opcode.
+- The function is large and inlining is not *aggressive* (details below).
+- The function definition contains any direct, recursive calls to itself or the call being inlined is recursive.
+  Note that indirect recursive calls (going through other functions) do not disqualify the function from inlining.
+- Argument expressions passed into the call can potentially have side effects.
+  This check is very broad, rejecting anything that is not simply a literal or an identifier, since
+  the condition is easy to satisfy by running ExpressionSplitter beforehand.
+
+Otherwise, if any of the following conditions is met, the call is inlined unconditionally:
+
+- The function is tiny.
+- The function is only ever called once.
+
+In the remaining cases the decision to inline or not depends on the size of the function.
+The size used here is not the actual bytecode size (which is not known to the optimizer), but rather
+a score calculated at the Yul level, which approximates that size.
+Inlining is performed if the size does not exceed a predefined threshold, which is a little higher
+if the inlining is aggressive and yet higher when the call has some constant arguments.
+
+The aggressive inlining is performed when:
+
+- The :ref:`yul-memoryguard` is present.
+- The function is not recursive (not even indirectly).
+- The legacy Yul->EVM transform is not used (i.e. the target is not the ``homestead`` :ref:`EVM version <evm-version>`).
 
 In the future, we may include a backtracking component
 that, instead of inlining a function right away, only specializes it,
