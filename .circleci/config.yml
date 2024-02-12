@@ -978,6 +978,9 @@ jobs:
       - run: git config --global core.autocrlf false
       - checkout
       - run:
+          name: Install dependencies
+          command: python -m pip install --user requests
+      - run:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
       - matrix_notify_failure_unless_pr
@@ -1688,7 +1691,7 @@ jobs:
       - run: git config --global core.autocrlf false
       - checkout
       # Ensure windows has python3 alias required by prepare_bytecode_report
-      - run: ln -s /c/tools/miniconda3/python /c/tools/miniconda3/python3
+      - run: ln -s /c/Python312/python /c/Python312/python3
       - attach_workspace:
           at: build
       - prepare_bytecode_report:
