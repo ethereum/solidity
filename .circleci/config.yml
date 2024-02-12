@@ -155,7 +155,7 @@ commands:
             )
             echo "export FOUNDRY_REPO=$FOUNDRY_REPO" >> "$BASH_ENV"
             echo "export FOUNDRY_VERSION=$FOUNDRY_VERSION" >> "$BASH_ENV"
-            echo "export FOUNDRY_RELEASE_TAG='nightly-${FOUNDRY_RELEASE_SHA}'" >> "$BASH_ENV"
+            echo "export FOUNDRY_RELEASE_TAG='${FOUNDRY_VERSION}'" >> "$BASH_ENV"
             # Save commit sha for caching
             echo "$FOUNDRY_RELEASE_SHA" > /tmp/workspace/foundry-release-sha
       - restore_cache:
