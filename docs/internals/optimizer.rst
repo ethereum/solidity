@@ -295,11 +295,11 @@ backtracking.
 All components of the Yul-based optimizer module are explained below.
 The following transformation steps are the main components:
 
-- SSA Transform
-- Common Subexpression Eliminator
-- Expression Simplifier
-- Unused Assign Eliminator
-- Full Inliner
+- SSATransform
+- CommonSubexpressionEliminator
+- ExpressionSimplifier
+- UnusedAssignEliminator
+- FullInliner
 
 .. _optimizer-steps:
 
@@ -313,7 +313,7 @@ on the individual steps and their sequence below.
 Abbreviation Full name
 ============ ===============================
 ``f``        :ref:`block-flattener`
-``l``        :ref:`circular-reference-pruner`
+``l``        :ref:`circular-references-pruner`
 ``c``        :ref:`common-subexpression-eliminator`
 ``C``        :ref:`conditional-simplifier`
 ``U``        :ref:`conditional-unsimplifier`
@@ -336,8 +336,8 @@ Abbreviation Full name
 ``L``        :ref:`load-resolver`
 ``M``        :ref:`loop-invariant-code-motion`
 ``m``        :ref:`rematerialiser`
-``V``        :ref:`SSA-reverser`
-``a``        :ref:`SSA-transform`
+``V``        :ref:`ssa-reverser`
+``a``        :ref:`ssa-transform`
 ``t``        :ref:`structural-simplifier`
 ``r``        :ref:`unused-assign-eliminator`
 ``p``        :ref:`unused-function-parameter-pruner`
@@ -416,7 +416,7 @@ and functions can be optimized in isolation without having to traverse the AST c
 FunctionGrouper
 ^^^^^^^^^^^^^^^
 
-The function grouper has to be applied after the disambiguator and the function hoister.
+The function grouper has to be applied after the Disambiguator and the FunctionHoister.
 Its effect is that all topmost elements that are not function definitions are moved
 into a single block which is the first statement of the root block.
 
@@ -429,14 +429,14 @@ After this step, a program has the following normal form:
 Where ``I`` is a (potentially empty) block that does not contain any function definitions (not even recursively)
 and ``F`` is a list of function definitions such that no function contains a function definition.
 
-The benefit of this stage is that we always know where the list of function begins.
+The benefit of this stage is that we always know where the list of functions begins.
 
 .. _for-loop-condition-into-body:
 
 ForLoopConditionIntoBody
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This transformation moves the loop-iteration condition of a for-loop into loop body.
+This transformation moves the loop-iteration condition of a ``for`` loop into loop body.
 We need this transformation because :ref:`expression-splitter` will not
 apply to iteration condition expressions (the ``C`` in the following example).
 
@@ -455,7 +455,7 @@ is transformed to
         Body...
     }
 
-This transformation can also be useful when paired with ``LoopInvariantCodeMotion``, since
+This transformation can also be useful when paired with LoopInvariantCodeMotion, since
 invariants in the loop-invariant conditions can then be taken outside the loop.
 
 .. _for-loop-init-rewriter:
@@ -463,7 +463,7 @@ invariants in the loop-invariant conditions can then be taken outside the loop.
 ForLoopInitRewriter
 ^^^^^^^^^^^^^^^^^^^
 
-This transformation moves the initialization part of a for-loop to before
+This transformation moves the initialization part of a ``for`` loop to before
 the loop:
 
 .. code-block:: text
@@ -482,7 +482,7 @@ is transformed to
     }
 
 This eases the rest of the optimization process because we can ignore
-the complicated scoping rules of the for loop initialization block.
+the complicated scoping rules of the ``for`` loop initialization block.
 
 .. _var-decl-initializer:
 
@@ -600,7 +600,7 @@ and it is also easier to perform function call inlining. Furthermore, it is simp
 to replace individual parts of expressions or re-organize the "expression tree".
 The drawback is that such code is much harder to read for humans.
 
-.. _SSA-transform:
+.. _ssa-transform:
 
 SSATransform
 ^^^^^^^^^^^^
@@ -645,19 +645,19 @@ are not modified) perform the following transforms:
 Furthermore, always record the current value of ``i`` used for ``a`` and replace each
 reference to ``a`` by ``a_i``.
 The current value mapping is cleared for a variable ``a`` at the end of each block
-in which it was assigned to and at the end of the for loop init block if it is assigned
-inside the for loop body or post block.
+in which it was assigned to and at the end of the ``for`` loop init block if it is assigned
+inside the ``for`` loop body or post block.
 If a variable's value is cleared according to the rule above and the variable is declared outside
 the block, a new SSA variable will be created at the location where control flow joins,
 this includes the beginning of loop post/body block and the location right after
-If/Switch/ForLoop/Block statement.
+``if``/``switch``/``for``/block statement.
 
-After this stage, the Unused Assign Eliminator is recommended to remove the unnecessary
+After this stage, the UnusedAssignEliminator is recommended to remove the unnecessary
 intermediate assignments.
 
-This stage provides best results if the Expression Splitter and the Common Subexpression Eliminator
+This stage provides best results if the ExpressionSplitter and the CommonSubexpressionEliminator
 are run right before it, because then it does not generate excessive amounts of variables.
-On the other hand, the Common Subexpression Eliminator could be more efficient if run after the
+On the other hand, the CommonSubexpressionEliminator could be more efficient if run after the
 SSA transform.
 
 .. _unused-assign-eliminator:
@@ -691,7 +691,7 @@ The SSA transform converts this snippet to the following:
         sstore(a_3, 1)
     }
 
-The Unused Assign Eliminator removes all the three assignments to ``a``, because
+The UnusedAssignEliminator removes all the three assignments to ``a``, because
 the value of ``a`` is not used and thus turn this
 snippet into strict SSA form:
 
@@ -716,7 +716,7 @@ mapping from assignment statements to the three states
 value will be used later by a reference to the variable.
 
 When an assignment is visited, it is added to the mapping in the "undecided" state
-(see remark about for loops below) and every other assignment to the same variable
+(see remark about ``for`` loops below) and every other assignment to the same variable
 that is still in the "undecided" state is changed to "unused".
 When a variable is referenced, the state of any assignment to that variable still
 in the "undecided" state is changed to "used".
@@ -731,7 +731,7 @@ Conflicting values are resolved in the following way:
 - "unused", "used" -> "used"
 - "undecided", "used" -> "used"
 
-For for-loops, the condition, body and post-part are visited twice, taking
+For ``for`` loops, the condition, body and post-part are visited twice, taking
 the joining control-flow at the condition into account.
 In other words, we create three control flow paths: Zero runs of the loop,
 one run and two runs and then combine them at the end.
@@ -757,13 +757,13 @@ and thus
 
 .. code-block:: none
 
-    max(s, f(s), f(f(s))) = max(s, f(s), f(f(s)), f(f(f(s))), ...).
+    max(s, f(s), f(f(s))) = max(s, f(s), f(f(s)), f(f(f(s))), ...)
 
 In summary, running the loop at most twice is enough because there are only three
 different states.
 
-For switch statements that have a "default"-case, there is no control-flow
-part that skips the switch.
+For ``switch`` statements that have a default case, there is no control-flow
+part that skips the ``switch``.
 
 When a variable goes out of scope, all statements still in the "undecided"
 state are changed to "unused", unless the variable is the return
@@ -793,7 +793,7 @@ The following parts make an expression non-movable:
 DataflowAnalyzer
 ^^^^^^^^^^^^^^^^
 
-The Dataflow Analyzer is not an optimizer step itself but is used as a tool
+The DataflowAnalyzer is not an optimizer step itself but is used as a tool
 by other components. While traversing the AST, it tracks the current value of
 each variable, as long as that value is a movable expression.
 It records the variables that are part of the expression
@@ -804,7 +804,7 @@ of the currently stored expression for ``b``.
 
 At control-flow joins, knowledge about variables is cleared if they have or would be assigned
 in any of the control-flow paths. For instance, upon entering a
-for loop, all variables are cleared that will be assigned during the
+``for`` loop, all variables are cleared that will be assigned during the
 body or the post block.
 
 Expression-Scale Simplifications
@@ -818,7 +818,7 @@ and hopefully simpler expressions.
 CommonSubexpressionEliminator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This step uses the Dataflow Analyzer and replaces subexpressions that
+This step uses the DataflowAnalyzer and replaces subexpressions that
 syntactically match the current value of a variable by a reference to
 that variable. This is an equivalence transform because such subexpressions have
 to be movable.
@@ -828,24 +828,24 @@ current value if the value is an identifier.
 
 The combination of the two rules above allow to compute a local value
 numbering, which means that if two variables have the same
-value, one of them will always be unused. The Unused Pruner or the
-Unused Assign Eliminator will then be able to fully eliminate such
+value, one of them will always be unused. The UnusedPruner or the
+UnusedAssignEliminator will then be able to fully eliminate such
 variables.
 
-This step is especially efficient if the expression splitter is run
+This step is especially efficient if the ExpressionSplitter is run
 before. If the code is in pseudo-SSA form,
 the values of variables are available for a longer time and thus we
 have a higher chance of expressions to be replaceable.
 
-The expression simplifier will be able to perform better replacements
-if the common subexpression eliminator was run right before it.
+The ExpressionSimplifier will be able to perform better replacements
+if the CommonSubexpressionEliminator was run right before it.
 
 .. _expression-simplifier:
 
 ExpressionSimplifier
 ^^^^^^^^^^^^^^^^^^^^
 
-The ExpressionSimplifier uses the Dataflow Analyzer and makes use
+The ExpressionSimplifier uses the DataflowAnalyzer and makes use
 of a list of equivalence transforms on expressions like ``X + 0 -> X``
 to simplify the code.
 
@@ -857,7 +857,7 @@ even when the code is in pseudo-SSA form.
 Some of the patterns like ``X - X -> 0`` can only be applied as long
 as the expression ``X`` is movable, because otherwise it would remove its potential side-effects.
 Since variable references are always movable, even if their current
-value might not be, the Expression Simplifier is again more powerful
+value might not be, the ExpressionSimplifier is again more powerful
 in split or pseudo-SSA form.
 
 .. _literal-rematerialiser:
@@ -877,12 +877,12 @@ currently stored in storage resp. memory, if known.
 
 Works best if the code is in SSA form.
 
-Prerequisite: Disambiguator, ForLoopInitRewriter.
+Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 Statement-Scale Simplifications
 -------------------------------
 
-.. _circular-reference-pruner:
+.. _circular-references-pruner:
 
 CircularReferencesPruner
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -895,7 +895,7 @@ neither externally referenced nor referenced from the outermost context.
 ConditionalSimplifier
 ^^^^^^^^^^^^^^^^^^^^^
 
-The Conditional Simplifier inserts assignments to condition variables if the value can be determined
+The ConditionalSimplifier inserts assignments to condition variables if the value can be determined
 from the control-flow.
 
 Destroys SSA form.
@@ -906,12 +906,12 @@ we cannot assign a specific value.
 
 Current features:
 
-- switch cases: insert "<condition> := <caseLabel>"
-- after if statement with terminating control-flow, insert "<condition> := 0"
+- ``switch`` cases: insert ``<condition> := <caseLabel>``
+- after ``if`` statement with terminating control-flow, insert ``<condition> := 0``
 
 Future features:
 
-- allow replacements by "1"
+- allow replacements by ``1``
 - take termination of user-defined functions into account
 
 Works best with SSA form and if dead code removal has run before.
@@ -923,7 +923,7 @@ Prerequisite: Disambiguator.
 ConditionalUnsimplifier
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Reverse of Conditional Simplifier.
+Reverse of ConditionalSimplifier.
 
 .. _control-flow-simplifier:
 
@@ -932,14 +932,14 @@ ControlFlowSimplifier
 
 Simplifies several control-flow structures:
 
-- replace if with empty body with pop(condition)
-- remove empty default switch case
-- remove empty switch case if no default case exists
-- replace switch with no cases with pop(expression)
-- turn switch with single case into if
-- replace switch with only default case with pop(expression) and body
-- replace switch with const expr with matching case body
-- replace ``for`` with terminating control flow and without other break/continue by ``if``
+- replace ``if`` with empty body with ``pop(condition)``
+- remove empty default ``switch`` case
+- remove empty ``switch`` case if no default case exists
+- replace ``switch`` with no cases with ``pop(expression)``
+- turn ``switch`` with single case into ``if``
+- replace ``switch`` with only default case with ``pop(expression)`` and body
+- replace ``switch`` with const expr with matching case body
+- replace ``for`` with terminating control flow and without other ``break``/``continue`` by ``if``
 - remove ``leave`` at the end of a function.
 
 None of these operations depend on the data flow. The StructuralSimplifier
@@ -949,6 +949,7 @@ The ControlFlowSimplifier does record the presence or absence of ``break``
 and ``continue`` statements during its traversal.
 
 Prerequisite: Disambiguator, FunctionHoister, ForLoopInitRewriter.
+
 Important: Introduces EVM opcodes and thus can only be used on EVM code for now.
 
 .. _dead-code-eliminator:
@@ -959,15 +960,16 @@ DeadCodeEliminator
 This optimization stage removes unreachable code.
 
 Unreachable code is any code within a block which is preceded by a
-leave, return, invalid, break, continue, selfdestruct, revert or by a call to a user-defined function that recurses infinitely.
+``leave``, ``return``, ``invalid``, ``break``, ``continue``, ``selfdestruct``, ``revert`` or by
+a call to a user-defined function that recurses infinitely.
 
 Function definitions are retained as they might be called by earlier
 code and thus are considered reachable.
 
-Because variables declared in a for loop's init block have their scope extended to the loop body,
+Because variables declared in a ``for`` loop's init block have their scope extended to the loop body,
 we require ForLoopInitRewriter to run before this step.
 
-Prerequisite: ForLoopInitRewriter, Function Hoister, Function Grouper
+Prerequisites: ForLoopInitRewriter, FunctionHoister, FunctionGrouper.
 
 .. _equal-store-eliminator:
 
@@ -978,12 +980,12 @@ This steps removes ``mstore(k, v)`` and ``sstore(k, v)`` calls if
 there was a previous call to ``mstore(k, v)`` / ``sstore(k, v)``,
 no other store in between and the values of ``k`` and ``v`` did not change.
 
-This simple step is effective if run after the SSA transform and the
-Common Subexpression Eliminator, because SSA will make sure that the variables
-will not change and the Common Subexpression Eliminator re-uses exactly the same
+This simple step is effective if run after the SSATransform and the
+CommonSubexpressionEliminator, because SSA will make sure that the variables
+will not change and the CommonSubexpressionEliminator re-uses exactly the same
 variable if the value is known to be the same.
 
-Prerequisites: Disambiguator, ForLoopInitRewriter
+Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 .. _unused-pruner:
 
@@ -992,8 +994,8 @@ UnusedPruner
 
 This step removes the definitions of all functions that are never referenced.
 
-It also removes the declaration of variables that are never referenced.
-If the declaration assigns a value that is not movable, the expression is retained,
+It also removes declarations of variables that are never referenced.
+If a declaration assigns a value that is not movable, the expression is retained,
 but its value is discarded.
 
 All movable expression statements (expressions that are not assigned) are removed.
@@ -1006,22 +1008,22 @@ StructuralSimplifier
 This is a general step that performs various kinds of simplifications on
 a structural level:
 
-- replace if statement with empty body by ``pop(condition)``
-- replace if statement with true condition by its body
-- remove if statement with false condition
-- turn switch with single case into if
-- replace switch with only default case by ``pop(expression)`` and body
-- replace switch with literal expression by matching case body
-- replace for loop with false condition by its initialization part
+- replace ``if`` statement with empty body by ``pop(condition)``
+- replace ``if`` statement with true condition by its body
+- remove ``if`` statement with false condition
+- turn ``switch`` with single case into ``if``
+- replace ``switch`` with only default case by ``pop(expression)`` and body
+- replace ``switch`` with literal expression by matching case body
+- replace ``for`` loop with false condition by its initialization part
 
-This component uses the Dataflow Analyzer.
+This component uses the DataflowAnalyzer.
 
 .. _block-flattener:
 
 BlockFlattener
 ^^^^^^^^^^^^^^
 
-This stage eliminates nested blocks by inserting the statement in the
+This stage eliminates nested blocks by inserting the statements in the
 inner block at the appropriate place in the outer block. It depends on the
 FunctionGrouper and does not flatten the outermost block to keep the form
 produced by the FunctionGrouper.
@@ -1062,10 +1064,9 @@ This optimization moves movable SSA variable declarations outside the loop.
 Only statements at the top level in a loop's body or post block are considered, i.e variable
 declarations inside conditional branches will not be moved out of the loop.
 
-Requirements:
+ExpressionSplitter and SSATransform should be run upfront to obtain better results.
 
-- The Disambiguator, ForLoopInitRewriter and FunctionHoister must be run upfront.
-- Expression splitter and SSA transform should be run upfront to obtain better result.
+Prerequisites: Disambiguator, ForLoopInitRewriter, FunctionHoister.
 
 
 Function-Level Optimizations
@@ -1092,7 +1093,7 @@ function ``f_1`` that takes only one argument, i.e.,
 Other optimization steps will be able to make more simplifications to the function. The
 optimization step is mainly useful for functions that would not be inlined.
 
-Prerequisites: Disambiguator, FunctionHoister
+Prerequisites: Disambiguator, FunctionHoister.
 
 LiteralRematerialiser is recommended as a prerequisite, even though it's not required for
 correctness.
@@ -1122,7 +1123,7 @@ The step LiteralRematerialiser is not required for correctness. It helps deal wi
 ``function f(x) -> y { revert(y, y} }`` where the literal ``y`` will be replaced by its value ``0``,
 allowing us to rewrite the function.
 
-.. index:: ! unused store eliminator
+.. index:: ! UnusedStoreEliminator
 .. _unused-store-eliminator:
 
 UnusedStoreEliminator
@@ -1149,7 +1150,7 @@ For example, the following code
         sstore(c, 3)
     }
 
-will be transformed into the code below after the Unused Store Eliminator step is run
+will be transformed into the code below after the UnusedStoreEliminator step is run
 
 .. code-block:: yul
 
@@ -1159,7 +1160,7 @@ will be transformed into the code below after the Unused Store Eliminator step i
         sstore(c, 3)
     }
 
-For memory store operations, things are generally simpler, at least in the outermost yul block as all such
+For memory store operations, things are generally simpler, at least in the outermost Yul block as all such
 statements will be removed if they are never read from in any code path.
 At function analysis level, however, the approach is similar to ``sstore``, as we do not know whether the memory location will
 be read once we leave the function's scope, so the statement will be removed only if all code paths lead to a memory overwrite.
@@ -1177,8 +1178,8 @@ If two functions are syntactically equivalent, while allowing variable
 renaming but not any re-ordering, then any reference to one of the
 functions is replaced by the other.
 
-The actual removal of the function is performed by the Unused Pruner.
 
+The actual removal of the function is performed by the UnusedPruner.
 
 Function Inlining
 -----------------
@@ -1199,7 +1200,7 @@ Furthermore, for all parameters, all of the following need to be true:
 
 - The argument is movable.
 - The parameter is either referenced less than twice in the function body, or the argument is rather cheap
-  ("cost" of at most 1, like a constant up to 0xff).
+  ("cost" of at most 1, like a constant up to ``0xff``).
 
 Example: The function to be inlined has the form of ``function f(...) -> r { r := E }`` where
 ``E`` is an expression that does not reference ``r`` and all arguments in the function call are movable expressions.
@@ -1255,7 +1256,7 @@ variables as much as possible.
 ExpressionJoiner
 ^^^^^^^^^^^^^^^^
 
-This is the opposite operation of the expression splitter. It turns a sequence of
+This is the opposite operation of the ExpressionSplitter. It turns a sequence of
 variable declarations that have exactly one reference into a complex expression.
 This stage fully preserves the order of function calls and opcode executions.
 It does not make use of any information concerning the commutativity of the opcodes;
@@ -1275,21 +1276,21 @@ Because of that, the snippet ``let x := add(0, 2) let y := mul(x, 3)`` is
 transformed to ``let y := mul(add(0, 2), 3)``, even though the ``add`` opcode
 would be executed after the evaluation of the literal ``3``.
 
-.. _SSA-reverser:
+.. _ssa-reverser:
 
 SSAReverser
 ^^^^^^^^^^^
 
-This is a tiny step that helps in reversing the effects of the SSA transform
-if it is combined with the Common Subexpression Eliminator and the
-Unused Pruner.
+This is a tiny step that helps in reversing the effects of the SSATransform
+if it is combined with the CommonSubexpressionEliminator and the
+UnusedPruner.
 
 The SSA form we generate is detrimental to code generation
 because it produces many local variables. It would
 be better to just re-use existing variables with assignments instead of
 fresh variable declarations.
 
-The SSA transform rewrites
+The SSATransform rewrites
 
 .. code-block:: yul
 
@@ -1307,7 +1308,7 @@ to
     a := a_2
 
 The problem is that instead of ``a``, the variable ``a_1`` is used
-whenever ``a`` was referenced. The SSA transform changes statements
+whenever ``a`` was referenced. The SSATransform changes statements
 of this form by just swapping out the declaration and the assignment. The above
 snippet is turned into
 
@@ -1320,10 +1321,10 @@ snippet is turned into
     let a_2 := a
 
 This is a very simple equivalence transform, but when we now run the
-Common Subexpression Eliminator, it will replace all occurrences of ``a_1``
-by ``a`` (until ``a`` is re-assigned). The Unused Pruner will then
+CommonSubexpressionEliminator, it will replace all occurrences of ``a_1``
+by ``a`` (until ``a`` is re-assigned). The UnusedPruner will then
 eliminate the variable ``a_1`` altogether and thus fully reverse the
-SSA transform.
+SSATransform.
 
 .. _stack-compressor:
 
@@ -1354,9 +1355,9 @@ is comparatively cheap to evaluate. Furthermore, it is only semantically equival
 the value of the expression did not change between the point of assignment and the
 point of use. The main benefit of this stage is that it can save stack slots if it
 leads to a variable being eliminated completely (see below), but it can also
-save a DUP opcode on the EVM if the expression is very cheap.
+save a ``DUP`` opcode on the EVM if the expression is very cheap.
 
-The Rematerialiser uses the Dataflow Analyzer to track the current values of variables,
+The Rematerialiser uses the DataflowAnalyzer to track the current values of variables,
 which are always movable.
 If the value is very cheap or the variable was explicitly requested to be eliminated,
 the variable reference is replaced by its current value.
