@@ -64,11 +64,11 @@ std::shared_ptr<DebugData const> Parser::createDebugData() const
 	switch (m_useSourceLocationFrom)
 	{
 		case UseSourceLocationFrom::Scanner:
-			return DebugData::create(ParserBase::currentLocation(), ParserBase::currentLocation());
+			return DebugData::create(ParserBase::currentLocation(), ParserBase::currentLocation(), {}, m_attributes);
 		case UseSourceLocationFrom::LocationOverride:
-			return DebugData::create(m_locationOverride, m_locationOverride);
+			return DebugData::create(m_locationOverride, m_locationOverride, {}, m_attributes);
 		case UseSourceLocationFrom::Comments:
-			return DebugData::create(ParserBase::currentLocation(), m_locationFromComment, m_astIDFromComment);
+			return DebugData::create(ParserBase::currentLocation(), m_locationFromComment, m_astIDFromComment, m_attributes);
 	}
 	solAssert(false, "");
 }
@@ -157,6 +157,7 @@ void Parser::fetchDebugDataFromComment()
 	langutil::SourceLocation originLocation = m_locationFromComment;
 	// Empty for each new node.
 	std::optional<int> astID;
+	std::optional<Json::Value> attributes;
 
 	while (regex_search(commentLiteral.cbegin(), commentLiteral.cend(), match, tagRegex))
 	{
@@ -177,6 +178,20 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
+		else if (match[1] == "@patch")
+		{
+			if (auto parseResult = parseAttributesPatchComment(commentLiteral, m_scanner->currentCommentLocation()))
+				tie(commentLiteral, attributes) = *parseResult;
+			else
+				break;
+		}
+		else if (match[1] == "@attr")
+		{
+			if (auto parseResult = parseAttributesComment(commentLiteral, m_scanner->currentCommentLocation()))
+				tie(commentLiteral, attributes) = *parseResult;
+			else
+				break;
+		}
 		else
 			// Ignore unrecognized tags.
 			continue;
@@ -184,6 +199,7 @@ void Parser::fetchDebugDataFromComment()
 
 	m_locationFromComment = originLocation;
 	m_astIDFromComment = astID;
+	m_attributes = attributes;
 }
 
 std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComment(
@@ -283,10 +299,29 @@ std::optional<std::pair<std::string_view, std::optional<int>>> Parser::parseASTI
 		return std::nullopt;
 }
 
+std::optional<std::pair<std::string_view, std::optional<Json::Value>>> Parser::parseAttributesComment(
+	std::string_view _arguments,
+	langutil::SourceLocation const& _commentLocation
+)
+{
+	(void)_arguments;
+	(void)_commentLocation;
+	return std::nullopt;
+}
+
+std::optional<std::pair<std::string_view, std::optional<Json::Value>>> Parser::parseAttributesPatchComment(
+	std::string_view _arguments,
+	langutil::SourceLocation const& _commentLocation
+) {
+	(void)_arguments;
+	(void)_commentLocation;
+	return std::nullopt;
+}
+
 Block Parser::parseBlock()
 {
 	RecursionGuard recursionGuard(*this);
-	Block block = createWithLocation<Block>();
+	Block block = createWithDebugData<Block>();
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
@@ -308,7 +343,7 @@ Statement Parser::parseStatement()
 		return parseBlock();
 	case Token::If:
 	{
-		If _if = createWithLocation<If>();
+		If _if = createWithDebugData<If>();
 		advance();
 		_if.condition = std::make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
@@ -317,7 +352,7 @@ Statement Parser::parseStatement()
 	}
 	case Token::Switch:
 	{
-		Switch _switch = createWithLocation<Switch>();
+		Switch _switch = createWithDebugData<Switch>();
 		advance();
 		_switch.expression = std::make_unique<Expression>(parseExpression());
 		while (currentToken() == Token::Case)
@@ -337,21 +372,21 @@ Statement Parser::parseStatement()
 		return parseForLoop();
 	case Token::Break:
 	{
-		Statement stmt{createWithLocation<Break>()};
+		Statement stmt{createWithDebugData<Break>()};
 		checkBreakContinuePosition("break");
 		advance();
 		return stmt;
 	}
 	case Token::Continue:
 	{
-		Statement stmt{createWithLocation<Continue>()};
+		Statement stmt{createWithDebugData<Continue>()};
 		checkBreakContinuePosition("continue");
 		advance();
 		return stmt;
 	}
 	case Token::Leave:
 	{
-		Statement stmt{createWithLocation<Leave>()};
+		Statement stmt{createWithDebugData<Leave>()};
 		if (!m_insideFunction)
 			m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
 		advance();
@@ -428,7 +463,7 @@ Statement Parser::parseStatement()
 Case Parser::parseCase()
 {
 	RecursionGuard recursionGuard(*this);
-	Case _case = createWithLocation<Case>();
+	Case _case = createWithDebugData<Case>();
 	if (currentToken() == Token::Default)
 		advance();
 	else if (currentToken() == Token::Case)
@@ -452,7 +487,7 @@ ForLoop Parser::parseForLoop()
 
 	ForLoopComponent outerForLoopComponent = m_currentForLoopComponent;
 
-	ForLoop forLoop = createWithLocation<ForLoop>();
+	ForLoop forLoop = createWithDebugData<ForLoop>();
 	expectToken(Token::For);
 	m_currentForLoopComponent = ForLoopComponent::ForLoopPre;
 	forLoop.pre = parseBlock();
@@ -559,7 +594,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 VariableDeclaration Parser::parseVariableDeclaration()
 {
 	RecursionGuard recursionGuard(*this);
-	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
+	VariableDeclaration varDecl = createWithDebugData<VariableDeclaration>();
 	expectToken(Token::Let);
 	while (true)
 	{
@@ -595,7 +630,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	ForLoopComponent outerForLoopComponent = m_currentForLoopComponent;
 	m_currentForLoopComponent = ForLoopComponent::None;
 
-	FunctionDefinition funDef = createWithLocation<FunctionDefinition>();
+	FunctionDefinition funDef = createWithDebugData<FunctionDefinition>();
 	expectToken(Token::Function);
 	funDef.name = expectAsmIdentifier();
 	expectToken(Token::LParen);
@@ -657,7 +692,7 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier>&& _initialOp)
 TypedName Parser::parseTypedName()
 {
 	RecursionGuard recursionGuard(*this);
-	TypedName typedName = createWithLocation<TypedName>();
+	TypedName typedName = createWithDebugData<TypedName>();
 	typedName.name = expectAsmIdentifier();
 	if (currentToken() == Token::Colon)
 	{

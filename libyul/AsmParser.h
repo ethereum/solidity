@@ -117,6 +117,16 @@ protected:
 		langutil::SourceLocation const& _commentLocation
 	);
 
+	std::optional<std::pair<std::string_view, std::optional<Json::Value>>> parseAttributesComment(
+		std::string_view _arguments,
+		langutil::SourceLocation const& _commentLocation
+	);
+
+	std::optional<std::pair<std::string_view, std::optional<Json::Value>>>parseAttributesPatchComment(
+		std::string_view _arguments,
+		langutil::SourceLocation const& _commentLocation
+	);
+
 	/// Creates a DebugData object with the correct source location set.
 	std::shared_ptr<DebugData const> createDebugData() const;
 
@@ -126,7 +136,7 @@ protected:
 	) const;
 
 	/// Creates an inline assembly node with the current source location.
-	template <class T> T createWithLocation() const
+	template <class T> T createWithDebugData() const
 	{
 		T r;
 		r.debugData = createDebugData();
@@ -163,6 +173,7 @@ private:
 	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;
+	std::optional<Json::Value> m_attributes;
 };
 
 }
