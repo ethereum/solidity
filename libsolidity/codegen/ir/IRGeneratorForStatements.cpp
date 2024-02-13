@@ -1013,6 +1013,16 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		{
 			solAssert(functionDef->isImplemented());
 
+			if (!functionDef->isVisibleInDerivedContracts())
+			{
+				auto origCallingContract = _functionCall.annotation().origCallingContract;
+				solAssert (origCallingContract, "Original calling contract is not set");
+				solAssert(
+					functionDef->annotation().contract == origCallingContract,
+					"Attempt to call private function from other contract"
+				);
+			}
+
 			define(_functionCall) <<
 				m_context.enqueueFunctionForCodeGeneration(*functionDef) <<
 				"(" <<
