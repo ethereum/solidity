@@ -1,0 +1,5 @@
+Warning: Statement has no effect.
+ --> mcopy_bytes_array_abi_decode/input.sol:7:9:
+  |
+7 |         abi.decode("abcd", (bytes));
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,230 @@
+IR:
+
+/// @use-src 0:"mcopy_bytes_array_abi_decode/input.sol"
+object "C_15" {
+    code {
+
+        mstore(64, memoryguard(128))
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_C_15()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset("C_15_deployed"), datasize("C_15_deployed"))
+
+        return(_1, datasize("C_15_deployed"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+        function constructor_C_15() {
+
+        }
+
+    }
+    /// @use-src 0:"mcopy_bytes_array_abi_decode/input.sol"
+    object "C_15_deployed" {
+        code {
+
+            mstore(64, memoryguard(128))
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0xc2985578
+                {
+                    // foo()
+
+                    external_fun_foo_14()
+                }
+
+                default {}
+            }
+
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function abi_decode_tuple_(headStart, dataEnd)   {
+                if slt(sub(dataEnd, headStart), 0) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+            }
+
+            function abi_encode_tuple__to__fromStack(headStart ) -> tail {
+                tail := add(headStart, 0)
+
+            }
+
+            function external_fun_foo_14() {
+
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                abi_decode_tuple_(4, calldatasize())
+                fun_foo_14()
+                let memPos := allocate_unbounded()
+                let memEnd := abi_encode_tuple__to__fromStack(memPos  )
+                return(memPos, sub(memEnd, memPos))
+
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function round_up_to_mul_of_32(value) -> result {
+                result := and(add(value, 31), not(31))
+            }
+
+            function panic_error_0x41() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x41)
+                revert(0, 0x24)
+            }
+
+            function finalize_allocation(memPtr, size) {
+                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+            }
+
+            function allocate_memory(size) -> memPtr {
+                memPtr := allocate_unbounded()
+                finalize_allocation(memPtr, size)
+            }
+
+            function array_allocation_size_t_string_memory_ptr(length) -> size {
+                // Make sure we can allocate memory without overflow
+                if gt(length, 0xffffffffffffffff) { panic_error_0x41() }
+
+                size := round_up_to_mul_of_32(length)
+
+                // add length slot
+                size := add(size, 0x20)
+
+            }
+
+            function allocate_memory_array_t_string_memory_ptr(length) -> memPtr {
+                let allocSize := array_allocation_size_t_string_memory_ptr(length)
+                memPtr := allocate_memory(allocSize)
+
+                mstore(memPtr, length)
+
+            }
+
+            function store_literal_in_memory_48bed44d1bcd124a28c27f343a817e5f5243190d3c52bf347daf876de1dbbf77(memPtr) {
+
+                mstore(add(memPtr, 0), "abcd")
+
+            }
+
+            function copy_literal_to_memory_48bed44d1bcd124a28c27f343a817e5f5243190d3c52bf347daf876de1dbbf77() -> memPtr {
+                memPtr := allocate_memory_array_t_string_memory_ptr(4)
+                store_literal_in_memory_48bed44d1bcd124a28c27f343a817e5f5243190d3c52bf347daf876de1dbbf77(add(memPtr, 32))
+            }
+
+            function convert_t_stringliteral_48bed44d1bcd124a28c27f343a817e5f5243190d3c52bf347daf876de1dbbf77_to_t_bytes_memory_ptr() -> converted {
+                converted := copy_literal_to_memory_48bed44d1bcd124a28c27f343a817e5f5243190d3c52bf347daf876de1dbbf77()
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d() {
+                revert(0, 0)
+            }
+
+            function revert_error_987264b3b1d58a9c7f8255e93e81c77d86d6299019c33110a076957a3e06e2ae() {
+                revert(0, 0)
+            }
+
+            function array_allocation_size_t_bytes_memory_ptr(length) -> size {
+                // Make sure we can allocate memory without overflow
+                if gt(length, 0xffffffffffffffff) { panic_error_0x41() }
+
+                size := round_up_to_mul_of_32(length)
+
+                // add length slot
+                size := add(size, 0x20)
+
+            }
+
+            function copy_memory_to_memory_with_cleanup(src, dst, length) {
+
+                mcopy(dst, src, length)
+                mstore(add(dst, length), 0)
+
+            }
+
+            function abi_decode_available_length_t_bytes_memory_ptr_fromMemory(src, length, end) -> array {
+                array := allocate_memory(array_allocation_size_t_bytes_memory_ptr(length))
+                mstore(array, length)
+                let dst := add(array, 0x20)
+                if gt(add(src, length), end) { revert_error_987264b3b1d58a9c7f8255e93e81c77d86d6299019c33110a076957a3e06e2ae() }
+                copy_memory_to_memory_with_cleanup(src, dst, length)
+            }
+
+            // bytes
+            function abi_decode_t_bytes_memory_ptr_fromMemory(offset, end) -> array {
+                if iszero(slt(add(offset, 0x1f), end)) { revert_error_1b9f4a0a5773e33b91aa01db23bf8c55fce1411167c872835e7fa00a4f17d46d() }
+                let length := mload(offset)
+                array := abi_decode_available_length_t_bytes_memory_ptr_fromMemory(add(offset, 0x20), length, end)
+            }
+
+            function abi_decode_tuple_t_bytes_memory_ptr_fromMemory(headStart, dataEnd) -> value0 {
+                if slt(sub(dataEnd, headStart), 32) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := mload(add(headStart, 0))
+                    if gt(offset, 0xffffffffffffffff) { revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() }
+
+                    value0 := abi_decode_t_bytes_memory_ptr_fromMemory(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function array_length_t_bytes_memory_ptr(value) -> length {
+
+                length := mload(value)
+
+            }
+
+            function fun_foo_14() {
+
+                let _1_mpos := convert_t_stringliteral_48bed44d1bcd124a28c27f343a817e5f5243190d3c52bf347daf876de1dbbf77_to_t_bytes_memory_ptr()
+
+                let expr_11_mpos :=  abi_decode_tuple_t_bytes_memory_ptr_fromMemory(add(_1_mpos, 32), add(add(_1_mpos, 32), array_length_t_bytes_memory_ptr(_1_mpos)))
+
+            }
+
+        }
+
+        data ".metadata" hex""
+    }
+
+}
