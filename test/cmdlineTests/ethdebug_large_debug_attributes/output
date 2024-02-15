@@ -1,0 +1,26 @@
+
+======= ethdebug_large_debug_attributes/input.yul (EVM) =======
+
+Pretty printed source:
+object "a" {
+    code {
+        {
+            let addr := linkersymbol("contract/test.sol:L")
+            sstore(0, addr)
+        }
+    }
+}
+
+
+Binary representation:
+73__$f919ba91ac99f96129544b80b9516b27a8$__5f5500
+
+Text representation:
+    /* "ethdebug_large_debug_attributes/input.yul":54152:54187   */
+  linkerSymbol("f919ba91ac99f96129544b80b9516b27a80e376b9dc693819d0b18b7e0395612")
+    /* "ethdebug_large_debug_attributes/input.yul":108313:108314   */
+  0x00
+    /* "ethdebug_large_debug_attributes/input.yul":108306:108321   */
+  sstore
+    /* "ethdebug_large_debug_attributes/input.yul":22:108327   */
+  stop

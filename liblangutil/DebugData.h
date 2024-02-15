@@ -19,6 +19,7 @@
 #pragma once
 
 #include <liblangutil/SourceLocation.h>
+#include <libsolutil/JSON.h>
 #include <optional>
 #include <memory>
 
@@ -28,27 +29,32 @@ namespace solidity::langutil
 struct DebugData
 {
 	typedef typename std::shared_ptr<DebugData const> ConstPtr;
+	typedef std::optional<std::vector<std::shared_ptr<Json>>> Attributes;
 
 	explicit DebugData(
 		langutil::SourceLocation _nativeLocation = {},
 		langutil::SourceLocation _originLocation = {},
-		std::optional<int64_t> _astID = {}
+		std::optional<int64_t> _astID = {},
+		Attributes _attributes = {}
 	):
 		nativeLocation(std::move(_nativeLocation)),
 		originLocation(std::move(_originLocation)),
-		astID(_astID)
+		astID(_astID),
+		attributes(std::move(_attributes))
 	{}
 
 	static DebugData::ConstPtr create(
 		langutil::SourceLocation _nativeLocation,
 		langutil::SourceLocation _originLocation = {},
-		std::optional<int64_t> _astID = {}
+		std::optional<int64_t> _astID = {},
+		Attributes _attributes = {}
 	)
 	{
 		return std::make_shared<DebugData>(
 			std::move(_nativeLocation),
 			std::move(_originLocation),
-			_astID
+			_astID,
+			std::move(_attributes)
 		);
 	}
 
@@ -65,6 +71,8 @@ struct DebugData
 	langutil::SourceLocation originLocation;
 	/// ID in the (Solidity) source AST.
 	std::optional<int64_t> astID;
+	/// Additional debug data attributes.
+	Attributes attributes;
 };
 
 } // namespace solidity::langutil

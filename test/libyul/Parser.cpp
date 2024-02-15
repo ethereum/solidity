@@ -54,7 +54,7 @@ namespace solidity::yul::test
 namespace
 {
 
-std::shared_ptr<AST> parse(std::string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
+std::shared_ptr<AST> parse(std::string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter, Parser::DebugAttributeCache::Ptr debugAttributesCache = {})
 {
 	auto stream = CharStream(_source, "");
 	std::map<unsigned, std::shared_ptr<std::string const>> indicesToSourceNames;
@@ -64,7 +64,8 @@ std::shared_ptr<AST> parse(std::string const& _source, Dialect const& _dialect, 
 	auto parserResult = yul::Parser(
 		errorReporter,
 		_dialect,
-		std::move(indicesToSourceNames)
+		std::move(indicesToSourceNames),
+		std::move(debugAttributesCache)
 	).parse(stream);
 	if (parserResult)
 	{
@@ -996,6 +997,67 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_multiple_src_tags_on_one_line)
 	BOOST_REQUIRE(std::holds_alternative<VariableDeclaration>(result->root().statements.at(0)));
 	VariableDeclaration const& varX = std::get<VariableDeclaration>(result->root().statements.at(0));
 	CHECK_LOCATION(varX.debugData->originLocation, "source1", 4, 5);
+}
+
+BOOST_AUTO_TEST_CASE(ethdebug_debug_attributes_empty)
+{
+	Parser::DebugAttributeCache::Ptr cache = std::make_shared<yul::Parser::DebugAttributeCache>();
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	std::shared_ptr<AST> result = parse(sourceText, dialect, reporter, cache);
+	BOOST_REQUIRE(cache->cache().size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(ethdebug_debug_attributes_set_empty)
+{
+	Parser::DebugAttributeCache::Ptr cache = std::make_shared<yul::Parser::DebugAttributeCache>();
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @debug.set {}
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	std::shared_ptr<AST> result = parse(sourceText, dialect, reporter, cache);
+	BOOST_REQUIRE(cache->cache().size() == 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(ethdebug_debug_attributes_set)
+{
+	Parser::DebugAttributeCache::Ptr cache = std::make_shared<yul::Parser::DebugAttributeCache>();
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @debug.set {"hello": "world"}
+		{}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	std::shared_ptr<AST> result = parse(sourceText, dialect, reporter, cache);
+	BOOST_REQUIRE(cache->cache().size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(ethdebug_debug_attributes_multiple_set)
+{
+	Parser::DebugAttributeCache::Ptr cache = std::make_shared<yul::Parser::DebugAttributeCache>();
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @debug.set {"hello": "world"}
+		{
+			/// @debug.set {"hello": "world!"}
+			{}
+			/// @debug.set {"hello": "world"}
+			{}
+		}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	std::shared_ptr<AST> result = parse(sourceText, dialect, reporter, cache);
+	BOOST_REQUIRE(cache->cache().size() == 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
