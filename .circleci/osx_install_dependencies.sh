@@ -57,7 +57,7 @@ then
   brew install grep
 
   # writing to /usr/local/lib need administrative privileges.
-  sudo ./scripts/install_obsolete_jsoncpp_1_7_4.sh
+  sudo ./scripts/install_obsolete_jsoncpp_1_9_5.sh
 
   # boost
   boost_version="1.84.0"
