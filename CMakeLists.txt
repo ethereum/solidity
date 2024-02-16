@@ -39,6 +39,7 @@ option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warni
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
 option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
 option(ONLY_BUILD_SOLIDITY_LIBRARIES "Only build solidity libraries" OFF)
+option(STRICT_JSONCPP_VERSION "Strictly check installed jsoncpp version" ON)
 
 # Setup cccache.
 include(EthCcache)
@@ -60,6 +61,10 @@ endif()
 
 if (PROFILE_OPTIMIZER_STEPS)
     add_definitions(-DPROFILE_OPTIMIZER_STEPS)
+endif()
+
+if (STRICT_JSONCPP_VERSION)
+	add_definitions(-DSTRICT_JSONCPP_VERSION_CHECK)
 endif()
 
 # Figure out what compiler and system are we using
