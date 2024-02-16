@@ -38,6 +38,7 @@ option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
 option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
+option(ONLY_BUILD_SOLIDITY_LIBRARIES "Only build solidity libraries" OFF)
 
 # Setup cccache.
 include(EthCcache)
@@ -144,12 +145,16 @@ add_subdirectory(libyul)
 add_subdirectory(libsolidity)
 add_subdirectory(libsolc)
 add_subdirectory(libstdlib)
-add_subdirectory(tools)
 
-if (NOT EMSCRIPTEN)
-	add_subdirectory(solc)
+if (NOT ONLY_BUILD_SOLIDITY_LIBRARIES)
+	add_subdirectory(tools)
+
+	if (NOT EMSCRIPTEN)
+		add_subdirectory(solc)
+	endif()
+
+	if (TESTS AND NOT EMSCRIPTEN)
+		add_subdirectory(test)
+	endif()
 endif()
 
-if (TESTS AND NOT EMSCRIPTEN)
-	add_subdirectory(test)
-endif()
