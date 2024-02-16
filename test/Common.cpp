@@ -78,7 +78,10 @@ std::optional<fs::path> findInDefaultPath(std::string const& lib_name)
 		fs::current_path() / ".." / "deps" / "lib",
 		fs::current_path() / ".." / ".." / "deps",
 		fs::current_path() / ".." / ".." / "deps" / "lib",
-		fs::current_path()
+		fs::current_path(),
+#ifdef __APPLE__
+		fs::current_path().root_path() / fs::path("usr") / "local" / "lib",
+#endif
 	};
 	for (auto const& basePath: searchPath)
 	{
