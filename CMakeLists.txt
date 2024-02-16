@@ -37,16 +37,19 @@ option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libs
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
+option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
 
 # Setup cccache.
 include(EthCcache)
 
 # Let's find our dependencies
 include(EthDependencies)
-include(fmtlib)
-include(jsoncpp)
-include(range-v3)
-include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+if (NOT USE_SYSTEM_LIBRARIES)
+  include(fmtlib)
+  include(jsoncpp)
+  include(range-v3)
+  include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+endif()
 
 find_package(Threads)
 
