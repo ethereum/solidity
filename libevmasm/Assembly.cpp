@@ -861,8 +861,8 @@ LinkerObject const& Assembly::assemble() const
 			immutableReferencesBySub = linkerObject.immutableReferences;
 		}
 		for (size_t tagPos: sub->m_tagPositionsInBytecode)
-			if (tagPos != std::numeric_limits<size_t>::max() && tagPos > subTagSize)
-				subTagSize = tagPos;
+			if (tagPos != std::numeric_limits<size_t>::max() && numberEncodingSize(tagPos) > subTagSize)
+				subTagSize = numberEncodingSize(tagPos);
 	}
 
 	bool setsImmutables = false;
