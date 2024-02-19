@@ -36,6 +36,7 @@
 #endif
 
 #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 
 #include <test/InteractiveTests.h>
 #include <test/Common.h>
@@ -49,7 +50,6 @@
 using namespace boost::unit_test;
 using namespace solidity::frontend::test;
 namespace fs = boost::filesystem;
-using namespace std;
 
 namespace
 {
@@ -100,7 +100,7 @@ void runTestCase(TestCase::Config const& _config, TestCase::TestCaseCreator cons
 {
 	try
 	{
-		stringstream errorStream;
+		std::stringstream errorStream;
 		auto testCase = _testCaseCreator(_config);
 		if (testCase->shouldRun())
 			switch (testCase->run(errorStream))
@@ -133,7 +133,7 @@ int registerTests(
 	boost::unit_test::test_suite& _suite,
 	boost::filesystem::path const& _basepath,
 	boost::filesystem::path const& _path,
-	vector<string> const& _labels,
+	std::vector<std::string> const& _labels,
 	TestCase::TestCaseCreator _testCaseCreator,
 	solidity::test::Batcher& _batcher
 )
@@ -176,9 +176,9 @@ int registerTests(
 			// This must be a vector of unique_ptrs because Boost.Test keeps the equivalent of a string_view to the filename
 			// that is passed in. If the strings were stored directly in the vector, pointers/references to them would be
 			// invalidated on reallocation.
-			static vector<unique_ptr<string const>> filenames;
+			static std::vector<std::unique_ptr<std::string const>> filenames;
 
-			filenames.emplace_back(make_unique<string>(_path.string()));
+			filenames.emplace_back(std::make_unique<std::string>(_path.string()));
 			auto test_case = make_test_case(
 				[config, _testCaseCreator]
 				{
@@ -236,11 +236,14 @@ test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/[])
 			exit(EXIT_FAILURE);
 
 		if (solidity::test::CommonOptions::get().disableSemanticTests)
-			cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
+			std::cout << std::endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << std::endl << std::endl;
+
+		if (!solidity::test::CommonOptions::get().enforceGasTest)
+			std::cout << std::endl << "WARNING :: Gas Cost Expectations are not being enforced" << std::endl << std::endl;
 
 		Batcher batcher(CommonOptions::get().selectedBatch, CommonOptions::get().batches);
 		if (CommonOptions::get().batches > 1)
-			cout << "Batch " << CommonOptions::get().selectedBatch << " out of " << CommonOptions::get().batches << endl;
+			std::cout << "Batch " << CommonOptions::get().selectedBatch << " out of " << CommonOptions::get().batches << std::endl;
 
 		// Batch the boost tests
 		BoostBatcher boostBatcher(batcher);
@@ -287,12 +290,12 @@ test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/[])
 	}
 	catch (solidity::test::ConfigException const& exception)
 	{
-		cerr << exception.what() << endl;
+		std::cerr << exception.what() << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	catch (std::runtime_error const& exception)
 	{
-		cerr << exception.what() << endl;
+		std::cerr << exception.what() << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
