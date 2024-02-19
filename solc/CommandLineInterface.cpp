@@ -43,9 +43,7 @@
 
 #include <libyul/YulStack.h>
 
-#include <libevmasm/Instruction.h>
 #include <libevmasm/Disassemble.h>
-#include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
