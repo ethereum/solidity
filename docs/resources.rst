@@ -19,7 +19,7 @@ General Resources
 Integrated (Ethereum) Development Environments
 ==============================================
 
-    * `Brownie <https://eth-brownie.readthedocs.io/en/stable/>`_
+    * `Ape <https://docs.apeworx.io/ape/stable/>`_
         Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
 
     * `Dapp <https://dapp.tools/>`_
