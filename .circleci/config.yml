@@ -505,7 +505,6 @@ defaults:
         TERM: xterm
         MAKEFLAGS: -j5
         CPUs: 5
-        ETH_EVMONE: /usr/local/lib/libevmone.dylib
 
   - base_python_small: &base_python_small
       docker:
