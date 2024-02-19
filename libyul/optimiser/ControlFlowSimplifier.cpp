@@ -37,7 +37,7 @@ namespace
 {
 
 ExpressionStatement makeDiscardCall(
-	std::shared_ptr<DebugData const> const& _debugData,
+	langutil::DebugData::ConstPtr const& _debugData,
 	BuiltinFunction const& _discardFunction,
 	Expression&& _expression
 )
@@ -196,7 +196,7 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 	yulAssert(_switchStmt.cases.size() == 1, "Expected only one case!");
 
 	auto& switchCase = _switchStmt.cases.front();
-	std::shared_ptr<DebugData const> debugData = debugDataOf(*_switchStmt.expression);
+	langutil::DebugData::ConstPtr debugData = debugDataOf(*_switchStmt.expression);
 	YulString type = m_typeInfo.typeOf(*_switchStmt.expression);
 	if (switchCase.value)
 	{

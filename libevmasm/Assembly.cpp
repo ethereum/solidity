@@ -179,7 +179,7 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 
 	if (c_instructions.count(name))
 	{
-		AssemblyItem item{c_instructions.at(name), location};
+		AssemblyItem item{c_instructions.at(name), langutil::DebugData::create(location)};
 		if (!jumpType.empty())
 		{
 			if (item.instruction() == Instruction::JUMP || item.instruction() == Instruction::JUMPI)

@@ -36,7 +36,7 @@ namespace
 {
 std::vector<Statement> generateMemoryStore(
 	Dialect const& _dialect,
-	std::shared_ptr<DebugData const> const& _debugData,
+	langutil::DebugData::ConstPtr const& _debugData,
 	YulString _mpos,
 	Expression _value
 )
@@ -55,7 +55,7 @@ std::vector<Statement> generateMemoryStore(
 	return result;
 }
 
-FunctionCall generateMemoryLoad(Dialect const& _dialect, std::shared_ptr<DebugData const> const& _debugData, YulString _mpos)
+FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, YulString _mpos)
 {
 	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction(_dialect.defaultType);
 	yulAssert(memoryLoadFunction, "");

@@ -30,7 +30,7 @@
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
-#include <liblangutil/SourceLocation.h>
+#include <liblangutil/DebugData.h>
 
 #include <map>
 
@@ -93,7 +93,7 @@ public:
 private:
 	std::string formatTypedName(TypedName _variable);
 	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
-	std::string formatDebugData(std::shared_ptr<DebugData const> const& _debugData, bool _statement);
+	std::string formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement);
 	template <class T>
 	std::string formatDebugData(T const& _node)
 	{

@@ -59,7 +59,7 @@ std::optional<int> toInt(std::string const& _value)
 
 }
 
-std::shared_ptr<DebugData const> Parser::createDebugData() const
+langutil::DebugData::ConstPtr Parser::createDebugData() const
 {
 	switch (m_useSourceLocationFrom)
 	{
@@ -74,7 +74,7 @@ std::shared_ptr<DebugData const> Parser::createDebugData() const
 }
 
 void Parser::updateLocationEndFrom(
-	std::shared_ptr<DebugData const>& _debugData,
+	langutil::DebugData::ConstPtr& _debugData,
 	SourceLocation const& _location
 ) const
 {
@@ -286,7 +286,7 @@ std::optional<std::pair<std::string_view, std::optional<int>>> Parser::parseASTI
 Block Parser::parseBlock()
 {
 	RecursionGuard recursionGuard(*this);
-	Block block = createWithLocation<Block>();
+	Block block = createWithDebugData<Block>();
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
@@ -308,7 +308,7 @@ Statement Parser::parseStatement()
 		return parseBlock();
 	case Token::If:
 	{
-		If _if = createWithLocation<If>();
+		If _if = createWithDebugData<If>();
 		advance();
 		_if.condition = std::make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
@@ -317,7 +317,7 @@ Statement Parser::parseStatement()
 	}
 	case Token::Switch:
 	{
-		Switch _switch = createWithLocation<Switch>();
+		Switch _switch = createWithDebugData<Switch>();
 		advance();
 		_switch.expression = std::make_unique<Expression>(parseExpression());
 		while (currentToken() == Token::Case)
@@ -337,21 +337,21 @@ Statement Parser::parseStatement()
 		return parseForLoop();
 	case Token::Break:
 	{
-		Statement stmt{createWithLocation<Break>()};
+		Statement stmt{createWithDebugData<Break>()};
 		checkBreakContinuePosition("break");
 		advance();
 		return stmt;
 	}
 	case Token::Continue:
 	{
-		Statement stmt{createWithLocation<Continue>()};
+		Statement stmt{createWithDebugData<Continue>()};
 		checkBreakContinuePosition("continue");
 		advance();
 		return stmt;
 	}
 	case Token::Leave:
 	{
-		Statement stmt{createWithLocation<Leave>()};
+		Statement stmt{createWithDebugData<Leave>()};
 		if (!m_insideFunction)
 			m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
 		advance();
@@ -428,7 +428,7 @@ Statement Parser::parseStatement()
 Case Parser::parseCase()
 {
 	RecursionGuard recursionGuard(*this);
-	Case _case = createWithLocation<Case>();
+	Case _case = createWithDebugData<Case>();
 	if (currentToken() == Token::Default)
 		advance();
 	else if (currentToken() == Token::Case)
@@ -452,7 +452,7 @@ ForLoop Parser::parseForLoop()
 
 	ForLoopComponent outerForLoopComponent = m_currentForLoopComponent;
 
-	ForLoop forLoop = createWithLocation<ForLoop>();
+	ForLoop forLoop = createWithDebugData<ForLoop>();
 	expectToken(Token::For);
 	m_currentForLoopComponent = ForLoopComponent::ForLoopPre;
 	forLoop.pre = parseBlock();
@@ -559,7 +559,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 VariableDeclaration Parser::parseVariableDeclaration()
 {
 	RecursionGuard recursionGuard(*this);
-	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
+	VariableDeclaration varDecl = createWithDebugData<VariableDeclaration>();
 	expectToken(Token::Let);
 	while (true)
 	{
@@ -595,7 +595,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	ForLoopComponent outerForLoopComponent = m_currentForLoopComponent;
 	m_currentForLoopComponent = ForLoopComponent::None;
 
-	FunctionDefinition funDef = createWithLocation<FunctionDefinition>();
+	FunctionDefinition funDef = createWithDebugData<FunctionDefinition>();
 	expectToken(Token::Function);
 	funDef.name = expectAsmIdentifier();
 	expectToken(Token::LParen);
@@ -657,7 +657,7 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier>&& _initialOp)
 TypedName Parser::parseTypedName()
 {
 	RecursionGuard recursionGuard(*this);
-	TypedName typedName = createWithLocation<TypedName>();
+	TypedName typedName = createWithDebugData<TypedName>();
 	typedName.name = expectAsmIdentifier();
 	if (currentToken() == Token::Colon)
 	{

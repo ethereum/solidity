@@ -142,10 +142,10 @@ private:
 	bool removeStackTopIfPossible();
 
 	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack position.
-	void appendDup(int _fromPosition, langutil::SourceLocation const& _location);
+	void appendDup(int _fromPosition,  langutil::DebugData::ConstPtr _debugData);
 	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack position.
 	/// @note this might also remove the last item if it exactly the same swap instruction.
-	void appendOrRemoveSwap(int _fromPosition, langutil::SourceLocation const& _location);
+	void appendOrRemoveSwap(int _fromPosition,  langutil::DebugData::ConstPtr _debugData);
 	/// Appends the given assembly item.
 	void appendItem(AssemblyItem const& _item);
 

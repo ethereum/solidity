@@ -56,7 +56,7 @@ void InspectedInterpreter::run(
 	InspectedInterpreter{_inspector, _state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
 }
 
-Inspector::NodeAction Inspector::queryUser(DebugData const& _data, std::map<YulString, u256> const& _variables)
+Inspector::NodeAction Inspector::queryUser(langutil::DebugData const& _data, std::map<YulString, u256> const& _variables)
 {
 	if (m_stepMode == NodeAction::RunNode)
 	{
@@ -131,7 +131,7 @@ Inspector::NodeAction Inspector::queryUser(DebugData const& _data, std::map<YulS
 	}
 }
 
-std::string Inspector::currentSource(DebugData const& _data) const
+std::string Inspector::currentSource(langutil::DebugData const& _data) const
 {
 	return m_source.substr(
 		static_cast<size_t>(_data.nativeLocation.start),
