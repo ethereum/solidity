@@ -150,7 +150,7 @@ Json Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto devDoc = devDocumentation(varDecl->annotation().docTags); !devDoc.empty())
 			doc["stateVariables"][varDecl->name()] = devDoc;
 
-		auto const assignIfNotEmpty = [&](std::string const& _name, Json::Value const& _content)
+		auto const assignIfNotEmpty = [&](std::string const& _name, Json const& _content)
 		{
 			if (!_content.empty())
 				doc["stateVariables"][varDecl->name()][_name] = _content;
@@ -176,7 +176,7 @@ Json Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	return doc;
 }
 
-Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames)
+Json Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames)
 {
 	Json jsonReturn{Json::object()};
 	auto returnDocs = _tags.equal_range("return");
@@ -216,7 +216,7 @@ std::string Natspec::extractDoc(std::multimap<std::string, DocTag> const& _tags,
 	return value;
 }
 
-Json::Value Natspec::extractCustomDoc(std::multimap<std::string, DocTag> const& _tags)
+Json Natspec::extractCustomDoc(std::multimap<std::string, DocTag> const& _tags)
 {
 	std::map<std::string, std::string> concatenated;
 	for (auto const& [tag, value]: _tags)

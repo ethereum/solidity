@@ -40,10 +40,12 @@ bool anyDataStoredInStorage(TypePointers const& _pointers)
 
 Json ABI::generate(ContractDefinition const& _contractDef)
 {
-	auto compare = [](Json::Value const& _a, Json::Value const& _b) -> bool {
-		return std::make_tuple(_a["type"], _a["name"]) < std::make_tuple(_b["type"], _b["name"]);
+	auto compare = [](Json const& _a, Json const& _b) -> bool {
+		if (_a.contains("type") && _a.contains("name") && _b.contains("type") && _b.contains("name"))
+			return std::make_tuple(_a["type"], _a["name"]) < std::make_tuple(_b["type"], _b["name"]);
+		return false;
 	};
-	std::multiset<Json::Value, decltype(compare)> abi(compare);
+	std::multiset<Json, decltype(compare)> abi(compare);
 
 	for (auto it: _contractDef.interfaceFunctions())
 	{
@@ -142,7 +144,7 @@ Json ABI::generate(ContractDefinition const& _contractDef)
 	return abiJson;
 }
 
-Json::Value ABI::formatTypeList(
+Json ABI::formatTypeList(
 	std::vector<std::string> const& _names,
 	std::vector<Type const*> const& _encodingTypes,
 	std::vector<Type const*> const& _solidityTypes,
@@ -160,7 +162,7 @@ Json::Value ABI::formatTypeList(
 	return params;
 }
 
-Json::Value ABI::formatType(
+Json ABI::formatType(
 	std::string const& _name,
 	Type const& _encodingType,
 	Type const& _solidityType,
@@ -193,11 +195,11 @@ Json::Value ABI::formatType(
 			);
 			if (subtype.contains("components"))
 			{
-				ret["type"] = subtype["type"].get<string>() + suffix;
+				ret["type"] = subtype["type"].get<std::string>() + suffix;
 				ret["components"] = subtype["components"];
 			}
 			else
-				ret["type"] = subtype["type"].get<string>() + suffix;
+				ret["type"] = subtype["type"].get<std::string>() + suffix;
 		}
 	}
 	else if (StructType const* structType = dynamic_cast<StructType const*>(&_encodingType))

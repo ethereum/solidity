@@ -33,8 +33,6 @@
 
 #include <libevmasm/LinkerObject.h>
 
-#include <json/json.h>
-
 #include <memory>
 #include <string>
 
@@ -132,7 +130,7 @@ public:
 	std::string print(
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
-	Json::Value astJson() const;
+	Json astJson() const;
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
 

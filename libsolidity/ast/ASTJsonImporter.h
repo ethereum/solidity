@@ -68,11 +68,11 @@ private:
 	template<class T>
 	ASTPointer<T> convertJsonToASTNode(Json const& _node);
 
-	langutil::SourceLocation createNameSourceLocation(Json::Value const& _node);
+	langutil::SourceLocation createNameSourceLocation(Json const& _node);
 	/// @returns source location of a mapping key name
-	langutil::SourceLocation createKeyNameSourceLocation(Json::Value const& _node);
+	langutil::SourceLocation createKeyNameSourceLocation(Json const& _node);
 	/// @returns source location of a mapping value name
-	langutil::SourceLocation createValueNameSourceLocation(Json::Value const& _node);
+	langutil::SourceLocation createValueNameSourceLocation(Json const& _node);
 
 	/// \defgroup nodeCreators JSON to AST-Nodes
 	///@{

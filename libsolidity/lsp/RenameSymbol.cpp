@@ -50,8 +50,8 @@ CallableDeclaration const* extractCallableDeclaration(FunctionCall const& _funct
 void RenameSymbol::operator()(MessageID _id, Json const& _args)
 {
 	auto const&& [sourceUnitName, lineColumn] = extractSourceUnitNameAndLineColumn(_args);
-	std::string const newName = _args["newName"].asString();
-	std::string const uri = _args["textDocument"]["uri"].asString();
+	std::string const newName = _args["newName"].get<std::string>();
+	std::string const uri = _args["textDocument"]["uri"].get<std::string>();
 
 	ASTNode const* sourceNode = m_server.astNodeAtSourceLocation(sourceUnitName, lineColumn);
 

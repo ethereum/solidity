@@ -59,8 +59,8 @@ Json formatError(
 	std::string const& _component,
 	std::string const& _message,
 	std::string const& _formattedMessage = "",
-	Json::Value const& _sourceLocation = Json::Value(),
-	Json::Value const& _secondarySourceLocation = Json::Value()
+	Json const& _sourceLocation = Json(),
+	Json const& _secondarySourceLocation = Json()
 )
 {
 	Json error{Json::object()};
@@ -76,7 +76,7 @@ Json formatError(
 	return error;
 }
 
-Json::Value formatFatalError(Error::Type _type, std::string const& _message)
+Json formatFatalError(Error::Type _type, std::string const& _message)
 {
 	Json output{Json::object()};
 	output["errors"] = Json::array();
@@ -149,13 +149,13 @@ Json formatErrorWithException(
 	return error;
 }
 
-std::map<std::string, std::set<std::string>> requestedContractNames(Json::Value const& _outputSelection)
+std::map<std::string, std::set<std::string>> requestedContractNames(Json const& _outputSelection)
 {
 	std::map<std::string, std::set<std::string>> contracts;
-	for (auto const& sourceName: _outputSelection.getMemberNames())
+	for (auto const& [sourceName, _]: _outputSelection.items())
 	{
 		std::string key = (sourceName == "*") ? "" : sourceName;
-		for (auto const& contractName: _outputSelection[sourceName].getMemberNames())
+		for (auto const& [contractName, _]: _outputSelection[sourceName].items())
 		{
 			std::string value = (contractName == "*") ? "" : contractName;
 			contracts[key].insert(value);
@@ -177,12 +177,12 @@ bool hashMatchesContent(std::string const& _hash, std::string const& _content)
 	}
 }
 
-bool isArtifactRequested(Json::Value const& _outputSelection, std::string const& _artifact, bool _wildcardMatchesExperimental)
+bool isArtifactRequested(Json const& _outputSelection, std::string const& _artifact, bool _wildcardMatchesExperimental)
 {
 	static std::set<std::string> experimental{"ir", "irAst", "irOptimized", "irOptimizedAst"};
 	for (auto const& selectedArtifactJson: _outputSelection)
 	{
-		std::string const& selectedArtifact = selectedArtifactJson.asString();
+		std::string const& selectedArtifact = selectedArtifactJson.get<std::string>();
 		if (
 			_artifact == selectedArtifact ||
 			boost::algorithm::starts_with(_artifact, selectedArtifact + ".")
@@ -211,13 +211,13 @@ bool isArtifactRequested(Json::Value const& _outputSelection, std::string const&
 ///
 /// @TODO optimise this. Perhaps flatten the structure upfront.
 ///
-bool isArtifactRequested(Json::Value const& _outputSelection, std::string const& _file, std::string const& _contract, std::string const& _artifact, bool _wildcardMatchesExperimental)
+bool isArtifactRequested(Json const& _outputSelection, std::string const& _file, std::string const& _contract, std::string const& _artifact, bool _wildcardMatchesExperimental)
 {
 	if (!_outputSelection.is_object())
 		return false;
 
 	for (auto const& file: { _file, std::string("*") })
-		if (_outputSelection.isMember(file) && _outputSelection[file].isObject())
+		if (_outputSelection.contains(file) && _outputSelection[file].is_object())
 		{
 			/// For SourceUnit-level targets (such as AST) only allow empty name, otherwise
 			/// for Contract-level targets try both contract name and wildcard
@@ -236,7 +236,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, std::string const&
 	return false;
 }
 
-bool isArtifactRequested(Json::Value const& _outputSelection, std::string const& _file, std::string const& _contract, std::vector<std::string> const& _artifacts, bool _wildcardMatchesExperimental)
+bool isArtifactRequested(Json const& _outputSelection, std::string const& _file, std::string const& _contract, std::vector<std::string> const& _artifacts, bool _wildcardMatchesExperimental)
 {
 	for (auto const& artifact: _artifacts)
 		if (isArtifactRequested(_outputSelection, _file, _contract, artifact, _wildcardMatchesExperimental))
@@ -296,9 +296,9 @@ bool isEvmBytecodeRequested(Json const& _outputSelection)
 
 /// @returns true if any Yul IR was requested. Note that as an exception, '*' does not
 /// yet match "ir", "irAst", "irOptimized" or "irOptimizedAst"
-bool isIRRequested(Json::Value const& _outputSelection)
+bool isIRRequested(Json const& _outputSelection)
 {
-	if (!_outputSelection.isObject())
+	if (!_outputSelection.is_object())
 		return false;
 
 	for (auto const& fileRequests: _outputSelection)
@@ -344,7 +344,7 @@ Json formatLinkReferences(std::map<size_t, std::string> const& linkReferences)
 	return ret;
 }
 
-Json::Value formatImmutableReferences(std::map<u256, std::pair<std::string, std::vector<size_t>>> const& _immutableReferences)
+Json formatImmutableReferences(std::map<u256, std::pair<std::string, std::vector<size_t>>> const& _immutableReferences)
 {
 	Json ret{Json::object()};
 
@@ -365,11 +365,11 @@ Json::Value formatImmutableReferences(std::map<u256, std::pair<std::string, std:
 	return ret;
 }
 
-Json::Value collectEVMObject(
+Json collectEVMObject(
 	langutil::EVMVersion _evmVersion,
 	evmasm::LinkerObject const& _object,
 	std::string const* _sourceMap,
-	Json::Value _generatedSources,
+	Json _generatedSources,
 	bool _runtimeObject,
 	std::function<bool(std::string)> const& _artifactRequested
 )
@@ -392,7 +392,7 @@ Json::Value collectEVMObject(
 	return output;
 }
 
-std::optional<Json::Value> checkKeys(Json::Value const& _input, std::set<std::string> const& _keys, std::string const& _name)
+std::optional<Json> checkKeys(Json const& _input, std::set<std::string> const& _keys, std::string const& _name)
 {
 	if (!_input.empty() && !_input.is_object())
 		return formatFatalError(Error::Type::JSONError, "\"" + _name + "\" must be an object");
@@ -410,7 +410,7 @@ std::optional<Json> checkRootKeys(Json const& _input)
 	return checkKeys(_input, keys, "root");
 }
 
-std::optional<Json::Value> checkSourceKeys(Json::Value const& _input, std::string const& _name)
+std::optional<Json> checkSourceKeys(Json const& _input, std::string const& _name)
 {
 	static std::set<std::string> keys{"content", "keccak256", "urls"};
 	return checkKeys(_input, keys, "sources." + _name);
@@ -457,19 +457,19 @@ std::optional<Json> checkOptimizerDetail(Json const& _details, std::string const
 	return {};
 }
 
-std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, std::string& _optimiserSetting, std::string& _cleanupSetting, bool _runYulOptimizer)
+std::optional<Json> checkOptimizerDetailSteps(Json const& _details, std::string const& _name, std::string& _optimiserSetting, std::string& _cleanupSetting, bool _runYulOptimizer)
 {
 	if (_details.contains(_name))
 	{
 		if (_details[_name].is_string())
 		{
-			std::string const fullSequence = _details[_name].asString();
+			std::string const fullSequence = _details[_name].get<std::string>();
 			if (!_runYulOptimizer && !OptimiserSuite::isEmptyOptimizerSequence(fullSequence))
 				return formatFatalError(Error::Type::JSONError, "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.");
 
 			try
 			{
-				yul::OptimiserSuite::validateSequence(_details[_name].get<string>());
+				yul::OptimiserSuite::validateSequence(_details[_name].get<std::string>());
 			}
 			catch (yul::OptimizerException const& _exception)
 			{
@@ -504,7 +504,7 @@ std::optional<Json> checkMetadataKeys(Json const& _input)
 			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.useLiteralContent\" must be Boolean");
 
 		static std::set<std::string> hashes{"ipfs", "bzzr1", "none"};
-		if (_input.isMember("bytecodeHash") && !hashes.count(_input["bytecodeHash"].asString()))
+		if (_input.contains("bytecodeHash") && !hashes.count(_input["bytecodeHash"].get<std::string>()))
 			return formatFatalError(Error::Type::JSONError, "\"settings.metadata.bytecodeHash\" must be \"ipfs\", \"bzzr1\" or \"none\"");
 	}
 	static std::set<std::string> keys{"appendCBOR", "useLiteralContent", "bytecodeHash"};
@@ -627,7 +627,7 @@ std::variant<OptimiserSettings, Json> parseOptimizerSettings(Json const& _jsonIn
 
 }
 
-std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler::parseInput(Json::Value const& _input)
+std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseInput(Json const& _input)
 {
 	InputsAndSettings ret;
 
@@ -637,7 +637,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	if (auto result = checkRootKeys(_input))
 		return *result;
 
-	ret.language = _input["language"].get<string>();
+	ret.language = _input["language"].get<std::string>();
 
 	Json const& sources = _input["sources"];
 
@@ -652,21 +652,21 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 
 	if (ret.language == "Solidity" || ret.language == "Yul")
 	{
-		for (auto const& sourceName: sources.getMemberNames())
+		for (auto const& [sourceName, _]: sources.items())
 		{
 			std::string hash;
 
 			if (auto result = checkSourceKeys(sources[sourceName], sourceName))
 				return *result;
 
-			if (sources[sourceName]["keccak256"].isString())
-				hash = sources[sourceName]["keccak256"].asString();
+			if (sources[sourceName]["keccak256"].is_string())
+				hash = sources[sourceName]["keccak256"].get<std::string>();
 
-			if (sources[sourceName]["content"].isString())
+			if (sources[sourceName]["content"].is_string())
 			{
-				std::string content = sources[sourceName]["content"].asString();
+				std::string content = sources[sourceName]["content"].get<std::string>();
 				if (!hash.empty() && !hashMatchesContent(hash, content))
-					ret.errors.append(formatError(
+					ret.errors.emplace_back(formatError(
 						Error::Type::IOError,
 						"general",
 						"Mismatch between content and supplied hash for \"" + sourceName + "\""
@@ -674,7 +674,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 				else
 					ret.sources[sourceName] = content;
 			}
-			else if (sources[sourceName]["urls"].isArray())
+			else if (sources[sourceName]["urls"].is_array())
 			{
 				if (!m_readFile)
 					return formatFatalError(
@@ -686,16 +686,16 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 
 				for (auto const& url: sources[sourceName]["urls"])
 				{
-					if (!url.isString())
+					if (!url.is_string())
 						return formatFatalError(Error::Type::JSONError, "URL must be a string.");
-					ReadCallback::Result result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), url.asString());
+					ReadCallback::Result result = m_readFile(ReadCallback::kindString(ReadCallback::Kind::ReadFile), url.get<std::string>());
 					if (result.success)
 					{
 						if (!hash.empty() && !hashMatchesContent(hash, result.responseOrErrorMessage))
-							ret.errors.append(formatError(
+							ret.errors.emplace_back(formatError(
 								Error::Type::IOError,
 								"general",
-								"Mismatch between content and supplied hash for \"" + sourceName + "\" at \"" + url.asString() + "\""
+								"Mismatch between content and supplied hash for \"" + sourceName + "\" at \"" + url.get<std::string>() + "\""
 							));
 						else
 						{
@@ -706,14 +706,14 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 					}
 					else
 						failures.push_back(
-							"Cannot import url (\"" + url.asString() + "\"): " + result.responseOrErrorMessage
+							"Cannot import url (\"" + url.get<std::string>() + "\"): " + result.responseOrErrorMessage
 						);
 				}
 
 				for (auto const& failure: failures)
 				{
 					/// If the import succeeded, let mark all the others as warnings, otherwise all of them are errors.
-					ret.errors.append(formatError(
+					ret.errors.emplace_back(formatError(
 						found ? Error::Type::Warning : Error::Type::IOError,
 						"general",
 						failure
@@ -726,17 +726,17 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	}
 	else if (ret.language == "SolidityAST")
 	{
-		for (auto const& sourceName: sources.getMemberNames())
+		for (auto const& [sourceName, _]: sources.items())
 			ret.sources[sourceName] = util::jsonCompactPrint(sources[sourceName]);
 	}
 	else if (ret.language == "EVMAssembly")
 	{
-		for (std::string const& sourceName: sources.getMemberNames())
+		for (auto const& [sourceName, _]: sources.items())
 		{
-			solAssert(sources.isMember(sourceName));
+			solAssert(sources.contains(sourceName));
 			if (
-				!sources[sourceName].isMember("assemblyJson") ||
-				!sources[sourceName]["assemblyJson"].isObject() ||
+				!sources[sourceName].contains("assemblyJson") ||
+				!sources[sourceName]["assemblyJson"].is_object() ||
 				sources[sourceName].size() != 1
 			)
 				return formatFatalError(
@@ -752,7 +752,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 				"EVMAssembly import only supports exactly one input file."
 			);
 	}
-	Json::Value const& auxInputs = _input["auxiliaryInput"];
+	Json const& auxInputs = _input["auxiliaryInput"];
 
 	if (auto result = checkAuxiliaryInputKeys(auxInputs))
 		return *result;
@@ -783,7 +783,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 						"\"smtlib2Responses." + hashString + "\" must be a string."
 					);
 
-				ret.smtLib2Responses[hash] = response.get<string>();
+				ret.smtLib2Responses[hash] = response.get<std::string>();
 			}
 		}
 	}
@@ -798,13 +798,13 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		if (!settings["stopAfter"].is_string())
 			return formatFatalError(Error::Type::JSONError, "\"settings.stopAfter\" must be a string.");
 
-		if (settings["stopAfter"].get<string>() != "parsing")
+		if (settings["stopAfter"].get<std::string>() != "parsing")
 			return formatFatalError(Error::Type::JSONError, "Invalid value for \"settings.stopAfter\". Only valid value is \"parsing\".");
 
 		ret.stopAfter = CompilerStack::State::Parsed;
 	}
 
-	if (settings.isMember("viaIR"))
+	if (settings.contains("viaIR"))
 	{
 		if (!settings["viaIR"].is_boolean())
 			return formatFatalError(Error::Type::JSONError, "\"settings.viaIR\" must be a Boolean.");
@@ -815,11 +815,11 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	{
 		if (!settings["evmVersion"].is_string())
 			return formatFatalError(Error::Type::JSONError, "evmVersion must be a string.");
-		std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].get<string>());
+		std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].get<std::string>());
 		if (!version)
 			return formatFatalError(Error::Type::JSONError, "Invalid EVM version requested.");
 		if (version < EVMVersion::constantinople())
-			ret.errors.append(formatError(
+			ret.errors.emplace_back(formatError(
 				Error::Type::Warning,
 				"general",
 				"Support for EVM versions older than constantinople is deprecated and will be removed in the future."
@@ -827,17 +827,17 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		ret.evmVersion = *version;
 	}
 
-	if (settings.isMember("eofVersion"))
+	if (settings.contains("eofVersion"))
 	{
-		if (!settings["eofVersion"].isUInt())
+		if (!settings["eofVersion"].is_number_unsigned())
 			return formatFatalError(Error::Type::JSONError, "eofVersion must be an unsigned integer.");
-		auto eofVersion = settings["evmVersion"].asUInt();
+		auto eofVersion = settings["evmVersion"].get<uint8_t>();
 		if (eofVersion != 1)
 			return formatFatalError(Error::Type::JSONError, "Invalid EOF version requested.");
 		ret.eofVersion = 1;
 	}
 
-	if (settings.isMember("debug"))
+	if (settings.contains("debug"))
 	{
 		if (auto result = checkKeys(settings["debug"], {"revertStrings", "debugInfo"}, "settings.debug"))
 			return *result;
@@ -846,7 +846,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!settings["debug"]["revertStrings"].is_string())
 				return formatFatalError(Error::Type::JSONError, "settings.debug.revertStrings must be a string.");
-			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].get<string>());
+			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].get<std::string>());
 			if (!revertStrings)
 				return formatFatalError(Error::Type::JSONError, "Invalid value for settings.debug.revertStrings.");
 			if (*revertStrings == RevertStrings::VerboseDebug)
@@ -863,8 +863,8 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 				return formatFatalError(Error::Type::JSONError, "settings.debug.debugInfo must be an array.");
 
 			std::vector<std::string> components;
-			for (Json::Value const& arrayValue: settings["debug"]["debugInfo"])
-				components.push_back(arrayValue.asString());
+			for (Json const& arrayValue: settings["debug"]["debugInfo"])
+				components.push_back(arrayValue.get<std::string>());
 
 			std::optional<DebugInfoSelection> debugInfoSelection = DebugInfoSelection::fromComponents(
 				components,
@@ -890,10 +890,10 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	{
 		if (!remapping.is_string())
 			return formatFatalError(Error::Type::JSONError, "\"settings.remappings\" must be an array of strings");
-		if (auto r = ImportRemapper::parseRemapping(remapping.get<string>()))
+		if (auto r = ImportRemapper::parseRemapping(remapping.get<std::string>()))
 			ret.remappings.emplace_back(std::move(*r));
 		else
-			return formatFatalError(Error::Type::JSONError, "Invalid remapping: \"" + remapping.get<string>() + "\"");
+			return formatFatalError(Error::Type::JSONError, "Invalid remapping: \"" + remapping.get<std::string>() + "\"");
 	}
 
 	if (settings.contains("optimizer"))
@@ -916,7 +916,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!jsonSourceName[library].is_string())
 				return formatFatalError(Error::Type::JSONError, "Library address must be a string.");
-			std::string address = jsonSourceName[library].asString();
+			std::string address = jsonSourceName[library].get<std::string>();
 
 			if (!boost::starts_with(address, "0x"))
 				return formatFatalError(
@@ -961,7 +961,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		metadataSettings["useLiteralContent"].get<bool>();
 	if (metadataSettings.contains("bytecodeHash"))
 	{
-		auto metadataHash = metadataSettings["bytecodeHash"].get<string>();
+		auto metadataHash = metadataSettings["bytecodeHash"].get<std::string>();
 		ret.metadataHash =
 			metadataHash == "ipfs" ?
 			CompilerStack::MetadataHash::IPFS :
@@ -1002,11 +1002,12 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.contracts is not a JSON object.");
 
 		std::map<std::string, std::set<std::string>> sourceContracts;
-		for (auto const& source: sources.getMemberNames())
+		for (auto const& [source, _]: sources.items())
 		{
 			if (source.empty())
 				return formatFatalError(Error::Type::JSONError, "Source name cannot be empty.");
 
+			auto const& contracts = sources[source];
 			if (!contracts.is_array())
 				return formatFatalError(Error::Type::JSONError, "Source contracts must be an array.");
 
@@ -1014,9 +1015,9 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			{
 				if (!contract.is_string())
 					return formatFatalError(Error::Type::JSONError, "Every contract in settings.modelChecker.contracts must be a string.");
-				if (contract.get<string>().empty())
+				if (contract.get<std::string>().empty())
 					return formatFatalError(Error::Type::JSONError, "Contract name cannot be empty.");
-				sourceContracts[source].insert(contract.get<string>());
+				sourceContracts[source].insert(contract.get<std::string>());
 			}
 
 			if (sourceContracts[source].empty())
@@ -1037,33 +1038,33 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	{
 		if (!modelCheckerSettings["engine"].is_string())
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.engine must be a string.");
-		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(modelCheckerSettings["engine"].get<string>());
+		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(modelCheckerSettings["engine"].get<std::string>());
 		if (!engine)
 			return formatFatalError(Error::Type::JSONError, "Invalid model checker engine requested.");
 		ret.modelCheckerSettings.engine = *engine;
 	}
 
-	if (modelCheckerSettings.isMember("bmcLoopIterations"))
+	if (modelCheckerSettings.contains("bmcLoopIterations"))
 	{
 		if (!ret.modelCheckerSettings.engine.bmc)
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.bmcLoopIterations requires the BMC engine to be enabled.");
-		if (modelCheckerSettings["bmcLoopIterations"].isUInt())
-			ret.modelCheckerSettings.bmcLoopIterations = modelCheckerSettings["bmcLoopIterations"].asUInt();
+		if (modelCheckerSettings["bmcLoopIterations"].is_number_unsigned())
+			ret.modelCheckerSettings.bmcLoopIterations = modelCheckerSettings["bmcLoopIterations"].get<unsigned>();
 		else
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.bmcLoopIterations must be an unsigned integer.");
 	}
 
-	if (modelCheckerSettings.isMember("extCalls"))
+	if (modelCheckerSettings.contains("extCalls"))
 	{
-		if (!modelCheckerSettings["extCalls"].isString())
+		if (!modelCheckerSettings["extCalls"].is_string())
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.extCalls must be a string.");
-		std::optional<ModelCheckerExtCalls> extCalls = ModelCheckerExtCalls::fromString(modelCheckerSettings["extCalls"].asString());
+		std::optional<ModelCheckerExtCalls> extCalls = ModelCheckerExtCalls::fromString(modelCheckerSettings["extCalls"].get<std::string>());
 		if (!extCalls)
 			return formatFatalError(Error::Type::JSONError, "Invalid model checker extCalls requested.");
 		ret.modelCheckerSettings.externalCalls = *extCalls;
 	}
 
-	if (modelCheckerSettings.isMember("invariants"))
+	if (modelCheckerSettings.contains("invariants"))
 	{
 		auto const& invariantsArray = modelCheckerSettings["invariants"];
 		if (!invariantsArray.is_array())
@@ -1074,7 +1075,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!i.is_string())
 				return formatFatalError(Error::Type::JSONError, "Every invariant type in settings.modelChecker.invariants must be a string.");
-			if (!invariants.setFromString(i.get<string>()))
+			if (!invariants.setFromString(i.get<std::string>()))
 				return formatFatalError(Error::Type::JSONError, "Invalid model checker invariants requested.");
 		}
 
@@ -1084,15 +1085,15 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		ret.modelCheckerSettings.invariants = invariants;
 	}
 
-	if (modelCheckerSettings.isMember("showProvedSafe"))
+	if (modelCheckerSettings.contains("showProvedSafe"))
 	{
 		auto const& showProvedSafe = modelCheckerSettings["showProvedSafe"];
-		if (!showProvedSafe.isBool())
+		if (!showProvedSafe.is_boolean())
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.showProvedSafe must be a Boolean value.");
-		ret.modelCheckerSettings.showProvedSafe = showProvedSafe.asBool();
+		ret.modelCheckerSettings.showProvedSafe = showProvedSafe.get<bool>();
 	}
 
-	if (modelCheckerSettings.isMember("showUnproved"))
+	if (modelCheckerSettings.contains("showUnproved"))
 	{
 		auto const& showUnproved = modelCheckerSettings["showUnproved"];
 		if (!showUnproved.is_boolean())
@@ -1100,15 +1101,15 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		ret.modelCheckerSettings.showUnproved = showUnproved.get<bool>();
 	}
 
-	if (modelCheckerSettings.isMember("showUnsupported"))
+	if (modelCheckerSettings.contains("showUnsupported"))
 	{
 		auto const& showUnsupported = modelCheckerSettings["showUnsupported"];
-		if (!showUnsupported.isBool())
+		if (!showUnsupported.is_boolean())
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.showUnsupported must be a Boolean value.");
-		ret.modelCheckerSettings.showUnsupported = showUnsupported.asBool();
+		ret.modelCheckerSettings.showUnsupported = showUnsupported.get<bool>();
 	}
 
-	if (modelCheckerSettings.isMember("solvers"))
+	if (modelCheckerSettings.contains("solvers"))
 	{
 		auto const& solversArray = modelCheckerSettings["solvers"];
 		if (!solversArray.is_array())
@@ -1119,26 +1120,26 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!s.is_string())
 				return formatFatalError(Error::Type::JSONError, "Every target in settings.modelChecker.solvers must be a string.");
-			if (!solvers.setSolver(s.get<string>()))
+			if (!solvers.setSolver(s.get<std::string>()))
 				return formatFatalError(Error::Type::JSONError, "Invalid model checker solvers requested.");
 		}
 
 		ret.modelCheckerSettings.solvers = solvers;
 	}
 
-	if (modelCheckerSettings.isMember("printQuery"))
+	if (modelCheckerSettings.contains("printQuery"))
 	{
 		auto const& printQuery = modelCheckerSettings["printQuery"];
-		if (!printQuery.isBool())
+		if (!printQuery.is_boolean())
 			return formatFatalError(Error::Type::JSONError, "settings.modelChecker.printQuery must be a Boolean value.");
 
 		if (!(ret.modelCheckerSettings.solvers == smtutil::SMTSolverChoice::SMTLIB2()))
 			return formatFatalError(Error::Type::JSONError, "Only SMTLib2 solver can be enabled to print queries");
 
-		ret.modelCheckerSettings.printQuery = printQuery.asBool();
+		ret.modelCheckerSettings.printQuery = printQuery.get<bool>();
 	}
 
-	if (modelCheckerSettings.isMember("targets"))
+	if (modelCheckerSettings.contains("targets"))
 	{
 		auto const& targetsArray = modelCheckerSettings["targets"];
 		if (!targetsArray.is_array())
@@ -1149,7 +1150,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		{
 			if (!t.is_string())
 				return formatFatalError(Error::Type::JSONError, "Every target in settings.modelChecker.targets must be a string.");
-			if (!targets.setFromString(t.get<string>()))
+			if (!targets.setFromString(t.get<std::string>()))
 				return formatFatalError(Error::Type::JSONError, "Invalid model checker targets requested.");
 		}
 
@@ -1169,35 +1170,35 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	return {std::move(ret)};
 }
 
-std::map<std::string, Json::Value> StandardCompiler::parseAstFromInput(StringMap const& _sources)
+std::map<std::string, Json> StandardCompiler::parseAstFromInput(StringMap const& _sources)
 {
-	std::map<std::string, Json::Value> sourceJsons;
+	std::map<std::string, Json> sourceJsons;
 	for (auto const& [sourceName, sourceCode]: _sources)
 	{
-		Json::Value ast;
+		Json ast;
 		astAssert(util::jsonParseStrict(sourceCode, ast), "Input file could not be parsed to JSON");
-		std::string astKey = ast.isMember("ast") ? "ast" : "AST";
+		std::string astKey = ast.contains("ast") ? "ast" : "AST";
 
-		astAssert(ast.isMember(astKey), "astkey is not member");
-		astAssert(ast[astKey]["nodeType"].asString() == "SourceUnit", "Top-level node should be a 'SourceUnit'");
+		astAssert(ast.contains(astKey), "astkey is not member");
+		astAssert(ast[astKey]["nodeType"].get<std::string>() == "SourceUnit", "Top-level node should be a 'SourceUnit'");
 		astAssert(sourceJsons.count(sourceName) == 0, "All sources must have unique names");
 		sourceJsons.emplace(sourceName, std::move(ast[astKey]));
 	}
 	return sourceJsons;
 }
 
-Json::Value StandardCompiler::importEVMAssembly(StandardCompiler::InputsAndSettings _inputsAndSettings)
+Json StandardCompiler::importEVMAssembly(StandardCompiler::InputsAndSettings _inputsAndSettings)
 {
 	solAssert(_inputsAndSettings.language == "EVMAssembly");
 	solAssert(_inputsAndSettings.sources.empty());
 	solAssert(_inputsAndSettings.jsonSources.size() == 1);
 
 	if (!isBinaryRequested(_inputsAndSettings.outputSelection))
-		return Json::objectValue;
+		return Json::object();;
 
 	evmasm::EVMAssemblyStack stack(_inputsAndSettings.evmVersion);
 	std::string const& sourceName = _inputsAndSettings.jsonSources.begin()->first; // result of structured binding can only be used within lambda from C++20 on.
-	Json::Value const& sourceJson = _inputsAndSettings.jsonSources.begin()->second;
+	Json const& sourceJson = _inputsAndSettings.jsonSources.begin()->second;
 	try
 	{
 		stack.analyze(sourceName, sourceJson);
@@ -1220,11 +1221,11 @@ Json::Value StandardCompiler::importEVMAssembly(StandardCompiler::InputsAndSetti
 		);
 	}
 	if (!stack.compilationSuccessful())
-		return Json::objectValue;
+		return Json::object();;
 
 	// EVM
 	bool const wildcardMatchesExperimental = false;
-	Json::Value evmData = Json::objectValue;
+	Json evmData = Json::object();;
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "evm.assembly", wildcardMatchesExperimental))
 		evmData["assembly"] = stack.assemblyString(sourceName, {});
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "evm.legacyAssembly", wildcardMatchesExperimental))
@@ -1278,13 +1279,13 @@ Json::Value StandardCompiler::importEVMAssembly(StandardCompiler::InputsAndSetti
 			}
 		);
 
-	Json::Value contractData = Json::objectValue;
+	Json contractData = Json::object();;
 	if (!evmData.empty())
 		contractData["evm"] = evmData;
 
-	Json::Value contractsOutput = Json::objectValue;
+	Json contractsOutput = Json::object();;
 	contractsOutput[sourceName][""] = contractData;
-	Json::Value output = Json::objectValue;
+	Json output = Json::object();;
 	output["contracts"] = contractsOutput;
 	return util::removeNullMembers(output);
 }
@@ -1329,7 +1330,7 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 			{
 				compilerStack.importASTs(parseAstFromInput(sourceList));
 				if (!compilerStack.analyze())
-					errors.append(formatError(Error::Type::FatalError, "general", "Analysis of the AST failed."));
+					errors.emplace_back(formatError(Error::Type::FatalError, "general", "Analysis of the AST failed."));
 				if (binariesRequested)
 					compilerStack.compile();
 			}
@@ -1346,7 +1347,7 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 				compilerStack.parseAndAnalyze(_inputsAndSettings.stopAfter);
 
 			for (auto const& error: compilerStack.errors())
-				errors.append(formatErrorWithException(
+				errors.emplace_back(formatErrorWithException(
 					compilerStack,
 					*error,
 					error->type(),
@@ -1492,7 +1493,7 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 			output["sources"][sourceName] = sourceResult;
 		}
 
-	Json::Value contractsOutput = Json::objectValue;
+	Json contractsOutput = Json::object();;
 	for (std::string const& contractName: analysisSuccess ? compilerStack.contractNames() : std::vector<std::string>())
 	{
 		size_t colon = contractName.rfind(':');
@@ -1599,7 +1600,7 @@ Json StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 {
 	solAssert(_inputsAndSettings.jsonSources.empty());
 
-	Json::Value output = Json::objectValue;
+	Json output = Json::object();;
 	output["errors"] = std::move(_inputsAndSettings.errors);
 
 	if (_inputsAndSettings.sources.size() != 1)
@@ -1687,7 +1688,7 @@ Json StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ast", wildcardMatchesExperimental))
 	{
-		Json::Value sourceResult = Json::objectValue;
+		Json sourceResult = Json::object();;
 		sourceResult["id"] = 0;
 		sourceResult["ast"] = stack.astJson();
 		output["sources"][sourceName] = sourceResult;
@@ -1760,11 +1761,27 @@ Json StandardCompiler::compile(Json const& _input) noexcept
 		else
 			return formatFatalError(Error::Type::JSONError, "Only \"Solidity\", \"Yul\", \"SolidityAST\" or \"EVMAssembly\" is supported as a language.");
 	}
-	catch (Json::LogicError const& _exception)
+	catch (Json::parse_error const& _exception)
 	{
-		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON logic exception: ") + _exception.what());
+		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON parse_error exception: ") + _exception.what());
 	}
-	catch (Json::RuntimeError const& _exception)
+	catch (Json::invalid_iterator const& _exception)
+	{
+		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON invalid_iterator exception: ") + _exception.what());
+	}
+	catch (Json::type_error const& _exception)
+	{
+		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON type_error exception: ") + _exception.what());
+	}
+	catch (Json::out_of_range const& _exception)
+	{
+		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON out_of_range exception: ") + _exception.what());
+	}
+	catch (Json::other_error const& _exception)
+	{
+		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON other_error exception: ") + _exception.what());
+	}
+	catch (Json::exception const& _exception)
 	{
 		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON runtime exception: ") + _exception.what());
 	}
@@ -1780,7 +1797,7 @@ Json StandardCompiler::compile(Json const& _input) noexcept
 
 std::string StandardCompiler::compile(std::string const& _input) noexcept
 {
-	Json::Value input;
+	Json input;
 	std::string errors;
 	try
 	{
@@ -1806,11 +1823,11 @@ std::string StandardCompiler::compile(std::string const& _input) noexcept
 	}
 }
 
-Json::Value StandardCompiler::formatFunctionDebugData(
+Json StandardCompiler::formatFunctionDebugData(
 	std::map<std::string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
 )
 {
-	static_assert(is_same_v<Json::number_unsigned_t, uint64_t>);
+	static_assert(std::is_same_v<Json::number_unsigned_t, uint64_t>);
 	Json ret{Json::object()};
 	for (auto const& [name, info]: _debugInfo)
 	{

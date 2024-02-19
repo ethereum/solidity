@@ -132,7 +132,7 @@ TestCase::TestResult GasTest::run(std::ostream& _stream, std::string const& _lin
 		Json const& estimates = estimateGroups[expectations.first];
 		return estimates.size() == expectations.second.size() &&
 			boost::all(expectations.second, [&](auto const& entry) {
-				return entry.second == estimates[entry.first].template get<string>();
+				return entry.second == estimates[entry.first].template get<std::string>();
 			});
 		})
 	)

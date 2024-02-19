@@ -32,8 +32,6 @@
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/EVMVersion.h>
 
-#include <json/json.h>
-
 #include <string>
 
 namespace solidity::frontend

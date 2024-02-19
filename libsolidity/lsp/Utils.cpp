@@ -31,7 +31,7 @@ namespace solidity::lsp
 using namespace frontend;
 using namespace langutil;
 
-std::optional<LineColumn> parseLineColumn(Json::Value const& _lineColumn)
+std::optional<LineColumn> parseLineColumn(Json const& _lineColumn)
 {
 	if (_lineColumn.is_object() && _lineColumn["line"].is_number_integer() && _lineColumn["character"].is_number_integer())
 		return LineColumn{_lineColumn["line"].get<int>(), _lineColumn["character"].get<int>()};
@@ -41,7 +41,7 @@ std::optional<LineColumn> parseLineColumn(Json::Value const& _lineColumn)
 
 Json toJson(LineColumn const& _pos)
 {
-	Json::Value json = Json::objectValue;
+	Json json = Json::object();;
 	json["line"] = std::max(_pos.line, 0);
 	json["character"] = std::max(_pos.column, 0);
 
@@ -86,7 +86,7 @@ std::optional<SourceLocation> declarationLocation(Declaration const* _declaratio
 std::optional<SourceLocation> parsePosition(
 	FileRepository const& _fileRepository,
 	std::string const& _sourceUnitName,
-	Json::Value const& _position
+	Json const& _position
 )
 {
 	if (!_fileRepository.sourceUnits().count(_sourceUnitName))
@@ -101,9 +101,9 @@ std::optional<SourceLocation> parsePosition(
 	return std::nullopt;
 }
 
-std::optional<SourceLocation> parseRange(FileRepository const& _fileRepository, std::string const& _sourceUnitName, Json::Value const& _range)
+std::optional<SourceLocation> parseRange(FileRepository const& _fileRepository, std::string const& _sourceUnitName, Json const& _range)
 {
-	if (!_range.isObject())
+	if (!_range.is_object())
 		return std::nullopt;
 	std::optional<SourceLocation> start = parsePosition(_fileRepository, _sourceUnitName, _range["start"]);
 	std::optional<SourceLocation> end = parsePosition(_fileRepository, _sourceUnitName, _range["end"]);

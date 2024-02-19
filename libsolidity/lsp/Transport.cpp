@@ -40,7 +40,7 @@
 using namespace solidity::lsp;
 
 // {{{ Transport
-std::optional<Json::Value> Transport::receive()
+std::optional<Json> Transport::receive()
 {
 	auto const headers = parseHeaders();
 	if (!headers)
@@ -57,7 +57,7 @@ std::optional<Json::Value> Transport::receive()
 
 	std::string const data = readBytes(stoul(headers->at("content-length")));
 
-	Json::Value jsonMessage;
+	Json jsonMessage;
 	std::string jsonParsingErrors;
 	solidity::util::jsonParseStrict(data, jsonMessage, &jsonParsingErrors);
 	if (!jsonParsingErrors.empty() || !jsonMessage || !jsonMessage.is_object())
@@ -103,7 +103,7 @@ std::optional<std::map<std::string, std::string>> Transport::parseHeaders()
 	return {std::move(headers)};
 }
 
-void Transport::notify(std::string _method, Json::Value _message)
+void Transport::notify(std::string _method, Json _message)
 {
 	Json json{Json::object()};
 	json["method"] = std::move(_method);

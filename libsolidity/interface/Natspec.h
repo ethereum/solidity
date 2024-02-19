@@ -71,7 +71,7 @@ private:
 	/// @param _returnParameterNames names of the return parameters
 	/// @return      A JSON representation
 	///              of a method's return notice documentation
-	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames);
+	static Json extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames);
 
 	/// Temporary function until https://github.com/ethereum/solidity/issues/11114 is implemented.
 	/// @return all events defined in the contract and its base contracts and all events

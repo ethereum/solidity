@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(JsonTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(json_types)
 {
-	auto check = [](Json::Value value, std::string const& expectation) {
+	auto check = [](Json value, std::string const& expectation) {
 		BOOST_CHECK(jsonCompactPrint(value) == expectation);
 	};
 

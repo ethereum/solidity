@@ -127,7 +127,7 @@ mv solidity solc
 mkdir -p ./solc/deps/downloads/ 2>/dev/null || true
 wget -O ./solc/deps/downloads/range-v3-0.12.0.tar.gz https://github.com/ericniebler/range-v3/archive/0.12.0.tar.gz
 wget -O ./solc/deps/downloads/fmt-9.1.0.tar.gz https://github.com/fmtlib/fmt/archive/9.1.0.tar.gz
-wget -O ./solc/deps/nlohmann/json/json.hpp https://github.com/nlohmann/json/releases/download/v3.10.2/json.hpp
+wget -O ./solc/deps/nlohmann/json/json.hpp https://github.com/nlohmann/json/releases/download/v3.11.3/json.hpp
 
 # Determine version
 cd solc

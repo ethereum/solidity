@@ -31,8 +31,8 @@
 #include <memory>
 
 static_assert(
-	(NLOHMANN_JSON_VERSION_MAJOR == 3) && (NLOHMANN_JSON_VERSION_MINOR == 11) && (NLOHMANN_JSON_VERSION_PATCH == 2),
-	"Unexpected nlohmann-json version. Expecting 3.11.2."
+	(NLOHMANN_JSON_VERSION_MAJOR == 3) && (NLOHMANN_JSON_VERSION_MINOR == 11) && (NLOHMANN_JSON_VERSION_PATCH == 3),
+	"Unexpected nlohmann-json version. Expecting 3.11.3."
 );
 
 namespace solidity::util
@@ -41,89 +41,42 @@ namespace solidity::util
 namespace
 {
 
-/// StreamWriterBuilder that can be constructed with specific settings
-class StreamWriterBuilder: public Json::StreamWriterBuilder
-{
-public:
-	explicit StreamWriterBuilder(std::map<std::string, Json::Value> const& _settings)
-	{
-		for (auto const& iter: _settings)
-			this->settings_[iter.first] = iter.second;
-	}
-};
-
-/// CharReaderBuilder with strict-mode settings
-class StrictModeCharReaderBuilder: public Json::CharReaderBuilder
-{
-public:
-	StrictModeCharReaderBuilder()
-	{
-		Json::CharReaderBuilder::strictMode(&this->settings_);
-	}
-};
-
-/// Serialise the JSON object (@a _input) with specific builder (@a _builder)
-/// \param _input JSON input string
-/// \param _builder StreamWriterBuilder that is used to create new Json::StreamWriter
-/// \return serialized json object
-std::string print(Json::Value const& _input, Json::StreamWriterBuilder const& _builder)
-{
-	std::stringstream stream;
-	std::unique_ptr<Json::StreamWriter> writer(_builder.newStreamWriter());
-	writer->write(_input, &stream);
-	return stream.str();
-}
-
-/// Parse a JSON string (@a _input) with specified builder (@ _builder) and writes resulting JSON object to (@a _json)
-/// \param _builder CharReaderBuilder that is used to create new Json::CharReaders
-/// \param _input JSON input string
-/// \param _json [out] resulting JSON object
-/// \param _errs [out] Formatted error messages
-/// \return \c true if the document was successfully parsed, \c false if an error occurred.
-bool parse(Json::CharReaderBuilder& _builder, std::string const& _input, Json::Value& _json, std::string* _errs)
-{
-	std::unique_ptr<Json::CharReader> reader(_builder.newCharReader());
-	return reader->parse(_input.c_str(), _input.c_str() + _input.length(), &_json, _errs);
-}
-
 /// Takes a JSON value (@ _json) and removes all its members with value 'null' recursively.
 void removeNullMembersHelper(Json& _json)
 {
-	if (_json.type() == Json::ValueType::arrayValue)
+	if (_json.is_array())
 		for (auto& child: _json)
 			removeNullMembersHelper(child);
-	else if (_json.type() == Json::ValueType::objectValue)
-		for (auto const& key: _json.getMemberNames())
+	else if (_json.is_object())
+		for (auto const& key: _json)
 		{
-			Json::Value& value = _json[key];
-			if (value.isNull())
-				_json.removeMember(key);
+			Json& value = _json[key];
+			if (value.is_null())
+				_json.erase(value);
 			else
 				removeNullMembersHelper(value);
 		}
 }
-#endif
 
 } // end anonymous namespace
 
 Json removeNullMembers(Json _json)
 {
-	// TODO: Support this.
-	// removeNullMembersHelper(_json);
+	removeNullMembersHelper(_json);
 	return _json;
 }
 
-std::string jsonPrettyPrint(Json::Value const& _input)
+std::string jsonPrettyPrint(Json const& _input)
 {
 	return jsonPrint(_input, JsonFormat{ JsonFormat::Pretty });
 }
 
-std::string jsonCompactPrint(Json::Value const& _input)
+std::string jsonCompactPrint(Json const& _input)
 {
 	return jsonPrint(_input, JsonFormat{ JsonFormat::Compact });
 }
 
-string jsonPrint(Json const& _input, JsonFormat const& _format)
+std::string jsonPrint(Json const& _input, JsonFormat const& _format)
 {
 	// NOTE: -1 here means no new lines (it is also the default setting)
 	return _input.dump(
@@ -133,7 +86,7 @@ string jsonPrint(Json const& _input, JsonFormat const& _format)
 	);
 }
 
-bool jsonParseStrict(string const& _input, Json& _json, string* _errs /* = nullptr */)
+bool jsonParseStrict(std::string const& _input, Json& _json, std::string* _errs /* = nullptr */)
 {
 	try
 	{
@@ -152,13 +105,13 @@ bool jsonParseStrict(string const& _input, Json& _json, string* _errs /* = nullp
 	}
 }
 
-std::optional<Json::Value> jsonValueByPath(Json::Value const& _node, std::string_view _jsonPath)
+std::optional<Json> jsonValueByPath(Json const& _node, std::string_view _jsonPath)
 {
-	if (!_node.isObject() || _jsonPath.empty())
+	if (!_node.is_object() || _jsonPath.empty())
 		return {};
 
 	std::string memberName = std::string(_jsonPath.substr(0, _jsonPath.find_first_of('.')));
-	if (!_node.isMember(memberName))
+	if (!_node.contains(memberName))
 		return {};
 
 	if (memberName == _jsonPath)

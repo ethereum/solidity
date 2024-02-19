@@ -423,7 +423,7 @@ bool CompilerStack::parse()
 	return true;
 }
 
-void CompilerStack::importASTs(std::map<std::string, Json::Value> const& _sources)
+void CompilerStack::importASTs(std::map<std::string, Json> const& _sources)
 {
 	if (m_stackState != Empty)
 		solThrow(CompilerError, "Must call importASTs only before the SourcesSet state.");
@@ -835,7 +835,7 @@ evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(std::string con
 	return currentContract.evmRuntimeAssembly ? &currentContract.evmRuntimeAssembly->items() : nullptr;
 }
 
-Json::Value CompilerStack::generatedSources(std::string const& _contractName, bool _runtime) const
+Json CompilerStack::generatedSources(std::string const& _contractName, bool _runtime) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -939,7 +939,7 @@ std::string const& CompilerStack::yulIR(std::string const& _contractName) const
 	return contract(_contractName).yulIR;
 }
 
-Json::Value const& CompilerStack::yulIRAst(std::string const& _contractName) const
+Json const& CompilerStack::yulIRAst(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -957,7 +957,7 @@ std::string const& CompilerStack::yulIROptimized(std::string const& _contractNam
 	return contract(_contractName).yulIROptimized;
 }
 
-Json::Value const& CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
+Json const& CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -997,7 +997,7 @@ std::string CompilerStack::assemblyString(std::string const& _contractName, Stri
 }
 
 /// TODO: cache the JSON
-Json::Value CompilerStack::assemblyJSON(std::string const& _contractName) const
+Json CompilerStack::assemblyJSON(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -1027,7 +1027,7 @@ std::map<std::string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-Json::Value const& CompilerStack::contractABI(std::string const& _contractName) const
+Json const& CompilerStack::contractABI(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1046,7 +1046,7 @@ Json const& CompilerStack::contractABI(Contract const& _contract) const
 	return _contract.abi.init([&]{ return ABI::generate(*_contract.contract); });
 }
 
-Json::Value const& CompilerStack::storageLayout(std::string const& _contractName) const
+Json const& CompilerStack::storageLayout(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1065,7 +1065,7 @@ Json const& CompilerStack::storageLayout(Contract const& _contract) const
 	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract); });
 }
 
-Json::Value const& CompilerStack::natspecUser(std::string const& _contractName) const
+Json const& CompilerStack::natspecUser(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1084,7 +1084,7 @@ Json const& CompilerStack::natspecUser(Contract const& _contract) const
 	return _contract.userDocumentation.init([&]{ return Natspec::userDocumentation(*_contract.contract); });
 }
 
-Json::Value const& CompilerStack::natspecDev(std::string const& _contractName) const
+Json const& CompilerStack::natspecDev(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1104,14 +1104,14 @@ Json const& CompilerStack::natspecDev(Contract const& _contract) const
 	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
 }
 
-Json::Value CompilerStack::interfaceSymbols(std::string const& _contractName) const
+Json CompilerStack::interfaceSymbols(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	Json::Value interfaceSymbols(Json::objectValue);
+	Json interfaceSymbols(Json::object());
 	// Always have a methods object
 	interfaceSymbols["methods"] = Json::object();
 
@@ -1720,7 +1720,7 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 		)
 		{
 			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
-			details["yulDetails"] = Json::objectValue;
+			details["yulDetails"] = Json::object();;
 			details["yulDetails"]["optimizerSteps"] = ":";
 		}
 		else
@@ -1753,7 +1753,7 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		*_contract.contract->annotation().canonicalName;
 
-	meta["settings"]["remappings"] = Json::arrayValue;
+	meta["settings"]["remappings"] = Json::array();;
 	std::set<std::string> remappings;
 	for (auto const& r: m_importRemapper.remappings())
 		remappings.insert(r.context + ":" + r.prefix + "=" + r.target);
@@ -1903,7 +1903,7 @@ Json gasToJson(GasEstimator::GasConsumption const& _gas)
 
 }
 
-Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
+Json CompilerStack::gasEstimates(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");

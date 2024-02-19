@@ -36,7 +36,7 @@ namespace
 
 /// TODO: share this between StandardCompiler.cpp
 /// Helper to match a specific error type and message
-bool containsError(Json::Value const& _compilerResult, std::string const& _type, std::string const& _message)
+bool containsError(Json const& _compilerResult, std::string const& _type, std::string const& _message)
 {
 	if (!_compilerResult.contains("errors"))
 		return false;
@@ -46,14 +46,14 @@ bool containsError(Json::Value const& _compilerResult, std::string const& _type,
 		BOOST_REQUIRE(error.is_object());
 		BOOST_REQUIRE(error["type"].is_string());
 		BOOST_REQUIRE(error["message"].is_string());
-		if ((error["type"].get<string>() == _type) && (error["message"].get<string>() == _message))
+		if ((error["type"].get<std::string>() == _type) && (error["message"].get<std::string>() == _message))
 			return true;
 	}
 
 	return false;
 }
 
-Json::Value compile(std::string const& _input, CStyleReadFileCallback _callback = nullptr)
+Json compile(std::string const& _input, CStyleReadFileCallback _callback = nullptr)
 {
 	char* output_ptr = solidity_compile(_input.c_str(), _callback, nullptr);
 	std::string output(output_ptr);
