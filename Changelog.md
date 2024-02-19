@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
 
 
 ### 0.8.24 (2024-01-25)

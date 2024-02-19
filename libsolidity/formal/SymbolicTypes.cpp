@@ -476,7 +476,7 @@ smtutil::Expression zeroValue(frontend::Type const* _type)
 	if (isSupportedType(*_type))
 	{
 		if (isNumber(*_type))
-			return 0;
+			return isSigned(_type) ? smtutil::Expression(s256(0)) : smtutil::Expression(static_cast<size_t>(0));
 		if (isBool(*_type))
 			return smtutil::Expression(false);
 		if (isArray(*_type) || isMapping(*_type))

@@ -124,7 +124,7 @@ public:
 	explicit Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
 		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
 	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::uintSort) {}
-	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
+	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::uintSort) {}
 	Expression(s256 const& _number): Expression(
 		_number >= 0 ? _number.str() : "-",
 		_number >= 0 ?
