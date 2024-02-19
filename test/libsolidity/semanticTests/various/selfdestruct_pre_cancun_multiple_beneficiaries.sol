@@ -36,7 +36,7 @@ contract D {
 // ----
 // constructor(), 2 ether ->
 // gas irOptimized: 223918
-// gas legacy: 374228
+// gas legacy: 374024
 // gas legacyOptimized: 239815
 // balance: 0x1111111111111111111111111111111111111111 -> 0
 // balance: 0x2222222222222222222222222222222222222222 -> 0

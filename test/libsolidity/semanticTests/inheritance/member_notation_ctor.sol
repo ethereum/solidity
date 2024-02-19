@@ -19,6 +19,6 @@ contract A {
 }
 // ----
 // g(int256): -1 -> -1
-// gas legacy: 102086
+// gas legacy: 102078
 // g(int256): 10 -> 10
-// gas legacy: 101714
+// gas legacy: 101706
