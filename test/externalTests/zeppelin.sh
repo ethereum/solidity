@@ -110,6 +110,13 @@ function zeppelin_test
     # Maybe related to the use of dynamic imports here: https://github.com/NomicFoundation/hardhat/commit/16ae15642951ac324ef7093a3342f7cf3a2a49a4
     npm install @nomicfoundation/hardhat-chai-matchers@2.0.3
 
+    # TODO: Remove when OpenZeppelin update to ethers 6.11.1+
+    # Prior versions of ethers accepts an object instead of a string as an argument to the toUtf8Bytes function.
+    # However, starting from Ethers version 6.11.1, string arguments are enforced,
+    # which causes the introduced assertion to fail in some OpenZeppelin tests.
+    # See: https://github.com/ethers-io/ethers.js/issues/4583
+    npm install ethers@6.11.0
+
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do
