@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Use ``MCOPY`` instead of ``MLOAD``/``MSTORE`` loop when copying byte arrays.
 
 
 Bugfixes:
