@@ -1697,8 +1697,12 @@ jobs:
       # platforms so line ending conversions must absolutely be disabled.
       - run: git config --global core.autocrlf false
       - checkout
-      # Ensure windows has python3 alias required by prepare_bytecode_report
-      - run: ln -s /c/Python312/python /c/Python312/python3
+      - run:
+          name: Force install python3.12.2
+          command: choco install python3 --pre --force --version=3.12.2
+      - run:
+          name: Create a symlink for python3
+          command: ln -s /c/ProgramData/chocolatey/bin/python3.12 /c/ProgramData/chocolatey/bin/python3
       - attach_workspace:
           at: build
       - prepare_bytecode_report:
