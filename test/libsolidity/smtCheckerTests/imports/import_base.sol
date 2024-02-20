@@ -12,7 +12,7 @@ contract Base {
 import "base";
 contract Der is Base {
 	function g(uint y) public {
-		require(x < 10); // added to restrict the search space and avoid non-determinsm in Spacer
+		require(x < 10); // added to restrict the search space and avoid non-determinism in Spacer
 		x += f();
 		assert(y > x);
 	}
