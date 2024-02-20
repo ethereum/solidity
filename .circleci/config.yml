@@ -1386,7 +1386,31 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git
+      - run:
+          name: Ensure pnpm is installed if npm is present
+          command: |
+            if command -v npm &> /dev/null; then
+              sudo npm install -g pnpm
+            fi
+      - run:
+          name: Retrieve Hardhat latest release tag
+          command: |
+            # Make authenticated requests when the Github token is available
+            if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then
+              EXTRA_HEADERS=(--header 'Authorization: Bearer '"${GITHUB_ACCESS_TOKEN}")
+            fi
+            HARDHAT_RELEASE_TAG=$(
+              curl \
+                --silent \
+                --location \
+                --fail \
+                --show-error \
+                "${EXTRA_HEADERS[@]}" \
+                https://api.github.com/repos/nomiclabs/hardhat/releases/latest \
+                | jq --raw-output .tag_name \
+            )
+            echo "export HARDHAT_RELEASE_TAG='${HARDHAT_RELEASE_TAG}'" >> "$BASH_ENV"
+      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git --branch $HARDHAT_RELEASE_TAG
       - run:
           name: Install dependencies
           command: |
