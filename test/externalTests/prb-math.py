@@ -51,8 +51,7 @@ class PRBMathRunner(FoundryRunner):
 test_config = TestConfig(
     name="PRBMath",
     repo_url="https://github.com/PaulRBerg/prb-math.git",
-    ref_type="branch",
-    ref="main",
+    ref="<latest-release>",
     compile_only_presets=[
         # pylint: disable=line-too-long
         # SettingsPreset.IR_NO_OPTIMIZE,       # Error: Yul exception:Variable expr_15699_address is 2 slot(s) too deep inside the stack. Stack too deep.

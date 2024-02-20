@@ -37,7 +37,6 @@ function test_fn { yarn test; }
 function perpetual_pools_test
 {
     local repo="https://github.com/solidity-external-tests/perpetual-pools-contracts"
-    local ref_type=branch
     local ref=pools-v2
     local config_file="hardhat.config.ts"
     local config_var="config"
@@ -57,7 +56,7 @@ function perpetual_pools_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.

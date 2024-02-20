@@ -37,8 +37,7 @@ function test_fn { SNAPSHOT_UPDATE=1 npx --no hardhat test; }
 function brink_test
 {
     local repo="https://github.com/brinktrade/brink-core"
-    local ref_type=branch
-    local ref=master
+    local ref="<latest-release>"
     local config_file="hardhat.config.js"
     local config_var=""
     local extra_settings="metadata: {bytecodeHash: 'none'}"
@@ -60,25 +59,18 @@ function brink_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     # TODO: Remove this when Brink merges https://github.com/brinktrade/brink-core/pull/52
     sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" src/Test/MockEIP1271Validator.sol
 
-    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var" "$CURRENT_EVM_VERSION" "$extra_settings" "$extra_optimizer_settings"
     yarn install
     yarn add hardhat-gas-reporter
 
-    # TODO: Remove when https://github.com/brinktrade/brink-core/issues/48 is fixed.
-    # TODO: Chai is ESM-only since version 5.x (see: https://github.com/chaijs/chai/issues/1561#issuecomment-1871134261),
-    # thus, we should stick to version 4.x until Brink and other dependencies also migrate to ESM.
-    yarn add chai@4.4.0
-
     replace_version_pragmas
-
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var" "$extra_settings" "$extra_optimizer_settings"
         store_benchmark_report hardhat brink "$repo" "$preset"
