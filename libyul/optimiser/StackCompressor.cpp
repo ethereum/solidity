@@ -253,7 +253,7 @@ bool StackCompressor::run(
 			_optimizeStackAllocation &&
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
-	bool allowMSizeOptimzation = !MSizeFinder::containsMSize(_dialect, *_object.code);
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, *_object.code);
 	if (usesOptimizedCodeGenerator)
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
@@ -262,7 +262,7 @@ bool StackCompressor::run(
 			_dialect,
 			*_object.code,
 			StackLayoutGenerator::reportStackTooDeep(*cfg),
-			allowMSizeOptimzation
+			allowMSizeOptimization
 		);
 	}
 	else
@@ -275,7 +275,7 @@ bool StackCompressor::run(
 				_dialect,
 				*_object.code,
 				stackSurplus,
-				allowMSizeOptimzation
+				allowMSizeOptimization
 			);
 		}
 	return false;
