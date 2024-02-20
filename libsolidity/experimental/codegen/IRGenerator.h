@@ -29,7 +29,7 @@
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
 
-#include <json/json.h>
+#include <libsolutil/JSON.h>
 
 #include <string>
 

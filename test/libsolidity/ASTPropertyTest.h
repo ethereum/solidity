@@ -56,7 +56,7 @@ private:
 
 	void readExpectations();
 	std::vector<StringPair> readKeyValuePairs(std::string const& _input);
-	void extractTestsFromAST(Json::Value const& _astJson);
+	void extractTestsFromAST(Json const& _astJson);
 	std::string formatExpectations(bool _obtainedResult = true);
 
 	std::vector<std::string> m_testOrder;

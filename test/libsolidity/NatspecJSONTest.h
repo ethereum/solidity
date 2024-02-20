@@ -44,7 +44,7 @@ enum class NatspecJSONKind
 
 std::ostream& operator<<(std::ostream& _output, NatspecJSONKind _kind);
 
-using NatspecMap = std::map<std::string, std::map<NatspecJSONKind, Json::Value>>;
+using NatspecMap = std::map<std::string, std::map<NatspecJSONKind, Json>>;
 using SerializedNatspecMap = std::map<std::string, std::map<NatspecJSONKind, std::string>>;
 
 class NatspecJSONTest: public SyntaxTest

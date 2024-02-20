@@ -36,12 +36,12 @@ namespace solidity::evmasm
 
 void EVMAssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
 {
-	Json::Value assemblyJson;
+	Json assemblyJson;
 	solRequire(jsonParseStrict(_source, assemblyJson), AssemblyImportException, "Could not parse JSON file.");
 	analyze(_sourceName, assemblyJson);
 }
 
-void EVMAssemblyStack::analyze(std::string const& _sourceName, Json::Value const& _assemblyJson)
+void EVMAssemblyStack::analyze(std::string const& _sourceName, Json const& _assemblyJson)
 {
 	solAssert(!m_evmAssembly);
 	m_name = _sourceName;
@@ -99,7 +99,7 @@ std::string const* EVMAssemblyStack::runtimeSourceMapping(std::string const& _co
 	return &m_runtimeSourceMapping;
 }
 
-Json::Value EVMAssemblyStack::assemblyJSON(std::string const& _contractName) const
+Json EVMAssemblyStack::assemblyJSON(std::string const& _contractName) const
 {
 	solAssert(_contractName == m_name);
 	solAssert(m_evmAssembly);

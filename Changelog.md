@@ -32,6 +32,8 @@ Bugfixes:
  * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
  * SMTChecker: Run Eldarica only when explicitly requested with `--model-checker-solvers eld`, even when it is present on the system.
 
+Build System:
+ * Replace internal JSON library jsoncpp with nlohmann::json.
 
 ### 0.8.24 (2024-01-25)
 

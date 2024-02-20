@@ -85,8 +85,6 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/FunctionSelector.h>
 
-#include <json/json.h>
-
 #include <boost/algorithm/string/replace.hpp>
 
 #include <range/v3/algorithm/all_of.hpp>
@@ -426,7 +424,7 @@ bool CompilerStack::parse()
 	return true;
 }
 
-void CompilerStack::importASTs(std::map<std::string, Json::Value> const& _sources)
+void CompilerStack::importASTs(std::map<std::string, Json> const& _sources)
 {
 	if (m_stackState != Empty)
 		solThrow(CompilerError, "Must call importASTs only before the SourcesSet state.");
@@ -843,18 +841,18 @@ evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(std::string con
 	return currentContract.evmRuntimeAssembly ? &currentContract.evmRuntimeAssembly->items() : nullptr;
 }
 
-Json::Value CompilerStack::generatedSources(std::string const& _contractName, bool _runtime) const
+Json CompilerStack::generatedSources(std::string const& _contractName, bool _runtime) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
 	Contract const& c = contract(_contractName);
-	util::LazyInit<Json::Value const> const& sources =
+	util::LazyInit<Json const> const& sources =
 		_runtime ?
 		c.runtimeGeneratedSources :
 		c.generatedSources;
 	return sources.init([&]{
-		Json::Value sources{Json::arrayValue};
+		Json sources = Json::array();
 		// If there is no compiler, then no bytecode was generated and thus no
 		// sources were generated (or we compiled "via IR").
 		if (c.compiler)
@@ -947,7 +945,7 @@ std::string const& CompilerStack::yulIR(std::string const& _contractName) const
 	return contract(_contractName).yulIR;
 }
 
-Json::Value const& CompilerStack::yulIRAst(std::string const& _contractName) const
+Json const& CompilerStack::yulIRAst(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -965,7 +963,7 @@ std::string const& CompilerStack::yulIROptimized(std::string const& _contractNam
 	return contract(_contractName).yulIROptimized;
 }
 
-Json::Value const& CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
+Json const& CompilerStack::yulIROptimizedAst(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -1005,7 +1003,7 @@ std::string CompilerStack::assemblyString(std::string const& _contractName, Stri
 }
 
 /// TODO: cache the JSON
-Json::Value CompilerStack::assemblyJSON(std::string const& _contractName) const
+Json CompilerStack::assemblyJSON(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -1016,7 +1014,7 @@ Json::Value CompilerStack::assemblyJSON(std::string const& _contractName) const
 	if (currentContract.evmAssembly)
 		return currentContract.evmAssembly->assemblyJSON(sourceIndices());
 	else
-		return Json::Value();
+		return Json();
 }
 
 std::vector<std::string> CompilerStack::sourceNames() const
@@ -1035,7 +1033,7 @@ std::map<std::string, unsigned> CompilerStack::sourceIndices() const
 	return indices;
 }
 
-Json::Value const& CompilerStack::contractABI(std::string const& _contractName) const
+Json const& CompilerStack::contractABI(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1043,7 +1041,7 @@ Json::Value const& CompilerStack::contractABI(std::string const& _contractName) 
 	return contractABI(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
+Json const& CompilerStack::contractABI(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1054,7 +1052,7 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 	return _contract.abi.init([&]{ return ABI::generate(*_contract.contract); });
 }
 
-Json::Value const& CompilerStack::storageLayout(std::string const& _contractName) const
+Json const& CompilerStack::storageLayout(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1062,7 +1060,7 @@ Json::Value const& CompilerStack::storageLayout(std::string const& _contractName
 	return storageLayout(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::storageLayout(Contract const& _contract) const
+Json const& CompilerStack::storageLayout(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1073,7 +1071,7 @@ Json::Value const& CompilerStack::storageLayout(Contract const& _contract) const
 	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract); });
 }
 
-Json::Value const& CompilerStack::natspecUser(std::string const& _contractName) const
+Json const& CompilerStack::natspecUser(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1081,7 +1079,7 @@ Json::Value const& CompilerStack::natspecUser(std::string const& _contractName) 
 	return natspecUser(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
+Json const& CompilerStack::natspecUser(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1092,7 +1090,7 @@ Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 	return _contract.userDocumentation.init([&]{ return Natspec::userDocumentation(*_contract.contract); });
 }
 
-Json::Value const& CompilerStack::natspecDev(std::string const& _contractName) const
+Json const& CompilerStack::natspecDev(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1100,7 +1098,7 @@ Json::Value const& CompilerStack::natspecDev(std::string const& _contractName) c
 	return natspecDev(contract(_contractName));
 }
 
-Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
+Json const& CompilerStack::natspecDev(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
@@ -1112,16 +1110,16 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
 }
 
-Json::Value CompilerStack::interfaceSymbols(std::string const& _contractName) const
+Json CompilerStack::interfaceSymbols(std::string const& _contractName) const
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solUnimplementedAssert(!isExperimentalSolidity());
 
-	Json::Value interfaceSymbols(Json::objectValue);
+	Json interfaceSymbols;
 	// Always have a methods object
-	interfaceSymbols["methods"] = Json::objectValue;
+	interfaceSymbols["methods"] = Json::object();
 
 	for (auto const& it: contractDefinition(_contractName).interfaceFunctions())
 		interfaceSymbols["methods"][it.second->externalSignature()] = it.first.hex();
@@ -1650,7 +1648,7 @@ CompilerStack::Source const& CompilerStack::source(std::string const& _sourceNam
 
 std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR) const
 {
-	Json::Value meta{Json::objectValue};
+	Json meta;
 	meta["version"] = 1;
 	std::string sourceType;
 	switch (m_compilationSourceType)
@@ -1671,7 +1669,7 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 	for (auto const sourceUnit: _contract.contract->sourceUnit().referencedSourceUnits(true))
 		referencedSources.insert(*sourceUnit->annotation().path);
 
-	meta["sources"] = Json::objectValue;
+	meta["sources"] = Json::object();
 	for (auto const& s: m_sources)
 	{
 		if (!referencedSources.count(s.first))
@@ -1685,15 +1683,15 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 			meta["sources"][s.first]["content"] = s.second.charStream->source();
 		else
 		{
-			meta["sources"][s.first]["urls"] = Json::arrayValue;
-			meta["sources"][s.first]["urls"].append("bzz-raw://" + util::toHex(s.second.swarmHash().asBytes()));
-			meta["sources"][s.first]["urls"].append(s.second.ipfsUrl());
+			meta["sources"][s.first]["urls"] = Json::array();
+			meta["sources"][s.first]["urls"].emplace_back("bzz-raw://" + util::toHex(s.second.swarmHash().asBytes()));
+			meta["sources"][s.first]["urls"].emplace_back(s.second.ipfsUrl());
 		}
 	}
 
-	static_assert(sizeof(m_optimiserSettings.expectedExecutionsPerDeployment) <= sizeof(Json::LargestUInt), "Invalid word size.");
-	solAssert(static_cast<Json::LargestUInt>(m_optimiserSettings.expectedExecutionsPerDeployment) < std::numeric_limits<Json::LargestUInt>::max(), "");
-	meta["settings"]["optimizer"]["runs"] = Json::Value(Json::LargestUInt(m_optimiserSettings.expectedExecutionsPerDeployment));
+	static_assert(sizeof(m_optimiserSettings.expectedExecutionsPerDeployment) <= sizeof(Json::number_integer_t), "Invalid word size.");
+	solAssert(static_cast<Json::number_integer_t>(m_optimiserSettings.expectedExecutionsPerDeployment) < std::numeric_limits<Json::number_integer_t>::max(), "");
+	meta["settings"]["optimizer"]["runs"] = Json::number_integer_t(m_optimiserSettings.expectedExecutionsPerDeployment);
 
 	/// Backwards compatibility: If set to one of the default settings, do not provide details.
 	OptimiserSettings settingsWithoutRuns = m_optimiserSettings;
@@ -1705,7 +1703,7 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 		meta["settings"]["optimizer"]["enabled"] = true;
 	else
 	{
-		Json::Value details{Json::objectValue};
+		Json details = Json::object();
 
 		details["orderLiterals"] = m_optimiserSettings.runOrderLiterals;
 		details["inliner"] = m_optimiserSettings.runInliner;
@@ -1718,14 +1716,14 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 		details["yul"] = m_optimiserSettings.runYulOptimiser;
 		if (m_optimiserSettings.runYulOptimiser)
 		{
-			details["yulDetails"] = Json::objectValue;
+			details["yulDetails"] = Json::object();
 			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
 			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps;
 		}
 		else if (OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps))
 		{
 			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
-			details["yulDetails"] = Json::objectValue;
+			details["yulDetails"] = Json::object();
 			details["yulDetails"]["optimizerSteps"] = ":";
 		}
 		else
@@ -1758,14 +1756,14 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		*_contract.contract->annotation().canonicalName;
 
-	meta["settings"]["remappings"] = Json::arrayValue;
+	meta["settings"]["remappings"] = Json::array();
 	std::set<std::string> remappings;
 	for (auto const& r: m_importRemapper.remappings())
 		remappings.insert(r.context + ":" + r.prefix + "=" + r.target);
 	for (auto const& r: remappings)
-		meta["settings"]["remappings"].append(r);
+		meta["settings"]["remappings"].emplace_back(r);
 
-	meta["settings"]["libraries"] = Json::objectValue;
+	meta["settings"]["libraries"] = Json::object();
 	for (auto const& library: m_libraries)
 		meta["settings"]["libraries"][library.first] = "0x" + util::toHex(library.second.asBytes());
 
@@ -1897,17 +1895,17 @@ bytes CompilerStack::createCBORMetadata(Contract const& _contract, bool _forIR) 
 namespace
 {
 
-Json::Value gasToJson(GasEstimator::GasConsumption const& _gas)
+Json gasToJson(GasEstimator::GasConsumption const& _gas)
 {
 	if (_gas.isInfinite)
-		return Json::Value("infinite");
+		return Json("infinite");
 	else
-		return Json::Value(util::toString(_gas.value));
+		return Json(util::toString(_gas.value));
 }
 
 }
 
-Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
+Json CompilerStack::gasEstimates(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
@@ -1915,18 +1913,18 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 	solUnimplementedAssert(!isExperimentalSolidity());
 
 	if (!assemblyItems(_contractName) && !runtimeAssemblyItems(_contractName))
-		return Json::Value();
+		return Json();
 
 	using Gas = GasEstimator::GasConsumption;
 	GasEstimator gasEstimator(m_evmVersion);
-	Json::Value output(Json::objectValue);
+	Json output = Json::object();
 
 	if (evmasm::AssemblyItems const* items = assemblyItems(_contractName))
 	{
 		Gas executionGas = gasEstimator.functionalEstimation(*items);
 		Gas codeDepositGas{evmasm::GasMeter::dataGas(runtimeObject(_contractName).bytecode, false, m_evmVersion)};
 
-		Json::Value creation(Json::objectValue);
+		Json creation = Json::object();
 		creation["codeDepositCost"] = gasToJson(codeDepositGas);
 		creation["executionCost"] = gasToJson(executionGas);
 		/// TODO: implement + overload to avoid the need of +=
@@ -1939,7 +1937,7 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 	{
 		/// External functions
 		ContractDefinition const& contract = contractDefinition(_contractName);
-		Json::Value externalFunctions(Json::objectValue);
+		Json externalFunctions = Json::object();
 		for (auto it: contract.interfaceFunctions())
 		{
 			std::string sig = it.second->externalSignature();
@@ -1956,7 +1954,7 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 			output["external"] = externalFunctions;
 
 		/// Internal functions
-		Json::Value internalFunctions(Json::objectValue);
+		Json internalFunctions = Json::object();
 		for (auto const& it: contract.definedFunctions())
 		{
 			/// Exclude externally visible functions, constructor, fallback and receive ether function
