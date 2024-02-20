@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Assembler: Prevent incorrect calculation of tag sizes.
  * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
 
 

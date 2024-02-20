@@ -13,7 +13,7 @@
         },
         "abi_decode_tuple_t_uint256_fromMemory":
         {
-          "entryPoint": 92,
+          "entryPoint": 88,
           "parameterSlots": 2,
           "returnSlots": 1
         }

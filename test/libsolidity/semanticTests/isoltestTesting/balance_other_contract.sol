@@ -16,9 +16,9 @@ contract ClientReceipt {
 }
 // ----
 // constructor(), 2000 wei ->
-// gas irOptimized: 169915
-// gas legacy: 230038
-// gas legacyOptimized: 173883
+// gas irOptimized: 169907
+// gas legacy: 230018
+// gas legacyOptimized: 173867
 // balance -> 1500
 // gas irOptimized: 191881
 // gas legacy: 235167

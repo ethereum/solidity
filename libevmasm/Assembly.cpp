@@ -861,8 +861,8 @@ LinkerObject const& Assembly::assemble() const
 			immutableReferencesBySub = linkerObject.immutableReferences;
 		}
 		for (size_t tagPos: sub->m_tagPositionsInBytecode)
-			if (tagPos != std::numeric_limits<size_t>::max() && tagPos > subTagSize)
-				subTagSize = tagPos;
+			if (tagPos != std::numeric_limits<size_t>::max() && numberEncodingSize(tagPos) > subTagSize)
+				subTagSize = numberEncodingSize(tagPos);
 	}
 
 	bool setsImmutables = false;
@@ -890,6 +890,18 @@ LinkerObject const& Assembly::assemble() const
 	std::multimap<size_t, size_t> subRef;
 	std::vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
+	// Adjust bytesPerTag for references to sub assemblies.
+	for (AssemblyItem const& i: m_items)
+		if (i.type() == PushTag)
+		{
+			auto [subId, tagId] = i.splitForeignPushTag();
+			if (subId == std::numeric_limits<size_t>::max())
+				continue;
+			assertThrow(subId < m_subs.size(), AssemblyException, "Invalid sub id");
+			auto subTagPosition = m_subs[subId]->m_tagPositionsInBytecode.at(tagId);
+			assertThrow(subTagPosition != std::numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
+			bytesPerTag = std::max(bytesPerTag, numberEncodingSize(subTagPosition));
+		}
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
