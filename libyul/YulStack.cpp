@@ -204,7 +204,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	);
 }
 
-MachineAssemblyObject YulStack::assemble(Machine _machine) const
+MachineAssemblyObject YulStack::assemble(Machine _machine)
 {
 	yulAssert(m_analysisSuccessful, "");
 	yulAssert(m_parserResult, "");
@@ -221,7 +221,7 @@ MachineAssemblyObject YulStack::assemble(Machine _machine) const
 }
 
 std::pair<MachineAssemblyObject, MachineAssemblyObject>
-YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName) const
+YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 {
 	auto [creationAssembly, deployedAssembly] = assembleEVMWithDeployed(_deployName);
 	yulAssert(creationAssembly, "");
@@ -255,7 +255,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName) cons
 }
 
 std::pair<std::shared_ptr<evmasm::Assembly>, std::shared_ptr<evmasm::Assembly>>
-YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName) const
+YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 {
 	yulAssert(m_analysisSuccessful, "");
 	yulAssert(m_parserResult, "");
@@ -274,6 +274,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName) c
 	);
 	compileEVM(adapter, optimize);
 
+	m_optimiserSettings.runCSE = false;
 	assembly.optimise(evmasm::Assembly::OptimiserSettings::translateSettings(m_optimiserSettings, m_evmVersion));
 
 	std::optional<size_t> subIndex;
