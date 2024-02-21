@@ -15,8 +15,11 @@ contract C {
 }
 // ----
 // constructor() ->
-// gas irOptimized: 165370
-// gas legacy: 244776
-// gas legacyOptimized: 171587
+// gas irOptimized: 113970
+// gas irOptimized code: 51400
+// gas legacy: 119776
+// gas legacy code: 125000
+// gas legacyOptimized: 114187
+// gas legacyOptimized code: 57400
 // deposit(bytes32), 18 wei: 0x1234 ->
 // ~ emit Deposit(address,bytes32,uint256) from 0x137aa4dfc0911524504fcd4d98501f179bc13b4a: #0xc06afe3a8444fc0004668591e8306bfb9968e79e, #0x1234, 0x00

@@ -85,3 +85,25 @@ class TestGasDiffStats(unittest.TestCase):
             0, # +legacyOptimized
             3, # +legacy
         ))
+
+    def test_collect_statistics_should_include_code_deposit_in_total_cost(self):
+        diff_output = dedent("""
+            -// gas irOptimized: 1
+            -// gas legacy: 20
+            -// gas legacyOptimized: 300
+            +// gas irOptimized: 4000
+            +// gas irOptimized code: 50000
+            +// gas legacy: 600000
+            +// gas legacyOptimized: 7000000
+            +// gas legacyOptimized code: 80000000
+            -// gas legacy code: 900000000
+        """).splitlines()
+
+        self.assertEqual(collect_statistics(diff_output), (
+            1,         # -irOptimized
+            300,       # -legacyOptimized
+            900000020, # -legacy
+            54000,     # +irOptimized
+            87000000,  # +legacyOptimized
+            600000,    # +legacy
+        ))

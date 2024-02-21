@@ -23,4 +23,5 @@ contract B {
 // ----
 // g() -> 42
 // gas irOptimized: 80813
-// gas legacy: 122471
+// gas legacy: 55871
+// gas legacy code: 66600

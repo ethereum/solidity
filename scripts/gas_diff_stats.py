@@ -23,7 +23,7 @@ import subprocess
 import sys
 from pathlib import Path
 from enum import Enum
-from parsec import generate, ParseError, regex, string
+from parsec import generate, ParseError, regex, string, optional
 from tabulate import tabulate
 
 class Kind(Enum):
@@ -49,6 +49,7 @@ gas_ir = string("gas ir").result(Kind.Ir)
 gas_ir_optimized = string("gas irOptimized").result(Kind.IrOptimized)
 gas_legacy_optimized = string("gas legacyOptimized").result(Kind.LegacyOptimized)
 gas_legacy = string("gas legacy").result(Kind.Legacy)
+code_suffix = string("code")
 
 def number() -> int:
     """Parse number."""
@@ -67,6 +68,8 @@ def diff_string() -> (Kind, Diff, int):
     yield comment
     yield space
     codegen_kind = yield gas_ir_optimized ^ gas_ir ^ gas_legacy_optimized ^ gas_legacy
+    yield optional(space)
+    yield optional(code_suffix)
     yield colon
     yield space
     val = yield number()
