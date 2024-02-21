@@ -1385,7 +1385,7 @@ jobs:
   t_ems_ext_hardhat:
     <<: *base_node_small
     docker:
-      - image: cimg/node:18.16
+      - image: cimg/rust:1.74.0-node
     environment:
       <<: *base_node_small_env
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
@@ -1395,18 +1395,15 @@ jobs:
           at: /tmp/workspace
       - run:
           name: Ensure pnpm is installed if npm is present
-          command: |
-            if command -v npm &> /dev/null; then
-              sudo npm install -g pnpm
-            fi
+          command: sudo npm install -g pnpm
       - run:
           name: Retrieve Hardhat latest release tag
           command: |
             # Make authenticated requests when the Github token is available
             if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then
-              EXTRA_HEADERS=(--header 'Authorization: Bearer '"${GITHUB_ACCESS_TOKEN}")
+              EXTRA_HEADERS=(--header "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}")
             fi
-            HARDHAT_RELEASE_TAG=$(
+            HARDHAT_LATEST_RELEASE_TAG=$(
               curl \
                 --silent \
                 --location \
@@ -1416,8 +1413,8 @@ jobs:
                 https://api.github.com/repos/nomiclabs/hardhat/releases/latest \
                 | jq --raw-output .tag_name \
             )
-            echo "export HARDHAT_RELEASE_TAG='${HARDHAT_RELEASE_TAG}'" >> "$BASH_ENV"
-      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git --branch $HARDHAT_RELEASE_TAG
+            echo "export HARDHAT_LATEST_RELEASE_TAG='${HARDHAT_LATEST_RELEASE_TAG}'" >> "$BASH_ENV"
+      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git --branch "$HARDHAT_LATEST_RELEASE_TAG"
       - run:
           name: Install dependencies
           command: |
