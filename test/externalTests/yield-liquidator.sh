@@ -37,7 +37,6 @@ function test_fn { npm run test; }
 function yield_liquidator_test
 {
     local repo="https://github.com/yieldprotocol/yield-liquidator-v2"
-    local ref_type=branch
     local ref="master"
     local config_file="hardhat.config.ts"
     local config_var="module.exports"
@@ -57,7 +56,7 @@ function yield_liquidator_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     neutralize_package_lock
     neutralize_package_json_hooks

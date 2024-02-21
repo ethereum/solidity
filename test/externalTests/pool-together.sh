@@ -36,9 +36,8 @@ function test_fn { yarn test; }
 
 function pool_together_test
 {
-    local repo="https://github.com/pooltogether/v4-core"
-    local ref_type=branch
-    local ref=master
+    local repo="https://github.com/pooltogether/v4-core.git"
+    local ref="<latest-release>"
     local config_file="hardhat.config.ts"
     local config_var="config"
 
@@ -57,13 +56,12 @@ function pool_together_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     # TODO: Remove this when https://github.com/NomicFoundation/hardhat/issues/3365 gets fixed.
     sed -i "s|it\(('should fail to return value if value passed does not fit in [0-9]\+ bits'\)|it.skip\1|g" test/libraries/ExtendedSafeCast.test.ts
     sed -i "s|it\(('should require an rng to be requested'\)|it.skip\1|g" test/DrawBeacon.test.ts
 
-    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"

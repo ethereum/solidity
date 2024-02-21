@@ -106,25 +106,28 @@ function setup_solc
 
 function download_project
 {
-    local repo="$1"
-    local ref_type="$2"
-    local solcjs_ref="$3"
-    local test_dir="$4"
+    local repo_url="$1"
+    local ref="$2"
+    local test_dir="$3"
 
-    [[ $ref_type == commit || $ref_type == branch || $ref_type == tag ]] || assertFail
+    printLog "Cloning ${repo_url}..."
+    # Clone the repo ignoring all blobs until needed by git.
+    # This allows access to commit history but with a fast initial clone
+    git clone --filter=blob:none "$repo_url" "$test_dir/ext"
+    cd "$test_dir/ext"
 
-    printLog "Cloning ${ref_type} ${solcjs_ref} of ${repo}..."
-    if [[ $ref_type == commit ]]; then
-        mkdir ext
-        cd ext
-        git init
-        git remote add origin "$repo"
-        git fetch --depth 1 origin "$solcjs_ref"
-        git reset --hard FETCH_HEAD
-    else
-        git clone --depth 1 "$repo" -b "$solcjs_ref" "$test_dir/ext"
-        cd ext
+    # If the ref is '<latest-release>' try to use the latest tag as ref
+    # NOTE: Sadly this will not work with monorepos and may not always
+    # return the latest tag.
+    if [[ "$ref" == "<latest-release>" ]]; then
+        ref=$(git tag --sort=-v:refname | head --lines=1)
     fi
+
+    [[ $ref != "" ]] || assertFail
+
+    printLog "Using ref: ${ref}"
+    git checkout "$ref"
+
     echo "Current commit hash: $(git rev-parse HEAD)"
 }
 

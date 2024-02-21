@@ -37,7 +37,6 @@ function test_fn { yarn test; }
 function ens_test
 {
     local repo="https://github.com/ensdomains/ens-contracts.git"
-    local ref_type=commit
     local ref="083d29a2c50cd0a8307386abf8fadc217b256256"
     local config_file="hardhat.config.js"
 
@@ -57,7 +56,7 @@ function ens_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     neutralize_package_lock
     neutralize_package_json_hooks
