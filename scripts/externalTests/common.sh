@@ -573,17 +573,15 @@ function gas_report_to_json
     cat - | "${REPO_ROOT}/scripts/externalTests/parse_eth_gas_report.py" | jq '{gas: .}'
 }
 
-function detect_hardhat_artifact_dir
+function detect_hardhat_artifact_dirs
 {
-    if [[ -e build/ && -e artifacts/ ]]; then
-        fail "Cannot determine Hardhat artifact location. Both build/ and artifacts/ exist"
-    elif [[ -e build/ ]]; then
-        echo -n build/artifacts
-    elif [[ -e artifacts/ ]]; then
-        echo -n artifacts
-    else
-        fail "Hardhat build artifacts not found."
-    fi
+    # NOTE: The artifacts path is a configured parameter in Hardhat, so the below may fail for new external tests
+    # See: https://hardhat.org/hardhat-runner/docs/config#path-configuration
+    local artifact_dir=()
+    [[ -e build/artifacts ]] && artifact_dir+=("build/artifacts")
+    [[ -e artifacts/ ]] && artifact_dir+=("artifacts")
+    (( ${#artifact_dir[@]} != 0 )) || assertFail
+    echo -n "${artifact_dir[@]}"
 }
 
 function bytecode_size_json_from_truffle_artifacts
@@ -608,16 +606,17 @@ function bytecode_size_json_from_truffle_artifacts
 function bytecode_size_json_from_hardhat_artifacts
 {
     # NOTE: The output of this function is a series of concatenated JSON dicts rather than a list.
-
-    for artifact in "$(detect_hardhat_artifact_dir)"/build-info/*.json; do
-        # Each artifact contains Standard JSON output under the `output` key.
-        # Process it into a dict of the form `{"<file>": {"<contract>": <size>}}`,
-        # Note that one Hardhat artifact often represents multiple input files.
-        jq '.output.contracts | to_entries[] | {
-            "\(.key)": .value | to_entries[] | {
-                "\(.key)": (.value.evm.bytecode.object | length / 2)
-            }
-        }' "$artifact"
+    for artifact_dir in $(detect_hardhat_artifact_dirs); do
+        for artifact in "$artifact_dir"/build-info/*.json; do
+            # Each artifact contains Standard JSON output under the `output` key.
+            # Process it into a dict of the form `{"<file>": {"<contract>": <size>}}`,
+            # Note that one Hardhat artifact often represents multiple input files.
+            jq '.output.contracts | to_entries[] | {
+                "\(.key)": .value | to_entries[] | {
+                    "\(.key)": (.value.evm.bytecode.object | length / 2)
+                }
+            }' "$artifact"
+        done
     done
 }
 
