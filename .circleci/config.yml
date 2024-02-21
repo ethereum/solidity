@@ -974,8 +974,15 @@ jobs:
     steps:
       - checkout
       - run:
+          # TODO: Add these to the base image
+          name: Install gas_diff_stats.py dependencies
+          command: python3 -m pip install --user parsec tabulate
+      - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
+      - run:
+          name: Smoke test for gas_diff_stats.py
+          command: scripts/gas_diff_stats.py
       - matrix_notify_failure_unless_pr
 
   t_win_pyscripts:
@@ -985,7 +992,7 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: python -m pip install --user requests
+          command: python -m pip install --user requests parsec tabulate
       - run:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
