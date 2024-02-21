@@ -81,7 +81,7 @@ function ens_test
     sed -i "s|it\(('Cannot be called if CANNOT_CREATE_SUBDOMAIN is burned and is a new subdomain',\)|it.skip\1|g" test/wrapper/NameWrapper.js
     sed -i "s|it\(('Cannot be called if PARENT_CANNOT_CONTROL is burned and is an existing subdomain',\)|it.skip\1|g" test/wrapper/NameWrapper.js
 
-    find . -name "*.sol" -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
+    find . -name "*.sol" -type f -exec sed -i -e 's/^\(\s*\)\(assembly\)/\1\/\/\/ @solidity memory-safe-assembly\n\1\2/' '{}' \;
 
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
