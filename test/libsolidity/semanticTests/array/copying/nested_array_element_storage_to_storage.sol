@@ -70,7 +70,7 @@ contract C {
 }
 // ----
 // test1() ->
-// gas irOptimized: 150468
+// gas irOptimized: 150489
 // gas legacy: 150949
 // gas legacyOptimized: 150906
 // test2() -> FAILURE
@@ -78,7 +78,7 @@ contract C {
 // gas legacy: 150673
 // gas legacyOptimized: 150576
 // test3() ->
-// gas irOptimized: 123762
+// gas irOptimized: 123773
 // gas legacy: 125333
 // gas legacyOptimized: 125127
 // test4() -> FAILURE

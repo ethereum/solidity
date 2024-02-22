@@ -22,7 +22,7 @@ contract C {
 }
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 89555
+// gas irOptimized: 89500
 // gas irOptimized code: 172800
 // gas legacy: 103042
 // gas legacy code: 338400

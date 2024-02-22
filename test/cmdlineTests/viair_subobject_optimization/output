@@ -4,26 +4,29 @@ EVM assembly:
     /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
   0x80
   jumpi(tag_7, callvalue)
-  0x1f
   bytecodeSize
+  dup1
   codesize
-  dup2
-  swap1
   sub
-  swap2
-  dup3
-  add
+  swap1
   not(0x1f)
+  0x1f
+  dup4
+  add
   and
   dup4
   add
   swap2
-  sub(shl(0x40, 0x01), 0x01)
   dup4
-  gt
-  dup5
-  dup5
+  dup4
   lt
+  0x01
+  dup1
+  0x40
+  shl
+  sub
+  dup5
+  gt
   or
   tag_3
   jumpi
@@ -42,8 +45,17 @@ EVM assembly:
   slt
   tag_7
   jumpi
+    /* "viair_subobject_optimization/input.sol":625:645  0xFFFFFFFFFFFFFFFF42 */
+  0xbe
+    /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+  0x01
+    /* "viair_subobject_optimization/input.sol":625:645  0xFFFFFFFFFFFFFFFF42 */
+  0x48
+  shl
+  sub
+    /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+  swap1
   mload
-  sub(shl(0x48, 0x01), 0xbe)
     /* "viair_subobject_optimization/input.sol":620:645  x == 0xFFFFFFFFFFFFFFFF42 */
   eq
     /* "viair_subobject_optimization/input.sol":616:661  if (x == 0xFFFFFFFFFFFFFFFF42)... */
@@ -116,15 +128,16 @@ sub_0: assembly {
       revert
     tag_3:
       jumpi(tag_7, callvalue)
-      jumpi(tag_7, slt(add(not(0x03), calldatasize), 0x00))
-      not(0x1f)
+      jumpi(tag_7, slt(add(calldatasize, not(0x03)), 0x00))
         /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
       dataSize(sub_0)
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
-      0x3f
+      not(0x1f)
+      swap1
       dup2
-      add
+      0x3f
       dup3
+      add
       and
       dup4
       add
@@ -204,23 +217,32 @@ sub_0: assembly {
       swap1
       return
     tag_12:
-      dup3
+      dup4
+      dup1
+      swap6
+      swap7
+      pop
       dup2
-      add
       dup5
+      swap6
+      swap4
+      swap5
+      add
       add
       mload
-      dup9
-      dup3
-      add
       dup4
+      dup3
+      dup11
+      add
       add
       mstore
-      dup8
-      swap6
-      pop
-      dup4
       add
+      swap1
+      dup7
+      swap5
+      swap4
+      swap3
+      swap2
       jump(tag_11)
     tag_9:
       mstore(0x00, shl(0xe0, 0x4e487b71))
@@ -236,26 +258,29 @@ sub_0: assembly {
             /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
           0x80
           jumpi(tag_7, callvalue)
-          0x1f
           bytecodeSize
+          dup1
           codesize
-          dup2
-          swap1
           sub
-          swap2
-          dup3
-          add
+          swap1
           not(0x1f)
+          0x1f
+          dup4
+          add
           and
           dup4
           add
           swap2
-          sub(shl(0x40, 0x01), 0x01)
           dup4
-          gt
-          dup5
-          dup5
+          dup4
           lt
+          0x01
+          dup1
+          0x40
+          shl
+          sub
+          dup5
+          gt
           or
           tag_3
           jumpi
@@ -274,8 +299,17 @@ sub_0: assembly {
           slt
           tag_7
           jumpi
+            /* "viair_subobject_optimization/input.sol":625:645  0xFFFFFFFFFFFFFFFF42 */
+          0xbe
+            /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+          0x01
+            /* "viair_subobject_optimization/input.sol":625:645  0xFFFFFFFFFFFFFFFF42 */
+          0x48
+          shl
+          sub
+            /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
+          swap1
           mload
-          sub(shl(0x48, 0x01), 0xbe)
             /* "viair_subobject_optimization/input.sol":620:645  x == 0xFFFFFFFFFFFFFFFF42 */
           eq
             /* "viair_subobject_optimization/input.sol":616:661  if (x == 0xFFFFFFFFFFFFFFFF42)... */

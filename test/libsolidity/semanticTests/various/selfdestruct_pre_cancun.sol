@@ -62,8 +62,8 @@ contract D {
 // EVMVersion: =shanghai
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 67028
-// gas irOptimized code: 175400
+// gas irOptimized: 66848
+// gas irOptimized code: 173000
 // gas legacy: 76163
 // gas legacy code: 297400
 // gas legacyOptimized: 66516
