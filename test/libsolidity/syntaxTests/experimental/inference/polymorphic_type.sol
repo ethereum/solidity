@@ -24,9 +24,9 @@ function run() {
 // Info 4164: (48-55): Inferred type: U
 // Info 4164: (56-63): Inferred type: V
 // Info 4164: (65-81): Inferred type: C
-// Info 4164: (71-75): Inferred type: 'k:(type, C)
+// Info 4164: (71-75): Inferred type: 's:(type, C)
 // Info 4164: (82-98): Inferred type: D
-// Info 4164: (88-92): Inferred type: 'l:(type, D)
+// Info 4164: (88-92): Inferred type: 't:(type, D)
 // Info 4164: (100-170): Inferred type: () -> ()
 // Info 4164: (112-114): Inferred type: ()
 // Info 4164: (125-141): Inferred type: T(U, ?bh:type, ?bj:(type, C))
