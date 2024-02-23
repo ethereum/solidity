@@ -129,6 +129,19 @@ bool TypeInference::analyze(SourceUnit const& _sourceUnit)
 	return !m_errorReporter.hasErrors();
 }
 
+bool TypeInference::visit(ForAllQuantifier const& _quantifier)
+{
+	solAssert(m_expressionContext == ExpressionContext::Term);
+
+	{
+		ScopedSaveAndRestore expressionContext{m_expressionContext, ExpressionContext::Type};
+		_quantifier.typeVariableDeclarations().accept(*this);
+	}
+
+	_quantifier.quantifiedDeclaration().accept(*this);
+	return false;
+}
+
 bool TypeInference::visit(FunctionDefinition const& _functionDefinition)
 {
 	solAssert(m_expressionContext == ExpressionContext::Term);
@@ -567,9 +580,11 @@ bool TypeInference::visit(Identifier const& _identifier)
 		solAssert(false);
 		break;
 	case ExpressionContext::Type:
-		// TODO: register free type variable name!
+		m_errorReporter.typeError(5934_error, _identifier.location(), "Undeclared type variable.");
+
+		// Assign it a fresh variable anyway just so that we can continue analysis.
 		identifierAnnotation.type = m_typeSystem.freshTypeVariable({});
-		return false;
+		break;
 	case ExpressionContext::Sort:
 		// TODO: error handling
 		solAssert(false);
