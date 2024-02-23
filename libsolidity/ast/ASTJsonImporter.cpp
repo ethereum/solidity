@@ -130,16 +130,17 @@ SourceLocation ASTJsonImporter::createValueNameSourceLocation(Json::Value const&
 }
 
 template<class T>
-ASTPointer<T> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _node)
+ASTPointer<T> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _node, bool _isParentInterface)
 {
-	ASTPointer<T> ret = std::dynamic_pointer_cast<T>(convertJsonToASTNode(_node));
+	ASTPointer<T> ret = std::dynamic_pointer_cast<T>(convertJsonToASTNode(_node, _isParentInterface));
 	astAssert(ret, "cast of converted json-node must not be nullptr");
 	return ret;
 }
 
-
-ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _json)
-{
+ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(
+	Json::Value const& _json,
+	bool _isParentInterface
+) {
 	astAssert(_json["nodeType"].isString() && _json.isMember("id"), "JSON-Node needs to have 'nodeType' and 'id' fields.");
 	std::string nodeType = _json["nodeType"].asString();
 	if (nodeType == "PragmaDirective")
@@ -167,7 +168,7 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	if (nodeType == "OverrideSpecifier")
 		return createOverrideSpecifier(_json);
 	if (nodeType == "FunctionDefinition")
-		return createFunctionDefinition(_json);
+		return createFunctionDefinition(_json, _isParentInterface);
 	if (nodeType == "VariableDeclaration")
 		return createVariableDeclaration(_json);
 	if (nodeType == "ModifierDefinition")
@@ -335,9 +336,10 @@ ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::V
 		baseContracts.push_back(createInheritanceSpecifier(base));
 
 	std::vector<ASTPointer<ASTNode>> subNodes;
+	bool isInterface = (contractKind(_node) == ContractKind::Interface);
 
 	for (auto& subnode: _node["nodes"])
-		subNodes.push_back(convertJsonToASTNode(subnode));
+		subNodes.push_back(convertJsonToASTNode(subnode, isInterface));
 
 	return createASTNode<ContractDefinition>(
 		_node,
@@ -512,8 +514,10 @@ ASTPointer<OverrideSpecifier> ASTJsonImporter::createOverrideSpecifier(Json::Val
 	);
 }
 
-ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::Value const&  _node)
-{
+ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(
+	Json::Value const&  _node,
+	bool _isParentInterface
+) {
 	astAssert(_node["kind"].isString(), "Expected 'kind' to be a string!");
 
 	Token kind;
@@ -560,7 +564,8 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 		createParameterList(member(_node, "parameters")),
 		modifiers,
 		createParameterList(member(_node, "returnParameters")),
-		memberAsBool(_node, "implemented") ? createBlock(member(_node, "body"), false) : nullptr
+		memberAsBool(_node, "implemented") ? createBlock(member(_node, "body"), false) : nullptr,
+		_isParentInterface
 	);
 }
 

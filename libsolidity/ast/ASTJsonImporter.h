@@ -62,11 +62,11 @@ private:
 	std::optional<std::vector<langutil::SourceLocation>> createSourceLocations(Json::Value const& _node) const;
 	/// Creates an ASTNode for a given JSON-ast of unknown type
 	/// @returns Pointer to a new created ASTNode
-	ASTPointer<ASTNode> convertJsonToASTNode(Json::Value const& _ast);
+	ASTPointer<ASTNode> convertJsonToASTNode(Json::Value const& _ast, bool _isParentInterface = false);
 	/// @returns a pointer to the more specific subclass of ASTNode
 	/// as indicated by the nodeType field of the json
 	template<class T>
-	ASTPointer<T> convertJsonToASTNode(Json::Value const& _node);
+	ASTPointer<T> convertJsonToASTNode(Json::Value const& _node, bool _isParentInterface = false);
 
 	langutil::SourceLocation createNameSourceLocation(Json::Value const& _node);
 	/// @returns source location of a mapping key name
@@ -89,7 +89,7 @@ private:
 	ASTPointer<UserDefinedValueTypeDefinition> createUserDefinedValueTypeDefinition(Json::Value const& _node);
 	ASTPointer<ParameterList> createParameterList(Json::Value const& _node);
 	ASTPointer<OverrideSpecifier> createOverrideSpecifier(Json::Value const& _node);
-	ASTPointer<FunctionDefinition> createFunctionDefinition(Json::Value const& _node);
+	ASTPointer<FunctionDefinition> createFunctionDefinition(Json::Value const& _node, bool _isParentInterface);
 	ASTPointer<VariableDeclaration> createVariableDeclaration(Json::Value const& _node);
 	ASTPointer<ModifierDefinition> createModifierDefinition(Json::Value const& _node);
 	ASTPointer<ModifierInvocation> createModifierInvocation(Json::Value const& _node);

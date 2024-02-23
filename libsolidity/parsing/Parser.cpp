@@ -380,6 +380,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	std::pair<ContractKind, bool> contractKind{};
 	documentation = parseStructuredDocumentation();
 	contractKind = parseContractKind();
+	bool isInterfaceContract = (contractKind.first == ContractKind::Interface);
 	std::tie(name, nameLocation) = expectIdentifierWithLocation();
 	if (m_scanner->currentToken() == Token::Is)
 		do
@@ -400,7 +401,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			currentTokenValue == Token::Receive ||
 			currentTokenValue == Token::Fallback
 		)
-			subNodes.push_back(parseFunctionDefinition());
+			subNodes.push_back(parseFunctionDefinition(false, true, isInterfaceContract));
 		else if (currentTokenValue == Token::Struct)
 			subNodes.push_back(parseStructDefinition());
 		else if (currentTokenValue == Token::Enum)
@@ -627,7 +628,7 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 	return result;
 }
 
-ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction, bool _allowBody)
+ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction, bool _allowBody, bool _isParentInterface)
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
@@ -705,6 +706,7 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition(bool _freeFunction, bool _al
 		header.modifiers,
 		header.returnParameters,
 		block,
+		_isParentInterface,
 		header.experimentalReturnExpression
 	);
 }
