@@ -156,7 +156,7 @@ creates a public state variable, but it is a more complex datatype.
 The :ref:`mapping <mapping-types>` type maps addresses to :ref:`unsigned integers <integers>`.
 
 Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are
-virtually initialised such that every possible key exists from the start and is mapped to a
+virtually initialized such that every possible key exists from the start and is mapped to a
 value whose byte-representation is all zeros. However, it is neither possible to obtain a list of all keys of
 a mapping, nor a list of all values. Record what you
 added to the mapping, or use it in a context where this is not needed. Or
