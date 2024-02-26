@@ -30,9 +30,9 @@ contract C is B {
 }
 // ----
 // test() -> 77
-// gas irOptimized: 55148
-// gas irOptimized code: 55200
+// gas irOptimized: 55329
+// gas irOptimized code: 65000
 // gas legacy: 57266
 // gas legacy code: 94600
-// gas legacyOptimized: 55173
-// gas legacyOptimized code: 55200
+// gas legacyOptimized: 55246
+// gas legacyOptimized code: 55600
