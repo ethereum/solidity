@@ -1070,8 +1070,10 @@
         result := and(add(value_389, 31), not(31))
     }
 }
+// TODO: Create variants for different EVM versions.
+// After changing the optimizer sequence the output here became EVM-version dependent.
 // ====
-// EVMVersion: >=constantinople
+// EVMVersion: =shanghai
 // ----
 // step: fullSuite
 //
@@ -1102,9 +1104,11 @@
 //         if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }
 //         value2 := add(_2, 32)
 //         value3 := length
-//         let _3 := calldataload(add(headStart, 96))
-//         if iszero(lt(_3, 3)) { revert(0, 0) }
-//         value4 := _3
+//         value4 := cleanup_revert_enum_Operation(calldataload(add(headStart, 96)))
+//     }
+//     function abi_encode_address(value, pos)
+//     {
+//         mstore(pos, and(value, sub(shl(160, 1), 1)))
 //     }
 //     function abi_encode_bytes32_address_uint256_bytes32_enum_Operation_uint256_uint256_uint256_address_address_uint256(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0) -> tail
 //     {
@@ -1120,7 +1124,12 @@
 //         mstore(add(headStart, 192), value6)
 //         mstore(add(headStart, 224), value7)
 //         mstore(add(headStart, 256), and(value8, _1))
-//         mstore(add(headStart, 288), and(value9, _1))
+//         abi_encode_address(value9, add(headStart, 288))
 //         mstore(add(headStart, 320), value10)
+//     }
+//     function cleanup_revert_enum_Operation(value) -> cleaned
+//     {
+//         if iszero(lt(value, 3)) { revert(0, 0) }
+//         cleaned := value
 //     }
 // }

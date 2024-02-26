@@ -20,6 +20,8 @@
 //
 // {
 //     {
-//         sstore(sload(0), 0xad9c000000000000823500000000000056ce0000000000002b67)
+//         let a := sload(0)
+//         let x := sload(a)
+//         sstore(a, or(or(and(x, 0), and(0x56ce0000000000002b67, 0xffffffffffffffffffffffffffffffff)), shl(128, 0xad9c0000000000008235)))
 //     }
 // }

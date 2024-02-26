@@ -17,8 +17,10 @@
         v := add(v, calldataload(7))
     }
 }
+// TODO: Create variants for different EVM versions.
+// After changing the optimizer sequence the output here became EVM-version dependent.
 // ====
-// EVMVersion: >=istanbul
+// EVMVersion: >=shanghai
 // ----
 // step: fullSuite
 //
@@ -28,10 +30,12 @@
 //         let sum := 0
 //         let length := calldataload(_1)
 //         let i := 0
-//         let _2 := calldataload(7)
-//         for { } lt(i, length) { i := add(i, 1) }
+//         for { } true { i := add(i, 1) }
 //         {
-//             sum := add(sum, add(calldataload(add(add(_1, shl(5, i)), 0x20)), _2))
+//             let _2 := iszero(lt(i, length))
+//             if _2 { break }
+//             if _2 { revert(0, 0) }
+//             sum := add(sum, add(calldataload(add(add(_1, shl(5, i)), 0x20)), calldataload(7)))
 //         }
 //         sstore(0, sum)
 //     }

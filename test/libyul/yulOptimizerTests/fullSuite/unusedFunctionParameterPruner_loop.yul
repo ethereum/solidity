@@ -19,12 +19,34 @@
 //
 // {
 //     {
+//         f_63()
 //         f()
-//         f()
-//         f()
+//         f_65()
 //         sstore(0, 1)
 //     }
+//     function f_63()
+//     {
+//         let b := 10
+//         let a := calldataload(0)
+//         let _1 := iszero(a)
+//         for { } iszero(b) { b := add(b, not(0)) }
+//         {
+//             mstore(a, 0)
+//             if _1 { leave }
+//         }
+//     }
 //     function f()
+//     {
+//         let b := 10
+//         let a := calldataload(0)
+//         let _1 := iszero(a)
+//         for { } iszero(b) { b := add(b, not(0)) }
+//         {
+//             mstore(a, 0)
+//             if _1 { leave }
+//         }
+//     }
+//     function f_65()
 //     {
 //         let b := 10
 //         let a := calldataload(0)

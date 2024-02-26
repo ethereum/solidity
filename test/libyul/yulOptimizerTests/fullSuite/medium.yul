@@ -23,7 +23,10 @@
 //
 // {
 //     {
-//         sstore(0, add(mload(0x40), 128))
-//         sstore(1, 0x20)
+//         let p := add(add(mload(0x40), 0x20), 96)
+//         mstore(p, 2)
+//         mstore(0x40, 0x20)
+//         sstore(0, p)
+//         sstore(1, mload(0x40))
 //     }
 // }

@@ -16,13 +16,13 @@ object "C_10" {
         code {
             {
                 let _1 := memoryguard(0x80)
+                let _2 := 64
                 if iszero(lt(calldatasize(), 4))
                 {
                     if eq(0xc2985578, shr(224, calldataload(0)))
                     {
                         if callvalue() { revert(0, 0) }
                         if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
-                        let _2 := 64
                         let newFreePtr := add(_1, _2)
                         if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, _1))
                         {
@@ -40,7 +40,7 @@ object "C_10" {
                         mstore(add(memPos, 0x20), length)
                         mcopy(add(memPos, _2), _3, length)
                         mstore(add(add(memPos, length), _2), 0)
-                        return(memPos, add(sub(add(memPos, and(add(length, 31), not(31))), memPos), _2))
+                        return(memPos, sub(add(add(memPos, and(add(length, 31), not(31))), _2), memPos))
                     }
                 }
                 revert(0, 0)

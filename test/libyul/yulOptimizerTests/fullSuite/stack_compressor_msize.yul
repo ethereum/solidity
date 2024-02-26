@@ -53,7 +53,7 @@
 //         mstore(lt(or(gt(_1, or(or(gt(or(or(or(gt(or(gt(_6, _9), _1), _8), _7), _5), _1), _1), _4), _1)), _1), _1), _1)
 //         sstore(not(gcd(_3, _2)), _1)
 //         sstore(2, _1)
-//         extcodecopy(_1, msize(), _1, _1)
+//         foo_singlereturn()
 //         sstore(0, 0)
 //         sstore(3, _1)
 //     }
@@ -63,4 +63,6 @@
 //         case 0 { out := _a }
 //         default { out := gcd(_b, mod(_a, _b)) }
 //     }
+//     function foo_singlereturn()
+//     { extcodecopy(1, msize(), 1, 1) }
 // }

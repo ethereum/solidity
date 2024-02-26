@@ -238,29 +238,31 @@
 //         mstore(0x80, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
 //         mstore(0xa0, 8489654445897228341090914135473290831551238522473825886865492707826370766375)
 //         let notes := add(0x04, calldataload(0x04))
+//         let _1 := 0x24
 //         let n := calldataload(notes)
+//         let challenge := mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //         if gt(calldataload(0x24), n)
 //         {
 //             mstore(0x00, 404)
 //             revert(0x00, 0x20)
 //         }
 //         let kn := calldataload(add(calldatasize(), not(191)))
-//         let _1 := 0x2a0
-//         mstore(_1, caller())
+//         let _2 := 0x2a0
+//         mstore(_2, caller())
 //         mstore(0x2c0, kn)
 //         mstore(0x2e0, calldataload(0x24))
-//         kn := mulmod(sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, kn), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//         kn := mulmod(sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, kn), challenge, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //         hashCommitments(notes, n)
 //         let b := add(0x300, shl(7, n))
 //         let i := 0
 //         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
-//             let noteIndex := add(add(calldataload(0x04), mul(i, 0xc0)), 0x24)
+//             let noteIndex := add(add(calldataload(0x04), mul(i, 0xc0)), _1)
 //             let k := 0
 //             let a := calldataload(add(add(calldataload(0x04), mul(i, 0xc0)), 0x44))
-//             let c := mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
-//             let _2 := add(i, 0x01)
-//             switch eq(_2, n)
+//             let c := challenge
+//             let _3 := add(i, 0x01)
+//             switch eq(_3, n)
 //             case 1 {
 //                 k := kn
 //                 if eq(calldataload(0x24), n)
@@ -270,13 +272,13 @@
 //             }
 //             case 0 { k := calldataload(noteIndex) }
 //             validateCommitment(noteIndex, k, a)
-//             switch gt(_2, calldataload(0x24))
+//             switch gt(_3, calldataload(0x24))
 //             case 1 {
 //                 kn := addmod(kn, sub(0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001, k), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 let x := mod(mload(0), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 k := mulmod(k, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 a := mulmod(a, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
-//                 c := mulmod(mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
+//                 c := mulmod(challenge, x, 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)
 //                 mstore(0, keccak256(0, 0x20))
 //             }
 //             case 0 {
@@ -302,9 +304,9 @@
 //             if gt(i, calldataload(0x24))
 //             {
 //                 mstore(0x60, c)
-//                 let _3 := 0x220
-//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, _3, 0x40))
-//                 let result_5 := and(result_4, call(gas(), 6, 0, _3, 0x80, 0x260, 0x40))
+//                 let _4 := 0x220
+//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, _4, 0x40))
+//                 let result_5 := and(result_4, call(gas(), 6, 0, _4, 0x80, 0x260, 0x40))
 //                 result := and(result_5, call(gas(), 6, 0, 0x1a0, 0x80, 0x1e0, 0x40))
 //             }
 //             if iszero(result)
@@ -315,7 +317,7 @@
 //             b := add(b, 0x40)
 //         }
 //         if lt(calldataload(0x24), n) { validatePairing() }
-//         if iszero(eq(mod(keccak256(_1, add(b, not(671))), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), mod(calldataload(0x44), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001)))
+//         if iszero(eq(mod(keccak256(_2, add(b, not(671))), 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001), challenge))
 //         {
 //             mstore(0, 404)
 //             revert(0, 0x20)
@@ -326,38 +328,37 @@
 //     function validatePairing()
 //     {
 //         let t2_x := calldataload(0x64)
-//         let t2_x_1 := calldataload(132)
-//         let t2_y := calldataload(164)
-//         let t2_y_1 := calldataload(196)
-//         let _1 := 0x90689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b
-//         let _2 := 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
-//         let _3 := 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2
-//         let _4 := 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed
-//         if or(or(or(or(or(or(or(iszero(t2_x), iszero(t2_x_1)), iszero(t2_y)), iszero(t2_y_1)), eq(t2_x, _4)), eq(t2_x_1, _3)), eq(t2_y, _2)), eq(t2_y_1, _1))
+//         let _1 := 0x20
+//         let t2_x_1 := calldataload(add(0x64, _1))
+//         let t2_y := calldataload(add(0x64, 0x40))
+//         let t2_y_1 := calldataload(add(0x64, 0x60))
+//         let _2 := 0x90689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b
+//         let _3 := 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
+//         let _4 := 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2
+//         let _5 := 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed
+//         if or(or(or(or(or(or(or(iszero(t2_x), iszero(t2_x_1)), iszero(t2_y)), iszero(t2_y_1)), eq(t2_x, _5)), eq(t2_x_1, _4)), eq(t2_y, _3)), eq(t2_y_1, _2))
 //         {
 //             mstore(0x00, 400)
-//             revert(0x00, 0x20)
+//             revert(0x00, _1)
 //         }
-//         let _5 := mload(0x1e0)
-//         let _6 := 0x20
-//         mstore(_6, _5)
+//         mstore(_1, mload(0x1e0))
 //         mstore(0x40, mload(0x200))
-//         mstore(0x80, _4)
-//         mstore(0x60, _3)
-//         mstore(0xc0, _2)
-//         mstore(0xa0, _1)
+//         mstore(0x80, _5)
+//         mstore(0x60, _4)
+//         mstore(0xc0, _3)
+//         mstore(0xa0, _2)
 //         mstore(0xe0, mload(0x260))
 //         mstore(0x100, mload(0x280))
 //         mstore(0x140, t2_x)
 //         mstore(0x120, t2_x_1)
-//         let _7 := 0x180
-//         mstore(_7, t2_y)
+//         let _6 := 0x180
+//         mstore(_6, t2_y)
 //         mstore(0x160, t2_y_1)
-//         let success := call(gas(), 8, 0, _6, _7, _6, _6)
-//         if or(iszero(success), iszero(mload(_6)))
+//         let success := call(gas(), 8, 0, _1, _6, _1, _1)
+//         if or(iszero(success), iszero(mload(_1)))
 //         {
 //             mstore(0, 400)
-//             revert(0, _6)
+//             revert(0, _1)
 //         }
 //     }
 //     function validateCommitment(note, k, a)
