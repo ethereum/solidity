@@ -209,9 +209,13 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 
 void OptimizedEVMCodeTransform::assertLayoutCompatibility(Stack const& _currentStack, Stack const& _desiredStack)
 {
-	yulAssert(_currentStack.size() == _desiredStack.size(), "");
+	bool result = true;
+
+	result = result && (_currentStack.size() == _desiredStack.size());
 	for (auto&& [currentSlot, desiredSlot]: ranges::zip_view(_currentStack, _desiredStack))
-		yulAssert(std::holds_alternative<JunkSlot>(desiredSlot) || currentSlot == desiredSlot, "");
+		result = result && (std::holds_alternative<JunkSlot>(desiredSlot) || currentSlot == desiredSlot);
+
+	yulAssert(result, "current stack is " + stackToString(_currentStack) + " desired stack is " + stackToString(_desiredStack));
 }
 
 AbstractAssembly::LabelID OptimizedEVMCodeTransform::getFunctionLabel(Scope::Function const& _function)

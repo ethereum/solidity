@@ -267,27 +267,18 @@ Stack createIdealLayout(Stack const& _operationOutput, Stack const& _post, Calla
 }
 }
 
-Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation, bool _aggressiveStackCompression)
+StackSlotSet StackLayoutGenerator::propagateStackSlotSetThroughOperation(StackSlotSet _exitStack, CFG::Operation const& _operation)
 {
-	// Enable aggressive stack compression for recursive calls.
-	if (auto const* functionCall = std::get_if<CFG::FunctionCall>(&_operation.operation))
-		if (functionCall->recursive)
-			_aggressiveStackCompression = true;
+	StackSlotSet stack = std::move(_exitStack);
 
-	// This is a huge tradeoff between code size, gas cost and stack size.
-	auto generateSlotOnTheFly = [&](StackSlot const& _slot) {
-		return _aggressiveStackCompression && canBeFreelyGenerated(_slot);
-	};
-
-	// Determine the ideal permutation of the slots in _exitLayout that are not operation outputs (and not to be
-	// generated on the fly), s.t. shuffling the `stack + _operation.output` to _exitLayout is cheap.
-	Stack stack = createIdealLayout(_operation.output, _exitStack, generateSlotOnTheFly);
-
-	// Make sure the resulting previous slots do not overlap with any assignmed variables.
+	// We do not need to retain variable slots that are reassigned here.
 	if (auto const* assignment = std::get_if<CFG::Assignment>(&_operation.operation))
-		for (auto& stackSlot: stack)
-			if (auto const* varSlot = std::get_if<VariableSlot>(&stackSlot))
-				yulAssert(!util::contains(assignment->variables, *varSlot), "");
+		for (auto&& var: assignment->variables)
+			stack.erase(var);
+
+	// We do not retain operation outputs.
+	for (auto&& var: _operation.output)
+		stack.erase(var);
 
 	// Since stack+_operation.output can be easily shuffled to _exitLayout, the desired layout before the operation
 	// is stack+_operation.input;
@@ -296,40 +287,62 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 	// Store the exact desired operation entry layout. The stored layout will be recreated by the code transform
 	// before executing the operation. However, this recreation can produce slots that can be freely generated or
 	// are duplicated, i.e. we can compress the stack afterwards without causing problems for code generation later.
-	m_layout.operationEntryLayout[&_operation] = stack;
+	m_layout.operationEntrySlots[&_operation] = stack;
 
-	// Remove anything from the stack top that can be freely generated or dupped from deeper on the stack.
-	while (!stack.empty())
+	return stack;
+}
+
+StackSlotSet StackLayoutGenerator::propagateStackSlotSetThroughBlock(StackSlotSet _exitStack, CFG::BasicBlock const& _block)
+{
+	StackSlotSet stack = _exitStack;
+	for (auto&& operation: _block.operations | ranges::views::reverse)
 	{
-		if (canBeFreelyGenerated(stack.back()))
-			stack.pop_back();
-		else if (auto offset = util::findOffset(stack | ranges::views::reverse | ranges::views::drop(1), stack.back()))
-		{
-			if (*offset + 2 < 16)
-				stack.pop_back();
-			else
-				break;
-		}
-		else
-			break;
+		StackSlotSet newStack = propagateStackSlotSetThroughOperation(stack, operation);
+		stack = std::move(newStack);
 	}
 
 	return stack;
 }
 
-Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _exitStack, CFG::BasicBlock const& _block, bool _aggressiveStackCompression)
+
+Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _entryStack, StackSlotSet _exitSet, CFG::Operation const& _operation)
 {
-	Stack stack = _exitStack;
-	for (auto&& [idx, operation]: _block.operations | ranges::views::enumerate | ranges::views::reverse)
+	Stack stack;
+
+	for (auto slot: _entryStack)
+		if (_exitSet.count(slot))
+			stack.emplace_back(slot);
+
+	m_layout.operationEntryLayout[&_operation] = stack + _operation.input;
+
+	for (auto slot: _operation.output)
+		if (_exitSet.count(slot))
+			stack.emplace_back(slot);
+	return stack;
+}
+
+Stack StackLayoutGenerator::propagateStackThroughBlock(Stack _entryStack, CFG::BasicBlock const& _block)
+{
+	Stack stack = _entryStack;
+	for (auto&& [idx, operation]: _block.operations | ranges::view::enumerate)
 	{
-		Stack newStack = propagateStackThroughOperation(stack, operation, _aggressiveStackCompression);
-		if (!_aggressiveStackCompression && !findStackTooDeep(newStack, stack).empty())
-			// If we had stack errors, run again with aggressive stack compression.
-			return propagateStackThroughBlock(std::move(_exitStack), _block, true);
+		StackSlotSet exitSet;
+		if (idx < _block.operations.size() - 1) {
+			exitSet = m_layout.operationEntrySlots.at(&_block.operations[idx + 1]);
+		} else {
+			exitSet = m_layout.blockInfos[&_block].exitSlots;
+		}
+		Stack newStack = propagateStackThroughOperation(stack, exitSet, operation);
 		stack = std::move(newStack);
 	}
+	StackSlotSet exitSet = m_layout.blockInfos[&_block].exitSlots;
 
-	return stack;
+	Stack result;
+	for (auto slot: stack)
+		if (exitSet.count(slot))
+			result.emplace_back(slot);
+
+	return result;
 }
 
 void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG::FunctionInfo const* _functionInfo)
@@ -352,12 +365,12 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG:
 			if (visited.count(block))
 				continue;
 
-			if (std::optional<Stack> exitLayout = getExitLayoutOrStageDependencies(*block, visited, toVisit))
+			if (std::optional<StackSlotSet> exitLayout = getExitLayoutOrStageDependencies(*block, visited, toVisit))
 			{
 				visited.emplace(block);
 				auto& info = m_layout.blockInfos[block];
-				info.exitLayout = *exitLayout;
-				info.entryLayout = propagateStackThroughBlock(info.exitLayout, *block);
+				info.exitSlots = *exitLayout;
+				info.entrySlots = propagateStackSlotSetThroughBlock(info.exitSlots, *block);
 
 				for (auto entry: block->entries)
 					toVisit.emplace_back(entry);
@@ -371,8 +384,8 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG:
 			// This block jumps backwards, but does not provide all slots required by the jump target on exit.
 			// Therefore we need to visit the subgraph between ``target`` and ``jumpingBlock`` again.
 			if (ranges::any_of(
-				m_layout.blockInfos[target].entryLayout,
-				[exitLayout = m_layout.blockInfos[jumpingBlock].exitLayout](StackSlot const& _slot) {
+				m_layout.blockInfos[target].entrySlots,
+				[exitLayout = m_layout.blockInfos[jumpingBlock].exitSlots](StackSlot const& _slot) {
 					return !util::contains(exitLayout, _slot);
 				}
 			))
@@ -402,52 +415,140 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG:
 			}
 	}
 
+	stitchConditionalJumpSets(_entry);
+
+	/// Forward pass.
+	visited.clear();
+	toVisit.emplace_back(&_entry);
+
+	if (_functionInfo)
+	{
+		Stack& entryLayout = m_layout.blockInfos[&_entry].entryLayout;
+		if (_functionInfo->canContinue)
+			entryLayout.emplace_back(FunctionReturnLabelSlot{_functionInfo->function});
+		for (auto const& param: _functionInfo->parameters | ranges::views::reverse)
+			entryLayout.emplace_back(param);
+	}
+
+	while (!toVisit.empty())
+	{
+		CFG::BasicBlock const *block = *toVisit.begin();
+		toVisit.pop_front();
+
+		if (visited.count(block))
+			continue;
+		visited.emplace(block);
+
+		Stack stack = m_layout.blockInfos[block].entryLayout;
+
+		stack = propagateStackThroughBlock(stack, *block);
+
+		for (auto it = std::begin(stack); it != std::end(stack);)
+		{
+			if (!m_layout.blockInfos[block].exitSlots.count(*it))
+				it = stack.erase(it);
+			else
+				it++;
+		}
+
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				if (!visited.count(_jump.target))
+				{
+					m_layout.blockInfos[_jump.target].entryLayout = stack;
+					toVisit.emplace_front(_jump.target);
+				}
+				else
+				{
+					// TODO: is this the correct validation?
+					auto const& layout = m_layout.blockInfos[_jump.target].entryLayout;
+					for (auto slot: layout)
+						yulAssert(util::contains(stack, slot), stackToString(layout) + " does not contain " + stackSlotToString(slot));
+				}
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				if (!(stack.back() == _conditionalJump.condition))
+					stack.emplace_back(_conditionalJump.condition);
+				Stack postJumpStack = stack;
+				postJumpStack.pop_back();
+				if (!visited.count(_conditionalJump.zero))
+				{
+					m_layout.blockInfos[_conditionalJump.zero].entryLayout = postJumpStack;
+					toVisit.emplace_front(_conditionalJump.zero);
+				}
+				else
+				{
+					// TODO: is this the correct validation?
+					auto const& layout = m_layout.blockInfos[_conditionalJump.zero].entryLayout;
+					for (auto slot: layout)
+						yulAssert(util::contains(postJumpStack, slot), stackToString(postJumpStack) + " does not contain " + stackSlotToString(slot));
+				}
+				if (!visited.count(_conditionalJump.nonZero))
+				{
+					m_layout.blockInfos[_conditionalJump.nonZero].entryLayout = postJumpStack;
+					toVisit.emplace_front(_conditionalJump.nonZero);
+				}
+				else
+				{
+					// TODO: is this the correct validation?
+					auto const& layout = m_layout.blockInfos[_conditionalJump.nonZero].entryLayout;
+					for (auto slot: layout)
+						yulAssert(util::contains(postJumpStack, slot), stackToString(postJumpStack) + " does not contain " + stackSlotToString(slot));
+				}
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&) {},
+			[&](CFG::BasicBlock::Terminated const&) {},
+		}, block->exit);
+		m_layout.blockInfos[block].exitLayout = stack;
+
+	}
+
 	stitchConditionalJumps(_entry);
-	fillInJunk(_entry, _functionInfo);
 }
 
-std::optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
+std::optional<StackSlotSet> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 	CFG::BasicBlock const& _block,
 	std::set<CFG::BasicBlock const*> const& _visited,
 	std::list<CFG::BasicBlock const*>& _toVisit
 ) const
 {
 	return std::visit(util::GenericVisitor{
-		[&](CFG::BasicBlock::MainExit const&) -> std::optional<Stack>
+		[&](CFG::BasicBlock::MainExit const&) -> std::optional<StackSlotSet>
 		{
 			// On the exit of the outermost block the stack can be empty.
-			return Stack{};
+			return StackSlotSet{};
 		},
-		[&](CFG::BasicBlock::Jump const& _jump) -> std::optional<Stack>
+		[&](CFG::BasicBlock::Jump const& _jump) -> std::optional<StackSlotSet>
 		{
 			if (_jump.backwards)
 			{
 				// Choose the best currently known entry layout of the jump target as initial exit.
 				// Note that this may not yet be the final layout.
 				if (auto* info = util::valueOrNullptr(m_layout.blockInfos, _jump.target))
-					return info->entryLayout;
-				return Stack{};
+					return info->entrySlots;
+				return StackSlotSet{};
 			}
 			// If the current iteration has already visited the jump target, start from its entry layout.
 			if (_visited.count(_jump.target))
-				return m_layout.blockInfos.at(_jump.target).entryLayout;
+				return m_layout.blockInfos.at(_jump.target).entrySlots;
 			// Otherwise stage the jump target for visit and defer the current block.
 			_toVisit.emplace_front(_jump.target);
 			return std::nullopt;
 		},
-		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<Stack>
+		[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump) -> std::optional<StackSlotSet>
 		{
 			bool zeroVisited = _visited.count(_conditionalJump.zero);
 			bool nonZeroVisited = _visited.count(_conditionalJump.nonZero);
 			if (zeroVisited && nonZeroVisited)
 			{
 				// If the current iteration has already visited both jump targets, start from its entry layout.
-				Stack stack = combineStack(
-					m_layout.blockInfos.at(_conditionalJump.zero).entryLayout,
-					m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout
-				);
+				StackSlotSet stack = m_layout.blockInfos.at(_conditionalJump.zero).entrySlots +
+					m_layout.blockInfos.at(_conditionalJump.nonZero).entrySlots;
 				// Additionally, the jump condition has to be at the stack top at exit.
-				stack.emplace_back(_conditionalJump.condition);
+				stack.emplace(_conditionalJump.condition);
 				return stack;
 			}
 			// If one of the jump targets has not been visited, stage it for visit and defer the current block.
@@ -457,20 +558,20 @@ std::optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 				_toVisit.emplace_front(_conditionalJump.nonZero);
 			return std::nullopt;
 		},
-		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<Stack>
+		[&](CFG::BasicBlock::FunctionReturn const& _functionReturn) -> std::optional<StackSlotSet>
 		{
 			// A function return needs the return variables and the function return label slot on stack.
 			yulAssert(_functionReturn.info, "");
-			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
+			StackSlotSet stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
 				return StackSlot{_varSlot};
-			}) | ranges::to<Stack>;
-			stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
+			}) | ranges::to<StackSlotSet>;
+			stack.emplace(FunctionReturnLabelSlot{_functionReturn.info->function});
 			return stack;
 		},
-		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>
+		[&](CFG::BasicBlock::Terminated const&) -> std::optional<StackSlotSet>
 		{
 			// A terminating block can have an empty stack on exit.
-			return Stack{};
+			return StackSlotSet{};
 		},
 	}, _block.exit);
 }
@@ -499,6 +600,51 @@ std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> StackLayout
 	return backwardsJumps;
 }
 
+
+void StackLayoutGenerator::stitchConditionalJumpSets(CFG::BasicBlock const& _block)
+{
+	util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{&_block}};
+	breadthFirstSearch.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		auto& info = m_layout.blockInfos.at(_block);
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				if (!_jump.backwards)
+					_addChild(_jump.target);
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				auto& zeroTargetInfo = m_layout.blockInfos.at(_conditionalJump.zero);
+				auto& nonZeroTargetInfo = m_layout.blockInfos.at(_conditionalJump.nonZero);
+				StackSlotSet exitLayout = info.exitSlots;
+
+				// The last block must have produced the condition at the stack top.
+				yulAssert(!exitLayout.empty(), "");
+				yulAssert(exitLayout.count(_conditionalJump.condition));
+
+				auto fixJumpTargetEntry = [&](StackSlotSet const& _originalEntryLayout) -> StackSlotSet {
+					StackSlotSet newEntryLayout;
+					for (auto slot: exitLayout)
+						if (util::contains(_originalEntryLayout, slot))
+							newEntryLayout.emplace(slot);
+
+					// Make sure everything the block being jumped to requires is actually present or can be generated.
+					for (auto const& slot: _originalEntryLayout)
+						yulAssert(canBeFreelyGenerated(slot) || util::contains(newEntryLayout, slot), "");
+					return newEntryLayout;
+				};
+				zeroTargetInfo.entrySlots = fixJumpTargetEntry(zeroTargetInfo.entrySlots);
+				nonZeroTargetInfo.entrySlots = fixJumpTargetEntry(nonZeroTargetInfo.entrySlots);
+				_addChild(_conditionalJump.zero);
+				_addChild(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&)	{},
+			[&](CFG::BasicBlock::Terminated const&) { },
+		}, _block->exit);
+	});
+}
+
 void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 {
 	util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{&_block}};
@@ -519,7 +665,7 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 
 				// The last block must have produced the condition at the stack top.
 				yulAssert(!exitLayout.empty(), "");
-				yulAssert(exitLayout.back() == _conditionalJump.condition, "");
+				yulAssert(exitLayout.back() == _conditionalJump.condition, stackToString(exitLayout) + " was expected to end in conditon " + stackSlotToString(_conditionalJump.condition));
 				// The condition is consumed by the jump.
 				exitLayout.pop_back();
 
@@ -530,8 +676,12 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 						if (!util::contains(_originalEntryLayout, slot))
 							slot = JunkSlot{};
 					// Make sure everything the block being jumped to requires is actually present or can be generated.
-					for (auto const& slot: _originalEntryLayout)
-						yulAssert(canBeFreelyGenerated(slot) || util::contains(newEntryLayout, slot), "");
+					{
+						bool sanity = true;
+						for (auto const& slot: _originalEntryLayout)
+							sanity = sanity && (canBeFreelyGenerated(slot) || util::contains(newEntryLayout, slot));
+						yulAssert(sanity, stackToString(newEntryLayout) + " is missing something from " + stackToString(_originalEntryLayout));
+					}
 					return newEntryLayout;
 				};
 				zeroTargetInfo.entryLayout = fixJumpTargetEntry(zeroTargetInfo.entryLayout);
@@ -543,93 +693,6 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 			[&](CFG::BasicBlock::Terminated const&) { },
 		}, _block->exit);
 	});
-}
-
-Stack StackLayoutGenerator::combineStack(Stack const& _stack1, Stack const& _stack2)
-{
-	// TODO: it would be nicer to replace this by a constructive algorithm.
-	// Currently it uses a reduced version of the Heap Algorithm to partly brute-force, which seems
-	// to work decently well.
-
-	Stack commonPrefix;
-	for (auto&& [slot1, slot2]: ranges::zip_view(_stack1, _stack2))
-	{
-		if (!(slot1 == slot2))
-			break;
-		commonPrefix.emplace_back(slot1);
-	}
-
-	Stack stack1Tail = _stack1 | ranges::views::drop(commonPrefix.size()) | ranges::to<Stack>;
-	Stack stack2Tail = _stack2 | ranges::views::drop(commonPrefix.size()) | ranges::to<Stack>;
-
-	if (stack1Tail.empty())
-		return commonPrefix + compressStack(stack2Tail);
-	if (stack2Tail.empty())
-		return commonPrefix + compressStack(stack1Tail);
-
-	Stack candidate;
-	for (auto slot: stack1Tail)
-		if (!util::contains(candidate, slot))
-			candidate.emplace_back(slot);
-	for (auto slot: stack2Tail)
-		if (!util::contains(candidate, slot))
-			candidate.emplace_back(slot);
-	cxx20::erase_if(candidate, [](StackSlot const& slot) {
-		return std::holds_alternative<LiteralSlot>(slot) || std::holds_alternative<FunctionCallReturnLabelSlot>(slot);
-	});
-
-	auto evaluate = [&](Stack const& _candidate) -> size_t {
-		size_t numOps = 0;
-		Stack testStack = _candidate;
-		auto swap = [&](unsigned _swapDepth) { ++numOps; if (_swapDepth > 16) numOps += 1000; };
-		auto dupOrPush = [&](StackSlot const& _slot)
-		{
-			if (canBeFreelyGenerated(_slot))
-				return;
-			auto depth = util::findOffset(ranges::concat_view(commonPrefix, testStack) | ranges::views::reverse, _slot);
-			if (depth && *depth >= 16)
-				numOps += 1000;
-		};
-		createStackLayout(testStack, stack1Tail, swap, dupOrPush, [&](){});
-		testStack = _candidate;
-		createStackLayout(testStack, stack2Tail, swap, dupOrPush, [&](){});
-		return numOps;
-	};
-
-	// See https://en.wikipedia.org/wiki/Heap's_algorithm
-	size_t n = candidate.size();
-	Stack bestCandidate = candidate;
-	size_t bestCost = evaluate(candidate);
-	std::vector<size_t> c(n, 0);
-	size_t i = 1;
-	while (i < n)
-	{
-		if (c[i] < i)
-		{
-			if (i & 1)
-				std::swap(candidate.front(), candidate[i]);
-			else
-				std::swap(candidate[c[i]], candidate[i]);
-			size_t cost = evaluate(candidate);
-			if (cost < bestCost)
-			{
-				bestCost = cost;
-				bestCandidate = candidate;
-			}
-			++c[i];
-			// Note that for a proper implementation of the Heap algorithm this would need to revert back to ``i = 1.``
-			// However, the incorrect implementation produces decent result and the proper version would have n!
-			// complexity and is thereby not feasible.
-			++i;
-		}
-		else
-		{
-			c[i] = 0;
-			++i;
-		}
-	}
-
-	return commonPrefix + bestCandidate;
 }
 
 std::vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG::BasicBlock const& _entry) const

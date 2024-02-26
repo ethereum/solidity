@@ -28,16 +28,24 @@
 namespace solidity::yul
 {
 
+using StackSlotSet = std::set<StackSlot>;
+
 struct StackLayout
 {
 	struct BlockInfo
 	{
+		/// Set of stack slots required on entry of this block.
+		StackSlotSet entrySlots;
+		/// Set of stack slots required at the exit of this block.
+		StackSlotSet exitSlots;
 		/// Complete stack layout that is required for entering a block.
 		Stack entryLayout;
 		/// The resulting stack layout after executing the block.
 		Stack exitLayout;
 	};
 	std::map<CFG::BasicBlock const*, BlockInfo> blockInfos;
+	/// For each operation the set of stack slots required on stack when entering the operation.
+	std::map<CFG::Operation const*, StackSlotSet> operationEntrySlots;
 	/// For each operation the complete stack layout that:
 	/// - has the slots required for the operation at the stack top.
 	/// - will have the operation result in a layout that makes it easy to achieve the next desired layout.
@@ -68,22 +76,19 @@ public:
 private:
 	StackLayoutGenerator(StackLayout& _context, CFG::FunctionInfo const* _functionInfo);
 
-	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
-	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
-	/// Simultaneously stores the entry layout required for executing the operation in m_layout.
-	Stack propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation, bool _aggressiveStackCompression = false);
+	Stack propagateStackThroughOperation(Stack _entryStack, StackSlotSet _exitSet, CFG::Operation const& _operation);
+	Stack propagateStackThroughBlock(Stack _entryStack, CFG::BasicBlock const& _block);
 
-	/// @returns the desired stack layout at the entry of @a _block, assuming the layout after
-	/// executing the block should be @a _exitStack.
-	Stack propagateStackThroughBlock(Stack _exitStack, CFG::BasicBlock const& _block, bool _aggressiveStackCompression = false);
 
+	StackSlotSet propagateStackSlotSetThroughOperation(StackSlotSet _exitStack, CFG::Operation const& _operation);
+	StackSlotSet propagateStackSlotSetThroughBlock(StackSlotSet _exitStack, CFG::BasicBlock const& _block);
 	/// Main algorithm walking the graph from entry to exit and propagating back the stack layouts to the entries.
 	/// Iteratively reruns itself along backwards jumps until the layout is stabilized.
 	void processEntryPoint(CFG::BasicBlock const& _entry, CFG::FunctionInfo const* _functionInfo = nullptr);
 
 	/// @returns the best known exit layout of @a _block, if all dependencies are already @a _visited.
 	/// If not, adds the dependencies to @a _dependencyList and @returns std::nullopt.
-	std::optional<Stack> getExitLayoutOrStageDependencies(
+	std::optional<StackSlotSet> getExitLayoutOrStageDependencies(
 		CFG::BasicBlock const& _block,
 		std::set<CFG::BasicBlock const*> const& _visited,
 		std::list<CFG::BasicBlock const*>& _dependencyList
@@ -98,9 +103,8 @@ private:
 	/// exactly, except that slots not required after the jump are marked as `JunkSlot`s.
 	void stitchConditionalJumps(CFG::BasicBlock const& _block);
 
-	/// Calculates the ideal stack layout, s.t. both @a _stack1 and @a _stack2 can be achieved with minimal
-	/// stack shuffling when starting from the returned layout.
-	static Stack combineStack(Stack const& _stack1, Stack const& _stack2);
+	void stitchConditionalJumpSets(CFG::BasicBlock const& _block);
+
 
 	/// Walks through the CFG and reports any stack too deep errors that would occur when generating code for it
 	/// without countermeasures.
