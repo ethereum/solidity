@@ -51,7 +51,7 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 		auto queryFileName = tempDir.path() / ("query_" + queryHash.hex() + ".smt2");
 
 		auto queryFile = boost::filesystem::ofstream(queryFileName);
-		queryFile << _query;
+		queryFile << _query << std::flush;
 
 		auto eldBin = boost::process::search_path(m_solverCmd);
 
