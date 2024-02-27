@@ -116,10 +116,16 @@ def semantictest_statistics():
             return None
         return collect_statistics(diff_output)
 
-    def stat(old, new):
-        if old == 0:
+    def percent(old, new):
+        return (int(new) - int(old)) / int(old) * 100 if int(old) != 0 else None
+
+    def percent_or_zero(old, new):
+        result = percent(old, new)
+        return result if result is not None else 0
+
+    def format_percent(percentage):
+        if percentage is None:
             return ''
-        percentage = (new - old) / old * 100
         prefix = (
             # Distinguish actual zero from very small differences
             '+' if round(percentage) == 0 and percentage > 0 else
@@ -127,6 +133,9 @@ def semantictest_statistics():
             ''
         )
         return f'{prefix}{round(percentage)}%'
+
+    def stat(old, new):
+        return format_percent(percent(old, new))
 
     table = []
 
@@ -138,16 +147,24 @@ def semantictest_statistics():
         parsed = parse_git_diff(fname)
         if parsed is None:
             continue
+        assert len(parsed) == 6
         ir_optimized = stat(parsed[0], parsed[3])
         legacy_optimized = stat(parsed[1], parsed[4])
         legacy = stat(parsed[2], parsed[5])
         fname = f"`{fname.split('/', 3)[-1]}`"
-        table += [[fname, ir_optimized, legacy_optimized, legacy]]
+        average = ((
+            percent_or_zero(parsed[0], parsed[3]) +
+            percent_or_zero(parsed[1], parsed[4]) +
+            percent_or_zero(parsed[2], parsed[5])
+        ) / 3)
+        table += [[average, fname, ir_optimized, legacy_optimized, legacy]]
+
+    sorted_table = [row[1:] for row in sorted(table, reverse=True)]
 
     if table:
         print("<details><summary>Click for a table of gas differences</summary>\n")
         table_header = ["File name", "IR optimized", "Legacy optimized", "Legacy"]
-        print(tabulate(sorted(table), headers=table_header, tablefmt="github"))
+        print(tabulate(sorted_table, headers=table_header, tablefmt="github"))
         print("</details>")
     else:
         print("No differences found.")
