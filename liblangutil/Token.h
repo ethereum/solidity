@@ -276,6 +276,7 @@ namespace solidity::langutil
 	K(Itself, "itself", 0)                                             \
 	K(StaticAssert, "static_assert", 0)                                \
 	K(Builtin, "__builtin", 0)                                         \
+	K(ForAll, "forall", 0)                                             \
 	T(ExperimentalEnd, nullptr, 0) /* used as experimental enum end marker */ \
 	\
 	/* Illegal token - not able to scan. */                            \

@@ -2625,6 +2625,38 @@ private:
 	SourceLocation m_nameParameterLocation;
 };
 
+// TODO: NatSpec used on the quantifier should be recognized as applying to the function.
+class ForAllQuantifier: public ASTNode, public Scopable, public ScopeOpener
+{
+public:
+	ForAllQuantifier(
+		int64_t _id,
+		SourceLocation _location,
+		ASTPointer<ParameterList> _typeVariableDeclarations,
+		ASTPointer<FunctionDefinition> _quantifiedDeclaration
+	):
+		ASTNode(_id, std::move(_location)),
+		m_typeVariableDeclarations(std::move(_typeVariableDeclarations)),
+		m_quantifiedDeclaration(std::move(_quantifiedDeclaration))
+	{
+		solAssert(m_typeVariableDeclarations);
+		solAssert(m_quantifiedDeclaration);
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+	ForAllQuantifierAnnotation& annotation() const override { return initAnnotation<ForAllQuantifierAnnotation>(); }
+
+	bool experimentalSolidityOnly() const override { return true; }
+
+	ParameterList const& typeVariableDeclarations() const { return *m_typeVariableDeclarations; }
+	FunctionDefinition const& quantifiedDeclaration() const { return *m_quantifiedDeclaration; }
+
+private:
+	ASTPointer<ParameterList> m_typeVariableDeclarations;
+	ASTPointer<FunctionDefinition> m_quantifiedDeclaration;
+};
+
 /// @}
 
 }

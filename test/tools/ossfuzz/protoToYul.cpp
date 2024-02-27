@@ -599,6 +599,12 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		return;
 	}
 
+	if (op == UnaryOp::BLOBHASH && !m_evmVersion.hasBlobHash())
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
 	// The following instructions may lead to change of EVM state and are hence
 	// excluded to avoid false positives.
 	if (
@@ -646,6 +652,9 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		break;
 	case UnaryOp::BLOCKHASH:
 		m_output << "blockhash";
+		break;
+	case UnaryOp::BLOBHASH:
+		m_output << "blobhash";
 		break;
 	}
 	m_output << "(";

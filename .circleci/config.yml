@@ -974,8 +974,15 @@ jobs:
     steps:
       - checkout
       - run:
+          # TODO: Add these to the base image
+          name: Install gas_diff_stats.py dependencies
+          command: python3 -m pip install --user parsec tabulate
+      - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
+      - run:
+          name: Smoke test for gas_diff_stats.py
+          command: scripts/gas_diff_stats.py
       - matrix_notify_failure_unless_pr
 
   t_win_pyscripts:
@@ -985,7 +992,7 @@ jobs:
       - checkout
       - run:
           name: Install dependencies
-          command: python -m pip install --user requests
+          command: python -m pip install --user requests parsec tabulate
       - run:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
@@ -1378,7 +1385,7 @@ jobs:
   t_ems_ext_hardhat:
     <<: *base_node_small
     docker:
-      - image: cimg/node:18.16
+      - image: cimg/rust:1.74.0-node
     environment:
       <<: *base_node_small_env
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
@@ -1386,7 +1393,28 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git
+      - run:
+          name: Ensure pnpm is installed if npm is present
+          command: sudo npm install -g pnpm
+      - run:
+          name: Retrieve Hardhat latest release tag
+          command: |
+            # Make authenticated requests when the Github token is available
+            if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then
+              EXTRA_HEADERS=(--header "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}")
+            fi
+            HARDHAT_LATEST_RELEASE_TAG=$(
+              curl \
+                --silent \
+                --location \
+                --fail \
+                --show-error \
+                "${EXTRA_HEADERS[@]}" \
+                https://api.github.com/repos/nomiclabs/hardhat/releases/latest \
+                | jq --raw-output .tag_name \
+            )
+            echo "export HARDHAT_LATEST_RELEASE_TAG='${HARDHAT_LATEST_RELEASE_TAG}'" >> "$BASH_ENV"
+      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git --branch "$HARDHAT_LATEST_RELEASE_TAG"
       - run:
           name: Install dependencies
           command: |

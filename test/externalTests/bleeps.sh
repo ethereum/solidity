@@ -38,7 +38,6 @@ function test_fn { HARDHAT_DEPLOY_FIXTURE=true npx --no hardhat --no-compile tes
 function bleeps_test
 {
     local repo="https://github.com/wighawag/bleeps"
-    local ref_type=branch
     local ref=main
     local config_file="hardhat.config.ts"
     local config_var=config
@@ -58,7 +57,7 @@ function bleeps_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     pushd "common-lib/"
     neutralize_package_json_hooks

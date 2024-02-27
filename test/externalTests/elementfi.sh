@@ -37,8 +37,7 @@ function test_fn { npm run test; }
 function elementfi_test
 {
     local repo="https://github.com/element-fi/elf-contracts"
-    local ref_type=branch
-    local ref=main
+    local ref="<latest-release>"
     local config_file="hardhat.config.ts"
     local config_var=config
 
@@ -60,7 +59,7 @@ function elementfi_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     chmod +x scripts/load-balancer-contracts.sh
     scripts/load-balancer-contracts.sh

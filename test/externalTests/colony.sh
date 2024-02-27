@@ -37,7 +37,6 @@ function test_fn { yarn run test:contracts; }
 function colony_test
 {
     local repo="https://github.com/solidity-external-tests/colonyNetwork.git"
-    local ref_type=branch
     local ref="develop_080"
     local config_file="truffle.js"
 
@@ -57,7 +56,7 @@ function colony_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     neutralize_package_json_hooks

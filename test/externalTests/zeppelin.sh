@@ -42,8 +42,7 @@ function test_fn { npm test; }
 function zeppelin_test
 {
     local repo="https://github.com/OpenZeppelin/openzeppelin-contracts.git"
-    local ref_type=branch
-    local ref="master"
+    local ref="<latest-release>"
     local config_file="hardhat.config.js"
 
     local compile_only_presets=(
@@ -62,7 +61,7 @@ function zeppelin_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
@@ -100,25 +99,12 @@ function zeppelin_test
     # Here only the testToInt(248) and testToInt(256) cases fail so change the loop range to skip them
     sed -i "s|range(8, 256, 8)\(.forEach(bits => testToInt(bits));\)|range(8, 240, 8)\1|" test/utils/math/SafeCast.test.js
 
-    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     npm install
 
-    # TODO: We fix the version to 2.0.3 instead of 2.0.4 since the latter does not work with ethers.js 6.10.0
-    # Maybe related to the use of dynamic imports here: https://github.com/NomicFoundation/hardhat/commit/16ae15642951ac324ef7093a3342f7cf3a2a49a4
-    npm install @nomicfoundation/hardhat-chai-matchers@2.0.3
-
-    # TODO: Remove when OpenZeppelin update to ethers 6.11.1+
-    # Prior versions of ethers accepts an object instead of a string as an argument to the toUtf8Bytes function.
-    # However, starting from Ethers version 6.11.1, string arguments are enforced,
-    # which causes the introduced assertion to fail in some OpenZeppelin tests.
-    # See: https://github.com/ethers-io/ethers.js/issues/4583
-    npm install ethers@6.11.0
-
     replace_version_pragmas
-
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
         store_benchmark_report hardhat zeppelin "$repo" "$preset"
