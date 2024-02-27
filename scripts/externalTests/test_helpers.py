@@ -96,23 +96,29 @@ def parse_command_line(description: str, args: List[str]):
     return arg_parser.parse_args(args)
 
 
-def download_project(test_dir: Path, repo_url: str, ref_type: str = "branch", ref: str = "master"):
-    assert ref_type in ("commit", "branch", "tag")
+def download_project(test_dir: Path, repo_url: str, ref: str = "<latest-release>"):
+    print(f"Cloning {repo_url}...")
+    # Clone the repo ignoring all blobs until needed by git.
+    # This allows access to commit history but with a fast initial clone
+    subprocess.run(["git", "clone", "--filter", "blob:none", repo_url, test_dir.resolve()], check=True)
+    if not test_dir.exists():
+        raise RuntimeError("Failed to clone the project.")
+    os.chdir(test_dir)
 
-    print(f"Cloning {ref_type} {ref} of {repo_url}...")
-    if ref_type == "commit":
-        os.mkdir(test_dir)
-        os.chdir(test_dir)
-        subprocess.run(["git", "init"], check=True)
-        subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
-        subprocess.run(["git", "fetch", "--depth", "1", "origin", ref], check=True)
-        subprocess.run(["git", "reset", "--hard", "FETCH_HEAD"], check=True)
-    else:
-        os.chdir(test_dir.parent)
-        subprocess.run(["git", "clone", "--no-progress", "--depth", "1", repo_url, "-b", ref, test_dir.resolve()], check=True)
-        if not test_dir.exists():
-            raise RuntimeError("Failed to clone the project.")
-        os.chdir(test_dir)
+    # If the ref is '<latest-release>' try to use the latest tag as ref
+    # NOTE: Sadly this will not work with monorepos and may not always
+    # return the latest tag.
+    if ref == "<latest-release>":
+        tags = subprocess.check_output(
+            ["git", "tag", "--sort", "-v:refname"],
+            encoding="ascii"
+        ).strip().split('\n')
+        if len(tags) == 0:
+            raise RuntimeError("Failed to retrieve latest release tag.")
+        ref = tags[0]
+
+    print(f"Using ref: {ref}")
+    subprocess.run(["git", "checkout", ref], check=True)
 
     if (test_dir / ".gitmodules").exists():
         subprocess.run(["git", "submodule", "update", "--init"], check=True)

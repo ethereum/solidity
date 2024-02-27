@@ -156,6 +156,7 @@ message UnaryOp {
     EXTCODEHASH = 7;
     BALANCE = 8;
     BLOCKHASH = 9;
+    BLOBHASH = 10;
   }
   required UOp op = 1;
   required Expression operand = 2;

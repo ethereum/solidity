@@ -94,6 +94,8 @@ public:
 	/// @returns contents of storage at @param _addr.
 	StorageMap const& get_address_storage(evmc::address const& _addr);
 
+	u256 totalCodeDepositGas() const { return m_totalCodeDepositGas; }
+
 	static Address convertFromEVMC(evmc::address const& _addr);
 	static evmc::address convertToEVMC(Address const& _addr);
 	static util::h256 convertFromEVMC(evmc::bytes32 const& _data);
@@ -137,6 +139,11 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	/// EVM version requested from EVMC (matches the above)
 	evmc_revision m_evmRevision;
+
+	/// The part of the total cost of the current transaction that paid for the code deposits.
+	/// I.e. GAS_CODE_DEPOSIT times the total size of deployed code of all newly created contracts,
+	/// including the current contract itself if it was a creation transaction.
+	u256 m_totalCodeDepositGas;
 };
 
 class EVMHostPrinter

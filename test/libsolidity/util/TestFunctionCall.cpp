@@ -21,6 +21,10 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <fmt/format.h>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/set_algorithm.hpp>
+
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -331,35 +335,77 @@ std::string TestFunctionCall::formatRawParameters(
 	return os.str();
 }
 
+namespace
+{
+
+std::string formatGasDiff(std::optional<u256> const& _gasUsed, std::optional<u256> const& _reference)
+{
+	if (!_reference.has_value() || !_gasUsed.has_value() || _gasUsed == _reference)
+		return "";
+
+	solUnimplementedAssert(*_gasUsed < u256(1) << 255);
+	solUnimplementedAssert(*_reference < u256(1) << 255);
+	s256 difference = static_cast<s256>(*_gasUsed) - static_cast<s256>(*_reference);
+
+	if (*_reference == 0)
+		return fmt::format("{}", difference.str());
+
+	int percent = static_cast<int>(
+		100.0 * (static_cast<double>(difference) / static_cast<double>(*_reference))
+	);
+	return fmt::format("{} ({:+}%)", difference.str(), percent);
+}
+
+// TODO: Convert this into a generic helper for getting optional form a map
+std::optional<u256> gasOrNullopt(std::map<std::string, u256> const& _map, std::string const& _key)
+{
+	auto it = _map.find(_key);
+	if (it == _map.end())
+		return std::nullopt;
+
+	return it->second;
+}
+
+}
+
 std::string TestFunctionCall::formatGasExpectations(
 	std::string const& _linePrefix,
 	bool _useActualCost,
 	bool _showDifference
 ) const
 {
-	std::stringstream os;
-	for (auto const& [runType, gasUsed]: (_useActualCost ? m_gasCosts : m_call.expectations.gasUsed))
-		if (!runType.empty())
-		{
-			bool differentResults =
-				m_gasCosts.count(runType) > 0 &&
-				m_call.expectations.gasUsed.count(runType) > 0 &&
-				m_gasCosts.at(runType) != m_call.expectations.gasUsed.at(runType);
+	using ranges::views::keys;
+	using ranges::views::set_symmetric_difference;
 
-			s256 difference = 0;
-			if (differentResults)
-				difference =
-					static_cast<s256>(m_gasCosts.at(runType)) -
-					static_cast<s256>(m_call.expectations.gasUsed.at(runType));
-			int percent = 0;
-			if (differentResults)
-				percent = static_cast<int>(
-					100.0 * (static_cast<double>(difference) / static_cast<double>(m_call.expectations.gasUsed.at(runType)))
-				);
-			os << std::endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
-			if (_showDifference && differentResults && _useActualCost)
-				os << " [" << std::showpos << difference << " (" << percent << "%)]";
-		}
+	soltestAssert(set_symmetric_difference(m_codeDepositGasCosts | keys, m_gasCostsExcludingCode | keys).empty());
+	soltestAssert(set_symmetric_difference(m_call.expectations.gasUsedForCodeDeposit | keys, m_call.expectations.gasUsedExcludingCode | keys).empty());
+
+	std::stringstream os;
+	for (auto const& [runType, gasUsedExcludingCode]: (_useActualCost ? m_gasCostsExcludingCode : m_call.expectations.gasUsedExcludingCode))
+	{
+		soltestAssert(runType != "");
+
+		u256 gasUsedForCodeDeposit = (_useActualCost ? m_codeDepositGasCosts : m_call.expectations.gasUsedForCodeDeposit).at(runType);
+
+		os << std::endl << _linePrefix << "// gas " << runType << ": " << gasUsedExcludingCode.str();
+		std::string gasDiff = formatGasDiff(
+			gasOrNullopt(m_gasCostsExcludingCode, runType),
+			gasOrNullopt(m_call.expectations.gasUsedExcludingCode, runType)
+		);
+		if (_showDifference && !gasDiff.empty() && _useActualCost)
+			os << " [" << gasDiff << "]";
+
+		if (gasUsedForCodeDeposit != 0)
+		{
+			os << std::endl << _linePrefix << "// gas " << runType << " code: " << gasUsedForCodeDeposit.str();
+			std::string codeGasDiff = formatGasDiff(
+				gasOrNullopt(m_codeDepositGasCosts, runType),
+				gasOrNullopt(m_call.expectations.gasUsedForCodeDeposit, runType)
+			);
+			if (_showDifference && !codeGasDiff.empty() && _useActualCost)
+				os << " [" << codeGasDiff << "]";
+			}
+	}
 	return os.str();
 }
 
