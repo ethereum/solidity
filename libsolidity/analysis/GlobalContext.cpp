@@ -28,40 +28,46 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <memory>
+#include <unordered_map>
 
 namespace solidity::frontend
 {
 
 namespace
 {
+
 /// Magic variables get negative ids for easy differentiation
 int magicVariableToID(std::string const& _name)
 {
-	if (_name == "abi") return -1;
-	else if (_name == "addmod") return -2;
-	else if (_name == "assert") return -3;
-	else if (_name == "block") return -4;
-	else if (_name == "blockhash") return -5;
-	else if (_name == "ecrecover") return -6;
-	else if (_name == "gasleft") return -7;
-	else if (_name == "keccak256") return -8;
-	else if (_name == "msg") return -15;
-	else if (_name == "mulmod") return -16;
-	else if (_name == "now") return -17;
-	else if (_name == "require") return -18;
-	else if (_name == "revert") return -19;
-	else if (_name == "ripemd160") return -20;
-	else if (_name == "selfdestruct") return -21;
-	else if (_name == "sha256") return -22;
-	else if (_name == "sha3") return -23;
-	else if (_name == "suicide") return -24;
-	else if (_name == "super") return -25;
-	else if (_name == "tx") return -26;
-	else if (_name == "type") return -27;
-	else if (_name == "this") return -28;
-	else if (_name == "blobhash") return -29;
-	else
-		solAssert(false, "Unknown magic variable: \"" + _name + "\".");
+	static std::unordered_map<std::string, int> const magicVariables = {
+		{"abi", -1},
+		{"addmod", -2},
+		{"assert", -3},
+		{"block", -4},
+		{"blockhash", -5},
+		{"ecrecover", -6},
+		{"gasleft", -7},
+		{"keccak256", -8},
+		{"msg", -15},
+		{"mulmod", -16},
+		{"now", -17},
+		{"require", -18},
+		{"revert", -19},
+		{"ripemd160", -20},
+		{"selfdestruct", -21},
+		{"sha256", -22},
+		{"sha3", -23},
+		{"suicide", -24},
+		{"super", -25},
+		{"tx", -26},
+		{"type", -27},
+		{"this", -28},
+		{"blobhash", -29}
+	};
+
+	if (auto id = magicVariables.find(_name); id != magicVariables.end())
+		return id->second;
+	solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
 
 inline std::vector<std::shared_ptr<MagicVariableDeclaration const>> constructMagicVariables(langutil::EVMVersion _evmVersion)
