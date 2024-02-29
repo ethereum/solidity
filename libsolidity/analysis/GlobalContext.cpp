@@ -28,6 +28,8 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <memory>
+#include <unordered_map>
+
 
 namespace solidity::frontend
 {
