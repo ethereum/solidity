@@ -1,7 +1,7 @@
 ### 0.8.25 (unreleased)
 
 Language Features:
-
+ * Support the use of the `delete` operator for user-defined value types.
 
 Compiler Features:
  * Code Generator: Use ``MCOPY`` instead of ``MLOAD``/``MSTORE`` loop when copying byte arrays.

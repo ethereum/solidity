@@ -2677,6 +2677,11 @@ bool UserDefinedValueType::operator==(Type const& _other) const
 	return other.definition() == definition();
 }
 
+TypeResult UserDefinedValueType::unaryOperatorResult(Token _operator) const
+{
+	return _operator == Token::Delete ? TypeProvider::emptyTuple() : nullptr;
+}
+
 std::string UserDefinedValueType::toString(bool /* _withoutDataLocation */) const
 {
 	return *definition().annotation().canonicalName;
