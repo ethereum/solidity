@@ -30,13 +30,11 @@
 #include <memory>
 #include <unordered_map>
 
-
 namespace solidity::frontend
 {
 
 namespace
 {
-
 /// Magic variables get negative ids for easy differentiation
 int magicVariableToID(std::string const& _name)
 {
