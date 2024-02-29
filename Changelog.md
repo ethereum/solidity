@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Code Generator: Use ``MCOPY`` instead of ``MLOAD``/``MSTORE`` loop when copying byte arrays.
+ * Yul Analyzer: Emit transient storage warning only for the first occurrence of ``tstore``.
 
 
 Bugfixes:
