@@ -30,7 +30,6 @@
 #include <memory>
 #include <unordered_map>
 
-
 namespace solidity::frontend
 {
 
@@ -56,8 +55,6 @@ int magicVariableToID(std::string const& _name)
 	}
 
 	solAssert(false, "Unknown magic variable: \"" + _name + "\".");
-
-
 }
 
 inline std::vector<std::shared_ptr<MagicVariableDeclaration const>> constructMagicVariables(langutil::EVMVersion _evmVersion)
