@@ -87,7 +87,12 @@ You can specify release build versions in the tag. For example:
 
 .. code-block:: bash
 
-    docker run ethereum/solc:0.8.21 --help
+    docker run ethereum/solc:stable --help
+
+Note: Specific version tags are supported for the Docker tag such as `docker run ethereum/solc:0.8.23 --help`.
+
+We will be passing the `stable` tag here instead of specific version tag to ensure that users get the latest version 
+by default and avoid the issue of an out-of-date version.
 
 To use the Docker image to compile Solidity files on the host machine, mount a
 local folder for input and output, and specify the contract to compile. For example:
