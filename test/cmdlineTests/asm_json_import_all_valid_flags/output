@@ -8,8 +8,8 @@
                 ".code":
                 [
                     {
-                        "begin": 0,
-                        "end": 0,
+                        "begin": -1,
+                        "end": -1,
                         "name": "PUSH",
                         "source": -1,
                         "value": "0"
@@ -22,8 +22,8 @@
                         ".code":
                         [
                             {
-                                "begin": 0,
-                                "end": 0,
+                                "begin": -1,
+                                "end": -1,
                                 "name": "PUSH",
                                 "source": -1,
                                 "value": "1"
@@ -40,8 +40,8 @@
             "bin": "5ffe",
             "bin-runtime": "6001",
             "opcodes": "PUSH0 INVALID ",
-            "srcmap": "0:0::-:0",
-            "srcmap-runtime": "0:0::-:0"
+            "srcmap": ":::-:0",
+            "srcmap-runtime": ":::-:0"
         }
     },
     "sourceList":
@@ -60,8 +60,8 @@ EVM assembly:
     ".code":
     [
         {
-            "begin": 0,
-            "end": 0,
+            "begin": -1,
+            "end": -1,
             "name": "PUSH",
             "source": -1,
             "value": "0"
@@ -74,8 +74,8 @@ EVM assembly:
             ".code":
             [
                 {
-                    "begin": 0,
-                    "end": 0,
+                    "begin": -1,
+                    "end": -1,
                     "name": "PUSH",
                     "source": -1,
                     "value": "1"
