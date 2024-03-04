@@ -165,24 +165,24 @@ private:
 	NameDispenser& m_nameDispenser;
 	std::set<YulString> const& m_variablesToReplace;
 	/// Variables (that are to be replaced) currently in scope.
-	std::set<YulString> m_variablesInScope;
+	std::vector<YulString> m_variablesInScope;
 	/// Set of variables that do not have a specific value.
-	std::set<YulString> m_variablesToReassign;
+	std::vector<YulString> m_variablesToReassign;
 	TypeInfo const& m_typeInfo;
 };
 
 void IntroduceControlFlowSSA::operator()(FunctionDefinition& _function)
 {
-	std::set<YulString> varsInScope;
+	std::vector<YulString> varsInScope;
 	std::swap(varsInScope, m_variablesInScope);
-	std::set<YulString> toReassign;
+	std::vector<YulString> toReassign;
 	std::swap(toReassign, m_variablesToReassign);
 
 	for (auto const& param: _function.parameters)
 		if (m_variablesToReplace.count(param.name))
 		{
-			m_variablesInScope.insert(param.name);
-			m_variablesToReassign.insert(param.name);
+			m_variablesInScope.push_back(param.name);
+			m_variablesToReassign.push_back(param.name);
 		}
 
 	ASTModifier::operator()(_function);
@@ -196,8 +196,8 @@ void IntroduceControlFlowSSA::operator()(ForLoop& _for)
 	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
 	for (auto const& var: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
-		if (m_variablesInScope.count(var))
-			m_variablesToReassign.insert(var);
+		if (util::contains(m_variablesInScope,var) && !util::contains(m_variablesToReassign, var))
+			m_variablesToReassign.push_back(var);
 
 	(*this)(_for.body);
 	(*this)(_for.post);
@@ -207,20 +207,27 @@ void IntroduceControlFlowSSA::operator()(Switch& _switch)
 {
 	yulAssert(m_variablesToReassign.empty(), "");
 
-	std::set<YulString> toReassign;
+
+
+	std::vector<YulString> toReassign;
+	auto addWithoutDuplicates = [](std::vector<YulString>& destination, std::vector<YulString> const& source){
+		for (auto const& elem: source)
+			if (!util::contains(destination, elem))
+				destination.push_back(elem);
+	};
 	for (auto& c: _switch.cases)
 	{
 		(*this)(c.body);
-		toReassign += m_variablesToReassign;
+		addWithoutDuplicates(toReassign, m_variablesToReassign);
 	}
 
-	m_variablesToReassign += toReassign;
+	addWithoutDuplicates(m_variablesToReassign, toReassign);
 }
 
 void IntroduceControlFlowSSA::operator()(Block& _block)
 {
-	std::set<YulString> variablesDeclaredHere;
-	std::set<YulString> assignedVariables;
+	std::vector<YulString> variablesDeclaredHere;
+	std::vector<YulString> assignedVariables;
 
 	util::iterateReplacing(
 		_block.statements,
@@ -235,7 +242,8 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 					{TypedName{debugDataOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
 					std::make_unique<Expression>(Identifier{debugDataOf(_s), toReassign})
 				});
-				assignedVariables.insert(toReassign);
+				if (!util::contains(assignedVariables, toReassign))
+					assignedVariables.push_back(toReassign);
 			}
 			m_variablesToReassign.clear();
 
@@ -245,16 +253,18 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 				for (auto const& var: varDecl.variables)
 					if (m_variablesToReplace.count(var.name))
 					{
-						variablesDeclaredHere.insert(var.name);
-						m_variablesInScope.insert(var.name);
+						if (!util::contains(variablesDeclaredHere, var.name))
+							variablesDeclaredHere.push_back(var.name);
+						if (!util::contains(m_variablesInScope, var.name))
+							m_variablesInScope.push_back(var.name);
 					}
 			}
 			else if (std::holds_alternative<Assignment>(_s))
 			{
 				Assignment& assignment = std::get<Assignment>(_s);
 				for (auto const& var: assignment.variableNames)
-					if (m_variablesToReplace.count(var.name))
-						assignedVariables.insert(var.name);
+					if (m_variablesToReplace.count(var.name) && !util::contains(assignedVariables, var.name))
+						assignedVariables.push_back(var.name);
 			}
 			else
 				visit(_s);
@@ -268,9 +278,14 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 			}
 		}
 	);
+
+	auto removeSubset = [](std::vector<YulString>& superset, std::vector<YulString> const& subset) {
+		for (auto const& elem: subset)
+			superset.erase(std::find(superset.begin(), superset.end(), elem));
+	};
 	m_variablesToReassign += assignedVariables;
-	m_variablesInScope -= variablesDeclaredHere;
-	m_variablesToReassign -= variablesDeclaredHere;
+	removeSubset(m_variablesInScope, variablesDeclaredHere);
+	removeSubset(m_variablesToReassign, variablesDeclaredHere);
 }
 
 /**
