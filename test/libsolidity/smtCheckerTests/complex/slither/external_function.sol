@@ -86,3 +86,4 @@ contract InternalCall {
 // Warning 8729: (681-716): Contract deployment is only supported in the trusted mode for external calls with the CHC engine.
 // Warning 8729: (854-886): Contract deployment is only supported in the trusted mode for external calls with the CHC engine.
 // Warning 5729: (1370-1375): BMC does not yet implement this type of function call.
+// Warning 3260: (749-780): BMC: Truncated value in type conversion happens here.

@@ -31,3 +31,6 @@ contract C {
 // SMTEngine: all
 // ----
 // Info 1391: CHC: 9 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Warning 3260: (361-368): BMC: Truncated value in type conversion happens here.
+// Warning 3260: (582-591): BMC: Truncated value in type conversion happens here.
+// Info 6002: BMC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

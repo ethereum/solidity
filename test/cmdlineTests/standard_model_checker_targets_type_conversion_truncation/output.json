@@ -1,0 +1,55 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "3260",
+            "formattedMessage": "Warning: BMC: Truncated value in type conversion happens here.
+ --> A:5:28:
+  |
+5 |                     return uint8(a);
+  |                            ^^^^^^^^
+Note: Counterexample:
+   = 0
+  <result> = false
+  a = 256
+
+Note: Callstack:
+Note:
+
+",
+            "message": "BMC: Truncated value in type conversion happens here.",
+            "secondarySourceLocations":
+            [
+                {
+                    "message": "Counterexample:
+   = 0
+  <result> = false
+  a = 256
+"
+                },
+                {
+                    "message": "Callstack:"
+                },
+                {
+                    "message": ""
+                }
+            ],
+            "severity": "warning",
+            "sourceLocation":
+            {
+                "end": 184,
+                "file": "A",
+                "start": 176
+            },
+            "type": "Warning"
+        }
+    ],
+    "sources":
+    {
+        "A":
+        {
+            "id": 0
+        }
+    }
+}

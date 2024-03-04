@@ -67,7 +67,8 @@ std::map<std::string, TargetType> const ModelCheckerTargets::targetStrings{
 	{"balance", TargetType::Balance},
 	{"assert", TargetType::Assert},
 	{"popEmptyArray", TargetType::PopEmptyArray},
-	{"outOfBounds", TargetType::OutOfBounds}
+	{"outOfBounds", TargetType::OutOfBounds},
+	{"typeConversionTruncation", TargetType::TypeConversionTruncation}
 };
 
 std::map<TargetType, std::string> const ModelCheckerTargets::targetTypeToString{
@@ -78,7 +79,8 @@ std::map<TargetType, std::string> const ModelCheckerTargets::targetTypeToString{
 	{TargetType::Balance, "Insufficient balance"},
 	{TargetType::Assert, "Assertion failed"},
 	{TargetType::PopEmptyArray, "Empty array pop"},
-	{TargetType::OutOfBounds, "Out of bounds access"}
+	{TargetType::OutOfBounds, "Out of bounds access"},
+	{TargetType::TypeConversionTruncation, "typeConversionTruncation"}
 };
 
 std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(std::string const& _targets)

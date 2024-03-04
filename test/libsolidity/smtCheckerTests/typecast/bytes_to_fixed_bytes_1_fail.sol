@@ -23,3 +23,7 @@ contract C {
 // Warning 6328: (356-403): CHC: Assertion violation happens here.
 // Warning 6328: (532-595): CHC: Assertion violation happens here.
 // Warning 6328: (740-819): CHC: Assertion violation happens here.
+// Warning 3260: (162-171): BMC: Truncated value in type conversion happens here.
+// Warning 3260: (289-299): BMC: Truncated value in type conversion happens here.
+// Warning 3260: (434-444): BMC: Truncated value in type conversion happens here.
+// Warning 3260: (626-636): BMC: Truncated value in type conversion happens here.

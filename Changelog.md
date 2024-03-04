@@ -15,6 +15,7 @@ Compiler Features:
  * Code Generator: Use ``MCOPY`` instead of ``MLOAD``/``MSTORE`` loop when copying byte arrays.
  * EVM: Set default EVM version to ``cancun``.
  * Yul Analyzer: Emit transient storage warning only for the first occurrence of ``tstore``.
+ * SMTChecker: Add ``typeConversionTruncation`` verification target for BMC engine. Type conversion of array slices is not supported.
 
 
 Bugfixes:

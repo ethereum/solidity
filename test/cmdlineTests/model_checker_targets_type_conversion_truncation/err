@@ -1,0 +1,12 @@
+Warning: BMC: Truncated value in type conversion happens here.
+ --> model_checker_targets_type_conversion_truncation/input.sol:5:10:
+  |
+5 | 		return uint8(a);
+  | 		       ^^^^^^^^
+Note: Counterexample:
+   = 0
+  <result> = false
+  a = 256
+
+Note: Callstack:
+Note:
