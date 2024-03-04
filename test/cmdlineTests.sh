@@ -216,7 +216,7 @@ import re, sys
 json = open("$stdout_path", "r").read()
 json = re.sub(r"{[^{}]*Warning: This is a pre-release compiler version[^{}]*},?", "", json)
 json = re.sub(r"\"errors\":\s*\[\s*\],?","\n" if json[1] == " " else "",json)       # Remove "errors" array if it's not empty
-json = re.sub("\n\\s*\n", "\n", json)                                               # Remove trailing whitespace
+json = re.sub(r"\n\s*\n", "\n", json)                                               # Remove trailing whitespace
 json = re.sub(r"},(\n{0,1})\n*(\s*(]|}))", r"}\1\2", json)                          # Remove trailing comma
 open("$stdout_path", "w").write(json)
 EOF
