@@ -15,13 +15,13 @@ The IR-based code generator was introduced with an aim to not only allow
 code generation to be more transparent and auditable but also
 to enable more powerful optimization passes that span across functions.
 
-You can enable it on the command line using ``--via-ir``
+You can enable it on the command-line using ``--via-ir``
 or with the option ``{"viaIR": true}`` in standard-json and we
 encourage everyone to try it out!
 
 For several reasons, there are tiny semantic differences between the old
 and the IR-based code generator, mostly in areas where we would not
-expect people to rely on this behaviour anyway.
+expect people to rely on this behavior anyway.
 This section highlights the main differences between the old and the IR-based codegen.
 
 Semantic Only Changes
@@ -29,6 +29,8 @@ Semantic Only Changes
 
 This section lists the changes that are semantic-only, thus potentially
 hiding new and different behavior in existing code.
+
+.. _state-variable-initialization-order:
 
 - The order of state variable initialization has changed in case of inheritance.
 

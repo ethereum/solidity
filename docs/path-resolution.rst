@@ -21,7 +21,7 @@ source unit is assigned a unique *source unit name* which is an opaque and unstr
 When you use the :ref:`import statement <import>`, you specify an *import path* that references a
 source unit name.
 
-.. index:: ! import callback, ! Host Filesystem Loader
+.. index:: ! import callback, ! Host Filesystem Loader, ! --no-import-callback
 .. _import-callback:
 
 Import Callback
@@ -36,11 +36,12 @@ An import callback is free to interpret source unit names in an arbitrary way, n
 If there is no callback available when one is needed or if it fails to locate the source code,
 compilation fails.
 
-The command-line compiler provides the *Host Filesystem Loader* - a rudimentary callback
+By default, the command-line compiler provides the *Host Filesystem Loader* - a rudimentary callback
 that interprets a source unit name as a path in the local filesystem.
+This callback can be disabled using the ``--no-import-callback`` command-line option.
 The `JavaScript interface <https://github.com/ethereum/solc-js>`_ does not provide any by default,
 but one can be provided by the user.
-This mechanism can be used to obtain source code from locations other then the local filesystem
+This mechanism can be used to obtain source code from locations other than the local filesystem
 (which may not even be accessible, e.g. when the compiler is running in a browser).
 For example the `Remix IDE <https://remix.ethereum.org/>`_ provides a versatile callback that
 lets you `import files from HTTP, IPFS and Swarm URLs or refer directly to packages in NPM registry
@@ -139,7 +140,7 @@ The initial content of the VFS depends on how you invoke the compiler:
 
 #. **Standard input**
 
-   On the command line it is also possible to provide the source by sending it to compiler's
+   On the command-line it is also possible to provide the source by sending it to compiler's
    standard input:
 
    .. code-block:: bash
@@ -345,13 +346,13 @@ of the compiler.
 CLI Path Normalization and Stripping
 ------------------------------------
 
-On the command line the compiler behaves just as you would expect from any other program:
+On the command-line the compiler behaves just as you would expect from any other program:
 it accepts paths in a format native to the platform and relative paths are relative to the current
 working directory.
-The source unit names assigned to files whose paths are specified on the command line, however,
+The source unit names assigned to files whose paths are specified on the command-line, however,
 should not change just because the project is being compiled on a different platform or because the
 compiler happens to have been invoked from a different directory.
-To achieve this, paths to source files coming from the command line must be converted to a canonical
+To achieve this, paths to source files coming from the command-line must be converted to a canonical
 form, and, if possible, made relative to the base path or one of the include paths.
 
 The normalization rules are as follows:
@@ -408,7 +409,7 @@ The resulting file path becomes the source unit name.
     Prior to version 0.8.8, CLI path stripping was not performed and the only normalization applied
     was the conversion of path separators.
     When working with older versions of the compiler it is recommended to invoke the compiler from
-    the base path and to only use relative paths on the command line.
+    the base path and to only use relative paths on the command-line.
 
 .. index:: ! allowed paths, ! --allow-paths, remapping; target
 .. _allowed-paths:
@@ -421,7 +422,7 @@ locations that are considered safe by default:
 
 - Outside of Standard JSON mode:
 
-  - The directories containing input files listed on the command line.
+  - The directories containing input files listed on the command-line.
   - The directories used as :ref:`remapping <import-remapping>` targets.
     If the target is not a directory (i.e does not end with ``/``, ``/.`` or ``/..``) the directory
     containing the target is used instead.
@@ -515,7 +516,7 @@ you can use the following in your source file:
 
 The compiler will look for the file in the VFS under ``dapp-bin/library/math.sol``.
 If the file is not available there, the source unit name will be passed to the Host Filesystem
-Loader, which will then look in ``/project/dapp-bin/library/iterable_mapping.sol``.
+Loader, which will then look in ``/project/dapp-bin/library/math.sol``.
 
 .. warning::
 
@@ -551,7 +552,7 @@ you checked out to ``/project/dapp-bin_old``, then you can run:
 This means that all imports in ``module2`` point to the old version but imports in ``module1``
 point to the new version.
 
-Here are the detailed rules governing the behaviour of remappings:
+Here are the detailed rules governing the behavior of remappings:
 
 #. **Remappings only affect the translation between import paths and source unit names.**
 

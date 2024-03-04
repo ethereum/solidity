@@ -37,7 +37,6 @@
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Suite.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 

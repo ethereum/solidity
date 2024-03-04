@@ -9,12 +9,13 @@ Events
 Solidity events give an abstraction on top of the EVM's logging functionality.
 Applications can subscribe and listen to these events through the RPC interface of an Ethereum client.
 
-Events are inheritable members of contracts. When you call them, they cause the
+Events can be defined at file level or as inheritable members of contracts (including interfaces and libraries).
+When you call them, they cause the
 arguments to be stored in the transaction's log - a special data structure
-in the blockchain. These logs are associated with the address of the contract,
+in the blockchain. These logs are associated with the address of the contract that emitted them,
 are incorporated into the blockchain, and stay there as long as a block is
 accessible (forever as of now, but this might
-change with Serenity). The Log and its event data is not accessible from within
+change in the future). The Log and its event data is not accessible from within
 contracts (not even from the contract that created them).
 
 It is possible to request a Merkle proof for logs, so if

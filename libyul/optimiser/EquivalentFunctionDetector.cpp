@@ -25,7 +25,6 @@
 #include <libyul/AST.h>
 #include <libyul/optimiser/Metrics.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 

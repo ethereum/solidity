@@ -22,7 +22,6 @@
 
 #include <variant>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -38,7 +37,7 @@ void SSAReverser::operator()(Block& _block)
 	walkVector(_block.statements);
 	util::iterateReplacingWindow<2>(
 		_block.statements,
-		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<vector<Statement>>
+		[&](Statement& _stmt1, Statement& _stmt2) -> std::optional<std::vector<Statement>>
 		{
 			auto* varDecl = std::get_if<VariableDeclaration>(&_stmt1);
 

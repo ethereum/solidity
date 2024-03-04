@@ -51,11 +51,11 @@ To set indentation and tab width settings uniformly, the repository contains an 
 ## 1. Namespaces
 
 1. No `using namespace` declarations in header files.
-2. Use `using namespace std;` in cpp files, but avoid importing namespaces from boost and others.
-3. All symbols should be declared in a namespace except for final applications.
-4. Use anonymous namespaces for helpers whose scope is a cpp file only.
-5. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
-6. Do not use `std::` qualifier in cpp files (see 2.), except for `std::move` and `std::forward`, which will otherwise cause the `check_style` step to fail.
+2. `using namespace solidity;` and other project local namespaces is fine in cpp files, and generally encouraged.
+3. Avoid `using namespace` at file level for third party libraries, such as boost, ranges, etc.
+4. All symbols should be declared in a namespace except for final applications.
+5. Use anonymous namespaces for helpers whose scope is a cpp file only.
+6. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
 
 Only in the header:
 ```cpp
@@ -63,16 +63,6 @@ Only in the header:
 namespace myNamespace
 {
 std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
-}
-```
-
-Only in the cpp file:
-```cpp
-#include <cassert>
-using namespace std;
-tuple<float, float> myNamespace::meanAndSigma(vector<float> const& _v)
-{
-  // ...
 }
 ```
 
@@ -117,7 +107,7 @@ Use `solAssert` and `solUnimplementedAssert` generously to check assumptions tha
 1. {Typename} + {qualifiers} + {name}.
 2. Only one per line.
 3. Associate */& with type, not variable (at ends with parser, but more readable, and safe if in conjunction with (b)).
-4. Favour declarations close to use; don't habitually declare at top of scope ala C.
+4. Favour declarations close to use; do not habitually declare at top of scope ala C.
 5. Pass non-trivial parameters as const reference, unless the data is to be copied into the function, then either pass by const reference or by value and use std::move.
 6. If a function returns multiple values, use std::tuple (std::pair acceptable) or better introduce a struct type. Do not use */& arguments.
 7. Use parameters of pointer type only if ``nullptr`` is a valid argument, use references otherwise. Often, ``std::optional`` is better suited than a raw pointer.

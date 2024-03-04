@@ -33,16 +33,15 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-string solidity::yul::reindent(string const& _code)
+std::string solidity::yul::reindent(std::string const& _code)
 {
 	int constexpr indentationWidth = 4;
 
-	auto constexpr static countBraces = [](string const& _s) noexcept -> int
+	auto constexpr static countBraces = [](std::string const& _s) noexcept -> int
 	{
 		auto const i = _s.find("//");
 		auto const e = i == _s.npos ? end(_s) : next(begin(_s), static_cast<ptrdiff_t>(i));
@@ -51,22 +50,22 @@ string solidity::yul::reindent(string const& _code)
 		return int(opening - closing);
 	};
 
-	vector<string> lines;
+	std::vector<std::string> lines;
 	boost::split(lines, _code, boost::is_any_of("\n"));
-	for (string& line: lines)
+	for (std::string& line: lines)
 		boost::trim(line);
 
 	// Reduce multiple consecutive empty lines.
-	lines = fold(lines, vector<string>{}, [](auto&& _lines, auto&& _line) {
+	lines = fold(lines, std::vector<std::string>{}, [](auto&& _lines, auto&& _line) {
 		if (!(_line.empty() && !_lines.empty() && _lines.back().empty()))
 			_lines.emplace_back(std::move(_line));
 		return std::move(_lines);
 	});
 
-	stringstream out;
+	std::stringstream out;
 	int depth = 0;
 
-	for (string const& line: lines)
+	for (std::string const& line: lines)
 	{
 		int const diff = countBraces(line);
 		if (diff < 0)
@@ -91,7 +90,7 @@ u256 solidity::yul::valueOfNumberLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::Number, "Expected number literal!");
 
-	static map<YulString, u256> numberCache;
+	static std::map<YulString, u256> numberCache;
 	static YulStringRepository::ResetCallback callback{[&] { numberCache.clear(); }};
 
 	auto&& [it, isNew] = numberCache.try_emplace(_literal.value, 0);

@@ -59,7 +59,7 @@ public:
 	/// Sets all input parameters according to @a _input which conforms to the standardized input
 	/// format, performs compilation and returns a standardized output.
 	Json::Value compile(Json::Value const& _input) noexcept;
-	/// Parses input as JSON and peforms the above processing steps, returning a serialized JSON
+	/// Parses input as JSON and performs the above processing steps, returning a serialized JSON
 	/// output. Parsing errors are returned as regular errors.
 	std::string compile(std::string const& _input) noexcept;
 
@@ -72,9 +72,9 @@ private:
 	{
 		std::string language;
 		Json::Value errors;
-		bool parserErrorRecovery = false;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
 		std::map<std::string, std::string> sources;
+		std::map<std::string, Json::Value> jsonSources;
 		std::map<util::h256, std::string> smtLib2Responses;
 		langutil::EVMVersion evmVersion;
 		std::optional<uint8_t> eofVersion;
@@ -96,6 +96,7 @@ private:
 	std::variant<InputsAndSettings, Json::Value> parseInput(Json::Value const& _input);
 
 	std::map<std::string, Json::Value> parseAstFromInput(StringMap const& _sources);
+	Json::Value importEVMAssembly(InputsAndSettings _inputsAndSettings);
 	Json::Value compileSolidity(InputsAndSettings _inputsAndSettings);
 	Json::Value compileYul(InputsAndSettings _inputsAndSettings);
 

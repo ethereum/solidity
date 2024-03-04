@@ -3,8 +3,8 @@
     [
         {
             "component": "general",
-            "formattedMessage": "\"Providing yulDetails requires Yul optimizer to be enabled.",
-            "message": "\"Providing yulDetails requires Yul optimizer to be enabled.",
+            "formattedMessage": "Only optimizerSteps can be set in yulDetails when Yul optimizer is disabled.",
+            "message": "Only optimizerSteps can be set in yulDetails when Yul optimizer is disabled.",
             "severity": "error",
             "type": "JSONError"
         }

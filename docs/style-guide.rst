@@ -28,7 +28,7 @@ captures this concept well.
 
     A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
 
-    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
+    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And do not hesitate to ask!
 
 
 ***********
@@ -233,7 +233,7 @@ Yes:
         bytes32[] options
     );
 
-    LongAndLotsOfArgs(
+    emit LongAndLotsOfArgs(
         sender,
         recipient,
         publicKey,
@@ -251,7 +251,7 @@ No:
                             uint256 amount,
                             bytes32[] options);
 
-    LongAndLotsOfArgs(sender,
+    emit LongAndLotsOfArgs(sender,
                       recipient,
                       publicKey,
                       amount,
@@ -448,7 +448,7 @@ No:
     y            = 2;
     longVariable = 3;
 
-Don't include a whitespace in the receive and fallback functions:
+Do not include a whitespace in the receive and fallback functions:
 
 Yes:
 
@@ -1045,13 +1045,15 @@ No:
 Order of Layout
 ***************
 
-Layout contract elements in the following order:
+Contract elements should be laid out in the following order:
 
 1. Pragma statements
 2. Import statements
-3. Interfaces
-4. Libraries
-5. Contracts
+3. Events
+4. Errors
+5. Interfaces
+6. Libraries
+7. Contracts
 
 Inside each contract, library or interface, use the following order:
 

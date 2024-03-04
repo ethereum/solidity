@@ -18,7 +18,7 @@ introduces a potential security risk. You may read
 more about this on the :ref:`security_considerations` page.
 
 The following is an example of the withdrawal pattern in practice in
-a contract where the goal is to send the most money to the
+a contract where the goal is to send the most of some compensation, e.g. Ether, to the
 contract in order to become the "richest", inspired by
 `King of the Ether <https://www.kingoftheether.com/>`_.
 

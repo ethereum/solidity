@@ -101,7 +101,7 @@ private:
 	/// returns the type. Reports errors on errors and returns the default type.
 	YulString expectExpression(Expression const& _expr);
 	YulString expectUnlimitedStringLiteral(Literal const& _literal);
-	/// Vists the expression and expects it to return a single boolean value.
+	/// Visits the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);
 

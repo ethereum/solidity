@@ -46,18 +46,28 @@ Members of ``address``
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
 - ``<address>.code`` (``bytes memory``): code at the :ref:`address` (can be empty)
 - ``<address>.codehash`` (``bytes32``): the codehash of the :ref:`address`
+- ``<address>.call(bytes memory) returns (bool, bytes memory)``: issue low-level ``CALL`` with the given payload,
+  returns success condition and return data
+- ``<address>.delegatecall(bytes memory) returns (bool, bytes memory)``: issue low-level ``DELEGATECALL`` with the given payload,
+  returns success condition and return data
+- ``<address>.staticcall(bytes memory) returns (bool, bytes memory)``: issue low-level ``STATICCALL`` with the given payload,
+  returns success condition and return data
 - ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`,
   returns ``false`` on failure
 - ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
 
-.. index:: blockhash, block, block;basefree, block;chainid, block;coinbase, block;difficulty, block;gaslimit, block;number, block;prevrandao, block;timestamp
+.. index:: blockhash, blobhash, block, block;basefee, block;blobbasefee, block;chainid, block;coinbase, block;difficulty, block;gaslimit, block;number, block;prevrandao, block;timestamp
 .. index:: gasleft, msg;data, msg;sender, msg;sig, msg;value, tx;gasprice, tx;origin
 
 Block and Transaction Properties
 ================================
 
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
+- ``blobhash(uint index) returns (bytes32)``: versioned hash of the ``index``-th blob associated with the current transaction.
+  A versioned hash consists of a single byte representing the version (currently ``0x01``), followed by the last 31 bytes
+  of the SHA256 hash of the KZG commitment (`EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_).
 - ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
+- ``block.blobbasefee`` (``uint``): current block's blob base fee (`EIP-7516 <https://eips.ethereum.org/EIPS/eip-7516>`_ and `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_)
 - ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty (``EVM < Paris``). For other EVM versions it behaves as a deprecated alias for ``block.prevrandao`` that will be removed in the next breaking release
@@ -149,12 +159,12 @@ Modifiers
 - ``pure`` for functions: Disallows modification or access of state.
 - ``view`` for functions: Disallows modification of state.
 - ``payable`` for functions: Allows them to receive Ether together with a call.
-- ``constant`` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
-- ``immutable`` for state variables: Allows exactly one assignment at construction time and is constant afterwards. Is stored in code.
+- ``constant`` for state variables: Disallows assignment (except initialization), does not occupy storage slot.
+- ``immutable`` for state variables: Allows assignment at construction time and is constant when deployed. Is stored in code.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
 - ``virtual`` for functions and modifiers: Allows the function's or modifier's
-  behaviour to be changed in derived contracts.
+  behavior to be changed in derived contracts.
 - ``override``: States that this function, modifier or public state variable changes
-  the behaviour of a function or modifier in a base contract.
+  the behavior of a function or modifier in a base contract.
 

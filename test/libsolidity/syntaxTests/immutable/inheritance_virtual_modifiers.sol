@@ -17,5 +17,3 @@ contract C is B {
         _; f(x);
     }
 }
-// ----
-// TypeError 7733: (245-246): Immutable variables cannot be read before they are initialized.

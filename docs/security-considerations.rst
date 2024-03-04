@@ -447,7 +447,7 @@ so help through off-chain computations might be needed there.
 If the self-check fails, the contract automatically switches into some kind of "failsafe" mode,
 which, for example, disables most of the features,
 hands over control to a fixed and trusted third party
-or just converts the contract into a simple "give me back my money" contract.
+or just converts the contract into a simple "give me back my Ether" contract.
 
 Ask for Peer Review
 ===================

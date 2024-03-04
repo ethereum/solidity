@@ -67,14 +67,18 @@ There are special variables and functions which always exist in the global
 namespace and are mainly used to provide information about the blockchain
 or are general-use utility functions.
 
-.. index:: abi, block, coinbase, difficulty, prevrandao, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin
+.. index:: abi, block, coinbase, difficulty, prevrandao, encode, number, block;number, timestamp, block;timestamp, block;basefee, block;blobbasefee, msg, data, gas, sender, value, gas price, origin
 
 
 Block and Transaction Properties
 --------------------------------
 
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block when ``blocknumber`` is one of the 256 most recent blocks; otherwise returns zero
+- ``blobhash(uint index) returns (bytes32)``: versioned hash of the ``index``-th blob associated with the current transaction.
+  A versioned hash consists of a single byte representing the version (currently ``0x01``), followed by the last 31 bytes
+  of the SHA256 hash of the KZG commitment (`EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_).
 - ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
+- ``block.blobbasefee`` (``uint``): current block's blob base fee (`EIP-7516 <https://eips.ethereum.org/EIPS/eip-7516>`_ and `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_)
 - ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty (``EVM < Paris``). For other EVM versions it behaves as a deprecated alias for ``block.prevrandao`` (`EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_ )
@@ -107,7 +111,7 @@ Block and Transaction Properties
 
     Both the timestamp and the block hash can be influenced by miners to some degree.
     Bad actors in the mining community can for example run a casino payout function on a chosen hash
-    and just retry a different hash if they did not receive any money.
+    and just retry a different hash if they did not receive any compensation, e.g. Ether.
 
     The current block timestamp must be strictly larger than the timestamp of the last block,
     but the only guarantee is that it will be somewhere between the timestamps of two
@@ -235,7 +239,7 @@ Mathematical and Cryptographic Functions
     the ecrecover function remained unchanged.
 
     This is usually not a problem unless you require signatures to be unique or use them to identify items.
-    OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.com/contracts/4.x/api/utils#ECDSA>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
+    OpenZeppelin has an `ECDSA helper library <https://docs.openzeppelin.com/contracts/4.x/api/utils#ECDSA>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
 
 .. note::
 
@@ -282,7 +286,7 @@ For more information, see the section on :ref:`address`.
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
-    Use a pattern where the recipient withdraws the money.
+    Use a pattern where the recipient withdraws the Ether.
 
 .. warning::
     Due to the fact that the EVM considers a call to a non-existing contract to always succeed,
@@ -336,7 +340,7 @@ Furthermore, all functions of the current contract are callable directly includi
 
 .. warning::
     From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
-    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behavior
     as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
 
 .. note::
@@ -380,7 +384,7 @@ The following properties are available for a contract type ``C``:
 In addition to the properties above, the following properties are available
 for an interface type ``I``:
 
-``type(I).interfaceId``:
+``type(I).interfaceId``
     A ``bytes4`` value containing the `EIP-165 <https://eips.ethereum.org/EIPS/eip-165>`_
     interface identifier of the given interface ``I``. This identifier is defined as the ``XOR`` of all
     function selectors defined within the interface itself - excluding all inherited functions.

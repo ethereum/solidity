@@ -1,6 +1,6 @@
 contract C {
-    function()[] arr;
-    function() f;
+    function() external[] arr;
+    function() external f;
 
     constructor() {
         arr.push();
@@ -11,10 +11,10 @@ contract C {
     }
 }
 // ----
-// Warning 8364: (82-90): Assertion checker does not yet implement type function (function ()[] storage pointer) returns (function ())
-// Warning 8364: (102-110): Assertion checker does not yet implement type function (function ()[] storage pointer) returns (function ())
-// Warning 7229: (172-183): Assertion checker does not yet implement the type function () for comparisons
-// Warning 6368: (149-155): CHC: Out of bounds access happens here.
-// Warning 6368: (172-178): CHC: Out of bounds access happens here.
-// Warning 6328: (165-184): CHC: Assertion violation happens here.
+// Warning 8364: (100-108): Assertion checker does not yet implement type function (function () external[] storage pointer) returns (function () external)
+// Warning 8364: (120-128): Assertion checker does not yet implement type function (function () external[] storage pointer) returns (function () external)
+// Warning 7229: (190-201): Assertion checker does not yet implement the type function () external for comparisons
+// Warning 6368: (167-173): CHC: Out of bounds access happens here.\nCounterexample:\nf = 0\n\nTransaction trace:\nC.constructor()
+// Warning 6368: (190-196): CHC: Out of bounds access happens here.\nCounterexample:\nf = 0\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (183-202): CHC: Assertion violation happens here.\nCounterexample:\narr = [14, 0], f = 0\n\nTransaction trace:\nC.constructor()
 // Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

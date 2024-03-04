@@ -1,0 +1,15 @@
+
+======= strict_asm_evm_version_constantinople/input.yul (EVM) =======
+
+Pretty printed source:
+object "object" {
+    code { { } }
+}
+
+
+Binary representation:
+00
+
+Text representation:
+    /* "strict_asm_evm_version_constantinople/input.yul":0:2   */
+  stop

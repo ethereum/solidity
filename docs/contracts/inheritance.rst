@@ -54,7 +54,7 @@ Details are given in the following example.
     // accessed externally via `this`, though.
     contract Destructible is Owned {
         // The keyword `virtual` means that the function can change
-        // its behaviour in derived classes ("overriding").
+        // its behavior in derived classes ("overriding").
         function destroy() virtual public {
             if (msg.sender == owner) selfdestruct(owner);
         }
@@ -115,7 +115,7 @@ Details are given in the following example.
 
         // Here, we only specify `override` and not `virtual`.
         // This means that contracts deriving from `PriceFeed`
-        // cannot change the behaviour of `destroy` anymore.
+        // cannot change the behavior of `destroy` anymore.
         function destroy() public override(Destructible, Named) { Named.destroy(); }
         function get() public view returns(uint r) { return info; }
 
@@ -293,7 +293,7 @@ and ends at a contract mentioning a function with that signature
 that does not override.
 
 If you do not mark a function that overrides as ``virtual``, derived
-contracts can no longer change the behaviour of that function.
+contracts can no longer change the behavior of that function.
 
 .. note::
 
@@ -398,7 +398,7 @@ Constructors
 
 A constructor is an optional function declared with the ``constructor`` keyword
 which is executed upon contract creation, and where you can run contract
-initialisation code.
+initialization code.
 
 Before the constructor code is executed, state variables are initialised to
 their specified value if you initialise them inline, or their :ref:`default value<default-value>` if you do not.
@@ -487,7 +487,7 @@ One way is directly in the inheritance list (``is Base(7)``).  The other is in
 the way a modifier is invoked as part of
 the derived constructor (``Base(y * y)``). The first way to
 do it is more convenient if the constructor argument is a
-constant and defines the behaviour of the contract or
+constant and defines the behavior of the contract or
 describes it. The second way has to be used if the
 constructor arguments of the base depend on those of the
 derived contract. Arguments have to be given either in the
@@ -590,9 +590,11 @@ One area where inheritance linearization is especially important and perhaps not
 Inheriting Different Kinds of Members of the Same Name
 ======================================================
 
-It is an error when any of the following pairs in a contract have the same name due to inheritance:
-  - a function and a modifier
-  - a function and an event
-  - an event and a modifier
+The only situations where, due to inheritance, a contract may contain multiple definitions sharing
+the same name are:
 
-As an exception, a state variable getter can override an external function.
+- Overloading of functions.
+- Overriding of virtual functions.
+- Overriding of external virtual functions by state variable getters.
+- Overriding of virtual modifiers.
+- Overloading of events.

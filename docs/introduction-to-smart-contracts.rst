@@ -156,7 +156,7 @@ creates a public state variable, but it is a more complex datatype.
 The :ref:`mapping <mapping-types>` type maps addresses to :ref:`unsigned integers <integers>`.
 
 Mappings can be seen as `hash tables <https://en.wikipedia.org/wiki/Hash_table>`_ which are
-virtually initialised such that every possible key exists from the start and is mapped to a
+virtually initialized such that every possible key exists from the start and is mapped to a
 value whose byte-representation is all zeros. However, it is neither possible to obtain a list of all keys of
 a mapping, nor a list of all values. Record what you
 added to the mapping, or use it in a context where this is not needed. Or
@@ -282,7 +282,7 @@ the source account is also not modified.
 Furthermore, a transaction is always cryptographically signed by the sender (creator).
 This makes it straightforward to guard access to specific modifications of the
 database. In the example of the electronic currency, a simple check ensures that
-only the person holding the keys to the account can transfer money from it.
+only the person holding the keys to the account can transfer some compensation, e.g. Ether, from it.
 
 .. index:: ! block
 
@@ -304,7 +304,7 @@ These blocks form a linear sequence in time, and that is where the word "blockch
 Blocks are added to the chain at regular intervals, although these intervals may be subject to change in the future.
 For the most up-to-date information, it is recommended to monitor the network, for example, on `Etherscan <https://etherscan.io/chart/blocktime>`_.
 
-As part of the "order selection mechanism" (which is called "mining") it may happen that
+As part of the "order selection mechanism", which is called `attestation <https://ethereum.org/en/developers/docs/consensus-mechanisms/pos/attestations/>`_, it may happen that
 blocks are reverted from time to time, but only at the "tip" of the chain. The more
 blocks are added on top of a particular block, the less likely this block will be reverted. So it might be that your transactions
 are reverted and even removed from the blockchain, but the longer you wait, the less
@@ -564,7 +564,7 @@ contracts, the Ether is forever lost.
 
 .. warning::
     From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
-    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behaviour
+    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behavior
     as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
 
 .. warning::
@@ -591,7 +591,7 @@ Precompiled Contracts
 There is a small set of contract addresses that are special:
 The address range between ``1`` and (including) ``8`` contains
 "precompiled contracts" that can be called as any other contract
-but their behaviour (and their gas consumption) is not defined
+but their behavior (and their gas consumption) is not defined
 by EVM code stored at that address (they do not contain code)
 but instead is implemented in the EVM execution environment itself.
 

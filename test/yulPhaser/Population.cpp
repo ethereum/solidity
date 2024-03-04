@@ -38,7 +38,6 @@
 #include <string>
 #include <sstream>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace boost::unit_test::framework;
@@ -52,12 +51,12 @@ protected:
 	static ChromosomePair twoStepSwap(Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
 		return ChromosomePair{
-			Chromosome(vector<string>{_chromosome1.optimisationSteps()[0], _chromosome2.optimisationSteps()[1]}),
-			Chromosome(vector<string>{_chromosome2.optimisationSteps()[0], _chromosome1.optimisationSteps()[1]}),
+			Chromosome(std::vector<std::string>{_chromosome1.optimisationSteps()[0], _chromosome2.optimisationSteps()[1]}),
+			Chromosome(std::vector<std::string>{_chromosome2.optimisationSteps()[0], _chromosome1.optimisationSteps()[1]}),
 		};
 	}
 
-	shared_ptr<FitnessMetric> m_fitnessMetric = make_shared<ChromosomeLengthMetric>();
+	std::shared_ptr<FitnessMetric> m_fitnessMetric = std::make_shared<ChromosomeLengthMetric>();
 };
 
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
@@ -95,14 +94,14 @@ BOOST_AUTO_TEST_CASE(isFitter_should_return_false_for_identical_individuals)
 
 BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_compute_fitness_and_sort_chromosomes, PopulationFixture)
 {
-	vector<Chromosome> chromosomes = {
+	std::vector<Chromosome> chromosomes = {
 		Chromosome::makeRandom(5),
 		Chromosome::makeRandom(15),
 		Chromosome::makeRandom(10),
 	};
 	Population population(m_fitnessMetric, chromosomes);
 
-	vector<Individual> const& individuals = population.individuals();
+	std::vector<Individual> const& individuals = population.individuals();
 
 	BOOST_TEST(individuals.size() == 3);
 	BOOST_TEST(individuals[0].fitness == 5);
@@ -115,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_compute_fitness_and_
 
 BOOST_FIXTURE_TEST_CASE(constructor_should_accept_individuals_without_recalculating_fitness, PopulationFixture)
 {
-	vector<Individual> customIndividuals = {
+	std::vector<Individual> customIndividuals = {
 		Individual(Chromosome("aaaccc"), 20),
 		Individual(Chromosome("aaa"), 10),
 		Individual(Chromosome("aaaf"), 30),
@@ -126,7 +125,7 @@ BOOST_FIXTURE_TEST_CASE(constructor_should_accept_individuals_without_recalculat
 
 	Population population(m_fitnessMetric, customIndividuals);
 
-	vector<Individual> expectedIndividuals{customIndividuals[1], customIndividuals[0], customIndividuals[2]};
+	std::vector<Individual> expectedIndividuals{customIndividuals[1], customIndividuals[0], customIndividuals[2]};
 	BOOST_TEST(population.individuals() == expectedIndividuals);
 }
 
@@ -170,13 +169,13 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_use_random_chromosome_length, Populati
 	constexpr double relativeTolerance = 0.05;
 
 	auto population = Population::makeRandom(m_fitnessMetric, populationSize, minLength, maxLength);
-	vector<size_t> samples = chromosomeLengths(population);
+	std::vector<size_t> samples = chromosomeLengths(population);
 
 	const double expectedValue = (maxLength + minLength) / 2.0;
 	const double variance = ((maxLength - minLength + 1) * (maxLength - minLength + 1) - 1) / 12.0;
 
-	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(std::abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(std::abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes, PopulationFixture)
@@ -186,10 +185,10 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 	constexpr int chromosomeLength = 30;
 	constexpr double relativeTolerance = 0.01;
 
-	map<string, size_t> stepIndices = enumerateOptmisationSteps();
+	std::map<std::string, size_t> stepIndices = enumerateOptmisationSteps();
 	auto population = Population::makeRandom(m_fitnessMetric, populationSize, chromosomeLength, chromosomeLength);
 
-	vector<size_t> samples;
+	std::vector<size_t> samples;
 	for (auto& individual: population.individuals())
 		for (auto& step: individual.chromosome.optimisationSteps())
 			samples.push_back(stepIndices.at(step));
@@ -197,8 +196,8 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 	const double expectedValue = double(stepIndices.size() - 1) / 2.0;
 	const double variance = double(stepIndices.size() * stepIndices.size() - 1) / 12.0;
 
-	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(std::abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(std::abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_compute_fitness, PopulationFixture)
@@ -223,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE(select_should_return_population_containing_individuals_i
 {
 	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c"), Chromosome("g"), Chromosome("h")});
 	RangeSelection selection(0.25, 0.75);
-	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{1, 2}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<size_t>{1, 2}));
 
 	BOOST_TEST(
 		population.select(selection) ==
@@ -235,7 +234,7 @@ BOOST_FIXTURE_TEST_CASE(select_should_include_duplicates_if_selection_contains_d
 {
 	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c")});
 	MosaicSelection selection({0, 1}, 2.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{0, 1, 0, 1}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<size_t>{0, 1, 0, 1}));
 
 	BOOST_TEST(population.select(selection) == Population(m_fitnessMetric, {
 		population.individuals()[0].chromosome,
@@ -258,7 +257,7 @@ BOOST_FIXTURE_TEST_CASE(mutate_should_return_population_containing_individuals_i
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
 	RangeSelection selection(0.25, 0.75);
-	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{1, 2}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<size_t>{1, 2}));
 
 	Population expectedPopulation(m_fitnessMetric, {Chromosome("fc"), Chromosome("fg")});
 
@@ -269,7 +268,7 @@ BOOST_FIXTURE_TEST_CASE(mutate_should_include_duplicates_if_selection_contains_d
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa")});
 	RangeSelection selection(0.0, 1.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{0, 1}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<size_t>{0, 1}));
 
 	BOOST_TEST(
 		population.mutate(selection, geneSubstitution(0, BlockFlattener::name)) ==
@@ -290,7 +289,7 @@ BOOST_FIXTURE_TEST_CASE(crossover_should_return_population_containing_individual
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
 	PairMosaicSelection selection({{0, 1}, {2, 1}}, 1.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 1}, {2, 1}, {0, 1}, {2, 1}}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<std::tuple<size_t, size_t>>{{0, 1}, {2, 1}, {0, 1}, {2, 1}}));
 
 	Population expectedPopulation(m_fitnessMetric, {Chromosome("ac"), Chromosome("ac"), Chromosome("gc"), Chromosome("gc")});
 
@@ -301,7 +300,7 @@ BOOST_FIXTURE_TEST_CASE(crossover_should_include_duplicates_if_selection_contain
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa")});
 	PairMosaicSelection selection({{0, 0}, {1, 1}}, 2.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {1, 1}, {0, 0}, {1, 1}}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<std::tuple<size_t, size_t>>{{0, 0}, {1, 1}, {0, 0}, {1, 1}}));
 
 	BOOST_TEST(
 		population.crossover(selection, fixedPointCrossover(0.5)) ==
@@ -322,14 +321,14 @@ BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_crossed_po
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
 	PairMosaicSelection selection({{2, 1}}, 0.25);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{2, 1}}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<std::tuple<size_t, size_t>>{{2, 1}}));
 
 	Population expectedCrossedPopulation(m_fitnessMetric, {Chromosome("gc"), Chromosome("cg")});
 	Population expectedRemainder(m_fitnessMetric, {Chromosome("aa"), Chromosome("hh")});
 
 	BOOST_TEST(
 		population.symmetricCrossoverWithRemainder(selection, twoStepSwap) ==
-		(tuple<Population, Population>{expectedCrossedPopulation, expectedRemainder})
+		(std::tuple<Population, Population>{expectedCrossedPopulation, expectedRemainder})
 	);
 }
 
@@ -337,7 +336,7 @@ BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_allow_crossing_th
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
 	PairMosaicSelection selection({{0, 0}, {2, 1}}, 1.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {2, 1}, {0, 0}, {2, 1}}));
+	assert(selection.materialise(population.individuals().size()) == (std::vector<std::tuple<size_t, size_t>>{{0, 0}, {2, 1}, {0, 0}, {2, 1}}));
 
 	Population expectedCrossedPopulation(m_fitnessMetric, {
 		Chromosome("aa"), Chromosome("aa"),
@@ -349,7 +348,7 @@ BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_allow_crossing_th
 
 	BOOST_TEST(
 		population.symmetricCrossoverWithRemainder(selection, twoStepSwap) ==
-		(tuple<Population, Population>{expectedCrossedPopulation, expectedRemainder})
+		(std::tuple<Population, Population>{expectedCrossedPopulation, expectedRemainder})
 	);
 }
 
@@ -361,7 +360,7 @@ BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_empty_popu
 
 	BOOST_TEST(
 		population.symmetricCrossoverWithRemainder(selection, twoStepSwap) ==
-		(tuple<Population, Population>{Population(m_fitnessMetric), population})
+		(std::tuple<Population, Population>{Population(m_fitnessMetric), population})
 	);
 }
 

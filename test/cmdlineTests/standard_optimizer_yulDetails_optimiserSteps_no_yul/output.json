@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.",
+            "message": "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

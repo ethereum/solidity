@@ -16,11 +16,11 @@ Simple Open Auction
 ===================
 
 The general idea of the following simple auction contract is that everyone can
-send their bids during a bidding period. The bids already include sending money
-/ Ether in order to bind the bidders to their bid. If the highest bid is
-raised, the previous highest bidder gets their money back.  After the end of
+send their bids during a bidding period. The bids already include sending some compensation,
+e.g. Ether, in order to bind the bidders to their bid. If the highest bid is
+raised, the previous highest bidder gets their Ether back.  After the end of
 the bidding period, the contract has to be called manually for the beneficiary
-to receive their money - contracts cannot activate themselves.
+to receive their Ether - contracts cannot activate themselves.
 
 .. code-block:: solidity
 
@@ -92,19 +92,19 @@ to receive their money - contracts cannot activate themselves.
                 revert AuctionAlreadyEnded();
 
             // If the bid is not higher, send the
-            // money back (the revert statement
+            // Ether back (the revert statement
             // will revert all changes in this
             // function execution including
-            // it having received the money).
+            // it having received the Ether).
             if (msg.value <= highestBid)
                 revert BidNotHighEnough(highestBid);
 
             if (highestBid != 0) {
-                // Sending back the money by simply using
+                // Sending back the Ether by simply using
                 // highestBidder.send(highestBid) is a security risk
                 // because it could execute an untrusted contract.
                 // It is always safer to let the recipients
-                // withdraw their money themselves.
+                // withdraw their Ether themselves.
                 pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
@@ -182,7 +182,7 @@ the contract checks that the hash value is the same as the one provided during
 the bidding period.
 
 Another challenge is how to make the auction **binding and blind** at the same
-time: The only way to prevent the bidder from just not sending the money after
+time: The only way to prevent the bidder from just not sending the Ether after
 they won the auction is to make them send it together with the bid. Since value
 transfers cannot be blinded in Ethereum, anyone can see the value.
 

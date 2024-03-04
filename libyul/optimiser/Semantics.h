@@ -21,10 +21,11 @@
 
 #pragma once
 
-#include <libyul/optimiser/ASTWalker.h>
-#include <libyul/SideEffects.h>
-#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/AST.h>
+#include <libyul/Object.h>
+#include <libyul/SideEffects.h>
+#include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 
 #include <set>
 
@@ -77,7 +78,8 @@ public:
 			!m_sideEffects.movableApartFromEffects ||
 			m_sideEffects.storage == SideEffects::Write ||
 			m_sideEffects.otherState == SideEffects::Write ||
-			m_sideEffects.memory == SideEffects::Write
+			m_sideEffects.memory == SideEffects::Write ||
+			m_sideEffects.transientStorage == SideEffects::Write
 		)
 			return false;
 
@@ -91,6 +93,10 @@ public:
 
 		if (m_sideEffects.memory == SideEffects::Read)
 			if (_codeContainsMSize || _other.memory == SideEffects::Write)
+				return false;
+
+		if (m_sideEffects.transientStorage == SideEffects::Read)
+			if (_other.transientStorage == SideEffects::Write)
 				return false;
 
 		return true;
@@ -143,6 +149,7 @@ class MSizeFinder: public ASTWalker
 {
 public:
 	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
+	static bool containsMSize(Dialect const& _dialect, Object const& _object);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _funCall) override;

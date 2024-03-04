@@ -42,7 +42,6 @@
 #include <optional>
 #include <string>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 
@@ -53,7 +52,7 @@ namespace
 {
 
 std::optional<Error> parseAndReturnFirstError(
-	string const& _source,
+	std::string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,
 	YulStack::Language _language = YulStack::Language::Assembly,
@@ -79,18 +78,16 @@ std::optional<Error> parseAndReturnFirstError(
 		BOOST_FAIL("Fatal error leaked.");
 		success = false;
 	}
-	shared_ptr<Error const> error;
+	std::shared_ptr<Error const> error;
 	for (auto const& e: stack.errors())
 	{
 		if (_allowWarnings && e->type() == Error::Type::Warning)
 			continue;
 		if (error)
-		{
-			string errors;
-			for (auto const& err: stack.errors())
-				errors += SourceReferenceFormatter::formatErrorInformation(*err, stack);
-			BOOST_FAIL("Found more than one error:\n" + errors);
-		}
+			BOOST_FAIL(
+				"Found more than one error:\n" +
+				SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack)
+			);
 		error = e;
 	}
 	if (!success)
@@ -101,7 +98,7 @@ std::optional<Error> parseAndReturnFirstError(
 }
 
 bool successParse(
-	string const& _source,
+	std::string const& _source,
 	bool _assemble = false,
 	bool _allowWarnings = true,
 	YulStack::Language _language = YulStack::Language::Assembly,
@@ -111,7 +108,7 @@ bool successParse(
 	return !parseAndReturnFirstError(_source, _assemble, _allowWarnings, _language, _machine);
 }
 
-bool successAssemble(string const& _source, bool _allowWarnings = true, YulStack::Language _language = YulStack::Language::Assembly)
+bool successAssemble(std::string const& _source, bool _allowWarnings = true, YulStack::Language _language = YulStack::Language::Assembly)
 {
 	return
 		successParse(_source, true, _allowWarnings, _language, YulStack::Machine::EVM);
@@ -130,7 +127,7 @@ Error expectError(
 	return *error;
 }
 
-void parsePrintCompare(string const& _source, bool _canWarn = false)
+void parsePrintCompare(std::string const& _source, bool _canWarn = false)
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
@@ -144,7 +141,7 @@ void parsePrintCompare(string const& _source, bool _canWarn = false)
 		BOOST_REQUIRE(!Error::containsErrors(stack.errors()));
 	else
 		BOOST_REQUIRE(stack.errors().empty());
-	string expectation = "object \"object\" {\n    code " + boost::replace_all_copy(_source, "\n", "\n    ") + "\n}\n";
+	std::string expectation = "object \"object\" {\n    code " + boost::replace_all_copy(_source, "\n", "\n    ") + "\n}\n";
 	BOOST_CHECK_EQUAL(stack.print(), expectation);
 }
 
@@ -221,8 +218,8 @@ BOOST_AUTO_TEST_CASE(print_string_literals)
 
 BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 {
-	string source = "{ let x := \"\\u1bac\" }";
-	string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
+	std::string source = "{ let x := \"\\u1bac\" }";
+	std::string parsed = "object \"object\" {\n    code { let x := \"\\xe1\\xae\\xac\" }\n}\n";
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().eofVersion(),
@@ -234,7 +231,7 @@ BOOST_AUTO_TEST_CASE(print_string_literal_unicode)
 	BOOST_REQUIRE(stack.errors().empty());
 	BOOST_CHECK_EQUAL(stack.print(), parsed);
 
-	string parsedInner = "{ let x := \"\\xe1\\xae\\xac\" }";
+	std::string parsedInner = "{ let x := \"\\xe1\\xae\\xac\" }";
 	parsePrintCompare(parsedInner);
 }
 
@@ -260,7 +257,7 @@ BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
 
 BOOST_AUTO_TEST_CASE(function_calls)
 {
-	string source = R"({
+	std::string source = R"({
 	function y()
 	{ }
 	function f(a) -> b

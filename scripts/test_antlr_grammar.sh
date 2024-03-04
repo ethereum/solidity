@@ -110,7 +110,7 @@ do
   SOL_FILES+=("$line")
 done < <(
   grep --include "*.sol" -riL -E \
-    "^\/\/ (Syntax|Type|Declaration)Error|^\/\/ ParserError (1684|2837|3716|3997|5333|6275|6281|6933|7319|8185|7637)|^==== Source:" \
+    "^\/\/ (Syntax|Type|Declaration)Error|^\/\/ ParserError (1684|2837|3716|3997|5333|6275|6281|6933|7319|8185|7637)|^==== Source:|^pragma experimental solidity;" \
     "${ROOT_DIR}/test/libsolidity/syntaxTests" \
     "${ROOT_DIR}/test/libsolidity/semanticTests" |
       # Skipping the unicode tests as I couldn't adapt the lexical grammar to recursively counting RLO/LRO/PDF's.
@@ -121,9 +121,18 @@ done < <(
       grep -v -E 'revertStatement/non_called.sol' |
       # Skipping a test with "let basefee := ..."
       grep -v -E 'inlineAssembly/basefee_berlin_function.sol' |
+      # Skipping a test with "let blobbasefee := ..."
+      grep -v -E 'inlineAssembly/blobbasefee_shanghai_function.sol' |
+      # Skipping a test with "let mcopy := ..."
+      grep -v -E 'inlineAssembly/mcopy_as_identifier_pre_cancun.sol' |
       # Skipping tests with "let prevrandao := ..."
       grep -v -E 'inlineAssembly/prevrandao_allowed_function_pre_paris.sol' |
       grep -v -E 'inlineAssembly/prevrandao_disallowed_function_post_paris.sol' |
+      # Skipping a test with "let blobhash := ..."
+      grep -v -E 'inlineAssembly/blobhash_pre_cancun.sol' |
+      grep -v -E 'inlineAssembly/blobhash_pre_cancun_not_reserved.sol' |
+      # Skipping tests with "let tstore/tload := ..."
+      grep -v -E 'inlineAssembly/tload_tstore_not_reserved_before_cancun.sol' |
       # Skipping license error, unrelated to the grammar
       grep -v -E 'license/license_double5.sol' |
       grep -v -E 'license/license_hidden_unicode.sol' |

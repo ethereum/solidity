@@ -80,69 +80,55 @@ object "A" {
 //     /* "source":192:207   */
 //   dataSize(sub_0.sub_0)
 //     /* "source":224:241   */
+//   swap1
 //   dataOffset(sub_0.sub_1)
 //     /* "source":258:273   */
+//   swap3
 //   dataSize(sub_0.sub_1)
 //     /* "source":291:310   */
+//   swap5
 //   dataOffset(sub_0.sub_0.sub_0)
 //     /* "source":328:345   */
+//   swap7
 //   dataSize(sub_0.sub_0.sub_0)
-//     /* "source":361:364   */
-//   dup10
+//     /* "source":351:365   */
+//   swap9
 //     /* "source":358:359   */
 //   0x00
 //     /* "source":351:365   */
 //   sstore
-//     /* "source":381:384   */
-//   dup9
 //     /* "source":377:379   */
 //   0x20
 //     /* "source":370:385   */
 //   sstore
-//     /* "source":401:404   */
-//   dup8
 //     /* "source":397:399   */
 //   0x40
 //     /* "source":390:405   */
 //   sstore
-//     /* "source":421:424   */
-//   dup7
 //     /* "source":417:419   */
 //   0x60
 //     /* "source":410:425   */
 //   sstore
-//     /* "source":442:446   */
-//   dup6
 //     /* "source":437:440   */
 //   0x80
 //     /* "source":430:447   */
 //   sstore
-//     /* "source":464:468   */
-//   dup5
 //     /* "source":459:462   */
 //   0xa0
 //     /* "source":452:469   */
 //   sstore
-//     /* "source":486:490   */
-//   dup4
 //     /* "source":481:484   */
 //   0xc0
 //     /* "source":474:491   */
 //   sstore
-//     /* "source":508:512   */
-//   dup3
 //     /* "source":503:506   */
 //   0xe0
 //     /* "source":496:513   */
 //   sstore
-//     /* "source":530:535   */
-//   dup2
 //     /* "source":525:528   */
 //   0x0100
 //     /* "source":518:536   */
 //   sstore
-//     /* "source":553:558   */
-//   dup1
 //     /* "source":548:551   */
 //   0x0120
 //     /* "source":541:559   */
@@ -166,41 +152,33 @@ object "A" {
 //         /* "source":756:769   */
 //       dataSize(sub_1)
 //         /* "source":788:805   */
+//       swap1
 //       dataOffset(sub_0.sub_0)
 //         /* "source":824:839   */
+//       swap3
 //       dataSize(sub_0.sub_0)
-//         /* "source":857:860   */
-//       dup6
+//         /* "source":847:861   */
+//       swap5
 //         /* "source":854:855   */
 //       0x00
 //         /* "source":847:861   */
 //       sstore
-//         /* "source":879:882   */
-//       dup5
 //         /* "source":875:877   */
 //       0x20
 //         /* "source":868:883   */
 //       sstore
-//         /* "source":901:904   */
-//       dup4
 //         /* "source":897:899   */
 //       0x40
 //         /* "source":890:905   */
 //       sstore
-//         /* "source":923:926   */
-//       dup3
 //         /* "source":919:921   */
 //       0x60
 //         /* "source":912:927   */
 //       sstore
-//         /* "source":946:950   */
-//       dup2
 //         /* "source":941:944   */
 //       0x80
 //         /* "source":934:951   */
 //       sstore
-//         /* "source":970:974   */
-//       dup1
 //         /* "source":965:968   */
 //       0xa0
 //         /* "source":958:975   */
@@ -218,14 +196,12 @@ object "A" {
 //           dataOffset(sub_0)
 //             /* "source":1087:1100   */
 //           dataSize(sub_0)
-//             /* "source":1120:1123   */
-//           dup2
+//             /* "source":1110:1124   */
+//           swap1
 //             /* "source":1117:1118   */
 //           0x00
 //             /* "source":1110:1124   */
 //           sstore
-//             /* "source":1144:1147   */
-//           dup1
 //             /* "source":1140:1142   */
 //           0x20
 //             /* "source":1133:1148   */
@@ -249,6 +225,6 @@ object "A" {
 //           invalid
 //     }
 // }
-// Bytecode: 5f608e6042603a607d6011607c6001607c6001895f55886020558760405586606055856080558460a0558360c0558260e055816101005580610120556101405ff3fe602860116039600160396001855f55846020558360405582606055816080558060a05560c05ff3fe60106001815f558060205560405ff3fefefefe60106001815f558060205560405ff3fefe
-// Opcodes: PUSH0 PUSH1 0x8E PUSH1 0x42 PUSH1 0x3A PUSH1 0x7D PUSH1 0x11 PUSH1 0x7C PUSH1 0x1 PUSH1 0x7C PUSH1 0x1 DUP10 PUSH0 SSTORE DUP9 PUSH1 0x20 SSTORE DUP8 PUSH1 0x40 SSTORE DUP7 PUSH1 0x60 SSTORE DUP6 PUSH1 0x80 SSTORE DUP5 PUSH1 0xA0 SSTORE DUP4 PUSH1 0xC0 SSTORE DUP3 PUSH1 0xE0 SSTORE DUP2 PUSH2 0x100 SSTORE DUP1 PUSH2 0x120 SSTORE PUSH2 0x140 PUSH0 RETURN INVALID PUSH1 0x28 PUSH1 0x11 PUSH1 0x39 PUSH1 0x1 PUSH1 0x39 PUSH1 0x1 DUP6 PUSH0 SSTORE DUP5 PUSH1 0x20 SSTORE DUP4 PUSH1 0x40 SSTORE DUP3 PUSH1 0x60 SSTORE DUP2 PUSH1 0x80 SSTORE DUP1 PUSH1 0xA0 SSTORE PUSH1 0xC0 PUSH0 RETURN INVALID PUSH1 0x10 PUSH1 0x1 DUP2 PUSH0 SSTORE DUP1 PUSH1 0x20 SSTORE PUSH1 0x40 PUSH0 RETURN INVALID INVALID INVALID INVALID PUSH1 0x10 PUSH1 0x1 DUP2 PUSH0 SSTORE DUP1 PUSH1 0x20 SSTORE PUSH1 0x40 PUSH0 RETURN INVALID INVALID
-// SourceMappings: 37:15:0:-:0;68:13;97:15;128:13;158:17;192:15;224:17;258:15;291:19;328:17;361:3;358:1;351:14;381:3;377:2;370:15;401:3;397:2;390:15;421:3;417:2;410:15;442:4;437:3;430:17;464:4;459:3;452:17;486:4;481:3;474:17;508:4;503:3;496:17;530:5;525:3;518:18;553:5;548:3;541:18;574:3;571:1;564:14
+// Bytecode: 5f6084603d603660746010906073926001946073966001985f5560205560405560605560805560a05560c05560e05561010055610120556101405ff3fe6025601060356001906035926001945f5560205560405560605560805560a05560c05ff3fe600f6001905f5560205560405ff3fefefefe600f6001905f5560205560405ff3fefe
+// Opcodes: PUSH0 PUSH1 0x84 PUSH1 0x3D PUSH1 0x36 PUSH1 0x74 PUSH1 0x10 SWAP1 PUSH1 0x73 SWAP3 PUSH1 0x1 SWAP5 PUSH1 0x73 SWAP7 PUSH1 0x1 SWAP9 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 SSTORE PUSH1 0x60 SSTORE PUSH1 0x80 SSTORE PUSH1 0xA0 SSTORE PUSH1 0xC0 SSTORE PUSH1 0xE0 SSTORE PUSH2 0x100 SSTORE PUSH2 0x120 SSTORE PUSH2 0x140 PUSH0 RETURN INVALID PUSH1 0x25 PUSH1 0x10 PUSH1 0x35 PUSH1 0x1 SWAP1 PUSH1 0x35 SWAP3 PUSH1 0x1 SWAP5 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 SSTORE PUSH1 0x60 SSTORE PUSH1 0x80 SSTORE PUSH1 0xA0 SSTORE PUSH1 0xC0 PUSH0 RETURN INVALID PUSH1 0xF PUSH1 0x1 SWAP1 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 PUSH0 RETURN INVALID INVALID INVALID INVALID PUSH1 0xF PUSH1 0x1 SWAP1 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 PUSH0 RETURN INVALID INVALID
+// SourceMappings: 37:15:0:-:0;68:13;97:15;128:13;158:17;192:15;224:17;;258:15;;291:19;;328:17;;351:14;358:1;351:14;377:2;370:15;397:2;390:15;417:2;410:15;437:3;430:17;459:3;452:17;481:3;474:17;503:3;496:17;525:3;518:18;548:3;541:18;574:3;571:1;564:14

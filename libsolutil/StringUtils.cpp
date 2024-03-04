@@ -23,14 +23,17 @@
  */
 
 #include <libsolutil/StringUtils.h>
+
+#include <boost/algorithm/string/trim.hpp>
+
+#include <sstream>
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 
-bool solidity::util::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance, size_t _lenThreshold)
+bool solidity::util::stringWithinDistance(std::string const& _str1, std::string const& _str2, size_t _maxDistance, size_t _lenThreshold)
 {
 	if (_str1 == _str2)
 		return true;
@@ -47,13 +50,13 @@ bool solidity::util::stringWithinDistance(string const& _str1, string const& _st
 	return distance <= _maxDistance && distance < n1 && distance < n2;
 }
 
-size_t solidity::util::stringDistance(string const& _str1, string const& _str2)
+size_t solidity::util::stringDistance(std::string const& _str1, std::string const& _str2)
 {
 	size_t n1 = _str1.size();
 	size_t n2 = _str2.size();
 	// Optimize by storing only last 2 rows and current row. So first index is considered modulo 3
 	// This is a two-dimensional array of size 3 x (n2 + 1).
-	vector<size_t> dp(3 * (n2 + 1));
+	std::vector<size_t> dp(3 * (n2 + 1));
 
 	// In this dp formulation of Damerau–Levenshtein distance we are assuming that the strings are 1-based to make base case storage easier.
 	// So index accesser to _name1 and _name2 have to be adjusted accordingly
@@ -61,25 +64,25 @@ size_t solidity::util::stringDistance(string const& _str1, string const& _str2)
 		for (size_t i2 = 0; i2 <= n2; ++i2)
 		{
 			size_t x = 0;
-			if (min(i1, i2) == 0) // base case
-				x = max(i1, i2);
+			if (std::min(i1, i2) == 0) // base case
+				x = std::max(i1, i2);
 			else
 			{
 				size_t left = dp[(i1 - 1) % 3 + i2 * 3];
 				size_t up = dp[(i1 % 3) + (i2 - 1) * 3];
 				size_t upleft = dp[((i1 - 1) % 3) + (i2 - 1) * 3];
 				// deletion and insertion
-				x = min(left + 1, up + 1);
+				x = std::min(left + 1, up + 1);
 				if (_str1[i1-1] == _str2[i2-1])
 					// same chars, can skip
-					x = min(x, upleft);
+					x = std::min(x, upleft);
 				else
 					// different chars so try substitution
-					x = min(x, upleft + 1);
+					x = std::min(x, upleft + 1);
 
 				// transposing
 				if (i1 > 1 && i2 > 1 && _str1[i1 - 1] == _str2[i2 - 2] && _str1[i1 - 2] == _str2[i2 - 1])
-					x = min(x, dp[((i1 - 2) % 3) + (i2 - 2) * 3] + 1);
+					x = std::min(x, dp[((i1 - 2) % 3) + (i2 - 2) * 3] + 1);
 			}
 			dp[(i1 % 3) + i2 * 3] = x;
 		}
@@ -87,9 +90,9 @@ size_t solidity::util::stringDistance(string const& _str1, string const& _str2)
 	return dp[(n1 % 3) + n2 * 3];
 }
 
-string solidity::util::quotedAlternativesList(vector<string> const& suggestions)
+std::string solidity::util::quotedAlternativesList(std::vector<std::string> const& suggestions)
 {
-	vector<string> quotedSuggestions;
+	std::vector<std::string> quotedSuggestions;
 
 	for (auto& suggestion: suggestions)
 		quotedSuggestions.emplace_back("\"" + suggestion + "\"");
@@ -97,20 +100,20 @@ string solidity::util::quotedAlternativesList(vector<string> const& suggestions)
 	return joinHumanReadable(quotedSuggestions, ", ", " or ");
 }
 
-string solidity::util::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
+std::string solidity::util::suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix)
 {
-	string result;
+	std::string result;
 	if (_startSuffix < _endSuffix)
 	{
-		result = _baseName + to_string(_startSuffix++);
+		result = _baseName + std::to_string(_startSuffix++);
 		while (_startSuffix < _endSuffix)
-			result += ", " + _baseName + to_string(_startSuffix++);
+			result += ", " + _baseName + std::to_string(_startSuffix++);
 	}
 	else if (_endSuffix < _startSuffix)
 	{
-		result = _baseName + to_string(_endSuffix++);
+		result = _baseName + std::to_string(_endSuffix++);
 		while (_endSuffix < _startSuffix)
-			result = _baseName + to_string(_endSuffix++) + ", " + result;
+			result = _baseName + std::to_string(_endSuffix++) + ", " + result;
 	}
 	return result;
 }
@@ -119,7 +122,7 @@ namespace
 {
 
 /// Try to format as N * 2**x
-optional<string> tryFormatPowerOfTwo(bigint const& _value)
+std::optional<std::string> tryFormatPowerOfTwo(bigint const& _value)
 {
 	bigint prefix = _value;
 
@@ -128,7 +131,7 @@ optional<string> tryFormatPowerOfTwo(bigint const& _value)
 	for (; (prefix & 0xff) == 0; prefix >>= 8)
 		++i;
 	if (i <= 2)
-		return nullopt;
+		return std::nullopt;
 
 	// 0x100 yields 2**8 (N is 1 and redundant)
 	if (prefix == 1)
@@ -150,11 +153,11 @@ optional<string> tryFormatPowerOfTwo(bigint const& _value)
 
 }
 
-string solidity::util::formatNumberReadable(bigint const& _value, bool _useTruncation)
+std::string solidity::util::formatNumberReadable(bigint const& _value, bool _useTruncation)
 {
 	bool const isNegative = _value < 0;
 	bigint const absValue = isNegative ? (bigint(-1) * _value) : bigint(_value);
-	string const sign = isNegative ? "-" : "";
+	std::string const sign = isNegative ? "-" : "";
 
 	// smaller numbers return as decimal
 	if (absValue <= 0x1000000)
@@ -165,7 +168,7 @@ string solidity::util::formatNumberReadable(bigint const& _value, bool _useTrunc
 	else if (auto result = tryFormatPowerOfTwo(absValue + 1))
 		return {sign + *result + (isNegative ? " + 1" : " - 1")};
 
-	string str = toHex(toCompactBigEndian(absValue), HexPrefix::Add, HexCase::Mixed);
+	std::string str = toHex(toCompactBigEndian(absValue), HexPrefix::Add, HexCase::Mixed);
 
 	if (_useTruncation)
 	{
@@ -191,3 +194,34 @@ string solidity::util::formatNumberReadable(bigint const& _value, bool _useTrunc
 	return sign + str;
 }
 
+std::string solidity::util::prefixLines(
+	std::string const& _input,
+	std::string const& _prefix,
+	bool _trimPrefix
+)
+{
+	std::ostringstream output;
+	printPrefixed(output, _input, _prefix, _trimPrefix, false /* _ensureFinalNewline */);
+	return output.str();
+}
+
+void solidity::util::printPrefixed(
+	std::ostream& _output,
+	std::string const& _input,
+	std::string const& _prefix,
+	bool _trimPrefix,
+	bool _ensureFinalNewline
+)
+{
+	std::istringstream input(_input);
+	std::string line;
+	while (std::getline(input, line))
+	{
+		if (line.empty() && _trimPrefix)
+			_output << boost::trim_right_copy(_prefix);
+		else
+			_output << _prefix << line;
+		if (!input.eof() || _ensureFinalNewline)
+			_output << '\n';
+	}
+}

@@ -16,6 +16,3 @@ contract C is B {
     function f() internal view override returns(uint) { return readX(); }
 
 }
-// ----
-// TypeError 2658: (0-202): Construction control flow ends without initializing all immutable state variables.
-// TypeError 2658: (204-361): Construction control flow ends without initializing all immutable state variables.

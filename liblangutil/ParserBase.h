@@ -38,14 +38,9 @@ struct ErrorId;
 class ParserBase
 {
 public:
-	/// Set @a _parserErrorRecovery to true for additional error
-	/// recovery.  This is experimental and intended for use
-	/// by front-end tools that need partial AST information even
-	/// when errors occur.
-	explicit ParserBase(ErrorReporter& errorReporter, bool _parserErrorRecovery = false): m_errorReporter(errorReporter)
-	{
-		m_parserErrorRecovery = _parserErrorRecovery;
-	}
+	explicit ParserBase(ErrorReporter& errorReporter):
+		m_errorReporter(errorReporter)
+	{}
 
 	virtual ~ParserBase() = default;
 
@@ -70,13 +65,9 @@ protected:
 	///@{
 	///@name Helper functions
 	/// If current token value is not @a _value, throw exception otherwise advance token
-	//  @a if _advance is true and error recovery is in effect.
+	//  if @a _advance is true
 	void expectToken(Token _value, bool _advance = true);
 
-	/// Like expectToken but if there is an error ignores tokens until
-	/// the expected token or EOS is seen. If EOS is encountered, back up to the error point,
-	/// and throw an exception so that a higher grammar rule has an opportunity to recover.
-	void expectTokenOrConsumeUntil(Token _value, std::string const& _currentNodeName, bool _advance = true);
 	Token currentToken() const;
 	Token peekNextToken() const;
 	std::string tokenName(Token _token);
@@ -108,10 +99,6 @@ protected:
 	ErrorReporter& m_errorReporter;
 	/// Current recursion depth during parsing.
 	size_t m_recursionDepth = 0;
-	/// True if we are in parser error recovery. Usually this means we are scanning for
-	/// a synchronization token like ';', or '}'. We use this to reduce cascaded error messages.
-	bool m_inParserRecovery = false;
-	bool m_parserErrorRecovery = false;
 };
 
 }

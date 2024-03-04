@@ -23,10 +23,7 @@ Integrated (Ethereum) Development Environments
         Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
 
     * `Dapp <https://dapp.tools/>`_
-        Tool for building, testing and deploying smart contracts from the command line.
-
-    * `Embark <https://framework.embarklabs.io/>`_
-        Developer platform for building and deploying decentralized applications.
+        Tool for building, testing and deploying smart contracts from the command-line.
 
     * `Foundry <https://github.com/foundry-rs/foundry>`_
         Fast, portable and modular toolkit for Ethereum application development written in Rust.
@@ -71,7 +68,7 @@ Editor Integrations
 
 * Visual Studio Code (VS Code)
 
-    * `Ethereum Remix Visual Studio Code extension <https://marketplace.visualstudio.com/items?itemName=RemixProject.ethereum-remix>`_
+    * `Ethereum Remix Visual Studio Code extension <https://github.com/ethereum/remix-vscode>`_
         Ethereum Remix extension pack for VS Code
 
     * `Solidity Visual Studio Code extension, by Juan Blanco <https://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
@@ -112,9 +109,6 @@ Solidity Tools
 
 * `leafleth <https://github.com/clemlak/leafleth>`_
     A documentation generator for Solidity smart-contracts.
-
-* `PIET <https://piet.slock.it/>`_
-    A tool to develop, audit and use Solidity smart contracts through a simple graphical interface.
 
 * `Scaffold-ETH <https://github.com/scaffold-eth/scaffold-eth>`_
     Forkable Ethereum development stack focused on fast product iterations.

@@ -140,7 +140,7 @@ Exponentiation
 
 Exponentiation is only available for unsigned types in the exponent. The resulting type
 of an exponentiation is always equal to the type of the base. Please take care that it is
-large enough to hold the result and prepare for potential assertion failures or wrapping behaviour.
+large enough to hold the result and prepare for potential assertion failures or wrapping behavior.
 
 .. note::
   In checked mode, exponentiation only uses the comparatively cheap ``exp`` opcode for small bases.
@@ -263,7 +263,7 @@ reverts on failure.
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
     (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
     to make safe Ether transfers, always check the return value of ``send``, use ``transfer`` or even better:
-    use a pattern where the recipient withdraws the money.
+    use a pattern where the recipient withdraws the Ether.
 
 * ``call``, ``delegatecall`` and ``staticcall``
 
@@ -414,14 +414,6 @@ Members:
 
 .. note::
     Prior to version 0.8.0, ``byte`` used to be an alias for ``bytes1``.
-
-Dynamically-sized byte array
-----------------------------
-
-``bytes``:
-    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
-``string``:
-    Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
 
 .. index:: address, ! literal;address
 
@@ -812,6 +804,12 @@ functions.
     The caller cannot pass its calldata directly to an external function and always ABI-encodes the arguments into memory.
     Marking the parameters as ``calldata`` only affects the implementation of the external function and is
     meaningless in a function pointer on the caller's side.
+
+.. warning::
+    Comparison of internal function pointers can have unexpected results in the legacy pipeline with the optimizer enabled,
+    as it can collapse identical functions into one, which will then lead to said function pointers comparing as equal instead of not.
+    Such comparisons are not advised, and will lead to the compiler issuing a warning, until the next breaking release (0.9.0),
+    when the warning will be upgraded to an error, thereby making such comparisons disallowed.
 
 Libraries are excluded because they require a ``delegatecall`` and use :ref:`a different ABI
 convention for their selectors <library-selectors>`.

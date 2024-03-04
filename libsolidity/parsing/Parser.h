@@ -40,15 +40,16 @@ class Parser: public langutil::ParserBase
 public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
-		langutil::EVMVersion _evmVersion,
-		bool _errorRecovery = false
+		langutil::EVMVersion _evmVersion
 	):
-		ParserBase(_errorReporter, _errorRecovery),
+		ParserBase(_errorReporter),
 		m_evmVersion(_evmVersion)
 	{}
 
 	ASTPointer<SourceUnit> parse(langutil::CharStream& _charStream);
 
+	/// Returns the maximal AST node ID assigned so far
+	int64_t maxID() const { return m_currentNodeID; }
 private:
 	class ASTNodeFactory;
 
@@ -75,6 +76,7 @@ private:
 		Visibility visibility = Visibility::Default;
 		StateMutability stateMutability = StateMutability::NonPayable;
 		std::vector<ASTPointer<ModifierInvocation>> modifiers;
+		ASTPointer<Expression> experimentalReturnExpression;
 	};
 
 	/// Struct to share parsed function call arguments.
@@ -100,7 +102,8 @@ private:
 	ASTPointer<OverrideSpecifier> parseOverrideSpecifier();
 	StateMutability parseStateMutability();
 	FunctionHeaderParserResult parseFunctionHeader(bool _isStateVariable);
-	ASTPointer<ASTNode> parseFunctionDefinition(bool _freeFunction = false);
+	ASTPointer<ForAllQuantifier> parseQuantifiedFunctionDefinition();
+	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _freeFunction = false, bool _allowBody = true);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<UserDefinedValueTypeDefinition> parseUserDefinedValueTypeDefinition();
@@ -169,6 +172,18 @@ private:
 	///@}
 
 	///@{
+	///@name Specialized parsing functions for the AST nodes of experimental solidity.
+	ASTPointer<VariableDeclarationStatement> parsePostfixVariableDeclarationStatement(
+		ASTPointer<ASTString> const& _docString
+	);
+	ASTPointer<VariableDeclaration> parsePostfixVariableDeclaration();
+	ASTPointer<TypeClassDefinition> parseTypeClassDefinition();
+	ASTPointer<TypeClassInstantiation> parseTypeClassInstantiation();
+	ASTPointer<TypeDefinition> parseTypeDefinition();
+	ASTPointer<TypeClassName> parseTypeClassName();
+	///@}
+
+	///@{
 	///@name Helper functions
 
 	/// @return true if we are at the start of a variable declaration.
@@ -218,6 +233,13 @@ private:
 	ASTPointer<ASTString> expectIdentifierTokenOrAddress();
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
+
+	bool isQuotedPath() const;
+	bool isStdlibPath() const;
+
+	int tokenPrecedence(Token _token) const;
+
+	ASTPointer<ASTString> getStdlibImportPathAndAdvance();
 
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
 	ASTPointer<ParameterList> createEmptyParameterList();

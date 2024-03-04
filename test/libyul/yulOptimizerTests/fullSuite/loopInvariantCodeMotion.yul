@@ -27,7 +27,7 @@
 //         let _1 := calldataload(0)
 //         let sum := 0
 //         let length := calldataload(_1)
-//         let i := sum
+//         let i := 0
 //         let _2 := calldataload(7)
 //         for { } lt(i, length) { i := add(i, 1) }
 //         {

@@ -28,7 +28,7 @@ if(PEDANTIC)
 endif()
 
 # Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
-eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity")
+eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${PROJECT_SOURCE_DIR}=/solidity")
 
 # -Wpessimizing-move warns when a call to std::move would prevent copy elision
 # if the argument was not wrapped in a call.  This happens when moving a local

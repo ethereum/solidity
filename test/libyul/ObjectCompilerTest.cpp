@@ -43,9 +43,8 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
-ObjectCompilerTest::ObjectCompilerTest(string const& _filename):
+ObjectCompilerTest::ObjectCompilerTest(std::string const& _filename):
 	TestCase(_filename)
 {
 	m_source = m_reader.source();
@@ -62,18 +61,18 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename):
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ObjectCompilerTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	YulStack stack(
 		EVMVersion(),
-		nullopt,
+		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		OptimiserSettings::preset(m_optimisationPreset),
 		DebugInfoSelection::All()
 	);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
 		SourceReferenceFormatter{_stream, stack, true, false}
 			.printErrorInformation(stack.errors());
 		return TestResult::FatalError;

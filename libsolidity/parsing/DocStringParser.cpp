@@ -28,7 +28,6 @@
 #include <range/v3/algorithm/find_if_not.hpp>
 #include <range/v3/view/subrange.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
@@ -36,17 +35,17 @@ using namespace solidity::frontend;
 namespace
 {
 
-string::const_iterator skipLineOrEOS(
-	string::const_iterator _nlPos,
-	string::const_iterator _end
+std::string::const_iterator skipLineOrEOS(
+	std::string::const_iterator _nlPos,
+	std::string::const_iterator _end
 )
 {
 	return (_nlPos == _end) ? _end : ++_nlPos;
 }
 
-string::const_iterator firstNonIdentifier(
-	string::const_iterator _pos,
-	string::const_iterator _end
+std::string::const_iterator firstNonIdentifier(
+	std::string::const_iterator _pos,
+	std::string::const_iterator _end
 )
 {
 	auto currPos = _pos;
@@ -58,18 +57,18 @@ string::const_iterator firstNonIdentifier(
 	return currPos;
 }
 
-string::const_iterator firstWhitespaceOrNewline(
-	string::const_iterator _pos,
-	string::const_iterator _end
+std::string::const_iterator firstWhitespaceOrNewline(
+	std::string::const_iterator _pos,
+	std::string::const_iterator _end
 )
 {
 	return ranges::find_first_of(ranges::make_subrange(_pos, _end), " \t\n");
 }
 
 
-string::const_iterator skipWhitespace(
-	string::const_iterator _pos,
-	string::const_iterator _end
+std::string::const_iterator skipWhitespace(
+	std::string::const_iterator _pos,
+	std::string::const_iterator _end
 )
 {
 	auto isWhitespace = [](char const& c) { return (c == ' ' || c == '\t'); };
@@ -78,7 +77,7 @@ string::const_iterator skipWhitespace(
 
 }
 
-multimap<string, DocTag> DocStringParser::parse()
+std::multimap<std::string, DocTag> DocStringParser::parse()
 {
 	m_lastTag = nullptr;
 	m_docTags = {};
@@ -96,7 +95,7 @@ multimap<string, DocTag> DocStringParser::parse()
 		{
 			// we found a tag
 			iter tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
-			string tagName{tagPos + 1, tagNameEndPos};
+			std::string tagName{tagPos + 1, tagNameEndPos};
 			iter tagDataPos = (tagNameEndPos != end) ? tagNameEndPos + 1 : tagNameEndPos;
 			currPos = parseDocTag(tagDataPos, end, tagName);
 		}
@@ -141,7 +140,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 		return _end;
 	}
 	auto nameEndPos = firstNonIdentifier(nameStartPos, _end);
-	auto paramName = string(nameStartPos, nameEndPos);
+	auto paramName = std::string(nameStartPos, nameEndPos);
 
 	auto descStartPos = skipWhitespace(nameEndPos, _end);
 	auto nlPos = find(descStartPos, _end, '\n');
@@ -152,7 +151,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 		return _end;
 	}
 
-	auto paramDesc = string(descStartPos, nlPos);
+	auto paramDesc = std::string(descStartPos, nlPos);
 	newTag("param");
 	m_lastTag->paramName = paramName;
 	m_lastTag->content = paramDesc;
@@ -160,7 +159,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 	return skipLineOrEOS(nlPos, _end);
 }
 
-DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string const& _tag)
+DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, std::string const& _tag)
 {
 	// TODO: need to check for @(start of a tag) between here and the end of line
 	// for all cases.
@@ -178,7 +177,7 @@ DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string 
 		return parseDocTagLine(_pos, _end, true);
 }
 
-void DocStringParser::newTag(string const& _tagName)
+void DocStringParser::newTag(std::string const& _tagName)
 {
 	m_lastTag = &m_docTags.insert(make_pair(_tagName, DocTag()))->second;
 }

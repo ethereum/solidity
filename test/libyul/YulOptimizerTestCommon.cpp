@@ -40,7 +40,6 @@
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
-#include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
@@ -49,7 +48,6 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/Semantics.h>
@@ -74,10 +72,9 @@ using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
-using namespace std;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
-	shared_ptr<Object> _obj,
+	std::shared_ptr<Object> _obj,
 	Dialect const& _dialect
 )
 {
@@ -97,6 +94,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"blockFlattener", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
 			BlockFlattener::run(*m_context, *m_ast);
 		}},
 		{"constantOptimiser", [&]() {
@@ -168,10 +166,11 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FullInliner::run(*m_context, *m_ast);
 			ExpressionJoiner::run(*m_context, *m_ast);
 		}},
-		{"mainFunction", [&]() {
+		{"fullInlinerWithoutSplitter", [&]() {
 			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
 			FunctionGrouper::run(*m_context, *m_ast);
-			MainFunction::run(*m_context, *m_ast);
+			FullInliner::run(*m_context, *m_ast);
 		}},
 		{"rematerialiser", [&]() {
 			disambiguate();
@@ -194,6 +193,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"fullSimplify", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
+			BlockFlattener::run(*m_context, *m_ast);
 			ExpressionSplitter::run(*m_context, *m_ast);
 			ForLoopInitRewriter::run(*m_context, *m_ast);
 			FunctionHoister::run(*m_context, *m_ast);
@@ -259,6 +260,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"loadResolver", [&]() {
 			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
+			BlockFlattener::run(*m_context, *m_ast);
 			ForLoopInitRewriter::run(*m_context, *m_ast);
 			FunctionHoister::run(*m_context, *m_ast);
 			ExpressionSplitter::run(*m_context, *m_ast);
@@ -288,10 +291,6 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionHoister::run(*m_context, *m_ast);
 			LiteralRematerialiser::run(*m_context, *m_ast);
 			StructuralSimplifier::run(*m_context, *m_ast);
-		}},
-		{"reasoningBasedSimplifier", [&]() {
-			disambiguate();
-			ReasoningBasedSimplifier::run(*m_context, *m_object->code);
 		}},
 		{"equivalentFunctionCombiner", [&]() {
 			disambiguate();
@@ -349,7 +348,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
-				map<YulString, set<YulString>> fakeUnreachables;
+				std::map<YulString, std::vector<YulString>> fakeUnreachables;
 				using ASTWalker::operator();
 				void operator()(FunctionDefinition const& _function) override
 				{
@@ -365,7 +364,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				void visitVariableName(YulString _var)
 				{
 					if (!_var.empty() && _var.str().front() == '$')
-						fakeUnreachables[m_currentFunction].insert(_var);
+						if (!util::contains(fakeUnreachables[m_currentFunction], _var))
+							fakeUnreachables[m_currentFunction].emplace_back(_var);
 				}
 				void operator()(VariableDeclaration const& _varDecl) override
 				{
@@ -387,7 +387,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 	};
 }
 
-void YulOptimizerTestCommon::setStep(string const& _optimizerStep)
+void YulOptimizerTestCommon::setStep(std::string const& _optimizerStep)
 {
 	m_optimizerStep = _optimizerStep;
 }
@@ -406,7 +406,7 @@ bool YulOptimizerTestCommon::runStep()
 	return true;
 }
 
-string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
+std::string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 {
 	std::mt19937 prng(_seed);
 	std::uniform_int_distribution<size_t> dist(1, m_namedSteps.size());
@@ -416,15 +416,14 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 	{
 		if (count == idx)
 		{
-			string optimiserStep = step.first;
+			std::string optimiserStep = step.first;
 			// Do not fuzz mainFunction and wordSizeTransform
 			// because they do not preserve yul code semantics.
 			// Do not fuzz reasoning based simplifier because
 			// it can sometimes drain memory.
 			if (
 				optimiserStep == "mainFunction"	||
-				optimiserStep == "wordSizeTransform" ||
-				optimiserStep == "reasoningBasedSimplifier"
+				optimiserStep == "wordSizeTransform"
 			)
 				// "Fullsuite" is fuzzed roughly four times more frequently than
 				// other steps because of the filtering in place above.
@@ -437,7 +436,7 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 	yulAssert(false, "Optimiser step selection failed.");
 }
 
-shared_ptr<Block> YulOptimizerTestCommon::run()
+std::shared_ptr<Block> YulOptimizerTestCommon::run()
 {
 	return runStep() ? m_ast : nullptr;
 }
@@ -451,8 +450,8 @@ void YulOptimizerTestCommon::disambiguate()
 
 void YulOptimizerTestCommon::updateContext()
 {
-	m_nameDispenser = make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
-	m_context = make_unique<OptimiserStepContext>(OptimiserStepContext{
+	m_nameDispenser = std::make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
+	m_context = std::make_unique<OptimiserStepContext>(OptimiserStepContext{
 		*m_dialect,
 		*m_nameDispenser,
 		m_reservedIdentifiers,

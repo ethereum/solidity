@@ -1,1 +1,1 @@
-Invalid option for --model-checker-contracts: model_checker_contracts_inexistent_contract/input.sol:
+Error: Invalid option for --model-checker-contracts: model_checker_contracts_inexistent_contract/input.sol:

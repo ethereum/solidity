@@ -1,0 +1,26 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "errorCode": "6275",
+            "formattedMessage": "ParserError: Source \"standard_no_import_callback/B.sol\" not found: No import callback.
+ --> A:2:24:
+  |
+2 | pragma solidity >=0.0; import 'standard_no_import_callback/B.sol';
+  |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+",
+            "message": "Source \"standard_no_import_callback/B.sol\" not found: No import callback.",
+            "severity": "error",
+            "sourceLocation":
+            {
+                "end": 102,
+                "file": "A",
+                "start": 59
+            },
+            "type": "ParserError"
+        }
+    ],
+    "sources": {}
+}

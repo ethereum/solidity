@@ -118,15 +118,15 @@ protected:
 	);
 
 	/// Creates a DebugData object with the correct source location set.
-	std::shared_ptr<DebugData const> createDebugData() const;
+	langutil::DebugData::ConstPtr createDebugData() const;
 
 	void updateLocationEndFrom(
-		std::shared_ptr<DebugData const>& _debugData,
+		langutil::DebugData::ConstPtr& _debugData,
 		langutil::SourceLocation const& _location
 	) const;
 
-	/// Creates an inline assembly node with the current source location.
-	template <class T> T createWithLocation() const
+	/// Creates an inline assembly node with the current debug data.
+	template <class T> T createWithDebugData() const
 	{
 		T r;
 		r.debugData = createDebugData();

@@ -457,26 +457,25 @@
     }
 }
 // ====
-// EVMVersion: >=constantinople
+// EVMVersion: >=shanghai
 // ----
 // step: fullSuite
 //
 // {
 //     {
-//         let _1 := 0
-//         let _2 := mload(_1)
+//         let _1 := mload(0)
 //         let pos := 0x20
-//         let length := mload(_2)
+//         let length := mload(_1)
 //         mstore(pos, length)
 //         pos := 64
-//         let srcPtr := add(_2, 0x20)
-//         let i := _1
+//         let srcPtr := add(_1, 0x20)
+//         let i := 0
 //         for { } lt(i, length) { i := add(i, 1) }
 //         {
-//             let _3 := mload(srcPtr)
+//             let _2 := mload(srcPtr)
 //             let pos_1 := pos
-//             let srcPtr_1 := _3
-//             let i_1 := _1
+//             let srcPtr_1 := _2
+//             let i_1 := 0
 //             for { } lt(i_1, 0x3) { i_1 := add(i_1, 1) }
 //             {
 //                 mstore(pos_1, and(mload(srcPtr_1), sub(shl(160, 1), 1)))
@@ -489,12 +488,12 @@
 //         let a, b, c, d := abi_decode_uint256t_uint256t_array_uint256_dynt_array_array_uint256_memory_dyn(mload(0x20), mload(64))
 //         sstore(a, b)
 //         sstore(c, d)
-//         sstore(_1, pos)
+//         sstore(0, pos)
 //     }
 //     function abi_decode_array_array_uint256_memory_dyn(offset, end) -> array
 //     {
 //         let _1 := 0x1f
-//         if iszero(slt(add(offset, _1), end)) { revert(0, 0) }
+//         if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
 //         let length := calldataload(offset)
 //         array := allocateMemory(array_allocation_size_array_address_dyn_memory(length))
 //         let dst := array

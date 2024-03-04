@@ -22,9 +22,9 @@
 #include <libyul/AST.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 
+#include <libsolutil/CommonData.h>
 #include <stack>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -35,9 +35,9 @@ namespace
 struct CallGraphCycleFinder
 {
 	CallGraph const& callGraph;
-	set<YulString> containedInCycle{};
-	set<YulString> visited{};
-	vector<YulString> currentPath{};
+	std::set<YulString> containedInCycle{};
+	std::set<YulString> visited{};
+	std::vector<YulString> currentPath{};
 
 	void visit(YulString _function)
 	{
@@ -61,7 +61,7 @@ struct CallGraphCycleFinder
 };
 }
 
-set<YulString> CallGraph::recursiveFunctions() const
+std::set<YulString> CallGraph::recursiveFunctions() const
 {
 	CallGraphCycleFinder cycleFinder{*this};
 	// Visiting the root only is not enough, since there may be disconnected recursive functions.
@@ -79,7 +79,9 @@ CallGraph CallGraphGenerator::callGraph(Block const& _ast)
 
 void CallGraphGenerator::operator()(FunctionCall const& _functionCall)
 {
-	m_callGraph.functionCalls[m_currentFunction].insert(_functionCall.functionName.name);
+	auto& functionCalls = m_callGraph.functionCalls[m_currentFunction];
+	if (!util::contains(functionCalls, _functionCall.functionName.name))
+		functionCalls.emplace_back(_functionCall.functionName.name);
 	ASTWalker::operator()(_functionCall);
 }
 

@@ -38,9 +38,8 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
-EVMCodeTransformTest::EVMCodeTransformTest(string const& _filename):
+EVMCodeTransformTest::EVMCodeTransformTest(std::string const& _filename):
 	EVMVersionRestrictedTestCase(_filename)
 {
 	m_source = m_reader.source();
@@ -48,21 +47,21 @@ EVMCodeTransformTest::EVMCodeTransformTest(string const& _filename):
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = m_stackOpt;
 	YulStack stack(
 		EVMVersion{},
-		nullopt,
+		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		settings,
 		DebugInfoSelection::All()
 	);
 	if (!stack.parseAndAnalyze("", m_source))
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
 		SourceReferenceFormatter{_stream, stack, true, false}
 			.printErrorInformation(stack.errors());
 		return TestResult::FatalError;
@@ -75,7 +74,7 @@ TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _
 		adapter,
 		EVMDialect::strictAssemblyForEVMObjects(EVMVersion{}),
 		m_stackOpt,
-		nullopt
+		std::nullopt
 	);
 
 	std::ostringstream output;

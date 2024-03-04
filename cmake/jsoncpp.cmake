@@ -6,7 +6,7 @@ else()
     set(JSONCPP_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
-set(prefix "${CMAKE_BINARY_DIR}/deps")
+set(prefix "${PROJECT_BINARY_DIR}/deps")
 set(JSONCPP_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 
@@ -40,9 +40,10 @@ if (WIN32 AND POLICY CMP0091 AND CMAKE_MSVC_RUNTIME_LIBRARY)
     list(APPEND JSONCPP_CMAKE_ARGS "-DCMAKE_MSVC_RUNTIME_LIBRARY=${CMAKE_MSVC_RUNTIME_LIBRARY}")
 endif()
 
+string(REPLACE ";" "$<SEMICOLON>" CMAKE_OSX_ARCHITECTURES_ "${CMAKE_OSX_ARCHITECTURES}")
 ExternalProject_Add(jsoncpp-project
     PREFIX "${prefix}"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
+    DOWNLOAD_DIR "${PROJECT_SOURCE_DIR}/deps/downloads"
     DOWNLOAD_NAME jsoncpp-1.9.3.tar.gz
     URL https://github.com/open-source-parsers/jsoncpp/archive/1.9.3.tar.gz
     URL_HASH SHA256=8593c1d69e703563d94d8c12244e2e18893eeb9a8a9f8aa3d09a327aa45c8f7d
@@ -57,6 +58,7 @@ ExternalProject_Add(jsoncpp-project
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
                -DCMAKE_CXX_FLAGS=${JSONCPP_CXX_FLAGS}
                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES_}
                ${JSONCPP_CMAKE_ARGS}
     ${byproducts}
 )

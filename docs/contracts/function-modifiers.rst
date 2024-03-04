@@ -6,7 +6,7 @@
 Function Modifiers
 ******************
 
-Modifiers can be used to change the behaviour of functions in a declarative way.
+Modifiers can be used to change the behavior of functions in a declarative way.
 For example,
 you can use a modifier to automatically check a condition prior to executing the function.
 
@@ -132,7 +132,7 @@ variables are set to their :ref:`default values<default-value>` just as if the f
 body.
 
 The ``_`` symbol can appear in the modifier multiple times. Each occurrence is replaced with
-the function body.
+the function body, and the function returns the return value of the final occurrence.
 
 Arbitrary expressions are allowed for modifier arguments and in this context,
 all symbols visible from the function are visible in the modifier. Symbols

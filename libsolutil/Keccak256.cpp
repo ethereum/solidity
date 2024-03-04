@@ -25,8 +25,6 @@
 #include <cstdint>
 #include <cstring>
 
-using namespace std;
-
 namespace solidity::util
 {
 

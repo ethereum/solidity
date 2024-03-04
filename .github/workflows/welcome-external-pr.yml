@@ -6,42 +6,16 @@ on:
       - opened
 
 env:
-  ORGANIZATION: Ethereum
   DRY_RUN: false
 
 jobs:
   comment-external-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Get organization members
-        id: get_members
-        env:
-          GH_TOKEN: ${{ secrets.READ_ORG }}
-          CONTRIBUTOR: ${{ github.event.pull_request.user.login }}
-        run: |
-          gh api graphql \
-            --raw-field organization="$ORGANIZATION" \
-            --raw-field query='
-              query($organization: String!) {
-                organization(login: $organization) {
-                  team(slug: "Solidity") {
-                    members(first: 100) {
-                      nodes {
-                        login
-                      }
-                    }
-                  }
-                }
-              }' > org_members.json
-          echo "CONTRIBUTOR_IS_ORG_MEMBER=$(
-            jq \
-              --arg contributor $CONTRIBUTOR \
-              '.data.organization.team.members | any(.nodes[].login; . == $contributor)' \
-              org_members.json
-          )" >> $GITHUB_OUTPUT
-
+      # Note: this step requires that the INTERNAL_CONTRIBUTORS environment variable
+      # is already defined in the repository with the current json list of internal contributors.
       - name: Comment on external contribution PR
-        if: ${{ steps.get_members.outputs.CONTRIBUTOR_IS_ORG_MEMBER == 'false' }}
+        if: "!contains(fromJSON(vars.INTERNAL_CONTRIBUTORS), github.event.pull_request.user.login)"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ github.event.pull_request.html_url }}

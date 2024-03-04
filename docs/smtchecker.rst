@@ -97,7 +97,7 @@ Overflow
 
 The contract above shows an overflow check example.
 The SMTChecker does not check underflow and overflow by default for Solidity >=0.8.7,
-so we need to use the command line option ``--model-checker-targets "underflow,overflow"``
+so we need to use the command-line option ``--model-checker-targets "underflow,overflow"``
 or the JSON option ``settings.modelChecker.targets = ["underflow", "overflow"]``.
 See :ref:`this section for targets configuration<smtchecker_targets>`.
 Here, it reports the following:
@@ -412,7 +412,7 @@ is already "locked", so it would not be possible to change the value of ``x``,
 regardless of what the unknown called code does.
 
 If we "forget" to use the ``mutex`` modifier on function ``set``, the
-SMTChecker is able to synthesize the behaviour of the externally called code so
+SMTChecker is able to synthesize the behavior of the externally called code so
 that the assertion fails:
 
 .. code-block:: text
@@ -636,7 +636,7 @@ expression type.
 It is also helpful to cast the called contract's variable as the type of the
 most derived type in case of inheritance.
 
-   .. code-block:: solidity
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -697,8 +697,9 @@ storage for ``address`` variables, therefore if ``B.a`` had type ``address``
 the encoding would assume that its storage does not change in between
 transactions to ``B``.
 
-   .. code-block:: solidity
+.. code-block:: solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
 
     contract A {
@@ -750,7 +751,7 @@ and modulo operations inside Horn rules. Because of that, by default the
 Solidity division and modulo operations are encoded using the constraint
 ``a = b * d + m`` where ``d = a / b`` and ``m = a % b``.
 However, other solvers, such as Eldarica, prefer the syntactically precise operations.
-The command line flag ``--model-checker-div-mod-no-slacks`` and the JSON option
+The command-line flag ``--model-checker-div-mod-no-slacks`` and the JSON option
 ``settings.modelChecker.divModNoSlacks`` can be used to toggle the encoding
 depending on the used solver preferences.
 

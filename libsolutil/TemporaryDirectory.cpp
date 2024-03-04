@@ -26,7 +26,6 @@
 #include <regex>
 #include <iostream>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 
@@ -42,8 +41,8 @@ TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
 }
 
 TemporaryDirectory::TemporaryDirectory(
-	vector<boost::filesystem::path> const& _subdirectories,
-	string const& _prefix
+	std::vector<boost::filesystem::path> const& _subdirectories,
+	std::string const& _prefix
 ):
 	TemporaryDirectory(_prefix)
 {
@@ -71,9 +70,9 @@ TemporaryDirectory::~TemporaryDirectory()
 	uintmax_t numRemoved = fs::remove_all(m_path, errorCode);
 	if (errorCode.value() != boost::system::errc::success)
 	{
-		cerr << "Failed to completely remove temporary directory '" << m_path << "'. ";
-		cerr << "Only " << numRemoved << " files were actually removed." << endl;
-		cerr << "Reason: " << errorCode.message() << endl;
+		std::cerr << "Failed to completely remove temporary directory '" << m_path << "'. ";
+		std::cerr << "Only " << numRemoved << " files were actually removed." << std::endl;
+		std::cerr << "Reason: " << errorCode.message() << std::endl;
 	}
 }
 

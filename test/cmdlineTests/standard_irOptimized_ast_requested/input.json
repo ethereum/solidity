@@ -1,0 +1,9 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_irOptimized_ast_requested/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {"*": {"*": ["irOptimizedAst"]}}
+	}
+}

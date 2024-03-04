@@ -28,11 +28,11 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/GasEstimator.h>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
@@ -40,7 +40,7 @@ namespace solidity::frontend::test
 class GasMeterTestFramework: public SolidityExecutionFramework
 {
 public:
-	void compile(string const& _sourceCode)
+	void compile(std::string const& _sourceCode)
 	{
 		m_compiler.reset();
 		m_compiler.setSources({{"", "pragma solidity >=0.0;\n"
@@ -50,10 +50,10 @@ public:
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
 	}
 
-	void testCreationTimeGas(string const& _sourceCode, u256 const& _tolerance = u256(0))
+	void testCreationTimeGas(std::string const& _sourceCode, u256 const& _tolerance = u256(0))
 	{
 		compileAndRun(_sourceCode);
-		auto state = make_shared<KnownState>();
+		auto state = std::make_shared<KnownState>();
 		PathGasMeter meter(*m_compiler.assemblyItems(m_compiler.lastContractName()), solidity::test::CommonOptions::get().evmVersion());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
 		u256 bytecodeSize(m_compiler.runtimeObject(m_compiler.lastContractName()).bytecode.size());
@@ -62,19 +62,14 @@ public:
 		// costs for transaction
 		gas += gasForTransaction(m_compiler.object(m_compiler.lastContractName()).bytecode, true);
 
-		// Skip the tests when we use ABIEncoderV2.
-		// TODO: We should enable this again once the yul optimizer is activated.
-		if (solidity::test::CommonOptions::get().useABIEncoderV1)
-		{
-			BOOST_REQUIRE(!gas.isInfinite);
-			BOOST_CHECK_LE(m_gasUsed, gas.value);
-			BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
-		}
+		BOOST_REQUIRE(!gas.isInfinite);
+		BOOST_CHECK_LE(m_gasUsed, gas.value);
+		BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
 	}
 
 	/// Compares the gas computed by PathGasMeter for the given signature (but unknown arguments)
 	/// against the actual gas usage computed by the VM on the given set of argument variants.
-	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants, u256 const& _tolerance = u256(0))
+	void testRunTimeGas(std::string const& _sig, std::vector<bytes> _argumentVariants, u256 const& _tolerance = u256(0))
 	{
 		u256 gasUsed = 0;
 		GasMeter::GasConsumption gas;
@@ -83,22 +78,17 @@ public:
 		{
 			sendMessage(hash.asBytes() + arguments, false, 0);
 			BOOST_CHECK(m_transactionSuccessful);
-			gasUsed = max(gasUsed, m_gasUsed);
-			gas = max(gas, gasForTransaction(hash.asBytes() + arguments, false));
+			gasUsed = std::max(gasUsed, m_gasUsed);
+			gas = std::max(gas, gasForTransaction(hash.asBytes() + arguments, false));
 		}
 
 		gas += GasEstimator(solidity::test::CommonOptions::get().evmVersion()).functionalEstimation(
 			*m_compiler.runtimeAssemblyItems(m_compiler.lastContractName()),
 			_sig
 		);
-		// Skip the tests when we use ABIEncoderV2.
-		// TODO: We should enable this again once the yul optimizer is activated.
-		if (solidity::test::CommonOptions::get().useABIEncoderV1)
-		{
-			BOOST_REQUIRE(!gas.isInfinite);
-			BOOST_CHECK_LE(m_gasUsed, gas.value);
-			BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
-		}
+		BOOST_REQUIRE(!gas.isInfinite);
+		BOOST_CHECK_LE(m_gasUsed, gas.value);
+		BOOST_CHECK_LE(gas.value - _tolerance, m_gasUsed);
 	}
 
 	static GasMeter::GasConsumption gasForTransaction(bytes const& _data, bool _isCreation)
@@ -130,6 +120,9 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 BOOST_AUTO_TEST_CASE(store_keccak256)
 {
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract test {
 			bytes32 public shaValue;
 			constructor() {
@@ -171,7 +164,7 @@ BOOST_AUTO_TEST_CASE(branches)
 		}
 	)";
 	testCreationTimeGas(sourceCode, 1);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)}, 1);
+	testRunTimeGas("f(uint256)", std::vector<bytes>{encodeArgs(2), encodeArgs(8)}, 1);
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
@@ -196,7 +189,7 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	// However, GasMeter always assumes cold costs.
 	testRunTimeGas(
 		"f(uint256)",
-		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		std::vector<bytes>{encodeArgs(2), encodeArgs(8)},
 		m_evmVersion < EVMVersion::berlin() ?
 		u256(0) :
 		u256(2100)
@@ -206,6 +199,9 @@ BOOST_AUTO_TEST_CASE(function_calls)
 BOOST_AUTO_TEST_CASE(multiple_external_functions)
 {
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract test {
 			uint data;
 			uint data2;
@@ -225,18 +221,21 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 	// However, GasMeter always assumes cold costs.
 	testRunTimeGas(
 		"f(uint256)",
-		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		std::vector<bytes>{encodeArgs(2), encodeArgs(8)},
 		m_evmVersion < EVMVersion::berlin() ?
 		u256(0) :
 		u256(2100)
 	);
 
-	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("g(uint256)", std::vector<bytes>{encodeArgs(2)});
 }
 
 BOOST_AUTO_TEST_CASE(exponent_size)
 {
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract A {
 			function f(uint x) public returns (uint) {
 				unchecked { return x ** 0; }
@@ -250,9 +249,9 @@ BOOST_AUTO_TEST_CASE(exponent_size)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2)});
-	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
-	testRunTimeGas("h(uint256)", vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("f(uint256)", std::vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("g(uint256)", std::vector<bytes>{encodeArgs(2)});
+	testRunTimeGas("h(uint256)", std::vector<bytes>{encodeArgs(2)});
 }
 
 BOOST_AUTO_TEST_CASE(balance_gas)
@@ -265,7 +264,7 @@ BOOST_AUTO_TEST_CASE(balance_gas)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("lookup_balance(address)", vector<bytes>{encodeArgs(2), encodeArgs(100)});
+	testRunTimeGas("lookup_balance(address)", std::vector<bytes>{encodeArgs(2), encodeArgs(100)});
 }
 
 BOOST_AUTO_TEST_CASE(extcodesize_gas)
@@ -280,7 +279,7 @@ BOOST_AUTO_TEST_CASE(extcodesize_gas)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f()", vector<bytes>{encodeArgs()});
+	testRunTimeGas("f()", std::vector<bytes>{encodeArgs()});
 }
 
 BOOST_AUTO_TEST_CASE(regular_functions_exclude_fallback)
@@ -294,7 +293,7 @@ BOOST_AUTO_TEST_CASE(regular_functions_exclude_fallback)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("x()", vector<bytes>{encodeArgs()});
+	testRunTimeGas("x()", std::vector<bytes>{encodeArgs()});
 }
 
 BOOST_AUTO_TEST_CASE(complex_control_flow)
@@ -303,6 +302,9 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	// Now we do not follow branches if they start out with lower gas costs than the ones
 	// we previously considered. This of course reduces accuracy.
 	char const* sourceCode = R"(
+		// TODO: We should enable v2 again once the yul optimizer is activated.
+		pragma abicoder v1;
+
 		contract log {
 			function ln(int128 x) public pure returns (int128 result) {
 				unchecked {
@@ -335,7 +337,114 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	)";
 	testCreationTimeGas(sourceCode);
 	// max gas is used for small x
-	testRunTimeGas("ln(int128)", vector<bytes>{encodeArgs(0), encodeArgs(10), encodeArgs(105), encodeArgs(30000)});
+	testRunTimeGas("ln(int128)", std::vector<bytes>{encodeArgs(0), encodeArgs(10), encodeArgs(105), encodeArgs(30000)});
+}
+
+BOOST_AUTO_TEST_CASE(
+	mcopy_memory_expansion_gas,
+	*boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::cancun()))
+)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function no_expansion() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0, 0xffff, 1)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_write() public {
+				assembly {
+					mcopy(0xffff, 0, 1)
+					return(0xffff, 1)
+				}
+			}
+
+			function expansion_on_read() public {
+				assembly {
+					mcopy(0, 0xffff, 1)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_read_write() public {
+				assembly {
+					mcopy(0xffff, 0xffff, 1)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_zero_size() public {
+				assembly {
+					mcopy(0xffff, 0xffff, 0)
+					return(0, 1)
+				}
+			}
+
+			function expansion_on_0_0_0() public {
+				assembly {
+					mcopy(0, 0, 0)
+					return(0, 1)
+				}
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("no_expansion()", {encodeArgs()});
+	testRunTimeGas("expansion_on_write()", {encodeArgs()});
+	testRunTimeGas("expansion_on_read()", {encodeArgs()});
+	testRunTimeGas("expansion_on_read_write()", {encodeArgs()});
+	testRunTimeGas("expansion_on_zero_size()", {encodeArgs()});
+	testRunTimeGas("expansion_on_0_0_0()", {encodeArgs()});
+}
+
+BOOST_AUTO_TEST_CASE(
+	mcopy_word_gas,
+	*boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::cancun()))
+)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function no_overlap() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x4000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+
+			function overlap_right() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x3000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+
+			function overlap_left() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x1000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+
+			function overlap_full() public {
+				assembly {
+					mstore(0xffe0, 1) // expand memory before using mcopy
+					mcopy(0x2000, 0x2000, 0x2000)
+					return(0, 0x10000)
+				}
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("no_overlap()", {encodeArgs()});
+	testRunTimeGas("overlap_right()", {encodeArgs()});
+	testRunTimeGas("overlap_left()", {encodeArgs()});
+	testRunTimeGas("overlap_full()", {encodeArgs()});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,0 +1,11 @@
+Warning: BMC: Assertion violation happens here.
+  --> model_checker_bmc_loop_iterations/input.sol:10:3:
+   |
+10 | 		assert(x == 3);
+   | 		^^^^^^^^^^^^^^
+Note: Counterexample:
+  x = 2
+
+Note: Callstack:
+Note: False negatives are possible when unrolling loops.
+This is due to the possibility that the BMC loop iteration setting is smaller than the actual number of iterations needed to complete a loop.

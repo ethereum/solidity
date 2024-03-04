@@ -38,7 +38,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 using namespace solidity::util;
@@ -47,9 +46,9 @@ using namespace solidity::yul;
 namespace
 {
 
-CommandLineOptions parseCommandLine(vector<string> const& _commandLine)
+CommandLineOptions parseCommandLine(std::vector<std::string> const& _commandLine)
 {
-	vector<char const*> argv = test::makeArgv(_commandLine);
+	std::vector<char const*> argv = test::makeArgv(_commandLine);
 
 	CommandLineParser cliParser;
 	cliParser.parse(static_cast<int>(_commandLine.size()), argv.data());
@@ -65,7 +64,7 @@ BOOST_AUTO_TEST_SUITE(CommandLineParserTest)
 
 BOOST_AUTO_TEST_CASE(no_options)
 {
-	vector<string> commandLine = {"solc", "contract.sol"};
+	std::vector<std::string> commandLine = {"solc", "contract.sol"};
 
 	CommandLineOptions expectedOptions;
 	expectedOptions.input.paths = {"contract.sol"};
@@ -79,7 +78,7 @@ BOOST_AUTO_TEST_CASE(no_options)
 
 BOOST_AUTO_TEST_CASE(help_license_version)
 {
-	map<string, InputMode> expectedModePerOption = {
+	std::map<std::string, InputMode> expectedModePerOption = {
 		{"--help", InputMode::Help},
 		{"--license", InputMode::License},
 		{"--version", InputMode::Version},
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 {
 	for (InputMode inputMode: {InputMode::Compiler, InputMode::CompilerWithASTImport})
 	{
-		vector<string> commandLine = {
+		std::vector<std::string> commandLine = {
 			"solc",
 			"contract.sol",             // Both modes do not care about file names, just about
 			"/tmp/projects/token.sol",  // their content. They also both support stdin.
@@ -116,7 +115,6 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--include-path=/home/user/include",
 			"--allow-paths=/tmp,/home,project,../contracts",
 			"--ignore-missing",
-			"--error-recovery",
 			"--output-dir=/tmp/out",
 			"--overwrite",
 			"--evm-version=spuriousDragon",
@@ -132,7 +130,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
 			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-optimized", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
+			"--ir", "--ir-ast-json", "--ir-optimized", "--ir-optimized-ast-json", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
 			"--gas",
 			"--combined-json="
 				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
@@ -140,8 +138,10 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--metadata-hash=swarm",
 			"--metadata-literal",
 			"--optimize",
+			"--optimize-yul",
 			"--optimize-runs=1000",
 			"--yul-optimizations=agf",
+			"--model-checker-bmc-loop-iterations=2",
 			"--model-checker-contracts=contract1.yul:A,contract2.yul:B",
 			"--model-checker-div-mod-no-slacks",
 			"--model-checker-engine=bmc",
@@ -152,11 +152,11 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--model-checker-show-unsupported",
 			"--model-checker-solvers=z3,smtlib2",
 			"--model-checker-targets=underflow,divByZero",
-			"--model-checker-timeout=5",
+			"--model-checker-timeout=5"
 		};
 
 		if (inputMode == InputMode::CompilerWithASTImport)
-			commandLine += vector<string>{
+			commandLine += std::vector<std::string>{
 				"--import-ast",
 			};
 
@@ -175,7 +175,6 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 		expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts", "c", "/usr/lib"};
 		expectedOptions.input.ignoreMissingFiles = true;
-		expectedOptions.input.errorRecovery = (inputMode == InputMode::Compiler);
 		expectedOptions.output.dir = "/tmp/out";
 		expectedOptions.output.overwriteFiles = true;
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
@@ -192,7 +191,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.compiler.outputs = {
 			true, true, true, true, true,
 			true, true, true, true, true,
-			true, true, true, true,
+			true, true, true, true, true,
+			true,
 		};
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
@@ -203,17 +203,20 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		};
 		expectedOptions.metadata.hash = CompilerStack::MetadataHash::Bzzr1;
 		expectedOptions.metadata.literalSources = true;
-		expectedOptions.optimizer.enabled = true;
+		expectedOptions.optimizer.optimizeEvmasm = true;
+		expectedOptions.optimizer.optimizeYul = true;
 		expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		expectedOptions.optimizer.yulSteps = "agf";
 
 		expectedOptions.modelChecker.initialize = true;
 		expectedOptions.modelChecker.settings = {
+			2,
 			{{{"contract1.yul", {"A"}}, {"contract2.yul", {"B"}}}},
 			true,
 			{true, false},
 			{ModelCheckerExtCalls::Mode::TRUSTED},
 			{{InvariantType::Contract, InvariantType::Reentrancy}},
+			false, // --model-checker-print-query
 			true,
 			true,
 			true,
@@ -230,23 +233,42 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 
 BOOST_AUTO_TEST_CASE(no_cbor_metadata)
 {
-	vector<string> commandLine = {"solc", "--no-cbor-metadata", "contract.sol"};
+	std::vector<std::string> commandLine = {"solc", "--no-cbor-metadata", "contract.sol"};
 	CommandLineOptions parsedOptions = parseCommandLine(commandLine);
 	bool assert = parsedOptions.metadata.format == CompilerStack::MetadataFormat::NoMetadata;
 
 	BOOST_TEST(assert);
 }
 
+BOOST_AUTO_TEST_CASE(no_import_callback)
+{
+	std::vector<std::vector<std::string>> commandLinePerInputMode = {
+		{"solc", "--no-import-callback", "contract.sol"},
+		{"solc", "--standard-json", "--no-import-callback", "input.json"},
+		{"solc", "--assemble", "--no-import-callback", "input.yul"},
+		{"solc", "--strict-assembly", "--no-import-callback", "input.yul"},
+		{"solc", "--import-ast", "--no-import-callback", "ast.json"},
+		{"solc", "--link", "--no-import-callback", "input.bin"},
+		{"solc", "--yul", "--no-import-callback", "input.yul"},
+	};
+
+	for (auto const& commandLine: commandLinePerInputMode)
+	{
+		CommandLineOptions parsedOptions = parseCommandLine(commandLine);
+		BOOST_TEST(parsedOptions.input.noImportCallback);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(via_ir_options)
 {
 	BOOST_TEST(!parseCommandLine({"solc", "contract.sol"}).output.viaIR);
-	for (string viaIrOption: {"--via-ir", "--experimental-via-ir"})
+	for (std::string viaIrOption: {"--via-ir", "--experimental-via-ir"})
 		BOOST_TEST(parseCommandLine({"solc", viaIrOption, "contract.sol"}).output.viaIR);
 }
 
 BOOST_AUTO_TEST_CASE(assembly_mode_options)
 {
-	static vector<tuple<vector<string>, YulStack::Machine, YulStack::Language>> const allowedCombinations = {
+	static std::vector<std::tuple<std::vector<std::string>, YulStack::Machine, YulStack::Language>> const allowedCombinations = {
 		{{"--machine=evm", "--yul-dialect=evm", "--assemble"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--yul-dialect=evm", "--yul"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--yul-dialect=evm", "--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
@@ -260,7 +282,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 
 	for (auto const& [assemblyOptions, expectedMachine, expectedLanguage]: allowedCombinations)
 	{
-		vector<string> commandLine = {
+		std::vector<std::string> commandLine = {
 			"solc",
 			"contract.yul",
 			"/tmp/projects/token.yul",
@@ -290,10 +312,11 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--asm",
 			"--bin",
 			"--ir-optimized",
+			"--ast-compact-json",
 		};
 		commandLine += assemblyOptions;
 		if (expectedLanguage == YulStack::Language::StrictAssembly)
-			commandLine += vector<string>{
+			commandLine += std::vector<std::string>{
 				"--optimize",
 				"--optimize-runs=1000",
 				"--yul-optimizations=agf",
@@ -329,9 +352,11 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.compiler.outputs.asm_ = true;
 		expectedOptions.compiler.outputs.binary = true;
 		expectedOptions.compiler.outputs.irOptimized = true;
+		expectedOptions.compiler.outputs.astCompactJson = true;
 		if (expectedLanguage == YulStack::Language::StrictAssembly)
 		{
-			expectedOptions.optimizer.enabled = true;
+			expectedOptions.optimizer.optimizeEvmasm = true;
+			expectedOptions.optimizer.optimizeYul = true;
 			expectedOptions.optimizer.yulSteps = "agf";
 			expectedOptions.optimizer.expectedExecutionsPerDeployment = 1000;
 		}
@@ -344,7 +369,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 
 BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 {
-	vector<string> commandLine = {
+	std::vector<std::string> commandLine = {
 		"solc",
 		"input.json",
 		"--standard-json",
@@ -394,9 +419,8 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 
 BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 {
-	map<string, vector<string>> invalidOptionInputModeCombinations = {
+	std::map<std::string, std::vector<std::string>> invalidOptionInputModeCombinations = {
 		// TODO: This should eventually contain all options.
-		{"--error-recovery", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
 		{"--metadata-literal", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
@@ -414,19 +438,52 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 	};
 
 	for (auto const& [optionName, inputModes]: invalidOptionInputModeCombinations)
-		for (string const& inputMode: inputModes)
+		for (std::string const& inputMode: inputModes)
 		{
-			stringstream serr;
+			std::stringstream serr;
 			size_t separatorPosition = optionName.find("=");
-			string optionNameWithoutValue = optionName.substr(0, separatorPosition);
+			std::string optionNameWithoutValue = optionName.substr(0, separatorPosition);
 			soltestAssert(!optionNameWithoutValue.empty());
 
-			vector<string> commandLine = {"solc", optionName, "file", inputMode};
+			std::vector<std::string> commandLine = {"solc", optionName, "file", inputMode};
 
-			string expectedMessage = "The following options are not supported in the current input mode: " + optionNameWithoutValue;
+			std::string expectedMessage = "The following options are not supported in the current input mode: " + optionNameWithoutValue;
 			auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedMessage; };
 
 			BOOST_CHECK_EXCEPTION(parseCommandLine(commandLine), CommandLineValidationError, hasCorrectMessage);
+		}
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_flags)
+{
+	OptimiserSettings yulOnly = OptimiserSettings::minimal();
+	yulOnly.runYulOptimiser = true;
+	yulOnly.optimizeStackAllocation = true;
+
+	OptimiserSettings evmasmOnly = OptimiserSettings::standard();
+	evmasmOnly.runYulOptimiser = false;
+
+	std::map<std::vector<std::string>, OptimiserSettings> settingsMap = {
+		{{}, OptimiserSettings::minimal()},
+		{{"--optimize"}, OptimiserSettings::standard()},
+		{{"--no-optimize-yul"}, OptimiserSettings::minimal()},
+		{{"--optimize-yul"}, yulOnly},
+		{{"--optimize", "--no-optimize-yul"}, evmasmOnly},
+		{{"--optimize", "--optimize-yul"}, OptimiserSettings::standard()},
+	};
+
+	std::map<InputMode, std::string> inputModeFlagMap = {
+		{InputMode::Compiler, ""},
+		{InputMode::CompilerWithASTImport, "--import-ast"},
+		{InputMode::Assembler, "--strict-assembly"},
+	};
+
+	for (auto const& [inputMode, inputModeFlag]: inputModeFlagMap)
+		for (auto const& [optimizerFlags, expectedOptimizerSettings]: settingsMap)
+		{
+			std::vector<std::string> commandLine = {"solc", inputModeFlag, "file"};
+			commandLine += optimizerFlags;
+			BOOST_CHECK(parseCommandLine(commandLine).optimiserSettings() == expectedOptimizerSettings);
 		}
 }
 
@@ -439,7 +496,7 @@ BOOST_AUTO_TEST_CASE(default_optimiser_sequence)
 
 BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
 {
-	vector<string> validSequenceInputs {
+	std::vector<std::string> validSequenceInputs {
 		":",                         // Empty optimization sequence and empty cleanup sequence
 		":fDn",                      // Empty optimization sequence and specified cleanup sequence
 		"dhfoDgvulfnTUtnIf:",        // Specified optimization sequence and empty cleanup sequence
@@ -450,7 +507,7 @@ BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
 		"a[[a][[aa]aa[aa]][]]aaa[aa[aa[aa]]]a[a][a][a]a[a]" // Nested brackets
 	};
 
-	vector<tuple<string, string>> const expectedParsedSequences {
+	std::vector<std::tuple<std::string, std::string>> const expectedParsedSequences {
 		{"", ""},
 		{"", "fDn"},
 		{"dhfoDgvulfnTUtnIf", ""},
@@ -474,7 +531,7 @@ BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
 
 BOOST_AUTO_TEST_CASE(invalid_optimiser_sequences)
 {
-	vector<string> const invalidSequenceInputs {
+	std::vector<std::string> const invalidSequenceInputs {
 		"abcdefg{hijklmno}pqr[st]uvwxyz", // Invalid abbreviation
 		"[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["
 		"[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["
@@ -492,7 +549,7 @@ BOOST_AUTO_TEST_CASE(invalid_optimiser_sequences)
 		"dhfoDgvulfnTU:tnIf:fdN"          // Too many cleanup sequence delimiters
 	};
 
-	vector<string> const expectedErrorMessages {
+	std::vector<std::string> const expectedErrorMessages {
 		"'b' is not a valid step abbreviation",
 		"Brackets nested too deep",
 		"Unbalanced brackets",
@@ -503,15 +560,51 @@ BOOST_AUTO_TEST_CASE(invalid_optimiser_sequences)
 
 	BOOST_CHECK_EQUAL(invalidSequenceInputs.size(), expectedErrorMessages.size());
 
-	string const baseExpectedErrorMessage = "Invalid optimizer step sequence in --yul-optimizations: ";
+	std::string const baseExpectedErrorMessage = "Invalid optimizer step sequence in --yul-optimizations: ";
 
 	for (size_t i = 0; i < invalidSequenceInputs.size(); ++i)
 	{
-		vector<string> const commandLineOptions = {"solc", "contract.sol", "--optimize", "--yul-optimizations=" + invalidSequenceInputs[i]};
-		string const expectedErrorMessage = baseExpectedErrorMessage + expectedErrorMessages[i];
+		std::vector<std::string> const commandLineOptions = {"solc", "contract.sol", "--optimize", "--yul-optimizations=" + invalidSequenceInputs[i]};
+		std::string const expectedErrorMessage = baseExpectedErrorMessage + expectedErrorMessages[i];
 		auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedErrorMessage; };
 		BOOST_CHECK_EXCEPTION(parseCommandLine(commandLineOptions), CommandLineValidationError, hasCorrectMessage);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(valid_empty_optimizer_sequences_without_optimize)
+{
+	std::vector<std::string> const validSequenceInputs {
+		"   :",
+		": ",
+		"\n : \n",
+		":"
+	};
+
+	std::vector<std::tuple<std::string, std::string>> const expectedParsedSequences {
+		{"   ", ""},
+		{"", " "},
+		{"\n ", " \n"},
+		{"", ""}
+	};
+
+	BOOST_CHECK_EQUAL(validSequenceInputs.size(), expectedParsedSequences.size());
+
+	for (size_t i = 0; i < validSequenceInputs.size(); ++i)
+	{
+		CommandLineOptions const& commandLineOptions = parseCommandLine({"solc", "contract.sol", "--yul-optimizations=" + validSequenceInputs[i]});
+		auto const& [expectedYulOptimiserSteps, expectedYulCleanupSteps] = expectedParsedSequences[i];
+		BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserSteps, expectedYulOptimiserSteps);
+		BOOST_CHECK_EQUAL(commandLineOptions.optimiserSettings().yulOptimiserCleanupSteps, expectedYulCleanupSteps);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(invalid_optimizer_sequence_without_optimize)
+{
+	std::string const invalidSequence{"u: "};
+	std::string const expectedErrorMessage{"--yul-optimizations is invalid with a non-empty sequence if Yul optimizer is disabled."};
+	std::vector<std::string> commandLineOptions{"solc", "contract.sol", "--yul-optimizations=" + invalidSequence};
+	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedErrorMessage; };
+	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLineOptions), CommandLineValidationError, hasCorrectMessage);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

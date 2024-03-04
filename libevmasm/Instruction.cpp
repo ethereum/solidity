@@ -22,7 +22,6 @@
 
 #include <libevmasm/Instruction.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
@@ -71,8 +70,10 @@ std::map<std::string, Instruction> const solidity::evmasm::c_instructions =
 	{ "EXTCODECOPY", Instruction::EXTCODECOPY },
 	{ "RETURNDATASIZE", Instruction::RETURNDATASIZE },
 	{ "RETURNDATACOPY", Instruction::RETURNDATACOPY },
+	{ "MCOPY", Instruction::MCOPY },
 	{ "EXTCODEHASH", Instruction::EXTCODEHASH },
 	{ "BLOCKHASH", Instruction::BLOCKHASH },
+	{ "BLOBHASH", Instruction::BLOBHASH },
 	{ "COINBASE", Instruction::COINBASE },
 	{ "TIMESTAMP", Instruction::TIMESTAMP },
 	{ "NUMBER", Instruction::NUMBER },
@@ -82,12 +83,15 @@ std::map<std::string, Instruction> const solidity::evmasm::c_instructions =
 	{ "CHAINID", Instruction::CHAINID },
 	{ "SELFBALANCE", Instruction::SELFBALANCE },
 	{ "BASEFEE", Instruction::BASEFEE },
+	{ "BLOBBASEFEE", Instruction::BLOBBASEFEE },
 	{ "POP", Instruction::POP },
 	{ "MLOAD", Instruction::MLOAD },
 	{ "MSTORE", Instruction::MSTORE },
 	{ "MSTORE8", Instruction::MSTORE8 },
 	{ "SLOAD", Instruction::SLOAD },
 	{ "SSTORE", Instruction::SSTORE },
+	{ "TLOAD", Instruction::TLOAD },
+	{ "TSTORE", Instruction::TSTORE },
 	{ "JUMP", Instruction::JUMP },
 	{ "JUMPI", Instruction::JUMPI },
 	{ "PC", Instruction::PC },
@@ -207,7 +211,7 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{ Instruction::SIGNEXTEND,	{ "SIGNEXTEND",		0, 2, 1, false, Tier::Low } },
 	{ Instruction::KECCAK256,	{ "KECCAK256",			0, 2, 1, true, Tier::Special } },
 	{ Instruction::ADDRESS,		{ "ADDRESS",		0, 0, 1, false, Tier::Base } },
-	{ Instruction::BALANCE,		{ "BALANCE",		0, 1, 1, false, Tier::Balance } },
+	{ Instruction::BALANCE,     { "BALANCE",        0, 1, 1, false, Tier::Special } },
 	{ Instruction::ORIGIN,		{ "ORIGIN",			0, 0, 1, false, Tier::Base } },
 	{ Instruction::CALLER,		{ "CALLER",			0, 0, 1, false, Tier::Base } },
 	{ Instruction::CALLVALUE,	{ "CALLVALUE",		0, 0, 1, false, Tier::Base } },
@@ -217,12 +221,14 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{ Instruction::CODESIZE,	{ "CODESIZE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::CODECOPY,	{ "CODECOPY",		0, 3, 0, true, Tier::VeryLow } },
 	{ Instruction::GASPRICE,	{ "GASPRICE",		0, 0, 1, false, Tier::Base } },
-	{ Instruction::EXTCODESIZE,	{ "EXTCODESIZE",	0, 1, 1, false, Tier::ExtCode } },
-	{ Instruction::EXTCODECOPY,	{ "EXTCODECOPY",	0, 4, 0, true, Tier::ExtCode } },
-	{ Instruction::RETURNDATASIZE,	{"RETURNDATASIZE",	0, 0, 1, false, Tier::Base } },
-	{ Instruction::RETURNDATACOPY,	{"RETURNDATACOPY",	0, 3, 0, true, Tier::VeryLow } },
-	{ Instruction::EXTCODEHASH,	{ "EXTCODEHASH",	0, 1, 1, false, Tier::Balance } },
-	{ Instruction::BLOCKHASH,	{ "BLOCKHASH",		0, 1, 1, false, Tier::Ext } },
+	{ Instruction::EXTCODESIZE, { "EXTCODESIZE",    0, 1, 1, false, Tier::Special } },
+	{ Instruction::EXTCODECOPY, { "EXTCODECOPY",    0, 4, 0, true, Tier::Special } },
+	{ Instruction::RETURNDATASIZE, {"RETURNDATASIZE", 0, 0, 1, false, Tier::Base } },
+	{ Instruction::RETURNDATACOPY, {"RETURNDATACOPY", 0, 3, 0, true, Tier::VeryLow } },
+	{ Instruction::MCOPY,       { "MCOPY",          0, 3, 0, true, Tier::VeryLow } },
+	{ Instruction::EXTCODEHASH, { "EXTCODEHASH",    0, 1, 1, false, Tier::Special } },
+	{ Instruction::BLOCKHASH,   { "BLOCKHASH",      0, 1, 1, false, Tier::BlockHash } },
+	{ Instruction::BLOBHASH,    { "BLOBHASH",       0, 1, 1, false, Tier::VeryLow } },
 	{ Instruction::COINBASE,	{ "COINBASE",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::TIMESTAMP,	{ "TIMESTAMP",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::NUMBER,		{ "NUMBER",			0, 0, 1, false, Tier::Base } },
@@ -231,12 +237,15 @@ static std::map<Instruction, InstructionInfo> const c_instructionInfo =
 	{ Instruction::CHAINID,		{ "CHAINID",		0, 0, 1, false, Tier::Base } },
 	{ Instruction::SELFBALANCE,	{ "SELFBALANCE",	0, 0, 1, false, Tier::Low } },
 	{ Instruction::BASEFEE,     { "BASEFEE",        0, 0, 1, false, Tier::Base } },
+	{ Instruction::BLOBBASEFEE, { "BLOBBASEFEE",    0, 0, 1, false, Tier::Base } },
 	{ Instruction::POP,			{ "POP",			0, 1, 0, false, Tier::Base } },
 	{ Instruction::MLOAD,		{ "MLOAD",			0, 1, 1, true, Tier::VeryLow } },
 	{ Instruction::MSTORE,		{ "MSTORE",			0, 2, 0, true, Tier::VeryLow } },
 	{ Instruction::MSTORE8,		{ "MSTORE8",		0, 2, 0, true, Tier::VeryLow } },
 	{ Instruction::SLOAD,		{ "SLOAD",			0, 1, 1, false, Tier::Special } },
 	{ Instruction::SSTORE,		{ "SSTORE",			0, 2, 0, true, Tier::Special } },
+	{ Instruction::TLOAD,       { "TLOAD",          0, 1, 1, false, Tier::WarmAccess} },
+	{ Instruction::TSTORE,      { "TSTORE",         0, 2, 0, true, Tier::WarmAccess} },
 	{ Instruction::JUMP,		{ "JUMP",			0, 1, 0, true, Tier::Mid } },
 	{ Instruction::JUMPI,		{ "JUMPI",			0, 2, 0, true, Tier::High } },
 	{ Instruction::PC,			{ "PC",				0, 0, 1, false, Tier::Base } },
@@ -335,7 +344,7 @@ InstructionInfo solidity::evmasm::instructionInfo(Instruction _inst, langutil::E
 	}
 	catch (...)
 	{
-		return InstructionInfo({"<INVALID_INSTRUCTION: " + to_string(static_cast<unsigned>(_inst)) + ">", 0, 0, 0, false, Tier::Invalid});
+		return InstructionInfo({"<INVALID_INSTRUCTION: " + std::to_string(static_cast<unsigned>(_inst)) + ">", 0, 0, 0, false, Tier::Invalid});
 	}
 }
 

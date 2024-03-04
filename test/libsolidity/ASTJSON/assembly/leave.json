@@ -39,6 +39,7 @@
               {
                 "AST":
                 {
+                  "nativeSrc": "56:26:1",
                   "nodeType": "YulBlock",
                   "src": "56:26:1",
                   "statements":
@@ -46,17 +47,20 @@
                     {
                       "body":
                       {
+                        "nativeSrc": "71:9:1",
                         "nodeType": "YulBlock",
                         "src": "71:9:1",
                         "statements":
                         [
                           {
+                            "nativeSrc": "73:5:1",
                             "nodeType": "YulLeave",
                             "src": "73:5:1"
                           }
                         ]
                       },
                       "name": "f",
+                      "nativeSrc": "58:22:1",
                       "nodeType": "YulFunctionDefinition",
                       "src": "58:22:1"
                     }

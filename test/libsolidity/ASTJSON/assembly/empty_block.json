@@ -39,11 +39,13 @@
               {
                 "AST":
                 {
+                  "nativeSrc": "61:6:1",
                   "nodeType": "YulBlock",
                   "src": "61:6:1",
                   "statements":
                   [
                     {
+                      "nativeSrc": "63:2:1",
                       "nodeType": "YulBlock",
                       "src": "63:2:1",
                       "statements": []

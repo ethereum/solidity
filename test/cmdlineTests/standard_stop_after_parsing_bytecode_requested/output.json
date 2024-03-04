@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Requested output selection conflicts with \"settings.stopAfter\".",
+            "message": "Requested output selection conflicts with \"settings.stopAfter\".",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

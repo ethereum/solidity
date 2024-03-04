@@ -30,8 +30,6 @@
 #include <map>
 #include <memory>
 
-using namespace std;
-
 static_assert(
 	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 3),
 	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.3."
@@ -47,7 +45,7 @@ namespace
 class StreamWriterBuilder: public Json::StreamWriterBuilder
 {
 public:
-	explicit StreamWriterBuilder(map<string, Json::Value> const& _settings)
+	explicit StreamWriterBuilder(std::map<std::string, Json::Value> const& _settings)
 	{
 		for (auto const& iter: _settings)
 			this->settings_[iter.first] = iter.second;
@@ -68,10 +66,10 @@ public:
 /// \param _input JSON input string
 /// \param _builder StreamWriterBuilder that is used to create new Json::StreamWriter
 /// \return serialized json object
-string print(Json::Value const& _input, Json::StreamWriterBuilder const& _builder)
+std::string print(Json::Value const& _input, Json::StreamWriterBuilder const& _builder)
 {
-	stringstream stream;
-	unique_ptr<Json::StreamWriter> writer(_builder.newStreamWriter());
+	std::stringstream stream;
+	std::unique_ptr<Json::StreamWriter> writer(_builder.newStreamWriter());
 	writer->write(_input, &stream);
 	return stream.str();
 }
@@ -82,9 +80,9 @@ string print(Json::Value const& _input, Json::StreamWriterBuilder const& _builde
 /// \param _json [out] resulting JSON object
 /// \param _errs [out] Formatted error messages
 /// \return \c true if the document was successfully parsed, \c false if an error occurred.
-bool parse(Json::CharReaderBuilder& _builder, string const& _input, Json::Value& _json, string* _errs)
+bool parse(Json::CharReaderBuilder& _builder, std::string const& _input, Json::Value& _json, std::string* _errs)
 {
-	unique_ptr<Json::CharReader> reader(_builder.newCharReader());
+	std::unique_ptr<Json::CharReader> reader(_builder.newCharReader());
 	return reader->parse(_input.c_str(), _input.c_str() + _input.length(), &_json, _errs);
 }
 
@@ -113,37 +111,52 @@ Json::Value removeNullMembers(Json::Value _json)
 	return _json;
 }
 
-string jsonPrettyPrint(Json::Value const& _input)
+std::string jsonPrettyPrint(Json::Value const& _input)
 {
 	return jsonPrint(_input, JsonFormat{ JsonFormat::Pretty });
 }
 
-string jsonCompactPrint(Json::Value const& _input)
+std::string jsonCompactPrint(Json::Value const& _input)
 {
 	return jsonPrint(_input, JsonFormat{ JsonFormat::Compact });
 }
 
-string jsonPrint(Json::Value const& _input, JsonFormat const& _format)
+std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format)
 {
-	map<string, Json::Value> settings;
+	std::map<std::string, Json::Value> settings;
 	if (_format.format == JsonFormat::Pretty)
 	{
-		settings["indentation"] = string(_format.indent, ' ');
+		settings["indentation"] = std::string(_format.indent, ' ');
 		settings["enableYAMLCompatibility"] = true;
 	}
 	else
 		settings["indentation"] = "";
 	StreamWriterBuilder writerBuilder(settings);
-	string result = print(_input, writerBuilder);
+	std::string result = print(_input, writerBuilder);
 	if (_format.format == JsonFormat::Pretty)
 		boost::replace_all(result, " \n", "\n");
 	return result;
 }
 
-bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* = nullptr */)
+bool jsonParseStrict(std::string const& _input, Json::Value& _json, std::string* _errs /* = nullptr */)
 {
 	static StrictModeCharReaderBuilder readerBuilder;
 	return parse(readerBuilder, _input, _json, _errs);
+}
+
+std::optional<Json::Value> jsonValueByPath(Json::Value const& _node, std::string_view _jsonPath)
+{
+	if (!_node.isObject() || _jsonPath.empty())
+		return {};
+
+	std::string memberName = std::string(_jsonPath.substr(0, _jsonPath.find_first_of('.')));
+	if (!_node.isMember(memberName))
+		return {};
+
+	if (memberName == _jsonPath)
+		return _node[memberName];
+
+	return jsonValueByPath(_node[memberName], _jsonPath.substr(memberName.size() + 1));
 }
 
 } // namespace solidity::util

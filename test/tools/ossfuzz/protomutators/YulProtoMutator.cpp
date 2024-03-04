@@ -26,20 +26,18 @@ void MutationInfo::exitInfo()
 	writeLine(SaveMessageAsText(*m_protobufMsg));
 }
 
-/// Initialize deterministic PRNG.
-static YulRandomNumGenerator s_rand(1337);
-
 /// Add m/sstore(0, variable)
 static LPMPostProcessor<Block> addStoreToZero(
 	[](Block* _message, unsigned _seed)
 	{
 		if (_seed % YPM::s_highIP == 0)
 		{
+			YulRandomNumGenerator yrand(_seed);
 			MutationInfo m{_message, "Added store to zero"};
 			auto storeStmt = new StoreFunc();
-			storeStmt->set_st(YPM::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(s_rand()));
+			storeStmt->set_st(YPM::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(yrand()));
 			storeStmt->set_allocated_loc(YPM::litExpression(0));
-			storeStmt->set_allocated_val(YPM::refExpression(s_rand));
+			storeStmt->set_allocated_val(YPM::refExpression(yrand));
 			auto stmt = _message->add_statements();
 			stmt->set_allocated_storage_func(storeStmt);
 		}
@@ -54,10 +52,10 @@ struct addControlFlow
 {
 	addControlFlow()
 	{
-		function = [](T* _message, unsigned)
+		function = [](T* _message, unsigned _seed)
 		{
 			MutationInfo m{_message, "Added control flow."};
-			YPM::addControlFlow(_message);
+			YPM::addControlFlow(_message, _seed);
 		};
 		/// Unused variable registers callback.
 		LPMPostProcessor<T> callback(function);
@@ -170,7 +168,7 @@ unsigned YPM::EnumTypeConverter<T>::enumMin()
 }
 
 template <typename T>
-void YPM::addControlFlow(T* _msg)
+void YPM::addControlFlow(T* _msg, unsigned _seed)
 {
 	enum class ControlFlowStmt: unsigned
 	{
@@ -188,8 +186,9 @@ void YPM::addControlFlow(T* _msg)
 		static_cast<unsigned>(ControlFlowStmt::For),
 		static_cast<unsigned>(ControlFlowStmt::Termination)
 	);
-	auto random = static_cast<ControlFlowStmt>(d(s_rand.m_random));
-	Statement* s = basicBlock(_msg)->add_statements();
+	YulRandomNumGenerator yrand(_seed);
+	auto random = static_cast<ControlFlowStmt>(d(yrand.m_random));
+	Statement* s = basicBlock(_msg, _seed)->add_statements();
 	switch (random)
 	{
 	case ControlFlowStmt::For:
@@ -222,7 +221,7 @@ void YPM::addControlFlow(T* _msg)
 	}
 }
 
-Block* YPM::randomBlock(ForStmt* _stmt)
+Block* YPM::randomBlock(ForStmt* _stmt, unsigned _seed)
 {
 	enum class ForBlocks: unsigned
 	{
@@ -234,7 +233,8 @@ Block* YPM::randomBlock(ForStmt* _stmt)
 		static_cast<unsigned>(ForBlocks::Init),
 		static_cast<unsigned>(ForBlocks::Body)
 	);
-	switch (static_cast<ForBlocks>(d(s_rand.m_random)))
+	YulRandomNumGenerator yrand(_seed);
+	switch (static_cast<ForBlocks>(d(yrand.m_random)))
 	{
 	case ForBlocks::Init:
 		return _stmt->mutable_for_init();
@@ -246,10 +246,10 @@ Block* YPM::randomBlock(ForStmt* _stmt)
 }
 
 template <typename T>
-Block* YPM::basicBlock(T* _msg)
+Block* YPM::basicBlock(T* _msg, unsigned _seed)
 {
 	if constexpr (std::is_same_v<T, ForStmt>)
-		return randomBlock(_msg);
+		return randomBlock(_msg, _seed);
 	else if constexpr (std::is_same_v<T, BoundedForStmt>)
 		return _msg->mutable_for_body();
 	else if constexpr (std::is_same_v<T, SwitchStmt>)

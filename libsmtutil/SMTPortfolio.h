@@ -46,7 +46,8 @@ public:
 		std::map<util::h256, std::string> _smtlib2Responses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
 		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
-		std::optional<unsigned> _queryTimeout = {}
+		std::optional<unsigned> _queryTimeout = {},
+		bool _printQuery = false
 	);
 
 	void reset() override;
@@ -62,6 +63,9 @@ public:
 
 	std::vector<std::string> unhandledQueries() override;
 	size_t solvers() override { return m_solvers.size(); }
+
+	std::string dumpQuery(std::vector<Expression> const& _expressionsToEvaluate);
+
 private:
 	static bool solverAnswered(CheckResult result);
 

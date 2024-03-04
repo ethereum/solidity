@@ -97,9 +97,12 @@ private:
 	bool visit(WhileStatement const& _node) override;
 	bool visit(ForStatement const& _node) override;
 	void endVisit(UnaryOperation const& _node) override;
+	void endVisit(BinaryOperation const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Return const& _node) override;
 	bool visit(TryStatement const& _node) override;
+	bool visit(Break const& _node) override;
+	bool visit(Continue const& _node) override;
 	//@}
 
 	/// Visitor helpers.
@@ -111,6 +114,12 @@ private:
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const& _funCall);
+	void inlineFunctionCall(
+		FunctionDefinition const* _funDef,
+		Expression const& _callStackExpr,
+		std::optional<Expression const*> _calledExpr,
+		std::vector<Expression const*> const& _arguments
+	);
 	/// Inlines if the function call is internal or external to `this`.
 	/// Erases knowledge about state variables if external.
 	void internalOrExternalFunctionCall(FunctionCall const& _funCall);
@@ -188,6 +197,9 @@ private:
 	smtutil::CheckResult checkSatisfiable();
 	//@}
 
+	smtutil::Expression mergeVariablesFromLoopCheckpoints();
+	bool isInsideLoop() const;
+
 	std::unique_ptr<smtutil::SolverInterface> m_interface;
 
 	/// Flags used for better warning messages.
@@ -204,6 +216,21 @@ private:
 
 	/// Number of verification conditions that could not be proved.
 	size_t m_unprovedAmt = 0;
-};
 
+	enum class LoopControlKind
+	{
+		Continue,
+		Break
+	};
+
+	// Current path conditions and SSA indices for break or continue statement
+	struct LoopControl {
+		LoopControlKind kind;
+		smtutil::Expression pathConditions;
+		VariableIndices variableIndices;
+	};
+
+	// Loop control statements for every loop
+	std::stack<std::vector<LoopControl>> m_loopCheckpoints;
+};
 }

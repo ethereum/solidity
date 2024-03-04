@@ -33,11 +33,11 @@
 #include <boost/preprocessor/facilities/overload.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
+#include <optional>
 #include <string>
 #include <utility>
-#include <vector>
-#include <memory>
 #include <variant>
+#include <vector>
 
 namespace solidity::langutil
 {
@@ -170,6 +170,8 @@ class Error: virtual public util::Exception
 public:
 	enum class Type
 	{
+		Info,
+		Warning,
 		CodeGenerationError,
 		DeclarationError,
 		DocstringParsingError,
@@ -185,15 +187,14 @@ public:
 		UnimplementedFeatureError,
 		YulException,
 		SMTLogicException,
-		Warning,
-		Info
 	};
 
 	enum class Severity
 	{
-		Error,
+		// NOTE: We rely on these being ordered from least to most severe.
+		Info,
 		Warning,
-		Info
+		Error,
 	};
 
 	Error(
@@ -206,6 +207,7 @@ public:
 
 	ErrorId errorId() const { return m_errorId; }
 	Type type() const { return m_type; }
+	Severity severity() const { return errorSeverity(m_type); }
 
 	SourceLocation const* sourceLocation() const noexcept;
 	SecondarySourceLocation const* secondarySourceLocation() const noexcept;
@@ -267,27 +269,17 @@ public:
 
 	static std::string formatErrorType(Type _type)
 	{
-		switch (_type)
-		{
-		case Type::IOError: return "IOError";
-		case Type::FatalError: return "FatalError";
-		case Type::JSONError: return "JSONError";
-		case Type::InternalCompilerError: return "InternalCompilerError";
-		case Type::CompilerError: return "CompilerError";
-		case Type::Exception: return "Exception";
-		case Type::CodeGenerationError: return "CodeGenerationError";
-		case Type::DeclarationError: return "DeclarationError";
-		case Type::DocstringParsingError: return "DocstringParsingError";
-		case Type::ParserError: return "ParserError";
-		case Type::SyntaxError: return "SyntaxError";
-		case Type::TypeError: return "TypeError";
-		case Type::UnimplementedFeatureError: return "UnimplementedFeatureError";
-		case Type::YulException: return "YulException";
-		case Type::SMTLogicException: return "SMTLogicException";
-		case Type::Warning: return "Warning";
-		case Type::Info: return "Info";
-		}
-		util::unreachable();
+		return m_errorTypeNames.at(_type);
+	}
+
+	static std::optional<Type> parseErrorType(std::string _name)
+	{
+		static std::map<std::string, Error::Type> const m_errorTypesByName = util::invertMap(m_errorTypeNames);
+
+		if (m_errorTypesByName.count(_name) == 0)
+			return std::nullopt;
+
+		return m_errorTypesByName.at(_name);
 	}
 
 	static std::string formatTypeOrSeverity(std::variant<Error::Type, Error::Severity> _typeOrSeverity)
@@ -307,6 +299,8 @@ public:
 private:
 	ErrorId m_errorId;
 	Type m_type;
+
+	static std::map<Type, std::string> const m_errorTypeNames;
 };
 
 }

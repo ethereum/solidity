@@ -365,13 +365,13 @@ i.e. the following is not valid: ``(x, uint y) = (1, 2);``
 .. warning::
     Be careful when assigning to multiple variables at the same time when
     reference types are involved, because it could lead to unexpected
-    copying behaviour.
+    copying behavior.
 
 Complications for Arrays and Structs
 ------------------------------------
 
 The semantics of assignments are more complicated for non-value types like arrays and structs,
-including ``bytes`` and ``string``, see :ref:`Data location and assignment behaviour <data-location-assignment>` for details.
+including ``bytes`` and ``string``, see :ref:`Data location and assignment behavior <data-location-assignment>` for details.
 
 In the example below the call to ``g(x)`` has no effect on ``x`` because it creates
 an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
@@ -510,7 +510,7 @@ additional checks.
 Since Solidity 0.8.0, all arithmetic operations revert on over- and underflow by default,
 thus making the use of these libraries unnecessary.
 
-To obtain the previous behaviour, an ``unchecked`` block can be used:
+To obtain the previous behavior, an ``unchecked`` block can be used:
 
 .. code-block:: solidity
 
@@ -685,7 +685,7 @@ and ``assert`` for internal error checking.
             addr.transfer(msg.value / 2);
             // Since transfer throws an exception on failure and
             // cannot call back here, there should be no way for us to
-            // still have half of the money.
+            // still have half of the Ether.
             assert(address(this).balance == balanceBeforeTransfer - msg.value / 2);
             return address(this).balance;
         }
@@ -719,7 +719,7 @@ The ``revert`` statement takes a custom error as direct argument without parenth
 
     revert CustomError(arg1, arg2);
 
-For backwards-compatibility reasons, there is also the ``revert()`` function, which uses parentheses
+For backward-compatibility reasons, there is also the ``revert()`` function, which uses parentheses
 and accepts a string:
 
     revert();

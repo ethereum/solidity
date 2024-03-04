@@ -31,16 +31,15 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/picosha2.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::test;
 using namespace evmc::literals;
 
-evmc::VM& EVMHost::getVM(string const& _path)
+evmc::VM& EVMHost::getVM(std::string const& _path)
 {
 	static evmc::VM NullVM{nullptr};
-	static map<string, unique_ptr<evmc::VM>> vms;
+	static std::map<std::string, std::unique_ptr<evmc::VM>> vms;
 	if (vms.count(_path) == 0)
 	{
 		evmc_loader_error_code errorCode = {};
@@ -48,16 +47,16 @@ evmc::VM& EVMHost::getVM(string const& _path)
 		if (vm && errorCode == EVMC_LOADER_SUCCESS)
 		{
 			if (vm.get_capabilities() & (EVMC_CAPABILITY_EVM1))
-				vms[_path] = make_unique<evmc::VM>(evmc::VM(std::move(vm)));
+				vms[_path] = std::make_unique<evmc::VM>(evmc::VM(std::move(vm)));
 			else
-				cerr << "VM loaded does not support EVM1" << endl;
+				std::cerr << "VM loaded does not support EVM1" << std::endl;
 		}
 		else
 		{
-			cerr << "Error loading VM from " << _path;
+			std::cerr << "Error loading VM from " << _path;
 			if (char const* errorMsg = evmc_last_error_msg())
-				cerr << ":" << endl << errorMsg;
-			cerr << endl;
+				std::cerr << ":" << std::endl << errorMsg;
+			std::cerr << std::endl;
 		}
 	}
 
@@ -67,7 +66,7 @@ evmc::VM& EVMHost::getVM(string const& _path)
 	return NullVM;
 }
 
-bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
+bool EVMHost::checkVmPaths(std::vector<boost::filesystem::path> const& _vmPaths)
 {
 	bool evmVmFound = false;
 	for (auto const& path: _vmPaths)
@@ -79,7 +78,7 @@ bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 		if (vm.has_capability(EVMC_CAPABILITY_EVM1))
 		{
 			if (evmVmFound)
-				BOOST_THROW_EXCEPTION(runtime_error("Multiple evm1 evmc vms defined. Please only define one evm1 evmc vm."));
+				BOOST_THROW_EXCEPTION(std::runtime_error("Multiple evm1 evmc vms defined. Please only define one evm1 evmc vm."));
 			evmVmFound = true;
 		}
 	}
@@ -92,7 +91,7 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 {
 	if (!m_vm)
 	{
-		cerr << "Unable to find evmone library" << endl;
+		std::cerr << "Unable to find evmone library" << std::endl;
 		assertThrow(false, Exception, "");
 	}
 
@@ -118,6 +117,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_PARIS;
 	else if (_evmVersion == langutil::EVMVersion::shanghai())
 		m_evmRevision = EVMC_SHANGHAI;
+	else if (_evmVersion == langutil::EVMVersion::cancun())
+		m_evmRevision = EVMC_CANCUN;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 
@@ -134,6 +135,15 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	tx_context.chain_id = evmc::uint256be{1};
 	// The minimum value of basefee
 	tx_context.block_base_fee = evmc::bytes32{7};
+	// The minimum value of blobbasefee
+	tx_context.blob_base_fee = evmc::bytes32{1};
+
+	static evmc_bytes32 const blob_hashes_array[] = {
+		0x0100000000000000000000000000000000000000000000000000000000000001_bytes32,
+		0x0100000000000000000000000000000000000000000000000000000000000002_bytes32
+	};
+	tx_context.blob_hashes = blob_hashes_array;
+	tx_context.blob_hashes_count = sizeof(blob_hashes_array) / sizeof(blob_hashes_array[0]);
 
 	// Reserve space for recording calls.
 	if (!recorded_calls.capacity())
@@ -151,6 +161,7 @@ void EVMHost::reset()
 	recorded_calls.clear();
 	// Clear EIP-2929 account access indicator
 	recorded_account_accesses.clear();
+	m_totalCodeDepositGas = 0;
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
@@ -175,14 +186,25 @@ void EVMHost::newTransactionFrame()
 	recorded_account_accesses.clear();
 
 	for (auto& [address, account]: accounts)
+	{
 		for (auto& [slot, value]: account.storage)
 		{
 			value.access_status = EVMC_ACCESS_COLD; // Clear EIP-2929 storage access indicator
 			value.original = value.current;			// Clear EIP-2200 dirty slot
 		}
+
+		// Clear transient storage according to EIP 1153
+		account.transient_storage.clear();
+	}
 	// Process selfdestruct list
 	for (auto& [address, _]: recorded_selfdestructs)
-		accounts.erase(address);
+		if (m_evmVersion < langutil::EVMVersion::cancun() || newlyCreatedAccounts.count(address))
+			// EIP-6780: If SELFDESTRUCT is executed in a transaction different from the one
+			// in which it was created, we do NOT record it or clear any data.
+			// Otherwise, the previous behavior (pre-Cancun) is maintained.
+			accounts.erase(address);
+	newlyCreatedAccounts.clear();
+	m_totalCodeDepositGas = 0;
 	recorded_selfdestructs.clear();
 }
 
@@ -197,6 +219,8 @@ bool EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _ben
 {
 	// TODO actual selfdestruct is even more complicated.
 
+	// NOTE: EIP-6780: The transfer of the entire account balance to the beneficiary should still happen
+	// after cancun.
 	transfer(accounts[_addr], accounts[_beneficiary], convertFromEVMC(accounts[_addr].balance));
 
 	// Record self destructs. Clearing will be done in newTransactionFrame().
@@ -296,7 +320,7 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		h160 createAddress(keccak256(
 			bytes{static_cast<uint8_t>(0xc0 + 21 + encodedNonce.size())} +
 			bytes{0x94} +
-			bytes(begin(message.sender.bytes), end(message.sender.bytes)) +
+			bytes(std::begin(message.sender.bytes), std::end(message.sender.bytes)) +
 			encodedNonce
 		), h160::AlignRight);
 
@@ -309,8 +333,8 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 	{
 		h160 createAddress(keccak256(
 			bytes{0xff} +
-			bytes(begin(message.sender.bytes), end(message.sender.bytes)) +
-			bytes(begin(message.create2_salt.bytes), end(message.create2_salt.bytes)) +
+			bytes(std::begin(message.sender.bytes), std::end(message.sender.bytes)) +
+			bytes(std::begin(message.create2_salt.bytes), std::end(message.create2_salt.bytes)) +
 			keccak256(bytes(message.input_data, message.input_data + message.input_size)).asBytes()
 		), h160::AlignRight);
 
@@ -332,6 +356,9 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 		code = accounts[message.code_address].code;
 
 	auto& destination = accounts[message.recipient];
+	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
+		// Mark account as created if it is a CREATE or CREATE2 call
+		newlyCreatedAccounts.emplace(message.recipient);
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
@@ -367,15 +394,18 @@ evmc::Result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
 	{
-		result.gas_left -= static_cast<int64_t>(evmasm::GasCosts::createDataGas * result.output_size);
+		int64_t codeDepositGas = static_cast<int64_t>(evmasm::GasCosts::createDataGas * result.output_size);
+		result.gas_left -= codeDepositGas;
 		if (result.gas_left < 0)
 		{
+			m_totalCodeDepositGas += -result.gas_left;
 			result.gas_left = 0;
 			result.status_code = EVMC_OUT_OF_GAS;
 			// TODO clear some fields?
 		}
 		else
 		{
+			m_totalCodeDepositGas += codeDepositGas;
 			result.create_address = message.recipient;
 			destination.code = evmc::bytes(result.output_data, result.output_data + result.output_size);
 			destination.codehash = convertToEVMC(keccak256({result.output_data, result.output_size}));
@@ -395,7 +425,7 @@ evmc::bytes32 EVMHost::get_block_hash(int64_t _number) const noexcept
 
 h160 EVMHost::convertFromEVMC(evmc::address const& _addr)
 {
-	return h160(bytes(begin(_addr.bytes), end(_addr.bytes)));
+	return h160(bytes(std::begin(_addr.bytes), std::end(_addr.bytes)));
 }
 
 evmc::address EVMHost::convertToEVMC(h160 const& _addr)
@@ -408,7 +438,7 @@ evmc::address EVMHost::convertToEVMC(h160 const& _addr)
 
 h256 EVMHost::convertFromEVMC(evmc::bytes32 const& _data)
 {
-	return h256(bytes(begin(_data.bytes), end(_data.bytes)));
+	return h256(bytes(std::begin(_data.bytes), std::end(_data.bytes)));
 }
 
 evmc::bytes32 EVMHost::convertToEVMC(h256 const& _data)
@@ -426,7 +456,7 @@ evmc::Result EVMHost::precompileECRecover(evmc_message const& _message) noexcept
 	// Fixed cost of 3000 gas.
 	constexpr int64_t gas_cost = 3000;
 
-	static map<bytes, EVMPrecompileOutput> const inputOutput{
+	static std::map<bytes, EVMPrecompileOutput> const inputOutput{
 		{
 			fromHex(
 				"18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c"
@@ -483,7 +513,7 @@ evmc::Result EVMHost::precompileRipeMD160(evmc_message const& _message) noexcept
 		return 600 + 120 * ((size + 31) / 32);
 	};
 
-	static map<bytes, EVMPrecompileOutput> const inputOutput{
+	static std::map<bytes, EVMPrecompileOutput> const inputOutput{
 		{
 			bytes{},
 			{
@@ -602,7 +632,7 @@ evmc::Result EVMHost::precompileALTBN128G1Add(evmc_message const& _message) noex
 	// Fixed 500 or 150 gas.
 	int64_t gas_cost = (Revision < EVMC_ISTANBUL) ? 500 : 150;
 
-	static map<bytes, EVMPrecompileOutput> const inputOutput{
+	static std::map<bytes, EVMPrecompileOutput> const inputOutput{
 		{
 			fromHex(
 				"0000000000000000000000000000000000000000000000000000000000000000"
@@ -870,7 +900,7 @@ evmc::Result EVMHost::precompileALTBN128G1Mul(evmc_message const& _message) noex
 	// Fixed 40000 or 6000 gas.
 	int64_t gas_cost = (Revision < EVMC_ISTANBUL) ? 40000 : 6000;
 
-	static map<bytes, EVMPrecompileOutput> const inputOutput{
+	static std::map<bytes, EVMPrecompileOutput> const inputOutput{
 		{
 			fromHex("0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000"),
 			{
@@ -964,7 +994,7 @@ evmc::Result EVMHost::precompileALTBN128PairingProduct(evmc_message const& _mess
 	};
 
 	// NOTE this is a partial implementation for some inputs.
-	static map<bytes, EVMPrecompileOutput> const inputOutput{
+	static std::map<bytes, EVMPrecompileOutput> const inputOutput{
 		{
 			fromHex(
 				"17c139df0efee0f766bc0204762b774362e4ded88953a39ce849a8a7fa163fa9"
@@ -1129,7 +1159,7 @@ evmc::Result EVMHost::precompileBlake2f(evmc_message const&) noexcept
 
 evmc::Result EVMHost::precompileGeneric(
 	evmc_message const& _message,
-	map<bytes, EVMPrecompileOutput> const& _inOut) noexcept
+	std::map<bytes, EVMPrecompileOutput> const& _inOut) noexcept
 {
 	bytes input(_message.input_data, _message.input_data + _message.input_size);
 	if (_inOut.count(input))
@@ -1176,7 +1206,7 @@ StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
 	return accounts[_addr].storage;
 }
 
-string EVMHostPrinter::state()
+std::string EVMHostPrinter::state()
 {
 	// Print state and execution trace.
 	if (m_host.account_exists(m_account))
@@ -1199,14 +1229,14 @@ void EVMHostPrinter::storage()
 				<< m_host.convertFromEVMC(slot)
 				<< ": "
 				<< m_host.convertFromEVMC(value.current)
-				<< endl;
+				<< std::endl;
 }
 
 void EVMHostPrinter::balance()
 {
 	m_stateStream << "BALANCE "
 		<< m_host.convertFromEVMC(m_host.get_balance(m_account))
-		<< endl;
+		<< std::endl;
 }
 
 void EVMHostPrinter::selfdestructRecords()
@@ -1216,12 +1246,12 @@ void EVMHostPrinter::selfdestructRecords()
 			m_stateStream << "SELFDESTRUCT"
 				<< " BENEFICIARY "
 				<< m_host.convertFromEVMC(beneficiary)
-				<< endl;
+				<< std::endl;
 }
 
 void EVMHostPrinter::callRecords()
 {
-	static auto constexpr callKind = [](evmc_call_kind _kind) -> string
+	static auto constexpr callKind = [](evmc_call_kind _kind) -> std::string
 	{
 		switch (_kind)
 		{
@@ -1244,5 +1274,5 @@ void EVMHostPrinter::callRecords()
 		m_stateStream << callKind(record.kind)
 			<< " VALUE "
 			<< m_host.convertFromEVMC(record.value)
-			<< endl;
+			<< std::endl;
 }

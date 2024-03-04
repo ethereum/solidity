@@ -24,7 +24,6 @@
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/transform.hpp>
 
-using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::util;
 
@@ -72,7 +71,7 @@ CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
 	FunctionCallGraphBuilder builder(_contract);
 	solAssert(builder.m_currentNode == CallGraph::Node(CallGraph::SpecialNode::Entry), "");
 
-	auto getSecondElement = [](auto const& _tuple){ return get<1>(_tuple); };
+	auto getSecondElement = [](auto const& _tuple){ return std::get<1>(_tuple); };
 
 	// Create graph for all publicly reachable functions
 	for (FunctionTypePointer functionType: _contract.interfaceFunctionList() | ranges::views::transform(getSecondElement))
@@ -96,14 +95,14 @@ CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
 	// All functions present in internal dispatch at creation time could potentially be pointers
 	// assigned to state variables and as such may be reachable after deployment as well.
 	builder.m_currentNode = CallGraph::SpecialNode::InternalDispatch;
-	set<CallGraph::Node, CallGraph::CompareByID> defaultNode;
+	std::set<CallGraph::Node, CallGraph::CompareByID> defaultNode;
 	for (CallGraph::Node const& dispatchTarget: util::valueOrDefault(_creationGraph.edges, CallGraph::SpecialNode::InternalDispatch, defaultNode))
 	{
-		solAssert(!holds_alternative<CallGraph::SpecialNode>(dispatchTarget), "");
-		solAssert(get<CallableDeclaration const*>(dispatchTarget) != nullptr, "");
+		solAssert(!std::holds_alternative<CallGraph::SpecialNode>(dispatchTarget), "");
+		solAssert(std::get<CallableDeclaration const*>(dispatchTarget) != nullptr, "");
 
 		// Visit the callable to add not only it but also everything it calls too
-		builder.functionReferenced(*get<CallableDeclaration const*>(dispatchTarget), false);
+		builder.functionReferenced(*std::get<CallableDeclaration const*>(dispatchTarget), false);
 	}
 
 	builder.m_currentNode = CallGraph::SpecialNode::Entry;
@@ -262,10 +261,10 @@ void FunctionCallGraphBuilder::processQueue()
 	while (!m_visitQueue.empty())
 	{
 		m_currentNode = m_visitQueue.front();
-		solAssert(holds_alternative<CallableDeclaration const*>(m_currentNode), "");
+		solAssert(std::holds_alternative<CallableDeclaration const*>(m_currentNode), "");
 
 		m_visitQueue.pop_front();
-		get<CallableDeclaration const*>(m_currentNode)->accept(*this);
+		std::get<CallableDeclaration const*>(m_currentNode)->accept(*this);
 	}
 
 	m_currentNode = CallGraph::SpecialNode::Entry;
@@ -281,7 +280,7 @@ void FunctionCallGraphBuilder::functionReferenced(CallableDeclaration const& _ca
 	if (_calledDirectly)
 	{
 		solAssert(
-			holds_alternative<CallGraph::SpecialNode>(m_currentNode) || m_graph.edges.count(m_currentNode) > 0,
+			std::holds_alternative<CallGraph::SpecialNode>(m_currentNode) || m_graph.edges.count(m_currentNode) > 0,
 			"Adding an edge from a node that has not been visited yet."
 		);
 
@@ -293,10 +292,10 @@ void FunctionCallGraphBuilder::functionReferenced(CallableDeclaration const& _ca
 	enqueueCallable(_callable);
 }
 
-ostream& solidity::frontend::operator<<(ostream& _out, CallGraph::Node const& _node)
+std::ostream& solidity::frontend::operator<<(std::ostream& _out, CallGraph::Node const& _node)
 {
-	if (holds_alternative<CallGraph::SpecialNode>(_node))
-		switch (get<CallGraph::SpecialNode>(_node))
+	if (std::holds_alternative<CallGraph::SpecialNode>(_node))
+		switch (std::get<CallGraph::SpecialNode>(_node))
 		{
 		case CallGraph::SpecialNode::InternalDispatch:
 			_out << "InternalDispatch";
@@ -309,19 +308,19 @@ ostream& solidity::frontend::operator<<(ostream& _out, CallGraph::Node const& _n
 		}
 	else
 	{
-		solAssert(holds_alternative<CallableDeclaration const*>(_node), "");
+		solAssert(std::holds_alternative<CallableDeclaration const*>(_node), "");
 
-		auto const* callableDeclaration = get<CallableDeclaration const*>(_node);
+		auto const* callableDeclaration = std::get<CallableDeclaration const*>(_node);
 		solAssert(callableDeclaration, "");
 
 		auto const* function = dynamic_cast<FunctionDefinition const *>(callableDeclaration);
 		auto const* event = dynamic_cast<EventDefinition const *>(callableDeclaration);
 		auto const* modifier = dynamic_cast<ModifierDefinition const *>(callableDeclaration);
 
-		auto typeToString = [](auto const& _var) -> string { return _var->type()->toString(true); };
-		vector<string> parameters = callableDeclaration->parameters() | ranges::views::transform(typeToString) | ranges::to<vector<string>>();
+		auto typeToString = [](auto const& _var) -> std::string { return _var->type()->toString(true); };
+		std::vector<std::string> parameters = callableDeclaration->parameters() | ranges::views::transform(typeToString) | ranges::to<std::vector<std::string>>();
 
-		string scopeName;
+		std::string scopeName;
 		if (!function || !function->isFree())
 		{
 			solAssert(callableDeclaration->annotation().scope, "");

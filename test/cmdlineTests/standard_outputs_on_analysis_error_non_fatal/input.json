@@ -1,0 +1,14 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_outputs_on_analysis_error_non_fatal/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {
+				"*": ["*"],
+				"": ["*"]
+			}
+		}
+	}
+}

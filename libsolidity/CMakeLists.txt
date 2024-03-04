@@ -101,6 +101,8 @@ set(sources
 	codegen/ir/IRLValue.h
 	codegen/ir/IRVariable.cpp
 	codegen/ir/IRVariable.h
+	experimental/analysis/Analysis.cpp
+	experimental/analysis/Analysis.h
 	formal/ArraySlicePredicate.cpp
 	formal/ArraySlicePredicate.h
 	formal/BMC.cpp
@@ -182,8 +184,35 @@ set(sources
 	parsing/Parser.cpp
 	parsing/Parser.h
 	parsing/Token.h
+	experimental/analysis/Analysis.cpp
+	experimental/analysis/Analysis.h
+	experimental/analysis/DebugWarner.cpp
+	experimental/analysis/DebugWarner.h
+	experimental/analysis/FunctionDependencyAnalysis.cpp
+	experimental/analysis/FunctionDependencyAnalysis.h
+	experimental/analysis/TypeClassRegistration.cpp
+	experimental/analysis/TypeClassRegistration.h
+	experimental/analysis/TypeInference.cpp
+	experimental/analysis/TypeInference.h
+	experimental/analysis/TypeRegistration.cpp
+	experimental/analysis/TypeRegistration.h
+	experimental/analysis/SyntaxRestrictor.cpp
+	experimental/analysis/SyntaxRestrictor.h
+	experimental/ast/FunctionCallGraph.h
+	experimental/ast/Type.cpp
+	experimental/ast/Type.h
+	experimental/ast/TypeSystem.cpp
+	experimental/ast/TypeSystem.h
+	experimental/ast/TypeSystemHelper.cpp
+	experimental/ast/TypeSystemHelper.h
+	experimental/codegen/Common.h
+	experimental/codegen/Common.cpp
+	experimental/codegen/IRGenerationContext.h
+	experimental/codegen/IRGenerator.cpp
+	experimental/codegen/IRGenerator.h
+	experimental/codegen/IRGeneratorForStatements.cpp
+	experimental/codegen/IRGeneratorForStatements.h
 )
 
 add_library(solidity ${sources})
 target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost fmt::fmt-header-only Threads::Threads)
-

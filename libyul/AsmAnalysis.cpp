@@ -44,7 +44,7 @@
 #include <memory>
 #include <functional>
 
-using namespace std;
+using namespace std::string_literals;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -52,7 +52,7 @@ using namespace solidity::langutil;
 
 namespace
 {
-inline string to_string(LiteralKind _kind)
+inline std::string to_string(LiteralKind _kind)
 {
 	switch (_kind)
 	{
@@ -98,14 +98,14 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 	return analysisInfo;
 }
 
-vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
+std::vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 {
 	expectValidType(_literal.type, nativeLocationOf(_literal));
 	if (_literal.kind == LiteralKind::String && _literal.value.str().size() > 32)
 		m_errorReporter.typeError(
 			3069_error,
 			nativeLocationOf(_literal),
-			"String literal too long (" + to_string(_literal.value.str().size()) + " > 32)"
+			"String literal too long (" + std::to_string(_literal.value.str().size()) + " > 32)"
 		);
 	else if (_literal.kind == LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
 		m_errorReporter.typeError(6708_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
@@ -122,7 +122,7 @@ vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 	return {_literal.type};
 }
 
-vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
+std::vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
@@ -180,13 +180,13 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 void AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	auto watcher = m_errorReporter.errorWatcher();
-	vector<YulString> types = std::visit(*this, _statement.expression);
+	std::vector<YulString> types = std::visit(*this, _statement.expression);
 	if (watcher.ok() && !types.empty())
 		m_errorReporter.typeError(
 			3083_error,
 			nativeLocationOf(_statement),
 			"Top-level expressions are not supposed to return values (this expression returns " +
-			to_string(types.size()) +
+			std::to_string(types.size()) +
 			" value" +
 			(types.size() == 1 ? "" : "s") +
 			"). Use ``pop()`` or assign them."
@@ -199,7 +199,7 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 	size_t const numVariables = _assignment.variableNames.size();
 	yulAssert(numVariables >= 1, "");
 
-	set<YulString> variables;
+	std::set<YulString> variables;
 	for (auto const& _variableName: _assignment.variableNames)
 		if (!variables.insert(_variableName.name).second)
 			m_errorReporter.declarationError(
@@ -210,7 +210,7 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 				" occurs multiple times on the left-hand side of the assignment."
 			);
 
-	vector<YulString> types = std::visit(*this, *_assignment.value);
+	std::vector<YulString> types = std::visit(*this, *_assignment.value);
 
 	if (types.size() != numVariables)
 		m_errorReporter.declarationError(
@@ -219,9 +219,9 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 			"Variable count for assignment to \"" +
 			joinHumanReadable(applyMap(_assignment.variableNames, [](auto const& _identifier){ return _identifier.name.str(); })) +
 			"\" does not match number of values (" +
-			to_string(numVariables) +
+			std::to_string(numVariables) +
 			" vs. " +
-			to_string(types.size()) +
+			std::to_string(types.size()) +
 			")"
 		);
 
@@ -249,7 +249,7 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 
 	if (_varDecl.value)
 	{
-		vector<YulString> types = std::visit(*this, *_varDecl.value);
+		std::vector<YulString> types = std::visit(*this, *_varDecl.value);
 		if (types.size() != numVariables)
 			m_errorReporter.declarationError(
 				3812_error,
@@ -257,9 +257,9 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 				"Variable count mismatch for declaration of \"" +
 				joinHumanReadable(applyMap(_varDecl.variables, [](auto const& _identifier){ return _identifier.name.str(); })) +
 				+ "\": " +
-				to_string(numVariables) +
+				std::to_string(numVariables) +
 				" variables and " +
-				to_string(types.size()) +
+				std::to_string(types.size()) +
 				" values."
 			);
 
@@ -301,13 +301,13 @@ void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 	(*this)(_funDef.body);
 }
 
-vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
+std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
 	yulAssert(!_funCall.functionName.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
-	vector<YulString> const* parameterTypes = nullptr;
-	vector<YulString> const* returnTypes = nullptr;
-	vector<optional<LiteralKind>> const* literalArguments = nullptr;
+	std::vector<YulString> const* parameterTypes = nullptr;
+	std::vector<YulString> const* returnTypes = nullptr;
+	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
 	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
 	{
@@ -316,9 +316,26 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				1699_error,
 				nativeLocationOf(_funCall.functionName),
 				"\"selfdestruct\" has been deprecated. "
-				"The underlying opcode will eventually undergo breaking changes, "
-				"and its use is not recommended."
+				"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
+				"data associated with an account and only transfers its Ether to the beneficiary, "
+				"unless executed in the same transaction in which the contract was created (see EIP-6780). "
+				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
+				"Future changes to the EVM might further reduce the functionality of the opcode."
 			);
+		else if (
+			m_evmVersion.supportsTransientStorage() &&
+			_funCall.functionName.name == "tstore"_yulstring
+		)
+			m_errorReporter.warning(
+				2394_error,
+				nativeLocationOf(_funCall.functionName),
+				"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
+				"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
+				"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
+				"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
+				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
+			);
+
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;
 		if (!f->literalArguments.empty())
@@ -367,12 +384,12 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			7000_error,
 			nativeLocationOf(_funCall.functionName),
 			"Function \"" + _funCall.functionName.name.str() + "\" expects " +
-			to_string(parameterTypes->size()) +
+			std::to_string(parameterTypes->size()) +
 			" arguments but got " +
-			to_string(_funCall.arguments.size()) + "."
+			std::to_string(_funCall.arguments.size()) + "."
 		);
 
-	vector<YulString> argTypes;
+	std::vector<YulString> argTypes;
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
 		Expression const& arg = _funCall.arguments[i - 1];
@@ -382,13 +399,13 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				std::nullopt
 		)
 		{
-			if (!holds_alternative<Literal>(arg))
+			if (!std::holds_alternative<Literal>(arg))
 				m_errorReporter.typeError(
 					9114_error,
 					nativeLocationOf(_funCall.functionName),
 					"Function expects direct literals as arguments."
 				);
-			else if (*literalArgumentKind != get<Literal>(arg).kind)
+			else if (*literalArgumentKind != std::get<Literal>(arg).kind)
 				m_errorReporter.typeError(
 					5859_error,
 					nativeLocationOf(arg),
@@ -396,10 +413,10 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				);
 			else if (*literalArgumentKind == LiteralKind::String)
 			{
-				string functionName = _funCall.functionName.name.str();
+				std::string functionName = _funCall.functionName.name.str();
 				if (functionName == "datasize" || functionName == "dataoffset")
 				{
-					if (!m_dataNames.count(get<Literal>(arg).value))
+					if (!m_dataNames.count(std::get<Literal>(arg).value))
 						m_errorReporter.typeError(
 							3517_error,
 							nativeLocationOf(arg),
@@ -408,7 +425,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				}
 				else if (functionName.substr(0, "verbatim_"s.size()) == "verbatim_")
 				{
-					if (get<Literal>(arg).value.empty())
+					if (std::get<Literal>(arg).value.empty())
 						m_errorReporter.typeError(
 							1844_error,
 							nativeLocationOf(arg),
@@ -416,7 +433,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 						);
 				}
 
-				argTypes.emplace_back(expectUnlimitedStringLiteral(get<Literal>(arg)));
+				argTypes.emplace_back(expectUnlimitedStringLiteral(std::get<Literal>(arg)));
 				continue;
 			}
 		}
@@ -435,7 +452,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		return *returnTypes;
 	}
 	else if (returnTypes)
-		return vector<YulString>(returnTypes->size(), m_dialect.defaultType);
+		return std::vector<YulString>(returnTypes->size(), m_dialect.defaultType);
 	else
 		return {};
 }
@@ -460,7 +477,7 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 
 	YulString valueType = expectExpression(*_switch.expression);
 
-	set<u256> cases;
+	std::set<u256> cases;
 	for (auto const& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -525,13 +542,13 @@ void AsmAnalyzer::operator()(Block const& _block)
 
 YulString AsmAnalyzer::expectExpression(Expression const& _expr)
 {
-	vector<YulString> types = std::visit(*this, _expr);
+	std::vector<YulString> types = std::visit(*this, _expr);
 	if (types.size() != 1)
 		m_errorReporter.typeError(
 			3950_error,
 			nativeLocationOf(_expr),
 			"Expected expression to evaluate to one value, but got " +
-			to_string(types.size()) +
+			std::to_string(types.size()) +
 			" values instead."
 		);
 	return types.empty() ? m_dialect.defaultType : types.front();
@@ -576,7 +593,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 				m_currentScope->insideFunction()
 			);
 
-		if (!holds_alternative<Scope::Variable>(*var))
+		if (!std::holds_alternative<Scope::Variable>(*var))
 			m_errorReporter.typeError(2657_error, nativeLocationOf(_variable), "Assignment requires variable.");
 		else if (!m_activeVariables.count(&std::get<Scope::Variable>(*var)))
 			m_errorReporter.declarationError(
@@ -670,6 +687,7 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 
 bool AsmAnalyzer::validateInstructions(std::string const& _instructionIdentifier, langutil::SourceLocation const& _location)
 {
+	// NOTE: This function uses the default EVM version instead of the currently selected one.
 	auto const builtin = EVMDialect::strictAssemblyForEVM(EVMVersion{}).builtin(YulString(_instructionIdentifier));
 	if (builtin && builtin->instruction.has_value())
 		return validateInstructions(builtin->instruction.value(), _location);
@@ -692,7 +710,7 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		_instr != evmasm::Instruction::JUMPDEST,
 	"");
 
-	auto errorForVM = [&](ErrorId _errorId, string const& vmKindMessage) {
+	auto errorForVM = [&](ErrorId _errorId, std::string const& vmKindMessage) {
 		m_errorReporter.typeError(
 			_errorId,
 			_location,
@@ -705,6 +723,9 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		);
 	};
 
+	// The errors below are meant to be issued when processing an undeclared identifier matching a builtin name
+	// present on the default EVM version but not on the currently selected one,
+	// since the other `validateInstructions()` overload uses the default EVM version.
 	if (_instr == evmasm::Instruction::RETURNDATACOPY && !m_evmVersion.supportsReturndata())
 		errorForVM(7756_error, "only available for Byzantium-compatible");
 	else if (_instr == evmasm::Instruction::RETURNDATASIZE && !m_evmVersion.supportsReturndata())
@@ -727,6 +748,17 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		errorForVM(7721_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::BASEFEE && !m_evmVersion.hasBaseFee())
 		errorForVM(5430_error, "only available for London-compatible");
+	else if (_instr == evmasm::Instruction::BLOBBASEFEE && !m_evmVersion.hasBlobBaseFee())
+		errorForVM(6679_error, "only available for Cancun-compatible");
+	else if (_instr == evmasm::Instruction::BLOBHASH && !m_evmVersion.hasBlobHash())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
+	else if (_instr == evmasm::Instruction::MCOPY && !m_evmVersion.hasMcopy())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
+	else if ((_instr == evmasm::Instruction::TSTORE || _instr == evmasm::Instruction::TLOAD) && !m_evmVersion.supportsTransientStorage())
+		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
+		yulAssert(false);
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.error(
 			2450_error,

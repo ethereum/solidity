@@ -5,18 +5,20 @@ Pretty printed source:
 /// @use-src 0:"input.sol"
 object "C_6_deployed" {
     code {
-        /// @src 0:60:101
-        mstore(64, 128)
-        fun_f_5()
+        {
+            /// @src 0:60:101
+            mstore(64, 128)
+            fun_f()
+        }
         /// @src 0:77:99
-        function fun_f_5()
-        { }
+        function fun_f()
+        { sstore(0, 42) }
     }
 }
 
 
 Binary representation:
-6080604052600a600e565b6010565b565b
+6080604052600a600c565b005b602a5f5556
 
 Text representation:
     /* "input.sol":60:101   */
@@ -25,8 +27,8 @@ Text representation:
   tag_1
   jump	// in
 tag_2:
+  stop
     /* "input.sol":77:99   */
-  jump(tag_3)
 tag_1:
+  sstore(0x00, 0x2a)
   jump	// out
-tag_3:

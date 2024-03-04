@@ -20,12 +20,46 @@ EXCLUDE_FILES=(
 EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
 EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
 
+NAMESPACE_STD_FREE_FILES=(
+    libevmasm/*
+    liblangutil/*
+    libsmtutil/*
+    libsolc/*
+    libsolidity/analysis/*
+    libsolidity/ast/*
+    libsolidity/codegen/ir/*
+    libsolidity/codegen/*
+    libsolidity/experimental/*
+    libsolidity/formal/*
+    libsolidity/interface/*
+    libsolidity/lsp/*
+    libsolidity/parsing/*
+    libsolutil/*
+    libyul/*
+    libyul/backends/evm/*
+    libyul/optimiser/*
+    solc/*
+    test/*
+    test/contracts/*
+    test/libevmasm/*
+    test/liblangutil/*
+    test/libsolutil/*
+    test/libsolidity/*
+    test/libsolidity/analysis/*
+    test/libsolidity/interface/*
+    test/libsolidity/util/*
+    test/libyul/*
+    test/solc/*
+    test/tools/yulInterpreter/*
+    test/yulPhaser/*
+)
+
 (
 REPO_ROOT="$(dirname "$0")"/..
 cd "$REPO_ROOT" || exit 1
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
-    grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
+    grep -v "test/libsolidity/ASTJSON\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}" || true
 )
 
 if [[ "$WHITESPACE" != "" ]]
@@ -61,10 +95,24 @@ FORMATERROR=$(
 ) | grep -E -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/" || true
 )
 
-if [[ "$FORMATERROR" != "" ]]
+# Special error handling for `using namespace std;` exclusion, since said statement can be present in the test directory
+# and its subdirectories, but is excluded in the above ruleset. In order to have consistent codestyle with regards to
+# std namespace usage, test directory must also be covered.
+FORMATSTDERROR=$(
+(
+    # make sure `using namespace std` is not used in INCLUDE_DIRECTORIES
+    # shellcheck disable=SC2068,SC2068
+    grep -nIE -d skip "using namespace std;" ${NAMESPACE_STD_FREE_FILES[@]}
+) || true
+)
+
+# Merge errors into single string
+FORMATEDERRORS="$FORMATERROR$FORMATSTDERROR"
+
+if [[ "$FORMATEDERRORS" != "" ]]
 then
     echo "Coding style error:" | tee -a "$ERROR_LOG"
-    echo "$FORMATERROR" | tee -a "$ERROR_LOG"
+    echo "$FORMATEDERRORS" | tee -a "$ERROR_LOG"
     scripts/ci/post_style_errors_on_github.sh "$ERROR_LOG"
     exit 1
 fi

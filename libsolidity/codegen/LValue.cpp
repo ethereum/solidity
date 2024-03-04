@@ -30,7 +30,6 @@
 
 #include <libsolutil/StackTooDeepString.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::frontend;
@@ -187,9 +186,16 @@ void ImmutableItem::storeValue(Type const& _sourceType, SourceLocation const&, b
 	m_context << Instruction::POP;
 }
 
-void ImmutableItem::setToZero(SourceLocation const&, bool) const
+void ImmutableItem::setToZero(SourceLocation const&, bool _removeReference) const
 {
-	solAssert(false, "Attempted to set immutable variable to zero.");
+	CompilerUtils utils(m_context);
+	solUnimplementedAssert(m_dataType->isValueType());
+	solAssert(_removeReference);
+
+	m_context << m_context.immutableMemoryOffset(m_variable);
+	utils.pushZeroValue(*m_dataType);
+	utils.storeInMemoryDynamic(*m_dataType);
+	m_context << Instruction::POP;
 }
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
@@ -403,7 +409,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					if (sourceType.location() == DataLocation::Storage)
 					{
 						// stack layout: source_ref target_ref
-						pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
+						std::pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
 						m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						m_context << u256(offsets.second);
 						// stack: source_ref target_ref source_member_ref source_member_off
@@ -420,7 +426,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 						// stack layout: source_ref target_ref source_value...
 					}
 					unsigned stackSize = sourceMemberType->sizeOnStack();
-					pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
+					std::pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
 					m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
 					m_context << u256(offsets.second);
 					// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
@@ -462,7 +468,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 			Type const* memberType = member.type;
 			if (memberType->category() == Type::Category::Mapping)
 				continue;
-			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
+			std::pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
 			m_context
 				<< offsets.first << Instruction::DUP3 << Instruction::ADD
 				<< u256(offsets.second);
@@ -585,7 +591,7 @@ void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	// We will assign from right to left to optimize stack layout.
 	for (size_t i = 0; i < m_lvalues.size(); ++i)
 	{
-		unique_ptr<LValue> const& lvalue = m_lvalues[m_lvalues.size() - i - 1];
+		std::unique_ptr<LValue> const& lvalue = m_lvalues[m_lvalues.size() - i - 1];
 		Type const* valType = valueTypes[valueTypes.size() - i - 1];
 		unsigned stackHeight = m_context.stackHeight();
 		solAssert(!valType == !lvalue, "");

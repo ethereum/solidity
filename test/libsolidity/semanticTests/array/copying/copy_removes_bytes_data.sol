@@ -7,9 +7,9 @@ contract c {
 }
 // ----
 // set(): 1, 2, 3, 4, 5 -> true
-// gas irOptimized: 177383
+// gas irOptimized: 177376
 // gas legacy: 177954
-// gas legacyOptimized: 177554
+// gas legacyOptimized: 177550
 // storageEmpty -> 0
 // reset() -> true
 // storageEmpty -> 1

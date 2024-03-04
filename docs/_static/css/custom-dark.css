@@ -1,0 +1,595 @@
+
+
+/* DARK MODE STYLING */
+
+/* code directives */
+
+:root[style*=dark] .method dt,
+:root[style*=dark] .class dt,
+:root[style*=dark] .data dt,
+:root[style*=dark] .attribute dt,
+:root[style*=dark] .function dt,
+:root[style*=dark] .classmethod dt,
+:root[style*=dark] .exception dt,
+:root[style*=dark] .descclassname,
+:root[style*=dark] .descname {
+  background-color: #2d2d2d !important;
+}
+
+:root[style*=dark] .rst-content dl:not(.docutils) dt {
+  background-color: #0008;
+  border-top: solid 3px #fff2;
+  border-left: solid 3px #fff2;
+}
+
+:root[style*=dark] em.property {
+  color: #888888;
+}
+
+
+/* tables */
+
+:root[style*=dark] .rst-content table.docutils td {
+  border: 0px;
+}
+
+:root[style*=dark] .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td {
+  background-color: #0002;
+}
+
+:root[style*=dark] .rst-content pre {
+  background: none;
+}
+
+/* inlined code highlights */
+
+:root[style*=dark] .xref,
+:root[style*=dark] .py-meth {
+  color: #aaddff !important;
+  font-weight: normal !important;
+}
+
+/* highlight color search text */
+
+:root[style*=dark] .rst-content .highlighted {
+  background: #ff5722;
+  box-shadow: 0 0 0 2px #f0978b;
+}
+
+/* notes, warnings, hints */
+
+:root[style*=dark] .hint .admonition-title {
+  background: #2aa87c !important;
+}
+
+:root[style*=dark] .warning .admonition-title {
+  background: #cc4444 !important;
+}
+
+:root[style*=dark] .admonition-title {
+  background: #3a7ca8 !important;
+}
+
+:root[style*=dark] .admonition,
+:root[style*=dark] .note {
+  background-color: #0008 !important;
+}
+
+
+/* table of contents */
+
+:root[style*=dark] .sidebar {
+  background-color: #191919 !important;
+}
+
+:root[style*=dark] .sidebar-title {
+  background-color: #2b2b2b !important;
+}
+
+:root[style*=dark] .wy-menu-vertical code.docutils.literal.notranslate {
+  background: none !important;
+  border: none !important;
+}
+
+
+:root[style*=dark] .toc-backref {
+  color: grey !important;
+}
+
+:root[style*=dark] .highlight {
+  background: #0008;
+  color: #f8f8f2
+}
+
+:root[style*=dark] .highlight .c {
+  color: #888
+}
+
+
+/* Comment */
+
+:root[style*=dark] .highlight .err {
+  color: #960050;
+  background-color: #1e0010
+}
+
+
+/* Error */
+
+:root[style*=dark] .highlight .k {
+  color: #66d9ef
+}
+
+
+/* Keyword */
+
+:root[style*=dark] .highlight .l {
+  color: #ae81ff
+}
+
+
+/* Literal */
+
+:root[style*=dark] .highlight .n {
+  color: #f8f8f2
+}
+
+
+/* Name */
+
+:root[style*=dark] .highlight .o {
+  color: #f92672
+}
+
+
+/* Operator */
+
+:root[style*=dark] .highlight .p {
+  color: #f8f8f2
+}
+
+
+/* Punctuation */
+
+:root[style*=dark] .highlight .ch {
+  color: #888
+}
+
+
+/* Comment.Hashbang */
+
+:root[style*=dark] .highlight .cm {
+  color: #888
+}
+
+
+/* Comment.Multiline */
+
+:root[style*=dark] .highlight .cp {
+  color: #888
+}
+
+
+/* Comment.Preproc */
+
+:root[style*=dark] .highlight .cpf {
+  color: #888
+}
+
+
+/* Comment.PreprocFile */
+
+:root[style*=dark] .highlight .c1 {
+  color: #888
+}
+
+
+/* Comment.Single */
+
+:root[style*=dark] .highlight .cs {
+  color: #888
+}
+
+
+/* Comment.Special */
+
+:root[style*=dark] .highlight .gd {
+  color: #f92672
+}
+
+
+/* Generic.Deleted */
+
+:root[style*=dark] .highlight .ge {
+  font-style: italic
+}
+
+
+/* Generic.Emph */
+
+:root[style*=dark] .highlight .gi {
+  color: #a6e22e
+}
+
+
+/* Generic.Inserted */
+
+:root[style*=dark] .highlight .gs {
+  font-weight: bold
+}
+
+
+/* Generic.Strong */
+
+:root[style*=dark] .highlight .gu {
+  color: #888
+}
+
+
+/* Generic.Subheading */
+
+:root[style*=dark] .highlight .kc {
+  color: #66d9ef
+}
+
+
+/* Keyword.Constant */
+
+:root[style*=dark] .highlight .kd {
+  color: #66d9ef
+}
+
+
+/* Keyword.Declaration */
+
+:root[style*=dark] .highlight .kn {
+  color: #f92672
+}
+
+
+/* Keyword.Namespace */
+
+:root[style*=dark] .highlight .kp {
+  color: #66d9ef
+}
+
+
+/* Keyword.Pseudo */
+
+:root[style*=dark] .highlight .kr {
+  color: #66d9ef
+}
+
+
+/* Keyword.Reserved */
+
+:root[style*=dark] .highlight .kt {
+  color: #66d9ef
+}
+
+
+/* Keyword.Type */
+
+:root[style*=dark] .highlight .ld {
+  color: #e6db74
+}
+
+
+/* Literal.Date */
+
+:root[style*=dark] .highlight .m {
+  color: #ae81ff
+}
+
+
+/* Literal.Number */
+
+:root[style*=dark] .highlight .s {
+  color: #e6db74
+}
+
+
+/* Literal.String */
+
+:root[style*=dark] .highlight .na {
+  color: #a6e22e
+}
+
+
+/* Name.Attribute */
+
+:root[style*=dark] .highlight .nb {
+  color: #f8f8f2
+}
+
+
+/* Name.Builtin */
+
+:root[style*=dark] .highlight .nc {
+  color: #a6e22e
+}
+
+
+/* Name.Class */
+
+:root[style*=dark] .highlight .no {
+  color: #66d9ef
+}
+
+
+/* Name.Constant */
+
+:root[style*=dark] .highlight .nd {
+  color: #a6e22e
+}
+
+
+/* Name.Decorator */
+
+:root[style*=dark] .highlight .ni {
+  color: #f8f8f2
+}
+
+
+/* Name.Entity */
+
+:root[style*=dark] .highlight .ne {
+  color: #a6e22e
+}
+
+
+/* Name.Exception */
+
+:root[style*=dark] .highlight .nf {
+  color: #a6e22e
+}
+
+
+/* Name.Function */
+
+:root[style*=dark] .highlight .nl {
+  color: #f8f8f2
+}
+
+
+/* Name.Label */
+
+:root[style*=dark] .highlight .nn {
+  color: #f8f8f2
+}
+
+
+/* Name.Namespace */
+
+:root[style*=dark] .highlight .nx {
+  color: #a6e22e
+}
+
+
+/* Name.Other */
+
+:root[style*=dark] .highlight .py {
+  color: #f8f8f2
+}
+
+
+/* Name.Property */
+
+:root[style*=dark] .highlight .nt {
+  color: #f92672
+}
+
+
+/* Name.Tag */
+
+:root[style*=dark] .highlight .nv {
+  color: #f8f8f2
+}
+
+
+/* Name.Variable */
+
+:root[style*=dark] .highlight .ow {
+  color: #f92672
+}
+
+
+/* Operator.Word */
+
+:root[style*=dark] .highlight .w {
+  color: #f8f8f2
+}
+
+
+/* Text.Whitespace */
+
+:root[style*=dark] .highlight .mb {
+  color: #ae81ff
+}
+
+
+/* Literal.Number.Bin */
+
+:root[style*=dark] .highlight .mf {
+  color: #ae81ff
+}
+
+
+/* Literal.Number.Float */
+
+:root[style*=dark] .highlight .mh {
+  color: #ae81ff
+}
+
+
+/* Literal.Number.Hex */
+
+:root[style*=dark] .highlight .mi {
+  color: #ae81ff
+}
+
+
+/* Literal.Number.Integer */
+
+:root[style*=dark] .highlight .mo {
+  color: #ae81ff
+}
+
+
+/* Literal.Number.Oct */
+
+:root[style*=dark] .highlight .sa {
+  color: #e6db74
+}
+
+
+/* Literal.String.Affix */
+
+:root[style*=dark] .highlight .sb {
+  color: #e6db74
+}
+
+
+/* Literal.String.Backtick */
+
+:root[style*=dark] .highlight .sc {
+  color: #e6db74
+}
+
+
+/* Literal.String.Char */
+
+:root[style*=dark] .highlight .dl {
+  color: #e6db74
+}
+
+
+/* Literal.String.Delimiter */
+
+:root[style*=dark] .highlight .sd {
+  color: #e6db74
+}
+
+
+/* Literal.String.Doc */
+
+:root[style*=dark] .highlight .s2 {
+  color: #e6db74
+}
+
+
+/* Literal.String.Double */
+
+:root[style*=dark] .highlight .se {
+  color: #ae81ff
+}
+
+
+/* Literal.String.Escape */
+
+:root[style*=dark] .highlight .sh {
+  color: #e6db74
+}
+
+
+/* Literal.String.Heredoc */
+
+:root[style*=dark] .highlight .si {
+  color: #e6db74
+}
+
+
+/* Literal.String.Interpol */
+
+:root[style*=dark] .highlight .sx {
+  color: #e6db74
+}
+
+
+/* Literal.String.Other */
+
+:root[style*=dark] .highlight .sr {
+  color: #e6db74
+}
+
+
+/* Literal.String.Regex */
+
+:root[style*=dark] .highlight .s1 {
+  color: #e6db74
+}
+
+
+/* Literal.String.Single */
+
+:root[style*=dark] .highlight .ss {
+  color: #e6db74
+}
+
+
+/* Literal.String.Symbol */
+
+:root[style*=dark] .highlight .bp {
+  color: #f8f8f2
+}
+
+
+/* Name.Builtin.Pseudo */
+
+:root[style*=dark] .highlight .fm {
+  color: #a6e22e
+}
+
+
+/* Name.Function.Magic */
+
+:root[style*=dark] .highlight .vc {
+  color: #f8f8f2
+}
+
+
+/* Name.Variable.Class */
+
+:root[style*=dark] .highlight .vg {
+  color: #f8f8f2
+}
+
+
+/* Name.Variable.Global */
+
+:root[style*=dark] .highlight .vi {
+  color: #f8f8f2
+}
+
+
+/* Name.Variable.Instance */
+
+:root[style*=dark] .highlight .vm {
+  color: #f8f8f2
+}
+
+
+/* Name.Variable.Magic */
+
+:root[style*=dark] .highlight .il {
+  color: #ae81ff
+}
+
+
+/* Grammar */
+
+:root[style*=dark] .railroad-diagram {
+  fill: white;
+}
+
+:root[style*=dark] .railroad-diagram path {
+  stroke: white;
+}
+
+:root[style*=dark] .railroad-diagram rect {
+  stroke: white;
+}
+
+:root[style*=dark] .a4 .sig-name {
+  background-color: transparent !important;
+}

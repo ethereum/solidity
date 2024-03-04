@@ -26,6 +26,7 @@
               {
                 "AST":
                 {
+                  "nativeSrc": "72:76:1",
                   "nodeType": "YulBlock",
                   "src": "72:76:1",
                   "statements":
@@ -33,6 +34,7 @@
                     {
                       "body":
                       {
+                        "nativeSrc": "94:35:1",
                         "nodeType": "YulBlock",
                         "src": "94:35:1",
                         "statements":
@@ -40,26 +42,31 @@
                           {
                             "body":
                             {
+                              "nativeSrc": "118:3:1",
                               "nodeType": "YulBlock",
                               "src": "118:3:1",
                               "statements": []
                             },
                             "name": "f2",
+                            "nativeSrc": "104:17:1",
                             "nodeType": "YulFunctionDefinition",
                             "src": "104:17:1"
                           }
                         ]
                       },
                       "name": "f1",
+                      "nativeSrc": "80:49:1",
                       "nodeType": "YulFunctionDefinition",
                       "src": "80:49:1"
                     },
                     {
+                      "nativeSrc": "136:6:1",
                       "nodeType": "YulAssignment",
                       "src": "136:6:1",
                       "value":
                       {
                         "kind": "number",
+                        "nativeSrc": "141:1:1",
                         "nodeType": "YulLiteral",
                         "src": "141:1:1",
                         "type": "",
@@ -69,6 +76,7 @@
                       [
                         {
                           "name": "x",
+                          "nativeSrc": "136:1:1",
                           "nodeType": "YulIdentifier",
                           "src": "136:1:1"
                         }

@@ -52,6 +52,7 @@ static constexpr char const* BLUE_BACKGROUND = "\033[44m";
 static constexpr char const* MAGENTA_BACKGROUND = "\033[45m";
 static constexpr char const* CYAN_BACKGROUND = "\033[46m";
 static constexpr char const* WHITE_BACKGROUND = "\033[47m";
+static constexpr char const* GRAY_BACKGROUND = "\033[100m";
 
 // 256-bit-colors (incomplete set)
 static constexpr char const* RED_BACKGROUND_256 = "\033[48;5;160m";

@@ -171,7 +171,7 @@ def print_ids_per_file(ids, id_to_file_names, top_dir):
 
 def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     test_sub_dirs = [
-        path.join("test", "libsolidity", "errorRecoveryTests"),
+        path.join("test", "libsolidity", "natspecJSON"),
         path.join("test", "libsolidity", "smtCheckerTests"),
         path.join("test", "libsolidity", "syntaxTests"),
         path.join("test", "libyul", "yulSyntaxTests")
@@ -202,9 +202,11 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
         "4591", # "There are more than 256 warnings. Ignoring the rest."
                 # Due to 3805, the warning lists look different for different compiler builds.
         "1834", # Unimplemented feature error, as we do not test it anymore via cmdLineTests
-        "5430", # basefee being used in inline assembly for EVMVersion < london
+        "6679", # blobbasefee being used in inline assembly for EVMVersion < cancun
         "1180", # SMTChecker, covered by CL tests
+        "2339", # SMTChecker, covered by CL tests
         "2961", # SMTChecker, covered by CL tests
+        "6240", # SMTChecker, covered by CL tests
         "9576", # SMTChecker, covered by CL tests
     }
     assert len(test_ids & white_ids) == 0, "The sets are not supposed to intersect"
@@ -230,16 +232,104 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
             return False
 
     old_source_only_ids = {
-        "1218", "1584", "1823",
-        "1988", "2066", "2833", "3356",
-        "3893", "3996", "4010", "4458", "4802",
-        "4902", "5272", "5622", "5798", "5840", "7128", "7400",
-        "7589", "7593", "7649", "7710",
-        "8065", "8084", "8140", "8158",
-        "8312", "8592", "9134", "9609",
+        "1218",
+        "1584",
+        "1823",
+        "1988",
+        "2066",
+        "2833",
+        "3356",
+        "3893",
+        "3996",
+        "4010",
+        "4458",
+        "4802",
+        "4902",
+        "5272",
+        "5622",
+        "5798",
+        "5840",
+        "7128",
+        "7400",
+        "7589",
+        "7593",
+        "7649",
+        "7710",
+        "8065",
+        "8084",
+        "8140",
+        "8158",
+        "8312",
+        "8592",
+        "9134",
+        "9609",
     }
 
-    new_source_only_ids = source_only_ids - old_source_only_ids
+    # TODO Cover these with tests and remove from this list as the development of experimental
+    # TODO Solidity progresses. The aim should be to completely get rid of `experimental_source_only_ids`.
+    experimental_source_only_ids = {
+        "1017",
+        "1439",
+        "1723",
+        "1741",
+        "1801",
+        "1807",
+        "2015",
+        "2345",
+        "2399",
+        "2599",
+        "2655",
+        "2934",
+        "3101",
+        "3111",
+        "3195",
+        "3520",
+        "3573",
+        "3654",
+        "4316",
+        "4337",
+        "4496",
+        "4504",
+        "4686",
+        "4767",
+        "4873",
+        "4955",
+        "5044",
+        "5094",
+        "5096",
+        "5104",
+        "5195",
+        "5262",
+        "5348",
+        "5360",
+        "5387",
+        "5577",
+        "5714",
+        "5731",
+        "5755",
+        "5904",
+        "6175",
+        "6387",
+        "6388",
+        "6460",
+        "6620",
+        "6739",
+        "6948",
+        "7341",
+        "7428",
+        "7531",
+        "8379",
+        "8809",
+        "8953",
+        "9159",
+        "9173",
+        "9282",
+        "9603",
+        "9658",
+        "9988",
+    }
+
+    new_source_only_ids = source_only_ids - old_source_only_ids - experimental_source_only_ids
     if len(new_source_only_ids) != 0:
         print("The following new error code(s), not covered by tests, found:")
         print_ids(new_source_only_ids)

@@ -41,7 +41,7 @@ sourcePPAConfig
 # Sanity check
 checkDputEntries "\[cpp-build-deps\]"
 
-DISTRIBUTIONS="focal jammy kinetic lunar"
+DISTRIBUTIONS="focal jammy lunar mantic"
 
 for distribution in $DISTRIBUTIONS
 do

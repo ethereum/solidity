@@ -81,6 +81,7 @@ struct InterpreterState
 	/// This is different than memory.size() because we ignore gas.
 	u256 msize;
 	std::map<util::h256, util::h256> storage;
+	std::map<util::h256, util::h256> transientStorage;
 	util::h160 address = util::h160("0x0000000000000000000000000000000011111111");
 	u256 balance = 0x22222222;
 	u256 selfbalance = 0x22223333;
@@ -99,6 +100,8 @@ struct InterpreterState
 	u256 chainid = 0x01;
 	/// The minimum value of basefee: 7 wei.
 	u256 basefee = 0x07;
+	/// The minimum value of blobbasefee: 1 wei.
+	u256 blobbasefee = 0x01;
 	/// Log of changes / effects. Sholud be structured data in the future.
 	std::vector<std::string> trace;
 	/// This is actually an input parameter that more or less limits the runtime.
@@ -111,6 +114,11 @@ struct InterpreterState
 	/// Number of the current state instance, used for recursion protection
 	size_t numInstance = 0;
 
+	// Blob commitment hash version
+	util::FixedHash<1> const blobHashVersion = util::FixedHash<1>(1);
+	// Blob commitments
+	std::array<u256, 2> const blobCommitments = {0x01, 0x02};
+
 	/// Prints execution trace and non-zero storage to @param _out.
 	/// Flag @param _disableMemoryTrace, if set, does not produce a memory dump. This
 	/// avoids false positives reports by the fuzzer when certain optimizer steps are
@@ -118,6 +126,8 @@ struct InterpreterState
 	void dumpTraceAndState(std::ostream& _out, bool _disableMemoryTrace) const;
 	/// Prints non-zero storage to @param _out.
 	void dumpStorage(std::ostream& _out) const;
+	/// Prints non-zero transient storage to @param _out.
+	void dumpTransientStorage(std::ostream& _out) const;
 
 	bytes readMemory(u256 const& _offset, u256 const& _size)
 	{

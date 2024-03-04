@@ -26,13 +26,12 @@
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libevmasm/Assembly.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 
 void Compiler::compileContract(
 	ContractDefinition const& _contract,
-	std::map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers,
+	std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> const& _otherCompilers,
 	bytes const& _metadata
 )
 {

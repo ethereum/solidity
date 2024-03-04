@@ -362,7 +362,7 @@ in memory is automatically considered memory-safe and does not need to be annota
 .. warning::
     It is your responsibility to make sure that the assembly actually satisfies the memory model. If you annotate
     an assembly block as memory-safe, but violate one of the memory assumptions, this **will** lead to incorrect and
-    undefined behaviour that cannot easily be discovered by testing.
+    undefined behavior that cannot easily be discovered by testing.
 
 In case you are developing a library that is meant to be compatible across multiple versions
 of Solidity, you can use a special comment to annotate an assembly block as memory-safe:
@@ -375,4 +375,4 @@ of Solidity, you can use a special comment to annotate an assembly block as memo
     }
 
 Note that we will disallow the annotation via comment in a future breaking release; so, if you are not concerned with
-backwards-compatibility with older compiler versions, prefer using the dialect string.
+backward-compatibility with older compiler versions, prefer using the dialect string.

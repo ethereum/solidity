@@ -150,10 +150,23 @@ public:
 	) const;
 
 	/// Create a JSON representation of the assembly.
-	Json::Value assemblyJSON(
-		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>(),
-		bool _includeSourceList = true
-	) const;
+	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _sourceIndices, bool _includeSourceList = true) const;
+
+	/// Constructs an @a Assembly from the serialized JSON representation.
+	/// @param _json JSON object containing assembly in the format produced by assemblyJSON().
+	/// @param _sourceList List of source files the assembly was built from. When the JSON represents
+	///     the root assembly, the function will read it from the 'sourceList' field and the parameter
+	///     must be empty. It is only used to pass the list down to recursive calls.
+	/// @param _level Nesting level of the current assembly in the assembly tree. The root is
+	///     at level 0 and the value increases down the tree. Necessary to distinguish between creation
+	///     and deployed objects.
+	/// @returns Created @a Assembly and the source list read from the 'sourceList' field of the root
+	///     assembly or an empty list (in recursive calls).
+	static std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> fromJSON(
+		Json::Value const& _json,
+		std::vector<std::string> const& _sourceList = {},
+		size_t _level = 0
+	);
 
 	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
 	void markAsInvalid() { m_invalid = true; }
@@ -171,10 +184,26 @@ protected:
 
 	unsigned codeSize(unsigned subTagSize) const;
 
+	/// Add all assembly items from given JSON array. This function imports the items by iterating through
+	/// the code array. This method only works on clean Assembly objects that don't have any items defined yet.
+	/// @param _json JSON array that contains assembly items (e.g. json['.code'])
+	/// @param _sourceList List of source names.
+	void importAssemblyItemsFromJSON(Json::Value const& _code, std::vector<std::string> const& _sourceList);
+
+	/// Creates an AssemblyItem from a given JSON representation.
+	/// @param _json JSON object that consists a single assembly item
+	/// @param _sourceList List of source names.
+	/// @returns AssemblyItem of _json argument.
+	AssemblyItem createAssemblyItemFromJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList);
+
 private:
 	bool m_invalid = false;
 
 	Assembly const* subAssemblyById(size_t _subId) const;
+
+	void encodeAllPossibleSubPathsInAssemblyTree(std::vector<size_t> _pathFromRoot = {}, std::vector<Assembly*> _assembliesOnPath = {});
+
+	std::shared_ptr<std::string const> sharedSourceName(std::string const& _name) const;
 
 protected:
 	/// 0 is reserved for exception
@@ -217,8 +246,10 @@ protected:
 	/// Internal name of the assembly object, only used with the Yul backend
 	/// currently
 	std::string m_name;
-
 	langutil::SourceLocation m_currentSourceLocation;
+
+	// FIXME: This being static means that the strings won't be freed when they're no longer needed
+	static std::map<std::string, std::shared_ptr<std::string const>> s_sharedSourceNames;
 
 public:
 	size_t m_currentModifierDepth = 0;

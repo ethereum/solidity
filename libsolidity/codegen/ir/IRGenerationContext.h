@@ -23,7 +23,6 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
-#include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
 
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
@@ -38,7 +37,6 @@
 #include <set>
 #include <string>
 #include <memory>
-#include <vector>
 
 namespace solidity::frontend
 {
@@ -46,20 +44,8 @@ namespace solidity::frontend
 class YulUtilFunctions;
 class ABIFunctions;
 
-struct AscendingFunctionIDCompare
-{
-	bool operator()(FunctionDefinition const* _f1, FunctionDefinition const* _f2) const
-	{
-		// NULLs always first.
-		if (_f1 != nullptr && _f2 != nullptr)
-			return _f1->id() < _f2->id();
-		else
-			return _f1 == nullptr;
-	}
-};
-
-using DispatchSet = std::set<FunctionDefinition const*, AscendingFunctionIDCompare>;
-using InternalDispatchMap = std::map<YulArity, DispatchSet>;
+using DispatchQueue = std::deque<FunctionDefinition const*>;
+using InternalDispatchMap = std::map<YulArity, DispatchQueue>;
 
 /**
  * Class that contains contextual information during IR generation.
@@ -73,7 +59,6 @@ public:
 		langutil::EVMVersion _evmVersion,
 		ExecutionContext _executionContext,
 		RevertStrings _revertStrings,
-		OptimiserSettings _optimiserSettings,
 		std::map<std::string, unsigned> _sourceIndices,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
@@ -81,7 +66,6 @@ public:
 		m_evmVersion(_evmVersion),
 		m_executionContext(_executionContext),
 		m_revertStrings(_revertStrings),
-		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_sourceIndices(std::move(_sourceIndices)),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
@@ -176,7 +160,6 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	ExecutionContext m_executionContext;
 	RevertStrings m_revertStrings;
-	OptimiserSettings m_optimiserSettings;
 	std::map<std::string, unsigned> m_sourceIndices;
 	std::set<std::string> m_usedSourceNames;
 	ContractDefinition const* m_mostDerivedContract = nullptr;
@@ -201,10 +184,9 @@ private:
 	/// were discovered by the IR generator during AST traversal.
 	/// Note that the queue gets filled in a lazy way - new definitions can be added while the
 	/// collected ones get removed and traversed.
-	/// The order and duplicates are irrelevant here (hence std::set rather than std::queue) as
-	/// long as the order of Yul functions in the generated code is deterministic and the same on
-	/// all platforms - which is a property guaranteed by MultiUseYulFunctionCollector.
-	DispatchSet m_functionGenerationQueue;
+	/// The order and duplicates are relevant here
+	/// (see: IRGenerationContext::[enqueue|dequeue]FunctionForCodeGeneration)
+	DispatchQueue m_functionGenerationQueue;
 
 	/// Collection of functions that need to be callable via internal dispatch.
 	/// Note that having a key with an empty set of functions is a valid situation. It means that

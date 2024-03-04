@@ -9,6 +9,7 @@ object "C_6_deployed" {
 
         /// @src 0:77:99  "function f() public {}"
         function fun_f_5() {
+            sstore(0, 42)
         }
         /// @src 0:60:101  "contract C {..."
     }

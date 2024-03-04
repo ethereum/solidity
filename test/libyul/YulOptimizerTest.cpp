@@ -24,7 +24,6 @@
 #include <test/Common.h>
 
 #include <libyul/Object.h>
-#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/AsmPrinter.h>
 
 #include <liblangutil/CharStreamProvider.h>
@@ -32,6 +31,7 @@
 #include <liblangutil/Scanner.h>
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/StringUtils.h>
 
 #include <fstream>
 
@@ -42,22 +42,15 @@ using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
-YulOptimizerTest::YulOptimizerTest(string const& _filename):
+YulOptimizerTest::YulOptimizerTest(std::string const& _filename):
 	EVMVersionRestrictedTestCase(_filename)
 {
 	boost::filesystem::path path(_filename);
 
 	if (path.empty() || std::next(path.begin()) == path.end() || std::next(std::next(path.begin())) == path.end())
-		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
-
-	if (m_optimizerStep == "reasoningBasedSimplifier" && (
-		solidity::test::CommonOptions::get().disableSMT ||
-		ReasoningBasedSimplifier::invalidInCurrentEnvironment()
-	))
-		m_shouldRun = false;
 
 	m_source = m_reader.source();
 
@@ -67,7 +60,7 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	std::tie(m_object, m_analysisInfo) = parse(_stream, _linePrefix, _formatted, m_source);
 	if (!m_object)
@@ -81,7 +74,7 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 
 	if (!tester.runStep())
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << std::endl;
 		return TestResult::FatalError;
 	}
 
@@ -92,8 +85,8 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	if (m_optimizerStep != "wordSizeTransform" && !std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))
 	{
 		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
-			<< _linePrefix << "Result after the optimiser:" << endl;
-		printIndented(_stream, printed, _linePrefix + "  ");
+			<< _linePrefix << "Result after the optimiser:" << std::endl;
+		printPrefixed(_stream, printed, _linePrefix + "  ");
 		return TestResult::FatalError;
 	}
 
@@ -103,20 +96,20 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 }
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> YulOptimizerTest::parse(
-	ostream& _stream,
-	string const& _linePrefix,
+	std::ostream& _stream,
+	std::string const& _linePrefix,
 	bool const _formatted,
-	string const& _source
+	std::string const& _source
 )
 {
 	ErrorList errors;
 	soltestAssert(m_dialect, "");
-	shared_ptr<Object> object;
-	shared_ptr<AsmAnalysisInfo> analysisInfo;
+	std::shared_ptr<Object> object;
+	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_dialect, errors);
 	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
 		CharStream charStream(_source, "");
 		SourceReferenceFormatter{_stream, SingletonCharStreamProvider(charStream), true, false}
 			.printErrorInformation(errors);

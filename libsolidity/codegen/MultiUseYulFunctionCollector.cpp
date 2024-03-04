@@ -26,44 +26,43 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::util;
 
-string MultiUseYulFunctionCollector::requestedFunctions()
+std::string MultiUseYulFunctionCollector::requestedFunctions()
 {
-	string result = std::move(m_code);
+	std::string result = std::move(m_code);
 	m_code.clear();
 	m_requestedFunctions.clear();
 	return result;
 }
 
-string MultiUseYulFunctionCollector::createFunction(string const& _name, function<string ()> const& _creator)
+std::string MultiUseYulFunctionCollector::createFunction(std::string const& _name, std::function<std::string()> const& _creator)
 {
 	if (!m_requestedFunctions.count(_name))
 	{
 		m_requestedFunctions.insert(_name);
-		string fun = _creator();
+		std::string fun = _creator();
 		solAssert(!fun.empty(), "");
-		solAssert(fun.find("function " + _name + "(") != string::npos, "Function not properly named.");
+		solAssert(fun.find("function " + _name + "(") != std::string::npos, "Function not properly named.");
 		m_code += std::move(fun);
 	}
 	return _name;
 }
 
-string MultiUseYulFunctionCollector::createFunction(
-	string const& _name,
-	function<string(vector<string>&, vector<string>&)> const& _creator
+std::string MultiUseYulFunctionCollector::createFunction(
+	std::string const& _name,
+	std::function<std::string(std::vector<std::string>&, std::vector<std::string>&)> const& _creator
 )
 {
 	solAssert(!_name.empty(), "");
 	if (!m_requestedFunctions.count(_name))
 	{
 		m_requestedFunctions.insert(_name);
-		vector<string> arguments;
-		vector<string> returnParameters;
-		string body = _creator(arguments, returnParameters);
+		std::vector<std::string> arguments;
+		std::vector<std::string> returnParameters;
+		std::string body = _creator(arguments, returnParameters);
 		solAssert(!body.empty(), "");
 
 		m_code += Whiskers(R"(

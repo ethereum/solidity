@@ -27,18 +27,18 @@
 #include <libsolutil/Keccak256.h>
 
 #include <functional>
+#include <utility>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
 
-ostream& KnownState::stream(ostream& _out) const
+std::ostream& KnownState::stream(std::ostream& _out) const
 {
-	auto streamExpressionClass = [this](ostream& _out, Id _id)
+	auto streamExpressionClass = [this](std::ostream& _out, Id _id)
 	{
 		auto const& expr = m_expressionClasses->representative(_id);
-		_out << "  " << dec << _id << ": ";
+		_out << "  " << std::dec << _id << ": ";
 		if (!expr.item)
 			_out << " no item";
 		else if (expr.item->type() == UndefinedItem)
@@ -46,26 +46,26 @@ ostream& KnownState::stream(ostream& _out) const
 		else
 			_out << *expr.item;
 		if (expr.sequenceNumber)
-			_out << "@" << dec << expr.sequenceNumber;
+			_out << "@" << std::dec << expr.sequenceNumber;
 		_out << "(";
 		for (Id arg: expr.arguments)
-			_out << dec << arg << ",";
-		_out << ")" << endl;
+			_out << std::dec << arg << ",";
+		_out << ")" << std::endl;
 	};
 
-	_out << "=== State ===" << endl;
-	_out << "Stack height: " << dec << m_stackHeight << endl;
-	_out << "Equivalence classes:" << endl;
+	_out << "=== State ===" << std::endl;
+	_out << "Stack height: " << std::dec << m_stackHeight << std::endl;
+	_out << "Equivalence classes:" << std::endl;
 	for (Id eqClass = 0; eqClass < m_expressionClasses->size(); ++eqClass)
 		streamExpressionClass(_out, eqClass);
 
-	_out << "Stack:" << endl;
+	_out << "Stack:" << std::endl;
 	for (auto const& it: m_stackElements)
 	{
-		_out << "  " << dec << it.first << ": ";
+		_out << "  " << std::dec << it.first << ": ";
 		streamExpressionClass(_out, it.second);
 	}
-	_out << "Storage:" << endl;
+	_out << "Storage:" << std::endl;
 	for (auto const& it: m_storageContent)
 	{
 		_out << "  ";
@@ -73,7 +73,7 @@ ostream& KnownState::stream(ostream& _out) const
 		_out << ": ";
 		streamExpressionClass(_out, it.second);
 	}
-	_out << "Memory:" << endl;
+	_out << "Memory:" << std::endl;
 	for (auto const& it: m_memoryContent)
 	{
 		_out << "  ";
@@ -115,7 +115,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 		for (size_t i = 0; i < _item.returnValues(); ++i)
 			setStackElement(
 				m_stackHeight - static_cast<int>(i),
-				m_expressionClasses->newClass(_item.location())
+				m_expressionClasses->newClass(_item.debugData())
 			);
 	}
 	else if (_item.type() != Operation)
@@ -138,44 +138,44 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				m_stackHeight + 1,
 				stackElement(
 					m_stackHeight - static_cast<int>(instruction) + static_cast<int>(Instruction::DUP1),
-					_item.location()
+					_item.debugData()
 				)
 			);
 		else if (SemanticInformation::isSwapInstruction(_item))
 			swapStackElements(
 				m_stackHeight,
 				m_stackHeight - 1 - static_cast<int>(instruction) + static_cast<int>(Instruction::SWAP1),
-				_item.location()
+				_item.debugData()
 			);
 		else if (instruction != Instruction::POP)
 		{
-			vector<Id> arguments(static_cast<size_t>(info.args));
+			std::vector<Id> arguments(static_cast<size_t>(info.args));
 			for (size_t i = 0; i < static_cast<size_t>(info.args); ++i)
-				arguments[i] = stackElement(m_stackHeight - static_cast<int>(i), _item.location());
+				arguments[i] = stackElement(m_stackHeight - static_cast<int>(i), _item.debugData());
 			switch (_item.instruction())
 			{
 			case Instruction::SSTORE:
-				op = storeInStorage(arguments[0], arguments[1], _item.location());
+				op = storeInStorage(arguments[0], arguments[1], _item.debugData());
 				break;
 			case Instruction::SLOAD:
 				setStackElement(
 					m_stackHeight + static_cast<int>(_item.deposit()),
-					loadFromStorage(arguments[0], _item.location())
+					loadFromStorage(arguments[0], _item.debugData())
 				);
 				break;
 			case Instruction::MSTORE:
-				op = storeInMemory(arguments[0], arguments[1], _item.location());
+				op = storeInMemory(arguments[0], arguments[1], _item.debugData());
 				break;
 			case Instruction::MLOAD:
 				setStackElement(
 					m_stackHeight + static_cast<int>(_item.deposit()),
-					loadFromMemory(arguments[0], _item.location())
+					loadFromMemory(arguments[0], _item.debugData())
 				);
 				break;
 			case Instruction::KECCAK256:
 				setStackElement(
 					m_stackHeight + static_cast<int>(_item.deposit()),
-					applyKeccak256(arguments.at(0), arguments.at(1), _item.location())
+					applyKeccak256(arguments.at(0), arguments.at(1), _item.debugData())
 				);
 				break;
 			default:
@@ -233,8 +233,8 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 				++it;
 			else
 			{
-				set<u256> theseTags = tagsInExpression(it->second);
-				set<u256> otherTags = tagsInExpression(other);
+				std::set<u256> theseTags = tagsInExpression(it->second);
+				std::set<u256> otherTags = tagsInExpression(other);
 				if (!theseTags.empty() && !otherTags.empty())
 				{
 					theseTags.insert(otherTags.begin(), otherTags.end());
@@ -251,7 +251,7 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 	// Use the smaller stack height. Essential to terminate in case of loops.
 	if (m_stackHeight > _other.m_stackHeight)
 	{
-		map<int, Id> shiftedStack;
+		std::map<int, Id> shiftedStack;
 		for (auto const& stackElement: m_stackElements)
 			shiftedStack[stackElement.first - stackDiff] = stackElement.second;
 		m_stackElements = std::move(shiftedStack);
@@ -261,7 +261,7 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 	intersect(m_storageContent, _other.m_storageContent);
 	intersect(m_memoryContent, _other.m_memoryContent);
 	if (_combineSequenceNumbers)
-		m_sequenceNumber = max(m_sequenceNumber, _other.m_sequenceNumber);
+		m_sequenceNumber = std::max(m_sequenceNumber, _other.m_sequenceNumber);
 }
 
 bool KnownState::operator==(KnownState const& _other) const
@@ -277,18 +277,18 @@ bool KnownState::operator==(KnownState const& _other) const
 	return (thisIt == m_stackElements.cend() && otherIt == _other.m_stackElements.cend());
 }
 
-ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation const& _location)
+ExpressionClasses::Id KnownState::stackElement(int _stackHeight, langutil::DebugData::ConstPtr _debugData)
 {
 	if (m_stackElements.count(_stackHeight))
 		return m_stackElements.at(_stackHeight);
 	// Stack element not found (not assigned yet), create new unknown equivalence class.
 	return m_stackElements[_stackHeight] =
-			m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, _location));
+			m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, std::move(_debugData)));
 }
 
-KnownState::Id KnownState::relativeStackElement(int _stackOffset, SourceLocation const& _location)
+KnownState::Id KnownState::relativeStackElement(int _stackOffset, langutil::DebugData::ConstPtr _debugData)
 {
-	return stackElement(m_stackHeight + _stackOffset, _location);
+	return stackElement(m_stackHeight + _stackOffset, std::move(_debugData));
 }
 
 void KnownState::clearTagUnions()
@@ -308,21 +308,22 @@ void KnownState::setStackElement(int _stackHeight, Id _class)
 void KnownState::swapStackElements(
 	int _stackHeightA,
 	int _stackHeightB,
-	SourceLocation const& _location
+	langutil::DebugData::ConstPtr _debugData
 )
 {
 	assertThrow(_stackHeightA != _stackHeightB, OptimizerException, "Swap on same stack elements.");
 	// ensure they are created
-	stackElement(_stackHeightA, _location);
-	stackElement(_stackHeightB, _location);
+	stackElement(_stackHeightA, _debugData);
+	stackElement(_stackHeightB, _debugData);
 
-	swap(m_stackElements[_stackHeightA], m_stackElements[_stackHeightB]);
+	std::swap(m_stackElements[_stackHeightA], m_stackElements[_stackHeightB]);
 }
 
 KnownState::StoreOperation KnownState::storeInStorage(
 	Id _slot,
 	Id _value,
-	SourceLocation const& _location)
+	langutil::DebugData::ConstPtr _debugData
+)
 {
 	if (m_storageContent.count(_slot) && m_storageContent[_slot] == _value)
 		// do not execute the storage if we know that the value is already there
@@ -337,7 +338,7 @@ KnownState::StoreOperation KnownState::storeInStorage(
 			storageContents.insert(storageItem);
 	m_storageContent = std::move(storageContents);
 
-	AssemblyItem item(Instruction::SSTORE, _location);
+	AssemblyItem item(Instruction::SSTORE, std::move(_debugData));
 	Id id = m_expressionClasses->find(item, {_slot, _value}, true, m_sequenceNumber);
 	StoreOperation operation{StoreOperation::Storage, _slot, m_sequenceNumber, id};
 	m_storageContent[_slot] = _value;
@@ -347,16 +348,16 @@ KnownState::StoreOperation KnownState::storeInStorage(
 	return operation;
 }
 
-ExpressionClasses::Id KnownState::loadFromStorage(Id _slot, SourceLocation const& _location)
+ExpressionClasses::Id KnownState::loadFromStorage(Id _slot, langutil::DebugData::ConstPtr _debugData)
 {
 	if (m_storageContent.count(_slot))
 		return m_storageContent.at(_slot);
 
-	AssemblyItem item(Instruction::SLOAD, _location);
+	AssemblyItem item(Instruction::SLOAD, std::move(_debugData));
 	return m_storageContent[_slot] = m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
 }
 
-KnownState::StoreOperation KnownState::storeInMemory(Id _slot, Id _value, SourceLocation const& _location)
+KnownState::StoreOperation KnownState::storeInMemory(Id _slot, Id _value, langutil::DebugData::ConstPtr _debugData)
 {
 	if (m_memoryContent.count(_slot) && m_memoryContent[_slot] == _value)
 		// do not execute the store if we know that the value is already there
@@ -369,7 +370,7 @@ KnownState::StoreOperation KnownState::storeInMemory(Id _slot, Id _value, Source
 			memoryContents.insert(memoryItem);
 	m_memoryContent = std::move(memoryContents);
 
-	AssemblyItem item(Instruction::MSTORE, _location);
+	AssemblyItem item(Instruction::MSTORE, std::move(_debugData));
 	Id id = m_expressionClasses->find(item, {_slot, _value}, true, m_sequenceNumber);
 	StoreOperation operation{StoreOperation::Memory, _slot, m_sequenceNumber, id};
 	m_memoryContent[_slot] = _value;
@@ -378,36 +379,36 @@ KnownState::StoreOperation KnownState::storeInMemory(Id _slot, Id _value, Source
 	return operation;
 }
 
-ExpressionClasses::Id KnownState::loadFromMemory(Id _slot, SourceLocation const& _location)
+ExpressionClasses::Id KnownState::loadFromMemory(Id _slot, langutil::DebugData::ConstPtr _debugData)
 {
 	if (m_memoryContent.count(_slot))
 		return m_memoryContent.at(_slot);
 
-	AssemblyItem item(Instruction::MLOAD, _location);
+	AssemblyItem item(Instruction::MLOAD, std::move(_debugData));
 	return m_memoryContent[_slot] = m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
 }
 
 KnownState::Id KnownState::applyKeccak256(
 	Id _start,
 	Id _length,
-	SourceLocation const& _location
+	langutil::DebugData::ConstPtr _debugData
 )
 {
-	AssemblyItem keccak256Item(Instruction::KECCAK256, _location);
+	AssemblyItem keccak256Item(Instruction::KECCAK256, _debugData);
 	// Special logic if length is a short constant, otherwise we cannot tell.
 	u256 const* l = m_expressionClasses->knownConstant(_length);
 	// unknown or too large length
 	if (!l || *l > 128)
 		return m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
 	unsigned length = unsigned(*l);
-	vector<Id> arguments;
+	std::vector<Id> arguments;
 	for (unsigned i = 0; i < length; i += 32)
 	{
 		Id slot = m_expressionClasses->find(
-			AssemblyItem(Instruction::ADD, _location),
+			AssemblyItem(Instruction::ADD, _debugData),
 			{_start, m_expressionClasses->find(u256(i))}
 		);
-		arguments.push_back(loadFromMemory(slot, _location));
+		arguments.push_back(loadFromMemory(slot, _debugData));
 	}
 	if (m_knownKeccak256Hashes.count({arguments, length}))
 		return m_knownKeccak256Hashes.at({arguments, length});
@@ -419,32 +420,32 @@ KnownState::Id KnownState::applyKeccak256(
 		for (Id a: arguments)
 			data += toBigEndian(*m_expressionClasses->knownConstant(a));
 		data.resize(length);
-		v = m_expressionClasses->find(AssemblyItem(u256(util::keccak256(data)), _location));
+		v = m_expressionClasses->find(AssemblyItem(u256(util::keccak256(data)), _debugData));
 	}
 	else
 		v = m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
 	return m_knownKeccak256Hashes[{arguments, length}] = v;
 }
 
-set<u256> KnownState::tagsInExpression(KnownState::Id _expressionId)
+std::set<u256> KnownState::tagsInExpression(KnownState::Id _expressionId)
 {
 	if (m_tagUnions.left.count(_expressionId))
 		return m_tagUnions.left.at(_expressionId);
 	// Might be a tag, then return the set of itself.
 	ExpressionClasses::Expression expr = m_expressionClasses->representative(_expressionId);
 	if (expr.item && expr.item->type() == PushTag)
-		return set<u256>({expr.item->data()});
+		return std::set<u256>({expr.item->data()});
 	else
-		return set<u256>();
+		return std::set<u256>();
 }
 
-KnownState::Id KnownState::tagUnion(set<u256> _tags)
+KnownState::Id KnownState::tagUnion(std::set<u256> _tags)
 {
 	if (m_tagUnions.right.count(_tags))
 		return m_tagUnions.right.at(_tags);
 	else
 	{
-		Id id = m_expressionClasses->newClass(SourceLocation());
+		Id id = m_expressionClasses->newClass(langutil::DebugData::create());
 		m_tagUnions.right.insert(make_pair(_tags, id));
 		return id;
 	}

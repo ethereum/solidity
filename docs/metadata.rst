@@ -147,14 +147,14 @@ explanatory purposes.
           "useLiteralContent": true
         },
         // Optional: Optimizer settings. The fields "enabled" and "runs" are deprecated
-        // and are only given for backwards-compatibility.
+        // and are only given for backward-compatibility.
         "optimizer": {
           "details": {
             "constantOptimizer": false,
             "cse": false,
             "deduplicate": false,
-            // inliner defaults to "true"
-            "inliner": true,
+            // inliner defaults to "false"
+            "inliner": false,
             // jumpdestRemover defaults to "true"
             "jumpdestRemover": true,
             "orderLiterals": false,
@@ -241,7 +241,7 @@ relevant part of the bytecode can be decoded with a CBOR decoder.
 Check the `Metadata Playground <https://playground.sourcify.dev/>`_ to see it in action.
 
 Whereas release builds of solc use a 3 byte encoding of the version as shown
-above (one byte each for major, minor and patch version number), prerelease builds
+above (one byte each for major, minor and patch version number), pre-release builds
 will instead use a complete version string including commit hash and build date.
 
 The commandline flag ``--no-cbor-metadata`` can be used to skip metadata

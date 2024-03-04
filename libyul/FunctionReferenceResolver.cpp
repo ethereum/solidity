@@ -23,7 +23,6 @@
 
 #include <range/v3/view/reverse.hpp>
 
-using namespace std;
 using namespace solidity::yul;
 using namespace solidity::util;
 
@@ -51,7 +50,7 @@ void FunctionReferenceResolver::operator()(Block const& _block)
 {
 	m_scopes.emplace_back();
 	for (auto const& statement: _block.statements)
-		if (auto const* function = get_if<FunctionDefinition>(&statement))
+		if (auto const* function = std::get_if<FunctionDefinition>(&statement))
 			m_scopes.back()[function->name] = function;
 
 	ASTWalker::operator()(_block);

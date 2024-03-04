@@ -34,7 +34,6 @@
 
 #include <iostream>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
@@ -48,7 +47,7 @@ void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 
 	uae.m_storesToRemove += uae.m_allStores - uae.m_usedStores;
 
-	set<Statement const*> toRemove{uae.m_storesToRemove.begin(), uae.m_storesToRemove.end()};
+	std::set<Statement const*> toRemove{uae.m_storesToRemove.begin(), uae.m_storesToRemove.end()};
 	StatementRemover remover{toRemove};
 	remover(_ast);
 }
@@ -103,7 +102,7 @@ void UnusedAssignEliminator::operator()(Block const& _block)
 	UnusedStoreBase::operator()(_block);
 
 	for (auto const& statement: _block.statements)
-		if (auto const* varDecl = get_if<VariableDeclaration>(&statement))
+		if (auto const* varDecl = std::get_if<VariableDeclaration>(&statement))
 			for (auto const& var: varDecl->variables)
 				m_activeStores.erase(var.name);
 }
@@ -112,7 +111,7 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 {
 	UnusedStoreBase::visit(_statement);
 
-	if (auto const* assignment = get_if<Assignment>(&_statement))
+	if (auto const* assignment = std::get_if<Assignment>(&_statement))
 	{
 		// We do not remove assignments whose values might have side-effects,
 		// but clear the active stores to the assigned variables in any case.

@@ -31,7 +31,6 @@
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -41,7 +40,7 @@ using namespace solidity::smtutil;
 ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
 	langutil::CharStreamProvider const& _charStreamProvider,
-	map<h256, string> const& _smtlib2Responses,
+	std::map<h256, std::string> const& _smtlib2Responses,
 	ModelCheckerSettings _settings,
 	ReadCallback::Callback const& _smtCallback
 ):
@@ -54,19 +53,19 @@ ModelChecker::ModelChecker(
 }
 
 // TODO This should be removed for 0.9.0.
-bool ModelChecker::isPragmaPresent(vector<shared_ptr<SourceUnit>> const& _sources)
+bool ModelChecker::isPragmaPresent(std::vector<std::shared_ptr<SourceUnit>> const& _sources)
 {
 	return ranges::any_of(_sources, [](auto _source) {
 		return _source && _source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker);
 	});
 }
 
-void ModelChecker::checkRequestedSourcesAndContracts(vector<shared_ptr<SourceUnit>> const& _sources)
+void ModelChecker::checkRequestedSourcesAndContracts(std::vector<std::shared_ptr<SourceUnit>> const& _sources)
 {
-	map<string, set<string>> exist;
+	std::map<std::string, std::set<std::string>> exist;
 	for (auto const& source: _sources)
 		for (auto node: source->nodes())
-			if (auto contract = dynamic_pointer_cast<ContractDefinition>(node))
+			if (auto contract = std::dynamic_pointer_cast<ContractDefinition>(node))
 				exist[contract->sourceUnitName()].insert(contract->name());
 
 	// Requested sources
@@ -100,7 +99,7 @@ void ModelChecker::analyze(SourceUnit const& _source)
 	{
 		PragmaDirective const* smtPragma = nullptr;
 		for (auto node: _source.nodes())
-			if (auto pragma = dynamic_pointer_cast<PragmaDirective>(node))
+			if (auto pragma = std::dynamic_pointer_cast<PragmaDirective>(node))
 				if (
 					pragma->literals().size() >= 2 &&
 					pragma->literals().at(1) == "SMTChecker"
@@ -125,7 +124,7 @@ void ModelChecker::analyze(SourceUnit const& _source)
 	if (m_settings.engine.chc)
 		m_chc.analyze(_source);
 
-	map<ASTNode const*, set<VerificationTargetType>, smt::EncodingContext::IdCompare> solvedTargets;
+	std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> solvedTargets;
 
 	for (auto const& [node, targets]: m_chc.safeTargets())
 		for (auto const& target: targets)
@@ -147,7 +146,7 @@ void ModelChecker::analyze(SourceUnit const& _source)
 			5724_error,
 			{},
 			"SMTChecker: " +
-			to_string(m_unsupportedErrorReporter.errors().size()) +
+			std::to_string(m_unsupportedErrorReporter.errors().size()) +
 			" unsupported language feature(s)."
 			" Enable the model checker option \"show unsupported\" to see all of them."
 		);
@@ -156,7 +155,7 @@ void ModelChecker::analyze(SourceUnit const& _source)
 	m_uniqueErrorReporter.clear();
 }
 
-vector<string> ModelChecker::unhandledQueries()
+std::vector<std::string> ModelChecker::unhandledQueries()
 {
 	return m_bmc.unhandledQueries() + m_chc.unhandledQueries();
 }
@@ -212,7 +211,7 @@ SMTSolverChoice ModelChecker::checkRequestedSolvers(SMTSolverChoice _enabled, Er
 			SourceLocation(),
 			"Solver z3 was selected for SMTChecker but it is not available."
 #ifdef HAVE_Z3_DLOPEN
-			" libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " was not found."
+			" libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " was not found."
 #endif
 		);
 	}

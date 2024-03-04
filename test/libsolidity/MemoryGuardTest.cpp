@@ -18,9 +18,11 @@
 
 #include <test/libsolidity/MemoryGuardTest.h>
 
+#include <test/Common.h>
 #include <test/libyul/Common.h>
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/StringUtils.h>
 #include <libyul/Object.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
@@ -28,37 +30,45 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 using namespace yul;
 
-TestCase::TestResult MemoryGuardTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+void MemoryGuardTest::setupCompiler(CompilerStack& _compiler)
 {
-	compiler().reset();
-	compiler().setSources(StringMap{{"", m_source}});
-	compiler().setViaIR(true);
-	compiler().setOptimiserSettings(OptimiserSettings::none());
-	if (!compiler().compile())
+	AnalysisFramework::setupCompiler(_compiler);
+
+	_compiler.setViaIR(true);
+	_compiler.setOptimiserSettings(OptimiserSettings::none());
+}
+
+TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
+{
+	if (!runFramework(m_source, PipelineStage::Compilation))
+	{
+		printPrefixed(_stream, formatErrors(filteredErrors(), _formatted), _linePrefix);
 		return TestResult::FatalError;
+	}
 
 	m_obtainedResult.clear();
-	for (string contractName: compiler().contractNames())
+	for (std::string contractName: compiler().contractNames())
 	{
 		ErrorList errors;
 		auto [object, analysisInfo] = yul::test::parse(
 			compiler().yulIR(contractName),
-			EVMDialect::strictAssemblyForEVMObjects({}),
+			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()),
 			errors
 		);
 
 		if (!object || !analysisInfo || Error::containsErrors(errors))
 		{
-			AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing IR." << endl;
+			AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing IR:" << std::endl;
+			printPrefixed(_stream, formatErrors(filterErrors(errors), _formatted), _linePrefix);
 			return TestResult::FatalError;
 		}
 

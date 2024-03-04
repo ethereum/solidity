@@ -26,6 +26,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <algorithm>
+#include <iterator>
 #include <iomanip>
 #include <memory>
 #include <regex>
@@ -35,7 +37,6 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
-using namespace std;
 
 bytes BytesUtils::alignLeft(bytes _bytes)
 {
@@ -71,7 +72,7 @@ bytes BytesUtils::applyAlign(
 	}
 }
 
-bytes BytesUtils::convertBoolean(string const& _literal)
+bytes BytesUtils::convertBoolean(std::string const& _literal)
 {
 	if (_literal == "true")
 		return bytes{true};
@@ -81,7 +82,7 @@ bytes BytesUtils::convertBoolean(string const& _literal)
 		BOOST_THROW_EXCEPTION(TestParserError("Boolean literal invalid."));
 }
 
-bytes BytesUtils::convertNumber(string const& _literal)
+bytes BytesUtils::convertNumber(std::string const& _literal)
 {
 	try
 	{
@@ -93,13 +94,13 @@ bytes BytesUtils::convertNumber(string const& _literal)
 	}
 }
 
-bytes BytesUtils::convertFixedPoint(string const& _literal, size_t& o_fractionalDigits)
+bytes BytesUtils::convertFixedPoint(std::string const& _literal, size_t& o_fractionalDigits)
 {
 	size_t dotPos = _literal.find('.');
 	o_fractionalDigits = dotPos < _literal.size() ? _literal.size() - dotPos : 0;
 	bool negative = !_literal.empty() && _literal.at(0) == '-';
 	// remove decimal point
-	string valueInteger = _literal.substr(0, dotPos) + _literal.substr(dotPos + 1);
+	std::string valueInteger = _literal.substr(0, dotPos) + _literal.substr(dotPos + 1);
 	// erase leading zeros to avoid parsing as octal.
 	while (!valueInteger.empty() && (valueInteger.at(0) == '0' || valueInteger.at(0) == '-'))
 		valueInteger.erase(valueInteger.begin());
@@ -118,7 +119,7 @@ bytes BytesUtils::convertFixedPoint(string const& _literal, size_t& o_fractional
 	}
 }
 
-bytes BytesUtils::convertHexNumber(string const& _literal)
+bytes BytesUtils::convertHexNumber(std::string const& _literal)
 {
 	try
 	{
@@ -130,7 +131,7 @@ bytes BytesUtils::convertHexNumber(string const& _literal)
 	}
 }
 
-bytes BytesUtils::convertString(string const& _literal)
+bytes BytesUtils::convertString(std::string const& _literal)
 {
 	try
 	{
@@ -142,18 +143,18 @@ bytes BytesUtils::convertString(string const& _literal)
 	}
 }
 
-string BytesUtils::formatUnsigned(bytes const& _bytes)
+std::string BytesUtils::formatUnsigned(bytes const& _bytes)
 {
-	stringstream os;
+	std::stringstream os;
 
 	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
 
 	return fromBigEndian<u256>(_bytes).str();
 }
 
-string BytesUtils::formatSigned(bytes const& _bytes)
+std::string BytesUtils::formatSigned(bytes const& _bytes)
 {
-	stringstream os;
+	std::stringstream os;
 
 	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
 
@@ -165,9 +166,9 @@ string BytesUtils::formatSigned(bytes const& _bytes)
 	return os.str();
 }
 
-string BytesUtils::formatBoolean(bytes const& _bytes)
+std::string BytesUtils::formatBoolean(bytes const& _bytes)
 {
-	stringstream os;
+	std::stringstream os;
 	u256 result = fromBigEndian<u256>(_bytes);
 
 	if (result == 0)
@@ -180,32 +181,32 @@ string BytesUtils::formatBoolean(bytes const& _bytes)
 	return os.str();
 }
 
-string BytesUtils::formatHex(bytes const& _bytes, bool _shorten)
+std::string BytesUtils::formatHex(bytes const& _bytes, bool _shorten)
 {
 	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
 	u256 value = fromBigEndian<u256>(_bytes);
-	string output = toCompactHexWithPrefix(value);
+	std::string output = toCompactHexWithPrefix(value);
 
 	if (_shorten)
 		return output.substr(0, output.size() - countRightPaddedZeros(_bytes) * 2);
 	return output;
 }
 
-string BytesUtils::formatHexString(bytes const& _bytes)
+std::string BytesUtils::formatHexString(bytes const& _bytes)
 {
-	stringstream os;
+	std::stringstream os;
 
 	os << "hex\"" << util::toHex(_bytes) << "\"";
 
 	return os.str();
 }
 
-string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
+std::string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 {
-	stringstream os;
+	std::stringstream os;
 
 	os << "\"";
-	for (size_t i = 0; i < min(_cutOff, _bytes.size()); ++i)
+	for (size_t i = 0; i < std::min(_cutOff, _bytes.size()); ++i)
 	{
 		auto const v = _bytes[i];
 		switch (v)
@@ -230,7 +231,7 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 
 std::string BytesUtils::formatFixedPoint(bytes const& _bytes, bool _signed, size_t _fractionalDigits)
 {
-	string decimal;
+	std::string decimal;
 	bool negative = false;
 	if (_signed)
 	{
@@ -244,46 +245,66 @@ std::string BytesUtils::formatFixedPoint(bytes const& _bytes, bool _signed, size
 	{
 		size_t numDigits = decimal.length() - (negative ? 1 : 0);
 		if (_fractionalDigits >= numDigits)
-			decimal.insert(negative ? 1 : 0, string(_fractionalDigits + 1 - numDigits, '0'));
+			decimal.insert(negative ? 1 : 0, std::string(_fractionalDigits + 1 - numDigits, '0'));
 		decimal.insert(decimal.length() - _fractionalDigits, ".");
 	}
 	return decimal;
 }
 
-string BytesUtils::formatRawBytes(
+std::string BytesUtils::formatRawBytes(
 	bytes const& _bytes,
 	solidity::frontend::test::ParameterList const& _parameters,
-	string _linePrefix)
+	std::string _linePrefix
+)
 {
-	stringstream os;
+	std::stringstream os;
 	ParameterList parameters;
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
+	{
+		// Interpret all full 32-byte values as integers.
+		parameters = ContractABIUtils::defaultParameters(_bytes.size() / 32);
+
+		// We'd introduce trailing zero bytes if we interpreted the final bit as an integer.
+		// We want a right-aligned sequence of bytes instead.
+		if (_bytes.size() % 32 != 0)
+			parameters.push_back({
+				bytes(),
+				"",
+				ABIType{ABIType::HexString, ABIType::AlignRight, _bytes.size() % 32},
+				FormatInfo{},
+			});
+	}
 	else
 		parameters = _parameters;
+	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
 
 	for (auto const& parameter: parameters)
 	{
-		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
+		long actualSize = std::min(
+			distance(it, _bytes.end()),
+			static_cast<ParameterList::difference_type>(parameter.abiType.size)
+		);
+		bytes byteRange(parameter.abiType.size, 0);
+		copy(it, it + actualSize, byteRange.begin());
 
 		os << _linePrefix << byteRange;
 		if (&parameter != &parameters.back())
-			os << endl;
+			os << std::endl;
 
-		it += static_cast<long>(parameter.abiType.size);
+		it += actualSize;
 	}
 
 	return os.str();
 }
 
-string BytesUtils::formatBytes(
+std::string BytesUtils::formatBytes(
 	bytes const& _bytes,
 	ABIType const& _abiType
 )
 {
-	stringstream os;
+	std::stringstream os;
 
 	switch (_abiType.type)
 	{
@@ -308,7 +329,7 @@ string BytesUtils::formatBytes(
 			{
 				auto entropy = [](std::string const& str) -> double {
 					double result = 0;
-					map<char, double> frequencies;
+					std::map<char, double> frequencies;
 					for (char c: str)
 						frequencies[c]++;
 					for (auto p: frequencies)
@@ -354,25 +375,43 @@ string BytesUtils::formatBytes(
 	return os.str();
 }
 
-string BytesUtils::formatBytesRange(
+std::string BytesUtils::formatBytesRange(
 	bytes _bytes,
 	solidity::frontend::test::ParameterList const& _parameters,
 	bool _highlight
 )
 {
-	stringstream os;
+	std::stringstream os;
 	ParameterList parameters;
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
+	{
+		// Interpret all full 32-byte values as integers.
+		parameters = ContractABIUtils::defaultParameters(_bytes.size() / 32);
+
+		// We'd introduce trailing zero bytes if we interpreted the final bit as an integer.
+		// We want a right-aligned sequence of bytes instead.
+		if (_bytes.size() % 32 != 0)
+			parameters.push_back({
+				bytes(),
+				"",
+				ABIType{ABIType::HexString, ABIType::AlignRight, _bytes.size() % 32},
+				FormatInfo{},
+			});
+	}
 	else
 		parameters = _parameters;
-
+	soltestAssert(ContractABIUtils::encodingSize(parameters) >= _bytes.size());
 
 	for (auto const& parameter: parameters)
 	{
-		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
+		long actualSize = std::min(
+			distance(it, _bytes.end()),
+			static_cast<ParameterList::difference_type>(parameter.abiType.size)
+		);
+		bytes byteRange(parameter.abiType.size, 0);
+		copy(it, it + actualSize, byteRange.begin());
 
 		if (!parameter.matchesBytes(byteRange))
 			AnsiColorized(
@@ -386,7 +425,7 @@ string BytesUtils::formatBytesRange(
 		if (&parameter != &parameters.back())
 			os << ", ";
 
-		it += static_cast<long>(parameter.abiType.size);
+		it += actualSize;
 	}
 
 	return os.str();

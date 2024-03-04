@@ -7,7 +7,6 @@ abstract contract B {
 }
 
 contract C is B(C.f) {
-    function f() internal returns(uint) { return x + 2; }
+    function f() internal view returns(uint) { return x + 2; }
 }
 // ----
-// TypeError 7733: (200-201): Immutable variables cannot be read before they are initialized.

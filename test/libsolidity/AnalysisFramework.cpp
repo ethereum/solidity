@@ -21,6 +21,8 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 
+#include <test/libsolidity/util/Common.h>
+#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/Common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -34,45 +36,88 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-pair<SourceUnit const*, ErrorList>
-AnalysisFramework::parseAnalyseAndReturnError(
-	string const& _source,
-	bool _reportWarnings,
-	bool _insertLicenseAndVersionPragma,
-	bool _allowMultipleErrors,
-	bool _allowRecoveryErrors
+std::pair<SourceUnit const*, ErrorList> AnalysisFramework::runAnalysisAndExpectNoParsingErrors(
+	std::string const& _source,
+	bool _includeWarningsAndInfos,
+	bool _addPreamble,
+	bool _allowMultiple
 )
 {
-	compiler().reset();
-	// Do not insert license if it is already present.
-	bool insertLicense = _insertLicenseAndVersionPragma && _source.find("// SPDX-License-Identifier:") == string::npos;
-	compiler().setSources({{"",
-		string{_insertLicenseAndVersionPragma ? "pragma solidity >=0.0;\n" : ""} +
-		string{insertLicense ? "// SPDX-License-Identifier: GPL-3.0\n" : ""} +
-		_source
-	}});
-	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
-	compiler().setParserErrorRecovery(_allowRecoveryErrors);
-	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
-	if (!compiler().parse())
-	{
-		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors());
-	}
+	runFramework(_addPreamble ? withPreamble(_source) : _source, PipelineStage::Analysis);
 
-	compiler().analyze();
+	if (!stageSuccessful(PipelineStage::Parsing))
+		BOOST_FAIL("Parsing contract failed in analysis test suite:" + formatErrors(m_compiler->errors()));
 
-	ErrorList errors = filterErrors(compiler().errors(), _reportWarnings);
-	if (errors.size() > 1 && !_allowMultipleErrors)
-		BOOST_FAIL("Multiple errors found: " + formatErrors());
+	ErrorList errors = filteredErrors(_includeWarningsAndInfos);
+	if (errors.size() > 1 && !_allowMultiple)
+		BOOST_FAIL("Multiple errors found: " + formatErrors(errors));
 
 	return make_pair(&compiler().ast(""), std::move(errors));
+}
+
+bool AnalysisFramework::runFramework(StringMap _sources, PipelineStage _targetStage)
+{
+	resetFramework();
+	m_targetStage = _targetStage;
+	soltestAssert(m_compiler);
+
+	m_compiler->setSources(std::move(_sources));
+	setupCompiler(*m_compiler);
+	executeCompilationPipeline();
+	return pipelineSuccessful();
+}
+
+void AnalysisFramework::resetFramework()
+{
+	compiler().reset();
+	m_targetStage = PipelineStage::Compilation;
+}
+
+std::unique_ptr<CompilerStack> AnalysisFramework::createStack() const
+{
+	return std::make_unique<CompilerStack>();
+}
+
+void AnalysisFramework::setupCompiler(CompilerStack& _compiler)
+{
+	// These are just defaults based on the (global) CLI options.
+	// Technically, every TestCase should override these with values passed to it in TestCase::Config.
+	// In practice TestCase::Config always matches global config so most test cases don't care.
+	_compiler.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+	_compiler.setEOFVersion(solidity::test::CommonOptions::get().eofVersion());
+	_compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
+}
+
+void AnalysisFramework::executeCompilationPipeline()
+{
+	soltestAssert(m_compiler);
+
+	// If you add a new stage, remember to handle it below.
+	soltestAssert(
+		m_targetStage == PipelineStage::Parsing ||
+		m_targetStage == PipelineStage::Analysis ||
+		m_targetStage == PipelineStage::Compilation
+	);
+
+	bool parsingSuccessful = m_compiler->parse();
+	soltestAssert(parsingSuccessful || !filteredErrors(false /* _includeWarningsAndInfos */).empty());
+	if (!parsingSuccessful || stageSuccessful(m_targetStage))
+		return;
+
+	bool analysisSuccessful = m_compiler->analyze();
+	soltestAssert(analysisSuccessful || !filteredErrors(false /* _includeWarningsAndInfos */).empty());
+	if (!analysisSuccessful || stageSuccessful(m_targetStage))
+		return;
+
+	bool compilationSuccessful = m_compiler->compile();
+	soltestAssert(compilationSuccessful || !filteredErrors(false /* _includeWarningsAndInfos */).empty());
+	soltestAssert(stageSuccessful(m_targetStage) == compilationSuccessful);
 }
 
 ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarningsAndInfos) const
@@ -102,7 +147,7 @@ ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _inc
 			{
 				SourceLocation const* location = currentError->sourceLocation();
 				// sufficient for now, but in future we might clone the error completely, including the secondary location
-				newError = make_shared<Error>(
+				newError = std::make_shared<Error>(
 					currentError->errorId(),
 					currentError->type(),
 					messagePrefix + " ....",
@@ -117,48 +162,61 @@ ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _inc
 	return errors;
 }
 
-SourceUnit const* AnalysisFramework::parseAndAnalyse(string const& _source)
+bool AnalysisFramework::stageSuccessful(PipelineStage _stage) const
 {
-	auto sourceAndError = parseAnalyseAndReturnError(_source);
-	BOOST_REQUIRE(!!sourceAndError.first);
-	string message;
-	if (!sourceAndError.second.empty())
-		message = "Unexpected error: " + formatErrors();
-	BOOST_REQUIRE_MESSAGE(sourceAndError.second.empty(), message);
-	return sourceAndError.first;
+	switch (_stage) {
+		case PipelineStage::Parsing: return compiler().state() >= CompilerStack::Parsed;
+		case PipelineStage::Analysis: return compiler().state() >= CompilerStack::AnalysisSuccessful;
+		case PipelineStage::Compilation: return compiler().state() >= CompilerStack::CompilationSuccessful;
+	}
+	unreachable();
 }
 
-bool AnalysisFramework::success(string const& _source)
+ErrorList AnalysisFramework::runAnalysisAndExpectError(
+	std::string const& _source,
+	bool _includeWarningsAndInfos,
+	bool _allowMultiple
+)
 {
-	return parseAnalyseAndReturnError(_source).second.empty();
+	auto [ast, errors] = runAnalysisAndExpectNoParsingErrors(_source, _includeWarningsAndInfos, true, _allowMultiple);
+	BOOST_REQUIRE(!errors.empty());
+	BOOST_REQUIRE_MESSAGE(ast, "Expected error, but no error happened.");
+	return errors;
 }
 
-ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warning, bool _allowMultiple)
+std::string AnalysisFramework::formatErrors(
+	langutil::ErrorList const& _errors,
+	bool _colored,
+	bool _withErrorIds
+) const
 {
-	auto sourceAndErrors = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
-	BOOST_REQUIRE(!sourceAndErrors.second.empty());
-	BOOST_REQUIRE_MESSAGE(!!sourceAndErrors.first, "Expected error, but no error happened.");
-	return sourceAndErrors.second;
+	return SourceReferenceFormatter::formatErrorInformation(
+		_errors,
+		*m_compiler,
+		_colored,
+		_withErrorIds
+	);
 }
 
-string AnalysisFramework::formatErrors() const
+std::string AnalysisFramework::formatError(
+	Error const& _error,
+	bool _colored,
+	bool _withErrorIds
+) const
 {
-	string message;
-	for (auto const& error: compiler().errors())
-		message += formatError(*error);
-	return message;
+	return SourceReferenceFormatter::formatErrorInformation(
+		_error,
+		*m_compiler,
+		_colored,
+		_withErrorIds
+	);
 }
 
-string AnalysisFramework::formatError(Error const& _error) const
-{
-	return SourceReferenceFormatter::formatErrorInformation(_error, *m_compiler);
-}
-
-ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)
+ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, std::string const& _name)
 {
 	ContractDefinition* contract = nullptr;
 
-	for (shared_ptr<ASTNode> const& node: _source.nodes())
+	for (std::shared_ptr<ASTNode> const& node: _source.nodes())
 		if ((contract = dynamic_cast<ContractDefinition*>(node.get())) && contract->name() == _name)
 			return contract;
 

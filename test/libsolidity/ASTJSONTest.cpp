@@ -36,22 +36,22 @@
 #include <memory>
 #include <stdexcept>
 
+using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace solidity::util::formatting;
 using namespace solidity::util;
-using namespace solidity;
-using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
+using namespace std::string_literals;
 
 namespace
 {
 
-string const sourceDelimiter("==== Source: ");
+std::string const sourceDelimiter("==== Source: ");
 
-string compilerStateToString(CompilerStack::State _state)
+std::string compilerStateToString(CompilerStack::State _state)
 {
 	switch (_state)
 	{
@@ -59,23 +59,23 @@ string compilerStateToString(CompilerStack::State _state)
 		case CompilerStack::State::SourcesSet: return "SourcesSet";
 		case CompilerStack::State::Parsed: return "Parsed";
 		case CompilerStack::State::ParsedAndImported: return "ParsedAndImported";
-		case CompilerStack::State::AnalysisPerformed: return "AnalysisPerformed";
+		case CompilerStack::State::AnalysisSuccessful: return "AnalysisSuccessful";
 		case CompilerStack::State::CompilationSuccessful: return "CompilationSuccessful";
 	}
 	soltestAssert(false, "Unexpected value of state parameter");
 }
 
-CompilerStack::State stringToCompilerState(const string& _state)
+CompilerStack::State stringToCompilerState(const std::string& _state)
 {
 	for (unsigned int i = CompilerStack::State::Empty; i <= CompilerStack::State::CompilationSuccessful; ++i)
 	{
 		if (_state == compilerStateToString(CompilerStack::State(i)))
 			return CompilerStack::State(i);
 	}
-	BOOST_THROW_EXCEPTION(runtime_error("Unsupported compiler state (" + _state + ") in test contract file"));
+	BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported compiler state (" + _state + ") in test contract file"));
 }
 
-void replaceVersionWithTag(string& _input)
+void replaceVersionWithTag(std::string& _input)
 {
 	boost::algorithm::replace_all(
 		_input,
@@ -84,7 +84,7 @@ void replaceVersionWithTag(string& _input)
 	);
 }
 
-void replaceTagWithVersion(string& _input)
+void replaceTagWithVersion(std::string& _input)
 {
 	boost::algorithm::replace_all(
 		_input,
@@ -95,14 +95,14 @@ void replaceTagWithVersion(string& _input)
 
 }
 
-void ASTJSONTest::generateTestVariants(string const& _filename)
+void ASTJSONTest::generateTestVariants(std::string const& _filename)
 {
-	string_view baseName = _filename;
+	std::string_view baseName = _filename;
 	baseName.remove_suffix(4);
 
 	const std::vector<CompilerStack::State> variantCompileStates = {
 		CompilerStack::State::Parsed,
-		CompilerStack::State::AnalysisPerformed
+		CompilerStack::State::AnalysisSuccessful,
 	};
 
 	for (const auto state: variantCompileStates)
@@ -117,18 +117,18 @@ void ASTJSONTest::generateTestVariants(string const& _filename)
 	}
 }
 
-void ASTJSONTest::fillSources(string const& _filename)
+void ASTJSONTest::fillSources(std::string const& _filename)
 {
-	ifstream file(_filename);
+	std::ifstream file(_filename);
 	if (!file)
-		BOOST_THROW_EXCEPTION(runtime_error("Cannot open test contract: \"" + _filename + "\"."));
-	file.exceptions(ios::badbit);
+		BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open test contract: \"" + _filename + "\"."));
+	file.exceptions(std::ios::badbit);
 
-	string sourceName;
-	string source;
-	string line;
-	string const delimiter("// ----");
-	string const failMarker("// failAfter:");
+	std::string sourceName;
+	std::string source;
+	std::string line;
+	std::string const delimiter("// ----");
+	std::string const failMarker("// failAfter:");
 	while (getline(file, line))
 	{
 		if (boost::algorithm::starts_with(line, sourceDelimiter))
@@ -140,14 +140,14 @@ void ASTJSONTest::fillSources(string const& _filename)
 				sourceDelimiter.size(),
 				line.size() - " ===="s.size() - sourceDelimiter.size()
 			);
-			source = string();
+			source = std::string();
 		}
 		else if (boost::algorithm::starts_with(line, failMarker))
 		{
-			string state = line.substr(failMarker.size());
+			std::string state = line.substr(failMarker.size());
 			boost::algorithm::trim(state);
 			if (m_expectedFailAfter.has_value())
-				BOOST_THROW_EXCEPTION(runtime_error("Duplicated \"failAfter\" directive"));
+				BOOST_THROW_EXCEPTION(std::runtime_error("Duplicated \"failAfter\" directive"));
 			m_expectedFailAfter = stringToCompilerState(state);
 
 		}
@@ -161,7 +161,7 @@ void ASTJSONTest::fillSources(string const& _filename)
 void ASTJSONTest::validateTestConfiguration() const
 {
 	if (m_variants.empty())
-		BOOST_THROW_EXCEPTION(runtime_error("No file with expected result found."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("No file with expected result found."));
 
 	if (m_expectedFailAfter.has_value())
 	{
@@ -172,8 +172,8 @@ void ASTJSONTest::validateTestConfiguration() const
 
 		if (unexpectedTestVariant != m_variants.end())
 			BOOST_THROW_EXCEPTION(
-				runtime_error(
-					string("Unexpected JSON file: ") + unexpectedTestVariant->astFilename() +
+				std::runtime_error(
+					std::string("Unexpected JSON file: ") + unexpectedTestVariant->astFilename() +
 					" in \"failAfter: " +
 					compilerStateToString(m_expectedFailAfter.value()) + "\" scenario."
 				)
@@ -181,23 +181,23 @@ void ASTJSONTest::validateTestConfiguration() const
 	}
 }
 
-ASTJSONTest::ASTJSONTest(string const& _filename):
+ASTJSONTest::ASTJSONTest(std::string const& _filename):
 	EVMVersionRestrictedTestCase(_filename)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
 
 	generateTestVariants(_filename);
 	fillSources(_filename);
 	validateTestConfiguration();
 }
 
-TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ASTJSONTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	CompilerStack c;
 
 	StringMap sources;
-	map<string, unsigned> sourceIndices;
+	std::map<std::string, unsigned> sourceIndices;
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		sources[m_sources[i].first] = m_sources[i].second;
@@ -237,10 +237,10 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 bool ASTJSONTest::runTest(
 	TestVariant& _variant,
-	map<string, unsigned> const& _sourceIndices,
+	std::map<std::string, unsigned> const& _sourceIndices,
 	CompilerStack& _compiler,
-	ostream& _stream,
-	string const& _linePrefix,
+	std::ostream& _stream,
+	std::string const& _linePrefix,
 	bool const _formatted
 )
 {
@@ -249,7 +249,7 @@ bool ASTJSONTest::runTest(
 
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
-		ostringstream result;
+		std::ostringstream result;
 		ASTJsonExporter(_compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first), JsonFormat{ JsonFormat::Pretty });
 		_variant.result += result.str();
 		if (i != m_sources.size() - 1)
@@ -264,49 +264,36 @@ bool ASTJSONTest::runTest(
 
 	if (_variant.expectation != _variant.result)
 	{
-		string nextIndentLevel = _linePrefix + "  ";
+		std::string nextIndentLevel = _linePrefix + "  ";
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) <<
 			_linePrefix <<
 			"Expected result" <<
 			(!_variant.name().empty() ? " (" + _variant.name() + "):" : ":") <<
-			endl;
-		{
-			istringstream stream(_variant.expectation);
-			string line;
-			while (getline(stream, line))
-				_stream << nextIndentLevel << line << endl;
-		}
-		_stream << endl;
+			std::endl;
+		printPrefixed(_stream, _variant.expectation, nextIndentLevel);
+		_stream << std::endl;
 
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) <<
 			_linePrefix <<
 			"Obtained result" <<
 			(!_variant.name().empty() ? " (" + _variant.name() + "):" : ":") <<
-			endl;
-		{
-			istringstream stream(_variant.result);
-			string line;
-			while (getline(stream, line))
-				_stream << nextIndentLevel << line << endl;
-		}
-		_stream << endl;
+			std::endl;
+		printPrefixed(_stream, _variant.result, nextIndentLevel);
+		_stream << std::endl;
 		return false;
 	}
 
 	return true;
 }
 
-void ASTJSONTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
+void ASTJSONTest::printSource(std::ostream& _stream, std::string const& _linePrefix, bool const) const
 {
 	for (auto const& source: m_sources)
 	{
 		if (m_sources.size() > 1 || source.first != "a")
-			_stream << _linePrefix << sourceDelimiter << source.first << " ====" << endl << endl;
-		stringstream stream(source.second);
-		string line;
-		while (getline(stream, line))
-			_stream << _linePrefix << line << endl;
-		_stream << endl;
+			printPrefixed(_stream, sourceDelimiter + source.first + " ====\n", _linePrefix);
+		printPrefixed(_stream, source.second, _linePrefix);
+		_stream << std::endl;
 	}
 }
 
@@ -320,13 +307,13 @@ void ASTJSONTest::printUpdatedExpectations(std::ostream&, std::string const&) co
 		);
 }
 
-void ASTJSONTest::updateExpectation(string const& _filename, string const& _expectation, string const& _variant) const
+void ASTJSONTest::updateExpectation(std::string const& _filename, std::string const& _expectation, std::string const& _variant) const
 {
-	ofstream file(_filename.c_str());
-	if (!file) BOOST_THROW_EXCEPTION(runtime_error("Cannot write " + _variant + "AST expectation to \"" + _filename + "\"."));
-	file.exceptions(ios::badbit);
+	std::ofstream file(_filename.c_str());
+	if (!file) BOOST_THROW_EXCEPTION(std::runtime_error("Cannot write " + _variant + "AST expectation to \"" + _filename + "\"."));
+	file.exceptions(std::ios::badbit);
 
-	string replacedResult = _expectation;
+	std::string replacedResult = _expectation;
 	replaceVersionWithTag(replacedResult);
 
 	file << replacedResult;

@@ -32,7 +32,6 @@
 #include <utility>
 #include <functional>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
@@ -92,7 +91,7 @@ Rules::Rules()
 	Y.setMatchGroup(6, m_matchGroups);
 	Z.setMatchGroup(7, m_matchGroups);
 
-	addRules(simplificationRuleList(nullopt, A, B, C, W, X, Y, Z));
+	addRules(simplificationRuleList(std::nullopt, A, B, C, W, X, Y, Z));
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 
@@ -103,7 +102,7 @@ Pattern::Pattern(Instruction _instruction, std::initializer_list<Pattern> _argum
 {
 }
 
-void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _matchGroups)
+void Pattern::setMatchGroup(unsigned _group, std::map<unsigned, Expression const*>& _matchGroups)
 {
 	m_matchGroup = _group;
 	m_matchGroups = &_matchGroups;
@@ -127,17 +126,17 @@ bool Pattern::matches(Expression const& _expr, ExpressionClasses const& _classes
 	return true;
 }
 
-AssemblyItem Pattern::toAssemblyItem(SourceLocation const& _location) const
+AssemblyItem Pattern::toAssemblyItem(langutil::DebugData::ConstPtr _debugData) const
 {
 	if (m_type == Operation)
-		return AssemblyItem(m_instruction, _location);
+		return AssemblyItem(m_instruction, std::move(_debugData));
 	else
-		return AssemblyItem(m_type, data(), _location);
+		return AssemblyItem(m_type, data(), std::move(_debugData));
 }
 
-string Pattern::toString() const
+std::string Pattern::toString() const
 {
-	stringstream s;
+	std::stringstream s;
 	switch (m_type)
 	{
 	case Operation:
@@ -146,7 +145,7 @@ string Pattern::toString() const
 		break;
 	case Push:
 		if (m_data)
-			s << "PUSH " << hex << data();
+			s << "PUSH " << std::hex << data();
 		else
 			s << "PUSH ";
 		break;
@@ -155,15 +154,15 @@ string Pattern::toString() const
 		break;
 	default:
 		if (m_data)
-			s << "t=" << dec << m_type << " d=" << hex << data();
+			s << "t=" << std::dec << m_type << " d=" << std::hex << data();
 		else
-			s << "t=" << dec << m_type << " d: nullptr";
+			s << "t=" << std::dec << m_type << " d: nullptr";
 		break;
 	}
 	if (!m_requireDataMatch)
 		s << " ~";
 	if (m_matchGroup)
-		s << "[" << dec << m_matchGroup << "]";
+		s << "[" << std::dec << m_matchGroup << "]";
 	s << "(";
 	for (Pattern const& p: m_arguments)
 		s << p.toString() << ", ";
@@ -200,7 +199,7 @@ u256 const& Pattern::data() const
 	return *m_data;
 }
 
-ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern, SourceLocation const& _location)
+ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern, langutil::DebugData::ConstPtr const& _debugData)
 {
 	if (_pattern.matchGroup())
 	{
@@ -210,15 +209,15 @@ ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern, SourceLocation c
 	else
 	{
 		hasId = false;
-		item = _pattern.toAssemblyItem(_location);
+		item = _pattern.toAssemblyItem(_debugData);
 	}
 	for (auto const& arg: _pattern.arguments())
-		arguments.emplace_back(arg, _location);
+		arguments.emplace_back(arg, _debugData);
 }
 
-string ExpressionTemplate::toString() const
+std::string ExpressionTemplate::toString() const
 {
-	stringstream s;
+	std::stringstream s;
 	if (hasId)
 		s << id;
 	else

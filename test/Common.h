@@ -27,19 +27,20 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/program_options.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace solidity::test
 {
 
 #ifdef _WIN32
 static constexpr auto evmoneFilename = "evmone.dll";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.10.0/evmone-0.10.0-windows-amd64.zip";
+static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.11.0/evmone-0.11.0-windows-amd64.zip";
 #elif defined(__APPLE__)
 static constexpr auto evmoneFilename = "libevmone.dylib";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.10.0/evmone-0.10.0-darwin-x86_64.tar.gz";
+static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.11.0/evmone-0.11.0-darwin-x86_64.tar.gz";
 #else
 static constexpr auto evmoneFilename = "libevmone.so";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.10.0/evmone-0.10.0-linux-x86_64.tar.gz";
+static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.11.0/evmone-0.11.0-linux-x86_64.tar.gz";
 #endif
 
 struct ConfigException: public util::Exception {};
@@ -99,6 +100,11 @@ private:
 /// I.e. if the test is located in the semantic test directory and is not excluded due to being a part of external sources.
 /// Note: @p _testPath can be relative but must include at least the `/test/libsolidity/semanticTests/` part
 bool isValidSemanticTestPath(boost::filesystem::path const& _testPath);
+
+/// Helper that can be used to skip tests when the EVM version selected on the command line
+/// is older than @p _minEVMVersion.
+/// @return A predicate (function) that can be passed into @a boost::unit_test::precondition().
+boost::unit_test::precondition::predicate_t minEVMVersionCheck(langutil::EVMVersion _minEVMVersion);
 
 bool loadVMs(CommonOptions const& _options);
 

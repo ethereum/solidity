@@ -82,7 +82,7 @@ solc/solc <sol file> --optimize --ir-optimized --yul-optimizations <sequence>
 ### How to choose good parameters
 Choosing good parameters for a genetic algorithm is not a trivial task but phaser's defaults are generally enough to find a sequence that gives results comparable or better than one hand-crafted by an experienced developer for a given set of programs.
 The difficult part is providing a fairly representative set of input files.
-If the files you give don't need certain optimisations the tool will find sequences that don't use these optimisations and perform badly for programs that could benefit from them.
+If the files you give do not need certain optimisations the tool will find sequences that do not use these optimisations and perform badly for programs that could benefit from them.
 If all the provided files greatly benefit from a specific optimisation, the sequence may not work well for programs that do not.
 
 We have conducted [a set of rough experiments](https://github.com/ethereum/solidity/issues/7806#issuecomment-598644491) to evaluate some combinations of parameter values.
@@ -91,5 +91,5 @@ The conclusions were used to adjust the defaults but you might still benefit fro
 1. The algorithm that performed the best was `GEWEP`.
 2. Using longer sequences in the initial population yields better results. The algorithm is good at removing superfluous steps.
 3. Preserving the top sequences from previous rounds improves results. Elite should contain at least a few individuals, especially when using the `classic` algorithm.
-4. Don't set mutation/deletion/addition chance too high. It makes results worse because it destroys the good patterns preserved by crossover. Values around 1-5% seem to work best.
+4. Do not set mutation/deletion/addition chance too high. It makes results worse because it destroys the good patterns preserved by crossover. Values around 1-5% seem to work best.
 5. Keep the algorithm running for 1000 rounds or more. It usually finds good sequences faster than that but it can shorten them significantly if you let it run longer. This is especially important when starting with long sequences.

@@ -1,1 +1,2 @@
-Failed to import AST: Imported tree evm version differs from configured evm version!
+Warning: Support for EVM versions older than constantinople is deprecated and will be removed in the future.
+Error: Failed to import AST: Imported tree evm version differs from configured evm version!

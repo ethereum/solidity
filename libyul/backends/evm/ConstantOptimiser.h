@@ -27,7 +27,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/ASTForward.h>
 
-#include <liblangutil/SourceLocation.h>
+#include <liblangutil/DebugData.h>
 
 #include <libsolutil/Common.h>
 
@@ -74,7 +74,7 @@ public:
 	RepresentationFinder(
 		EVMDialect const& _dialect,
 		GasMeter const& _meter,
-		std::shared_ptr<DebugData const> _debugData,
+		langutil::DebugData::ConstPtr _debugData,
 		std::map<u256, Representation>& _cache
 	):
 		m_dialect(_dialect),
@@ -100,7 +100,7 @@ private:
 
 	EVMDialect const& m_dialect;
 	GasMeter const& m_meter;
-	std::shared_ptr<DebugData const> m_debugData;
+	langutil::DebugData::ConstPtr m_debugData;
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
 	size_t m_maxSteps = 10000;
 	std::map<u256, Representation>& m_cache;

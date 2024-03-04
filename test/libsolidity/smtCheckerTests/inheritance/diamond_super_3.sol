@@ -31,6 +31,7 @@ contract E is C,D {
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: no
 // ----
-// Warning 6328: (379-394): CHC: Assertion violation happens here.
+// Warning 6328: (379-394): CHC: Assertion violation happens here.\nCounterexample:\nx = 111\n\nTransaction trace:\nE.constructor()\nState: x = 0\nE.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
 // Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

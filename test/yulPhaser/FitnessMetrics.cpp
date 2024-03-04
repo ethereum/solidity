@@ -29,7 +29,6 @@
 
 #include <cmath>
 
-using namespace std;
 using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
@@ -74,22 +73,22 @@ protected:
 	}
 
 	CharStream m_sourceStream = CharStream(SampleSourceCode, "");
-	Chromosome m_chromosome{vector<string>{UnusedPruner::name, EquivalentFunctionCombiner::name}};
-	Program m_program = get<Program>(Program::load(m_sourceStream));
+	Chromosome m_chromosome{std::vector<std::string>{UnusedPruner::name, EquivalentFunctionCombiner::name}};
+	Program m_program = std::get<Program>(Program::load(m_sourceStream));
 	Program m_optimisedProgram = optimisedProgram(m_program);
-	shared_ptr<ProgramCache> m_programCache = make_shared<ProgramCache>(m_program);
+	std::shared_ptr<ProgramCache> m_programCache = std::make_shared<ProgramCache>(m_program);
 	static constexpr CodeWeights m_weights{};
 };
 
 class FitnessMetricCombinationFixture: public ProgramBasedMetricFixture
 {
 protected:
-	vector<shared_ptr<FitnessMetric>> m_simpleMetrics = {
-		make_shared<ProgramSize>(m_program, nullptr, m_weights, 1),
-		make_shared<ProgramSize>(m_program, nullptr, m_weights, 2),
-		make_shared<ProgramSize>(m_program, nullptr, m_weights, 3),
+	std::vector<std::shared_ptr<FitnessMetric>> m_simpleMetrics = {
+		std::make_shared<ProgramSize>(m_program, nullptr, m_weights, 1),
+		std::make_shared<ProgramSize>(m_program, nullptr, m_weights, 2),
+		std::make_shared<ProgramSize>(m_program, nullptr, m_weights, 3),
 	};
-	vector<size_t> m_fitness = {
+	std::vector<size_t> m_fitness = {
 		m_simpleMetrics[0]->evaluate(m_chromosome),
 		m_simpleMetrics[1]->evaluate(m_chromosome),
 		m_simpleMetrics[2]->evaluate(m_chromosome),
@@ -102,7 +101,7 @@ BOOST_AUTO_TEST_SUITE(ProgramBasedMetricTest)
 
 BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_return_optimised_program_even_if_cache_not_available, ProgramBasedMetricFixture)
 {
-	string code = toString(DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgram(m_chromosome));
+	std::string code = toString(DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgram(m_chromosome));
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
@@ -110,7 +109,7 @@ BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_return_optimised_program_even_if
 
 BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_use_cache_if_available, ProgramBasedMetricFixture)
 {
-	string code = toString(DummyProgramBasedMetric(nullopt, m_programCache, m_weights).optimisedProgram(m_chromosome));
+	std::string code = toString(DummyProgramBasedMetric(std::nullopt, m_programCache, m_weights).optimisedProgram(m_chromosome));
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
@@ -119,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_use_cache_if_available, ProgramB
 
 BOOST_FIXTURE_TEST_CASE(optimisedProgramNoCache_should_return_optimised_program_even_if_cache_not_available, ProgramBasedMetricFixture)
 {
-	string code = toString(DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgramNoCache(m_chromosome));
+	std::string code = toString(DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgramNoCache(m_chromosome));
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
@@ -127,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(optimisedProgramNoCache_should_return_optimised_program_
 
 BOOST_FIXTURE_TEST_CASE(optimisedProgramNoCache_should_not_use_cache_even_if_available, ProgramBasedMetricFixture)
 {
-	string code = toString(DummyProgramBasedMetric(nullopt, m_programCache, m_weights).optimisedProgramNoCache(m_chromosome));
+	std::string code = toString(DummyProgramBasedMetric(std::nullopt, m_programCache, m_weights).optimisedProgramNoCache(m_chromosome));
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
@@ -147,7 +146,7 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_size_of_the_optimised_program, P
 
 BOOST_FIXTURE_TEST_CASE(evaluate_should_be_able_to_use_program_cache_if_available, ProgramBasedMetricFixture)
 {
-	size_t fitness = ProgramSize(nullopt, m_programCache, m_weights).evaluate(m_chromosome);
+	size_t fitness = ProgramSize(std::nullopt, m_programCache, m_weights).evaluate(m_chromosome);
 
 	BOOST_TEST(fitness != m_program.codeSize(m_weights));
 	BOOST_TEST(fitness == m_optimisedProgram.codeSize(m_weights));
@@ -190,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_the_size_ratio_between_optimised
 BOOST_FIXTURE_TEST_CASE(evaluate_should_be_able_to_use_program_cache_if_available, ProgramBasedMetricFixture)
 {
 	BOOST_TEST(
-		RelativeProgramSize(nullopt, m_programCache, 3, m_weights).evaluate(m_chromosome) ==
+		RelativeProgramSize(std::nullopt, m_programCache, 3, m_weights).evaluate(m_chromosome) ==
 		round(1000.0 * double(m_optimisedProgram.codeSize(m_weights)) / double(m_program.codeSize(m_weights)))
 	);
 	BOOST_TEST(m_programCache->size() == m_chromosome.length());
@@ -219,7 +218,7 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_return_one_if_number_of_repetitions_is_z
 BOOST_FIXTURE_TEST_CASE(evaluate_should_return_one_if_the_original_program_size_is_zero, ProgramBasedMetricFixture)
 {
 	CharStream sourceStream = CharStream("{}", "");
-	Program program = get<Program>(Program::load(sourceStream));
+	Program program = std::get<Program>(Program::load(sourceStream));
 
 	RelativeProgramSize metric(program, nullptr, 3, m_weights);
 
@@ -264,7 +263,7 @@ BOOST_FIXTURE_TEST_CASE(FitnessMetricMaximum_evaluate_should_compute_maximum_of_
 	FitnessMetricMaximum metric(m_simpleMetrics);
 
 	assert(m_simpleMetrics.size() == 3);
-	BOOST_TEST(metric.evaluate(m_chromosome) == max(m_fitness[0], max(m_fitness[1], m_fitness[2])));
+	BOOST_TEST(metric.evaluate(m_chromosome) == std::max(m_fitness[0], std::max(m_fitness[1], m_fitness[2])));
 	BOOST_TEST(metric.metrics() == m_simpleMetrics);
 }
 
@@ -273,7 +272,7 @@ BOOST_FIXTURE_TEST_CASE(FitnessMetricMinimum_evaluate_should_compute_minimum_of_
 	FitnessMetricMinimum metric(m_simpleMetrics);
 
 	assert(m_simpleMetrics.size() == 3);
-	BOOST_TEST(metric.evaluate(m_chromosome) == min(m_fitness[0], min(m_fitness[1], m_fitness[2])));
+	BOOST_TEST(metric.evaluate(m_chromosome) == std::min(m_fitness[0], std::min(m_fitness[1], m_fitness[2])));
 	BOOST_TEST(metric.metrics() == m_simpleMetrics);
 }
 

@@ -35,17 +35,13 @@ using solidity::langutil::InternalCompilerError;
 using solidity::util::errinfo_comment;
 using solidity::util::readFileAsString;
 using solidity::util::joinHumanReadable;
-using std::map;
-using std::reference_wrapper;
-using std::string;
-using std::vector;
 
 namespace solidity::frontend
 {
 
 FileReader::FileReader(
 	boost::filesystem::path _basePath,
-	vector<boost::filesystem::path> const& _includePaths,
+	std::vector<boost::filesystem::path> const& _includePaths,
 	FileSystemPathSet _allowedDirectories
 ):
 	m_allowedDirectories(std::move(_allowedDirectories)),
@@ -99,19 +95,19 @@ void FileReader::setSourceUnits(StringMap _sources)
 	m_sourceCodes = std::move(_sources);
 }
 
-ReadCallback::Result FileReader::readFile(string const& _kind, string const& _sourceUnitName)
+ReadCallback::Result FileReader::readFile(std::string const& _kind, std::string const& _sourceUnitName)
 {
 	try
 	{
 		if (_kind != ReadCallback::kindString(ReadCallback::Kind::ReadFile))
 			solAssert(false, "ReadFile callback used as callback kind " + _kind);
-		string strippedSourceUnitName = _sourceUnitName;
+		std::string strippedSourceUnitName = _sourceUnitName;
 		if (strippedSourceUnitName.find("file://") == 0)
 			strippedSourceUnitName.erase(0, 7);
 
-		vector<boost::filesystem::path> candidates;
-		vector<reference_wrapper<boost::filesystem::path>> prefixes = {m_basePath};
-		prefixes += (m_includePaths | ranges::to<vector<reference_wrapper<boost::filesystem::path>>>);
+		std::vector<boost::filesystem::path> candidates;
+		std::vector<std::reference_wrapper<boost::filesystem::path>> prefixes = {m_basePath};
+		prefixes += (m_includePaths | ranges::to<std::vector<std::reference_wrapper<boost::filesystem::path>>>);
 
 		for (auto const& prefix: prefixes)
 		{
@@ -183,9 +179,9 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 }
 
-string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath) const
+std::string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath) const
 {
-	vector<boost::filesystem::path> prefixes = {m_basePath.empty() ? normalizeCLIPathForVFS(".") : m_basePath};
+	std::vector<boost::filesystem::path> prefixes = {m_basePath.empty() ? normalizeCLIPathForVFS(".") : m_basePath};
 	prefixes += m_includePaths;
 
 	boost::filesystem::path normalizedPath = normalizeCLIPathForVFS(_cliPath);
@@ -200,17 +196,17 @@ string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPa
 	return normalizedPath.generic_string();
 }
 
-map<string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths) const
+std::map<std::string, FileReader::FileSystemPathSet> FileReader::detectSourceUnitNameCollisions(FileSystemPathSet const& _cliPaths) const
 {
-	map<string, FileReader::FileSystemPathSet> nameToPaths;
+	std::map<std::string, FileReader::FileSystemPathSet> nameToPaths;
 	for (boost::filesystem::path const& cliPath: _cliPaths)
 	{
-		string sourceUnitName = cliPathToSourceUnitName(cliPath);
+		std::string sourceUnitName = cliPathToSourceUnitName(cliPath);
 		boost::filesystem::path normalizedPath = normalizeCLIPathForVFS(cliPath);
 		nameToPaths[sourceUnitName].insert(normalizedPath);
 	}
 
-	map<string, FileReader::FileSystemPathSet> collisions;
+	std::map<std::string, FileReader::FileSystemPathSet> collisions;
 	for (auto&& [sourceUnitName, cliPaths]: nameToPaths)
 		if (cliPaths.size() >= 2)
 			collisions[sourceUnitName] = std::move(cliPaths);
@@ -329,7 +325,10 @@ bool FileReader::isPathPrefix(boost::filesystem::path const& _prefix, boost::fil
 	// NOTE: On Windows paths starting with a slash (rather than a drive letter) are considered relative by boost.
 	solAssert(_prefix.is_absolute() || isUNCPath(_prefix) || _prefix.root_path() == "/", "");
 	solAssert(_path.is_absolute() || isUNCPath(_path) || _path.root_path() == "/", "");
-	solAssert(_prefix == _prefix.lexically_normal() && _path == _path.lexically_normal(), "");
+	// NOTE: On Windows before Boost 1.78 lexically_normal() would not replace the `//` UNC prefix with `\\\\`.
+	// Later versions do. Use generic_path() to normalize all slashes to `/` and ignore that difference.
+	// This does not make the assert weaker because == ignores slash type anyway.
+	solAssert(_prefix == _prefix.lexically_normal().generic_string() && _path == _path.lexically_normal().generic_string(), "");
 	solAssert(!hasDotDotSegments(_prefix) && !hasDotDotSegments(_path), "");
 
 	boost::filesystem::path strippedPath = _path.lexically_relative(
@@ -377,7 +376,7 @@ bool FileReader::hasDotDotSegments(boost::filesystem::path const& _path)
 
 bool FileReader::isUNCPath(boost::filesystem::path const& _path)
 {
-	string rootName = _path.root_name().string();
+	std::string rootName = _path.root_name().string();
 
 	return (
 		rootName.size() == 2 ||

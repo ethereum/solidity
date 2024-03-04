@@ -26,10 +26,37 @@ class CompilerInterface(Enum):
     STANDARD_JSON = 'standard-json'
 
 
+class ExecutionArchitecture(Enum):
+    NATIVE = 'native'
+    OSX_INTEL = 'osx_intel'
+
+
+class SettingsPreset(Enum):
+    LEGACY_OPTIMIZE = 'legacy-optimize'
+    LEGACY_NO_OPTIMIZE = 'legacy-no-optimize'
+    VIA_IR_OPTIMIZE = 'via-ir-optimize'
+    VIA_IR_NO_OPTIMIZE = 'via-ir-no-optimize'
+
+
 class SMTUse(Enum):
     PRESERVE = 'preserve'
     DISABLE = 'disable'
     STRIP_PRAGMAS = 'strip-pragmas'
+
+
+@dataclass(frozen=True)
+class CompilerSettings:
+    optimize: bool
+    via_ir: bool
+
+    @staticmethod
+    def from_preset(preset: SettingsPreset):
+        return {
+            SettingsPreset.LEGACY_OPTIMIZE:    CompilerSettings(optimize=True,  via_ir=False),
+            SettingsPreset.LEGACY_NO_OPTIMIZE: CompilerSettings(optimize=False, via_ir=False),
+            SettingsPreset.VIA_IR_OPTIMIZE:    CompilerSettings(optimize=True,  via_ir=True),
+            SettingsPreset.VIA_IR_NO_OPTIMIZE: CompilerSettings(optimize=False, via_ir=True),
+        }[preset]
 
 
 @dataclass(frozen=True)
@@ -135,7 +162,7 @@ def parse_standard_json_output(source_file_name: Path, standard_json_output: str
     # CLI interface does not. To make reports comparable we must force this case to be detected as
     # an error in both cases.
     internal_compiler_error = any(
-        error['type'] in ['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError']
+        error['type'] in ['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError', 'YulException']
         for error in decoded_json_output.get('errors', {})
     )
 
@@ -161,7 +188,10 @@ def parse_standard_json_output(source_file_name: Path, standard_json_output: str
     return file_report
 
 
-def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
+def parse_cli_output(source_file_name: Path, cli_output: str, exit_code: int) -> FileReport:
+    if exit_code != 0:
+        return FileReport(file_name=source_file_name, contract_reports=None)
+
     # re.split() returns a list containing the text between pattern occurrences but also inserts the
     # content of matched groups in between. It also never omits the empty elements so the number of
     # list items is predictable (3 per match + the text before the first match)
@@ -189,13 +219,22 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
 
 def prepare_compiler_input(
     compiler_path: Path,
+    execution_arch: ExecutionArchitecture,
     source_file_name: Path,
-    optimize: bool,
     force_no_optimize_yul: bool,
     interface: CompilerInterface,
+    preset: SettingsPreset,
     smt_use: SMTUse,
     metadata_option_supported: bool,
 ) -> Tuple[List[str], str]:
+
+    settings = CompilerSettings.from_preset(preset)
+
+    command_line = []
+    if execution_arch == ExecutionArchitecture.OSX_INTEL:
+        command_line = ["/usr/bin/arch", "-64", "-x86_64"]
+    else:
+        assert execution_arch == ExecutionArchitecture.NATIVE
 
     if interface == CompilerInterface.STANDARD_JSON:
         json_input: dict = {
@@ -204,7 +243,9 @@ def prepare_compiler_input(
                 str(source_file_name): {'content': load_source(source_file_name, smt_use)}
             },
             'settings': {
-                'optimizer': {'enabled': optimize},
+                'optimizer': {'enabled': settings.optimize},
+                # NOTE: We omit viaIR rather than set it to false to handle older versions that don't have it.
+                **({'viaIR': True} if settings.via_ir else {}),
                 'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}},
             }
         }
@@ -212,7 +253,7 @@ def prepare_compiler_input(
         if smt_use == SMTUse.DISABLE:
             json_input['settings']['modelChecker'] = {'engine': 'none'}
 
-        command_line = [str(compiler_path), '--standard-json']
+        command_line += [str(compiler_path), '--standard-json']
         compiler_input = json.dumps(json_input)
     else:
         assert interface == CompilerInterface.CLI
@@ -220,14 +261,16 @@ def prepare_compiler_input(
         compiler_options = [str(source_file_name), '--bin']
         if metadata_option_supported:
             compiler_options.append('--metadata')
-        if optimize:
+        if settings.optimize:
             compiler_options.append('--optimize')
         elif force_no_optimize_yul:
             compiler_options.append('--no-optimize-yul')
+        if settings.via_ir:
+            compiler_options.append('--via-ir')
         if smt_use == SMTUse.DISABLE:
             compiler_options += ['--model-checker-engine', 'none']
 
-        command_line = [str(compiler_path)] + compiler_options
+        command_line += [str(compiler_path)] + compiler_options
         compiler_input = load_source(source_file_name, smt_use)
 
     return (command_line, compiler_input)
@@ -258,23 +301,24 @@ def detect_metadata_cli_option_support(compiler_path: Path):
 
 def run_compiler(
     compiler_path: Path,
+    execution_arch: ExecutionArchitecture,
     source_file_name: Path,
-    optimize: bool,
     force_no_optimize_yul: bool,
     interface: CompilerInterface,
+    preset: SettingsPreset,
     smt_use: SMTUse,
     metadata_option_supported: bool,
     tmp_dir: Path,
     exit_on_error: bool,
 ) -> FileReport:
-
     if interface == CompilerInterface.STANDARD_JSON:
         (command_line, compiler_input) = prepare_compiler_input(
             compiler_path,
+            execution_arch,
             Path(source_file_name.name),
-            optimize,
             force_no_optimize_yul,
             interface,
+            preset,
             smt_use,
             metadata_option_supported,
         )
@@ -284,7 +328,7 @@ def run_compiler(
             input=compiler_input,
             encoding='utf8',
             capture_output=True,
-            check=exit_on_error,
+            check=True,
         )
 
         return parse_standard_json_output(Path(source_file_name), process.stdout)
@@ -294,10 +338,11 @@ def run_compiler(
 
         (command_line, compiler_input) = prepare_compiler_input(
             compiler_path.absolute(),
+            execution_arch,
             Path(source_file_name.name),
-            optimize,
             force_no_optimize_yul,
             interface,
+            preset,
             smt_use,
             metadata_option_supported,
         )
@@ -317,13 +362,15 @@ def run_compiler(
             check=exit_on_error,
         )
 
-        return parse_cli_output(Path(source_file_name), process.stdout)
+        return parse_cli_output(Path(source_file_name), process.stdout, process.returncode)
 
 
 def generate_report(
     source_file_names: List[str],
     compiler_path: Path,
+    execution_arch: ExecutionArchitecture,
     interface: CompilerInterface,
+    presets: List[SettingsPreset],
     smt_use: SMTUse,
     force_no_optimize_yul: bool,
     report_file_path: Path,
@@ -335,16 +382,17 @@ def generate_report(
 
     try:
         with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
-            for optimize in [False, True]:
+            for preset in presets:
                 with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
                     for source_file_name in sorted(source_file_names):
                         try:
                             report = run_compiler(
                                 compiler_path,
+                                execution_arch,
                                 Path(source_file_name),
-                                optimize,
                                 force_no_optimize_yul,
                                 interface,
+                                preset,
                                 smt_use,
                                 metadata_option_supported,
                                 Path(tmp_dir),
@@ -358,7 +406,7 @@ def generate_report(
                         except subprocess.CalledProcessError as exception:
                             print(
                                 f"\n\nInterrupted by an exception while processing file "
-                                f"'{source_file_name}' with optimize={optimize}\n\n"
+                                f"'{source_file_name}' with preset={preset}\n\n"
                                 f"COMPILER STDOUT:\n{exception.stdout}\n"
                                 f"COMPILER STDERR:\n{exception.stderr}\n",
                                 file=sys.stderr
@@ -367,7 +415,7 @@ def generate_report(
                         except:
                             print(
                                 f"\n\nInterrupted by an exception while processing file "
-                                f"'{source_file_name}' with optimize={optimize}\n",
+                                f"'{source_file_name}' with preset={preset}\n\n",
                                 file=sys.stderr
                             )
                             raise
@@ -389,6 +437,22 @@ def commandline_parser() -> ArgumentParser:
         default=CompilerInterface.STANDARD_JSON.value,
         choices=[c.value for c in CompilerInterface],
         help="Compiler interface to use.",
+    )
+    parser.add_argument(
+        '--execution-arch',
+        dest='execution_arch',
+        default=ExecutionArchitecture.NATIVE.value,
+        choices=[c.value for c in ExecutionArchitecture],
+        help="Select the architecture of the universal binary that should be executed. (Only relevant for macOS)",
+    )
+    parser.add_argument(
+        '--preset',
+        dest='presets',
+        default=None,
+        nargs='+',
+        action='append',
+        choices=[p.value for p in SettingsPreset],
+        help="Predefined set of settings to pass to the compiler. More than one can be selected.",
     )
     parser.add_argument(
         '--smt-use',
@@ -418,10 +482,20 @@ def commandline_parser() -> ArgumentParser:
 
 if __name__ == "__main__":
     options = commandline_parser().parse_args()
+
+    if options.presets is None:
+        # NOTE: Can't put it in add_argument()'s default because then it would be always present.
+        # See https://github.com/python/cpython/issues/60603
+        presets = [[SettingsPreset.LEGACY_NO_OPTIMIZE.value, SettingsPreset.LEGACY_OPTIMIZE.value]]
+    else:
+        presets = options.presets
+
     generate_report(
         glob("*.sol"),
         Path(options.compiler_path),
+        ExecutionArchitecture(options.execution_arch),
         CompilerInterface(options.interface),
+        [SettingsPreset(p) for preset_group in presets for p in preset_group],
         SMTUse(options.smt_use),
         options.force_no_optimize_yul,
         Path(options.report_file),

@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "EVMAssembly import only supports exactly one input file.",
+            "message": "EVMAssembly import only supports exactly one input file.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

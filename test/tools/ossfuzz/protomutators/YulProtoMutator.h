@@ -96,13 +96,13 @@ struct YulProtoMutator
 	static constexpr unsigned s_highIP = 23;
 	/// Add control-flow statement to basic block.
 	template <typename T>
-	static void addControlFlow(T* _msg);
+	static void addControlFlow(T* _msg, unsigned _seed);
 	/// Obtain basic block for statement type.
 	template <typename T>
-	static Block* basicBlock(T* _msg);
+	static Block* basicBlock(T* _msg, unsigned _seed);
 	/// Obtain a basic block in a for stmt uniformly
 	/// at random
-	static Block* randomBlock(ForStmt* _msg);
+	static Block* randomBlock(ForStmt* _msg, unsigned _seed);
 	/// Obtain a basic block in global scope.
 	static Block* globalBlock(Program* _program);
 };

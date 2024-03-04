@@ -37,16 +37,15 @@ function test_fn { npm test; }
 function gnosis_safe_test
 {
     local repo="https://github.com/safe-global/safe-contracts.git"
-    local ref_type=branch
-    local ref=main
+    local ref="<latest-release>"
     local config_file="hardhat.config.ts"
     local config_var=userConfig
 
     local compile_only_presets=()
     local settings_presets=(
         "${compile_only_presets[@]}"
-        #ir-no-optimize            # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
-        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_call_430_mpos is 1 slot(s) too deep inside the stack."
+        #ir-no-optimize            # Compilation fails with "YulException: Variable var_txHash is 1 too deep in the stack". No memoryguard was present.
+        #ir-optimize-evm-only      # Compilation fails with "YulException: Variable var_txHash is 1 too deep in the stack". No memoryguard was present.
         # TODO: Uncomment the preset below when the issue: https://github.com/safe-global/safe-contracts/issues/544 is solved.
         #ir-optimize-evm+yul       # Compilation fails with "YulException: Cannot swap Variable var_operation with Variable _1: too deep in the stack by 4 slots."
         legacy-no-optimize
@@ -58,7 +57,7 @@ function gnosis_safe_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
     # NOTE: The patterns below intentionally have hard-coded versions.
@@ -77,7 +76,6 @@ function gnosis_safe_test
     sed -i "s|\(it\)\((\"can be used only via DELEGATECALL opcode\"\)|\1.skip\2|g" test/libraries/SignMessageLib.spec.ts
     sed -i "s|it\((\"can only be called from Safe itself\"\)|it.skip\1|g" test/libraries/Migration.spec.ts
 
-    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"

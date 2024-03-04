@@ -23,14 +23,16 @@
 
 #pragma once
 
-#include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/EVMVersion.h>
+
+#include <json/json.h>
 
 #include <string>
 
@@ -48,29 +50,27 @@ public:
 		langutil::EVMVersion _evmVersion,
 		std::optional<uint8_t> _eofVersion,
 		RevertStrings _revertStrings,
-		OptimiserSettings _optimiserSettings,
 		std::map<std::string, unsigned> _sourceIndices,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
-		langutil::CharStreamProvider const* _soliditySourceProvider
+		langutil::CharStreamProvider const* _soliditySourceProvider,
+		OptimiserSettings& _optimiserSettings
 	):
 		m_evmVersion(_evmVersion),
 		m_eofVersion(_eofVersion),
-		m_optimiserSettings(_optimiserSettings),
 		m_context(
 			_evmVersion,
 			ExecutionContext::Creation,
 			_revertStrings,
-			std::move(_optimiserSettings),
 			std::move(_sourceIndices),
 			_debugInfoSelection,
 			_soliditySourceProvider
 		),
-		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector())
+		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector()),
+		m_optimiserSettings(_optimiserSettings)
 	{}
 
-	/// Generates and returns the IR code, in unoptimized and optimized form
-	/// (or just pretty-printed, depending on the optimizer settings).
-	std::pair<std::string, std::string> run(
+	/// Generates and returns (unoptimized) IR code.
+	std::string run(
 		ContractDefinition const& _contract,
 		bytes const& _cborMetadata,
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
@@ -141,10 +141,10 @@ private:
 
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
-	OptimiserSettings const m_optimiserSettings;
 
 	IRGenerationContext m_context;
 	YulUtilFunctions m_utils;
+	OptimiserSettings m_optimiserSettings;
 };
 
 }

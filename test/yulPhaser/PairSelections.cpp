@@ -27,8 +27,6 @@
 #include <tuple>
 #include <vector>
 
-using namespace std;
-
 namespace solidity::phaser::test
 {
 
@@ -45,35 +43,35 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	constexpr double variance = (collectionSize * collectionSize - 1) / 12.0;
 
 	SimulationRNG::reset(1);
-	vector<tuple<size_t, size_t>> pairs = RandomPairSelection(selectionSize).materialise(collectionSize);
-	vector<size_t> samples;
+	std::vector<std::tuple<size_t, size_t>> pairs = RandomPairSelection(selectionSize).materialise(collectionSize);
+	std::vector<size_t> samples;
 	for (auto& [first, second]: pairs)
 	{
 		samples.push_back(first);
 		samples.push_back(second);
 	}
 
-	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(std::abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(std::abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
 {
 	const size_t collectionSize = 200;
 
-	vector<tuple<size_t, size_t>> pairs = RandomPairSelection(0.5).materialise(collectionSize);
+	std::vector<std::tuple<size_t, size_t>> pairs = RandomPairSelection(0.5).materialise(collectionSize);
 
 	BOOST_TEST(pairs.size() == 100);
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<0>(pair) <= collectionSize; }));
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<1>(pair) <= collectionSize; }));
+	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return std::get<0>(pair) <= collectionSize; }));
+	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return std::get<1>(pair) <= collectionSize; }));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_never_return_a_pair_of_identical_indices)
 {
-	vector<tuple<size_t, size_t>> pairs = RandomPairSelection(0.5).materialise(100);
+	std::vector<std::tuple<size_t, size_t>> pairs = RandomPairSelection(0.5).materialise(100);
 
 	BOOST_TEST(pairs.size() == 50);
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [](auto const& pair){ return get<0>(pair) != get<1>(pair); }));
+	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [](auto const& pair){ return std::get<0>(pair) != std::get<1>(pair); }));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_number_of_pairs_thats_a_fraction_of_collection_size)
@@ -132,18 +130,18 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	constexpr double variance = selectionChance * (1 - selectionChance);
 
 	SimulationRNG::reset(1);
-	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
-	vector<double> bernoulliTrials(collectionSize, 0);
+	std::vector<std::tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	std::vector<double> bernoulliTrials(collectionSize, 0);
 	for (auto& pair: pairs)
 	{
-		BOOST_REQUIRE(get<1>(pair) < collectionSize);
-		BOOST_REQUIRE(get<1>(pair) < collectionSize);
-		bernoulliTrials[get<0>(pair)] = 1.0;
-		bernoulliTrials[get<1>(pair)] = 1.0;
+		BOOST_REQUIRE(std::get<1>(pair) < collectionSize);
+		BOOST_REQUIRE(std::get<1>(pair) < collectionSize);
+		bernoulliTrials[std::get<0>(pair)] = 1.0;
+		bernoulliTrials[std::get<1>(pair)] = 1.0;
 	}
 
-	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(std::abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(std::abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
@@ -151,10 +149,10 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_c
 	const size_t collectionSize = 200;
 	constexpr double selectionChance = 0.5;
 
-	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	std::vector<std::tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
 
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<0>(pair) <= collectionSize; }));
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<1>(pair) <= collectionSize; }));
+	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return std::get<0>(pair) <= collectionSize; }));
+	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return std::get<1>(pair) <= collectionSize; }));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_use_unique_indices)
@@ -162,12 +160,12 @@ BOOST_AUTO_TEST_CASE(materialise_should_use_unique_indices)
 	constexpr size_t collectionSize = 200;
 	constexpr double selectionChance = 0.5;
 
-	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
-	set<size_t> indices;
+	std::vector<std::tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	std::set<size_t> indices;
 	for (auto& pair: pairs)
 	{
-		indices.insert(get<0>(pair));
-		indices.insert(get<1>(pair));
+		indices.insert(std::get<0>(pair));
+		indices.insert(std::get<1>(pair));
 	}
 
 	BOOST_TEST(indices.size() == 2 * pairs.size());
@@ -195,7 +193,7 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_all_pairs_if_selection_chance_is_
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(PairMosaicSelectionTest)
 
-using IndexPairs = vector<tuple<size_t, size_t>>;
+using IndexPairs = std::vector<std::tuple<size_t, size_t>>;
 
 BOOST_AUTO_TEST_CASE(materialise)
 {

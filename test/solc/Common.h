@@ -28,6 +28,7 @@
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::CommandLineOptions)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::InputMode)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::frontend::OptimiserSettings)
 
 namespace solidity::frontend::test
 {
@@ -65,7 +66,5 @@ OptionsReaderAndMessages runCLI(
 	std::vector<std::string> const& _commandLine,
 	std::string const& _standardInputContent = ""
 );
-
-std::string stripPreReleaseWarning(std::string const& _stderrContent);
 
 } // namespace solidity::frontend::test

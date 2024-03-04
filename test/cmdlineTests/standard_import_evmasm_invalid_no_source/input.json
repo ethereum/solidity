@@ -1,0 +1,12 @@
+{
+    "language": "EVMAssembly",
+    "sources": {
+    },
+    "settings": {
+        "outputSelection": {
+            "*": {
+                "": ["evm.bytecode"]
+            }
+        }
+    }
+}

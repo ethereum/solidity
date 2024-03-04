@@ -37,34 +37,33 @@
 #include <fcntl.h>
 #endif
 
-using namespace std;
 using namespace solidity::lsp;
 
 // {{{ Transport
-optional<Json::Value> Transport::receive()
+std::optional<Json::Value> Transport::receive()
 {
 	auto const headers = parseHeaders();
 	if (!headers)
 	{
 		error({}, ErrorCode::ParseError, "Could not parse RPC headers.");
-		return nullopt;
+		return std::nullopt;
 	}
 
 	if (!headers->count("content-length"))
 	{
 		error({}, ErrorCode::ParseError, "No content-length header found.");
-		return nullopt;
+		return std::nullopt;
 	}
 
-	string const data = readBytes(stoul(headers->at("content-length")));
+	std::string const data = readBytes(stoul(headers->at("content-length")));
 
 	Json::Value jsonMessage;
-	string jsonParsingErrors;
+	std::string jsonParsingErrors;
 	solidity::util::jsonParseStrict(data, jsonMessage, &jsonParsingErrors);
 	if (!jsonParsingErrors.empty() || !jsonMessage || !jsonMessage.isObject())
 	{
 		error({}, ErrorCode::ParseError, "Could not parse RPC JSON payload. " + jsonParsingErrors);
-		return nullopt;
+		return std::nullopt;
 	}
 
 	return {std::move(jsonMessage)};
@@ -82,9 +81,9 @@ void Transport::trace(std::string _message, Json::Value _extra)
 	}
 }
 
-optional<map<string, string>> Transport::parseHeaders()
+std::optional<std::map<std::string, std::string>> Transport::parseHeaders()
 {
-	map<string, string> headers;
+	std::map<std::string, std::string> headers;
 
 	while (true)
 	{
@@ -93,18 +92,18 @@ optional<map<string, string>> Transport::parseHeaders()
 			break;
 
 		auto const delimiterPos = line.find(':');
-		if (delimiterPos == string::npos)
-			return nullopt;
+		if (delimiterPos == std::string::npos)
+			return std::nullopt;
 
 		auto const name = boost::to_lower_copy(line.substr(0, delimiterPos));
 		auto const value = line.substr(delimiterPos + 1);
 		if (!headers.emplace(boost::trim_copy(name), boost::trim_copy(value)).second)
-			return nullopt;
+			return std::nullopt;
 	}
 	return {std::move(headers)};
 }
 
-void Transport::notify(string _method, Json::Value _message)
+void Transport::notify(std::string _method, Json::Value _message)
 {
 	Json::Value json;
 	json["method"] = std::move(_method);
@@ -119,7 +118,7 @@ void Transport::reply(MessageID _id, Json::Value _message)
 	send(std::move(json), _id);
 }
 
-void Transport::error(MessageID _id, ErrorCode _code, string _message)
+void Transport::error(MessageID _id, ErrorCode _code, std::string _message)
 {
 	Json::Value json;
 	json["error"]["code"] = static_cast<int>(_code);
@@ -135,7 +134,7 @@ void Transport::send(Json::Value _json, MessageID _id)
 		_json["id"] = _id;
 
 	// Trailing CRLF only for easier readability.
-	string const jsonString = solidity::util::jsonCompactPrint(_json);
+	std::string const jsonString = solidity::util::jsonCompactPrint(_json);
 
 	writeBytes(fmt::format("Content-Length: {}\r\n\r\n", jsonString.size()));
 	writeBytes(jsonString);
@@ -144,7 +143,7 @@ void Transport::send(Json::Value _json, MessageID _id)
 // }}}
 
 // {{{ IOStreamTransport
-IOStreamTransport::IOStreamTransport(istream& _in, ostream& _out):
+IOStreamTransport::IOStreamTransport(std::istream& _in, std::ostream& _out):
 	m_input{_in},
 	m_output{_out}
 {
@@ -162,7 +161,7 @@ std::string IOStreamTransport::readBytes(size_t _length)
 
 std::string IOStreamTransport::getline()
 {
-	string line;
+	std::string line;
 	std::getline(m_input, line);
 	return line;
 }

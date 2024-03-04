@@ -40,9 +40,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
+using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
@@ -78,13 +78,13 @@ private:
 
 Declaration const& resolveDeclaration(
 	SourceUnit const& _sourceUnit,
-	vector<string> const& _namespacedName,
+	std::vector<std::string> const& _namespacedName,
 	NameAndTypeResolver const& _resolver
 )
 {
 	ASTNode const* scope = &_sourceUnit;
 	// bracers are required, cause msvc couldn't handle this macro in for statement
-	for (string const& namePart: _namespacedName)
+	for (std::string const& namePart: _namespacedName)
 	{
 		auto declarations = _resolver.resolveName(namePart, scope);
 		BOOST_REQUIRE(!declarations.empty());
@@ -95,12 +95,12 @@ Declaration const& resolveDeclaration(
 }
 
 bytes compileFirstExpression(
-	string const& _sourceCode,
-	vector<vector<string>> _functions = {},
-	vector<vector<string>> _localVariables = {}
+	std::string const& _sourceCode,
+	std::vector<std::vector<std::string>> _functions = {},
+	std::vector<std::vector<std::string>> _localVariables = {}
 )
 {
-	string sourceCode = "pragma solidity >=0.0; // SPDX-License-Identifier: GPL-3\n" + _sourceCode;
+	std::string sourceCode = "pragma solidity >=0.0; // SPDX-License-Identifier: GPL-3\n" + _sourceCode;
 	CharStream stream(sourceCode, "");
 
 	ASTPointer<SourceUnit> sourceUnit;
@@ -114,21 +114,21 @@ bytes compileFirstExpression(
 	}
 	catch (boost::exception const& _e)
 	{
-		string msg = "Parsing source code failed with:\n" + boost::diagnostic_information(_e);
+		std::string msg = "Parsing source code failed with:\n" + boost::diagnostic_information(_e);
 		BOOST_FAIL(msg);
 	}
 	catch (...)
 	{
-		string msg = "Parsing source code failed with:\n" + boost::current_exception_diagnostic_information();
+		std::string msg = "Parsing source code failed with:\n" + boost::current_exception_diagnostic_information();
 		BOOST_FAIL(msg);
 	}
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	GlobalContext globalContext;
+	GlobalContext globalContext(solidity::test::CommonOptions::get().evmVersion());
 	Scoper::assignScopes(*sourceUnit);
 	BOOST_REQUIRE(SyntaxChecker(errorReporter, false).checkSyntax(*sourceUnit));
-	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
+	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter, false);
 	resolver.registerDeclarations(*sourceUnit);
 	BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*sourceUnit), "Resolving names failed");
 	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
@@ -151,7 +151,7 @@ bytes compileFirstExpression(
 			context.setArithmetic(Arithmetic::Wrapping);
 			size_t parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(static_cast<int>(parametersSize));
-			for (vector<string> const& variable: _localVariables)
+			for (std::vector<std::string> const& variable: _localVariables)
 				context.addVariable(
 					dynamic_cast<VariableDeclaration const&>(resolveDeclaration(*sourceUnit, variable, resolver)),
 					static_cast<unsigned>(parametersSize--)
@@ -162,7 +162,7 @@ bytes compileFirstExpression(
 				solidity::test::CommonOptions::get().optimize
 			).compile(*extractor.expression());
 
-			for (vector<string> const& function: _functions)
+			for (std::vector<std::string> const& function: _functions)
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(
 					resolveDeclaration(*sourceUnit, function, resolver)
 				));
@@ -654,6 +654,28 @@ BOOST_AUTO_TEST_CASE(blockhash)
 
 	bytes expectation({uint8_t(Instruction::PUSH1), 0x03,
 					   uint8_t(Instruction::BLOCKHASH)});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(
+	blobhash,
+	*boost::unit_test::precondition(minEVMVersionCheck(EVMVersion::cancun()))
+)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() public {
+				blobhash(3);
+			}
+		}
+	)";
+
+	bytes code = compileFirstExpression(sourceCode, {}, {});
+
+	bytes expectation({
+		uint8_t(Instruction::PUSH1), 0x03,
+		uint8_t(Instruction::BLOBHASH)
+	});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
