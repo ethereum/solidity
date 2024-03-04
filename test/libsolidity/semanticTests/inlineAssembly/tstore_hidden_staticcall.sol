@@ -18,3 +18,6 @@ contract C {
 // EVMVersion: >=cancun
 // ----
 // test() -> FAILURE
+// gas irOptimized: 98437877
+// gas legacy: 98437872
+// gas legacyOptimized: 98437873

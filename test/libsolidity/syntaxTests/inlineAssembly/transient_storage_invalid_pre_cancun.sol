@@ -7,7 +7,7 @@ contract C {
     }
 }
 // ====
-// EVMVersion: <cancun
+// EVMVersion: =shanghai
 // ----
-// DeclarationError 4619: (70-76): Function "tstore" not found.
-// DeclarationError 4619: (96-101): Function "tload" not found.
+// TypeError 6243: (70-76): The "tstore" instruction is only available for Cancun-compatible VMs (you are currently compiling for "shanghai").
+// TypeError 6243: (96-101): The "tload" instruction is only available for Cancun-compatible VMs (you are currently compiling for "shanghai").
