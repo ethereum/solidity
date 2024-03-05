@@ -29,6 +29,7 @@
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/ObjectParser.h>
 #include <libyul/Object.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -90,33 +91,29 @@ public:
 	{
 		ErrorList errors;
 		ErrorReporter errorReporter(errors);
-		CharStream _charStream(_input, "");
+		CharStream charStream(_input, "");
+
 		try
 		{
-			m_ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
-			if (!m_ast || !errorReporter.errors().empty())
+			ObjectParser parser(errorReporter, m_dialect);
+
+			auto scanner = make_shared<Scanner>(charStream);
+			m_inputIsCodeBlock = (scanner->currentToken() == Token::LBrace);
+			m_object = parser.parse(scanner, false);
+
+			if (!m_object || !errorReporter.errors().empty())
 			{
 				cerr << "Error parsing source." << endl;
-				printErrors(_charStream, errors);
-				throw std::runtime_error("Could not parse source.");
+				printErrors(charStream, errors);
+				solThrow(Exception, "Could not parse source.");
 			}
-			m_analysisInfo = make_unique<yul::AsmAnalysisInfo>();
-			AsmAnalyzer analyzer(
-				*m_analysisInfo,
-				errorReporter,
-				m_dialect
-			);
-			if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
-			{
-				cerr << "Error analyzing source." << endl;
-				printErrors(_charStream, errors);
-				throw std::runtime_error("Could not analyze source.");
-			}
+
+			runCodeAnalyzer(errorReporter);
 		}
 		catch(...)
 		{
 			cerr << "Fatal error during parsing: " << endl;
-			printErrors(_charStream, errors);
+			printErrors(charStream, errors);
 			throw;
 		}
 	}
@@ -129,7 +126,7 @@ public:
 		yulAssert(_columns > 0);
 		auto const& optimiserSteps = OptimiserSuite::stepAbbreviationToNameMap();
 		auto hasShorterString = [](auto const& a, auto const& b) { return a.second.size() < b.second.size(); };
-		size_t longestDescriptionLength = std::max(
+		size_t longestDescriptionLength = max(
 			max_element(optimiserSteps.begin(), optimiserSteps.end(), hasShorterString)->second.size(),
 			max_element(_extraOptions.begin(), _extraOptions.end(), hasShorterString)->second.size()
 		);
@@ -170,28 +167,156 @@ public:
 		}
 	}
 
-	void disambiguate()
+	void applyFunctionToObjectAndSubobjects(Object& _object, function<void(Object&)> _function)
 	{
-		*m_ast = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
-		m_analysisInfo.reset();
-		m_nameDispenser.reset(*m_ast);
+		for (auto const& subObjectNode: _object.subObjects)
+		{
+			auto subObject = dynamic_pointer_cast<Object>(subObjectNode);
+
+			if (subObject != nullptr)
+				applyFunctionToObjectAndSubobjects(*subObject, _function);
+		}
+
+		_function(_object);
 	}
 
-	void runSteps(string _source, string _steps)
+	void runCodeAnalyzer(ErrorReporter& _errorReporter)
+	{
+		applyFunctionToObjectAndSubobjects(
+			*m_object,
+			[&](Object& _object)
+			{
+				_object.analysisInfo = make_shared<yul::AsmAnalysisInfo>();
+
+				AsmAnalyzer analyzer(
+					*_object.analysisInfo,
+					_errorReporter,
+					m_dialect,
+					{},
+					_object.qualifiedDataNames()
+				);
+
+				bool success = analyzer.analyze(*_object.code);
+				yulAssert(success && !_errorReporter.hasErrors(), "Invalid assembly/yul code.");
+			}
+		);
+	}
+
+	void runCodeDisambiguator()
+	{
+		applyFunctionToObjectAndSubobjects(
+			*m_object,
+			[&](Object& _object)
+			{
+				_object.code = make_shared<yul::Block>(
+					get<yul::Block>(Disambiguator(m_dialect, *_object.analysisInfo)(*_object.code))
+				);
+
+				_object.analysisInfo.reset();
+			}
+		);
+	}
+
+	void runSequence(string_view _steps)
+	{
+		applyFunctionToObjectAndSubobjects(
+			*m_object,
+			[&](Object& _object)
+			{
+				OptimiserStepContext context = createOptimiserStepContext(_object);
+				OptimiserSuite{context}.runSequence(_steps, *_object.code);
+			}
+		);
+	}
+
+	void runVarNameCleaner()
+	{
+		applyFunctionToObjectAndSubobjects(
+			*m_object,
+			[&](Object& _object)
+			{
+				OptimiserStepContext context = createOptimiserStepContext(_object);
+				VarNameCleaner::run(context, *_object.code);
+			}
+		);
+	}
+
+	void runStackCompressor()
+	{
+		applyFunctionToObjectAndSubobjects(
+			*m_object,
+			[&](Object& _object) { StackCompressor::run(m_dialect, _object, true, 16); }
+		);
+	}
+
+	void printObject(string const& _objectPath)
+	{
+		if (!m_inputIsCodeBlock)
+		{
+			if (_objectPath.empty() || m_object->name.str() == _objectPath)
+				cout << m_object->toString(&m_dialect) << endl;
+			else
+			{
+				Object const* subObject = m_object->subObjectAt(YulString(_objectPath));
+				if (subObject == nullptr)
+					solThrow(Exception, "Assembly object not found.");
+
+				cout << subObject->toString(&m_dialect) << endl;
+			}
+		}
+		else
+		{
+			yulAssert(
+				m_object->subObjects.empty(),
+				"Unexpected subObjects found."
+			);
+
+			if (!_objectPath.empty())
+				solThrow(Exception, "Object path argument cannot be used. Input is a code block.");
+
+			cout << AsmPrinter{m_dialect}(*m_object->code) << endl;
+		}
+	}
+
+	void resetNameDispenser()
+	{
+		m_nameDispenser = make_shared<NameDispenser>(
+			m_dialect,
+			m_reservedIdentifiers
+		);
+	}
+
+	void parseAndRunSteps(string const& _source, string const& _steps)
 	{
 		parse(_source);
-		disambiguate();
-		OptimiserSuite{m_context}.runSequence(_steps, *m_ast);
-		cout << AsmPrinter{m_dialect}(*m_ast) << endl;
+		runCodeDisambiguator();
+		runSequence(_steps);
 	}
 
-	void runInteractive(string _source, bool _disambiguated = false)
+	OptimiserStepContext createOptimiserStepContext(Object& _object)
 	{
+		bool isCreation = m_object.get() == &_object || !boost::ends_with(_object.name.str(), "_deployed");
+
+		return OptimiserStepContext{
+			m_dialect,
+			*m_nameDispenser,
+			m_reservedIdentifiers,
+			isCreation ? nullopt : make_optional(OptimiserSettings::standard().expectedExecutionsPerDeployment)
+		};
+	}
+
+	void runInteractive(string _source, string const& _objectPath, bool _disambiguated = false)
+	{
+		ErrorList errors;
+		ErrorReporter errorReporter(errors);
 		bool disambiguated = _disambiguated;
+
+		parse(_source);
+
 		while (true)
 		{
-			parse(_source);
-			disambiguated = disambiguated || (disambiguate(), true);
+			disambiguated = disambiguated || (runCodeDisambiguator(), true);
+
 			map<char, string> const& extraOptions = {
 				// QUIT starts with a non-letter character on purpose to get it to show up on top of the list
 				{'#', ">>> QUIT <<<"},
@@ -213,24 +338,18 @@ public:
 					case '#':
 						return;
 					case ',':
-						VarNameCleaner::run(m_context, *m_ast);
+						runVarNameCleaner();
 						// VarNameCleaner destroys the unique names guarantee of the disambiguator.
 						disambiguated = false;
 						break;
 					case ';':
-					{
-						Object obj;
-						obj.code = m_ast;
-						StackCompressor::run(m_dialect, obj, true, 16);
+						runStackCompressor();
 						break;
-					}
 					default:
-						OptimiserSuite{m_context}.runSequence(
-							std::string_view(&option, 1),
-							*m_ast
-						);
+						runSequence(string_view(&option, 1));
 				}
-				_source = AsmPrinter{m_dialect}(*m_ast);
+
+				resetNameDispenser();
 			}
 			catch (...)
 			{
@@ -238,22 +357,20 @@ public:
 				cerr << boost::current_exception_diagnostic_information() << endl;
 			}
 			cout << "----------------------" << endl;
-			cout << _source << endl;
+			printObject(_objectPath);
 		}
 	}
 
 private:
-	shared_ptr<yul::Block> m_ast;
+	shared_ptr<yul::Object> m_object;
+	bool m_inputIsCodeBlock = false;
+
 	Dialect const& m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
-	unique_ptr<AsmAnalysisInfo> m_analysisInfo;
 	set<YulString> const m_reservedIdentifiers = {};
-	NameDispenser m_nameDispenser{m_dialect, m_reservedIdentifiers};
-	OptimiserStepContext m_context{
+	shared_ptr<NameDispenser> m_nameDispenser = make_shared<NameDispenser>(
 		m_dialect,
-		m_nameDispenser,
-		m_reservedIdentifiers,
-		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
-	};
+		m_reservedIdentifiers
+	);
 };
 
 int main(int argc, char** argv)
@@ -264,7 +381,7 @@ int main(int argc, char** argv)
 		po::options_description options(
 			R"(yulopti, yul optimizer exploration tool.
 	Usage: yulopti [Options] <file>
-	Reads <file> as yul code and applies optimizer steps to it,
+	Reads <file> containing either a yul object or a yul code block and applies optimizer steps to it,
 	interactively read from stdin.
 	In non-interactive mode a list of steps has to be provided.
 	If <file> is -, yul code is read from stdin and run non-interactively.
@@ -282,6 +399,14 @@ int main(int argc, char** argv)
 				"steps",
 				po::value<string>(),
 				"steps to execute non-interactively"
+			)
+			(
+				"object",
+				po::value<string>()->value_name("path"),
+				"Dotted path to a specific Yul object in the source to print after running the steps. "
+				"If not specified, the top-level object will be selected. "
+				"The object will be printed recursively. "
+				"Only valid if the source actually contains objects (rather than a block of Yul code)."
 			)
 			(
 				"non-interactive,n",
@@ -307,6 +432,8 @@ int main(int argc, char** argv)
 		}
 
 		string input;
+		string objectPath;
+
 		if (arguments.count("input-file"))
 		{
 			string filename = arguments["input-file"].as<string>();
@@ -330,20 +457,28 @@ int main(int argc, char** argv)
 			return 1;
 		}
 
+		if (arguments.count("object"))
+			objectPath = arguments["object"].as<string>();
+
 		YulOpti yulOpti;
 		bool disambiguated = false;
+
 		if (!nonInteractive)
-			cout << input << endl;
+		{
+			yulOpti.parse(input);
+			yulOpti.printObject(objectPath);
+		}
+
 		if (arguments.count("steps"))
 		{
 			string sequence = arguments["steps"].as<string>();
 			if (!nonInteractive)
 				cout << "----------------------" << endl;
-			yulOpti.runSteps(input, sequence);
+			yulOpti.parseAndRunSteps(input, sequence);
 			disambiguated = true;
 		}
 		if (!nonInteractive)
-			yulOpti.runInteractive(input, disambiguated);
+			yulOpti.runInteractive(input, objectPath, disambiguated);
 
 		return 0;
 	}
