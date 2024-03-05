@@ -175,7 +175,7 @@ struct ModelCheckerSettings
 	bool showUnsupported = false;
 	smtutil::SMTSolverChoice solvers = smtutil::SMTSolverChoice::Z3();
 	ModelCheckerTargets targets = ModelCheckerTargets::Default();
-	std::optional<unsigned> timeout;
+	std::optional<unsigned> timeout; // in milliseconds
 
 	bool operator!=(ModelCheckerSettings const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(ModelCheckerSettings const& _other) const noexcept

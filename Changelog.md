@@ -11,8 +11,9 @@ Compiler Features:
 Bugfixes:
  * Assembler: Prevent incorrect calculation of tag sizes.
  * EVM Assembly Import: Fix handling of missing source locations during import.
- * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
  * SMTChecker: Ensure query is properly flushed to a file before calling solver when using SMT-LIB interface.
+ * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
+ * SMTChecker: Run Eldarica only when explicitly requested with `--model-checker-solvers eld`, even when it is present on the system.
 
 
 ### 0.8.24 (2024-01-25)
