@@ -47,7 +47,7 @@ function bleeps_test
         "${compile_only_presets[@]}"
         #ir-no-optimize            # Compilation fails with: "YulException: Variable expr_15509_mpos is 4 too deep in the stack". No memoryguard was present.
         #ir-optimize-evm-only      # Compilation fails with: "YulException: Variable expr_15260_mpos is 4 too deep in the stack". No memoryguard was present.
-        ir-optimize-evm+yul
+        #ir-optimize-evm+yul       # Compilation fails with: "YulException: Variable expr_15208_mpos is 1 too deep in the stack". No memoryguard was present.
         #legacy-no-optimize        # Compilation fails with: "CompilerError: Stack too deep, try removing local variables."
         #legacy-optimize-evm-only  # Compilation fails with: "CompilerError: Stack too deep, try removing local variables."
         legacy-optimize-evm+yul
