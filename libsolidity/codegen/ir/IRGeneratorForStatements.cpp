@@ -796,6 +796,17 @@ bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 	return false;
 }
 
+void IRGeneratorForStatements::endVisit(RevertStatement const& _revertStatement)
+{
+	ErrorDefinition const* error = dynamic_cast<ErrorDefinition const*>(ASTNode::referencedDeclaration(_revertStatement.errorCall().expression()));
+	solAssert(error);
+	revertWithError(
+		error->functionType(true)->externalSignature(),
+		error->functionType(true)->parameterTypes(),
+		_revertStatement.errorCall().sortedArguments()
+	);
+}
+
 bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 {
 	setLocation(_binOp);
@@ -1114,17 +1125,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		appendCode() << templ.render();
 		break;
 	}
-	case FunctionType::Kind::Error:
-	{
-		ErrorDefinition const* error = dynamic_cast<ErrorDefinition const*>(ASTNode::referencedDeclaration(_functionCall.expression()));
-		solAssert(error);
-		revertWithError(
-			error->functionType(true)->externalSignature(),
-			error->functionType(true)->parameterTypes(),
-			_functionCall.sortedArguments()
-		);
-		break;
-	}
 	case FunctionType::Kind::Wrap:
 	case FunctionType::Kind::Unwrap:
 	{
@@ -1153,15 +1153,28 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip ?
 			arguments[1]->annotation().type :
 			nullptr;
-		std::string requireOrAssertFunction = m_utils.requireOrAssertFunction(
-			functionType->kind() == FunctionType::Kind::Assert,
-			messageArgumentType
-		);
 
-		appendCode() << std::move(requireOrAssertFunction) << "(" << IRVariable(*arguments[0]).name();
-		if (messageArgumentType && messageArgumentType->sizeOnStack() > 0)
-			appendCode() << ", " << IRVariable(*arguments[1]).commaSeparatedList();
-		appendCode() << ")\n";
+		auto const* magicType = dynamic_cast<MagicType const*>(messageArgumentType);
+		if (magicType && magicType->kind() == MagicType::Kind::Error)
+		{
+			auto const& errorConstructorCall = dynamic_cast<FunctionCall const&>(*arguments[1]);
+			appendCode() << m_utils.requireWithErrorFunction(errorConstructorCall) << "(" <<IRVariable(*arguments[0]).name();
+			for (auto argument: errorConstructorCall.arguments())
+				if (argument->annotation().type->sizeOnStack() > 0)
+					appendCode() << ", " << IRVariable(*argument).commaSeparatedList();
+			appendCode() << ")\n";
+		}
+		else
+		{
+			std::string requireOrAssertFunction = m_utils.requireOrAssertFunction(
+				functionType->kind() == FunctionType::Kind::Assert,
+				messageArgumentType
+			);
+			appendCode() << std::move(requireOrAssertFunction) << "(" << IRVariable(*arguments[0]).name();
+			if (messageArgumentType && messageArgumentType->sizeOnStack() > 0)
+				appendCode() << ", " << IRVariable(*arguments[1]).commaSeparatedList();
+			appendCode() << ")\n";
+		}
 
 		break;
 	}
@@ -1467,6 +1480,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			")\n";
 		break;
 	}
+	case FunctionType::Kind::Error:
 	case FunctionType::Kind::MetaType:
 	{
 		break;

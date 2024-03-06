@@ -94,6 +94,10 @@ public:
 	// `assert` or `require` call.
 	std::string requireOrAssertFunction(bool _assert, Type const* _messageType = nullptr);
 
+	// @returns function that has equivalent logic of a require function, but with a custom
+	// error constructor parameter.
+	std::string requireWithErrorFunction(FunctionCall const& errorConstructorCall);
+
 	/// @returns the name of a function that takes a (cleaned) value of the given value type and
 	/// left-aligns it, usually for use in non-padded encoding.
 	std::string leftAlignFunction(Type const& _type);

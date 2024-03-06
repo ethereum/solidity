@@ -2919,13 +2919,15 @@ FunctionType::FunctionType(ErrorDefinition const& _error):
 		m_parameterTypes.push_back(var->annotation().type);
 	}
 
+	m_returnParameterNames.push_back("");
+	m_returnParameterTypes.push_back(TypeProvider::magic(MagicType::Kind::Error));
+
 	solAssert(
 		m_parameterNames.size() == m_parameterTypes.size(),
 		"Parameter names list must match parameter types list!"
 	);
 	solAssert(
-		m_returnParameterNames.size() == 0 &&
-		m_returnParameterTypes.size() == 0,
+		m_returnParameterNames.size() == m_returnParameterTypes.size(),
 		""
 	);
 }
@@ -4091,6 +4093,8 @@ std::string MagicType::richIdentifier() const
 	case Kind::MetaType:
 		solAssert(m_typeArgument, "");
 		return "t_magic_meta_type_" + m_typeArgument->richIdentifier();
+	case Kind::Error:
+		return "t_error";
 	}
 	return "";
 }
@@ -4196,6 +4200,8 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				FunctionType::Options::withArbitraryParameters()
 			)}
 		});
+	case Kind::Error:
+		return {};
 	case Kind::MetaType:
 	{
 		solAssert(
@@ -4259,6 +4265,8 @@ std::string MagicType::toString(bool _withoutDataLocation) const
 	case Kind::MetaType:
 		solAssert(m_typeArgument, "");
 		return "type(" + m_typeArgument->toString(_withoutDataLocation) + ")";
+	case Kind::Error:
+		return "error";
 	}
 	solAssert(false, "Unknown kind of magic.");
 	return {};
