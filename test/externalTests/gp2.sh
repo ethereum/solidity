@@ -67,6 +67,9 @@ function gp2_test
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     yarn
 
+    # Remove the config section that requires an Etherscan key. We don't need it just to run tests.
+    sed -i '/^  etherscan: {$/,/^  },$/d' hardhat.config.ts
+
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
     rm -r node_modules/@gnosis.pm/safe-contracts/build/
 
