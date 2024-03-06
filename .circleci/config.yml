@@ -819,7 +819,7 @@ defaults:
       name: t_native_test_ext_chainlink
       project: chainlink
       binary_type: native
-      image: cimg/node:18.16
+      image: cimg/node:16.20
       resource_class: large # Tests run out of memory on a smaller machine
 
   - job_native_test_ext_gp2: &job_native_test_ext_gp2
