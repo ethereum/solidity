@@ -90,6 +90,11 @@ function uniswap_test
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
     yarn add ethers@5.6.1
 
+    # We set hardhat version to 2.20.0 since version 2.21.0 has issues with solidity-coverage plugin
+    # that often causes out-of-memory errors.
+    # See hardhat note about the issue here: https://github.com/NomicFoundation/hardhat/releases/tag/hardhat@2.21.0
+    yarn add hardhat@2.20.0
+
     replace_version_pragmas
 
     for preset in $SELECTED_PRESETS; do
