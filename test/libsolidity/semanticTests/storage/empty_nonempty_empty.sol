@@ -22,9 +22,9 @@ contract Test {
 // set(bytes): 0x20, 0
 // storageEmpty -> 1
 // set(bytes): 0x20, 66, "12345678901234567890123456789012", "12345678901234567890123456789012", "12"
-// gas irOptimized: 111886
+// gas irOptimized: 111852
 // gas legacy: 112734
-// gas legacyOptimized: 112115
+// gas legacyOptimized: 112084
 // storageEmpty -> 0
 // set(bytes): 0x20, 3, "abc"
 // storageEmpty -> 0
