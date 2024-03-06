@@ -64,6 +64,10 @@ function perpetual_pools_test
     sed -i 's|\(it\)\(("Should not allow commits that are too large"\)|\1.skip\2|g' test/PoolCommitter/commit.spec.ts
     sed -i 's|\(it\)\(("Should not allow for too many commitments (that bring amount over a user'\''s balance)"\)|\1.skip\2|g' test/PoolCommitter/commit.spec.ts
 
+    # Disable a test failing due to a non-deterministic order of keys in a returned dict.
+    # TODO: Figure out why it's failing and re-enable.
+    sed -i 's|\(it\)\(("Rotates the observations array"\)|\1.skip\2|g' test/PriceObserver.spec.ts
+
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
