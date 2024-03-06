@@ -783,6 +783,8 @@ defaults:
       project: perpetual-pools
       binary_type: native
       image: cimg/node:18.16
+      # FIXME: This used to work with small, but now runs out of memory on anything below xlarge.
+      resource_class: xlarge
 
   - job_native_test_ext_uniswap: &job_native_test_ext_uniswap
       <<: *requires_b_ubu_static
@@ -790,6 +792,8 @@ defaults:
       project: uniswap
       binary_type: native
       image: cimg/node:18.16
+      # FIXME: This used to work with small, but now runs out of memory on anything below xlarge.
+      resource_class: xlarge
 
   - job_native_test_ext_prb_math: &job_native_test_ext_prb_math
       <<: *requires_b_ubu_static
