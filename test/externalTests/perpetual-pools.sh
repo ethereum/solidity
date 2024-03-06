@@ -63,13 +63,20 @@ function perpetual_pools_test
     # TODO: Remove this when Hardhat adjusts heuristics for IR (https://github.com/nomiclabs/hardhat/issues/3365).
     sed -i 's|\(it\)\(("Should not allow commits that are too large"\)|\1.skip\2|g' test/PoolCommitter/commit.spec.ts
     sed -i 's|\(it\)\(("Should not allow for too many commitments (that bring amount over a user'\''s balance)"\)|\1.skip\2|g' test/PoolCommitter/commit.spec.ts
+    sed -i 's|import \"solidity-coverage\"||g' "$config_file"
+
 
     neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
+
     yarn install
+    # Remove solidity-coverage plugin since it heavily instruments the code, and often causes out-of-memory issues.
+    # See hardhat note about the issue here: https://github.com/NomicFoundation/hardhat/releases/tag/hardhat%402.21.0
+    yarn remove solidity-coverage
+    yarn add hardhat@2.20.0
 
     replace_version_pragmas
 
