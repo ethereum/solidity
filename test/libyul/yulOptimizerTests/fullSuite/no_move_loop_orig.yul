@@ -12,10 +12,10 @@
 //
 // {
 //     {
-//         let _1 := iszero(caller())
 //         for { }
 //         true
 //         {
+//             let _1 := iszero(caller())
 //             for { } iszero(_1) { }
 //             { }
 //             mstore(192, 0)

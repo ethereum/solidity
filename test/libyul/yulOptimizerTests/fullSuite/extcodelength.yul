@@ -26,12 +26,10 @@
 //         let value := calldataload(4)
 //         if iszero(eq(value, and(value, sub(shl(160, 1), 1)))) { revert(0, 0) }
 //         let length := extcodesize(value)
-//         let _1 := 0xffffffffffffffff
-//         if gt(length, _1) { revert(0, 0) }
+//         if gt(length, 0xffffffffffffffff) { revert(0, 0) }
 //         let memPtr := mload(64)
-//         let _2 := not(31)
-//         let newFreePtr := add(memPtr, and(add(and(add(length, 31), _2), 63), _2))
-//         if or(gt(newFreePtr, _1), lt(newFreePtr, memPtr)) { revert(0, 0) }
+//         let newFreePtr := add(memPtr, and(add(and(add(length, 31), not(31)), 63), not(31)))
+//         if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
 //         mstore(64, newFreePtr)
 //         mstore(memPtr, length)
 //         extcodecopy(value, add(memPtr, 32), 0, length)
