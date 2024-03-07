@@ -720,11 +720,14 @@ defaults:
       image: cimg/node:14.20
       python2: true
 
-  - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
+  - job_native_compile_ext_gnosis: &job_native_compile_ext_gnosis
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_gnosis
+      name: t_native_compile_ext_gnosis
       project: gnosis
       binary_type: native
+      # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
+      #        Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
+      compile_only: 1
       image: cimg/node:18.16
 
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
@@ -742,18 +745,24 @@ defaults:
       binary_type: native
       image: cimg/node:18.16
 
-  - job_native_test_ext_trident: &job_native_test_ext_trident
+  - job_native_compile_ext_trident: &job_native_compile_ext_trident
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_trident
+      name: t_native_compile_ext_trident
       project: trident
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       image: cimg/node:18.16
 
-  - job_native_test_ext_euler: &job_native_test_ext_euler
+  - job_native_compile_ext_euler: &job_native_compile_ext_euler
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_euler
+      name: t_native_compile_ext_euler
       project: euler
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       resource_class: medium
 
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
@@ -763,18 +772,24 @@ defaults:
       binary_type: native
       image: cimg/node:18.16
 
-  - job_native_test_ext_bleeps: &job_native_test_ext_bleeps
+  - job_native_compile_ext_bleeps: &job_native_compile_ext_bleeps
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_bleeps
+      name: t_native_compile_ext_bleeps
       project: bleeps
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       resource_class: medium
 
-  - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
+  - job_native_compile_ext_pool_together: &job_native_compile_ext_pool_together
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_pool_together
+      name: t_native_compile_ext_pool_together
       project: pool-together
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       image: cimg/node:18.16
 
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
@@ -814,19 +829,24 @@ defaults:
       binary_type: native
       image: cimg/node:18.16
 
-  - job_native_test_ext_chainlink: &job_native_test_ext_chainlink
+  - job_native_compile_ext_chainlink: &job_native_compile_ext_chainlink
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_chainlink
+      name: t_native_compile_ext_chainlink
       project: chainlink
       binary_type: native
-      image: cimg/node:18.16
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
+      image: cimg/node:16.20
       resource_class: large # Tests run out of memory on a smaller machine
 
-  - job_native_test_ext_gp2: &job_native_test_ext_gp2
+  - job_native_compile_ext_gp2: &job_native_compile_ext_gp2
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_gp2
+      name: t_native_compile_ext_gp2
       project: gp2
       binary_type: native
+      # NOTE: test suite disabled due to constant failures.
+      compile_only: 1
       image: cimg/node:18.16
 
   - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
@@ -1868,9 +1888,7 @@ workflows:
 
       - t_ext: *job_ems_compile_ext_colony
 
-      # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
-      #       Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
-      #- t_ext: *job_native_test_ext_gnosis
+      - t_ext: *job_native_compile_ext_gnosis
       - t_ext: *job_native_test_ext_zeppelin
       - t_ext: *job_native_test_ext_ens
       - t_ext: *job_native_test_ext_yield_liquidator
@@ -1879,23 +1897,18 @@ workflows:
       - t_ext: *job_native_test_ext_prb_math
       - t_ext: *job_native_test_ext_elementfi
       - t_ext: *job_native_test_ext_brink
-      # NOTE: We are disabling gp2 tests due to constant failures.
-      # - t_ext: *job_native_test_ext_gp2
-      # NOTE: The external tests below were commented because they
-      # depend on a specific version of hardhat which does not support shanghai EVM.
-      #- t_ext: *job_native_test_ext_trident
-      #- t_ext: *job_native_test_ext_euler
-      #- t_ext: *job_native_test_ext_bleeps
-      #- t_ext: *job_native_test_ext_pool_together
-      #- t_ext: *job_native_test_ext_chainlink
+      - t_ext: *job_native_compile_ext_gp2
+      - t_ext: *job_native_compile_ext_trident
+      - t_ext: *job_native_compile_ext_euler
+      - t_ext: *job_native_compile_ext_bleeps
+      - t_ext: *job_native_compile_ext_pool_together
+      - t_ext: *job_native_compile_ext_chainlink
 
       - c_ext_benchmarks:
           <<: *requires_nothing
           requires:
             - t_ems_compile_ext_colony
-            # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
-            #       Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
-            #- t_native_test_ext_gnosis
+            - t_native_compile_ext_gnosis
             - t_native_test_ext_zeppelin
             - t_native_test_ext_ens
             - t_native_test_ext_yield_liquidator
@@ -1903,18 +1916,15 @@ workflows:
             - t_native_test_ext_uniswap
             - t_native_test_ext_elementfi
             - t_native_test_ext_brink
-            # NOTE: We are disabling gp2 tests due to constant failures.
-            #- t_native_test_ext_gp2
+            - t_native_compile_ext_gp2
             # TODO: Dropping prb-math from the benchmarks since it is not implemented yet
             # in the new Foundry external testing infrastructure.
             # - t_native_test_ext_prb_math
-            # NOTE: The external tests below were commented because they
-            # depend on a specific version of hardhat which does not support shanghai EVM.
-            #- t_native_test_ext_trident
-            #- t_native_test_ext_euler
-            #- t_native_test_ext_bleeps
-            #- t_native_test_ext_pool_together
-            #- t_native_test_ext_chainlink
+            - t_native_compile_ext_trident
+            - t_native_compile_ext_euler
+            - t_native_compile_ext_bleeps
+            - t_native_compile_ext_pool_together
+            - t_native_compile_ext_chainlink
 
       # Windows build and tests
       - b_win: *requires_nothing
