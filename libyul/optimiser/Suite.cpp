@@ -171,19 +171,7 @@ void OptimiserSuite::run(
 	// Now the user-supplied part
 	suite.runSequence(_optimisationSequence, ast);
 
-	// This is a tuning parameter, but actually just prevents infinite loops.
-	size_t stackCompressorMaxIterations = 16;
 	suite.runSequence("g", ast);
-
-	// We ignore the return value because we will get a much better error
-	// message once we perform code generation.
-	if (!usesOptimizedCodeGenerator)
-		StackCompressor::run(
-			_dialect,
-			_object,
-			_optimizeStackAllocation,
-			stackCompressorMaxIterations
-		);
 
 	// Run the user-supplied clean up sequence
 	suite.runSequence(_optimisationCleanupSequence, ast);
@@ -198,12 +186,6 @@ void OptimiserSuite::run(
 		ConstantOptimiser{*evmDialect, *_meter}(ast);
 		if (usesOptimizedCodeGenerator)
 		{
-			StackCompressor::run(
-				_dialect,
-				_object,
-				_optimizeStackAllocation,
-				stackCompressorMaxIterations
-			);
 			if (evmDialect->providesObjectAccess())
 				StackLimitEvader::run(suite.m_context, _object);
 		}
