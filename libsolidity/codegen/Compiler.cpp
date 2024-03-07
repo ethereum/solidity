@@ -36,7 +36,13 @@ void Compiler::compileContract(
 )
 {
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimiserSettings);
-	runtimeCompiler.compileContract(_contract, _otherCompilers);
+	try {
+		runtimeCompiler.compileContract(_contract, _otherCompilers);
+	} catch (langutil::UnimplementedFeatureError const& _error) {
+		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
+			_error << langutil::errinfo_sourceLocation(m_runtimeContext.assembly().currentSourceLocation());
+		BOOST_THROW_EXCEPTION(_error);
+	}
 	m_runtimeContext.appendToAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
@@ -46,7 +52,13 @@ void Compiler::compileContract(
 	// settings accordingly.
 	creationSettings.expectedExecutionsPerDeployment = 1;
 	ContractCompiler creationCompiler(&runtimeCompiler, m_context, creationSettings);
-	m_runtimeSub = creationCompiler.compileConstructor(_contract, _otherCompilers);
+	try {
+		m_runtimeSub = creationCompiler.compileConstructor(_contract, _otherCompilers);
+	} catch (langutil::UnimplementedFeatureError const& _error) {
+		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
+			_error << langutil::errinfo_sourceLocation(m_context.assembly().currentSourceLocation());
+		BOOST_THROW_EXCEPTION(_error);
+	}
 
 	m_context.optimise(m_optimiserSettings);
 
