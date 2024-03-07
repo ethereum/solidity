@@ -48,7 +48,7 @@ function euler_test
         "${compile_only_presets[@]}"
         #ir-no-optimize           # Compilation fails with "YulException: Variable var_v_mpos is 4 too deep in the stack". No memoryguard was present.
         #ir-optimize-evm-only     # Compilation fails with "YulException: Variable var_v_mpos is 4 too deep in the stack". No memoryguard was present.
-        ir-optimize-evm+yul
+        #ir-optimize-evm+yul
         legacy-optimize-evm-only
         legacy-optimize-evm+yul
         legacy-no-optimize

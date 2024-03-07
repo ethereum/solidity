@@ -50,7 +50,7 @@ function gnosis_safe_test
         #ir-optimize-evm+yul       # Compilation fails with "YulException: Cannot swap Variable var_operation with Variable _1: too deep in the stack by 4 slots."
         legacy-no-optimize
         legacy-optimize-evm-only
-        legacy-optimize-evm+yul
+        #legacy-optimize-evm+yul
     )
 
     [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")

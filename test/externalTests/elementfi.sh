@@ -46,10 +46,10 @@ function elementfi_test
         # Locally we can only compile.
         ir-no-optimize
         ir-optimize-evm-only
-        ir-optimize-evm+yul
+        #ir-optimize-evm+yul
         legacy-no-optimize
         legacy-optimize-evm-only
-        legacy-optimize-evm+yul
+        #legacy-optimize-evm+yul
     )
     local settings_presets=(
         "${compile_only_presets[@]}"

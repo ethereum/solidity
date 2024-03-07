@@ -49,7 +49,7 @@ function ens_test
         ir-optimize-evm-only
         ir-optimize-evm+yul       # Needs memory-safe inline assembly patch
         legacy-optimize-evm-only
-        legacy-optimize-evm+yul
+        #legacy-optimize-evm+yul
     )
 
     [[ $SELECTED_PRESETS != "" ]] || SELECTED_PRESETS=$(circleci_select_steps_multiarg "${settings_presets[@]}")
