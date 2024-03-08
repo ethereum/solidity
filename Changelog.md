@@ -10,6 +10,7 @@ Compiler Features:
 
 Bugfixes:
  * Assembler: Prevent incorrect calculation of tag sizes.
+ * Commandline Interface: Do not run IR pipeline when ``--via-ir`` is used but no output that depends on the IR is requested.
  * EVM Assembly Import: Fix handling of missing source locations during import.
  * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
  * SMTChecker: Ensure query is properly flushed to a file before calling solver when using SMT-LIB interface.
