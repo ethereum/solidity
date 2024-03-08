@@ -1093,25 +1093,21 @@
 //         value0 := and(calldataload(headStart), sub(shl(160, 1), 1))
 //         value1 := calldataload(add(headStart, 32))
 //         let offset := calldataload(add(headStart, 64))
-//         let _1 := 0xffffffffffffffff
-//         if gt(offset, _1) { revert(0, 0) }
-//         let _2 := add(headStart, offset)
-//         if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }
-//         let length := calldataload(_2)
-//         if gt(length, _1) { revert(0, 0) }
-//         if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }
-//         value2 := add(_2, 32)
+//         if gt(offset, 0xffffffffffffffff) { revert(0, 0) }
+//         let _1 := add(headStart, offset)
+//         if iszero(slt(add(_1, 0x1f), dataEnd)) { revert(0, 0) }
+//         let length := calldataload(_1)
+//         if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+//         if gt(add(add(_1, length), 32), dataEnd) { revert(0, 0) }
+//         value2 := add(_1, 32)
 //         value3 := length
-//         let _3 := calldataload(add(headStart, 96))
-//         if iszero(lt(_3, 3)) { revert(0, 0) }
-//         value4 := _3
+//         value4 := cleanup_revert_enum_Operation(calldataload(add(headStart, 96)))
 //     }
 //     function abi_encode_bytes32_address_uint256_bytes32_enum_Operation_uint256_uint256_uint256_address_address_uint256(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0) -> tail
 //     {
 //         tail := add(headStart, 352)
 //         mstore(headStart, value0)
-//         let _1 := sub(shl(160, 1), 1)
-//         mstore(add(headStart, 32), and(value1, _1))
+//         mstore(add(headStart, 32), and(value1, sub(shl(160, 1), 1)))
 //         mstore(add(headStart, 64), value2)
 //         mstore(add(headStart, 96), value3)
 //         if iszero(lt(value4, 3)) { invalid() }
@@ -1119,8 +1115,13 @@
 //         mstore(add(headStart, 160), value5)
 //         mstore(add(headStart, 192), value6)
 //         mstore(add(headStart, 224), value7)
-//         mstore(add(headStart, 256), and(value8, _1))
-//         mstore(add(headStart, 288), and(value9, _1))
+//         mstore(add(headStart, 256), and(value8, sub(shl(160, 1), 1)))
+//         mstore(add(headStart, 288), and(value9, sub(shl(160, 1), 1)))
 //         mstore(add(headStart, 320), value10)
+//     }
+//     function cleanup_revert_enum_Operation(value) -> cleaned
+//     {
+//         if iszero(lt(value, 3)) { revert(0, 0) }
+//         cleaned := value
 //     }
 // }

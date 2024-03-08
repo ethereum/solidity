@@ -42,7 +42,6 @@ tag_5:
     /* "optimizer_user_yul/input.sol":263:269  a := 2 */
   swap1
   pop
-  0x00
     /* "optimizer_user_yul/input.sol":369:370  3 */
   0x03
     /* "optimizer_user_yul/input.sol":366:367  2 */
@@ -59,18 +58,10 @@ tag_6:
     /* "optimizer_user_yul/input.sol":384:392  sload(5) */
   dup1
     /* "optimizer_user_yul/input.sol":376:509  for { } sload(5) { } {... */
-  tag_8
+  iszero
+  tag_6
   jumpi
-    /* "optimizer_user_yul/input.sol":495:504  exp(x, y) */
-  0x01
-    /* "optimizer_user_yul/input.sol":490:504  z := exp(x, y) */
-  swap2
-  pop
-    /* "optimizer_user_yul/input.sol":376:509  for { } sload(5) { } {... */
-  jump(tag_6)
-tag_8:
     /* "optimizer_user_yul/input.sol":380:383  { } */
-  pop
   pop
     /* "optimizer_user_yul/input.sol":340:513  {... */
   pop
