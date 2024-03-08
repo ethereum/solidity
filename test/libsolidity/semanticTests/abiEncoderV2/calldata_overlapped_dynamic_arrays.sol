@@ -33,8 +33,8 @@ contract C {
 // f_which(uint256[],uint256[2],uint256): 0x40, 1, 2, 1, 5, 6 -> 0x20, 0x40, 5, 2
 // f_which(uint256[],uint256[2],uint256): 0x40, 1, 2, 1 -> FAILURE
 // f_storage(uint256[],uint256[2]): 0x20, 1, 2 -> 0x20, 0x60, 0x20, 1, 2
-// gas irOptimized: 111395
+// gas irOptimized: 111415
 // gas legacy: 112709
-// gas legacyOptimized: 111852
+// gas legacyOptimized: 111847
 // f_storage(uint256[],uint256[2]): 0x40, 1, 2, 5, 6 -> 0x20, 0x80, 0x20, 2, 5, 6
 // f_storage(uint256[],uint256[2]): 0x40, 1, 2, 5 -> FAILURE
