@@ -24,7 +24,7 @@ contract Main {
 }
 // ----
 // f(uint256): 0x34 -> 0x46bddb1178e94d7f2892ff5f366840eb658911794f2c3a44c450aa2c505186c1
-// gas irOptimized: 99524
+// gas irOptimized: 99552
 // gas irOptimized code: 12400
 // gas legacy: 101554
 // gas legacy code: 23600
