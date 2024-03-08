@@ -1988,10 +1988,6 @@ workflows:
           <<: *on_develop
 
     jobs:
-      # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *requires_nothing
-      - t_ubu_ossfuzz: *requires_b_ubu_ossfuzz
-
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *requires_nothing
       - t_ubu_codecov: *requires_b_ubu_codecov
@@ -2007,3 +2003,15 @@ workflows:
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_soltest: *requires_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
+
+  nightly-ossfuzz:
+
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          <<: *on_develop
+
+    jobs:
+      # OSSFUZZ builds and (regression) tests
+      - b_ubu_ossfuzz: *requires_nothing
+      - t_ubu_ossfuzz: *requires_b_ubu_ossfuzz
