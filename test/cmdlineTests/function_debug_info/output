@@ -41,7 +41,7 @@
         },
         "abi_decode_tuple_t_uint256":
         {
-          "entryPoint": 269,
+          "entryPoint": 271,
           "parameterSlots": 2,
           "returnSlots": 1
         },
@@ -52,7 +52,7 @@
         },
         "panic_error_0x32":
         {
-          "entryPoint": 292,
+          "entryPoint": 294,
           "parameterSlots": 0,
           "returnSlots": 0
         }

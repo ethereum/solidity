@@ -28,21 +28,20 @@
 //
 // {
 //     {
-//         let _1 := 1
-//         mstore(_1, _1)
-//         mstore(2, _1)
-//         mstore(3, _1)
-//         mstore(4, _1)
-//         mstore(5, _1)
-//         mstore(6, _1)
-//         let _2 := sload(8)
-//         mstore(mload(7), _1)
-//         mstore(_2, _1)
-//         mstore(calldataload(9), _1)
-//         let _3 := mload(13)
-//         mstore(11, _1)
-//         mstore(12, _1)
-//         mstore(_3, _1)
+//         mstore(1, 1)
+//         mstore(2, 1)
+//         mstore(3, 1)
+//         mstore(4, 1)
+//         mstore(5, 1)
+//         mstore(6, 1)
+//         let _1 := sload(8)
+//         mstore(mload(7), 1)
+//         mstore(_1, 1)
+//         mstore(calldataload(9), 1)
+//         let _2 := mload(13)
+//         mstore(11, 1)
+//         mstore(12, 1)
+//         mstore(_2, 1)
 //         return(0, 32)
 //     }
 // }

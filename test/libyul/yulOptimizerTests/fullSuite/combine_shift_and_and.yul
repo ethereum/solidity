@@ -12,6 +12,6 @@
 // {
 //     {
 //         let x := calldataload(0)
-//         sstore(shr(248, x), and(shr(4, x), 3855))
+//         sstore(shr(248, x), and(and(shr(4, x), sub(shl(244, 1), 1)), 3855))
 //     }
 // }

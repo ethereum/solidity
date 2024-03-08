@@ -13,8 +13,7 @@
 //
 // {
 //     {
-//         let _1 := sub(shl(160, 1), 1)
-//         let a := and(create2(0, 0, 0x20, 0), _1)
-//         sstore(a, and(_1, create2(0, 0, 0x20, 0)))
+//         let a := and(create2(0, 0, 0x20, 0), sub(shl(160, 1), 1))
+//         sstore(a, and(sub(shl(160, 1), 1), create2(0, 0, 0x20, 0)))
 //     }
 // }
