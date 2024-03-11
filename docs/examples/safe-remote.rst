@@ -106,6 +106,7 @@ you can use state machine-like constructs inside a contract.
         /// is called.
         function confirmPurchase()
             external
+            onlyBuyer
             inState(State.Created)
             condition(msg.value == (2 * value))
             payable
