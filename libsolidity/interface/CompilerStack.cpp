@@ -742,7 +742,7 @@ bool CompilerStack::compile(State _stopAfter)
 				{
 					try
 					{
-						if (m_viaIR || m_generateIR)
+						if ((m_generateEvmBytecode && m_viaIR) || m_generateIR)
 							generateIR(*contract);
 						if (m_generateEvmBytecode)
 						{
