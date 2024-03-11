@@ -193,8 +193,15 @@ on the type of ``X`` being
 
   ``enc(X) = enc(k) enc((X[0], ..., X[k-1]))``
 
-  i.e. it is encoded as if it were a tuple with ``k`` elements of the same type (resp. an array of static size ``k``), prefixed with
-  the number of elements.
+  i.e. it is encoded as if it were a tuple with ``k`` elements of the same type
+  (resp. an array of static size ``k``), prefixed with the number of elements.
+
+  .. warning::
+
+    For dynamically-sized ``T`` the offsets in the
+    encodings of ``head(X[i])`` for ``i < k`` are relative to the start of the
+    encoding of the internal tuple, ``enc((X[0], ..., X[k-1]))``, not to the
+    start of ``enc(X)``.
 
 - ``bytes``, of length ``k`` (which is assumed to be of type ``uint256``):
 
