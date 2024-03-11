@@ -1354,7 +1354,7 @@ Complete ERC20 Example
 
                 /* ---------- calldata decoding functions ----------- */
                 function selector() -> s {
-                    s := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
+                    s := shr(224, calldataload(0))
                 }
 
                 function decodeAsAddress(offset) -> v {
