@@ -143,7 +143,7 @@ langutil::Token Parser::advance()
 void Parser::fetchDebugDataFromComment()
 {
 	static std::regex const tagRegex = std::regex(
-		R"~~((?:^|\s+)(@[a-zA-Z0-9\-_]+)(?:\s+|$))~~", // tag, e.g: @src
+		R"~~((?:^|\s+)(@[a-zA-Z0-9\-\._]+)(?:\s+|$))~~", // tag, e.g: @src
 		std::regex_constants::ECMAScript | std::regex_constants::optimize
 	);
 
@@ -176,13 +176,24 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
-		else if (match[1] == "@attribute")
+		else if (match[1] == "@debug.patch")
 		{
 			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
 			{
 				commentLiteral = parseResult->first;
 				if (parseResult->second.has_value())
 					applyDebugDataAttributePatch(parseResult->second.value());
+			}
+			else
+				break;
+		}
+		else if (match[1] == "@debug.set")
+		{
+			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
+			{
+				commentLiteral = parseResult->first;
+				if (parseResult->second.has_value())
+					m_currentDebugDataAttributes = parseResult->second.value();
 			}
 			else
 				break;
