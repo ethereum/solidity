@@ -122,7 +122,7 @@ protected:
 		langutil::SourceLocation const& _commentLocation
 	);
 
-	void applyDebugDataAttributeOperation(Json& _attributes, Json const& _attributeOperation);
+	void applyDebugDataAttributePatch(Json const& _jsonPatch);
 
 	/// Creates a DebugData object with the correct source location set.
 	langutil::DebugData::ConstPtr createDebugData() const;

@@ -182,7 +182,7 @@ void Parser::fetchDebugDataFromComment()
 			{
 				commentLiteral = parseResult->first;
 				if (parseResult->second.has_value())
-					applyDebugDataAttributeOperation(m_currentDebugDataAttributes,  parseResult->second.value());
+					applyDebugDataAttributePatch(parseResult->second.value());
 			}
 			else
 				break;
@@ -220,11 +220,16 @@ std::optional<std::pair<std::string_view, std::optional<Json>>> Parser::parseDeb
 	return {{_arguments, jsonData}};
 }
 
-void Parser::applyDebugDataAttributeOperation(Json& _attributes, Json const& _attributeOperation)
+void Parser::applyDebugDataAttributePatch(Json const& _jsonPatch)
 {
-	(void)_attributes;
-	(void)_attributeOperation;
-	std::cout << "attributes='" << _attributes.dump(2) << "' attributeOperation='" << _attributeOperation.dump(2) << "'" << std::endl;
+	if (_jsonPatch.is_object())
+	{
+		Json array = Json::array();
+		array.push_back(_jsonPatch);
+		m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(array);
+	}
+	else
+		m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(_jsonPatch);
 }
 
 std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComment(
