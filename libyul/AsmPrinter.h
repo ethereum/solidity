@@ -93,6 +93,7 @@ private:
 	langutil::SourceLocation m_lastLocation = {};
 	langutil::DebugInfoSelection m_debugInfoSelection = {};
 	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;
+	langutil::DebugData::Attributes m_currentDebugAttributes;
 };
 
 }

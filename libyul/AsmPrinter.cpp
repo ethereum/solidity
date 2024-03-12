@@ -48,7 +48,8 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 
 	std::string const locationComment = formatDebugData(_literal);
 	std::string const formattedValue = formatLiteral(_literal);
-
+	if ( _literal.debugData)
+		m_currentDebugAttributes = _literal.debugData->attributes;
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
@@ -64,19 +65,24 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 std::string AsmPrinter::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "Invalid identifier.");
+	if (_identifier.debugData)
+		m_currentDebugAttributes = _identifier.debugData->attributes;
 	return formatDebugData(_identifier) + _identifier.name.str();
 }
 
 std::string AsmPrinter::operator()(ExpressionStatement const& _statement)
 {
 	std::string const locationComment = formatDebugData(_statement);
-
+	if (_statement.debugData)
+		m_currentDebugAttributes = _statement.debugData->attributes;
 	return locationComment + std::visit(*this, _statement.expression);
 }
 
 std::string AsmPrinter::operator()(Assignment const& _assignment)
 {
 	std::string const locationComment = formatDebugData(_assignment);
+	if (_assignment.debugData)
+		m_currentDebugAttributes = _assignment.debugData->attributes;
 
 	yulAssert(_assignment.variableNames.size() >= 1, "");
 	std::string variables = (*this)(_assignment.variableNames.front());
@@ -89,7 +95,8 @@ std::string AsmPrinter::operator()(Assignment const& _assignment)
 std::string AsmPrinter::operator()(VariableDeclaration const& _variableDeclaration)
 {
 	std::string out = formatDebugData(_variableDeclaration);
-
+	if (_variableDeclaration.debugData)
+		m_currentDebugAttributes = _variableDeclaration.debugData->attributes;
 	out += "let ";
 	out += boost::algorithm::join(
 		_variableDeclaration.variables | ranges::views::transform(
@@ -108,7 +115,8 @@ std::string AsmPrinter::operator()(VariableDeclaration const& _variableDeclarati
 std::string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition)
 {
 	yulAssert(!_functionDefinition.name.empty(), "Invalid function name.");
-
+	if (_functionDefinition.debugData)
+		m_currentDebugAttributes = _functionDefinition.debugData->attributes;
 	std::string out = formatDebugData(_functionDefinition);
 	out += "function " + _functionDefinition.name.str() + "(";
 	out += boost::algorithm::join(
@@ -136,6 +144,8 @@ std::string AsmPrinter::operator()(FunctionCall const& _functionCall)
 {
 	std::string const locationComment = formatDebugData(_functionCall);
 	std::string const functionName = (*this)(_functionCall.functionName);
+	if (_functionCall.debugData)
+		m_currentDebugAttributes = _functionCall.debugData->attributes;
 	return
 		locationComment +
 		functionName + "(" +
@@ -148,7 +158,8 @@ std::string AsmPrinter::operator()(FunctionCall const& _functionCall)
 std::string AsmPrinter::operator()(If const& _if)
 {
 	yulAssert(_if.condition, "Invalid if condition.");
-
+	if (_if.debugData)
+		m_currentDebugAttributes = _if.debugData->attributes;
 	std::string out = formatDebugData(_if);
 	out += "if " + std::visit(*this, *_if.condition);
 
@@ -163,7 +174,8 @@ std::string AsmPrinter::operator()(If const& _if)
 std::string AsmPrinter::operator()(Switch const& _switch)
 {
 	yulAssert(_switch.expression, "Invalid expression pointer.");
-
+	if (_switch.debugData)
+		m_currentDebugAttributes = _switch.debugData->attributes;
 	std::string out = formatDebugData(_switch);
 	out += "switch " + std::visit(*this, *_switch.expression);
 
@@ -181,6 +193,8 @@ std::string AsmPrinter::operator()(Switch const& _switch)
 std::string AsmPrinter::operator()(ForLoop const& _forLoop)
 {
 	yulAssert(_forLoop.condition, "Invalid for loop condition.");
+	if (_forLoop.debugData)
+		m_currentDebugAttributes = _forLoop.debugData->attributes;
 	std::string const locationComment = formatDebugData(_forLoop);
 
 	std::string pre = (*this)(_forLoop.pre);
@@ -202,24 +216,31 @@ std::string AsmPrinter::operator()(ForLoop const& _forLoop)
 
 std::string AsmPrinter::operator()(Break const& _break)
 {
+	if (_break.debugData)
+		m_currentDebugAttributes = _break.debugData->attributes;
 	return formatDebugData(_break) + "break";
 }
 
 std::string AsmPrinter::operator()(Continue const& _continue)
 {
+	if (_continue.debugData)
+		m_currentDebugAttributes = _continue.debugData->attributes;
 	return formatDebugData(_continue) + "continue";
 }
 
 // '_leave' and '__leave' is reserved in VisualStudio
 std::string AsmPrinter::operator()(Leave const& leave_)
 {
+	if (leave_.debugData)
+		m_currentDebugAttributes = leave_.debugData->attributes;
 	return formatDebugData(leave_) + "leave";
 }
 
 std::string AsmPrinter::operator()(Block const& _block)
 {
 	std::string const locationComment = formatDebugData(_block);
-
+	if (_block.debugData)
+		m_currentDebugAttributes = _block.debugData->attributes;
 	if (_block.statements.empty())
 		return locationComment + "{ }";
 	std::string body = boost::algorithm::join(
@@ -313,7 +334,21 @@ std::string AsmPrinter::formatDebugData(langutil::DebugData::ConstPtr const& _de
 			m_soliditySourceProvider
 		));
 	}
-
+	// if (m_currentDebugAttributes != _debugData->attributes)
+	// {
+		// Json diff = Json::diff(m_currentDebugAttributes, _debugData->attributes);
+		// if (!diff.empty())
+			// items.emplace_back("@debug.patch " + diff.dump());
+	// }
+	if (_debugData->attributes.has_value() && m_currentDebugAttributes != *_debugData->attributes)
+	{
+		Json attributes = Json::array();
+		for (auto const& attribute:*_debugData->attributes)
+			if ((*attribute != Json::object()) && (*attribute != Json::array()))
+				attributes.emplace_back(*attribute);
+		if (!attributes.empty())
+			items.emplace_back("@debug.set " + (attributes.size() == 1 ? attributes.at(0).dump() : attributes.dump()));
+	}
 	std::string commentBody = joinHumanReadable(items, " ");
 	if (commentBody.empty())
 		return "";

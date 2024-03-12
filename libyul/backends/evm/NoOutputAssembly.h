@@ -49,6 +49,7 @@ public:
 	~NoOutputAssembly() override = default;
 
 	void setSourceLocation(langutil::SourceLocation const&) override {}
+	void setDebugAttributes(langutil::DebugData::Attributes const&) override {}
 	int stackHeight() const override { return m_stackHeight; }
 	void setStackHeight(int height) override { m_stackHeight = height; }
 	void appendInstruction(evmasm::Instruction _instruction) override;

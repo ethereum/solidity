@@ -26,9 +26,9 @@
 #include <libyul/ASTForward.h>
 
 #include <libsolutil/Common.h>
-#include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
 #include <liblangutil/EVMVersion.h>
+#include <liblangutil/DebugData.h>
 
 #include <functional>
 #include <memory>
@@ -62,6 +62,8 @@ public:
 
 	/// Set a new source location valid starting from the next instruction.
 	virtual void setSourceLocation(langutil::SourceLocation const& _location) = 0;
+	/// Set a new debug attributes for next instruction.
+	virtual void setDebugAttributes(langutil::DebugData::Attributes const& _debugAttributes) = 0;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
 	virtual int stackHeight() const = 0;
