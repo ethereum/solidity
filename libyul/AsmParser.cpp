@@ -178,7 +178,7 @@ void Parser::fetchDebugDataFromComment()
 		}
 		else if (match[1] == "@debug.set")
 		{
-			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
+			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
 			{
 				commentLiteral = parseResult->first;
 				if (parseResult->second.has_value())
@@ -189,7 +189,7 @@ void Parser::fetchDebugDataFromComment()
 		}
 		else if (match[1] == "@debug.merge")
 		{
-			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
+			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
 			{
 				commentLiteral = parseResult->first;
 				if (parseResult->second.has_value())
@@ -200,11 +200,11 @@ void Parser::fetchDebugDataFromComment()
 		}
 		else if (match[1] == "@debug.patch")
 		{
-			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
+			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
 			{
 				commentLiteral = parseResult->first;
 				if (parseResult->second.has_value())
-					applyDebugDataAttributePatch(parseResult->second.value());
+					applyDebugDataAttributePatch(parseResult->second.value(), m_scanner->currentCommentLocation());
 			}
 			else
 				break;
@@ -218,8 +218,9 @@ void Parser::fetchDebugDataFromComment()
 }
 
 std::optional<std::pair<std::string_view, std::optional<Json>>> Parser::parseDebugDataAttributeOperationComment(
+	std::string const& _command,
 	std::string_view _arguments,
-	langutil::SourceLocation const&
+	langutil::SourceLocation const& _location
 )
 {
 	std::optional<Json> jsonData;
@@ -233,8 +234,13 @@ std::optional<std::pair<std::string_view, std::optional<Json>>> Parser::parseDeb
 		{
 			jsonData = Json::parse(_arguments.substr(0, e.byte - 1), nullptr, true);
 		}
-		catch(nlohmann::json::parse_error&)
+		catch(nlohmann::json::parse_error& ee)
 		{
+			m_errorReporter.syntaxError(
+				5721_error,
+				_location,
+			_command + ": Could not parse debug data: " + removeNlohmannInternalErrorIdentifier(ee.what())
+			);
 			jsonData.reset();
 		}
 		_arguments = _arguments.substr(e.byte - 1);
@@ -242,16 +248,27 @@ std::optional<std::pair<std::string_view, std::optional<Json>>> Parser::parseDeb
 	return {{_arguments, jsonData}};
 }
 
-void Parser::applyDebugDataAttributePatch(Json const& _jsonPatch)
+void Parser::applyDebugDataAttributePatch(Json const& _jsonPatch, langutil::SourceLocation const& _location)
 {
-	if (_jsonPatch.is_object())
+	try
 	{
-		Json array = Json::array();
-		array.push_back(_jsonPatch);
-		m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(array);
+		if (_jsonPatch.is_object())
+		{
+			Json array = Json::array();
+			array.push_back(_jsonPatch);
+			m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(array);
+		}
+		else
+			m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(_jsonPatch);
 	}
-	else
-		m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(_jsonPatch);
+	catch(nlohmann::json::parse_error& ee)
+	{
+		m_errorReporter.syntaxError(
+			9426_error,
+			_location,
+			"@debug.patch: Could not patch debug data: " + removeNlohmannInternalErrorIdentifier(ee.what())
+		);
+	}
 }
 
 std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComment(
