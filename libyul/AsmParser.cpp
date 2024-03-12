@@ -176,17 +176,6 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
-		else if (match[1] == "@debug.patch")
-		{
-			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
-			{
-				commentLiteral = parseResult->first;
-				if (parseResult->second.has_value())
-					applyDebugDataAttributePatch(parseResult->second.value());
-			}
-			else
-				break;
-		}
 		else if (match[1] == "@debug.set")
 		{
 			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
@@ -194,6 +183,28 @@ void Parser::fetchDebugDataFromComment()
 				commentLiteral = parseResult->first;
 				if (parseResult->second.has_value())
 					m_currentDebugDataAttributes = parseResult->second.value();
+			}
+			else
+				break;
+		}
+		else if (match[1] == "@debug.merge")
+		{
+			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
+			{
+				commentLiteral = parseResult->first;
+				if (parseResult->second.has_value())
+					m_currentDebugDataAttributes.merge_patch(parseResult->second.value());
+			}
+			else
+				break;
+		}
+		else if (match[1] == "@debug.patch")
+		{
+			if (auto parseResult = parseDebugDataAttributeOperationComment(commentLiteral, m_scanner->currentCommentLocation()))
+			{
+				commentLiteral = parseResult->first;
+				if (parseResult->second.has_value())
+					applyDebugDataAttributePatch(parseResult->second.value());
 			}
 			else
 				break;
