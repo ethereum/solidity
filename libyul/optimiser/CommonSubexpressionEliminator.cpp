@@ -120,6 +120,25 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 				// We check for syntactic equality again because the value might have changed.
 				if (inScope(variable) && SyntacticallyEqual{}(_e, *value->value))
 				{
+					if (debugDataOf(*value->value))
+					{
+						langutil::DebugData::Attributes mergedDebugAttributes;
+						if (debugDataOf(*value->value)->attributes.has_value())
+							mergedDebugAttributes = debugDataOf(*value->value)->attributes;
+						if (debugDataOf(_e) && mergedDebugAttributes.has_value())
+						{
+							for (auto const& i: debugDataOf(_e)->attributes.value())
+								mergedDebugAttributes->emplace_back(i);
+							_e = Identifier{
+								langutil::DebugData::create(
+									debugDataOf(_e)->nativeLocation,
+									debugDataOf(_e)->originLocation,
+									debugDataOf(_e)->astID,
+									mergedDebugAttributes),
+								variable};
+							break;
+						}
+					}
 					_e = Identifier{debugDataOf(_e), variable};
 					break;
 				}

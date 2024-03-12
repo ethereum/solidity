@@ -19,12 +19,14 @@
 #include <test/libyul/YulOptimizerAssemblyTest.h>
 #include <test/libyul/YulOptimizerTestCommon.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libyul/Common.h>
 #include <test/Common.h>
 
 #include <libyul/Object.h>
 #include <libyul/AsmPrinter.h>
 
+#include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/Scanner.h>
 
@@ -60,6 +62,10 @@ YulOptimizerAssemblyTest::YulOptimizerAssemblyTest(std::string const& _filename)
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
 
 	m_source = m_reader.source();
+
+	auto dialectName = m_reader.stringSetting("dialect", "evm");
+	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
+
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -103,4 +109,27 @@ TestCase::TestResult YulOptimizerAssemblyTest::run(std::ostream& _stream, std::s
 	m_obtainedResult += "\nAssembly:\n" + toString(assembly);
 
 	return checkResult(_stream, _linePrefix, _formatted);
+}
+
+std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> YulOptimizerAssemblyTest::parse(
+	std::ostream& _stream,
+	std::string const& _linePrefix,
+	bool const _formatted,
+	std::string const& _source
+)
+{
+	ErrorList errors;
+	soltestAssert(m_dialect, "");
+	std::shared_ptr<Object> object;
+	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
+	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_dialect, errors);
+	if (!object || !analysisInfo || Error::containsErrors(errors))
+	{
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
+		CharStream charStream(_source, "");
+		SourceReferenceFormatter{_stream, SingletonCharStreamProvider(charStream), true, false}
+			.printErrorInformation(errors);
+		return {};
+	}
+	return {std::move(object), std::move(analysisInfo)};
 }
