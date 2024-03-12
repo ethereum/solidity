@@ -62,6 +62,7 @@ AssemblyItem const& Assembly::append(AssemblyItem _i)
 	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
 	m_items.back().m_modifierDepth = m_currentModifierDepth;
+	m_items.back().setDebugAttributes(m_currentDebugAttributes);
 	return m_items.back();
 }
 
@@ -313,6 +314,16 @@ public:
 		}
 
 		std::string expression = _item.toAssemblyText(m_assembly);
+
+		if (_item.debugData()->attributes.has_value())
+		{
+			Json attributes = Json::array();
+			for (auto const& attribute: *_item.debugData()->attributes)
+				if ((*attribute != Json::object()) && (*attribute != Json::array()))
+					attributes.emplace_back(*attribute);
+			if (!attributes.empty())
+				expression += m_prefix + "   // @debug.set " + (attributes.size() == 1 ? attributes.at(0).dump() : attributes.dump());
+		}
 
 		if (!(
 			_item.canBeFunctional() &&

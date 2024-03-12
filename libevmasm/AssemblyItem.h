@@ -194,6 +194,15 @@ public:
 		m_debugData = std::move(_debugData);
 	}
 
+	void setDebugAttributes(langutil::DebugData::Attributes const& _debugAttributes)
+	{
+		if (!m_debugData)
+			m_debugData = langutil::DebugData::create({}, {}, {}, _debugAttributes);
+		else
+			m_debugData = langutil::DebugData::create(m_debugData->nativeLocation, m_debugData->originLocation, m_debugData->astID, _debugAttributes);
+	}
+
+
 	langutil::DebugData::ConstPtr debugData() const { return m_debugData; }
 
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }

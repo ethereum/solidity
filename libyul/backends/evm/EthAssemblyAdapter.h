@@ -41,6 +41,7 @@ class EthAssemblyAdapter: public AbstractAssembly
 public:
 	explicit EthAssemblyAdapter(evmasm::Assembly& _assembly);
 	void setSourceLocation(langutil::SourceLocation const& _location) override;
+	void setDebugAttributes(langutil::DebugData::Attributes const& _debugAttributes) override;
 	int stackHeight() const override;
 	void setStackHeight(int height) override;
 	void appendInstruction(evmasm::Instruction _instruction) override;

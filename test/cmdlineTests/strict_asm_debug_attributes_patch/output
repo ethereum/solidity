@@ -1,0 +1,66 @@
+
+======= strict_asm_debug_attributes_patch/input.yul (EVM) =======
+
+Pretty printed source:
+object "object" {
+    code {
+        {
+            /// @debug.set {"scope":1}
+            let a
+            /// @debug.set {"assignment":1,"scope":1}
+            a := z()
+            /// @debug.set {"scope":1}
+            let b
+            /// @debug.set {"assignment":2,"scope":1}
+            b := z_1()
+            /// @debug.set {"scope":1}
+            sstore(a, b)
+        }
+        function z() -> y
+        {
+            /// @debug.set {"scope":2}
+            y := calldataload(0)
+        }
+        function z_1() -> y
+        {
+            /// @debug.set {"scope":3}
+            y := calldataload(0x20)
+        }
+    }
+}
+
+
+Text representation:
+    /* "strict_asm_debug_attributes_patch/input.yul":227:230   */
+  tag_3   // @debug.set {"assignment":1,"scope":1}
+  tag_1   // @debug.set {"assignment":1,"scope":1}
+  jump	// in   // @debug.set {"assignment":1,"scope":1}
+tag_3:   // @debug.set {"assignment":1,"scope":1}
+    /* "strict_asm_debug_attributes_patch/input.yul":415:420   */
+  tag_4   // @debug.set {"assignment":2,"scope":1}
+  tag_2   // @debug.set {"assignment":2,"scope":1}
+  jump	// in   // @debug.set {"assignment":2,"scope":1}
+tag_4:   // @debug.set {"assignment":2,"scope":1}
+    /* "strict_asm_debug_attributes_patch/input.yul":503:515   */
+  swap1   // @debug.set {"scope":1}
+  sstore   // @debug.set {"scope":1}
+    /* "strict_asm_debug_attributes_patch/input.yul":27:1037   */
+  stop
+    /* "strict_asm_debug_attributes_patch/input.yul":599:808   */
+tag_1:
+    /* "strict_asm_debug_attributes_patch/input.yul":731:732   */
+  0x00   // @debug.set {"scope":2}
+    /* "strict_asm_debug_attributes_patch/input.yul":718:733   */
+  calldataload   // @debug.set {"scope":2}
+    /* "strict_asm_debug_attributes_patch/input.yul":599:808   */
+  swap1
+  jump	// out
+    /* "strict_asm_debug_attributes_patch/input.yul":817:1031   */
+tag_2:
+    /* "strict_asm_debug_attributes_patch/input.yul":951:955   */
+  0x20   // @debug.set {"scope":3}
+    /* "strict_asm_debug_attributes_patch/input.yul":938:956   */
+  calldataload   // @debug.set {"scope":3}
+    /* "strict_asm_debug_attributes_patch/input.yul":817:1031   */
+  swap1
+  jump	// out

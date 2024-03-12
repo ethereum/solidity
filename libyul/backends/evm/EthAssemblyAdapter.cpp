@@ -48,6 +48,11 @@ void EthAssemblyAdapter::setSourceLocation(SourceLocation const& _location)
 	m_assembly.setSourceLocation(_location);
 }
 
+void EthAssemblyAdapter::setDebugAttributes(langutil::DebugData::Attributes const& _debugAttributes)
+{
+	m_assembly.setDebugAttributes(_debugAttributes);
+}
+
 int EthAssemblyAdapter::stackHeight() const
 {
 	return m_assembly.deposit();
