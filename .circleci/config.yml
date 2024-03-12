@@ -1919,11 +1919,13 @@ workflows:
       - t_ext: *job_native_test_ext_elementfi
       - t_ext: *job_native_test_ext_brink
       - t_ext: *job_native_compile_ext_gp2
-      - t_ext: *job_native_compile_ext_trident
       - t_ext: *job_native_compile_ext_euler
-      - t_ext: *job_native_compile_ext_bleeps
       - t_ext: *job_native_compile_ext_pool_together
-      - t_ext: *job_native_compile_ext_chainlink
+      # TODO: Dropping the external tests below since they are based on old forks and
+      # fail after update the default evm version to cancun.
+      #- t_ext: *job_native_compile_ext_trident
+      #- t_ext: *job_native_compile_ext_chainlink
+      #- t_ext: *job_native_compile_ext_bleeps
 
       - c_ext_benchmarks:
           <<: *requires_nothing
@@ -1941,11 +1943,13 @@ workflows:
             # TODO: Dropping prb-math from the benchmarks since it is not implemented yet
             # in the new Foundry external testing infrastructure.
             # - t_native_test_ext_prb_math
-            - t_native_compile_ext_trident
             - t_native_compile_ext_euler
-            - t_native_compile_ext_bleeps
             - t_native_compile_ext_pool_together
-            - t_native_compile_ext_chainlink
+            # TODO: Dropping the external tests below since they are based on old forks and
+            # fail after update the default evm version to cancun.
+            #- t_native_compile_ext_trident
+            #- t_native_compile_ext_chainlink
+            #- t_native_compile_ext_bleeps
 
       # Windows build and tests
       - b_win: *requires_nothing
