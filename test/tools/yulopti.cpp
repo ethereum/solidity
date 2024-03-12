@@ -251,7 +251,8 @@ private:
 		m_dialect,
 		m_nameDispenser,
 		m_reservedIdentifiers,
-		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment,
+		{}
 	};
 };
 

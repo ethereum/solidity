@@ -36,24 +36,19 @@ struct Dialect;
 namespace solidity::yul::test
 {
 
-class YulOptimizerTest: public solidity::frontend::test::EVMVersionRestrictedTestCase
+class YulOptimizerAssemblyTest: public solidity::frontend::test::EVMVersionRestrictedTestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::make_unique<YulOptimizerTest>(_config.filename);
+		return std::make_unique<YulOptimizerAssemblyTest>(_config.filename);
 	}
 
-	explicit YulOptimizerTest(std::string const& _filename);
+	explicit YulOptimizerAssemblyTest(std::string const& _filename);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 private:
 	std::string m_optimizerStep;
-
-	Dialect const* m_dialect = nullptr;
-
-	std::shared_ptr<Object> m_object;
-	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 };
 
 }

@@ -27,6 +27,8 @@
 #include <vector>
 #include <memory>
 
+#include <libyul/AsmParser.h>
+
 namespace solidity::langutil
 {
 class Error;
@@ -48,7 +50,16 @@ std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>>
 parse(std::string const& _source, bool _yul = true);
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>>
-parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& _errors);
+parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& _errors, Parser::DebugAttributeCache::Ptr _debugAttributeCache = {});
+
+std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> parse(
+	std::ostream& _stream,
+	std::string const& _linePrefix,
+	bool const _formatted,
+	std::string const& _source,
+	Dialect const& _dialect,
+	Parser::DebugAttributeCache::Ptr _debugAttributeCache = {}
+);
 
 Block disambiguate(std::string const& _source, bool _yul = true);
 std::string format(std::string const& _source, bool _yul = true);

@@ -31,6 +31,7 @@
 #include <test/libsolidity/SMTCheckerTest.h>
 #include <test/libyul/ControlFlowGraphTest.h>
 #include <test/libyul/EVMCodeTransformTest.h>
+#include <test/libyul/YulOptimizerAssemblyTest.h>
 #include <test/libyul/YulOptimizerTest.h>
 #include <test/libyul/YulInterpreterTest.h>
 #include <test/libyul/ObjectCompilerTest.h>
@@ -63,6 +64,7 @@ Testsuite const g_interactiveTestsuites[] = {
 /*
 	Title                           Path           Subpath                          SMT   NeedsVM Creator function */
 	{"Yul Optimizer",               "libyul",      "yulOptimizerTests",             false, false, &yul::test::YulOptimizerTest::create},
+	{"Yul Optimizer with Assembly", "libyul",      "yulOptimizerAssemblyTests",     false, false, &yul::test::YulOptimizerAssemblyTest::create},
 	{"Yul Interpreter",             "libyul",      "yulInterpreterTests",           false, false, &yul::test::YulInterpreterTest::create},
 	{"Yul Object Compiler",         "libyul",      "objectCompiler",                false, false, &yul::test::ObjectCompilerTest::create},
 	{"Yul Control Flow Graph",      "libyul",      "yulControlFlowGraph",           false, false, &yul::test::ControlFlowGraphTest::create},

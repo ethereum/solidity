@@ -23,6 +23,9 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
+#include <libyul/AsmParser.h>
+
+#include <utility>
 
 namespace solidity::yul
 {
@@ -41,14 +44,22 @@ class FunctionGrouper
 {
 public:
 	static constexpr char const* name{"FunctionGrouper"};
-	static void run(OptimiserStepContext&, Block& _ast) { FunctionGrouper{}(_ast); }
+	static void run(OptimiserStepContext&, Block& _ast, Parser::DebugAttributeCache::Ptr _debugAttributeCache = {})
+	{
+		FunctionGrouper{std::move(_debugAttributeCache)}(_ast);
+	}
 
 	void operator()(Block& _block);
 
 private:
-	FunctionGrouper() = default;
+	explicit FunctionGrouper(Parser::DebugAttributeCache::Ptr _debugAttributeCache)
+		: m_debugAttributeCache(std::move(_debugAttributeCache))
+	{
+	}
 
 	bool alreadyGrouped(Block const& _block);
+
+	Parser::DebugAttributeCache::Ptr m_debugAttributeCache;
 };
 
 }

@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libyul/Exceptions.h>
+#include <libyul/AsmParser.h>
 
 #include <optional>
 #include <string>
@@ -39,6 +40,7 @@ struct OptimiserStepContext
 	std::set<YulString> const& reservedIdentifiers;
 	/// The value nullopt represents creation code
 	std::optional<size_t> expectedExecutionsPerDeployment;
+	Parser::DebugAttributeCache::Ptr debugAttributeCache;
 };
 
 

@@ -21,11 +21,14 @@
 
 #pragma once
 
+#include <libyul/AsmParser.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameDispenser.h>
 
+
 #include <set>
 #include <map>
+#include <utility>
 
 namespace solidity::yul
 {
@@ -44,10 +47,12 @@ class NameDisplacer: public ASTModifier
 public:
 	explicit NameDisplacer(
 		NameDispenser& _dispenser,
-		std::set<YulString> const& _namesToFree
+		std::set<YulString> const& _namesToFree,
+		Parser::DebugAttributeCache::Ptr _debugAttributeCache = {}
 	):
 		m_nameDispenser(_dispenser),
-		m_namesToFree(_namesToFree)
+		m_namesToFree(_namesToFree),
+		m_debugAttributeCache(std::move(_debugAttributeCache))
 	{
 		for (YulString n: _namesToFree)
 			m_nameDispenser.markUsed(n);
@@ -71,6 +76,7 @@ protected:
 	NameDispenser& m_nameDispenser;
 	std::set<YulString> const& m_namesToFree;
 	std::map<YulString, YulString> m_translations;
+	Parser::DebugAttributeCache::Ptr m_debugAttributeCache;
 };
 
 }

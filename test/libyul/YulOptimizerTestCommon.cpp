@@ -75,13 +75,16 @@ using namespace solidity::frontend;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
 	std::shared_ptr<Object> _obj,
-	Dialect const& _dialect
+	Dialect const& _dialect,
+	Parser::DebugAttributeCache::Ptr _debugAttributeCache
 )
 {
 	m_object = _obj;
 	m_ast = m_object->code;
 	m_analysisInfo = m_object->analysisInfo;
 	m_dialect = &_dialect;
+	if (_debugAttributeCache != nullptr)
+		m_context->debugAttributeCache = std::move(_debugAttributeCache);
 
 	m_namedSteps = {
 		{"disambiguator", [&]() { disambiguate(); }},
@@ -442,7 +445,7 @@ std::shared_ptr<Block> YulOptimizerTestCommon::run()
 
 void YulOptimizerTestCommon::disambiguate()
 {
-	*m_object->code = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_object->code));
+	*m_object->code = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo, {})(*m_object->code));
 	m_analysisInfo.reset();
 	updateContext();
 }
@@ -454,6 +457,7 @@ void YulOptimizerTestCommon::updateContext()
 		*m_dialect,
 		*m_nameDispenser,
 		m_reservedIdentifiers,
-		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment,
+		m_debugAttributeCache
 	});
 }

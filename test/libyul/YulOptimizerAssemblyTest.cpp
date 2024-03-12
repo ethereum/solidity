@@ -16,21 +16,29 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <test/libyul/YulOptimizerTest.h>
+#include <test/libyul/YulOptimizerAssemblyTest.h>
 #include <test/libyul/YulOptimizerTestCommon.h>
 
-#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libyul/Common.h>
 #include <test/Common.h>
 
 #include <libyul/Object.h>
 #include <libyul/AsmPrinter.h>
 
-#include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/Scanner.h>
 
 #include <libsolutil/AnsiColorized.h>
-#include <libsolutil/StringUtils.h>
+#include <libsolutil/CommonIO.h>
+
+#include <libyul/YulStack.h>
+#include <libyul/AsmAnalysis.h>
+#include <libyul/AsmAnalysisInfo.h>
+#include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/EthAssemblyAdapter.h>
+#include <libyul/backends/evm/EVMObjectCompiler.h>
+
+#include <libevmasm/Assembly.h>
 
 #include <fstream>
 
@@ -42,7 +50,7 @@ using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-YulOptimizerTest::YulOptimizerTest(std::string const& _filename):
+YulOptimizerAssemblyTest::YulOptimizerAssemblyTest(std::string const& _filename):
 	EVMVersionRestrictedTestCase(_filename)
 {
 	boost::filesystem::path path(_filename);
@@ -52,23 +60,22 @@ YulOptimizerTest::YulOptimizerTest(std::string const& _filename):
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
 
 	m_source = m_reader.source();
-
-	auto dialectName = m_reader.stringSetting("dialect", "evm");
-	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
-
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulOptimizerAssemblyTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
-	soltestAssert(m_dialect, "Dialect not set.");
-	std::tie(m_object, m_analysisInfo) = parse(_stream, _linePrefix, _formatted, m_source, *m_dialect);
-	if (!m_object)
+	std::shared_ptr<Object> object;
+	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
+	Parser::DebugAttributeCache::Ptr debugAttributeCache = std::make_shared<Parser::DebugAttributeCache>();
+
+	Dialect const& dialect = test::dialect("evm", solidity::test::CommonOptions::get().evmVersion());
+	std::tie(object, analysisInfo) = test::parse(_stream, _linePrefix, _formatted, m_source, dialect, debugAttributeCache);
+	if (!object)
 		return TestResult::FatalError;
 
-
-	m_object->analysisInfo = m_analysisInfo;
-	YulOptimizerTestCommon tester(m_object, *m_dialect);
+	object->analysisInfo = analysisInfo;
+	YulOptimizerTestCommon tester(object, dialect);
 	tester.setStep(m_optimizerStep);
 
 	if (!tester.runStep())
@@ -77,19 +84,23 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 		return TestResult::FatalError;
 	}
 
-	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect));
-
-	// Re-parse new code for compilability
-	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed, *m_dialect)))
-	{
-		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
-			<< _linePrefix << "Result after the optimiser:" << std::endl;
-		printPrefixed(_stream, printed, _linePrefix + "  ");
-		return TestResult::FatalError;
-	}
+	auto const printed = (object->subObjects.empty() ? AsmPrinter{ dialect }(*object->code) : object->toString(&dialect));
 
 	m_obtainedResult = "step: " + m_optimizerStep + "\n\n" + printed + "\n";
 
+	*object->analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(dialect, *object);
+
+	evmasm::Assembly assembly{solidity::test::CommonOptions::get().evmVersion(), false, {}};
+	EthAssemblyAdapter adapter(assembly);
+	EVMObjectCompiler::compile(
+		*object,
+		adapter,
+		EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
+		false, // optimize - don't run any other optimization
+		solidity::test::CommonOptions::get().eofVersion()
+	);
+
+	m_obtainedResult += "\nAssembly:\n" + toString(assembly);
+
 	return checkResult(_stream, _linePrefix, _formatted);
 }
-

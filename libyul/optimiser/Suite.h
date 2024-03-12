@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <libyul/AsmParser.h>
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
 #include <libyul/optimiser/OptimiserStep.h>
@@ -70,7 +71,8 @@ public:
 		std::string_view _optimisationSequence,
 		std::string_view _optimisationCleanupSequence,
 		std::optional<size_t> _expectedExecutionsPerDeployment,
-		std::set<YulString> const& _externallyUsedIdentifiers = {}
+		std::set<YulString> const& _externallyUsedIdentifiers = {},
+		Parser::DebugAttributeCache::Ptr _debugAttributeCache = {}
 	);
 
 	/// Ensures that specified sequence of step abbreviations is well-formed and can be executed.

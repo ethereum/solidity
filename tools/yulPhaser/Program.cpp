@@ -195,7 +195,8 @@ std::unique_ptr<Block> Program::applyOptimisationSteps(
 		_dialect,
 		_nameDispenser,
 		externallyUsedIdentifiers,
-		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment,
+		{}
 	};
 
 	for (std::string const& step: _optimisationSteps)

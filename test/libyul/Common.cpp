@@ -33,9 +33,13 @@
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SourceReferenceFormatter.h>
+
+#include <libsolutil/AnsiColorized.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <utility>
 #include <variant>
 
 using namespace solidity;
@@ -69,13 +73,14 @@ std::pair<std::shared_ptr<Block>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::te
 std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 	std::string const& _source,
 	Dialect const& _dialect,
-	ErrorList& _errors
+	ErrorList& _errors,
+	Parser::DebugAttributeCache::Ptr _debugAttributeCache
 )
 {
 	ErrorReporter errorReporter(_errors);
 	CharStream stream(_source, "");
 	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(stream);
-	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
+	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect, std::move(_debugAttributeCache)).parse(scanner, false);
 	if (!parserResult)
 		return {};
 	if (!parserResult->code || errorReporter.hasErrors())
@@ -86,6 +91,30 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::t
 	if (!analyzer.analyze(*parserResult->code) || errorReporter.hasErrors())
 		return {};
 	return {std::move(parserResult), std::move(analysisInfo)};
+}
+
+std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> yul::test::parse(
+	std::ostream& _stream,
+	std::string const& _linePrefix,
+	bool const _formatted,
+	std::string const& _source,
+	Dialect const& _dialect,
+	Parser::DebugAttributeCache::Ptr _debugAttributeCache
+)
+{
+	ErrorList errors;
+	std::shared_ptr<Object> object;
+	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
+	std::tie(object, analysisInfo) = yul::test::parse(_source, _dialect, errors, _debugAttributeCache);
+	if (!object || !analysisInfo || Error::containsErrors(errors))
+	{
+		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
+		CharStream charStream(_source, "");
+		SourceReferenceFormatter{_stream, SingletonCharStreamProvider(charStream), true, false}
+			.printErrorInformation(errors);
+		return {};
+	}
+	return {std::move(object), std::move(analysisInfo)};
 }
 
 yul::Block yul::test::disambiguate(std::string const& _source, bool _yul)

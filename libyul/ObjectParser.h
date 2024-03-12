@@ -24,6 +24,7 @@
 #include <libyul/YulString.h>
 #include <libyul/Object.h>
 #include <libyul/Dialect.h>
+#include <libyul/AsmParser.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/ParserBase.h>
@@ -31,6 +32,7 @@
 #include <libsolutil/Common.h>
 
 #include <memory>
+#include <utility>
 
 namespace solidity::langutil
 {
@@ -46,8 +48,8 @@ namespace solidity::yul
 class ObjectParser: public langutil::ParserBase
 {
 public:
-	explicit ObjectParser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
-		ParserBase(_errorReporter), m_dialect(_dialect) {}
+	explicit ObjectParser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect, Parser::DebugAttributeCache::Ptr _debugAttributeCache = {}):
+		ParserBase(_errorReporter), m_dialect(_dialect), m_debugAttributeCache(std::move(_debugAttributeCache)) {}
 
 	/// Parses a Yul object.
 	/// Falls back to code-only parsing if the source starts with `{`.
@@ -67,6 +69,7 @@ private:
 	void addNamedSubObject(Object& _container, YulString _name, std::shared_ptr<ObjectNode> _subObject);
 
 	Dialect const& m_dialect;
+	Parser::DebugAttributeCache::Ptr m_debugAttributeCache;
 };
 
 }

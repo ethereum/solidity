@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <libyul/AsmParser.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/NameDispenser.h>
 
@@ -40,7 +41,8 @@ class YulOptimizerTestCommon
 public:
 	explicit YulOptimizerTestCommon(
 		std::shared_ptr<Object> _obj,
-		Dialect const& _dialect
+		Dialect const& _dialect,
+		Parser::DebugAttributeCache::Ptr _debugAttributeCache = {}
 	);
 	/// Sets optimiser step to be run to @param
 	/// _optimiserStep.
@@ -71,6 +73,8 @@ private:
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::map<std::string, std::function<void(void)>> m_namedSteps;
+
+	Parser::DebugAttributeCache::Ptr m_debugAttributeCache;
 };
 
 }

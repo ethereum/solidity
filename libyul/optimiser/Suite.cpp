@@ -141,7 +141,8 @@ void OptimiserSuite::run(
 	std::string_view _optimisationSequence,
 	std::string_view _optimisationCleanupSequence,
 	std::optional<size_t> _expectedExecutionsPerDeployment,
-	std::set<YulString> const& _externallyUsedIdentifiers
+	std::set<YulString> const& _externallyUsedIdentifiers,
+	Parser::DebugAttributeCache::Ptr _debugAttributeCache
 )
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
@@ -161,7 +162,7 @@ void OptimiserSuite::run(
 	Block& ast = *_object.code;
 
 	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
-	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment, _debugAttributeCache};
 
 	OptimiserSuite suite(context, Debug::None);
 
