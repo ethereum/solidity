@@ -30,7 +30,7 @@ contract D {
 }
 // ----
 // run() ->
-// gas irOptimized: 375015
+// gas irOptimized: 374934
 // gas irOptimized code: 6600
 // gas legacy: 375119
 // gas legacy code: 17600

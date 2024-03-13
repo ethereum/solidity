@@ -11,9 +11,10 @@
 //
 // {
 //     {
+//         let x := 0
 //         switch mload(0)
-//         case 0 { }
-//         case 1 { }
+//         case 0 { x := 0 }
+//         case 1 { x := 1 }
 //         default { invalid() }
 //     }
 // }

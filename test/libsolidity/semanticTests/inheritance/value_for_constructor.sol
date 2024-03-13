@@ -39,7 +39,7 @@ contract Main {
 }
 // ----
 // constructor(), 22 wei ->
-// gas irOptimized: 143864
+// gas irOptimized: 143988
 // gas irOptimized code: 118000
 // gas legacy: 156586
 // gas legacy code: 236200

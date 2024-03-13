@@ -23,12 +23,12 @@
 // {
 //     {
 //         let x := calldataload(0)
-//         let b := and(shl(8, x), 15790080)
+//         let b := and(and(shl(8, x), not(4095)), 15790080)
 //         sstore(10, 0)
 //         sstore(11, b)
 //         sstore(12, b)
 //         sstore(13, 0)
-//         sstore(14, and(shl(251, x), shl(255, 1)))
+//         sstore(14, and(and(shl(251, x), shl(255, 1)), shl(255, 1)))
 //         sstore(0xf, 0)
 //         sstore(16, 0)
 //     }
