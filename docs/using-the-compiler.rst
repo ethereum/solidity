@@ -236,12 +236,12 @@ Input Description
             // `--allow-paths <path>`.
           ]
         },
-        "destructible":
+        "settable":
         {
           // Optional: keccak256 hash of the source file
           "keccak256": "0x234...",
           // Required (unless "urls" is used): literal contents of the source file
-          "content": "contract destructible is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
+          "content": "contract settable is owned { uint256 private x = 0; function set(uint256 _x) public { if (msg.sender == owner) x = _x; } }"
         },
         "myFile.sol_json.ast":
         {

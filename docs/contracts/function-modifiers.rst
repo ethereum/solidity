@@ -19,7 +19,6 @@ if they are marked ``virtual``. For details, please see
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.1 <0.9.0;
-    // This will report a warning due to deprecated selfdestruct
 
     contract owned {
         constructor() { owner = payable(msg.sender); }
@@ -41,16 +40,6 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-    contract destructible is owned {
-        // This contract inherits the `onlyOwner` modifier from
-        // `owned` and applies it to the `destroy` function, which
-        // causes that calls to `destroy` only have an effect if
-        // they are made by the stored owner.
-        function destroy() public onlyOwner {
-            selfdestruct(owner);
-        }
-    }
-
     contract priced {
         // Modifiers can receive arguments:
         modifier costs(uint price) {
@@ -60,7 +49,7 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
-    contract Register is priced, destructible {
+    contract Register is priced, owned {
         mapping(address => bool) registeredAddresses;
         uint price;
 
@@ -73,6 +62,9 @@ if they are marked ``virtual``. For details, please see
             registeredAddresses[msg.sender] = true;
         }
 
+        // This contract inherits the `onlyOwner` modifier from
+        // the `owned` contract. As a result, calls to `changePrice` will
+        // only take effect if they are made by the stored owner.
         function changePrice(uint price_) public onlyOwner {
             price = price_;
         }
