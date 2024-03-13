@@ -1910,7 +1910,8 @@ workflows:
       - t_ext: *job_ems_compile_ext_colony
 
       - t_ext: *job_native_compile_ext_gnosis
-      - t_ext: *job_native_test_ext_zeppelin
+      # TODO: Re-enable once bumped to use Cancun supported hardhat version
+      # - t_ext: *job_native_test_ext_zeppelin
       - t_ext: *job_native_test_ext_ens
       - t_ext: *job_native_test_ext_yield_liquidator
       - t_ext: *job_native_test_ext_perpetual_pools
@@ -1918,7 +1919,8 @@ workflows:
       - t_ext: *job_native_test_ext_prb_math
       - t_ext: *job_native_test_ext_elementfi
       - t_ext: *job_native_test_ext_brink
-      - t_ext: *job_native_compile_ext_gp2
+      # TODO: Re-enable once bumped to use Cancun supported hardhat version
+      # - t_ext: *job_native_compile_ext_gp2
       - t_ext: *job_native_compile_ext_euler
       - t_ext: *job_native_compile_ext_pool_together
       # TODO: Dropping the external tests below since they are based on old forks and
@@ -1932,14 +1934,16 @@ workflows:
           requires:
             - t_ems_compile_ext_colony
             - t_native_compile_ext_gnosis
-            - t_native_test_ext_zeppelin
+            # TODO: Re-enable once bumped to use Cancun supported hardhat version
+            # - t_native_test_ext_zeppelin
             - t_native_test_ext_ens
             - t_native_test_ext_yield_liquidator
             - t_native_test_ext_perpetual_pools
             - t_native_test_ext_uniswap
             - t_native_test_ext_elementfi
             - t_native_test_ext_brink
-            - t_native_compile_ext_gp2
+            # TODO: Re-enable once bumped to use Cancun supported hardhat version
+            # - t_native_compile_ext_gp2
             # TODO: Dropping prb-math from the benchmarks since it is not implemented yet
             # in the new Foundry external testing infrastructure.
             # - t_native_test_ext_prb_math
