@@ -8,11 +8,11 @@ contract Test {
 }
 // ----
 // constructor(): 7, 0x40, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz" ->
-// gas irOptimized: 182025
-// gas irOptimized code: 87200
+// gas irOptimized: 182563
+// gas irOptimized code: 84200
 // gas legacy: 196220
 // gas legacy code: 114600
-// gas legacyOptimized: 182604
-// gas legacyOptimized code: 76000
+// gas legacyOptimized: 182520
+// gas legacyOptimized code: 75800
 // m_x() -> 7
 // m_s() -> 0x20, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz"
