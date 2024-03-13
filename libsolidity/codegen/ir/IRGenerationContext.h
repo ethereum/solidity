@@ -37,6 +37,7 @@
 #include <set>
 #include <string>
 #include <memory>
+#include <deque>
 
 namespace solidity::frontend
 {

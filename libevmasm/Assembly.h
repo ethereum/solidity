@@ -30,10 +30,9 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/Assertions.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/JSON.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
-
-#include <json/json.h>
 
 #include <iostream>
 #include <sstream>
@@ -150,7 +149,7 @@ public:
 	) const;
 
 	/// Create a JSON representation of the assembly.
-	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _sourceIndices, bool _includeSourceList = true) const;
+	Json assemblyJSON(std::map<std::string, unsigned> const& _sourceIndices, bool _includeSourceList = true) const;
 
 	/// Constructs an @a Assembly from the serialized JSON representation.
 	/// @param _json JSON object containing assembly in the format produced by assemblyJSON().
@@ -163,7 +162,7 @@ public:
 	/// @returns Created @a Assembly and the source list read from the 'sourceList' field of the root
 	///     assembly or an empty list (in recursive calls).
 	static std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> fromJSON(
-		Json::Value const& _json,
+		Json const& _json,
 		std::vector<std::string> const& _sourceList = {},
 		size_t _level = 0
 	);
@@ -188,13 +187,13 @@ protected:
 	/// the code array. This method only works on clean Assembly objects that don't have any items defined yet.
 	/// @param _json JSON array that contains assembly items (e.g. json['.code'])
 	/// @param _sourceList List of source names.
-	void importAssemblyItemsFromJSON(Json::Value const& _code, std::vector<std::string> const& _sourceList);
+	void importAssemblyItemsFromJSON(Json const& _code, std::vector<std::string> const& _sourceList);
 
 	/// Creates an AssemblyItem from a given JSON representation.
 	/// @param _json JSON object that consists a single assembly item
 	/// @param _sourceList List of source names.
 	/// @returns AssemblyItem of _json argument.
-	AssemblyItem createAssemblyItemFromJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList);
+	AssemblyItem createAssemblyItemFromJSON(Json const& _json, std::vector<std::string> const& _sourceList);
 
 private:
 	bool m_invalid = false;

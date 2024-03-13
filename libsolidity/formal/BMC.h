@@ -41,6 +41,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <stack>
 
 using solidity::util::h256;
 

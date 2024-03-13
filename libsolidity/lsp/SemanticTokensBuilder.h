@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
-#include <json/json.h>
+#include <libsolutil/JSON.h>
 
 #include <fmt/format.h>
 
@@ -87,7 +87,7 @@ constexpr SemanticTokenModifiers operator|(SemanticTokenModifiers a, SemanticTok
 class SemanticTokensBuilder: public frontend::ASTConstVisitor
 {
 public:
-	Json::Value build(frontend::SourceUnit const& _sourceUnit, langutil::CharStream const& _charStream);
+	Json build(frontend::SourceUnit const& _sourceUnit, langutil::CharStream const& _charStream);
 
 	void reset(langutil::CharStream const* _charStream);
 	void encode(
@@ -114,7 +114,7 @@ public:
 	bool visit(frontend::VariableDeclaration const&) override;
 
 private:
-	Json::Value m_encodedTokens;
+	Json m_encodedTokens;
 	langutil::CharStream const* m_charStream;
 	int m_lastLine;
 	int m_lastStartChar;

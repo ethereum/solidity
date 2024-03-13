@@ -55,7 +55,7 @@ struct MarkdownBuilder
 
 }
 
-void DocumentHoverHandler::operator()(MessageID _id, Json::Value const& _args)
+void DocumentHoverHandler::operator()(MessageID _id, Json const& _args)
 {
 	auto const [sourceUnitName, lineColumn] = HandlerBase(*this).extractSourceUnitNameAndLineColumn(_args);
 	auto const [sourceNode, sourceOffset] = m_server.astNodeAndOffsetAtSourceLocation(sourceUnitName, lineColumn);
@@ -108,11 +108,11 @@ void DocumentHoverHandler::operator()(MessageID _id, Json::Value const& _args)
 
 	if (tooltipText.empty())
 	{
-		client().reply(_id, Json::nullValue);
+		client().reply(_id, Json());
 		return;
 	}
 
-	Json::Value reply = Json::objectValue;
+	Json reply;
 	reply["range"] = rangeToHighlight;
 	reply["contents"]["kind"] = "markdown";
 	reply["contents"]["value"] = std::move(tooltipText);

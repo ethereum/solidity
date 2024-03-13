@@ -47,8 +47,7 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/LazyInit.h>
-
-#include <json/json.h>
+#include <libsolutil/JSON.h>
 
 #include <functional>
 #include <memory>
@@ -221,7 +220,7 @@ public:
 
 	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse().
 	/// Will throw errors if the import fails
-	void importASTs(std::map<std::string, Json::Value> const& _sources);
+	void importASTs(std::map<std::string, Json> const& _sources);
 
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
 	///  typechecking, staticAnalysis) on previously parsed sources.
@@ -277,13 +276,13 @@ public:
 	std::string const& yulIR(std::string const& _contractName) const;
 
 	/// @returns the IR representation of a contract AST in format.
-	Json::Value const& yulIRAst(std::string const& _contractName) const;
+	Json const& yulIRAst(std::string const& _contractName) const;
 
 	/// @returns the optimized IR representation of a contract.
 	std::string const& yulIROptimized(std::string const& _contractName) const;
 
 	/// @returns the optimized IR representation of a contract AST in JSON format.
-	Json::Value const& yulIROptimizedAst(std::string const& _contractName) const;
+	Json const& yulIROptimizedAst(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
 	virtual evmasm::LinkerObject const& object(std::string const& _contractName) const override;
@@ -299,7 +298,7 @@ public:
 
 	/// @returns an array containing all utility sources generated during compilation.
 	/// Format: [ { name: string, id: number, language: "Yul", contents: string }, ... ]
-	Json::Value generatedSources(std::string const& _contractName, bool _runtime = false) const;
+	Json generatedSources(std::string const& _contractName, bool _runtime = false) const;
 
 	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
 	/// if the contract does not (yet) have bytecode.
@@ -317,26 +316,26 @@ public:
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	virtual Json::Value assemblyJSON(std::string const& _contractName) const override;
+	virtual Json assemblyJSON(std::string const& _contractName) const override;
 
 	/// @returns a JSON representing the contract ABI.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& contractABI(std::string const& _contractName) const;
+	Json const& contractABI(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the storage layout of the contract.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& storageLayout(std::string const& _contractName) const;
+	Json const& storageLayout(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the contract's user documentation.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& natspecUser(std::string const& _contractName) const;
+	Json const& natspecUser(std::string const& _contractName) const;
 
 	/// @returns a JSON representing the contract's developer documentation.
 	/// Prerequisite: Successful call to parse or compile.
-	Json::Value const& natspecDev(std::string const& _contractName) const;
+	Json const& natspecDev(std::string const& _contractName) const;
 
 	/// @returns a JSON object with the three members ``methods``, ``events``, ``errors``. Each is a map, mapping identifiers (hashes) to function names.
-	Json::Value interfaceSymbols(std::string const& _contractName) const;
+	Json interfaceSymbols(std::string const& _contractName) const;
 
 	/// @returns the Contract Metadata matching the pipeline selected using the viaIR setting.
 	std::string const& metadata(std::string const& _contractName) const { return metadata(contract(_contractName)); }
@@ -350,7 +349,7 @@ public:
 	bytes cborMetadata(std::string const& _contractName, bool _forIR) const;
 
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
-	Json::Value gasEstimates(std::string const& _contractName) const;
+	Json gasEstimates(std::string const& _contractName) const;
 
 	/// Changes the format of the metadata appended at the end of the bytecode.
 	void setMetadataFormat(MetadataFormat _metadataFormat) { m_metadataFormat = _metadataFormat; }
@@ -390,15 +389,15 @@ private:
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Yul IR code.
 		std::string yulIROptimized; ///< Optimized Yul IR code.
-		Json::Value yulIRAst; ///< JSON AST of Yul IR code.
-		Json::Value yulIROptimizedAst; ///< JSON AST of optimized Yul IR code.
+		Json yulIRAst; ///< JSON AST of Yul IR code.
+		Json yulIROptimizedAst; ///< JSON AST of optimized Yul IR code.
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
-		util::LazyInit<Json::Value const> abi;
-		util::LazyInit<Json::Value const> storageLayout;
-		util::LazyInit<Json::Value const> userDocumentation;
-		util::LazyInit<Json::Value const> devDocumentation;
-		util::LazyInit<Json::Value const> generatedSources;
-		util::LazyInit<Json::Value const> runtimeGeneratedSources;
+		util::LazyInit<Json const> abi;
+		util::LazyInit<Json const> storageLayout;
+		util::LazyInit<Json const> userDocumentation;
+		util::LazyInit<Json const> devDocumentation;
+		util::LazyInit<Json const> generatedSources;
+		util::LazyInit<Json const> runtimeGeneratedSources;
 		mutable std::optional<std::string const> sourceMapping;
 		mutable std::optional<std::string const> runtimeSourceMapping;
 	};
@@ -479,19 +478,19 @@ private:
 
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& contractABI(Contract const&) const;
+	Json const& contractABI(Contract const&) const;
 
 	/// @returns the storage layout of the contract as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& storageLayout(Contract const&) const;
+	Json const& storageLayout(Contract const&) const;
 
 	/// @returns the Natspec User documentation as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& natspecUser(Contract const&) const;
+	Json const& natspecUser(Contract const&) const;
 
 	/// @returns the Natspec Developer documentation as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
-	Json::Value const& natspecDev(Contract const&) const;
+	Json const& natspecDev(Contract const&) const;
 
 	/// @returns the Contract Metadata matching the pipeline selected using the viaIR setting.
 	/// This will generate the metadata and store it in the Contract object if it is not present yet.

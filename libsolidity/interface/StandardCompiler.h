@@ -58,12 +58,12 @@ public:
 
 	/// Sets all input parameters according to @a _input which conforms to the standardized input
 	/// format, performs compilation and returns a standardized output.
-	Json::Value compile(Json::Value const& _input) noexcept;
+	Json compile(Json const& _input) noexcept;
 	/// Parses input as JSON and performs the above processing steps, returning a serialized JSON
 	/// output. Parsing errors are returned as regular errors.
 	std::string compile(std::string const& _input) noexcept;
 
-	static Json::Value formatFunctionDebugData(
+	static Json formatFunctionDebugData(
 		std::map<std::string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
 	);
 
@@ -71,10 +71,10 @@ private:
 	struct InputsAndSettings
 	{
 		std::string language;
-		Json::Value errors;
+		Json errors;
 		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
 		std::map<std::string, std::string> sources;
-		std::map<std::string, Json::Value> jsonSources;
+		std::map<std::string, Json> jsonSources;
 		std::map<util::h256, std::string> smtLib2Responses;
 		langutil::EVMVersion evmVersion;
 		std::optional<uint8_t> eofVersion;
@@ -86,19 +86,19 @@ private:
 		bool metadataLiteralSources = false;
 		CompilerStack::MetadataFormat metadataFormat = CompilerStack::defaultMetadataFormat();
 		CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::IPFS;
-		Json::Value outputSelection;
+		Json outputSelection;
 		ModelCheckerSettings modelCheckerSettings = ModelCheckerSettings{};
 		bool viaIR = false;
 	};
 
 	/// Parses the input json (and potentially invokes the read callback) and either returns
 	/// it in condensed form or an error as a json object.
-	std::variant<InputsAndSettings, Json::Value> parseInput(Json::Value const& _input);
+	std::variant<InputsAndSettings, Json> parseInput(Json const& _input);
 
-	std::map<std::string, Json::Value> parseAstFromInput(StringMap const& _sources);
-	Json::Value importEVMAssembly(InputsAndSettings _inputsAndSettings);
-	Json::Value compileSolidity(InputsAndSettings _inputsAndSettings);
-	Json::Value compileYul(InputsAndSettings _inputsAndSettings);
+	std::map<std::string, Json> parseAstFromInput(StringMap const& _sources);
+	Json importEVMAssembly(InputsAndSettings _inputsAndSettings);
+	Json compileSolidity(InputsAndSettings _inputsAndSettings);
+	Json compileYul(InputsAndSettings _inputsAndSettings);
 
 	ReadCallback::Callback m_readFile;
 

@@ -34,50 +34,50 @@ BOOST_AUTO_TEST_SUITE(JsonTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(json_types)
 {
-	auto check = [](Json::Value value, std::string const& expectation) {
+	auto check = [](Json value, std::string const& expectation) {
 		BOOST_CHECK(jsonCompactPrint(value) == expectation);
 	};
 
-	Json::Value value;
+	Json value;
 	BOOST_CHECK(value.empty());
 	value = {};
 	BOOST_CHECK(value.empty());
-	value = Json::Value();
+	value = Json();
 	BOOST_CHECK(value.empty());
-	value = Json::nullValue;
+	value = Json();
 	BOOST_CHECK(value.empty());
 
 	check(value, "null");
 	check({}, "null");
-	check(Json::Value(), "null");
-	check(Json::nullValue, "null");
-	check(Json::objectValue, "{}");
-	check(Json::arrayValue, "[]");
-	check(Json::UInt(1), "1");
-	check(Json::UInt(-1), "4294967295");
-	check(Json::UInt64(1), "1");
-	check(Json::UInt64(-1), "18446744073709551615");
-	check(Json::LargestUInt(1), "1");
-	check(Json::LargestUInt(-1), "18446744073709551615");
-	check(Json::LargestUInt(0xffffffff), "4294967295");
-	check(Json::Value("test"), "\"test\"");
+	check(Json(), "null");
+	check(Json(), "null");
+	check(Json::object(), "{}");
+	check(Json::array(), "[]");
+	check(1, "1");
+	check(static_cast<uint32_t>(-1), "4294967295");
+	check(1, "1");
+	check(static_cast<uint64_t>(-1), "18446744073709551615");
+	check(1, "1");
+	check(static_cast<uint64_t>(-1), "18446744073709551615");
+	check(0xffffffff, "4294967295");
+	check(Json("test"), "\"test\"");
 	check("test", "\"test\"");
 	check(true, "true");
 
-	value = Json::objectValue;
+	value = Json::object();
 	value["key"] = "value";
 	check(value, "{\"key\":\"value\"}");
 
-	value = Json::arrayValue;
-	value.append(1);
-	value.append(2);
+	value = Json::array();
+	value.push_back(1);
+	value.push_back(2);
 	check(value, "[1,2]");
 }
 
 BOOST_AUTO_TEST_CASE(json_pretty_print)
 {
-	Json::Value json;
-	Json::Value jsonChild;
+	Json json;
+	Json jsonChild;
 
 	jsonChild["3.1"] = "3.1";
 	jsonChild["3.2"] = 2;
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(json_pretty_print)
 	json["2"] = "2";
 	json["3"] = jsonChild;
 	json["4"] = "ऑ ऒ ओ औ क ख";
-	json["5"] = "\xff";
+	json["5"] = "\\xff\\xfe";
 
 	BOOST_CHECK(
 	"{\n"
@@ -97,14 +97,14 @@ BOOST_AUTO_TEST_CASE(json_pretty_print)
 	"    \"3.2\": 2\n"
 	"  },\n"
 	"  \"4\": \"\\u0911 \\u0912 \\u0913 \\u0914 \\u0915 \\u0916\",\n"
-	"  \"5\": \"\\ufffd\"\n"
+	"  \"5\": \"\\\\xff\\\\xfe\"\n"
 	"}" == jsonPrettyPrint(json));
 }
 
 BOOST_AUTO_TEST_CASE(json_compact_print)
 {
-	Json::Value json;
-	Json::Value jsonChild;
+	Json json;
+	Json jsonChild;
 
 	jsonChild["3.1"] = "3.1";
 	jsonChild["3.2"] = 2;
@@ -112,9 +112,10 @@ BOOST_AUTO_TEST_CASE(json_compact_print)
 	json["2"] = "2";
 	json["3"] = jsonChild;
 	json["4"] = "ऑ ऒ ओ औ क ख";
-	json["5"] = "\xff";
+	json["5"] = "\x10";
+	json["6"] = "\u4e2d";
 
-	BOOST_CHECK("{\"1\":1,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":2},\"4\":\"\\u0911 \\u0912 \\u0913 \\u0914 \\u0915 \\u0916\",\"5\":\"\\ufffd\"}" == jsonCompactPrint(json));
+	BOOST_CHECK(R"({"1":1,"2":"2","3":{"3.1":"3.1","3.2":2},"4":"\u0911 \u0912 \u0913 \u0914 \u0915 \u0916","5":"\u0010","6":"\u4e2d"})" == jsonCompactPrint(json));
 }
 
 BOOST_AUTO_TEST_CASE(parse_json_strict)
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(parse_json_strict)
 	// In this test we check conformance against JSON.parse (https://tc39.es/ecma262/multipage/structured-data.html#sec-json.parse)
 	// and ECMA-404 (https://www.ecma-international.org/publications-and-standards/standards/ecma-404/)
 
-	Json::Value json;
+	Json json;
 	std::string errors;
 
 	// Just parse a valid json input
@@ -135,177 +136,200 @@ BOOST_AUTO_TEST_CASE(parse_json_strict)
 	// Trailing garbage is not allowed in ECMA-262
 	BOOST_CHECK(!jsonParseStrict("{\"1\":2,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":3}}}}}}}}}}", json, &errors));
 
-	// Comments are not allowed in ECMA-262
-	// ... but JSONCPP allows them
-	BOOST_CHECK(jsonParseStrict(
-		"{\"1\":3, // awesome comment\n\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":5}}", json, &errors
-	));
-	BOOST_CHECK(json["1"] == 3);
-	BOOST_CHECK(json["2"] == "2");
-	BOOST_CHECK(json["3"]["3.1"] == "3.1");
-	BOOST_CHECK(json["3"]["3.2"] == 5);
-
 	// According to ECMA-404 object, array, number, string, true, false, null are allowed
 	// ... but JSONCPP disallows value types
 	BOOST_CHECK(jsonParseStrict("[]", json, &errors));
-	BOOST_CHECK(json.isArray());
+	BOOST_CHECK(json.is_array());
 	BOOST_CHECK(jsonParseStrict("{}", json, &errors));
-	BOOST_CHECK(json.isObject());
-	BOOST_CHECK(!jsonParseStrict("1", json, &errors));
-	// BOOST_CHECK(json.isNumeric());
-	BOOST_CHECK(!jsonParseStrict("\"hello\"", json, &errors));
-	// BOOST_CHECK(json.isString());
-	BOOST_CHECK(!jsonParseStrict("true", json, &errors));
-	// BOOST_CHECK(json.isBool());
-	BOOST_CHECK(!jsonParseStrict("null", json, &errors));
-	// BOOST_CHECK(json.isNull());
+	BOOST_CHECK(json.is_object());
+	BOOST_CHECK(jsonParseStrict("1", json, &errors));
+	BOOST_CHECK(json.is_number());
+	BOOST_CHECK(jsonParseStrict("\"hello\"", json, &errors));
+	BOOST_CHECK(json.is_string());
+	BOOST_CHECK(jsonParseStrict("true", json, &errors));
+	BOOST_CHECK(json.is_boolean());
+	BOOST_CHECK(jsonParseStrict("null", json, &errors));
+	BOOST_CHECK(json.is_null());
 
 	// Single quotes are also disallowed by ECMA-404
 	BOOST_CHECK(!jsonParseStrict("'hello'", json, &errors));
-	// BOOST_CHECK(json.isString());
+	// BOOST_CHECK(json.is_string());
 
 	// Only string keys in objects are allowed in ECMA-404
 	BOOST_CHECK(!jsonParseStrict("{ 42: \"hello\" }", json, &errors));
 
 	// According to ECMA-404 hex escape sequences are not allowed, only unicode (\uNNNN) and
 	// a few control characters (\b, \f, \n, \r, \t)
-	//
-	// More lenient parsers allow hex escapes as long as they translate to a valid UTF-8 encoding.
-	//
-	// ... but JSONCPP allows any hex escapes
-	BOOST_CHECK(jsonParseStrict("[ \"\x80\xec\x80\" ]", json, &errors));
-	BOOST_CHECK(json.isArray());
-	BOOST_CHECK(json[0] == "\x80\xec\x80");
 
-	// This would be valid more lenient parsers.
 	BOOST_CHECK(jsonParseStrict("[ \"\xF0\x9F\x98\x8A\" ]", json, &errors));
-	BOOST_CHECK(json.isArray());
+	BOOST_CHECK(json.is_array());
 	BOOST_CHECK(json[0] == "😊");
+	BOOST_CHECK(json[0] == "\xF0\x9F\x98\x8A");
 }
 
 BOOST_AUTO_TEST_CASE(json_isOfType)
 {
-	Json::Value json;
+	Json json;
 
 	json["float"] = 3.1f;
 	json["double"] = 3.1;
 	json["int"] = 2;
-	json["int64"] = Json::Int64{0x4000000000000000};
+	json["int64"] = 0x4000000000000000;
 	json["string"] = "Hello World!";
 
 	BOOST_CHECK(isOfType<float>(json["float"]));
 	BOOST_CHECK(isOfType<double>(json["double"]));
 	BOOST_CHECK(isOfType<int>(json["int"]));
-	BOOST_CHECK(isOfType<Json::Int>(json["int"]));
-	BOOST_CHECK(isOfType<Json::UInt>(json["int"]));
-	BOOST_CHECK(isOfType<Json::Int64>(json["int"]));
-	BOOST_CHECK(isOfType<Json::Int64>(json["int64"]));
-	BOOST_CHECK(isOfType<Json::UInt64>(json["int64"]));
+	BOOST_CHECK(isOfType<int>(json["int"]));
+	BOOST_CHECK(isOfType<uint64_t>(json["int"]));
+	BOOST_CHECK(isOfType<uint64_t>(json["int"]));
+	BOOST_CHECK(isOfType<int>(json["int"]));
+	BOOST_CHECK(isOfType<int64_t>(json["int64"]));
+	BOOST_CHECK(isOfType<uint64_t>(json["int64"]));
+	BOOST_CHECK(isOfType<uint64_t >(json["int64"]));
 	BOOST_CHECK(isOfType<std::string>(json["string"]));
-	BOOST_CHECK(!isOfType<Json::Int>(json["int64"]));
+	BOOST_CHECK(!isOfType<int>(json["int64"]));
 	BOOST_CHECK(!isOfType<int>(json["double"]));
 	BOOST_CHECK(!isOfType<float>(json["string"]));
 	BOOST_CHECK(!isOfType<double>(json["string"]));
-	BOOST_CHECK(!isOfType<Json::Int>(json["string"]));
-	BOOST_CHECK(!isOfType<Json::Int64>(json["string"]));
-	BOOST_CHECK(!isOfType<Json::UInt>(json["string"]));
-	BOOST_CHECK(!isOfType<Json::UInt64>(json["string"]));
+	BOOST_CHECK(!isOfType<int>(json["string"]));
+	BOOST_CHECK(!isOfType<int64_t>(json["string"]));
+	BOOST_CHECK(!isOfType<unsigned >(json["string"]));
+	BOOST_CHECK(!isOfType<uint64_t >(json["string"]));
 }
 
 BOOST_AUTO_TEST_CASE(json_isisOfTypeIfExists)
 {
-	Json::Value json;
+	Json json;
 
 	json["float"] = 3.1f;
 	json["double"] = 3.1;
 	json["int"] = 2;
-	json["int64"] = Json::Int64{0x4000000000000000};
+	json["uint"] = 2u;
+	json["int64"] = 0x4000000000000000;
+	json["uint64"] = 0x4000000000000000u;
 	json["string"] = "Hello World!";
 
 	BOOST_CHECK(isOfTypeIfExists<float>(json, "float"));
 	BOOST_CHECK(isOfTypeIfExists<double>(json, "double"));
 	BOOST_CHECK(isOfTypeIfExists<int>(json, "int"));
-	BOOST_CHECK(isOfTypeIfExists<Json::Int>(json, "int"));
-	BOOST_CHECK(isOfTypeIfExists<Json::UInt>(json, "int"));
-	BOOST_CHECK(isOfTypeIfExists<Json::Int64>(json, "int"));
-	BOOST_CHECK(isOfTypeIfExists<Json::Int64>(json, "int64"));
-	BOOST_CHECK(isOfTypeIfExists<Json::UInt64>(json, "int64"));
+	BOOST_CHECK(isOfTypeIfExists<int>(json, "int"));
+	BOOST_CHECK(isOfTypeIfExists<unsigned>(json, "uint"));
+	BOOST_CHECK(isOfTypeIfExists<int64_t>(json, "int"));
+	BOOST_CHECK(isOfTypeIfExists<int64_t >(json, "int64"));
+	BOOST_CHECK(isOfTypeIfExists<uint64_t>(json, "uint64"));
 	BOOST_CHECK(isOfTypeIfExists<std::string>(json, "string"));
-	BOOST_CHECK(!isOfTypeIfExists<Json::Int>(json, "int64"));
+	BOOST_CHECK(!isOfTypeIfExists<int>(json, "int64"));
 	BOOST_CHECK(!isOfTypeIfExists<int>(json, "double"));
 	BOOST_CHECK(!isOfTypeIfExists<float>(json, "string"));
 	BOOST_CHECK(!isOfTypeIfExists<double>(json, "string"));
-	BOOST_CHECK(!isOfTypeIfExists<Json::Int>(json, "string"));
-	BOOST_CHECK(!isOfTypeIfExists<Json::Int64>(json, "string"));
-	BOOST_CHECK(!isOfTypeIfExists<Json::UInt>(json, "string"));
-	BOOST_CHECK(!isOfTypeIfExists<Json::UInt64>(json, "string"));
-	BOOST_CHECK(isOfTypeIfExists<Json::UInt64>(json, "NOT_EXISTING"));
+	BOOST_CHECK(!isOfTypeIfExists<int>(json, "string"));
+	BOOST_CHECK(!isOfTypeIfExists<int64_t>(json, "string"));
+	BOOST_CHECK(!isOfTypeIfExists<unsigned>(json, "string"));
+	BOOST_CHECK(!isOfTypeIfExists<uint64_t>(json, "string"));
+	BOOST_CHECK(isOfTypeIfExists<uint64_t>(json, "NOT_EXISTING"));
 }
 
 BOOST_AUTO_TEST_CASE(json_getOrDefault)
 {
-	Json::Value json;
+	Json json;
 
 	json["float"] = 3.1f;
 	json["double"] = 3.1;
 	json["int"] = 2;
-	json["int64"] = Json::Int64{0x4000000000000000};
-	json["uint64"] = Json::UInt64{0x5000000000000000};
+	json["int64"] = 0x4000000000000000;
+	json["uint64"] = 0x5000000000000000;
 	json["string"] = "Hello World!";
 
-	BOOST_CHECK(getOrDefault<float>(json["float"]) == 3.1f);
-	BOOST_CHECK(getOrDefault<float>(json["float"], -1.1f) == 3.1f);
-	BOOST_CHECK(getOrDefault<float>(json["no_float"], -1.1f) == -1.1f);
-	BOOST_CHECK(getOrDefault<double>(json["double"]) == 3.1);
-	BOOST_CHECK(getOrDefault<double>(json["double"], -1) == 3.1);
-	BOOST_CHECK(getOrDefault<double>(json["no_double"], -1.1) == -1.1);
-	BOOST_CHECK(getOrDefault<int>(json["int"]) == 2);
-	BOOST_CHECK(getOrDefault<int>(json["int"], -1) == 2);
-	BOOST_CHECK(getOrDefault<int>(json["no_int"], -1) == -1);
-	BOOST_CHECK(getOrDefault<Json::Int>(json["int"]) == 2);
-	BOOST_CHECK(getOrDefault<Json::Int>(json["int"], -1) == 2);
-	BOOST_CHECK(getOrDefault<Json::Int>(json["no_int"], -1) == -1);
-	BOOST_CHECK(getOrDefault<Json::UInt>(json["int"]) == 2);
-	BOOST_CHECK(getOrDefault<Json::UInt>(json["int"], 1) == 2);
-	BOOST_CHECK(getOrDefault<Json::UInt>(json["no_int"], 1) == 1);
-	BOOST_CHECK(getOrDefault<Json::Int64>(json["int"]) == 2);
-	BOOST_CHECK(getOrDefault<Json::Int64>(json["int"], -1) == 2);
-	BOOST_CHECK(getOrDefault<Json::Int64>(json["no_int"], -1) == -1);
-	BOOST_CHECK(getOrDefault<Json::Int64>(json["int64"]) == 0x4000000000000000);
-	BOOST_CHECK(getOrDefault<Json::Int64>(json["int64"], -1) == 0x4000000000000000);
-	BOOST_CHECK(getOrDefault<Json::Int64>(json["no_int64"], -1) == -1);
-	BOOST_CHECK(getOrDefault<Json::UInt64>(json["int64"]) == 0x4000000000000000);
-	BOOST_CHECK(getOrDefault<Json::UInt64>(json["int64"], 1) == 0x4000000000000000);
-	BOOST_CHECK(getOrDefault<Json::UInt64>(json["no_int64"], 1) == 1);
-	BOOST_CHECK(getOrDefault<Json::UInt64>(json["uint64"]) == 0x5000000000000000);
-	BOOST_CHECK(getOrDefault<Json::UInt64>(json["uint64"], 1) == 0x5000000000000000);
-	BOOST_CHECK(getOrDefault<Json::UInt64>(json["no_uint64"], 1) == 1);
-	BOOST_CHECK(getOrDefault<std::string>(json["string"], "ERROR") == "Hello World!");
-	BOOST_CHECK(getOrDefault<std::string>(json["no_string"]).empty());
-	BOOST_CHECK(getOrDefault<std::string>(json["no_string"], "ERROR") == "ERROR");
+	BOOST_CHECK(getOrDefault<float>(json, "float") == 3.1f);
+	BOOST_CHECK(getOrDefault<float>(json, "float", -1.1f) == 3.1f);
+	BOOST_CHECK(getOrDefault<float>(json, "no_float", -1.1f) == -1.1f);
+	BOOST_CHECK(getOrDefault<double>(json, "double") == 3.1);
+	BOOST_CHECK(getOrDefault<double>(json, "double", -1) == 3.1);
+	BOOST_CHECK(getOrDefault<double>(json, "no_double", -1.1) == -1.1);
+	BOOST_CHECK(getOrDefault<int>(json, "int") == 2);
+	BOOST_CHECK(getOrDefault<int>(json, "int", -1) == 2);
+	BOOST_CHECK(getOrDefault<int>(json, "no_int", -1) == -1);
+	BOOST_CHECK(getOrDefault<int>(json, "int") == 2);
+	BOOST_CHECK(getOrDefault<int>(json, "int", -1) == 2);
+	BOOST_CHECK(getOrDefault<int>(json, "no_int", -1) == -1);
+	BOOST_CHECK(getOrDefault<unsigned>(json, "int") == 2);
+	BOOST_CHECK(getOrDefault<unsigned>(json, "int", 1) == 2);
+	BOOST_CHECK(getOrDefault<unsigned>(json, "no_int", 1) == 1);
+	BOOST_CHECK(getOrDefault<int64_t>(json, "int") == 2);
+	BOOST_CHECK(getOrDefault<int64_t>(json, "int", -1) == 2);
+	BOOST_CHECK(getOrDefault<int64_t>(json, "no_int", -1) == -1);
+	BOOST_CHECK(getOrDefault<int64_t>(json, "int64") == 0x4000000000000000);
+	BOOST_CHECK(getOrDefault<int64_t>(json, "int64", -1) == 0x4000000000000000);
+	BOOST_CHECK(getOrDefault<int64_t>(json, "no_int64", -1) == -1);
+	BOOST_CHECK(getOrDefault<uint64_t>(json, "int64") == 0x4000000000000000);
+	BOOST_CHECK(getOrDefault<uint64_t>(json, "int64", 1) == 0x4000000000000000);
+	BOOST_CHECK(getOrDefault<uint64_t>(json, "no_int64", 1) == 1);
+	BOOST_CHECK(getOrDefault<uint64_t>(json, "uint64") == 0x5000000000000000);
+	BOOST_CHECK(getOrDefault<uint64_t>(json, "uint64", 1) == 0x5000000000000000);
+	BOOST_CHECK(getOrDefault<uint64_t>(json, "no_uint64", 1) == 1);
+	BOOST_CHECK(getOrDefault<std::string>(json, "string", "ERROR") == "Hello World!");
+	BOOST_CHECK(getOrDefault<std::string>(json, "no_string").empty());
+	BOOST_CHECK(getOrDefault<std::string>(json, "no_string", "ERROR") == "ERROR");
 }
 
 BOOST_AUTO_TEST_CASE(json_get)
 {
-	Json::Value json;
+	Json json;
 
 	json["float"] = 3.1f;
 	json["double"] = 3.1;
 	json["int"] = 2;
-	json["int64"] = Json::Int64{0x4000000000000000};
-	json["uint64"] = Json::UInt64{0x5000000000000000};
+	json["int64"] = 0x4000000000000000;
+	json["uint64"] = 0x5000000000000000;
 	json["string"] = "Hello World!";
 
 	BOOST_CHECK(get<float>(json["float"]) == 3.1f);
 	BOOST_CHECK(get<double>(json["double"]) == 3.1);
 	BOOST_CHECK(get<int>(json["int"]) == 2);
-	BOOST_CHECK(get<Json::Int>(json["int"]) == 2);
-	BOOST_CHECK(get<Json::UInt>(json["int"]) == 2);
-	BOOST_CHECK(get<Json::Int64>(json["int"]) == 2);
-	BOOST_CHECK(get<Json::Int64>(json["int64"]) == 0x4000000000000000);
-	BOOST_CHECK(get<Json::UInt64>(json["int64"]) == 0x4000000000000000);
-	BOOST_CHECK(get<Json::UInt64>(json["uint64"]) == 0x5000000000000000);
+	BOOST_CHECK(get<int>(json["int"]) == 2);
+	BOOST_CHECK(get<unsigned>(json["int"]) == 2);
+	BOOST_CHECK(get<int64_t>(json["int"]) == 2);
+	BOOST_CHECK(get<int64_t>(json["int64"]) == 0x4000000000000000);
+	BOOST_CHECK(get<uint64_t>(json["int64"]) == 0x4000000000000000);
+	BOOST_CHECK(get<uint64_t>(json["uint64"]) == 0x5000000000000000);
 	BOOST_CHECK(get<std::string>(json["string"]) == "Hello World!");
+}
+
+template<typename T>
+void json_test_int_range()
+{
+	Json max = {{"v", std::numeric_limits<T>::max()}};
+	Json min = {{"v", std::numeric_limits<T>::min()}};
+	Json overflow = {{"v", static_cast<int64_t>(std::numeric_limits<T>::max()) + 1}};
+	Json underflow = {{"v", static_cast<int64_t>(std::numeric_limits<T>::min()) - 1}};
+	BOOST_CHECK(getOrDefault<T>(max, "v", 0) == std::numeric_limits<T>::max());
+	BOOST_CHECK(getOrDefault<T>(min, "v", 0) == std::numeric_limits<T>::min());
+	BOOST_CHECK(getOrDefault<T>(overflow, "v", 0) == 0);
+	BOOST_CHECK(getOrDefault<T>(underflow, "v", 0) == 0);
+	BOOST_CHECK(get<T>(max["v"]) == std::numeric_limits<T>::max());
+	BOOST_CHECK(get<T>(min["v"]) == std::numeric_limits<T>::min());
+	BOOST_CHECK_THROW(get<T>(overflow["v"]), InvalidType);
+	BOOST_CHECK_THROW(get<T>(underflow["v"]), InvalidType);
+}
+
+BOOST_AUTO_TEST_CASE(json_range_checks)
+{
+	json_test_int_range<int32_t>();
+	json_test_int_range<uint32_t>();
+	json_test_int_range<int16_t>();
+	json_test_int_range<uint16_t>();
+	json_test_int_range<int8_t>();
+	json_test_int_range<uint8_t>();
+
+	Json overflow = {{"v", static_cast<double>(std::numeric_limits<float>::max()) * 2}};
+	Json underflow = {{"v", static_cast<double>(std::numeric_limits<float>::min()) / 2}};
+	BOOST_CHECK(getOrDefault<float>({{"v", std::numeric_limits<float>::max()}}, "v", 0) == std::numeric_limits<float>::max());
+	BOOST_CHECK(getOrDefault<float>({{"v", std::numeric_limits<float>::min()}}, "v", 0) == std::numeric_limits<float>::min());
+	BOOST_CHECK(getOrDefault<float>(overflow, "v", 0) == 0);
+	BOOST_CHECK(getOrDefault<float>(underflow, "v", 0) == 0);
+	BOOST_CHECK_THROW(get<float>(overflow["v"]), InvalidType);
+	BOOST_CHECK_THROW(get<float>(underflow["v"]), InvalidType);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

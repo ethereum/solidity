@@ -28,11 +28,11 @@
 #include <liblangutil/DebugInfoSelection.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/JSON.h>
 
 #include <memory>
 #include <set>
 #include <limits>
-#include <json/json.h>
 
 namespace solidity::yul
 {
@@ -58,7 +58,7 @@ struct ObjectNode
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const = 0;
-	virtual Json::Value toJson() const = 0;
+	virtual Json toJson() const = 0;
 };
 
 /**
@@ -75,7 +75,7 @@ struct Data: public ObjectNode
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const override;
-	Json::Value toJson() const override;
+	Json toJson() const override;
 };
 
 
@@ -98,7 +98,7 @@ public:
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
 	/// @returns a compact JSON representation of the AST.
-	Json::Value toJson() const;
+	Json toJson() const;
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
 	/// Handles all names containing dots as reserved identifiers, not accessible as data.

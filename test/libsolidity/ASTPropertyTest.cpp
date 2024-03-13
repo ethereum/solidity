@@ -108,20 +108,20 @@ void ASTPropertyTest::readExpectations()
 	m_expectation = formatExpectations(false /* _obtainedResult */);
 }
 
-void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
+void ASTPropertyTest::extractTestsFromAST(Json const& _astJson)
 {
-	std::queue<Json::Value> nodesToVisit;
+	std::queue<Json> nodesToVisit;
 	nodesToVisit.push(_astJson);
 
 	while (!nodesToVisit.empty())
 	{
-		Json::Value& node = nodesToVisit.front();
+		Json& node = nodesToVisit.front();
 
-		if (node.isArray())
+		if (node.is_array())
 			for (auto&& member: node)
 				nodesToVisit.push(member);
-		else if (node.isObject())
-			for (std::string const& memberName: node.getMemberNames())
+		else if (node.is_object())
+			for (auto const& [memberName, value]: node.items())
 			{
 				if (memberName != "documentation")
 				{
@@ -129,9 +129,8 @@ void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
 					continue;
 				}
 
-				std::string nodeDocstring = node["documentation"].isObject() ?
-					node["documentation"]["text"].asString() :
-					node["documentation"].asString();
+				std::string nodeDocstring = value.is_object() ?
+					value["text"].get<std::string>() : value.get<std::string>();
 				soltestAssert(!nodeDocstring.empty());
 
 				std::vector<StringPair> pairs = readKeyValuePairs(nodeDocstring);
@@ -150,17 +149,22 @@ void ASTPropertyTest::extractTestsFromAST(Json::Value const& _astJson)
 					);
 					m_tests[testId].property = testedProperty;
 
-					soltestAssert(node.isMember("nodeType"));
-					std::optional<Json::Value> propertyNode = jsonValueByPath(node, testedProperty);
+					soltestAssert(node.contains("nodeType"));
+					std::optional<Json> propertyNode = jsonValueByPath(node, testedProperty);
 					soltestAssert(
 						propertyNode.has_value(),
-						node["nodeType"].asString() + " node does not have a property named \""s + testedProperty + "\""
+						node["nodeType"].get<std::string>() + " node does not have a property named \""s + testedProperty + "\""
 					);
 					soltestAssert(
-						!propertyNode->isObject() && !propertyNode->isArray(),
+						!propertyNode->is_object() && !propertyNode->is_array(),
 						"Property \"" + testedProperty + "\" is an object or an array."
 					);
-					m_tests[testId].obtainedValue = propertyNode->asString();
+					if (propertyNode->is_string())
+						m_tests[testId].obtainedValue = propertyNode->get<std::string>();
+					else if  (propertyNode->is_boolean())
+						m_tests[testId].obtainedValue = fmt::format("{}", propertyNode->get<bool>());
+					else
+						soltestAssert(false);
 				}
 			}
 
@@ -195,8 +199,8 @@ TestCase::TestResult ASTPropertyTest::run(std::ostream& _stream, std::string con
 			SourceReferenceFormatter::formatErrorInformation(compiler.errors(), compiler, _formatted)
 		));
 
-	Json::Value astJson = ASTJsonExporter(compiler.state()).toJson(compiler.ast("A"));
-	soltestAssert(astJson);
+	Json astJson = ASTJsonExporter(compiler.state()).toJson(compiler.ast("A"));
+	soltestAssert(!astJson.empty());
 
 	extractTestsFromAST(astJson);
 

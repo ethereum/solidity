@@ -44,16 +44,16 @@ namespace solidity::lsp
 
 class FileRepository;
 
-std::optional<langutil::LineColumn> parseLineColumn(Json::Value const& _lineColumn);
-Json::Value toJson(langutil::LineColumn const& _pos);
-Json::Value toJsonRange(langutil::LineColumn const& _start, langutil::LineColumn const& _end);
+std::optional<langutil::LineColumn> parseLineColumn(Json const& _lineColumn);
+Json toJson(langutil::LineColumn const& _pos);
+Json toJsonRange(langutil::LineColumn const& _start, langutil::LineColumn const& _end);
 
 /// @returns the source location given a source unit name and an LSP Range object,
 /// or nullopt on failure.
 std::optional<langutil::SourceLocation> parsePosition(
 	FileRepository const& _fileRepository,
 	std::string const& _sourceUnitName,
-	Json::Value const& _position
+	Json const& _position
 );
 
 /// @returns the source location given a source unit name and an LSP Range object,
@@ -61,7 +61,7 @@ std::optional<langutil::SourceLocation> parsePosition(
 std::optional<langutil::SourceLocation> parseRange(
 	FileRepository const& _fileRepository,
 	std::string const& _sourceUnitName,
-	Json::Value const& _range
+	Json const& _range
 );
 
 /// Strips the file:// URI prefix off the given path, if present,

@@ -75,27 +75,27 @@ std::string Object::toString(
 	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
 
-Json::Value Data::toJson() const
+Json Data::toJson() const
 {
-	Json::Value ret{Json::objectValue};
+	Json ret;
 	ret["nodeType"] = "YulData";
 	ret["value"] = util::toHex(data);
 	return ret;
 }
 
-Json::Value Object::toJson() const
+Json Object::toJson() const
 {
 	yulAssert(code, "No code");
 
-	Json::Value codeJson{Json::objectValue};
+	Json codeJson;
 	codeJson["nodeType"] = "YulCode";
 	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(*code);
 
-	Json::Value subObjectsJson{Json::arrayValue};
+	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)
-		subObjectsJson.append(subObject->toJson());
+		subObjectsJson.emplace_back(subObject->toJson());
 
-	Json::Value ret{Json::objectValue};
+	Json ret;
 	ret["nodeType"] = "YulObject";
 	ret["name"] = name.str();
 	ret["code"] = codeJson;

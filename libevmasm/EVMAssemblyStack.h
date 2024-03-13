@@ -43,7 +43,7 @@ public:
 	/// Runs analysis steps.
 	/// Multiple calls overwrite the previous state.
 	/// @throws AssemblyImportException, if JSON could not be validated.
-	void analyze(std::string const& _sourceName, Json::Value const& _assemblyJson);
+	void analyze(std::string const& _sourceName, Json const& _assemblyJson);
 
 	void assemble();
 
@@ -58,7 +58,7 @@ public:
 	virtual std::string const* sourceMapping(std::string const& _contractName) const override;
 	virtual std::string const* runtimeSourceMapping(std::string const& _contractName) const override;
 
-	virtual Json::Value assemblyJSON(std::string const& _contractName) const override;
+	virtual Json assemblyJSON(std::string const& _contractName) const override;
 	virtual std::string assemblyString(std::string const& _contractName, StringMap const& _sourceCodes) const override;
 
 	virtual std::string const filesystemFriendlyName(std::string const& _contractName) const override;

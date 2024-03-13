@@ -172,33 +172,33 @@ std::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const&
 
 bool isValidMetadata(std::string const& _serialisedMetadata)
 {
-	Json::Value metadata;
+	Json metadata;
 	if (!util::jsonParseStrict(_serialisedMetadata, metadata))
 		return false;
 
 	return isValidMetadata(metadata);
 }
 
-bool isValidMetadata(Json::Value const& _metadata)
+bool isValidMetadata(Json const& _metadata)
 {
 	if (
-		!_metadata.isObject() ||
-		!_metadata.isMember("version") ||
-		!_metadata.isMember("language") ||
-		!_metadata.isMember("compiler") ||
-		!_metadata.isMember("settings") ||
-		!_metadata.isMember("sources") ||
-		!_metadata.isMember("output") ||
-		!_metadata["settings"].isMember("evmVersion") ||
-		!_metadata["settings"].isMember("metadata") ||
-		!_metadata["settings"]["metadata"].isMember("bytecodeHash")
+		!_metadata.is_object() ||
+		!_metadata.contains("version") ||
+		!_metadata.contains("language") ||
+		!_metadata.contains("compiler") ||
+		!_metadata.contains("settings") ||
+		!_metadata.contains("sources") ||
+		!_metadata.contains("output") ||
+		!_metadata["settings"].contains("evmVersion") ||
+		!_metadata["settings"].contains("metadata") ||
+		!_metadata["settings"]["metadata"].contains("bytecodeHash")
 	)
 		return false;
 
-	if (!_metadata["version"].isNumeric() || _metadata["version"] != 1)
+	if (!_metadata["version"].is_number() || _metadata["version"] != 1)
 		return false;
 
-	if (!_metadata["language"].isString() || _metadata["language"].asString() != "Solidity")
+	if (!_metadata["language"].is_string() || _metadata["language"].get<std::string>() != "Solidity")
 		return false;
 
 	/// @TODO add more strict checks

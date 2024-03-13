@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		"{\"begin\":8,\"end\":18,\"name\":\"MSTORE\",\"source\":2}"
 		"]},\"A6885B3731702DA62E8E4A8F584AC46A7F6822F4E2BA50FBA902F67B1588D23B\":\"01020304\"},\"sourceList\":[\"root.asm\",\"sub.asm\",\"verbatim.asm\"]}"
 	};
-	Json::Value jsonValue;
+	Json jsonValue;
 	BOOST_CHECK(util::jsonParseStrict(json, jsonValue));
 	BOOST_CHECK_EQUAL(util::jsonCompactPrint(_assembly.assemblyJSON(indices)), util::jsonCompactPrint(jsonValue));
 }

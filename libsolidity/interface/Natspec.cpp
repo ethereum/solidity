@@ -33,13 +33,13 @@
 using namespace solidity;
 using namespace solidity::frontend;
 
-Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
+Json Natspec::userDocumentation(ContractDefinition const& _contractDef)
 {
-	Json::Value doc{Json::objectValue};
+	Json doc;
 
-	doc["version"] = Json::Value(c_natspecVersion);
-	doc["kind"]    = Json::Value("user");
-	doc["methods"] = Json::objectValue;
+	doc["version"] = Json(c_natspecVersion);
+	doc["kind"]    = Json("user");
+	doc["methods"] = Json::object();
 
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
@@ -48,15 +48,15 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 		if (!value.empty())
 		{
 			// add the constructor, only if we have any documentation to add
-			Json::Value user{Json::objectValue};
-			user["notice"] = Json::Value(value);
+			Json user;
+			user["notice"] = Json(value);
 			doc["methods"]["constructor"] = user;
 		}
 	}
 
 	std::string notice = extractDoc(_contractDef.annotation().docTags, "notice");
 	if (!notice.empty())
-		doc["notice"] = Json::Value(notice);
+		doc["notice"] = Json(notice);
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
@@ -88,21 +88,21 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 		std::string value = extractDoc(error->annotation().docTags, "notice");
 		if (!value.empty())
 		{
-			Json::Value errorDoc{Json::objectValue};
+			Json errorDoc;
 			errorDoc["notice"] = value;
-			doc["errors"][error->functionType(true)->externalSignature()].append(std::move(errorDoc));
+			doc["errors"][error->functionType(true)->externalSignature()].emplace_back(std::move(errorDoc));
 		}
 	}
 
 	return doc;
 }
 
-Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
+Json Natspec::devDocumentation(ContractDefinition const& _contractDef)
 {
-	Json::Value doc = extractCustomDoc(_contractDef.annotation().docTags);
+	Json doc = extractCustomDoc(_contractDef.annotation().docTags);
 
-	doc["version"] = Json::Value(c_natspecVersion);
-	doc["kind"] = Json::Value("dev");
+	doc["version"] = Json(c_natspecVersion);
+	doc["kind"] = Json("dev");
 
 	auto author = extractDoc(_contractDef.annotation().docTags, "author");
 	if (!author.empty())
@@ -112,13 +112,13 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		doc["title"] = title;
 	auto dev = extractDoc(_contractDef.annotation().docTags, "dev");
 	if (!dev.empty())
-		doc["details"] = Json::Value(dev);
+		doc["details"] = Json(dev);
 
-	doc["methods"] = Json::objectValue;
+	doc["methods"] = Json::object();
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
 	{
-		Json::Value constructor(devDocumentation(constructorDefinition->annotation().docTags));
+		Json constructor(devDocumentation(constructorDefinition->annotation().docTags));
 		if (!constructor.empty())
 			// add the constructor, only if we have any documentation to add
 			doc["methods"]["constructor"] = constructor;
@@ -130,9 +130,9 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			continue;
 		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 		{
-			Json::Value method(devDocumentation(fun->annotation().docTags));
+			Json method(devDocumentation(fun->annotation().docTags));
 			// add the function, only if we have any documentation to add
-			Json::Value jsonReturn = extractReturnParameterDocs(
+			Json jsonReturn = extractReturnParameterDocs(
 				fun->annotation().docTags,
 				fun->functionType(false)->returnParameterNames()
 			);
@@ -150,7 +150,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto devDoc = devDocumentation(varDecl->annotation().docTags); !devDoc.empty())
 			doc["stateVariables"][varDecl->name()] = devDoc;
 
-		auto const assignIfNotEmpty = [&](std::string const& _name, Json::Value const& _content)
+		auto const assignIfNotEmpty = [&](std::string const& _name, Json const& _content)
 		{
 			if (!_content.empty())
 				doc["stateVariables"][varDecl->name()][_name] = _content;
@@ -171,14 +171,14 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			doc["events"][event->functionType(true)->externalSignature()] = devDoc;
 	for (auto const& error: _contractDef.interfaceErrors())
 		if (auto devDoc = devDocumentation(error->annotation().docTags); !devDoc.empty())
-			doc["errors"][error->functionType(true)->externalSignature()].append(devDoc);
+			doc["errors"][error->functionType(true)->externalSignature()].emplace_back(devDoc);
 
 	return doc;
 }
 
-Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames)
+Json Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames)
 {
-	Json::Value jsonReturn{Json::objectValue};
+	Json jsonReturn;
 	auto returnDocs = _tags.equal_range("return");
 
 	if (!_returnParameterNames.empty())
@@ -199,7 +199,7 @@ Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTa
 				content = content.substr(nameEndPos+1);
 			}
 
-			jsonReturn[paramName] = Json::Value(content);
+			jsonReturn[paramName] = Json(content);
 			n++;
 		}
 	}
@@ -216,7 +216,7 @@ std::string Natspec::extractDoc(std::multimap<std::string, DocTag> const& _tags,
 	return value;
 }
 
-Json::Value Natspec::extractCustomDoc(std::multimap<std::string, DocTag> const& _tags)
+Json Natspec::extractCustomDoc(std::multimap<std::string, DocTag> const& _tags)
 {
 	std::map<std::string, std::string> concatenated;
 	for (auto const& [tag, value]: _tags)
@@ -224,28 +224,28 @@ Json::Value Natspec::extractCustomDoc(std::multimap<std::string, DocTag> const& 
 			concatenated[tag] += value.content;
 	// We do not want to create an object if there are no custom tags found.
 	if (concatenated.empty())
-		return Json::nullValue;
-	Json::Value result{Json::objectValue};
+		return Json();
+	Json result;
 	for (auto& [tag, value]: concatenated)
 		result[tag] = std::move(value);
 	return result;
 }
 
-Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const& _tags)
+Json Natspec::devDocumentation(std::multimap<std::string, DocTag> const& _tags)
 {
-	Json::Value json = extractCustomDoc(_tags);
+	Json json = extractCustomDoc(_tags);
 	auto dev = extractDoc(_tags, "dev");
 	if (!dev.empty())
-		json["details"] = Json::Value(dev);
+		json["details"] = Json(dev);
 
 	auto author = extractDoc(_tags, "author");
 	if (!author.empty())
 		json["author"] = author;
 
-	Json::Value params(Json::objectValue);
+	Json params;
 	auto paramRange = _tags.equal_range("param");
 	for (auto i = paramRange.first; i != paramRange.second; ++i)
-		params[i->second.paramName] = Json::Value(i->second.content);
+		params[i->second.paramName] = Json(i->second.content);
 
 	if (!params.empty())
 		json["params"] = params;

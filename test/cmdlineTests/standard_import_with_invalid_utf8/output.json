@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "parse error at line 12, column 23: syntax error while parsing value - invalid string: surrogate U+D800..U+DBFF must be followed by U+DC00..U+DFFF; last read: '\"\\ud800\"'",
+            "message": "parse error at line 12, column 23: syntax error while parsing value - invalid string: surrogate U+D800..U+DBFF must be followed by U+DC00..U+DFFF; last read: '\"\\ud800\"'",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

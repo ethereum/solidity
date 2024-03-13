@@ -18,8 +18,7 @@
 #pragma once
 
 #include <libsolutil/Exceptions.h>
-
-#include <json/value.h>
+#include <libsolutil/JSON.h>
 
 #include <functional>
 #include <iosfwd>
@@ -32,7 +31,7 @@
 namespace solidity::lsp
 {
 
-using MessageID = Json::Value;
+using MessageID = Json;
 
 enum class TraceValue
 {
@@ -98,14 +97,14 @@ class Transport
 public:
 	virtual ~Transport() = default;
 
-	std::optional<Json::Value> receive();
-	void notify(std::string _method, Json::Value _params);
-	void reply(MessageID _id, Json::Value _result);
+	std::optional<Json> receive();
+	void notify(std::string _method, Json _params);
+	void reply(MessageID _id, Json _result);
 	void error(MessageID _id, ErrorCode _code, std::string _message);
 
 	virtual bool closed() const noexcept = 0;
 
-	void trace(std::string _message, Json::Value _extra = Json::nullValue);
+	void trace(std::string _message, Json _extra = Json{});
 
 	TraceValue traceValue() const noexcept { return m_logTrace; }
 	void setTrace(TraceValue _value) noexcept { m_logTrace = _value; }
@@ -135,7 +134,7 @@ protected:
 	/// Sends an arbitrary raw message to the client.
 	///
 	/// Used by the notify/reply/error function family.
-	virtual void send(Json::Value _message, MessageID _id = Json::nullValue);
+	virtual void send(Json _message, MessageID _id = Json{});
 };
 
 /**

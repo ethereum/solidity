@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(toJson)
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 	Program program = get<Program>(Program::load(sourceStream));
 
-	Json::Value parsingResult;
+	Json parsingResult;
 	std::string errors;
 	BOOST_TEST(jsonParseStrict(program.toJson(), parsingResult, &errors));
 	BOOST_TEST(errors.empty());

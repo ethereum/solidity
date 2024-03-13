@@ -67,7 +67,7 @@ void NatspecJSONTest::parseCustomExpectations(std::istream& _stream)
 
 		std::string rawJSON = extractExpectationJSON(_stream);
 		std::string jsonErrors;
-		Json::Value parsedJSON;
+		Json parsedJSON;
 		bool jsonParsingSuccessful = jsonParseStrict(rawJSON, parsedJSON, &jsonErrors);
 		if (!jsonParsingSuccessful)
 			BOOST_THROW_EXCEPTION(std::runtime_error(fmt::format(
@@ -86,7 +86,7 @@ void NatspecJSONTest::parseCustomExpectations(std::istream& _stream)
 
 bool NatspecJSONTest::expectationsMatch()
 {
-	// NOTE: Comparing pretty printed Json::Values to avoid using its operator==, which fails to
+	// NOTE: Comparing pretty printed Jsons to avoid using its operator==, which fails to
 	// compare equal numbers as equal. For example, for 'version' field the value is sometimes int,
 	// sometimes uint and they compare as different even when both are 1.
 	return

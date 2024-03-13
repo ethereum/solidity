@@ -35,7 +35,7 @@ struct CompilerOutput
 	/// EVM bytecode returned by compiler
 	solidity::bytes byteCode;
 	/// Method identifiers in a contract
-	Json::Value methodIdentifiersInContract;
+	Json methodIdentifiersInContract;
 };
 
 struct CompilerInput
@@ -89,7 +89,7 @@ public:
 		m_compilerInput.libraryAddresses = std::move(_libraryAddresses);
 	}
 	/// @returns method identifiers in contract called @param _contractName.
-	Json::Value methodIdentifiers(std::string const& _contractName)
+	Json methodIdentifiers(std::string const& _contractName)
 	{
 		return m_compiler.interfaceSymbols(_contractName)["methods"];
 	}

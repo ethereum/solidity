@@ -53,6 +53,6 @@ std::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const&
 bool isValidMetadata(std::string const& _serialisedMetadata);
 
 /// Expects a deserialised metadata JSON and returns true if the content is valid metadata.
-bool isValidMetadata(Json::Value const& _metadata);
+bool isValidMetadata(Json const& _metadata);
 
 } // end namespaces

@@ -57,7 +57,7 @@ optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 		else
 			contractName = m_compilerInput.contractName;
 		evmasm::LinkerObject obj = m_compiler.object(contractName);
-		Json::Value methodIdentifiers = m_compiler.interfaceSymbols(contractName)["methods"];
+		Json methodIdentifiers = m_compiler.interfaceSymbols(contractName)["methods"];
 		return CompilerOutput{obj.bytecode, methodIdentifiers};
 	}
 }
@@ -164,10 +164,10 @@ evmc::Result EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
 		// isabelle test entry point. At the moment, we are sure that the
 		// entry point is the second method in the contract (hence the ++)
 		// but not its name.
-		methodName = (++cOutput->methodIdentifiersInContract.begin())->asString() +
+		methodName = (++cOutput->methodIdentifiersInContract.begin())->get<std::string>() +
 			_fuzzIsabelle.substr(2, _fuzzIsabelle.size());
 	else
-		methodName = cOutput->methodIdentifiersInContract[m_methodName].asString();
+		methodName = cOutput->methodIdentifiersInContract[m_methodName].get<std::string>();
 
 	return deployAndExecute(
 		cOutput->byteCode,

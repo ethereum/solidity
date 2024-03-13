@@ -25,6 +25,7 @@
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
+#include <libsolutil/JSON.h>
 
 #include <libyul/Object.h>
 #include <libyul/ObjectParser.h>
@@ -32,8 +33,6 @@
 #include <libsolidity/interface/OptimiserSettings.h>
 
 #include <libevmasm/LinkerObject.h>
-
-#include <json/json.h>
 
 #include <memory>
 #include <string>
@@ -132,7 +131,7 @@ public:
 	std::string print(
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
-	Json::Value astJson() const;
+	Json astJson() const;
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
 

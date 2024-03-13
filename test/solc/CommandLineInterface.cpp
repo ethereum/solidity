@@ -1087,13 +1087,12 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 	TemporaryDirectory tempDir({"base/", "include/", "lib/nested/"}, TEST_CASE_NAME);
 	TemporaryWorkingDirectory tempWorkDir(tempDir);
 
-	std::string const mainContractSource = withPreamble(
+	std::string mainContractSource = withPreamble(
 		"import 'contract_via_callback.sol';\n"
 		"import 'include_via_callback.sol';\n"
 		"import 'nested_via_callback.sol';\n"
 		"import 'lib_via_callback.sol';\n"
 	);
-
 	std::string const standardJsonInput = R"(
 		{
 			"language": "Solidity",
@@ -1157,15 +1156,20 @@ BOOST_AUTO_TEST_CASE(standard_json_include_paths)
 
 	OptionsReaderAndMessages result = runCLI(commandLine, standardJsonInput);
 
-	Json::Value parsedStdout;
+	Json parsedStdout;
 	std::string jsonParsingErrors;
 	BOOST_TEST(util::jsonParseStrict(result.stdoutContent, parsedStdout, &jsonParsingErrors));
 	BOOST_TEST(jsonParsingErrors == "");
-	for (Json::Value const& errorDict: parsedStdout["errors"])
+	for (Json const& errorDict: parsedStdout["errors"])
 		// The error list might contain pre-release compiler warning
 		BOOST_TEST(errorDict["severity"] != "error");
+	// we might be able to use ranges again, but the nlohmann::json support is not yet fully there.
+	// (parsedStdout["sources"].items() | ranges::views::keys | ranges::to<std::set>)
+	std::set<std::string> sources;
+	for (auto const& [key, _]: parsedStdout["sources"].items())
+		sources.insert(key);
 	BOOST_TEST(
-		(parsedStdout["sources"].getMemberNames() | ranges::to<std::set>) ==
+		sources ==
 		(expectedSources | ranges::views::keys | ranges::to<std::set>) + std::set<std::string>{"main.sol"}
 	);
 
