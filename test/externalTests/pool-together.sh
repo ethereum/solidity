@@ -66,6 +66,9 @@ function pool_together_test
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     yarn install
+    # Hardhat 2.20.0 is the last version that works. Newer versions throw this error:
+    # Unexpected config HardhatConfig.networks.hardhat.initialBaseFeePerGas found - This field is only valid for networks with EIP-1559. Try a newer hardfork or remove it.
+    yarn add hardhat@2.20.0
 
     # These come with already compiled artifacts. We want them recompiled with latest compiler.
     rm -r node_modules/@pooltogether/yield-source-interface/artifacts/
