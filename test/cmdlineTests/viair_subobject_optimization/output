@@ -61,10 +61,9 @@ EVM assembly:
     /* "viair_subobject_optimization/input.sol":616:661  if (x == 0xFFFFFFFFFFFFFFFF42)... */
 tag_7:
   0x00
-    /* "viair_subobject_optimization/input.sol":653:661  revert() */
+    /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
   dup1
   revert
-    /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
 tag_3:
   mstore(0x00, shl(0xe0, 0x4e487b71))
   mstore(0x04, 0x41)
@@ -293,10 +292,9 @@ sub_0: assembly {
             /* "viair_subobject_optimization/input.sol":616:661  if (x == 0xFFFFFFFFFFFFFFFF42)... */
         tag_7:
           0x00
-            /* "viair_subobject_optimization/input.sol":653:661  revert() */
+            /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
           dup1
           revert
-            /* "viair_subobject_optimization/input.sol":61:668  contract C {... */
         tag_3:
           mstore(0x00, shl(0xe0, 0x4e487b71))
           mstore(0x04, 0x41)

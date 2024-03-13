@@ -29,6 +29,7 @@
 #include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
+#include <libevmasm/GasMeter.h>
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
@@ -74,7 +75,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			ret += i.bytesRequired(tagSize, Precision::Approximate);
+			ret += i.bytesRequired(tagSize, m_evmVersion, Precision::Approximate);
 		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
@@ -739,7 +740,7 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 
 		if (_settings.runPeephole)
 		{
-			PeepholeOptimiser peepOpt{m_items};
+			PeepholeOptimiser peepOpt{m_items, m_evmVersion};
 			while (peepOpt.optimise())
 			{
 				count++;
@@ -793,10 +794,21 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 				iter = eliminator.feedItems(iter, m_items.end(), usesMSize);
 				bool shouldReplace = false;
 				AssemblyItems optimisedChunk;
+				auto runGas = [&](AssemblyItems const& items) {
+					GasMeter gasMeter{std::make_shared<KnownState>(eliminator.getKnownState()), _settings.evmVersion};
+					GasMeter::GasConsumption gas;
+					for (auto const& item: items)
+						gas += gasMeter.estimateMax(item);
+					return gas;
+				};
 				try
 				{
 					optimisedChunk = eliminator.getOptimizedItems();
-					shouldReplace = (optimisedChunk.size() < static_cast<size_t>(iter - orig));
+					solAssert(iter >= orig);
+					shouldReplace = (
+						optimisedChunk.size()  < static_cast<size_t>(iter - orig) &&
+						!(runGas(AssemblyItems(orig, iter)) < runGas(optimisedChunk))
+					);
 				}
 				catch (StackTooDeepException const&)
 				{

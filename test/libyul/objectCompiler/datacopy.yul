@@ -33,7 +33,7 @@ object "a" {
 //         /* "source":153:170   */
 //       0x00
 //         /* "source":150:151   */
-//       dup1
+//       0x00
 //         /* "source":143:171   */
 //       sstore
 //         /* "source":188:205   */
@@ -47,6 +47,6 @@ object "a" {
 //     stop
 //     data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421
 // }
-// Bytecode: 6009600b5f3960095ff3fe5f8055600d5f5200fe
-// Opcodes: PUSH1 0x9 PUSH1 0xB PUSH0 CODECOPY PUSH1 0x9 PUSH0 RETURN INVALID PUSH0 DUP1 SSTORE PUSH1 0xD PUSH0 MSTORE STOP INVALID
+// Bytecode: 6009600b5f3960095ff3fe5f5f55600d5f5200fe
+// Opcodes: PUSH1 0x9 PUSH1 0xB PUSH0 CODECOPY PUSH1 0x9 PUSH0 RETURN INVALID PUSH0 PUSH0 SSTORE PUSH1 0xD PUSH0 MSTORE STOP INVALID
 // SourceMappings: 57:15:0:-:0;38:17;35:1;26:47;88:15;85:1;78:26

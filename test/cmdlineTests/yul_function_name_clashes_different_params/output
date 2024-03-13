@@ -20,7 +20,7 @@ object "object" {
 
 
 Binary representation:
-60056011565b600d60706016565b9055005b5f3590565b359056
+60056011565b600d60706013565b9055005b5f5b359056
 
 Text representation:
     /* "yul_function_name_clashes_different_params/input.yul":151:154   */
@@ -45,11 +45,6 @@ tag_4:
 tag_1:
     /* "yul_function_name_clashes_different_params/input.yul":129:130   */
   0x00
-    /* "yul_function_name_clashes_different_params/input.yul":116:131   */
-  calldataload
-    /* "yul_function_name_clashes_different_params/input.yul":79:133   */
-  swap1
-  jump	// out
     /* "yul_function_name_clashes_different_params/input.yul":187:242   */
 tag_2:
     /* "yul_function_name_clashes_different_params/input.yul":225:240   */

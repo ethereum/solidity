@@ -36,11 +36,11 @@ contract c {
 // ----
 // test() -> 0x02000202
 // gas irOptimized: 4547793
-// gas legacy: 4475396
-// gas legacyOptimized: 4447665
+// gas legacy: 4475401
+// gas legacyOptimized: 4448029
 // storageEmpty -> 1
 // clear() -> 0, 0
 // gas irOptimized: 4474777
-// gas legacy: 4407188
-// gas legacyOptimized: 4381336
+// gas legacy: 4407192
+// gas legacyOptimized: 4381680
 // storageEmpty -> 1

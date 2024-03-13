@@ -29,8 +29,8 @@ contract C {
 // x() -> 1
 // stack(uint256): 1023 -> FAILURE
 // gas irOptimized: 252410
-// gas legacy: 477722
-// gas legacyOptimized: 299567
+// gas legacy: 476845
+// gas legacyOptimized: 299061
 // x() -> 1
 // stack(uint256): 10 -> 0x87948bd7ebbe13a00bfd930c93e4828ab18e3908
 // x() -> 2

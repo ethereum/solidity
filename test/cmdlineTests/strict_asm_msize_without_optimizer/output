@@ -15,13 +15,13 @@ object "object" {
 
 
 Binary representation:
-600b565b5f8051905090565b5f8060136003565b5f525050
+600b565b5f5f51905090565b5f8060136003565b5f525050
 
 Text representation:
   jump(tag_2)
 tag_1:
   0x00
-  dup1
+  0x00
   mload
   swap1
   pop

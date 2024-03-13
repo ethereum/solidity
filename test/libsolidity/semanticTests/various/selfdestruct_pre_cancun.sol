@@ -62,12 +62,12 @@ contract D {
 // EVMVersion: =shanghai
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 67028
-// gas irOptimized code: 175400
-// gas legacy: 76163
-// gas legacy code: 297400
-// gas legacyOptimized: 66516
-// gas legacyOptimized code: 168000
+// gas irOptimized: 66988
+// gas irOptimized code: 175200
+// gas legacy: 76195
+// gas legacy code: 297800
+// gas legacyOptimized: 66512
+// gas legacyOptimized code: 167800
 // exists() -> false
 // test_create_and_terminate() ->
 // exists() -> false

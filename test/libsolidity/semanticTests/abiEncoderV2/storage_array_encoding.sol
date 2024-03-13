@@ -19,8 +19,8 @@ contract C {
 // ----
 // h(uint256[2][]): 0x20, 3, 123, 124, 223, 224, 323, 324 -> 32, 256, 0x20, 3, 123, 124, 223, 224, 323, 324
 // gas irOptimized: 180720
-// gas legacy: 184830
-// gas legacyOptimized: 181493
+// gas legacy: 184828
+// gas legacyOptimized: 181492
 // i(uint256[2][2]): 123, 124, 223, 224 -> 32, 128, 123, 124, 223, 224
 // gas irOptimized: 112425
 // gas legacy: 115398

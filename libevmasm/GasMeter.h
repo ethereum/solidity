@@ -225,6 +225,9 @@ public:
 	/// change with EVM versions)
 	static unsigned runGas(Instruction _instruction, langutil::EVMVersion _evmVersion);
 
+	/// @returns gas costs for push instructions (may change depending on EVM version)
+	static unsigned pushGas(u256 _value, langutil::EVMVersion _evmVersion);
+
 	/// @returns the gas cost of the supplied data, depending whether it is in creation code, or not.
 	/// In case of @a _inCreation, the data is only sent as a transaction and is not stored, whereas
 	/// otherwise code will be stored and have to pay "createDataGas" cost.

@@ -8,9 +8,7 @@ EVM assembly:
   iszero
   tag_1
   jumpi
-  0x00
-  dup1
-  revert
+  revert(0x00, 0x00)
 tag_1:
   pop
   dataSize(sub_0)
@@ -30,9 +28,7 @@ sub_0: assembly {
       iszero
       tag_1
       jumpi
-      0x00
-      dup1
-      revert
+      revert(0x00, 0x00)
     tag_1:
       pop
       jumpi(tag_2, lt(calldatasize, 0x04))
@@ -43,9 +39,7 @@ sub_0: assembly {
       tag_3
       jumpi
     tag_2:
-      0x00
-      dup1
-      revert
+      revert(0x00, 0x00)
         /* "optimizer_inliner_add/input.sol":182:303  function f() public pure {... */
     tag_3:
       tag_4
@@ -68,13 +62,28 @@ sub_0: assembly {
       iszero
       tag_8
       jumpi
-        /* "optimizer_inliner_add/input.sol":149:154  x + y */
-      dup1
-      add
+        /* "optimizer_inliner_add/input.sol":245:276  unsafe_add(x, unsafe_add(x, 1)) */
+      tag_10
+        /* "optimizer_inliner_add/input.sol":256:257  x */
+      dup2
+        /* "optimizer_inliner_add/input.sol":259:275  unsafe_add(x, 1) */
+      tag_11
+        /* "optimizer_inliner_add/input.sol":270:271  x */
+      dup4
         /* "optimizer_inliner_add/input.sol":273:274  1 */
       0x01
+        /* "optimizer_inliner_add/input.sol":259:275  unsafe_add(x, 1) */
+    tag_11:
         /* "optimizer_inliner_add/input.sol":149:154  x + y */
       add
+      swap1
+        /* "optimizer_inliner_add/input.sol":60:163  function unsafe_add(uint x, uint y) pure returns (uint)... */
+      jump
+        /* "optimizer_inliner_add/input.sol":245:276  unsafe_add(x, unsafe_add(x, 1)) */
+    tag_10:
+        /* "optimizer_inliner_add/input.sol":241:276  x = unsafe_add(x, unsafe_add(x, 1)) */
+      swap1
+      pop
         /* "optimizer_inliner_add/input.sol":217:297  for(uint x = 0; x < 10; x = unsafe_add(x, unsafe_add(x, 1)))... */
       jump(tag_7)
     tag_8:

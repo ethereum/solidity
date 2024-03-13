@@ -83,7 +83,7 @@ bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items, lan
 	bigint gas = 0;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
-			gas += GasMeter::runGas(Instruction::PUSH1, _evmVersion);
+			gas += GasMeter::pushGas(item.data(), _evmVersion);
 		else if (item.type() == Operation)
 		{
 			if (item.instruction() == Instruction::EXP)
@@ -100,9 +100,9 @@ bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 	return bigint(GasMeter::dataGas(_data, m_params.isCreation, m_params.evmVersion));
 }
 
-size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
+size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items, langutil::EVMVersion _evmVersion)
 {
-	return evmasm::bytesRequired(_items, 3, Precision::Approximate); // assume 3 byte addresses
+	return evmasm::bytesRequired(_items, 3, _evmVersion, Precision::Approximate); // assume 3 byte addresses
 }
 
 void ConstantOptimisationMethod::replaceConstants(
@@ -143,7 +143,7 @@ bigint CodeCopyMethod::gasNeeded() const
 		// Run gas: we ignore memory increase costs
 		simpleRunGas(copyRoutine(), m_params.evmVersion) + GasCosts::copyGas,
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
-		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
+		bytesRequired(copyRoutine(), m_params.evmVersion) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		// Data gas for data itself
 		dataGas(toBigEndian(m_value))
 	);
@@ -153,37 +153,74 @@ AssemblyItems CodeCopyMethod::execute(Assembly& _assembly) const
 {
 	bytes data = toBigEndian(m_value);
 	assertThrow(data.size() == 32, OptimizerException, "Invalid number encoding.");
-	AssemblyItems actualCopyRoutine = copyRoutine();
-	actualCopyRoutine[4] = _assembly.newData(data);
-	return actualCopyRoutine;
+	AssemblyItem newPushData = _assembly.newData(data);
+	return copyRoutine(&newPushData);
 }
 
-AssemblyItems const& CodeCopyMethod::copyRoutine()
+AssemblyItems CodeCopyMethod::copyRoutine(AssemblyItem* _pushData) const
 {
-	AssemblyItems static copyRoutine{
-		// constant to be reused 3+ times
-		u256(0),
+	if (_pushData)
+		assertThrow(_pushData->type() == PushData, OptimizerException, "Invalid Assembly Item.");
 
-		// back up memory
-		// mload(0)
-		Instruction::DUP1,
-		Instruction::MLOAD,
+	AssemblyItem dataUsed = _pushData ? *_pushData : AssemblyItem(PushData, u256(1) << 16);
 
-		// codecopy(0, <offset>, 32)
-		u256(32),
-		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[4]
-		Instruction::DUP4,
-		Instruction::CODECOPY,
+	// PUSH0 is cheaper than PUSHn/DUP/SWAP.
+	if (m_params.evmVersion.hasPush0())
+	{
+		// This costs ~29 gas.
+		AssemblyItems copyRoutine{
+			// back up memory
+			// mload(0)
+			u256(0),
+			Instruction::MLOAD,
 
-		// mload(0)
-		Instruction::DUP2,
-		Instruction::MLOAD,
+			// codecopy(0, <offset>, 32)
+			u256(32),
+			dataUsed,
+			u256(0),
+			Instruction::CODECOPY,
 
-		// restore original memory
-		Instruction::SWAP2,
-		Instruction::MSTORE
-	};
-	return copyRoutine;
+			// mload(0)
+			u256(0),
+			Instruction::MLOAD,
+
+			// restore original memory
+			// mstore(0, x)
+			Instruction::SWAP1,
+			u256(0),
+			Instruction::MSTORE
+		};
+		return copyRoutine;
+	}
+	else
+	{
+		// This costs ~33 gas.
+		AssemblyItems copyRoutine{
+			// constant to be reused 3+ times
+			u256(0),
+
+			// back up memory
+			// mload(0)
+			Instruction::DUP1,
+			Instruction::MLOAD,
+
+			// codecopy(0, <offset>, 32)
+			u256(32),
+			dataUsed,
+			Instruction::DUP4,
+			Instruction::CODECOPY,
+
+			// mload(0)
+			Instruction::DUP2,
+			Instruction::MLOAD,
+
+			// restore original memory
+			// mstore(0, x)
+			Instruction::SWAP2,
+			Instruction::MSTORE
+		};
+		return copyRoutine;
+	}
 }
 
 AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
@@ -323,7 +360,7 @@ bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 	return combineGas(
 		simpleRunGas(_routine, m_params.evmVersion) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
-		bytesRequired(_routine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
+		bytesRequired(_routine, m_params.evmVersion) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
 		0
 	);
 }

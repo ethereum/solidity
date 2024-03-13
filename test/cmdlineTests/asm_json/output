@@ -65,8 +65,9 @@ EVM assembly:
     {
       "begin": 60,
       "end": 160,
-      "name": "DUP1",
-      "source": 0
+      "name": "PUSH",
+      "source": 0,
+      "value": "0"
     },
     {
       "begin": 60,
@@ -208,8 +209,9 @@ EVM assembly:
         {
           "begin": 60,
           "end": 160,
-          "name": "DUP1",
-          "source": 0
+          "name": "PUSH",
+          "source": 0,
+          "value": "0"
         },
         {
           "begin": 60,
@@ -349,8 +351,9 @@ EVM assembly:
         {
           "begin": 60,
           "end": 160,
-          "name": "DUP1",
-          "source": 0
+          "name": "PUSH",
+          "source": 0,
+          "value": "0"
         },
         {
           "begin": 60,
@@ -626,8 +629,9 @@ EVM assembly:
         {
           "begin": 135,
           "end": 151,
-          "name": "DUP1",
-          "source": 0
+          "name": "PUSH",
+          "source": 0,
+          "value": "0"
         },
         {
           "begin": 135,
@@ -684,8 +688,9 @@ EVM assembly:
         {
           "begin": 194,
           "end": 195,
-          "name": "DUP1",
-          "source": 1
+          "name": "PUSH",
+          "source": 1,
+          "value": "0"
         },
         {
           "begin": 187,
@@ -844,8 +849,9 @@ EVM assembly:
         {
           "begin": 526,
           "end": 527,
-          "name": "DUP1",
-          "source": 1
+          "name": "PUSH",
+          "source": 1,
+          "value": "0"
         },
         {
           "begin": 519,

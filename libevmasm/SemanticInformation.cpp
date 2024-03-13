@@ -299,6 +299,13 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	}
 }
 
+bool SemanticInformation::terminatesControlFlow(AssemblyItem const& _item)
+{
+	if (_item.type() != evmasm::Operation)
+		return false;
+	return terminatesControlFlow(_item.instruction());
+}
+
 bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
 {
 	switch (_instruction)
