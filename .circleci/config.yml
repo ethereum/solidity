@@ -1469,6 +1469,9 @@ jobs:
 
             # NOTE: This is expected to work without running `pnpm build` first.
             cd hardhat/packages/hardhat-core
+            # TODO: temporarily set hardhat stack traces tests to use cancun hardfork
+            # Remove this when hardhat switch to cancun by default: https://github.com/NomicFoundation/hardhat/issues/4851
+            sed -i 's/hardfork: "shanghai",/hardfork: "cancun",/' test/internal/hardhat-network/stack-traces/execution.ts
             pnpm test
       - matrix_notify_failure_unless_pr
 

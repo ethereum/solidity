@@ -181,11 +181,7 @@ object "D_27" {
 
             function copy_memory_to_memory_with_cleanup(src, dst, length) {
 
-                let i := 0
-                for { } lt(i, length) { i := add(i, 32) }
-                {
-                    mstore(add(dst, i), mload(add(src, i)))
-                }
+                mcopy(dst, src, length)
                 mstore(add(dst, length), 0)
 
             }
@@ -470,8 +466,7 @@ object "D_27" {
                         }
                         mstore(_2, newFreePtr)
                         mstore(memPtr, 2)
-                        let _6 := 32
-                        mstore(add(memPtr, _6), "/*")
+                        mstore(add(memPtr, 32), "/*")
                         let memPtr_1 := mload(_2)
                         let newFreePtr_1 := add(memPtr_1, 96)
                         if or(gt(newFreePtr_1, /** @src 0:446:491  "new /// @src 0:149:156  \"new C()\"..." */ _5), /** @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..." */ lt(newFreePtr_1, memPtr_1))
@@ -482,17 +477,14 @@ object "D_27" {
                         }
                         mstore(_2, newFreePtr_1)
                         mstore(memPtr_1, 39)
-                        mstore(add(memPtr_1, _6), 0x2f2a2a204073726320303a39363a313635202022636f6e74726163742044207b)
+                        let _6 := add(memPtr_1, 32)
+                        mstore(_6, 0x2f2a2a204073726320303a39363a313635202022636f6e74726163742044207b)
                         mstore(add(memPtr_1, _2), shl(200, 0x2e2e2e22202a2f))
                         let memPos := mload(_2)
-                        mstore(memPos, _6)
+                        mstore(memPos, 32)
                         let length := mload(memPtr_1)
-                        mstore(add(memPos, _6), length)
-                        let i := 0
-                        for { } lt(i, length) { i := add(i, _6) }
-                        {
-                            mstore(add(add(memPos, i), _2), mload(add(add(memPtr_1, i), _6)))
-                        }
+                        mstore(add(memPos, 32), length)
+                        mcopy(add(memPos, _2), _6, length)
                         mstore(add(add(memPos, length), _2), 0)
                         return(memPos, add(sub(add(memPos, and(add(length, 31), not(31))), memPos), _2))
                     }
