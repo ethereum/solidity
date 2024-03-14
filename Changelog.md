@@ -1,12 +1,9 @@
-### 0.8.25 (unreleased)
-
-Language Features:
-
+### 0.8.25 (2023-03-14)
 
 Compiler Features:
  * Code Generator: Use ``MCOPY`` instead of ``MLOAD``/``MSTORE`` loop when copying byte arrays.
- * Yul Analyzer: Emit transient storage warning only for the first occurrence of ``tstore``.
  * EVM: Set default EVM version to ``cancun``.
+ * Yul Analyzer: Emit transient storage warning only for the first occurrence of ``tstore``.
 
 
 Bugfixes:
