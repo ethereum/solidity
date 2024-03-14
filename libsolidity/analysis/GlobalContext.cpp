@@ -66,7 +66,7 @@ int magicVariableToID(std::string const& _name)
 	};
 
 	if (util::contains(magicVariables, _name))
-		return magicVariables[_name];
+		return magicVariables.at(_name);
 
 	solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
