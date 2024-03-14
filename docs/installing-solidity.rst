@@ -83,14 +83,20 @@ and runs it in a new container, passing the ``--help`` argument.
 
     docker run ethereum/solc:stable --help
 
-For example, You can specify release build versions in the tag for the 0.5.4 release.
+You can specify release build versions in the tag. For example:
 
 .. code-block:: bash
 
-    docker run ethereum/solc:0.5.4 --help
+    docker run ethereum/solc:stable --help
+
+Note
+
+Specific compiler versions are supported as the Docker image tag such as `ethereum/solc:0.8.23`. We will be passing the
+`stable` tag here instead of specific version tag to ensure that users get the latest version by default and avoid the issue of
+an out-of-date version.
 
 To use the Docker image to compile Solidity files on the host machine, mount a
-local folder for input and output, and specify the contract to compile. For example.
+local folder for input and output, and specify the contract to compile. For example:
 
 .. code-block:: bash
 
@@ -183,7 +189,7 @@ If you need a specific version of Solidity you can install a
 Homebrew formula directly from Github.
 
 View
-`solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
+`solidity.rb commits on GitHub <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
 
 Copy the commit hash of the version you want and check it out on your machine.
 
@@ -224,8 +230,8 @@ out-of-the-box but it is also meant to be friendly to third-party tools:
   (via git, HTTPS, IPFS or just have it cached locally) and verify hashes of the binaries
   after downloading them, you do not have to use HTTPS for the binaries themselves.
 
-The same binaries are in most cases available on the `Solidity release page on Github`_. The
-difference is that we do not generally update old releases on the Github release page. This means
+The same binaries are in most cases available on the `Solidity release page on GitHub`_. The
+difference is that we do not generally update old releases on the GitHub release page. This means
 that we do not rename them if the naming convention changes and we do not add builds for platforms
 that were not supported at the time of release. This only happens in ``solc-bin``.
 
@@ -301,7 +307,7 @@ This means that:
 .. _IPFS: https://ipfs.io
 .. _Swarm: https://swarm-gateways.net/bzz:/swarm.eth
 .. _solc-bin: https://github.com/ethereum/solc-bin/
-.. _Solidity release page on github: https://github.com/ethereum/solidity/releases
+.. _Solidity release page on GitHub: https://github.com/ethereum/solidity/releases
 .. _sha3sum: https://github.com/maandree/sha3sum
 .. _keccak256() function from ethereumjs-util: https://github.com/ethereumjs/ethereumjs-util/blob/master/docs/modules/_hash_.md#const-keccak256
 .. _WebAssembly builds: https://emscripten.org/docs/compiling/WebAssembly.html
@@ -461,11 +467,11 @@ you should fork Solidity and add your personal fork as a second remote:
     This method will result in a pre-release build leading to e.g. a flag
     being set in each bytecode produced by such a compiler.
     If you want to re-build a released Solidity compiler, then
-    please use the source tarball on the github release page:
+    please use the source tarball on the GitHub release page:
 
     https://github.com/ethereum/solidity/releases/download/v0.X.Y/solidity_0.X.Y.tar.gz
 
-    (not the "Source code" provided by github).
+    (not the "Source code" provided by GitHub).
 
 Command-Line Build
 ------------------

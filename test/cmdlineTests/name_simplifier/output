@@ -98,9 +98,9 @@ object "C_59" {
                         }
                         mstore(_9, newFreePtr_2)
                         mstore(memPtr_1, 100)
-                        mstore(add(memPtr_1, _3), "longstringlongstringlongstringlo")
+                        let _11 := add(memPtr_1, _3)
+                        mstore(_11, "longstringlongstringlongstringlo")
                         mstore(add(memPtr_1, _9), "ngstringlongstringlongstringlong")
-                        let _11 := 96
                         mstore(add(memPtr_1, 96), "stringlongstringlongstringlongst")
                         mstore(add(memPtr_1, 128), "ring")
                         let memPos := mload(_9)
@@ -108,11 +108,7 @@ object "C_59" {
                         mstore(add(memPos, _3), _9)
                         let length := mload(memPtr_1)
                         mstore(add(memPos, _9), length)
-                        let i := 0
-                        for { } lt(i, length) { i := add(i, _3) }
-                        {
-                            mstore(add(add(memPos, i), _11), mload(add(add(memPtr_1, i), _3)))
-                        }
+                        mcopy(add(memPos, 96), _11, length)
                         mstore(add(add(memPos, length), 96), 0)
                         return(memPos, add(sub(add(memPos, and(add(length, 31), _8)), memPos), 96))
                     }

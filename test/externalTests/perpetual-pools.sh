@@ -69,7 +69,12 @@ function perpetual_pools_test
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
+
     yarn install
+    # We set hardhat version to 2.20.0 since version 2.21.0 has issues with solidity-coverage plugin
+    # that often causes out-of-memory errors.
+    # See hardhat note about the issue here: https://github.com/NomicFoundation/hardhat/releases/tag/hardhat@2.21.0
+    yarn add hardhat@2.20.0
 
     replace_version_pragmas
 

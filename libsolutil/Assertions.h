@@ -28,6 +28,7 @@
 #include <libsolutil/Exceptions.h>
 
 #include <string>
+#include <utility>
 
 namespace solidity::util
 {
@@ -69,7 +70,7 @@ inline std::string stringOrDefault(std::string _string, std::string _defaultStri
 {
 	// NOTE: Putting this in a function rather than directly in a macro prevents the string from
 	// being evaluated multiple times if it's not just a literal.
-	return (!_string.empty() ? _string : _defaultString);
+	return (!_string.empty() ? std::move(_string) : std::move(_defaultString));
 }
 
 }

@@ -41,7 +41,7 @@ from test_helpers import replace_version_pragmas
 from test_helpers import settings_from_preset
 from test_helpers import SettingsPreset
 
-CURRENT_EVM_VERSION: str = "shanghai"
+CURRENT_EVM_VERSION: str = "cancun"
 
 @dataclass
 class TestConfig:

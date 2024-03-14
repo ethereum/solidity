@@ -50,7 +50,7 @@ At least a day before the release:
 ### Create the Release
  - [ ] Create a [release on GitHub](https://github.com/ethereum/solidity/releases/new).
        Set the target to the ``develop`` branch and the tag to the new version, e.g. ``v0.8.5``.
-       Include the following warning: ``**The release is still in progress and the binaries may not yet be available from all sources.**``.
+       Include the following warning: ``**The release is still in progress. You may see broken links and binaries may not yet be available from all sources.**``.
        Do not publish it yet - click the ``Save draft`` button instead.
  - [ ] Thank voluntary contributors in the GitHub release notes.
        Use ``scripts/list_contributors.sh v<previous version>`` to get initial list of names.
@@ -68,6 +68,7 @@ At least a day before the release:
  - [ ] Take the ``github-binaries.tar`` tarball from ``c_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to the release page.
        Make sure it contains four binaries: ``solc-windows.exe``, ``solc-macos``, ``solc-static-linux`` and ``soljson.js``.
  - [ ] Take the ``solc-bin-binaries.tar`` tarball from ``c_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to solc-bin.
+ - [ ] Run ``npm install`` if you've got a clean checkout of the solc-bin repo.
  - [ ] Run ``npm run update -- --reuse-hashes`` in ``solc-bin`` and verify that the script has updated ``list.js``, ``list.txt`` and ``list.json`` files correctly and that symlinks to the new release have been added in ``solc-bin/wasm/`` and ``solc-bin/emscripten-wasm32/``.
  - [ ] Create a pull request in solc-bin and merge.
 

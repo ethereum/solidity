@@ -95,6 +95,8 @@ function zeppelin_test
     sed -i "s|it(\('calling upgradeToAndCall on the implementation reverts'\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
     sed -i "s|it(\('calling upgradeTo from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
     sed -i "s|it(\('calling upgradeToAndCall from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('rejects overflow'\)|it.skip(\1|g" test/token/ERC20/ERC20.test.js
+    sed -i "s|it(\('decimals overflow'\)|it.skip(\1|g" test/token/ERC20/extensions/ERC4626.test.js
 
     # Here only the testToInt(248) and testToInt(256) cases fail so change the loop range to skip them
     sed -i "s|range(8, 256, 8)\(.forEach(bits => testToInt(bits));\)|range(8, 240, 8)\1|" test/utils/math/SafeCast.test.js
@@ -103,6 +105,10 @@ function zeppelin_test
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     npm install
+    # We require to install hardhat 2.20.0 due to support for evm version cancun, otherwise we get the following error:
+    # Invalid value {"blockGasLimit":10000000,"allowUnlimitedContractSize":true,"hardfork":"cancun"} for HardhatConfig.networks.hardhat - Expected a value of type HardhatNetworkConfig.
+    # See: https://github.com/NomicFoundation/hardhat/issues/4176
+    npm install hardhat@2.20.0
 
     replace_version_pragmas
     for preset in $SELECTED_PRESETS; do

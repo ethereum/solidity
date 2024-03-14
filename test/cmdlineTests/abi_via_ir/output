@@ -1,0 +1,167 @@
+
+======= abi_via_ir/input.sol:C =======
+Contract JSON ABI
+[
+    {
+        "inputs":
+        [
+            {
+                "internalType": "uint256",
+                "name": "z",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "w",
+                "type": "uint256"
+            }
+        ],
+        "name": "err",
+        "type": "error"
+    },
+    {
+        "inputs":
+        [
+            {
+                "internalType": "uint256",
+                "name": "z",
+                "type": "uint256"
+            }
+        ],
+        "name": "fileLevelError",
+        "type": "error"
+    },
+    {
+        "inputs":
+        [
+            {
+                "internalType": "uint256",
+                "name": "r",
+                "type": "uint256"
+            }
+        ],
+        "name": "libraryError",
+        "type": "error"
+    },
+    {
+        "anonymous": true,
+        "inputs":
+        [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "y",
+                "type": "uint256"
+            }
+        ],
+        "name": "anon_ev",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs":
+        [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "y",
+                "type": "uint256"
+            }
+        ],
+        "name": "ev",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs":
+        [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "r",
+                "type": "uint256"
+            }
+        ],
+        "name": "libraryEvent",
+        "type": "event"
+    },
+    {
+        "inputs":
+        [
+            {
+                "components":
+                [
+                    {
+                        "internalType": "uint256",
+                        "name": "x",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct C.S",
+                "name": "s",
+                "type": "tuple"
+            }
+        ],
+        "name": "f",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
+
+======= abi_via_ir/input.sol:L =======
+Contract JSON ABI
+[
+    {
+        "inputs":
+        [
+            {
+                "internalType": "uint256",
+                "name": "r",
+                "type": "uint256"
+            }
+        ],
+        "name": "libraryError",
+        "type": "error"
+    },
+    {
+        "inputs":
+        [
+            {
+                "internalType": "uint256",
+                "name": "u",
+                "type": "uint256"
+            }
+        ],
+        "name": "libraryErrorUnused",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs":
+        [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "r",
+                "type": "uint256"
+            }
+        ],
+        "name": "libraryEvent",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs":
+        [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "u",
+                "type": "uint256"
+            }
+        ],
+        "name": "libraryEventUnused",
+        "type": "event"
+    }
+]

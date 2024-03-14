@@ -175,9 +175,9 @@ explanatory purposes.
       },
       // Required: Compilation source files/source units, keys are file paths
       "sources": {
-        "destructible": {
+        "settable": {
           // Required (unless "url" is used): literal contents of the source file
-          "content": "contract destructible is owned { function destroy() { if (msg.sender == owner) selfdestruct(owner); } }",
+          "content": "contract settable is owned { uint256 private x = 0; function set(uint256 _x) public { if (msg.sender == owner) x = _x; } }",
           // Required: keccak256 hash of the source file
           "keccak256": "0x234..."
         },

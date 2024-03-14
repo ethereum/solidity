@@ -22,7 +22,7 @@ set -e
 
 # Requires $REPO_ROOT to be defined and "${REPO_ROOT}/scripts/common.sh" to be included before.
 
-CURRENT_EVM_VERSION=shanghai
+CURRENT_EVM_VERSION=cancun
 
 AVAILABLE_PRESETS=(
     legacy-no-optimize
@@ -332,12 +332,16 @@ function force_hardhat_compiler_settings
         echo "require('hardhat-gas-reporter');"
         echo "module.exports.gasReporter = ${gas_reporter_settings};"
         echo "module.exports.solidity = ${compiler_settings};"
+        echo "module.exports.networks.hardhat = module.exports.networks.hardhat || { hardfork: '${evm_version}' }"
+        echo "module.exports.networks.hardhat.hardfork = '${evm_version}'"
     else
         [[ $config_file == *\.ts ]] || assertFail
         [[ $config_var_name != "" ]] || assertFail
         echo 'import "hardhat-gas-reporter";'
         echo "${config_var_name}.gasReporter = ${gas_reporter_settings};"
         echo "${config_var_name}.solidity = {compilers: [${compiler_settings}]};"
+        echo "${config_var_name}.networks!.hardhat = ${config_var_name}.networks!.hardhat ?? { hardfork: '${evm_version}' };"
+        echo "${config_var_name}.networks!.hardhat!.hardfork = '${evm_version}'"
     fi >> "$config_file"
 }
 

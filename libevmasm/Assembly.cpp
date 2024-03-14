@@ -124,8 +124,10 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 	solRequire(!name.empty(), AssemblyImportException, "Member 'name' is empty.");
 
 	SourceLocation location;
-	location.start = get<int>(_json["begin"]);
-	location.end = get<int>(_json["end"]);
+	if (_json.isMember("begin"))
+		location.start = get<int>(_json["begin"]);
+	if (_json.isMember("end"))
+		location.end = get<int>(_json["end"]);
 	int srcIndex = getOrDefault<int>(_json["source"], -1);
 	size_t modifierDepth = static_cast<size_t>(getOrDefault<int>(_json["modifierDepth"], 0));
 	std::string value = getOrDefault<std::string>(_json["value"], "");

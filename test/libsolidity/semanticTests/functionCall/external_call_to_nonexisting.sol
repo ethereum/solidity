@@ -22,12 +22,12 @@ contract C {
 }
 // ----
 // constructor(), 1 ether ->
-// gas irOptimized: 89555
-// gas irOptimized code: 172800
-// gas legacy: 103042
-// gas legacy code: 338400
-// gas legacyOptimized: 91862
-// gas legacyOptimized code: 201000
+// gas irOptimized: 89155
+// gas irOptimized code: 167800
+// gas legacy: 102626
+// gas legacy code: 333200
+// gas legacyOptimized: 91471
+// gas legacyOptimized code: 196200
 // f(uint256): 0 -> FAILURE
 // f(uint256): 1 -> FAILURE
 // f(uint256): 2 -> FAILURE

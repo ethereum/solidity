@@ -6,6 +6,6 @@ contract C {
     }
 }
 // ====
-// EVMVersion: <cancun
+// EVMVersion: =shanghai
 // ----
-// DeclarationError 4619: (75-80): Function "mcopy" not found.
+// TypeError 7755: (75-80): The "mcopy" instruction is only available for Cancun-compatible VMs (you are currently compiling for "shanghai").

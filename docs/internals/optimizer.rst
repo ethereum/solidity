@@ -298,7 +298,7 @@ The following transformation steps are the main components:
 - SSA Transform
 - Common Subexpression Eliminator
 - Expression Simplifier
-- Redundant Assign Eliminator
+- Unused Assign Eliminator
 - Full Inliner
 
 .. _optimizer-steps:
@@ -335,11 +335,11 @@ Abbreviation Full name
 ``T``        :ref:`literal-rematerialiser`
 ``L``        :ref:`load-resolver`
 ``M``        :ref:`loop-invariant-code-motion`
-``r``        :ref:`redundant-assign-eliminator`
 ``m``        :ref:`rematerialiser`
 ``V``        :ref:`SSA-reverser`
 ``a``        :ref:`SSA-transform`
 ``t``        :ref:`structural-simplifier`
+``r``        :ref:`unused-assign-eliminator`
 ``p``        :ref:`unused-function-parameter-pruner`
 ``S``        :ref:`unused-store-eliminator`
 ``u``        :ref:`unused-pruner`
@@ -482,7 +482,7 @@ is transformed to
     }
 
 This eases the rest of the optimization process because we can ignore
-the complicated scoping rules of the for loop initialisation block.
+the complicated scoping rules of the for loop initialization block.
 
 .. _var-decl-initializer:
 
@@ -652,7 +652,7 @@ the block, a new SSA variable will be created at the location where control flow
 this includes the beginning of loop post/body block and the location right after
 If/Switch/ForLoop/Block statement.
 
-After this stage, the Redundant Assign Eliminator is recommended to remove the unnecessary
+After this stage, the Unused Assign Eliminator is recommended to remove the unnecessary
 intermediate assignments.
 
 This stage provides best results if the Expression Splitter and the Common Subexpression Eliminator
@@ -660,10 +660,10 @@ are run right before it, because then it does not generate excessive amounts of 
 On the other hand, the Common Subexpression Eliminator could be more efficient if run after the
 SSA transform.
 
-.. _redundant-assign-eliminator:
+.. _unused-assign-eliminator:
 
-RedundantAssignEliminator
-^^^^^^^^^^^^^^^^^^^^^^^^^
+UnusedAssignEliminator
+^^^^^^^^^^^^^^^^^^^^^^
 
 The SSA transform always generates an assignment of the form ``a := a_i``, even though
 these might be unnecessary in many cases, like the following example:
@@ -691,7 +691,7 @@ The SSA transform converts this snippet to the following:
         sstore(a_3, 1)
     }
 
-The Redundant Assign Eliminator removes all the three assignments to ``a``, because
+The Unused Assign Eliminator removes all the three assignments to ``a``, because
 the value of ``a`` is not used and thus turn this
 snippet into strict SSA form:
 
@@ -704,7 +704,7 @@ snippet into strict SSA form:
         sstore(a_3, 1)
     }
 
-Of course the intricate parts of determining whether an assignment is redundant or not
+Of course the intricate parts of determining whether an assignment is unused or not
 are connected to joining control flow.
 
 The component works as follows in detail:
@@ -829,7 +829,7 @@ current value if the value is an identifier.
 The combination of the two rules above allow to compute a local value
 numbering, which means that if two variables have the same
 value, one of them will always be unused. The Unused Pruner or the
-Redundant Assign Eliminator will then be able to fully eliminate such
+Unused Assign Eliminator will then be able to fully eliminate such
 variables.
 
 This step is especially efficient if the expression splitter is run
@@ -1217,7 +1217,7 @@ The FullInliner replaces certain calls of certain functions
 by the function's body. This is not very helpful in most cases, because
 it just increases the code size but does not have a benefit. Furthermore,
 code is usually very expensive and we would often rather have shorter
-code than more efficient code. In same cases, though, inlining a function
+code than more efficient code. In some cases, though, inlining a function
 can have positive effects on subsequent optimizer steps. This is the case
 if one of the function arguments is a constant, for example.
 

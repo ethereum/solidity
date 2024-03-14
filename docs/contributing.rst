@@ -128,7 +128,7 @@ for the ``evmone`` shared object can be specified via the ``ETH_EVMONE`` environ
 If you do not have it installed, you can skip these tests by passing the ``--no-semantic-tests``
 flag to ``scripts/soltest.sh``.
 
-The ``evmone`` library should both end with the file name
+The ``evmone`` library should end with the file name
 extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
 
 For running SMT tests, the ``libz3`` library must be installed and locatable
@@ -552,7 +552,7 @@ topics, issues or feature implementations are debated in detail. The invitation 
 
 We are also sharing feedback surveys and other content that is relevant to language design in the forum.
 
-If you want to know where the team is standing in terms or implementing new features, you can follow the implementation status in the `Solidity Github project <https://github.com/ethereum/solidity/projects/43>`_.
+If you want to know where the team is standing in terms or implementing new features, you can follow the implementation status in the `Solidity GitHub project <https://github.com/ethereum/solidity/projects/43>`_.
 Issues in the design backlog need further specification and will either be discussed in a language design call or in a regular team call. You can
 see the upcoming changes for the next breaking release by changing from the default branch (`develop`) to the `breaking branch <https://github.com/ethereum/solidity/tree/breaking>`_.
 

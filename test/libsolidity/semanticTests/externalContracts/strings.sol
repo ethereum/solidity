@@ -49,12 +49,12 @@ contract test {
 }
 // ----
 // constructor()
-// gas irOptimized: 96420
-// gas irOptimized code: 533800
-// gas legacy: 126553
-// gas legacy code: 935400
-// gas legacyOptimized: 102933
-// gas legacyOptimized code: 616000
+// gas irOptimized: 95949
+// gas irOptimized code: 528000
+// gas legacy: 126106
+// gas legacy code: 930200
+// gas legacyOptimized: 102559
+// gas legacyOptimized code: 611400
 // toSlice(string): 0x20, 11, "hello world" -> 11, 0xa0
 // gas irOptimized: 22660
 // gas legacy: 23190

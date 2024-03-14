@@ -944,7 +944,7 @@ the arguments.
 |complex)                           |                                      |
 +-----------------------------------+--------------------------------------+
 |external functions without         |BMC: Erase state knowledge and assume |
-|implementation                     |result is nondeterminisc.             |
+|implementation                     |result is nondeterministic.           |
 |                                   |CHC: Nondeterministic summary.        |
 |                                   |Try to infer invariants that hold     |
 |                                   |after the call returns.               |

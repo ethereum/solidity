@@ -55,7 +55,7 @@ as it provides a number of other security benefits.
 What to Sign
 ------------
 
-For a contract that fulfils payments, the signed message must include:
+For a contract that fulfills payments, the signed message must include:
 
     1. The recipient's address.
     2. The amount to be transferred.
@@ -79,6 +79,10 @@ contract's address in the message, and only messages containing
 the contract's address itself will be accepted. You can find
 an example of this in the first two lines of the ``claimPayment()``
 function of the full contract at the end of this section.
+
+Furthermore, instead of destroying the contract by calling ``selfdestruct``,
+which is currently deprecated, we will disable the contract's functionalities by freezing it,
+resulting in the reversion of any call after it being frozen.
 
 Packing arguments
 -----------------
@@ -144,30 +148,54 @@ The full contract
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
-    // This will report a warning due to deprecated selfdestruct
-    contract ReceiverPays {
-        address owner = msg.sender;
 
+    contract Owned {
+        address payable owner;
+        constructor() {
+            owner = payable(msg.sender);
+        }
+    }
+
+    contract Freezable is Owned {
+        bool private _frozen = false;
+
+        modifier notFrozen() {
+            require(!_frozen, "Inactive Contract.");
+            _;
+        }
+
+        function freeze() internal {
+            if (msg.sender == owner)
+                _frozen = true;
+        }
+    }
+
+    contract ReceiverPays is Freezable {
         mapping(uint256 => bool) usedNonces;
 
         constructor() payable {}
 
-        function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) external {
+        function claimPayment(uint256 amount, uint256 nonce, bytes memory signature)
+            external
+            notFrozen
+        {
             require(!usedNonces[nonce]);
             usedNonces[nonce] = true;
 
             // this recreates the message that was signed on the client
             bytes32 message = prefixed(keccak256(abi.encodePacked(msg.sender, amount, nonce, this)));
-
             require(recoverSigner(message, signature) == owner);
-
             payable(msg.sender).transfer(amount);
         }
 
-        /// destroy the contract and reclaim the leftover funds.
-        function shutdown() external {
+        /// freeze the contract and reclaim the leftover funds.
+        function shutdown()
+            external
+            notFrozen
+        {
             require(msg.sender == owner);
-            selfdestruct(payable(msg.sender));
+            freeze();
+            payable(msg.sender).transfer(address(this).balance);
         }
 
         /// signature methods.
@@ -196,7 +224,6 @@ The full contract
             returns (address)
         {
             (uint8 v, bytes32 r, bytes32 s) = splitSignature(sig);
-
             return ecrecover(message, v, r, s);
         }
 
@@ -305,7 +332,7 @@ Closing the Payment Channel
 When Bob is ready to receive his funds, it is time to
 close the payment channel by calling a ``close`` function on the smart contract.
 Closing the channel pays the recipient the Ether they are owed and
-destroys the contract, sending any remaining Ether back to Alice. To
+deactivates the contract by freezing it, sending any remaining Ether back to Alice. To
 close the channel, Bob needs to provide a message signed by Alice.
 
 The smart contract must verify that the message contains a valid signature from the sender.
@@ -320,7 +347,7 @@ they could provide a message with a lower amount and cheat the recipient out of 
 
 The function verifies the signed message matches the given parameters.
 If everything checks out, the recipient is sent their portion of the Ether,
-and the sender is sent the rest via a ``selfdestruct``.
+and the sender is sent the remaining funds via a ``transfer``.
 You can see the ``close`` function in the full contract.
 
 Channel Expiration
@@ -342,11 +369,24 @@ The full contract
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
-    // This will report a warning due to deprecated selfdestruct
-    contract SimplePaymentChannel {
-        address payable public sender;      // The account sending payments.
-        address payable public recipient;   // The account receiving the payments.
-        uint256 public expiration;  // Timeout in case the recipient never closes.
+
+    contract Frozeable {
+        bool private _frozen = false;
+
+        modifier notFrozen() {
+            require(!_frozen, "Inactive Contract.");
+            _;
+        }
+
+        function freeze() internal {
+            _frozen = true;
+        }
+    }
+
+    contract SimplePaymentChannel is Frozeable {
+        address payable public sender;    // The account sending payments.
+        address payable public recipient; // The account receiving the payments.
+        uint256 public expiration;        // Timeout in case the recipient never closes.
 
         constructor (address payable recipientAddress, uint256 duration)
             payable
@@ -359,16 +399,23 @@ The full contract
         /// the recipient can close the channel at any time by presenting a
         /// signed amount from the sender. the recipient will be sent that amount,
         /// and the remainder will go back to the sender
-        function close(uint256 amount, bytes memory signature) external {
+        function close(uint256 amount, bytes memory signature)
+            external
+            notFrozen
+        {
             require(msg.sender == recipient);
             require(isValidSignature(amount, signature));
 
             recipient.transfer(amount);
-            selfdestruct(sender);
+            freeze();
+            sender.transfer(address(this).balance);
         }
 
         /// the sender can extend the expiration at any time
-        function extend(uint256 newExpiration) external {
+        function extend(uint256 newExpiration)
+            external
+            notFrozen
+        {
             require(msg.sender == sender);
             require(newExpiration > expiration);
 
@@ -377,9 +424,13 @@ The full contract
 
         /// if the timeout is reached without the recipient closing the channel,
         /// then the Ether is released back to the sender.
-        function claimTimeout() external {
+        function claimTimeout()
+            external
+            notFrozen
+        {
             require(block.timestamp >= expiration);
-            selfdestruct(sender);
+            freeze();
+            sender.transfer(address(this).balance);
         }
 
         function isValidSignature(uint256 amount, bytes memory signature)
@@ -388,14 +439,12 @@ The full contract
             returns (bool)
         {
             bytes32 message = prefixed(keccak256(abi.encodePacked(this, amount)));
-
             // check that the signature is from the payment sender
             return recoverSigner(message, signature) == sender;
         }
 
         /// All functions below this are just taken from the chapter
         /// 'creating and verifying signatures' chapter.
-
         function splitSignature(bytes memory sig)
             internal
             pure
@@ -411,7 +460,6 @@ The full contract
                 // final byte (first byte of the next 32 bytes)
                 v := byte(0, mload(add(sig, 96)))
             }
-
             return (v, r, s);
         }
 
@@ -421,7 +469,6 @@ The full contract
             returns (address)
         {
             (uint8 v, bytes32 r, bytes32 s) = splitSignature(sig);
-
             return ecrecover(message, v, r, s);
         }
 

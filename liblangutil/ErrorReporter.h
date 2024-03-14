@@ -137,6 +137,9 @@ public:
 	// @returns true if the maximum error count has been reached.
 	bool hasExcessiveErrors() const;
 
+	/// @returns true if there is at least one occurrence of error
+	bool hasError(ErrorId _errorId) const;
+
 	class ErrorWatcher
 	{
 	public:

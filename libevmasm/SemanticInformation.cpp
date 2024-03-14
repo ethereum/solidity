@@ -87,8 +87,8 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 	case Instruction::LOG4:
 	{
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
-		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 		assertThrow(memory(_instruction) == Effect::Read, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 		Operation op;
 		op.effect = memory(_instruction);
 		op.location = Location::Memory;
@@ -126,6 +126,7 @@ std::vector<SemanticInformation::Operation> SemanticInformation::readWriteOperat
 	{
 		assertThrow(memory(_instruction) != Effect::None, OptimizerException, "");
 		assertThrow(storage(_instruction) == Effect::None, OptimizerException, "");
+		assertThrow(transientStorage(_instruction) == Effect::None, OptimizerException, "");
 
 		Operation readOperation;
 		readOperation.effect = Read;

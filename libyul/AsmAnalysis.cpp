@@ -324,7 +324,8 @@ std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 			);
 		else if (
 			m_evmVersion.supportsTransientStorage() &&
-			_funCall.functionName.name == "tstore"_yulstring
+			_funCall.functionName.name == "tstore"_yulstring &&
+			!m_errorReporter.hasError({2394})
 		)
 			m_errorReporter.warning(
 				2394_error,
@@ -751,14 +752,11 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 	else if (_instr == evmasm::Instruction::BLOBBASEFEE && !m_evmVersion.hasBlobBaseFee())
 		errorForVM(6679_error, "only available for Cancun-compatible");
 	else if (_instr == evmasm::Instruction::BLOBHASH && !m_evmVersion.hasBlobHash())
-		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
-		yulAssert(false);
+		errorForVM(8314_error, "only available for Cancun-compatible");
 	else if (_instr == evmasm::Instruction::MCOPY && !m_evmVersion.hasMcopy())
-		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
-		yulAssert(false);
+		errorForVM(7755_error, "only available for Cancun-compatible");
 	else if ((_instr == evmasm::Instruction::TSTORE || _instr == evmasm::Instruction::TLOAD) && !m_evmVersion.supportsTransientStorage())
-		// TODO: Change this assertion to an error, similar to the ones above, when Cancun becomes the default EVM version.
-		yulAssert(false);
+		errorForVM(6243_error, "only available for Cancun-compatible");
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.error(
 			2450_error,

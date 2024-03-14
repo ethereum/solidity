@@ -97,11 +97,7 @@ object \"C_11\" {
 
             function copy_memory_to_memory_with_cleanup(src, dst, length) {
 
-                let i := 0
-                for { } lt(i, length) { i := add(i, 32) }
-                {
-                    mstore(add(dst, i), mload(add(src, i)))
-                }
+                mcopy(dst, src, length)
                 mstore(add(dst, length), 0)
 
             }

@@ -99,9 +99,7 @@ function elementfi_test
     # "ProviderError: Too Many Requests error received from eth-mainnet.alchemyapi.io"
     rm test/mockERC20YearnVaultTest.ts
 
-    # Several tests fail unless we use the exact versions hard-coded in package-lock.json
-    #neutralize_package_lock
-
+    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"

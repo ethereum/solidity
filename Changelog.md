@@ -1,16 +1,18 @@
-### 0.8.25 (unreleased)
-
-Language Features:
-
+### 0.8.25 (2023-03-14)
 
 Compiler Features:
  * Code Generator: Use ``MCOPY`` instead of ``MLOAD``/``MSTORE`` loop when copying byte arrays.
+ * EVM: Set default EVM version to ``cancun``.
+ * Yul Analyzer: Emit transient storage warning only for the first occurrence of ``tstore``.
 
 
 Bugfixes:
  * Assembler: Prevent incorrect calculation of tag sizes.
- * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
+ * Commandline Interface: Do not run IR pipeline when ``--via-ir`` is used but no output that depends on the IR is requested.
+ * EVM Assembly Import: Fix handling of missing source locations during import.
  * SMTChecker: Ensure query is properly flushed to a file before calling solver when using SMT-LIB interface.
+ * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
+ * SMTChecker: Run Eldarica only when explicitly requested with `--model-checker-solvers eld`, even when it is present on the system.
 
 
 ### 0.8.24 (2024-01-25)

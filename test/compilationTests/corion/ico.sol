@@ -372,5 +372,5 @@ contract ico is safeMath {
         return startBlock <= block.number && block.number <= icoDelay && ( ! aborted ) && ( ! closed );
     }
 
-    event EICO(address indexed Address, uint256 indexed value, address Affiliate, uint256 AffilateValue);
+    event EICO(address indexed Address, uint256 indexed value, address Affiliate, uint256 AffiliateValue);
 }

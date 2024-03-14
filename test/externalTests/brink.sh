@@ -64,6 +64,7 @@ function brink_test
     # TODO: Remove this when Brink merges https://github.com/brinktrade/brink-core/pull/52
     sed -i "s|\(function isValidSignature(bytes \)calldata\( _data, bytes \)calldata\( _signature)\)|\1memory\2memory\3|g" src/Test/MockEIP1271Validator.sol
 
+    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var" "$CURRENT_EVM_VERSION" "$extra_settings" "$extra_optimizer_settings"
