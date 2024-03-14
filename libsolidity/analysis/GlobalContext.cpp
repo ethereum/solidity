@@ -48,11 +48,8 @@ int magicVariableToID(std::string const& _name)
 		{"type", -27}, {"this", -28}, {"blobhash", -29}
 	};
 
-	auto it = magicVariables.find(_name);
-	if (it != magicVariables.end())
-	{
-		return it->second;
-	}
+	if (util::contains(magicVariables, _name))
+		return magicVariables[_name];
 
 	solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
