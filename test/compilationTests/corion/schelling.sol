@@ -521,7 +521,7 @@ contract schelling is module, announcementTypes, schellingVars {
 
             @aboveW     Weight of votes: ABOVE
             @belowW     Weight of votes: BELOW
-            @uint256    Calculatet weight
+            @uint256    Calculate weight
         */
         if ( aboveW == belowW ) {
             return aboveW + belowW;
