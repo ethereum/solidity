@@ -40,12 +40,29 @@ namespace
 int magicVariableToID(std::string const& _name)
 {
 	static std::unordered_map<std::string, int> const magicVariables = {
-		{"abi", -1}, {"addmod", -2}, {"assert", -3}, {"block", -4},
-		{"blockhash", -5}, {"ecrecover", -6}, {"gasleft", -7}, {"keccak256", -8},
-		{"msg", -15}, {"mulmod", -16}, {"now", -17}, {"require", -18},
-		{"revert", -19}, {"ripemd160", -20}, {"selfdestruct", -21}, {"sha256", -22},
-		{"sha3", -23}, {"suicide", -24}, {"super", -25}, {"tx", -26},
-		{"type", -27}, {"this", -28}, {"blobhash", -29}
+		{"abi", -1},
+        {"addmod", -2},
+        {"assert", -3},
+        {"block", -4},
+		{"blockhash", -5},
+        {"ecrecover", -6},
+        {"gasleft", -7},
+        {"keccak256", -8},
+		{"msg", -15},
+        {"mulmod", -16},
+        {"now", -17},
+        {"require", -18},
+		{"revert", -19},
+        {"ripemd160", -20},
+        {"selfdestruct", -21},
+        {"sha256", -22},
+		{"sha3", -23},
+        {"suicide", -24},
+        {"super", -25},
+        {"tx", -26},
+		{"type", -27},
+        {"this", -28},
+        {"blobhash", -29}
 	};
 
 	if (util::contains(magicVariables, _name))
