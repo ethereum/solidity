@@ -64,11 +64,11 @@ langutil::DebugData::ConstPtr Parser::createDebugData() const
 	switch (m_useSourceLocationFrom)
 	{
 		case UseSourceLocationFrom::Scanner:
-			return DebugData::create(ParserBase::currentLocation(), ParserBase::currentLocation());
+			return DebugData::create(ParserBase::currentLocation(), ParserBase::currentLocation(), {}, m_currentDebugDataAttributes);
 		case UseSourceLocationFrom::LocationOverride:
-			return DebugData::create(m_locationOverride, m_locationOverride);
+			return DebugData::create(m_locationOverride, m_locationOverride, {}, m_currentDebugDataAttributes);
 		case UseSourceLocationFrom::Comments:
-			return DebugData::create(ParserBase::currentLocation(), m_locationFromComment, m_astIDFromComment);
+			return DebugData::create(ParserBase::currentLocation(), m_locationFromComment, m_astIDFromComment, m_currentDebugDataAttributes);
 	}
 	solAssert(false, "");
 }
@@ -122,8 +122,7 @@ std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scan
 	try
 	{
 		m_scanner = _scanner;
-		if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
-			fetchDebugDataFromComment();
+		fetchDebugDataFromComment();
 		return std::make_unique<Block>(parseBlock());
 	}
 	catch (FatalError const&)
@@ -137,24 +136,20 @@ std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scan
 langutil::Token Parser::advance()
 {
 	auto const token = ParserBase::advance();
-	if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
-		fetchDebugDataFromComment();
+	fetchDebugDataFromComment();
 	return token;
 }
 
 void Parser::fetchDebugDataFromComment()
 {
-	solAssert(m_sourceNames.has_value(), "");
-
 	static std::regex const tagRegex = std::regex(
-		R"~~((?:^|\s+)(@[a-zA-Z0-9\-_]+)(?:\s+|$))~~", // tag, e.g: @src
+		R"~~((?:^|\s+)(@[a-zA-Z0-9\-\._]+)(?:\s+|$))~~", // tag, e.g: @src
 		std::regex_constants::ECMAScript | std::regex_constants::optimize
 	);
 
 	std::string_view commentLiteral = m_scanner->currentCommentLiteral();
 	std::match_results<std::string_view::const_iterator> match;
 
-	langutil::SourceLocation originLocation = m_locationFromComment;
 	// Empty for each new node.
 	std::optional<int> astID;
 
@@ -165,10 +160,14 @@ void Parser::fetchDebugDataFromComment()
 
 		if (match[1] == "@src")
 		{
-			if (auto parseResult = parseSrcComment(commentLiteral, m_scanner->currentCommentLocation()))
-				tie(commentLiteral, originLocation) = *parseResult;
-			else
-				break;
+			if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
+			{
+				solAssert(m_sourceNames.has_value(), "");
+				if (auto parseResult = parseSrcComment(commentLiteral, m_scanner->currentCommentLocation()))
+					tie(commentLiteral, m_locationFromComment) = *parseResult;
+				else
+					break;
+			}
 		}
 		else if (match[1] == "@ast-id")
 		{
@@ -177,13 +176,99 @@ void Parser::fetchDebugDataFromComment()
 			else
 				break;
 		}
+		else if (match[1] == "@debug.set")
+		{
+			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
+			{
+				commentLiteral = parseResult->first;
+				if (parseResult->second.has_value())
+					m_currentDebugDataAttributes = parseResult->second.value();
+			}
+			else
+				break;
+		}
+		else if (match[1] == "@debug.merge")
+		{
+			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
+			{
+				commentLiteral = parseResult->first;
+				if (parseResult->second.has_value())
+					m_currentDebugDataAttributes.merge_patch(parseResult->second.value());
+			}
+			else
+				break;
+		}
+		else if (match[1] == "@debug.patch")
+		{
+			if (auto parseResult = parseDebugDataAttributeOperationComment(match[1], commentLiteral, m_scanner->currentCommentLocation()))
+			{
+				commentLiteral = parseResult->first;
+				if (parseResult->second.has_value())
+					applyDebugDataAttributePatch(parseResult->second.value(), m_scanner->currentCommentLocation());
+			}
+			else
+				break;
+		}
 		else
 			// Ignore unrecognized tags.
 			continue;
 	}
 
-	m_locationFromComment = originLocation;
 	m_astIDFromComment = astID;
+}
+
+std::optional<std::pair<std::string_view, std::optional<Json>>> Parser::parseDebugDataAttributeOperationComment(
+	std::string const& _command,
+	std::string_view _arguments,
+	langutil::SourceLocation const& _location
+)
+{
+	std::optional<Json> jsonData;
+	try
+	{
+		jsonData = Json::parse(_arguments.begin(), _arguments.end(), nullptr, true);
+	}
+	catch (nlohmann::json::parse_error& e)
+	{
+		try
+		{
+			jsonData = Json::parse(_arguments.substr(0, e.byte - 1), nullptr, true);
+		}
+		catch(nlohmann::json::parse_error& ee)
+		{
+			m_errorReporter.syntaxError(
+				5721_error,
+				_location,
+			_command + ": Could not parse debug data: " + removeNlohmannInternalErrorIdentifier(ee.what())
+			);
+			jsonData.reset();
+		}
+		_arguments = _arguments.substr(e.byte - 1);
+	}
+	return {{_arguments, jsonData}};
+}
+
+void Parser::applyDebugDataAttributePatch(Json const& _jsonPatch, langutil::SourceLocation const& _location)
+{
+	try
+	{
+		if (_jsonPatch.is_object())
+		{
+			Json array = Json::array();
+			array.push_back(_jsonPatch);
+			m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(array);
+		}
+		else
+			m_currentDebugDataAttributes = m_currentDebugDataAttributes.patch(_jsonPatch);
+	}
+	catch(nlohmann::json::parse_error& ee)
+	{
+		m_errorReporter.syntaxError(
+			9426_error,
+			_location,
+			"@debug.patch: Could not patch debug data: " + removeNlohmannInternalErrorIdentifier(ee.what())
+		);
+	}
 }
 
 std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComment(

@@ -45,7 +45,7 @@ echo "Preparing input files"
 python3 ../scripts/isolate_tests.py ../test/
 
 # FIXME: These cases crash because of https://github.com/ethereum/solidity/issues/13583
-rm ./*_bytecode_too_large_*.sol ./*_combined_too_large_*.sol
+rm ./*_bytecode_too_large_*.sol ./*_combined_too_large_*.sol ./*_initcode_too_large_*.sol
 
 if [[ $binary_type == native || $binary_type == "osx_intel" ]]; then
     interface=$(echo -e "standard-json\ncli" | circleci tests split)
