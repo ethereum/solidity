@@ -39,7 +39,7 @@ namespace
 /// Magic variables get negative ids for easy differentiation
 int magicVariableToID(std::string const& _name)
 {
-	static const std::unordered_map<std::string, int> magicVariables = {
+	static std::unordered_map<std::string, int> const magicVariables = {
 		{"abi", -1}, {"addmod", -2}, {"assert", -3}, {"block", -4},
 		{"blockhash", -5}, {"ecrecover", -6}, {"gasleft", -7}, {"keccak256", -8},
 		{"msg", -15}, {"mulmod", -16}, {"now", -17}, {"require", -18},
