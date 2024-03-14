@@ -65,8 +65,8 @@ int magicVariableToID(std::string const& _name)
         {"blobhash", -29}
 	};
 
-	if (util::contains(magicVariables, _name))
-		return magicVariables.at(_name);
+	 if (magicVariables.find(_name) != magicVariables.end())
+            return magicVariables.at(_name);
 
 	solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
