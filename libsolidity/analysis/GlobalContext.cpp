@@ -65,11 +65,9 @@ int magicVariableToID(std::string const& _name)
         {"blobhash", -29}
 	};
 
-	try {
-        return magicVariables.at(_name);
-    } catch (const std::out_of_range&) {
-       solAssert(false, "Unknown magic variable: \"" + _name + "\".");
-	}
+	if (auto id = magicVariables.find(_name); id != magicVariables.end())
+		return id->second;
+	solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
 
 inline std::vector<std::shared_ptr<MagicVariableDeclaration const>> constructMagicVariables(langutil::EVMVersion _evmVersion)
