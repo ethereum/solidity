@@ -67,7 +67,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Solidity'
-project_copyright = '2016-2023, The Solidity Authors'
+project_copyright = '2016-2024, The Solidity Authors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
