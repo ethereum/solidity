@@ -62,11 +62,11 @@ class KnowledgeBase
 public:
 	/// Constructor for arbitrary value callback that allows for variable values
 	/// to change in between calls to functions of this class.
-	KnowledgeBase(std::function<AssignedValue const*(YulString)> _variableValues):
+	explicit KnowledgeBase(std::function<AssignedValue const*(YulString)> _variableValues):
 		m_variableValues(std::move(_variableValues))
 	{}
 	/// Constructor to use if source code is in SSA form and values are constant.
-	KnowledgeBase(std::map<YulString, AssignedValue> const& _ssaValues);
+	explicit KnowledgeBase(std::map<YulString, AssignedValue> const& _ssaValues);
 
 	bool knownToBeDifferent(YulString _a, YulString _b);
 	std::optional<u256> differenceIfKnownConstant(YulString _a, YulString _b);
