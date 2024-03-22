@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.11;
+pragma solidity >0.8.25;
 
 contract Test {
-	uint256 transient tlock;
-
-	modifier reentrancyGuard() {
+	modifier reentrancyGuard {
+		uint256 tlock;
+		assembly {
+			tlock := tload(0)
+		}
 		require(tlock == 0, 'Already locked');
-		tlock = 1;
+		assembly {
+			tstore(0, 1)
+		}
 		_;
-		tlock = 0;
+		assembly {
+			tstore(0, 0)
+		}
 	}
 
 	function requiresLock() external reentrancyGuard {

@@ -138,9 +138,20 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 
 	if (!_varDecl.immutable())
 	{
-		// retrieve the position of the variable
-		auto const& location = m_context.storageLocationOfVariable(_varDecl);
-		m_context << location.first << u256(location.second);
+		if (m_context.isStateVariable(&_varDecl))
+		{
+			// retrieve the position of the variable
+			auto const& location = m_context.storageLocationOfVariable(_varDecl);
+			m_context << location.first << u256(location.second);
+		}
+		else if (m_context.isTransientStateVariable(&_varDecl))
+		{
+			// retrieve the position of the variable
+			auto const& location = m_context.storageLocationOfTransientVariable(_varDecl);
+			m_context << location.first << u256(location.second);
+		}
+		else
+			solAssert(false, "");
 	}
 
 	Type const* returnType = _varDecl.annotation().type;

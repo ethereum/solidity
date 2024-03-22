@@ -2146,7 +2146,7 @@ std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> ContractType
 	std::vector<VariableDeclaration const*> variables;
 	for (ContractDefinition const* contract: m_contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 		for (VariableDeclaration const* variable: contract->stateVariables())
-			if (!(variable->isConstant() || variable->immutable()) && variable->referenceLocation() == VariableDeclaration::Location::Transient)
+			if (!(variable->isConstant() || variable->immutable()) && variable->referenceLocation() != VariableDeclaration::Location::Transient)
 				variables.push_back(variable);
 	TypePointers types;
 	for (auto variable: variables)
@@ -2166,7 +2166,7 @@ std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> ContractType
 	std::vector<VariableDeclaration const*> variables;
 	for (ContractDefinition const* contract: m_contract.annotation().linearizedBaseContracts | ranges::views::reverse) {
 		for (VariableDeclaration const* variable: contract->stateVariables())
-			if (!(variable->isConstant() || variable->immutable()) && variable->referenceLocation() != VariableDeclaration::Location::Transient)
+			if (!(variable->isConstant() || variable->immutable()) && variable->referenceLocation() == VariableDeclaration::Location::Transient)
 				variables.push_back(variable);
 	}
 	TypePointers types;
