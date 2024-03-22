@@ -110,8 +110,10 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 	else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
 		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
-	else
+	else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Transient))
 		TransientStorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	else
+		solAssert(false, "");
 }
 
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
@@ -2175,7 +2177,26 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			}
 			m_context << Instruction::KECCAK256;
 			m_context << u256(0);
-			setLValueToStorageItem(_indexAccess);
+
+			const Expression* expression = &_indexAccess.baseExpression();
+			while (true) {
+				const IndexAccess* asIndexAccess = dynamic_cast<const IndexAccess*>(expression);
+				if (asIndexAccess == nullptr)
+					break;
+				else
+					expression = &asIndexAccess->baseExpression();
+			}
+
+			const Declaration* declaration = ASTNode::referencedDeclaration(*expression);
+			if (m_context.isStateVariable(declaration))
+				setLValueToStorageItem(_indexAccess);
+			else if (m_context.isTransientStateVariable(declaration))
+				setLValueToTransientStorageItem(_indexAccess);
+			else
+			{
+
+				solAssert(false, "");
+			}
 			break;
 		}
 		case Type::Category::ArraySlice:
