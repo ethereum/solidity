@@ -816,8 +816,10 @@ std::set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocation
 {
 	using Location = VariableDeclaration::Location;
 
-	if (!hasReferenceOrMappingType() || isStateVariable() || isEventOrErrorParameter())
-		return set<Location>{ Location::Unspecified, Location::Transient };
+	if (isStateVariable())
+		return std::set<Location>{ Location::Unspecified, Location::Transient };
+	else if (!hasReferenceOrMappingType() || isEventOrErrorParameter())
+		return std::set<Location>{ Location::Unspecified };
 	else if (isCallableOrCatchParameter())
 	{
 		std::set<Location> locations{ Location::Memory };
@@ -826,9 +828,8 @@ std::set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocation
 			isInternalCallableParameter() ||
 			isLibraryFunctionParameter()
 		) {
-			locations.insert(Location::Storage);
-			locations.insert(Location::Transient);
-        }
+			locations.insert({ Location::Storage, Location::Transient });
+		}
 		if (!isTryCatchParameter() && !isConstructorParameter())
 			locations.insert(Location::CallData);
 
@@ -836,7 +837,7 @@ std::set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocation
 	}
 	else if (isLocalVariable())
 		// Further restrictions will be imposed later on.
-		return set<Location>{ Location::Memory, Location::Transient, Location::Storage, Location::CallData };
+		return std::set<Location>{ Location::Memory, Location::Transient, Location::Storage, Location::CallData };
 	else
 		// Struct members etc.
 		return std::set<Location>{ Location::Unspecified };

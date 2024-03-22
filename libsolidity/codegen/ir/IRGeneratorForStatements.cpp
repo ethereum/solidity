@@ -2300,8 +2300,8 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 			case DataLocation::Transient:
 			{
-				string slot = m_context.newYulVariable();
-				string offset = m_context.newYulVariable();
+				std::string slot = m_context.newYulVariable();
+				std::string offset = m_context.newYulVariable();
 
 				appendCode() << Whiskers(R"(
 					let <slot>, <offset> := <indexFunc>(<array>, <index>)
@@ -3075,12 +3075,12 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 
 			},
 			[&](IRLValue::Transient const& _storage) {
-				string offsetArgument;
-				optional<unsigned> offsetStatic;
+				std::string offsetArgument;
+				std::optional<unsigned> offsetStatic;
 
 				std::visit(GenericVisitor{
 					[&](unsigned _offset) { offsetStatic = _offset; },
-					[&](string const& _offset) { offsetArgument = ", " + _offset; }
+					[&](std::string const& _offset) { offsetArgument = ", " + _offset; }
 				}, _storage.offset);
 
 				appendCode() <<
@@ -3185,13 +3185,13 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 		[&](IRLValue::Transient const& _storage) {
 			if (!_lvalue.type.isValueType())
 				define(result) << _storage.slot << "\n";
-			else if (std::holds_alternative<string>(_storage.offset))
+			else if (std::holds_alternative<std::string>(_storage.offset))
 				define(result) <<
 					m_utils.readFromTransientStorageDynamic(_lvalue.type, true) <<
 					"(" <<
 					_storage.slot <<
 					", " <<
-					std::get<string>(_storage.offset) <<
+					std::get<std::string>(_storage.offset) <<
 					")\n";
 			else
 				define(result) <<

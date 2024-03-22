@@ -1055,6 +1055,8 @@ std::string ASTJsonExporter::location(VariableDeclaration::Location _location)
 		return "default";
 	case VariableDeclaration::Location::Storage:
 		return "storage";
+	case VariableDeclaration::Location::Transient:
+		return "transient";
 	case VariableDeclaration::Location::Memory:
 		return "memory";
 	case VariableDeclaration::Location::CallData:

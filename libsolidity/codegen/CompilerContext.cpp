@@ -76,7 +76,7 @@ void CompilerContext::addTransientStateVariable(
 	unsigned _byteOffset
 )
 {
-	m_transientStateVariables[&_declaration] = make_pair(_storageOffset, _byteOffset);
+	m_transientStateVariables[&_declaration] = std::make_pair(_storageOffset, _byteOffset);
 }
 
 void CompilerContext::addImmutable(VariableDeclaration const& _variable)
@@ -335,7 +335,7 @@ std::pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration
 	return it->second;
 }
 
-pair<u256, unsigned> CompilerContext::storageLocationOfTransientVariable(Declaration const& _declaration) const
+std::pair<u256, unsigned> CompilerContext::storageLocationOfTransientVariable(Declaration const& _declaration) const
 {
 	auto it = m_transientStateVariables.find(&_declaration);
 	solAssert(it != m_transientStateVariables.end(), "Variable not found in transient storage.");

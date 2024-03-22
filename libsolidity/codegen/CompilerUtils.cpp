@@ -1247,7 +1247,7 @@ void CompilerUtils::convertType(
 					{
 						solAssert(!member.type->containsNestedMapping());
 						// TODO(conner): use transient storage offset
-						pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
+						std::pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
 						_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						_context << u256(offsets.second);
 						TransientStorageItem(_context, *member.type).retrieveValue(SourceLocation(), true);

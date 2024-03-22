@@ -420,7 +420,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					{
 						// TODO(conner): use transient offsets
 						// stack layout: source_ref target_ref
-						pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
+						std::pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
 						m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						m_context << u256(offsets.second);
 						// stack: source_ref target_ref source_member_ref source_member_off
@@ -647,7 +647,7 @@ void TransientStorageItem::storeValue(Type const& _sourceType, SourceLocation co
 					_sourceType.isImplicitlyConvertibleTo(*m_dataType),
 					"function item stored but target is not implicitly convertible to source"
 				);
-				solAssert(!fun->bound(), "");
+				solAssert(!fun->hasBoundFirstArgument(), "");
 				if (fun->kind() == FunctionType::Kind::External)
 				{
 					solAssert(fun->sizeOnStack() == 2, "");
@@ -729,7 +729,7 @@ void TransientStorageItem::storeValue(Type const& _sourceType, SourceLocation co
 					if (sourceType.location() == DataLocation::Storage)
 					{
 						// stack layout: source_ref target_ref
-						pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
+						std::pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
 						m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						m_context << u256(offsets.second);
 						// stack: source_ref target_ref source_member_ref source_member_off
@@ -740,7 +740,7 @@ void TransientStorageItem::storeValue(Type const& _sourceType, SourceLocation co
 					{
 						// TODO(conner): use transient offsets
 						// stack layout: source_ref target_ref
-						pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
+						std::pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
 						m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						m_context << u256(offsets.second);
 						// stack: source_ref target_ref source_member_ref source_member_off
@@ -757,7 +757,7 @@ void TransientStorageItem::storeValue(Type const& _sourceType, SourceLocation co
 						// stack layout: source_ref target_ref source_value...
 					}
 					unsigned stackSize = sourceMemberType->sizeOnStack();
-					pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
+					std::pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
 					m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
 					m_context << u256(offsets.second);
 					// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
@@ -799,7 +799,7 @@ void TransientStorageItem::setToZero(SourceLocation const&, bool _removeReferenc
 			Type const* memberType = member.type;
 			if (memberType->category() == Type::Category::Mapping)
 				continue;
-			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
+			std::pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
 			m_context
 				<< offsets.first << Instruction::DUP3 << Instruction::ADD
 				<< u256(offsets.second);

@@ -453,7 +453,6 @@ bool SemanticInformation::movableApartFromEffects(Instruction _instruction)
 	case Instruction::TLOAD:
 	case Instruction::KECCAK256:
 	case Instruction::MLOAD:
-	case Instruction::TLOAD:
 		return true;
 
 	default:

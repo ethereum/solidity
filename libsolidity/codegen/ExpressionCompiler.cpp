@@ -1977,7 +1977,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		case DataLocation::Transient:
 		{
 			// TODO(conner): use transient offsets
-			pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
+			std::pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
 			m_context << offsets.first << Instruction::ADD << u256(offsets.second);
 			setLValueToTransientStorageItem(_memberAccess);
 			break;
