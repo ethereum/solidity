@@ -24,7 +24,7 @@ set -euo pipefail
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2023 solidity contributors.
+# (c) 2024 solidity contributors.
 #------------------------------------------------------------------------------
 
 (( $# == 4 )) || { >&2 echo "Wrong number of arguments."; exit 1; }
