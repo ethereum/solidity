@@ -1922,7 +1922,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ASTNode const*) const
 	if (!isString())
 	{
 		members.emplace_back("length", TypeProvider::uint256());
-		if (isDynamicallySized() && location() == DataLocation::Storage)
+		if (isDynamicallySized() && (location() == DataLocation::Storage || location() == DataLocation::Transient))
 		{
 			Type const* thisAsPointer = TypeProvider::withLocation(this, location(), true);
 			members.emplace_back("push", TypeProvider::function(
@@ -1953,7 +1953,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ASTNode const*) const
 
 Type const* ArrayType::encodingType() const
 {
-	if (location() == DataLocation::Storage)
+	if (location() == DataLocation::Storage || location() == DataLocation::Transient)
 		return TypeProvider::uint256();
 	else
 		return TypeProvider::withLocation(this, DataLocation::Memory, true);
@@ -1961,7 +1961,7 @@ Type const* ArrayType::encodingType() const
 
 Type const* ArrayType::decodingType() const
 {
-	if (location() == DataLocation::Storage)
+	if (location() == DataLocation::Storage || location() == DataLocation::Transient)
 		return TypeProvider::uint256();
 	else
 		return this;
@@ -1983,7 +1983,7 @@ TypeResult ArrayType::interfaceType(bool _inLibrary) const
 		solAssert(!baseInterfaceType.message().empty(), "Expected detailed error message!");
 		result = baseInterfaceType;
 	}
-	else if (_inLibrary && location() == DataLocation::Storage)
+	else if (_inLibrary && location() == DataLocation::Storage || location() == DataLocation::Transient)
 		result = this;
 	else if (m_arrayKind != ArrayKind::Ordinary)
 		result = TypeProvider::withLocation(this, DataLocation::Memory, true);

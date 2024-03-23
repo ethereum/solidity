@@ -41,6 +41,7 @@ using namespace solidity::evmasm;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 
+// [Amxx] TODO: transient version
 void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const
 {
 	// this copies source to target and also clears target if it was larger
@@ -601,6 +602,7 @@ void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 	);
 }
 
+// [Amxx] TODO: transient?
 void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
@@ -640,6 +642,7 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 	m_context << Instruction::POP;
 }
 
+// [Amxx] TODO: transient?
 void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 {
 	Type const* type = &_typeIn;
@@ -790,6 +793,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 	);
 }
 
+// [Amxx] TODO: transient?
 void ArrayUtils::incrementDynamicArraySize(ArrayType const& _type) const
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
@@ -834,6 +838,7 @@ void ArrayUtils::incrementDynamicArraySize(ArrayType const& _type) const
 		})", {"ref"});
 }
 
+// [Amxx] TODO: transient?
 void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
@@ -965,10 +970,13 @@ void ArrayUtils::clearStorageLoop(Type const* _type) const
 	);
 }
 
+// [Amxx] TODO: transient?
 void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) const
 {
-	if (_arrayType.location() == DataLocation::Storage)
+	switch (_arrayType.location())
 	{
+	case DataLocation::Storage:
+	case DataLocation::Transient:
 		if (_arrayType.baseType()->storageSize() <= 1)
 		{
 			unsigned baseBytes = _arrayType.baseType()->storageBytes();
@@ -984,9 +992,8 @@ void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) con
 		}
 		else
 			m_context << _arrayType.baseType()->storageSize() << Instruction::MUL;
-	}
-	else
-	{
+		break;
+	default:
 		if (!_arrayType.isByteArrayOrString())
 		{
 			if (_arrayType.location() == DataLocation::Memory)
@@ -999,6 +1006,7 @@ void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) con
 			m_context << u256(31) << Instruction::ADD
 				<< u256(32) << Instruction::DUP1
 				<< Instruction::SWAP2 << Instruction::DIV << Instruction::MUL;
+		break;
 	}
 }
 

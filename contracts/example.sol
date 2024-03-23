@@ -2,7 +2,10 @@
 pragma solidity >0.8.25;
 
 contract Test {
-    struct MyStruct { uint256 value; }
+    struct MyStruct {
+        uint256 v;
+        // mapping(address => uint256) m; // ERROR
+    }
 
     uint256                                         transient v_t;
     uint256                                                   v_s;
@@ -16,18 +19,20 @@ contract Test {
     mapping(address => mapping(uint256 => uint256))           m2_s;
 
     function set(uint256 value) public {
-        v_t = value;
-        v_s = value;
-        // a_t.push(value); // Error: Member "push" is not available in uint256[] transient pointer outside of storage.
-        a_s.push(value);
-        a_t[0] = value;
-        a_s[0] = value;
-        s_t.value = value;
-        s_s.value = value;
-        m_t[msg.sender] = value;
-        m_s[msg.sender] = value;
-        m2_t[msg.sender][0] = value;
-        m2_s[msg.sender][0] = value;
+        // v_t = value;
+        // v_s = value;
+        // a_t.push(value);
+        // a_s.push(value);
+        // a_t[0] = value;
+        // a_s[0] = value;
+        // s_t.v = value;
+        // s_s.v = value;
+        // s_t.m[msg.sender] = value;
+        // s_s.m[msg.sender] = value;
+        // m_t[msg.sender] = value;
+        // m_s[msg.sender] = value;
+        // m2_t[msg.sender][0] = value;
+        // m2_s[msg.sender][0] = value;
 
         // MyStruct transient s;
         // assembly { s.slot := 0 } // Error: The suffix ".slot" is not supported by this variable or type.
