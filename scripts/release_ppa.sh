@@ -23,22 +23,22 @@
 ## Additionally the following entries in /etc/dput.cf are required:
 ##
 ##  [ethereum-dev]
-##  fqdn			= ppa.launchpad.net
-##  method			= ftp
-##  incoming		= ~ethereum/ethereum-dev
-##  login			= anonymous
+##  fqdn            = ppa.launchpad.net
+##  method          = ftp
+##  incoming        = ~ethereum/ethereum-dev
+##  login           = anonymous
 ##
 ##  [ethereum]
-##  fqdn			= ppa.launchpad.net
-##  method			= ftp
-##  incoming		= ~ethereum/ethereum
-##  login			= anonymous
+##  fqdn            = ppa.launchpad.net
+##  method          = ftp
+##  incoming        = ~ethereum/ethereum
+##  login           = anonymous
 ##
 ##  [ethereum-static]
-##  fqdn			= ppa.launchpad.net
-##  method			= ftp
-##  incoming		= ~ethereum/ethereum-static
-##  login			= anonymous
+##  fqdn            = ppa.launchpad.net
+##  method          = ftp
+##  incoming        = ~ethereum/ethereum-static
+##  login           = anonymous
 ##
 ##############################################################################
 
@@ -68,7 +68,7 @@ packagename=solc
 # This needs to be a still active release
 static_build_distribution=focal
 
-DISTRIBUTIONS="focal jammy lunar mantic"
+DISTRIBUTIONS="focal jammy mantic"
 
 if is_release
 then
