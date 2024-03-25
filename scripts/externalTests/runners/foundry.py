@@ -101,7 +101,6 @@ class FoundryRunner(BaseRunner):
     @BaseRunner.enter_test_dir
     def compile(self, preset: SettingsPreset):
         """Compile project"""
-
         # Set the Foundry profile environment variable
         self.env.update({"FOUNDRY_PROFILE": self.profile_name(preset)})
         run_forge_command("forge build", self.env)

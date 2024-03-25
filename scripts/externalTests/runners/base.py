@@ -31,6 +31,7 @@ from tempfile import mkdtemp
 from textwrap import dedent
 from typing import List
 from typing import Set
+from typing import Optional
 
 from test_helpers import download_project
 from test_helpers import get_solc_short_version
@@ -51,6 +52,7 @@ class TestConfig:
     compile_only_presets: List[SettingsPreset] = field(default_factory=list)
     settings_presets: List[SettingsPreset] = field(default_factory=lambda: list(SettingsPreset))
     evm_version: str = field(default=CURRENT_EVM_VERSION)
+    test_dir: Optional[Path] = field(default=None)
 
     def selected_presets(self) -> Set[SettingsPreset]:
         return set(self.compile_only_presets + self.settings_presets)
@@ -70,7 +72,9 @@ class BaseRunner(metaclass=ABCMeta):
         self.presets = parse_custom_presets(args.selected_presets) if args.selected_presets else config.selected_presets()
         self.env = os.environ.copy()
         self.tmp_dir = mkdtemp(prefix=f"ext-test-{config.name}-")
-        self.test_dir = Path(self.tmp_dir) / "ext"
+        self.download_dir = Path(self.tmp_dir) / "ext"
+        # test directory relative to the project root
+        self.test_dir = self.download_dir / config.test_dir if config.test_dir else self.download_dir
 
     def setup_solc(self) -> str:
         if self.solc_binary_type == "solcjs":
@@ -133,7 +137,7 @@ def run_test(runner: BaseRunner):
     print(f"Using compiler version {solc_version}")
 
     # Download project
-    download_project(runner.test_dir, runner.config.repo_url, runner.config.ref)
+    download_project(runner.download_dir, runner.config.repo_url, runner.config.ref)
 
     # Configure run environment
     runner.setup_environment()

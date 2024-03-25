@@ -96,14 +96,14 @@ def parse_command_line(description: str, args: List[str]):
     return arg_parser.parse_args(args)
 
 
-def download_project(test_dir: Path, repo_url: str, ref: str = "<latest-release>"):
+def download_project(download_dir: Path, repo_url: str, ref: str = "<latest-release>"):
     print(f"Cloning {repo_url}...")
     # Clone the repo ignoring all blobs until needed by git.
     # This allows access to commit history but with a fast initial clone
-    subprocess.run(["git", "clone", "--filter", "blob:none", repo_url, test_dir.resolve()], check=True)
-    if not test_dir.exists():
+    subprocess.run(["git", "clone", "--filter", "blob:none", repo_url, download_dir.resolve()], check=True)
+    if not download_dir.exists():
         raise RuntimeError("Failed to clone the project.")
-    os.chdir(test_dir)
+    os.chdir(download_dir)
 
     # If the ref is '<latest-release>' try to use the latest tag as ref
     # NOTE: Sadly this will not work with monorepos and may not always
@@ -120,7 +120,7 @@ def download_project(test_dir: Path, repo_url: str, ref: str = "<latest-release>
     print(f"Using ref: {ref}")
     subprocess.run(["git", "checkout", ref], check=True)
 
-    if (test_dir / ".gitmodules").exists():
+    if (download_dir / ".gitmodules").exists():
         subprocess.run(["git", "submodule", "update", "--init"], check=True)
 
     print(f"Current commit hash: {git_commit_hash()}")
