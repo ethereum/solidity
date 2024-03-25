@@ -36,6 +36,7 @@
 
 #include <boost/rational.hpp>
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <optional>
@@ -342,6 +343,12 @@ public:
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.
 	virtual bool dataStoredIn(DataLocation) const { return false; }
+	/// @returns true if this is a non-value type and the data of this type is stored at any
+	/// of the given locations.
+	virtual bool dataStoredInAnyOf(std::initializer_list<DataLocation> _locations) const
+	{
+		return std::any_of(std::begin(_locations), std::end(_locations), [this](DataLocation location) { return this->dataStoredIn(location); });
+	}
 
 	/// Returns the list of all members of this type. Default implementation: no members apart from attached functions.
 	/// @param _currentScope scope in which the members are accessed.

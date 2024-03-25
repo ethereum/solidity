@@ -676,7 +676,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		BoolResult result = referenceType->validForLocation(referenceType->location());
 		if (result)
 		{
-			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && (referenceType->location() == DataLocation::Storage || referenceType->location() == DataLocation::Transient));
+			bool isLibraryStorageParameter = _variable.isLibraryFunctionParameter() && referenceType->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient });
 			// We skip the calldata check for abstract contract constructors.
 			bool isAbstractConstructorParam = _variable.isConstructorParameter() && m_currentContract && m_currentContract->abstract();
 			bool callDataCheckRequired =
@@ -1994,16 +1994,12 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 			{
 				if (auto resultArrayType = dynamic_cast<ArrayType const*>(resultType))
 					solAssert(
+						!argArrayType->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }) ||
 						(
-							argArrayType->location() != DataLocation::Storage &&
-							argArrayType->location() != DataLocation::Transient
-						) || (
+							resultArrayType->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }) &&
 							(
 								resultArrayType->isPointer() ||
 								(argArrayType->isByteArrayOrString() && resultArrayType->isByteArrayOrString())
-							) && (
-								resultArrayType->location() == DataLocation::Storage ||
-								resultArrayType->location() == DataLocation::Transient
 							)
 						),
 						"Invalid explicit conversion to storage type."
@@ -3493,7 +3489,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	case Type::Category::ArraySlice:
 	{
 		auto const& arrayType = dynamic_cast<ArraySliceType const&>(*baseType).arrayType();
-		if (arrayType.location() != DataLocation::CallData || !arrayType.isDynamicallySized())
+		if (!arrayType.dataStoredIn(DataLocation::CallData) || !arrayType.isDynamicallySized())
 			m_errorReporter.typeError(4802_error, _access.location(), "Index access is only implemented for slices of dynamic calldata arrays.");
 		baseType = &arrayType;
 		[[fallthrough]];
@@ -3520,7 +3516,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 				}
 		}
 		resultType = actualType.baseType();
-		isLValue = actualType.location() != DataLocation::CallData;
+		isLValue = !actualType.dataStoredIn(DataLocation::CallData);
 		break;
 	}
 	case Type::Category::Mapping:
@@ -3634,7 +3630,7 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	else if (!(arrayType = dynamic_cast<ArrayType const*>(exprType)))
 		m_errorReporter.fatalTypeError(4781_error, _access.location(), "Index range access is only possible for arrays and array slices.");
 
-	if (arrayType->location() != DataLocation::CallData || !arrayType->isDynamicallySized())
+	if (!arrayType->dataStoredIn(DataLocation::CallData) || !arrayType->isDynamicallySized())
 		m_errorReporter.typeError(1227_error, _access.location(), "Index range access is only supported for dynamic calldata arrays.");
 	else if (arrayType->baseType()->isDynamicallyEncoded())
 		m_errorReporter.typeError(2148_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");

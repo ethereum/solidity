@@ -23,9 +23,9 @@ contract Test {
     }
 
     function set(uint256 value) public {
-        v_t += value;
+        // v_t += value;
         // v_s += value;
-        // a_t.push(value); // length pushed to transient but value pushed to storage :/
+        // a_t.push(value);
         // a_s.push(value);
         // a_t[0] += value;
         // a_s[0] += value;

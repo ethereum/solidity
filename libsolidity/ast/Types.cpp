@@ -1927,7 +1927,7 @@ MemberList::MemberMap ArrayType::nativeMembers(ASTNode const*) const
 	if (!isString())
 	{
 		members.emplace_back("length", TypeProvider::uint256());
-		if (isDynamicallySized() && (location() == DataLocation::Storage || location() == DataLocation::Transient))
+		if (isDynamicallySized() && dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }))
 		{
 			Type const* thisAsPointer = TypeProvider::withLocation(this, location(), true);
 			members.emplace_back("push", TypeProvider::function(
@@ -1958,18 +1958,30 @@ MemberList::MemberMap ArrayType::nativeMembers(ASTNode const*) const
 
 Type const* ArrayType::encodingType() const
 {
-	if (location() == DataLocation::Storage || location() == DataLocation::Transient)
-		return TypeProvider::uint256();
-	else
-		return TypeProvider::withLocation(this, DataLocation::Memory, true);
+	switch (location())
+	{
+		case DataLocation::CallData:
+		case DataLocation::Memory:
+			return TypeProvider::withLocation(this, DataLocation::Memory, true);
+		case DataLocation::Storage:
+		case DataLocation::Transient:
+			return TypeProvider::uint256();
+	}
+	solAssert(false, "");
 }
 
 Type const* ArrayType::decodingType() const
 {
-	if (location() == DataLocation::Storage || location() == DataLocation::Transient)
-		return TypeProvider::uint256();
-	else
-		return this;
+	switch (location())
+	{
+		case DataLocation::CallData:
+		case DataLocation::Memory:
+			return this;
+		case DataLocation::Storage:
+		case DataLocation::Transient:
+			return TypeProvider::uint256();
+	}
+	solAssert(false, "");
 }
 
 TypeResult ArrayType::interfaceType(bool _inLibrary) const
@@ -1988,7 +2000,7 @@ TypeResult ArrayType::interfaceType(bool _inLibrary) const
 		solAssert(!baseInterfaceType.message().empty(), "Expected detailed error message!");
 		result = baseInterfaceType;
 	}
-	else if (_inLibrary && (location() == DataLocation::Storage || location() == DataLocation::Transient))
+	else if (_inLibrary && dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }))
 		result = this;
 	else if (m_arrayKind != ArrayKind::Ordinary)
 		result = TypeProvider::withLocation(this, DataLocation::Memory, true);
@@ -2386,7 +2398,7 @@ MemberList::MemberMap StructType::nativeMembers(ASTNode const*) const
 	{
 		Type const* type = variable->annotation().type;
 		solAssert(type, "");
-		solAssert(location() == DataLocation::Storage || location() == DataLocation::Transient || !type->containsNestedMapping(), "");
+		solAssert(dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }) || !type->containsNestedMapping(), "");
 		members.emplace_back(
 			variable.get(),
 			copyForLocationIfReference(type)
@@ -2434,7 +2446,7 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 
 	TypeResult result{nullptr};
 
-	if (recursive() && !(_inLibrary && (location() == DataLocation::Storage || location() == DataLocation::Transient)))
+	if (recursive() && !(_inLibrary && dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient})))
 		return TypeResult::err(
 			"Recursive structs can only be passed as storage pointers to libraries, "
 			"not as memory objects to contract functions."
