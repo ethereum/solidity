@@ -322,20 +322,21 @@ std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
 				"Future changes to the EVM might further reduce the functionality of the opcode."
 			);
-		else if (
-			m_evmVersion.supportsTransientStorage() &&
-			_funCall.functionName.name == "tstore"_yulstring &&
-			!m_errorReporter.hasError({2394})
-		)
-			m_errorReporter.warning(
-				2394_error,
-				nativeLocationOf(_funCall.functionName),
-				"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
-				"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
-				"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
-				"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
-				"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
-			);
+		/// TODO: triggering that in CODEGEN is problematic. Disabling.
+		// else if (
+		// 	m_evmVersion.supportsTransientStorage() &&
+		// 	_funCall.functionName.name == "tstore"_yulstring &&
+		// 	!m_errorReporter.hasError({2394})
+		// )
+		// 	m_errorReporter.warning(
+		// 		2394_error,
+		// 		nativeLocationOf(_funCall.functionName),
+		// 		"Transient storage as defined by EIP-1153 can break the composability of smart contracts: "
+		// 		"Since transient storage is cleared only at the end of the transaction and not at the end of the outermost call frame to the contract within a transaction, "
+		// 		"your contract may unintentionally misbehave when invoked multiple times in a complex transaction. "
+		// 		"To avoid this, be sure to clear all transient storage at the end of any call to your contract. "
+		// 		"The use of transient storage for reentrancy guards that are cleared at the end of the call is safe."
+		// 	);
 
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;

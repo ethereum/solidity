@@ -113,7 +113,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	Type const* targetType = &_targetType;
 	Type const* sourceType = &_sourceType;
 	m_context.callLowLevelFunction(
-		"$copyArrayToStorage_" + sourceType->identifier() + "_to_" + targetType->identifier(),
+		"$copyArrayToStorage_" + _sourceType.richIdentifier() + "_to_" + _targetType.richIdentifier(),
 		3,
 		1,
 		[=](CompilerContext& _context)
@@ -292,9 +292,9 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			_context << Instruction::POP << Instruction::SWAP1 << Instruction::POP;
 			// stack: target_ref target_data_end target_data_pos_updated
 			if (targetBaseType->storageBytes() < 32)
-				utils.clearStorageLoop(TypeProvider::uint256());
+				utils.clearStorageLoop(ArrayType(_targetType.location(), TypeProvider::uint256()));
 			else
-				utils.clearStorageLoop(targetBaseType);
+				utils.clearStorageLoop(_targetType);
 			_context << Instruction::POP;
 		}
 	);
@@ -536,18 +536,16 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 	}
 }
 
-void ArrayUtils::clearArray(ArrayType const& _typeIn) const
+void ArrayUtils::clearArray(ArrayType const& _type) const
 {
-	Type const* type = &_typeIn;
 	m_context.callLowLevelFunction(
-		"$clearArray_" + _typeIn.identifier(),
+		"$clearArray_" + _type.richIdentifier(),
 		2,
 		0,
-		[type](CompilerContext& _context)
+		[&_type](CompilerContext& _context)
 		{
-			ArrayType const& _type = dynamic_cast<ArrayType const&>(*type);
 			unsigned stackHeightStart = _context.stackHeight();
-			solAssert(_type.location() == DataLocation::Storage, "");
+			solAssert(_type.location() == DataLocation::Storage || _type.location() == DataLocation::Transient, "");
 			if (_type.baseType()->storageBytes() < 32)
 			{
 				solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
@@ -578,13 +576,19 @@ void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 				for (unsigned i = 1; i < _type.length(); ++i)
 				{
 					_context << u256(0);
-					StorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), false);
+					if (_type.location() == DataLocation::Storage)
+						StorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), false);
+					else
+						TransientStorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), false);
 					_context
 						<< Instruction::POP
 						<< u256(_type.baseType()->storageSize()) << Instruction::ADD;
 				}
 				_context << u256(0);
-				StorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), true);
+				if (_type.location() == DataLocation::Storage)
+					StorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), true);
+				else
+					TransientStorageItem(_context, *_type.baseType()).setToZero(SourceLocation(), true);
 			}
 			else
 			{
@@ -592,9 +596,9 @@ void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::ADD << Instruction::SWAP1;
 				if (_type.baseType()->storageBytes() < 32)
-					ArrayUtils(_context).clearStorageLoop(TypeProvider::uint256());
+					ArrayUtils(_context).clearStorageLoop(ArrayType(_type.location(), TypeProvider::uint256()));
 				else
-					ArrayUtils(_context).clearStorageLoop(_type.baseType());
+					ArrayUtils(_context).clearStorageLoop(_type);
 				_context << Instruction::POP;
 			}
 			solAssert(_context.stackHeight() == stackHeightStart - 2, "");
@@ -634,25 +638,23 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 		<< Instruction::SWAP1;
 	// stack: data_pos_end data_pos
 	if (_type.storageStride() < 32)
-		clearStorageLoop(TypeProvider::uint256());
+		clearStorageLoop(ArrayType(_type.location(), TypeProvider::uint256()));
 	else
-		clearStorageLoop(_type.baseType());
+		clearStorageLoop(_type);
 	// cleanup
 	m_context << endTag;
 	m_context << Instruction::POP;
 }
 
 // [Amxx] TODO: transient?
-void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
+void ArrayUtils::resizeDynamicArray(ArrayType const& _type) const
 {
-	Type const* type = &_typeIn;
 	m_context.callLowLevelFunction(
-		"$resizeDynamicArray_" + _typeIn.identifier(),
+		"$resizeDynamicArray_" + _type.richIdentifier(),
 		2,
 		0,
-		[type](CompilerContext& _context)
+		[&_type](CompilerContext& _context)
 		{
-			ArrayType const& _type = dynamic_cast<ArrayType const&>(*type);
 			solAssert(_type.location() == DataLocation::Storage, "");
 			solAssert(_type.isDynamicallySized(), "");
 			if (!_type.isByteArrayOrString() && _type.baseType()->storageBytes() < 32)
@@ -742,7 +744,7 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 				ArrayUtils(_context).convertLengthToSize(_type);
 				_context << Instruction::DUP2 << Instruction::ADD << Instruction::SWAP1;
 				// stack: ref new_length current_length first_word data_location_end data_location
-				ArrayUtils(_context).clearStorageLoop(TypeProvider::uint256());
+				ArrayUtils(_context).clearStorageLoop(ArrayType(_type.location(), TypeProvider::uint256())); // TODO check location
 				_context << Instruction::POP;
 				// stack: ref new_length current_length first_word
 				solAssert(_context.stackHeight() - stackHeightStart == 4 - 2, "3");
@@ -781,9 +783,9 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 			_context << Instruction::SWAP2 << Instruction::ADD;
 			// stack: ref new_length delete_end delete_start
 			if (_type.storageStride() < 32)
-				ArrayUtils(_context).clearStorageLoop(TypeProvider::uint256());
+				ArrayUtils(_context).clearStorageLoop(ArrayType(_type.location(), TypeProvider::uint256()));
 			else
-				ArrayUtils(_context).clearStorageLoop(_type.baseType());
+				ArrayUtils(_context).clearStorageLoop(_type); // TODO
 
 			_context << resizeEnd;
 			// cleanup
@@ -793,151 +795,282 @@ void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 	);
 }
 
-// [Amxx] TODO: transient?
 void ArrayUtils::incrementDynamicArraySize(ArrayType const& _type) const
 {
-	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
 	if (!_type.isByteArrayOrString() && _type.baseType()->storageBytes() < 32)
 		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
 
-	if (_type.isByteArrayOrString())
+	switch (_type.location())
 	{
-		// We almost always just add 2 (length of byte arrays is shifted left by one)
-		// except for the case where we transition from a short byte array
-		// to a long byte array, there we have to copy.
-		// This happens if the length is exactly 31, which means that the
-		// lowest-order byte (we actually use a mask with fewer bits) must
-		// be (31*2+0) = 62
+	case DataLocation::Storage:
+		if (_type.isByteArrayOrString())
+		{
+			// We almost always just add 2 (length of byte arrays is shifted left by one)
+			// except for the case where we transition from a short byte array
+			// to a long byte array, there we have to copy.
+			// This happens if the length is exactly 31, which means that the
+			// lowest-order byte (we actually use a mask with fewer bits) must
+			// be (31*2+0) = 62
 
-		m_context << Instruction::DUP1 << Instruction::SLOAD << Instruction::DUP1;
-		m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
-		m_context.appendInlineAssembly(R"({
-			// We have to copy if length is exactly 31, because that marks
-			// the transition between in-place and out-of-place storage.
-			switch length
-			case 31
-			{
-				mstore(0, ref)
-				let data_area := keccak256(0, 0x20)
-				sstore(data_area, and(data, not(0xff)))
-				// Set old length in new format (31 * 2 + 1)
-				data := 63
-			}
-			sstore(ref, add(data, 2))
-			// return new length in ref
-			ref := add(length, 1)
-		})", {"ref", "data", "length"});
-		m_context << Instruction::POP << Instruction::POP;
+			m_context << Instruction::DUP1 << Instruction::SLOAD << Instruction::DUP1;
+			m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
+			m_context.appendInlineAssembly(R"({
+				// We have to copy if length is exactly 31, because that marks
+				// the transition between in-place and out-of-place storage.
+				switch length
+				case 31
+				{
+					mstore(0, ref)
+					let data_area := keccak256(0, 0x20)
+					sstore(data_area, and(data, not(0xff)))
+					// Set old length in new format (31 * 2 + 1)
+					data := 63
+				}
+				sstore(ref, add(data, 2))
+				// return new length in ref
+				ref := add(length, 1)
+			})", {"ref", "data", "length"});
+			m_context << Instruction::POP << Instruction::POP;
+		}
+		else
+			m_context.appendInlineAssembly(R"({
+				let new_length := add(sload(ref), 1)
+				sstore(ref, new_length)
+				ref := new_length
+			})", {"ref"});
+		break;
+	case DataLocation::Transient:
+		if (_type.isByteArrayOrString())
+		{
+			// We almost always just add 2 (length of byte arrays is shifted left by one)
+			// except for the case where we transition from a short byte array
+			// to a long byte array, there we have to copy.
+			// This happens if the length is exactly 31, which means that the
+			// lowest-order byte (we actually use a mask with fewer bits) must
+			// be (31*2+0) = 62
+
+			m_context << Instruction::DUP1 << Instruction::TLOAD << Instruction::DUP1;
+			m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
+			m_context.appendInlineAssembly(R"({
+				// We have to copy if length is exactly 31, because that marks
+				// the transition between in-place and out-of-place storage.
+				switch length
+				case 31
+				{
+					mstore(0, ref)
+					let data_area := keccak256(0, 0x20)
+					tstore(data_area, and(data, not(0xff)))
+					// Set old length in new format (31 * 2 + 1)
+					data := 63
+				}
+				tstore(ref, add(data, 2))
+				// return new length in ref
+				ref := add(length, 1)
+			})", {"ref", "data", "length"});
+			m_context << Instruction::POP << Instruction::POP;
+		}
+		else
+			m_context.appendInlineAssembly(R"({
+				let new_length := add(tload(ref), 1)
+				tstore(ref, new_length)
+				ref := new_length
+			})", {"ref"});
+		break;
+	default:
+		solAssert(false, "");
 	}
-	else
-		m_context.appendInlineAssembly(R"({
-			let new_length := add(sload(ref), 1)
-			sstore(ref, new_length)
-			ref := new_length
-		})", {"ref"});
 }
 
-// [Amxx] TODO: transient?
 void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 {
-	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
 	if (!_type.isByteArrayOrString() && _type.baseType()->storageBytes() < 32)
 		solAssert(_type.baseType()->isValueType(), "Invalid storage size for non-value type.");
 
-	if (_type.isByteArrayOrString())
+	switch (_type.location())
 	{
-		m_context << Instruction::DUP1 << Instruction::SLOAD << Instruction::DUP1;
-		m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
-		util::Whiskers code(R"({
-			if iszero(length) {
-				mstore(0, <panicSelector>)
-				mstore(4, <emptyArrayPop>)
-				revert(0, 0x24)
-			}
-			switch gt(length, 31)
-			case 0 {
-				// short byte array
-				// Zero-out the suffix including the least significant byte.
-				let mask := sub(exp(0x100, sub(33, length)), 1)
-				length := sub(length, 1)
-				slot_value := or(and(not(mask), slot_value), mul(length, 2))
-			}
-			case 1 {
-				// long byte array
-				mstore(0, ref)
-				let slot := keccak256(0, 0x20)
-				switch length
-				case 32
-				{
-					let data := sload(slot)
-					sstore(slot, 0)
-					data := and(data, not(0xff))
-					slot_value := or(data, 62)
-				}
-				default
-				{
-					let offset_inside_slot := and(sub(length, 1), 0x1f)
-					slot := add(slot, div(sub(length, 1), 32))
-					let data := sload(slot)
-
-					// Zero-out the suffix of the byte array by masking it.
-					// ((1<<(8 * (32 - offset))) - 1)
-					let mask := sub(exp(0x100, sub(32, offset_inside_slot)), 1)
-					data := and(not(mask), data)
-					sstore(slot, data)
-
-					// Reduce the length by 1
-					slot_value := sub(slot_value, 2)
-				}
-			}
-			sstore(ref, slot_value)
-		})");
-		code("panicSelector", util::selectorFromSignatureU256("Panic(uint256)").str());
-		code("emptyArrayPop", std::to_string(unsigned(util::PanicCode::EmptyArrayPop)));
-		m_context.appendInlineAssembly(code.render(), {"ref", "slot_value", "length"});
-		m_context << Instruction::POP << Instruction::POP << Instruction::POP;
-	}
-	else
-	{
-		// stack: ArrayReference
-		retrieveLength(_type);
-		// stack: ArrayReference oldLength
-		m_context << Instruction::DUP1;
-		// stack: ArrayReference oldLength oldLength
-		m_context << Instruction::ISZERO;
-		m_context.appendConditionalPanic(util::PanicCode::EmptyArrayPop);
-
-		// Stack: ArrayReference oldLength
-		m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
-		// Stack ArrayReference newLength
-
-		if (_type.baseType()->category() != Type::Category::Mapping)
+	case DataLocation::Storage:
+		if (_type.isByteArrayOrString())
 		{
-			m_context << Instruction::DUP2 << Instruction::DUP2;
-			// Stack ArrayReference newLength ArrayReference newLength;
-			accessIndex(_type, false);
-			// Stack: ArrayReference newLength storage_slot byte_offset
-			StorageItem(m_context, *_type.baseType()).setToZero(SourceLocation(), true);
-		}
+			m_context << Instruction::DUP1 << Instruction::SLOAD << Instruction::DUP1;
+			m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
+			util::Whiskers code(R"({
+				if iszero(length) {
+					mstore(0, <panicSelector>)
+					mstore(4, <emptyArrayPop>)
+					revert(0, 0x24)
+				}
+				switch gt(length, 31)
+				case 0 {
+					// short byte array
+					// Zero-out the suffix including the least significant byte.
+					let mask := sub(exp(0x100, sub(33, length)), 1)
+					length := sub(length, 1)
+					slot_value := or(and(not(mask), slot_value), mul(length, 2))
+				}
+				case 1 {
+					// long byte array
+					mstore(0, ref)
+					let slot := keccak256(0, 0x20)
+					switch length
+					case 32
+					{
+						let data := sload(slot)
+						sstore(slot, 0)
+						data := and(data, not(0xff))
+						slot_value := or(data, 62)
+					}
+					default
+					{
+						let offset_inside_slot := and(sub(length, 1), 0x1f)
+						slot := add(slot, div(sub(length, 1), 32))
+						let data := sload(slot)
 
-		// Stack: ArrayReference newLength
-		m_context << Instruction::SWAP1 << Instruction::SSTORE;
+						// Zero-out the suffix of the byte array by masking it.
+						// ((1<<(8 * (32 - offset))) - 1)
+						let mask := sub(exp(0x100, sub(32, offset_inside_slot)), 1)
+						data := and(not(mask), data)
+						sstore(slot, data)
+
+						// Reduce the length by 1
+						slot_value := sub(slot_value, 2)
+					}
+				}
+				sstore(ref, slot_value)
+			})");
+			code("panicSelector", util::selectorFromSignatureU256("Panic(uint256)").str());
+			code("emptyArrayPop", std::to_string(unsigned(util::PanicCode::EmptyArrayPop)));
+			m_context.appendInlineAssembly(code.render(), {"ref", "slot_value", "length"});
+			m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+		}
+		else
+		{
+			// stack: ArrayReference
+			retrieveLength(_type);
+			// stack: ArrayReference oldLength
+			m_context << Instruction::DUP1;
+			// stack: ArrayReference oldLength oldLength
+			m_context << Instruction::ISZERO;
+			m_context.appendConditionalPanic(util::PanicCode::EmptyArrayPop);
+
+			// Stack: ArrayReference oldLength
+			m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
+			// Stack ArrayReference newLength
+
+			if (_type.baseType()->category() != Type::Category::Mapping)
+			{
+				m_context << Instruction::DUP2 << Instruction::DUP2;
+				// Stack ArrayReference newLength ArrayReference newLength;
+				accessIndex(_type, false);
+				// Stack: ArrayReference newLength storage_slot byte_offset
+				StorageItem(m_context, *_type.baseType()).setToZero(SourceLocation(), true);
+			}
+
+			// Stack: ArrayReference newLength
+			m_context << Instruction::SWAP1 << Instruction::SSTORE;
+		}
+		break;
+	case DataLocation::Transient:
+		if (_type.isByteArrayOrString())
+		{
+			m_context << Instruction::DUP1 << Instruction::TLOAD << Instruction::DUP1;
+			m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
+			util::Whiskers code(R"({
+				if iszero(length) {
+					mstore(0, <panicSelector>)
+					mstore(4, <emptyArrayPop>)
+					revert(0, 0x24)
+				}
+				switch gt(length, 31)
+				case 0 {
+					// short byte array
+					// Zero-out the suffix including the least significant byte.
+					let mask := sub(exp(0x100, sub(33, length)), 1)
+					length := sub(length, 1)
+					slot_value := or(and(not(mask), slot_value), mul(length, 2))
+				}
+				case 1 {
+					// long byte array
+					mstore(0, ref)
+					let slot := keccak256(0, 0x20)
+					switch length
+					case 32
+					{
+						let data := tload(slot)
+						tstore(slot, 0)
+						data := and(data, not(0xff))
+						slot_value := or(data, 62)
+					}
+					default
+					{
+						let offset_inside_slot := and(sub(length, 1), 0x1f)
+						slot := add(slot, div(sub(length, 1), 32))
+						let data := tload(slot)
+
+						// Zero-out the suffix of the byte array by masking it.
+						// ((1<<(8 * (32 - offset))) - 1)
+						let mask := sub(exp(0x100, sub(32, offset_inside_slot)), 1)
+						data := and(not(mask), data)
+						tstore(slot, data)
+
+						// Reduce the length by 1
+						slot_value := sub(slot_value, 2)
+					}
+				}
+				tstore(ref, slot_value)
+			})");
+			code("panicSelector", util::selectorFromSignatureU256("Panic(uint256)").str());
+			code("emptyArrayPop", std::to_string(unsigned(util::PanicCode::EmptyArrayPop)));
+			m_context.appendInlineAssembly(code.render(), {"ref", "slot_value", "length"});
+			m_context << Instruction::POP << Instruction::POP << Instruction::POP;
+		}
+		else
+		{
+			// stack: ArrayReference
+			retrieveLength(_type);
+			// stack: ArrayReference oldLength
+			m_context << Instruction::DUP1;
+			// stack: ArrayReference oldLength oldLength
+			m_context << Instruction::ISZERO;
+			m_context.appendConditionalPanic(util::PanicCode::EmptyArrayPop);
+
+			// Stack: ArrayReference oldLength
+			m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
+			// Stack ArrayReference newLength
+
+			if (_type.baseType()->category() != Type::Category::Mapping)
+			{
+				m_context << Instruction::DUP2 << Instruction::DUP2;
+				// Stack ArrayReference newLength ArrayReference newLength;
+				accessIndex(_type, false);
+				// Stack: ArrayReference newLength storage_slot byte_offset
+				TransientStorageItem(m_context, *_type.baseType()).setToZero(SourceLocation(), true);
+			}
+
+			// Stack: ArrayReference newLength
+			m_context << Instruction::SWAP1 << Instruction::TSTORE;
+		}
+		break;
+	default:
+		solAssert(false, "");
 	}
 }
 
-void ArrayUtils::clearStorageLoop(Type const* _type) const
+void ArrayUtils::clearStorageLoop(ArrayType const& _type) const
 {
-	solAssert(_type->storageBytes() >= 32, "");
+	Type const* baseType = _type.baseType();
+	DataLocation location = _type.location();
+
+	solAssert(baseType->storageBytes() >= 32, "");
 	m_context.callLowLevelFunction(
-		"$clearStorageLoop_" + _type->identifier(),
+		"$clearStorageLoop_" + _type.richIdentifier(),
 		2,
 		1,
-		[_type](CompilerContext& _context)
+		[baseType, location](CompilerContext& _context)
 		{
 			unsigned stackHeightStart = _context.stackHeight();
-			if (_type->category() == Type::Category::Mapping)
+			if (baseType->category() == Type::Category::Mapping)
 			{
 				_context << Instruction::POP;
 				return;
@@ -956,10 +1089,13 @@ void ArrayUtils::clearStorageLoop(Type const* _type) const
 			_context.appendConditionalJumpTo(zeroLoopEnd);
 			// delete
 			_context << u256(0);
-			StorageItem(_context, *_type).setToZero(SourceLocation(), false);
+			if (location == DataLocation::Storage)
+				StorageItem(_context, *baseType).setToZero(SourceLocation(), false);
+			else
+				TransientStorageItem(_context, *baseType).setToZero(SourceLocation(), false);
 			_context << Instruction::POP;
 			// increment
-			_context << _type->storageSize() << Instruction::ADD;
+			_context << baseType->storageSize() << Instruction::ADD;
 			_context.appendJumpTo(loopStart);
 			// cleanup
 			_context << zeroLoopEnd;
@@ -970,7 +1106,6 @@ void ArrayUtils::clearStorageLoop(Type const* _type) const
 	);
 }
 
-// [Amxx] TODO: transient?
 void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) const
 {
 	switch (_arrayType.location())
@@ -1025,13 +1160,13 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType, unsigned _stackDept
 		case DataLocation::Memory:
 			m_context << Instruction::MLOAD;
 			break;
-		case DataLocation::Transient:
-			m_context << Instruction::TLOAD;
+		case DataLocation::Storage:
+			m_context << Instruction::SLOAD;
 			if (_arrayType.isByteArrayOrString())
 				m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
 			break;
-		case DataLocation::Storage:
-			m_context << Instruction::SLOAD;
+		case DataLocation::Transient:
+			m_context << Instruction::TLOAD;
 			if (_arrayType.isByteArrayOrString())
 				m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
 			break;
@@ -1082,7 +1217,7 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 			m_context << Instruction::DUP2;
 		m_context << Instruction::ADD;
 		break;
-	case DataLocation::Transient:
+	case DataLocation::Storage:
 	{
 		if (_keepReference)
 			m_context << Instruction::DUP2;
@@ -1095,7 +1230,7 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 		{
 			// Special case of short byte arrays.
 			m_context << Instruction::SWAP1;
-			m_context << Instruction::DUP2 << Instruction::TLOAD;
+			m_context << Instruction::DUP2 << Instruction::SLOAD;
 			m_context << u256(1) << Instruction::AND << Instruction::ISZERO;
 			// No action needed for short byte arrays.
 			m_context.appendConditionalJumpTo(endTag);
@@ -1132,7 +1267,7 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 		m_context << endTag;
 		break;
 	}
-	case DataLocation::Storage:
+	case DataLocation::Transient:
 	{
 		if (_keepReference)
 			m_context << Instruction::DUP2;
@@ -1145,7 +1280,7 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 		{
 			// Special case of short byte arrays.
 			m_context << Instruction::SWAP1;
-			m_context << Instruction::DUP2 << Instruction::SLOAD;
+			m_context << Instruction::DUP2 << Instruction::TLOAD;
 			m_context << u256(1) << Instruction::AND << Instruction::ISZERO;
 			// No action needed for short byte arrays.
 			m_context.appendConditionalJumpTo(endTag);

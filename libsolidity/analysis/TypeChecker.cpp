@@ -106,6 +106,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	return false;
 }
 
+// [Amxx] TODO: transient?
 void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 {
 	size_t storageToStorageCopies = 0;
@@ -261,7 +262,8 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 				actualType = TypeProvider::payableAddress();
 			solAssert(
 				!actualType->dataStoredIn(DataLocation::CallData) &&
-				!actualType->dataStoredIn(DataLocation::Storage),
+				!actualType->dataStoredIn(DataLocation::Storage) &&
+				!actualType->dataStoredIn(DataLocation::Transient),
 				""
 			);
 			if (!actualType->fullEncodingType(false, _abiEncoderV2, false))
@@ -674,7 +676,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		BoolResult result = referenceType->validForLocation(referenceType->location());
 		if (result)
 		{
-			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && referenceType->location() == DataLocation::Storage);
+			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && (referenceType->location() == DataLocation::Storage || referenceType->location() == DataLocation::Transient));
 			// We skip the calldata check for abstract contract constructors.
 			bool isAbstractConstructorParam = _variable.isConstructorParameter() && m_currentContract && m_currentContract->abstract();
 			bool callDataCheckRequired =
@@ -921,7 +923,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			{
 				std::string const& suffix = identifierInfo.suffix;
 				solAssert((std::set<std::string>{"offset", "slot", "length", "selector", "address"}).count(suffix), "");
-				if (!var->isConstant() && (var->isStateVariable() || var->type()->dataStoredIn(DataLocation::Storage)))
+				if (!var->isConstant() && (var->isStateVariable() || var->type()->dataStoredIn(DataLocation::Storage) || var->type()->dataStoredIn(DataLocation::Transient)))
 				{
 					if (suffix != "slot" && suffix != "offset")
 					{
@@ -984,6 +986,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
 				m_errorReporter.typeError(9068_error, nativeLocationOf(_identifier), "You have to use the \".slot\" or \".offset\" suffix to access storage reference variables.");
+				return false;
+			}
+				else if (var->type()->dataStoredIn(DataLocation::Transient))
+			{
+				m_errorReporter.typeError(9068_error, nativeLocationOf(_identifier), "You have to use the \".slot\" or \".offset\" suffix to access transient reference variables.");
 				return false;
 			}
 			else if (var->type()->sizeOnStack() != 1)
@@ -1987,13 +1994,17 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 			{
 				if (auto resultArrayType = dynamic_cast<ArrayType const*>(resultType))
 					solAssert(
-						argArrayType->location() != DataLocation::Storage ||
 						(
+							argArrayType->location() != DataLocation::Storage &&
+							argArrayType->location() != DataLocation::Transient
+						) || (
 							(
 								resultArrayType->isPointer() ||
 								(argArrayType->isByteArrayOrString() && resultArrayType->isByteArrayOrString())
-							) &&
-							resultArrayType->location() == DataLocation::Storage
+							) && (
+								resultArrayType->location() == DataLocation::Storage ||
+								resultArrayType->location() == DataLocation::Transient
+							)
 						),
 						"Invalid explicit conversion to storage type."
 					);
@@ -3201,7 +3212,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					_memberAccess.location(),
 					"Member \"" + memberName + "\" is not available in " +
 					exprType->humanReadableName() +
-					" outside of storage."
+					" outside of storage." // TODO: mention transient storage explicitelly?
 				);
 		}
 

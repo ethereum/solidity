@@ -457,11 +457,17 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 	else if (_variable.isStateVariable())
 	{
-		solAssert(varLoc == Location::Unspecified || varLoc == Location::Transient, "");
-		if (varLoc == Location::Transient)
-			typeLoc = DataLocation::Transient;
-		else
+		switch (varLoc)
+		{
+		case Location::Unspecified:
 			typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
+			break;
+		case Location::Transient:
+			typeLoc = DataLocation::Transient;
+			break;
+		default:
+			solAssert(false, "");
+		}
 	}
 	else if (
 		dynamic_cast<StructDefinition const*>(_variable.scope()) ||

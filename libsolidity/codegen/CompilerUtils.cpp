@@ -1190,8 +1190,8 @@ void CompilerUtils::convertType(
 			// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
 			solAssert(
 				targetType.isPointer() &&
-				typeOnStack.location() == DataLocation::Storage,
-				"Invalid conversion to storage type."
+				typeOnStack.location() == DataLocation::Transient,
+				"Invalid conversion to transient type."
 			);
 			break;
 		case DataLocation::Memory:
