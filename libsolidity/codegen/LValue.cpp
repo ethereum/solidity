@@ -890,6 +890,58 @@ void StorageByteArrayElement::setToZero(SourceLocation const&, bool _removeRefer
 	m_context << Instruction::SWAP1 << Instruction::SSTORE;
 }
 
+TransientStorageByteArrayElement::TransientStorageByteArrayElement(CompilerContext& _compilerContext):
+	LValue(_compilerContext, TypeProvider::byte())
+{
+}
+
+void TransientStorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove) const
+{
+	// stack: ref byte_number
+	if (_remove)
+		m_context << Instruction::SWAP1 << Instruction::TLOAD
+			<< Instruction::SWAP1 << Instruction::BYTE;
+	else
+		m_context << Instruction::DUP2 << Instruction::TLOAD
+			<< Instruction::DUP2 << Instruction::BYTE;
+	m_context << (u256(1) << (256 - 8)) << Instruction::MUL;
+}
+
+void TransientStorageByteArrayElement::storeValue(Type const&, SourceLocation const&, bool _move) const
+{
+	// stack: value ref byte_number
+	m_context << u256(31) << Instruction::SUB << u256(0x100) << Instruction::EXP;
+	// stack: value ref (1<<(8*(31-byte_number)))
+	m_context << Instruction::DUP2 << Instruction::TLOAD;
+	// stack: value ref (1<<(8*(31-byte_number))) old_full_value
+	// clear byte in old value
+	m_context << Instruction::DUP2 << u256(0xff) << Instruction::MUL
+		<< Instruction::NOT << Instruction::AND;
+	// stack: value ref (1<<(32-byte_number)) old_full_value_with_cleared_byte
+	m_context << Instruction::SWAP1;
+	m_context << (u256(1) << (256 - 8)) << Instruction::DUP5 << Instruction::DIV
+		<< Instruction::MUL << Instruction::OR;
+	// stack: value ref new_full_value
+	m_context << Instruction::SWAP1 << Instruction::TSTORE;
+	if (_move)
+		m_context << Instruction::POP;
+}
+
+void TransientStorageByteArrayElement::setToZero(SourceLocation const&, bool _removeReference) const
+{
+	// stack: ref byte_number
+	solAssert(_removeReference, "");
+	m_context << u256(31) << Instruction::SUB << u256(0x100) << Instruction::EXP;
+	// stack: ref (1<<(8*(31-byte_number)))
+	m_context << Instruction::DUP2 << Instruction::TLOAD;
+	// stack: ref (1<<(8*(31-byte_number))) old_full_value
+	// clear byte in old value
+	m_context << Instruction::SWAP1 << u256(0xff) << Instruction::MUL;
+	m_context << Instruction::NOT << Instruction::AND;
+	// stack: ref old_full_value_with_cleared_byte
+	m_context << Instruction::SWAP1 << Instruction::TSTORE;
+}
+
 TupleObject::TupleObject(
 	CompilerContext& _compilerContext,
 	std::vector<std::unique_ptr<LValue>>&& _lvalues

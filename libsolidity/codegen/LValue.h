@@ -221,6 +221,28 @@ public:
 };
 
 /**
+ * Reference to a single byte inside a storage byte array.
+ * Stack: <storage_ref> <byte_number>
+ */
+class TransientStorageByteArrayElement: public LValue
+{
+public:
+	/// Constructs the LValue and assumes that the storage reference is already on the stack.
+	TransientStorageByteArrayElement(CompilerContext& _compilerContext);
+	unsigned sizeOnStack() const override { return 2; }
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
+	void storeValue(
+		Type const& _sourceType,
+		langutil::SourceLocation const& _location = {},
+		bool _move = false
+	) const override;
+	void setToZero(
+		langutil::SourceLocation const& _location = {},
+		bool _removeReference = true
+	) const override;
+};
+
+/**
  * Tuple object that can itself hold several LValues.
  */
 class TupleObject: public LValue

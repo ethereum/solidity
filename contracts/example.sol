@@ -7,6 +7,8 @@ contract Test {
         mapping(address => uint256) m;
     }
 
+    bytes                                           transient b_t;
+    bytes                                                     b_s;
     uint256                                         transient v_t;
     uint256                                                   v_s;
     uint256[]                                       transient a_t;
@@ -23,6 +25,8 @@ contract Test {
     }
 
     function set(uint256 value) public {
+        // b_t[0] = 0xFF;
+        // b_s[0] = 0xFF;
         // v_t += value;
         // v_s += value;
         // a_t.push(value);

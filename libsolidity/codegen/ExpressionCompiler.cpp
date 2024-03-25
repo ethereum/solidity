@@ -1111,13 +1111,20 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// stack: ArrayReference (newLength-1)
 				ArrayUtils(m_context).accessIndex(*arrayType, false);
 
-				if (arrayType->isByteArrayOrString())
-					// [Amxx] TODO: transient ?
-					setLValue<StorageByteArrayElement>(_functionCall);
-				else if (arrayType->dataStoredIn(DataLocation::Storage))
-					setLValueToStorageItem(_functionCall);
+				if (arrayType->dataStoredIn(DataLocation::Storage))
+				{
+					if (arrayType->isByteArrayOrString())
+						setLValue<StorageByteArrayElement>(_functionCall);
+					else
+						setLValueToStorageItem(_functionCall);
+				}
 				else if (arrayType->dataStoredIn(DataLocation::Transient))
-					setLValueToTransientStorageItem(_functionCall);
+				{
+					if (arrayType->isByteArrayOrString())
+						setLValueToTransientStorageItem(_functionCall);
+					else
+						setLValue<TransientStorageByteArrayElement>(_functionCall);
+				}
 				else
 					solAssert(false);
 			}
@@ -1153,13 +1160,20 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				// stack: argValue storageSlot slotOffset
-				if (arrayType->isByteArrayOrString())
-					// [Amxx] TODO: transient ?
-					StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
-				else if (arrayType->dataStoredIn(DataLocation::Storage))
-					StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				if (arrayType->dataStoredIn(DataLocation::Storage))
+				{
+					if (arrayType->isByteArrayOrString())
+						StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+					else
+						StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				}
 				else if (arrayType->dataStoredIn(DataLocation::Transient))
-					TransientStorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				{
+					if (arrayType->isByteArrayOrString())
+						TransientStorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+					else
+						TransientStorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				}
 				else
 					solAssert(false);
 			}
@@ -2248,7 +2262,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					if (arrayType.isByteArrayOrString())
 					{
 						solAssert(!arrayType.isString(), "Index access to string is not allowed.");
-						setLValue<StorageByteArrayElement>(_indexAccess);
+						setLValue<TransientStorageByteArrayElement>(_indexAccess);
 					}
 					else
 						setLValueToTransientStorageItem(_indexAccess);
