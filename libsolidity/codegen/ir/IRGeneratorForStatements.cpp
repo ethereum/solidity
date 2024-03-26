@@ -47,6 +47,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/transform.hpp>
 
 using namespace solidity;
@@ -56,6 +57,18 @@ using namespace std::string_literals;
 
 namespace
 {
+
+optional<size_t> staticEncodingSize(vector<Type const*> const& _parameterTypes)
+{
+	size_t encodedSize = 0;
+	for (auto const* type: _parameterTypes)
+	{
+		if (type->isDynamicallyEncoded())
+			return nullopt;
+		encodedSize += type->calldataHeadSize();
+	}
+	return encodedSize;
+}
 
 struct CopyTranslate: public yul::ASTCopier
 {
@@ -3375,8 +3388,16 @@ void IRGeneratorForStatements::revertWithError(
 	std::vector<ASTPointer<Expression const>> const& _errorArguments
 )
 {
+	bool needsAllocation = true;
+	if (optional<size_t> size = staticEncodingSize(_parameterTypes))
+		if (ranges::all_of(_parameterTypes, [](auto const* type) { return type && type->isValueType(); }))
+			needsAllocation = *size + 4 > CompilerUtils::generalPurposeMemoryStart;
 	Whiskers templ(R"({
+		<?needsAllocation>
 		let <pos> := <allocateUnbounded>()
+		<!needsAllocation>
+		let <pos> := 0
+		</needsAllocation>
 		mstore(<pos>, <hash>)
 		let <end> := <encode>(add(<pos>, 4) <argumentVars>)
 		revert(<pos>, sub(<end>, <pos>))
@@ -3384,7 +3405,9 @@ void IRGeneratorForStatements::revertWithError(
 	templ("pos", m_context.newYulVariable());
 	templ("end", m_context.newYulVariable());
 	templ("hash", util::selectorFromSignatureU256(_signature).str());
-	templ("allocateUnbounded", m_utils.allocateUnboundedFunction());
+	templ("needsAllocation", needsAllocation);
+	if (needsAllocation)
+		templ("allocateUnbounded", m_utils.allocateUnboundedFunction());
 
 	std::vector<std::string> errorArgumentVars;
 	std::vector<Type const*> errorArgumentTypes;
