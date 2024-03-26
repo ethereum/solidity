@@ -3876,7 +3876,7 @@ Type const* MappingType::encodingType() const
 
 std::string MappingType::richIdentifier() const
 {
-	return "t_mapping" + identifierList(m_keyType, m_valueType) + identifierLocationSuffix();;
+	return "t_mapping" + identifierList(m_keyType, m_valueType) + identifierLocationSuffix();
 }
 
 bool MappingType::operator==(Type const& _other) const
@@ -3884,7 +3884,7 @@ bool MappingType::operator==(Type const& _other) const
 	if (_other.category() != category())
 		return false;
 	MappingType const& other = dynamic_cast<MappingType const&>(_other);
-	return *other.m_keyType == *m_keyType && *other.m_valueType == *m_valueType;
+	return *other.m_keyType == *m_keyType && *other.m_valueType == *m_valueType && other.m_location == m_location;
 }
 
 std::string MappingType::toString(bool _withoutDataLocation) const

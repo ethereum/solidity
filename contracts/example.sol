@@ -20,9 +20,10 @@ contract Test {
     mapping(address => mapping(uint256 => uint256)) transient m2_t;
     mapping(address => mapping(uint256 => uint256))           m2_s;
 
-    // same name and parameters :/
-    function id_t(mapping(address => uint256) transient m) internal view returns (mapping(address => uint256) transient) { return m; }
-    function id_s(mapping(address => uint256) storage   m) internal view returns (mapping(address => uint256) storage  ) { return m; }
+    function id(mapping(address => uint256) transient m) internal pure returns (mapping(address => uint256) transient) { return m; }
+    function id(mapping(address => uint256) storage   m) internal pure returns (mapping(address => uint256) storage  ) { return m; }
+    function set(mapping(address => uint256) transient m, uint256 v) internal { m[msg.sender] = v; }
+    function set(mapping(address => uint256) storage   m, uint256 v) internal { m[msg.sender] = v; }
 
     function set(uint256 value) public {
         // b_t[0] = 0xFF;
@@ -44,8 +45,10 @@ contract Test {
 
         // (true ? m_t : m_s)[msg.sender] += value; // Error: resolution doesnt work well here :/
         // (false ? m_t : m_s)[msg.sender] += value; // Error: resolution doesnt work well here :/
-        id_t(m_t)[msg.sender] += value;
-        id_s(m_s)[msg.sender] += value;
+        // id_t(m_t)[msg.sender] += value;
+        // id_s(m_s)[msg.sender] += value;
+        set(m_t, value);
+        set(m_s, value);
 
         // MyStruct transient s_t_ref = s_t;
         // s_t_ref.v += value;
