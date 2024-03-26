@@ -26,39 +26,37 @@ contract Test {
     function set(mapping(address => uint256) storage   m, uint256 v) internal { m[msg.sender] = v; }
 
     function set(uint256 value) public {
-        // b_t[0] = 0xFF;
-        // b_s[0] = 0xFF;
-        // v_t += value;
-        // v_s += value;
-        // a_t.push(value);
-        // a_s.push(value);
-        // a_t[0] += value;
-        // a_s[0] += value;
-        // s_t.v += value;
-        // s_s.v += value;
-        // s_t.m[msg.sender] += value;
-        // s_s.m[msg.sender] += value;
-        // m_t[msg.sender] += value;
-        // m_s[msg.sender] += value;
-        // m2_t[msg.sender][0] += value;
-        // m2_s[msg.sender][0] += value;
+        b_t[0] = 0xFF;
+        b_s[0] = 0xFF;
+        v_t += value;
+        v_s += value;
+        a_t.push(value);
+        a_s.push(value);
+        a_t[0] += value;
+        a_s[0] += value;
+        s_t.v += value;
+        s_s.v += value;
+        s_t.m[msg.sender] += value;
+        s_s.m[msg.sender] += value;
+        m_t[msg.sender] += value;
+        m_s[msg.sender] += value;
+        m2_t[msg.sender][0] += value;
+        m2_s[msg.sender][0] += value;
 
-        // (true ? m_t : m_s)[msg.sender] += value; // Error: resolution doesnt work well here :/
-        // (false ? m_t : m_s)[msg.sender] += value; // Error: resolution doesnt work well here :/
-        // id_t(m_t)[msg.sender] += value;
-        // id_s(m_s)[msg.sender] += value;
+        id(m_t)[msg.sender] += value;
+        id(m_s)[msg.sender] += value;
         set(m_t, value);
         set(m_s, value);
 
-        // MyStruct transient s_t_ref = s_t;
-        // s_t_ref.v += value;
+        MyStruct transient s_t_ref = s_t;
+        s_t_ref.v += value;
 
-        // MyStruct transient s;
-        // assembly { s.slot := 0 }
-        // s.v *= value;
+        MyStruct transient s;
+        assembly { s.slot := 0 }
+        s.v *= value;
 
-        // assembly {
-        //     tstore(0, add(tload(0), value))
-        // }
+        assembly {
+            tstore(0, add(tload(0), value))
+        }
     }
 }
