@@ -276,7 +276,7 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 
 	// Convert value type to storage reference.
 	valueType = TypeProvider::withLocationIfReference(DataLocation::Storage, valueType);
-	_mapping.annotation().type = TypeProvider::mapping(keyType, keyName, valueType, valueName);
+	_mapping.annotation().type = TypeProvider::mapping(keyType, keyName, valueType, valueName, DataLocation::Storage);
 
 	// Check if parameter names are conflicting.
 	if (!keyName.empty())

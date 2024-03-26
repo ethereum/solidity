@@ -20,9 +20,9 @@ contract Test {
     mapping(address => mapping(uint256 => uint256)) transient m2_t;
     mapping(address => mapping(uint256 => uint256))           m2_s;
 
-    function id() internal view returns (mapping(address => uint256) transient) {
-        return m_t;
-    }
+    // same name and parameters :/
+    function id_t(mapping(address => uint256) transient m) internal view returns (mapping(address => uint256) transient) { return m; }
+    function id_s(mapping(address => uint256) storage   m) internal view returns (mapping(address => uint256) storage  ) { return m; }
 
     function set(uint256 value) public {
         // b_t[0] = 0xFF;
@@ -35,15 +35,17 @@ contract Test {
         // a_s[0] += value;
         // s_t.v += value;
         // s_s.v += value;
-        // s_t.m[msg.sender] += value; // throw in visit
-        // s_s.m[msg.sender] += value; // throw in visit
+        // s_t.m[msg.sender] += value;
+        // s_s.m[msg.sender] += value;
         // m_t[msg.sender] += value;
         // m_s[msg.sender] += value;
         // m2_t[msg.sender][0] += value;
         // m2_s[msg.sender][0] += value;
 
-        // (true ? m_t : m_s)[msg.sender] += value; // throw in visit
-        // id()[msg.sender] += value; // throw in visit
+        // (true ? m_t : m_s)[msg.sender] += value; // Error: resolution doesnt work well here :/
+        // (false ? m_t : m_s)[msg.sender] += value; // Error: resolution doesnt work well here :/
+        id_t(m_t)[msg.sender] += value;
+        id_s(m_s)[msg.sender] += value;
 
         // MyStruct transient s_t_ref = s_t;
         // s_t_ref.v += value;
@@ -51,7 +53,6 @@ contract Test {
         // MyStruct transient s;
         // assembly { s.slot := 0 }
         // s.v *= value;
-
 
         // assembly {
         //     tstore(0, add(tload(0), value))

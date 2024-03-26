@@ -2201,25 +2201,12 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			m_context << Instruction::KECCAK256;
 			m_context << u256(0);
 
-			const Expression* expression = &_indexAccess.baseExpression();
-			while (true) {
-				const IndexAccess* asIndexAccess = dynamic_cast<const IndexAccess*>(expression);
-				if (asIndexAccess == nullptr)
-					break;
-				else
-					expression = &asIndexAccess->baseExpression();
-			}
-
-			const Declaration* declaration = ASTNode::referencedDeclaration(*expression);
-			if (m_context.isStateVariable(declaration))
+			if (baseType.dataStoredIn(DataLocation::Storage))
 				setLValueToStorageItem(_indexAccess);
-			else if (m_context.isTransientStateVariable(declaration))
+			else if (baseType.dataStoredIn(DataLocation::Transient))
 				setLValueToTransientStorageItem(_indexAccess);
 			else
-			{
-
 				solAssert(false, "");
-			}
 			break;
 		}
 		case Type::Category::ArraySlice:

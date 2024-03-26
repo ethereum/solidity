@@ -3876,7 +3876,7 @@ Type const* MappingType::encodingType() const
 
 std::string MappingType::richIdentifier() const
 {
-	return "t_mapping" + identifierList(m_keyType, m_valueType);
+	return "t_mapping" + identifierList(m_keyType, m_valueType) + identifierLocationSuffix();;
 }
 
 bool MappingType::operator==(Type const& _other) const
@@ -3923,6 +3923,37 @@ TypeResult MappingType::interfaceType(bool _inLibrary) const
 std::vector<std::tuple<std::string, Type const*>> MappingType::makeStackItems() const
 {
 	return {std::make_tuple("slot", TypeProvider::uint256())};
+}
+
+std::unique_ptr<ReferenceType> MappingType::copyForLocation(DataLocation _location, bool _isPointer) const
+{
+	solAssert(_location == DataLocation::Storage || _location == DataLocation::Transient, "");
+	auto copy = std::make_unique<MappingType>(
+		keyType(),
+		keyName(),
+		TypeProvider::withLocationIfReference(_location, valueType()),
+		valueName(),
+		_location
+	);
+	copy->m_isPointer = _isPointer;
+	return copy;
+}
+
+BoolResult MappingType::validForLocation(DataLocation _location) const
+{
+	switch(_location)
+	{
+		case DataLocation::CallData:
+		case DataLocation::Memory:
+			return false;
+		case DataLocation::Storage:
+		case DataLocation::Transient:
+			if (auto referenceType = dynamic_cast<ReferenceType const*>(valueType()))
+				return referenceType->validForLocation(_location);
+			else
+				return true;
+	}
+	solAssert(false, "");
 }
 
 std::string TypeType::richIdentifier() const

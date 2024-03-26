@@ -1550,26 +1550,31 @@ private:
  * The type of a mapping, there is one distinct type per key/value type pair.
  * Mappings always occupy their own storage slot, but do not actually use it.
  */
-class MappingType: public CompositeType
+class MappingType: public ReferenceType
 {
 public:
-	MappingType(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName):
-		m_keyType(_keyType), m_keyName(_keyName), m_valueType(_valueType), m_valueName(_valueName) {}
+	MappingType(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName, DataLocation _location):
+		ReferenceType(_location), m_keyType(_keyType), m_keyName(_keyName), m_valueType(_valueType), m_valueName(_valueName) {}
 
 	Category category() const override { return Category::Mapping; }
 
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
+	unsigned calldataEncodedSize(bool) const override { solAssert(false, ""); }
+	unsigned calldataEncodedTailSize() const override { solAssert(false, ""); }
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 	bool containsNestedMapping() const override { return true; }
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
-	bool dataStoredIn(DataLocation _location) const override { return _location == DataLocation::Storage; }
 	/// Cannot be stored in memory, but just in case.
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	bool nameable() const override { return true; }
+	u256 memoryDataSize() const override { solAssert(false, ""); }
+
+	BoolResult validForLocation(DataLocation _loc) const override;
+	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 
