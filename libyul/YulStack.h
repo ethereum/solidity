@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM.
+ * Full assembly stack that can support Yul as input.
  */
 
 #pragma once
@@ -57,6 +57,7 @@ struct MachineAssemblyObject
 {
 	std::shared_ptr<evmasm::LinkerObject> bytecode;
 	std::string assembly;
+	Json::Value assemblyJson;
 	std::unique_ptr<std::string> sourceMappings;
 };
 
@@ -133,6 +134,7 @@ public:
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
 	Json::Value astJson() const;
+
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
 

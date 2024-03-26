@@ -1,0 +1,6 @@
+/// @use-src 2:"L0.sol"
+object "L0" {
+    code {
+        sstore(0, datasize("L0"))
+    }
+}

@@ -1,0 +1,4 @@
+/// @use-src 0: "abc.sol"
+{
+    verbatim_0i_0o("xyz")
+}

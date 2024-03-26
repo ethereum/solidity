@@ -1,28 +1,28 @@
 // something else
 /*-- another unrelated comment --*/
-/// @use-src 3: "abc.sol" , 2: "def.sol"
+/// @use-src 1: "abc.sol" , 0: "def.sol"
 object "a" {
   code {
-    /// @src 3:0:2
+    /// @src 1:0:2
     datacopy(0, dataoffset("sub"), datasize("sub"))
     return(0,
-      /** @src 2:5:6 */
+      /** @src 0:5:6 */
       datasize("sub")
     )
   }
-  /// @use-src 3: "abc.sol" , 2: "def.sol"
+  /// @use-src 1: "abc.sol" , 0: "def.sol"
   object "sub" {
     code {
-      /// @src 2:70:72
+      /// @src 0:70:72
       sstore(0, dataoffset("sub"))
       /**
        * @something else
-       * @src 3:2:5
+       * @src 1:2:5
        */
       mstore(
         0,
         datasize("data1")
-        /// @src 3:90:2
+        /// @src 1:90:2
       )
     }
     data "data1" "Hello, World!"

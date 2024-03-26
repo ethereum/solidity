@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5
+ * Full assembly stack that can support Yul as input.
  */
 
 
@@ -238,11 +238,16 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName) cons
 		)
 	);
 
+	std::map<std::string, unsigned> sourceIndices;
+	m_parserResult->collectSourceIndices(sourceIndices);
+	creationObject.assemblyJson = creationAssembly->assemblyJSON(sourceIndices);
+
 	MachineAssemblyObject deployedObject;
 	if (deployedAssembly)
 	{
 		deployedObject.bytecode = std::make_shared<evmasm::LinkerObject>(deployedAssembly->assemble());
 		deployedObject.assembly = deployedAssembly->assemblyString(m_debugInfoSelection);
+		deployedObject.assemblyJson = deployedAssembly->assemblyJSON(sourceIndices);
 		deployedObject.sourceMappings = std::make_unique<std::string>(
 			evmasm::AssemblyItem::computeSourceMapping(
 				deployedAssembly->items(),

@@ -310,6 +310,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
 			"--asm",
+			"--asm-json",
 			"--bin",
 			"--ir-optimized",
 			"--ast-compact-json",
@@ -350,6 +351,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.formatting.coloredOutput = false;
 		expectedOptions.formatting.withErrorIds = true;
 		expectedOptions.compiler.outputs.asm_ = true;
+		expectedOptions.compiler.outputs.asmJson = true;
 		expectedOptions.compiler.outputs.binary = true;
 		expectedOptions.compiler.outputs.irOptimized = true;
 		expectedOptions.compiler.outputs.astCompactJson = true;
