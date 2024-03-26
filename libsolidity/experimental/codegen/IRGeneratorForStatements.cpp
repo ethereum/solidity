@@ -33,6 +33,7 @@
 #include <libsolidity/experimental/codegen/Common.h>
 
 #include <range/v3/view/drop_last.hpp>
+#include <range/v3/view/zip.hpp>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -101,7 +102,7 @@ private:
 		auto type = m_context.analysis.annotation<TypeInference>(*varDecl).type;
 		solAssert(type);
 		solAssert(m_context.env->typeEquals(*type, m_context.analysis.typeSystem().type(PrimitiveType::Word, {})));
-		std::string value = IRNames::localVariable(*varDecl);
+		std::string value = IRVariable{*varDecl, *type, IRGeneratorForStatements::stackSize(m_context, *type)}.name();
 		return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}
 
@@ -112,6 +113,67 @@ private:
 
 }
 
+std::size_t IRGeneratorForStatements::stackSize(IRGenerationContext const& _context, Type _type)
+{
+	TypeSystemHelpers helper{_context.analysis.typeSystem()};
+	_type = _context.env->resolve(_type);
+	solAssert(std::holds_alternative<TypeConstant>(_type), "No monomorphized type.");
+
+	// type -> # stack slots
+	// unit, itself -> 0
+	// void, literals(integer), typeFunction -> error (maybe generate a revert)
+	// word, bool, function -> 1
+	// pair -> sum(stackSize(args))
+	// user-defined -> stackSize(underlying type)
+	TypeConstant typeConstant = std::get<TypeConstant>(_type);
+	if (
+		helper.isPrimitiveType(_type, PrimitiveType::Unit) ||
+		helper.isPrimitiveType(_type, PrimitiveType::Itself)
+	)
+		return 0;
+	else if (
+		helper.isPrimitiveType(_type, PrimitiveType::Bool) ||
+		helper.isPrimitiveType(_type, PrimitiveType::Word)
+	)
+	{
+		solAssert(typeConstant.arguments.empty(), "Primitive type Bool or Word should have no arguments.");
+		return 1;
+	}
+	else if (helper.isFunctionType(_type))
+		return 1;
+	else if (
+		helper.isPrimitiveType(_type, PrimitiveType::Integer) ||
+		helper.isPrimitiveType(_type, PrimitiveType::Void) ||
+		helper.isPrimitiveType(_type, PrimitiveType::TypeFunction)
+	)
+		solAssert(false, "Attempted to query the stack size of a type without stack representation.");
+	else if (helper.isPrimitiveType(_type, PrimitiveType::Pair))
+	{
+		solAssert(typeConstant.arguments.size() == 2);
+		return stackSize(_context, typeConstant.arguments.front()) + stackSize(_context, typeConstant.arguments.back());
+	}
+	else
+	{
+		Type underlyingType = _context.env->resolve(
+			_context.analysis.annotation<TypeInference>().underlyingTypes.at(typeConstant.constructor));
+		if (helper.isTypeConstant(underlyingType))
+			return stackSize(_context, underlyingType);
+
+		TypeEnvironment env = _context.env->clone();
+		Type genericFunctionType = helper.typeFunctionType(
+			helper.tupleType(typeConstant.arguments),
+			env.typeSystem().freshTypeVariable({}));
+		solAssert(env.unify(genericFunctionType, underlyingType).empty());
+
+		Type resolvedType = env.resolveRecursive(genericFunctionType);
+		auto [argumentType, resultType] = helper.destTypeFunctionType(resolvedType);
+		return stackSize(_context, resultType);
+	}
+
+	//TODO: sum types
+	return 0;
+}
+
 bool IRGeneratorForStatements::visit(TupleExpression const& _tupleExpression)
 {
 	std::vector<std::string> components;
@@ -119,7 +181,7 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tupleExpression)
 	{
 		solUnimplementedAssert(component);
 		component->accept(*this);
-		components.emplace_back(IRNames::localVariable(*component));
+		components.emplace_back(var(*component).commaSeparatedList());
 	}
 
 	solUnimplementedAssert(false, "No support for tuples.");
@@ -144,10 +206,11 @@ bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _variab
 	VariableDeclaration const* variableDeclaration = _variableDeclarationStatement.declarations().front().get();
 	solAssert(variableDeclaration);
 	// TODO: check the type of the variable; register local variable; initialize
-	m_code << "let " << IRNames::localVariable(*variableDeclaration);
 	if (_variableDeclarationStatement.initialValue())
-		m_code << " := " << IRNames::localVariable(*_variableDeclarationStatement.initialValue());
-	m_code << "\n";
+		define(var(*variableDeclaration), var(*_variableDeclarationStatement.initialValue()));
+	else
+		declare(var(*variableDeclaration));
+
 	return false;
 }
 
@@ -158,10 +221,8 @@ bool IRGeneratorForStatements::visit(ExpressionStatement const&)
 
 bool IRGeneratorForStatements::visit(Identifier const& _identifier)
 {
-	if (auto const* var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
-	{
-		m_code << "let " << IRNames::localVariable(_identifier) << " := " << IRNames::localVariable(*var) << "\n";
-	}
+	if (auto const* variable = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+		define(var(_identifier), var(*variable));
 	else if (auto const* function = dynamic_cast<FunctionDefinition const*>(_identifier.annotation().referencedDeclaration))
 		solAssert(m_expressionDeclaration.emplace(&_identifier, function).second);
 	else if (auto const* typeClass = dynamic_cast<TypeClassDefinition const*>(_identifier.annotation().referencedDeclaration))
@@ -179,7 +240,8 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 	{
 		solAssert(_return.annotation().function, "Invalid return.");
 		solAssert(_return.annotation().function->experimentalReturnExpression(), "Invalid return.");
-		m_code << IRNames::localVariable(*_return.annotation().function->experimentalReturnExpression()) << " := " << IRNames::localVariable(*value) << "\n";
+		auto returnExpression = _return.annotation().function->experimentalReturnExpression();
+		assign(var(*returnExpression), var(*value));
 	}
 
 	m_code << "leave\n";
@@ -201,13 +263,44 @@ void IRGeneratorForStatements::endVisit(BinaryOperation const& _binaryOperation)
 	Type functionType = helper.functionType(helper.tupleType({leftType, rightType}), resultType);
 	auto [typeClass, memberName] = m_context.analysis.annotation<TypeInference>().operators.at(_binaryOperation.getOperator());
 	auto const& functionDefinition = resolveTypeClassFunction(typeClass, memberName, functionType);
-	// TODO: deduplicate with FunctionCall
+	std::string result = var(_binaryOperation).commaSeparatedList();
+	if (!result.empty())
+		m_code << "let " << result << " := ";
+	m_code << buildFunctionCall(functionDefinition, functionType, _binaryOperation.arguments());
+}
+
+std::string IRGeneratorForStatements::buildFunctionCall(FunctionDefinition const& _functionDefinition, Type _functionType, std::vector<ASTPointer<Expression const>> const& _arguments)
+{
+	// Ensure type is resolved
 	// TODO: get around resolveRecursive by passing the environment further down?
-	functionType = m_context.env->resolveRecursive(functionType);
-	m_context.enqueueFunctionDefinition(&functionDefinition, functionType);
-	// TODO: account for return stack size
-	m_code << "let " << IRNames::localVariable(_binaryOperation) << " := " << IRNames::function(*m_context.env, functionDefinition, functionType) << "("
-		<< IRNames::localVariable(_binaryOperation.leftExpression()) << ", " << IRNames::localVariable(_binaryOperation.rightExpression()) << ")\n";
+	Type resolvedFunctionType = m_context.env->resolveRecursive(_functionType);
+	m_context.enqueueFunctionDefinition(&_functionDefinition, resolvedFunctionType);
+
+	std::ostringstream output;
+	output << IRNames::function(*m_context.env, _functionDefinition, resolvedFunctionType) << "(";
+	if (_arguments.size() == 1)
+		output << var(*_arguments.back()).commaSeparatedList();
+	else if (_arguments.size() > 1)
+	{
+		for (auto arg: _arguments | ranges::views::drop_last(1))
+			output << var(*arg).commaSeparatedList();
+		output << var(*_arguments.back()).commaSeparatedListPrefixed();
+	}
+	output << ")\n";
+	return output.str();
+}
+
+void IRGeneratorForStatements::assign(IRVariable const& _lhs, IRVariable const& _rhs, bool _declare)
+{
+	solAssert(stackSize(m_context, _lhs.type()) == stackSize(m_context, _rhs.type()));
+	for (auto&& [lhsSlot, rhsSlot]: ranges::zip_view(_lhs.stackSlots(), _rhs.stackSlots()))
+		m_code << (_declare ? "let " : "") << lhsSlot << " := " <<  rhsSlot << "\n";
+}
+
+void IRGeneratorForStatements::declare(IRVariable const& _var)
+{
+	if (_var.stackSize() > 0)
+		m_code << "let " << _var.commaSeparatedList() << "\n";
 }
 
 namespace
@@ -308,32 +401,23 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		case Builtins::FromBool:
 		case Builtins::Identity:
 			solAssert(_functionCall.arguments().size() == 1);
-			m_code << "let " << IRNames::localVariable(_functionCall) << " := " << IRNames::localVariable(*_functionCall.arguments().front()) << "\n";
+			define(var(_functionCall), var(*_functionCall.arguments().front()));
 			return;
 		case Builtins::ToBool:
 			solAssert(_functionCall.arguments().size() == 1);
-			m_code << "let " << IRNames::localVariable(_functionCall) << " := iszero(iszero(" << IRNames::localVariable(*_functionCall.arguments().front()) << "))\n";
+			m_code << "let " << var(_functionCall).name() << " := iszero(iszero(" << var(*_functionCall.arguments().front()).name() << "))\n";
 			return;
 		}
 		solAssert(false);
 	}
 	FunctionDefinition const* functionDefinition = dynamic_cast<FunctionDefinition const*>(std::get<Declaration const*>(declaration));
 	solAssert(functionDefinition);
-	// TODO: get around resolveRecursive by passing the environment further down?
-	functionType = m_context.env->resolveRecursive(functionType);
-	m_context.enqueueFunctionDefinition(functionDefinition, functionType);
 	// TODO: account for return stack size
 	solAssert(!functionDefinition->returnParameterList());
-	if (functionDefinition->experimentalReturnExpression())
-		m_code << "let " << IRNames::localVariable(_functionCall) << " := ";
-	m_code << IRNames::function(*m_context.env, *functionDefinition, functionType) << "(";
-	auto const& arguments = _functionCall.arguments();
-	if (arguments.size() > 1)
-		for (auto arg: arguments | ranges::views::drop_last(1))
-			m_code << IRNames::localVariable(*arg) << ", ";
-	if (!arguments.empty())
-		m_code << IRNames::localVariable(*arguments.back());
-	m_code << ")\n";
+	std::string result = var(_functionCall).commaSeparatedList();
+	if (!result.empty())
+		m_code << "let " << result << " := ";
+	m_code << buildFunctionCall(*functionDefinition, functionType, _functionCall.arguments());
 }
 
 bool IRGeneratorForStatements::visit(FunctionCall const&)
@@ -356,7 +440,7 @@ bool IRGeneratorForStatements::visit(IfStatement const& _ifStatement)
 	_ifStatement.condition().accept(*this);
 	if (_ifStatement.falseStatement())
 	{
-		m_code << "switch " << IRNames::localVariable(_ifStatement.condition()) << " {\n";
+		m_code << "switch " << var(_ifStatement.condition()).name() << " {\n";
 		m_code << "case 0 {\n";
 		_ifStatement.falseStatement()->accept(*this);
 		m_code << "}\n";
@@ -366,7 +450,7 @@ bool IRGeneratorForStatements::visit(IfStatement const& _ifStatement)
 	}
 	else
 	{
-		m_code << "if " << IRNames::localVariable(_ifStatement.condition()) << " {\n";
+		m_code << "if " << var(_ifStatement.condition()).name() << " {\n";
 		_ifStatement.trueStatement().accept(*this);
 		m_code << "}\n";
 	}
@@ -380,9 +464,8 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 	solAssert(lhs, "Can only assign to identifiers.");
 	auto const* lhsVar = dynamic_cast<VariableDeclaration const*>(lhs->annotation().referencedDeclaration);
 	solAssert(lhsVar, "Can only assign to identifiers referring to variables.");
-	m_code << IRNames::localVariable(*lhsVar) << " := " << IRNames::localVariable(_assignment.rightHandSide()) << "\n";
-
-	m_code << "let " << IRNames::localVariable(_assignment) << " := " << IRNames::localVariable(*lhsVar) << "\n";
+	assign(var(*lhsVar), var(_assignment.rightHandSide()));
+	define(var(_assignment), var(*lhsVar));
 	return false;
 }
 
