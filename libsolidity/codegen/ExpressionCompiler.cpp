@@ -1259,6 +1259,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function call.
 				solAssert(arguments.size() == 2, "");
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
+				// Check if the function call matches ``require(bool, error)``, and throw an unimplemented error,
+				// as require with custom errors is not supported in legacy codegen.
+				auto const* magicType = dynamic_cast<MagicType const*>(arguments[1]->annotation().type);
+				if (magicType && magicType->kind() == MagicType::Kind::Error)
+					solUnimplemented("Require with a custom error is only available using the via-ir pipeline.");
+
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
 					if (!*arguments.at(1)->annotation().isPure)

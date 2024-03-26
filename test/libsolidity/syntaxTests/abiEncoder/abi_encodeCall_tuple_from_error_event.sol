@@ -12,5 +12,5 @@ contract C {
 }
 // ----
 // TypeError 9062: (138-142): Expected an inline tuple, not an expression of a tuple type.
-// TypeError 9062: (177-181): Expected an inline tuple, not an expression of a tuple type.
+// TypeError 7515: (153-182): Expected a tuple with 0 components instead of a single non-tuple parameter.
 // TypeError 9062: (216-224): Expected an inline tuple, not an expression of a tuple type.

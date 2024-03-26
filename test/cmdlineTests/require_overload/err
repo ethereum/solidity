@@ -5,3 +5,4 @@ Error: No matching declaration found after argument-dependent lookup.
   |         ^^^^^^^
 Note: Candidate: function require(bool)
 Note: Candidate: function require(bool, string memory)
+Note: Candidate: function require(bool, error)

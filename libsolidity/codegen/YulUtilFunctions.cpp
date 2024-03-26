@@ -24,6 +24,7 @@
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+#include <libsolidity/codegen/ir/IRVariable.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FunctionSelector.h>
@@ -262,6 +263,66 @@ std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* 
 			(_messageType->sizeOnStack() > 0 ? ", " : "") +
 			suffixedVariableNameList("message_", 1, 1 + _messageType->sizeOnStack())
 		)
+		.render();
+	});
+}
+
+std::string YulUtilFunctions::requireWithError(FunctionCall const& errorConstructorCall)
+{
+	ErrorDefinition const* errorDefinition = dynamic_cast<ErrorDefinition const*>(ASTNode::referencedDeclaration(errorConstructorCall.expression()));
+	solAssert(errorDefinition);
+
+	std::string const errorSignature = errorDefinition->functionType(true)->externalSignature();
+	std::string const signatureHash = formatNumber(util::selectorFromSignatureU256(errorSignature));
+	auto functionName = [&]() -> std::string {
+		std::string name = "require_helper_t_error_" + std::to_string(errorDefinition->id());
+		for (ASTPointer<Expression const> const& argument: errorConstructorCall.sortedArguments())
+		{
+			solAssert(argument->annotation().type);
+			name += ("_" + argument->annotation().type->identifier());
+		}
+		return name;
+	};
+
+	auto errorArgumentVarsAndTypes = [&]() -> std::tuple<std::vector<std::string>, std::vector<Type const*>> {
+		std::vector<ASTPointer<Expression const>> const& errorConstructorArguments = errorConstructorCall.sortedArguments();
+		std::vector<std::string> errorArgumentVars{};
+		std::vector<Type const*> errorArgumentTypes{};
+		for (ASTPointer<Expression const> const& arg: errorConstructorArguments)
+		{
+			solAssert(arg->annotation().type);
+			if (arg->annotation().type->sizeOnStack() > 0)
+				errorArgumentVars += IRVariable(*arg).stackSlots();
+			errorArgumentTypes.push_back(arg->annotation().type);
+		}
+		return std::tie(errorArgumentVars, errorArgumentTypes);
+	};
+
+	return m_functionCollector.createFunction(functionName(), [&]() {
+		std::vector<Type const*> const& parameterTypes = errorDefinition->functionType(true)->parameterTypes();
+		auto [errorArgumentVars, errorArgumentTypes] = errorArgumentVarsAndTypes();
+		std::string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
+			.tupleEncoder(
+				errorArgumentTypes,
+				parameterTypes
+			);
+
+		return Whiskers(R"(
+			function <functionName>(condition <errorArguments>) {
+				if iszero(condition) {
+					let memPtr := <allocateUnbounded>()
+					mstore(memPtr, <errorHash>)
+					let end := <abiEncodeFunc>(add(memPtr, <hashHeaderSize>) <errorArguments>)
+					revert(memPtr, sub(end, memPtr))
+				}
+			}
+		)")
+		("functionName", functionName())
+		("allocateUnbounded", allocateUnboundedFunction())
+		("errorHash", signatureHash)
+		("abiEncodeFunc", encodeFunc)
+		("hashHeaderSize", std::to_string(4))
+		("errorArguments", joinHumanReadablePrefixed(errorArgumentVars))
 		.render();
 	});
 }

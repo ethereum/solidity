@@ -1670,6 +1670,7 @@ public:
 		Message, ///< "msg"
 		Transaction, ///< "tx"
 		ABI, ///< "abi"
+		Error,
 		MetaType ///< "type(...)"
 	};
 

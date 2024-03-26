@@ -1,17 +1,19 @@
-.. index:: ! error, revert, ! selector; of an error
+.. index:: ! error, revert, require ! selector; of an error
 .. _errors:
 
-*******************************
-Errors and the Revert Statement
-*******************************
+**************
+Custom Errors
+**************
 
 Errors in Solidity provide a convenient and gas-efficient way to explain to the
 user why an operation failed. They can be defined inside and outside of contracts (including interfaces and libraries).
 
 They have to be used together with the :ref:`revert statement <revert-statement>`
-which causes
-all changes in the current call to be reverted and passes the error data back to the
-caller.
+or the :ref:`require statement <assert-and-require-statements>`.
+In the case of ``revert`` statements, or ``require`` statements where the condition is evaluated to be false,
+all changes in the current call are to be reverted, and the error data passed back to the caller.
+
+Below is an example of custom error usage with the ``revert`` statement:
 
 .. code-block:: solidity
 
@@ -38,9 +40,43 @@ caller.
         // ...
     }
 
+And the same again with the ``require`` statement:
+
+.. code-block:: solidity
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.26;
+
+    /// Insufficient balance for transfer. Needed `required` but only
+    /// `available` available.
+    /// @param available balance available.
+    /// @param required requested amount to transfer.
+    error InsufficientBalance(uint256 available, uint256 required);
+
+    // This will only compile with via-ir
+    contract TestToken {
+        mapping(address => uint) balance;
+        function transfer(address to, uint256 amount) public {
+            require(amount > balance[msg.sender], InsufficientBalance(balance[msg.sender], amount));
+            balance[msg.sender] -= amount;
+            balance[to] += amount;
+        }
+        // ...
+    }
+
+.. note::
+    Functions are evaluated unconditionally within error constructors, so take special care in such cases in order
+    to make sure that such a function call does not have unexpected side-effects.
+    For example, in ``require(condition, CustomError(f());``, function ``f()`` will be called regardless of whether
+    the supplied condition is ``true`` or ``false``.
+
+Another important thing to mention when it comes to using ``require`` with custom errors, is that memory
+allocation for the error-based revert reason will only happen in the reverting pass, which, along with
+optimization of constants and string literals makes this about as (gas) cost effective as ``revert CustomError(args)``.
+
 Errors cannot be overloaded or overridden but are inherited.
 The same error can be defined in multiple places as long as the scopes are distinct.
-Instances of errors can only be created using ``revert`` statements.
+Instances of errors can only be created using ``revert`` statements, or as the second argument to ``require`` statements.
 
 The error creates data that is then passed to the caller with the revert operation
 to either return to the off-chain component or catch it in a :ref:`try/catch statement <try-catch>`.

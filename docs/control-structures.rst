@@ -594,6 +594,8 @@ The built-in errors ``Error(string)`` and ``Panic(uint256)`` are
 used by special functions, as explained below. ``Error`` is used for "regular" error conditions
 while ``Panic`` is used for errors that should not be present in bug-free code.
 
+.. _assert-and-require-statements:
+
 Panic via ``assert`` and Error via ``require``
 ----------------------------------------------
 
@@ -625,21 +627,23 @@ The error code supplied with the error data indicates the kind of panic.
 #. 0x41: If you allocate too much memory or create an array that is too large.
 #. 0x51: If you call a zero-initialized variable of internal function type.
 
-The ``require`` function either creates an error without any data or
-an error of type ``Error(string)``. It
-should be used to ensure valid conditions
-that cannot be detected until execution time.
-This includes conditions on inputs
-or return values from calls to external contracts.
+The ``require`` function provides three overloads:
+
+1. ``require(bool)`` which only accepts a boolean condition.
+2. ``require(bool, string)`` which accepts a boolean condition, as well as an error message.
+3. ``require(bool, error)`` which accepts a boolean condition, and a custom error.
+
+The first overload (condition only), will create an error without any data.
+The second overload will create an ``Error(string)``, whereas the third overload will create
+a custom, user supplied error, provided as the second argument to the ``require`` function.
 
 .. note::
 
-    It is currently not possible to use custom errors in combination
-    with ``require``. Please use ``if (!condition) revert CustomError();`` instead.
+    Using custom errors with ``require`` is only possible with the ``via-ir`` pipeline, i.e. compilation via Yul.
+    For the default compilation, please use ``if (!condition) revert CustomError();`` instead.
 
-An ``Error(string)`` exception (or an exception without data) is generated
-by the compiler
-in the following situations:
+An ``Error(args)`` exception (or an exception without data) is generated
+by the compiler in the following situations:
 
 #. Calling ``require(x)`` where ``x`` evaluates to ``false``.
 #. If you use ``revert()`` or ``revert("description")``.
@@ -662,10 +666,10 @@ an ``Error`` or a ``Panic`` (or whatever else was given):
 #. If you create a contract using the ``new`` keyword but the contract
    creation :ref:`does not finish properly<creating-contracts>`.
 
-You can optionally provide a message string for ``require``, but not for ``assert``.
+You can optionally provide a message string or a custom error to ``require``, but not to ``assert``.
 
 .. note::
-    If you do not provide a string argument to ``require``, it will revert
+    If you do not provide a string or custom error argument to ``require``, it will revert
     with empty error data, not even including the error selector.
 
 

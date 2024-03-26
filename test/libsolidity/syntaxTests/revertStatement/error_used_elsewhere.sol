@@ -3,4 +3,4 @@ function f() pure {
     E();
 }
 // ----
-// TypeError 7757: (35-38): Errors can only be used with revert statements: "revert MyError();".
+// TypeError 7757: (35-38): Errors can only be used with revert statements: "revert MyError(args);", or require functions: "require(condition, MyError(args))".
