@@ -403,6 +403,13 @@ for an interface type ``I``:
     interface identifier of the given interface ``I``. This identifier is defined as the ``XOR`` of all
     function selectors defined within the interface itself - excluding all inherited functions.
 
+The following properties are available for an struct type ``S``:
+
+``type(S).typehash``:
+    A ``bytes32`` value containing the `EIP-712 <https://eips.ethereum.org/EIPS/eip-712>`_
+    typehash of the given structure ``S``. This identifier is defined as ``keccak256`` of
+    structure name and all the fields with their types, wrapped in braces and separated by commas.
+
 The following properties are available for an integer type ``T``:
 
 ``type(T).min``

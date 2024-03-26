@@ -1886,6 +1886,23 @@ std::string ArrayType::canonicalName() const
 	return ret;
 }
 
+std::string ArrayType::eip712TypeName() const
+{
+	std::string ret;
+	if (isString())
+		ret = "string";
+	else if (isByteArrayOrString())
+		ret = "bytes";
+	else
+	{
+		ret = baseType()->eip712TypeName() + "[";
+		if (!isDynamicallySized())
+			ret += length().str();
+		ret += "]";
+	}
+	return ret;
+}
+
 std::string ArrayType::signatureInExternalFunction(bool _structsByName) const
 {
 	if (isByteArrayOrString())
@@ -2508,6 +2525,11 @@ std::string StructType::signatureInExternalFunction(bool _structsByName) const
 std::string StructType::canonicalName() const
 {
 	return *m_struct.annotation().canonicalName;
+}
+
+std::string StructType::eip712TypeName() const
+{
+	return this->typeDefinition()->name();
 }
 
 FunctionTypePointer StructType::constructorType() const
@@ -4198,15 +4220,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 		});
 	case Kind::MetaType:
 	{
-		solAssert(
-			m_typeArgument && (
-					m_typeArgument->category() == Type::Category::Contract ||
-					m_typeArgument->category() == Type::Category::Integer ||
-					m_typeArgument->category() == Type::Category::Enum
-			),
-			"Only enums, contracts or integer types supported for now"
-		);
-
+		solAssert(m_typeArgument, "");
 		if (m_typeArgument->category() == Type::Category::Contract)
 		{
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_typeArgument).contractDefinition();
@@ -4221,6 +4235,12 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 					{"interfaceId", TypeProvider::fixedBytes(4)},
 					{"name", TypeProvider::stringMemory()},
 				});
+		}
+		else if (m_typeArgument->category() == Type::Category::Struct)
+		{
+			return MemberList::MemberMap({
+				{"typehash", TypeProvider::fixedBytes(32)},
+			});
 		}
 		else if (m_typeArgument->category() == Type::Category::Integer)
 		{
@@ -4237,6 +4257,10 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				{"min", enumTypePointer},
 				{"max", enumTypePointer},
 			});
+		}
+		else
+		{
+			solAssert(false, "Only enums, contracts, structs or integer types supported for now");
 		}
 	}
 	}

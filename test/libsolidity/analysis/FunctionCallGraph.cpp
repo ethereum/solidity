@@ -1916,6 +1916,9 @@ BOOST_AUTO_TEST_CASE(builtins)
 		interface I {}
 
 		contract C {
+			struct S {
+				uint x;
+			}
 			function accessBuiltin() public payable {
 				abi.decode;
 				abi.encode;
@@ -1956,6 +1959,7 @@ BOOST_AUTO_TEST_CASE(builtins)
 				address(0).staticcall;
 				type(C).name;
 				type(I).interfaceId;
+				type(S).typehash;
 				type(uint).min;
 				type(uint).max;
 				assert;

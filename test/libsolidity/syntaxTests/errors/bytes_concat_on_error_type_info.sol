@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 4259: (126-139): Invalid type for argument in the function call. An enum type, contract type or an integer type is required, but error MyCustomError(uint256,bool) provided.
+// TypeError 4259: (126-139): Invalid type for argument in the function call. An enum type, contract type, struct type or an integer type is required, but error MyCustomError(uint256,bool) provided.

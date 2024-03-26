@@ -397,6 +397,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			{MagicType::Kind::MetaType, "runtimeCode"},
 			{MagicType::Kind::MetaType, "name"},
 			{MagicType::Kind::MetaType, "interfaceId"},
+			{MagicType::Kind::MetaType, "typehash"},
 			{MagicType::Kind::MetaType, "min"},
 			{MagicType::Kind::MetaType, "max"},
 		};
