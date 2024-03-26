@@ -276,7 +276,7 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 
 	// Convert value type to storage reference.
 	valueType = TypeProvider::withLocationIfReference(DataLocation::Storage, valueType);
-	_mapping.annotation().type = TypeProvider::mapping(keyType, keyName, valueType, valueName);
+	_mapping.annotation().type = TypeProvider::mapping(keyType, keyName, valueType, valueName, DataLocation::Storage);
 
 	// Check if parameter names are conflicting.
 	if (!keyName.empty())
@@ -406,6 +406,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 			switch (_location)
 			{
 				case Location::Memory: return "\"memory\"";
+				case Location::Transient: return "\"transient\"";
 				case Location::Storage: return "\"storage\"";
 				case Location::CallData: return "\"calldata\"";
 				case Location::Unspecified: return "none";
@@ -456,8 +457,17 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 	else if (_variable.isStateVariable())
 	{
-		solAssert(varLoc == Location::Unspecified, "");
-		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
+		switch (varLoc)
+		{
+		case Location::Unspecified:
+			typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
+			break;
+		case Location::Transient:
+			typeLoc = DataLocation::Transient;
+			break;
+		default:
+			solAssert(false, "");
+		}
 	}
 	else if (
 		dynamic_cast<StructDefinition const*>(_variable.scope()) ||
@@ -470,6 +480,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		{
 			case Location::Memory:
 				typeLoc = DataLocation::Memory;
+				break;
+			case Location::Transient:
+				typeLoc = DataLocation::Transient;
 				break;
 			case Location::Storage:
 				typeLoc = DataLocation::Storage;

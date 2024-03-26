@@ -55,6 +55,21 @@ struct IRLValue
 				return std::get<std::string>(offset);
 		}
 	};
+	struct Transient
+	{
+		std::string const slot;
+		/// unsigned: Used when the offset is known at compile time, uses optimized
+		///           functions
+		/// string: Used when the offset is determined at run time
+		std::variant<std::string, unsigned> const offset;
+		std::string offsetString() const
+		{
+			if (std::holds_alternative<unsigned>(offset))
+				return std::to_string(std::get<unsigned>(offset));
+			else
+				return std::get<std::string>(offset);
+		}
+	};
 	struct Memory
 	{
 		std::string const address;
@@ -64,7 +79,7 @@ struct IRLValue
 	{
 		std::vector<std::optional<IRLValue>> components;
 	};
-	std::variant<Stack, Immutable, Storage, Memory, Tuple> kind;
+	std::variant<Stack, Immutable, Transient, Storage, Memory, Tuple> kind;
 };
 
 }

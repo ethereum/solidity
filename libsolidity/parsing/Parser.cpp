@@ -819,7 +819,28 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	while (true)
 	{
 		Token token = m_scanner->currentToken();
-		if (_options.kind == VarDeclKind::State && TokenTraits::isVariableVisibilitySpecifier(token))
+		if (_options.kind == VarDeclKind::State  && TokenTraits::isLocationSpecifier(token))
+		{
+			if (location != VariableDeclaration::Location::Unspecified)
+				parserError(3548_error, "Location already specified.");
+			else
+			{
+				switch (token)
+				{
+				case Token::Transient:
+					location = VariableDeclaration::Location::Transient;
+					advance();
+					break;
+				case Token::Storage:
+				case Token::Memory:
+				case Token::CallData:
+					solAssert(false, "Invalid state variable location specifier.");
+				default:
+					solAssert(false, "Unknown data location.");
+				}
+			}
+		}
+		else if (_options.kind == VarDeclKind::State && TokenTraits::isVariableVisibilitySpecifier(token))
 		{
 			nodeFactory.markEndPosition();
 			if (visibility != Visibility::Default)
@@ -874,6 +895,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 					{
 					case Token::Storage:
 						location = VariableDeclaration::Location::Storage;
+						break;
+					case Token::Transient:
+						location = VariableDeclaration::Location::Transient;
 						break;
 					case Token::Memory:
 						location = VariableDeclaration::Location::Memory;

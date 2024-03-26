@@ -570,9 +570,9 @@ MagicType const* TypeProvider::meta(Type const* _type)
 	return createAndGet<MagicType>(_type);
 }
 
-MappingType const* TypeProvider::mapping(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName)
+MappingType const* TypeProvider::mapping(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName, DataLocation _location)
 {
-	return createAndGet<MappingType>(_keyType, _keyName, _valueType, _valueName);
+	return createAndGet<MappingType>(_keyType, _keyName, _valueType, _valueName, _location);
 }
 
 UserDefinedValueType const* TypeProvider::userDefinedValueType(UserDefinedValueTypeDefinition const& _definition)

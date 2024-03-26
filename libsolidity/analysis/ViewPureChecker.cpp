@@ -415,14 +415,14 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	}
 	case Type::Category::Struct:
 	{
-		if (_memberAccess.expression().annotation().type->dataStoredIn(DataLocation::Storage))
+		if (_memberAccess.expression().annotation().type->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }))
 			mutability = writes ? StateMutability::NonPayable : StateMutability::View;
 		break;
 	}
 	case Type::Category::Array:
 	{
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
-		if (member == "length" && type.isDynamicallySized() && type.dataStoredIn(DataLocation::Storage))
+		if (member == "length" && type.isDynamicallySized() && type.dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }))
 			mutability = StateMutability::View;
 		break;
 	}
@@ -446,7 +446,7 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 	else
 	{
 		bool writes = _indexAccess.annotation().willBeWrittenTo;
-		if (_indexAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
+		if (_indexAccess.baseExpression().annotation().type->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }))
 			reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexAccess.location());
 	}
 }
@@ -454,7 +454,7 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 void ViewPureChecker::endVisit(IndexRangeAccess const& _indexRangeAccess)
 {
 	bool writes = _indexRangeAccess.annotation().willBeWrittenTo;
-	if (_indexRangeAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
+	if (_indexRangeAccess.baseExpression().annotation().type->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }))
 		reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexRangeAccess.location());
 }
 

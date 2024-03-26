@@ -321,6 +321,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SSTORE:
 		m_state.storage[h256(arg[0])] = h256(arg[1]);
 		return 0;
+	case Instruction::TLOAD:
+		return m_state.transientStorage[h256(arg[0])];
+	case Instruction::TSTORE:
+		m_state.transientStorage[h256(arg[0])] = h256(arg[1]);
+		return 0;
 	case Instruction::PC:
 		return 0x77;
 	case Instruction::MSIZE:
@@ -346,11 +351,6 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::LOG4:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
-		return 0;
-	case Instruction::TLOAD:
-		return m_state.transientStorage[h256(arg[0])];
-	case Instruction::TSTORE:
-		m_state.transientStorage[h256(arg[0])] = h256(arg[1]);
 		return 0;
 	// --------------- calls ---------------
 	case Instruction::CREATE:

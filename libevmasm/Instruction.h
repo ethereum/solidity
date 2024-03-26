@@ -88,9 +88,9 @@ enum class Instruction: uint8_t
 	GASLIMIT,			///< get the block's gas limit
 	CHAINID,			///< get the config's chainid param
 	SELFBALANCE,		///< get balance of the current account
-	BASEFEE,            ///< get the block's basefee
-	BLOBHASH = 0x49,    ///< get a versioned hash of one of the blobs associated with the transaction
-	BLOBBASEFEE = 0x4a, ///< get the block's blob basefee
+	BASEFEE,			///< get the block's basefee
+	BLOBHASH = 0x49,	///< get a versioned hash of one of the blobs associated with the transaction
+	BLOBBASEFEE = 0x4a,	///< get the block's blob basefee
 
 	POP = 0x50,			///< remove item from stack
 	MLOAD,				///< load word from memory
@@ -104,12 +104,11 @@ enum class Instruction: uint8_t
 	MSIZE,				///< get the size of active memory
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
-	MCOPY = 0x5e,       ///< copy between memory areas
+	TLOAD = 0x5c,		///< load word from transient storage
+	TSTORE = 0x5d,		///< save word to transient storage
+	MCOPY = 0x5e,		///< copy between memory areas
 
-	TLOAD = 0x5c,       ///< load word from transient storage
-	TSTORE = 0x5d,      ///< save word to transient storage
-
-	PUSH0 = 0x5f,       ///< place the value 0 on stack
+	PUSH0 = 0x5f,		///< place the value 0 on stack
 	PUSH1 = 0x60,		///< place 1 byte item on stack
 	PUSH2,				///< place 2 byte item on stack
 	PUSH3,				///< place 3 byte item on stack

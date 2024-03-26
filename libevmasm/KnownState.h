@@ -109,6 +109,8 @@ public:
 
 	/// Resets any knowledge about storage.
 	void resetStorage() { m_storageContent.clear(); }
+	/// Reset any knowledge about transient storage.
+	void resetTransientStorage() { m_transientStorageContent.clear(); }
 	/// Resets any knowledge about memory.
 	void resetMemory() { m_memoryContent.clear(); }
 	/// Resets known Keccak-256 hashes
@@ -150,6 +152,7 @@ public:
 	ExpressionClasses& expressionClasses() const { return *m_expressionClasses; }
 
 	std::map<Id, Id> const& storageContent() const { return m_storageContent; }
+	std::map<Id, Id> const& transientStorageContent() const { return m_transientStorageContent; }
 
 private:
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.
@@ -183,6 +186,8 @@ private:
 	unsigned m_sequenceNumber = 1;
 	/// Knowledge about storage content.
 	std::map<Id, Id> m_storageContent;
+	/// Knowledge about transient storage content.
+	std::map<Id, Id> m_transientStorageContent;
 	/// Knowledge about memory content. Keys are memory addresses, note that the values overlap
 	/// and are not contained here if they are not completely known.
 	std::map<Id, Id> m_memoryContent;

@@ -259,6 +259,7 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 	}
 
 	intersect(m_storageContent, _other.m_storageContent);
+	intersect(m_transientStorageContent, _other.m_transientStorageContent);
 	intersect(m_memoryContent, _other.m_memoryContent);
 	if (_combineSequenceNumbers)
 		m_sequenceNumber = std::max(m_sequenceNumber, _other.m_sequenceNumber);
@@ -266,7 +267,9 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combine
 
 bool KnownState::operator==(KnownState const& _other) const
 {
-	if (m_storageContent != _other.m_storageContent || m_memoryContent != _other.m_memoryContent)
+	if (m_storageContent != _other.m_storageContent || 
+		m_transientStorageContent != _other.m_transientStorageContent ||
+		m_memoryContent != _other.m_memoryContent)
 		return false;
 	int stackDiff = m_stackHeight - _other.m_stackHeight;
 	auto thisIt = m_stackElements.cbegin();

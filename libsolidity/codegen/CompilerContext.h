@@ -83,6 +83,7 @@ public:
 	bool useABICoderV2() const { return m_useABICoderV2; }
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
+	void addTransientStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addImmutable(VariableDeclaration const& _declaration);
 
 	/// @returns the reserved memory for storing the value of the immutable @a _variable during contract creation.
@@ -110,6 +111,7 @@ public:
 
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
+	bool isTransientStateVariable(Declaration const* _declaration) const { return m_transientStateVariables.count(_declaration) != 0; }
 
 	/// @returns the entry label of the given function and creates it if it does not exist yet.
 	evmasm::AssemblyItem functionEntryLabel(Declaration const& _declaration);
@@ -186,6 +188,8 @@ public:
 	unsigned currentToBaseStackOffset(unsigned _offset) const;
 	/// @returns pair of slot and byte offset of the value inside this slot.
 	std::pair<u256, unsigned> storageLocationOfVariable(Declaration const& _declaration) const;
+	/// @returns pair of slot and byte offset of the value inside this slot.
+	std::pair<u256, unsigned> storageLocationOfTransientVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	evmasm::AssemblyItem appendConditionalJump() { return m_asm->appendJumpI().tag(); }
@@ -355,6 +359,8 @@ private:
 	std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> m_otherCompilers;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
+	/// Storage offsets of transient state variables
+	std::map<Declaration const*, std::pair<u256, unsigned>> m_transientStateVariables;
 	/// Memory offsets reserved for the values of immutable variables during contract creation.
 	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
 	/// Total amount of reserved memory. Reserved memory is used to store immutable variables during contract creation.

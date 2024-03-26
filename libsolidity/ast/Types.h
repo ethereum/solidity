@@ -36,6 +36,7 @@
 
 #include <boost/rational.hpp>
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <optional>
@@ -70,7 +71,7 @@ inline rational makeRational(bigint const& _numerator, bigint const& _denominato
 		return rational(_numerator, _denominator);
 }
 
-enum class DataLocation { Storage, CallData, Memory };
+enum class DataLocation { Storage, Transient, CallData, Memory };
 
 
 /**
@@ -342,6 +343,12 @@ public:
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.
 	virtual bool dataStoredIn(DataLocation) const { return false; }
+	/// @returns true if this is a non-value type and the data of this type is stored at any
+	/// of the given locations.
+	virtual bool dataStoredInAnyOf(std::initializer_list<DataLocation> _locations) const
+	{
+		return std::any_of(std::begin(_locations), std::end(_locations), [this](DataLocation location) { return this->dataStoredIn(location); });
+	}
 
 	/// Returns the list of all members of this type. Default implementation: no members apart from attached functions.
 	/// @param _currentScope scope in which the members are accessed.
@@ -1003,6 +1010,9 @@ public:
 	/// @returns a list of all state variables (including inherited) of the contract and their
 	/// offsets in storage.
 	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> stateVariables() const;
+	/// @returns a list of all state variables (including inherited) of the contract and their
+	/// offsets in storage.
+	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> transientStateVariables() const;
 	/// @returns a list of all immutable variables (including inherited) of the contract.
 	std::vector<VariableDeclaration const*> immutableVariables() const;
 protected:
@@ -1540,26 +1550,31 @@ private:
  * The type of a mapping, there is one distinct type per key/value type pair.
  * Mappings always occupy their own storage slot, but do not actually use it.
  */
-class MappingType: public CompositeType
+class MappingType: public ReferenceType
 {
 public:
-	MappingType(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName):
-		m_keyType(_keyType), m_keyName(_keyName), m_valueType(_valueType), m_valueName(_valueName) {}
+	MappingType(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName, DataLocation _location = DataLocation::Storage):
+		ReferenceType(_location), m_keyType(_keyType), m_keyName(_keyName), m_valueType(_valueType), m_valueName(_valueName) {}
 
 	Category category() const override { return Category::Mapping; }
 
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
+	unsigned calldataEncodedSize(bool) const override { solAssert(false, ""); }
+	unsigned calldataEncodedTailSize() const override { solAssert(false, ""); }
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
 	bool containsNestedMapping() const override { return true; }
 	TypeResult binaryOperatorResult(Token, Type const*) const override { return nullptr; }
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
-	bool dataStoredIn(DataLocation _location) const override { return _location == DataLocation::Storage; }
 	/// Cannot be stored in memory, but just in case.
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	bool nameable() const override { return true; }
+	u256 memoryDataSize() const override { solAssert(false, ""); }
+
+	BoolResult validForLocation(DataLocation _loc) const override;
+	std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 

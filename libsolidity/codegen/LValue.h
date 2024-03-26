@@ -174,6 +174,31 @@ public:
 };
 
 /**
+ * Reference to some item in storage. On the stack this is <storage key> <offset_inside_value>,
+ * where 0 <= offset_inside_value < 32 and an offset of i means that the value is multiplied
+ * by 2**i before storing it.
+ */
+class TransientStorageItem: public LValue
+{
+public:
+	/// Constructs the LValue and pushes the location of @a _declaration onto the stack.
+	TransientStorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
+	/// Constructs the LValue and assumes that the transient storage reference is already on the stack.
+	TransientStorageItem(CompilerContext& _compilerContext, Type const& _type);
+	unsigned sizeOnStack() const override { return 2; }
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
+	void storeValue(
+		Type const& _sourceType,
+		langutil::SourceLocation const& _location = {},
+		bool _move = false
+	) const override;
+	void setToZero(
+		langutil::SourceLocation const& _location = {},
+		bool _removeReference = true
+	) const override;
+};
+
+/**
  * Reference to a single byte inside a storage byte array.
  * Stack: <storage_ref> <byte_number>
  */
@@ -182,6 +207,28 @@ class StorageByteArrayElement: public LValue
 public:
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageByteArrayElement(CompilerContext& _compilerContext);
+	unsigned sizeOnStack() const override { return 2; }
+	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
+	void storeValue(
+		Type const& _sourceType,
+		langutil::SourceLocation const& _location = {},
+		bool _move = false
+	) const override;
+	void setToZero(
+		langutil::SourceLocation const& _location = {},
+		bool _removeReference = true
+	) const override;
+};
+
+/**
+ * Reference to a single byte inside a storage byte array.
+ * Stack: <storage_ref> <byte_number>
+ */
+class TransientStorageByteArrayElement: public LValue
+{
+public:
+	/// Constructs the LValue and assumes that the storage reference is already on the stack.
+	TransientStorageByteArrayElement(CompilerContext& _compilerContext);
 	unsigned sizeOnStack() const override { return 2; }
 	void retrieveValue(langutil::SourceLocation const& _location, bool _remove = false) const override;
 	void storeValue(

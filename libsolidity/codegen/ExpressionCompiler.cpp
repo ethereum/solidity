@@ -73,7 +73,7 @@ Type const* closestType(Type const* _type, Type const* _targetType, bool _isShif
 		return TypeProvider::tuple(std::move(tempComponents));
 	}
 	else
-		return _targetType->dataStoredIn(DataLocation::Storage) ? _type->mobileType() : _targetType;
+		return _targetType->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }) ? _type->mobileType() : _targetType;
 }
 
 }
@@ -92,7 +92,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.value()->accept(*this);
 
-	if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
+	if (_varDecl.annotation().type->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }))
 	{
 		// reference type, only convert value to mobile type and do final conversion in storeValue.
 		auto mt = type->mobileType();
@@ -107,8 +107,12 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	}
 	if (_varDecl.immutable())
 		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
-	else
+	else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
 		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Transient))
+		TransientStorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	else
+		solAssert(false, "");
 }
 
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
@@ -135,9 +139,20 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 
 	if (!_varDecl.immutable())
 	{
-		// retrieve the position of the variable
-		auto const& location = m_context.storageLocationOfVariable(_varDecl);
-		m_context << location.first << u256(location.second);
+		if (m_context.isStateVariable(&_varDecl))
+		{
+			// retrieve the position of the variable
+			auto const& location = m_context.storageLocationOfVariable(_varDecl);
+			m_context << location.first << u256(location.second);
+		}
+		else if (m_context.isTransientStateVariable(&_varDecl))
+		{
+			// retrieve the position of the variable
+			auto const& location = m_context.storageLocationOfTransientVariable(_varDecl);
+			m_context << location.first << u256(location.second);
+		}
+		else
+			solAssert(false, "");
 	}
 
 	Type const* returnType = _varDecl.annotation().type;
@@ -244,7 +259,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			std::pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
 			m_context << Instruction::DUP1 << u256(offsets.first) << Instruction::ADD << u256(offsets.second);
 			Type const* memberType = structType->memberType(names[i]);
-			StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true);
+			StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true); // [Amxx] TODO: transient
 			utils().convertType(*memberType, *returnTypes[i]);
 			utils().moveToStackTop(returnTypes[i]->sizeOnStack());
 			retSizeOnStack += returnTypes[i]->sizeOnStack();
@@ -259,7 +274,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		if (_varDecl.immutable())
 			ImmutableItem(m_context, _varDecl).retrieveValue(SourceLocation());
 		else
-			StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
+			StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true); // [Amxx] TODO: transient
 		utils().convertType(*returnType, *returnTypes.front());
 		retSizeOnStack = returnTypes.front()->sizeOnStack();
 	}
@@ -1096,10 +1111,22 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// stack: ArrayReference (newLength-1)
 				ArrayUtils(m_context).accessIndex(*arrayType, false);
 
-				if (arrayType->isByteArrayOrString())
-					setLValue<StorageByteArrayElement>(_functionCall);
+				if (arrayType->dataStoredIn(DataLocation::Storage))
+				{
+					if (arrayType->isByteArrayOrString())
+						setLValue<StorageByteArrayElement>(_functionCall);
+					else
+						setLValueToStorageItem(_functionCall);
+				}
+				else if (arrayType->dataStoredIn(DataLocation::Transient))
+				{
+					if (arrayType->isByteArrayOrString())
+						setLValueToTransientStorageItem(_functionCall);
+					else
+						setLValue<TransientStorageByteArrayElement>(_functionCall);
+				}
 				else
-					setLValueToStorageItem(_functionCall);
+					solAssert(false);
 			}
 			else
 			{
@@ -1125,18 +1152,30 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().moveToStackTop(2, argType->sizeOnStack());
 				// stack: storageSlot slotOffset argValue
 				Type const* type =
-					arrayType->baseType()->dataStoredIn(DataLocation::Storage) ?
-					arguments[0]->annotation().type->mobileType() :
-					arrayType->baseType();
+					arrayType->baseType()->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient })
+					? arguments[0]->annotation().type->mobileType()
+					: arrayType->baseType();
 				solAssert(type, "");
 				utils().convertType(*argType, *type);
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				// stack: argValue storageSlot slotOffset
-				if (!arrayType->isByteArrayOrString())
-					StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				if (arrayType->dataStoredIn(DataLocation::Storage))
+				{
+					if (arrayType->isByteArrayOrString())
+						StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+					else
+						StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				}
+				else if (arrayType->dataStoredIn(DataLocation::Transient))
+				{
+					if (arrayType->isByteArrayOrString())
+						TransientStorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+					else
+						TransientStorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+				}
 				else
-					StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+					solAssert(false);
 			}
 			break;
 		}
@@ -1146,7 +1185,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			solAssert(function.hasBoundFirstArgument(), "");
 			solAssert(function.parameterTypes().empty(), "");
 			ArrayType const* arrayType = dynamic_cast<ArrayType const*>(function.selfType());
-			solAssert(arrayType && arrayType->dataStoredIn(DataLocation::Storage), "");
+			solAssert(arrayType && arrayType->dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }), "");
 			ArrayUtils(m_context).popStorageArrayElement(*arrayType);
 			break;
 		}
@@ -1971,6 +2010,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			setLValueToStorageItem(_memberAccess);
 			break;
 		}
+		case DataLocation::Transient:
+		{
+			// TODO(conner): use transient offsets
+			std::pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
+			m_context << offsets.first << Instruction::ADD << u256(offsets.second);
+			setLValueToTransientStorageItem(_memberAccess);
+			break;
+		}
 		case DataLocation::Memory:
 		{
 			m_context << type.memoryOffsetOfMember(member) << Instruction::ADD;
@@ -2041,6 +2088,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					ArrayUtils(m_context).retrieveLength(type);
 					m_context << Instruction::SWAP1 << Instruction::POP;
 					break;
+				case DataLocation::Transient:
+					ArrayUtils(m_context).retrieveLength(type);
+					m_context << Instruction::SWAP1 << Instruction::POP;
+					break;
 				case DataLocation::Memory:
 					m_context << Instruction::MLOAD;
 					break;
@@ -2050,7 +2101,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			solAssert(
 				type.isDynamicallySized() &&
-				type.location() == DataLocation::Storage &&
+				type.dataStoredInAnyOf({ DataLocation::Storage, DataLocation::Transient }) &&
 				type.category() == Type::Category::Array,
 				"Tried to use ." + member + "() on a non-dynamically sized array"
 			);
@@ -2149,7 +2200,13 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			}
 			m_context << Instruction::KECCAK256;
 			m_context << u256(0);
-			setLValueToStorageItem(_indexAccess);
+
+			if (baseType.dataStoredIn(DataLocation::Storage))
+				setLValueToStorageItem(_indexAccess);
+			else if (baseType.dataStoredIn(DataLocation::Transient))
+				setLValueToTransientStorageItem(_indexAccess);
+			else
+				solAssert(false, "");
 			break;
 		}
 		case Type::Category::ArraySlice:
@@ -2186,6 +2243,16 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					}
 					else
 						setLValueToStorageItem(_indexAccess);
+					break;
+				case DataLocation::Transient:
+					ArrayUtils(m_context).accessIndex(arrayType);
+					if (arrayType.isByteArrayOrString())
+					{
+						solAssert(!arrayType.isString(), "Index access to string is not allowed.");
+						setLValue<TransientStorageByteArrayElement>(_indexAccess);
+					}
+					else
+						setLValueToTransientStorageItem(_indexAccess);
 					break;
 				case DataLocation::Memory:
 					ArrayUtils(m_context).accessIndex(arrayType);
@@ -2945,6 +3012,8 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 		setLValue<StackVariable>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else if (m_context.isStateVariable(&_declaration))
 		setLValue<StorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
+	else if (m_context.isTransientStateVariable(&_declaration))
+		setLValue<TransientStorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError()
 			<< errinfo_sourceLocation(_expression.location())
@@ -2954,6 +3023,11 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 {
 	setLValue<StorageItem>(_expression, *_expression.annotation().type);
+}
+
+void ExpressionCompiler::setLValueToTransientStorageItem(Expression const& _expression)
+{
+	setLValue<TransientStorageItem>(_expression, *_expression.annotation().type);
 }
 
 bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token _op, Arithmetic _arithmetic)

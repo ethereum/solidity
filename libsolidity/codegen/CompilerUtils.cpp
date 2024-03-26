@@ -492,8 +492,16 @@ void CompilerUtils::encodeToMemory(
 				solAssert(_encodeAsLibraryTypes);
 				solAssert(_givenTypes[i]->sizeOnStack() == 1);
 			}
+			else if (_givenTypes[i]->dataStoredIn(DataLocation::Transient) && targetType->isValueType())
+			{
+				// special case: convert storage reference type to value type - this is only
+				// possible for library calls where we just forward the storage reference
+				solAssert(_encodeAsLibraryTypes);
+				solAssert(_givenTypes[i]->sizeOnStack() == 1);
+			}
 			else if (
 				_givenTypes[i]->dataStoredIn(DataLocation::Storage) ||
+				_givenTypes[i]->dataStoredIn(DataLocation::Transient) ||
 				_givenTypes[i]->dataStoredIn(DataLocation::CallData) ||
 				_givenTypes[i]->category() == Type::Category::StringLiteral ||
 				_givenTypes[i]->category() == Type::Category::Function
@@ -1024,6 +1032,14 @@ void CompilerUtils::convertType(
 				"Invalid conversion to storage type."
 			);
 			break;
+		case DataLocation::Transient:
+			// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
+			solAssert(
+				(targetType.isPointer() || (typeOnStack.isByteArrayOrString() && targetType.isByteArrayOrString())) &&
+				typeOnStack.location() == DataLocation::Transient,
+				"Invalid conversion to transient storage type."
+			);
+			break;
 		case DataLocation::Memory:
 		{
 			// Copy the array to a free position in memory, unless it is already in memory.
@@ -1088,6 +1104,8 @@ void CompilerUtils::convertType(
 						ArrayUtils(m_context).accessIndex(typeOnStack, false);
 						if (typeOnStack.location() == DataLocation::Storage)
 							StorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
+						if (typeOnStack.location() == DataLocation::Transient)
+							TransientStorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
 						convertType(*typeOnStack.baseType(), *targetType.baseType(), _cleanupNeeded);
 						storeInMemoryDynamic(*targetType.baseType(), true);
 						m_context << Instruction::SWAP1 << u256(1) << Instruction::ADD;
@@ -1168,6 +1186,14 @@ void CompilerUtils::convertType(
 				"Invalid conversion to storage type."
 			);
 			break;
+		case DataLocation::Transient:
+			// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
+			solAssert(
+				targetType.isPointer() &&
+				typeOnStack.location() == DataLocation::Transient,
+				"Invalid conversion to transient type."
+			);
+			break;
 		case DataLocation::Memory:
 			// Copy the array to a free position in memory, unless it is already in memory.
 			switch (typeOnStack.location())
@@ -1199,6 +1225,42 @@ void CompilerUtils::convertType(
 				if (typeOnStack.recursive())
 					m_context.callLowLevelFunction(
 						"$convertRecursiveArrayStorageToMemory_" + typeOnStack.identifier() + "_to_" + targetType.identifier(),
+						1,
+						1,
+						conversionImpl
+					);
+				else
+					conversionImpl(m_context);
+				break;
+			}
+			case DataLocation::Transient:
+			{
+				auto conversionImpl =
+					[typeOnStack = &typeOnStack, targetType = &targetType](CompilerContext& _context)
+				{
+					CompilerUtils utils(_context);
+					// stack: <source ref>
+					utils.allocateMemory(typeOnStack->memoryDataSize());
+					_context << Instruction::SWAP1 << Instruction::DUP2;
+					// stack: <memory ptr> <source ref> <memory ptr>
+					for (auto const& member: typeOnStack->members(nullptr))
+					{
+						solAssert(!member.type->containsNestedMapping());
+						// TODO(conner): use transient storage offset
+						std::pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
+						_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
+						_context << u256(offsets.second);
+						TransientStorageItem(_context, *member.type).retrieveValue(SourceLocation(), true);
+						Type const* targetMemberType = targetType->memberType(member.name);
+						solAssert(!!targetMemberType, "Member not found in target type.");
+						utils.convertType(*member.type, *targetMemberType, true);
+						utils.storeInMemoryDynamic(*targetMemberType, true);
+					}
+					_context << Instruction::POP << Instruction::POP;
+				};
+				if (typeOnStack.recursive())
+					m_context.callLowLevelFunction(
+						"$convertRecursiveArrayTransientStorageToMemory_" + typeOnStack.identifier() + "_to_" + targetType.identifier(),
 						1,
 						1,
 						conversionImpl
@@ -1342,7 +1404,9 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		}
 	}
 	auto const* referenceType = dynamic_cast<ReferenceType const*>(&_type);
-	if (!referenceType || referenceType->location() == DataLocation::Storage)
+	if (!referenceType ||
+		referenceType->location() == DataLocation::Storage ||
+		referenceType->location() == DataLocation::Transient)
 	{
 		for (size_t i = 0; i < _type.sizeOnStack(); ++i)
 			m_context << u256(0);
