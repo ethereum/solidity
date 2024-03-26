@@ -46,7 +46,7 @@ for a stand-alone Yul mode.
     enabled by default and can only be turned off via the :ref:`Standard JSON <compiler-api>`.
 
 .. note::
-    An empty optimizer sequence is accepted even without ``--optimize`` in order to fully disable
+    An empty optimizer sequence, i.e ``:``, is accepted even without ``--optimize`` in order to fully disable
     the user-supplied portion of the Yul :ref:`optimizer sequence <selecting-optimizations>`, as by default,
     even when the optimizer is not turned on, the :ref:`unused pruner <unused-pruner>` step will be run.
 

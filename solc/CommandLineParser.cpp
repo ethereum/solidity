@@ -1229,8 +1229,15 @@ void CommandLineParser::processArgs()
 	if (m_args.count(g_strYulOptimizations))
 	{
 		OptimiserSettings optimiserSettings = m_options.optimiserSettings();
-		if (!optimiserSettings.runYulOptimiser && !OptimiserSuite::isEmptyOptimizerSequence(m_args[g_strYulOptimizations].as<std::string>()))
-			solThrow(CommandLineValidationError, "--" + g_strYulOptimizations + " is invalid with a non-empty sequence if Yul optimizer is disabled.");
+		if (
+			!optimiserSettings.runYulOptimiser &&
+			!OptimiserSuite::isEmptyOptimizerSequence(m_args[g_strYulOptimizations].as<std::string>())
+		)
+			solThrow(
+				CommandLineValidationError,
+				"--" + g_strYulOptimizations + " is invalid with a non-empty sequence if Yul optimizer is disabled."
+				" Note that the empty optimizer sequence is properly denoted by \":\"."
+			);
 
 		try
 		{
