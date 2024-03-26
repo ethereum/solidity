@@ -226,8 +226,9 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 			return false;
 		if (_item.instruction() == Instruction::MSTORE)
 			return false;
-		if (_item.instruction() == Instruction::TSTORE)
-			return false;
+		/// [Amxx] TODO: Transient is not supported by the optimize yet
+		// if (_item.instruction() == Instruction::TSTORE)
+		// 	return false;
 		if (!_msizeImportant && (
 			_item.instruction() == Instruction::MLOAD ||
 			_item.instruction() == Instruction::KECCAK256

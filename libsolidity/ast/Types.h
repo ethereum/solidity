@@ -1553,7 +1553,7 @@ private:
 class MappingType: public ReferenceType
 {
 public:
-	MappingType(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName, DataLocation _location):
+	MappingType(Type const* _keyType, ASTString _keyName, Type const* _valueType, ASTString _valueName, DataLocation _location = DataLocation::Storage):
 		ReferenceType(_location), m_keyType(_keyType), m_keyName(_keyName), m_valueType(_valueType), m_valueName(_valueName) {}
 
 	Category category() const override { return Category::Mapping; }
