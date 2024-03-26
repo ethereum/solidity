@@ -30,10 +30,12 @@
 #include <map>
 #include <memory>
 
+#ifdef STRICT_JSONCPP_VERSION_CHECK
 static_assert(
 	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 3),
 	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.3."
 );
+#endif
 
 namespace solidity::util
 {

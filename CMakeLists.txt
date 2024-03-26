@@ -37,16 +37,21 @@ option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libs
 option(STRICT_Z3_VERSION "Use the latest version of Z3" ON)
 option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warnings as errors." ON)
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
+option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
+option(ONLY_BUILD_SOLIDITY_LIBRARIES "Only build solidity libraries" OFF)
+option(STRICT_JSONCPP_VERSION "Strictly check installed jsoncpp version" ON)
 
 # Setup cccache.
 include(EthCcache)
 
 # Let's find our dependencies
 include(EthDependencies)
-include(fmtlib)
-include(jsoncpp)
-include(range-v3)
-include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+if (NOT USE_SYSTEM_LIBRARIES)
+  include(fmtlib)
+  include(jsoncpp)
+  include(range-v3)
+  include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
+endif()
 
 find_package(Threads)
 
@@ -56,6 +61,10 @@ endif()
 
 if (PROFILE_OPTIMIZER_STEPS)
     add_definitions(-DPROFILE_OPTIMIZER_STEPS)
+endif()
+
+if (STRICT_JSONCPP_VERSION)
+	add_definitions(-DSTRICT_JSONCPP_VERSION_CHECK)
 endif()
 
 # Figure out what compiler and system are we using
@@ -141,12 +150,16 @@ add_subdirectory(libyul)
 add_subdirectory(libsolidity)
 add_subdirectory(libsolc)
 add_subdirectory(libstdlib)
-add_subdirectory(tools)
 
-if (NOT EMSCRIPTEN)
-	add_subdirectory(solc)
+if (NOT ONLY_BUILD_SOLIDITY_LIBRARIES)
+	add_subdirectory(tools)
+
+	if (NOT EMSCRIPTEN)
+		add_subdirectory(solc)
+	endif()
+
+	if (TESTS AND NOT EMSCRIPTEN)
+		add_subdirectory(test)
+	endif()
 endif()
 
-if (TESTS AND NOT EMSCRIPTEN)
-	add_subdirectory(test)
-endif()
