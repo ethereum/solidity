@@ -55,6 +55,9 @@ then
   brew install coreutils
   brew install diffutils
   brew install grep
+  # JRE is required to run eldarica solver
+  brew install openjdk@11
+  brew install unzip
 
   # writing to /usr/local/lib need administrative privileges.
   sudo ./scripts/install_obsolete_jsoncpp_1_7_4.sh
@@ -72,6 +75,14 @@ then
   sudo ./b2 -a address-model=64 architecture=arm+x86 install
   cd ..
   sudo rm -rf "$boost_dir"
+
+  # eldarica
+  eldarica_version="2.1"
+  wget "https://github.com/uuverifiers/eldarica/releases/download/v${eldarica_version}/eldarica-bin-${eldarica_version}.zip" -O /tmp/eld_binaries.zip
+  validate_checksum /tmp/eld_binaries.zip 0ac43f45c0925383c9d2077f62bbb515fd792375f3b2b101b30c9e81dcd7785c
+  unzip /tmp/eld_binaries.zip -d /tmp
+  sudo mv /tmp/eldarica/{eld,eld-client,target,eldEnv} /usr/local/bin
+  rm -rf /tmp/{eldarica,eld_binaries.zip}
 
   # z3
   z3_version="4.12.1"

@@ -26,7 +26,7 @@ jobs:
         image_variant: [emscripten, ubuntu.clang.ossfuzz, ubuntu2004, ubuntu2204.clang, ubuntu2204]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
