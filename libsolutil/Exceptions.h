@@ -76,6 +76,7 @@ DEV_SIMPLE_EXCEPTION(FileNotFound);
 DEV_SIMPLE_EXCEPTION(NotAFile);
 DEV_SIMPLE_EXCEPTION(DataTooLong);
 DEV_SIMPLE_EXCEPTION(StringTooLong);
+DEV_SIMPLE_EXCEPTION(ElementNotFound);
 
 // error information to be added to exceptions
 using errinfo_comment = boost::error_info<struct tag_comment, std::string>;

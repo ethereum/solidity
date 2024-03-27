@@ -45,6 +45,7 @@ add_library(yul
 	backends/evm/ControlFlowGraph.h
 	backends/evm/ControlFlowGraphBuilder.cpp
 	backends/evm/ControlFlowGraphBuilder.h
+	backends/evm/Dominator.h
 	backends/evm/EthAssemblyAdapter.cpp
 	backends/evm/EthAssemblyAdapter.h
 	backends/evm/EVMCodeTransform.cpp
