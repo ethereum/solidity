@@ -49,7 +49,7 @@ struct DebugInfoSelection
 		std::vector<std::string> const& _componentNames,
 		bool _acceptWildcards = false
 	);
-	bool enable(std::string _component);
+	bool enable(std::string const& _component);
 
 	bool all() const noexcept;
 	bool any() const noexcept;

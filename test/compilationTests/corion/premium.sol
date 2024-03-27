@@ -310,7 +310,7 @@ contract premium is module, safeMath {
 
             @addr       The address which is needed to be checked.
 
-            @success    Is the address crontact or not
+            @success    Is the address contract or not
         */
         uint256 _codeLength;
         assembly {

@@ -9,10 +9,10 @@
 ## This requires the following entries in /etc/dput.cf:
 ##
 ##  [cpp-build-deps]
-##  fqdn			= ppa.launchpad.net
-##  method			= ftp
-##  incoming		= ~ethereum/cpp-build-deps
-##  login			= anonymous
+##  fqdn            = ppa.launchpad.net
+##  method          = ftp
+##  incoming        = ~ethereum/cpp-build-deps
+##  login           = anonymous
 ##
 ## To interact with launchpad, you need to set the variables $LAUNCHPAD_EMAIL
 ## and $LAUNCHPAD_KEYID in the file .release_ppa_auth in the root directory of
@@ -41,7 +41,7 @@ sourcePPAConfig
 # Sanity check
 checkDputEntries "\[cpp-build-deps\]"
 
-DISTRIBUTIONS="focal jammy lunar mantic"
+DISTRIBUTIONS="focal jammy mantic"
 
 for distribution in $DISTRIBUTIONS
 do

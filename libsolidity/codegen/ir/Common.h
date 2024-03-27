@@ -81,7 +81,7 @@ std::string dispenseLocationComment(ASTNode const& _node, IRGenerationContext& _
 }
 
 // Overloading std::less() makes it possible to use YulArity as a map key. We could define operator<
-// instead but such an operator would be a bit ambiguous (e.g. YulArity{2, 2} would be be greater than
+// instead but such an operator would be a bit ambiguous (e.g. YulArity{2, 2} would be greater than
 // YulArity{1, 10} in lexicographical order but the latter has greater total number of inputs and outputs).
 template<>
 struct std::less<solidity::frontend::YulArity>
