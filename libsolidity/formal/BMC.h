@@ -109,6 +109,7 @@ private:
 	//@{
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
+	void visitTypeConversion(FunctionCall const& _funCall);
 	void visitAddMulMod(FunctionCall const& _funCall) override;
 	void assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& _value) override;
 	/// Visits the FunctionDefinition of the called function
@@ -162,6 +163,8 @@ private:
 	void checkDivByZero(BMCVerificationTarget& _target);
 	void checkBalance(BMCVerificationTarget& _target);
 	void checkAssert(BMCVerificationTarget& _target);
+	void checkTypeConversionTruncation(BMCVerificationTarget& _target);
+
 	void addVerificationTarget(
 		VerificationTargetType _type,
 		smtutil::Expression const& _value,

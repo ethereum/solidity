@@ -16,3 +16,4 @@ contract C
 // ----
 // Warning 6328: (176-196): CHC: Assertion violation happens here.\nCounterexample:\ns = [1, 2, 3]\na = [1, 2, 3]\n\nTransaction trace:\nC.constructor()\nState: s = []\nC.f()
 // Info 1391: CHC: 9 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Info 6002: BMC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

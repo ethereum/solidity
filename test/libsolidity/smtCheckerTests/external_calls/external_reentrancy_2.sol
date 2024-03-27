@@ -15,3 +15,4 @@ contract C {
 // SMTIgnoreCex: no
 // ----
 // Warning 6328: (117-131): CHC: Assertion violation happens here.\nCounterexample:\nlocked = false\ntarget = 0x0\n\nTransaction trace:\nC.constructor()\nState: locked = true\nC.call(0x0)\n    D(target).e() -- untrusted external call, synthesized as:\n        C.call(0x0) -- reentrant call
+// Info 6002: BMC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

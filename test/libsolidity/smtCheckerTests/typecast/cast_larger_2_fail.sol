@@ -10,3 +10,4 @@ contract C
 // SMTEngine: all
 // ----
 // Warning 6328: (116-130): CHC: Assertion violation happens here.\nCounterexample:\n\na = 4660\nb = 4660\n\nTransaction trace:\nC.constructor()\nC.f()
+// Info 6002: BMC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

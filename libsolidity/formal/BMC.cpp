@@ -596,6 +596,13 @@ void BMC::endVisit(FunctionCall const& _funCall)
 {
 	auto functionCallKind = *_funCall.annotation().kind;
 
+	if (functionCallKind == FunctionCallKind::TypeConversion)
+	{
+		visitTypeConversion(_funCall);
+		SMTEncoder::endVisit(_funCall);
+		return;
+	}
+
 	if (functionCallKind != FunctionCallKind::FunctionCall)
 	{
 		SMTEncoder::endVisit(_funCall);
@@ -699,6 +706,55 @@ void BMC::visitAddMulMod(FunctionCall const& _funCall)
 	);
 
 	SMTEncoder::visitAddMulMod(_funCall);
+}
+
+void BMC::visitTypeConversion(FunctionCall const& _funCall)
+{
+	auto argument = _funCall.arguments().front();
+	auto const argType = argument->annotation().type;
+	auto const funCallType = _funCall.annotation().type;
+	auto const expressionType = _funCall.expression().annotation().type;
+	auto const resultType = dynamic_cast<TypeType const&>(*expressionType).actualType();
+
+	auto symbArg = expr(*argument, funCallType);
+
+	// do not warn about address(contract)
+	if (smt::isAddress(*resultType) && dynamic_cast<ContractType const*>(argType))
+		return;
+
+	if (smt::isStringLiteral(*argType) && smt::isFixedBytes(*resultType))
+		return;
+
+	ArrayType const* arrayType = dynamic_cast<ArrayType const*>(argType);
+
+	// no support for array slice
+	if (dynamic_cast<ArraySliceType const*>(argType))
+		return;
+
+	if (arrayType && arrayType->isByteArrayOrString() && smt::isFixedBytes(*resultType))
+	{
+		auto const& fixed = dynamic_cast<FixedBytesType const&>(*resultType);
+		size_t n = fixed.numBytes();
+			auto array = std::dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*argument));
+			addVerificationTarget(
+				VerificationTargetType::TypeConversionTruncation,
+				array->length() <= smtutil::Expression(n),
+				&_funCall
+			);
+		return;
+	}
+
+	if (smt::isNumber(*funCallType) || smt::isNumber(*argType))
+	{
+		std::optional<smtutil::Expression> symbMin = smt::minValue(funCallType);
+		std::optional<smtutil::Expression> symbMax = smt::maxValue(funCallType);
+
+		addVerificationTarget(
+			VerificationTargetType::TypeConversionTruncation,
+			(symbArg >= *symbMin) && (symbArg <= *symbMax),
+			&_funCall
+		);
+	}
 }
 
 void BMC::inlineFunctionCall(
@@ -908,6 +964,8 @@ std::string BMC::targetDescription(BMCVerificationTarget const& _target)
 		return "Assertion violation";
 	else if (_target.type == VerificationTargetType::Balance)
 		return "Insufficient funds";
+	else if (_target.type == VerificationTargetType::TypeConversionTruncation)
+		return "Truncated value in type conversion";
 	solAssert(false);
 }
 
@@ -942,6 +1000,9 @@ void BMC::checkVerificationTarget(BMCVerificationTarget& _target)
 			break;
 		case VerificationTargetType::Assert:
 			checkAssert(_target);
+			break;
+		case VerificationTargetType::TypeConversionTruncation:
+			checkTypeConversionTruncation(_target);
 			break;
 		default:
 			solAssert(false, "");
@@ -1080,6 +1141,29 @@ void BMC::checkAssert(BMCVerificationTarget& _target)
 		_target.expression->location(),
 		4661_error,
 		7812_error
+	);
+}
+
+void BMC::checkTypeConversionTruncation(BMCVerificationTarget& _target)
+{
+	solAssert(_target.type == VerificationTargetType::TypeConversionTruncation, "");
+
+	if (
+		m_solvedTargets.count(_target.expression) &&
+		m_solvedTargets.at(_target.expression).count(VerificationTargetType::TypeConversionTruncation)
+	)
+		return;
+
+	checkCondition(
+		_target,
+		_target.constraints && !_target.value,
+		_target.callStack,
+		_target.modelExpressions,
+		_target.expression->location(),
+		3260_error,
+		9371_error,
+		"<result>",
+		&_target.value
 	);
 }
 

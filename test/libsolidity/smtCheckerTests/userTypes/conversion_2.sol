@@ -30,3 +30,5 @@ contract C {
 // Warning 6328: (497-545): CHC: Assertion violation happens here.
 // Warning 6328: (652-702): CHC: Assertion violation happens here.
 // Info 1391: CHC: 4 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Warning 3260: (181-204): BMC: Truncated value in type conversion happens here.
+// Info 6002: BMC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
