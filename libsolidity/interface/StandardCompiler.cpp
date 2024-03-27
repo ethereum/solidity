@@ -40,7 +40,7 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/CommonData.h>
 
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <algorithm>
 #include <optional>
@@ -463,9 +463,15 @@ std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details
 	{
 		if (_details[_name].isString())
 		{
-			std::string const fullSequence = _details[_name].asString();
+			std::string fullSequence = _details[_name].asString();
+			boost::trim(fullSequence);
 			if (!_runYulOptimizer && !OptimiserSuite::isEmptyOptimizerSequence(fullSequence))
-				return formatFatalError(Error::Type::JSONError, "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.");
+			{
+				std::string errorMessage = "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.";
+				if (fullSequence.empty())
+					errorMessage += " Note that if an empty or blank string is supplied, the default cleanup sequence is used. The empty sequence is properly denoted by \":\".";
+				return formatFatalError(Error::Type::JSONError, errorMessage);
+			}
 
 			try
 			{
