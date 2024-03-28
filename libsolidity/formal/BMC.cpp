@@ -725,13 +725,11 @@ void BMC::visitTypeConversion(FunctionCall const& _funCall)
 	if (smt::isStringLiteral(*argType) && smt::isFixedBytes(*resultType))
 		return;
 
-	ArrayType const* arrayType = dynamic_cast<ArrayType const*>(argType);
-
 	// no support for array slice
 	if (dynamic_cast<ArraySliceType const*>(argType))
 		return;
 
-	if (arrayType && arrayType->isByteArrayOrString() && smt::isFixedBytes(*resultType))
+	if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(argType); arrayType && arrayType->isByteArrayOrString() && smt::isFixedBytes(*resultType))
 	{
 		auto const& fixed = dynamic_cast<FixedBytesType const&>(*resultType);
 		size_t n = fixed.numBytes();
