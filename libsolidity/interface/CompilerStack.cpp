@@ -1722,10 +1722,7 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
 			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps;
 		}
-		else if (
-			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps) &&
-			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserCleanupSteps)
-		)
+		else if (OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps))
 		{
 			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
 			details["yulDetails"] = Json::objectValue;

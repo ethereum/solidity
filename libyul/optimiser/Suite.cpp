@@ -399,7 +399,7 @@ bool OptimiserSuite::isEmptyOptimizerSequence(std::string const& _sequence)
 		default:
 			return false;
 		}
-	return true;
+	return delimiterCount == 1;
 }
 
 void OptimiserSuite::runSequence(std::string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable)

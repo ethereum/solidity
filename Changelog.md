@@ -7,6 +7,8 @@ Compiler Features:
 
 
 Bugfixes:
+ * Commandline Interface: Fix ICE when the optimizer is disabled and an empty/blank string is used for ``--yul-optimizations`` sequence.
+ * Standard JSON Interface: Fix ICE when the optimizer is disabled and an empty/blank string is used for ``optimizerSteps`` sequence.
 
 
 ### 0.8.25 (2023-03-14)
