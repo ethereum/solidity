@@ -33,14 +33,13 @@
 // {
 //     {
 //         let a := 0
-//         let a_1 := 0
-//         for { } a_1 { }
+//         for { } a { }
 //         {
-//             let _1 := add(a_1, a_1)
+//             let _1 := add(a, a)
 //             let var := add(_1, _1)
-//             switch a_1
-//             case 0 { a_1 := var }
-//             default { sstore(a, var) }
+//             switch a
+//             case 0 { a := var }
+//             default { sstore(0, var) }
 //         }
 //     }
 // }

@@ -29,8 +29,9 @@
 //         let length := calldataload(_1)
 //         let i := 0
 //         let _2 := calldataload(7)
-//         for { } lt(i, length) { i := add(i, 1) }
+//         for { } true { i := add(i, 1) }
 //         {
+//             if iszero(lt(i, length)) { break }
 //             sum := add(sum, add(calldataload(add(add(_1, shl(5, i)), 0x20)), _2))
 //         }
 //         sstore(0, sum)
