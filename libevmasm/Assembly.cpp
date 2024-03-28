@@ -62,6 +62,8 @@ AssemblyItem const& Assembly::append(AssemblyItem _i)
 	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
 	m_items.back().m_modifierDepth = m_currentModifierDepth;
+	if (m_currentDebugData)
+		m_items.back().setDebugData(m_currentDebugData);
 	return m_items.back();
 }
 
@@ -313,6 +315,9 @@ public:
 		}
 
 		std::string expression = _item.toAssemblyText(m_assembly);
+
+		if (!_item.debugData()->attributes.empty())
+			expression += m_prefix + "  // @debug.set " + _item.debugData()->attributes.dump();
 
 		if (!(
 			_item.canBeFunctional() &&

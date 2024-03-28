@@ -90,6 +90,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 	// Emit code.
 	{
 		m_assembly.setSourceLocation(originLocationOf(_call));
+		m_assembly.setDebugData(_call.debugData);
 		m_assembly.appendJumpTo(
 			getFunctionLabel(_call.function),
 			static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
@@ -134,6 +135,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BuiltinCall const& _call)
 	// Emit code.
 	{
 		m_assembly.setSourceLocation(originLocationOf(_call));
+		m_assembly.setDebugData(_call.debugData);
 		static_cast<BuiltinFunctionForEVM const&>(_call.builtin.get()).generateCode(
 			_call.functionCall,
 			m_assembly,
@@ -250,6 +252,7 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 	// ::createStackLayout asserts that it has successfully achieved the target layout.
 	langutil::SourceLocation sourceLocation = _debugData ? _debugData->originLocation : langutil::SourceLocation{};
 	m_assembly.setSourceLocation(sourceLocation);
+	m_assembly.setDebugData(_debugData);
 	::createStackLayout(
 		m_stack,
 		_targetStack | ranges::to<Stack>,
@@ -317,8 +320,10 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 				[&](LiteralSlot const& _literal)
 				{
 					m_assembly.setSourceLocation(originLocationOf(_literal));
+					m_assembly.setDebugData(_literal.debugData);
 					m_assembly.appendConstant(_literal.value);
 					m_assembly.setSourceLocation(sourceLocation);
+					m_assembly.setDebugData(_debugData);
 				},
 				[&](FunctionReturnLabelSlot const&)
 				{
@@ -329,16 +334,20 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 					if (!m_returnLabels.count(&_returnLabel.call.get()))
 						m_returnLabels[&_returnLabel.call.get()] = m_assembly.newLabelId();
 					m_assembly.setSourceLocation(originLocationOf(_returnLabel.call.get()));
+					m_assembly.setDebugData(_returnLabel.call.get().debugData);
 					m_assembly.appendLabelReference(m_returnLabels.at(&_returnLabel.call.get()));
 					m_assembly.setSourceLocation(sourceLocation);
+					m_assembly.setDebugData(_debugData);
 				},
 				[&](VariableSlot const& _variable)
 				{
 					if (m_currentFunctionInfo && util::contains(m_currentFunctionInfo->returnVariables, _variable))
 					{
 						m_assembly.setSourceLocation(originLocationOf(_variable));
+						m_assembly.setDebugData(_variable.debugData);
 						m_assembly.appendConstant(0);
 						m_assembly.setSourceLocation(sourceLocation);
+						m_assembly.setDebugData(_debugData);
 						return;
 					}
 					yulAssert(false, "Variable not found on stack.");
@@ -372,6 +381,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 	yulAssert(m_generated.insert(&_block).second, "");
 
 	m_assembly.setSourceLocation(originLocationOf(_block));
+	m_assembly.setDebugData(_block.debugData);
 	auto const& blockInfo = m_stackLayout.blockInfos.at(&_block);
 
 	// Assert that the stack is valid for entering the block.
@@ -412,6 +422,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 
 	// Exit the block.
 	m_assembly.setSourceLocation(originLocationOf(_block));
+	m_assembly.setDebugData(_block.debugData);
 	std::visit(util::GenericVisitor{
 		[&](CFG::BasicBlock::MainExit const&)
 		{
@@ -531,6 +542,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionInfo const& _functionInf
 	m_assembly.setStackHeight(static_cast<int>(m_stack.size()));
 
 	m_assembly.setSourceLocation(originLocationOf(_functionInfo));
+	m_assembly.setDebugData(_functionInfo.debugData);
 	m_assembly.appendLabel(getFunctionLabel(_functionInfo.function));
 
 	// Create the entry layout of the function body block and visit.

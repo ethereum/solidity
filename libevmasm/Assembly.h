@@ -111,6 +111,11 @@ public:
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
 	langutil::SourceLocation const& currentSourceLocation() const { return m_currentSourceLocation; }
+
+	/// Changes debug data used for each appended item.
+	void setDebugData(langutil::DebugData::ConstPtr _debugData) { m_currentDebugData = std::move(_debugData); }
+	langutil::DebugData::ConstPtr currentDebugData() { return m_currentDebugData; }
+
 	langutil::EVMVersion const& evmVersion() const { return m_evmVersion; }
 
 	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
@@ -246,6 +251,7 @@ protected:
 	/// currently
 	std::string m_name;
 	langutil::SourceLocation m_currentSourceLocation;
+	langutil::DebugData::ConstPtr m_currentDebugData;
 
 	// FIXME: This being static means that the strings won't be freed when they're no longer needed
 	static std::map<std::string, std::shared_ptr<std::string const>> s_sharedSourceNames;
