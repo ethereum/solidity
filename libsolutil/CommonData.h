@@ -450,6 +450,21 @@ bool contains_if(T const& _t, Predicate const& _p)
 	return std::end(_t) != std::find_if(std::begin(_t), std::end(_t), _p);
 }
 
+template <class T>
+void concatenateVectorWithoutDuplicates(std::vector<T>& _destination, std::vector<T> const& _source)
+{
+	for (auto&& elem: _source)
+		if (!contains(_destination, elem))
+			_destination.emplace_back(std::move(elem));
+}
+
+template <class T>
+void removeVectorSubset(std::vector<T>& _super, std::vector<T> const& _sub)
+{
+	for (auto const& elem: _sub)
+		_super.erase(std::find(_super.begin(), _super.end(), elem));
+}
+
 /// Function that iterates over a vector, calling a function on each of its
 /// elements. If that function returns a vector, the element is replaced by
 /// the returned vector. During the iteration, the original vector is only valid

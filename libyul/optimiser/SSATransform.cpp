@@ -207,21 +207,14 @@ void IntroduceControlFlowSSA::operator()(Switch& _switch)
 {
 	yulAssert(m_variablesToReassign.empty(), "");
 
-
-
 	std::vector<YulString> toReassign;
-	auto addWithoutDuplicates = [](std::vector<YulString>& destination, std::vector<YulString> const& source){
-		for (auto const& elem: source)
-			if (!util::contains(destination, elem))
-				destination.push_back(elem);
-	};
 	for (auto& c: _switch.cases)
 	{
 		(*this)(c.body);
-		addWithoutDuplicates(toReassign, m_variablesToReassign);
+		util::concatenateVectorWithoutDuplicates(toReassign, m_variablesToReassign);
 	}
 
-	addWithoutDuplicates(m_variablesToReassign, toReassign);
+	util::concatenateVectorWithoutDuplicates(m_variablesToReassign, toReassign);
 }
 
 void IntroduceControlFlowSSA::operator()(Block& _block)
@@ -279,13 +272,9 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 		}
 	);
 
-	auto removeSubset = [](std::vector<YulString>& superset, std::vector<YulString> const& subset) {
-		for (auto const& elem: subset)
-			superset.erase(std::find(superset.begin(), superset.end(), elem));
-	};
-	m_variablesToReassign += assignedVariables;
-	removeSubset(m_variablesInScope, variablesDeclaredHere);
-	removeSubset(m_variablesToReassign, variablesDeclaredHere);
+	util::concatenateVectorWithoutDuplicates(m_variablesToReassign, assignedVariables);
+	util::removeVectorSubset(m_variablesInScope, variablesDeclaredHere);
+	util::removeVectorSubset(m_variablesToReassign, variablesDeclaredHere);
 }
 
 /**
