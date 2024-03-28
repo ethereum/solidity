@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
+#include <libyul/backends/evm/StackSlotLiveness.h>
 
 #include <map>
 
@@ -66,31 +67,20 @@ public:
 	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulString _functionName);
 
 private:
-	StackLayoutGenerator(StackLayout& _context, CFG::FunctionInfo const* _functionInfo);
+	StackLayoutGenerator(StackLayout& _context, CFG::FunctionInfo const* _functionInfo, StackLayoutLivenessInfo const& _livenessInfo);
 
 	/// @returns the optimal entry stack layout, s.t. @a _operation can be applied to it and
 	/// the result can be transformed to @a _exitStack with minimal stack shuffling.
 	/// Simultaneously stores the entry layout required for executing the operation in m_layout.
-	Stack propagateStackThroughOperation(Stack _exitStack, CFG::Operation const& _operation, bool _aggressiveStackCompression = false);
+	Stack propagateStackThroughOperation(Stack _entryStack, StackSlotSet _exitSet, CFG::Operation const& _operation);
 
 	/// @returns the desired stack layout at the entry of @a _block, assuming the layout after
 	/// executing the block should be @a _exitStack.
-	Stack propagateStackThroughBlock(Stack _exitStack, CFG::BasicBlock const& _block, bool _aggressiveStackCompression = false);
+	Stack propagateStackThroughBlock(Stack _entryStack, CFG::BasicBlock const& _block);
 
 	/// Main algorithm walking the graph from entry to exit and propagating back the stack layouts to the entries.
 	/// Iteratively reruns itself along backwards jumps until the layout is stabilized.
 	void processEntryPoint(CFG::BasicBlock const& _entry, CFG::FunctionInfo const* _functionInfo = nullptr);
-
-	/// @returns the best known exit layout of @a _block, if all dependencies are already @a _visited.
-	/// If not, adds the dependencies to @a _dependencyList and @returns std::nullopt.
-	std::optional<Stack> getExitLayoutOrStageDependencies(
-		CFG::BasicBlock const& _block,
-		std::set<CFG::BasicBlock const*> const& _visited,
-		std::list<CFG::BasicBlock const*>& _dependencyList
-	) const;
-
-	/// @returns a pair of ``{jumpingBlock, targetBlock}`` for each backwards jump in the graph starting at @a _entry.
-	std::list<std::pair<CFG::BasicBlock const*, CFG::BasicBlock const*>> collectBackwardsJumps(CFG::BasicBlock const& _entry) const;
 
 	/// After the main algorithms, layouts at conditional jumps are merely compatible, i.e. the exit layout of the
 	/// jumping block is a superset of the entry layout of the target block. This function modifies the entry layouts
@@ -98,24 +88,13 @@ private:
 	/// exactly, except that slots not required after the jump are marked as `JunkSlot`s.
 	void stitchConditionalJumps(CFG::BasicBlock const& _block);
 
-	/// Calculates the ideal stack layout, s.t. both @a _stack1 and @a _stack2 can be achieved with minimal
-	/// stack shuffling when starting from the returned layout.
-	static Stack combineStack(Stack const& _stack1, Stack const& _stack2);
-
 	/// Walks through the CFG and reports any stack too deep errors that would occur when generating code for it
 	/// without countermeasures.
 	std::vector<StackTooDeep> reportStackTooDeep(CFG::BasicBlock const& _entry) const;
 
-	/// @returns a copy of @a _stack stripped of all duplicates and slots that can be freely generated.
-	/// Attempts to create a layout that requires a minimal amount of operations to reconstruct the original
-	/// stack @a _stack.
-	static Stack compressStack(Stack _stack);
-
-	//// Fills in junk when entering branches that do not need a clean stack in case the result is cheaper.
-	void fillInJunk(CFG::BasicBlock const& _block, CFG::FunctionInfo const* _functionInfo = nullptr);
-
 	StackLayout& m_layout;
 	CFG::FunctionInfo const* m_currentFunctionInfo = nullptr;
+	StackLayoutLivenessInfo const& m_livenessInfo;
 };
 
 }

@@ -62,6 +62,8 @@ add_library(yul
 	backends/evm/StackHelpers.h
 	backends/evm/StackLayoutGenerator.cpp
 	backends/evm/StackLayoutGenerator.h
+	backends/evm/StackSlotLiveness.cpp
+	backends/evm/StackSlotLiveness.h
 	backends/evm/VariableReferenceCounter.h
 	backends/evm/VariableReferenceCounter.cpp
 	optimiser/ASTCopier.cpp
