@@ -450,6 +450,8 @@ bool contains_if(T const& _t, Predicate const& _p)
 	return std::end(_t) != std::find_if(std::begin(_t), std::end(_t), _p);
 }
 
+/// Function that takes vector @param _destination and appends vector @param _source,
+/// whilst only taking into account unique elements of _source.
 template <class T>
 void concatenateVectorWithoutDuplicates(std::vector<T>& _destination, std::vector<T> const& _source)
 {
@@ -458,6 +460,7 @@ void concatenateVectorWithoutDuplicates(std::vector<T>& _destination, std::vecto
 			_destination.emplace_back(std::move(elem));
 }
 
+/// Function that removes all elements present in vector @param _sub from vector @_super.
 template <class T>
 void removeVectorSubset(std::vector<T>& _super, std::vector<T> const& _sub)
 {
