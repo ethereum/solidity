@@ -346,7 +346,7 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry, CFG:
 		// entry layout of the backwards jump target as the initial exit layout of the backwards-jumping block.
 		while (!toVisit.empty())
 		{
-			CFG::BasicBlock const *block = *toVisit.begin();
+			CFG::BasicBlock const* block = *toVisit.begin();
 			toVisit.pop_front();
 
 			if (visited.count(block))

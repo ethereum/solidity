@@ -152,7 +152,7 @@ private:
 
 	CFGNode* newLabel();
 	CFGNode* createLabelHere();
-	void placeAndConnectLabel(CFGNode *_node);
+	void placeAndConnectLabel(CFGNode* _node);
 
 	CFG::NodeContainer& m_nodeContainer;
 
