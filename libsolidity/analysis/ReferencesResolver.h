@@ -30,6 +30,8 @@
 
 #include <list>
 #include <map>
+#include <set>
+#include <stack>
 
 namespace solidity::langutil
 {
@@ -101,6 +103,8 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	/// Stack of function definitions.
 	std::vector<FunctionDefinition const*> m_functionDefinitions;
+	// Stack of sets to track local assembly variables and their scopes
+	std::stack<std::set<std::string>> m_localAssemblyVariables;
 	bool const m_resolveInsideCode;
 
 	InlineAssemblyAnnotation* m_yulAnnotation = nullptr;
