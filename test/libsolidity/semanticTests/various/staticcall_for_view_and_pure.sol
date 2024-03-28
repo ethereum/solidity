@@ -45,7 +45,7 @@ contract D {
 // gas legacyOptimized: 98425380
 // gas legacyOptimized code: 13200
 // fpure() -> FAILURE
-// gas irOptimized: 98425389
+// gas irOptimized: 98425388
 // gas irOptimized code: 13200
 // gas legacy: 98413174
 // gas legacy code: 25600
