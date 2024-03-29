@@ -259,7 +259,10 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			std::pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
 			m_context << Instruction::DUP1 << u256(offsets.first) << Instruction::ADD << u256(offsets.second);
 			Type const* memberType = structType->memberType(names[i]);
-			StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true); // [Amxx] TODO: transient
+			if (_varDecl.referenceLocation() == VariableDeclaration::Location::Transient)
+				TransientStorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true);
+			else
+				StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true);
 			utils().convertType(*memberType, *returnTypes[i]);
 			utils().moveToStackTop(returnTypes[i]->sizeOnStack());
 			retSizeOnStack += returnTypes[i]->sizeOnStack();
@@ -273,8 +276,10 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		solAssert(returnTypes.size() == 1, "");
 		if (_varDecl.immutable())
 			ImmutableItem(m_context, _varDecl).retrieveValue(SourceLocation());
+		else if (_varDecl.referenceLocation() == VariableDeclaration::Location::Transient)
+			TransientStorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		else
-			StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true); // [Amxx] TODO: transient
+			StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		utils().convertType(*returnType, *returnTypes.front());
 		retSizeOnStack = returnTypes.front()->sizeOnStack();
 	}
