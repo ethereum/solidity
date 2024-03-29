@@ -105,14 +105,15 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 		utils().convertType(*type, *_varDecl.annotation().type);
 		type = _varDecl.annotation().type;
 	}
+
 	if (_varDecl.immutable())
 		ImmutableItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
-	else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
-		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 	else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Transient))
 		TransientStorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
+	// else if (_varDecl.annotation().type->dataStoredIn(DataLocation::Storage))
+	// 	StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 	else
-		solAssert(false, "");
+		StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.location(), true);
 }
 
 void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
