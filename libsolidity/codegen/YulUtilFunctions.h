@@ -89,7 +89,6 @@ public:
 	/// @returns the name of a function that stores a string literal at a specific location in storage
 	/// signature: (slot) ->
 	std::string copyLiteralToStorageFunction(std::string const& _literal);
-	std::string copyLiteralToTransientFunction(std::string const& _literal);
 
 	// @returns the name of a function that has the equivalent logic of an
 	// `assert` or `require` call.
@@ -333,12 +332,6 @@ public:
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
 	std::string readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes);
 
-	/// @returns a function that reads a type from transient storage.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string readFromTransientStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
-	std::string readFromTransientStorageDynamic(Type const& _type, bool _splitFunctionTypes);
-
 	/// @returns a function that reads a value type from memory. Performs cleanup.
 	/// signature: (addr) -> value
 	std::string readFromMemory(Type const& _type);
@@ -361,17 +354,6 @@ public:
 	/// For reference types, offset is checked to be zero at runtime.
 	/// signature: (slot, [offset,] value)
 	std::string updateStorageValueFunction(
-		Type const& _fromType,
-		Type const& _toType,
-		std::optional<unsigned> const& _offset = std::optional<unsigned>()
-	);
-
-	/// Returns the name of a function will write the given value to
-	/// the specified slot and offset. If offset is not given, it is expected as
-	/// runtime parameter.
-	/// For reference types, offset is checked to be zero at runtime.
-	/// signature: (slot, [offset,] value)
-	std::string updateTransientStorageValueFunction(
 		Type const& _fromType,
 		Type const& _toType,
 		std::optional<unsigned> const& _offset = std::optional<unsigned>()
@@ -576,20 +558,10 @@ private:
 	/// @returns a function that reads a reference type from storage to memory (performing a deep copy).
 	std::string readFromStorageReferenceType(Type const& _type);
 
-	/// @returns a function that reads a value type from transient storage.
-	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	/// @param _offset if provided, read from static offset, otherwise offset is a parameter of the Yul function.
-	std::string readFromTransientStorageValueType(Type const& _type, std::optional<size_t> _offset, bool _splitFunctionTypes);
-
-	/// @returns a function that reads a reference type from transient storage to memory (performing a deep copy).
-	std::string readFromTransientStorageReferenceType(Type const& _type);
-
 	/// @returns the name of a function that will clear given storage slot
 	/// starting with given offset until the end of the slot
 	/// signature: (slot, offset)
-	std::string partialClearStorageSlotFunction(bool transient);
+	std::string partialClearStorageSlotFunction();
 
 	/// @returns the name of a function that will clear the given storage struct
 	/// signature: (slot) ->
