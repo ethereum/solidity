@@ -14,8 +14,9 @@ EVM assembly:
         {
             "begin": 41,
             "end": 137,
-            "name": "DUP1",
-            "source": 0
+            "name": "PUSH",
+            "source": 0,
+            "value": "0"
         },
         {
             "begin": 41,

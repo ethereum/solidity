@@ -15,6 +15,6 @@ contract C {
 }
 // ----
 // test() -> 7
-// gas irOptimized: 122461
+// gas irOptimized: 122459
 // gas legacy: 205176
 // gas legacyOptimized: 204971
