@@ -1008,6 +1008,81 @@ BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(deduplicateNextTagBlockSize3)
+{
+	AssemblyItems items{
+		Instruction::JUMP,
+		u256(0),
+		u256(1),
+		Instruction::REVERT,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		u256(1),
+		Instruction::REVERT
+	};
+
+	AssemblyItems expectation{
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		u256(1),
+		Instruction::REVERT
+	};
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(deduplicateNextTagBlockSize2)
+{
+	AssemblyItems items{
+		Instruction::JUMP,
+		u256(0),
+		Instruction::SELFDESTRUCT,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		Instruction::SELFDESTRUCT
+	};
+
+	AssemblyItems expectation{
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		Instruction::SELFDESTRUCT
+	};
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(deduplicateNextTagBlockSize1)
+{
+	AssemblyItems items{
+		Instruction::JUMP,
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		Instruction::STOP
+	};
+
+	AssemblyItems expectation{
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		Instruction::STOP
+	};
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
 BOOST_AUTO_TEST_CASE(peephole_double_push)
 {
 	AssemblyItems items{

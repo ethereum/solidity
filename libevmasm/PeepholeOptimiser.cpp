@@ -198,7 +198,7 @@ struct DoubleSwap: SimplePeepholeOptimizerMethod<DoubleSwap>
 	}
 };
 
-struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush>
+struct DoublePush
 {
 	static bool apply(OptimiserState& _state)
 	{
@@ -498,6 +498,99 @@ struct UnreachableCode
 	}
 };
 
+struct DeduplicateNextTagSize3 : SimplePeepholeOptimizerMethod<DeduplicateNextTagSize3>
+{
+	static bool applySimple(
+		AssemblyItem const& _precedingItem,
+		AssemblyItem const& _itemA,
+		AssemblyItem const& _itemB,
+		AssemblyItem const& _breakingItem,
+		AssemblyItem const& _tag,
+		AssemblyItem const& _itemC,
+		AssemblyItem const& _itemD,
+		AssemblyItem const& _breakingItem2,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_precedingItem.type() != Tag &&
+			_itemA == _itemC &&
+			_itemB == _itemD &&
+			_breakingItem == _breakingItem2 &&
+			_tag.type() == Tag &&
+			SemanticInformation::terminatesControlFlow(_breakingItem)
+		)
+		{
+			*_out = _precedingItem;
+			*_out = _tag;
+			*_out = _itemC;
+			*_out = _itemD;
+			*_out = _breakingItem2;
+			return true;
+		}
+
+		return false;
+	}
+};
+
+struct DeduplicateNextTagSize2 : SimplePeepholeOptimizerMethod<DeduplicateNextTagSize2>
+{
+	static bool applySimple(
+		AssemblyItem const& _precedingItem,
+		AssemblyItem const& _itemA,
+		AssemblyItem const& _breakingItem,
+		AssemblyItem const& _tag,
+		AssemblyItem const& _itemC,
+		AssemblyItem const& _breakingItem2,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_precedingItem.type() != Tag &&
+			_itemA == _itemC &&
+			_breakingItem == _breakingItem2 &&
+			_tag.type() == Tag &&
+			SemanticInformation::terminatesControlFlow(_breakingItem)
+		)
+		{
+			*_out = _precedingItem;
+			*_out = _tag;
+			*_out = _itemC;
+			*_out = _breakingItem2;
+			return true;
+		}
+
+		return false;
+	}
+};
+
+struct DeduplicateNextTagSize1 : SimplePeepholeOptimizerMethod<DeduplicateNextTagSize1>
+{
+	static bool applySimple(
+		AssemblyItem const& _precedingItem,
+		AssemblyItem const& _breakingItem,
+		AssemblyItem const& _tag,
+		AssemblyItem const& _breakingItem2,
+		std::back_insert_iterator<AssemblyItems> _out
+	)
+	{
+		if (
+			_precedingItem.type() != Tag &&
+			_breakingItem == _breakingItem2 &&
+			_tag.type() == Tag &&
+			SemanticInformation::terminatesControlFlow(_breakingItem)
+		)
+		{
+			*_out = _precedingItem;
+			*_out = _tag;
+			*_out = _breakingItem2;
+			return true;
+		}
+
+		return false;
+	}
+};
+
 void applyMethods(OptimiserState&)
 {
 	assertThrow(false, OptimizerException, "Peephole optimizer failed to apply identity.");
@@ -526,8 +619,8 @@ bool PeepholeOptimiser::optimise()
 		applyMethods(
 			state,
 			PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
-			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
-			TagConjunctions(), TruthyAnd(), Identity()
+			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(), DeduplicateNextTagSize3(),
+			DeduplicateNextTagSize2(), DeduplicateNextTagSize1(), TagConjunctions(), TruthyAnd(), Identity()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
