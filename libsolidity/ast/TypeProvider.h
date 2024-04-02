@@ -117,7 +117,8 @@ public:
 	static Type const* withLocationIfReference(DataLocation _location, Type const* _type, bool _isPointer = false)
 	{
 		if (auto refType = dynamic_cast<ReferenceType const*>(_type))
-			return withLocation(refType, _location, _isPointer);
+			if (refType->validForLocation(_location))
+				return withLocation(refType, _location, _isPointer);
 
 		return _type;
 	}

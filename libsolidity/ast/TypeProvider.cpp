@@ -276,6 +276,8 @@ Type const* TypeProvider::fromElementaryTypeName(std::string const& _name)
 		{
 			if (nameParts[1] == "storage")
 				location = DataLocation::Storage;
+			else if (nameParts[1] == "transient")
+				location = DataLocation::Transient;
 			else if (nameParts[1] == "calldata")
 				location = DataLocation::CallData;
 			else if (nameParts[1] == "memory")

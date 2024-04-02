@@ -1,24 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >0.8.25;
 
+library Lib {
+    function set(mapping(address => uint256) transient m, uint256 v) internal { m[msg.sender] += v; }
+    function set(mapping(address => uint256) storage   m, uint256 v) internal { m[msg.sender] += v; }
+}
+
 contract Test {
+    using Lib for mapping(address => uint256);
+
     struct MyStruct {
         uint256 v;
         mapping(address => uint256) m;
     }
 
-    bytes                                           transient b_t;
-    bytes                                                     b_s;
-    uint256                                         transient v_t;
-    uint256                                                   v_s;
-    uint256[]                                       transient a_t;
-    uint256[]                                                 a_s;
-    MyStruct                                        transient s_t;
-    MyStruct                                                  s_s;
-    mapping(address => uint256)                     transient m_t;
-    mapping(address => uint256)                               m_s;
-    mapping(address => mapping(uint256 => uint256)) transient m2_t;
-    mapping(address => mapping(uint256 => uint256))           m2_s;
+    bytes                                           transient /*public*/ b_t;
+    bytes                                                     /*public*/ b_s;
+    uint256                                         transient public v_t;
+    uint256                                                   public v_s;
+    uint256[]                                       transient public a_t;
+    uint256[]                                                 public a_s;
+    MyStruct                                        transient public s_t;
+    MyStruct                                                  public s_s;
+    mapping(address => uint256)                     transient public m_t;
+    mapping(address => uint256)                               public m_s;
+    mapping(uint256 => mapping(address => uint256)) transient public m2_t;
+    mapping(uint256 => mapping(address => uint256))           public m2_s;
 
     function id(mapping(address => uint256) transient m) internal pure returns (mapping(address => uint256) transient) { return m; }
     function id(mapping(address => uint256) storage   m) internal pure returns (mapping(address => uint256) storage  ) { return m; }
@@ -36,17 +43,15 @@ contract Test {
         a_s[0] += value;
         s_t.v += value;
         s_s.v += value;
-        s_t.m[msg.sender] += value;
-        s_s.m[msg.sender] += value;
-        m_t[msg.sender] += value;
-        m_s[msg.sender] += value;
-        m2_t[msg.sender][0] += value;
-        m2_s[msg.sender][0] += value;
+        s_t.m.set(value);
+        s_s.m.set(value);
+        // m_t.set(value);
+        // m_s.set(value);
+        id(m_t).set(value);
+        id(m_s).set(value);
+        m2_t[0].set(value);
+        m2_s[0].set(value);
 
-        id(m_t)[msg.sender] += value;
-        id(m_s)[msg.sender] += value;
-        set(m_t, value);
-        set(m_s, value);
 
         MyStruct transient s_t_ref = s_t;
         s_t_ref.v += value;
