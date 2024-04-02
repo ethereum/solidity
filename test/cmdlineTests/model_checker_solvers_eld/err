@@ -1,0 +1,5 @@
+Warning: CHC: Assertion violation happens here.
+ --> model_checker_solvers_eld/input.sol:5:3:
+  |
+5 | 		assert(x > 0);
+  | 		^^^^^^^^^^^^^
