@@ -659,6 +659,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::ABIEncodePacked:
 	case FunctionType::Kind::ABIEncodeWithSelector:
 	case FunctionType::Kind::ABIEncodeCall:
+	case FunctionType::Kind::ABIEncodeError:
 	case FunctionType::Kind::ABIEncodeWithSignature:
 		visitABIFunction(_funCall);
 		break;
@@ -3111,6 +3112,7 @@ std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> SMTEncoder::collectA
 				case FunctionType::Kind::ABIEncodePacked:
 				case FunctionType::Kind::ABIEncodeWithSelector:
 				case FunctionType::Kind::ABIEncodeCall:
+				case FunctionType::Kind::ABIEncodeError:
 				case FunctionType::Kind::ABIEncodeWithSignature:
 				case FunctionType::Kind::ABIDecode:
 					abiCalls.insert(&_funCall);

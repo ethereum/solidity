@@ -3073,6 +3073,7 @@ std::string FunctionType::richIdentifier() const
 	case Kind::ABIEncodePacked: id += "abiencodepacked"; break;
 	case Kind::ABIEncodeWithSelector: id += "abiencodewithselector"; break;
 	case Kind::ABIEncodeCall: id += "abiencodecall"; break;
+	case Kind::ABIEncodeError: id += "abiencodeerror"; break;
 	case Kind::ABIEncodeWithSignature: id += "abiencodewithsignature"; break;
 	case Kind::ABIDecode: id += "abidecode"; break;
 	case Kind::BlobHash: id += "blobhash"; break;
@@ -3661,6 +3662,7 @@ bool FunctionType::isPure() const
 		m_kind == Kind::ABIEncodePacked ||
 		m_kind == Kind::ABIEncodeWithSelector ||
 		m_kind == Kind::ABIEncodeCall ||
+		m_kind == Kind::ABIEncodeError ||
 		m_kind == Kind::ABIEncodeWithSignature ||
 		m_kind == Kind::ABIDecode ||
 		m_kind == Kind::MetaType ||
@@ -4171,6 +4173,16 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 				strings{},
 				strings{1, ""},
 				FunctionType::Kind::ABIEncodeCall,
+				StateMutability::Pure,
+				nullptr,
+				FunctionType::Options::withArbitraryParameters()
+			)},
+			{"encodeError", TypeProvider::function(
+				TypePointers{},
+				TypePointers{TypeProvider::array(DataLocation::Memory)},
+				strings{},
+				strings{1, ""},
+				FunctionType::Kind::ABIEncodeError,
 				StateMutability::Pure,
 				nullptr,
 				FunctionType::Options::withArbitraryParameters()

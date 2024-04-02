@@ -1298,12 +1298,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ABIEncodePacked:
 		case FunctionType::Kind::ABIEncodeWithSelector:
 		case FunctionType::Kind::ABIEncodeCall:
+		case FunctionType::Kind::ABIEncodeError:
 		case FunctionType::Kind::ABIEncodeWithSignature:
 		{
 			bool const isPacked = function.kind() == FunctionType::Kind::ABIEncodePacked;
 			bool const hasSelectorOrSignature =
 				function.kind() == FunctionType::Kind::ABIEncodeWithSelector ||
 				function.kind() == FunctionType::Kind::ABIEncodeCall ||
+				function.kind() == FunctionType::Kind::ABIEncodeError ||
 				function.kind() == FunctionType::Kind::ABIEncodeWithSignature;
 
 			TypePointers argumentTypes;
@@ -1311,7 +1313,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			ASTNode::listAccept(arguments, *this);
 
-			if (function.kind() == FunctionType::Kind::ABIEncodeCall)
+			if (
+				function.kind() == FunctionType::Kind::ABIEncodeCall ||
+				function.kind() == FunctionType::Kind::ABIEncodeError
+			)
 			{
 				solAssert(arguments.size() == 2);
 
@@ -1392,10 +1397,16 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						dataOnStack = TypeProvider::fixedBytes(32);
 					}
 				}
-				else if (function.kind() == FunctionType::Kind::ABIEncodeCall)
+				else if (
+					function.kind() == FunctionType::Kind::ABIEncodeCall ||
+					function.kind() == FunctionType::Kind::ABIEncodeError
+				)
 				{
 					auto const& funType = dynamic_cast<FunctionType const&>(*selectorType);
-					if (funType.kind() == FunctionType::Kind::Declaration)
+					if (
+						funType.kind() == FunctionType::Kind::Declaration ||
+						funType.kind() == FunctionType::Kind::Error
+					)
 					{
 						solAssert(funType.hasDeclaration());
 						solAssert(selectorType->sizeOnStack() == 0);

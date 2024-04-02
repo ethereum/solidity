@@ -390,6 +390,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			{MagicType::Kind::ABI, "encodePacked"},
 			{MagicType::Kind::ABI, "encodeWithSelector"},
 			{MagicType::Kind::ABI, "encodeCall"},
+			{MagicType::Kind::ABI, "encodeError"},
 			{MagicType::Kind::ABI, "encodeWithSignature"},
 			{MagicType::Kind::Message, "data"},
 			{MagicType::Kind::Message, "sig"},

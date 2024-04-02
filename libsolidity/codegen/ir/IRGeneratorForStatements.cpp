@@ -1169,6 +1169,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::ABIEncodePacked:
 	case FunctionType::Kind::ABIEncodeWithSelector:
 	case FunctionType::Kind::ABIEncodeCall:
+	case FunctionType::Kind::ABIEncodeError:
 	case FunctionType::Kind::ABIEncodeWithSignature:
 	{
 		bool const isPacked = functionType->kind() == FunctionType::Kind::ABIEncodePacked;
@@ -1176,6 +1177,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		bool const hasSelectorOrSignature =
 			functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector ||
 			functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
+			functionType->kind() == FunctionType::Kind::ABIEncodeError ||
 			functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature;
 
 		TypePointers argumentTypes;
@@ -1184,7 +1186,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		std::string selector;
 		std::vector<ASTPointer<Expression const>> argumentsOfEncodeFunction;
 
-		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
+		if (
+			functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
+			functionType->kind() == FunctionType::Kind::ABIEncodeError
+		)
 		{
 			solAssert(arguments.size() == 2);
 			// Account for tuples with one component which become that component
@@ -1212,7 +1217,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			argumentVars += IRVariable(*argument).stackSlots();
 		}
 
-		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
+		if (
+			functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
+			functionType->kind() == FunctionType::Kind::ABIEncodeError
+		)
 		{
 			auto encodedFunctionType = dynamic_cast<FunctionType const*>(arguments.front()->annotation().type);
 			solAssert(encodedFunctionType);
@@ -1225,7 +1233,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				targetTypes.emplace_back(type(*argument).fullEncodingType(false, true, isPacked));
 
 
-		if (functionType->kind() == FunctionType::Kind::ABIEncodeCall)
+		if (
+			functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
+			functionType->kind() == FunctionType::Kind::ABIEncodeError
+		)
 		{
 			auto const& selectorType = dynamic_cast<FunctionType const&>(type(*arguments.front()));
 			if (selectorType.kind() == FunctionType::Kind::Declaration)
@@ -1970,7 +1981,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 			define(_memberAccess) << requestedValue << "\n";
 		}
-		else if (std::set<std::string>{"encode", "encodePacked", "encodeWithSelector", "encodeCall", "encodeWithSignature", "decode"}.count(member))
+		else if (std::set<std::string>{"encode", "encodePacked", "encodeWithSelector", "encodeCall", "encodeError", "encodeWithSignature", "decode"}.count(member))
 		{
 			// no-op
 		}

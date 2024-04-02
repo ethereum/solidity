@@ -113,6 +113,9 @@ private:
 	/// Performs checks specific to the ABI encode functions of type ABIEncodeCall
 	void typeCheckABIEncodeCallFunction(FunctionCall const& _functionCall);
 
+	/// Performs checks specific to the ABI encode functions of type ABIEncodeError
+	void typeCheckABIEncodeErrorFunction(FunctionCall const& _functionCall);
+
 	/// Performs general checks and checks specific to string concat function call
 	void typeCheckStringConcatFunction(
 		FunctionCall const& _functionCall,
