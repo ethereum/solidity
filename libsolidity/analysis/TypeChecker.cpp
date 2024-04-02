@@ -2459,7 +2459,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 	if (arguments.size() != 2)
 	{
 		m_errorReporter.typeError(
-			6219_error,
+			6220_error,
 			_functionCall.location(),
 			"Expected two arguments: a custom error followed by a tuple."
 		);
@@ -2476,7 +2476,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 	else
 	{
 		m_errorReporter.typeError(
-			5511_error,
+			5512_error,
 			arguments.front()->location(),
 			"Expected first argument to be a custom error, not \"" +
 			type(*arguments.front())->humanReadableName() +
@@ -2517,7 +2517,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 		ssl.append("Error is declared here:", externalFunctionType->declaration().location());
 		// add something to message?
 
-		m_errorReporter.typeError(3509_error, arguments[0]->location(), ssl, msg);
+		m_errorReporter.typeError(3510_error, arguments[0]->location(), ssl, msg);
 		return;
 	}
 	solAssert(!externalFunctionType->takesArbitraryParameters(), "Function must have fixed parameters.");
@@ -2532,7 +2532,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 		else
 		{
 			m_errorReporter.typeError(
-				9062_error,
+				9063_error,
 				arguments[1]->location(),
 				"Expected an inline tuple, not an expression of a tuple type."
 			);
@@ -2546,7 +2546,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 	{
 		if (tupleType)
 			m_errorReporter.typeError(
-				7788_error,
+				7789_error,
 				_functionCall.location(),
 				"Expected " +
 				std::to_string(externalFunctionType->parameterTypes().size()) +
@@ -2556,7 +2556,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 			);
 		else
 			m_errorReporter.typeError(
-				7515_error,
+				7516_error,
 				_functionCall.location(),
 				"Expected a tuple with " +
 				std::to_string(externalFunctionType->parameterTypes().size()) +
@@ -2573,7 +2573,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 		BoolResult result = argType.isImplicitlyConvertibleTo(*externalFunctionType->parameterTypes()[i]);
 		if (!result)
 			m_errorReporter.typeError(
-				5407_error,
+				5408_error,
 				callArguments[i]->location(),
 				"Cannot implicitly convert component at position " +
 				std::to_string(i) +
