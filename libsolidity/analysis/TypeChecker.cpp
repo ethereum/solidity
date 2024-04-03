@@ -2507,15 +2507,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 				msg += " Cannot use special function.";
 		}
 
-		SecondarySourceLocation ssl{};
-
-		if (externalFunctionType->hasDeclaration())
-		{
-			ssl.append("Function is declared here:", externalFunctionType->declaration().location());
-			// add something to message?
-		}
-
-		m_errorReporter.typeError(3510_error, arguments[0]->location(), ssl, msg);
+		m_errorReporter.typeError(3510_error, arguments[0]->location(), {}, msg);
 		return;
 	}
 	solAssert(!externalFunctionType->takesArbitraryParameters(), "Function must have fixed parameters.");
@@ -2584,7 +2576,6 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 			);
 	}
 }
-
 
 void TypeChecker::typeCheckStringConcatFunction(
 	FunctionCall const& _functionCall,
