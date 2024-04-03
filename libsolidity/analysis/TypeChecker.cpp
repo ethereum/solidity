@@ -2487,12 +2487,14 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 
 	if (externalFunctionType->kind() != FunctionType::Kind::Error)
 	{
-		std::string msg = "Expected error type.";
+		std::string msg = "Expected an error type.";
 
 		switch (externalFunctionType->kind())
 		{
 			case FunctionType::Kind::Internal:
-				msg += " Provided internal function.";
+			case FunctionType::Kind::External:
+			case FunctionType::Kind::Declaration:
+				msg += " Cannot use functions for abi.encodeError.";
 				break;
 			case FunctionType::Kind::DelegateCall:
 				msg += " Cannot use library functions for abi.encodeError.";
@@ -2503,19 +2505,17 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 			case FunctionType::Kind::Event:
 				msg += " Cannot use events for abi.encodeError.";
 				break;
-			case FunctionType::Kind::External:
-			case FunctionType::Kind::Declaration:
-				msg += " Cannot use function for abi.encodeError.";
-				break;
 			default:
 				msg += " Cannot use special function.";
 		}
 
 		SecondarySourceLocation ssl{};
 
-		// [Amxx] TODO: check externalFunctionType->hasDeclaration()?
-		ssl.append("Error is declared here:", externalFunctionType->declaration().location());
-		// add something to message?
+		if (externalFunctionType->hasDeclaration())
+		{
+			ssl.append("Function is declared here:", externalFunctionType->declaration().location());
+			// add something to message?
+		}
 
 		m_errorReporter.typeError(3510_error, arguments[0]->location(), ssl, msg);
 		return;

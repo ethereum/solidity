@@ -1,5 +1,6 @@
 interface testInterface {
     function B(function (string calldata) external) external;
+    error E(function (string calldata) external);
 }
 
 contract testContract {
@@ -9,8 +10,12 @@ contract testContract {
     function main() external view {
         abi.encodeCall(testInterface.B, (this.g));
         abi.encodeCall(testInterface.B, (this.h));
+        abi.encodeError(testInterface.E, (this.g));
+        abi.encodeError(testInterface.E, (this.h));
     }
 }
 // ----
-// TypeError 5407: (278-286): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
-// TypeError 5407: (329-337): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
+// TypeError 5407: (328-336): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
+// TypeError 5407: (379-387): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
+// TypeError 5408: (431-439): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".
+// TypeError 5408: (483-491): Cannot implicitly convert component at position 0 from "function (string memory) external" to "function (string calldata) external".

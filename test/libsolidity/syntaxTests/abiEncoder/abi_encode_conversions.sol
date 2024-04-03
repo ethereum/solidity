@@ -3,6 +3,9 @@ interface testInterface {
     function D(string calldata) external;
     function E(string memory) external;
     function F(address) external;
+
+    error C2(function (string memory) external);
+    error F2(address);
 }
 
 contract testContract {
@@ -29,7 +32,11 @@ contract testContract {
         abi.encodeCall(testInterface.F, (payable(address(0))));
         abi.encodeCall(this.i, (s));
         abi.encodeCall(this.j, (s));
+
+        abi.encodeError(testInterface.C2, (this.g));
+        abi.encodeError(testInterface.C2, (this.h));
+        abi.encodeError(testInterface.F2, (payable(address(0))));
     }
 }
 // ----
-// Warning 6133: (860-914): Statement has no effect.
+// Warning 6133: (933-987): Statement has no effect.
