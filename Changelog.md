@@ -1,7 +1,7 @@
 ### 0.8.26 (unreleased)
 
 Language Features:
-
+ * General: New builtin function ``abi.encodeError(customError, (arg1, arg2, ...))`` that type-checks the arguments and returns the ABI-encoded error return data.
 
 Compiler Features:
 
