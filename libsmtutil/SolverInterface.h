@@ -189,10 +189,7 @@ public:
 
 	static Expression ite(Expression _condition, Expression _trueValue, Expression _falseValue)
 	{
-		if (_trueValue.sort->kind == Kind::Int)
-			smtAssert(_trueValue.sort->kind == _falseValue.sort->kind, "");
-		else
-			smtAssert(*_trueValue.sort == *_falseValue.sort, "");
+		smtAssert(areCompatible(*_trueValue.sort, *_falseValue.sort));
 		SortPointer sort = _trueValue.sort;
 		return Expression("ite", std::vector<Expression>{
 			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
@@ -216,10 +213,7 @@ public:
 		std::shared_ptr<ArraySort> arraySort = std::dynamic_pointer_cast<ArraySort>(_array.sort);
 		smtAssert(arraySort, "");
 		smtAssert(_index.sort, "");
-		if (arraySort->domain->kind == Kind::Int)
-			smtAssert(arraySort->domain->kind == _index.sort->kind, "");
-		else
-			smtAssert(*arraySort->domain == *_index.sort, "");
+		smtAssert(areCompatible(*arraySort->domain, *_index.sort));
 		return Expression(
 			"select",
 			std::vector<Expression>{std::move(_array), std::move(_index)},
@@ -236,10 +230,7 @@ public:
 		smtAssert(_index.sort, "");
 		smtAssert(_element.sort, "");
 		smtAssert(*arraySort->domain == *_index.sort, "");
-		if (arraySort->domain->kind == Kind::Int)
-			smtAssert(arraySort->range->kind == _element.sort->kind, "");
-		else
-			smtAssert(*arraySort->range == *_element.sort, "");
+		smtAssert(areCompatible(*arraySort->range, *_element.sort));
 		return Expression(
 			"store",
 			std::vector<Expression>{std::move(_array), std::move(_index), std::move(_element)},
@@ -254,10 +245,7 @@ public:
 		auto arraySort = std::dynamic_pointer_cast<ArraySort>(sortSort->inner);
 		smtAssert(sortSort && arraySort, "");
 		smtAssert(_value.sort, "");
-		if (arraySort->domain->kind == Kind::Int)
-			smtAssert(arraySort->range->kind == _value.sort->kind, "");
-		else
-			smtAssert(*arraySort->range == *_value.sort, "");
+		smtAssert(areCompatible(*arraySort->range, *_value.sort));
 		return Expression(
 			"const_array",
 			std::vector<Expression>{std::move(_sort), std::move(_value)},
@@ -501,6 +489,12 @@ public:
 	SortPointer sort;
 
 private:
+	/// Helper method for checking sort compatibility when creating expressions
+	/// Signed and unsigned Int sorts are compatible even though they are not same
+	static bool areCompatible(Sort const& s1, Sort const& s2)
+	{
+		return s1.kind == Kind::Int ? s1.kind == s2.kind : s1 == s2;
+	}
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
 	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):
 		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
