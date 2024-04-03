@@ -249,13 +249,6 @@ commands:
   # --------------------------------------------------------------------------
   # Artifact Commands
 
-  remove_signature_from_universal_binary:
-    description: Remove signature from universal binary
-    steps:
-      - run:
-          name: Remove signature from universal binary
-          command: codesign --remove-signature build/solc/solc
-
   store_artifacts_solc:
     description: Store compiled solc executable as artifact
     steps:
@@ -1196,7 +1189,6 @@ jobs:
       - checkout
       - install_dependencies_osx
       - run_build
-      - remove_signature_from_universal_binary
       - store_artifacts_solc
       - store_artifacts_yul_phaser
       - persist_executables_to_workspace_osx
