@@ -1239,7 +1239,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		)
 		{
 			auto const& selectorType = dynamic_cast<FunctionType const&>(type(*arguments.front()));
-			if (selectorType.kind() == FunctionType::Kind::Declaration)
+			if (
+				selectorType.kind() == FunctionType::Kind::Declaration ||
+				selectorType.kind() == FunctionType::Kind::Error
+			)
 			{
 				solAssert(selectorType.hasDeclaration());
 				selector = formatNumber(selectorType.externalIdentifier() << (256 - 32));
