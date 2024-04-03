@@ -229,7 +229,7 @@ public:
 		smtAssert(arraySort, "");
 		smtAssert(_index.sort, "");
 		smtAssert(_element.sort, "");
-		smtAssert(*arraySort->domain == *_index.sort, "");
+		smtAssert(areCompatible(*arraySort->domain, *_index.sort));
 		smtAssert(areCompatible(*arraySort->range, *_element.sort));
 		return Expression(
 			"store",
