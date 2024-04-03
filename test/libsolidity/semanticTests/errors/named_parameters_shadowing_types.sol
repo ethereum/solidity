@@ -10,11 +10,11 @@ contract C {
     error E1(StructType StructType);
     error E2(EnumType StructType, StructType EnumType);
 
-    function f() public {
+    function f() public pure {
         revert E1({StructType: StructType(42)});
     }
 
-    function g() public {
+    function g() public pure {
         revert E2({EnumType: StructType(42), StructType: EnumType.B});
     }
 }
