@@ -2494,10 +2494,8 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 			case FunctionType::Kind::Internal:
 			case FunctionType::Kind::External:
 			case FunctionType::Kind::Declaration:
-				msg += " Cannot use functions for abi.encodeError.";
-				break;
 			case FunctionType::Kind::DelegateCall:
-				msg += " Cannot use library functions for abi.encodeError.";
+				msg += " Cannot use functions for abi.encodeError.";
 				break;
 			case FunctionType::Kind::Creation:
 				msg += " Provided creation function.";
