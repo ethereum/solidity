@@ -603,7 +603,7 @@ Precompiled Contracts
 =====================
 
 There is a small set of contract addresses that are special:
-The address range between ``1`` and (including) ``8`` contains
+The address range between ``1`` and (including) ``0x0a`` contains
 "precompiled contracts" that can be called as any other contract
 but their behavior (and their gas consumption) is not defined
 by EVM code stored at that address (they do not contain code)
