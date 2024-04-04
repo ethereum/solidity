@@ -386,6 +386,8 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 		kind == Z3_OP_RECURSIVE
 	)
 		return Expression(_expr.decl().name().str(), arguments, fromZ3Sort(_expr.get_sort()));
+	else if (kind == Z3_OP_CONCAT)
+		return Expression("concat", arguments, sort);
 
 	smtAssert(false);
 

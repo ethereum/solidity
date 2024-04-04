@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix internal error when using bitwise operators with an array element as argument.
 
 
 ### 0.8.25 (2023-03-14)
