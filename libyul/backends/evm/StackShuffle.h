@@ -58,7 +58,7 @@ private:
 	template<typename MapType, typename ElementType>
 	size_t getIndex(MapType&& _map, ElementType&& _element)
 	{
-		auto [element, newlyInserted] = _map.emplace(std::make_pair(_element, size_t(0u)));
+		auto [element, newlyInserted] = _map.emplace(_element, size_t(0u));
 		if (newlyInserted)
 		{
 			element->second = m_indexedSlots.size();
@@ -152,7 +152,9 @@ public:
 			}
 
 		for (auto&& slot: m_targetStack)
-			++multiplicity[slot];
+			if (m_operationOutputs.count(slot) || m_generateSlotOnTheFly(slot))
+				++multiplicity[slot];
+
 		m_multiplicity = multiplicity;
 	}
 
