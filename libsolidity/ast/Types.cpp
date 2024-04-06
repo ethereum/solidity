@@ -1544,6 +1544,8 @@ TypeResult ReferenceType::unaryOperatorResult(Token _operator) const
 		return TypeProvider::emptyTuple();
 	case DataLocation::Storage:
 		return isPointer() ? nullptr : TypeProvider::emptyTuple();
+	case DataLocation::Transient:
+		solUnimplemented("Transient data location is only supported for value types.");
 	}
 	return nullptr;
 }
@@ -1571,6 +1573,9 @@ std::string ReferenceType::stringForReferencePart() const
 		return "calldata";
 	case DataLocation::Memory:
 		return "memory";
+	case DataLocation::Transient:
+		solUnimplemented("Transient data location is only supported for value types.");
+		break;
 	}
 	solAssert(false, "");
 	return "";
@@ -1583,6 +1588,9 @@ std::string ReferenceType::identifierLocationSuffix() const
 	{
 	case DataLocation::Storage:
 		id += "_storage";
+		break;
+	case DataLocation::Transient:
+		solUnimplemented("Transient data location is only supported for value types.");
 		break;
 	case DataLocation::Memory:
 		id += "_memory";
@@ -1748,6 +1756,9 @@ BoolResult ArrayType::validForLocation(DataLocation _loc) const
 			if (storageSizeUpperBound() >= bigint(1) << 256)
 				return BoolResult::err("Type too large for storage.");
 			break;
+		case DataLocation::Transient:
+			solUnimplemented("Transient data location is only supported for value types.");
+			break;
 	}
 	return true;
 }
@@ -1828,6 +1839,9 @@ std::vector<std::tuple<std::string, Type const*>> ArrayType::makeStackItems() co
 		case DataLocation::Storage:
 			// byte offset inside storage value is omitted
 			return {std::make_tuple("slot", TypeProvider::uint256())};
+		case DataLocation::Transient:
+			solUnimplemented("Transient data location is only supported for value types.");
+			break;
 	}
 	solAssert(false, "");
 }
@@ -2568,6 +2582,9 @@ std::vector<std::tuple<std::string, Type const*>> StructType::makeStackItems() c
 			return {std::make_tuple("mpos", TypeProvider::uint256())};
 		case DataLocation::Storage:
 			return {std::make_tuple("slot", TypeProvider::uint256())};
+		case DataLocation::Transient:
+			solUnimplemented("Transient data location is only supported for value types.");
+			break;
 	}
 	solAssert(false, "");
 }

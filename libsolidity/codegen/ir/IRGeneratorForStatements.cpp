@@ -47,6 +47,7 @@
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/transform.hpp>
 
 using namespace solidity;
@@ -373,6 +374,15 @@ std::string IRGeneratorForStatements::constantValueFunction(VariableDeclaration 
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	setLocation(_varDeclStatement);
+
+	auto static notTransient = [](std::shared_ptr<VariableDeclaration> const& _varDeclaration) {
+		return (_varDeclaration ? _varDeclaration->referenceLocation() != VariableDeclaration::Location::Transient : true);
+	};
+
+	solUnimplementedAssert(
+		ranges::all_of(_varDeclStatement.declarations(), notTransient),
+		"Transient storage variables are not supported."
+	);
 
 	if (Expression const* expression = _varDeclStatement.initialValue())
 	{
@@ -2314,6 +2324,9 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 
 				break;
 			}
+			case DataLocation::Transient:
+				solUnimplemented("Transient data location is only supported for value types.");
+				break;
 			case DataLocation::Memory:
 			{
 				std::string const indexAccessFunction = m_utils.memoryArrayIndexAccessFunction(arrayType);

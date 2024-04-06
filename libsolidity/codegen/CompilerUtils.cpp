@@ -1024,6 +1024,9 @@ void CompilerUtils::convertType(
 				"Invalid conversion to storage type."
 			);
 			break;
+		case DataLocation::Transient:
+			solUnimplemented("Transient data location is only supported for value types.");
+			break;
 		case DataLocation::Memory:
 		{
 			// Copy the array to a free position in memory, unless it is already in memory.
@@ -1168,6 +1171,9 @@ void CompilerUtils::convertType(
 				"Invalid conversion to storage type."
 			);
 			break;
+		case DataLocation::Transient:
+			solUnimplemented("Transient data location is only supported for value types.");
+			break;
 		case DataLocation::Memory:
 			// Copy the array to a free position in memory, unless it is already in memory.
 			switch (typeOnStack.location())
@@ -1207,6 +1213,9 @@ void CompilerUtils::convertType(
 					conversionImpl(m_context);
 				break;
 			}
+			case DataLocation::Transient:
+				solUnimplemented("Transient data location is only supported for value types.");
+				break;
 			case DataLocation::CallData:
 			{
 				if (typeOnStack.isDynamicallyEncoded())

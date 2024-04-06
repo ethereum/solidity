@@ -184,6 +184,9 @@ bool BMC::shouldInlineFunctionCall(
 
 bool BMC::visit(ContractDefinition const& _contract)
 {
+	// Raises UnimplementedFeatureError in the presence of transient storage variables
+	TransientDataLocationChecker checker(_contract);
+
 	initContract(_contract);
 
 	SMTEncoder::visit(_contract);

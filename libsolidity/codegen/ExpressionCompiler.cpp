@@ -2047,6 +2047,9 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					ArrayUtils(m_context).retrieveLength(type);
 					m_context << Instruction::SWAP1 << Instruction::POP;
 					break;
+				case DataLocation::Transient:
+					solUnimplemented("Transient data location is only supported for value types.");
+					break;
 				case DataLocation::Memory:
 					m_context << Instruction::MLOAD;
 					break;
@@ -2192,6 +2195,9 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					}
 					else
 						setLValueToStorageItem(_indexAccess);
+					break;
+				case DataLocation::Transient:
+					solUnimplemented("Transient data location is only supported for value types.");
 					break;
 				case DataLocation::Memory:
 					ArrayUtils(m_context).accessIndex(arrayType);

@@ -129,6 +129,19 @@ public:
 	static std::set<SourceUnit const*, ASTNode::CompareByID> sourceDependencies(SourceUnit const& _source);
 
 protected:
+	struct TransientDataLocationChecker: ASTConstVisitor
+	{
+		TransientDataLocationChecker(ContractDefinition const& _contract) { _contract.accept(*this); }
+
+		void endVisit(VariableDeclaration const& _var)
+		{
+			solUnimplementedAssert(
+				_var.referenceLocation() != VariableDeclaration::Location::Transient,
+				"Transient storage variables are not supported."
+			);
+		}
+	};
+
 	void resetSourceAnalysis();
 
 	// TODO: Check that we do not have concurrent reads and writes to a variable,

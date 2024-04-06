@@ -1021,6 +1021,9 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType, unsigned _stackDept
 			if (_arrayType.isByteArrayOrString())
 				m_context.callYulFunction(m_context.utilFunctions().extractByteArrayLengthFunction(), 1, 1);
 			break;
+		case DataLocation::Transient:
+			solUnimplemented("Transient data location is only supported for value types.");
+			break;
 		}
 	}
 }
@@ -1118,6 +1121,9 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 		m_context << endTag;
 		break;
 	}
+	case DataLocation::Transient:
+		solUnimplemented("Transient data location is only supported for value types.");
+		break;
 	}
 }
 

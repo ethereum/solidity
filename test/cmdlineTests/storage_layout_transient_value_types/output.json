@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "component": "general",
+            "formattedMessage": "Transient storage layout is not supported yet.",
+            "message": "Transient storage layout is not supported yet.",
+            "severity": "error",
+            "type": "UnimplementedFeatureError"
+        }
+    ]
+}

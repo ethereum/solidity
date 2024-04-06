@@ -407,6 +407,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 			{
 				case Location::Memory: return "\"memory\"";
 				case Location::Storage: return "\"storage\"";
+				case Location::Transient: return "\"transient\"";
 				case Location::CallData: return "\"calldata\"";
 				case Location::Unspecified: return "none";
 			}
@@ -456,8 +457,24 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 	else if (_variable.isStateVariable())
 	{
-		solAssert(varLoc == Location::Unspecified, "");
-		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
+		switch (varLoc)
+		{
+			case Location::Unspecified:
+				typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
+				break;
+			case Location::Transient:
+				if (_variable.isConstant() || _variable.immutable())
+					m_errorReporter.declarationError(
+						2197_error,
+						_variable.location(),
+						"Transient cannot be used as data location for constant or immutable variables."
+					);
+				typeLoc = DataLocation::Transient;
+				break;
+			default:
+				solAssert(false);
+				break;
+		}
 	}
 	else if (
 		dynamic_cast<StructDefinition const*>(_variable.scope()) ||
@@ -476,6 +493,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 				break;
 			case Location::CallData:
 				typeLoc = DataLocation::CallData;
+				break;
+			case Location::Transient:
+				solUnimplemented("Transient data location cannot be used in this kind of variable or parameter declaration.");
 				break;
 			case Location::Unspecified:
 				solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
@@ -496,6 +516,9 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		if (!allowed)
 			m_errorReporter.fatalTypeError(9259_error, _variable.location(), "Only constants of value type and byte array type are implemented.");
 	}
+
+	if (!type->isValueType())
+		solUnimplementedAssert(typeLoc != DataLocation::Transient, "Transient data location is only supported for value types.");
 
 	_variable.annotation().type = type;
 }
