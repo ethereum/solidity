@@ -1142,6 +1142,8 @@ Token ASTJsonImporter::literalTokenKind(Json::Value const& _node)
 		tok = Token::UnicodeStringLiteral;
 	else if (_node["kind"].asString() == "hexString")
 		tok = Token::HexStringLiteral;
+	else if (_node["kind"].asString() == "binString")
+		tok = Token::BinStringLiteral;
 	else if (_node["kind"].asString() == "bool")
 		tok = (member(_node, "value").asString() == "true") ? Token::TrueLiteral : Token::FalseLiteral;
 	else

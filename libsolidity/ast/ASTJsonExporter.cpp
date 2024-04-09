@@ -1107,6 +1107,8 @@ std::string ASTJsonExporter::literalTokenKind(Token _token)
 		return "unicodeString";
 	case Token::HexStringLiteral:
 		return "hexString";
+	case Token::BinStringLiteral:
+		return "binString";
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
 		return "bool";
