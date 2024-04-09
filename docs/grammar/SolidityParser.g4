@@ -421,7 +421,7 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
  */
 identifier: Identifier | From | Error | Revert | Global;
 
-literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
+literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | binStringLiteral | unicodeStringLiteral;
 
 literalWithSubDenomination: numberLiteral SubDenomination;
 
@@ -435,14 +435,18 @@ stringLiteral: (NonEmptyStringLiteral | EmptyStringLiteral)+;
  */
 hexStringLiteral: HexString+;
 /**
+ * A full bin string literal that consists of either one or several consecutive bin strings.
+ */
+binStringLiteral: BinString+;
+/**
  * A full unicode string literal that consists of either one or several consecutive unicode strings.
  */
 unicodeStringLiteral: UnicodeStringLiteral+;
 
 /**
- * Number literals can be decimal or hexadecimal numbers with an optional unit.
+ * Number literals can be decimal or hexadecimal numbers or binary numbers with an optional unit.
  */
-numberLiteral: DecimalNumber | HexNumber;
+numberLiteral: DecimalNumber | HexNumber | BinNumber;
 
 /**
  * A curly-braced block of statements. Opens its own scope.
@@ -612,5 +616,5 @@ yulPath: YulIdentifier (YulPeriod (YulIdentifier | YulEVMBuiltin))*;
  */
 yulFunctionCall: (YulIdentifier | YulEVMBuiltin) YulLParen (yulExpression (YulComma yulExpression)*)? YulRParen;
 yulBoolean: YulTrue | YulFalse;
-yulLiteral: YulDecimalNumber | YulStringLiteral | YulHexNumber | yulBoolean | YulHexStringLiteral;
+yulLiteral: YulDecimalNumber | YulStringLiteral | YulHexNumber | YulBinNumber | yulBoolean | YulHexStringLiteral | YulBinStringLiteral;
 yulExpression: yulPath | yulFunctionCall | yulLiteral;

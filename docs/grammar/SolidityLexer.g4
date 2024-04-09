@@ -47,6 +47,7 @@ From: 'from'; // not a real keyword
 Function: 'function';
 Global: 'global'; // not a real keyword
 Hex: 'hex';
+Bin: 'bin';
 If: 'if';
 Immutable: 'immutable';
 Import: 'import';
@@ -222,6 +223,23 @@ fragment EvenHexDigits: HexCharacter HexCharacter ('_'? HexCharacter HexCharacte
 fragment HexCharacter: [0-9A-Fa-f];
 
 /**
+ * Bin strings need to consist of binary digits which total length is multiple of 8, that may be grouped using underscores.
+ */
+BinString: 'bin' (('"' BinaryOctets? '"') | ('\'' BinaryOctets? '\''));
+/**
+ * Bin numbers consist of a prefix and an arbitrary number of binary digits that may be delimited by underscores.
+ */
+BinNumber: '0' 'b' BinDigits;
+//@doc:inline
+fragment BinDigits: BinCharacter ('_'? BinCharacter)*;
+//@doc:inline
+fragment BinaryOctets: BinaryOctet ('_'? BinaryOctet)*;
+//@doc:inline
+fragment BinaryOctet: BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter;
+//@doc:inline
+fragment BinCharacter: [01];
+
+/**
  * Scanned but not used by any rule, i.e, disallowed.
  * solc parser considers number starting with '0', not immediately followed by '.' or 'x' as
  * octal, even if non octal digits '8' and '9' are present.
@@ -290,6 +308,7 @@ YulLet: 'let';
 YulSwitch: 'switch';
 YulTrue: 'true';
 YulHex: 'hex';
+YulBin: 'bin';
 
 /**
  * Builtin functions in the EVM Yul dialect.
@@ -331,6 +350,10 @@ fragment YulIdentifierPart: [a-zA-Z0-9$_];
  */
 YulHexNumber: '0' 'x' [0-9a-fA-F]+;
 /**
+ * Bin literals in Yul consist of a prefix and one or more binary digits.
+ */
+YulBinNumber: '0' 'b' [01]+;
+/**
  * Decimal literals in Yul may be zero or any sequence of decimal digits without leading zeroes.
  */
 YulDecimalNumber: '0' | ([1-9] [0-9]*);
@@ -344,6 +367,7 @@ YulStringLiteral:
 	| '\'' SingleQuotedStringCharacter* '\'';
 //@doc:inline
 YulHexStringLiteral: HexString;
+YulBinStringLiteral: BinString;
 
 YulWS: [ \t\r\n\u000C]+ -> skip ;
 YulCOMMENT: '/*' .*? '*/' -> channel(HIDDEN) ;
