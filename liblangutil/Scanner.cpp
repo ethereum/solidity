@@ -72,7 +72,9 @@ std::string to_string(ScannerError _errorCode)
 		case ScannerError::NoError: return "No error.";
 		case ScannerError::IllegalToken: return "Invalid token.";
 		case ScannerError::IllegalHexString: return "Expected even number of hex-nibbles.";
+		case ScannerError::IllegalBinString: return "Expected numbers of bits multiple of 8.";
 		case ScannerError::IllegalHexDigit: return "Hexadecimal digit missing or invalid.";
+		case ScannerError::IllegalBinDigit: return "Binary digit missing or invalid.";
 		case ScannerError::IllegalCommentTerminator: return "Expected multi-line comment-terminator.";
 		case ScannerError::IllegalEscapeSequence: return "Invalid escape sequence.";
 		case ScannerError::UnicodeCharacterInNonUnicodeString: return "Invalid character in string. If you are trying to use Unicode characters, use a unicode\"...\" string literal.";
@@ -167,6 +169,24 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 			return false;
 		}
 		x = static_cast<char>(x * 16 + d);
+		advance();
+	}
+	o_scannedByte = x;
+	return true;
+}
+
+bool Scanner::scanBinByte(char& o_scannedByte)
+{
+	char x = 0;
+	for (size_t i = 0; i < 8; i++)
+	{
+		int d = binValue(m_char);
+		if (d < 0)
+		{
+			rollback(i);
+			return false;
+		}
+		x = static_cast<char>(x * 2 + d);
 		advance();
 	}
 	o_scannedByte = x;
@@ -726,6 +746,18 @@ void Scanner::scanToken()
 					else
 						token = setError(ScannerError::IllegalToken);
 				}
+				else if (token == Token::Bin)
+				{
+					// reset
+					m = 0;
+					n = 0;
+
+					// Special quoted hex string must follow
+					if (m_char == '"' || m_char == '\'')
+						token = scanBinString();
+					else
+						token = setError(ScannerError::IllegalToken);
+				}
 				else if (token == Token::Unicode && m_kind != ScannerKind::Yul)
 				{
 					// reset
@@ -901,6 +933,40 @@ Token Scanner::scanHexString()
 	return Token::HexStringLiteral;
 }
 
+Token Scanner::scanBinString()
+{
+	char const quote = m_char;
+	advance();  // consume quote
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
+	bool allowUnderscore = false;
+	while (m_char != quote && !isSourcePastEndOfInput())
+	{
+		char c = m_char;
+
+		if (scanBinByte(c))
+		{
+			addLiteralChar(c);
+			allowUnderscore = true;
+		}
+		else if (c == '_')
+		{
+			advance();
+			if (!allowUnderscore || m_char == quote)
+				return setError(ScannerError::IllegalNumberSeparator);
+			allowUnderscore = false;
+		}
+		else
+			return setError(ScannerError::IllegalBinString);
+	}
+
+	if (m_char != quote)
+		return setError(ScannerError::IllegalStringEndQuote);
+
+	literal.complete();
+	advance();  // consume quote
+	return Token::BinStringLiteral;
+}
+
 // Parse for regex [:digit:]+(_[:digit:]+)*
 void Scanner::scanDecimalDigits()
 {
@@ -931,11 +997,11 @@ Token Scanner::scanNumber(char _charSeen)
 	else
 	{
 		solAssert(_charSeen == 0, "");
-		// if the first character is '0' we must check for octals and hex
+		// if the first character is '0' we must check for octals and hex and bin
 		if (m_char == '0')
 		{
 			addLiteralCharAndAdvance();
-			// either 0, 0exxx, 0Exxx, 0.xxx or a hex number
+			// either 0, 0exxx, 0Exxx, 0.xxx, hex number or a binary number
 			if (m_char == 'x')
 			{
 				// hex number
@@ -945,6 +1011,17 @@ Token Scanner::scanNumber(char _charSeen)
 					return setError(ScannerError::IllegalHexDigit); // we must have at least one hex digit after 'x'
 
 				while (isHexDigit(m_char) || m_char == '_') // We keep the underscores for later validation
+					addLiteralCharAndAdvance();
+			}
+			else if (m_char == 'b')
+			{
+				// binary number
+				kind = BINARY;
+				addLiteralCharAndAdvance();
+				if (!isBinDigit(m_char))
+					return setError(ScannerError::IllegalBinDigit); // we must have at least one bin digit after 'b'
+
+				while (isBinDigit(m_char) || m_char == '_') // We keep the underscores for later validation
 					addLiteralCharAndAdvance();
 			}
 			else if (isDecimalDigit(m_char))

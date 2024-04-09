@@ -79,7 +79,9 @@ enum class ScannerError
 
 	IllegalToken,
 	IllegalHexString,
+	IllegalBinString,
 	IllegalHexDigit,
+	IllegalBinDigit,
 	IllegalCommentTerminator,
 	IllegalEscapeSequence,
 	UnicodeCharacterInNonUnicodeString,
@@ -214,6 +216,7 @@ private:
 	inline Token selectToken(char _next, Token _then, Token _else);
 
 	bool scanHexByte(char& o_scannedByte);
+	bool scanBinByte(char& o_scannedByte);
 	std::optional<unsigned> scanUnicode();
 
 	/// Scans a single Solidity token.
@@ -238,6 +241,7 @@ private:
 
 	Token scanString(bool const _isUnicode);
 	Token scanHexString();
+	Token scanBinString();
 	/// Scans a single line comment and returns its corrected end position.
 	size_t scanSingleLineDocComment();
 	Token scanMultiLineDocComment();
