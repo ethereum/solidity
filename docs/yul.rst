@@ -179,9 +179,11 @@ As literals, you can use:
 
 - Hex strings (e.g. ``hex"616263"``).
 
+- Bin strings (e.g. ``bin"011011001111111100000000"``).
+
 In the EVM dialect of Yul, literals represent 256-bit words as follows:
 
-- Decimal or hexadecimal constants must be less than ``2**256``.
+- Decimal or hexadecimal or binary constants must be less than ``2**256``.
   They represent the 256-bit word with that value as an unsigned integer in big endian encoding.
 
 - An ASCII string is first viewed as a byte sequence, by viewing
@@ -197,6 +199,10 @@ In the EVM dialect of Yul, literals represent 256-bit words as follows:
 - A hex string is first viewed as a byte sequence, by viewing
   each pair of contiguous hex digits as a byte.
   The byte sequence must not exceed 32 bytes (i.e. 64 hex digits), and is treated as above.
+
+- A bin string is first viewed as a byte sequence, by viewing
+  each pair of octuple bin digits as a byte.
+  The byte sequence must not exceed 32 bytes (i.e. 256 bin digits), and is treated as above.
 
 When compiling for the EVM, this will be translated into an
 appropriate ``PUSHi`` instruction. In the following example,
@@ -500,11 +506,12 @@ which are explained in their own chapter.
     TypedIdentifierList = Identifier ( ':' TypeName )? ( ',' Identifier ( ':' TypeName )? )*
     Literal =
         (NumberLiteral | StringLiteral | TrueLiteral | FalseLiteral) ( ':' TypeName )?
-    NumberLiteral = HexNumber | DecimalNumber
+    NumberLiteral = HexNumber | BinNumber | DecimalNumber
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
     TrueLiteral = 'true'
     FalseLiteral = 'false'
     HexNumber = '0x' [0-9a-fA-F]+
+    BinNumber = '0b' [01]+
     DecimalNumber = [0-9]+
 
 
@@ -731,6 +738,9 @@ We will use a destructuring notation for the AST nodes.
     E(G, L, n: HexNumber) = G, L, hex(n)
         where hex is the hexadecimal evaluation function,
         which turns a sequence of hexadecimal digits into their big endian value
+    E(G, L, n: BinNumber) = G, L, bin(n)
+        where bin is the binary evaluation function,
+        which turns a sequence of binary digits into their big endian value
     E(G, L, n: DecimalNumber) = G, L, dec(n),
         where dec is the decimal evaluation function,
         which turns a sequence of decimal digits into their big endian value
@@ -1136,6 +1146,7 @@ Yul objects are used to group named code and data sections.
 The functions ``datasize``, ``dataoffset`` and ``datacopy``
 can be used to access these sections from within code.
 Hex strings can be used to specify data in hex encoding,
+Bin strings can be used to specify data in bin encoding,
 regular strings in native encoding. For code,
 ``datacopy`` will access its assembled binary representation.
 
@@ -1145,6 +1156,7 @@ regular strings in native encoding. For code,
     Code = 'code' Block
     Data = 'data' StringLiteral ( HexLiteral | StringLiteral )
     HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+    BinLiteral = 'bin' ('"' ([01]{8})* '"' | '\'' ([01]{8})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
 
 Above, ``Block`` refers to ``Block`` in the Yul code grammar explained in the previous chapter.
@@ -1211,6 +1223,8 @@ An example Yul Object is shown below:
         }
 
         data "Table2" hex"4123"
+
+        data "Table3" bin"10100101"
 
         object "Contract1_deployed" {
             code {
