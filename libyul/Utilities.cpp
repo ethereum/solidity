@@ -86,6 +86,18 @@ std::string solidity::yul::reindent(std::string const& _code)
 	return out.str();
 }
 
+u256 solidity::yul::binaryConvert(std::string const& _value)
+{
+	yulAssert(_value.substr(0, 2) == "0b", "Expected binary prefix!");
+	yulAssert(_value.find_first_not_of("01", 2) == std::string::npos, "Expected binary digit!");
+
+	u256 result = 0;
+	for (size_t i = 0; i < _value.size() - 2; i++)
+		if (_value[i + 2] != '0')
+			boost::multiprecision::bit_set(result, static_cast<unsigned int>(_value.size() - 3 - i));
+	return result;
+}
+
 u256 solidity::yul::valueOfNumberLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::Number, "Expected number literal!");
@@ -97,8 +109,11 @@ u256 solidity::yul::valueOfNumberLiteral(Literal const& _literal)
 	if (isNew)
 	{
 		std::string const& literalString = _literal.value.str();
-		yulAssert(isValidDecimal(literalString) || isValidHex(literalString), "Invalid number literal!");
-		it->second = u256(literalString);
+		yulAssert(isValidDecimal(literalString) || isValidHex(literalString) || isValidBin(literalString), "Invalid number literal!");
+		if (boost::starts_with(literalString, "0b"))
+			it->second = binaryConvert(literalString);
+		else
+			it->second = u256(literalString);
 	}
 	return it->second;
 }

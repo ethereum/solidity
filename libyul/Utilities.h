@@ -30,6 +30,7 @@ namespace solidity::yul
 
 std::string reindent(std::string const& _code);
 
+u256 binaryConvert(std::string const& _value);
 u256 valueOfNumberLiteral(Literal const& _literal);
 u256 valueOfStringLiteral(Literal const& _literal);
 u256 valueOfBoolLiteral(Literal const& _literal);
