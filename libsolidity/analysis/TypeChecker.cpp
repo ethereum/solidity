@@ -3877,6 +3877,14 @@ void TypeChecker::endVisit(Literal const& _literal)
 			"You can use an expression of the form \"0x1234 * 1 day\" instead."
 		);
 
+	if (_literal.isBinNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
+		m_errorReporter.fatalTypeError(
+			5146_error,
+			_literal.location(),
+			"Binary numbers cannot be used with unit denominations. "
+			"You can use an expression of the form \"0b1011 * 1 days\" instead."
+		);
+
 	if (_literal.subDenomination() == Literal::SubDenomination::Year)
 		m_errorReporter.typeError(
 			4820_error,
