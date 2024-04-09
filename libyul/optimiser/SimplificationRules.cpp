@@ -160,7 +160,12 @@ bool Pattern::matches(
 		Literal const& literal = std::get<Literal>(*expr);
 		if (literal.kind != LiteralKind::Number)
 			return false;
-		if (m_data && *m_data != u256(literal.value.str()))
+		u256 value = 0;
+		if (literal.value.str().substr(0, 2) == "0b")
+			value = yul::binaryConvert(literal.value.str());
+		else
+			value = u256(literal.value.str());
+		if (m_data && *m_data != value)
 			return false;
 		assertThrow(m_arguments.empty(), OptimizerException, "");
 	}

@@ -155,8 +155,18 @@ void CodeCost::operator()(Literal const& _literal)
 	case LiteralKind::Boolean:
 		break;
 	case LiteralKind::Number:
-		for (u256 n = u256(_literal.value.str()); n >= 0x100; n >>= 8)
-			cost++;
+		if (_literal.value.str().substr(0, 2) == "0b")
+		{
+			size_t found = _literal.value.str().find("1", 2);
+			if (found != std::string::npos)
+			{
+				size_t bitLength = _literal.value.str().size() - found;
+				// bitLength is at least 1 at this point
+				cost += (bitLength - 1) / 8;
+			}
+		} else
+			for (u256 n = u256(_literal.value.str()); n >= 0x100; n >>= 8)
+				cost++;
 		if (valueOfLiteral(_literal) == 0)
 			if (auto evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 				if (evmDialect->evmVersion().hasPush0())
