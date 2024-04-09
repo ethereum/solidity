@@ -107,8 +107,18 @@ std::vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 			nativeLocationOf(_literal),
 			"String literal too long (" + std::to_string(_literal.value.str().size()) + " > 32)"
 		);
-	else if (_literal.kind == LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
-		m_errorReporter.typeError(6708_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
+	else if (_literal.kind == LiteralKind::Number)
+	{
+		if (boost::starts_with(_literal.value.str(), "0b"))
+		{
+			size_t found = _literal.value.str().find("1", 2);
+			if (found != std::string::npos && (_literal.value.str().size() - found) > 256)
+				m_errorReporter.typeError(6709_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
+		}
+		// if not binary, ask bigint to validate size
+		else if (bigint(_literal.value.str()) > u256(-1))
+			m_errorReporter.typeError(6708_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
+	}
 	else if (_literal.kind == LiteralKind::Boolean)
 		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
 
