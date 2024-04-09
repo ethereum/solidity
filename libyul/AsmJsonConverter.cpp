@@ -52,7 +52,7 @@ Json::Value AsmJsonConverter::operator()(Literal const& _node) const
 	{
 	case LiteralKind::Number:
 		yulAssert(
-			util::isValidDecimal(_node.value.str()) || util::isValidHex(_node.value.str()),
+			util::isValidDecimal(_node.value.str()) || util::isValidHex(_node.value.str()) || util::isValidBin(_node.value.str()),
 			"Invalid number literal"
 		);
 		ret["kind"] = "number";

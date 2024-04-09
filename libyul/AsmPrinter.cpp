@@ -49,7 +49,7 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
-		yulAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
+		yulAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()) || isValidBin(_literal.value.str()), "Invalid number literal" );
 		return locationComment + _literal.value.str() + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
 		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "Invalid bool literal.");
