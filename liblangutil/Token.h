@@ -160,6 +160,7 @@ namespace solidity::langutil
 	K(For, "for", 0)                                                   \
 	K(Function, "function", 0)                                         \
 	K(Hex, "hex", 0)                                                   \
+	K(Bin, "bin", 0)                                                   \
 	K(If, "if", 0)                                                     \
 	K(Indexed, "indexed", 0)                                           \
 	K(Interface, "interface", 0)                                       \
@@ -227,6 +228,7 @@ namespace solidity::langutil
 	T(StringLiteral, nullptr, 0)                                       \
 	T(UnicodeStringLiteral, nullptr, 0)                                \
 	T(HexStringLiteral, nullptr, 0)                                    \
+	T(BinStringLiteral, nullptr, 0)                                    \
 	T(CommentLiteral, nullptr, 0)                                      \
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
@@ -331,7 +333,8 @@ namespace TokenTraits
 	{
 		return tok == Token::Function || tok == Token::Let || tok == Token::If || tok == Token::Switch || tok == Token::Case ||
 			tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue || tok == Token::Leave ||
-			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex;
+			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex ||
+			tok == Token::BinStringLiteral || tok == Token::Bin;
 	}
 
 	constexpr bool isBuiltinTypeClassName(Token _token)
