@@ -2292,6 +2292,7 @@ ASTPointer<Expression> Parser::parseLiteral()
 	case Token::StringLiteral:
 	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
+	case Token::BinStringLiteral:
 	{
 		while (m_scanner->peekNextToken() == initialToken)
 		{
@@ -2337,6 +2338,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	case Token::StringLiteral:
 	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
+	case Token::BinStringLiteral:
 		expression = parseLiteral();
 		break;
 	case Token::Identifier:
