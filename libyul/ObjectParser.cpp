@@ -189,6 +189,8 @@ void ObjectParser::parseData(Object& _containingObject)
 
 	if (currentToken() == Token::HexStringLiteral)
 		expectToken(Token::HexStringLiteral, false);
+	else if (currentToken() == Token::BinStringLiteral)
+		expectToken(Token::BinStringLiteral, false);
 	else
 		expectToken(Token::StringLiteral, false);
 	addNamedSubObject(_containingObject, name, std::make_shared<Data>(name, asBytes(currentLiteral())));

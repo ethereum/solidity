@@ -507,6 +507,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 	}
 	case Token::StringLiteral:
 	case Token::HexStringLiteral:
+	case Token::BinStringLiteral:
 	case Token::Number:
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
@@ -516,6 +517,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		{
 		case Token::StringLiteral:
 		case Token::HexStringLiteral:
+		case Token::BinStringLiteral:
 			kind = LiteralKind::String;
 			break;
 		case Token::Number:
@@ -708,6 +710,10 @@ bool Parser::isValidNumberLiteral(std::string const& _literal)
 	}
 	catch (...)
 	{
+		// u256 does not support binary conversion.
+		// Manually check if _literal is binary.
+		if (boost::starts_with(_literal, "0b") && _literal.find_first_not_of("01", 2) == std::string::npos)
+			return true;
 		return false;
 	}
 	if (boost::starts_with(_literal, "0x"))
