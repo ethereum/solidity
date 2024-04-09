@@ -395,6 +395,12 @@ enum class HexPrefix
 	Add = 1,
 };
 
+enum class BinPrefix
+{
+	DontAdd = 0,
+	Add = 1,
+};
+
 enum class HexCase
 {
 	Lower = 0,
@@ -418,6 +424,23 @@ int fromHex(char _i, WhenError _throw);
 /// @example fromHex("41626261") == asBytes("Abba")
 /// If _throw = ThrowType::DontThrow, it replaces bad hex characters with 0's, otherwise it will throw an exception.
 bytes fromHex(std::string const& _s, WhenError _throw = WhenError::DontThrow);
+
+/// Convert a single byte to a string of bin characters (of length 8),
+std::string toBin(uint8_t _data);
+
+/// Convert a series of bytes to the corresponding string of bin octets,
+/// optionally with "0b" prefix.
+std::string toBin(bytes const& _data, BinPrefix _prefix = BinPrefix::DontAdd);
+
+/// Converts a (printable) ASCII bin character into the corresponding integer value.
+/// @example fromBin('0') == 0 && fromBin('1') == 1
+int fromBin(char _i, WhenError _throw);
+
+/// Converts a (printable) ASCII bin string into the corresponding byte stream.
+/// @example fromBin("100001001000001") == asBytes("BA")
+/// If _throw = ThrowType::DontThrow, it replaces bad bin characters with 0's, otherwise it will throw an exception.
+bytes fromBin(std::string const& _s, WhenError _throw = WhenError::DontThrow);
+
 /// Converts byte array to a string containing the same (binary) data. Unless
 /// the byte array happens to contain ASCII data, this won't be printable.
 inline std::string asString(bytes const& _b)
@@ -542,6 +565,7 @@ bool passesAddressChecksum(std::string const& _str, bool _strict);
 std::string getChecksummedAddress(std::string const& _addr);
 
 bool isValidHex(std::string const& _string);
+bool isValidBin(std::string const& _string);
 bool isValidDecimal(std::string const& _string);
 
 /// @returns a quoted string if all characters are printable ASCII chars,

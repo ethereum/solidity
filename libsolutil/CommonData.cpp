@@ -123,6 +123,97 @@ bytes solidity::util::fromHex(std::string const& _s, WhenError _throw)
 	return ret;
 }
 
+std::string solidity::util::toBin(uint8_t _data)
+{
+	return std::string{
+		static_cast<char>(((_data >> 7) & 1) + '0'),
+		static_cast<char>(((_data >> 6) & 1) + '0'),
+		static_cast<char>(((_data >> 5) & 1) + '0'),
+		static_cast<char>(((_data >> 4) & 1) + '0'),
+		static_cast<char>(((_data >> 3) & 1) + '0'),
+		static_cast<char>(((_data >> 2) & 1) + '0'),
+		static_cast<char>(((_data >> 1) & 1) + '0'),
+		static_cast<char>(((_data >> 0) & 1) + '0'),
+	};
+}
+
+std::string solidity::util::toBin(bytes const& _data, BinPrefix _prefix)
+{
+	std::string ret(_data.size() * 8 + (_prefix == BinPrefix::Add ? 2 : 0), 0);
+
+	size_t i = 0;
+	if (_prefix == BinPrefix::Add)
+	{
+		ret[i++] = '0';
+		ret[i++] = 'b';
+	}
+
+	for (uint8_t c: _data)
+	{
+		ret[i++] = static_cast<char>(((c >> 7) & 1) + '0');
+		ret[i++] = static_cast<char>(((c >> 6) & 1) + '0');
+		ret[i++] = static_cast<char>(((c >> 5) & 1) + '0');
+		ret[i++] = static_cast<char>(((c >> 4) & 1) + '0');
+		ret[i++] = static_cast<char>(((c >> 3) & 1) + '0');
+		ret[i++] = static_cast<char>(((c >> 2) & 1) + '0');
+		ret[i++] = static_cast<char>(((c >> 1) & 1) + '0');
+		ret[i++] = static_cast<char>(((c >> 0) & 1) + '0');
+	}
+	assertThrow(i == ret.size(), Exception, "");
+
+	return ret;
+}
+
+int solidity::util::fromBin(char _i, WhenError _throw)
+{
+	if (_i >= '0' && _i <= '1')
+		return _i - '0';
+	if (_throw == WhenError::Throw)
+		assertThrow(false, BadBinCharacter, std::to_string(_i));
+	else
+		return -1;
+}
+
+bytes solidity::util::fromBin(std::string const& _s, WhenError _throw)
+{
+	if (_s.empty())
+		return {};
+
+	unsigned s = (_s.size() >= 2 && _s[0] == '0' && _s[1] == 'b') ? 2 : 0;
+	std::vector<uint8_t> ret;
+	unsigned size = static_cast<unsigned>(_s.size() - s);
+	ret.reserve((size + 1) / 8);
+
+	if (size % 8)
+	{
+		int h = 0;
+		for (unsigned i = 0; i < size % 8; i++)
+		{
+			h <<= 1;
+			int b = fromBin(_s[s++], _throw);
+			if (b != -1)
+				h |= b;
+			else
+				return bytes();
+		}
+		ret.push_back(static_cast<uint8_t>(h));
+	}
+	for (unsigned i = s; i < _s.size(); i += 8)
+	{
+		int h = 0;
+		for (unsigned j = i; j < i + 8; j++)
+		{
+			h <<= 1;
+			int b = fromBin(_s[j], _throw);
+			if (b != -1)
+				h |= b;
+			else
+				return bytes();
+		}
+		ret.push_back(static_cast<uint8_t>(h));
+	}
+	return ret;
+}
 
 bool solidity::util::passesAddressChecksum(std::string const& _str, bool _strict)
 {
@@ -166,6 +257,15 @@ bool solidity::util::isValidHex(std::string const& _string)
 	if (_string.substr(0, 2) != "0x")
 		return false;
 	if (_string.find_first_not_of("0123456789abcdefABCDEF", 2) != std::string::npos)
+		return false;
+	return true;
+}
+
+bool solidity::util::isValidBin(std::string const& _string)
+{
+	if (_string.substr(0, 2) != "0b")
+		return false;
+	if (_string.find_first_not_of("01", 2) != std::string::npos)
 		return false;
 	return true;
 }

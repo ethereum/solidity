@@ -144,6 +144,12 @@ inline std::string toCompactHexWithPrefix(T _value)
 	return "0x" + util::toHex(toCompactBigEndian(_value, 1));
 }
 
+template <class T>
+inline std::string toCompactBinWithPrefix(T _value)
+{
+	return "0b" + util::toBin(toCompactBigEndian(_value, 1));
+}
+
 /// Returns decimal representation for small numbers and hex for large numbers.
 inline std::string formatNumber(bigint const& _value)
 {
