@@ -63,6 +63,10 @@ public:
 	static bytes convertHexNumber(std::string const& _literal);
 
 	/// Tries to convert \param _literal to an unpadded `bytes`
+	/// representation of the bin literal. Throws if conversion fails.
+	static bytes convertBinNumber(std::string const& _literal);
+
+	/// Tries to convert \param _literal to an unpadded `bytes`
 	/// representation of the string literal. Throws if conversion fails.
 	static bytes convertString(std::string const& _literal);
 
@@ -91,6 +95,17 @@ public:
 	/// string representation of a byte array which is assumed to hold
 	/// a hexString value.
 	static std::string formatHexString(bytes const& _bytes);
+
+	/// Converts \param _bytes to a soltest-compliant and human-readable
+	/// string representation of a byte array which is assumed to hold
+	/// a bin value.
+	/// The _shorten flag is used to trim leading and trailing zeros.
+	static std::string formatBin(bytes const& _bytes, bool _shorten = false);
+
+	/// Converts \param _bytes to a soltest-compliant and human-readable
+	/// string representation of a byte array which is assumed to hold
+	/// a binString value.
+	static std::string formatBinString(bytes const& _bytes);
 
 	/// Converts \param _bytes to a soltest-compliant and human-readable
 	/// string representation of a byte array which is assumed to hold

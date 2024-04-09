@@ -89,6 +89,7 @@ private:
 		std::string scanIdentifierOrKeyword();
 		std::string scanDecimalNumber();
 		std::string scanHexNumber();
+		std::string scanBinNumber();
 		std::string scanString();
 		std::string readLine();
 		char scanHexPart();
@@ -177,6 +178,9 @@ private:
 
 	/// Parses the current hex number literal.
 	std::string parseHexNumber();
+
+	/// Parses the current bin number literal.
+	std::string parseBinNumber();
 
 	/// Parses the current string literal.
 	std::string parseString();

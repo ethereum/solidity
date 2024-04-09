@@ -50,12 +50,14 @@ namespace solidity::frontend::test
 	T(Comment, "#", 0)                 \
 	T(Number, "number", 0)             \
 	T(HexNumber, "hex_number", 0)      \
+	T(BinNumber, "bin_number", 0)      \
 	T(String, "string", 0)             \
 	T(Identifier, "identifier", 0)     \
 	/* type keywords */                \
 	K(Ether, "ether", 0)               \
 	K(Wei, "wei", 0)                   \
 	K(Hex, "hex", 0)                   \
+	K(Bin, "bin", 0)                   \
 	K(Boolean, "boolean", 0)           \
 	/* special keywords */             \
 	K(Left, "left", 0)                 \
@@ -106,7 +108,9 @@ struct ABIType
 		UnsignedDec,
 		SignedDec,
 		Hex,
+		Bin,
 		HexString,
+		BinString,
 		String,
 		UnsignedFixedPoint,
 		SignedFixedPoint

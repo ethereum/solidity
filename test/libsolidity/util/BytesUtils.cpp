@@ -131,6 +131,18 @@ bytes BytesUtils::convertHexNumber(std::string const& _literal)
 	}
 }
 
+bytes BytesUtils::convertBinNumber(std::string const& _literal)
+{
+	try
+	{
+		return fromBin(_literal);
+	}
+	catch (std::exception const&)
+	{
+		BOOST_THROW_EXCEPTION(TestParserError("Bin number encoding invalid."));
+	}
+}
+
 bytes BytesUtils::convertString(std::string const& _literal)
 {
 	try
@@ -197,6 +209,26 @@ std::string BytesUtils::formatHexString(bytes const& _bytes)
 	std::stringstream os;
 
 	os << "hex\"" << util::toHex(_bytes) << "\"";
+
+	return os.str();
+}
+
+std::string BytesUtils::formatBin(bytes const& _bytes, bool _shorten)
+{
+	soltestAssert(!_bytes.empty() && _bytes.size() <= 32, "");
+	u256 value = fromBigEndian<u256>(_bytes);
+	std::string output = toCompactBinWithPrefix(value);
+
+	if (_shorten)
+		return output.substr(0, output.size() - countRightPaddedZeros(_bytes) * 8);
+	return output;
+}
+
+std::string BytesUtils::formatBinString(bytes const& _bytes)
+{
+	std::stringstream os;
+
+	os << "bin\"" << util::toBin(_bytes) << "\"";
 
 	return os.str();
 }
@@ -357,6 +389,12 @@ std::string BytesUtils::formatBytes(
 		break;
 	case ABIType::HexString:
 		os << formatHexString(_bytes);
+		break;
+	case ABIType::Bin:
+		os << formatBin(_bytes, _abiType.alignDeclared);
+		break;
+	case ABIType::BinString:
+		os << formatBinString(_bytes);
 		break;
 	case ABIType::String:
 		os << formatString(_bytes, _bytes.size() - countRightPaddedZeros(_bytes));

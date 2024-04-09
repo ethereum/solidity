@@ -412,6 +412,20 @@ Parameter TestFileParser::parseParameter()
 			BytesUtils::convertHexNumber(parsed)
 		);
 	}
+	else if (accept(Token::BinNumber))
+	{
+		if (isSigned)
+			BOOST_THROW_EXCEPTION(TestParserError("Invalid bin number literal."));
+
+		parameter.abiType = ABIType{ABIType::Bin, ABIType::AlignRight, 32};
+		std::string parsed = parseBinNumber();
+		parameter.rawString += parsed;
+		parameter.rawBytes = BytesUtils::applyAlign(
+			parameter.alignment,
+			parameter.abiType,
+			BytesUtils::convertBinNumber(parsed)
+		);
+	}
 	else if (accept(Token::Hex, true))
 	{
 		if (isSigned)
@@ -424,6 +438,21 @@ Parameter TestFileParser::parseParameter()
 		parameter.rawBytes = BytesUtils::convertHexNumber(parsed);
 		parameter.abiType = ABIType{
 			ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()
+		};
+	}
+	else if (accept(Token::Bin, true))
+	{
+		if (isSigned)
+			BOOST_THROW_EXCEPTION(TestParserError("Invalid bin string literal."));
+		if (parameter.alignment != Parameter::Alignment::None)
+			BOOST_THROW_EXCEPTION(TestParserError("Bin string literals cannot be aligned or padded."));
+
+		std::string parsed = parseString();
+		parameter.rawString += "bin\"" + parsed + "\"";
+
+		parameter.rawBytes = BytesUtils::convertBinNumber(parsed);
+		parameter.abiType = ABIType{
+			ABIType::BinString, ABIType::AlignNone, parameter.rawBytes.size()
 		};
 	}
 	else if (accept(Token::String))
@@ -551,6 +580,13 @@ std::string TestFileParser::parseHexNumber()
 	return literal;
 }
 
+std::string TestFileParser::parseBinNumber()
+{
+	std::string literal = m_scanner.currentLiteral();
+	expect(Token::BinNumber);
+	return literal;
+}
+
 std::string TestFileParser::parseString()
 {
 	std::string literal = m_scanner.currentLiteral();
@@ -581,6 +617,7 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "library") return {Token::Library, ""};
 		if (_literal == "right") return {Token::Right, ""};
 		if (_literal == "hex") return {Token::Hex, ""};
+		if (_literal == "bin") return {Token::Bin, ""};
 		if (_literal == "FAILURE") return {Token::Failure, ""};
 		if (_literal == "gas") return {Token::Gas, ""};
 		return {Token::Identifier, _literal};
@@ -655,6 +692,12 @@ void TestFileParser::Scanner::scanNextToken()
 					advance();
 					advance();
 					selectToken(Token::HexNumber, "0x" + scanHexNumber());
+				}
+				else if (current() == '0' && peek() == 'b')
+				{
+					advance();
+					advance();
+					selectToken(Token::BinNumber, "0b" + scanBinNumber());
 				}
 				else
 					selectToken(Token::Number, scanDecimalNumber());
@@ -731,6 +774,18 @@ std::string TestFileParser::Scanner::scanHexNumber()
 	std::string number;
 	number += current();
 	while (langutil::isHexDigit(peek()))
+	{
+		advance();
+		number += current();
+	}
+	return number;
+}
+
+std::string TestFileParser::Scanner::scanBinNumber()
+{
+	std::string number;
+	number += current();
+	while (langutil::isBinDigit(peek()))
 	{
 		advance();
 		number += current();
