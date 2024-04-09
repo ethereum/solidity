@@ -96,6 +96,68 @@ BOOST_AUTO_TEST_CASE(tohex_bytes)
 	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, static_cast<HexCase>(42)), "0x00112233445566778899aabbccddeeff");
 }
 
+BOOST_AUTO_TEST_CASE(frombin_char)
+{
+	BOOST_CHECK_EQUAL(fromBin('0', WhenError::DontThrow), 0b0);
+	BOOST_CHECK_EQUAL(fromBin('1', WhenError::DontThrow), 0b1);
+	BOOST_CHECK_EQUAL(fromBin('b', WhenError::DontThrow), -1);
+	BOOST_CHECK_EQUAL(fromBin('b', static_cast<WhenError>(42)), -1);
+
+	BOOST_CHECK_EQUAL(fromBin('0', WhenError::Throw), 0b0);
+	BOOST_CHECK_EQUAL(fromBin('1', WhenError::Throw), 0b1);
+	BOOST_CHECK_THROW(fromBin('b', WhenError::Throw), BadBinCharacter);
+}
+
+BOOST_AUTO_TEST_CASE(frombin_string)
+{
+	bytes expectation_zero = {{0b00110011, 0b10110011}};
+	bytes expectation_one = {{0b1, 0b00110011, 0b10110011}};
+	bytes expectation_two = {{0b11, 0b00110011, 0b10110011}};
+	bytes expectation_three = {{0b111, 0b00110011, 0b10110011}};
+	bytes expectation_four = {{0b1111, 0b00110011, 0b10110011}};
+	bytes expectation_five = {{0b11111, 0b00110011, 0b10110011}};
+	bytes expectation_six = {{0b111111, 0b00110011, 0b10110011}};
+	bytes expectation_seven = {{0b1111111, 0b00110011, 0b10110011}};
+
+	// Defaults to WhenError::DontThrow
+	BOOST_CHECK_EQUAL(fromBin(""), bytes());
+	BOOST_CHECK_EQUAL(fromBin("0011001110110011"), expectation_zero);
+	BOOST_CHECK_EQUAL(fromBin("0b0011001110110011"), expectation_zero);
+	BOOST_CHECK_EQUAL(fromBin("0b10011001110110011"), expectation_one);
+	BOOST_CHECK_EQUAL(fromBin("0b110011001110110011"), expectation_two);
+	BOOST_CHECK_EQUAL(fromBin("0b1110011001110110011"), expectation_three);
+	BOOST_CHECK_EQUAL(fromBin("0b11110011001110110011"), expectation_four);
+	BOOST_CHECK_EQUAL(fromBin("0b111110011001110110011"), expectation_five);
+	BOOST_CHECK_EQUAL(fromBin("0b1111110011001110110011"), expectation_six);
+	BOOST_CHECK_EQUAL(fromBin("0b11111110011001110110011"), expectation_seven);
+	BOOST_CHECK_EQUAL(fromBin("gg"), bytes());
+	BOOST_CHECK_EQUAL(fromBin("0bgg"), bytes());
+
+	BOOST_CHECK_EQUAL(fromBin("", WhenError::Throw), bytes());
+	BOOST_CHECK_EQUAL(fromBin("0011001110110011", WhenError::Throw), expectation_zero);
+	BOOST_CHECK_EQUAL(fromBin("0b0011001110110011", WhenError::Throw), expectation_zero);
+	BOOST_CHECK_EQUAL(fromBin("0b10011001110110011", WhenError::Throw), expectation_one);
+	BOOST_CHECK_EQUAL(fromBin("0b110011001110110011", WhenError::Throw), expectation_two);
+	BOOST_CHECK_EQUAL(fromBin("0b1110011001110110011", WhenError::Throw), expectation_three);
+	BOOST_CHECK_EQUAL(fromBin("0b11110011001110110011", WhenError::Throw), expectation_four);
+	BOOST_CHECK_EQUAL(fromBin("0b111110011001110110011", WhenError::Throw), expectation_five);
+	BOOST_CHECK_EQUAL(fromBin("0b1111110011001110110011", WhenError::Throw), expectation_six);
+	BOOST_CHECK_EQUAL(fromBin("0b11111110011001110110011", WhenError::Throw), expectation_seven);
+	BOOST_CHECK_THROW(fromBin("gg", WhenError::Throw), BadBinCharacter);
+	BOOST_CHECK_THROW(fromBin("0bgg", WhenError::Throw), BadBinCharacter);
+}
+
+BOOST_AUTO_TEST_CASE(tobin_uint8)
+{
+	BOOST_CHECK_EQUAL(toBin(0b10101010), "10101010");
+}
+
+BOOST_AUTO_TEST_CASE(tobin_bytes)
+{
+	BOOST_CHECK_EQUAL(toBin(fromBin("010011010001010101011101"), BinPrefix::DontAdd), "010011010001010101011101");
+	BOOST_CHECK_EQUAL(toBin(fromBin("010011010001010101011101"), BinPrefix::Add), "0b010011010001010101011101");
+}
+
 BOOST_AUTO_TEST_CASE(test_format_number)
 {
 	BOOST_CHECK_EQUAL(formatNumber(u256(0x8000000)), "0x08000000");
