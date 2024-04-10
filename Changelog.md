@@ -1,7 +1,11 @@
 ### 0.8.26 (unreleased)
 
-Language Features:
+Breaking changes:
+ * New reserved words: ``bin``
 
+Language Features:
+ * Binary string literals: ``bin"10110011"``
+ * Binary numbers: `0b101_001111`
 
 Compiler Features:
 
