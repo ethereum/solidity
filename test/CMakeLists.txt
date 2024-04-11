@@ -158,6 +158,8 @@ set(libyul_sources
     libyul/SyntaxTest.cpp
     libyul/YulInterpreterTest.cpp
     libyul/YulInterpreterTest.h
+    libyul/YulOptimizerAssemblyTest.cpp
+    libyul/YulOptimizerAssemblyTest.h
     libyul/YulOptimizerTest.cpp
     libyul/YulOptimizerTest.h
     libyul/YulOptimizerTestCommon.cpp
