@@ -225,7 +225,7 @@ fragment HexCharacter: [0-9A-Fa-f];
 /**
  * Bin strings need to consist of binary digits which total length is multiple of 8, that may be grouped using underscores.
  */
-BinString: 'bin' (('"' BinaryOctets? '"') | ('\'' BinaryOctets? '\''));
+BinString: 'bin' (('"' BinOctets? '"') | ('\'' BinOctets? '\''));
 /**
  * Bin numbers consist of a prefix and an arbitrary number of binary digits that may be delimited by underscores.
  */
@@ -233,9 +233,9 @@ BinNumber: '0' 'b' BinDigits;
 //@doc:inline
 fragment BinDigits: BinCharacter ('_'? BinCharacter)*;
 //@doc:inline
-fragment BinaryOctets: BinaryOctet ('_'? BinaryOctet)*;
+fragment BinOctets: BinOctet ('_'? BinOctet)*;
 //@doc:inline
-fragment BinaryOctet: BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter;
+fragment BinOctet: BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter BinCharacter;
 //@doc:inline
 fragment BinCharacter: [01];
 
