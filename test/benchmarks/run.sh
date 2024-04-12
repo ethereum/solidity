@@ -37,9 +37,6 @@ solc="${1:-${SOLIDITY_BUILD_DIR}/solc/solc}"
 command_available "$solc" --version
 
 output_dir=$(mktemp -d -t solc-benchmark-XXXXXX)
-result_legacy_file="${output_dir}/benchmark-legacy.txt"
-result_via_ir_file="${output_dir}/benchmark-via-ir.txt"
-warnings_and_errors_file="${output_dir}/benchmark-warn-err.txt"
 
 function cleanup() {
     rm -r "${output_dir}"
@@ -54,7 +51,28 @@ function bytecode_size {
     echo $(( bytecode_chars / 2 ))
 }
 
-benchmarks_dir="${REPO_ROOT}/test/benchmarks"
+function benchmark_contract {
+    local pipeline="$1"
+    local input_path="$2"
+
+    local solc_command=("${solc}" --optimize --bin --color "${input_path}")
+    [[ $pipeline == via-ir ]] && solc_command+=(--via-ir)
+    local time_args=(--output "${output_dir}/time-and-status-${pipeline}.txt" --quiet --format '%e s |         %x')
+
+    # NOTE: Legacy pipeline may fail with "Stack too deep" in some cases. That's fine.
+    "$time_bin_path" \
+        "${time_args[@]}" \
+        "${solc_command[@]}" \
+        > "${output_dir}/bytecode-${pipeline}.bin" \
+        2>> "${output_dir}/benchmark-warn-err.txt" || [[ $pipeline == legacy ]]
+
+    printf '| %-20s | %s   | %7d bytes | %20s |\n' \
+        '`'"$input_file"'`' \
+        "$pipeline" \
+        "$(bytecode_size < "${output_dir}/bytecode-${pipeline}.bin")" \
+        "$(< "${output_dir}/time-and-status-${pipeline}.txt")"
+}
+
 benchmarks=("verifier.sol" "OptimizorClub.sol" "chains.sol")
 time_bin_path=$(type -P time)
 
@@ -63,29 +81,14 @@ echo "|----------------------|----------|--------------:|---------:|----------:|
 
 for input_file in "${benchmarks[@]}"
 do
-    input_path="${benchmarks_dir}/${input_file}"
-
-    solc_command_legacy=("${solc}" --optimize --bin --color "${input_path}")
-    solc_command_via_ir=("${solc}" --via-ir --optimize --bin --color "${input_path}")
-
-    # Legacy can fail.
-    "${time_bin_path}" --output "${result_legacy_file}" --quiet --format "%e s |         %x" "${solc_command_legacy[@]}" >"${output_dir}/bytecode-legacy.bin" 2>>"${warnings_and_errors_file}" || true
-    "${time_bin_path}" --output "${result_via_ir_file}" --quiet --format "%e s |         %x" "${solc_command_via_ir[@]}" >"${output_dir}/bytecode-via-ir.bin" 2>>"${warnings_and_errors_file}"
-
-    time_and_status_legacy=$(<"${result_legacy_file}")
-    time_and_status_via_ir=$(<"${result_via_ir_file}")
-    bytecode_size_legacy=$(bytecode_size <"${output_dir}/bytecode-legacy.bin")
-    bytecode_size_via_ir=$(bytecode_size <"${output_dir}/bytecode-via-ir.bin")
-
-    printf '| %-20s | legacy   | %7d bytes | %20s |\n' '`'"$input_file"'`' "$bytecode_size_legacy" "$time_and_status_legacy"
-    printf '| %-20s | via-ir   | %7d bytes | %20s |\n' '`'"$input_file"'`' "$bytecode_size_via_ir" "$time_and_status_via_ir"
+    benchmark_contract legacy "${REPO_ROOT}/test/benchmarks/${input_file}"
+    benchmark_contract via-ir "${REPO_ROOT}/test/benchmarks/${input_file}"
 done
 
 echo
 echo "======================================================="
 echo "Warnings and errors generated during run:"
 echo "======================================================="
-echo "$(<"${warnings_and_errors_file}")"
+echo "$(< "${output_dir}/benchmark-warn-err.txt")"
 
 cleanup
-
