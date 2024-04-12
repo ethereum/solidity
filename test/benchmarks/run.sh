@@ -26,8 +26,15 @@ set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "$0")/../../" && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 
+# shellcheck source=scripts/common.sh
+source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
+
+(( $# <= 1 )) || fail "Too many arguments. Usage: run.sh [<solc-path>]"
+
+solc="${1:-${SOLIDITY_BUILD_DIR}/solc/solc}"
+command_available "$solc" --version
 
 output_dir=$(mktemp -d -t solc-benchmark-XXXXXX)
 result_legacy_file="${output_dir}/benchmark-legacy.txt"
@@ -47,7 +54,6 @@ function bytecode_size {
     echo $(( bytecode_chars / 2 ))
 }
 
-solc="${SOLIDITY_BUILD_DIR}/solc/solc"
 benchmarks_dir="${REPO_ROOT}/test/benchmarks"
 benchmarks=("chains.sol" "OptimizorClub.sol" "verifier.sol")
 time_bin_path=$(type -P time)
