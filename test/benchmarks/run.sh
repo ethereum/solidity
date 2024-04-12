@@ -26,6 +26,9 @@ set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "$0")/../../" && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 
+# shellcheck source=scripts/common_cmdline.sh
+source "${REPO_ROOT}/scripts/common_cmdline.sh"
+
 output_dir=$(mktemp -d -t solc-benchmark-XXXXXX)
 result_legacy_file="${output_dir}/benchmark-legacy.txt"
 result_via_ir_file="${output_dir}/benchmark-via-ir.txt"
@@ -37,6 +40,12 @@ function cleanup() {
 }
 
 trap cleanup SIGINT SIGTERM
+
+function bytecode_size {
+    local bytecode_chars
+    bytecode_chars=$(stripCLIDecorations | stripEmptyLines | wc --chars)
+    echo $(( bytecode_chars / 2 ))
+}
 
 solc="${SOLIDITY_BUILD_DIR}/solc/solc"
 benchmarks_dir="${REPO_ROOT}/test/benchmarks"
@@ -51,17 +60,20 @@ do
     solc_command_via_ir=("${solc}" --via-ir --optimize --bin --color "${input_path}")
 
     # Legacy can fail.
-    "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null 2>>"${warnings_and_errors_file}" || true
-    "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >/dev/null 2>>"${warnings_and_errors_file}"
+    "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >"${output_dir}/bytecode-legacy.bin" 2>>"${warnings_and_errors_file}" || true
+    "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >"${output_dir}/bytecode-via-ir.bin" 2>>"${warnings_and_errors_file}"
 
     time_legacy=$(<"${result_legacy_file}")
     time_via_ir=$(<"${result_via_ir_file}")
+    bytecode_size_legacy=$(bytecode_size <"${output_dir}/bytecode-legacy.bin")
+    bytecode_size_via_ir=$(bytecode_size <"${output_dir}/bytecode-via-ir.bin")
+
 
     echo "======================================================="
     echo "            ${input_file}"
     echo "-------------------------------------------------------"
-    echo "legacy pipeline took ${time_legacy} seconds to execute."
-    echo "via-ir pipeline took ${time_via_ir} seconds to execute."
+    echo "legacy pipeline took ${time_legacy} seconds to execute. Bytecode size is ${bytecode_size_legacy} bytes."
+    echo "via-ir pipeline took ${time_via_ir} seconds to execute. Bytecode size is ${bytecode_size_viar_ir} bytes."
     echo "======================================================="
 done
 
