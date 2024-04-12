@@ -58,6 +58,9 @@ benchmarks_dir="${REPO_ROOT}/test/benchmarks"
 benchmarks=("chains.sol" "OptimizorClub.sol" "verifier.sol")
 time_bin_path=$(type -P time)
 
+echo "| File                 | Pipeline | Bytecode size | Time     | Exit code |"
+echo "|----------------------|----------|--------------:|---------:|----------:|"
+
 for input_file in "${benchmarks[@]}"
 do
     input_path="${benchmarks_dir}/${input_file}"
@@ -66,21 +69,16 @@ do
     solc_command_via_ir=("${solc}" --via-ir --optimize --bin --color "${input_path}")
 
     # Legacy can fail.
-    "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >"${output_dir}/bytecode-legacy.bin" 2>>"${warnings_and_errors_file}" || true
-    "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >"${output_dir}/bytecode-via-ir.bin" 2>>"${warnings_and_errors_file}"
+    "${time_bin_path}" --output "${result_legacy_file}" --quiet --format "%e s |         %x" "${solc_command_legacy[@]}" >"${output_dir}/bytecode-legacy.bin" 2>>"${warnings_and_errors_file}" || true
+    "${time_bin_path}" --output "${result_via_ir_file}" --quiet --format "%e s |         %x" "${solc_command_via_ir[@]}" >"${output_dir}/bytecode-via-ir.bin" 2>>"${warnings_and_errors_file}"
 
-    time_legacy=$(<"${result_legacy_file}")
-    time_via_ir=$(<"${result_via_ir_file}")
+    time_and_status_legacy=$(<"${result_legacy_file}")
+    time_and_status_via_ir=$(<"${result_via_ir_file}")
     bytecode_size_legacy=$(bytecode_size <"${output_dir}/bytecode-legacy.bin")
     bytecode_size_via_ir=$(bytecode_size <"${output_dir}/bytecode-via-ir.bin")
 
-
-    echo "======================================================="
-    echo "            ${input_file}"
-    echo "-------------------------------------------------------"
-    echo "legacy pipeline took ${time_legacy} seconds to execute. Bytecode size is ${bytecode_size_legacy} bytes."
-    echo "via-ir pipeline took ${time_via_ir} seconds to execute. Bytecode size is ${bytecode_size_viar_ir} bytes."
-    echo "======================================================="
+    printf '| %-20s | legacy   | %7d bytes | %20s |\n' '`'"$input_file"'`' "$bytecode_size_legacy" "$time_and_status_legacy"
+    printf '| %-20s | via-ir   | %7d bytes | %20s |\n' '`'"$input_file"'`' "$bytecode_size_via_ir" "$time_and_status_via_ir"
 done
 
 echo
