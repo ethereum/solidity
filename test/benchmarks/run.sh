@@ -51,7 +51,7 @@ do
     solc_command_via_ir=("${solc}" --via-ir --optimize --bin --color "${input_path}")
 
     # Legacy can fail.
-    "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null 2>>"${warnings_and_errors_file}"
+    "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null 2>>"${warnings_and_errors_file}" || true
     "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >/dev/null 2>>"${warnings_and_errors_file}"
 
     time_legacy=$(<"${result_legacy_file}")
