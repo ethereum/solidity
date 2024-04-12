@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
-"""A script to collect gas statistics and print it.
+"""Summarizes gas differences from semantic test diff.
 
-Useful to summarize gas differences to semantic tests for a PR / branch.
+The script collects all gas differences present in git diff of semantic tests
+and summarizes them in the form of a table that's ready to post in a GitHub comment.
+The diff is calculated against the `origin/develop` branch.
+Only changes that are already committed are taken into account.
+Changes that are only staged or not staged or committed at all are ignored.
 
-Dependencies: Parsec (https://pypi.org/project/parsec/) and Tabulate
-(https://pypi.org/project/tabulate/)
+Useful for reviewing the gas impact of a specific PR / branch.
+Instead of tediously going through each individual change, it's recommended to review the table.
 
-  pip install parsec tabulate
-
-Run from root project dir.
-
-  python3 scripts/gas_diff_stats.py
-
-Note that the changes to semantic tests have to be committed.
-
-Assumes that there is a remote named ``origin`` pointing to the Solidity github
-repository. The changes are compared against ``origin/develop``.
-
+Dependencies: parsec, tabulate
 """
 
 import subprocess
 import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 from enum import Enum
 from parsec import generate, ParseError, regex, string, optional
@@ -170,6 +165,9 @@ def semantictest_statistics():
         print("No differences found.")
 
 def main():
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    options = parser.parse_args()
+
     try:
         semantictest_statistics()
     except subprocess.CalledProcessError as exception:
