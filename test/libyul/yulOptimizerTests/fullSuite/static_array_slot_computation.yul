@@ -1,8 +1,8 @@
 // The yul code for the following contract
-//  contract C {
-//	  uint256[] x;
-//	  function f() public { x[10] = 5; }
-//  }
+// contract C {
+//     uint256[] x;
+//     function f() public { x[10] = 5; }
+// }
 
 {
     let _1 := 0

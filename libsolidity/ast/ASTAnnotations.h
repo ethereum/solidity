@@ -65,8 +65,8 @@ struct ASTAnnotation
 
 struct DocTag
 {
-	std::string content;	///< The text content of the tag.
-	std::string paramName;	///< Only used for @param, stores the parameter name.
+	std::string content;    ///< The text content of the tag.
+	std::string paramName;  ///< Only used for @param, stores the parameter name.
 };
 
 struct StructurallyDocumentedAnnotation

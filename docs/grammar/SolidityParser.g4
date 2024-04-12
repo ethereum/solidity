@@ -251,7 +251,7 @@ structMember: type=typeName name=identifier Semicolon;
 /**
  * Definition of an enum. Can occur at top-level within a source unit or within a contract, library or interface.
  */
-enumDefinition:	Enum name=identifier LBrace enumValues+=identifier (Comma enumValues+=identifier)* RBrace;
+enumDefinition: Enum name=identifier LBrace enumValues+=identifier (Comma enumValues+=identifier)* RBrace;
 /**
  * Definition of a user defined value type. Can occur at top-level within a source unit or within a contract, library or interface.
  */
@@ -400,7 +400,7 @@ expression:
 	| New typeName # NewExpr
 	| tupleExpression # Tuple
 	| inlineArrayExpression # InlineArray
- 	| (
+	| (
 		identifier
 		| literal
 		| literalWithSubDenomination

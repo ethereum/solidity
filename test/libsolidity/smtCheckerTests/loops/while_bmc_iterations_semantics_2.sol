@@ -7,7 +7,7 @@ contract C {
 				y = 1;
 			++x;
 		}
- 		// BMC loop iteration setting is just enough to leave the loop
+		// BMC loop iteration setting is just enough to leave the loop
 		assert(x == 3);
 		assert(y == 1); // should fail
 		assert(y == 0);

@@ -199,9 +199,9 @@ private:
 	/// Prints a Yul formatted variable declaration statement to the output
 	/// stream.
 	/// Example 1: createVarDecls(0, 1, true) returns {"x_0"} and prints
-	///		let x_0 :=
+	///     let x_0 :=
 	/// Example 2: createVarDecls(0, 2, false) returns {"x_0", "x_1"} and prints
-	///		let x_0, x_1
+	///     let x_0, x_1
 	/// @param _start Start index of variable (inclusive)
 	/// @param _end End index of variable (exclusive)
 	/// @param _isAssignment Flag indicating if variable declaration is also
@@ -215,7 +215,7 @@ private:
 	/// Prints comma separated variable names to output stream and
 	/// returns a vector containing the printed variable names.
 	/// Example: createVars(0, 2) returns {"x_0", "x_1"} and prints
-	///		x_0, x_1
+	///     x_0, x_1
 	/// @param _startIdx Start index of variable (inclusive)
 	/// @param _endIdx End index of variable (exclusive)
 	/// @return A vector of strings containing the printed variable names.
@@ -264,7 +264,7 @@ private:
 	/// @param _p Enum that decides if the returned token is hex prefixed ("0x") or not
 	/// @return Dictionary token at the index computed using a
 	/// monotonically increasing counter as follows:
-	///		index = (m_inputSize * m_inputSize + counter) % dictionarySize
+	///     index = (m_inputSize * m_inputSize + counter) % dictionarySize
 	/// where m_inputSize is the size of the protobuf input and
 	/// dictionarySize is the total number of entries in the dictionary.
 	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);

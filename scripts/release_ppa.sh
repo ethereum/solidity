@@ -210,8 +210,8 @@ export DH_OPTIONS
 override_dh_auto_test:
 
 #override_dh_installdocs:
-#	make -C docs html
-#	dh_installdocs docs/_build/html
+#    make -C docs html
+#    dh_installdocs docs/_build/html
 
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

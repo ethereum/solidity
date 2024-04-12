@@ -1358,11 +1358,11 @@ BOOST_AUTO_TEST_CASE(cse_verbatim_mload)
 	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
 	AssemblyItems input{
 		u256(1000),
-		Instruction::MLOAD,	// Should not be removed
+		Instruction::MLOAD, // Should not be removed
 		Instruction::POP,
 		verbatim,
 		u256(1000),
-		Instruction::MLOAD,	// Should not be removed
+		Instruction::MLOAD, // Should not be removed
 		Instruction::POP,
 	};
 

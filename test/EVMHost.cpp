@@ -191,7 +191,7 @@ void EVMHost::newTransactionFrame()
 		for (auto& [slot, value]: account.storage)
 		{
 			value.access_status = EVMC_ACCESS_COLD; // Clear EIP-2929 storage access indicator
-			value.original = value.current;			// Clear EIP-2200 dirty slot
+			value.original = value.current;         // Clear EIP-2200 dirty slot
 		}
 
 		// Clear transient storage according to EIP 1153

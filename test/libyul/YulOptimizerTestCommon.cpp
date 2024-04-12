@@ -422,7 +422,7 @@ std::string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 			// Do not fuzz reasoning based simplifier because
 			// it can sometimes drain memory.
 			if (
-				optimiserStep == "mainFunction"	||
+				optimiserStep == "mainFunction" ||
 				optimiserStep == "wordSizeTransform"
 			)
 				// "Fullsuite" is fuzzed roughly four times more frequently than

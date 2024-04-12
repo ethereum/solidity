@@ -7,7 +7,7 @@ contract C
 				x = 10;
 				continue;
 			}
- 			if (x > 0) {
+			if (x > 0) {
 				x = 11;
 				continue;
 			}

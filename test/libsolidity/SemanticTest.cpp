@@ -157,7 +157,7 @@ std::map<std::string, Builtin> SemanticTest::makeBuiltins()
 			{
 				soltestAssert(_call.arguments.parameters.empty(), "No arguments expected.");
 				return toBigEndian(u256(storageEmpty(m_contractAddress) ? 1 : 0));
-		 	}
+			}
 		},
 		{
 			"account",

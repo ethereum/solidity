@@ -30,9 +30,9 @@ namespace solidity::util
 ///
 /// Result<bool> check()
 /// {
-///		if (false)
-///			return Result<bool>::err("Error message.")
-///		return true;
+///     if (false)
+///         return Result<bool>::err("Error message.")
+///     return true;
 /// }
 ///
 

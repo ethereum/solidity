@@ -9,21 +9,21 @@ contract C {
 		delete a;
 		assert(a.length == 0);
 	}
- 	function g(uint x, uint y, uint v) public {
+	function g(uint x, uint y, uint v) public {
 		require(x < b.length);
 		require(y < b[x].length);
 		b[x][y] = v;
 		delete b;
 		assert(b.length == 0);
 	}
- 	function h(uint x, uint y, uint v) public {
+	function h(uint x, uint y, uint v) public {
 		require(x < b.length);
 		require(y < b[x].length);
 		b[x][y] = v;
 		delete b[x];
 		assert(b[x].length == 0);
 	}
- 	function i(uint x, uint y, uint v) public {
+	function i(uint x, uint y, uint v) public {
 		require(x < b.length);
 		require(y < b[x].length);
 		b[x][y] = v;
@@ -31,7 +31,7 @@ contract C {
 		delete b[y];
 		assert(b[y].length == 0);
 	}
- 	function j(uint x, uint y, uint z, uint v) public {
+	function j(uint x, uint y, uint z, uint v) public {
 		require(x < b.length);
 		require(y < b[x].length);
 		b[x][y] = v;

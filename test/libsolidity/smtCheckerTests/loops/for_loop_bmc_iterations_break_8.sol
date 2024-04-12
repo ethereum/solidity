@@ -3,7 +3,7 @@ contract C
 	function f() public pure {
 		uint x;
 		for (;;) {
- 			break;
+			break;
 			++x;
 		}
 		assert(x == 0);
