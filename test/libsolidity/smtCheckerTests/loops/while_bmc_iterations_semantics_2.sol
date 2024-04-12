@@ -18,5 +18,5 @@ contract C {
 // SMTSolvers: z3
 // BMCLoopIterations: 3
 // ----
-// Warning 4661: (220-234): BMC: Assertion violation happens here.
+// Warning 4661: (219-233): BMC: Assertion violation happens here.
 // Info 6002: BMC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
