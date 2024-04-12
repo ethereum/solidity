@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix internal error on mapping access caused by too strong requirements on sort compatibility of the index and mapping domain.
  * SMTChecker: Fix internal error when using bitwise operators with an array element as argument.
 
 
