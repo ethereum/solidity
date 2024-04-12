@@ -55,7 +55,7 @@ function bytecode_size {
 }
 
 benchmarks_dir="${REPO_ROOT}/test/benchmarks"
-benchmarks=("chains.sol" "OptimizorClub.sol" "verifier.sol")
+benchmarks=("verifier.sol" "OptimizorClub.sol" "chains.sol")
 time_bin_path=$(type -P time)
 
 echo "| File                 | Pipeline | Bytecode size | Time     | Exit code |"
