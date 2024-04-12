@@ -505,14 +505,14 @@ function compile_and_run_test
     [[ $preset != *" "* ]] || assertFail "Preset names must not contain spaces."
 
     printLog "Running compile function..."
-    time $compile_fn
-    $verify_fn "$SOLCVERSION_SHORT" "$SOLCVERSION"
+    time_to_json_file "$(compilation_time_report_path "$preset")" "$compile_fn"
+    "$verify_fn" "$SOLCVERSION_SHORT" "$SOLCVERSION"
 
     if [[ "$COMPILE_ONLY" == 1 || " $compile_only_presets " == *" $preset "* ]]; then
         printLog "Skipping test function..."
     else
         printLog "Running test function..."
-        $test_fn
+        "$test_fn"
     fi
 }
 
@@ -570,6 +570,13 @@ function gas_report_path
     local preset="$1"
 
     echo "${DIR}/gas-report-${preset}.rst"
+}
+
+function compilation_time_report_path
+{
+    local preset="$1"
+
+    echo "${DIR}/compilation-time-report-${preset}.json"
 }
 
 function gas_report_to_json
@@ -679,5 +686,6 @@ function store_benchmark_report
 
         "bytecode_size_json_from_${framework}_artifacts" | combine_artifact_json
         project_info_json "$project_url"
+        echo "{\"compilation_time\": $(cat "$(compilation_time_report_path "$preset")")}"
     } | jq --slurp "{\"${project_name}\": {\"${preset}\": add}}" --indent 4 --sort-keys > "$output_file"
 }
