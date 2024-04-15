@@ -26,10 +26,17 @@ set -euo pipefail
 REPO_ROOT=$(cd "$(dirname "$0")/../../" && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 
+# shellcheck source=scripts/common.sh
+source "${REPO_ROOT}/scripts/common.sh"
+# shellcheck source=scripts/common_cmdline.sh
+source "${REPO_ROOT}/scripts/common_cmdline.sh"
+
+(( $# <= 1 )) || fail "Too many arguments. Usage: run.sh [<solc-path>]"
+
+solc="${1:-${SOLIDITY_BUILD_DIR}/solc/solc}"
+command_available "$solc" --version
+
 output_dir=$(mktemp -d -t solc-benchmark-XXXXXX)
-result_legacy_file="${output_dir}/benchmark-legacy.txt"
-result_via_ir_file="${output_dir}/benchmark-via-ir.txt"
-warnings_and_errors_file="${output_dir}/benchmark-warn-err.txt"
 
 function cleanup() {
     rm -r "${output_dir}"
@@ -38,38 +45,50 @@ function cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-solc="${SOLIDITY_BUILD_DIR}/solc/solc"
-benchmarks_dir="${REPO_ROOT}/test/benchmarks"
-benchmarks=("chains.sol" "OptimizorClub.sol" "verifier.sol")
+function bytecode_size {
+    local bytecode_chars
+    bytecode_chars=$(stripCLIDecorations | stripEmptyLines | wc --chars)
+    echo $(( bytecode_chars / 2 ))
+}
+
+function benchmark_contract {
+    local pipeline="$1"
+    local input_path="$2"
+
+    local solc_command=("${solc}" --optimize --bin --color "${input_path}")
+    [[ $pipeline == via-ir ]] && solc_command+=(--via-ir)
+    local time_args=(--output "${output_dir}/time-and-status-${pipeline}.txt" --quiet --format '%e s |         %x')
+
+    # NOTE: Legacy pipeline may fail with "Stack too deep" in some cases. That's fine.
+    "$time_bin_path" \
+        "${time_args[@]}" \
+        "${solc_command[@]}" \
+        > "${output_dir}/bytecode-${pipeline}.bin" \
+        2>> "${output_dir}/benchmark-warn-err.txt" || [[ $pipeline == legacy ]]
+
+    printf '| %-20s | %s   | %7d bytes | %20s |\n' \
+        '`'"$input_file"'`' \
+        "$pipeline" \
+        "$(bytecode_size < "${output_dir}/bytecode-${pipeline}.bin")" \
+        "$(< "${output_dir}/time-and-status-${pipeline}.txt")"
+}
+
+benchmarks=("verifier.sol" "OptimizorClub.sol" "chains.sol")
 time_bin_path=$(type -P time)
+
+echo "| File                 | Pipeline | Bytecode size | Time     | Exit code |"
+echo "|----------------------|----------|--------------:|---------:|----------:|"
 
 for input_file in "${benchmarks[@]}"
 do
-    input_path="${benchmarks_dir}/${input_file}"
-
-    solc_command_legacy=("${solc}" --optimize --bin --color "${input_path}")
-    solc_command_via_ir=("${solc}" --via-ir --optimize --bin --color "${input_path}")
-
-    # Legacy can fail.
-    "${time_bin_path}" --output "${result_legacy_file}" --format "%e" "${solc_command_legacy[@]}" >/dev/null 2>>"${warnings_and_errors_file}"
-    "${time_bin_path}" --output "${result_via_ir_file}" --format "%e" "${solc_command_via_ir[@]}" >/dev/null 2>>"${warnings_and_errors_file}"
-
-    time_legacy=$(<"${result_legacy_file}")
-    time_via_ir=$(<"${result_via_ir_file}")
-
-    echo "======================================================="
-    echo "            ${input_file}"
-    echo "-------------------------------------------------------"
-    echo "legacy pipeline took ${time_legacy} seconds to execute."
-    echo "via-ir pipeline took ${time_via_ir} seconds to execute."
-    echo "======================================================="
+    benchmark_contract legacy "${REPO_ROOT}/test/benchmarks/${input_file}"
+    benchmark_contract via-ir "${REPO_ROOT}/test/benchmarks/${input_file}"
 done
 
 echo
 echo "======================================================="
 echo "Warnings and errors generated during run:"
 echo "======================================================="
-echo "$(<"${warnings_and_errors_file}")"
+echo "$(< "${output_dir}/benchmark-warn-err.txt")"
 
 cleanup
-
