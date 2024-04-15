@@ -942,7 +942,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					else
 					{
 						solAssert(paramTypes[arg - 1]->isValueType(), "");
-						if (auto functionType =	dynamic_cast<FunctionType const*>(paramTypes[arg - 1]))
+						if (auto functionType = dynamic_cast<FunctionType const*>(paramTypes[arg - 1]))
 						{
 							auto argumentType =
 								dynamic_cast<FunctionType const*>(arguments[arg-1]->annotation().type);

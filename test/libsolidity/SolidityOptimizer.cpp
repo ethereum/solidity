@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 			numSHA3s++;
 	});
 // TEST DISABLED - OPTIMIZER IS NOT EFFECTIVE ON THIS ONE ANYMORE
-//	BOOST_CHECK_EQUAL(1, numSHA3s);
+// BOOST_CHECK_EQUAL(1, numSHA3s);
 }
 
 BOOST_AUTO_TEST_CASE(store_tags_as_unions)
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 			numSHA3s++;
 	});
 // TEST DISABLED UNTIL 93693404 IS IMPLEMENTED
-//	BOOST_CHECK_EQUAL(2, numSHA3s);
+// BOOST_CHECK_EQUAL(2, numSHA3s);
 }
 
 BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)

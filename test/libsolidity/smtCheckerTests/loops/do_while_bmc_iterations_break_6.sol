@@ -4,7 +4,7 @@ contract C {
 		do {
 			++x;
 			if (x > 0) {
- 				x = 2;
+				x = 2;
 				break;
 			}
 			if (x > 1) {

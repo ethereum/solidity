@@ -1220,7 +1220,7 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	BOOST_CHECK(
 		optimizer["details"]["yulDetails"]["optimizerSteps"].asString() ==
 		OptimiserSettings::DefaultYulOptimiserSteps + ":"s + OptimiserSettings::DefaultYulOptimiserCleanupSteps
- 	);
+	);
 	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 10);
 	BOOST_CHECK(optimizer["runs"].asUInt() == 600);
 }

@@ -159,7 +159,7 @@ public:
 	bytes asBytes() const { return bytes(data(), data() + N); }
 
 private:
-	std::array<uint8_t, N> m_data;		///< The binary data.
+	std::array<uint8_t, N> m_data; ///< The binary data.
 };
 
 /// Stream I/O for the FixedHash class.

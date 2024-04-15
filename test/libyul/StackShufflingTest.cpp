@@ -56,12 +56,12 @@ bool StackShufflingTest::parse(std::string const& _source)
 					scanner.next();
 					std::string functionName = scanner.currentLiteral();
 					auto call = yul::FunctionCall{
-						{},	yul::Identifier{{}, YulString(functionName)}, {}
+						{}, yul::Identifier{{}, YulString(functionName)}, {}
 					};
 					stack.emplace_back(FunctionCallReturnLabelSlot{
-							m_functions.insert(
-								make_pair(functionName, call)
-							).first->second
+						m_functions.insert(
+							make_pair(functionName, call)
+						).first->second
 					});
 					expectToken(Token::RBrack);
 				}
@@ -78,14 +78,14 @@ bool StackShufflingTest::parse(std::string const& _source)
 				scanner.next();
 				std::string functionName = scanner.currentLiteral();
 				auto call = yul::FunctionCall{
-				    {},	yul::Identifier{{}, YulString(functionName)}, {}
-			    };
+					{}, yul::Identifier{{}, YulString(functionName)}, {}
+				};
 				expectToken(Token::Comma);
 				scanner.next();
 				size_t index = size_t(atoi(scanner.currentLiteral().c_str()));
 				stack.emplace_back(TemporarySlot{
-						m_functions.insert(make_pair(functionName, call)).first->second,
-						index
+					m_functions.insert(make_pair(functionName, call)).first->second,
+					index
 				});
 				expectToken(Token::RBrack);
 			}
@@ -104,7 +104,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 				std::string ghostVariableId = scanner.currentLiteral();
 				Scope::Variable ghostVar = Scope::Variable{""_yulstring, YulString(literal + "[" + ghostVariableId + "]")};
 				stack.emplace_back(VariableSlot{
-						m_variables.insert(std::make_pair(ghostVar.name, ghostVar)).first->second
+					m_variables.insert(std::make_pair(ghostVar.name, ghostVar)).first->second
 				});
 				expectToken(Token::RBrack);
 			}
@@ -112,9 +112,9 @@ bool StackShufflingTest::parse(std::string const& _source)
 			{
 				Scope::Variable var = Scope::Variable{""_yulstring, YulString(literal)};
 				stack.emplace_back(VariableSlot{
-						m_variables.insert(
-							make_pair(literal, var)
-						).first->second
+					m_variables.insert(
+						make_pair(literal, var)
+					).first->second
 				});
 			}
 			scanner.next();

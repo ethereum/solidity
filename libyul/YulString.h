@@ -66,7 +66,7 @@ public:
 
 		return Handle{id, h};
 	}
-	std::string const& idToString(size_t _id) const	{ return *m_strings.at(_id); }
+	std::string const& idToString(size_t _id) const { return *m_strings.at(_id); }
 
 	static std::uint64_t hash(std::string const& v)
 	{

@@ -6,11 +6,11 @@ contract C {
 			if (x > 1) {
 				x = 3;
 				break;
- 			}
+			}
 			if (x > 0) {
 				x = 2;
 				break;
- 			}
+			}
 		} while (x < 3);
 		assert(x == 2);
 	}

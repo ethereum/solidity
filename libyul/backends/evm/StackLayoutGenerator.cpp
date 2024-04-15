@@ -539,7 +539,7 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 				_addChild(_conditionalJump.zero);
 				_addChild(_conditionalJump.nonZero);
 			},
-			[&](CFG::BasicBlock::FunctionReturn const&)	{},
+			[&](CFG::BasicBlock::FunctionReturn const&) {},
 			[&](CFG::BasicBlock::Terminated const&) { },
 		}, _block->exit);
 	});

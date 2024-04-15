@@ -6,7 +6,7 @@ contract C
 			if (i > 0) {
 				x = 1;
 				break;
- 			} else {
+			} else {
 				x = 2;
 				continue;
 			}

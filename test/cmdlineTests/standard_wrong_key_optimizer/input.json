@@ -11,12 +11,12 @@
 	{
 		"optimizer": {
 			"key1": "test",
-      		"enabled": true,
-      		"runs": 200
-    	},
-    	"evmVersion": "byzantium",
-    	"metadata": {
-      		"useLiteralContent": true
-    	}
+			"enabled": true,
+			"runs": 200
+		},
+		"evmVersion": "byzantium",
+		"metadata": {
+			"useLiteralContent": true
+		}
 	}
 }

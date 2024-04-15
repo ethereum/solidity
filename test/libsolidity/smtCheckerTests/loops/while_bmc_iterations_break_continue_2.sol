@@ -5,11 +5,11 @@ contract C {
 			if (x > 1) {
 				x = 3;
 				break;
- 			}
+			}
 			if (x >= 0) {
 				x = 2;
 				continue;
- 			}
+			}
 		}
 		assert(x == 3);
 	}

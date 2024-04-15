@@ -1042,7 +1042,7 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 	if (category == Category::FixedBytes)
 		return false;
 	else if (auto addressType = dynamic_cast<AddressType const*>(&_convertTo))
-		return	(m_value == 0) ||
+		return (m_value == 0) ||
 			((addressType->stateMutability() != StateMutability::Payable) &&
 			!isNegative() &&
 			!isFractional() &&

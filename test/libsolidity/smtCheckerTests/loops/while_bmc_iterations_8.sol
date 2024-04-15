@@ -3,7 +3,7 @@ contract C
 	uint256[] y;
 
 	function f() public view {
- 		uint256 x = 0;
+		uint256 x = 0;
 		while (x < y.length) {
 			x = 1;
 		}

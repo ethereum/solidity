@@ -3413,7 +3413,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isPure = true;
 		else if (
 			magicType->kind() == MagicType::Kind::MetaType &&
-			(memberName == "min" ||	memberName == "max")
+			(memberName == "min" || memberName == "max")
 		)
 			annotation.isPure = true;
 		else if (magicType->kind() == MagicType::Kind::Block)

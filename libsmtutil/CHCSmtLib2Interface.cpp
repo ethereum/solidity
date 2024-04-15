@@ -221,5 +221,5 @@ std::string CHCSmtLib2Interface::createHeaderAndDeclarations() {
 }
 
 std::string CHCSmtLib2Interface::createQueryAssertion(std::string name) {
-	return "(assert\n(forall " + forall() + "\n" +	"(=> " + name + " false)))";
+	return "(assert\n(forall " + forall() + "\n" + "(=> " + name + " false)))";
 }
