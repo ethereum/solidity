@@ -56,7 +56,7 @@ void CHCSmtLib2Interface::reset()
 	m_accumulatedOutput.clear();
 	m_variables.clear();
 	m_unhandledQueries.clear();
-	m_sortNames.clear();
+	m_smtlib2->reset();
 }
 
 void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
@@ -115,24 +115,18 @@ void CHCSmtLib2Interface::declareVariable(std::string const& _name, SortPointer 
 	else if (!m_variables.count(_name))
 	{
 		m_variables.insert(_name);
-		write("(declare-var |" + _name + "| " + toSmtLibSort(*_sort) + ')');
+		write("(declare-var |" + _name + "| " + toSmtLibSort(_sort) + ')');
 	}
 }
 
-std::string CHCSmtLib2Interface::toSmtLibSort(Sort const& _sort)
+std::string CHCSmtLib2Interface::toSmtLibSort(SortPointer _sort)
 {
-	if (!m_sortNames.count(&_sort))
-		m_sortNames[&_sort] = m_smtlib2->toSmtLibSort(_sort);
-	return m_sortNames.at(&_sort);
+	return m_smtlib2->toSmtLibSort(_sort);
 }
 
 std::string CHCSmtLib2Interface::toSmtLibSort(std::vector<SortPointer> const& _sorts)
 {
-	std::string ssort("(");
-	for (auto const& sort: _sorts)
-		ssort += toSmtLibSort(*sort) + " ";
-	ssort += ")";
-	return ssort;
+	return m_smtlib2->toSmtLibSort(_sorts);
 }
 
 std::string CHCSmtLib2Interface::forall()
@@ -142,7 +136,7 @@ std::string CHCSmtLib2Interface::forall()
 	{
 		solAssert(sort, "");
 		if (sort->kind != Kind::Function)
-			vars += " (" + name + " " + toSmtLibSort(*sort) + ")";
+			vars += " (" + name + " " + toSmtLibSort(sort) + ")";
 	}
 	vars += ")";
 	return vars;
@@ -158,7 +152,7 @@ void CHCSmtLib2Interface::declareFunction(std::string const& _name, SortPointer 
 		auto fSort = std::dynamic_pointer_cast<FunctionSort>(_sort);
 		smtAssert(fSort->codomain);
 		std::string domain = toSmtLibSort(fSort->domain);
-		std::string codomain = toSmtLibSort(*fSort->codomain);
+		std::string codomain = toSmtLibSort(fSort->codomain);
 		m_variables.insert(_name);
 		write(
 			"(declare-fun |" +

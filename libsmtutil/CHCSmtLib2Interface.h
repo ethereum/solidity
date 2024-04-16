@@ -57,8 +57,10 @@ public:
 
 	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
 
+	auto const& sortNames() const { return m_smtlib2->sortNames(); }
+
 private:
-	std::string toSmtLibSort(Sort const& _sort);
+	std::string toSmtLibSort(SortPointer _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	void writeHeader();
@@ -85,8 +87,6 @@ private:
 
 	frontend::ReadCallback::Callback m_smtCallback;
 	SMTSolverChoice m_enabledSolvers;
-
-	std::map<Sort const*, std::string> m_sortNames;
 };
 
 }

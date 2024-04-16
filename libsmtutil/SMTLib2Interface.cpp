@@ -56,6 +56,7 @@ void SMTLib2Interface::reset()
 	m_accumulatedOutput.emplace_back();
 	m_variables.clear();
 	m_userSorts.clear();
+	m_sortNames.clear();
 	write("(set-option :produce-models true)");
 	if (m_queryTimeout)
 		write("(set-option :timeout " + std::to_string(*m_queryTimeout) + ")");
@@ -81,7 +82,7 @@ void SMTLib2Interface::declareVariable(std::string const& _name, SortPointer con
 	else if (!m_variables.count(_name))
 	{
 		m_variables.emplace(_name, _sort);
-		write("(declare-fun |" + _name + "| () " + toSmtLibSort(*_sort) + ')');
+		write("(declare-fun |" + _name + "| () " + toSmtLibSort(_sort) + ')');
 	}
 }
 
@@ -94,7 +95,7 @@ void SMTLib2Interface::declareFunction(std::string const& _name, SortPointer con
 	{
 		auto const& fSort = std::dynamic_pointer_cast<FunctionSort>(_sort);
 		std::string domain = toSmtLibSort(fSort->domain);
-		std::string codomain = toSmtLibSort(*fSort->codomain);
+		std::string codomain = toSmtLibSort(fSort->codomain);
 		m_variables.emplace(_name, _sort);
 		write(
 			"(declare-fun |" +
@@ -183,7 +184,7 @@ std::string SMTLib2Interface::toSExpr(Expression const& _expr)
 		smtAssert(sortSort, "");
 		auto arraySort = std::dynamic_pointer_cast<ArraySort>(sortSort->inner);
 		smtAssert(arraySort, "");
-		sexpr += "(as const " + toSmtLibSort(*arraySort) + ") ";
+		sexpr += "(as const " + toSmtLibSort(arraySort) + ") ";
 		sexpr += toSExpr(_expr.arguments.at(1));
 	}
 	else if (_expr.name == "tuple_get")
@@ -212,25 +213,32 @@ std::string SMTLib2Interface::toSExpr(Expression const& _expr)
 	return sexpr;
 }
 
-std::string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
+std::string SMTLib2Interface::toSmtLibSort(solidity::smtutil::SortPointer _sort)
 {
-	switch (_sort.kind)
+	if (!m_sortNames.count(_sort))
+		m_sortNames[_sort] = toSmtLibSortInternal(_sort);
+	return m_sortNames.at(_sort);
+}
+
+std::string SMTLib2Interface::toSmtLibSortInternal(SortPointer _sort)
+{
+	switch (_sort->kind)
 	{
 	case Kind::Int:
 		return "Int";
 	case Kind::Bool:
 		return "Bool";
 	case Kind::BitVector:
-		return "(_ BitVec " + std::to_string(dynamic_cast<BitVectorSort const&>(_sort).size) + ")";
+		return "(_ BitVec " + std::to_string(dynamic_cast<BitVectorSort const&>(*_sort).size) + ")";
 	case Kind::Array:
 	{
-		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
+		auto const& arraySort = dynamic_cast<ArraySort const&>(*_sort);
 		smtAssert(arraySort.domain && arraySort.range, "");
-		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
+		return "(Array " + toSmtLibSort(arraySort.domain) + ' ' + toSmtLibSort(arraySort.range) + ')';
 	}
 	case Kind::Tuple:
 	{
-		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_sort);
 		std::string tupleName = "|" + tupleSort.name + "|";
 		auto isName = [&](auto entry) { return entry.first == tupleName; };
 		if (ranges::find_if(m_userSorts, isName) == m_userSorts.end())
@@ -238,7 +246,7 @@ std::string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 			std::string decl("(declare-datatypes ((" + tupleName + " 0)) (((" + tupleName);
 			smtAssert(tupleSort.members.size() == tupleSort.components.size(), "");
 			for (unsigned i = 0; i < tupleSort.members.size(); ++i)
-				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(*tupleSort.components.at(i)) + ")";
+				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(tupleSort.components.at(i)) + ")";
 			decl += "))))";
 			m_userSorts.emplace_back(tupleName, decl);
 			write(decl);
@@ -255,7 +263,7 @@ std::string SMTLib2Interface::toSmtLibSort(std::vector<SortPointer> const& _sort
 {
 	std::string ssort("(");
 	for (auto const& sort: _sorts)
-		ssort += toSmtLibSort(*sort) + " ";
+		ssort += toSmtLibSort(sort) + " ";
 	ssort += ")";
 	return ssort;
 }
