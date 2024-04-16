@@ -1183,6 +1183,7 @@ public:
 		solAssert(underlyingType().nameable(), "");
 		return true;
 	}
+	bool isEIP712AllowedStructMemberType() const override { return true; }
 
 	bool containsNestedMapping() const override
 	{
@@ -1207,7 +1208,6 @@ public:
 
 	std::string toString(bool _withoutDataLocation) const override;
 	std::string canonicalName() const override;
-	std::string eip712TypeName() const override { solAssert(false, "EIP-712 is not supported for struct members of user defined value type"); }
 	std::string signatureInExternalFunction(bool) const override { solAssert(false, ""); }
 
 protected:
