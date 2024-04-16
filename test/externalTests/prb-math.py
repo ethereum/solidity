@@ -43,7 +43,7 @@ class PRBMathRunner(FoundryRunner):
         # Starting from version v4.0.2, the default installation method for PRBMath dependencies
         # has transitioned from Foundry to Node.js.
         subprocess.run(
-            ["pnpm", "install"],
+            ["pnpm", "install", "--no-frozen-lockfile"],
             env=self.env,
             check=True
         )
