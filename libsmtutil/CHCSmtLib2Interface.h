@@ -76,6 +76,9 @@ private:
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
+	/// Translates CHC solver response with a model to our representation of invariants. Returns None on error.
+	std::optional<smtutil::Expression> invariantsFromSolverResponse(std::string const& response) const;
+
 	/// Used to access toSmtLibSort, SExpr, and handle variables.
 	std::unique_ptr<SMTLib2Interface> m_smtlib2;
 
