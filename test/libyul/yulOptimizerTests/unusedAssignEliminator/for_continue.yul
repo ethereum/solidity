@@ -7,7 +7,7 @@
         x := 2 // Will not be removed as if-condition can be false.
         if callvalue() {
             // This can be removed because x is overwritten both after the
-            // loop at at the start of the next iteration.
+            // loop at the start of the next iteration.
             x := 3
             continue
         }
