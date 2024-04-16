@@ -43,9 +43,7 @@
 
 #include <libyul/YulStack.h>
 
-#include <libevmasm/Instruction.h>
 #include <libevmasm/Disassemble.h>
-#include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -166,42 +164,86 @@ static bool coloredOutput(CommandLineOptions const& _options)
 		(_options.formatting.coloredOutput.has_value() && _options.formatting.coloredOutput.value());
 }
 
+void CommandLineInterface::handleEVMAssembly(std::string const& _contract)
+{
+	solAssert(m_assemblyStack);
+	solAssert(
+		CompilerInputModes.count(m_options.input.mode) == 1 ||
+		m_options.input.mode == frontend::InputMode::EVMAssemblerJSON
+	);
+
+	if (!m_options.compiler.outputs.asm_ && !m_options.compiler.outputs.asmJson)
+		return;
+
+	std::string assembly;
+	if (m_options.compiler.outputs.asmJson)
+		assembly = util::jsonPrint(removeNullMembers(m_assemblyStack->assemblyJSON(_contract)), m_options.formatting.json);
+	else
+		assembly = m_assemblyStack->assemblyString(_contract, m_fileReader.sourceUnits());
+
+	if (!m_options.output.dir.empty())
+		createFile(
+			m_compiler->filesystemFriendlyName(_contract) +
+			(m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"),
+			assembly
+		);
+	else
+		sout() << "EVM assembly:" << std::endl << assembly << std::endl;
+}
+
 void CommandLineInterface::handleBinary(std::string const& _contract)
 {
-	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+	solAssert(m_assemblyStack);
+	solAssert(
+		CompilerInputModes.count(m_options.input.mode) == 1 ||
+		m_options.input.mode == frontend::InputMode::EVMAssemblerJSON
+	);
+
+	std::string binary;
+	std::string binaryRuntime;
+	if (m_options.compiler.outputs.binary)
+		binary = objectWithLinkRefsHex(m_assemblyStack->object(_contract));
+	if (m_options.compiler.outputs.binaryRuntime)
+		binaryRuntime = objectWithLinkRefsHex(m_assemblyStack->runtimeObject(_contract));
 
 	if (m_options.compiler.outputs.binary)
 	{
 		if (!m_options.output.dir.empty())
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", objectWithLinkRefsHex(m_compiler->object(_contract)));
+			createFile(m_assemblyStack->filesystemFriendlyName(_contract) + ".bin", binary);
 		else
 		{
 			sout() << "Binary:" << std::endl;
-			sout() << objectWithLinkRefsHex(m_compiler->object(_contract)) << std::endl;
+			sout() << binary << std::endl;
 		}
 	}
 	if (m_options.compiler.outputs.binaryRuntime)
 	{
 		if (!m_options.output.dir.empty())
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)));
+			createFile(m_assemblyStack->filesystemFriendlyName(_contract) + ".bin-runtime", binaryRuntime);
 		else
 		{
 			sout() << "Binary of the runtime part:" << std::endl;
-			sout() << objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)) << std::endl;
+			sout() << binaryRuntime << std::endl;
 		}
 	}
 }
 
 void CommandLineInterface::handleOpcode(std::string const& _contract)
 {
-	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+	solAssert(m_assemblyStack);
+	solAssert(
+		CompilerInputModes.count(m_options.input.mode) == 1 ||
+		m_options.input.mode == frontend::InputMode::EVMAssemblerJSON
+	);
+
+	std::string opcodes{evmasm::disassemble(m_assemblyStack->object(_contract).bytecode, m_options.output.evmVersion)};
 
 	if (!m_options.output.dir.empty())
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion));
+		createFile(m_assemblyStack->filesystemFriendlyName(_contract) + ".opcode", opcodes);
 	else
 	{
 		sout() << "Opcodes:" << std::endl;
-		sout() << std::uppercase << evmasm::disassemble(m_compiler->object(_contract).bytecode, m_options.output.evmVersion);
+		sout() << std::uppercase << opcodes;
 		sout() << std::endl;
 	}
 }
@@ -293,7 +335,10 @@ void CommandLineInterface::handleIROptimizedAst(std::string const& _contractName
 
 void CommandLineInterface::handleBytecode(std::string const& _contract)
 {
-	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+	solAssert(
+		CompilerInputModes.count(m_options.input.mode) == 1 ||
+		m_options.input.mode == frontend::InputMode::EVMAssemblerJSON
+	);
 
 	if (m_options.compiler.outputs.opcodes)
 		handleOpcode(_contract);
@@ -464,6 +509,9 @@ void CommandLineInterface::readInputFiles()
 {
 	solAssert(!m_standardJsonInput.has_value());
 
+	if (m_options.input.noImportCallback)
+		m_universalCallback.resetImportCallback();
+
 	static std::set<frontend::InputMode> const noInputFiles{
 		frontend::InputMode::Help,
 		frontend::InputMode::License,
@@ -517,7 +565,7 @@ void CommandLineInterface::readInputFiles()
 			if (!m_options.input.ignoreMissingFiles)
 				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not found.");
 			else
-				serr() << infile << " is not found. Skipping." << std::endl;
+				report(Error::Severity::Info, fmt::format("\"{}\" is not found. Skipping.", infile.string()));
 
 			continue;
 		}
@@ -527,7 +575,7 @@ void CommandLineInterface::readInputFiles()
 			if (!m_options.input.ignoreMissingFiles)
 				solThrow(CommandLineValidationError, '"' + infile.string() + "\" is not a valid file.");
 			else
-				serr() << infile << " is not a valid file. Skipping." << std::endl;
+				report(Error::Severity::Info, fmt::format("\"{}\" is not a valid file. Skipping.", infile.string()));
 
 			continue;
 		}
@@ -639,7 +687,7 @@ bool CommandLineInterface::run(int _argc, char const* const* _argv)
 		// There might be no message in the exception itself if the error output is bulky and has
 		// already been printed to stderr (this happens e.g. for compiler errors).
 		if (_exception.what() != ""s)
-			serr() << _exception.what() << std::endl;
+			report(Error::Severity::Error, _exception.what());
 
 		return false;
 	}
@@ -658,7 +706,19 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 		return false;
 	}
 
-	parser.parse(_argc, _argv);
+	try
+	{
+		parser.parse(_argc, _argv);
+	}
+	catch (...)
+	{
+		// Even if the overall CLI parsing fails, the --color/--no-color options may have been
+		// successfully parsed, and if so, should be taken into account when printing errors.
+		// If no value is present, it's possible that --no-color is still there but parsing failed
+		// due to other, unrecognized options so play it safe and disable color in that case.
+		m_options.formatting.coloredOutput = parser.options().formatting.coloredOutput.value_or(false);
+		throw;
+	}
 	m_options = parser.options();
 
 	return true;
@@ -666,6 +726,12 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 
 void CommandLineInterface::processInput()
 {
+	if (m_options.output.evmVersion < EVMVersion::constantinople())
+		report(
+			Error::Severity::Warning,
+			"Support for EVM versions older than constantinople is deprecated and will be removed in the future."
+		);
+
 	switch (m_options.input.mode)
 	{
 	case InputMode::Help:
@@ -701,6 +767,12 @@ void CommandLineInterface::processInput()
 		compile();
 		outputCompilationResults();
 		break;
+	case InputMode::EVMAssemblerJSON:
+		assembleFromEVMAssemblyJSON();
+		handleCombinedJSON();
+		handleBytecode(m_assemblyStack->contractNames().front());
+		handleEVMAssembly(m_assemblyStack->contractNames().front());
+		break;
 	}
 }
 
@@ -717,11 +789,41 @@ void CommandLineInterface::printLicense()
 	sout() << licenseText << std::endl;
 }
 
+void CommandLineInterface::assembleFromEVMAssemblyJSON()
+{
+	solAssert(m_options.input.mode == InputMode::EVMAssemblerJSON);
+	solAssert(!m_assemblyStack);
+	solAssert(!m_evmAssemblyStack && !m_compiler);
+
+	solAssert(m_fileReader.sourceUnits().size() == 1);
+	auto&& [sourceUnitName, source] = *m_fileReader.sourceUnits().begin();
+
+	auto evmAssemblyStack = std::make_unique<evmasm::EVMAssemblyStack>(m_options.output.evmVersion);
+	try
+	{
+		evmAssemblyStack->parseAndAnalyze(sourceUnitName, source);
+	}
+	catch (evmasm::AssemblyImportException const& _exception)
+	{
+		solThrow(CommandLineExecutionError, "Assembly Import Error: "s + _exception.what());
+	}
+
+	if (m_options.output.debugInfoSelection.has_value())
+		evmAssemblyStack->selectDebugInfo(m_options.output.debugInfoSelection.value());
+	evmAssemblyStack->assemble();
+
+	m_evmAssemblyStack = std::move(evmAssemblyStack);
+	m_assemblyStack = m_evmAssemblyStack.get();
+}
+
 void CommandLineInterface::compile()
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+	solAssert(!m_assemblyStack);
+	solAssert(!m_evmAssemblyStack && !m_compiler);
 
 	m_compiler = std::make_unique<CompilerStack>(m_universalCallback.callback());
+	m_assemblyStack = m_compiler.get();
 
 	SourceReferenceFormatter formatter(serr(false), *m_compiler, coloredOutput(m_options), m_options.formatting.withErrorIds);
 
@@ -817,7 +919,7 @@ void CommandLineInterface::compile()
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)
 		{
-			serr() << *boost::get_error_info<errinfo_comment>(_error);
+			report(Error::Severity::Error, *boost::get_error_info<errinfo_comment>(_error));
 			solThrow(CommandLineExecutionError, "Documentation parsing failed.");
 		}
 		else
@@ -831,7 +933,11 @@ void CommandLineInterface::compile()
 
 void CommandLineInterface::handleCombinedJSON()
 {
-	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+	solAssert(m_assemblyStack);
+	solAssert(
+		CompilerInputModes.count(m_options.input.mode) == 1 ||
+		m_options.input.mode == frontend::InputMode::EVMAssemblerJSON
+	);
 
 	if (!m_options.compiler.combinedJsonRequests.has_value())
 		return;
@@ -839,59 +945,65 @@ void CommandLineInterface::handleCombinedJSON()
 	Json::Value output(Json::objectValue);
 
 	output[g_strVersion] = frontend::VersionString;
-	std::vector<std::string> contracts = m_compiler->contractNames();
-
-	// NOTE: The state checks here are more strict that in Standard JSON. There we allow
-	// requesting certain outputs even if compilation fails as long as analysis went ok.
-	bool compilationSuccess = m_compiler->state() >= CompilerStack::State::CompilationSuccessful;
+	std::vector<std::string> contracts = m_assemblyStack->contractNames();
 
 	if (!contracts.empty())
 		output[g_strContracts] = Json::Value(Json::objectValue);
 	for (std::string const& contractName: contracts)
 	{
 		Json::Value& contractData = output[g_strContracts][contractName] = Json::objectValue;
-		if (m_options.compiler.combinedJsonRequests->abi && compilationSuccess)
-			contractData[g_strAbi] = m_compiler->contractABI(contractName);
-		if (m_options.compiler.combinedJsonRequests->metadata && compilationSuccess)
-			contractData["metadata"] = m_compiler->metadata(contractName);
-		if (m_options.compiler.combinedJsonRequests->binary && compilationSuccess)
-			contractData[g_strBinary] = m_compiler->object(contractName).toHex();
-		if (m_options.compiler.combinedJsonRequests->binaryRuntime && compilationSuccess)
-			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
-		if (m_options.compiler.combinedJsonRequests->opcodes && compilationSuccess)
-			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode, m_options.output.evmVersion);
-		if (m_options.compiler.combinedJsonRequests->asm_ && compilationSuccess)
-			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
-		if (m_options.compiler.combinedJsonRequests->storageLayout && compilationSuccess)
-			contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
-		if (m_options.compiler.combinedJsonRequests->generatedSources && compilationSuccess)
-			contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
-		if (m_options.compiler.combinedJsonRequests->generatedSourcesRuntime && compilationSuccess)
-			contractData[g_strGeneratedSourcesRuntime] = m_compiler->generatedSources(contractName, true);
-		if (m_options.compiler.combinedJsonRequests->srcMap && compilationSuccess)
+
+		// NOTE: The state checks here are more strict that in Standard JSON. There we allow
+		// requesting certain outputs even if compilation fails as long as analysis went ok.
+		if (m_compiler && m_compiler->compilationSuccessful())
 		{
-			auto map = m_compiler->sourceMapping(contractName);
-			contractData[g_strSrcMap] = map ? *map : "";
+			if (m_options.compiler.combinedJsonRequests->abi)
+				contractData[g_strAbi] = m_compiler->contractABI(contractName);
+			if (m_options.compiler.combinedJsonRequests->metadata)
+				contractData["metadata"] = m_compiler->metadata(contractName);
+			if (m_options.compiler.combinedJsonRequests->storageLayout)
+				contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
+			if (m_options.compiler.combinedJsonRequests->generatedSources)
+				contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
+			if (m_options.compiler.combinedJsonRequests->generatedSourcesRuntime)
+				contractData[g_strGeneratedSourcesRuntime] = m_compiler->generatedSources(contractName, true);
+			if (m_options.compiler.combinedJsonRequests->signatureHashes)
+				contractData[g_strSignatureHashes] = m_compiler->interfaceSymbols(contractName)["methods"];
+			if (m_options.compiler.combinedJsonRequests->natspecDev)
+				contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
+			if (m_options.compiler.combinedJsonRequests->natspecUser)
+				contractData[g_strNatspecUser] = m_compiler->natspecUser(contractName);
 		}
-		if (m_options.compiler.combinedJsonRequests->srcMapRuntime && compilationSuccess)
+
+		if (m_assemblyStack->compilationSuccessful())
 		{
-			auto map = m_compiler->runtimeSourceMapping(contractName);
-			contractData[g_strSrcMapRuntime] = map ? *map : "";
+			if (m_options.compiler.combinedJsonRequests->binary)
+				contractData[g_strBinary] = m_assemblyStack->object(contractName).toHex();
+			if (m_options.compiler.combinedJsonRequests->binaryRuntime)
+				contractData[g_strBinaryRuntime] = m_assemblyStack->runtimeObject(contractName).toHex();
+			if (m_options.compiler.combinedJsonRequests->opcodes)
+				contractData[g_strOpcodes] = evmasm::disassemble(m_assemblyStack->object(contractName).bytecode, m_options.output.evmVersion);
+			if (m_options.compiler.combinedJsonRequests->asm_)
+				contractData[g_strAsm] = m_assemblyStack->assemblyJSON(contractName);
+			if (m_options.compiler.combinedJsonRequests->srcMap)
+			{
+				auto map = m_assemblyStack->sourceMapping(contractName);
+				contractData[g_strSrcMap] = map ? *map : "";
+			}
+			if (m_options.compiler.combinedJsonRequests->srcMapRuntime)
+			{
+				auto map = m_assemblyStack->runtimeSourceMapping(contractName);
+				contractData[g_strSrcMapRuntime] = map ? *map : "";
+			}
+			if (m_options.compiler.combinedJsonRequests->funDebug)
+				contractData[g_strFunDebug] = StandardCompiler::formatFunctionDebugData(
+					m_assemblyStack->object(contractName).functionDebugData
+				);
+			if (m_options.compiler.combinedJsonRequests->funDebugRuntime)
+				contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
+					m_assemblyStack->runtimeObject(contractName).functionDebugData
+				);
 		}
-		if (m_options.compiler.combinedJsonRequests->funDebug && compilationSuccess)
-			contractData[g_strFunDebug] = StandardCompiler::formatFunctionDebugData(
-				m_compiler->object(contractName).functionDebugData
-			);
-		if (m_options.compiler.combinedJsonRequests->funDebugRuntime && compilationSuccess)
-			contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
-				m_compiler->runtimeObject(contractName).functionDebugData
-			);
-		if (m_options.compiler.combinedJsonRequests->signatureHashes && compilationSuccess)
-			contractData[g_strSignatureHashes] = m_compiler->interfaceSymbols(contractName)["methods"];
-		if (m_options.compiler.combinedJsonRequests->natspecDev && compilationSuccess)
-			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
-		if (m_options.compiler.combinedJsonRequests->natspecUser && compilationSuccess)
-			contractData[g_strNatspecUser] = m_compiler->natspecUser(contractName);
 	}
 
 	bool needsSourceList =
@@ -903,12 +1015,13 @@ void CommandLineInterface::handleCombinedJSON()
 		// Indices into this array are used to abbreviate source names in source locations.
 		output[g_strSourceList] = Json::Value(Json::arrayValue);
 
-		for (auto const& source: m_compiler->sourceNames())
+		for (auto const& source: m_assemblyStack->sourceNames())
 			output[g_strSourceList].append(source);
 	}
 
 	if (m_options.compiler.combinedJsonRequests->ast)
 	{
+		solAssert(m_compiler);
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_fileReader.sourceUnits())
 		{
@@ -1020,7 +1133,10 @@ void CommandLineInterface::link()
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
-				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << std::endl;
+				report(
+					Error::Severity::Warning,
+					fmt::format("Reference \"{}\" in file \"{}\" still unresolved.", foundPlaceholder, src.first)
+				);
 			it += placeholderSize;
 		}
 		// Remove hints for resolved libraries.
@@ -1136,7 +1252,7 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			if (object.bytecode)
 				sout() << object.bytecode->toHex() << std::endl;
 			else
-				serr() << "No binary representation found." << std::endl;
+				report(Error::Severity::Info, "No binary representation found.");
 		}
 		if (m_options.compiler.outputs.astCompactJson)
 		{
@@ -1150,7 +1266,7 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			if (!object.assembly.empty())
 				sout() << object.assembly << std::endl;
 			else
-				serr() << "No text representation found." << std::endl;
+				report(Error::Severity::Info, "No text representation found.");
 		}
 	}
 }
@@ -1177,20 +1293,7 @@ void CommandLineInterface::outputCompilationResults()
 			if (needsHumanTargetedStdout(m_options))
 				sout() << std::endl << "======= " << contract << " =======" << std::endl;
 
-			// do we need EVM assembly?
-			if (m_options.compiler.outputs.asm_ || m_options.compiler.outputs.asmJson)
-			{
-				std::string ret;
-				if (m_options.compiler.outputs.asmJson)
-					ret = util::jsonPrint(removeNullMembers(m_compiler->assemblyJSON(contract)), m_options.formatting.json);
-				else
-					ret = m_compiler->assemblyString(contract, m_fileReader.sourceUnits());
-
-				if (!m_options.output.dir.empty())
-					createFile(m_compiler->filesystemFriendlyName(contract) + (m_options.compiler.outputs.asmJson ? "_evm.json" : ".evm"), ret);
-				else
-					sout() << "EVM assembly:" << std::endl << ret << std::endl;
-			}
+			handleEVMAssembly(contract);
 
 			if (m_options.compiler.estimateGas)
 				handleGasEstimation(contract);
@@ -1218,6 +1321,18 @@ void CommandLineInterface::outputCompilationResults()
 		else
 			sout() << "Compiler run successful. No output generated." << std::endl;
 	}
+}
+
+void CommandLineInterface::report(langutil::Error::Severity _severity, std::string _message)
+{
+	SourceReferenceFormatter::printPrimaryMessage(
+		serr(),
+		_message,
+		_severity,
+		std::nullopt,
+		coloredOutput(m_options),
+		m_options.formatting.withErrorIds
+	);
 }
 
 }

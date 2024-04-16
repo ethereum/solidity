@@ -88,34 +88,36 @@ std::string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata, bool _cle
 		"_to_memory"s +
 		(_cleanup ? "_with_cleanup"s : ""s);
 
-	return m_functionCollector.createFunction(functionName, [&]() {
+	return m_functionCollector.createFunction(functionName, [&](std::vector<std::string>& _args, std::vector<std::string>&) {
+		_args = {"src", "dst", "length"};
+
 		if (_fromCalldata)
-		{
 			return Whiskers(R"(
-				function <functionName>(src, dst, length) {
-					calldatacopy(dst, src, length)
-					<?cleanup>mstore(add(dst, length), 0)</cleanup>
-				}
+				calldatacopy(dst, src, length)
+				<?cleanup>mstore(add(dst, length), 0)</cleanup>
 			)")
-			("functionName", functionName)
 			("cleanup", _cleanup)
 			.render();
-		}
 		else
 		{
-			return Whiskers(R"(
-				function <functionName>(src, dst, length) {
+			if (m_evmVersion.hasMcopy())
+				return Whiskers(R"(
+					mcopy(dst, src, length)
+					<?cleanup>mstore(add(dst, length), 0)</cleanup>
+				)")
+				("cleanup", _cleanup)
+				.render();
+			else
+				return Whiskers(R"(
 					let i := 0
 					for { } lt(i, length) { i := add(i, 32) }
 					{
 						mstore(add(dst, i), mload(add(src, i)))
 					}
 					<?cleanup>mstore(add(dst, length), 0)</cleanup>
-				}
-			)")
-			("functionName", functionName)
-			("cleanup", _cleanup)
-			.render();
+				)")
+				("cleanup", _cleanup)
+				.render();
 		}
 	});
 }
@@ -3866,7 +3868,7 @@ std::string YulUtilFunctions::cleanupFunction(Type const& _type)
 		}
 		case Type::Category::Enum:
 		{
-			// Out of range enums cannot be truncated unambigiously and therefore it should be an error.
+			// Out of range enums cannot be truncated unambiguously and therefore it should be an error.
 			templ("body", "cleaned := value " + validatorFunction(_type, false) + "(value)");
 			break;
 		}

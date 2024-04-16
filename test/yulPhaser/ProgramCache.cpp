@@ -30,7 +30,6 @@
 #include <string>
 #include <set>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
@@ -50,16 +49,16 @@ protected:
 		"    }\n"
 		"}\n";
 
-	Program optimisedProgram(Program _program, string _abbreviatedOptimisationSteps) const
+	Program optimisedProgram(Program _program, std::string _abbreviatedOptimisationSteps) const
 	{
 		Program result = std::move(_program);
 		result.optimise(Chromosome::genesToSteps(_abbreviatedOptimisationSteps));
 		return result;
 	}
 
-	static set<string> cachedKeys(ProgramCache const& _programCache)
+	static std::set<std::string> cachedKeys(ProgramCache const& _programCache)
 	{
-		 set<string> keys;
+		 std::set<std::string> keys;
 		for (auto pair = _programCache.entries().begin(); pair != _programCache.entries().end(); ++pair)
 			keys.insert(pair->first);
 
@@ -67,7 +66,7 @@ protected:
 	}
 
 	CharStream m_sourceStream = CharStream(SampleSourceCode, "program-cache-test");
-	Program m_program = get<Program>(Program::load(m_sourceStream));
+	Program m_program = std::get<Program>(Program::load(m_sourceStream));
 	ProgramCache m_programCache{m_program};
 };
 
@@ -111,7 +110,7 @@ BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_store_programs_for_all_prefixes, 
 
 	BOOST_TEST(toString(cachedProgram) == toString(programIuO));
 
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "IuO"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu", "IuO"}));
 	BOOST_TEST(toString(*m_programCache.find("I")) == toString(programI));
 	BOOST_TEST(toString(*m_programCache.find("Iu")) == toString(programIu));
 	BOOST_TEST(toString(*m_programCache.find("IuO")) == toString(programIuO));
@@ -119,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_store_programs_for_all_prefixes, 
 
 BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_repeat_the_chromosome_requested_number_of_times, ProgramCacheFixture)
 {
-	string steps = "IuOIuO";
+	std::string steps = "IuOIuO";
 
 	Program cachedProgram = m_programCache.optimiseProgram("IuO", 2);
 
@@ -148,14 +147,14 @@ BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_reuse_the_longest_prefix_and_move
 	m_programCache.startRound(1);
 
 	BOOST_TEST(m_programCache.currentRound() == 1);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "Ia"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu", "Ia"}));
 	BOOST_TEST(m_programCache.entries().find("I")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("Iu")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("Ia")->second.roundNumber == 0);
 
 	m_programCache.optimiseProgram("IuOI");
 
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "Ia", "IuO", "IuOI"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu", "Ia", "IuO", "IuOI"}));
 	BOOST_TEST(m_programCache.entries().find("I")->second.roundNumber == 1);
 	BOOST_TEST(m_programCache.entries().find("Iu")->second.roundNumber == 1);
 	BOOST_TEST(m_programCache.entries().find("Ia")->second.roundNumber == 0);
@@ -171,14 +170,14 @@ BOOST_FIXTURE_TEST_CASE(startRound_should_remove_entries_older_than_two_rounds, 
 	m_programCache.optimiseProgram("Iu");
 
 	BOOST_TEST(m_programCache.currentRound() == 0);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu"}));
 	BOOST_TEST(m_programCache.entries().find("I")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("Iu")->second.roundNumber == 0);
 
 	m_programCache.optimiseProgram("a");
 
 	BOOST_TEST(m_programCache.currentRound() == 0);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "a"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu", "a"}));
 	BOOST_TEST(m_programCache.entries().find("I")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("Iu")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("a")->second.roundNumber == 0);
@@ -186,7 +185,7 @@ BOOST_FIXTURE_TEST_CASE(startRound_should_remove_entries_older_than_two_rounds, 
 	m_programCache.startRound(1);
 
 	BOOST_TEST(m_programCache.currentRound() == 1);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "a"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu", "a"}));
 	BOOST_TEST(m_programCache.entries().find("I")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("Iu")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("a")->second.roundNumber == 0);
@@ -194,7 +193,7 @@ BOOST_FIXTURE_TEST_CASE(startRound_should_remove_entries_older_than_two_rounds, 
 	m_programCache.optimiseProgram("af");
 
 	BOOST_TEST(m_programCache.currentRound() == 1);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "a", "af"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu", "a", "af"}));
 	BOOST_TEST(m_programCache.entries().find("I")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("Iu")->second.roundNumber == 0);
 	BOOST_TEST(m_programCache.entries().find("a")->second.roundNumber == 1);
@@ -203,7 +202,7 @@ BOOST_FIXTURE_TEST_CASE(startRound_should_remove_entries_older_than_two_rounds, 
 	m_programCache.startRound(2);
 
 	BOOST_TEST(m_programCache.currentRound() == 2);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"a", "af"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"a", "af"}));
 	BOOST_TEST(m_programCache.entries().find("a")->second.roundNumber == 1);
 	BOOST_TEST(m_programCache.entries().find("af")->second.roundNumber == 1);
 
@@ -223,31 +222,31 @@ BOOST_FIXTURE_TEST_CASE(gatherStats_should_return_cache_statistics, ProgramCache
 
 	m_programCache.optimiseProgram("L");
 	m_programCache.optimiseProgram("Iu");
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"L", "I", "Iu"}));
 	CacheStats expectedStats1{0, 3, sizeL + sizeI + sizeIu, {{0, 3}}};
 	BOOST_CHECK(m_programCache.gatherStats() == expectedStats1);
 
 	m_programCache.optimiseProgram("IuO");
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu", "IuO"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"L", "I", "Iu", "IuO"}));
 	CacheStats expectedStats2{2, 4, sizeL + sizeI + sizeIu + sizeIuO, {{0, 4}}};
 	BOOST_CHECK(m_programCache.gatherStats() == expectedStats2);
 
 	m_programCache.startRound(1);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu", "IuO"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"L", "I", "Iu", "IuO"}));
 	BOOST_CHECK(m_programCache.gatherStats() == expectedStats2);
 
 	m_programCache.optimiseProgram("IuO");
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "I", "Iu", "IuO"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"L", "I", "Iu", "IuO"}));
 	CacheStats expectedStats3{5, 4, sizeL + sizeI + sizeIu + sizeIuO, {{0, 1}, {1, 3}}};
 	BOOST_CHECK(m_programCache.gatherStats() == expectedStats3);
 
 	m_programCache.startRound(2);
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"I", "Iu", "IuO"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"I", "Iu", "IuO"}));
 	CacheStats expectedStats4{5, 4, sizeI + sizeIu + sizeIuO, {{1, 3}}};
 	BOOST_CHECK(m_programCache.gatherStats() == expectedStats4);
 
 	m_programCache.optimiseProgram("LT");
-	BOOST_REQUIRE((cachedKeys(m_programCache) == set<string>{"L", "LT", "I", "Iu", "IuO"}));
+	BOOST_REQUIRE((cachedKeys(m_programCache) == std::set<std::string>{"L", "LT", "I", "Iu", "IuO"}));
 	CacheStats expectedStats5{5, 6, sizeL + sizeLT + sizeI + sizeIu + sizeIuO, {{1, 3}, {2, 2}}};
 	BOOST_CHECK(m_programCache.gatherStats() == expectedStats5);
 }

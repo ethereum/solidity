@@ -27,6 +27,7 @@
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/EVMVersion.h>
@@ -51,7 +52,8 @@ public:
 		RevertStrings _revertStrings,
 		std::map<std::string, unsigned> _sourceIndices,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
-		langutil::CharStreamProvider const* _soliditySourceProvider
+		langutil::CharStreamProvider const* _soliditySourceProvider,
+		OptimiserSettings& _optimiserSettings
 	):
 		m_evmVersion(_evmVersion),
 		m_eofVersion(_eofVersion),
@@ -63,7 +65,8 @@ public:
 			_debugInfoSelection,
 			_soliditySourceProvider
 		),
-		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector())
+		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector()),
+		m_optimiserSettings(_optimiserSettings)
 	{}
 
 	/// Generates and returns (unoptimized) IR code.
@@ -141,6 +144,7 @@ private:
 
 	IRGenerationContext m_context;
 	YulUtilFunctions m_utils;
+	OptimiserSettings m_optimiserSettings;
 };
 
 }

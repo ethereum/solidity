@@ -23,6 +23,7 @@
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceLocation.h>
+#include <range/v3/algorithm/find_if.hpp>
 #include <memory>
 
 using namespace solidity;
@@ -79,6 +80,16 @@ void ErrorReporter::error(ErrorId _errorId, Error::Type _type, SourceLocation co
 bool ErrorReporter::hasExcessiveErrors() const
 {
 	return m_errorCount > c_maxErrorsAllowed;
+}
+
+bool ErrorReporter::hasError(ErrorId _errorId) const
+{
+	auto errorMatch = [&](std::shared_ptr<Error const> const& error) -> bool {
+		solAssert(error.get());
+		return error->errorId() == _errorId;
+	};
+
+	return ranges::find_if(m_errorList, errorMatch) != ranges::end(m_errorList);
 }
 
 bool ErrorReporter::checkForExcessiveErrors(Error::Type _type)

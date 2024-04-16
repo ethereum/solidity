@@ -54,7 +54,7 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 		return;
 
 	YulString iszero = m_dialect.booleanNegationFunction()->name;
-	std::shared_ptr<DebugData const> debugData = debugDataOf(*firstStatement.condition);
+	langutil::DebugData::ConstPtr debugData = debugDataOf(*firstStatement.condition);
 
 	if (
 		std::holds_alternative<FunctionCall>(*firstStatement.condition) &&

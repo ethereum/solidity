@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "No input sources specified.",
+            "message": "No input sources specified.",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

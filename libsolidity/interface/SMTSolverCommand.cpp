@@ -37,7 +37,17 @@ using solidity::util::errinfo_comment;
 namespace solidity::frontend
 {
 
-SMTSolverCommand::SMTSolverCommand(std::string _solverCmd) : m_solverCmd(_solverCmd) {}
+void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMilliseconds)
+{
+	m_arguments.clear();
+	m_solverCmd = "eld";
+	if (timeoutInMilliseconds)
+	{
+		unsigned int timeoutInSeconds = timeoutInMilliseconds.value() / 1000u;
+		timeoutInSeconds = timeoutInSeconds == 0 ? 1 : timeoutInSeconds;
+		m_arguments.push_back("-t:" + std::to_string(timeoutInSeconds));
+	}
+}
 
 ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query)
 {
@@ -46,23 +56,30 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 		if (_kind != ReadCallback::kindString(ReadCallback::Kind::SMTQuery))
 			solAssert(false, "SMTQuery callback used as callback kind " + _kind);
 
+		if (m_solverCmd.empty())
+			return ReadCallback::Result{false, "No solver set."};
+
 		auto tempDir = solidity::util::TemporaryDirectory("smt");
 		util::h256 queryHash = util::keccak256(_query);
 		auto queryFileName = tempDir.path() / ("query_" + queryHash.hex() + ".smt2");
 
 		auto queryFile = boost::filesystem::ofstream(queryFileName);
-		queryFile << _query;
+		queryFile << _query << std::flush;
 
 		auto eldBin = boost::process::search_path(m_solverCmd);
 
 		if (eldBin.empty())
 			return ReadCallback::Result{false, m_solverCmd + " binary not found."};
 
+		auto args = m_arguments;
+		args.push_back(queryFileName.string());
+
 		boost::process::ipstream pipe;
 		boost::process::child eld(
 			eldBin,
-			queryFileName,
-			boost::process::std_out > pipe
+			args,
+			boost::process::std_out > pipe,
+			boost::process::std_err >boost::process::null
 		);
 
 		std::vector<std::string> data;

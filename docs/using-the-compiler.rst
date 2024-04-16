@@ -147,14 +147,14 @@ Target Options
 Below is a list of target EVM versions and the compiler-relevant changes introduced
 at each version. Backward compatibility is not guaranteed between each version.
 
-- ``homestead``
+- ``homestead`` (*support deprecated*)
    - (oldest version)
-- ``tangerineWhistle``
+- ``tangerineWhistle`` (*support deprecated*)
    - Gas cost for access to other accounts increased, relevant for gas estimation and the optimizer.
    - All gas sent by default for external calls, previously a certain amount had to be retained.
-- ``spuriousDragon``
+- ``spuriousDragon`` (*support deprecated*)
    - Gas cost for the ``exp`` opcode increased, relevant for gas estimation and the optimizer.
-- ``byzantium``
+- ``byzantium`` (*support deprecated*)
    - Opcodes ``returndatacopy``, ``returndatasize`` and ``staticcall`` are available in assembly.
    - The ``staticcall`` opcode is used when calling non-library view or pure functions, which prevents the functions from modifying state at the EVM level, i.e., even applies when you use invalid type conversions.
    - It is possible to access dynamic data returned from function calls.
@@ -174,8 +174,13 @@ at each version. Backward compatibility is not guaranteed between each version.
    - The block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_) can be accessed via the global ``block.basefee`` or ``basefee()`` in inline assembly.
 - ``paris``
    - Introduces ``prevrandao()`` and ``block.prevrandao``, and changes the semantics of the now deprecated ``block.difficulty``, disallowing ``difficulty()`` in inline assembly (see `EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_).
-- ``shanghai`` (**default**)
-  - Smaller code size and gas savings due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
+- ``shanghai``
+   - Smaller code size and gas savings due to the introduction of ``push0`` (see `EIP-3855 <https://eips.ethereum.org/EIPS/eip-3855>`_).
+- ``cancun`` (**default**)
+   - The block's blob base fee (`EIP-7516 <https://eips.ethereum.org/EIPS/eip-7516>`_ and `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_) can be accessed via the global ``block.blobbasefee`` or ``blobbasefee()`` in inline assembly.
+   - Introduces ``blobhash()`` in inline assembly and a corresponding global function to retrieve versioned hashes of blobs associated with the transaction (see `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_).
+   - Opcode ``mcopy`` is available in assembly (see `EIP-5656 <https://eips.ethereum.org/EIPS/eip-5656>`_).
+   - Opcodes ``tstore`` and ``tload`` are available in assembly (see `EIP-1153 <https://eips.ethereum.org/EIPS/eip-1153>`_).
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
@@ -203,7 +208,7 @@ Input Description
 .. code-block:: javascript
 
     {
-      // Required: Source code language. Currently supported are "Solidity", "Yul" and "SolidityAST" (experimental).
+      // Required: Source code language. Currently supported are "Solidity", "Yul", "SolidityAST" (experimental), "EVMAssembly" (experimental).
       "language": "Solidity",
       // Required
       "sources":
@@ -230,21 +235,40 @@ Input Description
             // If files are used, their directories should be added to the command-line via
             // `--allow-paths <path>`.
           ]
-          // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key.
+        },
+        "settable":
+        {
+          // Optional: keccak256 hash of the source file
+          "keccak256": "0x234...",
+          // Required (unless "urls" is used): literal contents of the source file
+          "content": "contract settable is owned { uint256 private x = 0; function set(uint256 _x) public { if (msg.sender == owner) x = _x; } }"
+        },
+        "myFile.sol_json.ast":
+        {
+          // If language is set to "SolidityAST", an AST needs to be supplied under the "ast" key
+          // and there can be only one source file present.
+          // The format is the same as used by the `ast` output.
           // Note that importing ASTs is experimental and in particular that:
           // - importing invalid ASTs can produce undefined results and
           // - no proper error reporting is available on invalid ASTs.
           // Furthermore, note that the AST import only consumes the fields of the AST as
           // produced by the compiler in "stopAfter": "parsing" mode and then re-performs
           // analysis, so any analysis-based annotations of the AST are ignored upon import.
-          "ast": { ... } // formatted as the json ast requested with the ``ast`` output selection.
+          "ast": { ... }
         },
-        "destructible":
+        "myFile_evm.json":
         {
-          // Optional: keccak256 hash of the source file
-          "keccak256": "0x234...",
-          // Required (unless "urls" is used): literal contents of the source file
-          "content": "contract destructible is owned { function shutdown() { if (msg.sender == owner) selfdestruct(owner); } }"
+          // If language is set to "EVMAssembly", an EVM Assembly JSON object needs to be supplied
+          // under the "assemblyJson" key and there can be only one source file present.
+          // The format is the same as used by the `evm.legacyAssembly` output or `--asm-json`
+          // output on the command line.
+          // Note that importing EVM assembly is experimental.
+          "assemblyJson":
+          {
+            ".code": [ ... ],
+            ".data": { ... }, // optional
+            "sourceList": [ ... ] // optional (if no `source` node was defined in any `.code` object)
+          }
         }
       },
       // Optional
@@ -287,6 +311,9 @@ Input Description
             "cse": false,
             // Optimize representation of literal numbers and strings in code.
             "constantOptimizer": false,
+            // Use unchecked arithmetic when incrementing the counter of for loops
+            // under certain circumstances. It is always on if no details are given.
+            "simpleCounterForLoopUncheckedIncrement": true,
             // The new Yul optimizer. Mostly operates on the code of ABI coder v2
             // and inline assembly.
             // It is activated together with the global optimizer setting
@@ -317,8 +344,8 @@ Input Description
         // Version of the EVM to compile for.
         // Affects type checking and code generation. Can be homestead,
         // tangerineWhistle, spuriousDragon, byzantium, constantinople,
-        // petersburg, istanbul, berlin, london, paris or shanghai (default)
-        "evmVersion": "byzantium",
+        // petersburg, istanbul, berlin, london, paris, shanghai or cancun (default)
+        "evmVersion": "cancun",
         // Optional: Change compilation pipeline to go through the Yul intermediate representation.
         // This is false by default.
         "viaIR": true,

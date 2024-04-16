@@ -9,20 +9,20 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-20
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7a1e1b01eda0d1e20704279672bcfd53dbbc481898ff960958a225dea76345bd"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-22
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:212b4d79a89c6e2d9b58ddea2d6296c5618f4ae0b016694a3b159d2b11cbbacc"
   ubuntu-2204-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-5
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:4df420b7ccd96f540a4300a4fae0fcac2f4d3f23ffff9e3777c1f2d7c37ef901"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-7
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:ecbeec36b12fd953bfb6fb3e7ced474bb73945d7ed615e6538960c32bae8126c"
   ubuntu-2204-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-4
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:538596bf55961197f8b5670d8a6742d9bcd502b6a1045ae9d372cdf35ce69d93"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-6
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:1818a56061f39ece4a92138948404214bf939c9deb68f4dc2c68cd82b39e8410"
   ubuntu-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:a4fc3a41240c3bc58882d3f504e446c6931b547119012f5c45f79b0df91dbdd1"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-5
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:c21c4c2a591d0702c388d1944539f6498ed8e51c54c1a1cb34693079efd9ab77"
   emscripten-docker-image:
     type: string
     # NOTE: Please remember to update the `build_emscripten.sh` whenever the hash of this image changes.
@@ -81,6 +81,7 @@ commands:
         enum:
           - solcjs
           - native
+          - osx_intel
       binary_path:
         type: string
       preset:
@@ -88,7 +89,6 @@ commands:
     steps:
       - run:
           name: Generate bytecode reports for the selected preset
-          no_output_timeout: 30m
           command: |
             .circleci/parallel_bytecode_report.sh \
                 "<< parameters.label >>" \
@@ -155,7 +155,7 @@ commands:
             )
             echo "export FOUNDRY_REPO=$FOUNDRY_REPO" >> "$BASH_ENV"
             echo "export FOUNDRY_VERSION=$FOUNDRY_VERSION" >> "$BASH_ENV"
-            echo "export FOUNDRY_RELEASE_TAG='nightly-${FOUNDRY_RELEASE_SHA}'" >> "$BASH_ENV"
+            echo "export FOUNDRY_RELEASE_TAG='${FOUNDRY_VERSION}'" >> "$BASH_ENV"
             # Save commit sha for caching
             echo "$FOUNDRY_RELEASE_SHA" > /tmp/workspace/foundry-release-sha
       - restore_cache:
@@ -220,11 +220,18 @@ commands:
           command: .circleci/soltest.sh
 
   run_soltest_all:
+    parameters:
+      # NOTE: If not specified, soltest_all.sh will use the default values as specified in the script.
+      # In other words, it will execute for all EVM versions that are not marked as deprecated.
+      evm_versions:
+        description: "List of EVM versions (separated by space)."
+        type: string
+        default: ""
     steps:
       - run:
           name: soltest_all
           no_output_timeout: 30m
-          command: .circleci/soltest_all.sh
+          command: .circleci/soltest_all.sh "<< parameters.evm_versions >>"
 
   run_cmdline_tests:
     steps:
@@ -364,12 +371,63 @@ commands:
       - matrix_notify_failure_unless_pr
 
   install_dependencies_osx:
+    # An extra cache key is used to only save the flag that communicates whether the cache exists.
+    # if this flag was set (the cache exist) we remove all files located in /usr/local & /opt/homebrew.
+    # With this simple trick restoring the cache is much faster. Otherwise CircleCI is generating
+    # warning messages if a file from the cache is overwriting an already existing file on disk.
+    # Restoring the cache is much faster if we remove all potentially conflicting files beforehand.
     steps:
-      # FIXME: We used to cache dependencies on macOS but now it takes longer than just installing
-      # them each time. See https://github.com/ethereum/solidity/issues/12925.
+      - restore_cache:
+          keys:
+            - osx-dependencies-cached-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      - run:
+          name: Installing dependencies / Restoring dependency cache
+          command: |
+            if [[ -f ~/osx-dependencies-cached ]]; then
+              echo "Dependency flag exists. Removing /usr/local/ and /opt/homebrew/. These directories will be restored from cache."
+
+              # CircleCI is providing the circleci cli tools via some kind of symlink magic.
+              # So we just save the original symlinks and restore them later.
+              circleci_binary_path=$(command -v circleci)
+              circleci_agent_binary_path=$(command -v circleci-agent)
+              cp "${circleci_binary_path}" /tmp/circleci
+              cp "${circleci_agent_binary_path}" /tmp/circleci-agent
+
+              # Homebrew is installed in /usr/local on intel macs, but in /opt/homebrew on apple silicon.
+              if [[ -d /opt/homebrew ]]; then
+                sudo rm -rf /opt/homebrew
+                sudo mkdir -p /opt/homebrew/bin
+                sudo chmod 777 /opt/{homebrew,homebrew/bin}
+              fi
+              # under macos /usr/local itself is read-only, so we just remove its sub-directories.
+              sudo rm -rf /usr/local/*
+              sudo mkdir -p /usr/local/bin
+              sudo chmod 777 /usr/{local,local/bin}
+
+              mv /tmp/circleci "${circleci_binary_path}"
+              mv /tmp/circleci-agent "${circleci_agent_binary_path}"
+            fi
+      - restore_cache:
+          keys:
+            - osx-dependencies-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
           command: .circleci/osx_install_dependencies.sh
+      - run:
+          name: Mark dependencies as cached
+          command: touch ~/osx-dependencies-cached
+      - save_cache:
+          key: osx-dependencies-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          paths:
+            # Homebrew is installed in /usr/local on intel macs, but in /opt/homebrew on apple silicon.
+            - /usr/local
+            - /opt/homebrew
+      - save_cache:
+          key: osx-dependencies-cached-{{ arch }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          paths:
+            - ~/osx-dependencies-cached
 
 defaults:
 
@@ -441,8 +499,8 @@ defaults:
 
   - base_osx: &base_osx
       macos:
-        xcode: "14.2.0"
-      resource_class: macos.x86.medium.gen2
+        xcode: "15.0.0"
+      resource_class: macos.m1.medium.gen1
       environment: &base_osx_env
         TERM: xterm
         MAKEFLAGS: -j5
@@ -662,11 +720,14 @@ defaults:
       image: cimg/node:14.20
       python2: true
 
-  - job_native_test_ext_gnosis: &job_native_test_ext_gnosis
+  - job_native_compile_ext_gnosis: &job_native_compile_ext_gnosis
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_gnosis
+      name: t_native_compile_ext_gnosis
       project: gnosis
       binary_type: native
+      # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
+      #        Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
+      compile_only: 1
       image: cimg/node:18.16
 
   - job_native_test_ext_zeppelin: &job_native_test_ext_zeppelin
@@ -684,18 +745,24 @@ defaults:
       binary_type: native
       image: cimg/node:18.16
 
-  - job_native_test_ext_trident: &job_native_test_ext_trident
+  - job_native_compile_ext_trident: &job_native_compile_ext_trident
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_trident
+      name: t_native_compile_ext_trident
       project: trident
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       image: cimg/node:18.16
 
-  - job_native_test_ext_euler: &job_native_test_ext_euler
+  - job_native_compile_ext_euler: &job_native_compile_ext_euler
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_euler
+      name: t_native_compile_ext_euler
       project: euler
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       resource_class: medium
 
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
@@ -705,18 +772,24 @@ defaults:
       binary_type: native
       image: cimg/node:18.16
 
-  - job_native_test_ext_bleeps: &job_native_test_ext_bleeps
+  - job_native_compile_ext_bleeps: &job_native_compile_ext_bleeps
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_bleeps
+      name: t_native_compile_ext_bleeps
       project: bleeps
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       resource_class: medium
 
-  - job_native_test_ext_pool_together: &job_native_test_ext_pool_together
+  - job_native_compile_ext_pool_together: &job_native_compile_ext_pool_together
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_pool_together
+      name: t_native_compile_ext_pool_together
       project: pool-together
       binary_type: native
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
       image: cimg/node:18.16
 
   - job_native_test_ext_perpetual_pools: &job_native_test_ext_perpetual_pools
@@ -738,7 +811,8 @@ defaults:
       name: t_native_test_ext_prb_math
       project: prb-math
       binary_type: native
-      image: cimg/rust:1.70
+      image: cimg/rust:1.74.0-node
+      resource_class: medium
 
   - job_native_test_ext_elementfi: &job_native_test_ext_elementfi
       <<: *requires_b_ubu_static
@@ -755,19 +829,24 @@ defaults:
       binary_type: native
       image: cimg/node:18.16
 
-  - job_native_test_ext_chainlink: &job_native_test_ext_chainlink
+  - job_native_compile_ext_chainlink: &job_native_compile_ext_chainlink
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_chainlink
+      name: t_native_compile_ext_chainlink
       project: chainlink
       binary_type: native
-      image: cimg/node:18.16
+      # NOTE: test suite disabled due to dependence on a specific version of Hardhat
+      # which does not support shanghai EVM.
+      compile_only: 1
+      image: cimg/node:16.20
       resource_class: large # Tests run out of memory on a smaller machine
 
-  - job_native_test_ext_gp2: &job_native_test_ext_gp2
+  - job_native_compile_ext_gp2: &job_native_compile_ext_gp2
       <<: *requires_b_ubu_static
-      name: t_native_test_ext_gp2
+      name: t_native_compile_ext_gp2
       project: gp2
       binary_type: native
+      # NOTE: test suite disabled due to constant failures.
+      compile_only: 1
       image: cimg/node:18.16
 
   - job_b_ubu_asan_clang: &job_b_ubu_asan_clang
@@ -915,8 +994,15 @@ jobs:
     steps:
       - checkout
       - run:
+          # TODO: Add these to the base image
+          name: Install gas_diff_stats.py dependencies
+          command: python3 -m pip install --user parsec tabulate
+      - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
+      - run:
+          name: Smoke test for gas_diff_stats.py
+          command: scripts/gas_diff_stats.py
       - matrix_notify_failure_unless_pr
 
   t_win_pyscripts:
@@ -924,6 +1010,9 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - checkout
+      - run:
+          name: Install dependencies
+          command: python -m pip install --user requests parsec tabulate
       - run:
           name: Python unit tests
           command: python.exe test/pyscriptTests.py
@@ -1095,6 +1184,7 @@ jobs:
     environment:
       <<: *base_osx_env
       CMAKE_BUILD_TYPE: Release
+      CMAKE_OPTIONS: -DCMAKE_OSX_ARCHITECTURES:STRING=x86_64;arm64
     steps:
       - checkout
       - install_dependencies_osx
@@ -1123,7 +1213,7 @@ jobs:
 
   t_osx_cli:
     <<: *base_osx
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - checkout
       - install_dependencies_osx
@@ -1176,6 +1266,20 @@ jobs:
     steps:
       - soltest_all
 
+  t_ubu_soltest_deprecated_evm_versions: &t_ubu_soltest_deprecated_evm_versions
+    <<: *base_ubuntu2204_large
+    parallelism: 50
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run_soltest_all:
+          evm_versions: homestead byzantium
+      - store_test_results:
+          path: test_results/
+      - store_artifacts_test_results
+      - matrix_notify_failure_unless_pr
+
   t_ubu_lsp: &t_ubu_lsp
     <<: *base_ubuntu2204_small
     steps:
@@ -1218,7 +1322,7 @@ jobs:
 
   t_ubu_cli: &t_ubu_cli
     <<: *base_ubuntu2204_small
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - cmdline_tests
 
@@ -1237,7 +1341,7 @@ jobs:
   t_ubu_asan_cli:
     # Runs slightly faster on medium but we only run it nightly so efficiency matters more.
     <<: *base_ubuntu2204
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     environment:
       <<: *base_ubuntu2204_env
       ASAN_OPTIONS: check_initialization_order=true:detect_stack_use_after_return=true:strict_init_order=true:strict_string_checks=true:detect_invalid_pointer_pairs=2
@@ -1286,7 +1390,7 @@ jobs:
 
   t_ubu_ubsan_clang_cli:
     <<: *base_ubuntu2204_clang
-    parallelism: 7 # Should match number of tests in .circleci/cli.sh
+    parallelism: 8 # Should match number of tests in .circleci/parallel_cli_tests.py
     steps:
       - cmdline_tests
 
@@ -1314,7 +1418,7 @@ jobs:
   t_ems_ext_hardhat:
     <<: *base_node_small
     docker:
-      - image: cimg/node:18.16
+      - image: cimg/rust:1.74.0-node
     environment:
       <<: *base_node_small_env
       HARDHAT_TESTS_SOLC_PATH: /tmp/workspace/soljson.js
@@ -1322,21 +1426,45 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git
+      - run:
+          name: Ensure pnpm is installed if npm is present
+          command: sudo npm install -g pnpm
+      - run:
+          name: Retrieve Hardhat latest release tag
+          command: |
+            # Make authenticated requests when the Github token is available
+            if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then
+              EXTRA_HEADERS=(--header "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}")
+            fi
+            HARDHAT_LATEST_RELEASE_TAG=$(
+              curl \
+                --silent \
+                --location \
+                --fail \
+                --show-error \
+                "${EXTRA_HEADERS[@]}" \
+                https://api.github.com/repos/nomiclabs/hardhat/releases/latest \
+                | jq --raw-output .tag_name \
+            )
+            echo "export HARDHAT_LATEST_RELEASE_TAG='${HARDHAT_LATEST_RELEASE_TAG}'" >> "$BASH_ENV"
+      - run: git clone --depth 1 https://github.com/nomiclabs/hardhat.git --branch "$HARDHAT_LATEST_RELEASE_TAG"
       - run:
           name: Install dependencies
           command: |
             cd hardhat
-            yarn
+            pnpm install
       - run:
           name: Run hardhat-core test suite
           command: |
             HARDHAT_TESTS_SOLC_VERSION=$(scripts/get_version.sh)
             export HARDHAT_TESTS_SOLC_VERSION
 
-            # NOTE: This is expected to work without running `yarn build` first.
+            # NOTE: This is expected to work without running `pnpm build` first.
             cd hardhat/packages/hardhat-core
-            yarn test
+            # TODO: temporarily set hardhat stack traces tests to use cancun hardfork
+            # Remove this when hardhat switch to cancun by default: https://github.com/NomicFoundation/hardhat/issues/4851
+            sed -i 's/hardfork: "shanghai",/hardfork: "cancun",/' test/internal/hardhat-network/stack-traces/execution.ts
+            pnpm test
       - matrix_notify_failure_unless_pr
 
   t_ext:
@@ -1374,6 +1502,12 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - install_foundry
+      - run:
+          name: Ensure pnpm is installed if npm is present
+          command: |
+            if command -v npm &> /dev/null; then
+              sudo npm install -g pnpm
+            fi
       - install_python3:
           packages: requests
       - run:
@@ -1600,6 +1734,22 @@ jobs:
           binary_path: "build/solc/solc"
           preset: "<< parameters.preset >>"
 
+  b_bytecode_osx_intel:
+    parameters:
+      preset:
+        type: string
+    <<: *base_osx
+    parallelism: 2 # For prepare_bytecode_report
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - prepare_bytecode_report:
+          label: "osx_intel"
+          binary_type: osx_intel
+          binary_path: "build/solc/solc"
+          preset: "<< parameters.preset >>"
+
   b_bytecode_win:
     parameters:
       preset:
@@ -1611,8 +1761,12 @@ jobs:
       # platforms so line ending conversions must absolutely be disabled.
       - run: git config --global core.autocrlf false
       - checkout
-      # Ensure windows has python3 alias required by prepare_bytecode_report
-      - run: ln -s /c/tools/miniconda3/python /c/tools/miniconda3/python3
+      - run:
+          name: Force install python3.12.2
+          command: choco install python3 --pre --force --version=3.12.2
+      - run:
+          name: Create a symlink for python3
+          command: ln -s /c/ProgramData/chocolatey/bin/python3.12 /c/ProgramData/chocolatey/bin/python3
       - attach_workspace:
           at: build
       - prepare_bytecode_report:
@@ -1750,9 +1904,7 @@ workflows:
 
       - t_ext: *job_ems_compile_ext_colony
 
-      # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
-      #       Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
-      #- t_ext: *job_native_test_ext_gnosis
+      - t_ext: *job_native_compile_ext_gnosis
       - t_ext: *job_native_test_ext_zeppelin
       - t_ext: *job_native_test_ext_ens
       - t_ext: *job_native_test_ext_yield_liquidator
@@ -1761,23 +1913,20 @@ workflows:
       - t_ext: *job_native_test_ext_prb_math
       - t_ext: *job_native_test_ext_elementfi
       - t_ext: *job_native_test_ext_brink
-      # NOTE: We are disabling gp2 tests due to constant failures.
-      # - t_ext: *job_native_test_ext_gp2
-      # NOTE: The external tests below were commented because they
-      # depend on a specific version of hardhat which does not support shanghai EVM.
-      #- t_ext: *job_native_test_ext_trident
-      #- t_ext: *job_native_test_ext_euler
-      #- t_ext: *job_native_test_ext_bleeps
-      #- t_ext: *job_native_test_ext_pool_together
-      #- t_ext: *job_native_test_ext_chainlink
+      - t_ext: *job_native_compile_ext_gp2
+      - t_ext: *job_native_compile_ext_euler
+      - t_ext: *job_native_compile_ext_pool_together
+      # TODO: Dropping the external tests below since they are based on old forks and
+      # fail after update the default evm version to cancun.
+      #- t_ext: *job_native_compile_ext_trident
+      #- t_ext: *job_native_compile_ext_chainlink
+      #- t_ext: *job_native_compile_ext_bleeps
 
       - c_ext_benchmarks:
           <<: *requires_nothing
           requires:
             - t_ems_compile_ext_colony
-            # NOTE: We are disabling the gnosis test suite due to version discrepancies that are difficult to fix.
-            #       Check again after (and if) https://github.com/safe-global/safe-contracts/pull/644 is merged.
-            #- t_native_test_ext_gnosis
+            - t_native_compile_ext_gnosis
             - t_native_test_ext_zeppelin
             - t_native_test_ext_ens
             - t_native_test_ext_yield_liquidator
@@ -1785,18 +1934,17 @@ workflows:
             - t_native_test_ext_uniswap
             - t_native_test_ext_elementfi
             - t_native_test_ext_brink
-            # NOTE: We are disabling gp2 tests due to constant failures.
-            #- t_native_test_ext_gp2
+            - t_native_compile_ext_gp2
             # TODO: Dropping prb-math from the benchmarks since it is not implemented yet
             # in the new Foundry external testing infrastructure.
             # - t_native_test_ext_prb_math
-            # NOTE: The external tests below were commented because they
-            # depend on a specific version of hardhat which does not support shanghai EVM.
-            #- t_native_test_ext_trident
-            #- t_native_test_ext_euler
-            #- t_native_test_ext_bleeps
-            #- t_native_test_ext_pool_together
-            #- t_native_test_ext_chainlink
+            - t_native_compile_ext_euler
+            - t_native_compile_ext_pool_together
+            # TODO: Dropping the external tests below since they are based on old forks and
+            # fail after update the default evm version to cancun.
+            #- t_native_compile_ext_trident
+            #- t_native_compile_ext_chainlink
+            #- t_native_compile_ext_bleeps
 
       # Windows build and tests
       - b_win: *requires_nothing
@@ -1823,6 +1971,11 @@ workflows:
           matrix: *bytecode_compare_preset_matrix
           requires:
             - b_osx
+      - b_bytecode_osx_intel:
+          <<: *on_all_tags_and_branches
+          matrix: *bytecode_compare_preset_matrix
+          requires:
+            - b_osx
       - b_bytecode_ems:
           <<: *on_all_tags_and_branches
           matrix: *bytecode_compare_preset_matrix
@@ -1835,6 +1988,7 @@ workflows:
             - b_bytecode_ubu
             - b_bytecode_win
             - b_bytecode_osx
+            - b_bytecode_osx_intel
             - b_bytecode_ems
 
       # Final artifacts
@@ -1854,10 +2008,6 @@ workflows:
           <<: *on_develop
 
     jobs:
-      # OSSFUZZ builds and (regression) tests
-      - b_ubu_ossfuzz: *requires_nothing
-      - t_ubu_ossfuzz: *requires_b_ubu_ossfuzz
-
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *requires_nothing
       - t_ubu_codecov: *requires_b_ubu_codecov
@@ -1873,3 +2023,19 @@ workflows:
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_soltest: *requires_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
+
+      # Deprecated EVM versions tests
+      - b_ubu: *requires_nothing
+      - t_ubu_soltest_deprecated_evm_versions: *requires_b_ubu
+
+  nightly-ossfuzz:
+
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          <<: *on_develop
+
+    jobs:
+      # OSSFUZZ builds and (regression) tests
+      - b_ubu_ossfuzz: *requires_nothing
+      - t_ubu_ossfuzz: *requires_b_ubu_ossfuzz

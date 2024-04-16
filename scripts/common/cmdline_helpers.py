@@ -48,7 +48,7 @@ def solc_bin_report(solc_binary: str, input_files: List[Path], via_ir: bool) -> 
         (['--via-ir'] if via_ir else []),
         encoding='utf8',
     )
-    return parse_cli_output('', output)
+    return parse_cli_output('', output, 0)
 
 
 def save_bytecode(bytecode_path: Path, reports: FileReport, contract: Optional[str] = None):

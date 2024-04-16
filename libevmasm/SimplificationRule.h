@@ -117,8 +117,10 @@ struct EVMBuiltins
 	static auto constexpr EXTCODECOPY = PatternGenerator<Instruction::EXTCODECOPY>{};
 	static auto constexpr RETURNDATASIZE = PatternGenerator<Instruction::RETURNDATASIZE>{};
 	static auto constexpr RETURNDATACOPY = PatternGenerator<Instruction::RETURNDATACOPY>{};
+	static auto constexpr MCOPY = PatternGenerator<Instruction::MCOPY>{};
 	static auto constexpr EXTCODEHASH = PatternGenerator<Instruction::EXTCODEHASH>{};
 	static auto constexpr BLOCKHASH = PatternGenerator<Instruction::BLOCKHASH>{};
+	static auto constexpr BLOBHASH = PatternGenerator<Instruction::BLOBHASH>{};
 	static auto constexpr COINBASE = PatternGenerator<Instruction::COINBASE>{};
 	static auto constexpr TIMESTAMP = PatternGenerator<Instruction::TIMESTAMP>{};
 	static auto constexpr NUMBER = PatternGenerator<Instruction::NUMBER>{};
@@ -127,12 +129,15 @@ struct EVMBuiltins
 	static auto constexpr CHAINID = PatternGenerator<Instruction::CHAINID>{};
 	static auto constexpr SELFBALANCE = PatternGenerator<Instruction::SELFBALANCE>{};
 	static auto constexpr BASEFEE = PatternGenerator<Instruction::BASEFEE>{};
+	static auto constexpr BLOBBASEFEE = PatternGenerator<Instruction::BLOBBASEFEE>{};
 	static auto constexpr POP = PatternGenerator<Instruction::POP>{};
 	static auto constexpr MLOAD = PatternGenerator<Instruction::MLOAD>{};
 	static auto constexpr MSTORE = PatternGenerator<Instruction::MSTORE>{};
 	static auto constexpr MSTORE8 = PatternGenerator<Instruction::MSTORE8>{};
 	static auto constexpr SLOAD = PatternGenerator<Instruction::SLOAD>{};
 	static auto constexpr SSTORE = PatternGenerator<Instruction::SSTORE>{};
+	static auto constexpr TLOAD = PatternGenerator<Instruction::TLOAD>{};
+	static auto constexpr TSTORE = PatternGenerator<Instruction::TSTORE>{};
 	static auto constexpr PC = PatternGenerator<Instruction::PC>{};
 	static auto constexpr MSIZE = PatternGenerator<Instruction::MSIZE>{};
 	static auto constexpr GAS = PatternGenerator<Instruction::GAS>{};

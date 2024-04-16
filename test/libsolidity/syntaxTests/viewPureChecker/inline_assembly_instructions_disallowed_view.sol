@@ -23,7 +23,7 @@ contract C {
 // ====
 // EVMVersion: >=london
 // ----
-// Warning 1699: (308-320): "selfdestruct" has been deprecated. The underlying opcode will eventually undergo breaking changes, and its use is not recommended.
+// Warning 1699: (308-320): "selfdestruct" has been deprecated. Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and data associated with an account and only transfers its Ether to the beneficiary, unless executed in the same transaction in which the contract was created (see EIP-6780). Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. Future changes to the EVM might further reduce the functionality of the opcode.
 // Warning 5740: (336-468): Unreachable code.
 // TypeError 8961: (75-87): Function cannot be declared as view because this expression (potentially) modifies the state.
 // TypeError 8961: (104-119): Function cannot be declared as view because this expression (potentially) modifies the state.

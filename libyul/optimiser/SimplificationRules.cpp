@@ -234,7 +234,7 @@ evmasm::Instruction Pattern::instruction() const
 	return m_instruction;
 }
 
-Expression Pattern::toExpression(std::shared_ptr<DebugData const> const& _debugData, langutil::EVMVersion _evmVersion) const
+Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion) const
 {
 	if (matchGroup())
 		return ASTCopier().translate(matchGroupValue());

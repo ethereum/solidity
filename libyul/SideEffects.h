@@ -50,7 +50,7 @@ struct SideEffects
 	/// At statement level, it means that functions containing this code can be
 	/// called multiple times, their calls can be rearranged and calls can also be
 	/// deleted without changing the semantics.
-	/// This means it cannot depend on storage or memory, cannot have any side-effects,
+	/// This means it cannot depend on storage, memory or transient storage, cannot have any side-effects,
 	/// but it can depend on state that is constant across an EVM-call.
 	bool movable = true;
 	/// If true, the expressions in this code can be moved or copied (together with their arguments)
@@ -76,11 +76,15 @@ struct SideEffects
 	/// or `None` respectively. Note that, when the value is `Read`, the expression can have an
 	/// effect on `msize()`.
 	Effect memory = None;
+	/// Can write, read or have no effect on transient storage, when the value of `transientStorage` is `Write`, `Read`
+	/// or `None` respectively.  When the value is `Write`, the expression can invalidate transient storage,
+	/// potentially indirectly through external calls.
+	Effect transientStorage = None;
 
 	/// @returns the worst-case side effects.
 	static SideEffects worst()
 	{
-		return SideEffects{false, false, false, false, false, Write, Write, Write};
+		return SideEffects{false, false, false, false, false, Write, Write, Write, Write};
 	}
 
 	/// @returns the combined side effects of two pieces of code.
@@ -94,7 +98,8 @@ struct SideEffects
 			cannotLoop && _other.cannotLoop,
 			otherState + _other.otherState,
 			storage + _other.storage,
-			memory + _other.memory
+			memory + _other.memory,
+			transientStorage + _other.transientStorage
 		};
 	}
 
@@ -115,7 +120,8 @@ struct SideEffects
 			cannotLoop == _other.cannotLoop &&
 			otherState == _other.otherState &&
 			storage == _other.storage &&
-			memory == _other.memory;
+			memory == _other.memory &&
+			transientStorage == _other.transientStorage;
 	}
 };
 

@@ -115,6 +115,16 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 			gas += memoryGas(0, -2);
 			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-2));
 			break;
+		case Instruction::MCOPY:
+		{
+			GasConsumption memoryGasFromRead = memoryGas(-1, -2);
+			GasConsumption memoryGasFromWrite = memoryGas(0, -2);
+
+			gas = runGas(_item.instruction(), m_evmVersion);
+			gas += (memoryGasFromRead < memoryGasFromWrite ? memoryGasFromWrite : memoryGasFromRead);
+			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-2));
+			break;
+		}
 		case Instruction::EXTCODESIZE:
 			gas = GasCosts::extCodeGas(m_evmVersion);
 			break;
@@ -264,17 +274,20 @@ unsigned GasMeter::runGas(Instruction _instruction, langutil::EVMVersion _evmVer
 
 	switch (instructionInfo(_instruction, _evmVersion).gasPriceTier)
 	{
-	case Tier::Zero:    return GasCosts::tier0Gas;
-	case Tier::Base:    return GasCosts::tier1Gas;
-	case Tier::VeryLow: return GasCosts::tier2Gas;
-	case Tier::Low:     return GasCosts::tier3Gas;
-	case Tier::Mid:     return GasCosts::tier4Gas;
-	case Tier::High:    return GasCosts::tier5Gas;
-	case Tier::Ext:     return GasCosts::tier6Gas;
-	default: break;
+	case Tier::Zero:        return GasCosts::tier0Gas;
+	case Tier::Base:        return GasCosts::tier1Gas;
+	case Tier::VeryLow:     return GasCosts::tier2Gas;
+	case Tier::Low:         return GasCosts::tier3Gas;
+	case Tier::Mid:         return GasCosts::tier4Gas;
+	case Tier::High:        return GasCosts::tier5Gas;
+	case Tier::BlockHash:   return GasCosts::tier6Gas;
+	case Tier::WarmAccess:  return GasCosts::warmStorageReadCost;
+
+	case Tier::Special:
+	case Tier::Invalid:
+		assertThrow(false, OptimizerException, "Invalid gas tier for instruction " + instructionInfo(_instruction, _evmVersion).name);
 	}
-	assertThrow(false, OptimizerException, "Invalid gas tier for instruction " + instructionInfo(_instruction, _evmVersion).name);
-	return 0;
+	util::unreachable();
 }
 
 u256 GasMeter::dataGas(bytes const& _data, bool _inCreation, langutil::EVMVersion _evmVersion)

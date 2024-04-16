@@ -33,7 +33,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
 using namespace solidity::langutil;
 
 namespace solidity::yul::test
@@ -42,10 +41,10 @@ namespace solidity::yul::test
 class KnowledgeBaseTest
 {
 protected:
-	KnowledgeBase constructKnowledgeBase(string const& _source)
+	KnowledgeBase constructKnowledgeBase(std::string const& _source)
 	{
 		ErrorList errorList;
-		shared_ptr<AsmAnalysisInfo> analysisInfo;
+		std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 		std::tie(m_object, analysisInfo) = yul::test::parse(_source, m_dialect, errorList);
 		BOOST_REQUIRE(m_object && errorList.empty() && m_object->code);
 
@@ -62,9 +61,9 @@ protected:
 	}
 
 	EVMDialect m_dialect{EVMVersion{}, true};
-	shared_ptr<Object> m_object;
+	std::shared_ptr<Object> m_object;
 	SSAValueTracker m_ssaValues;
-	map<YulString, AssignedValue> m_values;
+	std::map<YulString, AssignedValue> m_values;
 };
 
 BOOST_FIXTURE_TEST_SUITE(KnowledgeBase, KnowledgeBaseTest)

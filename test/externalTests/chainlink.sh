@@ -37,7 +37,6 @@ function test_fn { yarn test; }
 function chainlink_test
 {
     local repo="https://github.com/solidity-external-tests/chainlink"
-    local ref_type=branch
     local ref=develop_080
     local config_file="hardhat.config.ts"
     local config_var=config
@@ -58,7 +57,7 @@ function chainlink_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     cd "contracts/"
 

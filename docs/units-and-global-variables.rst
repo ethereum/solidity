@@ -67,14 +67,18 @@ There are special variables and functions which always exist in the global
 namespace and are mainly used to provide information about the blockchain
 or are general-use utility functions.
 
-.. index:: abi, block, coinbase, difficulty, prevrandao, encode, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin
+.. index:: abi, block, coinbase, difficulty, prevrandao, encode, number, block;number, timestamp, block;timestamp, block;basefee, block;blobbasefee, msg, data, gas, sender, value, gas price, origin
 
 
 Block and Transaction Properties
 --------------------------------
 
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block when ``blocknumber`` is one of the 256 most recent blocks; otherwise returns zero
+- ``blobhash(uint index) returns (bytes32)``: versioned hash of the ``index``-th blob associated with the current transaction.
+  A versioned hash consists of a single byte representing the version (currently ``0x01``), followed by the last 31 bytes
+  of the SHA256 hash of the KZG commitment (`EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_).
 - ``block.basefee`` (``uint``): current block's base fee (`EIP-3198 <https://eips.ethereum.org/EIPS/eip-3198>`_ and `EIP-1559 <https://eips.ethereum.org/EIPS/eip-1559>`_)
+- ``block.blobbasefee`` (``uint``): current block's blob base fee (`EIP-7516 <https://eips.ethereum.org/EIPS/eip-7516>`_ and `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_)
 - ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty (``EVM < Paris``). For other EVM versions it behaves as a deprecated alias for ``block.prevrandao`` (`EIP-4399 <https://eips.ethereum.org/EIPS/eip-4399>`_ )
@@ -335,9 +339,23 @@ Contract-related
 Furthermore, all functions of the current contract are callable directly including the current function.
 
 .. warning::
-    From version 0.8.18 and up, the use of ``selfdestruct`` in both Solidity and Yul will trigger a
-    deprecation warning, since the ``SELFDESTRUCT`` opcode will eventually undergo breaking changes in behavior
-    as stated in `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
+    From ``EVM >= Cancun`` onwards, ``selfdestruct`` will **only** send all Ether in the account to the given recipient and not destroy the contract.
+    However, when ``selfdestruct`` is called in the same transaction that creates the contract calling it,
+    the behaviour of ``selfdestruct`` before Cancun hardfork (i.e., ``EVM <= Shanghai``) is preserved and will destroy the current contract,
+    deleting any data, including storage keys, code and the account itself.
+    See `EIP-6780 <https://eips.ethereum.org/EIPS/eip-6780>`_ for more details.
+
+    The new behaviour is the result of a network-wide change that affects all contracts present on
+    the Ethereum mainnet and testnets.
+    It is important to note that this change is dependent on the EVM version of the chain on which
+    the contract is deployed.
+    The ``--evm-version`` setting used when compiling the contract has no bearing on it.
+
+    Also, note that the ``selfdestruct`` opcode has been deprecated in Solidity version 0.8.18,
+    as recommended by `EIP-6049 <https://eips.ethereum.org/EIPS/eip-6049>`_.
+    The deprecation is still in effect and the compiler will still emit warnings on its use.
+    Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account.
+    Future changes to the EVM might further reduce the functionality of the opcode.
 
 .. note::
     Prior to version 0.5.0, there was a function called ``suicide`` with the same

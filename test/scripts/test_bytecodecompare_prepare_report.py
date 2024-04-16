@@ -9,7 +9,8 @@ from unittest_helpers import FIXTURE_DIR, LIBSOLIDITY_TEST_DIR, load_fixture, lo
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
 # pragma pylint: disable=import-error
-from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SettingsPreset, SMTUse, Statistics
+from bytecodecompare.prepare_report import ExecutionArchitecture, CompilerInterface, FileReport, ContractReport
+from bytecodecompare.prepare_report import SettingsPreset, SMTUse, Statistics
 from bytecodecompare.prepare_report import load_source, parse_cli_output, parse_standard_json_output, prepare_compiler_input
 # pragma pylint: enable=import-error
 
@@ -223,6 +224,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
 
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=False,
@@ -237,6 +239,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_should_work_with_cli_interface(self):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=False,
@@ -273,6 +276,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
 
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             preset=SettingsPreset.VIA_IR_OPTIMIZE,
             force_no_optimize_yul=False,
@@ -287,6 +291,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_for_cli_preserves_newlines(self):
         (_command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             preset=SettingsPreset.LEGACY_OPTIMIZE,
             force_no_optimize_yul=True,
@@ -300,6 +305,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_for_cli_should_handle_force_no_optimize_yul_flag(self):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.LEGACY_NO_OPTIMIZE,
             force_no_optimize_yul=True,
@@ -317,6 +323,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
     def test_prepare_compiler_input_for_cli_should_not_use_metadata_option_if_not_supported(self):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
+            ExecutionArchitecture.NATIVE,
             SMT_SMOKE_TEST_SOL_PATH,
             preset=SettingsPreset.VIA_IR_OPTIMIZE,
             force_no_optimize_yul=False,
@@ -487,19 +494,19 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        report = parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), LIBRARY_INHERITED2_SOL_CLI_OUTPUT)
+        report = parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), LIBRARY_INHERITED2_SOL_CLI_OUTPUT, 0)
         self.assertEqual(report, expected_report)
 
     def test_parse_cli_output_should_report_error_on_compiler_errors(self):
         expected_report = FileReport(file_name=Path('syntaxTests/pragma/unknown_pragma.sol'), contract_reports=None)
 
-        report = parse_cli_output(Path('syntaxTests/pragma/unknown_pragma.sol'), UNKNOWN_PRAGMA_SOL_CLI_OUTPUT)
+        report = parse_cli_output(Path('syntaxTests/pragma/unknown_pragma.sol'), UNKNOWN_PRAGMA_SOL_CLI_OUTPUT, 0)
         self.assertEqual(report, expected_report)
 
     def test_parse_cli_output_should_report_error_on_empty_output(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), ''), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), '', 0), expected_report)
 
     def test_parse_cli_output_should_report_missing_bytecode_and_metadata(self):
         compiler_output = dedent("""\
@@ -541,22 +548,25 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), compiler_output), expected_report)
+        self.assertEqual(
+            parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), compiler_output, 0),
+            expected_report
+        )
 
     def test_parse_cli_output_should_report_error_on_unimplemented_feature_error(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_report_error_on_stack_too_deep_error(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), STACK_TOO_DEEP_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), STACK_TOO_DEEP_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_report_error_on_code_generation_error(self):
         expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        self.assertEqual(parse_cli_output(Path('file.sol'), CODE_GENERATION_ERROR_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('file.sol'), CODE_GENERATION_ERROR_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_handle_output_from_solc_0_4_0(self):
         expected_report = FileReport(
@@ -571,7 +581,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_0_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_0_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_handle_output_from_solc_0_4_8(self):
         expected_report = FileReport(
@@ -588,7 +598,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_8_CLI_OUTPUT), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), SOLC_0_4_8_CLI_OUTPUT, 0), expected_report)
 
     def test_parse_cli_output_should_handle_leading_and_trailing_spaces(self):
         compiler_output = (
@@ -606,7 +616,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output, 0), expected_report)
 
     def test_parse_cli_output_should_handle_empty_bytecode_and_metadata_lines(self):
         compiler_output = dedent("""\
@@ -640,7 +650,7 @@ class TestParseCLIOutput(PrepareReportTestBase):
             ]
         )
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output, 0), expected_report)
 
     def test_parse_cli_output_should_handle_link_references_in_bytecode(self):
         compiler_output = dedent("""\
@@ -662,4 +672,4 @@ class TestParseCLIOutput(PrepareReportTestBase):
         )
         # pragma pylint: enable=line-too-long
 
-        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
+        self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output, 0), expected_report)

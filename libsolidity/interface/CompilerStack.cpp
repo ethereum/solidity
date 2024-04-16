@@ -53,10 +53,13 @@
 #include <libsolidity/interface/Natspec.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/StorageLayout.h>
+#include <libsolidity/interface/UniversalCallback.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 
 #include <libsolidity/experimental/analysis/Analysis.h>
+#include <libsolidity/experimental/analysis/FunctionDependencyAnalysis.h>
+#include <libsolidity/experimental/codegen/IRGenerator.h>
 
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
@@ -69,12 +72,12 @@
 #include <libyul/YulStack.h>
 #include <libyul/AST.h>
 #include <libyul/AsmParser.h>
+#include <libyul/optimiser/Suite.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <libevmasm/Exceptions.h>
 
 #include <libsolutil/SwarmHash.h>
 #include <libsolutil/IpfsHash.h>
@@ -86,6 +89,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/map.hpp>
 
@@ -100,6 +104,7 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::stdlib;
+using namespace solidity::yul;
 using namespace std::string_literals;
 
 using solidity::util::errinfo_comment;
@@ -231,6 +236,9 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	if (m_stackState >= ParsedAndImported)
 		solThrow(CompilerError, "Must set EVM version before parsing.");
 	m_evmVersion = _version;
+	// GlobalContext depends on evmVersion since the Cancun hardfork.
+	// Therefore, we reset it whenever we set a new EVM version, ensuring that the context is never reused with a mismatched version.
+	m_globalContext.reset();
 }
 
 void CompilerStack::setEOFVersion(std::optional<uint8_t> _version)
@@ -310,6 +318,7 @@ void CompilerStack::reset(bool _keepSettings)
 {
 	m_stackState = Empty;
 	m_sources.clear();
+	m_maxAstId.reset();
 	m_smtlib2Responses.clear();
 	m_unhandledSMTLib2Queries.clear();
 	if (!_keepSettings)
@@ -410,6 +419,10 @@ bool CompilerStack::parse()
 
 	m_stackState = (m_stopAfter <= Parsed ? Parsed : ParsedAndImported);
 	storeContractDefinitions();
+
+	solAssert(!m_maxAstId.has_value());
+	m_maxAstId = parser.maxID();
+
 	return true;
 }
 
@@ -420,6 +433,7 @@ void CompilerStack::importASTs(std::map<std::string, Json::Value> const& _source
 	std::map<std::string, ASTPointer<SourceUnit>> reconstructedSources = ASTJsonImporter(m_evmVersion).jsonToSourceUnit(_sources);
 	for (auto& src: reconstructedSources)
 	{
+		solUnimplementedAssert(!src.second->experimentalSolidity());
 		std::string const& path = src.first;
 		Source source;
 		source.ast = src.second;
@@ -452,16 +466,16 @@ bool CompilerStack::analyze()
 
 	try
 	{
-		bool experimentalSolidity = !m_sourceOrder.empty() && m_sourceOrder.front()->ast->experimentalSolidity();
+		bool experimentalSolidity = isExperimentalSolidity();
 
 		SyntaxChecker syntaxChecker(m_errorReporter, m_optimiserSettings.runYulOptimiser);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		m_globalContext = std::make_shared<GlobalContext>();
+		m_globalContext = std::make_shared<GlobalContext>(m_evmVersion);
 		// We need to keep the same resolver during the whole process.
-		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
+		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter, experimentalSolidity);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.registerDeclarations(*source->ast))
 				return false;
@@ -475,10 +489,12 @@ bool CompilerStack::analyze()
 
 		resolver.warnHomonymDeclarations();
 
-		DocStringTagParser docStringTagParser(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
-				noErrors = false;
+		{
+			DocStringTagParser docStringTagParser(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
+					noErrors = false;
+		}
 
 		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
@@ -639,7 +655,12 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 		// m_modelCheckerSettings is spread to engines and solver interfaces,
 		// so we need to check whether the enabled ones are available before building the classes.
 		if (m_modelCheckerSettings.engine.any())
+		{
 			m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
+			if (auto* universalCallback = m_readFile.target<frontend::UniversalCallback>())
+				if (m_modelCheckerSettings.solvers.eld)
+					universalCallback->smtCommand().setEldarica(m_modelCheckerSettings.timeout);
+		}
 
 		ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
 		modelChecker.checkRequestedSourcesAndContracts(allSources);
@@ -655,7 +676,8 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 bool CompilerStack::analyzeExperimental()
 {
 	solAssert(!m_experimentalAnalysis);
-	m_experimentalAnalysis = std::make_unique<experimental::Analysis>(m_errorReporter);
+	solAssert(m_maxAstId && *m_maxAstId >= 0);
+	m_experimentalAnalysis = std::make_unique<experimental::Analysis>(m_errorReporter, static_cast<std::uint64_t>(*m_maxAstId));
 	std::vector<std::shared_ptr<SourceUnit const>> sourceAsts;
 	for (Source const* source: m_sourceOrder)
 		if (source->ast)
@@ -720,7 +742,7 @@ bool CompilerStack::compile(State _stopAfter)
 				{
 					try
 					{
-						if (m_viaIR || m_generateIR)
+						if ((m_generateEvmBytecode && m_viaIR) || m_generateIR)
 							generateIR(*contract);
 						if (m_generateEvmBytecode)
 						{
@@ -930,6 +952,8 @@ Json::Value const& CompilerStack::yulIRAst(std::string const& _contractName) con
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
+	solUnimplementedAssert(!isExperimentalSolidity());
+
 	return contract(_contractName).yulIRAst;
 }
 
@@ -945,6 +969,8 @@ Json::Value const& CompilerStack::yulIROptimizedAst(std::string const& _contract
 {
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
+
+	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return contract(_contractName).yulIROptimizedAst;
 }
@@ -984,6 +1010,8 @@ Json::Value CompilerStack::assemblyJSON(std::string const& _contractName) const
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
+	solUnimplementedAssert(!isExperimentalSolidity());
+
 	Contract const& currentContract = contract(_contractName);
 	if (currentContract.evmAssembly)
 		return currentContract.evmAssembly->assemblyJSON(sourceIndices());
@@ -1021,6 +1049,7 @@ Json::Value const& CompilerStack::contractABI(Contract const& _contract) const
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solAssert(_contract.contract, "");
+	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return _contract.abi.init([&]{ return ABI::generate(*_contract.contract); });
 }
@@ -1039,6 +1068,7 @@ Json::Value const& CompilerStack::storageLayout(Contract const& _contract) const
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solAssert(_contract.contract, "");
+	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return _contract.storageLayout.init([&]{ return StorageLayout().generate(*_contract.contract); });
 }
@@ -1057,6 +1087,7 @@ Json::Value const& CompilerStack::natspecUser(Contract const& _contract) const
 		solThrow(CompilerError, "Analysis was not successful.");
 
 	solAssert(_contract.contract, "");
+	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return _contract.userDocumentation.init([&]{ return Natspec::userDocumentation(*_contract.contract); });
 }
@@ -1076,6 +1107,8 @@ Json::Value const& CompilerStack::natspecDev(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
+	solUnimplementedAssert(!isExperimentalSolidity());
+
 	return _contract.devDocumentation.init([&]{ return Natspec::devDocumentation(*_contract.contract); });
 }
 
@@ -1083,6 +1116,8 @@ Json::Value CompilerStack::interfaceSymbols(std::string const& _contractName) co
 {
 	if (m_stackState < AnalysisSuccessful)
 		solThrow(CompilerError, "Analysis was not successful.");
+
+	solUnimplementedAssert(!isExperimentalSolidity());
 
 	Json::Value interfaceSymbols(Json::objectValue);
 	// Always have a methods object
@@ -1124,6 +1159,8 @@ std::string const& CompilerStack::metadata(Contract const& _contract) const
 
 	solAssert(_contract.contract, "");
 
+	solUnimplementedAssert(!isExperimentalSolidity());
+
 	return _contract.metadata.init([&]{ return createMetadata(_contract, m_viaIR); });
 }
 
@@ -1143,6 +1180,8 @@ SourceUnit const& CompilerStack::ast(std::string const& _sourceName) const
 		solThrow(CompilerError, "Parsing not yet performed.");
 	if (!source(_sourceName).ast)
 		solThrow(CompilerError, "Parsing was not successful.");
+
+	solUnimplementedAssert(!isExperimentalSolidity());
 
 	return *source(_sourceName).ast;
 }
@@ -1447,15 +1486,8 @@ void CompilerStack::compileContract(
 	solAssert(!m_viaIR, "");
 	bytes cborEncodedMetadata = createCBORMetadata(compiledContract, /* _forIR */ false);
 
-	try
-	{
-		// Run optimiser and compile the contract.
-		compiler->compileContract(_contract, _otherCompilers, cborEncodedMetadata);
-	}
-	catch(evmasm::OptimizerException const&)
-	{
-		solAssert(false, "Optimizer exception during compilation");
-	}
+	// Run optimiser and compile the contract.
+	compiler->compileContract(_contract, _otherCompilers, cborEncodedMetadata);
 
 	_otherCompilers[compiledContract.contract] = compiler;
 
@@ -1465,9 +1497,6 @@ void CompilerStack::compileContract(
 void CompilerStack::generateIR(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
-
-	if (m_experimentalAnalysis)
-		solThrow(CompilerError, "IR codegen after experimental analysis is unsupported.");
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
@@ -1492,19 +1521,40 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(
-		m_evmVersion,
-		m_eofVersion,
-		m_revertStrings,
-		sourceIndices(),
-		m_debugInfoSelection,
-		this
-	);
-	compiledContract.yulIR = generator.run(
-		_contract,
-		createCBORMetadata(compiledContract, /* _forIR */ true),
-		otherYulSources
-	);
+	if (m_experimentalAnalysis)
+	{
+		experimental::IRGenerator generator(
+			m_evmVersion,
+			m_eofVersion,
+			m_revertStrings,
+			sourceIndices(),
+			m_debugInfoSelection,
+			this,
+			*m_experimentalAnalysis
+		);
+		compiledContract.yulIR = generator.run(
+			_contract,
+			{}, // TODO: createCBORMetadata(compiledContract, /* _forIR */ true),
+			otherYulSources
+		);
+	}
+	else
+	{
+		IRGenerator generator(
+			m_evmVersion,
+			m_eofVersion,
+			m_revertStrings,
+			sourceIndices(),
+			m_debugInfoSelection,
+			this,
+			m_optimiserSettings
+		);
+		compiledContract.yulIR = generator.run(
+			_contract,
+			createCBORMetadata(compiledContract, /* _forIR */ true),
+			otherYulSources
+		);
+	}
 
 	yul::YulStack stack(
 		m_evmVersion,
@@ -1664,12 +1714,28 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 		details["deduplicate"] = m_optimiserSettings.runDeduplicate;
 		details["cse"] = m_optimiserSettings.runCSE;
 		details["constantOptimizer"] = m_optimiserSettings.runConstantOptimiser;
+		details["simpleCounterForLoopUncheckedIncrement"] = m_optimiserSettings.simpleCounterForLoopUncheckedIncrement;
 		details["yul"] = m_optimiserSettings.runYulOptimiser;
 		if (m_optimiserSettings.runYulOptimiser)
 		{
 			details["yulDetails"] = Json::objectValue;
 			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
 			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps;
+		}
+		else if (
+			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps) &&
+			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserCleanupSteps)
+		)
+		{
+			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
+			details["yulDetails"] = Json::objectValue;
+			details["yulDetails"]["optimizerSteps"] = ":";
+		}
+		else
+		{
+			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
+			solAssert(m_optimiserSettings.yulOptimiserSteps == OptimiserSettings::DefaultYulOptimiserSteps);
+			solAssert(m_optimiserSettings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps);
 		}
 
 		meta["settings"]["optimizer"]["details"] = std::move(details);
@@ -1849,6 +1915,8 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 	if (m_stackState != CompilationSuccessful)
 		solThrow(CompilerError, "Compilation was not successful.");
 
+	solUnimplementedAssert(!isExperimentalSolidity());
+
 	if (!assemblyItems(_contractName) && !runtimeAssemblyItems(_contractName))
 		return Json::Value();
 
@@ -1919,4 +1987,18 @@ Json::Value CompilerStack::gasEstimates(std::string const& _contractName) const
 	}
 
 	return output;
+}
+
+bool CompilerStack::isExperimentalSolidity() const
+{
+	return
+		!m_sourceOrder.empty() &&
+		ranges::all_of(m_sourceOrder, [](auto const* _source) { return _source->ast->experimentalSolidity(); } )
+	;
+}
+
+experimental::Analysis const& CompilerStack::experimentalAnalysis() const
+{
+	solAssert(!!m_experimentalAnalysis);
+	return *m_experimentalAnalysis;
 }

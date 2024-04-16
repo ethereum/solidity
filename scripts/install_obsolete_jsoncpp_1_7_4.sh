@@ -17,7 +17,7 @@ TEMPDIR=$(mktemp -d)
     cd "jsoncpp-${jsoncpp_version}"
     mkdir -p build
     cd build
-    cmake -DARCHIVE_INSTALL_DIR=. -G "Unix Makefiles" ..
+    cmake -DCMAKE_OSX_ARCHITECTURES:STRING="x86_64;arm64" -DARCHIVE_INSTALL_DIR=. -G "Unix Makefiles" ..
     make
     make install
 )

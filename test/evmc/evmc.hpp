@@ -493,6 +493,15 @@ public:
 
     /// @copydoc evmc_host_interface::access_storage
     virtual evmc_access_status access_storage(const address& addr, const bytes32& key) noexcept = 0;
+
+    /// @copydoc evmc_host_interface::get_transient_storage
+    virtual bytes32 get_transient_storage(const address& addr,
+                                          const bytes32& key) const noexcept = 0;
+
+    /// @copydoc evmc_host_interface::set_transient_storage
+    virtual void set_transient_storage(const address& addr,
+                                       const bytes32& key,
+                                       const bytes32& value) noexcept = 0;
 };
 
 
@@ -590,6 +599,18 @@ public:
     evmc_access_status access_storage(const address& address, const bytes32& key) noexcept final
     {
         return host->access_storage(context, &address, &key);
+    }
+
+    bytes32 get_transient_storage(const address& address, const bytes32& key) const noexcept final
+    {
+        return host->get_transient_storage(context, &address, &key);
+    }
+
+    void set_transient_storage(const address& address,
+                               const bytes32& key,
+                               const bytes32& value) noexcept final
+    {
+        host->set_transient_storage(context, &address, &key, &value);
     }
 };
 
@@ -844,18 +865,42 @@ inline evmc_access_status access_storage(evmc_host_context* h,
 {
     return Host::from_context(h)->access_storage(*addr, *key);
 }
+
+inline evmc_bytes32 get_transient_storage(evmc_host_context* h,
+                                          const evmc_address* addr,
+                                          const evmc_bytes32* key) noexcept
+{
+    return Host::from_context(h)->get_transient_storage(*addr, *key);
+}
+
+inline void set_transient_storage(evmc_host_context* h,
+                                  const evmc_address* addr,
+                                  const evmc_bytes32* key,
+                                  const evmc_bytes32* value) noexcept
+{
+    Host::from_context(h)->set_transient_storage(*addr, *key, *value);
+}
 }  // namespace internal
 
 inline const evmc_host_interface& Host::get_interface() noexcept
 {
     static constexpr evmc_host_interface interface = {
-        ::evmc::internal::account_exists, ::evmc::internal::get_storage,
-        ::evmc::internal::set_storage,    ::evmc::internal::get_balance,
-        ::evmc::internal::get_code_size,  ::evmc::internal::get_code_hash,
-        ::evmc::internal::copy_code,      ::evmc::internal::selfdestruct,
-        ::evmc::internal::call,           ::evmc::internal::get_tx_context,
-        ::evmc::internal::get_block_hash, ::evmc::internal::emit_log,
-        ::evmc::internal::access_account, ::evmc::internal::access_storage,
+        ::evmc::internal::account_exists,
+        ::evmc::internal::get_storage,
+        ::evmc::internal::set_storage,
+        ::evmc::internal::get_balance,
+        ::evmc::internal::get_code_size,
+        ::evmc::internal::get_code_hash,
+        ::evmc::internal::copy_code,
+        ::evmc::internal::selfdestruct,
+        ::evmc::internal::call,
+        ::evmc::internal::get_tx_context,
+        ::evmc::internal::get_block_hash,
+        ::evmc::internal::emit_log,
+        ::evmc::internal::access_account,
+        ::evmc::internal::access_storage,
+        ::evmc::internal::get_transient_storage,
+        ::evmc::internal::set_transient_storage,
     };
     return interface;
 }

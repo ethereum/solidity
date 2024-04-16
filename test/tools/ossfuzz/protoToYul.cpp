@@ -116,6 +116,10 @@ EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 		return EVMVersion::london();
 	case Program::PARIS:
 		return EVMVersion::paris();
+	case Program::SHANGHAI:
+		return EVMVersion::shanghai();
+	case Program::CANCUN:
+		return EVMVersion::cancun();
 	}
 }
 
@@ -589,6 +593,18 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		return;
 	}
 
+	if (op == UnaryOp::TLOAD && !m_evmVersion.supportsTransientStorage())
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
+	if (op == UnaryOp::BLOBHASH && !m_evmVersion.hasBlobHash())
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
 	// The following instructions may lead to change of EVM state and are hence
 	// excluded to avoid false positives.
 	if (
@@ -616,6 +632,9 @@ void ProtoConverter::visit(UnaryOp const& _x)
 	case UnaryOp::SLOAD:
 		m_output << "sload";
 		break;
+	case UnaryOp::TLOAD:
+		m_output << "tload";
+		break;
 	case UnaryOp::ISZERO:
 		m_output << "iszero";
 		break;
@@ -633,6 +652,9 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		break;
 	case UnaryOp::BLOCKHASH:
 		m_output << "blockhash";
+		break;
+	case UnaryOp::BLOBHASH:
+		m_output << "blobhash";
 		break;
 	}
 	m_output << "(";
@@ -759,6 +781,22 @@ void ProtoConverter::visit(NullaryOp const& _x)
 		else
 			m_output << dictionaryToken();
 		break;
+	case NullaryOp::BASEFEE:
+		// Replace calls to basefee() on unsupported EVMs with a dictionary
+		// token.
+		if (m_evmVersion.hasBaseFee())
+			m_output << "basefee()";
+		else
+			m_output << dictionaryToken();
+		break;
+	case NullaryOp::BLOBBASEFEE:
+		// Replace calls to blobbasefee() on unsupported EVMs with a dictionary
+		// token.
+		if (m_evmVersion.hasBlobBaseFee())
+			m_output << "blobbasefee()";
+		else
+			m_output << dictionaryToken();
+		break;
 	}
 }
 
@@ -774,6 +812,10 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	// We don't generate code if the copy function is returndatacopy
 	// and the underlying evm does not support it.
 	if (type == CopyFunc::RETURNDATA && !m_evmVersion.supportsReturndata())
+		return;
+
+	// Bail out if MCOPY is not supported for fuzzed EVM version
+	if (type == CopyFunc::MEMORY && !m_evmVersion.hasMcopy())
 		return;
 
 	// Code copy may change state if e.g., some byte of code
@@ -796,13 +838,22 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	case CopyFunc::DATA:
 		m_output << "datacopy";
 		break;
+	case CopyFunc::MEMORY:
+		m_output << "mcopy";
 	}
 	m_output << "(";
 	m_output << "mod(";
 	visit(_x.target());
 	m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
 	m_output << ", ";
-	visit(_x.source());
+	if (type == CopyFunc::MEMORY)
+	{
+		m_output << "mod(";
+		visit(_x.source());
+		m_output << ", " << to_string(s_maxMemory - s_maxSize) << ")";
+	}
+	else
+		visit(_x.source());
 	m_output << ", ";
 	m_output << "mod(";
 	visit(_x.size());
@@ -1121,9 +1172,12 @@ void ProtoConverter::visit(StoreFunc const& _x)
 	case StoreFunc::MSTORE8:
 		m_output << "mstore8(";
 		break;
+	case StoreFunc::TSTORE:
+		m_output << "tstore(";
+		break;
 	}
 	// Write to memory within bounds, storage is unbounded
-	if (storeType == StoreFunc::SSTORE)
+	if (storeType == StoreFunc::SSTORE || storeType == StoreFunc::TSTORE)
 		visit(_x.loc());
 	else if (storeType == StoreFunc::MSTORE8)
 	{
@@ -1735,18 +1789,29 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 
 void ProtoConverter::saveFunctionCallOutput(vector<string> const& _varsVec)
 {
-	for (auto const& var: _varsVec)
+	constexpr auto numSlots = 10;
+	constexpr auto slotSize = 32;
+
+	for (string const& var: _varsVec)
 	{
 		// Flip a dice to choose whether to save output values
 		// in storage or memory.
-		bool coinFlip = counter() % 2 == 0;
+		unsigned diceThrow = counter() % (m_evmVersion.supportsTransientStorage() ? 3 : 2);
 		// Pseudo-randomly choose one of the first ten 32-byte
 		// aligned slots.
-		string slot = to_string((counter() % 10) * 32);
-		if (coinFlip)
+		string slot = std::to_string((counter() % numSlots) * slotSize);
+		if (diceThrow == 0)
 			m_output << "sstore(" << slot << ", " << var << ")\n";
-		else
+		else if (diceThrow == 1)
 			m_output << "mstore(" << slot << ", " << var << ")\n";
+		else
+		{
+			yulAssert(
+				m_evmVersion.supportsTransientStorage(),
+				"Proto fuzzer: Invalid evm version"
+			);
+			m_output << "tstore(" << slot << ", " << var << ")\n";
+		}
 	}
 }
 

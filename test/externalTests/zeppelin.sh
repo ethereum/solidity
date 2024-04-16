@@ -42,8 +42,7 @@ function test_fn { npm test; }
 function zeppelin_test
 {
     local repo="https://github.com/OpenZeppelin/openzeppelin-contracts.git"
-    local ref_type=branch
-    local ref="master"
+    local ref="<latest-release>"
     local config_file="hardhat.config.js"
 
     local compile_only_presets=(
@@ -62,7 +61,7 @@ function zeppelin_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
@@ -96,18 +95,22 @@ function zeppelin_test
     sed -i "s|it(\('calling upgradeToAndCall on the implementation reverts'\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
     sed -i "s|it(\('calling upgradeTo from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
     sed -i "s|it(\('calling upgradeToAndCall from a contract that is not an ERC1967 proxy\)|it.skip(\1|g" test/proxy/utils/UUPSUpgradeable.test.js
+    sed -i "s|it(\('rejects overflow'\)|it.skip(\1|g" test/token/ERC20/ERC20.test.js
+    sed -i "s|it(\('decimals overflow'\)|it.skip(\1|g" test/token/ERC20/extensions/ERC4626.test.js
 
     # Here only the testToInt(248) and testToInt(256) cases fail so change the loop range to skip them
     sed -i "s|range(8, 256, 8)\(.forEach(bits => testToInt(bits));\)|range(8, 240, 8)\1|" test/utils/math/SafeCast.test.js
 
-    neutralize_package_lock
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")"
     npm install
+    # We require to install hardhat 2.20.0 due to support for evm version cancun, otherwise we get the following error:
+    # Invalid value {"blockGasLimit":10000000,"allowUnlimitedContractSize":true,"hardfork":"cancun"} for HardhatConfig.networks.hardhat - Expected a value of type HardhatNetworkConfig.
+    # See: https://github.com/NomicFoundation/hardhat/issues/4176
+    npm install hardhat@2.20.0
 
     replace_version_pragmas
-
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn
         store_benchmark_report hardhat zeppelin "$repo" "$preset"

@@ -10,9 +10,9 @@ if (DEFINED MSVC)
 	else()
 		get_filename_component(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/../deps/install" ABSOLUTE)
 		set(ETH_DEPENDENCY_INSTALL_DIR
-			"${DEPS_DIR}/x64"					# Old location for deps.
-			"${DEPS_DIR}/win64"					# New location for deps.
-			"${DEPS_DIR}/win64/Release/share"	# LLVM shared cmake files.
+			"${DEPS_DIR}/x64"                 # Old location for deps.
+			"${DEPS_DIR}/win64"               # New location for deps.
+			"${DEPS_DIR}/win64/Release/share" # LLVM shared cmake files.
 		)
 	endif()
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})

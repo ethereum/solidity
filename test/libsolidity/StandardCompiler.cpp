@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(invalid_language)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\", \"Yul\" or \"SolidityAST\" is supported as a language."));
+	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\", \"Yul\", \"SolidityAST\" or \"EVMAssembly\" is supported as a language."));
 }
 
 BOOST_AUTO_TEST_CASE(valid_language)
@@ -1050,9 +1050,11 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"paris\"") != std::string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"shanghai\","));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"shanghai\"") != std::string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"cancun\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"cancun\"") != std::string::npos);
 	// test default
 	result = compile(inputForVersion(""));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"shanghai\"") != std::string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"cancun\"") != std::string::npos);
 	// test invalid
 	result = compile(inputForVersion("\"evmVersion\": \"invalid\","));
 	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");
@@ -1218,8 +1220,8 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	BOOST_CHECK(
 		optimizer["details"]["yulDetails"]["optimizerSteps"].asString() ==
 		OptimiserSettings::DefaultYulOptimiserSteps + ":"s + OptimiserSettings::DefaultYulOptimiserCleanupSteps
- 	);
-	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 9);
+	);
+	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 10);
 	BOOST_CHECK(optimizer["runs"].asUInt() == 600);
 }
 

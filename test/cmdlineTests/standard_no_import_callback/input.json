@@ -1,0 +1,8 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "A": {
+            "content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; import 'standard_no_import_callback/B.sol';"
+        }
+    }
+}

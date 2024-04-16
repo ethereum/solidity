@@ -122,6 +122,7 @@ public:
 	static RationalNumberType const* isConstant(Expression const& _expr);
 
 	static std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> collectABICalls(ASTNode const* _node);
+	static std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> collectBytesConcatCalls(ASTNode const* _node);
 
 	/// @returns all the sources that @param _source depends on,
 	/// including itself.
@@ -211,6 +212,7 @@ protected:
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
 	void visitABIFunction(FunctionCall const& _funCall);
+	void visitBytesConcat(FunctionCall const& _funCall);
 	void visitCryptoFunction(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
 	virtual void visitAddMulMod(FunctionCall const& _funCall);
@@ -275,7 +277,7 @@ protected:
 	/// @returns a pair of expressions representing _left / _right and _left mod _right, respectively.
 	/// Uses slack variables and additional constraints to express the results using only operations
 	/// more friendly to the SMT solver (multiplication, addition, subtraction and comparison).
-	std::pair<smtutil::Expression, smtutil::Expression>	divModWithSlacks(
+	std::pair<smtutil::Expression, smtutil::Expression> divModWithSlacks(
 		smtutil::Expression _left,
 		smtutil::Expression _right,
 		IntegerType const& _type
@@ -403,12 +405,16 @@ protected:
 
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
-	void createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
+	void createReturnedExpressions(FunctionDefinition const* _funDef, Expression const& _calledExpr);
 
 	/// @returns the symbolic arguments for a function call,
 	/// taking into account attached functions and
 	/// type conversion.
-	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
+	std::vector<smtutil::Expression> symbolicArguments(
+		std::vector<ASTPointer<VariableDeclaration>> const& _funParameters,
+		std::vector<Expression const*> const& _arguments,
+		std::optional<Expression const*> _calledExpr
+	);
 
 	smtutil::Expression constantExpr(Expression const& _expr, VariableDeclaration const& _var);
 
@@ -496,6 +502,14 @@ protected:
 	langutil::CharStreamProvider const& m_charStreamProvider;
 
 	smt::SymbolicState& state();
+
+private:
+	smtutil::Expression createSelectExpressionForFunction(
+		smtutil::Expression symbFunction,
+		std::vector<frontend::ASTPointer<frontend::Expression const>> const& args,
+		frontend::TypePointers const& inTypes,
+		unsigned long argsActualLength
+	);
 };
 
 }

@@ -8,6 +8,7 @@ import sys
 # TODO: We should switch to time-based splitting but that requires JUnit XML report support in cmdlineTests.sh.
 tests_to_run_in_parallel = [
     '~ast_import_export',                   # ~7 min
+    '~evmasm_import_export',                # ~5 min
     '~ast_export_with_stop_after_parsing',  # ~4 min
     '~soljson_via_fuzzer',                  # ~3 min
     '~via_ir_equivalence',                  # ~1 min

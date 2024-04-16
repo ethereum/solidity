@@ -383,6 +383,25 @@ void OptimiserSuite::validateSequence(std::string_view _stepAbbreviations)
 	assertThrow(nestingLevel == 0, OptimizerException, "Unbalanced brackets");
 }
 
+bool OptimiserSuite::isEmptyOptimizerSequence(std::string const& _sequence)
+{
+	size_t delimiterCount{0};
+	for (char const step: _sequence)
+		switch (step)
+		{
+		case ':':
+			if (++delimiterCount > 1)
+				return false;
+			break;
+		case ' ':
+		case '\n':
+			break;
+		default:
+			return false;
+		}
+	return true;
+}
+
 void OptimiserSuite::runSequence(std::string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable)
 {
 	validateSequence(_stepAbbreviations);

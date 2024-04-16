@@ -742,12 +742,18 @@ bool ASTJsonExporter::visit(WhileStatement const& _node)
 
 bool ASTJsonExporter::visit(ForStatement const& _node)
 {
-	setJsonNode(_node, "ForStatement", {
+
+	std::vector<std::pair<std::string, Json::Value>> attributes = {
 		std::make_pair("initializationExpression", toJsonOrNull(_node.initializationExpression())),
 		std::make_pair("condition", toJsonOrNull(_node.condition())),
 		std::make_pair("loopExpression", toJsonOrNull(_node.loopExpression())),
 		std::make_pair("body", toJson(_node.body()))
-	});
+	};
+
+	if (_node.annotation().isSimpleCounterLoop.set())
+		attributes.emplace_back("isSimpleCounterLoop", *_node.annotation().isSimpleCounterLoop);
+
+	setJsonNode(_node, "ForStatement", std::move(attributes));
 	return false;
 }
 
@@ -1030,6 +1036,15 @@ bool ASTJsonExporter::visit(StructuredDocumentation const& _node)
 void ASTJsonExporter::endVisit(EventDefinition const&)
 {
 	m_inEvent = false;
+}
+
+bool ASTJsonExporter::visitNode(ASTNode const& _node)
+{
+	solAssert(false, _node.experimentalSolidityOnly() ?
+		"Attempt to export an AST of experimental solidity." :
+		"Attempt to export an AST that contains unexpected nodes."
+	);
+	return false;
 }
 
 std::string ASTJsonExporter::location(VariableDeclaration::Location _location)

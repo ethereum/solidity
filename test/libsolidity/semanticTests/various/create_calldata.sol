@@ -8,7 +8,10 @@ contract C {
 }
 // ----
 // constructor(): 42 ->
-// gas irOptimized: 145578
-// gas legacy: 173845
-// gas legacyOptimized: 137877
+// gas irOptimized: 67834
+// gas irOptimized code: 70400
+// gas legacy: 78029
+// gas legacy code: 90200
+// gas legacyOptimized: 68321
+// gas legacyOptimized code: 64600
 // s() -> 0x20, 0

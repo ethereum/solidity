@@ -237,7 +237,7 @@ void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression 
 	}, _expression);
 }
 
-void OptimizedEVMCodeTransform::createStackLayout(std::shared_ptr<DebugData const> _debugData, Stack _targetStack)
+void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr _debugData, Stack _targetStack)
 {
 	static constexpr auto slotVariableName = [](StackSlot const& _slot) {
 		return std::visit(util::GenericVisitor{

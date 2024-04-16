@@ -49,6 +49,15 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 		return hasSelfBalance();
 	case Instruction::BASEFEE:
 		return hasBaseFee();
+	case Instruction::BLOBHASH:
+		return hasBlobHash();
+	case Instruction::BLOBBASEFEE:
+		return hasBlobBaseFee();
+	case Instruction::MCOPY:
+		return hasMcopy();
+	case Instruction::TSTORE:
+	case Instruction::TLOAD:
+		return supportsTransientStorage();
 	default:
 		return true;
 	}

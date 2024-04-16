@@ -30,6 +30,7 @@ native_platforms=(
     ubuntu2004-static
     ubuntu
     osx
+    osx_intel
     windows
 )
 interfaces=(

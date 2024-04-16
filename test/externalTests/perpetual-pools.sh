@@ -37,7 +37,6 @@ function test_fn { yarn test; }
 function perpetual_pools_test
 {
     local repo="https://github.com/solidity-external-tests/perpetual-pools-contracts"
-    local ref_type=branch
     local ref=pools-v2
     local config_file="hardhat.config.ts"
     local config_var="config"
@@ -57,7 +56,7 @@ function perpetual_pools_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
 
     # Disable tests that won't pass on the ir presets due to Hardhat heuristics. Note that this also disables
     # them for other presets but that's fine - we want same code run for benchmarks to be comparable.
@@ -70,7 +69,12 @@ function perpetual_pools_test
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
+
     yarn install
+    # We set hardhat version to 2.20.0 since version 2.21.0 has issues with solidity-coverage plugin
+    # that often causes out-of-memory errors.
+    # See hardhat note about the issue here: https://github.com/NomicFoundation/hardhat/releases/tag/hardhat@2.21.0
+    yarn add hardhat@2.20.0
 
     replace_version_pragmas
 

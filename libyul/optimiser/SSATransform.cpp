@@ -84,7 +84,7 @@ void IntroduceSSA::operator()(Block& _block)
 
 				// Replace "let a := v" by "let a_1 := v  let a := a_1"
 				// Replace "let a, b := v" by "let a_1, b_1 := v  let a := a_1 let b := b_2"
-				std::shared_ptr<DebugData const> debugData = varDecl.debugData;
+				langutil::DebugData::ConstPtr debugData = varDecl.debugData;
 				std::vector<Statement> statements;
 				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(varDecl.value)});
 				TypedNameList newVariables;
@@ -111,7 +111,7 @@ void IntroduceSSA::operator()(Block& _block)
 
 				// Replace "a := v" by "let a_1 := v  a := v"
 				// Replace "a, b := v" by "let a_1, b_1 := v  a := a_1 b := b_2"
-				std::shared_ptr<DebugData const> debugData = assignment.debugData;
+				langutil::DebugData::ConstPtr debugData = assignment.debugData;
 				std::vector<Statement> statements;
 				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(assignment.value)});
 				TypedNameList newVariables;

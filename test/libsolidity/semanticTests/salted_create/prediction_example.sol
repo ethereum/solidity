@@ -26,4 +26,5 @@ contract C {
 // compileViaYul: also
 // ----
 // createDSalted(bytes32,uint256): 42, 64 ->
-// gas legacy: 102943
+// gas legacy: 78574
+// gas legacy code: 23600

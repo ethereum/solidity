@@ -216,7 +216,7 @@ import re, sys
 json = open("$stdout_path", "r").read()
 json = re.sub(r"{[^{}]*Warning: This is a pre-release compiler version[^{}]*},?", "", json)
 json = re.sub(r"\"errors\":\s*\[\s*\],?","\n" if json[1] == " " else "",json)       # Remove "errors" array if it's not empty
-json = re.sub("\n\\s*\n", "\n", json)                                               # Remove trailing whitespace
+json = re.sub(r"\n\s*\n", "\n", json)                                               # Remove trailing whitespace
 json = re.sub(r"},(\n{0,1})\n*(\s*(]|}))", r"}\1\2", json)                          # Remove trailing comma
 open("$stdout_path", "w").write(json)
 EOF
@@ -240,9 +240,9 @@ EOF
         sed -i.bak -e 's/\(\\"version\\":[ ]*\\"\)[^"\\]*\(\\"\)/\1<VERSION REMOVED>\2/' "$stdout_path"
         rm "$stdout_path.bak"
     else
-        sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+        sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./,+1d' "$stderr_path"
         sed -i.bak -e '/^Compiler run successful, no output requested\.$/d' "$stderr_path"
-        sed -i.bak -e '/^Warning (3805): This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
+        sed -i.bak -e '/^Warning (3805): This is a pre-release compiler version, please do not use it in production./,+1d' "$stderr_path"
         sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
         sed -i.bak -e 's/\(Unimplemented feature error.* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
@@ -318,14 +318,14 @@ EOF
 ## RUN
 
 printTask "Testing passing files that are not found..."
-test_solc_behaviour "file_not_found.sol" "" "" "" 1 "" "\"file_not_found.sol\" is not found." "" ""
+test_solc_behaviour "file_not_found.sol" "" "" "" 1 "" "Error: \"file_not_found.sol\" is not found." "" ""
 
 printTask "Testing passing files that are not files..."
-test_solc_behaviour "." "" "" "" 1 "" "\".\" is not a valid file." "" ""
+test_solc_behaviour "." "" "" "" 1 "" "Error: \".\" is not a valid file." "" ""
 
 printTask "Testing passing empty remappings..."
-test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "" "Invalid remapping: \"=/some/remapping/target\"." "" ""
-test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid remapping: \"ctx:=/some/remapping/target\"." "" ""
+test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "" "Error: Invalid remapping: \"=/some/remapping/target\"." "" ""
+test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Error: Invalid remapping: \"ctx:=/some/remapping/target\"." "" ""
 
 printTask "Running general commandline tests..."
 (

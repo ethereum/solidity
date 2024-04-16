@@ -1,5 +1,5 @@
 ==== Source: A ====
-contract C {
+contract D {
 }
 ==== Source: B ====
 import "A" as M;
@@ -7,7 +7,7 @@ import "A" as M;
 contract C {
     function f() public pure returns (bool) {
         bool flag;
-        ((flag = true) ? M : M).C;
+        ((flag = true) ? M : M).D;
         return flag;
     }
 }

@@ -53,8 +53,8 @@ BOOST_PP_REPEAT(32, USINGDECL, 0)
 	ostringstream stream;                                                      \
 	switch (_intWidth)                                                         \
 	{                                                                          \
-	BOOST_PP_REPEAT(32, CASEIMPL, sign)	                                       \
-	}	                                                                       \
+	BOOST_PP_REPEAT(32, CASEIMPL, sign)                                        \
+	}                                                                          \
 	return stream.str();
 
 using namespace std;
@@ -103,7 +103,7 @@ string ProtoConverter::getVarDecl(
 	// One level of indentation for state variable declarations
 	// Two levels of indentation for local variable declarations
 	return Whiskers(R"(
-	<?isLocalVar>	</isLocalVar><type><?qual> <qualifier></qual> <varName>;)"
+	<?isLocalVar> </isLocalVar><type><?qual> <qualifier></qual> <varName>;)"
 		)
 		("isLocalVar", !m_isStateVar)
 		("type", _type)

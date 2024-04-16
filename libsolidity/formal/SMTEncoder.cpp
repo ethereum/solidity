@@ -459,17 +459,7 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	// User-defined operators are essentially function calls.
 	if (*_op.annotation().userDefinedFunction)
-	{
-		// TODO: Implement user-defined operators properly.
-		m_unsupportedErrors.warning(
-			6156_error,
-			_op.location(),
-			"User-defined operators are not yet supported by SMTChecker. "s +
-			"This invocation of operator " + TokenTraits::friendlyName(_op.getOperator()) +
-			" has been ignored, which may lead to incorrect results."
-		);
 		return;
-	}
 
 	auto const* subExpr = innermostTuple(_op.subExpression());
 	auto type = _op.annotation().type;
@@ -561,17 +551,7 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 
 	// User-defined operators are essentially function calls.
 	if (*_op.annotation().userDefinedFunction)
-	{
-		// TODO: Implement user-defined operators properly.
-		m_unsupportedErrors.warning(
-			6756_error,
-			_op.location(),
-			"User-defined operators are not yet supported by SMTChecker. "s +
-			"This invocation of operator " + TokenTraits::friendlyName(_op.getOperator()) +
-			" has been ignored, which may lead to incorrect results."
-		);
 		return;
-	}
 
 	if (TokenTraits::isArithmeticOp(_op.getOperator()))
 		arithmeticOperation(_op);
@@ -670,6 +650,9 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::External:
 		if (publicGetter(_funCall.expression()))
 			visitPublicGetter(_funCall);
+		break;
+	case FunctionType::Kind::BytesConcat:
+		visitBytesConcat(_funCall);
 		break;
 	case FunctionType::Kind::ABIDecode:
 	case FunctionType::Kind::ABIEncode:
@@ -800,6 +783,33 @@ void SMTEncoder::visitRequire(FunctionCall const& _funCall)
 	addPathImpliedExpression(expr(*args.front()));
 }
 
+void SMTEncoder::visitBytesConcat(FunctionCall const& _funCall)
+{
+	auto const& args = _funCall.sortedArguments();
+
+	// bytes.concat call with no arguments returns an empty array
+	if (args.size() == 0)
+	{
+		defineExpr(_funCall, smt::zeroValue(TypeProvider::bytesMemory()));
+		return;
+	}
+
+	// bytes.concat with single argument of type bytes memory
+	if (args.size() == 1 && args.front()->annotation().type->category() == frontend::Type::Category::Array)
+	{
+		defineExpr(_funCall, expr(*args.front(), TypeProvider::bytesMemory()));
+		return;
+	}
+
+	auto const& [name, inTypes, outType] = state().bytesConcatFunctionTypes(&_funCall);
+	solAssert(inTypes.size() == args.size(), "");
+
+	auto symbFunction = state().bytesConcatFunction(&_funCall);
+	auto out = createSelectExpressionForFunction(symbFunction, args, inTypes, args.size());
+
+	defineExpr(_funCall, out);
+}
+
 void SMTEncoder::visitABIFunction(FunctionCall const& _funCall)
 {
 	auto symbFunction = state().abiFunction(&_funCall);
@@ -816,24 +826,8 @@ void SMTEncoder::visitABIFunction(FunctionCall const& _funCall)
 		defineExpr(_funCall, smt::zeroValue(TypeProvider::bytesMemory()));
 		return;
 	}
-	std::vector<smtutil::Expression> symbArgs;
-	for (unsigned i = 0; i < argsActualLength; ++i)
-		if (args.at(i))
-			symbArgs.emplace_back(expr(*args.at(i), inTypes.at(i)));
 
-	std::optional<smtutil::Expression> arg;
-	if (inTypes.size() == 1)
-		arg = expr(*args.at(0), inTypes.at(0));
-	else
-	{
-		auto inputSort = dynamic_cast<smtutil::ArraySort&>(*symbFunction.sort).domain;
-		arg = smtutil::Expression::tuple_constructor(
-			smtutil::Expression(std::make_shared<smtutil::SortSort>(inputSort), ""),
-			symbArgs
-		);
-	}
-
-	auto out = smtutil::Expression::select(symbFunction, *arg);
+	auto out = createSelectExpressionForFunction(symbFunction, args, inTypes, argsActualLength);
 	if (outTypes.size() == 1)
 		defineExpr(_funCall, out);
 	else
@@ -929,7 +923,6 @@ void SMTEncoder::visitObjectCreation(FunctionCall const& _funCall)
 
 	smtutil::Expression arraySize = expr(*args.front());
 	setSymbolicUnknownValue(arraySize, TypeProvider::uint256(), m_context);
-
 	auto symbArray = std::dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_funCall));
 	solAssert(symbArray, "");
 	smt::setSymbolicZeroValue(*symbArray, m_context);
@@ -3137,6 +3130,29 @@ std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> SMTEncoder::collectA
 	return ABIFunctions(_node).abiCalls;
 }
 
+std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> SMTEncoder::collectBytesConcatCalls(ASTNode const* _node)
+{
+	struct BytesConcatFunctions: public ASTConstVisitor
+	{
+		BytesConcatFunctions(ASTNode const* _node) { _node->accept(*this); }
+		void endVisit(FunctionCall const& _funCall)
+		{
+			if (*_funCall.annotation().kind == FunctionCallKind::FunctionCall)
+				switch (dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type).kind())
+				{
+				case FunctionType::Kind::BytesConcat:
+					bytesConcatCalls.insert(&_funCall);
+					break;
+				default: {}
+				}
+		}
+
+		std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> bytesConcatCalls;
+	};
+
+	return BytesConcatFunctions(_node).bytesConcatCalls;
+}
+
 std::set<SourceUnit const*, ASTNode::CompareByID> SMTEncoder::sourceDependencies(SourceUnit const& _source)
 {
 	std::set<SourceUnit const*, ASTNode::CompareByID> sources;
@@ -3146,47 +3162,42 @@ std::set<SourceUnit const*, ASTNode::CompareByID> SMTEncoder::sourceDependencies
 	return sources;
 }
 
-void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contextContract)
+void SMTEncoder::createReturnedExpressions(FunctionDefinition const* _funDef, Expression const& _callStackExpr)
 {
-	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), _contextContract);
-	if (!funDef)
+	if (!_funDef)
 		return;
 
-	auto const& returnParams = funDef->returnParameters();
+	auto const& returnParams = _funDef->returnParameters();
 	for (auto param: returnParams)
 		createVariable(*param);
 	auto returnValues = applyMap(returnParams, [this](auto const& param) -> std::optional<smtutil::Expression> {
 		solAssert(param && m_context.knownVariable(*param), "");
 		return currentValue(*param);
 	});
-	defineExpr(_funCall, returnValues);
+	defineExpr(_callStackExpr, returnValues);
 }
 
-std::vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract)
+std::vector<smtutil::Expression> SMTEncoder::symbolicArguments(
+	std::vector<ASTPointer<VariableDeclaration>> const& _funParameters,
+	std::vector<Expression const*> const& _arguments,
+	std::optional<Expression const*> _boundArgumentCall
+)
 {
-	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), _contextContract);
-	solAssert(funDef, "");
-
 	std::vector<smtutil::Expression> args;
-	Expression const* calledExpr = &_funCall.expression();
-	auto funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
-	solAssert(funType, "");
-
-	std::vector<ASTPointer<Expression const>> arguments = _funCall.sortedArguments();
-	auto functionParams = funDef->parameters();
 	unsigned firstParam = 0;
-	if (funType->hasBoundFirstArgument())
+	if (_boundArgumentCall)
 	{
-		calledExpr = innermostTuple(*calledExpr);
+		Expression const* calledExpr = innermostTuple(*_boundArgumentCall.value());
 		auto const& attachedFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 		solAssert(attachedFunction, "");
-		args.push_back(expr(attachedFunction->expression(), functionParams.front()->type()));
+		args.push_back(expr(attachedFunction->expression(), _funParameters.front()->type()));
 		firstParam = 1;
 	}
 
-	solAssert((arguments.size() + firstParam) == functionParams.size(), "");
-	for (unsigned i = 0; i < arguments.size(); ++i)
-		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
+	solAssert((_arguments.size() + firstParam) == _funParameters.size(), "");
+
+	for (unsigned i = 0; i < _arguments.size(); ++i)
+		args.push_back(expr(*_arguments.at(i), _funParameters.at(i + firstParam)->type()));
 
 	return args;
 }
@@ -3245,4 +3256,31 @@ void SMTEncoder::createFreeConstants(std::set<SourceUnit const*, ASTNode::Compar
 smt::SymbolicState& SMTEncoder::state()
 {
 	return m_context.state();
+}
+
+smtutil::Expression SMTEncoder::createSelectExpressionForFunction(
+	smtutil::Expression symbFunction,
+	std::vector<frontend::ASTPointer<frontend::Expression const>> const& args,
+	frontend::TypePointers const& inTypes,
+	unsigned long argsActualLength
+)
+{
+	solAssert(argsActualLength <= args.size() && inTypes.size() == argsActualLength);
+	if (inTypes.size() == 1)
+	{
+		smtutil::Expression arg = expr(*args.at(0), inTypes.at(0));
+		return smtutil::Expression::select(symbFunction, arg);
+	}
+
+	std::vector<smtutil::Expression> symbArgs;
+	for (unsigned i = 0; i < argsActualLength; ++i)
+		if (args.at(i))
+			symbArgs.emplace_back(expr(*args.at(i), inTypes.at(i)));
+
+	auto inputSort = dynamic_cast<smtutil::ArraySort&>(*symbFunction.sort).domain;
+	smtutil::Expression arg = smtutil::Expression::tuple_constructor(
+		smtutil::Expression(std::make_shared<smtutil::SortSort>(inputSort), ""),
+		symbArgs
+	);
+	return smtutil::Expression::select(symbFunction, arg);
 }

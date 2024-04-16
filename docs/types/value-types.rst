@@ -415,14 +415,6 @@ Members:
 .. note::
     Prior to version 0.8.0, ``byte`` used to be an alias for ``bytes1``.
 
-Dynamically-sized byte array
-----------------------------
-
-``bytes``:
-    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
-``string``:
-    Dynamically-sized UTF-8-encoded string, see :ref:`arrays`. Not a value-type!
-
 .. index:: address, ! literal;address
 
 .. _address_literals:
@@ -812,6 +804,12 @@ functions.
     The caller cannot pass its calldata directly to an external function and always ABI-encodes the arguments into memory.
     Marking the parameters as ``calldata`` only affects the implementation of the external function and is
     meaningless in a function pointer on the caller's side.
+
+.. warning::
+    Comparison of internal function pointers can have unexpected results in the legacy pipeline with the optimizer enabled,
+    as it can collapse identical functions into one, which will then lead to said function pointers comparing as equal instead of not.
+    Such comparisons are not advised, and will lead to the compiler issuing a warning, until the next breaking release (0.9.0),
+    when the warning will be upgraded to an error, thereby making such comparisons disallowed.
 
 Libraries are excluded because they require a ``delegatecall`` and use :ref:`a different ABI
 convention for their selectors <library-selectors>`.

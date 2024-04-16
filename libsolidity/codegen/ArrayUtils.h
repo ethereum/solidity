@@ -51,7 +51,7 @@ public:
 	/// place as required by the ABI encoding). Use CompilerUtils::convertType if you want real
 	/// memory copies of nested arrays.
 	/// Stack pre: memory_offset source_item
-	/// Stack post: memory_offest + length(padded)
+	/// Stack post: memory_offset + length(padded)
 	void copyArrayToMemory(ArrayType const& _sourceType, bool _padToWordBoundaries = true) const;
 	/// Clears the given dynamic or static array.
 	/// Stack pre: storage_ref storage_byte_offset

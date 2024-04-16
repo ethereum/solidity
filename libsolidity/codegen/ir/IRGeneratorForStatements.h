@@ -24,6 +24,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/ir/IRLValue.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
+#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <functional>
 
@@ -65,11 +66,13 @@ public:
 	IRGeneratorForStatements(
 		IRGenerationContext& _context,
 		YulUtilFunctions& _utils,
+		OptimiserSettings& _optimiserSettings,
 		std::function<std::string()> _placeholderCallback = {}
 	):
 		IRGeneratorForStatementsBase(_context),
 		m_placeholderCallback(std::move(_placeholderCallback)),
-		m_utils(_utils)
+		m_utils(_utils),
+		m_optimiserSettings(_optimiserSettings)
 	{}
 
 	std::string code() const override;
@@ -235,7 +238,8 @@ private:
 		Expression const* _conditionExpression,
 		Statement const*  _initExpression = nullptr,
 		ExpressionStatement const* _loopExpression = nullptr,
-		bool _isDoWhile = false
+		bool _isDoWhile = false,
+		bool _isSimpleCounterLoop = false
 	);
 
 	static Type const& type(Expression const& _expression);
@@ -245,6 +249,7 @@ private:
 	std::function<std::string()> m_placeholderCallback;
 	YulUtilFunctions& m_utils;
 	std::optional<IRLValue> m_currentLValue;
+	OptimiserSettings m_optimiserSettings;
 };
 
 }

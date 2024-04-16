@@ -83,7 +83,7 @@ std::optional<DebugInfoSelection> DebugInfoSelection::fromComponents(
 	return selection;
 }
 
-bool DebugInfoSelection::enable(std::string _component)
+bool DebugInfoSelection::enable(std::string const& _component)
 {
 	auto memberIt = componentMap().find(boost::trim_copy(_component));
 	if (memberIt == componentMap().end())

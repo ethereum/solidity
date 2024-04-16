@@ -37,8 +37,7 @@ function test_fn { yarn test; }
 function gp2_test
 {
     local repo="https://github.com/cowprotocol/contracts.git"
-    local ref_type=branch
-    local ref=main
+    local ref="<latest-release>"
     local config_file="hardhat.config.ts"
     local config_var="config"
 
@@ -58,24 +57,27 @@ function gp2_test
     print_presets_or_exit "$SELECTED_PRESETS"
 
     setup_solc "$DIR" "$BINARY_TYPE" "$BINARY_PATH"
-    download_project "$repo" "$ref_type" "$ref" "$DIR"
+    download_project "$repo" "$ref" "$DIR"
     [[ $BINARY_TYPE == native ]] && replace_global_solc "$BINARY_PATH"
 
-    neutralize_package_lock
     neutralize_package_json_hooks
     name_hardhat_default_export "$config_file" "$config_var"
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var"
     force_hardhat_unlimited_contract_size "$config_file" "$config_var"
     yarn
+    # We require to install hardhat 2.20.0 due to support for evm version cancun, otherwise we get the following error:
+    # Invalid value {"blockGasLimit":12500000,"hardfork":"cancun","allowUnlimitedContractSize":true} for HardhatConfig.networks.hardhat - Expected a value of type HardhatNetworkConfig.
+    # See: https://github.com/NomicFoundation/hardhat/issues/4176
+    yarn add hardhat@2.20.0
 
-    # Workaround for error caused by the last release of hardhat-waffle@2.0.6 that bumps ethereum-waffle
-    # to version 4.0.10 and breaks gp2 build with the following error:
-    #
-    #  Cannot find module 'ethereum-waffle/dist/cjs/src/deployContract'
-    #
-    # See: https://github.com/NomicFoundation/hardhat-waffle/commit/83ee9cb36ee59d0bedacbbd00043f030af104ad0
-    yarn add '@nomiclabs/hardhat-waffle@2.0.5'
+    # Ignore bench directory which fails to compile with current hardhat and ethers versions.
+    # bench/trace/gas.ts:123:19 - error TS2339: Property 'equals' does not exist on type 'Uint8Array'.
+    jq '. + {"exclude": ["bench"]}' tsconfig.json > temp.json
+    mv temp.json tsconfig.json
+
+    # Remove the config section that requires an Etherscan key. We don't need it just to run tests.
+    sed -i '/^  etherscan: {$/,/^  },$/d' hardhat.config.ts
 
     # Some dependencies come with pre-built artifacts. We want to build from scratch.
     rm -r node_modules/@gnosis.pm/safe-contracts/build/
@@ -104,7 +106,6 @@ function gp2_test
     sed -i 's|it\(("should revert when encoding invalid flags"\)|it.skip\1|g' test/GPv2Trade.test.ts
 
     replace_version_pragmas
-
     for preset in $SELECTED_PRESETS; do
         hardhat_run_test "$config_file" "$preset" "${compile_only_presets[*]}" compile_fn test_fn "$config_var"
         store_benchmark_report hardhat gp2 "$repo" "$preset"

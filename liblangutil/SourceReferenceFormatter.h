@@ -118,14 +118,36 @@ public:
 
 	static std::string formatErrorInformation(Error const& _error, CharStream const& _charStream);
 
+	static void printPrimaryMessage(
+		std::ostream& _stream,
+		std::string _message,
+		std::variant<Error::Type, Error::Severity> _typeOrSeverity,
+		std::optional<ErrorId> _errorId = std::nullopt,
+		bool _colored = false,
+		bool _withErrorIds = false
+	);
+
+	/// The default text color for printing error messages of a given severity in the terminal.
+	/// Assumes a dark background color.
+	static char const* errorTextColor(Error::Severity _severity);
+
+	/// The default background color for highlighting source fragments corresponding to an error
+	/// of a given severity in the terminal. Assumes a light text color.
+	/// @note This is *not* meant to be used for the same text in combination with @a errorTextColor().
+	///       It's an alternative way to highlight it, while preserving the original text color.
+	static char const* errorHighlightColor(Error::Severity _severity);
+
 private:
 	util::AnsiColorized normalColored() const;
 	util::AnsiColorized frameColored() const;
-	util::AnsiColorized errorColored(langutil::Error::Severity _severity) const;
-	util::AnsiColorized messageColored() const;
+	util::AnsiColorized errorColored(Error::Severity _severity) const { return errorColored(m_stream, m_colored, _severity); }
+	util::AnsiColorized messageColored() const { return messageColored(m_stream, m_colored); }
 	util::AnsiColorized secondaryColored() const;
 	util::AnsiColorized highlightColored() const;
 	util::AnsiColorized diagColored() const;
+
+	static util::AnsiColorized errorColored(std::ostream& _stream, bool _colored, langutil::Error::Severity _severity);
+	static util::AnsiColorized messageColored(std::ostream& _stream, bool _colored);
 
 private:
 	std::ostream& m_stream;

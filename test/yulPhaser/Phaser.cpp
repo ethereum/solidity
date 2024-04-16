@@ -32,7 +32,6 @@
 #include <algorithm>
 #include <fstream>
 
-using namespace std;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
@@ -69,15 +68,15 @@ protected:
 class FixtureWithPrograms
 {
 protected:
-	vector<CharStream> m_sourceStreams = {
+	std::vector<CharStream> m_sourceStreams = {
 		CharStream("{}", ""),
 		CharStream("{{}}", ""),
 		CharStream("{{{}}}", ""),
 	};
-	vector<Program> m_programs = {
-		get<Program>(Program::load(m_sourceStreams[0])),
-		get<Program>(Program::load(m_sourceStreams[1])),
-		get<Program>(Program::load(m_sourceStreams[2])),
+	std::vector<Program> m_programs = {
+		std::get<Program>(Program::load(m_sourceStreams[0])),
+		std::get<Program>(Program::load(m_sourceStreams[1])),
+		std::get<Program>(Program::load(m_sourceStreams[2])),
 	};
 };
 
@@ -96,7 +95,7 @@ protected:
 class PoulationFactoryFixture
 {
 protected:
-	shared_ptr<FitnessMetric> m_fitnessMetric = make_shared<ChromosomeLengthMetric>();
+	std::shared_ptr<FitnessMetric> m_fitnessMetric = std::make_shared<ChromosomeLengthMetric>();
 	PopulationFactory::Options m_options = {
 		/* minChromosomeLength = */ 0,
 		/* maxChromosomeLength = */ 0,
@@ -113,7 +112,7 @@ BOOST_AUTO_TEST_SUITE(GeneticAlgorithmFactoryTest)
 BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_options_to_it, GeneticAlgorithmFactoryFixture)
 {
 	m_options.algorithm = Algorithm::Random;
-	unique_ptr<GeneticAlgorithm> algorithm1 = GeneticAlgorithmFactory::build(m_options, 100);
+	std::unique_ptr<GeneticAlgorithm> algorithm1 = GeneticAlgorithmFactory::build(m_options, 100);
 	BOOST_REQUIRE(algorithm1 != nullptr);
 
 	auto randomAlgorithm = dynamic_cast<RandomAlgorithm*>(algorithm1.get());
@@ -123,7 +122,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 	BOOST_TEST(randomAlgorithm->options().maxChromosomeLength == m_options.maxChromosomeLength);
 
 	m_options.algorithm = Algorithm::GEWEP;
-	unique_ptr<GeneticAlgorithm> algorithm2 = GeneticAlgorithmFactory::build(m_options, 100);
+	std::unique_ptr<GeneticAlgorithm> algorithm2 = GeneticAlgorithmFactory::build(m_options, 100);
 	BOOST_REQUIRE(algorithm2 != nullptr);
 
 	auto gewepAlgorithm = dynamic_cast<GenerationalElitistWithExclusivePools*>(algorithm2.get());
@@ -139,7 +138,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 	BOOST_TEST(gewepAlgorithm->options().percentGenesToAddOrDelete == m_options.gewepGenesToAddOrDelete.value());
 
 	m_options.algorithm = Algorithm::Classic;
-	unique_ptr<GeneticAlgorithm> algorithm3 = GeneticAlgorithmFactory::build(m_options, 100);
+	std::unique_ptr<GeneticAlgorithm> algorithm3 = GeneticAlgorithmFactory::build(m_options, 100);
 	BOOST_REQUIRE(algorithm3 != nullptr);
 
 	auto classicAlgorithm = dynamic_cast<ClassicGeneticAlgorithm*>(algorithm3.get());
@@ -156,8 +155,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 BOOST_FIXTURE_TEST_CASE(build_should_set_random_algorithm_elite_pool_size_based_on_population_size_if_not_specified, GeneticAlgorithmFactoryFixture)
 {
 	m_options.algorithm = Algorithm::Random;
-	m_options.randomElitePoolSize = nullopt;
-	unique_ptr<GeneticAlgorithm> algorithm = GeneticAlgorithmFactory::build(m_options, 100);
+	m_options.randomElitePoolSize = std::nullopt;
+	std::unique_ptr<GeneticAlgorithm> algorithm = GeneticAlgorithmFactory::build(m_options, 100);
 	BOOST_REQUIRE(algorithm != nullptr);
 
 	auto randomAlgorithm = dynamic_cast<RandomAlgorithm*>(algorithm.get());
@@ -168,11 +167,11 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_random_algorithm_elite_pool_size_based_
 BOOST_FIXTURE_TEST_CASE(build_should_set_gewep_mutation_percentages_based_on_maximum_chromosome_length_if_not_specified, GeneticAlgorithmFactoryFixture)
 {
 	m_options.algorithm = Algorithm::GEWEP;
-	m_options.gewepGenesToRandomise = nullopt;
-	m_options.gewepGenesToAddOrDelete = nullopt;
+	m_options.gewepGenesToRandomise = std::nullopt;
+	m_options.gewepGenesToAddOrDelete = std::nullopt;
 	m_options.maxChromosomeLength = 125;
 
-	unique_ptr<GeneticAlgorithm> algorithm = GeneticAlgorithmFactory::build(m_options, 100);
+	std::unique_ptr<GeneticAlgorithm> algorithm = GeneticAlgorithmFactory::build(m_options, 100);
 	BOOST_REQUIRE(algorithm != nullptr);
 
 	auto gewepAlgorithm = dynamic_cast<GenerationalElitistWithExclusivePools*>(algorithm.get());
@@ -188,7 +187,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMet
 {
 	m_options.metric = MetricChoice::RelativeCodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Sum;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
+	std::unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto sumMetric = dynamic_cast<FitnessMetricSum*>(metric.get());
@@ -206,7 +205,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, Fitn
 	m_options.metric = MetricChoice::CodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.chromosomeRepetitions = 5;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
+	std::unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
@@ -224,7 +223,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFac
 	m_options.metric = MetricChoice::RelativeCodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.relativeMetricScale = 10;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
+	std::unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
@@ -239,10 +238,10 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFac
 
 BOOST_FIXTURE_TEST_CASE(build_should_create_metric_for_each_input_program, FitnessMetricFactoryFixture)
 {
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(
+	std::unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(
 		m_options,
 		m_programs,
-		vector<shared_ptr<ProgramCache>>(m_programs.size(), nullptr),
+		std::vector<std::shared_ptr<ProgramCache>>(m_programs.size(), nullptr),
 		m_weights
 	);
 	BOOST_REQUIRE(metric != nullptr);
@@ -255,14 +254,14 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_metric_for_each_input_program, Fitne
 BOOST_FIXTURE_TEST_CASE(build_should_pass_program_caches_to_metrics, FitnessMetricFactoryFixture)
 {
 	assert(m_programs.size() == 3);
-	vector<shared_ptr<ProgramCache>> caches = {
-		make_shared<ProgramCache>(m_programs[0]),
-		make_shared<ProgramCache>(m_programs[1]),
-		make_shared<ProgramCache>(m_programs[2]),
+	std::vector<std::shared_ptr<ProgramCache>> caches = {
+		std::make_shared<ProgramCache>(m_programs[0]),
+		std::make_shared<ProgramCache>(m_programs[1]),
+		std::make_shared<ProgramCache>(m_programs[2]),
 	};
 
 	m_options.metric = MetricChoice::RelativeCodeSize;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_programs, caches, m_weights);
+	std::unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_programs, caches, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto combinedMetric = dynamic_cast<FitnessMetricCombination*>(metric.get());
@@ -287,7 +286,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_an_empty_population_if_no_specific_o
 	m_options.populationFromFile = {};
 	BOOST_TEST(
 		PopulationFactory::build(m_options, m_fitnessMetric) ==
-		Population(m_fitnessMetric, vector<Chromosome>{})
+		Population(m_fitnessMetric, std::vector<Chromosome>{})
 	);
 }
 
@@ -318,7 +317,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_random_population_option, Poulation
 
 BOOST_FIXTURE_TEST_CASE(build_should_respect_population_from_file_option, PoulationFactoryFixture)
 {
-	map<string, vector<string>> fileContent = {
+	std::map<std::string, std::vector<std::string>> fileContent = {
 		{"a.txt", {"a", "fff", "", "jxccLTa"}},
 		{"b.txt", {}},
 		{"c.txt", {""}},
@@ -328,9 +327,9 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_population_from_file_option, Poulat
 	TemporaryDirectory tempDir;
 	for (auto const& [fileName, chromosomes]: fileContent)
 	{
-		ofstream tmpFile((tempDir.path() / fileName).string());
+		std::ofstream tmpFile((tempDir.path() / fileName).string());
 		for (auto const& chromosome: chromosomes)
-			tmpFile << chromosome << endl;
+			tmpFile << chromosome << std::endl;
 
 		m_options.populationFromFile.push_back((tempDir.path() / fileName).string());
 	}
@@ -361,8 +360,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_combine_populations_from_all_sources, Poula
 {
 	TemporaryDirectory tempDir;
 	{
-		ofstream tmpFile((tempDir.path() / "population.txt").string());
-		tmpFile << "axc" << endl << "fcL" << endl;
+		std::ofstream tmpFile((tempDir.path() / "population.txt").string());
+		tmpFile << "axc" << std::endl << "fcL" << std::endl;
 	}
 
 	m_options.population = {"axc", "fcL"};
@@ -388,7 +387,7 @@ BOOST_AUTO_TEST_SUITE(ProgramCacheFactoryTest)
 BOOST_FIXTURE_TEST_CASE(build_should_create_cache_for_each_input_program_if_cache_enabled, FixtureWithPrograms)
 {
 	ProgramCacheFactory::Options options{/* programCacheEnabled = */ true};
-	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
+	std::vector<std::shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
 	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
 
 	BOOST_TEST(caches.size() == m_programs.size());
@@ -402,7 +401,7 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_cache_for_each_input_program_if_cach
 BOOST_FIXTURE_TEST_CASE(build_should_return_nullptr_for_each_input_program_if_cache_disabled, FixtureWithPrograms)
 {
 	ProgramCacheFactory::Options options{/* programCacheEnabled = */ false};
-	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
+	std::vector<std::shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
 	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
 
 	BOOST_TEST(caches.size() == m_programs.size());
@@ -416,7 +415,7 @@ BOOST_AUTO_TEST_SUITE(ProgramFactoryTest)
 BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 {
 	TemporaryDirectory tempDir;
-	vector<string> sources{"{}", "{{}}", "{{{}}}"};
+	std::vector<std::string> sources{"{}", "{{}}", "{{{}}}"};
 	ProgramFactory::Options options{
 		/* inputFiles = */ {
 			(tempDir.path() / "program1.yul").string(),
@@ -428,17 +427,17 @@ BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 
 	for (size_t i = 0; i < sources.size(); ++i)
 	{
-		ofstream tmpFile(options.inputFiles[i]);
-		tmpFile << sources[i] << endl;
+		std::ofstream tmpFile(options.inputFiles[i]);
+		tmpFile << sources[i] << std::endl;
 	}
 
-	vector<Program> programs = ProgramFactory::build(options);
+	std::vector<Program> programs = ProgramFactory::build(options);
 
 	BOOST_TEST(programs.size() == sources.size());
 	for (size_t i = 0; i < sources.size(); ++i)
 	{
 		CharStream sourceStream(sources[i], options.inputFiles[i]);
-		BOOST_TEST(toString(programs[i]) == toString(get<Program>(Program::load(sourceStream))));
+		BOOST_TEST(toString(programs[i]) == toString(std::get<Program>(Program::load(sourceStream))));
 	}
 }
 
@@ -451,17 +450,17 @@ BOOST_AUTO_TEST_CASE(build_should_apply_prefix)
 	};
 
 	CharStream nestedSource("{{{let x:= 1}}}", "");
-	Program nestedProgram = get<Program>(Program::load(nestedSource));
-	Program flatProgram = get<Program>(Program::load(nestedSource));
+	Program nestedProgram = std::get<Program>(Program::load(nestedSource));
+	Program flatProgram = std::get<Program>(Program::load(nestedSource));
 	flatProgram.optimise(Chromosome::genesToSteps("f"));
 	assert(toString(nestedProgram) != toString(flatProgram));
 
 	{
-		ofstream tmpFile(options.inputFiles[0]);
-		tmpFile << nestedSource.source() << endl;
+		std::ofstream tmpFile(options.inputFiles[0]);
+		tmpFile << nestedSource.source() << std::endl;
 	}
 
-	vector<Program> programs = ProgramFactory::build(options);
+	std::vector<Program> programs = ProgramFactory::build(options);
 
 	BOOST_TEST(programs.size() == 1);
 	BOOST_TEST(toString(programs[0]) == toString(flatProgram));

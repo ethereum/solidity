@@ -119,7 +119,7 @@ struct OpPop: SimplePeepholeOptimizerMethod<OpPop>
 			if (instructionInfo(instr, langutil::EVMVersion()).ret == 1 && !instructionInfo(instr, langutil::EVMVersion()).sideEffects)
 			{
 				for (int j = 0; j < instructionInfo(instr, langutil::EVMVersion()).args; j++)
-					*_out = {Instruction::POP, _op.location()};
+					*_out = {Instruction::POP, _op.debugData()};
 				return true;
 			}
 		}
@@ -142,13 +142,13 @@ struct OpStop: SimplePeepholeOptimizerMethod<OpStop>
 				Instruction instr = _op.instruction();
 				if (!instructionInfo(instr, langutil::EVMVersion()).sideEffects)
 				{
-					*_out = {Instruction::STOP, _op.location()};
+					*_out = {Instruction::STOP, _op.debugData()};
 					return true;
 				}
 			}
 			else if (_op.type() == Push)
 			{
-				*_out = {Instruction::STOP, _op.location()};
+				*_out = {Instruction::STOP, _op.debugData()};
 				return true;
 			}
 		}
@@ -208,7 +208,7 @@ struct DoublePush: SimplePeepholeOptimizerMethod<DoublePush>
 		if (_push1.type() == Push && _push2.type() == Push && _push1.data() == _push2.data())
 		{
 			*_out = _push1;
-			*_out = {Instruction::DUP1, _push2.location()};
+			*_out = {Instruction::DUP1, _push2.debugData()};
 			return true;
 		}
 		else
@@ -334,7 +334,7 @@ struct EqIsZeroJumpI: SimplePeepholeOptimizerMethod<EqIsZeroJumpI>
 			_jumpi == Instruction::JUMPI
 		)
 		{
-			*_out = AssemblyItem(Instruction::SUB, _eq.location());
+			*_out = AssemblyItem(Instruction::SUB, _eq.debugData());
 			*_out = _pushTag;
 			*_out = _jumpi;
 			return true;
@@ -365,7 +365,7 @@ struct DoubleJump: SimplePeepholeOptimizerMethod<DoubleJump>
 			_pushTag1.data() == _tag1.data()
 		)
 		{
-			*_out = AssemblyItem(Instruction::ISZERO, _jumpi.location());
+			*_out = AssemblyItem(Instruction::ISZERO, _jumpi.debugData());
 			*_out = _pushTag2;
 			*_out = _jumpi;
 			*_out = _tag1;
@@ -393,7 +393,7 @@ struct JumpToNext: SimplePeepholeOptimizerMethod<JumpToNext>
 		)
 		{
 			if (_jump == Instruction::JUMPI)
-				*_out = AssemblyItem(Instruction::POP, _jump.location());
+				*_out = AssemblyItem(Instruction::POP, _jump.debugData());
 			*_out = _tag;
 			return true;
 		}

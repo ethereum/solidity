@@ -2,8 +2,7 @@
 
 ### Requirements
  - [ ] GitHub account with access to [solidity](https://github.com/ethereum/solidity), [solc-js](https://github.com/ethereum/solc-js),
-       [solc-bin](https://github.com/ethereum/solc-bin), [homebrew-ethereum](https://github.com/ethereum/homebrew-ethereum),
-       [solidity-website](https://github.com/ethereum/solidity-website).
+       [solc-bin](https://github.com/ethereum/solc-bin), [solidity-website](https://github.com/ethereum/solidity-website).
  - [ ] DockerHub account with push rights to the [``solc`` image](https://hub.docker.com/r/ethereum/solc).
  - [ ] Launchpad (Ubuntu One) account with a membership in the ["Ethereum" team](https://launchpad.net/~ethereum) and
        a gnupg key for your email in the ``ethereum.org`` domain (has to be version 1, gpg2 won't work).
@@ -21,7 +20,6 @@ At least a day before the release:
  - [ ] Rerun CI on the top commits of main branches in all repositories that do not have daily activity by creating a test branch or PR:
       - [ ] ``solc-js``
       - [ ] ``solc-bin`` (make sure the bytecode comparison check did run)
-      - [ ] ``homebrew-ethereum``
  - [ ] (Optional) Create a prerelease in our Ubuntu PPA by following the steps in the PPA section below on ``develop`` rather than on a tag.
        This is recommended especially when dealing with PPA for the first time, when we add a new Ubuntu version or when the PPA scripts were modified in this release cycle.
  - [ ] Verify that the release tarball of ``solc-js`` works.
@@ -31,6 +29,7 @@ At least a day before the release:
 At least a day before the release:
  - [ ] Create a draft PR to sort the changelog.
  - [ ] Create draft PRs to bump version in ``solidity`` and ``solc-js``.
+       **Note**: The ``solc-js`` PR won't pass CI checks yet because it depends on the soljson binary from ``solc-bin``.
  - [ ] Create a draft of the release on github.
  - [ ] Create a draft PR to update soliditylang.org.
  - [ ] Create drafts of blog posts.
@@ -51,13 +50,14 @@ At least a day before the release:
 ### Create the Release
  - [ ] Create a [release on GitHub](https://github.com/ethereum/solidity/releases/new).
        Set the target to the ``develop`` branch and the tag to the new version, e.g. ``v0.8.5``.
-       Include the following warning: ``**The release is still in progress and the binaries may not yet be available from all sources.**``.
+       Include the following warning: ``**The release is still in progress. You may see broken links and binaries may not yet be available from all sources.**``.
        Do not publish it yet - click the ``Save draft`` button instead.
  - [ ] Thank voluntary contributors in the GitHub release notes.
        Use ``scripts/list_contributors.sh v<previous version>`` to get initial list of names.
        Remove different variants of the same name manually before using the output.
  - [ ] Check that all tests on the latest commit in ``develop`` are green.
  - [ ] Click the ``Publish release`` button on the release page, creating the tag.
+       **Important: Must not be done before all the PRs, including changelog cleanup and date, are merged.**
  - [ ] Wait for the CI runs on the tag itself.
 
 ### Upload Release Artifacts and Publish Binaries
@@ -68,12 +68,12 @@ At least a day before the release:
  - [ ] Take the ``github-binaries.tar`` tarball from ``c_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to the release page.
        Make sure it contains four binaries: ``solc-windows.exe``, ``solc-macos``, ``solc-static-linux`` and ``soljson.js``.
  - [ ] Take the ``solc-bin-binaries.tar`` tarball from ``c_release_binaries`` run of the tagged commit in circle-ci and add all binaries from it to solc-bin.
+ - [ ] Run ``npm install`` if you've got a clean checkout of the solc-bin repo.
  - [ ] Run ``npm run update -- --reuse-hashes`` in ``solc-bin`` and verify that the script has updated ``list.js``, ``list.txt`` and ``list.json`` files correctly and that symlinks to the new release have been added in ``solc-bin/wasm/`` and ``solc-bin/emscripten-wasm32/``.
  - [ ] Create a pull request in solc-bin and merge.
 
 ### Homebrew and MacOS
  - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in the [``solidity`` formula in Homebrew core repository](https://github.com/Homebrew/homebrew-core/blob/master/Formula/solidity.rb).
- - [ ] Update the version and the hash (``sha256sum solidity_$VERSION.tar.gz``) in [our custom ``solidity`` Homebrew formula](https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb).
 
 ### Docker
  - [ ] Run ``./scripts/docker_deploy_manual.sh v$VERSION``.
@@ -96,9 +96,11 @@ At least a day before the release:
 ### Release solc-js
  - [ ] Wait until solc-bin was properly deployed. You can test this via remix - a test run through remix is advisable anyway.
  - [ ] Increment the version number, create a pull request for that, merge it after tests succeeded.
- - [ ] Run ``npm run build:tarball`` in the updated ``solc-js`` repository to create ``solc-<version>.tgz``. Inspect the tarball to ensure that it contains an up to date compiler binary.
- - [ ] Run ``npm run publish:tarball`` to publish the newly created tarball.
  - [ ] Create a tag using ``git tag --annotate v$VERSION`` and push it with ``git push --tags``.
+ - [ ] Wait for the CI runs on the tag itself.
+ - [ ] Take the ``solc-x.y.z.tgz`` artifact from ``build-package`` run on the tagged commit in circle-ci.
+       Inspect the tarball to ensure that it contains an up-to-date compiler binary (``soljson.js``).
+ - [ ] Run ``npm publish solc-x.y.z.tgz`` to publish the newly created tarball.
 
 ### Post-release
  - [ ] Make sure the documentation for the new release has been published successfully.

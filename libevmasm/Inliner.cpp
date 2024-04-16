@@ -44,7 +44,7 @@ using namespace solidity::evmasm;
 
 namespace
 {
-/// @returns an estimation of the runtime gas cost of the AsssemblyItems in @a _itemRange.
+/// @returns an estimation of the runtime gas cost of the AssemblyItems in @a _itemRange.
 template<typename RangeType>
 u256 executionCost(RangeType const& _itemRange, langutil::EVMVersion _evmVersion)
 {

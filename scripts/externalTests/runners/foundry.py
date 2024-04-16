@@ -69,8 +69,7 @@ class FoundryRunner(BaseRunner):
             yul = {yul}
         """).format(**profile_fields)
 
-    @BaseRunner.enter_test_dir
-    def configure(self):
+    def setup_presets_profiles(self):
         """Configure forge tests profiles"""
 
         profiles = []
@@ -93,6 +92,10 @@ class FoundryRunner(BaseRunner):
             for profile in profiles:
                 f.write(profile)
 
+    @BaseRunner.enter_test_dir
+    def configure(self):
+        """Install project dependencies"""
+        self.setup_presets_profiles()
         run_forge_command("forge install", self.env)
 
     @BaseRunner.enter_test_dir

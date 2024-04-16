@@ -127,7 +127,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 		return 1 + std::max<size_t>(1, numberEncodingSize(data()));
 	case PushSubSize:
 	case PushProgramSize:
-		return 1 + 4;		// worst case: a 16MB program
+		return 1 + 4; // worst case: a 16MB program
 	case PushTag:
 	case PushData:
 	case PushSub:
@@ -245,6 +245,18 @@ std::string AssemblyItem::getJumpTypeAsString() const
 	default:
 		return "";
 	}
+}
+
+std::optional<AssemblyItem::JumpType> AssemblyItem::parseJumpType(std::string const& _jumpType)
+{
+	if (_jumpType == "[in]")
+		return JumpType::IntoFunction;
+	else if (_jumpType == "[out]")
+		return JumpType::OutOfFunction;
+	else if (_jumpType.empty())
+		return JumpType::Ordinary;
+
+	return std::nullopt;
 }
 
 std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const

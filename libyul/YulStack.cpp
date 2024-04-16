@@ -34,12 +34,14 @@
 #include <libyul/optimiser/Suite.h>
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
+#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <boost/algorithm/string.hpp>
 
 #include <optional>
 
 using namespace solidity;
+using namespace solidity::frontend;
 using namespace solidity::yul;
 using namespace solidity::langutil;
 
@@ -164,14 +166,39 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
 		meter = std::make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
 
+	auto [optimizeStackAllocation, yulOptimiserSteps, yulOptimiserCleanupSteps] = [&]() -> std::tuple<bool, std::string, std::string>
+	{
+		if (!m_optimiserSettings.runYulOptimiser)
+		{
+			// Yul optimizer disabled, but empty sequence (:) explicitly provided
+			if (OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps))
+				return std::make_tuple(true, "", "");
+			// Yul optimizer disabled, and no sequence explicitly provided (assumes default sequence)
+			else
+			{
+				yulAssert(
+					m_optimiserSettings.yulOptimiserSteps == OptimiserSettings::DefaultYulOptimiserSteps &&
+					m_optimiserSettings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps
+				);
+				return std::make_tuple(true, "u", "");
+			}
+
+		}
+		return std::make_tuple(
+			m_optimiserSettings.optimizeStackAllocation,
+			m_optimiserSettings.yulOptimiserSteps,
+			m_optimiserSettings.yulOptimiserCleanupSteps
+		);
+	}();
+
 	OptimiserSuite::run(
 		dialect,
 		meter.get(),
 		_object,
 		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
-		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.optimizeStackAllocation : true,
-		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.yulOptimiserSteps : "u",
-		m_optimiserSettings.runYulOptimiser ? m_optimiserSettings.yulOptimiserCleanupSteps : "",
+		optimizeStackAllocation,
+		yulOptimiserSteps,
+		yulOptimiserCleanupSteps,
 		_isCreation ? std::nullopt : std::make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
 	);

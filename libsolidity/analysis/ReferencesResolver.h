@@ -85,6 +85,7 @@ private:
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(Return const& _return) override;
 	bool visit(UsingForDirective const& _usingFor) override;
+	bool visit(BinaryOperation const& _binaryOperation) override;
 
 	void operator()(yul::FunctionDefinition const& _function) override;
 	void operator()(yul::Identifier const& _identifier) override;
@@ -98,12 +99,13 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
 	langutil::EVMVersion m_evmVersion;
-	/// Stack of return parameters.
-	std::vector<ParameterList const*> m_returnParameters;
+	/// Stack of function definitions.
+	std::vector<FunctionDefinition const*> m_functionDefinitions;
 	bool const m_resolveInsideCode;
 
 	InlineAssemblyAnnotation* m_yulAnnotation = nullptr;
 	bool m_yulInsideFunction = false;
+	bool m_typeContext = false;
 };
 
 }

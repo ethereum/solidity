@@ -25,9 +25,6 @@ Integrated (Ethereum) Development Environments
     * `Dapp <https://dapp.tools/>`_
         Tool for building, testing and deploying smart contracts from the command-line.
 
-    * `Embark <https://framework.embarklabs.io/>`_
-        Developer platform for building and deploying decentralized applications.
-
     * `Foundry <https://github.com/foundry-rs/foundry>`_
         Fast, portable and modular toolkit for Ethereum application development written in Rust.
 
@@ -113,7 +110,7 @@ Solidity Tools
 * `leafleth <https://github.com/clemlak/leafleth>`_
     A documentation generator for Solidity smart-contracts.
 
-* `Scaffold-ETH <https://github.com/scaffold-eth/scaffold-eth>`_
+* `Scaffold-ETH 2 <https://github.com/scaffold-eth/scaffold-eth-2>`_
     Forkable Ethereum development stack focused on fast product iterations.
 
 * `sol2uml <https://www.npmjs.com/package/sol2uml>`_

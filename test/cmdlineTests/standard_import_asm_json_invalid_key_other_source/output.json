@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Invalid input source specified. Expected exactly one object, named 'assemblyJson', inside $.sources.A",
+            "message": "Invalid input source specified. Expected exactly one object, named 'assemblyJson', inside $.sources.A",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

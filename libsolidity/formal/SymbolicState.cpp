@@ -268,16 +268,19 @@ void SymbolicState::prepareForSourceUnit(SourceUnit const& _source, bool _storag
 	auto allSources = _source.referencedSourceUnits(true);
 	allSources.insert(&_source);
 	std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> abiCalls;
+	std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> bytesConcatCalls;
 	std::set<ContractDefinition const*, ASTCompareByID<ContractDefinition>> contracts;
 	for (auto const& source: allSources)
 	{
 		abiCalls += SMTEncoder::collectABICalls(source);
+		bytesConcatCalls += SMTEncoder::collectBytesConcatCalls(source);
 		for (auto node: source->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
 				contracts.insert(contract);
 	}
 	buildState(contracts, _storage);
 	buildABIFunctions(abiCalls);
+	buildBytesConcatFunctions(bytesConcatCalls);
 }
 
 /// Private helpers.
@@ -355,6 +358,80 @@ void SymbolicState::buildState(std::set<ContractDefinition const*, ASTCompareByI
 	);
 }
 
+void SymbolicState::buildBytesConcatFunctions(std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> const& _bytesConcatCalls)
+{
+	std::map<std::string, SortPointer> functions;
+
+	for (auto const* funCall: _bytesConcatCalls)
+	{
+		auto t = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type);
+		solAssert(t->kind() == FunctionType::Kind::BytesConcat, "Expected bytes.concat function");
+
+		auto const& args = funCall->sortedArguments();
+
+		auto argTypes = [](auto const& _args) {
+			return util::applyMap(_args, [](auto arg) { return arg->annotation().type; });
+		};
+
+		// bytes.concat : (bytes/literal/fixed bytes, ... ) -> bytes
+		std::vector<frontend::Type const*> inTypes = argTypes(args);
+
+		auto replaceUserDefinedValueTypes = [](auto& _types) {
+			for (auto& t: _types)
+				if (auto userType = dynamic_cast<UserDefinedValueType const*>(t))
+					t = &userType->underlyingType();
+		};
+		auto replaceStringLiteralTypes = [](auto& _types) {
+			for (auto& t: _types)
+				if (t->category() == frontend::Type::Category::StringLiteral)
+					t = TypeProvider::bytesMemory();
+		};
+		replaceUserDefinedValueTypes(inTypes);
+		replaceStringLiteralTypes(inTypes);
+
+		auto name = t->richIdentifier();
+		for (auto paramType: inTypes)
+			name += "_" + paramType->richIdentifier();
+
+		frontend::Type const* outType = TypeProvider::bytesMemory();
+		name += "_" + outType->richIdentifier();
+
+		m_bytesConcatMembers[funCall] = {name, inTypes, outType};
+
+		if (functions.count(name))
+			continue;
+
+		/// If there is only one parameter, we use that type directly.
+		/// Otherwise we create a tuple wrapping the necessary types.
+		auto typesToSort = [](auto const& _types, std::string const& _name) -> std::shared_ptr<Sort> {
+			if (_types.size() == 1)
+				return smtSortAbstractFunction(*_types.front());
+
+			std::vector<std::string> inNames;
+			std::vector<SortPointer> sorts;
+			for (unsigned i = 0; i < _types.size(); ++i)
+			{
+				inNames.emplace_back(_name + "_input_" + std::to_string(i));
+				sorts.emplace_back(smtSortAbstractFunction(*_types.at(i)));
+			}
+			return std::make_shared<smtutil::TupleSort>(
+				_name + "_input",
+				inNames,
+				sorts
+			);
+		};
+
+		auto functionSort = std::make_shared<smtutil::ArraySort>(
+			typesToSort(inTypes, name),
+			smtSortAbstractFunction(*outType)
+		);
+
+		functions[name] = functionSort;
+	}
+
+	m_bytesConcat = std::make_unique<BlockchainVariable>("bytesConcat", std::move(functions), m_context);
+}
+
 void SymbolicState::buildABIFunctions(std::set<FunctionCall const*, ASTCompareByID<FunctionCall>> const& _abiFunctions)
 {
 	std::map<std::string, SortPointer> functions;
@@ -366,7 +443,6 @@ void SymbolicState::buildABIFunctions(std::set<FunctionCall const*, ASTCompareBy
 		auto const& args = funCall->sortedArguments();
 		auto const& paramTypes = t->parameterTypes();
 		auto const& returnTypes = t->returnParameterTypes();
-
 
 		auto argTypes = [](auto const& _args) {
 			return util::applyMap(_args, [](auto arg) { return arg->annotation().type; });
@@ -492,4 +568,15 @@ smtutil::Expression SymbolicState::abiFunction(frontend::FunctionCall const* _fu
 SymbolicState::SymbolicABIFunction const& SymbolicState::abiFunctionTypes(FunctionCall const* _funCall) const
 {
 	return m_abiMembers.at(_funCall);
+}
+
+smtutil::Expression SymbolicState::bytesConcatFunction(frontend::FunctionCall const* _funCall)
+{
+	solAssert(m_bytesConcat, "");
+	return m_bytesConcat->member(std::get<0>(m_bytesConcatMembers.at(_funCall)));
+}
+
+SymbolicState::SymbolicBytesConcatFunction const& SymbolicState::bytesConcatFunctionTypes(FunctionCall const* _funCall) const
+{
+	return m_bytesConcatMembers.at(_funCall);
 }

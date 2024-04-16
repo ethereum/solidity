@@ -63,6 +63,9 @@ struct MockedAccount
     /// The account storage map.
     std::map<bytes32, StorageValue> storage;
 
+    /// The account transient storage.
+    std::unordered_map<bytes32, bytes32> transient_storage;
+
     /// Helper method for setting balance by numeric type.
     void set_balance(uint64_t x) noexcept
     {
@@ -467,8 +470,7 @@ public:
     ///
     /// @param addr  The account address.
     /// @param key   The account's storage key.
-    /// @return      The ::EVMC_ACCESS_WARM if the storage key has been accessed
-    /// before,
+    /// @return      The ::EVMC_ACCESS_WARM if the storage key has been accessed before,
     ///              the ::EVMC_ACCESS_COLD otherwise.
     evmc_access_status access_storage(const address& addr, const bytes32& key) noexcept override
     {
@@ -476,6 +478,38 @@ public:
         const auto access_status = value.access_status;
         value.access_status = EVMC_ACCESS_WARM;
         return access_status;
+    }
+
+    /// Get account's transient storage.
+    ///
+    /// @param addr  The account address.
+    /// @param key   The account's transient storage key.
+    /// @return      The transient storage value. Null value in case the account does not exist.
+    bytes32 get_transient_storage(const address& addr, const bytes32& key) const noexcept override
+    {
+        record_account_access(addr);
+
+        const auto account_iter = accounts.find(addr);
+        if (account_iter == accounts.end())
+            return {};
+
+        const auto storage_iter = account_iter->second.transient_storage.find(key);
+        if (storage_iter != account_iter->second.transient_storage.end())
+            return storage_iter->second;
+        return {};
+    }
+
+    /// Set account's transient storage.
+    ///
+    /// @param addr   The account address.
+    /// @param key    The account's transient storage key.
+    /// @param value  The value to be stored.
+    void set_transient_storage(const address& addr,
+                               const bytes32& key,
+                               const bytes32& value) noexcept override
+    {
+        record_account_access(addr);
+        accounts[addr].transient_storage[key] = value;
     }
 };
 }  // namespace evmc

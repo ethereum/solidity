@@ -30,6 +30,7 @@
 #include <libyul/optimiser/Suite.h>
 
 #include <libevmasm/Disassemble.h>
+#include <libevmasm/EVMAssemblyStack.h>
 
 #include <libsmtutil/Exceptions.h>
 
@@ -441,7 +442,7 @@ std::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkOptimizerDetailsKeys(Json::Value const& _input)
 {
-	static std::set<std::string> keys{"peephole", "inliner", "jumpdestRemover", "orderLiterals", "deduplicate", "cse", "constantOptimizer", "yul", "yulDetails"};
+	static std::set<std::string> keys{"peephole", "inliner", "jumpdestRemover", "orderLiterals", "deduplicate", "cse", "constantOptimizer", "yul", "yulDetails", "simpleCounterForLoopUncheckedIncrement"};
 	return checkKeys(_input, keys, "settings.optimizer.details");
 }
 
@@ -456,12 +457,16 @@ std::optional<Json::Value> checkOptimizerDetail(Json::Value const& _details, std
 	return {};
 }
 
-std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, std::string& _optimiserSetting, std::string& _cleanupSetting)
+std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details, std::string const& _name, std::string& _optimiserSetting, std::string& _cleanupSetting, bool _runYulOptimizer)
 {
 	if (_details.isMember(_name))
 	{
 		if (_details[_name].isString())
 		{
+			std::string const fullSequence = _details[_name].asString();
+			if (!_runYulOptimizer && !OptimiserSuite::isEmptyOptimizerSequence(fullSequence))
+				return formatFatalError(Error::Type::JSONError, "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.");
+
 			try
 			{
 				yul::OptimiserSuite::validateSequence(_details[_name].asString());
@@ -474,7 +479,6 @@ std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details
 				);
 			}
 
-			std::string const fullSequence = _details[_name].asString();
 			auto const delimiterPos = fullSequence.find(":");
 			_optimiserSetting = fullSequence.substr(0, delimiterPos);
 
@@ -599,25 +603,32 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 			return *error;
 		if (auto error = checkOptimizerDetail(details, "yul", settings.runYulOptimiser))
 			return *error;
+		if (auto error = checkOptimizerDetail(details, "simpleCounterForLoopUncheckedIncrement", settings.simpleCounterForLoopUncheckedIncrement))
+			return *error;
 		settings.optimizeStackAllocation = settings.runYulOptimiser;
 		if (details.isMember("yulDetails"))
 		{
 			if (!settings.runYulOptimiser)
-				return formatFatalError(Error::Type::JSONError, "\"Providing yulDetails requires Yul optimizer to be enabled.");
+			{
+				if (checkKeys(details["yulDetails"], {"optimizerSteps"}, "settings.optimizer.details.yulDetails"))
+					return formatFatalError(Error::Type::JSONError, "Only optimizerSteps can be set in yulDetails when Yul optimizer is disabled.");
+				if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps, settings.yulOptimiserCleanupSteps, settings.runYulOptimiser))
+					return *error;
+				return {std::move(settings)};
+			}
 
 			if (auto result = checkKeys(details["yulDetails"], {"stackAllocation", "optimizerSteps"}, "settings.optimizer.details.yulDetails"))
 				return *result;
 			if (auto error = checkOptimizerDetail(details["yulDetails"], "stackAllocation", settings.optimizeStackAllocation))
 				return *error;
-			if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps, settings.yulOptimiserCleanupSteps))
+			if (auto error = checkOptimizerDetailSteps(details["yulDetails"], "optimizerSteps", settings.yulOptimiserSteps, settings.yulOptimiserCleanupSteps, settings.runYulOptimiser))
 				return *error;
 		}
 	}
-	return { std::move(settings) };
+	return {std::move(settings)};
 }
 
 }
-
 
 std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler::parseInput(Json::Value const& _input)
 {
@@ -720,7 +731,29 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		for (auto const& sourceName: sources.getMemberNames())
 			ret.sources[sourceName] = util::jsonCompactPrint(sources[sourceName]);
 	}
+	else if (ret.language == "EVMAssembly")
+	{
+		for (std::string const& sourceName: sources.getMemberNames())
+		{
+			solAssert(sources.isMember(sourceName));
+			if (
+				!sources[sourceName].isMember("assemblyJson") ||
+				!sources[sourceName]["assemblyJson"].isObject() ||
+				sources[sourceName].size() != 1
+			)
+				return formatFatalError(
+					Error::Type::JSONError,
+					"Invalid input source specified. Expected exactly one object, named 'assemblyJson', inside $.sources." + sourceName
+				);
 
+			ret.jsonSources[sourceName] = sources[sourceName]["assemblyJson"];
+		}
+		if (ret.jsonSources.size() != 1)
+			return formatFatalError(
+				Error::Type::JSONError,
+				"EVMAssembly import only supports exactly one input file."
+			);
+	}
 	Json::Value const& auxInputs = _input["auxiliaryInput"];
 
 	if (auto result = checkAuxiliaryInputKeys(auxInputs))
@@ -787,6 +820,12 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].asString());
 		if (!version)
 			return formatFatalError(Error::Type::JSONError, "Invalid EVM version requested.");
+		if (version < EVMVersion::constantinople())
+			ret.errors.append(formatError(
+				Error::Type::Warning,
+				"general",
+				"Support for EVM versions older than constantinople is deprecated and will be removed in the future."
+			));
 		ret.evmVersion = *version;
 	}
 
@@ -1148,8 +1187,113 @@ std::map<std::string, Json::Value> StandardCompiler::parseAstFromInput(StringMap
 	return sourceJsons;
 }
 
+Json::Value StandardCompiler::importEVMAssembly(StandardCompiler::InputsAndSettings _inputsAndSettings)
+{
+	solAssert(_inputsAndSettings.language == "EVMAssembly");
+	solAssert(_inputsAndSettings.sources.empty());
+	solAssert(_inputsAndSettings.jsonSources.size() == 1);
+
+	if (!isBinaryRequested(_inputsAndSettings.outputSelection))
+		return Json::objectValue;
+
+	evmasm::EVMAssemblyStack stack(_inputsAndSettings.evmVersion);
+	std::string const& sourceName = _inputsAndSettings.jsonSources.begin()->first; // result of structured binding can only be used within lambda from C++20 on.
+	Json::Value const& sourceJson = _inputsAndSettings.jsonSources.begin()->second;
+	try
+	{
+		stack.analyze(sourceName, sourceJson);
+		stack.assemble();
+	}
+	catch (evmasm::AssemblyImportException const& e)
+	{
+		return formatFatalError(Error::Type::Exception, "Assembly import error: " + std::string(e.what()));
+	}
+	catch (evmasm::InvalidOpcode const& e)
+	{
+		return formatFatalError(Error::Type::Exception, "Assembly import error: " + std::string(e.what()));
+	}
+	catch (...)
+	{
+		return formatError(
+			Error::Type::Exception,
+			"general",
+			"Unknown exception during assembly import: " + boost::current_exception_diagnostic_information()
+		);
+	}
+	if (!stack.compilationSuccessful())
+		return Json::objectValue;
+
+	// EVM
+	bool const wildcardMatchesExperimental = false;
+	Json::Value evmData = Json::objectValue;
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "evm.assembly", wildcardMatchesExperimental))
+		evmData["assembly"] = stack.assemblyString(sourceName, {});
+	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "evm.legacyAssembly", wildcardMatchesExperimental))
+		evmData["legacyAssembly"] = stack.assemblyJSON(sourceName);
+
+	if (isArtifactRequested(
+		_inputsAndSettings.outputSelection,
+		sourceName,
+		"",
+		evmObjectComponents("bytecode"),
+		wildcardMatchesExperimental
+	))
+		evmData["bytecode"] = collectEVMObject(
+			_inputsAndSettings.evmVersion,
+			stack.object(sourceName),
+			stack.sourceMapping(sourceName),
+			{},
+			false, // _runtimeObject
+			[&](std::string const& _element) {
+				return isArtifactRequested(
+					_inputsAndSettings.outputSelection,
+					sourceName,
+					"",
+					"evm.bytecode." + _element,
+					wildcardMatchesExperimental
+				);
+			}
+		);
+
+	if (isArtifactRequested(
+		_inputsAndSettings.outputSelection,
+		sourceName,
+		"",
+		evmObjectComponents("deployedBytecode"),
+		wildcardMatchesExperimental
+	))
+		evmData["deployedBytecode"] = collectEVMObject(
+			_inputsAndSettings.evmVersion,
+			stack.runtimeObject(sourceName),
+			stack.runtimeSourceMapping(sourceName),
+			{},
+			true, // _runtimeObject
+			[&](std::string const& _element) {
+				return isArtifactRequested(
+					_inputsAndSettings.outputSelection,
+					sourceName,
+					"",
+					"evm.deployedBytecode." + _element,
+					wildcardMatchesExperimental
+				);
+			}
+		);
+
+	Json::Value contractData = Json::objectValue;
+	if (!evmData.empty())
+		contractData["evm"] = evmData;
+
+	Json::Value contractsOutput = Json::objectValue;
+	contractsOutput[sourceName][""] = contractData;
+	Json::Value output = Json::objectValue;
+	output["contracts"] = contractsOutput;
+	return util::removeNullMembers(output);
+}
+
 Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inputsAndSettings)
 {
+	solAssert(_inputsAndSettings.jsonSources.empty());
+
 	CompilerStack compilerStack(m_readFile);
 
 	StringMap sourceList = std::move(_inputsAndSettings.sources);
@@ -1454,6 +1598,8 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 {
+	solAssert(_inputsAndSettings.jsonSources.empty());
+
 	Json::Value output = Json::objectValue;
 	output["errors"] = std::move(_inputsAndSettings.errors);
 
@@ -1611,8 +1757,10 @@ Json::Value StandardCompiler::compile(Json::Value const& _input) noexcept
 			return compileYul(std::move(settings));
 		else if (settings.language == "SolidityAST")
 			return compileSolidity(std::move(settings));
+		else if (settings.language == "EVMAssembly")
+			return importEVMAssembly(std::move(settings));
 		else
-			return formatFatalError(Error::Type::JSONError, "Only \"Solidity\", \"Yul\" or \"SolidityAST\" is supported as a language.");
+			return formatFatalError(Error::Type::JSONError, "Only \"Solidity\", \"Yul\", \"SolidityAST\" or \"EVMAssembly\" is supported as a language.");
 	}
 	catch (Json::LogicError const& _exception)
 	{

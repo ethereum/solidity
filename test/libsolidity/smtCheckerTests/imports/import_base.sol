@@ -12,7 +12,7 @@ contract Base {
 import "base";
 contract Der is Base {
 	function g(uint y) public {
-		require(x < 10); // added to restrict the search space and avoid non-determinsm in Spacer
+		require(x < 10); // added to restrict the search space and avoid non-determinism in Spacer
 		x += f();
 		assert(y > x);
 	}
@@ -20,5 +20,5 @@ contract Der is Base {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6328: (der:173-186): CHC: Assertion violation happens here.
+// Warning 6328: (der:174-187): CHC: Assertion violation happens here.
 // Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

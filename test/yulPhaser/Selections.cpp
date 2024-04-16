@@ -29,7 +29,6 @@
 #include <set>
 #include <vector>
 
-using namespace std;
 using namespace solidity::util;
 
 namespace solidity::phaser::test
@@ -41,28 +40,28 @@ BOOST_AUTO_TEST_SUITE(RangeSelectionTest)
 
 BOOST_AUTO_TEST_CASE(materialise)
 {
-	BOOST_TEST(RangeSelection(0.0, 1.0).materialise(10) == vector<size_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-	BOOST_TEST(RangeSelection(0.0, 0.1).materialise(10) == vector<size_t>({0}));
-	BOOST_TEST(RangeSelection(0.0, 0.2).materialise(10) == vector<size_t>({0, 1}));
-	BOOST_TEST(RangeSelection(0.0, 0.7).materialise(10) == vector<size_t>({0, 1, 2, 3, 4, 5, 6}));
+	BOOST_TEST(RangeSelection(0.0, 1.0).materialise(10) == std::vector<size_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+	BOOST_TEST(RangeSelection(0.0, 0.1).materialise(10) == std::vector<size_t>({0}));
+	BOOST_TEST(RangeSelection(0.0, 0.2).materialise(10) == std::vector<size_t>({0, 1}));
+	BOOST_TEST(RangeSelection(0.0, 0.7).materialise(10) == std::vector<size_t>({0, 1, 2, 3, 4, 5, 6}));
 
-	BOOST_TEST(RangeSelection(0.9, 1.0).materialise(10) == vector<size_t>({                           9}));
-	BOOST_TEST(RangeSelection(0.8, 1.0).materialise(10) == vector<size_t>({                        8, 9}));
-	BOOST_TEST(RangeSelection(0.5, 1.0).materialise(10) == vector<size_t>({               5, 6, 7, 8, 9}));
+	BOOST_TEST(RangeSelection(0.9, 1.0).materialise(10) == std::vector<size_t>({                           9}));
+	BOOST_TEST(RangeSelection(0.8, 1.0).materialise(10) == std::vector<size_t>({                        8, 9}));
+	BOOST_TEST(RangeSelection(0.5, 1.0).materialise(10) == std::vector<size_t>({               5, 6, 7, 8, 9}));
 
-	BOOST_TEST(RangeSelection(0.3, 0.6).materialise(10) == vector<size_t>({         3, 4, 5            }));
-	BOOST_TEST(RangeSelection(0.2, 0.7).materialise(10) == vector<size_t>({      2, 3, 4, 5, 6         }));
-	BOOST_TEST(RangeSelection(0.4, 0.7).materialise(10) == vector<size_t>({            4, 5, 6         }));
+	BOOST_TEST(RangeSelection(0.3, 0.6).materialise(10) == std::vector<size_t>({         3, 4, 5            }));
+	BOOST_TEST(RangeSelection(0.2, 0.7).materialise(10) == std::vector<size_t>({      2, 3, 4, 5, 6         }));
+	BOOST_TEST(RangeSelection(0.4, 0.7).materialise(10) == std::vector<size_t>({            4, 5, 6         }));
 
-	BOOST_TEST(RangeSelection(0.4, 0.7).materialise(5) == vector<size_t>({2, 3}));
+	BOOST_TEST(RangeSelection(0.4, 0.7).materialise(5) == std::vector<size_t>({2, 3}));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_round_indices)
 {
-	BOOST_TEST(RangeSelection(0.01, 0.99).materialise(10) == vector<size_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-	BOOST_TEST(RangeSelection(0.04, 0.96).materialise(10) == vector<size_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-	BOOST_TEST(RangeSelection(0.05, 0.95).materialise(10) == vector<size_t>({   1, 2, 3, 4, 5, 6, 7, 8, 9}));
-	BOOST_TEST(RangeSelection(0.06, 0.94).materialise(10) == vector<size_t>({   1, 2, 3, 4, 5, 6, 7, 8   }));
+	BOOST_TEST(RangeSelection(0.01, 0.99).materialise(10) == std::vector<size_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+	BOOST_TEST(RangeSelection(0.04, 0.96).materialise(10) == std::vector<size_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+	BOOST_TEST(RangeSelection(0.05, 0.95).materialise(10) == std::vector<size_t>({   1, 2, 3, 4, 5, 6, 7, 8, 9}));
+	BOOST_TEST(RangeSelection(0.06, 0.94).materialise(10) == std::vector<size_t>({   1, 2, 3, 4, 5, 6, 7, 8   }));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_handle_empty_collections)
@@ -93,27 +92,27 @@ BOOST_AUTO_TEST_SUITE(MosaicSelectionTest)
 
 BOOST_AUTO_TEST_CASE(materialise)
 {
-	BOOST_TEST(MosaicSelection({1}, 0.5).materialise(4) == vector<size_t>({1, 1}));
-	BOOST_TEST(MosaicSelection({1}, 1.0).materialise(4) == vector<size_t>({1, 1, 1, 1}));
-	BOOST_TEST(MosaicSelection({1}, 2.0).materialise(4) == vector<size_t>({1, 1, 1, 1, 1, 1, 1, 1}));
-	BOOST_TEST(MosaicSelection({1}, 1.0).materialise(2) == vector<size_t>({1, 1}));
+	BOOST_TEST(MosaicSelection({1}, 0.5).materialise(4) == std::vector<size_t>({1, 1}));
+	BOOST_TEST(MosaicSelection({1}, 1.0).materialise(4) == std::vector<size_t>({1, 1, 1, 1}));
+	BOOST_TEST(MosaicSelection({1}, 2.0).materialise(4) == std::vector<size_t>({1, 1, 1, 1, 1, 1, 1, 1}));
+	BOOST_TEST(MosaicSelection({1}, 1.0).materialise(2) == std::vector<size_t>({1, 1}));
 
-	BOOST_TEST(MosaicSelection({0, 1}, 0.5).materialise(4) == vector<size_t>({0, 1}));
-	BOOST_TEST(MosaicSelection({0, 1}, 1.0).materialise(4) == vector<size_t>({0, 1, 0, 1}));
-	BOOST_TEST(MosaicSelection({0, 1}, 2.0).materialise(4) == vector<size_t>({0, 1, 0, 1, 0, 1, 0, 1}));
-	BOOST_TEST(MosaicSelection({0, 1}, 1.0).materialise(2) == vector<size_t>({0, 1}));
+	BOOST_TEST(MosaicSelection({0, 1}, 0.5).materialise(4) == std::vector<size_t>({0, 1}));
+	BOOST_TEST(MosaicSelection({0, 1}, 1.0).materialise(4) == std::vector<size_t>({0, 1, 0, 1}));
+	BOOST_TEST(MosaicSelection({0, 1}, 2.0).materialise(4) == std::vector<size_t>({0, 1, 0, 1, 0, 1, 0, 1}));
+	BOOST_TEST(MosaicSelection({0, 1}, 1.0).materialise(2) == std::vector<size_t>({0, 1}));
 
-	BOOST_TEST(MosaicSelection({3, 2, 1, 0}, 0.5).materialise(4) == vector<size_t>({3, 2}));
-	BOOST_TEST(MosaicSelection({3, 2, 1, 0}, 1.0).materialise(4) == vector<size_t>({3, 2, 1, 0}));
-	BOOST_TEST(MosaicSelection({3, 2, 1, 0}, 2.0).materialise(4) == vector<size_t>({3, 2, 1, 0, 3, 2, 1, 0}));
-	BOOST_TEST(MosaicSelection({1, 0, 1, 0}, 1.0).materialise(2) == vector<size_t>({1, 0}));
+	BOOST_TEST(MosaicSelection({3, 2, 1, 0}, 0.5).materialise(4) == std::vector<size_t>({3, 2}));
+	BOOST_TEST(MosaicSelection({3, 2, 1, 0}, 1.0).materialise(4) == std::vector<size_t>({3, 2, 1, 0}));
+	BOOST_TEST(MosaicSelection({3, 2, 1, 0}, 2.0).materialise(4) == std::vector<size_t>({3, 2, 1, 0, 3, 2, 1, 0}));
+	BOOST_TEST(MosaicSelection({1, 0, 1, 0}, 1.0).materialise(2) == std::vector<size_t>({1, 0}));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_round_indices)
 {
-	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 0.49).materialise(5) == vector<size_t>({4, 3}));
-	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 0.50).materialise(5) == vector<size_t>({4, 3, 2}));
-	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 0.51).materialise(5) == vector<size_t>({4, 3, 2}));
+	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 0.49).materialise(5) == std::vector<size_t>({4, 3}));
+	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 0.50).materialise(5) == std::vector<size_t>({4, 3, 2}));
+	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 0.51).materialise(5) == std::vector<size_t>({4, 3, 2}));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_handle_empty_collections)
@@ -132,10 +131,10 @@ BOOST_AUTO_TEST_CASE(materialise_should_handle_empty_selections)
 
 BOOST_AUTO_TEST_CASE(materialise_should_clamp_indices_at_collection_size)
 {
-	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 1.0).materialise(4) == vector<size_t>({3, 3, 2, 1}));
-	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 2.0).materialise(3) == vector<size_t>({2, 2, 2, 1, 0, 2}));
-	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 1.0).materialise(1) == vector<size_t>({0}));
-	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 7.0).materialise(1) == vector<size_t>({0, 0, 0, 0, 0, 0, 0}));
+	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 1.0).materialise(4) == std::vector<size_t>({3, 3, 2, 1}));
+	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 2.0).materialise(3) == std::vector<size_t>({2, 2, 2, 1, 0, 2}));
+	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 1.0).materialise(1) == std::vector<size_t>({0}));
+	BOOST_TEST(MosaicSelection({4, 3, 2, 1, 0}, 7.0).materialise(1) == std::vector<size_t>({0, 0, 0, 0, 0, 0, 0}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -150,17 +149,17 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	constexpr double variance = (collectionSize * collectionSize - 1) / 12.0;
 
 	SimulationRNG::reset(1);
-	vector<size_t> samples = RandomSelection(selectionSize).materialise(collectionSize);
+	std::vector<size_t> samples = RandomSelection(selectionSize).materialise(collectionSize);
 
-	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(std::abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(std::abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
 {
 	const size_t collectionSize = 200;
 
-	vector<size_t> indices = RandomSelection(0.5).materialise(collectionSize);
+	std::vector<size_t> indices = RandomSelection(0.5).materialise(collectionSize);
 
 	BOOST_TEST(indices.size() == 100);
 	BOOST_TEST(all_of(indices.begin(), indices.end(), [&](auto const& index){ return index <= collectionSize; }));
@@ -214,20 +213,20 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	constexpr double variance = selectionChance * (1 - selectionChance);
 
 	SimulationRNG::reset(1);
-	auto indices = convertContainer<set<size_t>>(RandomSubset(selectionChance).materialise(collectionSize));
+	auto indices = convertContainer<std::set<size_t>>(RandomSubset(selectionChance).materialise(collectionSize));
 
-	vector<double> bernoulliTrials(collectionSize);
+	std::vector<double> bernoulliTrials(collectionSize);
 	for (size_t i = 0; i < collectionSize; ++i)
 		bernoulliTrials[i] = double(indices.count(i));
 
-	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(std::abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
+	BOOST_TEST(std::abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
 {
 	const size_t collectionSize = 200;
-	vector<size_t> indices = RandomSubset(0.5).materialise(collectionSize);
+	std::vector<size_t> indices = RandomSubset(0.5).materialise(collectionSize);
 
 	BOOST_TEST(all_of(indices.begin(), indices.end(), [&](auto const& index){ return index <= collectionSize; }));
 }
@@ -235,7 +234,7 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_c
 BOOST_AUTO_TEST_CASE(materialise_should_return_indices_in_the_same_order_they_are_in_the_container)
 {
 	const size_t collectionSize = 200;
-	vector<size_t> indices = RandomSubset(0.5).materialise(collectionSize);
+	std::vector<size_t> indices = RandomSubset(0.5).materialise(collectionSize);
 
 	for (size_t i = 1; i < indices.size(); ++i)
 		BOOST_TEST(indices[i - 1] < indices[i]);

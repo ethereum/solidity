@@ -1,4 +1,14 @@
 {
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "Support for EVM versions older than constantinople is deprecated and will be removed in the future.",
+            "message": "Support for EVM versions older than constantinople is deprecated and will be removed in the future.",
+            "severity": "warning",
+            "type": "Warning"
+        }
+    ],
     "sources":
     {
         "A":

@@ -23,13 +23,12 @@
 
 #include <sstream>
 
-using namespace std;
 using namespace solidity::frontend;
 
-vector<char const*> test::makeArgv(vector<string> const& _commandLine)
+std::vector<char const*> test::makeArgv(std::vector<std::string> const& _commandLine)
 {
 	size_t argc = _commandLine.size();
-	vector<char const*> argv(_commandLine.size() + 1);
+	std::vector<char const*> argv(_commandLine.size() + 1);
 
 	// C++ standard mandates argv[argc] to be NULL
 	argv[argc] = nullptr;
@@ -41,12 +40,12 @@ vector<char const*> test::makeArgv(vector<string> const& _commandLine)
 }
 
 test::OptionsReaderAndMessages test::parseCommandLineAndReadInputFiles(
-	vector<string> const& _commandLine,
-	string const& _standardInputContent
+	std::vector<std::string> const& _commandLine,
+	std::string const& _standardInputContent
 )
 {
-	vector<char const*> argv = makeArgv(_commandLine);
-	stringstream sin(_standardInputContent), sout, serr;
+	std::vector<char const*> argv = makeArgv(_commandLine);
+	std::stringstream sin(_standardInputContent), sout, serr;
 	CommandLineInterface cli(sin, sout, serr);
 	bool success = cli.parseArguments(static_cast<int>(_commandLine.size()), argv.data());
 	cli.readInputFiles();
@@ -62,12 +61,12 @@ test::OptionsReaderAndMessages test::parseCommandLineAndReadInputFiles(
 }
 
 test::OptionsReaderAndMessages test::runCLI(
-	vector<string> const& _commandLine,
-	string const& _standardInputContent
+	std::vector<std::string> const& _commandLine,
+	std::string const& _standardInputContent
 )
 {
-	vector<char const*> argv = makeArgv(_commandLine);
-	stringstream sin(_standardInputContent), sout, serr;
+	std::vector<char const*> argv = makeArgv(_commandLine);
+	std::stringstream sin(_standardInputContent), sout, serr;
 	CommandLineInterface cli(sin, sout, serr);
 	bool success = cli.run(static_cast<int>(_commandLine.size()), argv.data());
 

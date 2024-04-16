@@ -1,1 +1,1 @@
-Cannot specify a metadata hashing method when --no-cbor-metadata is set.
+Error: Cannot specify a metadata hashing method when --no-cbor-metadata is set.

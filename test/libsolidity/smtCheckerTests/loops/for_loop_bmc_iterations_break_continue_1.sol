@@ -5,11 +5,11 @@ contract C
 		for (uint i = 0; i < 3; ++i) {
 			if (i > 1) {
 				break;
- 			}
+			}
 			if (i >= 0) {
 				x = 10;
 				continue;
- 			}
+			}
 		}
 		assert(x == 10);
 	}

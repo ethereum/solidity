@@ -1,11 +1,81 @@
-### 0.8.22 (unreleased)
+### 0.8.26 (unreleased)
+
+Language Features:
+
+
+Compiler Features:
+
+
+Bugfixes:
+ * SMTChecker: Fix internal error on mapping access caused by too strong requirements on sort compatibility of the index and mapping domain.
+ * SMTChecker: Fix internal error when using bitwise operators with an array element as argument.
+
+
+### 0.8.25 (2024-03-14)
+
+Compiler Features:
+ * Code Generator: Use ``MCOPY`` instead of ``MLOAD``/``MSTORE`` loop when copying byte arrays.
+ * EVM: Set default EVM version to ``cancun``.
+ * Yul Analyzer: Emit transient storage warning only for the first occurrence of ``tstore``.
+
+
+Bugfixes:
+ * Assembler: Prevent incorrect calculation of tag sizes.
+ * Commandline Interface: Do not run IR pipeline when ``--via-ir`` is used but no output that depends on the IR is requested.
+ * EVM Assembly Import: Fix handling of missing source locations during import.
+ * SMTChecker: Ensure query is properly flushed to a file before calling solver when using SMT-LIB interface.
+ * SMTChecker: Fix internal error caused by not respecting the sign of an integer type when constructing zero-value SMT expressions.
+ * SMTChecker: Run Eldarica only when explicitly requested with `--model-checker-solvers eld`, even when it is present on the system.
+
+
+### 0.8.24 (2024-01-25)
+
+Language Features:
+ * Introduce global ``block.blobbasefee`` for retrieving the blob base fee of the current block.
+ * Introduce global function ``blobhash(uint)`` for retrieving versioned hashes of blobs, akin to the homonymous Yul builtin.
+ * Yul: Introduce builtin ``blobbasefee()`` for retrieving the blob base fee of the current block.
+ * Yul: Introduce builtin ``blobhash()`` for retrieving versioned hashes of blobs associated with the transaction.
+ * Yul: Introduce builtin ``mcopy()`` for cheaply copying data between memory areas.
+ * Yul: Introduce builtins ``tload()`` and ``tstore()`` for transient storage access.
+
+
+Compiler Features:
+ * EVM: Support for the EVM Version "Cancun".
+ * SMTChecker: Support `bytes.concat` except when string literals are passed as arguments.
+ * SMTChecker: Print a message that function parameter name was used instead of a concrete value in a counterexample when the concrete value found by the solver is too long to print.
+ * Standard JSON Interface: Add experimental support to import EVM assembly in the format used by ``--asm-json``.
+ * TypeChecker: Comparison of internal function pointers now yields a warning, as it can produce unexpected results with the legacy pipeline enabled.
+
+
+Bugfixes:
+ * AST import: Fix bug when importing inline assembly with empty ``let`` variable declaration.
+
+
+### 0.8.23 (2023-11-08)
+
+Important Bugfixes:
+ * Optimizer: Fix block deduplicator bug which led to blocks which are identical apart from the contents of ``verbatim`` instructions to be treated as equivalent and thus collapsed into a single one.
+
+
+Compiler Features:
+ * Commandline Interface: An empty ``--yul-optimizations`` sequence can now be always provided.
+ * Standard JSON Interface: An empty ``optimizerSteps`` sequence can now always be provided.
+
+
+### 0.8.22 (2023-10-25)
 
 Language Features:
  * Allow defining events at file level.
 
 
 Compiler Features:
+ * Code Generator: Remove redundant overflow checks of certain ``for`` loops when the counter variable cannot overflow.
+ * Commandline Interface: Add ``--no-import-callback`` option that prevents the compiler from loading source files not given explicitly on the CLI or in Standard JSON input.
+ * Commandline Interface: Add an experimental ``--import-asm-json`` option that can import EVM assembly in the format used by ``--asm-json``.
+ * Commandline Interface: Use proper severity and coloring also for error messages produced outside of the compilation pipeline.
+ * EVM: Deprecate support for "homestead", "tangerineWhistle", "spuriousDragon" and "byzantium" EVM versions.
  * Parser: Remove the experimental error recovery mode (``--error-recovery`` / ``settings.parserErrorRecovery``).
+ * SMTChecker: Support user-defined operators.
  * Yul Optimizer: If ``PUSH0`` is supported, favor zero literals over storing zero values in variables.
  * Yul Optimizer: Run the ``Rematerializer`` and ``UnusedPruner`` steps at the end of the default clean-up sequence.
 

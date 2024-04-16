@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		if (CommonOptions::get().useABIEncoderV1)
 			CHECK_DEPLOY_GAS(133045, 129731, evmVersion);
 		else
-			CHECK_DEPLOY_GAS(144999, 121229, evmVersion);
+			CHECK_DEPLOY_GAS(144995, 121229, evmVersion);
 	}
 	// This is only correct on >=Constantinople.
 	else if (!CommonOptions::get().useABIEncoderV1)
@@ -110,22 +110,22 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		{
 			// Costs with 0 are cases which cannot be triggered in tests.
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(0, 109241, evmVersion);
+				CHECK_DEPLOY_GAS(0, 109237, evmVersion);
 			else if (evmVersion < EVMVersion::shanghai())
-				CHECK_DEPLOY_GAS(0, 97697, evmVersion);
+				CHECK_DEPLOY_GAS(0, 97693, evmVersion);
 			// Shanghai is cheaper due to `push0`
 			else
-				CHECK_DEPLOY_GAS(0, 97071, evmVersion);
+				CHECK_DEPLOY_GAS(0, 97067, evmVersion);
 		}
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(139013, 123969, evmVersion);
+				CHECK_DEPLOY_GAS(139009, 123969, evmVersion);
 			else if (evmVersion < EVMVersion::shanghai())
-				CHECK_DEPLOY_GAS(123361, 110969, evmVersion);
+				CHECK_DEPLOY_GAS(123357, 110969, evmVersion);
 			// Shanghai is cheaper due to `push0`
 			else
-				CHECK_DEPLOY_GAS(121493, 110969, evmVersion);
+				CHECK_DEPLOY_GAS(121489, 110969, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	else if (evmVersion < EVMVersion::shanghai())
 		CHECK_DEPLOY_GAS(114077, 96461, evmVersion);
 	else
-		CHECK_DEPLOY_GAS(114077, 95835, evmVersion);
+		CHECK_DEPLOY_GAS(114077, 95831, evmVersion);
 
 	if (evmVersion >= EVMVersion::byzantium())
 	{

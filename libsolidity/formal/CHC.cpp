@@ -543,6 +543,35 @@ void CHC::endVisit(ForStatement const& _for)
 	m_scopes.pop_back();
 }
 
+void CHC::endVisit(UnaryOperation const& _op)
+{
+	SMTEncoder::endVisit(_op);
+
+	if (auto funDef = *_op.annotation().userDefinedFunction)
+	{
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.subExpression());
+		internalFunctionCall(funDef, std::nullopt, _op.userDefinedFunctionType(), arguments, state().thisAddress());
+
+		createReturnedExpressions(funDef, _op);
+	}
+}
+
+void CHC::endVisit(BinaryOperation const& _op)
+{
+	SMTEncoder::endVisit(_op);
+
+	if (auto funDef = *_op.annotation().userDefinedFunction)
+	{
+		std::vector<Expression const*> arguments;
+		arguments.push_back(&_op.leftExpression());
+		arguments.push_back(&_op.rightExpression());
+		internalFunctionCall(funDef, std::nullopt, _op.userDefinedFunctionType(), arguments, state().thisAddress());
+
+		createReturnedExpressions(funDef, _op);
+	}
+}
+
 void CHC::endVisit(FunctionCall const& _funCall)
 {
 	auto functionCallKind = *_funCall.annotation().kind;
@@ -593,8 +622,8 @@ void CHC::endVisit(FunctionCall const& _funCall)
 		break;
 	}
 
-
-	createReturnedExpressions(_funCall, m_currentContract);
+	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
+	createReturnedExpressions(funDef, _funCall);
 }
 
 void CHC::endVisit(Break const& _break)
@@ -820,20 +849,26 @@ void CHC::visitDeployment(FunctionCall const& _funCall)
 	defineExpr(_funCall, newAddr);
 }
 
-void CHC::internalFunctionCall(FunctionCall const& _funCall)
+void CHC::internalFunctionCall(
+	FunctionDefinition const* _funDef,
+	std::optional<Expression const*> _boundArgumentCall,
+	FunctionType const* _funType,
+	std::vector<Expression const*> const& _arguments,
+	smtutil::Expression _contractAddressValue
+)
 {
 	solAssert(m_currentContract, "");
+	solAssert(_funType, "");
 
-	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
-	if (function)
+	if (_funDef)
 	{
 		if (m_currentFunction && !m_currentFunction->isConstructor())
-			m_callGraph[m_currentFunction].insert(function);
+			m_callGraph[m_currentFunction].insert(_funDef);
 		else
-			m_callGraph[m_currentContract].insert(function);
+			m_callGraph[m_currentContract].insert(_funDef);
 	}
 
-	m_context.addAssertion(predicate(_funCall));
+	m_context.addAssertion(predicate(_funDef, _boundArgumentCall, _funType, _arguments, _contractAddressValue));
 
 	solAssert(m_errorDest, "");
 	connectBlocks(
@@ -843,6 +878,42 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 	);
 	m_context.addAssertion(smtutil::Expression::implies(currentPathConditions(), errorFlag().currentValue() == 0));
 	m_context.addAssertion(errorFlag().increaseIndex() == 0);
+}
+
+void CHC::internalFunctionCall(FunctionCall const& _funCall)
+{
+	solAssert(m_currentContract, "");
+
+	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
+	if (funDef)
+	{
+		if (m_currentFunction && !m_currentFunction->isConstructor())
+			m_callGraph[m_currentFunction].insert(funDef);
+		else
+			m_callGraph[m_currentContract].insert(funDef);
+	}
+
+	Expression const* calledExpr = &_funCall.expression();
+	auto funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
+
+	auto contractAddressValue = [this](FunctionCall const& _f) {
+		auto [callExpr, callOptions] = functionCallExpression(_f);
+
+		FunctionType const& funType = dynamic_cast<FunctionType const&>(*callExpr->annotation().type);
+		if (funType.kind() == FunctionType::Kind::Internal)
+			return state().thisAddress();
+		if (MemberAccess const* callBase = dynamic_cast<MemberAccess const*>(callExpr))
+			return expr(callBase->expression());
+		solAssert(false, "Unreachable!");
+	};
+
+	std::vector<Expression const*> arguments;
+	for (auto& arg: _funCall.sortedArguments())
+		arguments.push_back(&(*arg));
+
+	std::optional<Expression const*> boundArgumentCall =
+		funType->hasBoundFirstArgument() ? std::make_optional(calledExpr) : std::nullopt;
+	internalFunctionCall(funDef, boundArgumentCall, funType, arguments, contractAddressValue(_funCall));
 }
 
 void CHC::addNondetCalls(ContractDefinition const& _contract)
@@ -869,8 +940,6 @@ void CHC::nondetCall(ContractDefinition const& _contract, VariableDeclaration co
 	for (auto const* var: _contract.stateVariables())
 		m_context.variable(*var)->increaseIndex();
 
-	auto error = errorFlag().increaseIndex();
-
 	Predicate const& callPredicate = *createSymbolicBlock(
 		nondetInterfaceSort(_contract, state()),
 		"nondet_call_" + uniquePrefix(),
@@ -879,7 +948,7 @@ void CHC::nondetCall(ContractDefinition const& _contract, VariableDeclaration co
 		m_currentContract
 	);
 	auto postCallState = std::vector<smtutil::Expression>{state().state()} + currentStateVariables(_contract);
-	std::vector<smtutil::Expression> stateExprs{error, address, state().abi(), state().crypto()};
+	std::vector<smtutil::Expression> stateExprs = commonStateExpressions(errorFlag().increaseIndex(), address);
 
 	auto nondet = (*m_nondetInterfaces.at(&_contract))(stateExprs + preCallState + postCallState);
 	auto nondetCall = callPredicate(stateExprs + preCallState + postCallState);
@@ -953,8 +1022,6 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 			m_context.variable(*var)->increaseIndex();
 	}
 
-	auto error = errorFlag().increaseIndex();
-
 	Predicate const& callPredicate = *createSymbolicBlock(
 		nondetInterfaceSort(*m_currentContract, state()),
 		"nondet_call_" + uniquePrefix(),
@@ -962,7 +1029,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 		&_funCall
 	);
 	auto postCallState = std::vector<smtutil::Expression>{state().state()} + currentStateVariables();
-	std::vector<smtutil::Expression> stateExprs{error, state().thisAddress(), state().abi(), state().crypto()};
+	std::vector<smtutil::Expression> stateExprs = commonStateExpressions(errorFlag().increaseIndex(), state().thisAddress());
 
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(stateExprs + preCallState + postCallState);
 	auto nondetCall = callPredicate(stateExprs + preCallState + postCallState);
@@ -1028,7 +1095,10 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 		state().readStateVars(*function->annotation().contract, contractAddressValue(_funCall));
 	}
 
-	smtutil::Expression pred = predicate(_funCall);
+	std::vector<Expression const*> arguments;
+	for (auto& arg: _funCall.sortedArguments())
+		arguments.push_back(&(*arg));
+	smtutil::Expression pred = predicate(function, std::nullopt, &funType, arguments, calledAddress);
 
 	auto txConstraints = state().txTypeConstraints() && state().txFunctionConstraints(*function);
 	m_context.addAssertion(pred && txConstraints);
@@ -1264,6 +1334,12 @@ std::set<unsigned> CHC::transactionVerificationTargetsIds(ASTNode const* _txRoot
 	return verificationTargetsIds;
 }
 
+bool CHC::usesStaticCall(FunctionDefinition const* _funDef, FunctionType const* _funType)
+{
+	auto kind = _funType->kind();
+	return (_funDef && (_funDef->stateMutability() == StateMutability::Pure || _funDef->stateMutability() == StateMutability::View)) || kind == FunctionType::Kind::BareStaticCall;
+}
+
 bool CHC::usesStaticCall(FunctionCall const& _funCall)
 {
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
@@ -1384,7 +1460,9 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 					auto errorPost = errorFlag().increaseIndex();
 					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-					std::vector<smtutil::Expression> args{errorPost, state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
+					std::vector<smtutil::Expression> args =
+						commonStateExpressions(errorPost, state().thisAddress()) +
+						std::vector<smtutil::Expression>{state().tx(), state().state(1)};
 					args += state1 +
 						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 						std::vector<smtutil::Expression>{state().state(2)} +
@@ -1733,40 +1811,36 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 	solAssert(false, "");
 }
 
-smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
+smtutil::Expression CHC::predicate(
+	FunctionDefinition const* _funDef,
+	std::optional<Expression const*> _boundArgumentCall,
+	FunctionType const* _funType,
+	std::vector<Expression const*> _arguments,
+	smtutil::Expression _contractAddressValue
+)
 {
-	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	auto kind = funType.kind();
+	solAssert(_funType, "");
+	auto kind = _funType->kind();
 	solAssert(kind == FunctionType::Kind::Internal || kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
-
-	solAssert(m_currentContract, "");
-	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
-	if (!function)
+	if (!_funDef)
 		return smtutil::Expression(true);
 
-	auto contractAddressValue = [this](FunctionCall const& _f) {
-		auto [callExpr, callOptions] = functionCallExpression(_f);
-
-		FunctionType const& funType = dynamic_cast<FunctionType const&>(*callExpr->annotation().type);
-		if (funType.kind() == FunctionType::Kind::Internal)
-			return state().thisAddress();
-		if (MemberAccess const* callBase = dynamic_cast<MemberAccess const*>(callExpr))
-			return expr(callBase->expression());
-		solAssert(false, "Unreachable!");
-	};
 	errorFlag().increaseIndex();
-	std::vector<smtutil::Expression> args{errorFlag().currentValue(), contractAddressValue(_funCall), state().abi(), state().crypto(), state().tx(), state().state()};
 
-	auto const* contract = function->annotation().contract;
+	std::vector<smtutil::Expression> args =
+		commonStateExpressions(errorFlag().currentValue(), _contractAddressValue) +
+		std::vector<smtutil::Expression>{state().tx(), state().state()};
+
+	auto const* contract = _funDef->annotation().contract;
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
-	solAssert(kind != FunctionType::Kind::Internal || function->isFree() || (contract && contract->isLibrary()) || util::contains(hierarchy, contract), "");
+	solAssert(kind != FunctionType::Kind::Internal || _funDef->isFree() || (contract && contract->isLibrary()) || util::contains(hierarchy, contract), "");
 
 	if (kind == FunctionType::Kind::Internal)
 		contract = m_currentContract;
 
 	args += currentStateVariables(*contract);
-	args += symbolicArguments(_funCall, contract);
-	if (!usesStaticCall(_funCall))
+	args += symbolicArguments(_funDef->parameters(), _arguments, _boundArgumentCall);
+	if (!usesStaticCall(_funDef, _funType))
 	{
 		state().newState();
 		for (auto const& var: stateVariablesIncludingInheritedAndPrivate(*contract))
@@ -1775,7 +1849,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 	args += std::vector<smtutil::Expression>{state().state()};
 	args += currentStateVariables(*contract);
 
-	for (auto var: function->parameters() + function->returnParameters())
+	for (auto var: _funDef->parameters() + _funDef->returnParameters())
 	{
 		if (m_context.knownVariable(*var))
 			m_context.variable(*var)->increaseIndex();
@@ -1784,10 +1858,10 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		args.push_back(currentValue(*var));
 	}
 
-	Predicate const& summary = *m_summaries.at(contract).at(function);
+	Predicate const& summary = *m_summaries.at(contract).at(_funDef);
 	auto from = smt::function(summary, contract, m_context);
 	Predicate const& callPredicate = *createSummaryBlock(
-		*function,
+		*_funDef,
 		*contract,
 		kind == FunctionType::Kind::Internal ? PredicateType::InternalCall : PredicateType::ExternalCallTrusted
 	);
@@ -2237,7 +2311,6 @@ std::optional<std::string> CHC::generateCounterexample(CHCSolverInterface::CexGr
 					path.emplace_back("State: " + modelMsg);
 			}
 		}
-
 		std::string txCex = summaryPredicate->formatSummaryCall(summaryArgs, m_charStreamProvider);
 
 		std::list<std::string> calls;
@@ -2411,4 +2484,11 @@ frontend::Expression const* CHC::valueOption(FunctionCallOptions const* _options
 void CHC::decreaseBalanceFromOptionsValue(Expression const& _value)
 {
 	state().addBalance(state().thisAddress(), 0 - expr(_value));
+}
+
+std::vector<smtutil::Expression> CHC::commonStateExpressions(smtutil::Expression const& error, smtutil::Expression const& address)
+{
+	if (state().hasBytesConcatFunction())
+		return {error, address, state().abi(), state().bytesConcat(), state().crypto()};
+	return {error, address, state().abi(), state().crypto()};
 }

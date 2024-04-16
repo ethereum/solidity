@@ -20,7 +20,9 @@
 # ------------------------------------------------------------------------------
 
 import sys
+import subprocess
 from pathlib import Path
+from shutil import which
 
 # Our scripts/ is not a proper Python package so we need to modify PYTHONPATH to import from it
 # pragma pylint: disable=import-error,wrong-import-position
@@ -32,11 +34,24 @@ from runners.base import TestConfig
 from runners.foundry import FoundryRunner
 from test_helpers import SettingsPreset
 
+class PRBMathRunner(FoundryRunner):
+    def configure(self):
+        if which("pnpm") is None:
+            raise RuntimeError("pnpm not found.")
+
+        self.setup_presets_profiles()
+        # Starting from version v4.0.2, the default installation method for PRBMath dependencies
+        # has transitioned from Foundry to Node.js.
+        subprocess.run(
+            ["pnpm", "install"],
+            env=self.env,
+            check=True
+        )
+
 test_config = TestConfig(
     name="PRBMath",
     repo_url="https://github.com/PaulRBerg/prb-math.git",
-    ref_type="branch",
-    ref="main",
+    ref="<latest-release>",
     compile_only_presets=[
         # pylint: disable=line-too-long
         # SettingsPreset.IR_NO_OPTIMIZE,       # Error: Yul exception:Variable expr_15699_address is 2 slot(s) too deep inside the stack. Stack too deep.
@@ -50,4 +65,4 @@ test_config = TestConfig(
     ],
 )
 
-sys.exit(run_test(FoundryRunner(argv=sys.argv[1:], config=test_config)))
+sys.exit(run_test(PRBMathRunner(argv=sys.argv[1:], config=test_config)))

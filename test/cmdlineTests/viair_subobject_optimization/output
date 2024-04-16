@@ -117,77 +117,70 @@ sub_0: assembly {
     tag_3:
       jumpi(tag_7, callvalue)
       jumpi(tag_7, slt(add(not(0x03), calldatasize), 0x00))
-      not(0x1f)
         /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
       dataSize(sub_0)
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
+      swap1
+      not(0x1f)
+      swap1
+      dup2
       0x3f
+      dup5
+      add
+      and
       dup2
       add
-      dup3
-      and
+      swap2
+      dup2
       dup4
-      add
-      swap1
-      dup4
-      dup3
       lt
       0xffffffffffffffff
-      dup4
+      dup5
       gt
       or
       tag_9
       jumpi
+      0x40
       swap3
-      swap1
-      0x40
-      swap1
-      0x40
+      dup4
       mstore
         /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
       dup4
       dup3
       mstore
       0x20
+      dup3
+      add
       swap4
       dataOffset(sub_0)
-      0x20
-      dup5
-      add
+      dup6
       codecopy
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
-      mload(0x40)
-      swap4
-      dup5
-      swap3
-        /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
-      0x20
-        /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
-      dup5
-      mstore
-      dup1
-      mload
-      swap3
+      0x1f
       dup4
+      mload
+      swap5
+      dup6
+      swap4
         /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
       0x20
         /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
-      dup7
+      dup6
+      mstore
+      mload
+      dup1
+      swap2
+      dup2
+        /* "viair_subobject_optimization/input.sol":745:765  type(C).creationCode */
+      0x20
+        /* "viair_subobject_optimization/input.sol":669:772  contract D {... */
+      dup8
       add
       mstore
-      0x00
-    tag_11:
-      dup5
-      dup2
-      lt
-      tag_12
-      jumpi
-      dup6
-      0x40
-      dup2
-      dup10
-      0x1f
-      dup10
+      dup7
+      dup7
+      add
+      mcopy
       0x00
       dup6
       dup3
@@ -203,25 +196,6 @@ sub_0: assembly {
       add
       swap1
       return
-    tag_12:
-      dup3
-      dup2
-      add
-      dup5
-      add
-      mload
-      dup9
-      dup3
-      add
-      dup4
-      add
-      mstore
-      dup8
-      swap6
-      pop
-      dup4
-      add
-      jump(tag_11)
     tag_9:
       mstore(0x00, shl(0xe0, 0x4e487b71))
       mstore(0x04, 0x41)

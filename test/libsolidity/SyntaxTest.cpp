@@ -45,6 +45,11 @@ SyntaxTest::SyntaxTest(
 	CommonSyntaxTest(_filename, _evmVersion),
 	m_minSeverity(_minSeverity)
 {
+	static std::set<std::string> const compileViaYulAllowedValues{"true", "false"};
+
+	m_compileViaYul = m_reader.stringSetting("compileViaYul", "false");
+	if (!util::contains(compileViaYulAllowedValues, m_compileViaYul))
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileViaYul value: " + m_compileViaYul + "."));
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
 }
 
@@ -58,6 +63,7 @@ void SyntaxTest::setupCompiler(CompilerStack& _compiler)
 		OptimiserSettings::full() :
 		OptimiserSettings::minimal()
 	);
+	_compiler.setViaIR(m_compileViaYul == "true");
 	_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
 }
@@ -67,7 +73,7 @@ void SyntaxTest::parseAndAnalyze()
 	try
 	{
 		runFramework(withPreamble(m_sources.sources), PipelineStage::Compilation);
-		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis))
+		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis) && !compiler().isExperimentalAnalysis())
 		{
 			ErrorList const& errors = compiler().errors();
 			auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
@@ -85,7 +91,7 @@ void SyntaxTest::parseAndAnalyze()
 	catch (UnimplementedFeatureError const& _e)
 	{
 		m_errorList.emplace_back(SyntaxTestError{
-			"UnimplementedFeatureError",
+			Error::Type::UnimplementedFeatureError,
 			std::nullopt,
 			errorMessage(_e),
 			"",
@@ -134,7 +140,7 @@ void SyntaxTest::filterObtainedErrors()
 			}
 		}
 		m_errorList.emplace_back(SyntaxTestError{
-			Error::formatErrorType(currentError->type()),
+			currentError->type(),
 			currentError->errorId(),
 			errorMessage(*currentError),
 			sourceName,
