@@ -785,8 +785,8 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 				return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
 			});
 
-			auto runGas = [&](AssemblyItems const& items) {
-				GasMeter gasMeter{std::make_shared<KnownState>(), _settings.evmVersion};
+			auto runGas = [&](AssemblyItems const& items, KnownState _state) {
+				GasMeter gasMeter{std::make_shared<KnownState>(_state), _settings.evmVersion};
 				GasMeter::GasConsumption gas;
 				for (auto const& item: items)
 					gas += gasMeter.estimateMax(item);
@@ -807,8 +807,8 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 				{
 					optimisedChunk = eliminator.getOptimizedItems();
 					solAssert(iter >= orig);
-					auto originalCost = static_cast<bigint>(iter - orig) + runs * runGas(AssemblyItems(orig, iter)).value;
-					auto optimizedCost = static_cast<bigint>(optimisedChunk.size()) + runs * runGas(optimisedChunk).value;
+					auto originalCost = static_cast<bigint>(iter - orig) + runs * runGas(AssemblyItems(orig, iter), eliminator.getKnownState()).value;
+					auto optimizedCost = static_cast<bigint>(optimisedChunk.size()) + runs * runGas(optimisedChunk, eliminator.getKnownState()).value;
 					shouldReplace = optimizedCost < originalCost;
 				}
 				catch (StackTooDeepException const&)
@@ -830,8 +830,8 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
-			auto optimisedItemsCost = static_cast<bigint>(optimisedItems.size()) + runs * runGas(optimisedItems).value;
-			auto itemsCost = static_cast<bigint>(m_items.size()) + runs * runGas(m_items).value;
+			auto optimisedItemsCost = static_cast<bigint>(optimisedItems.size()) + runs * runGas(optimisedItems, KnownState{}).value;
+			auto itemsCost = static_cast<bigint>(m_items.size()) + runs * runGas(m_items, KnownState{}).value;
 			if (optimisedItemsCost < itemsCost)
 			{
 				m_items = std::move(optimisedItems);
