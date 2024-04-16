@@ -4259,9 +4259,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			});
 		}
 		else
-		{
 			solAssert(false, "Only enums, contracts, structs or integer types supported for now");
-		}
 	}
 	}
 	solAssert(false, "Unknown kind of magic.");
