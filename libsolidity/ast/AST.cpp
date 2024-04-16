@@ -392,17 +392,17 @@ std::vector<std::pair<ASTPointer<IdentifierPath>, std::optional<Token>>> UsingFo
 
 void StructDefinition::insertEip712EncodedSubtypes(std::set<std::string>& subtypes) const
 {
-	for (size_t i = 0; i < m_members.size(); i++)
+	for (auto const& member: m_members)
 	{
 		Declaration const* declaration = nullptr;
 
-		switch (m_members[i]->type()->category())
+		switch (member->type()->category())
 		{
 			case Type::Category::Struct:
-				declaration = m_members[i]->type()->typeDefinition();
+				declaration = member->type()->typeDefinition();
 				break;
 			case Type::Category::Array:
-				if (auto const* arrayType = dynamic_cast<ArrayType const*>(m_members[i]->type()))
+				if (auto const* arrayType = dynamic_cast<ArrayType const*>(member->type()))
 					if (auto finalBaseType = dynamic_cast<StructType const*>(arrayType->finalBaseType(false)))
 						declaration = finalBaseType->typeDefinition();
 				break;
