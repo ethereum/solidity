@@ -1452,7 +1452,7 @@ jobs:
           name: Install dependencies
           command: |
             cd hardhat
-            pnpm install
+            pnpm install --no-frozen-lockfile
       - run:
           name: Run hardhat-core test suite
           command: |
