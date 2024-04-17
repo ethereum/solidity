@@ -991,6 +991,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install gas_diff_stats.py dependencies
+          command: python3 -m pip install --user parsec tabulate
+      - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
       - run:
