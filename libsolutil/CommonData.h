@@ -343,6 +343,49 @@ void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
 	}
 }
 
+template<typename T>
+class UniqueVector
+{
+public:
+	std::vector<T> const& contents() const { return m_contents; }
+	size_t size() const { return m_contents.size(); }
+	bool empty() const { return m_contents.empty(); }
+	auto begin() const { return m_contents.begin(); }
+	auto end() const { return m_contents.end(); }
+	void clear() { m_contents.clear(); }
+	bool contains(T const& _value) const
+	{
+		return std::find(m_contents.begin(), m_contents.end(), _value) != m_contents.end();
+	}
+
+	void pushBack(T _value)
+	{
+		if (!contains(_value))
+			m_contents.emplace_back(std::move(_value));
+	}
+
+	void pushBack(UniqueVector<T> const& _values)
+	{
+		for (auto&& value: _values)
+			pushBack(value);
+	}
+
+	void removeAll(std::vector<T> const& _values)
+	{
+		for (auto const& value: _values)
+			m_contents.erase(std::find(m_contents.begin(), m_contents.end(), value));
+	}
+
+private:
+	std::vector<T> m_contents;
+};
+
+template<typename T>
+void swap(UniqueVector<T>& _lhs, UniqueVector<T>& _rhs)
+{
+	std::swap(_lhs.contents(), _rhs.contents());
+}
+
 namespace detail
 {
 
