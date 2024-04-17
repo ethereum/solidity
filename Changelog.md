@@ -8,7 +8,6 @@ Compiler Features:
 
 Bugfixes:
  * SMTChecker: Fix internal error when using bitwise operators with an array element as argument.
- * DockerFiles: Added parsec and tabulate to base dockerfiles
 
 
 ### 0.8.25 (2023-03-14)

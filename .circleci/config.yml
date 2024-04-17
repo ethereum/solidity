@@ -940,11 +940,8 @@ jobs:
             pylint
             z3-solver
             pygments-lexer-solidity
-            parsec
-            tabulate
             deepdiff
             colorama
-            requests
       - run: pylint --version
       - run:
           name: Linting Python Scripts
@@ -1000,10 +997,6 @@ jobs:
     <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - run:
-          # TODO: Add these to the base image
-          name: Install gas_diff_stats.py dependencies
-          command: python3 -m pip install --user parsec tabulate
       - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
