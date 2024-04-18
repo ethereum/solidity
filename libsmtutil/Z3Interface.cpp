@@ -169,6 +169,12 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 				smtAssert(sortSort, "");
 				return m_context.constant(n.c_str(), z3Sort(*sortSort->inner));
 			}
+			else if (n == "tuple_constructor")
+			{
+				auto constructor = z3::func_decl(m_context, Z3_get_tuple_sort_mk_decl(m_context, z3Sort(*_expr.sort)));
+				smtAssert(constructor.arity() == arguments.size());
+				return constructor();
+			}
 			else
 				try
 				{
