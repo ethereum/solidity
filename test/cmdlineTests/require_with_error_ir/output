@@ -184,7 +184,8 @@ object "C_36" {
             }
 
             function require_helper_t_error_7_CustomError_t_rational_1_by_1_t_stringliteral_332c39dcd398ea34a48b871898d589f55fc4c7bce00562fb670c972e7e1b0720(condition , expr_15) {
-                if iszero(condition) {
+                if iszero(condition)
+                {
                     let memPtr := allocate_unbounded()
                     mstore(memPtr, 0x97ea5a2f00000000000000000000000000000000000000000000000000000000)
                     let end := abi_encode_tuple_t_rational_1_by_1_t_stringliteral_332c39dcd398ea34a48b871898d589f55fc4c7bce00562fb670c972e7e1b0720__to_t_uint256_t_string_memory_ptr__fromStack(add(memPtr, 4) , expr_15)
@@ -238,7 +239,8 @@ object "C_36" {
             }
 
             function require_helper_t_error_7_CustomError_t_rational_2_by_1_t_stringliteral_89027a4db8d1d3a0787296eb1553fba0dc506f981f9697f1a66994c458d392b5(condition , expr_29) {
-                if iszero(condition) {
+                if iszero(condition)
+                {
                     let memPtr := allocate_unbounded()
                     mstore(memPtr, 0x97ea5a2f00000000000000000000000000000000000000000000000000000000)
                     let end := abi_encode_tuple_t_rational_2_by_1_t_stringliteral_89027a4db8d1d3a0787296eb1553fba0dc506f981f9697f1a66994c458d392b5__to_t_uint256_t_string_memory_ptr__fromStack(add(memPtr, 4) , expr_29)

@@ -216,6 +216,42 @@ std::string YulUtilFunctions::copyLiteralToStorageFunction(std::string const& _l
 	});
 }
 
+std::string YulUtilFunctions::revertWithError(
+	std::string const& _signature,
+	std::vector<Type const*> const& _parameterTypes,
+	std::vector<ASTPointer<Expression const>> const& _errorArguments,
+	std::string const& _posVar,
+	std::string const& _endVar
+)
+{
+	solAssert((!_posVar.empty() && !_endVar.empty()) || (_posVar.empty() && _endVar.empty()));
+	bool const needsNewVariable = !_posVar.empty() && !_endVar.empty();
+
+	Whiskers templ(R"({
+		let <pos> := <allocateUnbounded>()
+		mstore(<pos>, <hash>)
+		let <end> := <encode>(add(<pos>, 4) <argumentVars>)
+		revert(<pos>, sub(<end>, <pos>))
+	})");
+	templ("pos", needsNewVariable ? _posVar : "memPtr");
+	templ("end", needsNewVariable ? _endVar : "end");
+	templ("hash", formatNumber(util::selectorFromSignatureU256(_signature)));
+	templ("allocateUnbounded", allocateUnboundedFunction());
+
+	std::vector<std::string> errorArgumentVars;
+	std::vector<Type const*> errorArgumentTypes;
+	for (ASTPointer<Expression const> const& arg: _errorArguments)
+	{
+		errorArgumentVars += IRVariable(*arg).stackSlots();
+		solAssert(arg->annotation().type);
+		errorArgumentTypes.push_back(arg->annotation().type);
+	}
+	templ("argumentVars", joinHumanReadablePrefixed(errorArgumentVars));
+	templ("encode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleEncoder(errorArgumentTypes, _parameterTypes));
+
+	return templ.render();
+}
+
 std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType)
 {
 	std::string functionName =
@@ -273,57 +309,37 @@ std::string YulUtilFunctions::requireWithErrorFunction(FunctionCall const& error
 	solAssert(errorDefinition);
 
 	std::string const errorSignature = errorDefinition->functionType(true)->externalSignature();
-	std::string const signatureHash = formatNumber(util::selectorFromSignatureU256(errorSignature));
-	std::string const functionName = [&]() {
-		// Note that in most cases we'll always generate one function per error definition,
-		// because types in the constructor call will match the ones in the definition. The only
-		// exception are calls with types, where each instance has its own type (e.g. literals).
-		std::string name = "require_helper_t_error_" + std::to_string(errorDefinition->id()) + "_" + errorDefinition->name();
-		for (ASTPointer<Expression const> const& argument: errorConstructorCall.sortedArguments())
-		{
-			solAssert(argument->annotation().type);
-			name += ("_" + argument->annotation().type->identifier());
-		}
-		return name;
-	}();
+	// Note that in most cases we'll always generate one function per error definition,
+	// because types in the constructor call will match the ones in the definition. The only
+	// exception are calls with types, where each instance has its own type (e.g. literals).
+	std::string functionName = "require_helper_t_error_" + std::to_string(errorDefinition->id()) + "_" + errorDefinition->name();
+	for (ASTPointer<Expression const> const& argument: errorConstructorCall.sortedArguments())
+	{
+		solAssert(argument->annotation().type);
+		functionName += ("_" + argument->annotation().type->identifier());
+	}
 
-	auto errorArgumentVarsAndTypes = [&]() -> std::tuple<std::vector<std::string>, std::vector<Type const*>> {
-		std::vector<std::string> errorArgumentVars;
-		std::vector<Type const*> errorArgumentTypes;
-		for (ASTPointer<Expression const> const& arg: errorConstructorCall.sortedArguments())
-		{
-			solAssert(arg->annotation().type);
-			if (arg->annotation().type->sizeOnStack() > 0)
-				errorArgumentVars += IRVariable(*arg).stackSlots();
-			errorArgumentTypes.push_back(arg->annotation().type);
-		}
-		return std::make_tuple(std::move(errorArgumentVars), std::move(errorArgumentTypes));
-	}();
+	std::vector<std::string> functionParameterNames;
+	for (ASTPointer<Expression const> const& arg: errorConstructorCall.sortedArguments())
+	{
+		solAssert(arg->annotation().type);
+		if (arg->annotation().type->sizeOnStack() > 0)
+			functionParameterNames += IRVariable(*arg).stackSlots();
+	}
 
 	return m_functionCollector.createFunction(functionName, [&]() {
-		auto [errorArgumentVars, errorArgumentTypes] = errorArgumentVarsAndTypes;
-		std::string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
-			.tupleEncoder(
-				errorArgumentTypes,
-				errorDefinition->functionType(true)->parameterTypes()
-			);
-
 		return Whiskers(R"(
-			function <functionName>(condition <errorArguments>) {
-				if iszero(condition) {
-					let memPtr := <allocateUnbounded>()
-					mstore(memPtr, <errorHash>)
-					let end := <abiEncodeFunc>(add(memPtr, <hashHeaderSize>) <errorArguments>)
-					revert(memPtr, sub(end, memPtr))
-				}
+			function <functionName>(condition <functionParameterNames>) {
+				if iszero(condition)
+					<revertWithError>
 			}
 		)")
 		("functionName", functionName)
-		("allocateUnbounded", allocateUnboundedFunction())
-		("errorHash", signatureHash)
-		("abiEncodeFunc", encodeFunc)
-		("hashHeaderSize", std::to_string(4))
-		("errorArguments", joinHumanReadablePrefixed(errorArgumentVars))
+		("functionParameterNames", joinHumanReadablePrefixed(functionParameterNames))
+		// We're creating parameter names from the expressions passed into the constructor call,
+		// which will result in odd names like `expr_29` that would normally be used for locals.
+		// Note that this is the naming expected by `revertWithError()`.
+		("revertWithError", revertWithError(errorSignature, errorDefinition->functionType(true)->parameterTypes(), errorConstructorCall.sortedArguments()))
 		.render();
 	});
 }

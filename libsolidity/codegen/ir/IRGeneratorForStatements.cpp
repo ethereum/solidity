@@ -3389,31 +3389,14 @@ void IRGeneratorForStatements::revertWithError(
 	std::vector<ASTPointer<Expression const>> const& _errorArguments
 )
 {
-	Whiskers templ(R"({
-		let <pos> := <allocateUnbounded>()
-		mstore(<pos>, <hash>)
-		let <end> := <encode>(add(<pos>, 4) <argumentVars>)
-		revert(<pos>, sub(<end>, <pos>))
-	})");
-	templ("pos", m_context.newYulVariable());
-	templ("end", m_context.newYulVariable());
-	templ("hash", util::selectorFromSignatureU256(_signature).str());
-	templ("allocateUnbounded", m_utils.allocateUnboundedFunction());
-
-	std::vector<std::string> errorArgumentVars;
-	std::vector<Type const*> errorArgumentTypes;
-	for (ASTPointer<Expression const> const& arg: _errorArguments)
-	{
-		errorArgumentVars += IRVariable(*arg).stackSlots();
-		solAssert(arg->annotation().type);
-		errorArgumentTypes.push_back(arg->annotation().type);
-	}
-	templ("argumentVars", joinHumanReadablePrefixed(errorArgumentVars));
-	templ("encode", m_context.abiFunctions().tupleEncoder(errorArgumentTypes, _parameterTypes));
-
-	appendCode() << templ.render();
+	appendCode() << m_utils.revertWithError(
+		_signature,
+		_parameterTypes,
+		_errorArguments,
+		m_context.newYulVariable(),
+		m_context.newYulVariable()
+	);
 }
-
 
 bool IRGeneratorForStatements::visit(TryCatchClause const& _clause)
 {
