@@ -465,7 +465,12 @@ std::optional<Json::Value> checkOptimizerDetailSteps(Json::Value const& _details
 		{
 			std::string const fullSequence = _details[_name].asString();
 			if (!_runYulOptimizer && !OptimiserSuite::isEmptyOptimizerSequence(fullSequence))
-				return formatFatalError(Error::Type::JSONError, "If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted.");
+			{
+				std::string errorMessage =
+					"If Yul optimizer is disabled, only an empty optimizerSteps sequence is accepted."
+					" Note that the empty optimizer sequence is properly denoted by \":\".";
+				return formatFatalError(Error::Type::JSONError, errorMessage);
+			}
 
 			try
 			{

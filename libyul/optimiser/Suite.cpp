@@ -77,6 +77,8 @@
 
 #include <range/v3/view/map.hpp>
 #include <range/v3/action/remove.hpp>
+#include <range/v3/algorithm/count.hpp>
+#include <range/v3/algorithm/none_of.hpp>
 
 #include <limits>
 #include <tuple>
@@ -385,21 +387,9 @@ void OptimiserSuite::validateSequence(std::string_view _stepAbbreviations)
 
 bool OptimiserSuite::isEmptyOptimizerSequence(std::string const& _sequence)
 {
-	size_t delimiterCount{0};
-	for (char const step: _sequence)
-		switch (step)
-		{
-		case ':':
-			if (++delimiterCount > 1)
-				return false;
-			break;
-		case ' ':
-		case '\n':
-			break;
-		default:
-			return false;
-		}
-	return true;
+	return
+		ranges::count(_sequence, ':') == 1 &&
+		ranges::none_of(_sequence, [](auto _step) { return _step != ':' && _step != ' ' && _step != '\n'; });
 }
 
 void OptimiserSuite::runSequence(std::string_view _stepAbbreviations, Block& _ast, bool _repeatUntilStable)
