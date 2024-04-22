@@ -451,7 +451,7 @@ The literal ``MeE`` is equivalent to ``M * 10**E``.
 Examples include ``2e10``, ``-2e10``, ``2e-10``, ``2.5e1``.
 
 Underscores can be used to separate the digits of a numeric literal to aid readability.
-For example, decimal ``123_000``, hexadecimal ``0x2eff_abde``, scientific decimal notation ``1_2e345_678`` are all valid.
+For example, decimal ``123_000``, hexadecimal ``0x2eff_abde``, binary ``0b01011111_11010000``, scientific decimal notation ``1_2e345_678`` are all valid.
 Underscores are only allowed between two digits and only one consecutive underscore is allowed.
 There is no additional semantic meaning added to a number literal containing underscores,
 the underscores are ignored.

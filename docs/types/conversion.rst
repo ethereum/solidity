@@ -130,7 +130,7 @@ If the array is shorter than the target type, it will be padded with zeros at th
         }
     }
 
-.. index:: ! literal;conversion, literal;rational, literal;hexadecimal number
+.. index:: ! literal;conversion, literal;rational, literal;hexadecimal number, literal;binary number
 .. _types-conversion-literals:
 
 Conversions between Literals and Elementary Types
@@ -139,7 +139,7 @@ Conversions between Literals and Elementary Types
 Integer Types
 -------------
 
-Decimal and hexadecimal number literals can be implicitly converted to any integer type
+Decimal and hexadecimal and binary number literals can be implicitly converted to any integer type
 that is large enough to represent it without truncation:
 
 .. code-block:: solidity
@@ -147,21 +147,25 @@ that is large enough to represent it without truncation:
     uint8 a = 12; // fine
     uint32 b = 1234; // fine
     uint16 c = 0x123456; // fails, since it would have to truncate to 0x3456
+    uint8 d = 0b1111000011110101; // fails, since it would have to truncate to 0b11110101
 
 .. note::
     Prior to version 0.8.0, any decimal or hexadecimal number literals could be explicitly
     converted to an integer type. From 0.8.0, such explicit conversions are as strict as implicit
     conversions, i.e., they are only allowed if the literal fits in the resulting range.
 
-.. index:: literal;string, literal;hexadecimal
+.. index:: literal;string, literal;hexadecimal, literal;binary
 
 Fixed-Size Byte Arrays
 ----------------------
 
 Decimal number literals cannot be implicitly converted to fixed-size byte arrays. Hexadecimal
 number literals can be, but only if the number of hex digits exactly fits the size of the bytes
-type. As an exception both decimal and hexadecimal literals which have a value of zero can be
-converted to any fixed-size bytes type:
+type. Binary number literals can be, but only if the number of binary digits exactly fits the size of
+the bytes type.
+
+As an exception of both decimal and hexadecimal and binary number literals which have a value of zero
+can be converted to any fixed-size bytes type:
 
 .. code-block:: solidity
 
@@ -172,6 +176,8 @@ converted to any fixed-size bytes type:
     bytes2 e = 0x0012; // fine
     bytes4 f = 0; // fine
     bytes4 g = 0x0; // fine
+    bytes1 h = 0b11010100; // fine
+    bytes2 i = 0b01001110; // not allowed
 
 String literals and hex string literals can be implicitly converted to fixed-size byte arrays,
 if their number of characters is less than or equal to the size of the bytes type:
