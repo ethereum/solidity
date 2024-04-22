@@ -440,9 +440,9 @@ hexStringLiteral: HexString+;
 unicodeStringLiteral: UnicodeStringLiteral+;
 
 /**
- * Number literals can be decimal or hexadecimal numbers with an optional unit.
+ * Number literals can be decimal or hexadecimal numbers or binary numbers with an optional unit.
  */
-numberLiteral: DecimalNumber | HexNumber;
+numberLiteral: DecimalNumber | HexNumber | BinNumber;
 
 /**
  * A curly-braced block of statements. Opens its own scope.

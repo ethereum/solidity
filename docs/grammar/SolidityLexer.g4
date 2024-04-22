@@ -222,6 +222,15 @@ fragment EvenHexDigits: HexCharacter HexCharacter ('_'? HexCharacter HexCharacte
 fragment HexCharacter: [0-9A-Fa-f];
 
 /**
+ * Bin numbers consist of a prefix and an arbitrary number of binary digits that may be delimited by underscores.
+ */
+BinNumber: '0' 'b' BinDigits;
+//@doc:inline
+fragment BinDigits: BinCharacter ('_'? BinCharacter)*;
+//@doc:inline
+fragment BinCharacter: [01];
+
+/**
  * Scanned but not used by any rule, i.e, disallowed.
  * solc parser considers number starting with '0', not immediately followed by '.' or 'x' as
  * octal, even if non octal digits '8' and '9' are present.
