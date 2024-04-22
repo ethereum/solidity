@@ -225,6 +225,23 @@ BOOST_AUTO_TEST_CASE(hex_numbers)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
 }
 
+BOOST_AUTO_TEST_CASE(bin_numbers)
+{
+	TestScanner scanner("var x = 0b01001010101001;");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Var);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Assign);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0b01001010101001");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Semicolon);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset("0b1011");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0b1011");
+	scanner.reset("0B1011");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Illegal);
+}
+
 BOOST_AUTO_TEST_CASE(octal_numbers)
 {
 	TestScanner scanner("07");
@@ -404,7 +421,7 @@ BOOST_AUTO_TEST_CASE(number_literals_with_trailing_underscore_at_eos)
 
 BOOST_AUTO_TEST_CASE(negative_numbers)
 {
-	TestScanner scanner("var x = -.2 + -0x78 + -7.3 + 8.9 + 2e-2;");
+	TestScanner scanner("var x = -.2 + -0x78 + -7.3 + 8.9 + 2e-2 + -0b11011;");
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Var);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Assign);
@@ -425,6 +442,10 @@ BOOST_AUTO_TEST_CASE(negative_numbers)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Add);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "2e-2");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Add);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Sub);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "0b11011");
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Semicolon);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
