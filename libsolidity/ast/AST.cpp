@@ -1012,6 +1012,13 @@ bool Literal::isHexNumber() const
 	return boost::starts_with(value(), "0x");
 }
 
+bool Literal::isBinNumber() const
+{
+	if (token() != Token::Number)
+		return false;
+	return boost::starts_with(value(), "0b");
+}
+
 bool Literal::looksLikeAddress() const
 {
 	if (subDenomination() != SubDenomination::None)

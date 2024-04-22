@@ -916,6 +916,16 @@ std::tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _li
 			// process as hex
 			value = bigint(valueString);
 		}
+		else if (boost::starts_with(valueString, "0b"))
+		{
+			// process as bin
+			bigint tempValue;
+			size_t valueStringLength = valueString.length();
+			for (size_t i = 0; i < valueStringLength - 2; i++)
+				if (valueString[i + 2] != '0')
+					boost::multiprecision::bit_set(tempValue, static_cast<unsigned int>(valueStringLength - 3 - i));
+			value = tempValue;
+		}
 		else if (expPoint != valueString.end())
 		{
 			// Parse mantissa and exponent. Checks numeric limit.

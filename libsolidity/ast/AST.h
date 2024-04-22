@@ -2448,6 +2448,8 @@ public:
 
 	/// @returns true if this is a number with a hex prefix.
 	bool isHexNumber() const;
+	/// @returns true if this is a number with a bin prefix.
+	bool isBinNumber() const;
 
 	/// @returns true if this looks like a checksummed address.
 	bool looksLikeAddress() const;

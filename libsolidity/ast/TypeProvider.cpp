@@ -370,6 +370,12 @@ RationalNumberType const* TypeProvider::rationalNumber(Literal const& _literal)
 			if (digitCount % 2 == 0 && (digitCount / 2) <= 32)
 				compatibleBytesType = fixedBytes(static_cast<unsigned>(digitCount / 2));
 		}
+		else if (_literal.isBinNumber())
+		{
+			size_t const digitCount = _literal.valueWithoutUnderscores().length() - 2;
+			if (digitCount % 8 == 0 && digitCount <= 256)
+				compatibleBytesType = fixedBytes(static_cast<unsigned>(digitCount / 8));
+		}
 
 		return rationalNumber(std::get<1>(validLiteral), compatibleBytesType);
 	}
