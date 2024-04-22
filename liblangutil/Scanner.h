@@ -80,6 +80,7 @@ enum class ScannerError
 	IllegalToken,
 	IllegalHexString,
 	IllegalHexDigit,
+	IllegalBinDigit,
 	IllegalCommentTerminator,
 	IllegalEscapeSequence,
 	UnicodeCharacterInNonUnicodeString,

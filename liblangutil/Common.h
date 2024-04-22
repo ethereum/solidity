@@ -30,6 +30,11 @@ inline bool isHexDigit(char c)
 		('A' <= c && c <= 'F');
 }
 
+inline bool isBinDigit(char c)
+{
+	return c == '0' || c == '1';
+}
+
 inline bool isWhiteSpace(char c)
 {
 	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
@@ -53,6 +58,13 @@ inline int hexValue(char c)
 		return c - 'a' + 10;
 	else if (c >= 'A' && c <= 'F')
 		return c - 'A' + 10;
+	else return -1;
+}
+
+inline int binValue(char c)
+{
+	if (c >= '0' && c <= '1')
+		return c - '0';
 	else return -1;
 }
 }

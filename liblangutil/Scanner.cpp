@@ -73,6 +73,7 @@ std::string to_string(ScannerError _errorCode)
 		case ScannerError::IllegalToken: return "Invalid token.";
 		case ScannerError::IllegalHexString: return "Expected even number of hex-nibbles.";
 		case ScannerError::IllegalHexDigit: return "Hexadecimal digit missing or invalid.";
+		case ScannerError::IllegalBinDigit: return "Binary digit missing or invalid.";
 		case ScannerError::IllegalCommentTerminator: return "Expected multi-line comment-terminator.";
 		case ScannerError::IllegalEscapeSequence: return "Invalid escape sequence.";
 		case ScannerError::UnicodeCharacterInNonUnicodeString: return "Invalid character in string. If you are trying to use Unicode characters, use a unicode\"...\" string literal.";
@@ -931,7 +932,7 @@ Token Scanner::scanNumber(char _charSeen)
 	else
 	{
 		solAssert(_charSeen == 0, "");
-		// if the first character is '0' we must check for octals and hex
+		// if the first character is '0' we must check for octals and hex and bin
 		if (m_char == '0')
 		{
 			addLiteralCharAndAdvance();
@@ -945,6 +946,17 @@ Token Scanner::scanNumber(char _charSeen)
 					return setError(ScannerError::IllegalHexDigit); // we must have at least one hex digit after 'x'
 
 				while (isHexDigit(m_char) || m_char == '_') // We keep the underscores for later validation
+					addLiteralCharAndAdvance();
+			}
+			else if (m_char == 'b')
+			{
+				// binary number
+				kind = BINARY;
+				addLiteralCharAndAdvance();
+				if (!isBinDigit(m_char))
+					return setError(ScannerError::IllegalBinDigit); // we must have at least one bin digit after 'b'
+
+				while (isBinDigit(m_char) || m_char == '_') // We keep the underscores for later validation
 					addLiteralCharAndAdvance();
 			}
 			else if (isDecimalDigit(m_char))
