@@ -27,5 +27,23 @@ contract C {
       bytes32 b32 = 0x0;
       b1; b2; b3; b4; b8; b16; b32;
     }
+    function i() public pure {
+      bytes1 b1 = 0b000;
+      bytes2 b2 = 0b00000;
+      bytes3 b3 = 0b0000000;
+      bytes4 b4 = 0b000000000;
+      bytes8 b8 = 0b00000000000000000;
+      b1; b2; b3; b4; b8;
+    }
+    function j() public pure {
+      bytes1 b1 = 0b0;
+      bytes2 b2 = 0b0;
+      bytes3 b3 = 0b0;
+      bytes4 b4 = 0b0;
+      bytes8 b8 = 0b0;
+      bytes16 b16 = 0b0;
+      bytes32 b32 = 0b0;
+      b1; b2; b3; b4; b8; b16; b32;
+    }
 }
 // ----
