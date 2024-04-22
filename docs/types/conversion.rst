@@ -147,7 +147,6 @@ that is large enough to represent it without truncation:
     uint8 a = 12; // fine
     uint32 b = 1234; // fine
     uint16 c = 0x123456; // fails, since it would have to truncate to 0x3456
-    uint8 d = 0b1111000011110101; // fails, since it would have to truncate to 0b11110101
 
 .. note::
     Prior to version 0.8.0, any decimal or hexadecimal number literals could be explicitly
@@ -176,8 +175,6 @@ can be converted to any fixed-size bytes type:
     bytes2 e = 0x0012; // fine
     bytes4 f = 0; // fine
     bytes4 g = 0x0; // fine
-    bytes1 h = 0b11010100; // fine
-    bytes2 i = 0b01001110; // not allowed
 
 String literals and hex string literals can be implicitly converted to fixed-size byte arrays,
 if their number of characters is less than or equal to the size of the bytes type:
