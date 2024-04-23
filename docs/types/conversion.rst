@@ -139,7 +139,7 @@ Conversions between Literals and Elementary Types
 Integer Types
 -------------
 
-Decimal and hexadecimal and binary number literals can be implicitly converted to any integer type
+Decimal, hexadecimal and binary number literals can be implicitly converted to any integer type
 that is large enough to represent it without truncation:
 
 .. code-block:: solidity
@@ -160,11 +160,11 @@ Fixed-Size Byte Arrays
 
 Decimal number literals cannot be implicitly converted to fixed-size byte arrays. Hexadecimal
 number literals can be, but only if the number of hex digits exactly fits the size of the bytes
-type. Binary number literals can be, but only if the number of binary digits exactly fits the size of
-the bytes type.
+type. The same applies to binary number literals, which can only be implicitly converted if
+the number of binary digits exactly fits the size of the bytes type.
 
-As an exception of both decimal and hexadecimal and binary number literals which have a value of zero
-can be converted to any fixed-size bytes type:
+The only exception to this is that zero literals in all of the above forms (binary, decimal and hex)
+can be converted to any fixed-size bytes type.
 
 .. code-block:: solidity
 
