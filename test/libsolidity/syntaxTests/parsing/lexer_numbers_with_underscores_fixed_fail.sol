@@ -10,7 +10,7 @@ contract C {
 }
 // ----
 // SyntaxError 2090: (57-64): Invalid use of underscores in number literal. No trailing underscores allowed.
-// SyntaxError 2990: (81-91): Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.
+// SyntaxError 2990: (81-91): Invalid use of underscores in number literal. Only one consecutive underscore between digits is allowed.
 // SyntaxError 1023: (108-112): Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.
 // SyntaxError 3891: (129-133): Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.
 // SyntaxError 6165: (150-157): Invalid use of underscores in number literal. No underscore in front of exponent allowed.
