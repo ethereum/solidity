@@ -30,7 +30,7 @@ inline bool isHexDigit(char c)
 		('A' <= c && c <= 'F');
 }
 
-inline bool isBinDigit(char c)
+inline bool isBinDigit(char const c)
 {
 	return c == '0' || c == '1';
 }
