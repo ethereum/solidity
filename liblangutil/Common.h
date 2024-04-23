@@ -60,11 +60,4 @@ inline int hexValue(char c)
 		return c - 'A' + 10;
 	else return -1;
 }
-
-inline int binValue(char c)
-{
-	if (c >= '0' && c <= '1')
-		return c - '0';
-	else return -1;
-}
 }
