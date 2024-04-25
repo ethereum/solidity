@@ -90,9 +90,25 @@ public:
 	/// signature: (slot) ->
 	std::string copyLiteralToStorageFunction(std::string const& _literal);
 
+	/// @returns statements to revert with an error.
+	/// Generates code to revert with an error. The error arguments are assumed to
+	/// be already evaluated and available in local IRVariables, but not yet
+	/// converted.
+	std::string revertWithError(
+		std::string const& _signature,
+		std::vector<Type const*> const& _parameterTypes,
+		std::vector<ASTPointer<Expression const>> const& _errorArguments,
+		std::string const& _posVar = {},
+		std::string const& _endVar = {}
+	);
+
 	// @returns the name of a function that has the equivalent logic of an
 	// `assert` or `require` call.
 	std::string requireOrAssertFunction(bool _assert, Type const* _messageType = nullptr);
+
+	// @returns function that has equivalent logic of a require function, but with a custom
+	// error constructor parameter.
+	std::string requireWithErrorFunction(FunctionCall const& errorConstructorCall);
 
 	/// @returns the name of a function that takes a (cleaned) value of the given value type and
 	/// left-aligns it, usually for use in non-padded encoding.

@@ -4,6 +4,5 @@ contract C {
         require(c, E(2, 7));
     }
 }
-// ====
-// compileViaYul: true
 // ----
+// UnimplementedFeatureError: Require with a custom error is only available using the via-ir pipeline.

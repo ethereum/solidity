@@ -85,8 +85,9 @@ registering with a username and password, all you need is an Ethereum keypair.
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity ^0.8.26;
 
+    // This will only compile via IR
     contract Coin {
         // The keyword "public" makes variables
         // accessible from other contracts
@@ -118,12 +119,7 @@ registering with a username and password, all you need is an Ethereum keypair.
         // Sends an amount of existing coins
         // from any caller to an address
         function send(address receiver, uint amount) public {
-            if (amount > balances[msg.sender])
-                revert InsufficientBalance({
-                    requested: amount,
-                    available: balances[msg.sender]
-                });
-
+            require(amount > balances[msg.sender], InsufficientBalance(amount, balances[msg.sender]));
             balances[msg.sender] -= amount;
             balances[receiver] += amount;
             emit Sent(msg.sender, receiver, amount);
@@ -225,8 +221,8 @@ than the maximum value of ``uint`` (``2**256 - 1``). This is also true for the s
 :ref:`Errors <errors>` allow you to provide more information to the caller about
 why a condition or operation failed. Errors are used together with the
 :ref:`revert statement <revert-statement>`. The ``revert`` statement unconditionally
-aborts and reverts all changes similar to the ``require`` function, but it also
-allows you to provide the name of an error and additional data which will be supplied to the caller
+aborts and reverts all changes, much like the :ref:`require function <assert-and-require-statements>`.
+Both approaches allow you to provide the name of an error and additional data which will be supplied to the caller
 (and eventually to the front-end application or block explorer) so that
 a failure can more easily be debugged or reacted upon.
 

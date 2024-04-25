@@ -39,6 +39,10 @@ do
     then
         opts+=(--ignore-warnings)
     fi
+    if grep "// This will only compile via IR" "$f" >/dev/null
+    then
+        opts+=(--via-ir)
+    fi
 
     # Disable the version pragma in code snippets that only work with the current development version.
     # It's necessary because x.y.z won't match `^x.y.z` or `>=x.y.z` pragmas until it's officially released.

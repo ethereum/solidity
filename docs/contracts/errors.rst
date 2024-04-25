@@ -1,22 +1,25 @@
-.. index:: ! error, revert, ! selector; of an error
+.. index:: ! error, revert, require, ! selector; of an error
 .. _errors:
 
-*******************************
-Errors and the Revert Statement
-*******************************
+*************
+Custom Errors
+*************
 
 Errors in Solidity provide a convenient and gas-efficient way to explain to the
 user why an operation failed. They can be defined inside and outside of contracts (including interfaces and libraries).
 
 They have to be used together with the :ref:`revert statement <revert-statement>`
-which causes
-all changes in the current call to be reverted and passes the error data back to the
-caller.
+or the :ref:`require function <assert-and-require-statements>`.
+In the case of ``revert`` statements, or ``require`` calls where the condition is evaluated to be false,
+all changes in the current call are reverted, and the error data passed back to the caller.
+
+The example below shows custom error usage with the ``revert`` statement in function ``transferWithRevertError``,
+as well as the newer approach with ``require`` in function ``transferWithRequireError``.
 
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.4;
+    pragma solidity ^0.8.26;
 
     /// Insufficient balance for transfer. Needed `required` but only
     /// `available` available.
@@ -24,9 +27,10 @@ caller.
     /// @param required requested amount to transfer.
     error InsufficientBalance(uint256 available, uint256 required);
 
+    // This will only compile via IR
     contract TestToken {
         mapping(address => uint) balance;
-        function transfer(address to, uint256 amount) public {
+        function transferWithRevertError(address to, uint256 amount) public {
             if (amount > balance[msg.sender])
                 revert InsufficientBalance({
                     available: balance[msg.sender],
@@ -35,12 +39,22 @@ caller.
             balance[msg.sender] -= amount;
             balance[to] += amount;
         }
+        function transferWithRequireError(address to, uint256 amount) public {
+            require(amount > balance[msg.sender], InsufficientBalance(balance[msg.sender], amount));
+            balance[msg.sender] -= amount;
+            balance[to] += amount;
+        }
         // ...
     }
 
+Another important detail to mention when it comes to using ``require`` with custom errors, is that memory
+allocation for the error-based revert reason will only happen in the reverting case, which, along with
+optimization of constants and string literals makes this about as gas-efficient as the
+``if (!condition) revert CustomError(args)`` pattern.
+
 Errors cannot be overloaded or overridden but are inherited.
 The same error can be defined in multiple places as long as the scopes are distinct.
-Instances of errors can only be created using ``revert`` statements.
+Instances of errors can only be created using ``revert`` statements, or as the second argument to ``require`` functions.
 
 The error creates data that is then passed to the caller with the revert operation
 to either return to the off-chain component or catch it in a :ref:`try/catch statement <try-catch>`.
@@ -65,8 +79,7 @@ The selector consists of the first four bytes of the keccak256-hash of the signa
     only the name of the error is relevant, not the contract or file where it is defined.
 
 The statement ``require(condition, "description");`` would be equivalent to
-``if (!condition) revert Error("description")`` if you could define
-``error Error(string)``.
+``if (!condition) revert Error("description")`` if you could define ``error Error(string)``.
 Note, however, that ``Error`` is a built-in type and cannot be defined in user-supplied code.
 
 Similarly, a failing ``assert`` or similar conditions will revert with an error
