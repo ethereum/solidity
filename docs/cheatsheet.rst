@@ -168,3 +168,44 @@ Modifiers
 - ``override``: States that this function, modifier or public state variable changes
   the behavior of a function or modifier in a base contract.
 
+Optimizer Step Dependencies
+===========================
+
+=========================================== ===================================================== =============================================================== ===========================================
+Step                                        Hard prerequisites                                    Steps that should run before                                    Steps that should run after
+=========================================== ===================================================== =============================================================== ===========================================
+:ref:`a <ssa-transform>`                    Disambiguator, ForLoopInitRewriter                    ExpressionSplitter, CommonSubexpressionEliminator               UnusedAssignEliminator
+:ref:`C <conditional-simplifier>`           Disambiguator                                         SSATransform, DeadCodeEliminator
+:ref:`c <common-subexpression-eliminator>`  Disambiguator, ForLoopInitRewriter                    ExpressionSplitter, SSATransform [#]_                           UnusedPruner, UnusedAssignEliminator
+:ref:`D <dead-code-eliminator>`             ForLoopInitRewriter, FunctionHoister, FunctionGrouper
+:ref:`d <var-decl-initializer>`
+:ref:`E <equal-store-eliminator>`           Disambiguator, ForLoopInitRewriter                    ExpressionSplitter, SSATransform, CommonSubexpressionEliminator
+:ref:`e <expression-inliner>`               Disambiguator
+:ref:`F <function-specializer>`             Disambiguator, FunctionHoister                        LiteralRematerialiser
+:ref:`f <block-flattener>`                  Disambiguator, FunctionGrouper
+:ref:`g <function-grouper>`                 Disambiguator, FunctionHoister
+:ref:`h <function-hoister>`                 Disambiguator
+:ref:`I <for-loop-condition-into-body>`     Disambiguator                                         StructuralSimplifier
+:ref:`i <full-inliner>`                     Disambiguator                                         FunctionHoister, ExpressionSplitter
+:ref:`j <expression-joiner>`                Disambiguator
+:ref:`L <load-resolver>`                    Disambiguator, ForLoopInitRewriter                    SSATransform
+:ref:`l <circular-references-pruner>`       Disambiguator, FunctionHoister
+:ref:`M <loop-invariant-code-motion>`       Disambiguator, ForLoopInitRewriter, FunctionHoister   ExpressionSplitter, SSATransform, ForLoopConditionIntoBody
+:ref:`m <rematerialiser>`                   Disambiguator, ForLoopInitRewriter
+:ref:`n <control-flow-simplifier>`          Disambiguator, ForLoopInitRewriter, FunctionHoister
+:ref:`O <for-loop-condition-out-of-body>`                                                         LiteralRematerialiser
+:ref:`o <for-loop-init-rewriter>`           Disambiguator
+:ref:`p <unused-function-parameter-pruner>` Disambiguator, FunctionHoister                        LiteralRematerialiser                                           FullInliner, UnusedPruner
+:ref:`r <unused-assign-eliminator>`         Disambiguator, ForLoopInitRewriter
+:ref:`S <unused-store-eliminator>`          Disambiguator, ForLoopInitRewriter                    SSATransform
+:ref:`s <expression-simplifier>`            Disambiguator, ForLoopInitRewriter                    ExpressionSplitter, SSATransform, CommonSubexpressionEliminator
+:ref:`T <literal-rematerialiser>`           Disambiguator, ForLoopInitRewriter
+:ref:`t <structural-simplifier>`            Disambiguator                                         LiteralRematerialiser
+:ref:`U <conditional-unsimplifier>`
+:ref:`u <unused-pruner>`                    Disambiguator
+:ref:`V <ssa-reverser>`                     Disambiguator                                                                                                         CommonSubexpressionEliminator, UnusedPruner
+:ref:`v <equivalent-function-combiner>`     Disambiguator, FunctionHoister                                                                                        UnusedPruner
+:ref:`x <expression-splitter>`                                                                    ForLoopConditionIntoBody
+=========================================== ===================================================== =============================================================== ===========================================
+
+.. [#] It is enough if SSATransform was used once at any point before running the step.

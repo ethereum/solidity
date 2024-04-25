@@ -1,4 +1,4 @@
-.. index:: optimizer, optimiser, common subexpression elimination, constant propagation
+.. index:: ! optimizer, ! optimiser, ! common subexpression elimination, ! constant propagation
 .. _optimizer:
 
 *************
