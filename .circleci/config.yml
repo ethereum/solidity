@@ -332,9 +332,6 @@ commands:
       - attach_workspace:
           at: build
       - run:
-          name: Install dependencies
-          command: pip install --user deepdiff colorama
-      - run:
           name: Executing solc LSP test suite
           command: test/lsp.py build/solc/solc --non-interactive
       - matrix_notify_failure_unless_pr
@@ -925,19 +922,9 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   chk_pylint:
-    <<: *base_cimg_small
+    <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - install_python3:
-          packages: >
-            pylint
-            z3-solver
-            pygments-lexer-solidity
-            parsec
-            tabulate
-            deepdiff
-            colorama
-            requests
       - run: pylint --version
       - run:
           name: Linting Python Scripts
@@ -974,11 +961,9 @@ jobs:
       - matrix_notify_failure_unless_pr
 
   chk_proofs:
-    <<: *base_cimg_small
+    <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - install_python3:
-          packages: z3-solver
       - run_proofs
       - matrix_notify_failure_unless_pr
 
@@ -993,10 +978,6 @@ jobs:
     <<: *base_ubuntu2204_small
     steps:
       - checkout
-      - run:
-          # TODO: Add these to the base image
-          name: Install gas_diff_stats.py dependencies
-          command: python3 -m pip install --user parsec tabulate
       - run:
           name: Python unit tests
           command: python3 test/pyscriptTests.py
@@ -1508,14 +1489,6 @@ jobs:
             if command -v npm &> /dev/null; then
               sudo npm install -g pnpm
             fi
-      - install_python3:
-          packages: requests
-      - run:
-          name: Install lsof
-          command: |
-            # lsof is used by Colony in its stop-blockchain-client.sh script
-            sudo apt update
-            sudo apt-get --quiet --assume-yes --no-install-recommends install lsof
       - when:
           condition: << parameters.python2 >>
           steps:
