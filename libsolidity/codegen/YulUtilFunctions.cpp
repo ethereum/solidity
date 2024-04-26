@@ -252,7 +252,7 @@ std::string YulUtilFunctions::revertWithError(
 	return templ.render();
 }
 
-std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType)
+std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType, ASTPointer<Expression const> _stringArgumentExpression)
 {
 	std::string functionName =
 		std::string(_assert ? "assert_helper" : "require_helper") +
@@ -271,34 +271,19 @@ std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* 
 			("functionName", functionName)
 			.render();
 
-		int const hashHeaderSize = 4;
-		u256 const errorHash = util::selectorFromSignatureU256("Error(string)");
-
-		std::string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
-			.tupleEncoder(
-				{_messageType},
-				{TypeProvider::stringMemory()}
-			);
+		solAssert(_stringArgumentExpression, "Require with string must have a string argument");
+		solAssert(_stringArgumentExpression->annotation().type);
+		std::vector<std::string> functionParameterNames = IRVariable(*_stringArgumentExpression).stackSlots();
 
 		return Whiskers(R"(
-			function <functionName>(condition <messageVars>) {
-				if iszero(condition) {
-					let memPtr := <allocateUnbounded>()
-					mstore(memPtr, <errorHash>)
-					let end := <abiEncodeFunc>(add(memPtr, <hashHeaderSize>) <messageVars>)
-					revert(memPtr, sub(end, memPtr))
-				}
+			function <functionName>(condition <functionParameterNames>) {
+				if iszero(condition)
+					<revertWithError>
 			}
 		)")
 		("functionName", functionName)
-		("allocateUnbounded", allocateUnboundedFunction())
-		("errorHash", formatNumber(errorHash))
-		("abiEncodeFunc", encodeFunc)
-		("hashHeaderSize", std::to_string(hashHeaderSize))
-		("messageVars",
-			(_messageType->sizeOnStack() > 0 ? ", " : "") +
-			suffixedVariableNameList("message_", 1, 1 + _messageType->sizeOnStack())
-		)
+		("revertWithError", revertWithError("Error(string)", {_messageType}, {_stringArgumentExpression}))
+		("functionParameterNames", joinHumanReadablePrefixed(functionParameterNames))
 		.render();
 	});
 }
