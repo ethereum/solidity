@@ -71,10 +71,6 @@ RUN set -ex; \
 	unzip /opt/eld_binaries.zip -d /opt; \
 	rm -f /opt/eld_binaries.zip;
 
-# Cleanup
-RUN set -ex; \
-	rm -rf /var/lib/apt/lists/*
-
 FROM base AS libraries
 
 ENV CC clang

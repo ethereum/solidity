@@ -173,10 +173,6 @@ RUN set -ex; \
     cp abicoder.hpp /usr/include; \
     rm -rf /usr/src/Yul-Isabelle
 
-# Cleanup
-RUN set -ex; \
-	rm -rf /var/lib/apt/lists/*
-
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
 COPY --from=libraries /usr/bin /usr/bin
