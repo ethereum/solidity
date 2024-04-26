@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:jammy AS base
-LABEL version="7"
+LABEL version="8"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -34,13 +34,14 @@ RUN set -ex; \
 	apt-get install -qqy --no-install-recommends \
 		build-essential sudo \
 		software-properties-common \
-		cmake ninja-build \
+		cmake ninja-build lsof \
 		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
 		libboost-program-options-dev \
 		libcvc4-dev libz3-static-dev z3-static jq \
 		libcln-dev zip locales-all; \
 	apt-get install -qy python3-pip python3-sphinx; \
-	pip3 install codecov;
+	pip3 install codecov parsec tabulate pylint z3-solver \
+	pygments-lexer-solidity deepdiff colorama requests;
 
 # Eldarica
 RUN set -ex; \
