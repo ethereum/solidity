@@ -9,25 +9,25 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-22
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:212b4d79a89c6e2d9b58ddea2d6296c5618f4ae0b016694a3b159d2b11cbbacc"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-23
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:84a1fb8771236e8d9aa5c615a425b8929e56a6e4f150a60078c8d74a1ceaa6c2"
   ubuntu-2204-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-7
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:ecbeec36b12fd953bfb6fb3e7ced474bb73945d7ed615e6538960c32bae8126c"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204-8
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:1c3a4118218640b2bf632242979a63d48f3d9c70d48be9574332f2dbbd04b192"
   ubuntu-2204-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-6
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:1818a56061f39ece4a92138948404214bf939c9deb68f4dc2c68cd82b39e8410"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2204.clang-7
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:0f47e733e100080c4174381c262cfcf974bc8e7c3c41b8dff611b9641c82f714"
   ubuntu-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-5
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:c21c4c2a591d0702c388d1944539f6498ed8e51c54c1a1cb34693079efd9ab77"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu.clang.ossfuzz-6
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:8883fa2845bbc1e0922af60439313666e4ba325f67a117e17d78cca3ea6589b3"
   emscripten-docker-image:
     type: string
-    # NOTE: Please remember to update the `build_emscripten.sh` whenever the hash of this image changes.
-    # solbuildpackpusher/solidity-buildpack-deps:emscripten-16
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:19fcb5ac029bbc27ec36e10f7d14ea224d8010145f9690562ef084fd16146b0c"
+    # NOTE: Please remember to update the `scripts/build_emscripten.sh` whenever the hash of this image changes.
+    # solbuildpackpusher/solidity-buildpack-deps:emscripten-17
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:c57f2bfb8c15d70fe290629358dd1c73dc126e3760f443b54764797556b887d4"
   evm-version:
     type: string
     default: london
