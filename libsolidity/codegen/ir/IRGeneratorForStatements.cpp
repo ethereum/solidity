@@ -1166,9 +1166,11 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 		else
 		{
+			ASTPointer<Expression const> stringArgumentExpression = messageArgumentType ? arguments[1] : nullptr;
 			std::string requireOrAssertFunction = m_utils.requireOrAssertFunction(
 				functionType->kind() == FunctionType::Kind::Assert,
-				messageArgumentType
+				messageArgumentType,
+				stringArgumentExpression
 			);
 			appendCode() << std::move(requireOrAssertFunction) << "(" << IRVariable(*arguments[0]).name();
 			if (messageArgumentType && messageArgumentType->sizeOnStack() > 0)

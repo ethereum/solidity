@@ -104,7 +104,11 @@ public:
 
 	// @returns the name of a function that has the equivalent logic of an
 	// `assert` or `require` call.
-	std::string requireOrAssertFunction(bool _assert, Type const* _messageType = nullptr);
+	std::string requireOrAssertFunction(
+		bool _assert,
+		Type const* _messageType = nullptr,
+		ASTPointer<Expression const> _stringArgumentExpression = nullptr
+	);
 
 	// @returns function that has equivalent logic of a require function, but with a custom
 	// error constructor parameter.
