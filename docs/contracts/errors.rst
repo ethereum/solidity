@@ -40,7 +40,7 @@ as well as the newer approach with ``require`` in function ``transferWithRequire
             balance[to] += amount;
         }
         function transferWithRequireError(address to, uint256 amount) public {
-            require(amount > balance[msg.sender], InsufficientBalance(balance[msg.sender], amount));
+            require(amount <= balance[msg.sender], InsufficientBalance(balance[msg.sender], amount));
             balance[msg.sender] -= amount;
             balance[to] += amount;
         }
