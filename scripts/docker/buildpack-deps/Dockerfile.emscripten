@@ -33,13 +33,18 @@
 # Using $(em-config CACHE)/sysroot/usr seems to work, though, and still has cmake find the
 # dependencies automatically.
 FROM emscripten/emsdk:3.1.19 AS base
-LABEL version="16"
+LABEL version="17"
 
 ADD emscripten.jam /usr/src
 RUN set -ex && \
-	\
 	apt-get update && \
-	apt-get install lz4 sudo --no-install-recommends && \
+	apt-get install -qqy --no-install-recommends \
+		lsof \
+		lz4 \
+		python3 \
+		python3-pip \
+		sudo && \
+	pip3 install requests && \
 	\
 	cd /usr/src && \
 	git clone https://github.com/Z3Prover/z3.git -b z3-4.12.1 --depth 1 && \

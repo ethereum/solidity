@@ -22,19 +22,45 @@
 # (c) 2016-2021 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang:latest as base
-LABEL version="5"
+LABEL version="6"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update; \
 	apt-get -qqy install --no-install-recommends \
-		automake libtool bison texinfo \
-		build-essential sudo \
+		automake \
+		bison \
+		build-essential \
+		curl \
+		git \
+		jq \
+		libbz2-dev \
+		liblzma-dev \
+		libtool \
+		lsof \
+		m4 \
+		mlton \
+		ninja-build \
+		openjdk-8-jdk \
+		pkg-config \
+		python3-pip \
 		software-properties-common \
-		ninja-build git wget \
-		libbz2-dev zlib1g-dev git curl uuid-dev \
-		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4 jq; \
-    apt-get install -qy python3-pip;
+		sudo \
+		texinfo \
+		unzip \
+		uuid-dev \
+		wget \
+		zlib1g-dev; \
+	pip3 install \
+		codecov \
+		colorama \
+		deepdiff \
+		parsec \
+		pygments-lexer-solidity \
+		pylint \
+		requests \
+		tabulate \
+		z3-solver;
 
 # Install cmake 3.21.2 (minimum requirement is cmake 3.10)
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-Linux-x86_64.sh; \
@@ -146,10 +172,6 @@ RUN set -ex; \
     cp libabicoder.a /usr/lib; \
     cp abicoder.hpp /usr/include; \
     rm -rf /usr/src/Yul-Isabelle
-
-# Cleanup
-RUN set -ex; \
-	rm -rf /var/lib/apt/lists/*
 
 FROM base
 COPY --from=libraries /usr/lib /usr/lib

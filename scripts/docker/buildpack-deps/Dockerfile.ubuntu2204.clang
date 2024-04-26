@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM buildpack-deps:jammy AS base
-LABEL version="6"
+LABEL version="7"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -32,28 +32,44 @@ RUN set -ex; \
 	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9 ; \
 	apt-get update; \
 	apt-get install -qqy --no-install-recommends \
-		build-essential sudo \
-		software-properties-common \
-		cmake ninja-build \
-		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
-		libboost-program-options-dev \
+		build-essential \
 		clang \
-		libz3-static-dev z3-static jq \
-		libcln-dev;
+		cmake \
+		jq \
+		lsof \
+		libboost-filesystem-dev \
+		libboost-program-options-dev \
+		libboost-system-dev \
+		libboost-test-dev \
+		libcln-dev \
+		libz3-static-dev \
+		ninja-build \
+		python3-pip \
+		software-properties-common \
+		sudo \
+		z3-static; \
+	pip3 install \
+		codecov \
+		colorama \
+		deepdiff \
+		parsec \
+		pygments-lexer-solidity \
+		pylint \
+		requests \
+		tabulate \
+		z3-solver;
 
 # Eldarica
 RUN set -ex; \
 	apt-get update; \
-	apt-get install -qy unzip openjdk-11-jre; \
+	apt-get install -qy \
+		openjdk-11-jre \
+		unzip; \
 	eldarica_version="2.1"; \
 	wget "https://github.com/uuverifiers/eldarica/releases/download/v${eldarica_version}/eldarica-bin-${eldarica_version}.zip" -O /opt/eld_binaries.zip; \
 	test "$(sha256sum /opt/eld_binaries.zip)" = "0ac43f45c0925383c9d2077f62bbb515fd792375f3b2b101b30c9e81dcd7785c  /opt/eld_binaries.zip"; \
 	unzip /opt/eld_binaries.zip -d /opt; \
 	rm -f /opt/eld_binaries.zip;
-
-# Cleanup
-RUN set -ex; \
-	rm -rf /var/lib/apt/lists/*
 
 FROM base AS libraries
 
