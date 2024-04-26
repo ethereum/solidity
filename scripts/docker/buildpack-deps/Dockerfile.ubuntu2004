@@ -32,21 +32,39 @@ RUN set -ex; \
 	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1c52189c923f6ca9 ; \
 	apt-get update; \
 	apt-get install -qqy --no-install-recommends \
-		build-essential sudo \
-		software-properties-common \
-		cmake ninja-build lsof \
-		libboost-filesystem-dev libboost-test-dev libboost-system-dev \
+		build-essential \
+		cmake \
+		jq \
+		libboost-filesystem-dev \
 		libboost-program-options-dev \
-		libcvc4-dev libz3-static-dev z3-static jq \
-		; \
-	apt-get install -qy python3-pip python3-sphinx; \
-	pip3 install codecov parsec tabulate pylint z3-solver \
-	pygments-lexer-solidity deepdiff colorama requests;
+		libboost-system-dev \
+		libboost-test-dev \
+		libcvc4-dev \
+		libz3-static-dev \
+		lsof \
+		ninja-build \
+		python3-pip \
+		python3-sphinx \
+		software-properties-common \
+		sudo \
+		z3-static; \
+	pip3 install \
+		codecov \
+		colorama \
+		deepdiff \
+		parsec \
+		pygments-lexer-solidity \
+		pylint \
+		requests \
+		tabulate \
+		z3-solver;
 
 # Eldarica
 RUN set -ex; \
 	apt-get update; \
-	apt-get install -qy unzip openjdk-11-jre; \
+	apt-get install -qqy \
+		openjdk-11-jre \
+		unzip; \
 	eldarica_version="2.1"; \
 	wget "https://github.com/uuverifiers/eldarica/releases/download/v${eldarica_version}/eldarica-bin-${eldarica_version}.zip" -O /opt/eld_binaries.zip; \
 	test "$(sha256sum /opt/eld_binaries.zip)" = "0ac43f45c0925383c9d2077f62bbb515fd792375f3b2b101b30c9e81dcd7785c  /opt/eld_binaries.zip"; \

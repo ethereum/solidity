@@ -28,14 +28,39 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update; \
 	apt-get -qqy install --no-install-recommends \
-		automake libtool bison texinfo \
-		build-essential sudo lsof \
+		automake \
+		bison \
+		build-essential \
+		curl \
+		git \
+		jq \
+		libbz2-dev \
+		liblzma-dev \
+		libtool \
+		lsof \
+		m4 \
+		mlton \
+		ninja-build \
+		openjdk-8-jdk \
+		pkg-config \
+		python3-pip \
 		software-properties-common \
-		ninja-build git wget python3-pip \
-		libbz2-dev zlib1g-dev curl uuid-dev \
-		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4 jq; \
-	pip3 install codecov parsec tabulate pylint z3-solver \
-	pygments-lexer-solidity deepdiff colorama requests;
+		sudo \
+		texinfo \
+		unzip \
+		uuid-dev \
+		wget \
+		zlib1g-dev; \
+	pip3 install \
+		codecov \
+		colorama \
+		deepdiff \
+		parsec \
+		pygments-lexer-solidity \
+		pylint \
+		requests \
+		tabulate \
+		z3-solver;
 
 # Install cmake 3.21.2 (minimum requirement is cmake 3.10)
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-Linux-x86_64.sh; \

@@ -37,9 +37,13 @@ LABEL version="17"
 
 ADD emscripten.jam /usr/src
 RUN set -ex && \
-	\
 	apt-get update && \
-	apt-get install lz4 sudo lsof python3 python3-pip --no-install-recommends && \
+	apt-get install -qqy --no-install-recommends \
+		lsof \
+		lz4 \
+		python3 \
+		python3-pip \
+		sudo && \
 	pip3 install requests && \
 	\
 	cd /usr/src && \
