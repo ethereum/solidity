@@ -466,6 +466,8 @@ Loops that already have a literal constant as iteration condition are not transf
 
 To avoid unnecessary rewriting, it is recommended to run this step after StructuralSimplifier.
 
+May destroy the :ref:`expression-split <expression-splitter>` form.
+
 Prerequisites: Disambiguator.
 
 .. _for-loop-init-rewriter:
@@ -884,6 +886,8 @@ Since variable references are always movable, even if their current
 value might not be, the ExpressionSimplifier is again more powerful
 in :ref:`expression-split <expression-splitter>` or :ref:`pseudo-SSA <ssa-transform>` form.
 
+Some of the simplifications destroy the :ref:`expression-split <expression-splitter>` form.
+
 Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 .. _literal-rematerialiser:
@@ -895,6 +899,10 @@ If a variable referenced in an expression is known to have a literal value, repl
 the variable with the literal.
 
 This is mostly used so that other components do not have to rely on the DataflowAnalyzer.
+
+While the step destroys the :ref:`expression-split <expression-splitter>` form in the strict sense,
+it does not introduce any nested function calls, which may be good enough for many steps that require
+this property.
 
 Prerequisites: Disambiguator, ForLoopInitRewriter.
 
@@ -934,7 +942,7 @@ ConditionalSimplifier
 The ConditionalSimplifier inserts assignments to condition variables if the value can be determined
 from the control-flow.
 
-Destroys SSA form.
+Destroys the :ref:`SSA <ssa-transform>` form.
 
 Currently, this tool is very limited, mostly because we do not yet have support
 for boolean types. Since conditions only check for expressions being nonzero,
@@ -1384,6 +1392,8 @@ Because of that, the snippet ``let x := add(0, 2) let y := mul(x, 3)`` is
 transformed to ``let y := mul(add(0, 2), 3)``, even though the ``add`` opcode
 would be executed after the evaluation of the literal ``3``.
 
+Destroys the :ref:`expression-split <expression-splitter>` form.
+
 Prerequisites: Disambiguator.
 
 .. _ssa-reverser:
@@ -1436,6 +1446,8 @@ by ``a`` (until ``a`` is re-assigned). The UnusedPruner will then
 eliminate the variable ``a_1`` altogether and thus fully reverse the
 SSATransform.
 
+Destroys the :ref:`SSA <ssa-transform>` form.
+
 Prerequisites: Disambiguator.
 
 .. _stack-compressor:
@@ -1473,6 +1485,8 @@ The Rematerialiser uses the DataflowAnalyzer to track the current values of vari
 which are always movable.
 If the value is very cheap or the variable was explicitly requested to be eliminated,
 the variable reference is replaced by its current value.
+
+Destroys the :ref:`expression-split <expression-splitter>` form.
 
 Prerequisites: Disambiguator, ForLoopInitRewriter.
 
