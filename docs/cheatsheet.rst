@@ -23,7 +23,7 @@ ABI Encoding and Decoding Functions
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: :ref:`ABI <ABI>`-encodes
   the given arguments starting from the second and prepends the given four-byte selector
 - ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``: ABI-encodes a call to ``functionPointer`` with the arguments found in the
-  tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, (...))``
+  tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, ...)``
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent
   to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
 
