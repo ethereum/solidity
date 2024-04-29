@@ -68,8 +68,8 @@ function brink_test
     neutralize_package_json_hooks
     force_hardhat_compiler_binary "$config_file" "$BINARY_TYPE" "$BINARY_PATH"
     force_hardhat_compiler_settings "$config_file" "$(first_word "$SELECTED_PRESETS")" "$config_var" "$CURRENT_EVM_VERSION" "$extra_settings" "$extra_optimizer_settings"
-    yarn install
-    yarn add hardhat-gas-reporter
+    pnpm install
+    pnpm install hardhat-gas-reporter
 
     replace_version_pragmas
     for preset in $SELECTED_PRESETS; do

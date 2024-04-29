@@ -83,17 +83,17 @@ function uniswap_test
     # - Newer versions of ethereumjs/tx have an issue with 'gteHardfork()' method.
     neutralize_package_lock
 
-    yarn install
-    yarn add hardhat-gas-reporter
+    pnpm install
+    pnpm install hardhat-gas-reporter
 
     # With ethers.js 5.6.2 many tests for revert messages fail.
     # TODO: Remove when https://github.com/ethers-io/ethers.js/discussions/2849 is resolved.
-    yarn add ethers@5.6.1
+    pnpm install ethers@5.6.1
 
     # We set hardhat version to 2.20.0 since version 2.21.0 has issues with solidity-coverage plugin
     # that often causes out-of-memory errors.
     # See hardhat note about the issue here: https://github.com/NomicFoundation/hardhat/releases/tag/hardhat@2.21.0
-    yarn add hardhat@2.20.0
+    pnpm install hardhat@2.20.0
 
     replace_version_pragmas
 
