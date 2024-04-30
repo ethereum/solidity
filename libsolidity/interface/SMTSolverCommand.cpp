@@ -37,7 +37,7 @@ using solidity::util::errinfo_comment;
 namespace solidity::frontend
 {
 
-void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMilliseconds)
+void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMilliseconds, bool computeInvariants)
 {
 	m_arguments.clear();
 	m_solverCmd = "eld";
@@ -47,6 +47,8 @@ void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMillisec
 		timeoutInSeconds = timeoutInSeconds == 0 ? 1 : timeoutInSeconds;
 		m_arguments.push_back("-t:" + std::to_string(timeoutInSeconds));
 	}
+	if (computeInvariants)
+		m_arguments.emplace_back("-ssol");
 }
 
 ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query)
