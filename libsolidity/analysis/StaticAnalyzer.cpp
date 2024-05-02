@@ -298,7 +298,8 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 {
 	if (
 		*_operation.rightExpression().annotation().isPure &&
-		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod)
+		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod) &&
+		ConstantEvaluator::evaluate(m_errorReporter, _operation.leftExpression())
 	)
 		if (auto rhs = ConstantEvaluator::evaluate(m_errorReporter, _operation.rightExpression()))
 			if (rhs->value == 0)
