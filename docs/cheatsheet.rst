@@ -11,8 +11,8 @@ Order of Precedence of Operators
 
 .. index:: abi;decode, abi;encode, abi;encodePacked, abi;encodeWithSelector, abi;encodeCall, abi;encodeWithSignature
 
-ABI Encoding and Decoding Functions
-===================================
+ABI Encoding and Decoding Functions and Errors
+==============================================
 
 - ``abi.decode(bytes memory encodedData, (...)) returns (...)``: :ref:`ABI <ABI>`-decodes
   the provided data. The types are given in parentheses as second argument.
@@ -26,6 +26,8 @@ ABI Encoding and Decoding Functions
   tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, (...))``
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent
   to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
+- ``abi.encodeError(error errorPointer, (...)) returns (bytes memory)``: ABI-encodes the revert data for ``errorPointer`` with the arguments found in the
+  tuple. Performs a full type-check, ensuring the types match the error definition. Results equals ``abi.encodeWithSelector(errorPointer.selector, (...))``
 
 .. index:: bytes;concat, string;concat
 
@@ -167,4 +169,3 @@ Modifiers
   behavior to be changed in derived contracts.
 - ``override``: States that this function, modifier or public state variable changes
   the behavior of a function or modifier in a base contract.
-

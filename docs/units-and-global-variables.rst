@@ -135,8 +135,8 @@ Block and Transaction Properties
 
 .. index:: abi, encoding, packed
 
-ABI Encoding and Decoding Functions
------------------------------------
+ABI Encoding and Decoding Functions and Errors
+----------------------------------------------
 
 - ``abi.decode(bytes memory encodedData, (...)) returns (...)``: ABI-decodes the given data, while the types are given in parentheses as second argument. Example: ``(uint a, uint[2] memory b, bytes memory c) = abi.decode(data, (uint, uint[2], bytes))``
 - ``abi.encode(...) returns (bytes memory)``: ABI-encodes the given arguments
@@ -144,6 +144,7 @@ ABI Encoding and Decoding Functions
 - ``abi.encodeWithSelector(bytes4 selector, ...) returns (bytes memory)``: ABI-encodes the given arguments starting from the second and prepends the given four-byte selector
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
 - ``abi.encodeCall(function functionPointer, (...)) returns (bytes memory)``: ABI-encodes a call to ``functionPointer`` with the arguments found in the tuple. Performs a full type-check, ensuring the types match the function signature. Result equals ``abi.encodeWithSelector(functionPointer.selector, (...))``
+- ``abi.encodeError(function errorPointer, (...)) returns (bytes memory)``: ABI-encodes the revert data for ``errorPointer`` with the arguments found in the tuple. Performs a full type-check, ensuring the types match the error definition. Result equals ``abi.encodeWithSelector(errorPointer.selector, (...))``
 
 .. note::
     These encoding functions can be used to craft data for external function calls without actually
