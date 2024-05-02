@@ -26,14 +26,14 @@ contract C {
     }
 }
 // ----
-// TypeError 5408: (357-363): Cannot implicitly convert component at position 0 from "function () pure external" to "uint8".
-// TypeError 5408: (365-371): Cannot implicitly convert component at position 1 from "function () pure external" to "uint8".
-// TypeError 5408: (403-411): Cannot implicitly convert component at position 0 from "function () pure external" to "uint32".
-// TypeError 5408: (442-450): Cannot implicitly convert component at position 0 from "function () pure external" to "uint256".
-// TypeError 5408: (481-489): Cannot implicitly convert component at position 0 from "function () pure external" to "bytes memory".
-// TypeError 5408: (520-528): Cannot implicitly convert component at position 0 from "function () pure external" to "bytes32".
-// TypeError 5408: (559-567): Cannot implicitly convert component at position 0 from "function () pure external" to "string memory".
-// TypeError 5408: (598-606): Cannot implicitly convert component at position 0 from "function () pure external" to "bool".
-// TypeError 5408: (637-645): Cannot implicitly convert component at position 0 from "function () pure external" to "address".
-// TypeError 5408: (676-684): Cannot implicitly convert component at position 0 from "function () pure external" to "address payable".
-// TypeError 5408: (715-723): Cannot implicitly convert component at position 0 from "function () pure external" to "enum C.testEnum".
+// TypeError 5407: (357-363): Cannot implicitly convert component at position 0 from "function () pure external" to "uint8".
+// TypeError 5407: (365-371): Cannot implicitly convert component at position 1 from "function () pure external" to "uint8".
+// TypeError 5407: (403-411): Cannot implicitly convert component at position 0 from "function () pure external" to "uint32".
+// TypeError 5407: (442-450): Cannot implicitly convert component at position 0 from "function () pure external" to "uint256".
+// TypeError 5407: (481-489): Cannot implicitly convert component at position 0 from "function () pure external" to "bytes memory".
+// TypeError 5407: (520-528): Cannot implicitly convert component at position 0 from "function () pure external" to "bytes32".
+// TypeError 5407: (559-567): Cannot implicitly convert component at position 0 from "function () pure external" to "string memory".
+// TypeError 5407: (598-606): Cannot implicitly convert component at position 0 from "function () pure external" to "bool".
+// TypeError 5407: (637-645): Cannot implicitly convert component at position 0 from "function () pure external" to "address".
+// TypeError 5407: (676-684): Cannot implicitly convert component at position 0 from "function () pure external" to "address payable".
+// TypeError 5407: (715-723): Cannot implicitly convert component at position 0 from "function () pure external" to "enum C.testEnum".

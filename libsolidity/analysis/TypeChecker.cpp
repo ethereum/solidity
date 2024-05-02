@@ -2229,14 +2229,12 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
 
 	// No further generic checks needed as we do a precise check for ABIEncodeCall and ABIEncodeError
-	if (_functionType->kind() == FunctionType::Kind::ABIEncodeCall)
+	if (
+		_functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
+		_functionType->kind() == FunctionType::Kind::ABIEncodeError
+	)
 	{
-		typeCheckABIEncodeCallFunction(_functionCall);
-		return;
-	}
-	if (_functionType->kind() == FunctionType::Kind::ABIEncodeError)
-	{
-		typeCheckABIEncodeErrorFunction(_functionCall);
+		typeCheckABIEncodeCallFunctionOrError(_functionCall, _functionType);
 		return;
 	}
 
@@ -2298,19 +2296,34 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	}
 }
 
-void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCall)
+void TypeChecker::typeCheckABIEncodeCallFunctionOrError(
+	FunctionCall const& _functionCall,
+	FunctionTypePointer _functionType
+)
 {
 	std::vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
 
 	// Expecting first argument to be the function pointer and second to be a tuple.
 	if (arguments.size() != 2)
 	{
-		m_errorReporter.typeError(
-			6219_error,
-			_functionCall.location(),
-			"Expected two arguments: a function pointer followed by a tuple."
-		);
-		return;
+		switch (_functionType->kind()) {
+			case FunctionType::Kind::ABIEncodeCall:
+				m_errorReporter.typeError(
+					6219_error,
+					_functionCall.location(),
+					"Expected two arguments: a function pointer followed by a tuple."
+				);
+				return;
+			case FunctionType::Kind::ABIEncodeError:
+				m_errorReporter.typeError(
+					6220_error,
+					_functionCall.location(),
+					"Expected two arguments: a custom error followed by a tuple."
+				);
+				return;
+			default:
+				solAssert(false);
+		}
 	}
 
 	FunctionType const* externalFunctionType = nullptr;
@@ -2322,17 +2335,32 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 	}
 	else
 	{
-		m_errorReporter.typeError(
-			5511_error,
-			arguments.front()->location(),
-			"Expected first argument to be a function pointer, not \"" +
-			type(*arguments.front())->humanReadableName() +
-			"\"."
-		);
-		return;
+		switch (_functionType->kind()) {
+			case FunctionType::Kind::ABIEncodeCall:
+				m_errorReporter.typeError(
+					5511_error,
+					arguments.front()->location(),
+					"Expected first argument to be a function pointer, not \"" +
+					type(*arguments.front())->humanReadableName() +
+					"\"."
+				);
+				return;
+			case FunctionType::Kind::ABIEncodeError:
+				m_errorReporter.typeError(
+					5512_error,
+					arguments.front()->location(),
+					"Expected first argument to be a custom error, not \"" +
+					type(*arguments.front())->humanReadableName() +
+					"\"."
+				);
+				return;
+			default:
+				solAssert(false);
+		}
 	}
 
 	if (
+		_functionType->kind() == FunctionType::Kind::ABIEncodeCall &&
 		externalFunctionType->kind() != FunctionType::Kind::External &&
 		externalFunctionType->kind() != FunctionType::Kind::Declaration
 	)
@@ -2382,6 +2410,34 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 		}
 
 		m_errorReporter.typeError(3509_error, arguments[0]->location(), ssl, msg);
+		return;
+	}
+	if (
+		_functionType->kind() == FunctionType::Kind::ABIEncodeError &&
+		externalFunctionType->kind() != FunctionType::Kind::Error
+	)
+	{
+		std::string msg = "Expected an error type.";
+
+		switch (externalFunctionType->kind())
+		{
+			case FunctionType::Kind::Internal:
+			case FunctionType::Kind::External:
+			case FunctionType::Kind::Declaration:
+			case FunctionType::Kind::DelegateCall:
+				msg += " Cannot use functions for abi.encodeError.";
+				break;
+			case FunctionType::Kind::Creation:
+				msg += " Provided creation function.";
+				break;
+			case FunctionType::Kind::Event:
+				msg += " Cannot use events for abi.encodeError.";
+				break;
+			default:
+				msg += " Cannot use special function.";
+		}
+
+		m_errorReporter.typeError(3510_error, arguments[0]->location(), msg);
 		return;
 	}
 	solAssert(!externalFunctionType->takesArbitraryParameters(), "Function must have fixed parameters.");
@@ -2438,132 +2494,6 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 		if (!result)
 			m_errorReporter.typeError(
 				5407_error,
-				callArguments[i]->location(),
-				"Cannot implicitly convert component at position " +
-				std::to_string(i) +
-				" from \"" +
-				argType.humanReadableName() +
-				"\" to \"" +
-				externalFunctionType->parameterTypes()[i]->humanReadableName() +
-				"\"" +
-				(result.message().empty() ?  "." : ": " + result.message())
-			);
-	}
-}
-
-void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionCall)
-{
-	std::vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
-
-	// Expecting first argument to be the function pointer and second to be a tuple.
-	if (arguments.size() != 2)
-	{
-		m_errorReporter.typeError(
-			6220_error,
-			_functionCall.location(),
-			"Expected two arguments: a custom error followed by a tuple."
-		);
-		return;
-	}
-
-	FunctionType const* externalFunctionType = nullptr;
-	if (auto const functionPointerType = dynamic_cast<FunctionTypePointer>(type(*arguments.front())))
-	{
-		// this cannot be a library function, that is checked below
-		externalFunctionType = functionPointerType->asExternallyCallableFunction(false);
-		solAssert(externalFunctionType->kind() == functionPointerType->kind());
-	}
-	else
-	{
-		m_errorReporter.typeError(
-			5512_error,
-			arguments.front()->location(),
-			"Expected first argument to be a custom error, not \"" +
-			type(*arguments.front())->humanReadableName() +
-			"\"."
-		);
-		return;
-	}
-
-	if (externalFunctionType->kind() != FunctionType::Kind::Error)
-	{
-		std::string msg = "Expected an error type.";
-
-		switch (externalFunctionType->kind())
-		{
-			case FunctionType::Kind::Internal:
-			case FunctionType::Kind::External:
-			case FunctionType::Kind::Declaration:
-			case FunctionType::Kind::DelegateCall:
-				msg += " Cannot use functions for abi.encodeError.";
-				break;
-			case FunctionType::Kind::Creation:
-				msg += " Provided creation function.";
-				break;
-			case FunctionType::Kind::Event:
-				msg += " Cannot use events for abi.encodeError.";
-				break;
-			default:
-				msg += " Cannot use special function.";
-		}
-
-		m_errorReporter.typeError(3510_error, arguments[0]->location(), msg);
-		return;
-	}
-	solAssert(!externalFunctionType->takesArbitraryParameters(), "Function must have fixed parameters.");
-	// Tuples with only one component become that component
-	std::vector<ASTPointer<Expression const>> callArguments;
-
-	auto const* tupleType = dynamic_cast<TupleType const*>(type(*arguments[1]));
-	if (tupleType)
-	{
-		if (TupleExpression const* argumentTuple = dynamic_cast<TupleExpression const*>(arguments[1].get()))
-			callArguments = {argumentTuple->components().begin(), argumentTuple->components().end()};
-		else
-		{
-			m_errorReporter.typeError(
-				9063_error,
-				arguments[1]->location(),
-				"Expected an inline tuple, not an expression of a tuple type."
-			);
-			return;
-		}
-	}
-	else
-		callArguments.push_back(arguments[1]);
-
-	if (externalFunctionType->parameterTypes().size() != callArguments.size())
-	{
-		if (tupleType)
-			m_errorReporter.typeError(
-				7789_error,
-				_functionCall.location(),
-				"Expected " +
-				std::to_string(externalFunctionType->parameterTypes().size()) +
-				" instead of " +
-				std::to_string(callArguments.size()) +
-				" components for the tuple parameter."
-			);
-		else
-			m_errorReporter.typeError(
-				7516_error,
-				_functionCall.location(),
-				"Expected a tuple with " +
-				std::to_string(externalFunctionType->parameterTypes().size()) +
-				" components instead of a single non-tuple parameter."
-			);
-	}
-
-	// Use min() to check as much as we can before failing fatally
-	size_t const numParameters = std::min(callArguments.size(), externalFunctionType->parameterTypes().size());
-
-	for (size_t i = 0; i < numParameters; i++)
-	{
-		Type const& argType = *type(*callArguments[i]);
-		BoolResult result = argType.isImplicitlyConvertibleTo(*externalFunctionType->parameterTypes()[i]);
-		if (!result)
-			m_errorReporter.typeError(
-				5408_error,
 				callArguments[i]->location(),
 				"Cannot implicitly convert component at position " +
 				std::to_string(i) +

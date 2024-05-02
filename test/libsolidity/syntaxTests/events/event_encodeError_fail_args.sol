@@ -28,14 +28,14 @@ contract C {
     }
 }
 // ----
-// TypeError 5408: (384-397): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "uint8".
-// TypeError 5408: (399-412): Cannot implicitly convert component at position 1 from "event MyCustomEvent(uint256)" to "uint8".
-// TypeError 5408: (444-459): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "uint32".
-// TypeError 5408: (490-505): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "uint256".
-// TypeError 5408: (536-551): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "bytes memory".
-// TypeError 5408: (582-597): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "bytes32".
-// TypeError 5408: (627-642): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "string memory".
-// TypeError 5408: (672-687): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "bool".
-// TypeError 5408: (717-732): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "address".
-// TypeError 5408: (762-777): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "address payable".
-// TypeError 5408: (807-822): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "enum C.testEnum".
+// TypeError 5407: (384-397): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "uint8".
+// TypeError 5407: (399-412): Cannot implicitly convert component at position 1 from "event MyCustomEvent(uint256)" to "uint8".
+// TypeError 5407: (444-459): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "uint32".
+// TypeError 5407: (490-505): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "uint256".
+// TypeError 5407: (536-551): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "bytes memory".
+// TypeError 5407: (582-597): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "bytes32".
+// TypeError 5407: (627-642): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "string memory".
+// TypeError 5407: (672-687): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "bool".
+// TypeError 5407: (717-732): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "address".
+// TypeError 5407: (762-777): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "address payable".
+// TypeError 5407: (807-822): Cannot implicitly convert component at position 0 from "event MyCustomEvent(uint256)" to "enum C.testEnum".

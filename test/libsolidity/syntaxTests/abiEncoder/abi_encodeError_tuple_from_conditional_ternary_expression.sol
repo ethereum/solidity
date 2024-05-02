@@ -12,6 +12,6 @@ contract C {
     }
 }
 // ----
-// TypeError 9063: (223-241): Expected an inline tuple, not an expression of a tuple type.
-// TypeError 9063: (272-290): Expected an inline tuple, not an expression of a tuple type.
-// TypeError 9063: (321-343): Expected an inline tuple, not an expression of a tuple type.
+// TypeError 9062: (223-241): Expected an inline tuple, not an expression of a tuple type.
+// TypeError 9062: (272-290): Expected an inline tuple, not an expression of a tuple type.
+// TypeError 9062: (321-343): Expected an inline tuple, not an expression of a tuple type.

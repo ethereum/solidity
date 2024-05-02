@@ -110,11 +110,11 @@ private:
 		FunctionTypePointer _functionType
 	);
 
-	/// Performs checks specific to the ABI encode functions of type ABIEncodeCall
-	void typeCheckABIEncodeCallFunction(FunctionCall const& _functionCall);
-
-	/// Performs checks specific to the ABI encode functions of type ABIEncodeError
-	void typeCheckABIEncodeErrorFunction(FunctionCall const& _functionCall);
+	/// Performs checks specific to the ABI encode functions/errors of type ABIEncodeCall/AbiEncodeError
+	void typeCheckABIEncodeCallFunctionOrError(
+		FunctionCall const& _functionCall,
+		FunctionTypePointer _functionType
+	);
 
 	/// Performs general checks and checks specific to string concat function call
 	void typeCheckStringConcatFunction(

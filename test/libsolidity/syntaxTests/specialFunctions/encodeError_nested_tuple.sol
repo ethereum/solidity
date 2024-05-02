@@ -5,5 +5,5 @@ contract C {
 	}
 }
 // ----
-// TypeError 7789: (124-151): Expected 2 instead of 1 components for the tuple parameter.
-// TypeError 5408: (144-149): Cannot implicitly convert component at position 0 from "tuple(int_const 1,int_const 2)" to "int256".
+// TypeError 7788: (124-151): Expected 2 instead of 1 components for the tuple parameter.
+// TypeError 5407: (144-149): Cannot implicitly convert component at position 0 from "tuple(int_const 1,int_const 2)" to "int256".
