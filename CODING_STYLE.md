@@ -20,7 +20,7 @@
 Yes:
 ```cpp
 if (a == b[i])
-    printf("Hello\n");	// NOTE spaces used instead of tab here for clarity - first byte should be '\t'.
+    printf("Hello\n"); // NOTE spaces used instead of tab here for clarity - first byte should be '\t'.
 foo->bar(
     someLongVariableName,
     anotherLongVariableName,

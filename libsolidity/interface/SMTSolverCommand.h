@@ -36,7 +36,7 @@ public:
 		return [this](std::string const& _kind, std::string const& _query) { return solve(_kind, _query); };
 	}
 
-	void setEldarica(std::optional<unsigned int> timeoutInMilliseconds);
+	void setEldarica(std::optional<unsigned int> timeoutInMilliseconds, bool computeInvariants);
 
 private:
 	/// The name of the solver's binary.

@@ -450,12 +450,12 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_3)
 	ErrorReporter reporter(errorList);
 	auto const sourceText = R"(
 		/// @src 1:23:45
-		{								// Block
-			{							// Block
-				sstore(0, 1)			// FunctionCall
+		{                               // Block
+			{                           // Block
+				sstore(0, 1)            // FunctionCall
 				/// @src 0:420:680
 			}
-			mstore(1, 2)				// FunctionCall
+			mstore(1, 2)                // FunctionCall
 		}
 	)";
 	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});

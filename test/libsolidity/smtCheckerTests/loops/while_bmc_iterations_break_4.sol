@@ -4,7 +4,7 @@ contract C {
 		while (x < 3) {
 			++x;
 			if (x > 0) {
- 				++x;
+				++x;
 				break;
 			}
 		}

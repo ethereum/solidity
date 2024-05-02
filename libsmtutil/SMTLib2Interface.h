@@ -61,12 +61,13 @@ public:
 
 	// Used by CHCSmtLib2Interface
 	std::string toSExpr(Expression const& _expr);
-	std::string toSmtLibSort(Sort const& _sort);
+	std::string toSmtLibSort(SortPointer _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	std::map<std::string, SortPointer> variables() { return m_variables; }
 
 	std::vector<std::pair<std::string, std::string>> const& userSorts() const { return m_userSorts; }
+	std::map<SortPointer, std::string> const& sortNames() const { return m_sortNames; }
 
 	std::string dumpQuery(std::vector<Expression> const& _expressionsToEvaluate);
 
@@ -81,6 +82,8 @@ private:
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
+	std::string toSmtLibSortInternal(SortPointer _sort);
+
 	std::vector<std::string> m_accumulatedOutput;
 	std::map<std::string, SortPointer> m_variables;
 
@@ -89,6 +92,10 @@ private:
 	/// It needs to be a vector so that the declaration order is kept,
 	/// otherwise solvers cannot parse the queries.
 	std::vector<std::pair<std::string, std::string>> m_userSorts;
+
+	/// Maps a user sort to SMT-LIB2 sort.
+	/// Remembers all declared sorts and is used as a cache as well.
+	std::map<SortPointer, std::string> m_sortNames;
 
 	std::map<util::h256, std::string> m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;

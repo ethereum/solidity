@@ -659,7 +659,7 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 			m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
 			if (auto* universalCallback = m_readFile.target<frontend::UniversalCallback>())
 				if (m_modelCheckerSettings.solvers.eld)
-					universalCallback->smtCommand().setEldarica(m_modelCheckerSettings.timeout);
+					universalCallback->smtCommand().setEldarica(m_modelCheckerSettings.timeout, m_modelCheckerSettings.invariants != ModelCheckerInvariants::None());
 		}
 
 		ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
@@ -1722,10 +1722,7 @@ std::string CompilerStack::createMetadata(Contract const& _contract, bool _forIR
 			details["yulDetails"]["stackAllocation"] = m_optimiserSettings.optimizeStackAllocation;
 			details["yulDetails"]["optimizerSteps"] = m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps;
 		}
-		else if (
-			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps) &&
-			OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserCleanupSteps)
-		)
+		else if (OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps))
 		{
 			solAssert(m_optimiserSettings.optimizeStackAllocation == false);
 			details["yulDetails"] = Json::objectValue;

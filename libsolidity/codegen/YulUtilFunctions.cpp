@@ -24,6 +24,7 @@
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+#include <libsolidity/codegen/ir/IRVariable.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FunctionSelector.h>
@@ -215,7 +216,43 @@ std::string YulUtilFunctions::copyLiteralToStorageFunction(std::string const& _l
 	});
 }
 
-std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType)
+std::string YulUtilFunctions::revertWithError(
+	std::string const& _signature,
+	std::vector<Type const*> const& _parameterTypes,
+	std::vector<ASTPointer<Expression const>> const& _errorArguments,
+	std::string const& _posVar,
+	std::string const& _endVar
+)
+{
+	solAssert((!_posVar.empty() && !_endVar.empty()) || (_posVar.empty() && _endVar.empty()));
+	bool const needsNewVariable = !_posVar.empty() && !_endVar.empty();
+
+	Whiskers templ(R"({
+		let <pos> := <allocateUnbounded>()
+		mstore(<pos>, <hash>)
+		let <end> := <encode>(add(<pos>, 4) <argumentVars>)
+		revert(<pos>, sub(<end>, <pos>))
+	})");
+	templ("pos", needsNewVariable ? _posVar : "memPtr");
+	templ("end", needsNewVariable ? _endVar : "end");
+	templ("hash", formatNumber(util::selectorFromSignatureU256(_signature)));
+	templ("allocateUnbounded", allocateUnboundedFunction());
+
+	std::vector<std::string> errorArgumentVars;
+	std::vector<Type const*> errorArgumentTypes;
+	for (ASTPointer<Expression const> const& arg: _errorArguments)
+	{
+		errorArgumentVars += IRVariable(*arg).stackSlots();
+		solAssert(arg->annotation().type);
+		errorArgumentTypes.push_back(arg->annotation().type);
+	}
+	templ("argumentVars", joinHumanReadablePrefixed(errorArgumentVars));
+	templ("encode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleEncoder(errorArgumentTypes, _parameterTypes));
+
+	return templ.render();
+}
+
+std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType, ASTPointer<Expression const> _stringArgumentExpression)
 {
 	std::string functionName =
 		std::string(_assert ? "assert_helper" : "require_helper") +
@@ -234,34 +271,60 @@ std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* 
 			("functionName", functionName)
 			.render();
 
-		int const hashHeaderSize = 4;
-		u256 const errorHash = util::selectorFromSignatureU256("Error(string)");
-
-		std::string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
-			.tupleEncoder(
-				{_messageType},
-				{TypeProvider::stringMemory()}
-			);
+		solAssert(_stringArgumentExpression, "Require with string must have a string argument");
+		solAssert(_stringArgumentExpression->annotation().type);
+		std::vector<std::string> functionParameterNames = IRVariable(*_stringArgumentExpression).stackSlots();
 
 		return Whiskers(R"(
-			function <functionName>(condition <messageVars>) {
-				if iszero(condition) {
-					let memPtr := <allocateUnbounded>()
-					mstore(memPtr, <errorHash>)
-					let end := <abiEncodeFunc>(add(memPtr, <hashHeaderSize>) <messageVars>)
-					revert(memPtr, sub(end, memPtr))
-				}
+			function <functionName>(condition <functionParameterNames>) {
+				if iszero(condition)
+					<revertWithError>
 			}
 		)")
 		("functionName", functionName)
-		("allocateUnbounded", allocateUnboundedFunction())
-		("errorHash", formatNumber(errorHash))
-		("abiEncodeFunc", encodeFunc)
-		("hashHeaderSize", std::to_string(hashHeaderSize))
-		("messageVars",
-			(_messageType->sizeOnStack() > 0 ? ", " : "") +
-			suffixedVariableNameList("message_", 1, 1 + _messageType->sizeOnStack())
-		)
+		("revertWithError", revertWithError("Error(string)", {_messageType}, {_stringArgumentExpression}))
+		("functionParameterNames", joinHumanReadablePrefixed(functionParameterNames))
+		.render();
+	});
+}
+
+std::string YulUtilFunctions::requireWithErrorFunction(FunctionCall const& errorConstructorCall)
+{
+	ErrorDefinition const* errorDefinition = dynamic_cast<ErrorDefinition const*>(ASTNode::referencedDeclaration(errorConstructorCall.expression()));
+	solAssert(errorDefinition);
+
+	std::string const errorSignature = errorDefinition->functionType(true)->externalSignature();
+	// Note that in most cases we'll always generate one function per error definition,
+	// because types in the constructor call will match the ones in the definition. The only
+	// exception are calls with types, where each instance has its own type (e.g. literals).
+	std::string functionName = "require_helper_t_error_" + std::to_string(errorDefinition->id()) + "_" + errorDefinition->name();
+	for (ASTPointer<Expression const> const& argument: errorConstructorCall.sortedArguments())
+	{
+		solAssert(argument->annotation().type);
+		functionName += ("_" + argument->annotation().type->identifier());
+	}
+
+	std::vector<std::string> functionParameterNames;
+	for (ASTPointer<Expression const> const& arg: errorConstructorCall.sortedArguments())
+	{
+		solAssert(arg->annotation().type);
+		if (arg->annotation().type->sizeOnStack() > 0)
+			functionParameterNames += IRVariable(*arg).stackSlots();
+	}
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(condition <functionParameterNames>) {
+				if iszero(condition)
+					<revertWithError>
+			}
+		)")
+		("functionName", functionName)
+		("functionParameterNames", joinHumanReadablePrefixed(functionParameterNames))
+		// We're creating parameter names from the expressions passed into the constructor call,
+		// which will result in odd names like `expr_29` that would normally be used for locals.
+		// Note that this is the naming expected by `revertWithError()`.
+		("revertWithError", revertWithError(errorSignature, errorDefinition->functionType(true)->parameterTypes(), errorConstructorCall.sortedArguments()))
 		.render();
 	});
 }

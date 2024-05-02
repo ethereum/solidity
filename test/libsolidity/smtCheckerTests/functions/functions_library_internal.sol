@@ -7,7 +7,7 @@ contract C {
 	function f() public {
 		function()internal x;
 		x.value(42);
- 	}
+	}
 }
 // ====
 // SMTEngine: all

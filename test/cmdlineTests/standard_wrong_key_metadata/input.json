@@ -10,13 +10,13 @@
 	"settings":
 	{
 		"optimizer": {
-      		"enabled": true,
-      		"runs": 200
-    	},
-    	"evmVersion": "byzantium",
-    	"metadata": {
+			"enabled": true,
+			"runs": 200
+		},
+		"evmVersion": "byzantium",
+		"metadata": {
 			"key1": "test",
-      		"useLiteralContent": true
-    	}
+			"useLiteralContent": true
+		}
 	}
 }

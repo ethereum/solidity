@@ -498,6 +498,9 @@ BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
 {
 	std::vector<std::string> validSequenceInputs {
 		":",                         // Empty optimization sequence and empty cleanup sequence
+		" : ",                       // whitespaces only optimization sequence and whitespaces only cleanup sequence
+		": ",                        // Empty optimization sequence and whitespaces only cleanup sequence
+		" :",                        // whitespaces only optimization sequence and empty cleanup sequence
 		":fDn",                      // Empty optimization sequence and specified cleanup sequence
 		"dhfoDgvulfnTUtnIf:",        // Specified optimization sequence and empty cleanup sequence
 		"dhfoDgvulfnTUtnIf:fDn",     // Specified optimization sequence and cleanup sequence
@@ -509,6 +512,9 @@ BOOST_AUTO_TEST_CASE(valid_optimiser_sequences)
 
 	std::vector<std::tuple<std::string, std::string>> const expectedParsedSequences {
 		{"", ""},
+		{" ", " "},
+		{"", " "},
+		{" ", ""},
 		{"", "fDn"},
 		{"dhfoDgvulfnTUtnIf", ""},
 		{"dhfoDgvulfnTUtnIf", "fDn"},
@@ -600,11 +606,26 @@ BOOST_AUTO_TEST_CASE(valid_empty_optimizer_sequences_without_optimize)
 
 BOOST_AUTO_TEST_CASE(invalid_optimizer_sequence_without_optimize)
 {
-	std::string const invalidSequence{"u: "};
-	std::string const expectedErrorMessage{"--yul-optimizations is invalid with a non-empty sequence if Yul optimizer is disabled."};
-	std::vector<std::string> commandLineOptions{"solc", "contract.sol", "--yul-optimizations=" + invalidSequence};
+	std::vector<std::string> const invalidSequenceInputs {
+		{" "},
+		{"u: "},
+		{"u:"},
+		{":f"},
+		{" :f"}
+	};
+
+	std::string const expectedErrorMessage{
+		"--yul-optimizations is invalid with a non-empty sequence if Yul optimizer is disabled."
+		" Note that the empty optimizer sequence is properly denoted by \":\"."
+	};
+
 	auto hasCorrectMessage = [&](CommandLineValidationError const& _exception) { return _exception.what() == expectedErrorMessage; };
-	BOOST_CHECK_EXCEPTION(parseCommandLine(commandLineOptions), CommandLineValidationError, hasCorrectMessage);
+
+	for (auto const& invalidSequence: invalidSequenceInputs)
+	{
+		std::vector<std::string> commandLineOptions{"solc", "contract.sol", "--yul-optimizations=" + invalidSequence};
+		BOOST_CHECK_EXCEPTION(parseCommandLine(commandLineOptions), CommandLineValidationError, hasCorrectMessage);
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

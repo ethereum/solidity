@@ -392,8 +392,7 @@ Array Members
         // Data location for all state variables is storage.
         bool[2][] pairsOfFlags;
 
-        // newPairs is stored in memory - the only possibility
-        // for public contract function arguments
+        // newPairs is stored in memory
         function setAllFlagPairs(bool[2][] memory newPairs) public {
             // assignment to a storage array performs a copy of ``newPairs`` and
             // replaces the complete array ``pairsOfFlags``.

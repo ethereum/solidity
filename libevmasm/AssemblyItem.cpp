@@ -127,7 +127,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, Precision _precision) 
 		return 1 + std::max<size_t>(1, numberEncodingSize(data()));
 	case PushSubSize:
 	case PushProgramSize:
-		return 1 + 4;		// worst case: a 16MB program
+		return 1 + 4; // worst case: a 16MB program
 	case PushTag:
 	case PushData:
 	case PushSub:

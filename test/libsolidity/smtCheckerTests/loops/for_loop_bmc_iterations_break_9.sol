@@ -4,7 +4,7 @@ contract C
 		uint x;
 		for (;x < 2;) {
 			++x;
- 			break;
+			break;
 		}
 		assert(x == 1);
 	}

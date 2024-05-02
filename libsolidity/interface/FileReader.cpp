@@ -271,7 +271,7 @@ boost::filesystem::path FileReader::normalizeCLIPathForVFS(
 
 	// If the path is on the same drive as the working dir, for portability we prefer not to
 	// include the root name. Do this only for non-UNC paths - my experiments show that on Windows
-	// when the working dir is an UNC path, / does not not actually refer to the root of the UNC path.
+	// when the working dir is an UNC path, / does not actually refer to the root of the UNC path.
 
 	boost::filesystem::path normalizedRootPath = normalizeCLIRootPathForVFS(normalizedPath, canonicalWorkDir);
 

@@ -45,7 +45,7 @@ extern "C" {
 /// @param o_error A pointer to an error message, if there is one.
 ///
 /// The file (as well as error) contents that is to be allocated by the callback
-/// implementor must use the solidity_alloc() API to allocate its underlying
+/// implementer must use the solidity_alloc() API to allocate its underlying
 /// storage. Ownership is then transferred to the compiler which will take care
 /// of the deallocation.
 ///

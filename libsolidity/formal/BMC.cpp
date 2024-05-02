@@ -349,7 +349,7 @@ bool BMC::visit(WhileStatement const& _node)
 			_node.body().accept(*this);
 			popPathCondition();
 
-			auto brokeInCurrentIteration =	mergeVariablesFromLoopCheckpoints();
+			auto brokeInCurrentIteration = mergeVariablesFromLoopCheckpoints();
 
 			// merges indices modified when accepting loop condition that no longer holds
 			mergeVariables(
@@ -414,7 +414,7 @@ bool BMC::visit(ForStatement const& _node)
 		pushPathCondition(forCondition);
 		_node.body().accept(*this);
 
-		auto brokeInCurrentIteration =	mergeVariablesFromLoopCheckpoints();
+		auto brokeInCurrentIteration = mergeVariablesFromLoopCheckpoints();
 
 		// accept loop expression if there was no break
 		if (_node.loopExpression())

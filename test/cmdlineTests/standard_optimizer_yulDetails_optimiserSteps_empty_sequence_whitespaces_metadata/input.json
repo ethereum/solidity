@@ -1,0 +1,25 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "A": {"content": "
+            // SPDX-License-Identifier: GPL-3.0
+            pragma solidity >=0.0;
+            contract C { }
+        "}
+    },
+    "settings": {
+        "optimizer": {
+            "details": {
+                "yul": false,
+                "yulDetails": {
+                    "optimizerSteps": " :  "
+                }
+            }
+        },
+        "outputSelection": {
+            "*": {
+              "*": ["metadata"]
+            }
+        }
+    }
+}

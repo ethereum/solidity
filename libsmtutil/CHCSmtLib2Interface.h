@@ -57,8 +57,10 @@ public:
 
 	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
 
+	auto const& sortNames() const { return m_smtlib2->sortNames(); }
+
 private:
-	std::string toSmtLibSort(Sort const& _sort);
+	std::string toSmtLibSort(SortPointer _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	void writeHeader();
@@ -74,6 +76,9 @@ private:
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
+	/// Translates CHC solver response with a model to our representation of invariants. Returns None on error.
+	std::optional<smtutil::Expression> invariantsFromSolverResponse(std::string const& response) const;
+
 	/// Used to access toSmtLibSort, SExpr, and handle variables.
 	std::unique_ptr<SMTLib2Interface> m_smtlib2;
 
@@ -85,8 +90,6 @@ private:
 
 	frontend::ReadCallback::Callback m_smtCallback;
 	SMTSolverChoice m_enabledSolvers;
-
-	std::map<Sort const*, std::string> m_sortNames;
 };
 
 }

@@ -117,9 +117,9 @@ Tag                                                                             
 =============== ====================================================================================== =============================
 ``@title``      A title that should describe the contract/interface                                    contract, library, interface, struct, enum
 ``@author``     The name of the author                                                                 contract, library, interface, struct, enum
-``@notice``     Explain to an end user what this does                                                  contract, library, interface, function, public state variable, event, struct, enum
-``@dev``        Explain to a developer any extra details                                               contract, library, interface, function, state variable, event, struct, enum
-``@param``      Documents a parameter just like in Doxygen (must be followed by parameter name)        function, event
+``@notice``     Explain to an end user what this does                                                  contract, library, interface, function, public state variable, event, struct, enum, error
+``@dev``        Explain to a developer any extra details                                               contract, library, interface, function, state variable, event, struct, enum, error
+``@param``      Documents a parameter just like in Doxygen (must be followed by parameter name)        function, event, error
 ``@return``     Documents the return variables of a contract's function                                function, public state variable
 ``@inheritdoc`` Copies all missing tags from the base function (must be followed by the contract name) function, public state variable
 ``@custom:...`` Custom tag, semantics is application-defined                                           everywhere

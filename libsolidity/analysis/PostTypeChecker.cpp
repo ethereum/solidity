@@ -103,6 +103,11 @@ bool PostTypeChecker::visit(FunctionCall const& _functionCall)
 	return callVisit(_functionCall);
 }
 
+void PostTypeChecker::endVisit(FunctionCall const& _functionCall)
+{
+	callEndVisit(_functionCall);
+}
+
 bool PostTypeChecker::visit(Identifier const& _identifier)
 {
 	return callVisit(_identifier);
@@ -304,6 +309,7 @@ private:
 	bool m_insideModifierInvocation = false;
 };
 
+// TODO: this should either be split into separate emit and error checkers, or at least renamed to include require
 struct EventOutsideEmitErrorOutsideRevertChecker: public PostTypeChecker::Checker
 {
 	EventOutsideEmitErrorOutsideRevertChecker(ErrorReporter& _errorReporter):
@@ -336,6 +342,11 @@ struct EventOutsideEmitErrorOutsideRevertChecker: public PostTypeChecker::Checke
 		if (*_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
 			if (auto const* functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type))
 			{
+				if (functionType->kind() == FunctionType::Kind::Require)
+				{
+					solAssert(!m_inRequire);
+					m_inRequire = true;
+				}
 				// Check for event outside of emit statement
 				if (!dynamic_cast<EmitStatement const*>(m_currentStatement) && functionType->kind() == FunctionType::Kind::Event)
 					m_errorReporter.typeError(
@@ -343,11 +354,11 @@ struct EventOutsideEmitErrorOutsideRevertChecker: public PostTypeChecker::Checke
 						_functionCall.location(),
 						"Event invocations have to be prefixed by \"emit\"."
 					);
-				else if (!dynamic_cast<RevertStatement const*>(m_currentStatement) && functionType->kind() == FunctionType::Kind::Error)
+				else if (!dynamic_cast<RevertStatement const*>(m_currentStatement) && !m_inRequire && functionType->kind() == FunctionType::Kind::Error)
 					m_errorReporter.typeError(
 						7757_error,
 						_functionCall.location(),
-						"Errors can only be used with revert statements: \"revert MyError();\"."
+						"Errors can only be used with revert statements: \"revert MyError(args);\", or require functions: \"require(condition, MyError(args))\"."
 					);
 			}
 		m_currentStatement = nullptr;
@@ -355,8 +366,20 @@ struct EventOutsideEmitErrorOutsideRevertChecker: public PostTypeChecker::Checke
 		return true;
 	}
 
+	void endVisit(FunctionCall const& _functionCall) override
+	{
+		if (*_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
+			if (auto const* functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type))
+				if (functionType->kind() == FunctionType::Kind::Require)
+				{
+					solAssert(m_inRequire);
+					m_inRequire = false;
+				}
+	}
+
 private:
 	Statement const* m_currentStatement = nullptr;
+	bool m_inRequire = false;
 };
 
 struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker

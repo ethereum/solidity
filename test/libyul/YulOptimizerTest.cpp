@@ -81,8 +81,7 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect));
 
 	// Re-parse new code for compilability
-	// TODO: support for wordSizeTransform which needs different input and output dialects
-	if (m_optimizerStep != "wordSizeTransform" && !std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))
+	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))
 	{
 		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
 			<< _linePrefix << "Result after the optimiser:" << std::endl;

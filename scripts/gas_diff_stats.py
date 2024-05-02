@@ -1,26 +1,20 @@
 #!/usr/bin/env python3
-"""A script to collect gas statistics and print it.
+"""Summarizes gas differences from semantic test diff.
 
-Useful to summarize gas differences to semantic tests for a PR / branch.
+The script collects all gas differences present in git diff of semantic tests
+and summarizes them in the form of a table that's ready to post in a GitHub comment.
+Only changes that are already committed are taken into account.
+Changes that are only staged or not staged or committed at all are ignored.
 
-Dependencies: Parsec (https://pypi.org/project/parsec/) and Tabulate
-(https://pypi.org/project/tabulate/)
+Useful for reviewing the gas impact of a specific PR / branch.
+Instead of tediously going through each individual change, it's recommended to review the table.
 
-  pip install parsec tabulate
-
-Run from root project dir.
-
-  python3 scripts/gas_diff_stats.py
-
-Note that the changes to semantic tests have to be committed.
-
-Assumes that there is a remote named ``origin`` pointing to the Solidity github
-repository. The changes are compared against ``origin/develop``.
-
+Dependencies: parsec, tabulate
 """
 
 import subprocess
 import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 from enum import Enum
 from parsec import generate, ParseError, regex, string, optional
@@ -105,11 +99,11 @@ def collect_statistics(lines) -> (int, int, int, int, int, int):
         for _codegen_kind in codegen_kinds
     )
 
-def semantictest_statistics():
+def semantictest_statistics(base_branch: str):
     """Prints the tabulated statistics that can be pasted in github."""
     def parse_git_diff(fname):
         diff_output = subprocess.check_output(
-            ["git", "diff", "--unified=0", "origin/develop", "HEAD", fname],
+            ["git", "diff", "--unified=0", base_branch, "HEAD", fname],
             universal_newlines=True
         ).splitlines()
         if len(diff_output) == 0:
@@ -170,8 +164,17 @@ def semantictest_statistics():
         print("No differences found.")
 
 def main():
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument(
+        '--base',
+        dest='base_branch',
+        default='origin/develop',
+        help='The base branch to diff against. default: origin/develop',
+    )
+    options = parser.parse_args()
+
     try:
-        semantictest_statistics()
+        semantictest_statistics(options.base_branch)
     except subprocess.CalledProcessError as exception:
         sys.exit(f"Error in the git diff:\n{exception.output}")
     except ParseError as exception:

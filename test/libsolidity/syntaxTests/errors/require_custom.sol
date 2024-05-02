@@ -4,5 +4,6 @@ contract C {
         require(c, E(2, 7));
     }
 }
+// ====
+// compileViaYul: true
 // ----
-// TypeError 9322: (83-90): No matching declaration found after argument-dependent lookup.

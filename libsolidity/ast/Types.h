@@ -1662,6 +1662,8 @@ private:
 
 /**
  * Special type for magic variables (block, msg, tx, type(...)), similar to a struct but without any reference.
+ *
+ * It is also the type shared by all instances of all custom error types.
  */
 class MagicType: public Type
 {
@@ -1671,6 +1673,7 @@ public:
 		Message, ///< "msg"
 		Transaction, ///< "tx"
 		ABI, ///< "abi"
+		Error, ///< custom error instance
 		MetaType ///< "type(...)"
 	};
 

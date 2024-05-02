@@ -86,3 +86,8 @@ html.transition *:after {
 .wy-menu-vertical a:hover {
     background-color: #0002;
 }
+
+body {
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}

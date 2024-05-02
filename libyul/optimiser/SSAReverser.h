@@ -30,42 +30,42 @@ class AssignmentCounter;
  *
  * In particular, the SSA transform will rewrite
  *
- * 		a := E
+ *     a := E
  *
  * to
  *
- * 		let a_1 := E
- * 		a := a_1
+ *     let a_1 := E
+ *     a := a_1
  *
  * To undo this kind of transformation, the SSAReverser changes this back to
  *
- * 		a := E
- * 		let a_1 := a
+ *     a := E
+ *     let a_1 := a
  *
- * 	In the special case
- * 		let a := E
- * 		a := a
+ * In the special case
+ *     let a := E
+ *     a := a
  *
- * 	the redundant assignment "a := a" is removed.
+ * the redundant assignment "a := a" is removed.
  *
  *
  * Secondly, the SSA transform will rewrite
  *
- * 		let a := E
+ *     let a := E
  * to
  *
- * 		let a_1 := E
- * 		let a := a_1
+ *     let a_1 := E
+ *     let a := a_1
  *
  * To undo this kind of transformation, the SSAReverser changes this back to
  *
- * 		let a := E
- * 		let a_1 := a
+ *     let a := E
+ *     let a_1 := a
  *
- * 	After that the CSE can replace references of a_1 by references to a,
- * 	after which the unused pruner can remove the declaration of a_1.
+ * After that the CSE can replace references of a_1 by references to a,
+ * after which the unused pruner can remove the declaration of a_1.
  *
- * 	Prerequisites: Disambiguator
+ * Prerequisites: Disambiguator
  *
  */
 class SSAReverser: public ASTModifier

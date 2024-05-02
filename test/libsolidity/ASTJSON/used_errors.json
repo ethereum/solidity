@@ -57,8 +57,8 @@
                 "src": "38:1:1",
                 "typeDescriptions":
                 {
-                  "typeIdentifier": "t_function_error_pure$__$returns$__$",
-                  "typeString": "function () pure"
+                  "typeIdentifier": "t_function_error_pure$__$returns$_t_error_$",
+                  "typeString": "function () pure returns (error)"
                 }
               },
               "id": 6,
@@ -74,8 +74,8 @@
               "tryCall": false,
               "typeDescriptions":
               {
-                "typeIdentifier": "t_tuple$__$",
-                "typeString": "tuple()"
+                "typeIdentifier": "t_error",
+                "typeString": "error"
               }
             },
             "id": 7,

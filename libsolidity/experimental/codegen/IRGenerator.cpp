@@ -52,14 +52,13 @@ IRGenerator::IRGenerator(
 	DebugInfoSelection const&,
 	CharStreamProvider const*,
 	Analysis const& _analysis
-)
-:
-m_evmVersion(_evmVersion),
-m_eofVersion(_eofVersion),
-//		m_debugInfoSelection(_debugInfoSelection),
-//		m_soliditySourceProvider(_soliditySourceProvider),
-m_env(_analysis.typeSystem().env().clone()),
-m_context{_analysis, &m_env, {}, {}}
+):
+	m_evmVersion(_evmVersion),
+	m_eofVersion(_eofVersion),
+	//m_debugInfoSelection(_debugInfoSelection),
+	//m_soliditySourceProvider(_soliditySourceProvider),
+	m_env(_analysis.typeSystem().env().clone()),
+	m_context{_analysis, &m_env, {}, {}}
 {
 }
 

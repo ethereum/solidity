@@ -300,7 +300,7 @@ bool SyntaxChecker::visit(Literal const& _literal)
 
 	if (value.find("__") != ASTString::npos)
 	{
-		m_errorReporter.syntaxError(2990_error, _literal.location(), "Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.");
+		m_errorReporter.syntaxError(2990_error, _literal.location(), "Invalid use of underscores in number literal. Only one consecutive underscore between digits is allowed.");
 		return true;
 	}
 

@@ -103,7 +103,7 @@ void markRecursiveCalls(CFG& _cfg)
 					_addChild(_conditionalJump.nonZero);
 				},
 				[&](CFG::BasicBlock::FunctionReturn const&) {},
-				[&](CFG::BasicBlock::Terminated const&)	{},
+				[&](CFG::BasicBlock::Terminated const&) {},
 			}, _block->exit);
 		});
 		return calls;

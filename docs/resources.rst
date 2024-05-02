@@ -110,7 +110,7 @@ Solidity Tools
 * `leafleth <https://github.com/clemlak/leafleth>`_
     A documentation generator for Solidity smart-contracts.
 
-* `Scaffold-ETH <https://github.com/scaffold-eth/scaffold-eth>`_
+* `Scaffold-ETH 2 <https://github.com/scaffold-eth/scaffold-eth-2>`_
     Forkable Ethereum development stack focused on fast product iterations.
 
 * `sol2uml <https://www.npmjs.com/package/sol2uml>`_

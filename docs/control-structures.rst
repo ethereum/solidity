@@ -594,6 +594,8 @@ The built-in errors ``Error(string)`` and ``Panic(uint256)`` are
 used by special functions, as explained below. ``Error`` is used for "regular" error conditions
 while ``Panic`` is used for errors that should not be present in bug-free code.
 
+.. _assert-and-require-statements:
+
 Panic via ``assert`` and Error via ``require``
 ----------------------------------------------
 
@@ -625,21 +627,24 @@ The error code supplied with the error data indicates the kind of panic.
 #. 0x41: If you allocate too much memory or create an array that is too large.
 #. 0x51: If you call a zero-initialized variable of internal function type.
 
-The ``require`` function either creates an error without any data or
-an error of type ``Error(string)``. It
-should be used to ensure valid conditions
-that cannot be detected until execution time.
-This includes conditions on inputs
-or return values from calls to external contracts.
+The ``require`` function provides three overloads:
+
+1. ``require(bool)`` which will revert without any data (not even an error selector).
+2. ``require(bool, string)`` which will revert with an ``Error(string)``.
+3. ``require(bool, error)`` which will revert with the custom, user supplied error provided as the second argument.
 
 .. note::
+    ``require`` arguments are evaluated unconditionally, so take special care to make sure that
+    they are not expressions with unexpected side-effects.
+    For example, in ``require(condition, CustomError(f()));`` and ``require(condition, f());``,
+    function ``f()`` will be called regardless of whether the supplied condition is ``true`` or ``false``.
 
-    It is currently not possible to use custom errors in combination
-    with ``require``. Please use ``if (!condition) revert CustomError();`` instead.
+.. note::
+    Using custom errors with ``require`` is only supported by the via IR pipeline, i.e. compilation via Yul.
+    For the legacy pipeline, please use ``if (!condition) revert CustomError();`` instead.
 
 An ``Error(string)`` exception (or an exception without data) is generated
-by the compiler
-in the following situations:
+by the compiler in the following situations:
 
 #. Calling ``require(x)`` where ``x`` evaluates to ``false``.
 #. If you use ``revert()`` or ``revert("description")``.
@@ -662,10 +667,10 @@ an ``Error`` or a ``Panic`` (or whatever else was given):
 #. If you create a contract using the ``new`` keyword but the contract
    creation :ref:`does not finish properly<creating-contracts>`.
 
-You can optionally provide a message string for ``require``, but not for ``assert``.
+You can optionally provide a message string or a custom error to ``require``, but not to ``assert``.
 
 .. note::
-    If you do not provide a string argument to ``require``, it will revert
+    If you do not provide a string or custom error argument to ``require``, it will revert
     with empty error data, not even including the error selector.
 
 

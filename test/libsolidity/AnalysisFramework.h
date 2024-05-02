@@ -200,7 +200,7 @@ CHECK_ERROR_OR_WARNING(text, type, substrings, false, true)
 #define CHECK_WARNING(text, substring) \
 CHECK_ERROR_OR_WARNING(text, Warning, std::vector<std::string>{(substring)}, true, false)
 
-// [checkWarningAllowMulti(text, substring)] aserts that the compilation down to typechecking
+// [checkWarningAllowMulti(text, substring)] asserts that the compilation down to typechecking
 // emits a warning and with a message containing [substring].
 // Because of the limitations of the preprocessor, you cannot use {"abc", "def"} as arguments,
 // but have to replace them by (std::vector<std::string>{"abc", "def"}) (note the parentheses)

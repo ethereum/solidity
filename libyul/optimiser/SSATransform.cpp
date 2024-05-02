@@ -166,8 +166,8 @@ private:
 	std::set<YulString> const& m_variablesToReplace;
 	/// Variables (that are to be replaced) currently in scope.
 	std::set<YulString> m_variablesInScope;
-	/// Set of variables that do not have a specific value.
-	std::set<YulString> m_variablesToReassign;
+	/// Variables that do not have a specific value.
+	util::UniqueVector<YulString> m_variablesToReassign;
 	TypeInfo const& m_typeInfo;
 };
 
@@ -175,14 +175,14 @@ void IntroduceControlFlowSSA::operator()(FunctionDefinition& _function)
 {
 	std::set<YulString> varsInScope;
 	std::swap(varsInScope, m_variablesInScope);
-	std::set<YulString> toReassign;
+	util::UniqueVector<YulString> toReassign;
 	std::swap(toReassign, m_variablesToReassign);
 
 	for (auto const& param: _function.parameters)
 		if (m_variablesToReplace.count(param.name))
 		{
 			m_variablesInScope.insert(param.name);
-			m_variablesToReassign.insert(param.name);
+			m_variablesToReassign.pushBack(param.name);
 		}
 
 	ASTModifier::operator()(_function);
@@ -196,8 +196,8 @@ void IntroduceControlFlowSSA::operator()(ForLoop& _for)
 	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
 	for (auto const& var: assignedVariableNames(_for.body) + assignedVariableNames(_for.post))
-		if (m_variablesInScope.count(var))
-			m_variablesToReassign.insert(var);
+		if (util::contains(m_variablesInScope,var))
+			m_variablesToReassign.pushBack(var);
 
 	(*this)(_for.body);
 	(*this)(_for.post);
@@ -207,26 +207,26 @@ void IntroduceControlFlowSSA::operator()(Switch& _switch)
 {
 	yulAssert(m_variablesToReassign.empty(), "");
 
-	std::set<YulString> toReassign;
+	util::UniqueVector<YulString> toReassign;
 	for (auto& c: _switch.cases)
 	{
 		(*this)(c.body);
-		toReassign += m_variablesToReassign;
+		toReassign.pushBack(m_variablesToReassign);
 	}
 
-	m_variablesToReassign += toReassign;
+	m_variablesToReassign.pushBack(toReassign);
 }
 
 void IntroduceControlFlowSSA::operator()(Block& _block)
 {
-	std::set<YulString> variablesDeclaredHere;
-	std::set<YulString> assignedVariables;
+	util::UniqueVector<YulString> variablesDeclaredHere;
+	util::UniqueVector<YulString> assignedVariables;
 
 	util::iterateReplacing(
 		_block.statements,
 		[&](Statement& _s) -> std::optional<std::vector<Statement>>
 		{
-		std::vector<Statement> toPrepend;
+			std::vector<Statement> toPrepend;
 			for (YulString toReassign: m_variablesToReassign)
 			{
 				YulString newName = m_nameDispenser.newName(toReassign);
@@ -235,7 +235,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 					{TypedName{debugDataOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
 					std::make_unique<Expression>(Identifier{debugDataOf(_s), toReassign})
 				});
-				assignedVariables.insert(toReassign);
+				assignedVariables.pushBack(toReassign);
 			}
 			m_variablesToReassign.clear();
 
@@ -245,7 +245,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 				for (auto const& var: varDecl.variables)
 					if (m_variablesToReplace.count(var.name))
 					{
-						variablesDeclaredHere.insert(var.name);
+						variablesDeclaredHere.pushBack(var.name);
 						m_variablesInScope.insert(var.name);
 					}
 			}
@@ -254,7 +254,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 				Assignment& assignment = std::get<Assignment>(_s);
 				for (auto const& var: assignment.variableNames)
 					if (m_variablesToReplace.count(var.name))
-						assignedVariables.insert(var.name);
+						assignedVariables.pushBack(var.name);
 			}
 			else
 				visit(_s);
@@ -268,9 +268,10 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 			}
 		}
 	);
-	m_variablesToReassign += assignedVariables;
-	m_variablesInScope -= variablesDeclaredHere;
-	m_variablesToReassign -= variablesDeclaredHere;
+
+	m_variablesToReassign.pushBack(assignedVariables);
+	m_variablesInScope -= variablesDeclaredHere.contents();
+	m_variablesToReassign.removeAll(variablesDeclaredHere.contents());
 }
 
 /**
