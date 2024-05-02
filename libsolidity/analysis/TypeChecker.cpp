@@ -2234,7 +2234,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 		typeCheckABIEncodeCallFunction(_functionCall);
 		return;
 	}
-	else if (_functionType->kind() == FunctionType::Kind::ABIEncodeError)
+	if (_functionType->kind() == FunctionType::Kind::ABIEncodeError)
 	{
 		typeCheckABIEncodeErrorFunction(_functionCall);
 		return;
@@ -2507,7 +2507,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 				msg += " Cannot use special function.";
 		}
 
-		m_errorReporter.typeError(3510_error, arguments[0]->location(), {}, msg);
+		m_errorReporter.typeError(3510_error, arguments[0]->location(), msg);
 		return;
 	}
 	solAssert(!externalFunctionType->takesArbitraryParameters(), "Function must have fixed parameters.");
@@ -2518,7 +2518,7 @@ void TypeChecker::typeCheckABIEncodeErrorFunction(FunctionCall const& _functionC
 	if (tupleType)
 	{
 		if (TupleExpression const* argumentTuple = dynamic_cast<TupleExpression const*>(arguments[1].get()))
-			callArguments = decltype(callArguments){argumentTuple->components().begin(), argumentTuple->components().end()};
+			callArguments = {argumentTuple->components().begin(), argumentTuple->components().end()};
 		else
 		{
 			m_errorReporter.typeError(
