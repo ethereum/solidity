@@ -2448,7 +2448,7 @@ void TypeChecker::typeCheckABIEncodeCallFunctionOrError(
 	if (tupleType)
 	{
 		if (TupleExpression const* argumentTuple = dynamic_cast<TupleExpression const*>(arguments[1].get()))
-			callArguments = decltype(callArguments){argumentTuple->components().begin(), argumentTuple->components().end()};
+			callArguments = {argumentTuple->components().begin(), argumentTuple->components().end()};
 		else
 		{
 			m_errorReporter.typeError(
