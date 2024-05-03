@@ -27,7 +27,7 @@ ABI Encoding and Decoding Functions and Errors
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent
   to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature))), ...)``
 - ``abi.encodeError(error errorPointer, (...)) returns (bytes memory)``: ABI-encodes the revert data for ``errorPointer`` with the arguments found in the
-  tuple. Performs a full type-check, ensuring the types match the error definition. Results equals ``abi.encodeWithSelector(errorPointer.selector, (...))``
+  tuple. Performs a full type-check, ensuring the types match the error definition. Results equals ``abi.encodeWithSelector(errorPointer.selector, ...)``
 
 .. index:: bytes;concat, string;concat
 
