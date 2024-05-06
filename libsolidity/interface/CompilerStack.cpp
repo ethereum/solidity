@@ -656,8 +656,12 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 		{
 			m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
 			if (auto* universalCallback = m_readFile.target<frontend::UniversalCallback>())
+			{
 				if (m_modelCheckerSettings.solvers.eld)
 					universalCallback->smtCommand().setEldarica(m_modelCheckerSettings.timeout, m_modelCheckerSettings.invariants != ModelCheckerInvariants::None());
+				if (m_modelCheckerSettings.solvers.cvc5)
+					universalCallback->smtCommand().setCvc5(m_modelCheckerSettings.timeout);
+			}
 		}
 
 		ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);

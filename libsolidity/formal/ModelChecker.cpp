@@ -24,9 +24,7 @@
 #include <z3_version.h>
 #endif
 
-#if defined(__linux) || defined(__APPLE__)
 #include <boost/process.hpp>
-#endif
 
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/view.hpp>
@@ -163,14 +161,10 @@ std::vector<std::string> ModelChecker::unhandledQueries()
 SMTSolverChoice ModelChecker::availableSolvers()
 {
 	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
-#if defined(__linux) || defined(__APPLE__)
 	available.eld = !boost::process::search_path("eld").empty();
-#endif
+	available.cvc5 = !boost::process::search_path("cvc5").empty();
 #ifdef HAVE_Z3
 	available.z3 = solidity::smtutil::Z3Interface::available();
-#endif
-#ifdef HAVE_CVC4
-	available.cvc4 = true;
 #endif
 	return available;
 }
@@ -179,13 +173,13 @@ SMTSolverChoice ModelChecker::checkRequestedSolvers(SMTSolverChoice _enabled, Er
 {
 	SMTSolverChoice availableSolvers{ModelChecker::availableSolvers()};
 
-	if (_enabled.cvc4 && !availableSolvers.cvc4)
+	if (_enabled.cvc5 && !availableSolvers.cvc5)
 	{
-		_enabled.cvc4 = false;
+		_enabled.cvc5 = false;
 		_errorReporter.warning(
 			4902_error,
 			SourceLocation(),
-			"Solver CVC4 was selected for SMTChecker but it is not available."
+			"Solver cvc5 was selected for SMTChecker but it is not available."
 		);
 	}
 
