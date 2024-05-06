@@ -19,23 +19,28 @@ General Resources
 Integrated (Ethereum) Development Environments
 ==============================================
 
-    * `Brownie <https://eth-brownie.readthedocs.io/en/stable/>`_
-        Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
-
-    * `Dapp <https://dapp.tools/>`_
-        Tool for building, testing and deploying smart contracts from the command-line.
+    * `Hardhat <https://hardhat.org/>`_
+        Ethereum development environment with local Ethereum network, debugging features and plugin ecosystem.
 
     * `Foundry <https://github.com/foundry-rs/foundry>`_
         Fast, portable and modular toolkit for Ethereum application development written in Rust.
 
-    * `Hardhat <https://hardhat.org/>`_
-        Ethereum development environment with local Ethereum network, debugging features and plugin ecosystem.
-
     * `Remix <https://remix.ethereum.org/>`_
         Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
+    * `Dapp <https://dapp.tools/>`_
+        Tool for building, testing and deploying smart contracts from the command-line.
+
+    * `Brownie <https://eth-brownie.readthedocs.io/en/stable/>`_
+        Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
+
+    * `Ape <https://docs.apeworx.io/ape/stable/az>`_
+        Python-based web3 development tool for compiling, testing, and interacting with smart contracts.
+
     * `Truffle <https://trufflesuite.com/truffle/>`_
         Ethereum development framework.
+        💡 Note: Consensys announced the sunset of Truffle on September 21, 2023.
+        Current users may check out the migration path and available product support [here](https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat?utm_source=github&utm_medium=referral&utm_campaign=2023_Sep_truffle-sunset-2023_announcement_).
 
 Editor Integrations
 ===================
@@ -139,6 +144,9 @@ Solidity Tools
 
 * `Universal Mutator <https://github.com/agroce/universalmutator>`_
     A tool for mutation generation, with configurable rules and support for Solidity and Vyper.
+
+* `ethdebug <https://github.com/ethdebug/format>`_
+    A standard debugging data format for smart contracts on Ethereum-compatible networks.
 
 Third-Party Solidity Parsers and Grammars
 =========================================
