@@ -112,9 +112,10 @@ Use `solAssert` and `solUnimplementedAssert` generously to check assumptions tha
 6. If a function returns multiple values, use std::tuple (std::pair acceptable) or better introduce a struct type. Do not use */& arguments.
 7. Use parameters of pointer type only if ``nullptr`` is a valid argument, use references otherwise. Often, ``std::optional`` is better suited than a raw pointer.
 8. Never use a macro where adequate non-preprocessor C++ can be written.
-9. Do not pass bools: prefer enumerations instead.
-10. Prefer enum class to straight enum.
-11. Always initialize POD variables, even if their value is overwritten later.
+9. Use ``auto`` whenever it deduces the correct type. Still use pointer-, reference- and const-qualifiers.
+10. Do not pass bools: prefer enumerations instead.
+11. Prefer enum class to straight enum.
+12. Always initialize POD variables, even if their value is overwritten later.
 
 Yes:
 ```cpp
