@@ -333,10 +333,7 @@ The following are dependencies for all builds of Solidity:
 +-----------------------------------+-------------------------------------------------------+
 | `z3`_ (version 4.8.16+, Optional) | For use with SMT checker.                             |
 +-----------------------------------+-------------------------------------------------------+
-| `cvc4`_ (Optional)                | For use with SMT checker.                             |
-+-----------------------------------+-------------------------------------------------------+
 
-.. _cvc4: https://cvc4.cs.stanford.edu/web/
 .. _Git: https://git-scm.com/download
 .. _Boost: https://www.boost.org
 .. _CMake: https://cmake.org/download/
@@ -542,12 +539,6 @@ Inside the build folder you can disable them, since they are enabled by default:
 
     # disables only Z3 SMT Solver.
     cmake .. -DUSE_Z3=OFF
-
-    # disables only CVC4 SMT Solver.
-    cmake .. -DUSE_CVC4=OFF
-
-    # disables both Z3 and CVC4
-    cmake .. -DUSE_CVC4=OFF -DUSE_Z3=OFF
 
 The Version String in Detail
 ============================

@@ -133,15 +133,11 @@ elseif (${Z3_FOUND})
   message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
 endif()
 
-find_package(CVC4 QUIET)
-if (${CVC4_FOUND})
-  add_definitions(-DHAVE_CVC4)
-  message("CVC4 SMT solver found. This enables optional SMT checking with CVC4.")
-endif()
+find_program(CVC5_PATH cvc5)
 
-if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
+if (NOT (${Z3_FOUND} OR CVC5_PATH))
   message("No SMT solver found (or it has been forcefully disabled). Optional SMT checking will not be available.\
-  \nPlease install Z3 or CVC4 or remove the option disabling them (USE_Z3, USE_CVC4).")
+  \nPlease install Z3 or cvc5 or remove the option disabling them (USE_Z3).")
 endif()
 
 add_subdirectory(libsolutil)

@@ -822,10 +822,10 @@ which is primarily an SMT solver and makes `Spacer
 <https://github.com/uuverifiers/eldarica>`_ which does both.
 
 The user can choose which solvers should be used, if available, via the CLI
-option ``--model-checker-solvers {all,cvc4,eld,smtlib2,z3}`` or the JSON option
+option ``--model-checker-solvers {all,cvc5,eld,smtlib2,z3}`` or the JSON option
 ``settings.modelChecker.solvers=[smtlib2,z3]``, where:
 
-- ``cvc4`` is only available if the ``solc`` binary is compiled with it. Only BMC uses ``cvc4``.
+- ``cvc5`` is used via its binary which must be installed in the system. Only BMC uses ``cvc5``.
 - ``eld`` is used via its binary which must be installed in the system. Only CHC uses ``eld``, and only if ``z3`` is not enabled.
 - ``smtlib2`` outputs SMT/Horn queries in the `smtlib2 <http://smtlib.cs.uiowa.edu/>`_ format.
   These can be used together with the compiler's `callback mechanism <https://github.com/ethereum/solc-js>`_ so that
@@ -849,7 +849,7 @@ concerned about this option. More advanced users might apply this option to try
 alternative solvers on more complex problems.
 
 Please note that certain combinations of chosen engine and solver will lead to
-the SMTChecker doing nothing, for example choosing CHC and ``cvc4``.
+the SMTChecker doing nothing, for example choosing CHC and ``cvc5``.
 
 *******************************
 Abstraction and False Positives

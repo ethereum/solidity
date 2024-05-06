@@ -1044,7 +1044,7 @@ jobs:
     <<: *base_ubuntu2004_xlarge
     environment:
       <<: *base_ubuntu2204_xlarge_env
-      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
+      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
       - run_build
@@ -1104,7 +1104,7 @@ jobs:
     environment:
       <<: *base_ubuntu2204_large_env
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
+      CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20
       MAKEFLAGS: -j 10
     steps:
       - checkout

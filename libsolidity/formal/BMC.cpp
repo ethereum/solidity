@@ -51,15 +51,15 @@ BMC::BMC(
 	))
 {
 	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
-#if defined (HAVE_Z3) || defined (HAVE_CVC4)
-	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
+#if defined (HAVE_Z3)
+	if (m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
 			m_errorReporter.warning(
 				5622_error,
 				"SMT-LIB2 query responses were given in the auxiliary input, "
-				"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
+				"but this Solidity binary uses an SMT solver Z3 directly."
 				"These responses will be ignored."
-				"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
+				"Consider disabling Z3 at compilation time in order to use SMT-LIB2 responses."
 			);
 #endif
 }
@@ -67,13 +67,13 @@ BMC::BMC(
 void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
 {
 	// At this point every enabled solver is available.
-	if (!m_settings.solvers.cvc4 && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
+	if (!m_settings.solvers.cvc5 && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
 	{
 		m_errorReporter.warning(
 			7710_error,
 			SourceLocation(),
 			"BMC analysis was not possible since no SMT solver was found and enabled."
-			" The accepted solvers for BMC are cvc4 and z3."
+			" The accepted solvers for BMC are cvc5 and z3."
 		);
 		return;
 	}
@@ -123,7 +123,7 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 				);
 
 
-	// If this check is true, Z3 and CVC4 are not available
+	// If this check is true, Z3 and cvc5 are not available
 	// and the query answers were not provided, since SMTPortfolio
 	// guarantees that SmtLib2Interface is the first solver, if enabled.
 	if (
@@ -134,7 +134,7 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 		m_errorReporter.warning(
 			8084_error,
 			SourceLocation(),
-			"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
+			"BMC analysis was not possible. No SMT solver (Z3 or cvc5) was available."
 			" None of the installed solvers was enabled."
 #ifdef HAVE_Z3_DLOPEN
 			" Install libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " to enable Z3."
