@@ -37,8 +37,7 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Whiskers.h>
-
-#include <json/json.h>
+#include <libsolutil/JSON.h>
 
 #include <sstream>
 #include <variant>

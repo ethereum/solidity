@@ -22,19 +22,18 @@
 
 #include <libsolutil/JSON.h>
 
-#include <libsolutil/CommonIO.h>
+#include <libsolutil/CommonData.h>
 
-#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
-#include <sstream>
 #include <map>
-#include <memory>
+#include <sstream>
 
-#ifdef STRICT_JSONCPP_VERSION_CHECK
+#ifdef STRICT_NLOHMANN_JSON_VERSION_CHECK
 static_assert(
-	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 3),
-	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.3."
-);
+	(NLOHMANN_JSON_VERSION_MAJOR == 3) && (NLOHMANN_JSON_VERSION_MINOR == 11) && (NLOHMANN_JSON_VERSION_PATCH == 3),
+	"Unexpected nlohmann-json version. Expecting 3.11.3.");
 #endif
 
 namespace solidity::util
@@ -43,116 +42,209 @@ namespace solidity::util
 namespace
 {
 
-/// StreamWriterBuilder that can be constructed with specific settings
-class StreamWriterBuilder: public Json::StreamWriterBuilder
-{
-public:
-	explicit StreamWriterBuilder(std::map<std::string, Json::Value> const& _settings)
-	{
-		for (auto const& iter: _settings)
-			this->settings_[iter.first] = iter.second;
-	}
-};
-
-/// CharReaderBuilder with strict-mode settings
-class StrictModeCharReaderBuilder: public Json::CharReaderBuilder
-{
-public:
-	StrictModeCharReaderBuilder()
-	{
-		Json::CharReaderBuilder::strictMode(&this->settings_);
-	}
-};
-
-/// Serialise the JSON object (@a _input) with specific builder (@a _builder)
-/// \param _input JSON input string
-/// \param _builder StreamWriterBuilder that is used to create new Json::StreamWriter
-/// \return serialized json object
-std::string print(Json::Value const& _input, Json::StreamWriterBuilder const& _builder)
-{
-	std::stringstream stream;
-	std::unique_ptr<Json::StreamWriter> writer(_builder.newStreamWriter());
-	writer->write(_input, &stream);
-	return stream.str();
-}
-
-/// Parse a JSON string (@a _input) with specified builder (@ _builder) and writes resulting JSON object to (@a _json)
-/// \param _builder CharReaderBuilder that is used to create new Json::CharReaders
-/// \param _input JSON input string
-/// \param _json [out] resulting JSON object
-/// \param _errs [out] Formatted error messages
-/// \return \c true if the document was successfully parsed, \c false if an error occurred.
-bool parse(Json::CharReaderBuilder& _builder, std::string const& _input, Json::Value& _json, std::string* _errs)
-{
-	std::unique_ptr<Json::CharReader> reader(_builder.newCharReader());
-	return reader->parse(_input.c_str(), _input.c_str() + _input.length(), &_json, _errs);
-}
-
 /// Takes a JSON value (@ _json) and removes all its members with value 'null' recursively.
-void removeNullMembersHelper(Json::Value& _json)
+void removeNullMembersHelper(Json& _json)
 {
-	if (_json.type() == Json::ValueType::arrayValue)
+	if (_json.is_array())
+	{
 		for (auto& child: _json)
 			removeNullMembersHelper(child);
-	else if (_json.type() == Json::ValueType::objectValue)
-		for (auto const& key: _json.getMemberNames())
+	}
+	else if (_json.is_object())
+	{
+		for (auto it = _json.begin(); it != _json.end();)
 		{
-			Json::Value& value = _json[key];
-			if (value.isNull())
-				_json.removeMember(key);
+			if (it->is_null())
+				it = _json.erase(it);
 			else
-				removeNullMembersHelper(value);
+			{
+				removeNullMembersHelper(*it);
+				++it;
+			}
 		}
+	}
+}
+
+std::string trimRightAllLines(std::string const& input)
+{
+	std::vector<std::string> lines;
+	std::string output;
+	boost::split(lines, input, boost::is_any_of("\n"));
+	for (auto& line: lines)
+	{
+		boost::trim_right(line);
+		if (!line.empty())
+			output += line + "\n";
+	}
+	return boost::trim_right_copy(output);
+}
+
+std::string formatLikeJsoncpp(std::string const& _dumped, JsonFormat const& _format)
+{
+	uint32_t indentLevel = 0;
+	std::stringstream reformatted;
+	bool inQuotes = false;
+	for (size_t i = 0; i < _dumped.size(); ++i)
+	{
+		char c = _dumped[i];
+		bool emptyThing = false;
+
+		if (c == '"' && (i == 0 || _dumped[i - 1] != '\\'))
+			inQuotes = !inQuotes;
+
+		if (!inQuotes)
+		{
+			if (i < _dumped.size() - 1)
+			{
+				char nc = _dumped[i + 1];
+				if ((c == '[' && nc == ']') || (c == '{' && nc == '}'))
+					emptyThing = true;
+			}
+			if (c == '[' || c == '{')
+			{
+				if (i > 0 && _dumped[i - 1] != '\n')
+					if (!emptyThing)
+						reformatted << '\n' << std::string(indentLevel * _format.indent, ' ');
+				indentLevel++;
+			}
+			else if (c == ']' || c == '}')
+			{
+				indentLevel--;
+				if (i + 1 < _dumped.size() && _dumped[i + 1] != '\n'
+					&& (_dumped[i + 1] == ']' || _dumped[i + 1] == '}'))
+					reformatted << '\n' << std::string(indentLevel * _format.indent, ' ');
+			}
+		}
+		reformatted << c;
+		if (!emptyThing && !inQuotes && (c == '[' || c == '{') && indentLevel > 0 && i + 1 < _dumped.size()
+			&& _dumped[i + 1] != '\n')
+			reformatted << '\n' << std::string(indentLevel * _format.indent, ' ');
+	}
+	return trimRightAllLines(reformatted.str());
+}
+
+std::string escapeNewlinesAndTabsWithinStringLiterals(std::string const& _json)
+{
+	std::stringstream fixed;
+	bool inQuotes = false;
+	for (size_t i = 0; i < _json.size(); ++i)
+	{
+		char c = _json[i];
+
+		// Originally we had just this here:
+		// if (c == '"' && (i == 0 || _json[i - 1] != '\\'))
+		//    inQuotes = !inQuotes;
+		// However, this is not working if the escape character itself was escaped. e.g. "\n\r'\"\\".
+
+		if (c == '"')
+		{
+			size_t backslashCount = 0;
+			size_t j = i;
+			while (j > 0 && _json[j - 1] == '\\')
+			{
+				backslashCount++;
+				j--;
+			}
+			if (backslashCount % 2 == 0)
+			{
+				inQuotes = !inQuotes;
+				fixed << c;
+				continue;
+			}
+		}
+
+		if (inQuotes)
+		{
+			if (c == '\n')
+				fixed << "\\n";
+			else if (c == '\t')
+				fixed << "\\t";
+			else
+				fixed << c;
+		}
+		else
+			fixed << c;
+	}
+	return fixed.str();
 }
 
 } // end anonymous namespace
 
-Json::Value removeNullMembers(Json::Value _json)
+Json removeNullMembers(Json _json)
 {
 	removeNullMembersHelper(_json);
 	return _json;
 }
 
-std::string jsonPrettyPrint(Json::Value const& _input)
+std::string removeNlohmannInternalErrorIdentifier(std::string const& _input)
 {
-	return jsonPrint(_input, JsonFormat{ JsonFormat::Pretty });
+	std::string result = _input;
+	std::size_t startPos = result.find('[');
+	std::size_t endPos = result.find(']', startPos);
+
+	if (startPos != std::string::npos && endPos != std::string::npos)
+		result.erase(startPos, endPos - startPos + 1);
+
+	return boost::trim_copy(result);
 }
 
-std::string jsonCompactPrint(Json::Value const& _input)
-{
-	return jsonPrint(_input, JsonFormat{ JsonFormat::Compact });
-}
+std::string jsonPrettyPrint(Json const& _input) { return jsonPrint(_input, JsonFormat{JsonFormat::Pretty}); }
 
-std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format)
+std::string jsonCompactPrint(Json const& _input) { return jsonPrint(_input, JsonFormat{JsonFormat::Compact}); }
+
+std::string jsonPrint(Json const& _input, JsonFormat const& _format)
 {
-	std::map<std::string, Json::Value> settings;
+	// NOTE: -1 here means no new lines (it is also the default setting)
+	std::string dumped = _input.dump(
+		/* indent */ (_format.format == JsonFormat::Pretty) ? static_cast<int>(_format.indent) : -1,
+		/* indent_char */ ' ',
+		/* ensure_ascii */ true
+	);
+
+	// let's remove this once all test-cases having the correct output.
 	if (_format.format == JsonFormat::Pretty)
+		dumped = formatLikeJsoncpp(dumped, _format);
+
+	return dumped;
+}
+
+bool jsonParseStrict(std::string const& _input, Json& _json, std::string* _errs /* = nullptr */)
+{
+	try
 	{
-		settings["indentation"] = std::string(_format.indent, ' ');
-		settings["enableYAMLCompatibility"] = true;
+		_json = Json::parse(
+			// TODO: remove this in the next breaking release?
+			escapeNewlinesAndTabsWithinStringLiterals(_input),
+			/* callback */ nullptr,
+			/* allow exceptions */ true,
+			/* ignore_comments */true
+		);
+		_errs = {};
+		return true;
 	}
-	else
-		settings["indentation"] = "";
-	StreamWriterBuilder writerBuilder(settings);
-	std::string result = print(_input, writerBuilder);
-	if (_format.format == JsonFormat::Pretty)
-		boost::replace_all(result, " \n", "\n");
-	return result;
+	catch (Json::parse_error const& e)
+	{
+		if (_errs)
+		{
+			std::stringstream escaped;
+			for (char c: removeNlohmannInternalErrorIdentifier(e.what()))
+				if (std::isprint(c))
+					escaped << c;
+				else
+					escaped << "\\x" + toHex(static_cast<uint8_t>(c));
+			*_errs = escaped.str();
+		}
+		return false;
+	}
 }
 
-bool jsonParseStrict(std::string const& _input, Json::Value& _json, std::string* _errs /* = nullptr */)
+std::optional<Json> jsonValueByPath(Json const& _node, std::string_view _jsonPath)
 {
-	static StrictModeCharReaderBuilder readerBuilder;
-	return parse(readerBuilder, _input, _json, _errs);
-}
-
-std::optional<Json::Value> jsonValueByPath(Json::Value const& _node, std::string_view _jsonPath)
-{
-	if (!_node.isObject() || _jsonPath.empty())
+	if (!_node.is_object() || _jsonPath.empty())
 		return {};
 
 	std::string memberName = std::string(_jsonPath.substr(0, _jsonPath.find_first_of('.')));
-	if (!_node.isMember(memberName))
+	if (!_node.contains(memberName))
 		return {};
 
 	if (memberName == _jsonPath)

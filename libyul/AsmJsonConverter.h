@@ -25,7 +25,7 @@
 
 #include <libyul/ASTForward.h>
 #include <liblangutil/SourceLocation.h>
-#include <json/json.h>
+#include <libsolutil/JSON.h>
 #include <boost/variant/static_visitor.hpp>
 #include <optional>
 #include <vector>
@@ -36,35 +36,35 @@ namespace solidity::yul
 /**
  * Converter of the yul AST into JSON format
  */
-class AsmJsonConverter: public boost::static_visitor<Json::Value>
+class AsmJsonConverter: public boost::static_visitor<Json>
 {
 public:
 	/// Create a converter to JSON for any block of inline assembly
 	/// @a _sourceIndex to be used to abbreviate source name in the source locations
 	explicit AsmJsonConverter(std::optional<size_t> _sourceIndex): m_sourceIndex(_sourceIndex) {}
 
-	Json::Value operator()(Block const& _node) const;
-	Json::Value operator()(TypedName const& _node) const;
-	Json::Value operator()(Literal const& _node) const;
-	Json::Value operator()(Identifier const& _node) const;
-	Json::Value operator()(Assignment const& _node) const;
-	Json::Value operator()(VariableDeclaration const& _node) const;
-	Json::Value operator()(FunctionDefinition const& _node) const;
-	Json::Value operator()(FunctionCall const& _node) const;
-	Json::Value operator()(If const& _node) const;
-	Json::Value operator()(Switch const& _node) const;
-	Json::Value operator()(Case const& _node) const;
-	Json::Value operator()(ForLoop const& _node) const;
-	Json::Value operator()(Break const& _node) const;
-	Json::Value operator()(Continue const& _node) const;
-	Json::Value operator()(Leave const& _node) const;
-	Json::Value operator()(ExpressionStatement const& _node) const;
-	Json::Value operator()(Label const& _node) const;
+	Json operator()(Block const& _node) const;
+	Json operator()(TypedName const& _node) const;
+	Json operator()(Literal const& _node) const;
+	Json operator()(Identifier const& _node) const;
+	Json operator()(Assignment const& _node) const;
+	Json operator()(VariableDeclaration const& _node) const;
+	Json operator()(FunctionDefinition const& _node) const;
+	Json operator()(FunctionCall const& _node) const;
+	Json operator()(If const& _node) const;
+	Json operator()(Switch const& _node) const;
+	Json operator()(Case const& _node) const;
+	Json operator()(ForLoop const& _node) const;
+	Json operator()(Break const& _node) const;
+	Json operator()(Continue const& _node) const;
+	Json operator()(Leave const& _node) const;
+	Json operator()(ExpressionStatement const& _node) const;
+	Json operator()(Label const& _node) const;
 
 private:
-	Json::Value createAstNode(langutil::SourceLocation const& _originLocation, langutil::SourceLocation const& _nativeLocation, std::string _nodeType) const;
+	Json createAstNode(langutil::SourceLocation const& _originLocation, langutil::SourceLocation const& _nativeLocation, std::string _nodeType) const;
 	template <class T>
-	Json::Value vectorOfVariantsToJson(std::vector<T> const& vec) const;
+	Json vectorOfVariantsToJson(std::vector<T> const& vec) const;
 
 	std::optional<size_t> const m_sourceIndex;
 };

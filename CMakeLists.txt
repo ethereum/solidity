@@ -39,7 +39,7 @@ option(PEDANTIC "Enable extra warnings and pedantic build flags. Treat all warni
 option(PROFILE_OPTIMIZER_STEPS "Output performance metrics for the optimiser steps." OFF)
 option(USE_SYSTEM_LIBRARIES "Use system libraries" OFF)
 option(ONLY_BUILD_SOLIDITY_LIBRARIES "Only build solidity libraries" OFF)
-option(STRICT_JSONCPP_VERSION "Strictly check installed jsoncpp version" ON)
+option(STRICT_NLOHMANN_JSON_VERSION "Strictly check installed nlohmann json version" ON)
 
 # Setup cccache.
 include(EthCcache)
@@ -48,9 +48,8 @@ include(EthCcache)
 include(EthDependencies)
 if (NOT USE_SYSTEM_LIBRARIES)
   include(fmtlib)
-  include(jsoncpp)
+  include(nlohmann-json)
   include(range-v3)
-  include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
 endif()
 
 find_package(Threads)
@@ -63,8 +62,8 @@ if (PROFILE_OPTIMIZER_STEPS)
     add_definitions(-DPROFILE_OPTIMIZER_STEPS)
 endif()
 
-if (STRICT_JSONCPP_VERSION)
-	add_definitions(-DSTRICT_JSONCPP_VERSION_CHECK)
+if (STRICT_NLOHMANN_JSON_VERSION)
+	add_definitions(-DSTRICT_NLOHMANN_JSON_VERSION_CHECK)
 endif()
 
 # Figure out what compiler and system are we using
@@ -162,4 +161,3 @@ if (NOT ONLY_BUILD_SOLIDITY_LIBRARIES)
 		add_subdirectory(test)
 	endif()
 endif()
-

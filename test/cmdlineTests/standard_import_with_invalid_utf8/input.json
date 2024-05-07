@@ -1,0 +1,29 @@
+{
+	"language": "EVMAssembly",
+	"sources": {
+		"A": {
+			"assemblyJson": {
+				".code": [
+					{
+						"begin": 36,
+						"end": 51,
+						"name": "PUSH",
+						"source": 0,
+						"value": "\ud800"
+					}
+				],
+				"sourceList": [
+					"<stdin>"
+				]
+			}
+		}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {
+				"": [
+				]
+			}
+		}
+	}
+}

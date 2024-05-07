@@ -22,7 +22,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
 
-#include <json/value.h>
+#include <libsolutil/JSON.h>
 
 #include <functional>
 #include <map>
@@ -85,29 +85,29 @@ private:
 	/// Checks if the server is initialized (to be used by messages that need it to be initialized).
 	/// Reports an error and returns false if not.
 	void requireServerInitialized();
-	void handleInitialize(MessageID _id, Json::Value const& _args);
-	void handleInitialized(MessageID _id, Json::Value const& _args);
-	void handleWorkspaceDidChangeConfiguration(Json::Value const& _args);
-	void setTrace(Json::Value const& _args);
-	void handleTextDocumentDidOpen(Json::Value const& _args);
-	void handleTextDocumentDidChange(Json::Value const& _args);
-	void handleTextDocumentDidClose(Json::Value const& _args);
-	void handleRename(Json::Value const& _args);
-	void handleGotoDefinition(MessageID _id, Json::Value const& _args);
-	void semanticTokensFull(MessageID _id, Json::Value const& _args);
+	void handleInitialize(MessageID _id, Json const& _args);
+	void handleInitialized(MessageID _id, Json const& _args);
+	void handleWorkspaceDidChangeConfiguration(Json const& _args);
+	void setTrace(Json const& _args);
+	void handleTextDocumentDidOpen(Json const& _args);
+	void handleTextDocumentDidChange(Json const& _args);
+	void handleTextDocumentDidClose(Json const& _args);
+	void handleRename(Json const& _args);
+	void handleGotoDefinition(MessageID _id, Json const& _args);
+	void semanticTokensFull(MessageID _id, Json const& _args);
 
 	/// Invoked when the server user-supplied configuration changes (initiated by the client).
-	void changeConfiguration(Json::Value const&);
+	void changeConfiguration(Json const&);
 
 	/// Compile everything until after analysis phase.
 	void compile();
 
 	std::vector<boost::filesystem::path> allSolidityFilesFromProject() const;
 
-	using MessageHandler = std::function<void(MessageID, Json::Value const&)>;
+	using MessageHandler = std::function<void(MessageID, Json const&)>;
 
-	Json::Value toRange(langutil::SourceLocation const& _location);
-	Json::Value toJson(langutil::SourceLocation const& _location);
+	Json toRange(langutil::SourceLocation const& _location);
+	Json toJson(langutil::SourceLocation const& _location);
 
 	// LSP related member fields
 
@@ -127,7 +127,7 @@ private:
 	frontend::CompilerStack m_compilerStack;
 
 	/// User-supplied custom configuration settings (such as EVM version).
-	Json::Value m_settingsObject;
+	Json m_settingsObject;
 };
 
 }

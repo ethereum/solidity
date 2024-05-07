@@ -413,7 +413,7 @@ void TestFunctionCall::reset()
 {
 	m_rawBytes = bytes{};
 	m_failure = true;
-	m_contractABI = Json::Value{};
+	m_contractABI = Json();
 	m_calledNonExistingFunction = false;
 }
 

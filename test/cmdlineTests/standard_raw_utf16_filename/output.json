@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "parse error at line 5, column 4: syntax error while parsing object key - invalid string: control character U+0000 (NUL) must be escaped to \\u0000; last read: '\"<U+0000>'; expected string literal",
+            "message": "parse error at line 5, column 4: syntax error while parsing object key - invalid string: control character U+0000 (NUL) must be escaped to \\u0000; last read: '\"<U+0000>'; expected string literal",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

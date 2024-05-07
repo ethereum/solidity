@@ -1,0 +1,12 @@
+{
+    "errors":
+    [
+        {
+            "component": "general",
+            "formattedMessage": "parse error at line 5, column 4: syntax error while parsing object key - invalid string: ill-formed UTF-8 byte; last read: '\"\\xff'; expected string literal",
+            "message": "parse error at line 5, column 4: syntax error while parsing object key - invalid string: ill-formed UTF-8 byte; last read: '\"\\xff'; expected string literal",
+            "severity": "error",
+            "type": "JSONError"
+        }
+    ]
+}

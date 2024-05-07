@@ -80,10 +80,10 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 	}
 }
 
-void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, std::vector<std::string> const& _sourceList)
+void Assembly::importAssemblyItemsFromJSON(Json const& _code, std::vector<std::string> const& _sourceList)
 {
 	solAssert(m_items.empty());
-	solRequire(_code.isArray(), AssemblyImportException, "Supplied JSON is not an array.");
+	solRequire(_code.is_array(), AssemblyImportException, "Supplied JSON is not an array.");
 	for (auto jsonItemIter = std::begin(_code); jsonItemIter != std::end(_code); ++jsonItemIter)
 	{
 		AssemblyItem const& newItem = m_items.emplace_back(createAssemblyItemFromJSON(*jsonItemIter, _sourceList));
@@ -98,11 +98,11 @@ void Assembly::importAssemblyItemsFromJSON(Json::Value const& _code, std::vector
 	}
 }
 
-AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std::vector<std::string> const& _sourceList)
+AssemblyItem Assembly::createAssemblyItemFromJSON(Json const& _json, std::vector<std::string> const& _sourceList)
 {
-	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
+	solRequire(_json.is_object(), AssemblyImportException, "Supplied JSON is not an object.");
 	static std::set<std::string> const validMembers{"name", "begin", "end", "source", "value", "modifierDepth", "jumpType"};
-	for (std::string const& member: _json.getMemberNames())
+	for (auto const& [member, _]: _json.items())
 		solRequire(
 			validMembers.count(member),
 			AssemblyImportException,
@@ -124,14 +124,14 @@ AssemblyItem Assembly::createAssemblyItemFromJSON(Json::Value const& _json, std:
 	solRequire(!name.empty(), AssemblyImportException, "Member 'name' is empty.");
 
 	SourceLocation location;
-	if (_json.isMember("begin"))
+	if (_json.contains("begin"))
 		location.start = get<int>(_json["begin"]);
-	if (_json.isMember("end"))
+	if (_json.contains("end"))
 		location.end = get<int>(_json["end"]);
-	int srcIndex = getOrDefault<int>(_json["source"], -1);
-	size_t modifierDepth = static_cast<size_t>(getOrDefault<int>(_json["modifierDepth"], 0));
-	std::string value = getOrDefault<std::string>(_json["value"], "");
-	std::string jumpType = getOrDefault<std::string>(_json["jumpType"], "");
+	int srcIndex = getOrDefault<int>(_json, "source", -1);
+	size_t modifierDepth = static_cast<size_t>(getOrDefault<int>(_json, "modifierDepth", 0));
+	std::string value = getOrDefault<std::string>(_json, "value", "");
+	std::string jumpType = getOrDefault<std::string>(_json, "jumpType", "");
 
 	auto updateUsedTags = [&](u256 const& data)
 	{
@@ -429,11 +429,11 @@ std::string Assembly::assemblyString(
 	return tmp.str();
 }
 
-Json::Value Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourceIndices, bool _includeSourceList) const
+Json Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourceIndices, bool _includeSourceList) const
 {
-	Json::Value root;
-	root[".code"] = Json::arrayValue;
-	Json::Value& code = root[".code"];
+	Json root;
+	root[".code"] = Json::array();
+	Json& code = root[".code"];
 	for (AssemblyItem const& item: m_items)
 	{
 		int sourceIndex = -1;
@@ -445,7 +445,7 @@ Json::Value Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourc
 		}
 
 		auto [name, data] = item.nameAndData(m_evmVersion);
-		Json::Value jsonItem;
+		Json jsonItem;
 		jsonItem["name"] = name;
 		jsonItem["begin"] = item.location().start;
 		jsonItem["end"] = item.location().end;
@@ -461,32 +461,32 @@ Json::Value Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourc
 		if (!data.empty())
 			jsonItem["value"] = data;
 		jsonItem["source"] = sourceIndex;
-		code.append(std::move(jsonItem));
+		code.emplace_back(std::move(jsonItem));
 
 		if (item.type() == AssemblyItemType::Tag)
 		{
-			Json::Value jumpdest;
+			Json jumpdest;
 			jumpdest["name"] = "JUMPDEST";
 			jumpdest["begin"] = item.location().start;
 			jumpdest["end"] = item.location().end;
 			jumpdest["source"] = sourceIndex;
 			if (item.m_modifierDepth != 0)
 				jumpdest["modifierDepth"] = static_cast<int>(item.m_modifierDepth);
-			code.append(std::move(jumpdest));
+			code.emplace_back(std::move(jumpdest));
 		}
 	}
 	if (_includeSourceList)
 	{
-		root["sourceList"] = Json::arrayValue;
-		Json::Value& jsonSourceList = root["sourceList"];
+		root["sourceList"] = Json::array();
+		Json& jsonSourceList = root["sourceList"];
 		for (auto const& [name, index]: _sourceIndices)
 			jsonSourceList[index] = name;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
-		root[".data"] = Json::objectValue;
-		Json::Value& data = root[".data"];
+		root[".data"] = Json::object();
+		Json& data = root[".data"];
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
 				data[util::toHex(toBigEndian((u256)i.first), util::HexPrefix::DontAdd, util::HexCase::Upper)] = util::toHex(i.second);
@@ -506,110 +506,107 @@ Json::Value Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourc
 }
 
 std::pair<std::shared_ptr<Assembly>, std::vector<std::string>> Assembly::fromJSON(
-	Json::Value const& _json,
+	Json const& _json,
 	std::vector<std::string> const& _sourceList,
 	size_t _level
 )
 {
-	solRequire(_json.isObject(), AssemblyImportException, "Supplied JSON is not an object.");
+	solRequire(_json.is_object(), AssemblyImportException, "Supplied JSON is not an object.");
 	static std::set<std::string> const validMembers{".code", ".data", ".auxdata", "sourceList"};
-	for (std::string const& attribute: _json.getMemberNames())
+	for (auto const& [attribute, _]: _json.items())
 		solRequire(validMembers.count(attribute), AssemblyImportException, "Unknown attribute '" + attribute + "'.");
 
 	if (_level == 0)
 	{
-		if (_json.isMember("sourceList"))
+		if (_json.contains("sourceList"))
 		{
-			solRequire(_json["sourceList"].isArray(), AssemblyImportException, "Optional member 'sourceList' is not an array.");
-			for (Json::Value const& sourceName: _json["sourceList"])
-				solRequire(sourceName.isString(), AssemblyImportException, "The 'sourceList' array contains an item that is not a string.");
+			solRequire(_json["sourceList"].is_array(), AssemblyImportException, "Optional member 'sourceList' is not an array.");
+			for (Json const& sourceName: _json["sourceList"])
+				solRequire(sourceName.is_string(), AssemblyImportException, "The 'sourceList' array contains an item that is not a string.");
 		}
 	}
 	else
 		solRequire(
-			!_json.isMember("sourceList"),
+			!_json.contains("sourceList"),
 			AssemblyImportException,
 			"Member 'sourceList' may only be present in the root JSON object."
 		);
 
 	auto result = std::make_shared<Assembly>(EVMVersion{}, _level == 0 /* _creation */, "" /* _name */);
 	std::vector<std::string> parsedSourceList;
-	if (_json.isMember("sourceList"))
+	if (_json.contains("sourceList"))
 	{
 		solAssert(_level == 0);
 		solAssert(_sourceList.empty());
-		for (Json::Value const& sourceName: _json["sourceList"])
+		for (Json const& sourceName: _json["sourceList"])
 		{
 			solRequire(
-				std::find(parsedSourceList.begin(), parsedSourceList.end(), sourceName.asString()) == parsedSourceList.end(),
+				std::find(parsedSourceList.begin(), parsedSourceList.end(), sourceName.get<std::string>()) == parsedSourceList.end(),
 				AssemblyImportException,
 				"Items in 'sourceList' array are not unique."
 			);
-			parsedSourceList.emplace_back(sourceName.asString());
+			parsedSourceList.emplace_back(sourceName.get<std::string>());
 		}
 	}
 
-	solRequire(_json.isMember(".code"), AssemblyImportException, "Member '.code' is missing.");
-	solRequire(_json[".code"].isArray(), AssemblyImportException, "Member '.code' is not an array.");
-	for (Json::Value const& codeItem: _json[".code"])
-		solRequire(codeItem.isObject(), AssemblyImportException, "The '.code' array contains an item that is not an object.");
+	solRequire(_json.contains(".code"), AssemblyImportException, "Member '.code' is missing.");
+	solRequire(_json[".code"].is_array(), AssemblyImportException, "Member '.code' is not an array.");
+	for (Json const& codeItem: _json[".code"])
+		solRequire(codeItem.is_object(), AssemblyImportException, "The '.code' array contains an item that is not an object.");
 
 	result->importAssemblyItemsFromJSON(_json[".code"], _level == 0 ? parsedSourceList : _sourceList);
 
-	if (_json.isMember(".auxdata"))
+	if (_json.contains(".auxdata"))
 	{
-		solRequire(_json[".auxdata"].isString(), AssemblyImportException, "Optional member '.auxdata' is not a string.");
-		result->m_auxiliaryData = fromHex(_json[".auxdata"].asString());
+		solRequire(_json[".auxdata"].is_string(), AssemblyImportException, "Optional member '.auxdata' is not a string.");
+		result->m_auxiliaryData = fromHex(_json[".auxdata"].get<std::string>());
 		solRequire(!result->m_auxiliaryData.empty(), AssemblyImportException, "Optional member '.auxdata' is not a valid hexadecimal string.");
 	}
 
-	if (_json.isMember(".data"))
+	if (_json.contains(".data"))
 	{
-		solRequire(_json[".data"].isObject(), AssemblyImportException, "Optional member '.data' is not an object.");
-		Json::Value const& data = _json[".data"];
+		solRequire(_json[".data"].is_object(), AssemblyImportException, "Optional member '.data' is not an object.");
+		Json const& data = _json[".data"];
 		std::map<size_t, std::shared_ptr<Assembly>> subAssemblies;
-		for (Json::ValueConstIterator dataIter = data.begin(); dataIter != data.end(); dataIter++)
+		for (auto const& [key, value] : data.items())
 		{
-			solAssert(dataIter.key().isString());
-			std::string dataItemID = dataIter.key().asString();
-			Json::Value const& dataItem = data[dataItemID];
-			if (dataItem.isString())
+			if (value.is_string())
 			{
 				solRequire(
-					dataItem.asString().empty() || !fromHex(dataItem.asString()).empty(),
+					value.get<std::string>().empty() || !fromHex(value.get<std::string>()).empty(),
 					AssemblyImportException,
-					"The value for key '" + dataItemID + "' inside '.data' is not a valid hexadecimal string."
+					"The value for key '" + key + "' inside '.data' is not a valid hexadecimal string."
 				);
-				result->m_data[h256(fromHex(dataItemID))] = fromHex(dataItem.asString());
+				result->m_data[h256(fromHex(key))] = fromHex(value.get<std::string>());
 			}
-			else if (dataItem.isObject())
+			else if (value.is_object())
 			{
 				size_t index{};
 				try
 				{
 					// Using signed variant because stoul() still accepts negative numbers and
 					// just lets them wrap around.
-					int parsedDataItemID = std::stoi(dataItemID, nullptr, 16);
-					solRequire(parsedDataItemID >= 0, AssemblyImportException, "The key '" + dataItemID + "' inside '.data' is out of the supported integer range.");
+					int parsedDataItemID = std::stoi(key, nullptr, 16);
+					solRequire(parsedDataItemID >= 0, AssemblyImportException, "The key '" + key + "' inside '.data' is out of the supported integer range.");
 					index = static_cast<size_t>(parsedDataItemID);
 				}
 				catch (std::invalid_argument const&)
 				{
-					solThrow(AssemblyImportException, "The key '" + dataItemID + "' inside '.data' is not an integer.");
+					solThrow(AssemblyImportException, "The key '" + key + "' inside '.data' is not an integer.");
 				}
 				catch (std::out_of_range const&)
 				{
-					solThrow(AssemblyImportException, "The key '" + dataItemID + "' inside '.data' is out of the supported integer range.");
+					solThrow(AssemblyImportException, "The key '" + key + "' inside '.data' is out of the supported integer range.");
 				}
 
-				auto [subAssembly, emptySourceList] = Assembly::fromJSON(dataItem, _level == 0 ? parsedSourceList : _sourceList, _level + 1);
+				auto [subAssembly, emptySourceList] = Assembly::fromJSON(value, _level == 0 ? parsedSourceList : _sourceList, _level + 1);
 				solAssert(subAssembly);
 				solAssert(emptySourceList.empty());
 				solAssert(subAssemblies.count(index) == 0);
 				subAssemblies[index] = subAssembly;
 			}
 			else
-				solThrow(AssemblyImportException, "The value of key '" + dataItemID + "' inside '.data' is neither a hex string nor an object.");
+				solThrow(AssemblyImportException, "The value of key '" + key + "' inside '.data' is neither a hex string nor an object.");
 		}
 
 		if (!subAssemblies.empty())
