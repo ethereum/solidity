@@ -1,10 +1,7 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "C":
-            {
+    "contracts": {
+        "A": {
+            "C": {
                 "ir": "
 /// @use-src 0:\"A\"
 object \"C_11\" {
@@ -147,10 +144,8 @@ object \"C_11\" {
             }
         }
     },
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

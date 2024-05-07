@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "settings.modelChecker.printQuery must be a Boolean value.",

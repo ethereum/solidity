@@ -3,4 +3,5 @@ contract C {
         assembly { {} }
     }
 }
+
 // ----

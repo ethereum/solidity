@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "settings.modelChecker.showUnsupported must be a Boolean value.",

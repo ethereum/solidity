@@ -15,8 +15,7 @@ contract test {
 // [
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint256",
@@ -35,8 +34,7 @@ contract test {
 //   },
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint256",
@@ -60,8 +58,7 @@ contract test {
 // [
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint256",

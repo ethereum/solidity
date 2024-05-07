@@ -1,25 +1,21 @@
 [
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       2
     ]
   },
   "id": 3,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
       "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation":
-      {
+      "documentation": {
         "id": 1,
         "nodeType": "StructuredDocumentation",
         "src": "0:27:1",
@@ -27,8 +23,7 @@
       },
       "fullyImplemented": true,
       "id": 2,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         2
       ],
       "name": "C",
@@ -45,25 +40,21 @@
 },
 {
   "absolutePath": "b",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       5
     ]
   },
   "id": 6,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
       "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation":
-      {
+      "documentation": {
         "id": 4,
         "nodeType": "StructuredDocumentation",
         "src": "0:61:2",
@@ -71,8 +62,7 @@
       },
       "fullyImplemented": true,
       "id": 5,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         5
       ],
       "name": "C",
@@ -89,17 +79,14 @@
 },
 {
   "absolutePath": "c",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       23
     ]
   },
   "id": 24,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -108,19 +95,16 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 23,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         23
       ],
       "name": "C",
       "nameLocation": "9:1:3",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "constant": false,
-          "documentation":
-          {
+          "documentation": {
             "id": 7,
             "nodeType": "StructuredDocumentation",
             "src": "15:32:3",
@@ -136,19 +120,16 @@
           "src": "48:17:3",
           "stateVariable": true,
           "storageLocation": "default",
-          "typeDescriptions":
-          {
+          "typeDescriptions": {
             "typeIdentifier": "t_uint256",
             "typeString": "uint256"
           },
-          "typeName":
-          {
+          "typeName": {
             "id": 8,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
             "src": "48:4:3",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_uint256",
               "typeString": "uint256"
             }
@@ -157,8 +138,7 @@
         },
         {
           "anonymous": false,
-          "documentation":
-          {
+          "documentation": {
             "id": 10,
             "nodeType": "StructuredDocumentation",
             "src": "69:26:3",
@@ -169,8 +149,7 @@
           "name": "Evt",
           "nameLocation": "102:3:3",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 11,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -179,13 +158,11 @@
           "src": "96:12:3"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 16,
             "nodeType": "Block",
             "src": "153:6:3",
-            "statements":
-            [
+            "statements": [
               {
                 "id": 15,
                 "nodeType": "PlaceholderStatement",
@@ -193,8 +170,7 @@
               }
             ]
           },
-          "documentation":
-          {
+          "documentation": {
             "id": 13,
             "nodeType": "StructuredDocumentation",
             "src": "111:26:3",
@@ -204,8 +180,7 @@
           "name": "mod",
           "nameLocation": "147:3:3",
           "nodeType": "ModifierDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 14,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -216,15 +191,13 @@
           "visibility": "internal"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 21,
             "nodeType": "Block",
             "src": "209:2:3",
             "statements": []
           },
-          "documentation":
-          {
+          "documentation": {
             "id": 18,
             "nodeType": "StructuredDocumentation",
             "src": "162:25:3",
@@ -238,15 +211,13 @@
           "name": "fn",
           "nameLocation": "197:2:3",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 19,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "199:2:3"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 20,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -262,8 +233,7 @@
       "scope": 24,
       "src": "0:213:3",
       "usedErrors": [],
-      "usedEvents":
-      [
+      "usedEvents": [
         12
       ]
     }

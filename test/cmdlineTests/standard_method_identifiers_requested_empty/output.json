@@ -1,21 +1,15 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "C":
-            {
-                "evm":
-                {
+    "contracts": {
+        "A": {
+            "C": {
+                "evm": {
                     "methodIdentifiers": {}
                 }
             }
         }
     },
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

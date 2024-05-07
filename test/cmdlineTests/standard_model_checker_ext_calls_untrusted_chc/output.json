@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "6328",
@@ -31,8 +30,7 @@ test.constructor()
 test.g(0)
     e.f() -- untrusted external call",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 254,
                 "file": "A",
                 "start": 240
@@ -40,10 +38,8 @@ test.g(0)
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

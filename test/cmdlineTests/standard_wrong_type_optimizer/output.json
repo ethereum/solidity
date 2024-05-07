@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "\"settings.optimizer\" must be an object",

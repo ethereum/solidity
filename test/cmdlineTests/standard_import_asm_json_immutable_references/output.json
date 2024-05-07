@@ -1,27 +1,19 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "":
-            {
-                "evm":
-                {
-                    "bytecode":
-                    {
+    "contracts": {
+        "A": {
+            "": {
+                "evm": {
+                    "bytecode": {
                         "functionDebugData": {},
                         "linkReferences": {},
                         "object": "<BYTECODE REMOVED>",
                         "opcodes":"<OPCODES REMOVED>",
                         "sourceMap":"<SOURCEMAP REMOVED>"
                     },
-                    "deployedBytecode":
-                    {
+                    "deployedBytecode": {
                         "functionDebugData": {},
-                        "immutableReferences":
-                        {
-                            "6":
-                            [
+                        "immutableReferences": {
+                            "6": [
                                 {
                                     "length": 32,
                                     "start": 1

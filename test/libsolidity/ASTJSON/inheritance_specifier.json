@@ -1,20 +1,16 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C1":
-    [
+  "exportedSymbols": {
+    "C1": [
       1
     ],
-    "C2":
-    [
+    "C2": [
       4
     ]
   },
   "id": 5,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -23,8 +19,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 1,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         1
       ],
       "name": "C1",
@@ -38,15 +33,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 2,
             "name": "C1",
-            "nameLocations":
-            [
+            "nameLocations": [
               "30:2:1"
             ],
             "nodeType": "IdentifierPath",
@@ -63,8 +55,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 4,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         4,
         1
       ],

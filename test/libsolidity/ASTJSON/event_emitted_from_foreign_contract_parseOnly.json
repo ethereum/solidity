@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 20,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,20 +12,17 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "anonymous": false,
           "id": 4,
           "name": "E",
           "nameLocation": "23:1:1",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 3,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 2,
@@ -39,8 +35,7 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 1,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
@@ -69,24 +64,18 @@
       "name": "D",
       "nameLocation": "61:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 17,
             "nodeType": "Block",
             "src": "106:37:1",
-            "statements":
-            [
+            "statements": [
               {
-                "eventCall":
-                {
-                  "arguments":
-                  [
+                "eventCall": {
+                  "arguments": [
                     {
-                      "expression":
-                      {
+                      "expression": {
                         "id": 13,
                         "name": "msg",
                         "nodeType": "Identifier",
@@ -102,10 +91,8 @@
                       "typeDescriptions": {}
                     }
                   ],
-                  "expression":
-                  {
-                    "expression":
-                    {
+                  "expression": {
+                    "expression": {
                       "id": 10,
                       "name": "C",
                       "nodeType": "Identifier",
@@ -141,12 +128,10 @@
           "name": "test",
           "nameLocation": "78:4:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 8,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 7,
@@ -158,8 +143,7 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 6,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
@@ -172,8 +156,7 @@
             ],
             "src": "82:16:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 9,
             "nodeType": "ParameterList",
             "parameters": [],

@@ -4,8 +4,7 @@ Contract JSON ABI
 [
     {
         "anonymous": false,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": false,
                 "internalType": "uint256",
@@ -18,8 +17,7 @@ Contract JSON ABI
     },
     {
         "anonymous": false,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": true,
                 "internalType": "uint256",
@@ -44,8 +42,7 @@ Contract JSON ABI
 [
     {
         "anonymous": false,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": false,
                 "internalType": "uint256",

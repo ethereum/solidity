@@ -5,8 +5,7 @@ contract test {
 //     :test
 // [
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "a",
@@ -19,8 +18,7 @@ contract test {
 //       }
 //     ],
 //     "name": "f",
-//     "outputs":
-//     [
+//     "outputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "d",

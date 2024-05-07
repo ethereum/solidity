@@ -4,22 +4,18 @@ JSON AST (compact format):
 ======= ast_compact_json_with_base_path/c.sol =======
 {
   "absolutePath": "ast_compact_json_with_base_path/c.sol",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       5
     ]
   },
   "id": 6,
   "license": "GPL-3.0",
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "id": 4,
-      "literals":
-      [
+      "literals": [
         "solidity",
         ">=",
         "0.0"
@@ -35,8 +31,7 @@ JSON AST (compact format):
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 5,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         5
       ],
       "name": "C",
@@ -54,22 +49,18 @@ JSON AST (compact format):
 ======= ast_compact_json_with_base_path/input.sol =======
 {
   "absolutePath": "ast_compact_json_with_base_path/input.sol",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       5
     ]
   },
   "id": 3,
   "license": "GPL-3.0",
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "id": 1,
-      "literals":
-      [
+      "literals": [
         "solidity",
         ">=",
         "0.0"

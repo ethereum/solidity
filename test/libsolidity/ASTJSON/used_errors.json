@@ -1,32 +1,26 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       19
     ],
-    "X":
-    [
+    "X": [
       2
     ],
-    "f":
-    [
+    "f": [
       9
     ]
   },
   "id": 20,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "errorSelector": "c1599bd9",
       "id": 2,
       "name": "X",
       "nameLocation": "6:1:1",
       "nodeType": "ErrorDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 1,
         "nodeType": "ParameterList",
         "parameters": [],
@@ -35,19 +29,15 @@
       "src": "0:10:1"
     },
     {
-      "body":
-      {
+      "body": {
         "id": 8,
         "nodeType": "Block",
         "src": "29:15:1",
-        "statements":
-        [
+        "statements": [
           {
-            "errorCall":
-            {
+            "errorCall": {
               "arguments": [],
-              "expression":
-              {
+              "expression": {
                 "argumentTypes": [],
                 "id": 5,
                 "name": "X",
@@ -55,8 +45,7 @@
                 "overloadedDeclarations": [],
                 "referencedDeclaration": 2,
                 "src": "38:1:1",
-                "typeDescriptions":
-                {
+                "typeDescriptions": {
                   "typeIdentifier": "t_function_error_pure$__$returns$_t_error_$",
                   "typeString": "function () pure returns (error)"
                 }
@@ -72,8 +61,7 @@
               "nodeType": "FunctionCall",
               "src": "38:3:1",
               "tryCall": false,
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_error",
                 "typeString": "error"
               }
@@ -91,15 +79,13 @@
       "name": "f",
       "nameLocation": "20:1:1",
       "nodeType": "FunctionDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 3,
         "nodeType": "ParameterList",
         "parameters": [],
         "src": "21:2:1"
       },
-      "returnParameters":
-      {
+      "returnParameters": {
         "id": 4,
         "nodeType": "ParameterList",
         "parameters": [],
@@ -119,23 +105,20 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 19,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         19
       ],
       "name": "C",
       "nameLocation": "54:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "errorSelector": "2bc80f3a",
           "id": 11,
           "name": "T",
           "nameLocation": "68:1:1",
           "nodeType": "ErrorDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 10,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -144,19 +127,15 @@
           "src": "62:10:1"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 17,
             "nodeType": "Block",
             "src": "97:8:1",
-            "statements":
-            [
+            "statements": [
               {
-                "expression":
-                {
+                "expression": {
                   "arguments": [],
-                  "expression":
-                  {
+                  "expression": {
                     "argumentTypes": [],
                     "id": 14,
                     "name": "f",
@@ -164,8 +143,7 @@
                     "overloadedDeclarations": [],
                     "referencedDeclaration": 9,
                     "src": "99:1:1",
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_function_internal_pure$__$returns$__$",
                       "typeString": "function () pure"
                     }
@@ -181,8 +159,7 @@
                   "nodeType": "FunctionCall",
                   "src": "99:3:1",
                   "tryCall": false,
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_tuple$__$",
                     "typeString": "tuple()"
                   }
@@ -201,15 +178,13 @@
           "name": "h",
           "nameLocation": "86:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 12,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "87:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -224,8 +199,7 @@
       ],
       "scope": 20,
       "src": "45:62:1",
-      "usedErrors":
-      [
+      "usedErrors": [
         2,
         11
       ],

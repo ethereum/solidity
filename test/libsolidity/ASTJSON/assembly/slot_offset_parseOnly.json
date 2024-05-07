@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 13,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,12 +12,10 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "id": 3,
-          "members":
-          [
+          "members": [
             {
               "constant": false,
               "id": 2,
@@ -30,8 +27,7 @@
               "stateVariable": false,
               "storageLocation": "default",
               "typeDescriptions": {},
-              "typeName":
-              {
+              "typeName": {
                 "id": 1,
                 "name": "uint",
                 "nodeType": "ElementaryTypeName",
@@ -58,16 +54,13 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 5,
             "nodeType": "UserDefinedTypeName",
-            "pathNode":
-            {
+            "pathNode": {
               "id": 4,
               "name": "S",
-              "nameLocations":
-              [
+              "nameLocations": [
                 "42:1:1"
               ],
               "nodeType": "IdentifierPath",
@@ -79,34 +72,28 @@
           "visibility": "internal"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 10,
             "nodeType": "Block",
             "src": "76:70:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "95:45:1",
                   "nodeType": "YulBlock",
                   "src": "95:45:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
                       "nativeSrc": "97:17:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "97:17:1",
-                      "value":
-                      {
+                      "value": {
                         "name": "s.offset",
                         "nativeSrc": "106:8:1",
                         "nodeType": "YulIdentifier",
                         "src": "106:8:1"
                       },
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "x",
                           "nativeSrc": "101:1:1",
@@ -120,10 +107,8 @@
                       "nativeSrc": "115:23:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "115:23:1",
-                      "value":
-                      {
-                        "arguments":
-                        [
+                      "value": {
+                        "arguments": [
                           {
                             "name": "s.slot",
                             "nativeSrc": "128:6:1",
@@ -139,8 +124,7 @@
                             "value": "2"
                           }
                         ],
-                        "functionName":
-                        {
+                        "functionName": {
                           "name": "mul",
                           "nativeSrc": "124:3:1",
                           "nodeType": "YulIdentifier",
@@ -150,8 +134,7 @@
                         "nodeType": "YulFunctionCall",
                         "src": "124:14:1"
                       },
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "y",
                           "nativeSrc": "119:1:1",
@@ -178,15 +161,13 @@
           "name": "e",
           "nameLocation": "60:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 7,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "61:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],

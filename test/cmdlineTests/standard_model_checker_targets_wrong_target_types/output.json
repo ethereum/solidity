@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "Every target in settings.modelChecker.targets must be a string.",

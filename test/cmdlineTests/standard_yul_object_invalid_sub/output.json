@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "TypeError: Unknown data object \"NamedObject.\".
@@ -12,8 +11,7 @@
 ",
             "message": "Unknown data object \"NamedObject.\".",
             "severity": "error",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 64,
                 "file": "A",
                 "start": 50

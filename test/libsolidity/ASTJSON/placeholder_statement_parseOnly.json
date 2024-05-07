@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 6,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,16 +12,13 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 3,
             "nodeType": "Block",
             "src": "24:6:1",
-            "statements":
-            [
+            "statements": [
               {
                 "id": 2,
                 "nodeType": "PlaceholderStatement",
@@ -34,8 +30,7 @@
           "name": "M",
           "nameLocation": "22:1:1",
           "nodeType": "ModifierDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],

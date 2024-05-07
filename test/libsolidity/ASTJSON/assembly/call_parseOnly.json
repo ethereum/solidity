@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 7,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,32 +12,24 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 4,
             "nodeType": "Block",
             "src": "37:59:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "56:34:1",
                   "nodeType": "YulBlock",
                   "src": "56:34:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
-                      "expression":
-                      {
-                        "arguments":
-                        [
+                      "expression": {
+                        "arguments": [
                           {
-                            "arguments":
-                            [
+                            "arguments": [
                               {
                                 "kind": "number",
                                 "nativeSrc": "67:1:1",
@@ -96,8 +87,7 @@
                                 "value": "6"
                               }
                             ],
-                            "functionName":
-                            {
+                            "functionName": {
                               "name": "call",
                               "nativeSrc": "62:4:1",
                               "nodeType": "YulIdentifier",
@@ -108,8 +98,7 @@
                             "src": "62:25:1"
                           }
                         ],
-                        "functionName":
-                        {
+                        "functionName": {
                           "name": "pop",
                           "nativeSrc": "58:3:1",
                           "nodeType": "YulIdentifier",
@@ -140,15 +129,13 @@
           "name": "j",
           "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "27:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

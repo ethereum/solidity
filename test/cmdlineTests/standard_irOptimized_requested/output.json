@@ -1,10 +1,7 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "C":
-            {
+    "contracts": {
+        "A": {
+            "C": {
                 "irOptimized": "/// @use-src 0:\"A\"
 object \"C_7\" {
     code {
@@ -77,10 +74,8 @@ object \"C_7\" {
             }
         }
     },
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

@@ -1,16 +1,13 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       6
     ]
   },
   "id": 7,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -19,37 +16,30 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 6,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         6
       ],
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 4,
             "nodeType": "Block",
             "src": "39:30:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "52:14:1",
                   "nodeType": "YulBlock",
                   "src": "52:14:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
                       "nativeSrc": "57:5:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "57:5:1",
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "x",
                           "nativeSrc": "61:1:1",
@@ -77,15 +67,13 @@
           "name": "f",
           "nameLocation": "23:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "24:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

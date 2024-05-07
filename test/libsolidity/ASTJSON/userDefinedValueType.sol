@@ -9,4 +9,5 @@ contract C {
     type MyUInt is uint;
     mapping(MyAddress => MyUInt) public m;
 }
+
 // ----

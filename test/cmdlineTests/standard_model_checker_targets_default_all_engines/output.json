@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "4281",
@@ -31,8 +30,7 @@ test.constructor()
 State: arr = []
 test.f(0x0, 1)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 216,
                 "file": "A",
                 "start": 211
@@ -69,8 +67,7 @@ test.constructor()
 State: arr = []
 test.f(0x0, 1)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 258,
                 "file": "A",
                 "start": 245
@@ -107,8 +104,7 @@ test.constructor()
 State: arr = []
 test.f(0x0, 1)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 275,
                 "file": "A",
                 "start": 266
@@ -145,8 +141,7 @@ test.constructor()
 State: arr = []
 test.f(0x0, 1)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 289,
                 "file": "A",
                 "start": 283
@@ -165,15 +160,13 @@ Note: Callstack:
 
 ",
             "message": "BMC: Condition is always true.",
-            "secondarySourceLocations":
-            [
+            "secondarySourceLocations": [
                 {
                     "message": "Callstack:"
                 }
             ],
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 165,
                 "file": "A",
                 "start": 159
@@ -197,8 +190,7 @@ Note:
 
 ",
             "message": "BMC: Insufficient funds happens here.",
-            "secondarySourceLocations":
-            [
+            "secondarySourceLocations": [
                 {
                     "message": "Counterexample:
   a = 0
@@ -213,8 +205,7 @@ Note:
                 }
             ],
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 237,
                 "file": "A",
                 "start": 224
@@ -222,10 +213,8 @@ Note:
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

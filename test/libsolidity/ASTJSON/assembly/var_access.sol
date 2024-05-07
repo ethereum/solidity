@@ -4,4 +4,5 @@ contract C {
         assembly { x := 7 }
     }
 }
+
 // ----

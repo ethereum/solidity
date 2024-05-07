@@ -3,8 +3,7 @@
 Contract JSON ABI
 [
     {
-        "inputs":
-        [
+        "inputs": [
             {
                 "internalType": "uint256",
                 "name": "z",
@@ -20,8 +19,7 @@ Contract JSON ABI
         "type": "error"
     },
     {
-        "inputs":
-        [
+        "inputs": [
             {
                 "internalType": "uint256",
                 "name": "z",
@@ -32,8 +30,7 @@ Contract JSON ABI
         "type": "error"
     },
     {
-        "inputs":
-        [
+        "inputs": [
             {
                 "internalType": "uint256",
                 "name": "r",
@@ -45,8 +42,7 @@ Contract JSON ABI
     },
     {
         "anonymous": true,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": false,
                 "internalType": "uint256",
@@ -59,8 +55,7 @@ Contract JSON ABI
     },
     {
         "anonymous": false,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": false,
                 "internalType": "uint256",
@@ -73,8 +68,7 @@ Contract JSON ABI
     },
     {
         "anonymous": false,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": false,
                 "internalType": "uint256",
@@ -86,11 +80,9 @@ Contract JSON ABI
         "type": "event"
     },
     {
-        "inputs":
-        [
+        "inputs": [
             {
-                "components":
-                [
+                "components": [
                     {
                         "internalType": "uint256",
                         "name": "x",
@@ -113,8 +105,7 @@ Contract JSON ABI
 Contract JSON ABI
 [
     {
-        "inputs":
-        [
+        "inputs": [
             {
                 "internalType": "uint256",
                 "name": "r",
@@ -125,8 +116,7 @@ Contract JSON ABI
         "type": "error"
     },
     {
-        "inputs":
-        [
+        "inputs": [
             {
                 "internalType": "uint256",
                 "name": "u",
@@ -138,8 +128,7 @@ Contract JSON ABI
     },
     {
         "anonymous": false,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": false,
                 "internalType": "uint256",
@@ -152,8 +141,7 @@ Contract JSON ABI
     },
     {
         "anonymous": false,
-        "inputs":
-        [
+        "inputs": [
             {
                 "indexed": false,
                 "internalType": "uint256",

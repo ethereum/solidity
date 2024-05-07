@@ -1,22 +1,16 @@
 {
-    "contracts":
-    {
-        "fileA":
-        {
-            "A":
-            {
-                "storageLayout":
-                {
+    "contracts": {
+        "fileA": {
+            "A": {
+                "storageLayout": {
                     "storage": [],
                     "types": null
                 }
             }
         }
     },
-    "sources":
-    {
-        "fileA":
-        {
+    "sources": {
+        "fileA": {
             "id": 0
         }
     }

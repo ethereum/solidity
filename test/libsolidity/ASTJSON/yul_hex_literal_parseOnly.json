@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 7,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,30 +12,24 @@
       "name": "Sample",
       "nameLocation": "9:6:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 4,
             "nodeType": "Block",
             "src": "47:167:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "66:142:1",
                   "nodeType": "YulBlock",
                   "src": "66:142:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
                       "nativeSrc": "80:15:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "80:15:1",
-                      "value":
-                      {
+                      "value": {
                         "hexValue": "74657374",
                         "kind": "string",
                         "nativeSrc": "89:6:1",
@@ -45,8 +38,7 @@
                         "type": "",
                         "value": "test"
                       },
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "a",
                           "nativeSrc": "84:1:1",
@@ -60,8 +52,7 @@
                       "nativeSrc": "108:54:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "108:54:1",
-                      "value":
-                      {
+                      "value": {
                         "hexValue": "112233445566778899aabbccddeeff6677889900",
                         "kind": "string",
                         "nativeSrc": "117:45:1",
@@ -69,8 +60,7 @@
                         "src": "117:45:1",
                         "type": ""
                       },
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "b",
                           "nativeSrc": "112:1:1",
@@ -84,8 +74,7 @@
                       "nativeSrc": "175:23:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "175:23:1",
-                      "value":
-                      {
+                      "value": {
                         "hexValue": "1234abcd",
                         "kind": "string",
                         "nativeSrc": "184:14:1",
@@ -93,8 +82,7 @@
                         "src": "184:14:1",
                         "type": ""
                       },
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "c",
                           "nativeSrc": "179:1:1",
@@ -121,15 +109,13 @@
           "name": "f",
           "nameLocation": "31:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "32:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

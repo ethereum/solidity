@@ -1,25 +1,19 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "":
-            {
-                "evm":
-                {
+    "contracts": {
+        "A": {
+            "": {
+                "evm": {
                     "assembly": "    /* \"<stdin>\":36:51   */
   0x00
 ",
-                    "bytecode":
-                    {
+                    "bytecode": {
                         "functionDebugData": {},
                         "linkReferences": {},
                         "object": "<BYTECODE REMOVED>",
                         "opcodes":"<OPCODES REMOVED>",
                         "sourceMap":"<SOURCEMAP REMOVED>"
                     },
-                    "deployedBytecode":
-                    {
+                    "deployedBytecode": {
                         "functionDebugData": {},
                         "immutableReferences": {},
                         "linkReferences": {},
@@ -27,10 +21,8 @@
                         "opcodes": "",
                         "sourceMap": ""
                     },
-                    "legacyAssembly":
-                    {
-                        ".code":
-                        [
+                    "legacyAssembly": {
+                        ".code": [
                             {
                                 "begin": 36,
                                 "end": 51,
@@ -39,8 +31,7 @@
                                 "value": "0"
                             }
                         ],
-                        "sourceList":
-                        [
+                        "sourceList": [
                             "<stdin>"
                         ]
                     }

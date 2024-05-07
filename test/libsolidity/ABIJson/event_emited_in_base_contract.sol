@@ -18,8 +18,7 @@ contract C is B {}
 //   },
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint8",
@@ -37,8 +36,7 @@ contract C is B {}
 // [
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint8",
@@ -56,8 +54,7 @@ contract C is B {}
 // [
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint8",

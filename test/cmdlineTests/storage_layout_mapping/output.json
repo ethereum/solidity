@@ -1,14 +1,9 @@
 {
-    "contracts":
-    {
-        "fileA":
-        {
-            "A":
-            {
-                "storageLayout":
-                {
-                    "storage":
-                    [
+    "contracts": {
+        "fileA": {
+            "A": {
+                "storageLayout": {
+                    "storage": [
                         {
                             "astId": 3,
                             "contract": "fileA:A",
@@ -34,38 +29,32 @@
                             "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
                         }
                     ],
-                    "types":
-                    {
-                        "t_address":
-                        {
+                    "types": {
+                        "t_address": {
                             "encoding": "inplace",
                             "label": "address",
                             "numberOfBytes": "20"
                         },
-                        "t_bool":
-                        {
+                        "t_bool": {
                             "encoding": "inplace",
                             "label": "bool",
                             "numberOfBytes": "1"
                         },
-                        "t_mapping(t_address,t_bool)":
-                        {
+                        "t_mapping(t_address,t_bool)": {
                             "encoding": "mapping",
                             "key": "t_address",
                             "label": "mapping(address => bool)",
                             "numberOfBytes": "32",
                             "value": "t_bool"
                         },
-                        "t_mapping(t_uint256,t_mapping(t_address,t_bool))":
-                        {
+                        "t_mapping(t_uint256,t_mapping(t_address,t_bool))": {
                             "encoding": "mapping",
                             "key": "t_uint256",
                             "label": "mapping(uint256 => mapping(address => bool))",
                             "numberOfBytes": "32",
                             "value": "t_mapping(t_address,t_bool)"
                         },
-                        "t_uint256":
-                        {
+                        "t_uint256": {
                             "encoding": "inplace",
                             "label": "uint256",
                             "numberOfBytes": "32"
@@ -75,10 +64,8 @@
             }
         }
     },
-    "sources":
-    {
-        "fileA":
-        {
+    "sources": {
+        "fileA": {
             "id": 0
         }
     }

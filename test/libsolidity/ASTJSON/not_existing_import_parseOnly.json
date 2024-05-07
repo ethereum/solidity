@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 12,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "absolutePath": "notexisting.sol",
       "file": "notexisting.sol",
@@ -16,15 +15,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 2,
             "name": "NotExisting.X",
-            "nameLocations":
-            [
+            "nameLocations": [
               "55:11:1",
               "67:1:1"
             ],
@@ -42,8 +38,7 @@
       "name": "C",
       "nameLocation": "50:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "constant": false,
           "id": 6,
@@ -55,16 +50,13 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 5,
             "nodeType": "UserDefinedTypeName",
-            "pathNode":
-            {
+            "pathNode": {
               "id": 4,
               "name": "NotExisting.SomeStruct",
-              "nameLocations":
-              [
+              "nameLocations": [
                 "72:11:1",
                 "84:10:1"
               ],
@@ -77,8 +69,7 @@
           "visibility": "public"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 9,
             "nodeType": "Block",
             "src": "127:2:1",
@@ -91,15 +82,13 @@
           "name": "",
           "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 7,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "124:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],

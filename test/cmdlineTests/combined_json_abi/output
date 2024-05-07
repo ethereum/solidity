@@ -1,8 +1,6 @@
 {
-   "contracts":
-   {
-      "combined_json_abi/input.sol:C":
-      {
+   "contracts": {
+      "combined_json_abi/input.sol:C": {
          "abi": []
       }
    },

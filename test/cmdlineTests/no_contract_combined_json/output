@@ -1,25 +1,19 @@
 {
-    "sourceList":
-    [
+    "sourceList": [
         "no_contract_combined_json/input.sol"
     ],
-    "sources":
-    {
-        "no_contract_combined_json/input.sol":
-        {
-            "AST":
-            {
+    "sources": {
+        "no_contract_combined_json/input.sol": {
+            "AST": {
                 "absolutePath": "no_contract_combined_json/input.sol",
                 "exportedSymbols": {},
                 "id": 2,
                 "license": "GPL-3.0",
                 "nodeType": "SourceUnit",
-                "nodes":
-                [
+                "nodes": [
                     {
                         "id": 1,
-                        "literals":
-                        [
+                        "literals": [
                             "solidity",
                             ">=",
                             "0.0"

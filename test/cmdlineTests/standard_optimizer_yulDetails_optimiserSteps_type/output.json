@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "\"settings.optimizer.details.optimizerSteps\" must be a string",

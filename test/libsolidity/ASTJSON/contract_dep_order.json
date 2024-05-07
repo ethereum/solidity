@@ -1,32 +1,25 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "A":
-    [
+  "exportedSymbols": {
+    "A": [
       1
     ],
-    "B":
-    [
+    "B": [
       4
     ],
-    "C":
-    [
+    "C": [
       7
     ],
-    "D":
-    [
+    "D": [
       10
     ],
-    "E":
-    [
+    "E": [
       13
     ]
   },
   "id": 14,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -35,8 +28,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 1,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         1
       ],
       "name": "A",
@@ -50,15 +42,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 2,
             "name": "A",
-            "nameLocations":
-            [
+            "nameLocations": [
               "29:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -75,8 +64,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 4,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         4,
         1
       ],
@@ -91,15 +79,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 5,
             "name": "B",
-            "nameLocations":
-            [
+            "nameLocations": [
               "49:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -116,8 +101,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 7,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         7,
         4,
         1
@@ -133,15 +117,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 8,
             "name": "C",
-            "nameLocations":
-            [
+            "nameLocations": [
               "69:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -158,8 +139,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 10,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         10,
         7,
         4,
@@ -176,15 +156,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 11,
             "name": "D",
-            "nameLocations":
-            [
+            "nameLocations": [
               "89:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -201,8 +178,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 13,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         13,
         10,
         7,

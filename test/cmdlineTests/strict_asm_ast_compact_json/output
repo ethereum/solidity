@@ -3,26 +3,20 @@
 AST:
 
 {
-    "code":
-    {
-        "block":
-        {
+    "code": {
+        "block": {
             "nativeSrc": "60:246:0",
             "nodeType": "YulBlock",
             "src": "-1:-1:0",
-            "statements":
-            [
+            "statements": [
                 {
                     "nativeSrc": "60:246:0",
                     "nodeType": "YulBlock",
                     "src": "-1:-1:0",
-                    "statements":
-                    [
+                    "statements": [
                         {
-                            "expression":
-                            {
-                                "arguments":
-                                [
+                            "expression": {
+                                "arguments": [
                                     {
                                         "kind": "number",
                                         "nativeSrc": "122:2:0",
@@ -40,8 +34,7 @@ AST:
                                         "value": "128"
                                     }
                                 ],
-                                "functionName":
-                                {
+                                "functionName": {
                                     "name": "mstore",
                                     "nativeSrc": "115:6:0",
                                     "nodeType": "YulIdentifier",

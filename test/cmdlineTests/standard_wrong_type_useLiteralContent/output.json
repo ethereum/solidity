@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "\"settings.metadata.useLiteralContent\" must be Boolean",

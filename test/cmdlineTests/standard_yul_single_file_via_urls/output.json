@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "Cannot import url (\"in.yul\"): File not found. Searched the following locations: \"\".",

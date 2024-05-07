@@ -1,12 +1,8 @@
 {
-    "contracts":
-    {
-        "<stdin>":
-        {
-            "asm":
-            {
-                ".code":
-                [
+    "contracts": {
+        "<stdin>": {
+            "asm": {
+                ".code": [
                     {
                         "begin": -1,
                         "end": -1,
@@ -15,12 +11,9 @@
                         "value": "0"
                     }
                 ],
-                ".data":
-                {
-                    "0":
-                    {
-                        ".code":
-                        [
+                ".data": {
+                    "0": {
+                        ".code": [
                             {
                                 "begin": -1,
                                 "end": -1,
@@ -31,8 +24,7 @@
                         ]
                     }
                 },
-                "sourceList":
-                [
+                "sourceList": [
                     "contract.sol",
                     "#utility.yul"
                 ]
@@ -44,8 +36,7 @@
             "srcmap-runtime": ":::-:0"
         }
     },
-    "sourceList":
-    [
+    "sourceList": [
         "contract.sol",
         "#utility.yul"
     ],
@@ -57,8 +48,7 @@ Binary of the runtime part:
 6001
 EVM assembly:
 {
-    ".code":
-    [
+    ".code": [
         {
             "begin": -1,
             "end": -1,
@@ -67,12 +57,9 @@ EVM assembly:
             "value": "0"
         }
     ],
-    ".data":
-    {
-        "0":
-        {
-            ".code":
-            [
+    ".data": {
+        "0": {
+            ".code": [
                 {
                     "begin": -1,
                     "end": -1,
@@ -83,8 +70,7 @@ EVM assembly:
             ]
         }
     },
-    "sourceList":
-    [
+    "sourceList": [
         "contract.sol",
         "#utility.yul"
     ]

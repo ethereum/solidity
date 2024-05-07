@@ -1,19 +1,13 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "C":
-            {
-                "evm":
-                {
-                    "bytecode":
-                    {
+    "contracts": {
+        "A": {
+            "C": {
+                "evm": {
+                    "bytecode": {
                         "generatedSources": [],
                         "object": "<BYTECODE REMOVED>"
                     },
-                    "deployedBytecode":
-                    {
+                    "deployedBytecode": {
                         "object": "<BYTECODE REMOVED>"
                     }
                 },
@@ -81,17 +75,13 @@ object \"C_3\" {
 
 "
             },
-            "D":
-            {
-                "evm":
-                {
-                    "bytecode":
-                    {
+            "D": {
+                "evm": {
+                    "bytecode": {
                         "generatedSources": [],
                         "object": "<BYTECODE REMOVED>"
                     },
-                    "deployedBytecode":
-                    {
+                    "deployedBytecode": {
                         "object": "<BYTECODE REMOVED>"
                     }
                 },
@@ -299,8 +289,7 @@ object \"D_16\" {
             }
         }
     },
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "2072",
@@ -313,8 +302,7 @@ object \"D_16\" {
 ",
             "message": "Unused local variable.",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 131,
                 "file": "A",
                 "start": 128
@@ -322,10 +310,8 @@ object \"D_16\" {
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

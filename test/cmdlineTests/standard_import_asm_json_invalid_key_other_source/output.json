@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "Invalid input source specified. Expected exactly one object, named 'assemblyJson', inside $.sources.A",

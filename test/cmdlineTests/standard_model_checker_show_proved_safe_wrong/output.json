@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "settings.modelChecker.showProvedSafe must be a Boolean value.",

@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "Invalid optimizer step sequence in \"settings.optimizer.details.optimizerSteps\": Cleanup sequence delimiter cannot be placed inside the brackets",

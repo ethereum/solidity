@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "4144",
@@ -19,8 +18,7 @@ Note:
 
 ",
             "message": "BMC: Underflow (resulting value less than 0) happens here.",
-            "secondarySourceLocations":
-            [
+            "secondarySourceLocations": [
                 {
                     "message": "Counterexample:
   <result> = (- 1)
@@ -36,8 +34,7 @@ Note:
                 }
             ],
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 177,
                 "file": "A",
                 "start": 174
@@ -45,10 +42,8 @@ Note:
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

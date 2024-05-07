@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "9302",
@@ -13,8 +12,7 @@
 ",
             "message": "Return value of low-level calls not used.",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 143,
                 "file": "A",
                 "start": 132
@@ -51,8 +49,7 @@ State: x = 0
 test.f(0x0)
     _a.call(\"\") -- untrusted external call",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 166,
                 "file": "A",
                 "start": 151
@@ -60,10 +57,8 @@ test.f(0x0)
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

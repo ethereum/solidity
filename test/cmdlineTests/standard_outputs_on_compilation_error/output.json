@@ -1,12 +1,8 @@
 {
-    "contracts":
-    {
-        "C":
-        {
-            "C":
-            {
-                "abi":
-                [
+    "contracts": {
+        "C": {
+            "C": {
+                "abi": [
                     {
                         "inputs": [],
                         "stateMutability": "nonpayable",
@@ -15,8 +11,7 @@
                     {
                         "inputs": [],
                         "name": "x",
-                        "outputs":
-                        [
+                        "outputs": [
                             {
                                 "internalType": "uint256",
                                 "name": "",
@@ -27,27 +22,22 @@
                         "type": "function"
                     }
                 ],
-                "devdoc":
-                {
+                "devdoc": {
                     "kind": "dev",
                     "methods": {},
                     "version": 1
                 },
-                "evm":
-                {
-                    "methodIdentifiers":
-                    {
+                "evm": {
+                    "methodIdentifiers": {
                         "x()": "0c55699c"
                     }
                 },
                 "metadata": "{\"compiler\":{\"version\":\"<VERSION REMOVED>\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"x\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"C\":\"C\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"C\":{\"keccak256\":\"0x67a13ebd685e4c6f792e71eb747dac57edb99e94d04d841ee6c979ae517934ce\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://665b000da768823654f680d02686c1e59d682a0b3882e43a77fed9f80ce64ae8\",\"dweb:/ipfs/QmVnKvuidH6KiCdNQpoAQUtDbB8hXkafVLXWMNitUcxnqC\"]}},\"version\":1}",
-                "storageLayout":
-                {
+                "storageLayout": {
                     "storage": [],
                     "types": null
                 },
-                "userdoc":
-                {
+                "userdoc": {
                     "kind": "user",
                     "methods": {},
                     "version": 1
@@ -55,8 +45,7 @@
             }
         }
     },
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "1284",
@@ -68,29 +57,22 @@
             "type": "CodeGenerationError"
         }
     ],
-    "sources":
-    {
-        "C":
-        {
-            "ast":
-            {
+    "sources": {
+        "C": {
+            "ast": {
                 "absolutePath": "C",
-                "exportedSymbols":
-                {
-                    "C":
-                    [
+                "exportedSymbols": {
+                    "C": [
                         15
                     ]
                 },
                 "id": 16,
                 "license": "GPL-3.0",
                 "nodeType": "SourceUnit",
-                "nodes":
-                [
+                "nodes": [
                     {
                         "id": 1,
-                        "literals":
-                        [
+                        "literals": [
                             "solidity",
                             "*"
                         ],
@@ -105,15 +87,13 @@
                         "contractKind": "contract",
                         "fullyImplemented": true,
                         "id": 15,
-                        "linearizedBaseContracts":
-                        [
+                        "linearizedBaseContracts": [
                             15
                         ],
                         "name": "C",
                         "nameLocation": "65:1:0",
                         "nodeType": "ContractDefinition",
-                        "nodes":
-                        [
+                        "nodes": [
                             {
                                 "constant": false,
                                 "functionSelector": "0c55699c",
@@ -126,19 +106,16 @@
                                 "src": "228:23:0",
                                 "stateVariable": true,
                                 "storageLocation": "default",
-                                "typeDescriptions":
-                                {
+                                "typeDescriptions": {
                                     "typeIdentifier": "t_uint256",
                                     "typeString": "uint256"
                                 },
-                                "typeName":
-                                {
+                                "typeName": {
                                     "id": 2,
                                     "name": "uint",
                                     "nodeType": "ElementaryTypeName",
                                     "src": "228:4:0",
-                                    "typeDescriptions":
-                                    {
+                                    "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
                                         "typeString": "uint256"
                                     }
@@ -146,39 +123,33 @@
                                 "visibility": "public"
                             },
                             {
-                                "body":
-                                {
+                                "body": {
                                     "id": 13,
                                     "nodeType": "Block",
                                     "src": "272:46:0",
-                                    "statements":
-                                    [
+                                    "statements": [
                                         {
-                                            "expression":
-                                            {
+                                            "expression": {
                                                 "id": 8,
                                                 "isConstant": false,
                                                 "isLValue": false,
                                                 "isPure": false,
                                                 "lValueRequested": false,
-                                                "leftHandSide":
-                                                {
+                                                "leftHandSide": {
                                                     "id": 6,
                                                     "name": "x",
                                                     "nodeType": "Identifier",
                                                     "overloadedDeclarations": [],
                                                     "referencedDeclaration": 3,
                                                     "src": "282:1:0",
-                                                    "typeDescriptions":
-                                                    {
+                                                    "typeDescriptions": {
                                                         "typeIdentifier": "t_uint256",
                                                         "typeString": "uint256"
                                                     }
                                                 },
                                                 "nodeType": "Assignment",
                                                 "operator": "=",
-                                                "rightHandSide":
-                                                {
+                                                "rightHandSide": {
                                                     "hexValue": "30",
                                                     "id": 7,
                                                     "isConstant": false,
@@ -188,16 +159,14 @@
                                                     "lValueRequested": false,
                                                     "nodeType": "Literal",
                                                     "src": "286:1:0",
-                                                    "typeDescriptions":
-                                                    {
+                                                    "typeDescriptions": {
                                                         "typeIdentifier": "t_rational_0_by_1",
                                                         "typeString": "int_const 0"
                                                     },
                                                     "value": "0"
                                                 },
                                                 "src": "282:5:0",
-                                                "typeDescriptions":
-                                                {
+                                                "typeDescriptions": {
                                                     "typeIdentifier": "t_uint256",
                                                     "typeString": "uint256"
                                                 }
@@ -207,15 +176,13 @@
                                             "src": "282:5:0"
                                         },
                                         {
-                                            "body":
-                                            {
+                                            "body": {
                                                 "id": 11,
                                                 "nodeType": "Block",
                                                 "src": "310:2:0",
                                                 "statements": []
                                             },
-                                            "condition":
-                                            {
+                                            "condition": {
                                                 "hexValue": "74727565",
                                                 "id": 10,
                                                 "isConstant": false,
@@ -225,8 +192,7 @@
                                                 "lValueRequested": false,
                                                 "nodeType": "Literal",
                                                 "src": "304:4:0",
-                                                "typeDescriptions":
-                                                {
+                                                "typeDescriptions": {
                                                     "typeIdentifier": "t_bool",
                                                     "typeString": "bool"
                                                 },
@@ -245,15 +211,13 @@
                                 "name": "",
                                 "nameLocation": "-1:-1:-1",
                                 "nodeType": "FunctionDefinition",
-                                "parameters":
-                                {
+                                "parameters": {
                                     "id": 4,
                                     "nodeType": "ParameterList",
                                     "parameters": [],
                                     "src": "269:2:0"
                                 },
-                                "returnParameters":
-                                {
+                                "returnParameters": {
                                     "id": 5,
                                     "nodeType": "ParameterList",
                                     "parameters": [],

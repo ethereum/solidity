@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 4,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,16 +12,14 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "anonymous": false,
           "id": 2,
           "name": "E",
           "nameLocation": "19:1:1",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],

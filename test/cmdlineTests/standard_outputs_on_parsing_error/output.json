@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "7858",
@@ -13,8 +12,7 @@
 ",
             "message": "Expected pragma, import directive or contract/interface/library/struct/enum/constant/function/error definition.",
             "severity": "error",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 121,
                 "file": "C",
                 "start": 120

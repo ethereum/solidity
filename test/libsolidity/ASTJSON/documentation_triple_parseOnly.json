@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 29,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,8 +12,7 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "constant": false,
           "id": 3,
@@ -26,8 +24,7 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 2,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
@@ -37,28 +34,22 @@
           "visibility": "internal"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 26,
             "nodeType": "Block",
             "src": "84:181:1",
-            "statements":
-            [
+            "statements": [
               {
-                "body":
-                {
+                "body": {
                   "id": 22,
                   "nodeType": "Block",
                   "src": "142:75:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
                       "documentation": "tee\n s \"t\" 3",
-                      "expression":
-                      {
+                      "expression": {
                         "id": 20,
-                        "leftHandSide":
-                        {
+                        "leftHandSide": {
                           "id": 18,
                           "name": "x",
                           "nodeType": "Identifier",
@@ -68,8 +59,7 @@
                         },
                         "nodeType": "Assignment",
                         "operator": "*=",
-                        "rightHandSide":
-                        {
+                        "rightHandSide": {
                           "hexValue": "32",
                           "id": 19,
                           "kind": "number",
@@ -87,12 +77,10 @@
                     }
                   ]
                 },
-                "condition":
-                {
+                "condition": {
                   "commonType": {},
                   "id": 14,
-                  "leftExpression":
-                  {
+                  "leftExpression": {
                     "id": 12,
                     "name": "i",
                     "nodeType": "Identifier",
@@ -102,8 +90,7 @@
                   },
                   "nodeType": "BinaryOperation",
                   "operator": "<",
-                  "rightExpression":
-                  {
+                  "rightExpression": {
                     "hexValue": "3230",
                     "id": 13,
                     "kind": "number",
@@ -117,14 +104,11 @@
                 },
                 "documentation": "test2",
                 "id": 23,
-                "initializationExpression":
-                {
-                  "assignments":
-                  [
+                "initializationExpression": {
+                  "assignments": [
                     9
                   ],
-                  "declarations":
-                  [
+                  "declarations": [
                     {
                       "constant": false,
                       "id": 9,
@@ -136,8 +120,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {},
-                      "typeName":
-                      {
+                      "typeName": {
                         "id": 8,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
@@ -148,8 +131,7 @@
                     }
                   ],
                   "id": 11,
-                  "initialValue":
-                  {
+                  "initialValue": {
                     "hexValue": "30",
                     "id": 10,
                     "kind": "number",
@@ -161,17 +143,14 @@
                   "nodeType": "VariableDeclarationStatement",
                   "src": "117:10:1"
                 },
-                "loopExpression":
-                {
-                  "expression":
-                  {
+                "loopExpression": {
+                  "expression": {
                     "id": 16,
                     "nodeType": "UnaryOperation",
                     "operator": "++",
                     "prefix": false,
                     "src": "137:3:1",
-                    "subExpression":
-                    {
+                    "subExpression": {
                       "id": 15,
                       "name": "i",
                       "nodeType": "Identifier",
@@ -190,8 +169,7 @@
               },
               {
                 "documentation": "tes \"t4\" ",
-                "expression":
-                {
+                "expression": {
                   "id": 24,
                   "name": "x",
                   "nodeType": "Identifier",
@@ -212,19 +190,16 @@
           "name": "f",
           "nameLocation": "51:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 4,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "52:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 7,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 6,
@@ -236,8 +211,7 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 5,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",

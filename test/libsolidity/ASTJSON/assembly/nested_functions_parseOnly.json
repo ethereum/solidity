@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 9,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,35 +12,27 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 6,
             "nodeType": "Block",
             "src": "57:95:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "72:76:1",
                   "nodeType": "YulBlock",
                   "src": "72:76:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
-                      "body":
-                      {
+                      "body": {
                         "nativeSrc": "94:35:1",
                         "nodeType": "YulBlock",
                         "src": "94:35:1",
-                        "statements":
-                        [
+                        "statements": [
                           {
-                            "body":
-                            {
+                            "body": {
                               "nativeSrc": "118:3:1",
                               "nodeType": "YulBlock",
                               "src": "118:3:1",
@@ -63,8 +54,7 @@
                       "nativeSrc": "136:6:1",
                       "nodeType": "YulAssignment",
                       "src": "136:6:1",
-                      "value":
-                      {
+                      "value": {
                         "kind": "number",
                         "nativeSrc": "141:1:1",
                         "nodeType": "YulLiteral",
@@ -72,8 +62,7 @@
                         "type": "",
                         "value": "2"
                       },
-                      "variableNames":
-                      [
+                      "variableNames": [
                         {
                           "name": "x",
                           "nativeSrc": "136:1:1",
@@ -99,19 +88,16 @@
           "name": "f",
           "nameLocation": "24:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "25:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 4,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 3,
@@ -123,8 +109,7 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 2,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",

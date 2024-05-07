@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 10,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,23 +12,18 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 7,
             "nodeType": "Block",
             "src": "33:36:1",
-            "statements":
-            [
+            "statements": [
               {
-                "assignments":
-                [
+                "assignments": [
                   4
                 ],
-                "declarations":
-                [
+                "declarations": [
                   {
                     "constant": false,
                     "id": 4,
@@ -41,8 +35,7 @@
                     "stateVariable": false,
                     "storageLocation": "memory",
                     "typeDescriptions": {},
-                    "typeName":
-                    {
+                    "typeName": {
                       "id": 3,
                       "name": "string",
                       "nodeType": "ElementaryTypeName",
@@ -53,8 +46,7 @@
                   }
                 ],
                 "id": 6,
-                "initialValue":
-                {
+                "initialValue": {
                   "hexValue": "48656c6c6f20576f726c64",
                   "id": 5,
                   "kind": "string",
@@ -75,15 +67,13 @@
           "name": "f",
           "nameLocation": "22:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "23:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

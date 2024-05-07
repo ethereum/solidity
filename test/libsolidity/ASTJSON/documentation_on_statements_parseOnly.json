@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 28,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,8 +12,7 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "constant": false,
           "id": 2,
@@ -26,8 +24,7 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 1,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
@@ -37,27 +34,21 @@
           "visibility": "internal"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 25,
             "nodeType": "Block",
             "src": "99:229:1",
-            "statements":
-            [
+            "statements": [
               {
-                "body":
-                {
+                "body": {
                   "id": 21,
                   "nodeType": "Block",
                   "src": "156:66:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
-                      "expression":
-                      {
+                      "expression": {
                         "id": 19,
-                        "leftHandSide":
-                        {
+                        "leftHandSide": {
                           "id": 17,
                           "name": "x",
                           "nodeType": "Identifier",
@@ -67,8 +58,7 @@
                         },
                         "nodeType": "Assignment",
                         "operator": "*=",
-                        "rightHandSide":
-                        {
+                        "rightHandSide": {
                           "hexValue": "32",
                           "id": 18,
                           "kind": "number",
@@ -86,12 +76,10 @@
                     }
                   ]
                 },
-                "condition":
-                {
+                "condition": {
                   "commonType": {},
                   "id": 13,
-                  "leftExpression":
-                  {
+                  "leftExpression": {
                     "id": 11,
                     "name": "i",
                     "nodeType": "Identifier",
@@ -101,8 +89,7 @@
                   },
                   "nodeType": "BinaryOperation",
                   "operator": "<",
-                  "rightExpression":
-                  {
+                  "rightExpression": {
                     "hexValue": "3230",
                     "id": 12,
                     "kind": "number",
@@ -115,14 +102,11 @@
                   "typeDescriptions": {}
                 },
                 "id": 22,
-                "initializationExpression":
-                {
-                  "assignments":
-                  [
+                "initializationExpression": {
+                  "assignments": [
                     8
                   ],
-                  "declarations":
-                  [
+                  "declarations": [
                     {
                       "constant": false,
                       "id": 8,
@@ -134,8 +118,7 @@
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {},
-                      "typeName":
-                      {
+                      "typeName": {
                         "id": 7,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
@@ -146,8 +129,7 @@
                     }
                   ],
                   "id": 10,
-                  "initialValue":
-                  {
+                  "initialValue": {
                     "hexValue": "30",
                     "id": 9,
                     "kind": "number",
@@ -159,17 +141,14 @@
                   "nodeType": "VariableDeclarationStatement",
                   "src": "131:10:1"
                 },
-                "loopExpression":
-                {
-                  "expression":
-                  {
+                "loopExpression": {
+                  "expression": {
                     "id": 15,
                     "nodeType": "UnaryOperation",
                     "operator": "++",
                     "prefix": false,
                     "src": "151:3:1",
-                    "subExpression":
-                    {
+                    "subExpression": {
                       "id": 14,
                       "name": "i",
                       "nodeType": "Identifier",
@@ -187,8 +166,7 @@
                 "src": "126:96:1"
               },
               {
-                "expression":
-                {
+                "expression": {
                   "id": 23,
                   "name": "x",
                   "nodeType": "Identifier",
@@ -209,19 +187,16 @@
           "name": "f",
           "nameLocation": "66:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 3,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "67:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 6,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 5,
@@ -233,8 +208,7 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 4,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",

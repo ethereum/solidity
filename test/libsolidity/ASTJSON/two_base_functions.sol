@@ -7,4 +7,5 @@ contract B {
 contract C is A, B {
     function f() public override(A, B) {}
 }
+
 // ----

@@ -1,14 +1,9 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "a":
-            {
-                "evm":
-                {
-                    "bytecode":
-                    {
+    "contracts": {
+        "A": {
+            "a": {
+                "evm": {
+                    "bytecode": {
                         "linkReferences": {},
                         "object": "<BYTECODE REMOVED>"
                     }

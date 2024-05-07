@@ -1,24 +1,19 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "B":
-    [
+  "exportedSymbols": {
+    "B": [
       16
     ],
-    "C":
-    [
+    "C": [
       19
     ],
-    "L":
-    [
+    "L": [
       5
     ]
   },
   "id": 20,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -27,15 +22,13 @@
       "contractKind": "library",
       "fullyImplemented": true,
       "id": 5,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         5
       ],
       "name": "L",
       "nameLocation": "10:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "anonymous": false,
           "eventSelector": "870e3024466c178150e2490c7cfb455e33c0db877113af040f89189d07946664",
@@ -43,12 +36,10 @@
           "name": "E",
           "nameLocation": "20:1:1",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 3,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 2,
@@ -61,19 +52,16 @@
                 "src": "22:5:1",
                 "stateVariable": false,
                 "storageLocation": "default",
-                "typeDescriptions":
-                {
+                "typeDescriptions": {
                   "typeIdentifier": "t_uint8",
                   "typeString": "uint8"
                 },
-                "typeName":
-                {
+                "typeName": {
                   "id": 1,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
                   "src": "22:5:1",
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
                   }
@@ -89,8 +77,7 @@
       "scope": 20,
       "src": "0:31:1",
       "usedErrors": [],
-      "usedEvents":
-      [
+      "usedEvents": [
         4
       ]
     },
@@ -102,28 +89,22 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 16,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         16
       ],
       "name": "B",
       "nameLocation": "41:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 14,
             "nodeType": "Block",
             "src": "63:28:1",
-            "statements":
-            [
+            "statements": [
               {
-                "eventCall":
-                {
-                  "arguments":
-                  [
+                "eventCall": {
+                  "arguments": [
                     {
                       "hexValue": "30",
                       "id": 11,
@@ -134,33 +115,28 @@
                       "lValueRequested": false,
                       "nodeType": "Literal",
                       "src": "82:1:1",
-                      "typeDescriptions":
-                      {
+                      "typeDescriptions": {
                         "typeIdentifier": "t_rational_0_by_1",
                         "typeString": "int_const 0"
                       },
                       "value": "0"
                     }
                   ],
-                  "expression":
-                  {
-                    "argumentTypes":
-                    [
+                  "expression": {
+                    "argumentTypes": [
                       {
                         "typeIdentifier": "t_rational_0_by_1",
                         "typeString": "int_const 0"
                       }
                     ],
-                    "expression":
-                    {
+                    "expression": {
                       "id": 8,
                       "name": "L",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
                       "referencedDeclaration": 5,
                       "src": "78:1:1",
-                      "typeDescriptions":
-                      {
+                      "typeDescriptions": {
                         "typeIdentifier": "t_type$_t_contract$_L_$5_$",
                         "typeString": "type(library L)"
                       }
@@ -175,8 +151,7 @@
                     "nodeType": "MemberAccess",
                     "referencedDeclaration": 4,
                     "src": "78:3:1",
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_function_event_nonpayable$_t_uint8_$returns$__$",
                       "typeString": "function (uint8)"
                     }
@@ -192,8 +167,7 @@
                   "nodeType": "FunctionCall",
                   "src": "78:6:1",
                   "tryCall": false,
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_tuple$__$",
                     "typeString": "tuple()"
                   }
@@ -211,15 +185,13 @@
           "name": "",
           "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 6,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "60:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 7,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -235,22 +207,18 @@
       "scope": 20,
       "src": "32:61:1",
       "usedErrors": [],
-      "usedEvents":
-      [
+      "usedEvents": [
         4
       ]
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 17,
             "name": "B",
-            "nameLocations":
-            [
+            "nameLocations": [
               "108:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -267,8 +235,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 19,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         19,
         16
       ],
@@ -279,8 +246,7 @@
       "scope": 20,
       "src": "94:18:1",
       "usedErrors": [],
-      "usedEvents":
-      [
+      "usedEvents": [
         4
       ]
     }

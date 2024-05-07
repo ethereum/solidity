@@ -1,8 +1,6 @@
 {
-    "auxiliaryInputRequested":
-    {
-        "smtlib2queries":
-        {
+    "auxiliaryInputRequested": {
+        "smtlib2queries": {
             "0x1880095c52d8681601c6821e4a5c29740649509af99947bce54102546dd3376a": "(set-option :timeout 1000)
 (set-logic HORN)
 (declare-datatypes ((|bytes_tuple| 0)) (((|bytes_tuple| (|bytes_tuple_accessor_array| (Array Int Int)) (|bytes_tuple_accessor_length| Int)))))
@@ -129,8 +127,7 @@
 "
         }
     },
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "2339",
@@ -410,10 +407,8 @@
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

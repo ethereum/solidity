@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 7,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,30 +12,24 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 4,
             "nodeType": "Block",
             "src": "42:154:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "61:129:1",
                   "nodeType": "YulBlock",
                   "src": "61:129:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
                       "nativeSrc": "75:10:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "75:10:1",
-                      "value":
-                      {
+                      "value": {
                         "kind": "number",
                         "nativeSrc": "84:1:1",
                         "nodeType": "YulLiteral",
@@ -44,8 +37,7 @@
                         "type": "",
                         "value": "0"
                       },
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "v",
                           "nativeSrc": "79:1:1",
@@ -56,22 +48,18 @@
                       ]
                     },
                     {
-                      "cases":
-                      [
+                      "cases": [
                         {
-                          "body":
-                          {
+                          "body": {
                             "nativeSrc": "139:10:1",
                             "nodeType": "YulBlock",
                             "src": "139:10:1",
-                            "statements":
-                            [
+                            "statements": [
                               {
                                 "nativeSrc": "141:6:1",
                                 "nodeType": "YulAssignment",
                                 "src": "141:6:1",
-                                "value":
-                                {
+                                "value": {
                                   "kind": "number",
                                   "nativeSrc": "146:1:1",
                                   "nodeType": "YulLiteral",
@@ -79,8 +67,7 @@
                                   "type": "",
                                   "value": "1"
                                 },
-                                "variableNames":
-                                [
+                                "variableNames": [
                                   {
                                     "name": "v",
                                     "nativeSrc": "141:1:1",
@@ -94,8 +81,7 @@
                           "nativeSrc": "132:17:1",
                           "nodeType": "YulCase",
                           "src": "132:17:1",
-                          "value":
-                          {
+                          "value": {
                             "kind": "number",
                             "nativeSrc": "137:1:1",
                             "nodeType": "YulLiteral",
@@ -105,19 +91,16 @@
                           }
                         },
                         {
-                          "body":
-                          {
+                          "body": {
                             "nativeSrc": "170:10:1",
                             "nodeType": "YulBlock",
                             "src": "170:10:1",
-                            "statements":
-                            [
+                            "statements": [
                               {
                                 "nativeSrc": "172:6:1",
                                 "nodeType": "YulAssignment",
                                 "src": "172:6:1",
-                                "value":
-                                {
+                                "value": {
                                   "kind": "number",
                                   "nativeSrc": "177:1:1",
                                   "nodeType": "YulLiteral",
@@ -125,8 +108,7 @@
                                   "type": "",
                                   "value": "2"
                                 },
-                                "variableNames":
-                                [
+                                "variableNames": [
                                   {
                                     "name": "v",
                                     "nativeSrc": "172:1:1",
@@ -143,11 +125,9 @@
                           "value": "default"
                         }
                       ],
-                      "expression":
-                      {
+                      "expression": {
                         "arguments": [],
-                        "functionName":
-                        {
+                        "functionName": {
                           "name": "calldatasize",
                           "nativeSrc": "105:12:1",
                           "nodeType": "YulIdentifier",
@@ -178,15 +158,13 @@
           "name": "f",
           "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "27:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

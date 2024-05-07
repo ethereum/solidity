@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "3944",
@@ -31,8 +30,7 @@ test.constructor()
 State: arr = []
 test.f(0x0, 0)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 177,
                 "file": "A",
                 "start": 174
@@ -69,8 +67,7 @@ test.constructor()
 State: arr = []
 test.f(0x0, 2)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 203,
                 "file": "A",
                 "start": 185
@@ -78,10 +75,8 @@ test.f(0x0, 2)",
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

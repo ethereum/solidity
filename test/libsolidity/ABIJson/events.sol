@@ -10,8 +10,7 @@ contract test {
 // [
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint256",
@@ -36,8 +35,7 @@ contract test {
 //   },
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint256",
@@ -55,8 +53,7 @@ contract test {
 //     "type": "event"
 //   },
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "a",
@@ -64,8 +61,7 @@ contract test {
 //       }
 //     ],
 //     "name": "f",
-//     "outputs":
-//     [
+//     "outputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "d",

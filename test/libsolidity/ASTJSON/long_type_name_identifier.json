@@ -1,16 +1,13 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "c":
-    [
+  "exportedSymbols": {
+    "c": [
       15
     ]
   },
   "id": 16,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -19,15 +16,13 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 15,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         15
       ],
       "name": "c",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "constant": false,
           "id": 3,
@@ -39,21 +34,17 @@
           "src": "13:8:1",
           "stateVariable": true,
           "storageLocation": "default",
-          "typeDescriptions":
-          {
+          "typeDescriptions": {
             "typeIdentifier": "t_array$_t_uint256_$dyn_storage",
             "typeString": "uint256[]"
           },
-          "typeName":
-          {
-            "baseType":
-            {
+          "typeName": {
+            "baseType": {
               "id": 1,
               "name": "uint",
               "nodeType": "ElementaryTypeName",
               "src": "13:4:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_uint256",
                 "typeString": "uint256"
               }
@@ -61,8 +52,7 @@
             "id": 2,
             "nodeType": "ArrayTypeName",
             "src": "13:6:1",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
               "typeString": "uint256[]"
             }
@@ -70,20 +60,16 @@
           "visibility": "internal"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 13,
             "nodeType": "Block",
             "src": "43:25:1",
-            "statements":
-            [
+            "statements": [
               {
-                "assignments":
-                [
+                "assignments": [
                   10
                 ],
-                "declarations":
-                [
+                "declarations": [
                   {
                     "constant": false,
                     "id": 10,
@@ -95,21 +81,17 @@
                     "src": "45:16:1",
                     "stateVariable": false,
                     "storageLocation": "storage",
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                       "typeString": "uint256[]"
                     },
-                    "typeName":
-                    {
-                      "baseType":
-                      {
+                    "typeName": {
+                      "baseType": {
                         "id": 8,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
                         "src": "45:4:1",
-                        "typeDescriptions":
-                        {
+                        "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
@@ -117,8 +99,7 @@
                       "id": 9,
                       "nodeType": "ArrayTypeName",
                       "src": "45:6:1",
-                      "typeDescriptions":
-                      {
+                      "typeDescriptions": {
                         "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
                         "typeString": "uint256[]"
                       }
@@ -127,16 +108,14 @@
                   }
                 ],
                 "id": 12,
-                "initialValue":
-                {
+                "initialValue": {
                   "id": 11,
                   "name": "a",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
                   "referencedDeclaration": 3,
                   "src": "64:1:1",
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_array$_t_uint256_$dyn_storage",
                     "typeString": "uint256[] storage ref"
                   }
@@ -154,15 +133,13 @@
           "name": "f",
           "nameLocation": "32:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 4,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "33:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 5,
             "nodeType": "ParameterList",
             "parameters": [],

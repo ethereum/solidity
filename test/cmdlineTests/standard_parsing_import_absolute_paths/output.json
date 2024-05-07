@@ -1,20 +1,15 @@
 {
-    "sources":
-    {
-        "/lib/L.sol":
-        {
-            "ast":
-            {
+    "sources": {
+        "/lib/L.sol": {
+            "ast": {
                 "absolutePath": "/lib/L.sol",
                 "id": 2,
                 "license": "GPL-2.0",
                 "nodeType": "SourceUnit",
-                "nodes":
-                [
+                "nodes": [
                     {
                         "id": 1,
-                        "literals":
-                        [
+                        "literals": [
                             "solidity",
                             ">=",
                             "0.0"
@@ -27,20 +22,16 @@
             },
             "id": 0
         },
-        "/project/../C.sol":
-        {
-            "ast":
-            {
+        "/project/../C.sol": {
+            "ast": {
                 "absolutePath": "/project/../C.sol",
                 "id": 5,
                 "license": "GPL-2.0",
                 "nodeType": "SourceUnit",
-                "nodes":
-                [
+                "nodes": [
                     {
                         "id": 3,
-                        "literals":
-                        [
+                        "literals": [
                             "solidity",
                             ">=",
                             "0.0"

@@ -1,14 +1,9 @@
 {
-    "contracts":
-    {
-        "fileA":
-        {
-            "A":
-            {
-                "storageLayout":
-                {
-                    "storage":
-                    [
+    "contracts": {
+        "fileA": {
+            "A": {
+                "storageLayout": {
+                    "storage": [
                         {
                             "astId": 3,
                             "contract": "fileA:A",
@@ -42,23 +37,19 @@
                             "type": "t_array(t_uint256)2_storage"
                         }
                     ],
-                    "types":
-                    {
-                        "t_address":
-                        {
+                    "types": {
+                        "t_address": {
                             "encoding": "inplace",
                             "label": "address",
                             "numberOfBytes": "20"
                         },
-                        "t_array(t_uint256)2_storage":
-                        {
+                        "t_array(t_uint256)2_storage": {
                             "base": "t_uint256",
                             "encoding": "inplace",
                             "label": "uint256[2]",
                             "numberOfBytes": "64"
                         },
-                        "t_uint256":
-                        {
+                        "t_uint256": {
                             "encoding": "inplace",
                             "label": "uint256",
                             "numberOfBytes": "32"
@@ -68,10 +59,8 @@
             }
         }
     },
-    "sources":
-    {
-        "fileA":
-        {
+    "sources": {
+        "fileA": {
             "id": 0
         }
     }

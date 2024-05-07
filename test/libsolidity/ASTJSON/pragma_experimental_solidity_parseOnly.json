@@ -3,12 +3,10 @@
   "experimentalSolidity": true,
   "id": 2,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "id": 1,
-      "literals":
-      [
+      "literals": [
         "experimental",
         "solidity"
       ],

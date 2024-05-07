@@ -2,16 +2,14 @@
   "absolutePath": "a",
   "id": 28,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "id": 2,
       "name": "MyAddress",
       "nameLocation": "5:9:1",
       "nodeType": "UserDefinedValueTypeDefinition",
       "src": "0:26:1",
-      "underlyingType":
-      {
+      "underlyingType": {
         "id": 1,
         "name": "address",
         "nodeType": "ElementaryTypeName",
@@ -26,8 +24,7 @@
       "nameLocation": "32:6:1",
       "nodeType": "UserDefinedValueTypeDefinition",
       "src": "27:20:1",
-      "underlyingType":
-      {
+      "underlyingType": {
         "id": 3,
         "name": "uint",
         "nodeType": "ElementaryTypeName",
@@ -36,20 +33,16 @@
       }
     },
     {
-      "body":
-      {
+      "body": {
         "id": 15,
         "nodeType": "Block",
         "src": "61:34:1",
-        "statements":
-        [
+        "statements": [
           {
-            "assignments":
-            [
+            "assignments": [
               9
             ],
-            "declarations":
-            [
+            "declarations": [
               {
                 "constant": false,
                 "id": 9,
@@ -61,16 +54,13 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 8,
                   "nodeType": "UserDefinedTypeName",
-                  "pathNode":
-                  {
+                  "pathNode": {
                     "id": 7,
                     "name": "MyAddress",
-                    "nameLocations":
-                    [
+                    "nameLocations": [
                       "67:9:1"
                     ],
                     "nodeType": "IdentifierPath",
@@ -87,12 +77,10 @@
             "src": "67:11:1"
           },
           {
-            "assignments":
-            [
+            "assignments": [
               13
             ],
-            "declarations":
-            [
+            "declarations": [
               {
                 "constant": false,
                 "id": 13,
@@ -104,16 +92,13 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 12,
                   "nodeType": "UserDefinedTypeName",
-                  "pathNode":
-                  {
+                  "pathNode": {
                     "id": 11,
                     "name": "MyUInt",
-                    "nameLocations":
-                    [
+                    "nameLocations": [
                       "84:6:1"
                     ],
                     "nodeType": "IdentifierPath",
@@ -138,15 +123,13 @@
       "name": "f",
       "nameLocation": "57:1:1",
       "nodeType": "FunctionDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 5,
         "nodeType": "ParameterList",
         "parameters": [],
         "src": "58:2:1"
       },
-      "returnParameters":
-      {
+      "returnParameters": {
         "id": 6,
         "nodeType": "ParameterList",
         "parameters": [],
@@ -166,16 +149,14 @@
       "name": "C",
       "nameLocation": "105:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "id": 18,
           "name": "MyAddress",
           "nameLocation": "118:9:1",
           "nodeType": "UserDefinedValueTypeDefinition",
           "src": "113:26:1",
-          "underlyingType":
-          {
+          "underlyingType": {
             "id": 17,
             "name": "address",
             "nodeType": "ElementaryTypeName",
@@ -190,8 +171,7 @@
           "nameLocation": "149:6:1",
           "nodeType": "UserDefinedValueTypeDefinition",
           "src": "144:20:1",
-          "underlyingType":
-          {
+          "underlyingType": {
             "id": 19,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
@@ -210,21 +190,17 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 25,
             "keyName": "",
             "keyNameLocation": "-1:-1:-1",
-            "keyType":
-            {
+            "keyType": {
               "id": 22,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 21,
                 "name": "MyAddress",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "177:9:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -238,16 +214,13 @@
             "typeDescriptions": {},
             "valueName": "",
             "valueNameLocation": "-1:-1:-1",
-            "valueType":
-            {
+            "valueType": {
               "id": 24,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 23,
                 "name": "MyUInt",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "190:6:1"
                 ],
                 "nodeType": "IdentifierPath",

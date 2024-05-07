@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "3644",
@@ -13,8 +12,7 @@
 ",
             "message": "This parameter has a type that can only be used internally. You can make the contract abstract to avoid this problem.",
             "severity": "error",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 258,
                 "file": "C",
                 "start": 244
