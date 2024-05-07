@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "4281",
@@ -31,8 +30,7 @@ test.constructor()
 State: arr = []
 test.f(0x0, 1)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 216,
                 "file": "A",
                 "start": 211
@@ -40,10 +38,8 @@ test.f(0x0, 1)",
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

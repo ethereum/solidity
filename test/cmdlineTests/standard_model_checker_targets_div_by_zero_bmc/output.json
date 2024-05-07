@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "3046",
@@ -19,8 +18,7 @@ Note:
 
 ",
             "message": "BMC: Division by zero happens here.",
-            "secondarySourceLocations":
-            [
+            "secondarySourceLocations": [
                 {
                     "message": "Counterexample:
   <result> = 0
@@ -36,8 +34,7 @@ Note:
                 }
             ],
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 216,
                 "file": "A",
                 "start": 211
@@ -45,10 +42,8 @@ Note:
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

@@ -7,12 +7,10 @@ JSON AST (compact format):
     "id": 4,
     "license": "GPL-3.0",
     "nodeType": "SourceUnit",
-    "nodes":
-    [
+    "nodes": [
         {
             "id": 1,
-            "literals":
-            [
+            "literals": [
                 "solidity",
                 "*"
             ],

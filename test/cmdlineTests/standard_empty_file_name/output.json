@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "2904",
@@ -9,8 +8,7 @@
 ",
             "message": "Declaration \"A\" not found in \"\" (referenced as \".\").",
             "severity": "error",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 79,
                 "file": "",
                 "start": 59

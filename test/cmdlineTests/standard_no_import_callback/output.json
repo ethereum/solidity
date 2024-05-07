@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "6275",
@@ -13,8 +12,7 @@
 ",
             "message": "Source \"standard_no_import_callback/B.sol\" not found: No import callback.",
             "severity": "error",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 102,
                 "file": "A",
                 "start": 59

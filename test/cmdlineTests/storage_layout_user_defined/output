@@ -2,8 +2,7 @@
 ======= storage_layout_user_defined/input.sol:C =======
 Contract Storage Layout:
 {
-  "storage":
-  [
+  "storage": [
     {
       "astId": 7,
       "contract": "storage_layout_user_defined/input.sol:C",
@@ -69,16 +68,13 @@ Contract Storage Layout:
       "type": "t_userDefinedValueType(MyInt8)4"
     }
   ],
-  "types":
-  {
-    "t_userDefinedValueType(MyInt128)2":
-    {
+  "types": {
+    "t_userDefinedValueType(MyInt128)2": {
       "encoding": "inplace",
       "label": "MyInt128",
       "numberOfBytes": "16"
     },
-    "t_userDefinedValueType(MyInt8)4":
-    {
+    "t_userDefinedValueType(MyInt8)4": {
       "encoding": "inplace",
       "label": "MyInt8",
       "numberOfBytes": "1"

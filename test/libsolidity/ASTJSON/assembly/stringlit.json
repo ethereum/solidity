@@ -1,16 +1,13 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       6
     ]
   },
   "id": 7,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -19,37 +16,30 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 6,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         6
       ],
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 4,
             "nodeType": "Block",
             "src": "37:43:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "56:18:1",
                   "nodeType": "YulBlock",
                   "src": "56:18:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
                       "nativeSrc": "58:14:1",
                       "nodeType": "YulVariableDeclaration",
                       "src": "58:14:1",
-                      "value":
-                      {
+                      "value": {
                         "hexValue": "616263",
                         "kind": "string",
                         "nativeSrc": "67:5:1",
@@ -58,8 +48,7 @@
                         "type": "",
                         "value": "abc"
                       },
-                      "variables":
-                      [
+                      "variables": [
                         {
                           "name": "x",
                           "nativeSrc": "62:1:1",
@@ -87,15 +76,13 @@
           "name": "m",
           "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "27:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

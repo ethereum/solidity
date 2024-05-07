@@ -1,14 +1,9 @@
 {
-    "contracts":
-    {
-        "fileA":
-        {
-            "A":
-            {
-                "storageLayout":
-                {
-                    "storage":
-                    [
+    "contracts": {
+        "fileA": {
+            "A": {
+                "storageLayout": {
+                    "storage": [
                         {
                             "astId": 4,
                             "contract": "fileA:A",
@@ -26,10 +21,8 @@
                             "type": "t_string_storage"
                         }
                     ],
-                    "types":
-                    {
-                        "t_string_storage":
-                        {
+                    "types": {
+                        "t_string_storage": {
                             "encoding": "bytes",
                             "label": "string",
                             "numberOfBytes": "32"
@@ -39,10 +32,8 @@
             }
         }
     },
-    "sources":
-    {
-        "fileA":
-        {
+    "sources": {
+        "fileA": {
             "id": 0
         }
     }

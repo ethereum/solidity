@@ -1,14 +1,9 @@
 {
-    "contracts":
-    {
-        "fileA":
-        {
-            "A":
-            {
-                "storageLayout":
-                {
-                    "storage":
-                    [
+    "contracts": {
+        "fileA": {
+            "A": {
+                "storageLayout": {
+                    "storage": [
                         {
                             "astId": 15,
                             "contract": "fileA:A",
@@ -42,34 +37,28 @@
                             "type": "t_address"
                         }
                     ],
-                    "types":
-                    {
-                        "t_address":
-                        {
+                    "types": {
+                        "t_address": {
                             "encoding": "inplace",
                             "label": "address",
                             "numberOfBytes": "20"
                         },
-                        "t_array(t_uint256)2_storage":
-                        {
+                        "t_array(t_uint256)2_storage": {
                             "base": "t_uint256",
                             "encoding": "inplace",
                             "label": "uint256[2]",
                             "numberOfBytes": "64"
                         },
-                        "t_array(t_uint256)dyn_storage":
-                        {
+                        "t_array(t_uint256)dyn_storage": {
                             "base": "t_uint256",
                             "encoding": "dynamic_array",
                             "label": "uint256[]",
                             "numberOfBytes": "32"
                         },
-                        "t_struct(S)13_storage":
-                        {
+                        "t_struct(S)13_storage": {
                             "encoding": "inplace",
                             "label": "struct A.S",
-                            "members":
-                            [
+                            "members": [
                                 {
                                     "astId": 3,
                                     "contract": "fileA:A",
@@ -105,14 +94,12 @@
                             ],
                             "numberOfBytes": "128"
                         },
-                        "t_uint128":
-                        {
+                        "t_uint128": {
                             "encoding": "inplace",
                             "label": "uint128",
                             "numberOfBytes": "16"
                         },
-                        "t_uint256":
-                        {
+                        "t_uint256": {
                             "encoding": "inplace",
                             "label": "uint256",
                             "numberOfBytes": "32"
@@ -122,10 +109,8 @@
             }
         }
     },
-    "sources":
-    {
-        "fileA":
-        {
+    "sources": {
+        "fileA": {
             "id": 0
         }
     }

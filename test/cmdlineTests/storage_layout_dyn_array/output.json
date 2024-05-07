@@ -1,14 +1,9 @@
 {
-    "contracts":
-    {
-        "fileA":
-        {
-            "A":
-            {
-                "storageLayout":
-                {
-                    "storage":
-                    [
+    "contracts": {
+        "fileA": {
+            "A": {
+                "storageLayout": {
+                    "storage": [
                         {
                             "astId": 4,
                             "contract": "fileA:A",
@@ -26,30 +21,25 @@
                             "type": "t_array(t_bool)dyn_storage"
                         }
                     ],
-                    "types":
-                    {
-                        "t_array(t_bool)dyn_storage":
-                        {
+                    "types": {
+                        "t_array(t_bool)dyn_storage": {
                             "base": "t_bool",
                             "encoding": "dynamic_array",
                             "label": "bool[]",
                             "numberOfBytes": "32"
                         },
-                        "t_array(t_uint256)dyn_storage":
-                        {
+                        "t_array(t_uint256)dyn_storage": {
                             "base": "t_uint256",
                             "encoding": "dynamic_array",
                             "label": "uint256[]",
                             "numberOfBytes": "32"
                         },
-                        "t_bool":
-                        {
+                        "t_bool": {
                             "encoding": "inplace",
                             "label": "bool",
                             "numberOfBytes": "1"
                         },
-                        "t_uint256":
-                        {
+                        "t_uint256": {
                             "encoding": "inplace",
                             "label": "uint256",
                             "numberOfBytes": "32"
@@ -59,10 +49,8 @@
             }
         }
     },
-    "sources":
-    {
-        "fileA":
-        {
+    "sources": {
+        "fileA": {
             "id": 0
         }
     }

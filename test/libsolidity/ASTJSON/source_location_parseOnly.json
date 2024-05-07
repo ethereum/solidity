@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 13,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,23 +12,18 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 10,
             "nodeType": "Block",
             "src": "33:20:1",
-            "statements":
-            [
+            "statements": [
               {
-                "assignments":
-                [
+                "assignments": [
                   4
                 ],
-                "declarations":
-                [
+                "declarations": [
                   {
                     "constant": false,
                     "id": 4,
@@ -41,8 +35,7 @@
                     "stateVariable": false,
                     "storageLocation": "default",
                     "typeDescriptions": {},
-                    "typeName":
-                    {
+                    "typeName": {
                       "id": 3,
                       "name": "uint",
                       "nodeType": "ElementaryTypeName",
@@ -53,8 +46,7 @@
                   }
                 ],
                 "id": 6,
-                "initialValue":
-                {
+                "initialValue": {
                   "hexValue": "32",
                   "id": 5,
                   "kind": "number",
@@ -67,15 +59,13 @@
                 "src": "35:10:1"
               },
               {
-                "expression":
-                {
+                "expression": {
                   "id": 8,
                   "nodeType": "UnaryOperation",
                   "operator": "++",
                   "prefix": false,
                   "src": "47:3:1",
-                  "subExpression":
-                  {
+                  "subExpression": {
                     "id": 7,
                     "name": "x",
                     "nodeType": "Identifier",
@@ -98,15 +88,13 @@
           "name": "f",
           "nameLocation": "22:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "23:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

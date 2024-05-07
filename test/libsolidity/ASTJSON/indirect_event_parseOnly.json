@@ -3,8 +3,7 @@
   "id": 26,
   "license": "GPL-3.0",
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -14,16 +13,14 @@
       "name": "L",
       "nameLocation": "44:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "anonymous": false,
           "id": 2,
           "name": "E",
           "nameLocation": "58:1:1",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -32,19 +29,15 @@
           "src": "52:10:1"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 8,
             "nodeType": "Block",
             "src": "89:13:1",
-            "statements":
-            [
+            "statements": [
               {
-                "eventCall":
-                {
+                "eventCall": {
                   "arguments": [],
-                  "expression":
-                  {
+                  "expression": {
                     "id": 5,
                     "name": "E",
                     "nodeType": "Identifier",
@@ -73,15 +66,13 @@
           "name": "f",
           "nameLocation": "76:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 3,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "77:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 4,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -106,16 +97,14 @@
       "name": "C",
       "nameLocation": "114:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "anonymous": false,
           "id": 12,
           "name": "H",
           "nameLocation": "128:1:1",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 11,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -124,21 +113,16 @@
           "src": "122:10:1"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 23,
             "nodeType": "Block",
             "src": "157:20:1",
-            "statements":
-            [
+            "statements": [
               {
-                "expression":
-                {
+                "expression": {
                   "arguments": [],
-                  "expression":
-                  {
-                    "expression":
-                    {
+                  "expression": {
+                    "expression": {
                       "id": 15,
                       "name": "L",
                       "nodeType": "Identifier",
@@ -166,11 +150,9 @@
                 "src": "159:5:1"
               },
               {
-                "eventCall":
-                {
+                "eventCall": {
                   "arguments": [],
-                  "expression":
-                  {
+                  "expression": {
                     "id": 20,
                     "name": "H",
                     "nodeType": "Identifier",
@@ -199,15 +181,13 @@
           "name": "g",
           "nameLocation": "146:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "147:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 14,
             "nodeType": "ParameterList",
             "parameters": [],

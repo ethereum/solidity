@@ -11,8 +11,7 @@ contract Derived is Base {
 // [
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": true,
 //         "internalType": "bytes32",
@@ -24,8 +23,7 @@ contract Derived is Base {
 //     "type": "event"
 //   },
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "p",
@@ -33,8 +31,7 @@ contract Derived is Base {
 //       }
 //     ],
 //     "name": "baseFunction",
-//     "outputs":
-//     [
+//     "outputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "i",
@@ -51,8 +48,7 @@ contract Derived is Base {
 // [
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": true,
 //         "internalType": "bytes32",
@@ -65,8 +61,7 @@ contract Derived is Base {
 //   },
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": true,
 //         "internalType": "uint256",
@@ -78,8 +73,7 @@ contract Derived is Base {
 //     "type": "event"
 //   },
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "p",
@@ -87,8 +81,7 @@ contract Derived is Base {
 //       }
 //     ],
 //     "name": "baseFunction",
-//     "outputs":
-//     [
+//     "outputs": [
 //       {
 //         "internalType": "uint256",
 //         "name": "i",
@@ -99,8 +92,7 @@ contract Derived is Base {
 //     "type": "function"
 //   },
 //   {
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "internalType": "bytes32",
 //         "name": "p",
@@ -108,8 +100,7 @@ contract Derived is Base {
 //       }
 //     ],
 //     "name": "derivedFunction",
-//     "outputs":
-//     [
+//     "outputs": [
 //       {
 //         "internalType": "bytes32",
 //         "name": "i",

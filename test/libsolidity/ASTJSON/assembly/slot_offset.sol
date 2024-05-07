@@ -5,4 +5,5 @@ contract C {
         assembly { let x := s.offset let y := mul(s.slot, 2) }
     }
 }
+
 // ----

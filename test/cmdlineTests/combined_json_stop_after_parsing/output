@@ -1,28 +1,21 @@
 {
-    "contracts":
-    {
+    "contracts": {
         "combined_json_stop_after_parsing/input.sol:C": {}
     },
-    "sourceList":
-    [
+    "sourceList": [
         "combined_json_stop_after_parsing/input.sol"
     ],
-    "sources":
-    {
-        "combined_json_stop_after_parsing/input.sol":
-        {
-            "AST":
-            {
+    "sources": {
+        "combined_json_stop_after_parsing/input.sol": {
+            "AST": {
                 "absolutePath": "combined_json_stop_after_parsing/input.sol",
                 "id": 3,
                 "license": "GPL-3.0",
                 "nodeType": "SourceUnit",
-                "nodes":
-                [
+                "nodes": [
                     {
                         "id": 1,
-                        "literals":
-                        [
+                        "literals": [
                             "solidity",
                             "*"
                         ],

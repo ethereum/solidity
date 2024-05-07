@@ -1,20 +1,12 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "a":
-            {
-                "evm":
-                {
-                    "bytecode":
-                    {
-                        "linkReferences":
-                        {
-                            "contract/test.sol":
-                            {
-                                "L2":
-                                [
+    "contracts": {
+        "A": {
+            "a": {
+                "evm": {
+                    "bytecode": {
+                        "linkReferences": {
+                            "contract/test.sol": {
+                                "L2": [
                                     {
                                         "length": 20,
                                         "start": 22

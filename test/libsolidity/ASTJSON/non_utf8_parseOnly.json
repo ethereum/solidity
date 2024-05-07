@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 16,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,23 +12,18 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 13,
             "nodeType": "Block",
             "src": "33:45:1",
-            "statements":
-            [
+            "statements": [
               {
-                "assignments":
-                [
+                "assignments": [
                   4
                 ],
-                "declarations":
-                [
+                "declarations": [
                   {
                     "constant": false,
                     "id": 4,
@@ -41,8 +35,7 @@
                     "stateVariable": false,
                     "storageLocation": "memory",
                     "typeDescriptions": {},
-                    "typeName":
-                    {
+                    "typeName": {
                       "id": 3,
                       "name": "string",
                       "nodeType": "ElementaryTypeName",
@@ -53,13 +46,10 @@
                   }
                 ],
                 "id": 12,
-                "initialValue":
-                {
-                  "arguments":
-                  [
+                "initialValue": {
+                  "arguments": [
                     {
-                      "arguments":
-                      [
+                      "arguments": [
                         {
                           "hexValue": "ff",
                           "id": 9,
@@ -69,14 +59,12 @@
                           "typeDescriptions": {}
                         }
                       ],
-                      "expression":
-                      {
+                      "expression": {
                         "id": 8,
                         "nodeType": "ElementaryTypeNameExpression",
                         "src": "60:5:1",
                         "typeDescriptions": {},
-                        "typeName":
-                        {
+                        "typeName": {
                           "id": 7,
                           "name": "bytes",
                           "nodeType": "ElementaryTypeName",
@@ -93,14 +81,12 @@
                       "typeDescriptions": {}
                     }
                   ],
-                  "expression":
-                  {
+                  "expression": {
                     "id": 6,
                     "nodeType": "ElementaryTypeNameExpression",
                     "src": "53:6:1",
                     "typeDescriptions": {},
-                    "typeName":
-                    {
+                    "typeName": {
                       "id": 5,
                       "name": "string",
                       "nodeType": "ElementaryTypeName",
@@ -128,15 +114,13 @@
           "name": "f",
           "nameLocation": "22:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "23:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

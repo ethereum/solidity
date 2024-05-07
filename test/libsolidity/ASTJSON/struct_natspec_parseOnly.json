@@ -2,19 +2,16 @@
   "absolutePath": "a",
   "id": 9,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
-      "documentation":
-      {
+      "documentation": {
         "id": 1,
         "nodeType": "StructuredDocumentation",
         "src": "0:112:1",
         "text": "@title example of title\n @author example of author\n @notice example of notice\n @dev example of dev"
       },
       "id": 8,
-      "members":
-      [
+      "members": [
         {
           "constant": false,
           "id": 3,
@@ -26,8 +23,7 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 2,
             "name": "string",
             "nodeType": "ElementaryTypeName",
@@ -47,8 +43,7 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 4,
             "name": "bool",
             "nodeType": "ElementaryTypeName",
@@ -68,8 +63,7 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 6,
             "name": "uint256",
             "nodeType": "ElementaryTypeName",

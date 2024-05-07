@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "2018",
@@ -13,8 +12,7 @@
 ",
             "message": "Function state mutability can be restricted to pure",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 162,
                 "file": "A",
                 "start": 81
@@ -32,10 +30,8 @@
             "type": "Info"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

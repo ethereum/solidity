@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "3364",
@@ -22,8 +21,7 @@ Note: Second constructor call is here:
 
 ",
             "message": "Base constructor arguments given twice.",
-            "secondarySourceLocations":
-            [
+            "secondarySourceLocations": [
                 {
                     "end": 112,
                     "file": "A",
@@ -38,8 +36,7 @@ Note: Second constructor call is here:
                 }
             ],
             "severity": "error",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 160,
                 "file": "A",
                 "start": 139

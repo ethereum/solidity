@@ -1,28 +1,22 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       49
     ],
-    "I8":
-    [
+    "I8": [
       2
     ],
-    "sub":
-    [
+    "sub": [
       20
     ],
-    "unsub":
-    [
+    "unsub": [
       30
     ]
   },
   "id": 50,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "canonicalName": "I8",
       "id": 2,
@@ -30,29 +24,24 @@
       "nameLocation": "5:2:1",
       "nodeType": "UserDefinedValueTypeDefinition",
       "src": "0:16:1",
-      "underlyingType":
-      {
+      "underlyingType": {
         "id": 1,
         "name": "int8",
         "nodeType": "ElementaryTypeName",
         "src": "11:4:1",
-        "typeDescriptions":
-        {
+        "typeDescriptions": {
           "typeIdentifier": "t_int8",
           "typeString": "int8"
         }
       }
     },
     {
-      "functionList":
-      [
+      "functionList": [
         {
-          "definition":
-          {
+          "definition": {
             "id": 3,
             "name": "sub",
-            "nameLocations":
-            [
+            "nameLocations": [
               "24:3:1"
             ],
             "nodeType": "IdentifierPath",
@@ -62,12 +51,10 @@
           "operator": "-"
         },
         {
-          "definition":
-          {
+          "definition": {
             "id": 4,
             "name": "unsub",
-            "nameLocations":
-            [
+            "nameLocations": [
               "34:5:1"
             ],
             "nodeType": "IdentifierPath",
@@ -81,16 +68,13 @@
       "id": 7,
       "nodeType": "UsingForDirective",
       "src": "17:43:1",
-      "typeName":
-      {
+      "typeName": {
         "id": 6,
         "nodeType": "UserDefinedTypeName",
-        "pathNode":
-        {
+        "pathNode": {
           "id": 5,
           "name": "I8",
-          "nameLocations":
-          [
+          "nameLocations": [
             "50:2:1"
           ],
           "nodeType": "IdentifierPath",
@@ -99,16 +83,14 @@
         },
         "referencedDeclaration": 2,
         "src": "50:2:1",
-        "typeDescriptions":
-        {
+        "typeDescriptions": {
           "typeIdentifier": "t_userDefinedValueType$_I8_$2",
           "typeString": "I8"
         }
       }
     },
     {
-      "body":
-      {
+      "body": {
         "id": 19,
         "nodeType": "Block",
         "src": "100:2:1",
@@ -121,12 +103,10 @@
       "name": "sub",
       "nameLocation": "70:3:1",
       "nodeType": "FunctionDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 14,
         "nodeType": "ParameterList",
-        "parameters":
-        [
+        "parameters": [
           {
             "constant": false,
             "id": 10,
@@ -138,21 +118,17 @@
             "src": "74:2:1",
             "stateVariable": false,
             "storageLocation": "default",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_userDefinedValueType$_I8_$2",
               "typeString": "I8"
             },
-            "typeName":
-            {
+            "typeName": {
               "id": 9,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 8,
                 "name": "I8",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "74:2:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -161,8 +137,7 @@
               },
               "referencedDeclaration": 2,
               "src": "74:2:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                 "typeString": "I8"
               }
@@ -180,21 +155,17 @@
             "src": "78:2:1",
             "stateVariable": false,
             "storageLocation": "default",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_userDefinedValueType$_I8_$2",
               "typeString": "I8"
             },
-            "typeName":
-            {
+            "typeName": {
               "id": 12,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 11,
                 "name": "I8",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "78:2:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -203,8 +174,7 @@
               },
               "referencedDeclaration": 2,
               "src": "78:2:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                 "typeString": "I8"
               }
@@ -214,12 +184,10 @@
         ],
         "src": "73:8:1"
       },
-      "returnParameters":
-      {
+      "returnParameters": {
         "id": 18,
         "nodeType": "ParameterList",
-        "parameters":
-        [
+        "parameters": [
           {
             "constant": false,
             "id": 17,
@@ -231,21 +199,17 @@
             "src": "96:2:1",
             "stateVariable": false,
             "storageLocation": "default",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_userDefinedValueType$_I8_$2",
               "typeString": "I8"
             },
-            "typeName":
-            {
+            "typeName": {
               "id": 16,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 15,
                 "name": "I8",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "96:2:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -254,8 +218,7 @@
               },
               "referencedDeclaration": 2,
               "src": "96:2:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                 "typeString": "I8"
               }
@@ -272,8 +235,7 @@
       "visibility": "internal"
     },
     {
-      "body":
-      {
+      "body": {
         "id": 29,
         "nodeType": "Block",
         "src": "140:2:1",
@@ -286,12 +248,10 @@
       "name": "unsub",
       "nameLocation": "112:5:1",
       "nodeType": "FunctionDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 24,
         "nodeType": "ParameterList",
-        "parameters":
-        [
+        "parameters": [
           {
             "constant": false,
             "id": 23,
@@ -303,21 +263,17 @@
             "src": "118:2:1",
             "stateVariable": false,
             "storageLocation": "default",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_userDefinedValueType$_I8_$2",
               "typeString": "I8"
             },
-            "typeName":
-            {
+            "typeName": {
               "id": 22,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 21,
                 "name": "I8",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "118:2:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -326,8 +282,7 @@
               },
               "referencedDeclaration": 2,
               "src": "118:2:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                 "typeString": "I8"
               }
@@ -337,12 +292,10 @@
         ],
         "src": "117:4:1"
       },
-      "returnParameters":
-      {
+      "returnParameters": {
         "id": 28,
         "nodeType": "ParameterList",
-        "parameters":
-        [
+        "parameters": [
           {
             "constant": false,
             "id": 27,
@@ -354,21 +307,17 @@
             "src": "136:2:1",
             "stateVariable": false,
             "storageLocation": "default",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_userDefinedValueType$_I8_$2",
               "typeString": "I8"
             },
-            "typeName":
-            {
+            "typeName": {
               "id": 26,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 25,
                 "name": "I8",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "136:2:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -377,8 +326,7 @@
               },
               "referencedDeclaration": 2,
               "src": "136:2:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                 "typeString": "I8"
               }
@@ -402,28 +350,22 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 49,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         49
       ],
       "name": "C",
       "nameLocation": "152:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 47,
             "nodeType": "Block",
             "src": "208:30:1",
-            "statements":
-            [
+            "statements": [
               {
-                "expression":
-                {
-                  "commonType":
-                  {
+                "expression": {
+                  "commonType": {
                     "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                     "typeString": "I8"
                   },
@@ -433,8 +375,7 @@
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
-                  "leftExpression":
-                  {
+                  "leftExpression": {
                     "function": 30,
                     "id": 43,
                     "isConstant": false,
@@ -445,45 +386,39 @@
                     "operator": "-",
                     "prefix": true,
                     "src": "225:2:1",
-                    "subExpression":
-                    {
+                    "subExpression": {
                       "id": 42,
                       "name": "a",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
                       "referencedDeclaration": 33,
                       "src": "226:1:1",
-                      "typeDescriptions":
-                      {
+                      "typeDescriptions": {
                         "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                         "typeString": "I8"
                       }
                     },
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                       "typeString": "I8"
                     }
                   },
                   "nodeType": "BinaryOperation",
                   "operator": "-",
-                  "rightExpression":
-                  {
+                  "rightExpression": {
                     "id": 44,
                     "name": "b",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
                     "referencedDeclaration": 36,
                     "src": "230:1:1",
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                       "typeString": "I8"
                     }
                   },
                   "src": "225:6:1",
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                     "typeString": "I8"
                   }
@@ -503,12 +438,10 @@
           "name": "f",
           "nameLocation": "169:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 37,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 33,
@@ -520,21 +453,17 @@
                 "src": "171:4:1",
                 "stateVariable": false,
                 "storageLocation": "default",
-                "typeDescriptions":
-                {
+                "typeDescriptions": {
                   "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                   "typeString": "I8"
                 },
-                "typeName":
-                {
+                "typeName": {
                   "id": 32,
                   "nodeType": "UserDefinedTypeName",
-                  "pathNode":
-                  {
+                  "pathNode": {
                     "id": 31,
                     "name": "I8",
-                    "nameLocations":
-                    [
+                    "nameLocations": [
                       "171:2:1"
                     ],
                     "nodeType": "IdentifierPath",
@@ -543,8 +472,7 @@
                   },
                   "referencedDeclaration": 2,
                   "src": "171:2:1",
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                     "typeString": "I8"
                   }
@@ -562,21 +490,17 @@
                 "src": "177:4:1",
                 "stateVariable": false,
                 "storageLocation": "default",
-                "typeDescriptions":
-                {
+                "typeDescriptions": {
                   "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                   "typeString": "I8"
                 },
-                "typeName":
-                {
+                "typeName": {
                   "id": 35,
                   "nodeType": "UserDefinedTypeName",
-                  "pathNode":
-                  {
+                  "pathNode": {
                     "id": 34,
                     "name": "I8",
-                    "nameLocations":
-                    [
+                    "nameLocations": [
                       "177:2:1"
                     ],
                     "nodeType": "IdentifierPath",
@@ -585,8 +509,7 @@
                   },
                   "referencedDeclaration": 2,
                   "src": "177:2:1",
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                     "typeString": "I8"
                   }
@@ -596,12 +519,10 @@
             ],
             "src": "170:12:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 41,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 40,
@@ -613,21 +534,17 @@
                 "src": "204:2:1",
                 "stateVariable": false,
                 "storageLocation": "default",
-                "typeDescriptions":
-                {
+                "typeDescriptions": {
                   "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                   "typeString": "I8"
                 },
-                "typeName":
-                {
+                "typeName": {
                   "id": 39,
                   "nodeType": "UserDefinedTypeName",
-                  "pathNode":
-                  {
+                  "pathNode": {
                     "id": 38,
                     "name": "I8",
-                    "nameLocations":
-                    [
+                    "nameLocations": [
                       "204:2:1"
                     ],
                     "nodeType": "IdentifierPath",
@@ -636,8 +553,7 @@
                   },
                   "referencedDeclaration": 2,
                   "src": "204:2:1",
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_userDefinedValueType$_I8_$2",
                     "typeString": "I8"
                   }

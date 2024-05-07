@@ -9,4 +9,5 @@ contract C is B {
 	function foo() public override { }
 	function faa() public override { }
 }
+
 // ----

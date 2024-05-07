@@ -1,8 +1,6 @@
 {
-    "auxiliaryInputRequested":
-    {
-        "smtlib2queries":
-        {
+    "auxiliaryInputRequested": {
+        "smtlib2queries": {
             "0x8704a7b848b706ef33cbfc06e4f185636f568a29621126b7244355dd0de956bb": "(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
@@ -32,8 +30,7 @@
 "
         }
     },
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "6240",
@@ -119,10 +116,8 @@
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

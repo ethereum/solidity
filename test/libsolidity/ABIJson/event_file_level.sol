@@ -32,8 +32,7 @@ contract D is C {
 //   },
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint256",
@@ -64,8 +63,7 @@ contract D is C {
 //   },
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "uint256",
@@ -78,8 +76,7 @@ contract D is C {
 //   },
 //   {
 //     "anonymous": false,
-//     "inputs":
-//     [
+//     "inputs": [
 //       {
 //         "indexed": false,
 //         "internalType": "string",

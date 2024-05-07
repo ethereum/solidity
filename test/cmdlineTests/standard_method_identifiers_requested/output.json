@@ -1,24 +1,17 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "C":
-            {
-                "evm":
-                {
-                    "methodIdentifiers":
-                    {
+    "contracts": {
+        "A": {
+            "C": {
+                "evm": {
+                    "methodIdentifiers": {
                         "f()": "26121ff0"
                     }
                 }
             }
         }
     },
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

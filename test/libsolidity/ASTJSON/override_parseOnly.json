@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 30,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,11 +12,9 @@
       "name": "A",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 3,
             "nodeType": "Block",
             "src": "44:2:1",
@@ -30,15 +27,13 @@
           "name": "faa",
           "nameLocation": "23:3:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "26:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -56,15 +51,12 @@
     },
     {
       "abstract": true,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 6,
             "name": "A",
-            "nameLocations":
-            [
+            "nameLocations": [
               "72:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -81,8 +73,7 @@
       "name": "B",
       "nameLocation": "67:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "id": 10,
           "implemented": false,
@@ -91,15 +82,13 @@
           "name": "foo",
           "nameLocation": "86:3:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "89:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 9,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -111,8 +100,7 @@
           "visibility": "public"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 14,
             "nodeType": "Block",
             "src": "148:2:1",
@@ -125,22 +113,19 @@
           "name": "faa",
           "nameLocation": "118:3:1",
           "nodeType": "FunctionDefinition",
-          "overrides":
-          {
+          "overrides": {
             "id": 12,
             "nodeType": "OverrideSpecifier",
             "overrides": [],
             "src": "139:8:1"
           },
-          "parameters":
-          {
+          "parameters": {
             "id": 11,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "121:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -158,15 +143,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 17,
             "name": "B",
-            "nameLocations":
-            [
+            "nameLocations": [
               "167:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -183,11 +165,9 @@
       "name": "C",
       "nameLocation": "162:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 22,
             "nodeType": "Block",
             "src": "203:3:1",
@@ -200,22 +180,19 @@
           "name": "foo",
           "nameLocation": "181:3:1",
           "nodeType": "FunctionDefinition",
-          "overrides":
-          {
+          "overrides": {
             "id": 20,
             "nodeType": "OverrideSpecifier",
             "overrides": [],
             "src": "194:8:1"
           },
-          "parameters":
-          {
+          "parameters": {
             "id": 19,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "184:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 21,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -227,8 +204,7 @@
           "visibility": "public"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 27,
             "nodeType": "Block",
             "src": "239:3:1",
@@ -241,22 +217,19 @@
           "name": "faa",
           "nameLocation": "217:3:1",
           "nodeType": "FunctionDefinition",
-          "overrides":
-          {
+          "overrides": {
             "id": 25,
             "nodeType": "OverrideSpecifier",
             "overrides": [],
             "src": "230:8:1"
           },
-          "parameters":
-          {
+          "parameters": {
             "id": 24,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "220:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 26,
             "nodeType": "ParameterList",
             "parameters": [],

@@ -1,14 +1,9 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "YulTest":
-            {
-                "evm":
-                {
-                    "bytecode":
-                    {
+    "contracts": {
+        "A": {
+            "YulTest": {
+                "evm": {
+                    "bytecode": {
                         "functionDebugData": {},
                         "generatedSources": [],
                         "linkReferences": {},
@@ -16,14 +11,11 @@
                         "opcodes":"<OPCODES REMOVED>",
                         "sourceMap":"<SOURCEMAP REMOVED>"
                     },
-                    "deployedBytecode":
-                    {
+                    "deployedBytecode": {
                         "functionDebugData": {},
                         "generatedSources": [],
-                        "immutableReferences":
-                        {
-                            "test":
-                            [
+                        "immutableReferences": {
+                            "test": [
                                 {
                                     "length": 32,
                                     "start": 1

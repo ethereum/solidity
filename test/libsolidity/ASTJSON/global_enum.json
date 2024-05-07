@@ -1,21 +1,17 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "E":
-    [
+  "exportedSymbols": {
+    "E": [
       2
     ]
   },
   "id": 3,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "canonicalName": "E",
       "id": 2,
-      "members":
-      [
+      "members": [
         {
           "id": 1,
           "name": "A",

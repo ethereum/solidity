@@ -2,15 +2,13 @@
   "absolutePath": "a",
   "id": 20,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "id": 2,
       "name": "X",
       "nameLocation": "6:1:1",
       "nodeType": "ErrorDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 1,
         "nodeType": "ParameterList",
         "parameters": [],
@@ -19,19 +17,15 @@
       "src": "0:10:1"
     },
     {
-      "body":
-      {
+      "body": {
         "id": 8,
         "nodeType": "Block",
         "src": "29:15:1",
-        "statements":
-        [
+        "statements": [
           {
-            "errorCall":
-            {
+            "errorCall": {
               "arguments": [],
-              "expression":
-              {
+              "expression": {
                 "id": 5,
                 "name": "X",
                 "nodeType": "Identifier",
@@ -60,15 +54,13 @@
       "name": "f",
       "nameLocation": "20:1:1",
       "nodeType": "FunctionDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 3,
         "nodeType": "ParameterList",
         "parameters": [],
         "src": "21:2:1"
       },
-      "returnParameters":
-      {
+      "returnParameters": {
         "id": 4,
         "nodeType": "ParameterList",
         "parameters": [],
@@ -88,15 +80,13 @@
       "name": "C",
       "nameLocation": "54:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "id": 11,
           "name": "T",
           "nameLocation": "68:1:1",
           "nodeType": "ErrorDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 10,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -105,19 +95,15 @@
           "src": "62:10:1"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 17,
             "nodeType": "Block",
             "src": "97:8:1",
-            "statements":
-            [
+            "statements": [
               {
-                "expression":
-                {
+                "expression": {
                   "arguments": [],
-                  "expression":
-                  {
+                  "expression": {
                     "id": 14,
                     "name": "f",
                     "nodeType": "Identifier",
@@ -146,15 +132,13 @@
           "name": "h",
           "nameLocation": "86:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 12,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "87:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],

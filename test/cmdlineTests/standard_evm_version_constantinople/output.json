@@ -1,8 +1,6 @@
 {
-    "sources":
-    {
-        "input.sol":
-        {
+    "sources": {
+        "input.sol": {
             "id": 0
         }
     }

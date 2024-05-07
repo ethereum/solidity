@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 7,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,32 +12,25 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 4,
             "nodeType": "Block",
             "src": "37:51:1",
-            "statements":
-            [
+            "statements": [
               {
-                "AST":
-                {
+                "AST": {
                   "nativeSrc": "56:26:1",
                   "nodeType": "YulBlock",
                   "src": "56:26:1",
-                  "statements":
-                  [
+                  "statements": [
                     {
-                      "body":
-                      {
+                      "body": {
                         "nativeSrc": "71:9:1",
                         "nodeType": "YulBlock",
                         "src": "71:9:1",
-                        "statements":
-                        [
+                        "statements": [
                           {
                             "nativeSrc": "73:5:1",
                             "nodeType": "YulLeave",
@@ -68,15 +60,13 @@
           "name": "l",
           "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "27:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],

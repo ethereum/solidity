@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "7400",
@@ -37,8 +36,7 @@ Transaction trace:
 B.constructor()
 B.g(0)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 137,
                 "file": "Source",
                 "start": 124
@@ -71,8 +69,7 @@ Transaction trace:
 A.constructor()
 A.f(0)",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 231,
                 "file": "Source",
                 "start": 218
@@ -80,10 +77,8 @@ A.f(0)",
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "Source":
-        {
+    "sources": {
+        "Source": {
             "id": 0
         }
     }

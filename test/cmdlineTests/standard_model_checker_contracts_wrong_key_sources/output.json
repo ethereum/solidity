@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "9134",
@@ -12,10 +11,8 @@
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "Source":
-        {
+    "sources": {
+        "Source": {
             "id": 0
         }
     }

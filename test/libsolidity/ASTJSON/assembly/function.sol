@@ -3,4 +3,5 @@ contract C {
         assembly { function g() { pop(blockhash(20)) } g() }
     }
 }
+
 // ----

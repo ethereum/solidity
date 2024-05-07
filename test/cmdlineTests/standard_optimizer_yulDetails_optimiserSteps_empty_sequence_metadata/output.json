@@ -1,18 +1,13 @@
 {
-    "contracts":
-    {
-        "A":
-        {
-            "C":
-            {
+    "contracts": {
+        "A": {
+            "C": {
                 "metadata": "{\"compiler\":{\"version\":\"<VERSION REMOVED>\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"A\":\"C\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"details\":{\"constantOptimizer\":false,\"cse\":false,\"deduplicate\":false,\"inliner\":false,\"jumpdestRemover\":true,\"orderLiterals\":false,\"peephole\":true,\"simpleCounterForLoopUncheckedIncrement\":true,\"yul\":false,\"yulDetails\":{\"optimizerSteps\":\":\"}},\"runs\":200},\"remappings\":[]},\"sources\":{\"A\":{\"keccak256\":\"0xb284c39999cb85b80be315a6e9e322adf67a783c66e91ba4439168694580a66d\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://098cee915fad095b8a996813768bd7d5e8c9e40c405e8c43d0572bb7bbc17334\",\"dweb:/ipfs/QmZmUzvSryrrD7pJ9S32iQnEWn4QBL4J1NdbQqL2Xc3yTr\"]}},\"version\":1}"
             }
         }
     },
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

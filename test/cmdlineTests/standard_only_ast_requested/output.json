@@ -1,27 +1,20 @@
 {
-    "sources":
-    {
-        "A":
-        {
-            "ast":
-            {
+    "sources": {
+        "A": {
+            "ast": {
                 "absolutePath": "A",
-                "exportedSymbols":
-                {
-                    "C":
-                    [
+                "exportedSymbols": {
+                    "C": [
                         6
                     ]
                 },
                 "id": 7,
                 "license": "GPL-3.0",
                 "nodeType": "SourceUnit",
-                "nodes":
-                [
+                "nodes": [
                     {
                         "id": 1,
-                        "literals":
-                        [
+                        "literals": [
                             "solidity",
                             ">=",
                             "0.0"
@@ -37,18 +30,15 @@
                         "contractKind": "contract",
                         "fullyImplemented": true,
                         "id": 6,
-                        "linearizedBaseContracts":
-                        [
+                        "linearizedBaseContracts": [
                             6
                         ],
                         "name": "C",
                         "nameLocation": "68:1:0",
                         "nodeType": "ContractDefinition",
-                        "nodes":
-                        [
+                        "nodes": [
                             {
-                                "body":
-                                {
+                                "body": {
                                     "id": 4,
                                     "nodeType": "Block",
                                     "src": "97:2:0",
@@ -62,15 +52,13 @@
                                 "name": "f",
                                 "nameLocation": "81:1:0",
                                 "nodeType": "FunctionDefinition",
-                                "parameters":
-                                {
+                                "parameters": {
                                     "id": 2,
                                     "nodeType": "ParameterList",
                                     "parameters": [],
                                     "src": "82:2:0"
                                 },
-                                "returnParameters":
-                                {
+                                "returnParameters": {
                                     "id": 3,
                                     "nodeType": "ParameterList",
                                     "parameters": [],

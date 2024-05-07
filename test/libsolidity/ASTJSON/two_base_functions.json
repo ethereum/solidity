@@ -1,24 +1,19 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "A":
-    [
+  "exportedSymbols": {
+    "A": [
       5
     ],
-    "B":
-    [
+    "B": [
       10
     ],
-    "C":
-    [
+    "C": [
       22
     ]
   },
   "id": 23,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -27,18 +22,15 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 5,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         5
       ],
       "name": "A",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 3,
             "nodeType": "Block",
             "src": "45:2:1",
@@ -52,15 +44,13 @@
           "name": "f",
           "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "27:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -86,18 +76,15 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 10,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         10
       ],
       "name": "B",
       "nameLocation": "59:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "body":
-          {
+          "body": {
             "id": 8,
             "nodeType": "Block",
             "src": "95:2:1",
@@ -111,15 +98,13 @@
           "name": "f",
           "nameLocation": "76:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 6,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "77:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 7,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -139,15 +124,12 @@
     },
     {
       "abstract": false,
-      "baseContracts":
-      [
+      "baseContracts": [
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 11,
             "name": "A",
-            "nameLocations":
-            [
+            "nameLocations": [
               "114:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -159,12 +141,10 @@
           "src": "114:1:1"
         },
         {
-          "baseName":
-          {
+          "baseName": {
             "id": 13,
             "name": "B",
-            "nameLocations":
-            [
+            "nameLocations": [
               "117:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -181,8 +161,7 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 22,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         22,
         10,
         5
@@ -190,16 +169,13 @@
       "name": "C",
       "nameLocation": "109:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
-          "baseFunctions":
-          [
+          "baseFunctions": [
             4,
             9
           ],
-          "body":
-          {
+          "body": {
             "id": 20,
             "nodeType": "Block",
             "src": "160:2:1",
@@ -213,17 +189,14 @@
           "name": "f",
           "nameLocation": "134:1:1",
           "nodeType": "FunctionDefinition",
-          "overrides":
-          {
+          "overrides": {
             "id": 18,
             "nodeType": "OverrideSpecifier",
-            "overrides":
-            [
+            "overrides": [
               {
                 "id": 16,
                 "name": "A",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "154:1:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -233,8 +206,7 @@
               {
                 "id": 17,
                 "name": "B",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "157:1:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -244,15 +216,13 @@
             ],
             "src": "145:14:1"
           },
-          "parameters":
-          {
+          "parameters": {
             "id": 15,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "135:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 19,
             "nodeType": "ParameterList",
             "parameters": [],

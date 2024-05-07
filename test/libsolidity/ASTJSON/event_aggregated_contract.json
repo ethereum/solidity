@@ -1,20 +1,16 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       10
     ],
-    "D":
-    [
+    "D": [
       30
     ]
   },
   "id": 31,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -23,15 +19,13 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 10,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         10
       ],
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "anonymous": false,
           "eventSelector": "ffae15ba29768297c9b951e2e14bc33dc84599d1572acc234266fc70392babc8",
@@ -39,8 +33,7 @@
           "name": "e",
           "nameLocation": "23:1:1",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 1,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -49,19 +42,15 @@
           "src": "17:10:1"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 8,
             "nodeType": "Block",
             "src": "52:25:1",
-            "statements":
-            [
+            "statements": [
               {
-                "eventCall":
-                {
+                "eventCall": {
                   "arguments": [],
-                  "expression":
-                  {
+                  "expression": {
                     "argumentTypes": [],
                     "id": 5,
                     "name": "e",
@@ -69,8 +58,7 @@
                     "overloadedDeclarations": [],
                     "referencedDeclaration": 2,
                     "src": "67:1:1",
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_function_event_nonpayable$__$returns$__$",
                       "typeString": "function ()"
                     }
@@ -86,8 +74,7 @@
                   "nodeType": "FunctionCall",
                   "src": "67:3:1",
                   "tryCall": false,
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_tuple$__$",
                     "typeString": "tuple()"
                   }
@@ -106,15 +93,13 @@
           "name": "f",
           "nameLocation": "41:1:1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 3,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "42:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 4,
             "nodeType": "ParameterList",
             "parameters": [],
@@ -130,8 +115,7 @@
       "scope": 31,
       "src": "0:79:1",
       "usedErrors": [],
-      "usedEvents":
-      [
+      "usedEvents": [
         2
       ]
     },
@@ -139,22 +123,19 @@
       "abstract": false,
       "baseContracts": [],
       "canonicalName": "D",
-      "contractDependencies":
-      [
+      "contractDependencies": [
         10
       ],
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 30,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         30
       ],
       "name": "D",
       "nameLocation": "89:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "constant": false,
           "id": 13,
@@ -166,21 +147,17 @@
           "src": "97:3:1",
           "stateVariable": true,
           "storageLocation": "default",
-          "typeDescriptions":
-          {
+          "typeDescriptions": {
             "typeIdentifier": "t_contract$_C_$10",
             "typeString": "contract C"
           },
-          "typeName":
-          {
+          "typeName": {
             "id": 12,
             "nodeType": "UserDefinedTypeName",
-            "pathNode":
-            {
+            "pathNode": {
               "id": 11,
               "name": "C",
-              "nameLocations":
-              [
+              "nameLocations": [
                 "97:1:1"
               ],
               "nodeType": "IdentifierPath",
@@ -189,8 +166,7 @@
             },
             "referencedDeclaration": 10,
             "src": "97:1:1",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_contract$_C_$10",
               "typeString": "contract C"
             }
@@ -198,42 +174,35 @@
           "visibility": "internal"
         },
         {
-          "body":
-          {
+          "body": {
             "id": 28,
             "nodeType": "Block",
             "src": "120:43:1",
-            "statements":
-            [
+            "statements": [
               {
-                "expression":
-                {
+                "expression": {
                   "id": 21,
                   "isConstant": false,
                   "isLValue": false,
                   "isPure": false,
                   "lValueRequested": false,
-                  "leftHandSide":
-                  {
+                  "leftHandSide": {
                     "id": 16,
                     "name": "c",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
                     "referencedDeclaration": 13,
                     "src": "130:1:1",
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_contract$_C_$10",
                       "typeString": "contract C"
                     }
                   },
                   "nodeType": "Assignment",
                   "operator": "=",
-                  "rightHandSide":
-                  {
+                  "rightHandSide": {
                     "arguments": [],
-                    "expression":
-                    {
+                    "expression": {
                       "argumentTypes": [],
                       "id": 19,
                       "isConstant": false,
@@ -242,21 +211,17 @@
                       "lValueRequested": false,
                       "nodeType": "NewExpression",
                       "src": "134:5:1",
-                      "typeDescriptions":
-                      {
+                      "typeDescriptions": {
                         "typeIdentifier": "t_function_creation_nonpayable$__$returns$_t_contract$_C_$10_$",
                         "typeString": "function () returns (contract C)"
                       },
-                      "typeName":
-                      {
+                      "typeName": {
                         "id": 18,
                         "nodeType": "UserDefinedTypeName",
-                        "pathNode":
-                        {
+                        "pathNode": {
                           "id": 17,
                           "name": "C",
-                          "nameLocations":
-                          [
+                          "nameLocations": [
                             "138:1:1"
                           ],
                           "nodeType": "IdentifierPath",
@@ -265,8 +230,7 @@
                         },
                         "referencedDeclaration": 10,
                         "src": "138:1:1",
-                        "typeDescriptions":
-                        {
+                        "typeDescriptions": {
                           "typeIdentifier": "t_contract$_C_$10",
                           "typeString": "contract C"
                         }
@@ -283,15 +247,13 @@
                     "nodeType": "FunctionCall",
                     "src": "134:7:1",
                     "tryCall": false,
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_contract$_C_$10",
                       "typeString": "contract C"
                     }
                   },
                   "src": "130:11:1",
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_contract$_C_$10",
                     "typeString": "contract C"
                   }
@@ -301,22 +263,18 @@
                 "src": "130:11:1"
               },
               {
-                "expression":
-                {
+                "expression": {
                   "arguments": [],
-                  "expression":
-                  {
+                  "expression": {
                     "argumentTypes": [],
-                    "expression":
-                    {
+                    "expression": {
                       "id": 23,
                       "name": "c",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
                       "referencedDeclaration": 13,
                       "src": "151:1:1",
-                      "typeDescriptions":
-                      {
+                      "typeDescriptions": {
                         "typeIdentifier": "t_contract$_C_$10",
                         "typeString": "contract C"
                       }
@@ -331,8 +289,7 @@
                     "nodeType": "MemberAccess",
                     "referencedDeclaration": 9,
                     "src": "151:3:1",
-                    "typeDescriptions":
-                    {
+                    "typeDescriptions": {
                       "typeIdentifier": "t_function_external_nonpayable$__$returns$__$",
                       "typeString": "function () external"
                     }
@@ -348,8 +305,7 @@
                   "nodeType": "FunctionCall",
                   "src": "151:5:1",
                   "tryCall": false,
-                  "typeDescriptions":
-                  {
+                  "typeDescriptions": {
                     "typeIdentifier": "t_tuple$__$",
                     "typeString": "tuple()"
                   }
@@ -367,15 +323,13 @@
           "name": "",
           "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 14,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "117:2:1"
           },
-          "returnParameters":
-          {
+          "returnParameters": {
             "id": 15,
             "nodeType": "ParameterList",
             "parameters": [],

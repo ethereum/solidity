@@ -1,12 +1,9 @@
 {
-    "sources":
-    {
-        "a.sol":
-        {
+    "sources": {
+        "a.sol": {
             "id": 0
         },
-        "b.sol":
-        {
+        "b.sol": {
             "id": 1
         }
     }

@@ -1,12 +1,8 @@
 {
-    "contracts":
-    {
-        "C":
-        {
-            "C":
-            {
-                "evm":
-                {
+    "contracts": {
+        "C": {
+            "C": {
+                "evm": {
                     "assembly": "    /* \"C\":79:503  contract C... */
   0xa0
   jumpi(tag_5, callvalue)
@@ -350,12 +346,9 @@ sub_0: assembly {
                 }
             }
         },
-        "D":
-        {
-            "D":
-            {
-                "evm":
-                {
+        "D": {
+            "D": {
+                "evm": {
                     "assembly": "    /* \"D\":91:181  contract D is C(3)... */
   0xa0
   jumpi(tag_5, callvalue)
@@ -716,14 +709,11 @@ sub_0: assembly {
             }
         }
     },
-    "sources":
-    {
-        "C":
-        {
+    "sources": {
+        "C": {
             "id": 0
         },
-        "D":
-        {
+        "D": {
             "id": 1
         }
     }

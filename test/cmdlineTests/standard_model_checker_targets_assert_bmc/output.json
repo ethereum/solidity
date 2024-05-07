@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "4661",
@@ -18,8 +17,7 @@ Note:
 
 ",
             "message": "BMC: Assertion violation happens here.",
-            "secondarySourceLocations":
-            [
+            "secondarySourceLocations": [
                 {
                     "message": "Counterexample:
   a = 0
@@ -34,8 +32,7 @@ Note:
                 }
             ],
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 258,
                 "file": "A",
                 "start": 245
@@ -43,10 +40,8 @@ Note:
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

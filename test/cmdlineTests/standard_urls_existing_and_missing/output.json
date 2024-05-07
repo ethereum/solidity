@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "formattedMessage": "Cannot import url (\"standard_urls_existing_and_missing/non-existent-contract-1.sol\"): File not found. Searched the following locations: \"\".",
@@ -9,10 +8,8 @@
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "url_not_found.sol":
-        {
+    "sources": {
+        "url_not_found.sol": {
             "id": 0
         }
     }

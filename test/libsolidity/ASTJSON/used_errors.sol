@@ -4,4 +4,5 @@ contract C {
     error T();
     function h() public { f(); }
 }
+
 // ----

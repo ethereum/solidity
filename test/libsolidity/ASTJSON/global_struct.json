@@ -1,21 +1,17 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "S":
-    [
+  "exportedSymbols": {
+    "S": [
       3
     ]
   },
   "id": 4,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "canonicalName": "S",
       "id": 3,
-      "members":
-      [
+      "members": [
         {
           "constant": false,
           "id": 2,
@@ -27,19 +23,16 @@
           "src": "11:9:1",
           "stateVariable": false,
           "storageLocation": "default",
-          "typeDescriptions":
-          {
+          "typeDescriptions": {
             "typeIdentifier": "t_uint256",
             "typeString": "uint256"
           },
-          "typeName":
-          {
+          "typeName": {
             "id": 1,
             "name": "uint256",
             "nodeType": "ElementaryTypeName",
             "src": "11:7:1",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_uint256",
               "typeString": "uint256"
             }

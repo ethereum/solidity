@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 11,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,8 +12,7 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "constant": false,
           "id": 3,
@@ -26,16 +24,14 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 1,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
             "src": "17:4:1",
             "typeDescriptions": {}
           },
-          "value":
-          {
+          "value": {
             "hexValue": "34",
             "id": 2,
             "kind": "number",
@@ -57,16 +53,14 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 4,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
             "src": "50:4:1",
             "typeDescriptions": {}
           },
-          "value":
-          {
+          "value": {
             "hexValue": "32",
             "id": 5,
             "kind": "number",
@@ -88,16 +82,14 @@
           "stateVariable": false,
           "storageLocation": "default",
           "typeDescriptions": {},
-          "typeName":
-          {
+          "typeName": {
             "id": 7,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
             "src": "82:4:1",
             "typeDescriptions": {}
           },
-          "value":
-          {
+          "value": {
             "hexValue": "33",
             "id": 8,
             "kind": "number",

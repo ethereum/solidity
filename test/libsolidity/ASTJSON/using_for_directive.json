@@ -1,34 +1,26 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "C":
-    [
+  "exportedSymbols": {
+    "C": [
       13
     ],
-    "L":
-    [
+    "L": [
       4
     ],
-    "f":
-    [
+    "f": [
       10
     ]
   },
   "id": 14,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
-      "functionList":
-      [
+      "functionList": [
         {
-          "function":
-          {
+          "function": {
             "id": 1,
             "name": "f",
-            "nameLocations":
-            [
+            "nameLocations": [
               "7:1:1"
             ],
             "nodeType": "IdentifierPath",
@@ -41,14 +33,12 @@
       "id": 3,
       "nodeType": "UsingForDirective",
       "src": "0:19:1",
-      "typeName":
-      {
+      "typeName": {
         "id": 2,
         "name": "uint",
         "nodeType": "ElementaryTypeName",
         "src": "14:4:1",
-        "typeDescriptions":
-        {
+        "typeDescriptions": {
           "typeIdentifier": "t_uint256",
           "typeString": "uint256"
         }
@@ -62,8 +52,7 @@
       "contractKind": "library",
       "fullyImplemented": true,
       "id": 4,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         4
       ],
       "name": "L",
@@ -76,8 +65,7 @@
       "usedEvents": []
     },
     {
-      "body":
-      {
+      "body": {
         "id": 9,
         "nodeType": "Block",
         "src": "50:2:1",
@@ -90,12 +78,10 @@
       "name": "f",
       "nameLocation": "42:1:1",
       "nodeType": "FunctionDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 7,
         "nodeType": "ParameterList",
-        "parameters":
-        [
+        "parameters": [
           {
             "constant": false,
             "id": 6,
@@ -107,19 +93,16 @@
             "src": "44:4:1",
             "stateVariable": false,
             "storageLocation": "default",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_uint256",
               "typeString": "uint256"
             },
-            "typeName":
-            {
+            "typeName": {
               "id": 5,
               "name": "uint",
               "nodeType": "ElementaryTypeName",
               "src": "44:4:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_uint256",
                 "typeString": "uint256"
               }
@@ -129,8 +112,7 @@
         ],
         "src": "43:6:1"
       },
-      "returnParameters":
-      {
+      "returnParameters": {
         "id": 8,
         "nodeType": "ParameterList",
         "parameters": [],
@@ -150,24 +132,20 @@
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 13,
-      "linearizedBaseContracts":
-      [
+      "linearizedBaseContracts": [
         13
       ],
       "name": "C",
       "nameLocation": "62:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "global": false,
           "id": 12,
-          "libraryName":
-          {
+          "libraryName": {
             "id": 11,
             "name": "L",
-            "nameLocations":
-            [
+            "nameLocations": [
               "72:1:1"
             ],
             "nodeType": "IdentifierPath",

@@ -1,25 +1,20 @@
 {
   "absolutePath": "a",
-  "exportedSymbols":
-  {
-    "A":
-    [
+  "exportedSymbols": {
+    "A": [
       3
     ],
-    "f":
-    [
+    "f": [
       13
     ]
   },
   "id": 14,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "canonicalName": "A",
       "id": 3,
-      "members":
-      [
+      "members": [
         {
           "id": 1,
           "name": "X",
@@ -41,26 +36,21 @@
       "src": "0:15:1"
     },
     {
-      "body":
-      {
+      "body": {
         "id": 12,
         "nodeType": "Block",
         "src": "46:15:1",
-        "statements":
-        [
+        "statements": [
           {
-            "expression":
-            {
-              "expression":
-              {
+            "expression": {
+              "expression": {
                 "id": 9,
                 "name": "A",
                 "nodeType": "Identifier",
                 "overloadedDeclarations": [],
                 "referencedDeclaration": 3,
                 "src": "55:1:1",
-                "typeDescriptions":
-                {
+                "typeDescriptions": {
                   "typeIdentifier": "t_type$_t_enum$_A_$3_$",
                   "typeString": "type(enum A)"
                 }
@@ -75,8 +65,7 @@
               "nodeType": "MemberAccess",
               "referencedDeclaration": 1,
               "src": "55:3:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_enum$_A_$3",
                 "typeString": "enum A"
               }
@@ -95,19 +84,16 @@
       "name": "f",
       "nameLocation": "25:1:1",
       "nodeType": "FunctionDefinition",
-      "parameters":
-      {
+      "parameters": {
         "id": 4,
         "nodeType": "ParameterList",
         "parameters": [],
         "src": "26:2:1"
       },
-      "returnParameters":
-      {
+      "returnParameters": {
         "id": 8,
         "nodeType": "ParameterList",
-        "parameters":
-        [
+        "parameters": [
           {
             "constant": false,
             "id": 7,
@@ -119,21 +105,17 @@
             "src": "43:1:1",
             "stateVariable": false,
             "storageLocation": "default",
-            "typeDescriptions":
-            {
+            "typeDescriptions": {
               "typeIdentifier": "t_enum$_A_$3",
               "typeString": "enum A"
             },
-            "typeName":
-            {
+            "typeName": {
               "id": 6,
               "nodeType": "UserDefinedTypeName",
-              "pathNode":
-              {
+              "pathNode": {
                 "id": 5,
                 "name": "A",
-                "nameLocations":
-                [
+                "nameLocations": [
                   "43:1:1"
                 ],
                 "nodeType": "IdentifierPath",
@@ -142,8 +124,7 @@
               },
               "referencedDeclaration": 3,
               "src": "43:1:1",
-              "typeDescriptions":
-              {
+              "typeDescriptions": {
                 "typeIdentifier": "t_enum$_A_$3",
                 "typeString": "enum A"
               }

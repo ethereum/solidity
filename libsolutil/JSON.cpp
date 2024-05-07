@@ -25,9 +25,7 @@
 #include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/trim.hpp>
 
-#include <map>
 #include <sstream>
 
 #ifdef STRICT_NLOHMANN_JSON_VERSION_CHECK
@@ -63,64 +61,6 @@ void removeNullMembersHelper(Json& _json)
 			}
 		}
 	}
-}
-
-std::string trimRightAllLines(std::string const& input)
-{
-	std::vector<std::string> lines;
-	std::string output;
-	boost::split(lines, input, boost::is_any_of("\n"));
-	for (auto& line: lines)
-	{
-		boost::trim_right(line);
-		if (!line.empty())
-			output += line + "\n";
-	}
-	return boost::trim_right_copy(output);
-}
-
-std::string formatLikeJsoncpp(std::string const& _dumped, JsonFormat const& _format)
-{
-	uint32_t indentLevel = 0;
-	std::stringstream reformatted;
-	bool inQuotes = false;
-	for (size_t i = 0; i < _dumped.size(); ++i)
-	{
-		char c = _dumped[i];
-		bool emptyThing = false;
-
-		if (c == '"' && (i == 0 || _dumped[i - 1] != '\\'))
-			inQuotes = !inQuotes;
-
-		if (!inQuotes)
-		{
-			if (i < _dumped.size() - 1)
-			{
-				char nc = _dumped[i + 1];
-				if ((c == '[' && nc == ']') || (c == '{' && nc == '}'))
-					emptyThing = true;
-			}
-			if (c == '[' || c == '{')
-			{
-				if (i > 0 && _dumped[i - 1] != '\n')
-					if (!emptyThing)
-						reformatted << '\n' << std::string(indentLevel * _format.indent, ' ');
-				indentLevel++;
-			}
-			else if (c == ']' || c == '}')
-			{
-				indentLevel--;
-				if (i + 1 < _dumped.size() && _dumped[i + 1] != '\n'
-					&& (_dumped[i + 1] == ']' || _dumped[i + 1] == '}'))
-					reformatted << '\n' << std::string(indentLevel * _format.indent, ' ');
-			}
-		}
-		reformatted << c;
-		if (!emptyThing && !inQuotes && (c == '[' || c == '{') && indentLevel > 0 && i + 1 < _dumped.size()
-			&& _dumped[i + 1] != '\n')
-			reformatted << '\n' << std::string(indentLevel * _format.indent, ' ');
-	}
-	return trimRightAllLines(reformatted.str());
 }
 
 std::string escapeNewlinesAndTabsWithinStringLiterals(std::string const& _json)
@@ -200,10 +140,6 @@ std::string jsonPrint(Json const& _input, JsonFormat const& _format)
 		/* indent_char */ ' ',
 		/* ensure_ascii */ true
 	);
-
-	// let's remove this once all test-cases having the correct output.
-	if (_format.format == JsonFormat::Pretty)
-		dumped = formatLikeJsoncpp(dumped, _format);
 
 	return dumped;
 }

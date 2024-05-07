@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "1236",
@@ -18,8 +17,7 @@ Note:
 
 ",
             "message": "BMC: Insufficient funds happens here.",
-            "secondarySourceLocations":
-            [
+            "secondarySourceLocations": [
                 {
                     "message": "Counterexample:
   a = 0
@@ -34,8 +32,7 @@ Note:
                 }
             ],
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 237,
                 "file": "A",
                 "start": 224
@@ -43,10 +40,8 @@ Note:
             "type": "Warning"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

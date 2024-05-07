@@ -2,8 +2,7 @@
   "absolutePath": "a",
   "id": 8,
   "nodeType": "SourceUnit",
-  "nodes":
-  [
+  "nodes": [
     {
       "abstract": false,
       "baseContracts": [],
@@ -13,20 +12,17 @@
       "name": "C",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
-      "nodes":
-      [
+      "nodes": [
         {
           "anonymous": false,
           "id": 6,
           "name": "E",
           "nameLocation": "23:1:1",
           "nodeType": "EventDefinition",
-          "parameters":
-          {
+          "parameters": {
             "id": 5,
             "nodeType": "ParameterList",
-            "parameters":
-            [
+            "parameters": [
               {
                 "constant": false,
                 "id": 4,
@@ -39,19 +35,16 @@
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {},
-                "typeName":
-                {
+                "typeName": {
                   "id": 3,
                   "nodeType": "FunctionTypeName",
-                  "parameterTypes":
-                  {
+                  "parameterTypes": {
                     "id": 1,
                     "nodeType": "ParameterList",
                     "parameters": [],
                     "src": "33:2:1"
                   },
-                  "returnParameterTypes":
-                  {
+                  "returnParameterTypes": {
                     "id": 2,
                     "nodeType": "ParameterList",
                     "parameters": [],

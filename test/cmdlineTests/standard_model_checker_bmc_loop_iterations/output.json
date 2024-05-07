@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "6002",
@@ -12,10 +11,8 @@
             "type": "Info"
         }
     ],
-    "sources":
-    {
-        "Source":
-        {
+    "sources": {
+        "Source": {
             "id": 0
         }
     }

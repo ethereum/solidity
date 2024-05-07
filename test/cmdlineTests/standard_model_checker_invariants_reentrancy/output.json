@@ -1,6 +1,5 @@
 {
-    "errors":
-    [
+    "errors": [
         {
             "component": "general",
             "errorCode": "9302",
@@ -13,8 +12,7 @@
 ",
             "message": "Return value of low-level calls not used.",
             "severity": "warning",
-            "sourceLocation":
-            {
+            "sourceLocation": {
                 "end": 143,
                 "file": "A",
                 "start": 132
@@ -50,10 +48,8 @@
             "type": "Info"
         }
     ],
-    "sources":
-    {
-        "A":
-        {
+    "sources": {
+        "A": {
             "id": 0
         }
     }

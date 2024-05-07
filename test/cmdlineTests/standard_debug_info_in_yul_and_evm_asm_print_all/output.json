@@ -1,12 +1,8 @@
 {
-    "contracts":
-    {
-        "C":
-        {
-            "C":
-            {
-                "evm":
-                {
+    "contracts": {
+        "C": {
+            "C": {
+                "evm": {
                     "assembly": "    /* \"C\":60:101  contract C {... */
   mstore(0x40, 0x80)
   callvalue
@@ -211,10 +207,8 @@ object \"C_6\" {
             }
         }
     },
-    "sources":
-    {
-        "C":
-        {
+    "sources": {
+        "C": {
             "id": 0
         }
     }

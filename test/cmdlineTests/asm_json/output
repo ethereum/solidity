@@ -2,8 +2,7 @@
 ======= asm_json/input.sol:C =======
 EVM assembly:
 {
-  ".code":
-  [
+  ".code": [
     {
       "begin": 60,
       "end": 160,
@@ -140,13 +139,10 @@ EVM assembly:
       "source": 0
     }
   ],
-  ".data":
-  {
-    "0":
-    {
+  ".data": {
+    "0": {
       ".auxdata": "<BYTECODE REMOVED>",
-      ".code":
-      [
+      ".code": [
         {
           "begin": 60,
           "end": 160,
@@ -1570,8 +1566,7 @@ EVM assembly:
       ]
     }
   },
-  "sourceList":
-  [
+  "sourceList": [
     "asm_json/input.sol",
     "#utility.yul"
   ]

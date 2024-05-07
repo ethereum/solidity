@@ -1,32 +1,22 @@
 {
-    "contracts":
-    {
-        "C":
-        {
-            "C":
-            {
-                "irOptimizedAst":
-                {
-                    "code":
-                    {
-                        "block":
-                        {
+    "contracts": {
+        "C": {
+            "C": {
+                "irOptimizedAst": {
+                    "code": {
+                        "block": {
                             "nativeSrc": "44:790:0",
                             "nodeType": "YulBlock",
                             "src": "-1:-1:0",
-                            "statements":
-                            [
+                            "statements": [
                                 {
                                     "nativeSrc": "44:790:0",
                                     "nodeType": "YulBlock",
                                     "src": "-1:-1:0",
-                                    "statements":
-                                    [
+                                    "statements": [
                                         {
-                                            "expression":
-                                            {
-                                                "arguments":
-                                                [
+                                            "expression": {
+                                                "arguments": [
                                                     {
                                                         "kind": "number",
                                                         "nativeSrc": "103:2:0",
@@ -36,8 +26,7 @@
                                                         "value": "64"
                                                     },
                                                     {
-                                                        "arguments":
-                                                        [
+                                                        "arguments": [
                                                             {
                                                                 "kind": "number",
                                                                 "nativeSrc": "119:3:0",
@@ -47,8 +36,7 @@
                                                                 "value": "0x80"
                                                             }
                                                         ],
-                                                        "functionName":
-                                                        {
+                                                        "functionName": {
                                                             "name": "memoryguard",
                                                             "nativeSrc": "107:11:0",
                                                             "nodeType": "YulIdentifier",
@@ -59,8 +47,7 @@
                                                         "src": "56:13:0"
                                                     }
                                                 ],
-                                                "functionName":
-                                                {
+                                                "functionName": {
                                                     "name": "mstore",
                                                     "nativeSrc": "96:6:0",
                                                     "nodeType": "YulIdentifier",
@@ -75,19 +62,15 @@
                                             "src": "56:13:0"
                                         },
                                         {
-                                            "body":
-                                            {
+                                            "body": {
                                                 "nativeSrc": "148:83:0",
                                                 "nodeType": "YulBlock",
                                                 "src": "56:13:0",
-                                                "statements":
-                                                [
+                                                "statements": [
                                                     {
-                                                        "expression":
-                                                        {
+                                                        "expression": {
                                                             "arguments": [],
-                                                            "functionName":
-                                                            {
+                                                            "functionName": {
                                                                 "name": "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
                                                                 "nativeSrc": "150:77:0",
                                                                 "nodeType": "YulIdentifier",
@@ -103,11 +86,9 @@
                                                     }
                                                 ]
                                             },
-                                            "condition":
-                                            {
+                                            "condition": {
                                                 "arguments": [],
-                                                "functionName":
-                                                {
+                                                "functionName": {
                                                     "name": "callvalue",
                                                     "nativeSrc": "136:9:0",
                                                     "nodeType": "YulIdentifier",
@@ -125,11 +106,9 @@
                                             "nativeSrc": "268:30:0",
                                             "nodeType": "YulVariableDeclaration",
                                             "src": "56:13:0",
-                                            "value":
-                                            {
+                                            "value": {
                                                 "arguments": [],
-                                                "functionName":
-                                                {
+                                                "functionName": {
                                                     "name": "allocate_unbounded",
                                                     "nativeSrc": "278:18:0",
                                                     "nodeType": "YulIdentifier",
@@ -139,8 +118,7 @@
                                                 "nodeType": "YulFunctionCall",
                                                 "src": "56:13:0"
                                             },
-                                            "variables":
-                                            [
+                                            "variables": [
                                                 {
                                                     "name": "_1",
                                                     "nativeSrc": "272:2:0",
@@ -151,10 +129,8 @@
                                             ]
                                         },
                                         {
-                                            "expression":
-                                            {
-                                                "arguments":
-                                                [
+                                            "expression": {
+                                                "arguments": [
                                                     {
                                                         "name": "_1",
                                                         "nativeSrc": "316:2:0",
@@ -162,8 +138,7 @@
                                                         "src": "56:13:0"
                                                     },
                                                     {
-                                                        "arguments":
-                                                        [
+                                                        "arguments": [
                                                             {
                                                                 "hexValue": "435f325f6465706c6f796564",
                                                                 "kind": "string",
@@ -174,8 +149,7 @@
                                                                 "value": "C_2_deployed"
                                                             }
                                                         ],
-                                                        "functionName":
-                                                        {
+                                                        "functionName": {
                                                             "name": "dataoffset",
                                                             "nativeSrc": "320:10:0",
                                                             "nodeType": "YulIdentifier",
@@ -186,8 +160,7 @@
                                                         "src": "56:13:0"
                                                     },
                                                     {
-                                                        "arguments":
-                                                        [
+                                                        "arguments": [
                                                             {
                                                                 "hexValue": "435f325f6465706c6f796564",
                                                                 "kind": "string",
@@ -198,8 +171,7 @@
                                                                 "value": "C_2_deployed"
                                                             }
                                                         ],
-                                                        "functionName":
-                                                        {
+                                                        "functionName": {
                                                             "name": "datasize",
                                                             "nativeSrc": "348:8:0",
                                                             "nodeType": "YulIdentifier",
@@ -210,8 +182,7 @@
                                                         "src": "56:13:0"
                                                     }
                                                 ],
-                                                "functionName":
-                                                {
+                                                "functionName": {
                                                     "name": "codecopy",
                                                     "nativeSrc": "307:8:0",
                                                     "nodeType": "YulIdentifier",
@@ -226,10 +197,8 @@
                                             "src": "56:13:0"
                                         },
                                         {
-                                            "expression":
-                                            {
-                                                "arguments":
-                                                [
+                                            "expression": {
+                                                "arguments": [
                                                     {
                                                         "name": "_1",
                                                         "nativeSrc": "390:2:0",
@@ -237,8 +206,7 @@
                                                         "src": "56:13:0"
                                                     },
                                                     {
-                                                        "arguments":
-                                                        [
+                                                        "arguments": [
                                                             {
                                                                 "hexValue": "435f325f6465706c6f796564",
                                                                 "kind": "string",
@@ -249,8 +217,7 @@
                                                                 "value": "C_2_deployed"
                                                             }
                                                         ],
-                                                        "functionName":
-                                                        {
+                                                        "functionName": {
                                                             "name": "datasize",
                                                             "nativeSrc": "394:8:0",
                                                             "nodeType": "YulIdentifier",
@@ -261,8 +228,7 @@
                                                         "src": "56:13:0"
                                                     }
                                                 ],
-                                                "functionName":
-                                                {
+                                                "functionName": {
                                                     "name": "return",
                                                     "nativeSrc": "383:6:0",
                                                     "nodeType": "YulIdentifier",
@@ -279,21 +245,17 @@
                                     ]
                                 },
                                 {
-                                    "body":
-                                    {
+                                    "body": {
                                         "nativeSrc": "469:43:0",
                                         "nodeType": "YulBlock",
                                         "src": "56:13:0",
-                                        "statements":
-                                        [
+                                        "statements": [
                                             {
                                                 "nativeSrc": "483:19:0",
                                                 "nodeType": "YulAssignment",
                                                 "src": "56:13:0",
-                                                "value":
-                                                {
-                                                    "arguments":
-                                                    [
+                                                "value": {
+                                                    "arguments": [
                                                         {
                                                             "kind": "number",
                                                             "nativeSrc": "499:2:0",
@@ -303,8 +265,7 @@
                                                             "value": "64"
                                                         }
                                                     ],
-                                                    "functionName":
-                                                    {
+                                                    "functionName": {
                                                         "name": "mload",
                                                         "nativeSrc": "493:5:0",
                                                         "nodeType": "YulIdentifier",
@@ -314,8 +275,7 @@
                                                     "nodeType": "YulFunctionCall",
                                                     "src": "56:13:0"
                                                 },
-                                                "variableNames":
-                                                [
+                                                "variableNames": [
                                                     {
                                                         "name": "memPtr",
                                                         "nativeSrc": "483:6:0",
@@ -329,8 +289,7 @@
                                     "name": "allocate_unbounded",
                                     "nativeSrc": "429:83:0",
                                     "nodeType": "YulFunctionDefinition",
-                                    "returnVariables":
-                                    [
+                                    "returnVariables": [
                                         {
                                             "name": "memPtr",
                                             "nativeSrc": "462:6:0",
@@ -342,18 +301,14 @@
                                     "src": "56:13:0"
                                 },
                                 {
-                                    "body":
-                                    {
+                                    "body": {
                                         "nativeSrc": "611:36:0",
                                         "nodeType": "YulBlock",
                                         "src": "56:13:0",
-                                        "statements":
-                                        [
+                                        "statements": [
                                             {
-                                                "expression":
-                                                {
-                                                    "arguments":
-                                                    [
+                                                "expression": {
+                                                    "arguments": [
                                                         {
                                                             "kind": "number",
                                                             "nativeSrc": "632:1:0",
@@ -371,8 +326,7 @@
                                                             "value": "0"
                                                         }
                                                     ],
-                                                    "functionName":
-                                                    {
+                                                    "functionName": {
                                                         "name": "revert",
                                                         "nativeSrc": "625:6:0",
                                                         "nodeType": "YulIdentifier",
@@ -399,29 +353,22 @@
                     },
                     "name": "C_2",
                     "nodeType": "YulObject",
-                    "subObjects":
-                    [
+                    "subObjects": [
                         {
-                            "code":
-                            {
-                                "block":
-                                {
+                            "code": {
+                                "block": {
                                     "nativeSrc": "899:588:0",
                                     "nodeType": "YulBlock",
                                     "src": "-1:-1:0",
-                                    "statements":
-                                    [
+                                    "statements": [
                                         {
                                             "nativeSrc": "899:588:0",
                                             "nodeType": "YulBlock",
                                             "src": "-1:-1:0",
-                                            "statements":
-                                            [
+                                            "statements": [
                                                 {
-                                                    "expression":
-                                                    {
-                                                        "arguments":
-                                                        [
+                                                    "expression": {
+                                                        "arguments": [
                                                             {
                                                                 "kind": "number",
                                                                 "nativeSrc": "966:2:0",
@@ -431,8 +378,7 @@
                                                                 "value": "64"
                                                             },
                                                             {
-                                                                "arguments":
-                                                                [
+                                                                "arguments": [
                                                                     {
                                                                         "kind": "number",
                                                                         "nativeSrc": "982:3:0",
@@ -442,8 +388,7 @@
                                                                         "value": "0x80"
                                                                     }
                                                                 ],
-                                                                "functionName":
-                                                                {
+                                                                "functionName": {
                                                                     "name": "memoryguard",
                                                                     "nativeSrc": "970:11:0",
                                                                     "nodeType": "YulIdentifier",
@@ -454,8 +399,7 @@
                                                                 "src": "56:13:0"
                                                             }
                                                         ],
-                                                        "functionName":
-                                                        {
+                                                        "functionName": {
                                                             "name": "mstore",
                                                             "nativeSrc": "959:6:0",
                                                             "nodeType": "YulIdentifier",
@@ -470,11 +414,9 @@
                                                     "src": "56:13:0"
                                                 },
                                                 {
-                                                    "expression":
-                                                    {
+                                                    "expression": {
                                                         "arguments": [],
-                                                        "functionName":
-                                                        {
+                                                        "functionName": {
                                                             "name": "revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74",
                                                             "nativeSrc": "1001:77:0",
                                                             "nodeType": "YulIdentifier",
@@ -491,18 +433,14 @@
                                             ]
                                         },
                                         {
-                                            "body":
-                                            {
+                                            "body": {
                                                 "nativeSrc": "1432:44:0",
                                                 "nodeType": "YulBlock",
                                                 "src": "56:13:0",
-                                                "statements":
-                                                [
+                                                "statements": [
                                                     {
-                                                        "expression":
-                                                        {
-                                                            "arguments":
-                                                            [
+                                                        "expression": {
+                                                            "arguments": [
                                                                 {
                                                                     "kind": "number",
                                                                     "nativeSrc": "1457:1:0",
@@ -520,8 +458,7 @@
                                                                     "value": "0"
                                                                 }
                                                             ],
-                                                            "functionName":
-                                                            {
+                                                            "functionName": {
                                                                 "name": "revert",
                                                                 "nativeSrc": "1450:6:0",
                                                                 "nodeType": "YulIdentifier",
@@ -548,8 +485,7 @@
                             },
                             "name": "C_2_deployed",
                             "nodeType": "YulObject",
-                            "subObjects":
-                            [
+                            "subObjects": [
                                 {
                                     "nodeType": "YulData",
                                     "value": "<BYTECODE REMOVED>"
@@ -561,10 +497,8 @@
             }
         }
     },
-    "sources":
-    {
-        "C":
-        {
+    "sources": {
+        "C": {
             "id": 0
         }
     }

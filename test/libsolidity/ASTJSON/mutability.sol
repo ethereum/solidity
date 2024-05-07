@@ -4,4 +4,5 @@ contract C
     uint public constant b = 2;
     uint public c = 3;
 }
+
 // ----
