@@ -9,6 +9,6 @@ Info: CHC: 1 verification condition(s) proved safe! Enable the model checker opt
 Info: Contract invariant(s) for model_checker_invariants_contract_reentrancy/input.sol:test:
 (!(x >= 1) || true)
 Reentrancy property(ies) for model_checker_invariants_contract_reentrancy/input.sol:test:
-(((!(x <= 0) || !(x' >= 1)) && (!(x <= 0) || !(<errorCode> >= 1))) || true)
+(((!(x <= 0) || !(<errorCode> >= 1)) && (!(x <= 0) || !(x' >= 1))) || true)
 <errorCode> = 0 -> no errors
 <errorCode> = 1 -> Assertion failed at assert(x == 0)
