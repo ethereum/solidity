@@ -1050,6 +1050,12 @@ void BMC::checkDivByZero(BMCVerificationTarget& _target)
 void BMC::checkBalance(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTargetType::Balance, "");
+
+	if (
+		m_solvedTargets.count(_target.expression) &&
+		m_solvedTargets.at(_target.expression).count(VerificationTargetType::Balance)
+	)
+		return;
 	checkCondition(
 		_target,
 		_target.constraints && _target.value,

@@ -1,13 +1,9 @@
-contract C
-{
-	uint public x;
-	function g() public {
-		x = 0;
-		this.h();
-		assert(x == 2);
-	}
-	function h() public {
-		x = 2;
+contract C {
+	address payable recipient;
+
+	function f() public payable {
+		require(msg.value > 1);
+		recipient.transfer(1);
 	}
 }
 // ====

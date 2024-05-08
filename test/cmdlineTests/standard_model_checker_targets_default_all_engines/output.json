@@ -150,6 +150,16 @@ test.f(0x0, 1)",
         },
         {
             "component": "general",
+            "errorCode": "1391",
+            "formattedMessage": "Info: CHC: 1 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.
+
+",
+            "message": "CHC: 1 verification condition(s) proved safe! Enable the model checker option \"show proved safe\" to see all of them.",
+            "severity": "info",
+            "type": "Info"
+        },
+        {
+            "component": "general",
             "errorCode": "6838",
             "formattedMessage": "Warning: BMC: Condition is always true.
  --> A:7:15:
@@ -170,45 +180,6 @@ Note: Callstack:
                 "end": 165,
                 "file": "A",
                 "start": 159
-            },
-            "type": "Warning"
-        },
-        {
-            "component": "general",
-            "errorCode": "1236",
-            "formattedMessage": "Warning: BMC: Insufficient funds happens here.
-  --> A:11:7:
-   |
-11 | \t\t\t\t\t\ta.transfer(x);
-   | \t\t\t\t\t\t^^^^^^^^^^^^^
-Note: Counterexample:
-  a = 0
-  x = 0
-
-Note: Callstack:
-Note:
-
-",
-            "message": "BMC: Insufficient funds happens here.",
-            "secondarySourceLocations": [
-                {
-                    "message": "Counterexample:
-  a = 0
-  x = 0
-"
-                },
-                {
-                    "message": "Callstack:"
-                },
-                {
-                    "message": ""
-                }
-            ],
-            "severity": "warning",
-            "sourceLocation": {
-                "end": 237,
-                "file": "A",
-                "start": 224
             },
             "type": "Warning"
         }

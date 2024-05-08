@@ -88,21 +88,11 @@ test.f(0x0, 1)
 13 | 		arr[x];
    | 		^^^^^^
 
+Info: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+
 Warning: BMC: Condition is always true.
  --> model_checker_targets_all_all_engines/input.sol:6:11:
   |
 6 | 		require(x >= 0);
   | 		        ^^^^^^
 Note: Callstack:
-
-Warning: BMC: Insufficient funds happens here.
-  --> model_checker_targets_all_all_engines/input.sol:10:3:
-   |
-10 | 		a.transfer(x);
-   | 		^^^^^^^^^^^^^
-Note: Counterexample:
-  a = 0
-  x = 0
-
-Note: Callstack:
-Note:

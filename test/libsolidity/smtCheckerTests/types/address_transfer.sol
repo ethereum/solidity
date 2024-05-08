@@ -11,5 +11,5 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 8656: (98-113): CHC: Insufficient funds happens here.
 // Warning 6328: (162-186): CHC: Assertion violation happens here.
-// Warning 1236: (98-113): BMC: Insufficient funds happens here.

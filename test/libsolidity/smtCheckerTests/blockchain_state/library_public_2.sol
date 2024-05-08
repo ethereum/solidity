@@ -21,6 +21,6 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 4588: (238-243): Assertion checker does not yet implement this type of function call.
+// Warning 8656: (54-67): CHC: Insufficient funds happens here.
 // Warning 6328: (282-298): CHC: Assertion violation happens here.
 // Warning 6328: (317-331): CHC: Assertion violation happens here.
-// Warning 1236: (54-67): BMC: Insufficient funds happens here.

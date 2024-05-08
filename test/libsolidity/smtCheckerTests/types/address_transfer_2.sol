@@ -15,6 +15,6 @@ contract C
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
+// Warning 8656: (184-199): CHC: Insufficient funds happens here.
+// Warning 8656: (203-218): CHC: Insufficient funds happens here.
 // Warning 6328: (262-291): CHC: Assertion violation happens here.
-// Warning 1236: (184-199): BMC: Insufficient funds happens here.
-// Warning 1236: (203-218): BMC: Insufficient funds happens here.
