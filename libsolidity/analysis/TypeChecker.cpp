@@ -116,7 +116,8 @@ void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
 		TupleType const& lhsType = dynamic_cast<TupleType const&>(*type(_lhs));
 		TupleExpression const* lhsResolved = dynamic_cast<TupleExpression const*>(resolveOuterUnaryTuples(&_lhs));
 
-		if (lhsType.components().size() != _rhs.components().size() || lhsResolved->components().size() != _rhs.components().size())
+		solAssert(!lhsResolved || lhsResolved->components().size() == lhsType.components().size());
+		if (lhsType.components().size() != _rhs.components().size())
 		{
 			solAssert(m_errorReporter.hasErrors(), "");
 			return;
