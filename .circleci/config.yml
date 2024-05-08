@@ -1146,7 +1146,7 @@ jobs:
       - run:
           name: Install build dependencies
           command: |
-            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake cvc4 git openssh tar
+            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake git openssh tar
       - checkout
       - run_build
       - store_artifacts_solc
@@ -1273,7 +1273,7 @@ jobs:
       - run:
           name: Install runtime dependencies
           command: |
-            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+            pacman --noconfirm -Syu --noprogressbar --needed z3
       - soltest
 
   t_ubu_clang_soltest: &t_ubu_clang_soltest
