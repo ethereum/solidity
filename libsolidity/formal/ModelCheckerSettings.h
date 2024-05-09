@@ -113,7 +113,7 @@ struct ModelCheckerInvariants
 	std::set<InvariantType> invariants;
 };
 
-enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray, OutOfBounds };
+enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, DivByZero, Balance, Assert, PopEmptyArray, OutOfBounds };
 
 struct ModelCheckerTargets
 {
