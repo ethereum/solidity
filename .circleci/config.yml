@@ -1728,8 +1728,8 @@ jobs:
       - run: git config --global core.autocrlf false
       - checkout
       - run:
-          name: Force install python3.12.2
-          command: choco install python3 --pre --force --version=3.12.2
+          name: Force install python3.12
+          command: choco install python312 --pre --force
       - run:
           name: Create a symlink for python3
           command: ln -s /c/ProgramData/chocolatey/bin/python3.12 /c/ProgramData/chocolatey/bin/python3
