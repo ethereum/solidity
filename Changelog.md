@@ -9,6 +9,7 @@ Compiler Features:
 
 Bugfixes:
  * Commandline Interface: Fix ICE when the optimizer is disabled and an empty/blank string is used for ``--yul-optimizations`` sequence.
+ * Optimizer: Fix optimizer executing each repeating part of the step sequence at least twice, even if the code size already became stable after the first iteration.
  * SMTChecker: Fix false positive when comparing hashes of same array or string literals.
  * SMTChecker: Fix internal error on mapping access caused by too strong requirements on sort compatibility of the index and mapping domain.
  * SMTChecker: Fix internal error when using an empty tuple in a conditional operator.
