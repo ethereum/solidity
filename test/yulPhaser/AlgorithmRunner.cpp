@@ -434,6 +434,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_overwrite_existing_file_if_autosave_file_spec
 	BOOST_TEST(readLinesFromFile(m_autosavePath) != originalContent);
 }
 
+// Disabled due to a fairly obscure bug in GCC 13+
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109561
+// The issue is on line 444, and more specifically the Options struct std::optional<std::string>
+/*
 BOOST_FIXTURE_TEST_CASE(run_should_not_save_population_to_file_if_autosave_file_not_specified, AlgorithmRunnerAutosaveFixture)
 {
 	m_options.maxRounds = 5;
@@ -445,6 +449,7 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_save_population_to_file_if_autosave_file_
 
 	BOOST_TEST(!fs::exists(m_autosavePath));
 }
+*/
 
 BOOST_FIXTURE_TEST_CASE(run_should_randomise_duplicate_chromosomes_if_requested, AlgorithmRunnerFixture)
 {
