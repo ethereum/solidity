@@ -411,6 +411,8 @@ its visibility and it is impossible to reference variables defined in a differen
 The benefit of this stage is that function definitions can be looked up more easily
 and functions can be optimized in isolation without having to traverse the AST completely.
 
+Prerequisites: Disambiguator.
+
 .. _function-grouper:
 
 FunctionGrouper
@@ -430,6 +432,8 @@ Where ``I`` is a (potentially empty) block that does not contain any function de
 and ``F`` is a list of function definitions such that no function contains a function definition.
 
 The benefit of this stage is that we always know where the list of functions begins.
+
+Prerequisites: Disambiguator, FunctionHoister.
 
 .. _for-loop-condition-into-body:
 
@@ -458,6 +462,12 @@ is transformed to
 This transformation can also be useful when paired with LoopInvariantCodeMotion, since
 invariants in the loop-invariant conditions can then be taken outside the loop.
 
+Loops that already have a literal constant as iteration condition are not transformed.
+
+To avoid unnecessary rewriting, it is recommended to run this step after StructuralSimplifier.
+
+Prerequisites: Disambiguator.
+
 .. _for-loop-init-rewriter:
 
 ForLoopInitRewriter
@@ -483,6 +493,8 @@ is transformed to
 
 This eases the rest of the optimization process because we can ignore
 the complicated scoping rules of the ``for`` loop initialization block.
+
+Prerequisites: Disambiguator.
 
 .. _var-decl-initializer:
 
@@ -660,6 +672,8 @@ are run right before it, because then it does not generate excessive amounts of 
 On the other hand, the CommonSubexpressionEliminator could be more efficient if run after the
 SSA transform.
 
+Prerequisites: Disambiguator, ForLoopInitRewriter.
+
 .. _unused-assign-eliminator:
 
 UnusedAssignEliminator
@@ -774,6 +788,8 @@ In the second traversal, all assignments that are in the "unused" state are remo
 This step is usually run right after the SSA transform to complete
 the generation of the pseudo-SSA.
 
+Prerequisites: Disambiguator, ForLoopInitRewriter.
+
 Tools
 -----
 
@@ -807,6 +823,8 @@ in any of the control-flow paths. For instance, upon entering a
 ``for`` loop, all variables are cleared that will be assigned during the
 body or the post block.
 
+Prerequisites: Disambiguator, ForLoopInitRewriter.
+
 Expression-Scale Simplifications
 --------------------------------
 
@@ -832,13 +850,18 @@ value, one of them will always be unused. The UnusedPruner or the
 UnusedAssignEliminator will then be able to fully eliminate such
 variables.
 
-This step is especially efficient if the ExpressionSplitter is run
-before. If the code is in pseudo-SSA form,
-the values of variables are available for a longer time and thus we
-have a higher chance of expressions to be replaceable.
+The longer the values of variables are available, the higher the chance of an expression being replaceable.
+For this reason the step could potentially be more effective when used on code in pseudo-SSA form.
+This property, however, is not easily destroyed once established, and in most cases it is enough
+if SSATransform was used once at any point before running the step.
+The difference may also not be very significant in practice.
+
+This step is especially efficient if the ExpressionSplitter is run before.
 
 The ExpressionSimplifier will be able to perform better replacements
 if the CommonSubexpressionEliminator was run right before it.
+
+Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 .. _expression-simplifier:
 
@@ -853,12 +876,15 @@ It tries to match patterns like ``X + 0`` on each subexpression.
 During the matching procedure, it resolves variables to their currently
 assigned expressions to be able to match more deeply nested patterns
 even when the code is in pseudo-SSA form.
+In fact, running CommonSubexpressionEliminator before helps this component track equivalent subexpressions.
 
 Some of the patterns like ``X - X -> 0`` can only be applied as long
 as the expression ``X`` is movable, because otherwise it would remove its potential side-effects.
 Since variable references are always movable, even if their current
 value might not be, the ExpressionSimplifier is again more powerful
-in split or pseudo-SSA form.
+in :ref:`expression-split <expression-splitter>` or :ref:`pseudo-SSA <ssa-transform>` form.
+
+Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 .. _literal-rematerialiser:
 
@@ -875,6 +901,9 @@ LoadResolver
 Optimisation stage that replaces expressions of type ``sload(x)`` and ``mload(x)`` by the value
 currently stored in storage resp. memory, if known.
 
+Also evaluates simple ``keccak256(a, c)`` when the value at memory location ``a`` is known and ``c``
+is a constant ``<= 32``.
+
 Works best if the code is in SSA form.
 
 Prerequisites: Disambiguator, ForLoopInitRewriter.
@@ -889,6 +918,8 @@ CircularReferencesPruner
 
 This stage removes functions that call each other but are
 neither externally referenced nor referenced from the outermost context.
+
+Prerequisites: Disambiguator, FunctionHoister.
 
 .. _conditional-simplifier:
 
@@ -914,9 +945,9 @@ Future features:
 - allow replacements by ``1``
 - take termination of user-defined functions into account
 
-Works best with SSA form and if dead code removal has run before.
+Works best with SSA form and if DeadCodeEliminator has run before.
 
-Prerequisite: Disambiguator.
+Prerequisites: Disambiguator.
 
 .. _conditional-unsimplifier:
 
@@ -948,9 +979,7 @@ performs similar tasks that do depend on data flow.
 The ControlFlowSimplifier does record the presence or absence of ``break``
 and ``continue`` statements during its traversal.
 
-Prerequisite: Disambiguator, FunctionHoister, ForLoopInitRewriter.
-
-Important: Introduces EVM opcodes and thus can only be used on EVM code for now.
+Prerequisites: Disambiguator, FunctionHoister, ForLoopInitRewriter.
 
 .. _dead-code-eliminator:
 
@@ -985,6 +1014,9 @@ CommonSubexpressionEliminator, because SSA will make sure that the variables
 will not change and the CommonSubexpressionEliminator re-uses exactly the same
 variable if the value is known to be the same.
 
+Works best on code without literal arguments, which is the case when the code is in the
+:ref:`expression-split <expression-splitter>` form.
+
 Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 .. _unused-pruner:
@@ -999,6 +1031,10 @@ If a declaration assigns a value that is not movable, the expression is retained
 but its value is discarded.
 
 All movable expression statements (expressions that are not assigned) are removed.
+
+Does not remove circular references.
+
+Prerequisites: Disambiguator.
 
 .. _structural-simplifier:
 
@@ -1017,6 +1053,10 @@ a structural level:
 - replace ``for`` loop with false condition by its initialization part
 
 This component uses the DataflowAnalyzer.
+
+LiteralRematerialiser should be run before this step.
+
+Prerequisites: Disambiguator.
 
 .. _block-flattener:
 
@@ -1055,6 +1095,8 @@ is transformed to
 As long as the code is disambiguated, this does not cause a problem because
 the scopes of variables can only grow.
 
+Prerequisites: Disambiguator, FunctionGrouper.
+
 .. _loop-invariant-code-motion:
 
 LoopInvariantCodeMotion
@@ -1065,6 +1107,9 @@ Only statements at the top level in a loop's body or post block are considered, 
 declarations inside conditional branches will not be moved out of the loop.
 
 ExpressionSplitter and SSATransform should be run upfront to obtain better results.
+
+The transformation will not move loop-invariant condition out of the condition block of the loop.
+This can be addressed by running ForLoopConditionIntoBody beforehand.
 
 Prerequisites: Disambiguator, ForLoopInitRewriter, FunctionHoister.
 
@@ -1095,7 +1140,7 @@ optimization step is mainly useful for functions that would not be inlined.
 
 Prerequisites: Disambiguator, FunctionHoister.
 
-LiteralRematerialiser is recommended as a prerequisite, even though it's not required for
+LiteralRematerialiser is recommended before, even though it's not required for
 correctness.
 
 .. _unused-function-parameter-pruner:
@@ -1103,7 +1148,7 @@ correctness.
 UnusedFunctionParameterPruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This step removes unused parameters in a function.
+This step removes unused parameters from function definitions.
 
 If a parameter is unused, like ``c`` and ``y`` in, ``function f(a,b,c) -> x, y { x := div(a,b) }``, we
 remove the parameter and create a new "linking" function as follows:
@@ -1114,12 +1159,12 @@ remove the parameter and create a new "linking" function as follows:
     function f2(a,b,c) -> x, y { x := f(a,b) }
 
 and replace all references to ``f`` by ``f2``.
-The inliner should be run afterwards to make sure that all references to ``f2`` are replaced by
+FullInliner should be run afterwards to make sure that all references to ``f2`` are replaced by
 ``f``.
 
-Prerequisites: Disambiguator, FunctionHoister, LiteralRematerialiser.
+Prerequisites: Disambiguator, FunctionHoister.
 
-The step LiteralRematerialiser is not required for correctness. It helps deal with cases such as:
+The step LiteralRematerialiser is recommended but not required for correctness. It helps deal with cases such as:
 ``function f(x) -> y { revert(y, y} }`` where the literal ``y`` will be replaced by its value ``0``,
 allowing us to rewrite the function.
 
@@ -1178,8 +1223,9 @@ If two functions are syntactically equivalent, while allowing variable
 renaming but not any re-ordering, then any reference to one of the
 functions is replaced by the other.
 
-
 The actual removal of the function is performed by the UnusedPruner.
+
+Prerequisites: Disambiguator, FunctionHoister.
 
 Function Inlining
 -----------------
@@ -1207,7 +1253,7 @@ Example: The function to be inlined has the form of ``function f(...) -> r { r :
 
 The result of this inlining is always a single expression.
 
-This component can only be used on sources with unique names.
+Prerequisites: Disambiguator.
 
 .. _full-inliner:
 
@@ -1221,6 +1267,24 @@ code is usually very expensive and we would often rather have shorter
 code than more efficient code. In some cases, though, inlining a function
 can have positive effects on subsequent optimizer steps. This is the case
 if one of the function arguments is a constant, for example.
+
+The transform changes code of the form
+
+.. code-block:: none
+
+    function f(a, b) -> c { /* ... */ }
+    let z := f(x, y)
+
+into
+
+.. code-block:: none
+
+    function f(a, b) -> c { /* ... */ }
+    let f_b := y
+    let f_a := x
+    let f_c
+    /* ... code of f, with replacements: a -> f_a, b -> f_b, c -> f_c */
+    let z := f_c
 
 During inlining, a heuristic is used to tell if the function call
 should be inlined or not.
@@ -1238,10 +1302,12 @@ we can run the optimizer on this specialized function. If it
 results in heavy gains, the specialized function is kept,
 otherwise the original function is used instead.
 
-FunctionHoister and ExpressionSplitter are recommended as prerequisites since they make the step
+FunctionHoister and ExpressionSplitter are recommended before this step since they make it
 more efficient, but are not required for correctness.
 In particular, function calls with other function calls as arguments are not inlined, but running
 ExpressionSplitter beforehand ensures that there are no such calls in the input.
+
+Prerequisites: Disambiguator.
 
 Cleanup
 -------
@@ -1263,8 +1329,24 @@ It does not make use of any information concerning the commutativity of the opco
 if moving the value of a variable to its place of use would change the order
 of any function call or opcode execution, the transformation is not performed.
 
+Code of the form
+
+.. code-block:: none
+
+    let a1 := mload(y)
+    let a2 := mul(x, 4)
+    sstore(a2, a1)
+
+is transformed into
+
+.. code-block:: none
+
+    sstore(mul(x, 4), mload(y))
+
 Note that the component will not move the assigned value of a variable assignment
 or a variable that is referenced more than once.
+The transformation is also not applied to loop conditions, because those are
+evaluated with each loop.
 
 The snippet ``let x := add(0, 2) let y := mul(x, mload(2))`` is not transformed,
 because it would cause the order of the call to the opcodes ``add`` and
@@ -1275,6 +1357,8 @@ When reordering opcodes like that, variable references and literals are ignored.
 Because of that, the snippet ``let x := add(0, 2) let y := mul(x, 3)`` is
 transformed to ``let y := mul(add(0, 2), 3)``, even though the ``add`` opcode
 would be executed after the evaluation of the literal ``3``.
+
+Prerequisites: Disambiguator.
 
 .. _ssa-reverser:
 
@@ -1326,6 +1410,8 @@ by ``a`` (until ``a`` is re-assigned). The UnusedPruner will then
 eliminate the variable ``a_1`` altogether and thus fully reverse the
 SSATransform.
 
+Prerequisites: Disambiguator.
+
 .. _stack-compressor:
 
 StackCompressor
@@ -1361,6 +1447,8 @@ The Rematerialiser uses the DataflowAnalyzer to track the current values of vari
 which are always movable.
 If the value is very cheap or the variable was explicitly requested to be eliminated,
 the variable reference is replaced by its current value.
+
+Prerequisites: Disambiguator, ForLoopInitRewriter.
 
 .. _for-loop-condition-out-of-body:
 
