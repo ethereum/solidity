@@ -45,7 +45,6 @@
 //             ret := A(add(m, not(0)), 1)
 //             leave
 //         }
-//         let _1 := not(0)
-//         ret := A(add(m, _1), A(m, add(n, _1)))
+//         ret := A(add(m, not(0)), A(m, add(n, not(0))))
 //     }
 // }

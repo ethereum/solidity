@@ -12,9 +12,7 @@
     if 0 {
         mstore(0x40, 0x20)
     }
-    if sub(2,1) {
-        for { switch mul(1,2) case 2 { mstore(0x40, 0x20) } } sub(1,1) {} { mstore(0x80, 0x40) }
-    }
+    mstore(0x40, 0x20)
     sstore(0, array_index_access(x, 3))
     sstore(1, mload(0x40))
 }
