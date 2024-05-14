@@ -1881,6 +1881,7 @@ workflows:
       - t_ext: *job_native_compile_ext_gp2
       - t_ext: *job_native_compile_ext_euler
       - t_ext: *job_native_compile_ext_pool_together
+      - t_ubu_soltest_deprecated_evm_versions: *requires_b_ubu
       # TODO: Dropping the external tests below since they are based on old forks and
       # fail after update the default evm version to cancun.
       #- t_ext: *job_native_compile_ext_trident
@@ -1987,10 +1988,6 @@ workflows:
       - b_ubu_san_clang: *job_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_soltest: *requires_b_ubu_ubsan_clang
       - t_ubu_ubsan_clang_cli: *requires_b_ubu_ubsan_clang
-
-      # Deprecated EVM versions tests
-      - b_ubu: *requires_nothing
-      - t_ubu_soltest_deprecated_evm_versions: *requires_b_ubu
 
   nightly-ossfuzz:
 
