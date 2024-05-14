@@ -87,3 +87,5 @@ test.f(0x0, 1)
    |
 13 | 		arr[x];
    | 		^^^^^^
+
+Info: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

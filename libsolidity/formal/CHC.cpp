@@ -607,6 +607,22 @@ void CHC::endVisit(FunctionCall const& _funCall)
 		SMTEncoder::endVisit(_funCall);
 		unknownFunctionCall(_funCall);
 		break;
+	case FunctionType::Kind::Send:
+	case FunctionType::Kind::Transfer:
+	{
+		auto value = _funCall.arguments().front();
+		solAssert(value, "");
+		smtutil::Expression thisBalance = state().balance();
+
+		verificationTargetEncountered(
+			&_funCall,
+			VerificationTargetType::Balance,
+			thisBalance < expr(*value)
+		);
+
+		SMTEncoder::endVisit(_funCall);
+		break;
+	}
 	case FunctionType::Kind::KECCAK256:
 	case FunctionType::Kind::ECRecover:
 	case FunctionType::Kind::SHA256:
@@ -2013,6 +2029,8 @@ std::pair<std::string, ErrorId> CHC::targetDescription(CHCVerificationTarget con
 		return {"Division by zero", 4281_error};
 	else if (_target.type == VerificationTargetType::Assert)
 		return {"Assertion violation", 6328_error};
+	else if (_target.type == VerificationTargetType::Balance)
+		return {"Insufficient funds", 8656_error};
 	else
 		solAssert(false);
 }
