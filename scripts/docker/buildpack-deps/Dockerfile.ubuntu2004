@@ -39,7 +39,6 @@ RUN set -ex; \
 		libboost-program-options-dev \
 		libboost-system-dev \
 		libboost-test-dev \
-		libcvc4-dev \
 		libz3-static-dev \
 		lsof \
 		ninja-build \
@@ -47,6 +46,7 @@ RUN set -ex; \
 		python3-sphinx \
 		software-properties-common \
 		sudo \
+		unzip \
 		z3-static; \
 	pip3 install \
 		codecov \
@@ -59,17 +59,31 @@ RUN set -ex; \
 		tabulate \
 		z3-solver;
 
+# TODO: we could eliminate duplication by using a Dockerfile extension like:
+# https://github.com/edrevo/dockerfile-plus?tab=readme-ov-file#dockerfile
+# or mult-stage builds, then we could define a base image which would be included/used by all the other Dockerfiles.
+# Or we could move the common parts to a shell script, copying and calling it from the Dockerfiles.
 # Eldarica
 RUN set -ex; \
 	apt-get update; \
 	apt-get install -qqy \
-		openjdk-11-jre \
-		unzip; \
+		openjdk-11-jre; \
 	eldarica_version="2.1"; \
 	wget "https://github.com/uuverifiers/eldarica/releases/download/v${eldarica_version}/eldarica-bin-${eldarica_version}.zip" -O /opt/eld_binaries.zip; \
 	test "$(sha256sum /opt/eld_binaries.zip)" = "0ac43f45c0925383c9d2077f62bbb515fd792375f3b2b101b30c9e81dcd7785c  /opt/eld_binaries.zip"; \
 	unzip /opt/eld_binaries.zip -d /opt; \
 	rm -f /opt/eld_binaries.zip;
+
+# CVC5
+RUN set -ex; \
+	cvc5_version="1.1.2"; \
+	wget "https://github.com/cvc5/cvc5/releases/download/cvc5-${cvc5_version}/cvc5-Linux-static.zip" -O /opt/cvc5.zip; \
+	test "$(sha256sum /opt/cvc5.zip)" = "cf291aef67da8eaa8d425a51f67f3f72f36db8b1040655dc799b64e3d69e6086  /opt/cvc5.zip"; \
+	unzip /opt/cvc5.zip -x "cvc5-Linux-static/lib/cmake/*" -d /opt; \
+	mv /opt/cvc5-Linux-static/bin/* /usr/bin; \
+	mv /opt/cvc5-Linux-static/include/* /usr/include; \
+	mv /opt/cvc5-Linux-static/lib/* /usr/lib; \
+	rm -rf /opt/cvc5-Linux-static /opt/cvc5.zip;
 
 FROM base AS libraries
 
