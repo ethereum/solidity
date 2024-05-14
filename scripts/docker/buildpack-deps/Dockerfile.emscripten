@@ -83,3 +83,14 @@ RUN set -ex && \
 		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
 	       --prefix=$(em-config CACHE)/sysroot/usr install && \
 	rm -r /usr/src/boost_1_75_0
+
+# CVC5
+RUN set -ex; \
+	cvc5_version="1.1.2"; \
+	wget "https://github.com/cvc5/cvc5/releases/download/cvc5-${cvc5_version}/cvc5-Linux-static.zip" -O /opt/cvc5.zip; \
+	test "$(sha256sum /opt/cvc5.zip)" = "cf291aef67da8eaa8d425a51f67f3f72f36db8b1040655dc799b64e3d69e6086  /opt/cvc5.zip"; \
+	unzip /opt/cvc5.zip -x "cvc5-Linux-static/lib/cmake/*" -d /opt; \
+	mv /opt/cvc5-Linux-static/bin/* /usr/bin; \
+	mv /opt/cvc5-Linux-static/include/* /usr/include; \
+	mv /opt/cvc5-Linux-static/lib/* /usr/lib; \
+	rm -rf /opt/cvc5-Linux-static /opt/cvc5.zip;
