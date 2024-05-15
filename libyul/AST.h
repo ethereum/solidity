@@ -28,6 +28,8 @@
 
 #include <liblangutil/DebugData.h>
 
+#include <libsolutil/Numeric.h>
+
 #include <memory>
 #include <optional>
 
@@ -41,7 +43,32 @@ using TypedNameList = std::vector<TypedName>;
 
 /// Literal number or string (up to 32 bytes)
 enum class LiteralKind { Number, Boolean, String };
-struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; YulString value; Type type; };
+/// Literal value that holds a u256 word of data, can be of LiteralKind type and - in case of arguments to
+/// builtins - exceed the u256 word (32 bytes), in which case the value is stored as string. The former is constructed
+/// via u256 word and optional hint and leads to unlimited == false, the latter is
+/// constructed via the string constructor and leads to unlimited == true.
+class LiteralValue {
+public:
+	using Data = u256;
+	using BuiltinStringLiteralData = std::string;
+	using RepresentationHint = std::shared_ptr<std::string>;
+
+	LiteralValue() = default;
+	explicit LiteralValue(std::string _builtinStringLiteralValue);
+	explicit LiteralValue(Data const& _data, std::optional<std::string> const& _hint = std::nullopt);
+
+	bool operator==(LiteralValue const& _rhs) const;
+	bool operator<(LiteralValue const& _rhs) const;
+	Data const& value() const;
+	BuiltinStringLiteralData const& builtinStringLiteralValue() const;
+	bool unlimited() const;
+	RepresentationHint const& hint() const;
+
+private:
+	std::optional<Data> m_numericValue;
+	std::shared_ptr<std::string> m_stringValue;
+};
+struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; LiteralValue value; Type type; };
 /// External / internal identifier or label reference
 struct Identifier { langutil::DebugData::ConstPtr debugData; YulString name; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand

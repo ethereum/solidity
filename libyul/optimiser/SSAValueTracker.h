@@ -57,7 +57,7 @@ private:
 
 	/// Special expression whose address will be used in m_values.
 	/// YulString does not need to be reset because SSAValueTracker is short-lived.
-	Expression const m_zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
+	Expression const m_zero{Literal{{}, LiteralKind::Number, LiteralValue(u256{0}), {}}};
 	std::map<YulString, Expression const*> m_values;
 };
 

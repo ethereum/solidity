@@ -297,7 +297,7 @@ void CodeTransform::operator()(Identifier const& _identifier)
 void CodeTransform::operator()(Literal const& _literal)
 {
 	m_assembly.setSourceLocation(originLocationOf(_literal));
-	m_assembly.appendConstant(valueOfLiteral(_literal));
+	m_assembly.appendConstant(_literal.value.value());
 }
 
 void CodeTransform::operator()(If const& _if)

@@ -160,7 +160,7 @@ bool Pattern::matches(
 		Literal const& literal = std::get<Literal>(*expr);
 		if (literal.kind != LiteralKind::Number)
 			return false;
-		if (m_data && *m_data != u256(literal.value.str()))
+		if (m_data && *m_data != literal.value.value())
 			return false;
 		assertThrow(m_arguments.empty(), OptimizerException, "");
 	}
@@ -241,7 +241,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_debugData, LiteralKind::Number, YulString{formatNumber(*m_data)}, {}};
+		return Literal{_debugData, LiteralKind::Number, LiteralValue{*m_data, formatNumber(*m_data)}, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
@@ -261,7 +261,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 
 u256 Pattern::d() const
 {
-	return valueOfNumberLiteral(std::get<Literal>(matchGroupValue()));
+	return std::get<Literal>(matchGroupValue()).value.value();
 }
 
 Expression const& Pattern::matchGroupValue() const

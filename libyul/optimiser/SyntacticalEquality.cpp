@@ -22,6 +22,7 @@
 
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
+#include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -63,12 +64,13 @@ bool SyntacticallyEqual::expressionEqual(Identifier const& _lhs, Identifier cons
 }
 bool SyntacticallyEqual::expressionEqual(Literal const& _lhs, Literal const& _rhs)
 {
-	if (_lhs.kind != _rhs.kind || _lhs.type != _rhs.type)
+	yulAssert(validLiteral(_lhs), "Invalid lhs literal during syntactical equality check");
+	yulAssert(validLiteral(_rhs), "Invalid rhs literal during syntactical equality check");
+
+	if (_lhs.type != _rhs.type)
 		return false;
-	if (_lhs.kind == LiteralKind::Number)
-		return valueOfNumberLiteral(_lhs) == valueOfNumberLiteral(_rhs);
-	else
-		return _lhs.value == _rhs.value;
+
+	return _lhs.value == _rhs.value;
 }
 
 bool SyntacticallyEqual::statementEqual(ExpressionStatement const& _lhs, ExpressionStatement const& _rhs)

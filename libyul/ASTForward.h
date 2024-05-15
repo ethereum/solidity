@@ -29,6 +29,7 @@ namespace solidity::yul
 {
 
 enum class LiteralKind;
+class LiteralValue;
 struct Literal;
 struct Label;
 struct Identifier;

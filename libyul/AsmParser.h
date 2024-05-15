@@ -138,10 +138,10 @@ protected:
 	Case parseCase();
 	ForLoop parseForLoop();
 	/// Parses a functional expression that has to push exactly one stack element
-	Expression parseExpression();
+	Expression parseExpression(bool _unlimitedLiteralArgument = false);
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin function call (only the name).
-	std::variant<Literal, Identifier> parseLiteralOrIdentifier();
+	std::variant<Literal, Identifier> parseLiteralOrIdentifier(bool _unlimitedLiteralArgument = false);
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
 	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);

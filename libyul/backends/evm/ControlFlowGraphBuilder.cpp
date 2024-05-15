@@ -245,7 +245,7 @@ ControlFlowGraphBuilder::ControlFlowGraphBuilder(
 
 StackSlot ControlFlowGraphBuilder::operator()(Literal const& _literal)
 {
-	return LiteralSlot{valueOfLiteral(_literal), _literal.debugData};
+	return LiteralSlot{_literal.value.value(), _literal.debugData};
 }
 
 StackSlot ControlFlowGraphBuilder::operator()(Identifier const& _identifier)
@@ -361,7 +361,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
-			Stack{ghostVarSlot, LiteralSlot{valueOfLiteral(*_case.value), debugDataOf(*_case.value)}},
+			Stack{ghostVarSlot, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
 			Stack{TemporarySlot{ghostCall, 0}},
 			CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
 		});
@@ -399,7 +399,7 @@ void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 
 	std::optional<bool> constantCondition;
 	if (auto const* literalCondition = std::get_if<yul::Literal>(_loop.condition.get()))
-		constantCondition = valueOfLiteral(*literalCondition) != 0;
+		constantCondition = literalCondition->value.value() != 0;
 
 	CFG::BasicBlock& loopCondition = m_graph.makeBlock(debugDataOf(*_loop.condition));
 	CFG::BasicBlock& loopBody = m_graph.makeBlock(debugDataOf(_loop.body));

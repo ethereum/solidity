@@ -224,7 +224,7 @@ void OptimizedEVMCodeTransform::validateSlot(StackSlot const& _slot, Expression 
 	std::visit(util::GenericVisitor{
 		[&](yul::Literal const& _literal) {
 			auto* literalSlot = std::get_if<LiteralSlot>(&_slot);
-			yulAssert(literalSlot && valueOfLiteral(_literal) == literalSlot->value, "");
+			yulAssert(literalSlot && _literal.value.value() == literalSlot->value, "");
 		},
 		[&](yul::Identifier const& _identifier) {
 			auto* variableSlot = std::get_if<VariableSlot>(&_slot);

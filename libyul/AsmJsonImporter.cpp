@@ -25,6 +25,7 @@
 #include <libyul/AsmJsonImporter.h>
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Utilities.h>
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
@@ -165,26 +166,25 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	std::string kind = member(_node, "kind").get<std::string>();
 
 	solAssert(member(_node, "hexValue").is_string() || member(_node, "value").is_string(), "");
+	std::string value;
 	if (_node.contains("hexValue"))
-		lit.value = YulString{util::asString(util::fromHex(member(_node, "hexValue").get<std::string>()))};
+		value = util::asString(util::fromHex(member(_node, "hexValue").get<std::string>()));
 	else
-		lit.value = YulString{member(_node, "value").get<std::string>()};
-
-	lit.type= YulString{member(_node, "type").get<std::string>()};
-
+		value = member(_node, "value").get<std::string>();
+	lit.type = YulString{member(_node, "type").get<std::string>()};
 	if (kind == "number")
 	{
-		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::CharStream charStream(value, "");
 		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Number;
 		yulAssert(
 			scanner.currentToken() == Token::Number,
-			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + std::string(" while scanning ") + lit.value.str()
+			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + std::string(" while scanning ") + value
 		);
 	}
 	else if (kind == "bool")
 	{
-		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::CharStream charStream(value, "");
 		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Boolean;
 		yulAssert(
@@ -197,13 +197,17 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 	{
 		lit.kind = LiteralKind::String;
 		yulAssert(
-			lit.value.str().size() <= 32,
-			"String literal too long (" + std::to_string(lit.value.str().size()) + " > 32)"
+			value.size() <= 32,
+			"String literal too long (" + std::to_string(value.size()) + " > 32)"
 		);
 	}
 	else
 		yulAssert(false, "unknown type of literal");
 
+	// import only for inline assembly, no unlimited string literals there
+	lit.value = valueOfLiteral(value, lit.kind, false /* _unlimitedLiteralArgument */);
+
+	yulAssert(validLiteral(lit));
 	return lit;
 }
 

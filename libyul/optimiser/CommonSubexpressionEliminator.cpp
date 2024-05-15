@@ -114,7 +114,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 				if (
 					m_returnVariables.count(variable) &&
 					std::holds_alternative<Literal>(*value->value) &&
-					valueOfLiteral(std::get<Literal>(*value->value)) == 0
+					std::get<Literal>(*value->value).value.value() == 0
 				)
 					continue;
 				// We check for syntactic equality again because the value might have changed.

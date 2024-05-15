@@ -37,6 +37,7 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 #include <libyul/optimiser/ASTCopier.h>
 
 #include <liblangutil/Exceptions.h>
@@ -203,7 +204,7 @@ private:
 			solAssert(false);
 
 		if (isDigit(value.front()))
-			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::YulString{value}, {}};
+			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfNumberLiteral(value), {}};
 		else
 			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}

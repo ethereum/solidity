@@ -91,7 +91,7 @@ void GasMeterVisitor::operator()(Literal const& _lit)
 	m_dataGas +=
 		singleByteDataGas() +
 		evmasm::GasMeter::dataGas(
-			toCompactBigEndian(valueOfLiteral(_lit), 1),
+			toCompactBigEndian(_lit.value.value(), 1),
 			m_isCreation,
 			m_dialect.evmVersion()
 		);

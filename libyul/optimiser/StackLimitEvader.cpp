@@ -113,7 +113,7 @@ u256 literalArgumentValue(FunctionCall const& _call)
 	yulAssert(_call.arguments.size() == 1, "");
 	Literal const* literal = std::get_if<Literal>(&_call.arguments.front());
 	yulAssert(literal && literal->kind == LiteralKind::Number, "");
-	return valueOfLiteral(*literal);
+	return literal->value.value();
 }
 }
 
@@ -210,6 +210,6 @@ void StackLimitEvader::run(
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");
-		literal->value = YulString{toCompactHexWithPrefix(reservedMemory)};
+		literal->value = LiteralValue{reservedMemory, toCompactHexWithPrefix(reservedMemory)};
 	}
 }

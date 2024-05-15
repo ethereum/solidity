@@ -125,7 +125,7 @@ void LoadResolver::tryEvaluateKeccak(
 			{},
 			LiteralKind::Number,
 			// a dummy 256-bit number to represent the Keccak256 hash.
-			YulString{std::numeric_limits<u256>::max().str()},
+			LiteralValue{std::numeric_limits<u256>::max()},
 			{}
 		}
 	);
@@ -146,10 +146,11 @@ void LoadResolver::tryEvaluateKeccak(
 		{
 			bytes contentAsBytes = toBigEndian(*memoryContent);
 			contentAsBytes.resize(static_cast<size_t>(*byteLength));
+			u256 const contentHash (keccak256(contentAsBytes));
 			_e = Literal{
 				debugDataOf(_e),
 				LiteralKind::Number,
-				YulString{u256(keccak256(contentAsBytes)).str()},
+				LiteralValue{contentHash},
 				m_dialect.defaultType
 			};
 		}

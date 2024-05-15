@@ -20,9 +20,10 @@
  * Converts inline assembly AST to JSON format
  */
 
-#include <libyul/AsmJsonConverter.h>
 #include <libyul/AST.h>
+#include <libyul/AsmJsonConverter.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Utilities.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/UTF8.h>
 
@@ -47,14 +48,11 @@ Json AsmJsonConverter::operator()(TypedName const& _node) const
 
 Json AsmJsonConverter::operator()(Literal const& _node) const
 {
+	yulAssert(validLiteral(_node));
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulLiteral");
 	switch (_node.kind)
 	{
 	case LiteralKind::Number:
-		yulAssert(
-			util::isValidDecimal(_node.value.str()) || util::isValidHex(_node.value.str()),
-			"Invalid number literal"
-		);
 		ret["kind"] = "number";
 		break;
 	case LiteralKind::Boolean:
@@ -62,12 +60,15 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 		break;
 	case LiteralKind::String:
 		ret["kind"] = "string";
-		ret["hexValue"] = util::toHex(util::asBytes(_node.value.str()));
+		ret["hexValue"] = util::toHex(util::asBytes(formatLiteral(_node)));
 		break;
 	}
 	ret["type"] = _node.type.str();
-	if (util::validateUTF8(_node.value.str()))
-		ret["value"] = _node.value.str();
+	{
+		auto const formattedLiteral = formatLiteral(_node);
+		if (util::validateUTF8(formattedLiteral))
+			ret["value"] = formattedLiteral;
+	}
 	return ret;
 }
 
