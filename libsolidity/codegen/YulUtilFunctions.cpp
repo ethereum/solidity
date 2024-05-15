@@ -32,10 +32,29 @@
 #include <libsolutil/StringUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
 
+#include <range/v3/algorithm/all_of.hpp>
+
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace std::string_literals;
+
+namespace
+{
+
+std::optional<size_t> staticEncodingSize(std::vector<Type const*> const& _parameterTypes)
+{
+	size_t encodedSize = 0;
+	for (auto* type: _parameterTypes)
+	{
+		if (type->isDynamicallyEncoded())
+			return std::nullopt;
+		encodedSize += type->calldataHeadSize();
+	}
+	return encodedSize;
+}
+
+}
 
 std::string YulUtilFunctions::identityFunction()
 {
@@ -226,9 +245,26 @@ std::string YulUtilFunctions::revertWithError(
 {
 	solAssert((!_posVar.empty() && !_endVar.empty()) || (_posVar.empty() && _endVar.empty()));
 	bool const needsNewVariable = !_posVar.empty() && !_endVar.empty();
+	bool needsAllocation = true;
+
+	if (std::optional<size_t> size = staticEncodingSize(_parameterTypes))
+		if (
+			ranges::all_of(_parameterTypes, [](auto const* type) {
+				solAssert(!dynamic_cast<InaccessibleDynamicType const*>(type));
+				return type && type->isValueType();
+			})
+		)
+		{
+			constexpr size_t errorSelectorSize = 4;
+			needsAllocation = *size + errorSelectorSize > CompilerUtils::generalPurposeMemoryStart;
+		}
 
 	Whiskers templ(R"({
+		<?needsAllocation>
 		let <pos> := <allocateUnbounded>()
+		<!needsAllocation>
+		let <pos> := 0
+		</needsAllocation>
 		mstore(<pos>, <hash>)
 		let <end> := <encode>(add(<pos>, 4) <argumentVars>)
 		revert(<pos>, sub(<end>, <pos>))
@@ -236,7 +272,9 @@ std::string YulUtilFunctions::revertWithError(
 	templ("pos", needsNewVariable ? _posVar : "memPtr");
 	templ("end", needsNewVariable ? _endVar : "end");
 	templ("hash", formatNumber(util::selectorFromSignatureU256(_signature)));
-	templ("allocateUnbounded", allocateUnboundedFunction());
+	templ("needsAllocation", needsAllocation);
+	if (needsAllocation)
+		templ("allocateUnbounded", allocateUnboundedFunction());
 
 	std::vector<std::string> errorArgumentVars;
 	std::vector<Type const*> errorArgumentTypes;
@@ -282,7 +320,7 @@ std::string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* 
 			}
 		)")
 		("functionName", functionName)
-		("revertWithError", revertWithError("Error(string)", {_messageType}, {_stringArgumentExpression}))
+		("revertWithError", revertWithError("Error(string)", {TypeProvider::stringMemory()}, {_stringArgumentExpression}))
 		("functionParameterNames", joinHumanReadablePrefixed(functionParameterNames))
 		.render();
 	});
