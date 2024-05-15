@@ -26,21 +26,20 @@
 #include <cstring>
 #include <fstream>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::phaser;
 
-vector<string> phaser::readLinesFromFile(string const& _path)
+std::vector<std::string> phaser::readLinesFromFile(std::string const& _path)
 {
-	ifstream inputStream(_path);
-	assertThrow(inputStream.is_open(), FileOpenError, "Could not open file '" + _path + "': " + strerror(errno));
+	std::ifstream inputStream(_path);
+	assertThrow(inputStream.is_open(), FileOpenError, "Could not open file '" + _path + "': " + std::strerror(errno));
 
-	string line;
-	vector<string> lines;
-	while (!getline(inputStream, line).fail())
+	std::string line;
+	std::vector<std::string> lines;
+	while (!std::getline(inputStream, line).fail())
 		lines.push_back(line);
 
-	assertThrow(!inputStream.bad(), FileReadError, "Error while reading from file '" + _path + "': " + strerror(errno));
+	assertThrow(!inputStream.bad(), FileReadError, "Error while reading from file '" + _path + "': " + std::strerror(errno));
 
 	return lines;
 }

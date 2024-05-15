@@ -35,19 +35,18 @@ using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::test;
 using namespace solidity::util;
-using namespace std;
 
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
 	ProtoConverter converter;
-	string sol_source = converter.protoToSolidity(_input);
+	std::string sol_source = converter.protoToSolidity(_input);
 
 	if (char const* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_DUMP_PATH=x.yul ./a.out proto-input
-		ofstream of(dump_path);
-		of.write(sol_source.data(), static_cast<streamsize>(sol_source.size()));
+		std::ofstream of(dump_path);
+		of.write(sol_source.data(), static_cast<std::streamsize>(sol_source.size()));
 	}
 
 	if (char const* dump_path = getenv("SOL_DEBUG_FILE"))
@@ -55,7 +54,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		sol_source.clear();
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_LOAD_PATH=x.yul ./a.out proto-input
-		ifstream ifstr(dump_path);
+		std::ifstream ifstr(dump_path);
 		sol_source = {
 			std::istreambuf_iterator<char>(ifstr),
 			std::istreambuf_iterator<char>()
@@ -66,9 +65,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// We target the default EVM which is the latest
 	langutil::EVMVersion version;
 	EVMHost hostContext(version, evmone);
-	string contractName = "C";
-	string libraryName = converter.libraryTest() ? converter.libraryName() : "";
-	string methodName = "test()";
+	std::string contractName = "C";
+	std::string libraryName = converter.libraryTest() ? converter.libraryName() : "";
+	std::string methodName = "test()";
 	StringMap source({{"test.sol", sol_source}});
 	CompilerInput cInput(version, source, contractName, OptimiserSettings::minimal(), {});
 	EvmoneUtility evmoneUtil(

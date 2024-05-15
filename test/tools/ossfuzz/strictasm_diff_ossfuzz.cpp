@@ -36,7 +36,6 @@
 #include <memory>
 #include <iostream>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -51,7 +50,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	if (_size > 600)
 		return 0;
 
-	string input(reinterpret_cast<char const*>(_data), _size);
+	std::string input(reinterpret_cast<char const*>(_data), _size);
 
 	if (std::any_of(input.begin(), input.end(), [](char c) {
 		return ((static_cast<unsigned char>(c) > 127) || !(isPrint(c) || (c == '\n') || (c == '\t')));
@@ -62,7 +61,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 	YulStack stack(
 		langutil::EVMVersion(),
-		nullopt,
+		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
 		DebugInfoSelection::All()
@@ -81,8 +80,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		return 0;
 	}
 
-	ostringstream os1;
-	ostringstream os2;
+	std::ostringstream os1;
+	std::ostringstream os2;
 	// Disable memory tracing to avoid false positive reports
 	// such as unused write to memory e.g.,
 	// { mstore(0, 1) }

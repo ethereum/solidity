@@ -21,7 +21,6 @@
 
 #include <liblangutil/Exceptions.h>
 
-using namespace std;
 using namespace solidity::test::fuzzer::mutator;
 
 // Prototype as we can't use the FuzzerInterface.h header.
@@ -54,17 +53,17 @@ SolidityCustomMutatorInterface::SolidityCustomMutatorInterface(
 	data(_data),
 	size(_size),
 	maxMutantSize(_maxSize),
-	generator(make_shared<SolidityGenerator>(_seed))
+	generator(std::make_shared<SolidityGenerator>(_seed))
 {}
 
 size_t SolidityCustomMutatorInterface::generate()
 {
-	string testCase = generator->generateTestProgram();
+	std::string testCase = generator->generateTestProgram();
 	solAssert(
 		!testCase.empty() && data,
 		"Solc custom mutator: Invalid mutant or memory pointer"
 	);
-	size_t mutantSize = min(testCase.size(), maxMutantSize - 1);
+	size_t mutantSize = std::min(testCase.size(), maxMutantSize - 1);
 	mempcpy(data, testCase.data(), mutantSize);
 	return mutantSize;
 }

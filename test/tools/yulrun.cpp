@@ -43,7 +43,6 @@
 #include <memory>
 #include <iostream>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -55,11 +54,11 @@ namespace po = boost::program_options;
 namespace
 {
 
-pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)
+std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>> parse(std::string const& _source)
 {
 	YulStack stack(
 		langutil::EVMVersion(),
-		nullopt,
+		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::Default()
@@ -71,15 +70,15 @@ pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source
 	}
 	else
 	{
-		SourceReferenceFormatter(cout, stack, true, false).printErrorInformation(stack.errors());
+		SourceReferenceFormatter(std::cout, stack, true, false).printErrorInformation(stack.errors());
 		return {};
 	}
 }
 
-void interpret(string const& _source, bool _inspect, bool _disableExternalCalls)
+void interpret(std::string const& _source, bool _inspect, bool _disableExternalCalls)
 {
-	shared_ptr<Block> ast;
-	shared_ptr<AsmAnalysisInfo> analysisInfo;
+	std::shared_ptr<Block> ast;
+	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 	tie(ast, analysisInfo) = parse(_source);
 	if (!ast || !analysisInfo)
 		return;
@@ -100,7 +99,7 @@ void interpret(string const& _source, bool _inspect, bool _disableExternalCalls)
 	{
 	}
 
-	state.dumpTraceAndState(cout, /*disableMemoryTracing=*/false);
+	state.dumpTraceAndState(std::cout, /*disableMemoryTracing=*/false);
 }
 
 }
@@ -119,7 +118,7 @@ Allowed options)",
 		("help", "Show this help screen.")
 		("enable-external-calls", "Enable external calls")
 		("interactive", "Run interactive")
-		("input-file", po::value<vector<string>>(), "input file");
+		("input-file", po::value<std::vector<std::string>>(), "input file");
 	po::positional_options_description filesPositions;
 	filesPositions.add("input-file", -1);
 
@@ -132,17 +131,17 @@ Allowed options)",
 	}
 	catch (po::error const& _exception)
 	{
-		cerr << _exception.what() << endl;
+		std::cerr << _exception.what() << std::endl;
 		return 1;
 	}
 
 	if (arguments.count("help"))
-		cout << options;
+		std::cout << options;
 	else
 	{
-		string input;
+		std::string input;
 		if (arguments.count("input-file"))
-			for (string path: arguments["input-file"].as<vector<string>>())
+			for (std::string path: arguments["input-file"].as<std::vector<std::string>>())
 			{
 				try
 				{
@@ -150,17 +149,17 @@ Allowed options)",
 				}
 				catch (FileNotFound const&)
 				{
-					cerr << "File not found: " << path << endl;
+					std::cerr << "File not found: " << path << std::endl;
 					return 1;
 				}
 				catch (NotAFile const&)
 				{
-					cerr << "Not a regular file: " << path << endl;
+					std::cerr << "Not a regular file: " << path << std::endl;
 					return 1;
 				}
 			}
 		else
-			input = readUntilEnd(cin);
+			input = readUntilEnd(std::cin);
 
 		interpret(input, arguments.count("interactive"), !arguments.count("enable-external-calls"));
 	}

@@ -28,9 +28,8 @@ using namespace solidity::test::fuzzer;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 using namespace solidity::util;
-using namespace std;
 
-optional<CompilerOutput> SolidityCompilationFramework::compileContract()
+std::optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 {
 	m_compiler.setSources(m_compilerInput.sourceCode);
 	m_compiler.setLibraries(m_compilerInput.libraryAddresses);
@@ -41,8 +40,8 @@ optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 	{
 		if (m_compilerInput.debugFailure)
 		{
-			cerr << "Compiling contract failed" << endl;
-			cerr << SourceReferenceFormatter::formatErrorInformation(
+			std::cerr << "Compiling contract failed" << std::endl;
+			std::cerr << SourceReferenceFormatter::formatErrorInformation(
 				m_compiler.errors(),
 				m_compiler
 			);
@@ -51,7 +50,7 @@ optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 	}
 	else
 	{
-		string contractName;
+		std::string contractName;
 		if (m_compilerInput.contractName.empty())
 			contractName = m_compiler.lastContractName();
 		else
@@ -103,7 +102,7 @@ evmc::Result EvmoneUtility::deployContract(bytes const& _code)
 
 evmc::Result EvmoneUtility::deployAndExecute(
 	bytes const& _byteCode,
-	string const& _hexEncodedInput
+	std::string const& _hexEncodedInput
 )
 {
 	// Deploy contract and signal failure if deploy failed
@@ -128,9 +127,9 @@ evmc::Result EvmoneUtility::deployAndExecute(
 	return callResult;
 }
 
-evmc::Result EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
+evmc::Result EvmoneUtility::compileDeployAndExecute(std::string _fuzzIsabelle)
 {
-	map<string, h160> libraryAddressMap;
+	std::map<std::string, h160> libraryAddressMap;
 	// Stage 1: Compile and deploy library if present.
 	if (!m_libraryName.empty())
 	{
@@ -158,7 +157,7 @@ evmc::Result EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
 		"SolidityEvmoneInterface: Invalid compilation output."
 	);
 
-	string methodName;
+	std::string methodName;
 	if (!_fuzzIsabelle.empty())
 		// TODO: Remove this once a cleaner solution is found for querying
 		// isabelle test entry point. At the moment, we are sure that the
@@ -175,7 +174,7 @@ evmc::Result EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
 	);
 }
 
-optional<CompilerOutput> EvmoneUtility::compileContract()
+std::optional<CompilerOutput> EvmoneUtility::compileContract()
 {
 	try
 	{

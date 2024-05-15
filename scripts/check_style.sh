@@ -50,8 +50,12 @@ NAMESPACE_STD_FREE_FILES=(
     test/libsolidity/util/*
     test/libyul/*
     test/solc/*
+    test/tools/*
+    test/tools/ossfuzz/*
+    test/tools/ossfuzz/protomutators/*
     test/tools/yulInterpreter/*
     test/yulPhaser/*
+    tools/yulPhaser/*
 )
 
 (

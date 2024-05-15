@@ -23,7 +23,6 @@
 #include <sstream>
 
 using namespace solidity::frontend::test;
-using namespace std;
 
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
@@ -32,13 +31,13 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
 	if (_size <= 600)
 	{
-		string input(reinterpret_cast<char const*>(_data), _size);
-		map<string, string> sourceCode;
+		std::string input(reinterpret_cast<char const*>(_data), _size);
+		std::map<std::string, std::string> sourceCode;
 		try
 		{
 			TestCaseReader t = TestCaseReader(std::istringstream(input));
 			sourceCode = t.sources().sources;
-			map<string, string> settings = t.settings();
+			std::map<std::string, std::string> settings = t.settings();
 			bool compileViaYul =
 				settings.count("compileViaYul") &&
 				(settings.at("compileViaYul") == "also" || settings.at("compileViaYul") == "true");
@@ -51,7 +50,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 				compileViaYul
 			);
 		}
-		catch (runtime_error const&)
+		catch (std::runtime_error const&)
 		{
 			return 0;
 		}

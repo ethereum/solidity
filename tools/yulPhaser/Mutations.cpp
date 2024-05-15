@@ -28,15 +28,14 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::phaser;
 
-function<Mutation> phaser::geneRandomisation(double _chance)
+std::function<Mutation> phaser::geneRandomisation(double _chance)
 {
 	return [=](Chromosome const& _chromosome)
 	{
-		string genes;
+		std::string genes;
 		for (char gene: _chromosome.genes())
 			genes.push_back(
 				SimulationRNG::bernoulliTrial(_chance) ?
@@ -48,11 +47,11 @@ function<Mutation> phaser::geneRandomisation(double _chance)
 	};
 }
 
-function<Mutation> phaser::geneDeletion(double _chance)
+std::function<Mutation> phaser::geneDeletion(double _chance)
 {
 	return [=](Chromosome const& _chromosome)
 	{
-		string genes;
+		std::string genes;
 		for (char gene: _chromosome.genes())
 			if (!SimulationRNG::bernoulliTrial(_chance))
 				genes.push_back(gene);
@@ -61,11 +60,11 @@ function<Mutation> phaser::geneDeletion(double _chance)
 	};
 }
 
-function<Mutation> phaser::geneAddition(double _chance)
+std::function<Mutation> phaser::geneAddition(double _chance)
 {
 	return [=](Chromosome const& _chromosome)
 	{
-		string genes;
+		std::string genes;
 
 		if (SimulationRNG::bernoulliTrial(_chance))
 			genes.push_back(Chromosome::randomGene());
@@ -81,10 +80,10 @@ function<Mutation> phaser::geneAddition(double _chance)
 	};
 }
 
-function<Mutation> phaser::alternativeMutations(
+std::function<Mutation> phaser::alternativeMutations(
 	double _firstMutationChance,
-	function<Mutation> _mutation1,
-	function<Mutation> _mutation2
+	std::function<Mutation> _mutation1,
+	std::function<Mutation> _mutation2
 )
 {
 	return [=](Chromosome const& _chromosome)
@@ -96,7 +95,7 @@ function<Mutation> phaser::alternativeMutations(
 	};
 }
 
-function<Mutation> phaser::mutationSequence(vector<function<Mutation>> _mutations)
+std::function<Mutation> phaser::mutationSequence(std::vector<std::function<Mutation>> _mutations)
 {
 	return [=](Chromosome const& _chromosome)
 	{
@@ -134,26 +133,26 @@ ChromosomePair fixedPointSwap(
 
 }
 
-function<Crossover> phaser::randomPointCrossover()
+std::function<Crossover> phaser::randomPointCrossover()
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
-		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+		size_t minLength = std::min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
 		size_t minPoint = (minLength > 0 ? 1 : 0);
 		assert(minPoint <= minLength);
 
 		size_t randomPoint = SimulationRNG::uniformInt(minPoint, minLength);
-		return get<0>(fixedPointSwap(_chromosome1, _chromosome2, randomPoint));
+		return std::get<0>(fixedPointSwap(_chromosome1, _chromosome2, randomPoint));
 	};
 }
 
-function<SymmetricCrossover> phaser::symmetricRandomPointCrossover()
+std::function<SymmetricCrossover> phaser::symmetricRandomPointCrossover()
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
-		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+		size_t minLength = std::min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
 		size_t minPoint = (minLength > 0 ? 1 : 0);
@@ -164,16 +163,16 @@ function<SymmetricCrossover> phaser::symmetricRandomPointCrossover()
 	};
 }
 
-function<Crossover> phaser::fixedPointCrossover(double _crossoverPoint)
+std::function<Crossover> phaser::fixedPointCrossover(double _crossoverPoint)
 {
 	assert(0.0 <= _crossoverPoint && _crossoverPoint <= 1.0);
 
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
-		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
-		size_t concretePoint = static_cast<size_t>(round(double(minLength) * _crossoverPoint));
+		size_t minLength = std::min(_chromosome1.length(), _chromosome2.length());
+		size_t concretePoint = static_cast<size_t>(std::round(double(minLength) * _crossoverPoint));
 
-		return get<0>(fixedPointSwap(_chromosome1, _chromosome2, concretePoint));
+		return std::get<0>(fixedPointSwap(_chromosome1, _chromosome2, concretePoint));
 	};
 }
 
@@ -192,8 +191,8 @@ ChromosomePair fixedTwoPointSwap(
 	assert(_crossoverPoint2 <= _chromosome1.length());
 	assert(_crossoverPoint2 <= _chromosome2.length());
 
-	size_t lowPoint = min(_crossoverPoint1, _crossoverPoint2);
-	size_t highPoint = max(_crossoverPoint1, _crossoverPoint2);
+	size_t lowPoint = std::min(_crossoverPoint1, _crossoverPoint2);
+	size_t highPoint = std::max(_crossoverPoint1, _crossoverPoint2);
 
 	return {
 		Chromosome(
@@ -211,11 +210,11 @@ ChromosomePair fixedTwoPointSwap(
 
 }
 
-function<Crossover> phaser::randomTwoPointCrossover()
+std::function<Crossover> phaser::randomTwoPointCrossover()
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
-		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+		size_t minLength = std::min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
 		size_t minPoint = (minLength > 0 ? 1 : 0);
@@ -223,15 +222,15 @@ function<Crossover> phaser::randomTwoPointCrossover()
 
 		size_t randomPoint1 = SimulationRNG::uniformInt(minPoint, minLength);
 		size_t randomPoint2 = SimulationRNG::uniformInt(randomPoint1, minLength);
-		return get<0>(fixedTwoPointSwap(_chromosome1, _chromosome2, randomPoint1, randomPoint2));
+		return std::get<0>(fixedTwoPointSwap(_chromosome1, _chromosome2, randomPoint1, randomPoint2));
 	};
 }
 
-function<SymmetricCrossover> phaser::symmetricRandomTwoPointCrossover()
+std::function<SymmetricCrossover> phaser::symmetricRandomTwoPointCrossover()
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
-		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+		size_t minLength = std::min(_chromosome1.length(), _chromosome2.length());
 
 		// Don't use position 0 (because this just swaps the values) unless it's the only choice.
 		size_t minPoint = (minLength > 0 ? 1 : 0);
@@ -248,10 +247,10 @@ namespace
 
 ChromosomePair uniformSwap(Chromosome const& _chromosome1, Chromosome const& _chromosome2, double _swapChance)
 {
-	string steps1;
-	string steps2;
+	std::string steps1;
+	std::string steps2;
 
-	size_t minLength = min(_chromosome1.length(), _chromosome2.length());
+	size_t minLength = std::min(_chromosome1.length(), _chromosome2.length());
 	for (size_t i = 0; i < minLength; ++i)
 		if (SimulationRNG::bernoulliTrial(_swapChance))
 		{
@@ -286,15 +285,15 @@ ChromosomePair uniformSwap(Chromosome const& _chromosome1, Chromosome const& _ch
 
 }
 
-function<Crossover> phaser::uniformCrossover(double _swapChance)
+std::function<Crossover> phaser::uniformCrossover(double _swapChance)
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
-		return get<0>(uniformSwap(_chromosome1, _chromosome2, _swapChance));
+		return std::get<0>(uniformSwap(_chromosome1, _chromosome2, _swapChance));
 	};
 }
 
-function<SymmetricCrossover> phaser::symmetricUniformCrossover(double _swapChance)
+std::function<SymmetricCrossover> phaser::symmetricUniformCrossover(double _swapChance)
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{

@@ -28,7 +28,6 @@
 #include <cassert>
 #include <numeric>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
@@ -37,12 +36,12 @@ using namespace solidity::phaser;
 namespace solidity::phaser
 {
 
-ostream& operator<<(ostream& _stream, Individual const& _individual);
-ostream& operator<<(ostream& _stream, Population const& _population);
+std::ostream& operator<<(std::ostream& _stream, Individual const& _individual);
+std::ostream& operator<<(std::ostream& _stream, Population const& _population);
 
 }
 
-ostream& phaser::operator<<(ostream& _stream, Individual const& _individual)
+std::ostream& phaser::operator<<(std::ostream& _stream, Individual const& _individual)
 {
 	_stream << _individual.fitness << " " << _individual.chromosome;
 
@@ -59,12 +58,12 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 }
 
 Population Population::makeRandom(
-	shared_ptr<FitnessMetric> _fitnessMetric,
+	std::shared_ptr<FitnessMetric> _fitnessMetric,
 	size_t _size,
-	function<size_t()> _chromosomeLengthGenerator
+	std::function<size_t()> _chromosomeLengthGenerator
 )
 {
-	vector<Chromosome> chromosomes;
+	std::vector<Chromosome> chromosomes;
 	for (size_t i = 0; i < _size; ++i)
 		chromosomes.push_back(Chromosome::makeRandom(_chromosomeLengthGenerator()));
 
@@ -72,7 +71,7 @@ Population Population::makeRandom(
 }
 
 Population Population::makeRandom(
-	shared_ptr<FitnessMetric> _fitnessMetric,
+	std::shared_ptr<FitnessMetric> _fitnessMetric,
 	size_t _size,
 	size_t _minChromosomeLength,
 	size_t _maxChromosomeLength
@@ -87,25 +86,25 @@ Population Population::makeRandom(
 
 Population Population::select(Selection const& _selection) const
 {
-	vector<Individual> selectedIndividuals;
+	std::vector<Individual> selectedIndividuals;
 	for (size_t i: _selection.materialise(m_individuals.size()))
 		selectedIndividuals.emplace_back(m_individuals[i]);
 
 	return Population(m_fitnessMetric, selectedIndividuals);
 }
 
-Population Population::mutate(Selection const& _selection, function<Mutation> _mutation) const
+Population Population::mutate(Selection const& _selection, std::function<Mutation> _mutation) const
 {
-	vector<Individual> mutatedIndividuals;
+	std::vector<Individual> mutatedIndividuals;
 	for (size_t i: _selection.materialise(m_individuals.size()))
 		mutatedIndividuals.emplace_back(_mutation(m_individuals[i].chromosome), *m_fitnessMetric);
 
 	return Population(m_fitnessMetric, mutatedIndividuals);
 }
 
-Population Population::crossover(PairSelection const& _selection, function<Crossover> _crossover) const
+Population Population::crossover(PairSelection const& _selection, std::function<Crossover> _crossover) const
 {
-	vector<Individual> crossedIndividuals;
+	std::vector<Individual> crossedIndividuals;
 	for (auto const& [i, j]: _selection.materialise(m_individuals.size()))
 	{
 		auto childChromosome = _crossover(
@@ -118,27 +117,27 @@ Population Population::crossover(PairSelection const& _selection, function<Cross
 	return Population(m_fitnessMetric, crossedIndividuals);
 }
 
-tuple<Population, Population> Population::symmetricCrossoverWithRemainder(
+std::tuple<Population, Population> Population::symmetricCrossoverWithRemainder(
 	PairSelection const& _selection,
-	function<SymmetricCrossover> _symmetricCrossover
+	std::function<SymmetricCrossover> _symmetricCrossover
 ) const
 {
-	vector<int> indexSelected(m_individuals.size(), false);
+	std::vector<int> indexSelected(m_individuals.size(), false);
 
-	vector<Individual> crossedIndividuals;
+	std::vector<Individual> crossedIndividuals;
 	for (auto const& [i, j]: _selection.materialise(m_individuals.size()))
 	{
 		auto children = _symmetricCrossover(
 			m_individuals[i].chromosome,
 			m_individuals[j].chromosome
 		);
-		crossedIndividuals.emplace_back(std::move(get<0>(children)), *m_fitnessMetric);
-		crossedIndividuals.emplace_back(std::move(get<1>(children)), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(std::move(std::get<0>(children)), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(std::move(std::get<1>(children)), *m_fitnessMetric);
 		indexSelected[i] = true;
 		indexSelected[j] = true;
 	}
 
-	vector<Individual> remainder;
+	std::vector<Individual> remainder;
 	for (size_t i = 0; i < indexSelected.size(); ++i)
 		if (!indexSelected[i])
 			remainder.emplace_back(m_individuals[i]);
@@ -166,7 +165,7 @@ Population operator+(Population _a, Population _b)
 
 Population Population::combine(std::tuple<Population, Population> _populationPair)
 {
-	return get<0>(_populationPair) + get<1>(_populationPair);
+	return std::get<0>(_populationPair) + std::get<1>(_populationPair);
 }
 
 bool Population::operator==(Population const& _other) const
@@ -177,28 +176,28 @@ bool Population::operator==(Population const& _other) const
 	return m_individuals == _other.m_individuals && m_fitnessMetric == _other.m_fitnessMetric;
 }
 
-ostream& phaser::operator<<(ostream& _stream, Population const& _population)
+std::ostream& phaser::operator<<(std::ostream& _stream, Population const& _population)
 {
 	auto individual = _population.m_individuals.begin();
 	for (; individual != _population.m_individuals.end(); ++individual)
-		_stream << *individual << endl;
+		_stream << *individual << std::endl;
 
 	return _stream;
 }
 
-vector<Individual> Population::chromosomesToIndividuals(
+std::vector<Individual> Population::chromosomesToIndividuals(
 	FitnessMetric& _fitnessMetric,
-	vector<Chromosome> _chromosomes
+	std::vector<Chromosome> _chromosomes
 )
 {
-	vector<Individual> individuals;
+	std::vector<Individual> individuals;
 	for (auto& chromosome: _chromosomes)
 		individuals.emplace_back(std::move(chromosome), _fitnessMetric);
 
 	return individuals;
 }
 
-vector<Individual> Population::sortedIndividuals(vector<Individual> _individuals)
+std::vector<Individual> Population::sortedIndividuals(std::vector<Individual> _individuals)
 {
 	sort(_individuals.begin(), _individuals.end(), isFitter);
 	return _individuals;
