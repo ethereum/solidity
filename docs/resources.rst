@@ -40,7 +40,7 @@ Integrated (Ethereum) Development Environments
     * `Truffle <https://trufflesuite.com/truffle/>`_
         Ethereum development framework.
         💡 Note: Consensys announced the sunset of Truffle on September 21, 2023.
-        Current users may check out the migration path and available product support [here](https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat?utm_source=github&utm_medium=referral&utm_campaign=2023_Sep_truffle-sunset-2023_announcement_).
+        Current users may check out the migration path and available product support `here. <https://consensys.io/blog/consensys-announces-the-sunset-of-truffle-and-ganache-and-new-hardhat>`_
 
 Editor Integrations
 ===================
