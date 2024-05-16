@@ -31,12 +31,24 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <range/v3/view/drop.hpp>
 #include <range/v3/view/transform.hpp>
 
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
+
+
+Object const* Object::at(YulString _name) const
+{
+	yulAssert(
+		this->subIndexByName.count(_name),
+		"Assembly object <" + _name.str() + "> not found."
+	);
+	size_t subIndex = this->subIndexByName.at(_name);
+	return dynamic_cast<Object const*>(this->subObjects[subIndex].get());
+}
 
 std::string Data::toString(Dialect const*, DebugInfoSelection const&, CharStreamProvider const*) const
 {
@@ -129,11 +141,8 @@ std::set<YulString> Object::qualifiedDataNames() const
 	return qualifiedNames;
 }
 
-std::vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
+void Object::visitPath(YulString _qualifiedName, std::function<bool(Object const*)> const& _visitor) const
 {
-	yulAssert(_qualifiedName != name, "");
-	yulAssert(subIndexByName.count(name) == 0, "");
-
 	if (boost::algorithm::starts_with(_qualifiedName.str(), name.str() + "."))
 		_qualifiedName = YulString{_qualifiedName.str().substr(name.str().length() + 1)};
 	yulAssert(!_qualifiedName.empty(), "");
@@ -141,21 +150,51 @@ std::vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
 	std::vector<std::string> subObjectPathComponents;
 	boost::algorithm::split(subObjectPathComponents, _qualifiedName.str(), boost::is_any_of("."));
 
-	std::vector<size_t> path;
 	Object const* object = this;
 	for (std::string const& currentSubObjectName: subObjectPathComponents)
 	{
 		yulAssert(!currentSubObjectName.empty(), "");
-		auto subIndexIt = object->subIndexByName.find(YulString{currentSubObjectName});
-		yulAssert(
-			subIndexIt != object->subIndexByName.end(),
-			"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code."
-		);
-		object = dynamic_cast<Object const*>(object->subObjects[subIndexIt->second].get());
-		yulAssert(object, "Assembly object <" + _qualifiedName.str() + "> not found or does not contain code.");
-		yulAssert(object->subId != std::numeric_limits<size_t>::max(), "");
-		path.push_back({object->subId});
-	}
 
+		YulString subObjectName = YulString{currentSubObjectName};
+		object = object->at(subObjectName);
+		if (object && _visitor(object))
+			break;
+	}
+}
+
+std::vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
+{
+	std::vector<size_t> path;
+	yulAssert(_qualifiedName != name, "");
+	yulAssert(subIndexByName.count(name) == 0, "");
+
+	this->visitPath(_qualifiedName, [&](Object const* _object) -> bool {
+		yulAssert(_object->subId != std::numeric_limits<size_t>::max(), "");
+		path.push_back(_object->subId);
+		return false;
+	});
 	return path;
+}
+
+Object const* Object::subObjectAt(YulString _qualifiedName)
+{
+	yulAssert(!_qualifiedName.empty(), "");
+
+	// If there is no `.` in the given `_qualifiedName`, the target
+	// object name is considered to be equal to the `_qualifiedName`, otherwise,
+	// the target object name is the last element in the path given by `_qualifiedName`.
+	YulString targetObjectName = _qualifiedName;
+	size_t targetObjectPos = _qualifiedName.str().find_last_of(".");
+	if (targetObjectPos != std::string::npos)
+		targetObjectName = YulString(_qualifiedName.str().substr(targetObjectPos + 1));
+
+	Object const* foundObject = nullptr;
+	this->visitPath(_qualifiedName, [&](Object const* _subObject) -> bool {
+		if (targetObjectName != _subObject->name)
+			return false;
+		foundObject = _subObject;
+		return true;
+	});
+
+	return foundObject;
 }
