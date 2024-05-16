@@ -29,7 +29,6 @@ using namespace solidity::test::abiv2fuzzer;
 using namespace solidity::test;
 using namespace solidity::util;
 using namespace solidity;
-using namespace std;
 
 static constexpr size_t abiCoderHeapSize = 1024 * 512;
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
@@ -37,18 +36,18 @@ static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 DEFINE_PROTO_FUZZER(Contract const& _contract)
 {
 	ProtoConverter converter(_contract.seed());
-	string contractSource = converter.contractToString(_contract);
+	std::string contractSource = converter.contractToString(_contract);
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
 		// With libFuzzer binary run this to generate the solidity source file x.sol from a proto input:
 		// PROTO_FUZZER_DUMP_PATH=x.sol ./a.out proto-input
-		ofstream of(dump_path);
+		std::ofstream of(dump_path);
 		of << contractSource;
 	}
 
-	string typeString = converter.isabelleTypeString();
-	string valueString = converter.isabelleValueString();
+	std::string typeString = converter.isabelleTypeString();
+	std::string valueString = converter.isabelleValueString();
 	abicoder::ABICoder coder(abiCoderHeapSize);
 	if (!typeString.empty() && converter.coderFunction())
 	{
@@ -58,7 +57,7 @@ DEFINE_PROTO_FUZZER(Contract const& _contract)
 		// We target the default EVM which is the latest
 		langutil::EVMVersion version;
 		EVMHost hostContext(version, evmone);
-		string contractName = "C";
+		std::string contractName = "C";
 		StringMap source({{"test.sol", contractSource}});
 		CompilerInput cInput(version, source, contractName, OptimiserSettings::minimal(), {});
 		EvmoneUtility evmoneUtil(

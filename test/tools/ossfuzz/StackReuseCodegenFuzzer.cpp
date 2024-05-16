@@ -46,7 +46,6 @@ using namespace solidity::test::fuzzer;
 using namespace solidity::yul;
 using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::langutil;
-using namespace std;
 
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
@@ -80,7 +79,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		filterStatefulInstructions,
 		filterUnboundedLoops
 	);
-	string yul_source = converter.programToString(_input);
+	std::string yul_source = converter.programToString(_input);
 	// Do not fuzz the EVM Version field.
 	// See https://github.com/ethereum/solidity/issues/12590
 	langutil::EVMVersion version;
@@ -89,8 +88,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
-		ofstream of(dump_path);
-		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
+		std::ofstream of(dump_path);
+		of.write(yul_source.data(), static_cast<std::streamsize>(yul_source.size()));
 	}
 
 	YulStringRepository::reset();
@@ -103,7 +102,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bool unoptimizedStackTooDeep = false;
 	try
 	{
-		YulAssembler assembler{version, nullopt, settings, yul_source};
+		YulAssembler assembler{version, std::nullopt, settings, yul_source};
 		unoptimisedByteCode = assembler.assemble();
 		auto yulObject = assembler.object();
 		recursiveFunction = recursiveFunctionExists(
@@ -116,7 +115,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		unoptimizedStackTooDeep = true;
 	}
 
-	ostringstream unoptimizedState;
+	std::ostringstream unoptimizedState;
 	bool noRevertInSource = true;
 	bool noInvalidInSource = true;
 	if (!unoptimizedStackTooDeep)
@@ -128,8 +127,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		evmc::Result callResult = hostContext.call(callMessage);
 		// If the fuzzer synthesized input does not contain the revert opcode which
 		// we lazily check by string find, the EVM call should not revert.
-		noRevertInSource = yul_source.find("revert") == string::npos;
-		noInvalidInSource = yul_source.find("invalid") == string::npos;
+		noRevertInSource = yul_source.find("revert") == std::string::npos;
+		noInvalidInSource = yul_source.find("invalid") == std::string::npos;
 		if (noInvalidInSource)
 			solAssert(
 				callResult.status_code != EVMC_INVALID_INSTRUCTION,
@@ -157,7 +156,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bytes optimisedByteCode;
 	try
 	{
-		optimisedByteCode = YulAssembler{version, nullopt, settings, yul_source}.assemble();
+		optimisedByteCode = YulAssembler{version, std::nullopt, settings, yul_source}.assemble();
 	}
 	catch (solidity::yul::StackTooDeepError const&)
 	{
@@ -194,13 +193,13 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		 (!noInvalidInSource && callResultOpt.status_code == EVMC_INVALID_INSTRUCTION)),
 		"Optimised call failed."
 	);
-	ostringstream optimizedState;
+	std::ostringstream optimizedState;
 	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
 
 	if (unoptimizedState.str() != optimizedState.str())
 	{
-		cout << unoptimizedState.str() << endl;
-		cout << optimizedState.str() << endl;
+		std::cout << unoptimizedState.str() << std::endl;
+		std::cout << optimizedState.str() << std::endl;
 		solAssert(
 			false,
 			"State of unoptimised and optimised stack reused code do not match."

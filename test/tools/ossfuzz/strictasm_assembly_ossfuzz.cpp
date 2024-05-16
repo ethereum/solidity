@@ -24,7 +24,6 @@
 
 using namespace solidity;
 using namespace solidity::yul;
-using namespace std;
 
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
@@ -36,10 +35,10 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 	YulStringRepository::reset();
 
-	string input(reinterpret_cast<char const*>(_data), _size);
+	std::string input(reinterpret_cast<char const*>(_data), _size);
 	YulStack stack(
 		langutil::EVMVersion(),
-		nullopt,
+		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::minimal(),
 		langutil::DebugInfoSelection::All()

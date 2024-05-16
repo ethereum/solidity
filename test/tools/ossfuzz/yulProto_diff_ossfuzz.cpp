@@ -36,7 +36,6 @@
 
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -47,15 +46,15 @@ using namespace solidity::yul::test::yul_fuzzer;
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
 	ProtoConverter converter;
-	string yul_source = converter.programToString(_input);
+	std::string yul_source = converter.programToString(_input);
 	EVMVersion version = converter.version();
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_DUMP_PATH=x.yul ./a.out proto-input
-		ofstream of(dump_path);
-		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
+		std::ofstream of(dump_path);
+		of.write(yul_source.data(), static_cast<std::streamsize>(yul_source.size()));
 	}
 
 	YulStringRepository::reset();
@@ -63,7 +62,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// YulStack entry point
 	YulStack stack(
 		version,
-		nullopt,
+		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
 		DebugInfoSelection::All()
@@ -81,8 +80,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		yulAssert(false, "Proto fuzzer generated malformed program");
 	}
 
-	ostringstream os1;
-	ostringstream os2;
+	std::ostringstream os1;
+	std::ostringstream os2;
 	// Disable memory tracing to avoid false positive reports
 	// such as unused write to memory e.g.,
 	// { mstore(0, 1) }
@@ -102,7 +101,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	std::shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
 	yulAssert(astBlock != nullptr, "Optimiser error.");
 	termReason = yulFuzzerUtil::interpret(
 		os2,
@@ -116,8 +115,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bool isTraceEq = (os1.str() == os2.str());
 	if (!isTraceEq)
 	{
-		cout << os1.str() << endl;
-		cout << os2.str() << endl;
+		std::cout << os1.str() << std::endl;
+		std::cout << os2.str() << std::endl;
 		yulAssert(false, "Interpreted traces for optimized and unoptimized code differ.");
 	}
 	return;

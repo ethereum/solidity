@@ -6,11 +6,10 @@
 
 using namespace solidity::yul::test::yul_fuzzer;
 using namespace protobuf_mutator;
-using namespace std;
 
 using YPM = YulProtoMutator;
 
-MutationInfo::MutationInfo(ProtobufMessage const* _message, string const& _info):
+MutationInfo::MutationInfo(ProtobufMessage const* _message, std::string const& _info):
 	ScopeGuard([&]{ exitInfo(); }),
 	m_protobufMsg(_message)
 {
@@ -60,7 +59,7 @@ struct addControlFlow
 		/// Unused variable registers callback.
 		LPMPostProcessor<T> callback(function);
 	}
-	function<void(T*, unsigned)> function;
+	std::function<void(T*, unsigned)> function;
 };
 }
 
@@ -182,7 +181,7 @@ void YPM::addControlFlow(T* _msg, unsigned _seed)
 		Leave,
 		Termination
 	};
-	uniform_int_distribution<unsigned> d(
+	std::uniform_int_distribution<unsigned> d(
 		static_cast<unsigned>(ControlFlowStmt::For),
 		static_cast<unsigned>(ControlFlowStmt::Termination)
 	);
@@ -229,7 +228,7 @@ Block* YPM::randomBlock(ForStmt* _stmt, unsigned _seed)
 		Post = 1,
 		Body = 2
 	};
-	uniform_int_distribution<unsigned> d(
+	std::uniform_int_distribution<unsigned> d(
 		static_cast<unsigned>(ForBlocks::Init),
 		static_cast<unsigned>(ForBlocks::Body)
 	);

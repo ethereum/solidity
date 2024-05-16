@@ -23,7 +23,6 @@
 
 using namespace solidity::test::fuzzer::mutator;
 using namespace solidity::util;
-using namespace std;
 
 GeneratorBase::GeneratorBase(std::shared_ptr<SolidityGenerator> _mutator)
 {
@@ -32,11 +31,11 @@ GeneratorBase::GeneratorBase(std::shared_ptr<SolidityGenerator> _mutator)
 	uRandDist = mutator->uniformRandomDist();
 }
 
-string GeneratorBase::visitChildren()
+std::string GeneratorBase::visitChildren()
 {
-	ostringstream os;
+	std::ostringstream os;
 	// Randomise visit order
-	vector<GeneratorPtr> randomisedChildren;
+	std::vector<GeneratorPtr> randomisedChildren;
 	for (auto const& child: generators)
 		randomisedChildren.push_back(child);
 	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
@@ -47,7 +46,7 @@ string GeneratorBase::visitChildren()
 	return os.str();
 }
 
-string TestState::randomPath(set<string> const& _sourceUnitPaths) const
+std::string TestState::randomPath(std::set<std::string> const& _sourceUnitPaths) const
 {
 	auto it = _sourceUnitPaths.begin();
 	/// Advance iterator by n where 0 <= n <= sourceUnitPaths.size() - 1
@@ -60,7 +59,7 @@ string TestState::randomPath(set<string> const& _sourceUnitPaths) const
 	return *it;
 }
 
-string TestState::randomPath() const
+std::string TestState::randomPath() const
 {
 	solAssert(!empty(), "Solc custom mutator: Null test state");
 	return randomPath(sourceUnitPaths);
@@ -73,20 +72,20 @@ void TestState::print(std::ostream& _os) const
 		_os << "Source path: " << item << std::endl;
 }
 
-string TestState::randomNonCurrentPath() const
+std::string TestState::randomNonCurrentPath() const
 {
 	/// To obtain a source path that is not the currently visited
 	/// source unit itself, we require at least one other source
 	/// unit to be previously visited.
 	solAssert(size() >= 2, "Solc custom mutator: Invalid test state");
 
-	set<string> filteredSourcePaths;
-	string currentPath = currentSourceUnitPath;
-	copy_if(
+	std::set<std::string> filteredSourcePaths;
+	std::string currentPath = currentSourceUnitPath;
+	std::copy_if(
 		sourceUnitPaths.begin(),
 		sourceUnitPaths.end(),
 		inserter(filteredSourcePaths, filteredSourcePaths.begin()),
-		[currentPath](string const& _item) {
+		[currentPath](std::string const& _item) {
 			return _item != currentPath;
 		}
 	);
@@ -100,12 +99,12 @@ void TestCaseGenerator::setup()
 	});
 }
 
-string TestCaseGenerator::visit()
+std::string TestCaseGenerator::visit()
 {
-	ostringstream os;
+	std::ostringstream os;
 	for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxSourceUnits); i++)
 	{
-		string sourcePath = path();
+		std::string sourcePath = path();
 		os << "\n"
 			<< "==== Source: "
 			<< sourcePath
@@ -126,32 +125,32 @@ void SourceUnitGenerator::setup()
 	});
 }
 
-string SourceUnitGenerator::visit()
+std::string SourceUnitGenerator::visit()
 {
 	return visitChildren();
 }
 
-string PragmaGenerator::visit()
+std::string PragmaGenerator::visit()
 {
 	static constexpr const char* preamble = R"(
 		pragma solidity >= 0.0.0;
 		pragma experimental SMTChecker;
 	)";
 	// Choose equally at random from coder v1 and v2
-	string abiPragma = "pragma abicoder v" +
-		to_string(uRandDist->distributionOneToN(2)) +
+	std::string abiPragma = "pragma abicoder v" +
+		std::to_string(uRandDist->distributionOneToN(2)) +
 		";\n";
 	return preamble + abiPragma;
 }
 
-string ImportGenerator::visit()
+std::string ImportGenerator::visit()
 {
 	/*
 	 * Case 1: No source units defined
 	 * Case 2: One source unit defined
 	 * Case 3: At least two source units defined
 	 */
-	ostringstream os;
+	std::ostringstream os;
 	// Self import with a small probability only if
 	// there is one source unit present in test.
 	if (state->size() == 1)
@@ -175,19 +174,19 @@ string ImportGenerator::visit()
 }
 
 template <typename T>
-shared_ptr<T> SolidityGenerator::generator()
+std::shared_ptr<T> SolidityGenerator::generator()
 {
 	for (auto& g: m_generators)
-		if (holds_alternative<shared_ptr<T>>(g))
-			return get<shared_ptr<T>>(g);
+		if (std::holds_alternative<std::shared_ptr<T>>(g))
+			return std::get<std::shared_ptr<T>>(g);
 	solAssert(false, "");
 }
 
 SolidityGenerator::SolidityGenerator(unsigned _seed)
 {
 	m_generators = {};
-	m_urd = make_shared<UniformRandomDistribution>(make_unique<RandomEngine>(_seed));
-	m_state = make_shared<TestState>(m_urd);
+	m_urd = std::make_shared<UniformRandomDistribution>(std::make_unique<RandomEngine>(_seed));
+	m_state = std::make_shared<TestState>(m_urd);
 }
 
 template <size_t I>
@@ -200,14 +199,14 @@ void SolidityGenerator::createGenerators()
 	}
 }
 
-string SolidityGenerator::generateTestProgram()
+std::string SolidityGenerator::generateTestProgram()
 {
 	createGenerators();
 	for (auto& g: m_generators)
 		std::visit(GenericVisitor{
 			[&](auto const& _item) { return _item->setup(); }
 		}, g);
-	string program = generator<TestCaseGenerator>()->generate();
+	std::string program = generator<TestCaseGenerator>()->generate();
 	destroyGenerators();
 	return program;
 }

@@ -28,7 +28,6 @@
 #include <ctime>
 #include <limits>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::phaser;
 
@@ -51,7 +50,7 @@ size_t SimulationRNG::binomialInt(size_t _numTrials, double _successProbability)
 {
 	// NOTE: binomial_distribution<size_t> would not work because it internally tries to use abs()
 	// and fails to compile due to ambiguous conversion.
-	assert(_numTrials <= static_cast<size_t>(numeric_limits<long>::max()));
+	assert(_numTrials <= static_cast<size_t>(std::numeric_limits<long>::max()));
 
 	boost::random::binomial_distribution<long> distribution(static_cast<long>(_numTrials), _successProbability);
 	return static_cast<size_t>(distribution(s_generator));
@@ -62,5 +61,5 @@ uint32_t SimulationRNG::generateSeed()
 	// This is not a secure way to seed the generator but it's good enough for simulation purposes.
 	// The only thing that matters for us is that the sequence is different on each run and that
 	// it fits the expected distribution. It does not have to be 100% unpredictable.
-	return static_cast<uint32_t>(time(nullptr));
+	return static_cast<uint32_t>(std::time(nullptr));
 }

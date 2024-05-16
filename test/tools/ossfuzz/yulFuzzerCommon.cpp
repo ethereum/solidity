@@ -17,14 +17,13 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test::yul_fuzzer;
 
 yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
-	ostream& _os,
-	shared_ptr<yul::Block> _ast,
+	std::ostream& _os,
+	std::shared_ptr<yul::Block> _ast,
 	Dialect const& _dialect,
 	bool _disableMemoryTracing,
 	bool _outputStorageOnly,

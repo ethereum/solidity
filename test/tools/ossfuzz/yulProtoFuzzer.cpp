@@ -40,20 +40,19 @@ using namespace solidity::langutil;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 using namespace solidity::yul::test::yul_fuzzer;
-using namespace std;
 
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
 	ProtoConverter converter;
-	string yul_source = converter.programToString(_input);
+	std::string yul_source = converter.programToString(_input);
 	EVMVersion version = converter.version();
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
 		// With libFuzzer binary run this to generate a YUL source file x.yul:
 		// PROTO_FUZZER_DUMP_PATH=x.yul ./a.out proto-input
-		ofstream of(dump_path);
-		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
+		std::ofstream of(dump_path);
+		of.write(yul_source.data(), static_cast<std::streamsize>(yul_source.size()));
 	}
 
 	if (yul_source.size() > 1200)
@@ -64,7 +63,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// YulStack entry point
 	YulStack stack(
 		version,
-		nullopt,
+		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
 		DebugInfoSelection::All()
@@ -85,6 +84,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	std::shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
 	yulAssert(astBlock != nullptr, "Optimiser error.");
 }

@@ -38,7 +38,6 @@
 #include <windows.h>
 #endif
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
@@ -69,24 +68,24 @@ struct TestStats
 class TestFilter
 {
 public:
-	explicit TestFilter(string _filter): m_filter(std::move(_filter))
+	explicit TestFilter(std::string _filter): m_filter(std::move(_filter))
 	{
-		string filter{m_filter};
+		std::string filter{m_filter};
 
 		boost::replace_all(filter, "/", "\\/");
 		boost::replace_all(filter, "*", ".*");
 
-		m_filterExpression = regex{"(" + filter + "(\\.sol|\\.yul|\\.stack))"};
+		m_filterExpression = std::regex{"(" + filter + "(\\.sol|\\.yul|\\.stack))"};
 	}
 
-	bool matches(fs::path const& _path, string const& _name) const
+	bool matches(fs::path const& _path, std::string const& _name) const
 	{
-		return regex_match(_name, m_filterExpression) && solidity::test::isValidSemanticTestPath(_path);
+		return std::regex_match(_name, m_filterExpression) && solidity::test::isValidSemanticTestPath(_path);
 	}
 
 private:
-	string m_filter;
-	regex m_filterExpression;
+	std::string m_filter;
+	std::regex m_filterExpression;
 };
 
 class TestTool
@@ -96,7 +95,7 @@ public:
 		TestCreator _testCaseCreator,
 		TestOptions const& _options,
 		fs::path _path,
-		string _name
+		std::string _name
 	):
 		m_testCaseCreator(_testCaseCreator),
 		m_options(_options),
@@ -137,9 +136,9 @@ private:
 	TestOptions const& m_options;
 	TestFilter m_filter;
 	fs::path const m_path;
-	string const m_name;
+	std::string const m_name;
 
-	unique_ptr<TestCase> m_test;
+	std::unique_ptr<TestCase> m_test;
 
 	static bool m_exitRequested;
 };
@@ -154,7 +153,7 @@ TestTool::Result TestTool::process()
 	{
 		if (m_filter.matches(m_path, m_name))
 		{
-			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
+			(AnsiColorized(std::cout, formatted, {BOLD}) << m_name << ": ").flush();
 
 			m_test = m_testCaseCreator(TestCase::Config{
 				m_path.string(),
@@ -170,22 +169,22 @@ TestTool::Result TestTool::process()
 				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
 				{
 					case TestCase::TestResult::Success:
-						AnsiColorized(cout, formatted, {BOLD, GREEN}) << "OK" << endl;
+						AnsiColorized(std::cout, formatted, {BOLD, GREEN}) << "OK" << std::endl;
 						return Result::Success;
 					default:
-						AnsiColorized(cout, formatted, {BOLD, RED}) << "FAIL" << endl;
+						AnsiColorized(std::cout, formatted, {BOLD, RED}) << "FAIL" << std::endl;
 
-						AnsiColorized(cout, formatted, {BOLD, CYAN}) << "  Contract:" << endl;
-						m_test->printSource(cout, "    ", formatted);
-						m_test->printSettings(cout, "    ", formatted);
+						AnsiColorized(std::cout, formatted, {BOLD, CYAN}) << "  Contract:" << std::endl;
+						m_test->printSource(std::cout, "    ", formatted);
+						m_test->printSettings(std::cout, "    ", formatted);
 
-						cout << endl << outputMessages.str() << endl;
+						std::cout << std::endl << outputMessages.str() << std::endl;
 						return result == TestCase::TestResult::FatalError ? Result::Exception : Result::Failure;
 				}
 			}
 			else
 			{
-				AnsiColorized(cout, formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
+				AnsiColorized(std::cout, formatted, {BOLD, YELLOW}) << "NOT RUN" << std::endl;
 				return Result::Skipped;
 			}
 		}
@@ -194,30 +193,30 @@ TestTool::Result TestTool::process()
 	}
 	catch (boost::exception const& _e)
 	{
-		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Exception during test: " << boost::diagnostic_information(_e) << endl;
+		AnsiColorized(std::cout, formatted, {BOLD, RED}) <<
+			"Exception during test: " << boost::diagnostic_information(_e) << std::endl;
 		return Result::Exception;
 	}
 	catch (std::exception const& _e)
 	{
-		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Exception during test: " << boost::diagnostic_information(_e) << endl;
+		AnsiColorized(std::cout, formatted, {BOLD, RED}) <<
+			"Exception during test: " << boost::diagnostic_information(_e) << std::endl;
 		return Result::Exception;
 	}
 	catch (...)
 	{
-		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Unknown exception during test: " << boost::current_exception_diagnostic_information() << endl;
+		AnsiColorized(std::cout, formatted, {BOLD, RED}) <<
+			"Unknown exception during test: " << boost::current_exception_diagnostic_information() << std::endl;
 		return Result::Exception;
 	}
 }
 
 void TestTool::updateTestCase()
 {
-	ofstream file(m_path.string(), ios::trunc);
+	std::ofstream file(m_path.string(), std::ios::trunc);
 	m_test->printSource(file);
 	m_test->printUpdatedSettings(file);
-	file << "// ----" << endl;
+	file << "// ----" << std::endl;
 	m_test->printUpdatedExpectations(file, "// ");
 }
 
@@ -230,34 +229,34 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 	}
 
 	if (_exception)
-		cout << "(e)dit/(s)kip/(q)uit? ";
+		std::cout << "(e)dit/(s)kip/(q)uit? ";
 	else
-		cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
-	cout.flush();
+		std::cout << "(e)dit/(u)pdate expectations/(s)kip/(q)uit? ";
+	std::cout.flush();
 
 	while (true)
 	{
 		switch(readStandardInputChar())
 		{
 		case 's':
-			cout << endl;
+			std::cout << std::endl;
 			return Request::Skip;
 		case 'u':
 			if (_exception)
 				break;
 			else
 			{
-				cout << endl;
+				std::cout << std::endl;
 				updateTestCase();
 				return Request::Rerun;
 			}
 		case 'e':
-			cout << endl << endl;
+			std::cout << std::endl << std::endl;
 			if (system((m_options.editor + " \"" + m_path.string() + "\"").c_str()))
-				cerr << "Error running editor command." << endl << endl;
+				std::cerr << "Error running editor command." << std::endl << std::endl;
 			return Request::Rerun;
 		case 'q':
-			cout << endl;
+			std::cout << std::endl;
 			return Request::Quit;
 		default:
 			break;
@@ -326,7 +325,7 @@ TestStats TestTool::processPath(
 					m_exitRequested = true;
 					break;
 				case Request::Rerun:
-					cout << "Re-running test case..." << endl;
+					std::cout << "Re-running test case..." << std::endl;
 					--testCount;
 					break;
 				case Request::Skip:
@@ -379,7 +378,7 @@ std::optional<TestStats> runTestSuite(
 	TestOptions const& _options,
 	fs::path const& _basePath,
 	fs::path const& _subdirectory,
-	string const& _name,
+	std::string const& _name,
 	solidity::test::Batcher& _batcher
 )
 {
@@ -388,7 +387,7 @@ std::optional<TestStats> runTestSuite(
 
 	if (!fs::exists(testPath) || !fs::is_directory(testPath))
 	{
-		cerr << _name << " tests not found. Use the --testpath argument." << endl;
+		std::cerr << _name << " tests not found. Use the --testpath argument." << std::endl;
 		return std::nullopt;
 	}
 
@@ -402,19 +401,19 @@ std::optional<TestStats> runTestSuite(
 
 	if (stats.skippedCount != stats.testCount)
 	{
-		cout << endl << _name << " Test Summary: ";
-		AnsiColorized(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
+		std::cout << std::endl << _name << " Test Summary: ";
+		AnsiColorized(std::cout, formatted, {BOLD, stats ? GREEN : RED}) <<
 			stats.successCount <<
 			"/" <<
 			stats.testCount;
-		cout << " tests successful";
+		std::cout << " tests successful";
 		if (stats.skippedCount > 0)
 		{
-			cout << " (";
-			AnsiColorized(cout, formatted, {BOLD, YELLOW}) << stats.skippedCount;
-			cout<< " tests skipped)";
+			std::cout << " (";
+			AnsiColorized(std::cout, formatted, {BOLD, YELLOW}) << stats.skippedCount;
+			std::cout<< " tests skipped)";
 		}
-		cout << "." << endl << endl;
+		std::cout << "." << std::endl << std::endl;
 	}
 	return stats;
 }
@@ -446,14 +445,14 @@ int main(int argc, char const *argv[])
 			return EXIT_FAILURE;
 
 		if (options.disableSemanticTests)
-			cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
+			std::cout << std::endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << std::endl << std::endl;
 
 		TestStats global_stats{0, 0};
-		cout << "Running tests..." << endl << endl;
+		std::cout << "Running tests..." << std::endl << std::endl;
 
 		Batcher batcher(CommonOptions::get().selectedBatch, CommonOptions::get().batches);
 		if (CommonOptions::get().batches > 1)
-			cout << "Batch " << CommonOptions::get().selectedBatch << " out of " << CommonOptions::get().batches << endl;
+			std::cout << "Batch " << CommonOptions::get().selectedBatch << " out of " << CommonOptions::get().batches << std::endl;
 
 		// Actually run the tests.
 		// Interactive tests are added in InteractiveTests.h
@@ -479,42 +478,42 @@ int main(int argc, char const *argv[])
 				return EXIT_FAILURE;
 		}
 
-		cout << endl << "Summary: ";
-		AnsiColorized(cout, !options.noColor, {BOLD, global_stats ? GREEN : RED}) <<
+		std::cout << std::endl << "Summary: ";
+		AnsiColorized(std::cout, !options.noColor, {BOLD, global_stats ? GREEN : RED}) <<
 			 global_stats.successCount << "/" << global_stats.testCount;
-		cout << " tests successful";
+		std::cout << " tests successful";
 		if (global_stats.skippedCount > 0)
 		{
-			cout << " (";
-			AnsiColorized(cout, !options.noColor, {BOLD, YELLOW}) << global_stats.skippedCount;
-			cout << " tests skipped)";
+			std::cout << " (";
+			AnsiColorized(std::cout, !options.noColor, {BOLD, YELLOW}) << global_stats.skippedCount;
+			std::cout << " tests skipped)";
 		}
-		cout << "." << endl;
+		std::cout << "." << std::endl;
 
 		if (options.disableSemanticTests)
-			cout << "\nNOTE: Skipped semantics tests.\n" << endl;
+			std::cout << "\nNOTE: Skipped semantics tests.\n" << std::endl;
 
 		return global_stats ? EXIT_SUCCESS : EXIT_FAILURE;
 	}
 	catch (boost::program_options::error const& exception)
 	{
-		cerr << exception.what() << endl;
+		std::cerr << exception.what() << std::endl;
 		return 2;
 	}
 	catch (std::runtime_error const& exception)
 	{
-		cerr << exception.what() << endl;
+		std::cerr << exception.what() << std::endl;
 		return 2;
 	}
 	catch (solidity::test::ConfigException const& exception)
 	{
-		cerr << exception.what() << endl;
+		std::cerr << exception.what() << std::endl;
 		return 2;
 	}
 	catch (...)
 	{
-		cerr << "Unhandled exception caught." << endl;
-		cerr << boost::current_exception_diagnostic_information() << endl;
+		std::cerr << "Unhandled exception caught." << std::endl;
+		std::cerr << boost::current_exception_diagnostic_information() << std::endl;
 		return 2;
 	}
 }
