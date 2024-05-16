@@ -33,7 +33,7 @@
 # Using $(em-config CACHE)/sysroot/usr seems to work, though, and still has cmake find the
 # dependencies automatically.
 FROM emscripten/emsdk:3.1.19 AS base
-LABEL version="17"
+LABEL version="18"
 
 ADD emscripten.jam /usr/src
 RUN set -ex && \
