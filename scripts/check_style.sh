@@ -20,44 +20,6 @@ EXCLUDE_FILES=(
 EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
 EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
 
-NAMESPACE_STD_FREE_FILES=(
-    libevmasm/*
-    liblangutil/*
-    libsmtutil/*
-    libsolc/*
-    libsolidity/analysis/*
-    libsolidity/ast/*
-    libsolidity/codegen/ir/*
-    libsolidity/codegen/*
-    libsolidity/experimental/*
-    libsolidity/formal/*
-    libsolidity/interface/*
-    libsolidity/lsp/*
-    libsolidity/parsing/*
-    libsolutil/*
-    libyul/*
-    libyul/backends/evm/*
-    libyul/optimiser/*
-    solc/*
-    test/*
-    test/contracts/*
-    test/libevmasm/*
-    test/liblangutil/*
-    test/libsolutil/*
-    test/libsolidity/*
-    test/libsolidity/analysis/*
-    test/libsolidity/interface/*
-    test/libsolidity/util/*
-    test/libyul/*
-    test/solc/*
-    test/tools/*
-    test/tools/ossfuzz/*
-    test/tools/ossfuzz/protomutators/*
-    test/tools/yulInterpreter/*
-    test/yulPhaser/*
-    tools/yulPhaser/*
-)
-
 (
 REPO_ROOT="$(dirname "$0")"/..
 cd "$REPO_ROOT" || exit 1
@@ -104,9 +66,7 @@ FORMATERROR=$(
 # std namespace usage, test directory must also be covered.
 FORMATSTDERROR=$(
 (
-    # make sure `using namespace std` is not used in INCLUDE_DIRECTORIES
-    # shellcheck disable=SC2068,SC2068
-    grep -nIE -d skip "using namespace std;" ${NAMESPACE_STD_FREE_FILES[@]}
+    git grep -nIE "using namespace std;" -- '*.h' '*.cpp'
 ) || true
 )
 
