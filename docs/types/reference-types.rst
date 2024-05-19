@@ -150,7 +150,7 @@ a reference to it.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Variables of type ``bytes`` and ``string`` are special arrays. The ``bytes`` type is similar to ``bytes1[]``,
-but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
+except that ``bytes1[]`` is not packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
 length or index access.
 
 Solidity does not have string manipulation functions, but there are
