@@ -55,6 +55,7 @@ protected:
 	bool m_optimiseYul{};
 	std::string m_compileViaYul{};
 	langutil::Error::Severity m_minSeverity{};
+	PipelineStage m_stopAfter;
 };
 
 }
