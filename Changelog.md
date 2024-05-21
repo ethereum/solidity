@@ -1,14 +1,3 @@
-### 0.8.27 (unreleased)
-
-Language Features:
-
-
-Compiler Features:
-
-
-Bugfixes:
-
-
 ### 0.8.26 (2024-05-21)
 
 Language Features:
