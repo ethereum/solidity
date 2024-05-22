@@ -554,6 +554,23 @@ void CHC::endVisit(UnaryOperation const& _op)
 		internalFunctionCall(funDef, std::nullopt, _op.userDefinedFunctionType(), arguments, state().thisAddress());
 
 		createReturnedExpressions(funDef, _op);
+		return;
+	}
+
+	if (
+		_op.annotation().type->category() == Type::Category::RationalNumber ||
+		_op.annotation().type->category() == Type::Category::FixedPoint
+	)
+		return;
+
+	if (_op.getOperator() == Token::Sub && smt::isInteger(*_op.annotation().type))
+	{
+		auto const* intType = dynamic_cast<IntegerType const*>(_op.annotation().type);
+		if (!intType)
+			intType = TypeProvider::uint256();
+
+		verificationTargetEncountered(&_op, VerificationTargetType::Underflow, expr(_op) < intType->minValue());
+		verificationTargetEncountered(&_op, VerificationTargetType::Overflow, expr(_op) > intType->maxValue());
 	}
 }
 
