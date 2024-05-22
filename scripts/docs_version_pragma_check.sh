@@ -154,7 +154,8 @@ SOLTMPDIR=$(mktemp -d)
         # We expect errors if explicitly stated, or if imports
         # are used (in the style guide)
         if ( ! grep -E "This will not compile after" "$f" >/dev/null && \
-            grep -E "This will not compile|import \"" "$f" >/dev/null )
+            grep -E "This will not compile|import \"" "$f" >/dev/null || \
+            grep -R "This will only compile via IR" "$f" >/dev/null )
         then
             opts=(--expect-errors)
         fi
