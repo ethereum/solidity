@@ -1522,6 +1522,13 @@ jobs:
   c_ext_benchmarks:
     <<: *base_node_small
     steps:
+      - run:
+          name: Check CircleCI token presence; Skip job if not set.
+          command: |
+            if [[ -z "$CIRCLECI_TOKEN" ]]; then
+              echo "Skipping benchmarks..."
+              circleci-agent step halt
+            fi
       - install_python3:
           packages: requests
       - checkout

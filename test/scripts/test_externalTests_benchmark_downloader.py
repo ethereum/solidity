@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest import TestCase
 from unittest.mock import call, Mock, patch
+import os
+import requests
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
 # pragma pylint: disable=import-error
@@ -31,7 +33,7 @@ def _git_run_command_mock(command):
         "If you have updated the code, please remember to add matching command fixtures above."
     )
 
-def _requests_get_mock(url, params, timeout):
+def _requests_get_mock(url, params, headers, timeout):
     response_mock = Mock()
 
     if url == 'https://api.github.com/repos/ethereum/solidity/pulls/12818':
@@ -155,25 +157,37 @@ def _requests_get_mock(url, params, timeout):
         return response_mock
 
     if url == 'https://circleci.com/api/v2/project/gh/ethereum/solidity/1018023/artifacts':
-        response_mock.json.return_value = {
-            "next_page_token": None,
-            "items": [
-                {
-                    "path": "reports/externalTests/all-benchmarks.json",
-                    "url": "https://circle-artifacts.com/0/reports/externalTests/all-benchmarks.json"
-                },
-                {
-                    "path": "reports/externalTests/summarized-benchmarks.json",
-                    "url": "https://circle-artifacts.com/0/reports/externalTests/summarized-benchmarks.json"
-                }
-            ]
-        }
+        if (
+            os.environ.get('CIRCLECI_TOKEN') == 'valid_token' and
+            headers.get('Circle-Token') == os.environ.get('CIRCLECI_TOKEN')
+        ):
+            response_mock.json.return_value = {
+                "next_page_token": None,
+                "items": [
+                    {
+                        "path": "reports/externalTests/all-benchmarks.json",
+                        "url": "https://circle-artifacts.com/0/reports/externalTests/all-benchmarks.json"
+                    },
+                    {
+                        "path": "reports/externalTests/summarized-benchmarks.json",
+                        "url": "https://circle-artifacts.com/0/reports/externalTests/summarized-benchmarks.json"
+                    }
+                ]
+            }
+        else:
+            response_mock.status_code = 401
+            response_mock.json.return_value = {
+                "message": "Unauthorized"
+            }
+            error = requests.exceptions.HTTPError(f"401 Client Error: Unauthorized for url: {url}")
+            response_mock.raise_for_status.side_effect = error
         return response_mock
 
     raise RuntimeError(
         "The test tried to perform an unexpected GET request.\n"
         f"URL: {url}\n" +
         (f"query: {params}\n" if len(params) > 0 else "") +
+        (f"headers: {headers}\n" if len(headers) > 0 else "") +
         f"timeout: {timeout}\n" +
         "If you have updated the code, please remember to add matching response fixtures above."
     )
@@ -186,17 +200,20 @@ class TestBenchmarkDownloader(TestCase):
     @patch('externalTests.download_benchmarks.download_file')
     @patch('requests.get', _requests_get_mock)
     @patch('common.git_helpers.run_git_command',_git_run_command_mock)
+    @patch.dict(os.environ, {'CIRCLECI_TOKEN': 'valid_token'})
     def test_download_benchmarks(download_file_mock):
         download_benchmarks(None, None, None, silent=True)
         download_file_mock.assert_has_calls([
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/summarized-benchmarks.json',
                 Path('summarized-benchmarks-benchmark-downloader-fa1ddc6f.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/all-benchmarks.json',
                 Path('all-benchmarks-benchmark-downloader-fa1ddc6f.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
         ])
@@ -205,17 +222,20 @@ class TestBenchmarkDownloader(TestCase):
     @patch('externalTests.download_benchmarks.download_file')
     @patch('requests.get', _requests_get_mock)
     @patch('common.git_helpers.run_git_command',_git_run_command_mock)
+    @patch.dict(os.environ, {'CIRCLECI_TOKEN': 'valid_token'})
     def test_download_benchmarks_branch(download_file_mock):
         download_benchmarks('develop', None, None, silent=True)
         download_file_mock.assert_has_calls([
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/summarized-benchmarks.json',
                 Path('summarized-benchmarks-develop-43f29c00.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/all-benchmarks.json',
                 Path('all-benchmarks-develop-43f29c00.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
         ])
@@ -224,17 +244,20 @@ class TestBenchmarkDownloader(TestCase):
     @patch('externalTests.download_benchmarks.download_file')
     @patch('requests.get', _requests_get_mock)
     @patch('common.git_helpers.run_git_command',_git_run_command_mock)
+    @patch.dict(os.environ, {'CIRCLECI_TOKEN': 'valid_token'})
     def test_download_benchmarks_pr(download_file_mock):
         download_benchmarks(None, 12818, None, silent=True)
         download_file_mock.assert_has_calls([
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/summarized-benchmarks.json',
                 Path('summarized-benchmarks-benchmark-downloader-fa1ddc6f.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/all-benchmarks.json',
                 Path('all-benchmarks-benchmark-downloader-fa1ddc6f.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
         ])
@@ -243,17 +266,30 @@ class TestBenchmarkDownloader(TestCase):
     @patch('externalTests.download_benchmarks.download_file')
     @patch('requests.get', _requests_get_mock)
     @patch('common.git_helpers.run_git_command',_git_run_command_mock)
+    @patch.dict(os.environ, {'CIRCLECI_TOKEN': 'valid_token'})
     def test_download_benchmarks_base_of_pr(download_file_mock):
         download_benchmarks(None, None, 12818, silent=True)
         download_file_mock.assert_has_calls([
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/summarized-benchmarks.json',
                 Path('summarized-benchmarks-develop-43f29c00.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
             call(
                 'https://circle-artifacts.com/0/reports/externalTests/all-benchmarks.json',
                 Path('all-benchmarks-develop-43f29c00.json'),
+                {'Circle-Token': 'valid_token'},
                 False
             ),
         ])
+
+    # NOTE: No circleci token is set in the environment
+    @patch('externalTests.download_benchmarks.download_file')
+    @patch('requests.get', _requests_get_mock)
+    @patch('common.git_helpers.run_git_command',_git_run_command_mock)
+    def test_download_benchmarks_unauthorized_request(self, _):
+        with self.assertRaises(requests.exceptions.HTTPError) as manager:
+            download_benchmarks(None, None, None, silent=True)
+
+        self.assertIn('401 Client Error: Unauthorized', str(manager.exception))
