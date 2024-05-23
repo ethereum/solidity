@@ -82,7 +82,7 @@ At least a day before the release:
 ### PPA
  - [ ] Create ``.release_ppa_auth`` at the root of your local Solidity checkout and set ``LAUNCHPAD_EMAIL`` and ``LAUNCHPAD_KEYID`` to your key's email and key id.
  - [ ] Double-check that the ``DISTRIBUTIONS`` list in ``scripts/release_ppa.sh`` and ``scripts/deps-ppa/static_z3.sh`` contains the most recent versions of Ubuntu.
- - [ ] Make sure the [``~ethereum/cpp-build-deps`` PPA repository](https://launchpad.net/~ethereum/+archive/ubuntu/cpp-build-deps) contains ``libz3-static-dev builds`` for all current versions of Ubuntu.
+ - [ ] Make sure the [``~ethereum/cpp-build-deps`` PPA repository](https://launchpad.net/~ethereum/+archive/ubuntu/cpp-build-deps) contains ``libz3-static-dev`` builds for all current versions of Ubuntu.
        Note that it may be included in the ``z3-static`` multipackage (follow the ``View package details`` link to check).
        If not present, run ``scripts/deps-ppa/static_z3.sh`` and wait for the builds to succeed before continuing.
  - [ ] Run ``scripts/release_ppa.sh v$VERSION`` to create the PPA release.
