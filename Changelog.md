@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
 
 
 ### 0.8.26 (2024-05-21)
