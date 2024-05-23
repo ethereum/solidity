@@ -2,7 +2,9 @@
 
 from argparse import ArgumentParser, Namespace
 from enum import Enum, unique
+from os import environ
 from pathlib import Path
+from textwrap import dedent
 from typing import Mapping, Optional
 import sys
 
@@ -28,8 +30,13 @@ class Status(Enum):
 
 def process_commandline() -> Namespace:
     script_description = (
-        "Downloads benchmark results attached as artifacts to the c_ext_benchmarks job on CircleCI. "
-        "If no options are specified, downloads results for the currently checked out git branch."
+        """
+        Downloads benchmark results attached as artifacts to the c_ext_benchmarks job on CircleCI.
+        If no options are specified, downloads results for the currently checked out git branch.
+
+        The script requires the CIRCLECI_TOKEN environment variable to be set with a valid CircleCI API token.
+        You can generate a new token at https://app.circleci.com/settings/user/tokens.
+        """
     )
 
     parser = ArgumentParser(description=script_description)
@@ -96,9 +103,11 @@ def download_benchmark_artifact(
             print(f"Missing artifact: {artifact_path}.")
         return False
 
+    headers = {'Circle-Token': str(environ.get('CIRCLECI_TOKEN'))} if 'CIRCLECI_TOKEN' in environ else {}
     download_file(
         artifacts[artifact_path]['url'],
         Path(f'{benchmark_name}-{branch}-{commit_hash[:8]}.json'),
+        headers,
         overwrite,
     )
 
@@ -162,6 +171,13 @@ def download_benchmarks(
 
 def main():
     try:
+        if 'CIRCLECI_TOKEN' not in environ:
+            raise RuntimeError(
+               dedent(""" \
+                   CIRCLECI_TOKEN environment variable required but not set.
+                   Please generate a new token at https://app.circleci.com/settings/user/tokens and set CIRCLECI_TOKEN.
+                   """)
+            )
         options = process_commandline()
         return download_benchmarks(
             options.branch,

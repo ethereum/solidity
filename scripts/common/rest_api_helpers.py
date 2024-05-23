@@ -1,3 +1,4 @@
+from os import environ
 from pathlib import Path
 from typing import List, Mapping, Optional
 import functools
@@ -42,13 +43,13 @@ class FileAlreadyExists(APIHelperError):
     pass
 
 
-def query_api(url: str, params: Mapping[str, str], debug_requests=False) -> dict:
+def query_api(url: str, params: Mapping[str, str], headers: dict, debug_requests=False) -> dict:
     if debug_requests:
         print(f'REQUEST URL: {url}')
         if len(params) > 0:
             print(f'QUERY: {params}')
 
-    response = requests.get(url, params=params, timeout=60)
+    response = requests.get(url, params=params, headers=headers, timeout=60)
     response.raise_for_status()
 
     if debug_requests:
@@ -63,11 +64,11 @@ def query_api(url: str, params: Mapping[str, str], debug_requests=False) -> dict
     return response.json()
 
 
-def download_file(url: str, target_path: Path, overwrite=False):
+def download_file(url: str, target_path: Path, headers: dict, overwrite=False):
     if not overwrite and target_path.exists():
         raise FileAlreadyExists(f"Refusing to overwrite existing file: '{target_path}'.")
 
-    with requests.get(url, stream=True, timeout=60) as request:
+    with requests.get(url, headers, stream=True, timeout=60) as request:
         with open(target_path, 'wb') as target_file:
             shutil.copyfileobj(request.raw, target_file)
 
@@ -85,6 +86,7 @@ class Github:
     def pull_request(self, pr_id: int) -> dict:
         return query_api(
             f'{self.BASE_URL}/repos/{self.project_slug}/pulls/{pr_id}',
+            {},
             {},
             self.debug_requests
         )
@@ -108,11 +110,12 @@ class CircleCI:
 
         page_count = 0
         next_page_token = None
+        headers = {'Circle-Token': str(environ.get('CIRCLECI_TOKEN'))} if 'CIRCLECI_TOKEN' in environ else {}
         while max_pages is None or page_count < max_pages:
             if next_page_token is not None:
                 params = {**params, 'page-token': next_page_token}
 
-            json_response = query_api(url, params, self.debug_requests)
+            json_response = query_api(url, params, headers, self.debug_requests)
 
             yield json_response['items']
             next_page_token = json_response['next_page_token']
