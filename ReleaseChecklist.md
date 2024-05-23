@@ -38,6 +38,7 @@ At least a day before the release:
 ### Blog Post
  - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Releases`` category and explain some of the new features or concepts.
  - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Security Alerts`` category in case of important bug(s).
+ - [ ] Get the posts reviewed and approved **before the release starts**.
 
 ### Changelog
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice. Commit it.
