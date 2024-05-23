@@ -569,11 +569,18 @@ void BMC::endVisit(UnaryOperation const& _op)
 		return;
 
 	if (_op.getOperator() == Token::Sub && smt::isInteger(*_op.annotation().type))
+	{
 		addVerificationTarget(
-			VerificationTargetType::UnderOverflow,
+			VerificationTargetType::Underflow,
 			expr(_op),
 			&_op
 		);
+		addVerificationTarget(
+			VerificationTargetType::Overflow,
+			expr(_op),
+			&_op
+		);
+	}
 }
 
 void BMC::endVisit(BinaryOperation const& _op)
@@ -813,32 +820,29 @@ std::pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 	if (_op == Token::Mod)
 		return values;
 
-	VerificationTargetType type;
 	// The order matters here:
 	// If _op is Div and intType is signed, we only care about overflow.
 	if (_op == Token::Div)
 	{
 		if (intType->isSigned())
 			// Signed division can only overflow.
-			type = VerificationTargetType::Overflow;
+			addVerificationTarget(VerificationTargetType::Overflow, values.second, &_expression);
 		else
 			// Unsigned division cannot underflow/overflow.
 			return values;
 	}
 	else if (intType->isSigned())
-		type = VerificationTargetType::UnderOverflow;
+	{
+		addVerificationTarget(VerificationTargetType::Overflow, values.second, &_expression);
+		addVerificationTarget(VerificationTargetType::Underflow, values.second, &_expression);
+	}
 	else if (_op == Token::Sub)
-		type = VerificationTargetType::Underflow;
+		addVerificationTarget(VerificationTargetType::Underflow, values.second, &_expression);
 	else if (_op == Token::Add || _op == Token::Mul)
-		type = VerificationTargetType::Overflow;
+		addVerificationTarget(VerificationTargetType::Overflow, values.second, &_expression);
 	else
 		solAssert(false, "");
 
-	addVerificationTarget(
-		type,
-		values.second,
-		&_expression
-	);
 	return values;
 }
 
@@ -919,6 +923,12 @@ void BMC::checkVerificationTargets()
 
 void BMC::checkVerificationTarget(BMCVerificationTarget& _target)
 {
+	if (
+		m_solvedTargets.count(_target.expression) &&
+		m_solvedTargets.at(_target.expression).count(_target.type)
+	)
+		return;
+
 	switch (_target.type)
 	{
 		case VerificationTargetType::ConstantCondition:
@@ -928,10 +938,6 @@ void BMC::checkVerificationTarget(BMCVerificationTarget& _target)
 			checkUnderflow(_target);
 			break;
 		case VerificationTargetType::Overflow:
-			checkOverflow(_target);
-			break;
-		case VerificationTargetType::UnderOverflow:
-			checkUnderflow(_target);
 			checkOverflow(_target);
 			break;
 		case VerificationTargetType::DivByZero:
@@ -961,18 +967,9 @@ void BMC::checkConstantCondition(BMCVerificationTarget& _target)
 void BMC::checkUnderflow(BMCVerificationTarget& _target)
 {
 	solAssert(
-		_target.type == VerificationTargetType::Underflow ||
-			_target.type == VerificationTargetType::UnderOverflow,
+		_target.type == VerificationTargetType::Underflow,
 		""
 	);
-
-	if (
-		m_solvedTargets.count(_target.expression) && (
-			m_solvedTargets.at(_target.expression).count(VerificationTargetType::Underflow) ||
-			m_solvedTargets.at(_target.expression).count(VerificationTargetType::UnderOverflow)
-		)
-	)
-		return;
 
 	auto const* intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
 	if (!intType)
@@ -994,18 +991,9 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target)
 void BMC::checkOverflow(BMCVerificationTarget& _target)
 {
 	solAssert(
-		_target.type == VerificationTargetType::Overflow ||
-			_target.type == VerificationTargetType::UnderOverflow,
+		_target.type == VerificationTargetType::Overflow,
 		""
 	);
-
-	if (
-		m_solvedTargets.count(_target.expression) && (
-			m_solvedTargets.at(_target.expression).count(VerificationTargetType::Overflow) ||
-			m_solvedTargets.at(_target.expression).count(VerificationTargetType::UnderOverflow)
-		)
-	)
-		return;
 
 	auto const* intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
 	if (!intType)
@@ -1028,12 +1016,6 @@ void BMC::checkDivByZero(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTargetType::DivByZero, "");
 
-	if (
-		m_solvedTargets.count(_target.expression) &&
-		m_solvedTargets.at(_target.expression).count(VerificationTargetType::DivByZero)
-	)
-		return;
-
 	checkCondition(
 		_target,
 		_target.constraints && (_target.value == 0),
@@ -1051,11 +1033,6 @@ void BMC::checkBalance(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTargetType::Balance, "");
 
-	if (
-		m_solvedTargets.count(_target.expression) &&
-		m_solvedTargets.at(_target.expression).count(VerificationTargetType::Balance)
-	)
-		return;
 	checkCondition(
 		_target,
 		_target.constraints && _target.value,
@@ -1071,12 +1048,6 @@ void BMC::checkBalance(BMCVerificationTarget& _target)
 void BMC::checkAssert(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTargetType::Assert, "");
-
-	if (
-		m_solvedTargets.count(_target.expression) &&
-		m_solvedTargets.at(_target.expression).count(_target.type)
-	)
-		return;
 
 	checkCondition(
 		_target,
