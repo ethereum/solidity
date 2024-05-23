@@ -25,7 +25,15 @@ def ADDMOD(x, y, m):
 	return If(m == 0, 0, Extract(x.size() - 1, 0, URem(ZeroExt(1, x) + ZeroExt(1, y), ZeroExt(1, m))))
 
 def SMOD(x, y):
-	return If(y == 0, 0, x % y)
+	return If(
+		y == 0,
+		0,
+		If(
+			x >= 0,
+			If(y >= 0, x % y, x % (-y)),
+			If(y >= 0, -((-x) % y), -((-x) % (-y)))
+		)
+	)
 
 def LT(x, y):
 	return If(ULT(x, y), BitVecVal(1, x.size()), BitVecVal(0, x.size()))
