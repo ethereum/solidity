@@ -1,4 +1,15 @@
-### 0.8.26 (unreleased)
+### 0.8.27 (unreleased)
+
+Language Features:
+
+
+Compiler Features:
+
+
+Bugfixes:
+
+
+### 0.8.26 (2024-05-21)
 
 Language Features:
  * Introduce a new overload ``require(bool, Error)`` that allows usage of ``require`` functions with custom errors. This feature is available in the ``via-ir`` pipeline only.

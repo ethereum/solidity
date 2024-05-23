@@ -51,6 +51,16 @@ SyntaxTest::SyntaxTest(
 	if (!util::contains(compileViaYulAllowedValues, m_compileViaYul))
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileViaYul value: " + m_compileViaYul + "."));
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
+
+	static std::map<std::string, PipelineStage> const pipelineStages = {
+		{"parsing", PipelineStage::Parsing},
+		{"analysis", PipelineStage::Analysis},
+		{"compilation", PipelineStage::Compilation}
+	};
+	std::string stopAfter = m_reader.stringSetting("stopAfter", "compilation");
+	if (!pipelineStages.count(stopAfter))
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid stopAfter value: " + stopAfter + "."));
+	m_stopAfter = pipelineStages.at(stopAfter);
 }
 
 void SyntaxTest::setupCompiler(CompilerStack& _compiler)
@@ -72,7 +82,7 @@ void SyntaxTest::parseAndAnalyze()
 {
 	try
 	{
-		runFramework(withPreamble(m_sources.sources), PipelineStage::Compilation);
+		runFramework(withPreamble(m_sources.sources), m_stopAfter);
 		if (!pipelineSuccessful() && stageSuccessful(PipelineStage::Analysis) && !compiler().isExperimentalAnalysis())
 		{
 			ErrorList const& errors = compiler().errors();
