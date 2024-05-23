@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser, Namespace
 from enum import Enum, unique
+from os import environ
 from pathlib import Path
 from typing import Mapping, Optional
 import sys
@@ -96,9 +97,11 @@ def download_benchmark_artifact(
             print(f"Missing artifact: {artifact_path}.")
         return False
 
+    headers = {'Circle-Token': str(environ.get('CIRCLECI_TOKEN'))} if 'CIRCLECI_TOKEN' in environ else {}
     download_file(
         artifacts[artifact_path]['url'],
         Path(f'{benchmark_name}-{branch}-{commit_hash[:8]}.json'),
+        headers,
         overwrite,
     )
 
