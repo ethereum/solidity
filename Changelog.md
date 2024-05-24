@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
 
 
 Bugfixes:
