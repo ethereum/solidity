@@ -15,6 +15,7 @@
 At least a day before the release:
  - [ ] Run ``make linkcheck`` from within ``docs/`` and fix any broken links it finds.
        Ignore false positives caused by ``href`` anchors and dummy links not meant to work.
+       **Note**: In order to run the link check, make sure you've built the docs first via ``docs.sh``.
  - [ ] Double-check that [the most recent docs builds at readthedocs](https://readthedocs.org/projects/solidity/builds/) succeeded.
  - [ ] Make sure that all merged PRs that should have changelog entries do have them.
  - [ ] Rerun CI on the top commits of main branches in all repositories that do not have daily activity by creating a test branch or PR:
