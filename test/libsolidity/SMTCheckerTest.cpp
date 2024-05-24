@@ -38,6 +38,14 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename): SyntaxTest(_filena
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT external calls mode."));
 
+	auto const& showProvedSafe = m_reader.stringSetting("SMTShowProvedSafe", "no");
+	if (showProvedSafe == "no")
+		m_modelCheckerSettings.showProvedSafe = false;
+	else if (showProvedSafe == "yes")
+		m_modelCheckerSettings.showProvedSafe = true;
+	else
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT \"show proved safe\" choice."));
+
 	auto const& showUnproved = m_reader.stringSetting("SMTShowUnproved", "yes");
 	if (showUnproved == "no")
 		m_modelCheckerSettings.showUnproved = false;

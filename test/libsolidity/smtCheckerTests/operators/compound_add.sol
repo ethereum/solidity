@@ -10,6 +10,9 @@ contract C
 }
 // ====
 // SMTEngine: all
+// SMTShowProvedSafe: yes
 // ----
 // Warning 6328: (118-133): CHC: Assertion violation happens here.
-// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Info 9576: (90-95): CHC: Overflow (resulting value larger than 2**256 - 1) check is safe!
+// Info 9576: (85-95): CHC: Overflow (resulting value larger than 2**256 - 1) check is safe!
+// Info 9576: (99-114): CHC: Assertion violation check is safe!
