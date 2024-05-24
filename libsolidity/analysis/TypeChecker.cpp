@@ -94,103 +94,6 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	return false;
 }
 
-void TypeChecker::checkDoubleStorageAssignment(Assignment const& _assignment)
-{
-	size_t storageToStorageCopies = 0;
-	size_t toStorageCopies = 0;
-	size_t storageByteArrayPushes = 0;
-	size_t storageByteAccesses = 0;
-	auto count = [&](TupleExpression const& _lhs, TupleType const& _rhs, auto _recurse) -> void {
-		TupleType const& lhsType = dynamic_cast<TupleType const&>(*type(_lhs));
-		TupleExpression const* lhsResolved = dynamic_cast<TupleExpression const*>(resolveOuterUnaryTuples(&_lhs));
-
-		solAssert(!lhsResolved || lhsResolved->components().size() == lhsType.components().size());
-		if (lhsType.components().size() != _rhs.components().size())
-		{
-			solAssert(m_errorReporter.hasErrors(), "");
-			return;
-		}
-
-		for (auto&& [index, componentType]: lhsType.components() | ranges::views::enumerate)
-		{
-			if (ReferenceType const* ref = dynamic_cast<ReferenceType const*>(componentType))
-			{
-				if (ref && ref->dataStoredIn(DataLocation::Storage) && !ref->isPointer())
-				{
-					toStorageCopies++;
-					if (_rhs.components()[index]->dataStoredIn(DataLocation::Storage))
-						storageToStorageCopies++;
-				}
-			}
-			else if (FixedBytesType const* bytesType = dynamic_cast<FixedBytesType const*>(componentType))
-			{
-				if (bytesType && bytesType->numBytes() == 1)
-				{
-					if (FunctionCall const* lhsCall = dynamic_cast<FunctionCall const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
-					{
-						FunctionType const& callType = dynamic_cast<FunctionType const&>(*type(lhsCall->expression()));
-						if (callType.kind() == FunctionType::Kind::ArrayPush)
-						{
-							ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*callType.selfType());
-							if (arrayType.isByteArray() && arrayType.dataStoredIn(DataLocation::Storage))
-							{
-								++storageByteAccesses;
-								++storageByteArrayPushes;
-							}
-						}
-					}
-					else if (IndexAccess const* indexAccess = dynamic_cast<IndexAccess const*>(resolveOuterUnaryTuples(lhsResolved->components().at(index).get())))
-					{
-						if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
-							if (arrayType->isByteArray() && arrayType->dataStoredIn(DataLocation::Storage))
-								++storageByteAccesses;
-					}
-				}
-			}
-			else if (TupleType const* tupleType = dynamic_cast<TupleType const*>(componentType))
-				if (auto const* lhsNested = dynamic_cast<TupleExpression const*>(lhsResolved->components().at(index).get()))
-					if (auto const* rhsNestedType = dynamic_cast<TupleType const*>(_rhs.components().at(index)))
-						_recurse(
-							*lhsNested,
-							*rhsNestedType,
-							_recurse
-						);
-		}
-	};
-
-	TupleExpression const* lhsTupleExpression = dynamic_cast<TupleExpression const*>(&_assignment.leftHandSide());
-	if (!lhsTupleExpression)
-	{
-		solAssert(m_errorReporter.hasErrors());
-		return;
-	}
-	count(
-		*lhsTupleExpression,
-		dynamic_cast<TupleType const&>(*type(_assignment.rightHandSide())),
-		count
-	);
-
-	if (storageToStorageCopies >= 1 && toStorageCopies >= 2)
-		m_errorReporter.warning(
-			7238_error,
-			_assignment.location(),
-			"This assignment performs two copies to storage. Since storage copies do not first "
-			"copy to a temporary location, one of them might be overwritten before the second "
-			"is executed and thus may have unexpected effects. It is safer to perform the copies "
-			"separately or assign to storage pointers first."
-		);
-
-	if (storageByteArrayPushes >= 1 && storageByteAccesses >= 2)
-		m_errorReporter.warning(
-			7239_error,
-			_assignment.location(),
-			"This assignment involves multiple accesses to a bytes array in storage while simultaneously enlarging it. "
-			"When a bytes array is enlarged, it may transition from short storage layout to long storage layout, "
-			"which invalidates all references to its elements. It is safer to only enlarge byte arrays in a single "
-			"operation, one element at a time."
-		);
-}
-
 TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2)
 {
 	std::vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
@@ -1575,10 +1478,6 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		_assignment.annotation().type = TypeProvider::emptyTuple();
 
 		expectType(_assignment.rightHandSide(), *tupleType);
-
-		// expectType does not cause fatal errors, so we have to check again here.
-		if (dynamic_cast<TupleType const*>(type(_assignment.rightHandSide())))
-			checkDoubleStorageAssignment(_assignment);
 	}
 	else if (_assignment.assignmentOperator() == Token::Assign)
 		expectType(_assignment.rightHandSide(), *t);
