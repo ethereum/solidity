@@ -406,6 +406,7 @@ message Program {
     PARIS = 9;
     SHANGHAI = 10;
     CANCUN = 11;
+    PRAGUE = 12;
   }
   oneof program_oneof {
     Block block = 1;

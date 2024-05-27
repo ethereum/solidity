@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * EVM: Support for the EVM version "Prague".
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
 
 

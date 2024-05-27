@@ -119,6 +119,8 @@ EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 		return EVMVersion::shanghai();
 	case Program::CANCUN:
 		return EVMVersion::cancun();
+	case Program::PRAGUE:
+		return EVMVersion::prague();
 	}
 }
 

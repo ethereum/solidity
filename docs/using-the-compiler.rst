@@ -181,6 +181,7 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Introduces ``blobhash()`` in inline assembly and a corresponding global function to retrieve versioned hashes of blobs associated with the transaction (see `EIP-4844 <https://eips.ethereum.org/EIPS/eip-4844>`_).
    - Opcode ``mcopy`` is available in assembly (see `EIP-5656 <https://eips.ethereum.org/EIPS/eip-5656>`_).
    - Opcodes ``tstore`` and ``tload`` are available in assembly (see `EIP-1153 <https://eips.ethereum.org/EIPS/eip-1153>`_).
+- ``prague`` (**experimental**)
 
 .. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
@@ -344,7 +345,7 @@ Input Description
         // Version of the EVM to compile for.
         // Affects type checking and code generation. Can be homestead,
         // tangerineWhistle, spuriousDragon, byzantium, constantinople,
-        // petersburg, istanbul, berlin, london, paris, shanghai or cancun (default)
+        // petersburg, istanbul, berlin, london, paris, shanghai, cancun (default) or prague.
         "evmVersion": "cancun",
         // Optional: Change compilation pipeline to go through the Yul intermediate representation.
         // This is false by default.
