@@ -15,6 +15,7 @@
 At least a day before the release:
  - [ ] Run ``make linkcheck`` from within ``docs/`` and fix any broken links it finds.
        Ignore false positives caused by ``href`` anchors and dummy links not meant to work.
+       **Note**: In order to run the link check, make sure you've built the docs first via ``docs.sh``.
  - [ ] Double-check that [the most recent docs builds at readthedocs](https://readthedocs.org/projects/solidity/builds/) succeeded.
  - [ ] Make sure that all merged PRs that should have changelog entries do have them.
  - [ ] Rerun CI on the top commits of main branches in all repositories that do not have daily activity by creating a test branch or PR:
@@ -24,6 +25,7 @@ At least a day before the release:
        This is recommended especially when dealing with PPA for the first time, when we add a new Ubuntu version or when the PPA scripts were modified in this release cycle.
  - [ ] Verify that the release tarball of ``solc-js`` works.
        Bump version locally, add ``soljson.js`` from CI, build it, compare the file structure with the previous version, install it locally and try to use it.
+ - [ ] Review [Learning from Past Releases](https://notes.ethereum.org/@solidity/release-mistakes) to make sure you don't repeat the same mistakes.
 
 ### Drafts
 At least a day before the release:
@@ -38,6 +40,7 @@ At least a day before the release:
 ### Blog Post
  - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Releases`` category and explain some of the new features or concepts.
  - [ ] Create a post on [solidity-website](https://github.com/ethereum/solidity-website/tree/main/src/posts) in the ``Security Alerts`` category in case of important bug(s).
+ - [ ] Get the posts reviewed and approved **before the release starts**.
 
 ### Changelog
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice. Commit it.
@@ -81,7 +84,7 @@ At least a day before the release:
 ### PPA
  - [ ] Create ``.release_ppa_auth`` at the root of your local Solidity checkout and set ``LAUNCHPAD_EMAIL`` and ``LAUNCHPAD_KEYID`` to your key's email and key id.
  - [ ] Double-check that the ``DISTRIBUTIONS`` list in ``scripts/release_ppa.sh`` and ``scripts/deps-ppa/static_z3.sh`` contains the most recent versions of Ubuntu.
- - [ ] Make sure the [``~ethereum/cpp-build-deps`` PPA repository](https://launchpad.net/~ethereum/+archive/ubuntu/cpp-build-deps) contains ``libz3-static-dev builds`` for all current versions of Ubuntu.
+ - [ ] Make sure the [``~ethereum/cpp-build-deps`` PPA repository](https://launchpad.net/~ethereum/+archive/ubuntu/cpp-build-deps) contains ``libz3-static-dev`` builds for all current versions of Ubuntu.
        Note that it may be included in the ``z3-static`` multipackage (follow the ``View package details`` link to check).
        If not present, run ``scripts/deps-ppa/static_z3.sh`` and wait for the builds to succeed before continuing.
  - [ ] Run ``scripts/release_ppa.sh v$VERSION`` to create the PPA release.
@@ -116,4 +119,5 @@ At least a day before the release:
  - [ ] Share the announcement on [Project Updates](https://discord.com/channels/420394352083337236/798974456704925696)
  - [ ] Share the announcement on [`#solidity` channel on Matrix](https://matrix.to/#/#ethereum_solidity:gitter.im)
  - [ ] Share the announcement on [`#solc-tooling`](https://matrix.to/#/#solc-tooling:matrix.org)
+ - [ ] If anything went wrong this time, mention it in [Learning from Past Releases](https://notes.ethereum.org/@solidity/release-mistakes).
  - [ ] Lean back, wait for bug reports and repeat from step 1 :).
