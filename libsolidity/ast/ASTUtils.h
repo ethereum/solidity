@@ -42,4 +42,10 @@ ASTNode const* locateInnermostASTNode(int _offsetInFile, SourceUnit const& _sour
 /// into unary tuples and returns the contained expression.
 Expression const* resolveOuterUnaryTuples(Expression const* _expr);
 
+/// @returns the type of an expression and asserts that it is present.
+Type const* type(Expression const& _expression);
+/// @returns the type of the given variable and throws if the type is not present
+/// (this can happen for variables with non-explicit types before their types are resolved)
+Type const* type(VariableDeclaration const& _variable);
+
 }
