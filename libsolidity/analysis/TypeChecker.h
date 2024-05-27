@@ -56,12 +56,6 @@ public:
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
 	bool checkTypeRequirements(SourceUnit const& _source);
 
-	/// @returns the type of an expression and asserts that it is present.
-	Type const* type(Expression const& _expression) const;
-	/// @returns the type of the given variable and throws if the type is not present
-	/// (this can happen for variables with non-explicit types before their types are resolved)
-	Type const* type(VariableDeclaration const& _variable) const;
-
 	static bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall);
 
 private:

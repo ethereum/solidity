@@ -80,18 +80,6 @@ bool TypeChecker::checkTypeRequirements(SourceUnit const& _source)
 	return !Error::containsErrors(m_errorReporter.errors());
 }
 
-Type const* TypeChecker::type(Expression const& _expression) const
-{
-	solAssert(!!_expression.annotation().type, "Type requested but not present.");
-	return _expression.annotation().type;
-}
-
-Type const* TypeChecker::type(VariableDeclaration const& _variable) const
-{
-	solAssert(!!_variable.annotation().type, "Type requested but not present.");
-	return _variable.annotation().type;
-}
-
 bool TypeChecker::visit(ContractDefinition const& _contract)
 {
 	m_currentContract = &_contract;

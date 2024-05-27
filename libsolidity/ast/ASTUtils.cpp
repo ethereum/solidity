@@ -95,4 +95,16 @@ Expression const* resolveOuterUnaryTuples(Expression const* _expr)
 	return _expr;
 }
 
+Type const* type(Expression const& _expression)
+{
+	solAssert(!!_expression.annotation().type, "Type requested but not present.");
+	return _expression.annotation().type;
+}
+
+Type const* type(VariableDeclaration const& _variable)
+{
+	solAssert(!!_variable.annotation().type, "Type requested but not present.");
+	return _variable.annotation().type;
+}
+
 }
