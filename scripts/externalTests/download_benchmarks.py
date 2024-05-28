@@ -34,8 +34,8 @@ def process_commandline() -> Namespace:
         Downloads benchmark results attached as artifacts to the c_ext_benchmarks job on CircleCI.
         If no options are specified, downloads results for the currently checked out git branch.
 
-        The script requires the CIRCLECI_TOKEN environment variable to be set with a valid CircleCI API token.
-        You can generate a new token at https://app.circleci.com/settings/user/tokens.
+        The script will use the CIRCLECI_TOKEN environment as a CircleCI API token if set.
+        You can generate a new personal token at https://app.circleci.com/settings/user/tokens.
         """
     )
 
