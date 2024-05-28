@@ -662,7 +662,7 @@ Yes:
         return balanceOf[from];
     }
 
-    function increment(uint x) public onlyOwner pure returns (uint) {
+    function increment(uint x) public pure onlyOwner returns (uint) {
         return x + 1;
     }
 
