@@ -387,8 +387,8 @@ private:
 		std::shared_ptr<evmasm::Assembly> evmRuntimeAssembly;
 		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
-		std::string yulIR; ///< Yul IR code.
-		std::string yulIROptimized; ///< Optimized Yul IR code.
+		std::string yulIR; ///< Yul IR code straight from the code generator.
+		std::string yulIROptimized; ///< Reparsed and possibly optimized Yul IR code.
 		Json yulIRAst; ///< JSON AST of Yul IR code.
 		Json yulIROptimizedAst; ///< JSON AST of optimized Yul IR code.
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
@@ -449,7 +449,10 @@ private:
 	);
 
 	/// Generate Yul IR for a single contract.
-	/// The IR is stored but otherwise unused.
+	/// Unoptimized IR is stored but otherwise unused, while optimized IR may be used for code
+	/// generation if compilation via IR is enabled. Note that whether "optimized IR" is actually
+	/// optimized depends on the optimizer settings.
+	/// @param _contract Contract to generate IR for.
 	void generateIR(ContractDefinition const& _contract);
 
 	/// Generate EVM representation for a single contract.
