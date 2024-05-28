@@ -111,6 +111,7 @@ class CircleCI:
         page_count = 0
         next_page_token = None
         headers = {'Circle-Token': str(environ.get('CIRCLECI_TOKEN'))} if 'CIRCLECI_TOKEN' in environ else {}
+        print("have some headers", headers)
         while max_pages is None or page_count < max_pages:
             if next_page_token is not None:
                 params = {**params, 'page-token': next_page_token}
