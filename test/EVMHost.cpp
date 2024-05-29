@@ -119,6 +119,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_SHANGHAI;
 	else if (_evmVersion == langutil::EVMVersion::cancun())
 		m_evmRevision = EVMC_CANCUN;
+	else if (_evmVersion == langutil::EVMVersion::prague())
+		m_evmRevision = EVMC_PRAGUE;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 

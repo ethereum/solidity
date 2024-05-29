@@ -49,7 +49,8 @@ static std::vector<EVMVersion> s_evmVersions = {
 	EVMVersion::istanbul(),
 	EVMVersion::berlin(),
 	EVMVersion::london(),
-	EVMVersion::paris()
+	EVMVersion::paris(),
+	EVMVersion::prague()
 };
 
 void FuzzerUtil::testCompilerJsonInterface(std::string const& _input, bool _optimize, bool _quiet)
