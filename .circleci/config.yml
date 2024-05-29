@@ -1533,6 +1533,19 @@ jobs:
       - run:
           name: Summarize reports
           command: cat reports/externalTests/all-benchmarks.json | scripts/externalTests/summarize_benchmarks.sh > reports/externalTests/summarized-benchmarks.json
+      - store_artifacts:
+          path: reports/externalTests/all-benchmarks.json
+      - store_artifacts:
+          path: reports/externalTests/summarized-benchmarks.json
+      - run:
+          name: Check CircleCI token presence; Skip remaining steps if the token is not present.
+          command: |
+            # NOTE: download_benchmarks.py requires CIRCLECI_TOKEN environment variable to be set to
+            # a valid CircleCI API token to download the benchmark artifacts.
+            if [[ -z "$CIRCLECI_TOKEN" ]]; then
+              echo "Skipping download benchmarks..."
+              circleci-agent step halt
+            fi
       - run:
           name: Download reports from base branch
           command: |
@@ -1577,10 +1590,6 @@ jobs:
                 base-branch/all-benchmarks-*.json \
                 all-benchmarks.json > diff/benchmark-diff-all-table-inplace-absolute.md
             fi
-      - store_artifacts:
-          path: reports/externalTests/all-benchmarks.json
-      - store_artifacts:
-          path: reports/externalTests/summarized-benchmarks.json
       - store_artifacts:
           path: reports/externalTests/diff/
       - store_artifacts:
