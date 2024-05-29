@@ -7,10 +7,12 @@ Language Features:
 
 
 Compiler Features:
+ * Command Line Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
  * EVM: Support for the EVM version "Prague".
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
  * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
+ * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Yul Optimizer: The optimizer now treats some previously unrecognized identical literals as identical.
 
 

@@ -849,12 +849,14 @@ void CommandLineInterface::compile()
 		m_compiler->setRevertStringBehaviour(m_options.output.revertStrings);
 		if (m_options.output.debugInfoSelection.has_value())
 			m_compiler->selectDebugInfo(m_options.output.debugInfoSelection.value());
-		m_compiler->enableIRGeneration(
-			m_options.compiler.outputs.ir ||
-			m_options.compiler.outputs.irOptimized ||
-			m_options.compiler.outputs.irAstJson ||
-			m_options.compiler.outputs.irOptimizedAstJson
-		);
+
+		CompilerStack::IROutputSelection irOutputSelection = CompilerStack::IROutputSelection::None;
+		if (m_options.compiler.outputs.irOptimized || m_options.compiler.outputs.irOptimizedAstJson)
+			irOutputSelection = CompilerStack::IROutputSelection::UnoptimizedAndOptimized;
+		else if (m_options.compiler.outputs.ir || m_options.compiler.outputs.irAstJson)
+			irOutputSelection = CompilerStack::IROutputSelection::UnoptimizedOnly;
+
+		m_compiler->requestIROutputs(irOutputSelection);
 		m_compiler->enableEvmBytecodeGeneration(
 			m_options.compiler.estimateGas ||
 			m_options.compiler.outputs.asm_ ||

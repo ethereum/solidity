@@ -313,7 +313,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_viaIR = false;
 		m_evmVersion = langutil::EVMVersion();
 		m_modelCheckerSettings = ModelCheckerSettings{};
-		m_generateIR = false;
+		m_irOutputSelection = IROutputSelection::None;
 		m_revertStrings = RevertStrings::Default;
 		m_optimiserSettings = OptimiserSettings::minimal();
 		m_metadataLiteralSources = false;
@@ -728,8 +728,17 @@ bool CompilerStack::compile(State _stopAfter)
 				{
 					try
 					{
-						if ((m_generateEvmBytecode && m_viaIR) || m_generateIR)
-							generateIR(*contract);
+						// NOTE: Bytecode generation via IR always uses Contract::yulIROptimized.
+						// When optimization is not enabled, that member simply contains unoptimized code.
+						bool needIROutput =
+							(m_generateEvmBytecode && m_viaIR) ||
+							m_irOutputSelection != IROutputSelection::None;
+						bool needUnoptimizedIROutputOnly =
+							!(m_generateEvmBytecode && m_viaIR) &&
+							m_irOutputSelection != IROutputSelection::UnoptimizedAndOptimized;
+
+						if (needIROutput)
+							generateIR(*contract, needUnoptimizedIROutputOnly);
 						if (m_generateEvmBytecode)
 						{
 							if (m_viaIR)
@@ -1402,7 +1411,7 @@ void CompilerStack::compileContract(
 	assembleYul(_contract, compiler->assemblyPtr(), compiler->runtimeAssemblyPtr());
 }
 
-void CompilerStack::generateIR(ContractDefinition const& _contract)
+void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unoptimizedOnly)
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "");
 
@@ -1420,7 +1429,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 
 	std::string dependenciesSource;
 	for (auto const& [dependency, referencee]: _contract.annotation().contractDependencies)
-		generateIR(*dependency);
+		generateIR(*dependency, _unoptimizedOnly);
 
 	if (!_contract.canBeDeployed())
 		return;
@@ -1485,9 +1494,14 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	{
 		YulStack stack = parseYul(compiledContract.yulIR);
 		compiledContract.yulIRAst = stack.astJson();
-		stack.optimize();
-		compiledContract.yulIROptimized = stack.print(this);
+		if (!_unoptimizedOnly)
+		{
+			stack.optimize();
+			compiledContract.yulIROptimized = stack.print(this);
+		}
 	}
+
+	if (!_unoptimizedOnly)
 	{
 		// Optimizer does not maintain correct native source locations in the AST.
 		// We can work around it by regenerating the AST from scratch from optimized IR.
