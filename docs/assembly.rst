@@ -9,7 +9,8 @@ Inline Assembly
 
 You can interleave Solidity statements with inline assembly in a language close
 to the one of the Ethereum Virtual Machine. This gives you more fine-grained control,
-which is especially useful when you are enhancing the language by writing libraries.
+which is especially useful when you are enhancing the language by writing libraries or
+trying to optimize gas usage.
 
 The language used for inline assembly in Solidity is called :ref:`Yul <yul>`
 and it is documented in its own section. This section will only cover
