@@ -49,6 +49,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
+using namespace solidity::util;
 using namespace std::string_literals;
 
 namespace
@@ -1402,13 +1403,8 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 	}
 	catch (UnimplementedFeatureError const& _exception)
 	{
-		errors.emplace_back(formatErrorWithException(
-			compilerStack,
-			_exception,
-			Error::Type::UnimplementedFeatureError,
-			"general",
-			"Unimplemented feature (" + _exception.lineInfo() + ")"
-		));
+		// let StandardCompiler::compile handle this
+		throw _exception;
 	}
 	catch (yul::YulException const& _exception)
 	{
@@ -1469,7 +1465,7 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 	Json output;
 
 	if (errors.size() > 0)
-		output["errors"] = std::move(errors);
+	output["errors"] = std::move(errors);
 
 	if (!compilerStack.unhandledSMTLib2Queries().empty())
 		for (std::string const& query: compilerStack.unhandledSMTLib2Queries())
@@ -1782,6 +1778,11 @@ Json StandardCompiler::compile(Json const& _input) noexcept
 	catch (Json::exception const& _exception)
 	{
 		return formatFatalError(Error::Type::InternalCompilerError, std::string("JSON runtime exception: ") + util::removeNlohmannInternalErrorIdentifier(_exception.what()));
+	}
+	catch (UnimplementedFeatureError const& _exception)
+	{
+		solAssert(_exception.comment(), "Unimplemented feature errors must include a message for the user");
+		return formatFatalError(Error::Type::UnimplementedFeatureError, stringOrDefault(_exception.comment()));
 	}
 	catch (util::Exception const& _exception)
 	{

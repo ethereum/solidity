@@ -346,64 +346,71 @@ bool CompilerStack::parse()
 	if (SemVerVersion{std::string(VersionString)}.isPrerelease())
 		m_errorReporter.warning(3805_error, "This is a pre-release compiler version, please do not use it in production.");
 
-	Parser parser{m_errorReporter, m_evmVersion};
-
-	std::vector<std::string> sourcesToParse;
-	for (auto const& s: m_sources)
-		sourcesToParse.push_back(s.first);
-
-	for (size_t i = 0; i < sourcesToParse.size(); ++i)
+	try
 	{
-		std::string const& path = sourcesToParse[i];
-		Source& source = m_sources[path];
-		source.ast = parser.parse(*source.charStream);
-		if (!source.ast)
-			solAssert(Error::containsErrors(m_errorReporter.errors()), "Parser returned null but did not report error.");
-		else
+		Parser parser{m_errorReporter, m_evmVersion};
+
+		std::vector<std::string> sourcesToParse;
+		for (auto const& s: m_sources)
+			sourcesToParse.push_back(s.first);
+
+		for (size_t i = 0; i < sourcesToParse.size(); ++i)
 		{
-			source.ast->annotation().path = path;
-
-			for (auto const& import: ASTNode::filteredNodes<ImportDirective>(source.ast->nodes()))
+			std::string const& path = sourcesToParse[i];
+			Source& source = m_sources[path];
+			source.ast = parser.parse(*source.charStream);
+			if (!source.ast)
+				solAssert(Error::containsErrors(m_errorReporter.errors()), "Parser returned null but did not report error.");
+			else
 			{
-				solAssert(!import->path().empty(), "Import path cannot be empty.");
-				// Check whether the import directive is for the standard library,
-				// and if yes, add specified file to source units to be parsed.
-				auto it = stdlib::sources.find(import->path());
-				if (it != stdlib::sources.end())
+				source.ast->annotation().path = path;
+
+				for (auto const& import: ASTNode::filteredNodes<ImportDirective>(source.ast->nodes()))
 				{
-					auto [name, content] = *it;
-					m_sources[name].charStream = std::make_unique<CharStream>(content, name);
-					sourcesToParse.push_back(name);
+					solAssert(!import->path().empty(), "Import path cannot be empty.");
+					// Check whether the import directive is for the standard library,
+					// and if yes, add specified file to source units to be parsed.
+					auto it = stdlib::sources.find(import->path());
+					if (it != stdlib::sources.end())
+					{
+						auto [name, content] = *it;
+						m_sources[name].charStream = std::make_unique<CharStream>(content, name);
+						sourcesToParse.push_back(name);
+					}
+
+					// The current value of `path` is the absolute path as seen from this source file.
+					// We first have to apply remappings before we can store the actual absolute path
+					// as seen globally.
+					import->annotation().absolutePath = applyRemapping(util::absolutePath(
+						import->path(),
+						path
+					), path);
 				}
 
-				// The current value of `path` is the absolute path as seen from this source file.
-				// We first have to apply remappings before we can store the actual absolute path
-				// as seen globally.
-				import->annotation().absolutePath = applyRemapping(util::absolutePath(
-					import->path(),
-					path
-				), path);
+				if (m_stopAfter >= ParsedAndImported)
+					for (auto const& newSource: loadMissingSources(*source.ast))
+					{
+						std::string const& newPath = newSource.first;
+						std::string const& newContents = newSource.second;
+						m_sources[newPath].charStream = std::make_shared<CharStream>(newContents, newPath);
+						sourcesToParse.push_back(newPath);
+					}
 			}
-
-			if (m_stopAfter >= ParsedAndImported)
-				for (auto const& newSource: loadMissingSources(*source.ast))
-				{
-					std::string const& newPath = newSource.first;
-					std::string const& newContents = newSource.second;
-					m_sources[newPath].charStream = std::make_shared<CharStream>(newContents, newPath);
-					sourcesToParse.push_back(newPath);
-				}
 		}
+
+		if (Error::containsErrors(m_errorReporter.errors()))
+			return false;
+
+		m_stackState = (m_stopAfter <= Parsed ? Parsed : ParsedAndImported);
+		storeContractDefinitions();
+
+		solAssert(!m_maxAstId.has_value());
+		m_maxAstId = parser.maxID();
 	}
-
-	if (Error::containsErrors(m_errorReporter.errors()))
-		return false;
-
-	m_stackState = (m_stopAfter <= Parsed ? Parsed : ParsedAndImported);
-	storeContractDefinitions();
-
-	solAssert(!m_maxAstId.has_value());
-	m_maxAstId = parser.maxID();
+	catch (UnimplementedFeatureError const& _error)
+	{
+		reportUnimplementedFeatureError(_error);
+	}
 
 	return true;
 }
@@ -492,6 +499,11 @@ bool CompilerStack::analyze()
 	catch (FatalError const& error)
 	{
 		solAssert(m_errorReporter.hasErrors(), "Unreported fatal error: "s + error.what());
+		noErrors = false;
+	}
+	catch (UnimplementedFeatureError const& _error)
+	{
+		reportUnimplementedFeatureError(_error);
 		noErrors = false;
 	}
 
@@ -737,28 +749,10 @@ bool CompilerStack::compile(State _stopAfter)
 						m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
 						return false;
 					}
-					catch (UnimplementedFeatureError const& _unimplementedError)
+					catch (UnimplementedFeatureError const& _error)
 					{
-						if (
-							SourceLocation const* sourceLocation =
-							boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
-						)
-						{
-							std::string const* comment = _unimplementedError.comment();
-							m_errorReporter.error(
-								1834_error,
-								Error::Type::CodeGenerationError,
-								*sourceLocation,
-								fmt::format(
-									"Unimplemented feature error {} in {}",
-									(comment && !comment->empty()) ? ": " + *comment : "",
-									_unimplementedError.lineInfo()
-								)
-							);
-							return false;
-						}
-						else
-							throw;
+						reportUnimplementedFeatureError(_error);
+						return false;
 					}
 				}
 	m_stackState = CompilationSuccessful;
@@ -1907,4 +1901,10 @@ experimental::Analysis const& CompilerStack::experimentalAnalysis() const
 {
 	solAssert(!!m_experimentalAnalysis);
 	return *m_experimentalAnalysis;
+}
+
+void CompilerStack::reportUnimplementedFeatureError(UnimplementedFeatureError const& _error)
+{
+	solAssert(_error.comment(), "Unimplemented feature errors must include a message for the user");
+	m_errorReporter.unimplementedFeatureError(1834_error, _error.sourceLocation(), *_error.comment());
 }

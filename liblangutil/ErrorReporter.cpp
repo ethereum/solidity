@@ -263,6 +263,16 @@ void ErrorReporter::docstringParsingError(ErrorId _error, SourceLocation const& 
 	);
 }
 
+void ErrorReporter::unimplementedFeatureError(ErrorId _error, SourceLocation const& _location, std::string const& _description)
+{
+	error(
+		_error,
+		Error::Type::UnimplementedFeatureError,
+		_location,
+		_description
+	);
+}
+
 void ErrorReporter::info(
 	ErrorId _error,
 	SourceLocation const& _location,

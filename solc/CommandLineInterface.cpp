@@ -691,6 +691,12 @@ bool CommandLineInterface::run(int _argc, char const* const* _argv)
 
 		return false;
 	}
+	catch (UnimplementedFeatureError const& _error)
+	{
+		solAssert(_error.comment(), "Unimplemented feature errors must include a message for the user");
+		report(Error::Severity::Error, stringOrDefault(_error.comment(), "Unimplemented feature"));
+		return false;
+	}
 }
 
 bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)

@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// UnimplementedFeatureError: Not yet implemented - FixedPointType.
+// UnimplementedFeatureError 1834: Not yet implemented - FixedPointType.

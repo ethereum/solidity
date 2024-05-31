@@ -5,4 +5,4 @@ contract C {
     fixed a4 = 0 / -0.123;
 }
 // ----
-// UnimplementedFeatureError: Not yet implemented - FixedPointType.
+// UnimplementedFeatureError 1834: Not yet implemented - FixedPointType.
