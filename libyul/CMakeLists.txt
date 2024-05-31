@@ -36,6 +36,8 @@ add_library(yul
 	ScopeFiller.h
 	Utilities.cpp
 	Utilities.h
+	YulControlFlowGraphExporter.h
+	YulControlFlowGraphExporter.cpp
 	YulString.h
 	backends/evm/AbstractAssembly.h
 	backends/evm/AsmCodeGen.cpp
