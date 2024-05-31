@@ -87,6 +87,7 @@ struct CompilerOutputs
 			{"metadata", &CompilerOutputs::metadata},
 			{"storage-layout", &CompilerOutputs::storageLayout},
 			{"transient-storage-layout", &CompilerOutputs::transientStorageLayout},
+			{"yul-cfg-json", &CompilerOutputs::yulCFGJson},
 		};
 		return components;
 	}
@@ -100,6 +101,7 @@ struct CompilerOutputs
 	bool abi = false;
 	bool ir = false;
 	bool irAstJson = false;
+	bool yulCFGJson = false;
 	bool irOptimized = false;
 	bool irOptimizedAstJson = false;
 	bool signatureHashes = false;

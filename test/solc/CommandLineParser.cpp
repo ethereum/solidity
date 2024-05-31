@@ -131,6 +131,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
 			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
 			"--ir", "--ir-ast-json", "--ir-optimized", "--ir-optimized-ast-json", "--hashes", "--userdoc", "--devdoc", "--metadata",
+			"--yul-cfg-json",
 			"--storage-layout", "--transient-storage-layout",
 			"--gas",
 			"--combined-json="
@@ -193,7 +194,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			true, true, true, true, true,
 			true, true, true, true, true,
 			true, true, true, true, true,
-			true, true,
+			true, true, true,
 		};
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
