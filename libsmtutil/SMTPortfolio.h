@@ -42,13 +42,7 @@ public:
 	SMTPortfolio(SMTPortfolio const&) = delete;
 	SMTPortfolio& operator=(SMTPortfolio const&) = delete;
 
-	SMTPortfolio(
-		std::map<util::h256, std::string> _smtlib2Responses = {},
-		frontend::ReadCallback::Callback _smtCallback = {},
-		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
-		std::optional<unsigned> _queryTimeout = {},
-		bool _printQuery = false
-	);
+	SMTPortfolio(std::vector<std::unique_ptr<SolverInterface>> solvers, std::optional<unsigned> _queryTimeout);
 
 	void reset() override;
 

@@ -18,9 +18,14 @@
 
 #include <libsolidity/formal/BMC.h>
 
+#include <libsolidity/formal/Cvc5SMTLib2Interface.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
+#include <libsmtutil/SMTLib2Interface.h>
 #include <libsmtutil/SMTPortfolio.h>
+#ifdef HAVE_Z3
+#include <libsmtutil/Z3Interface.h>
+#endif
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
@@ -35,6 +40,8 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
+using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 BMC::BMC(
 	smt::EncodingContext& _context,
@@ -45,12 +52,19 @@ BMC::BMC(
 	ModelCheckerSettings _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
-	m_interface(std::make_unique<smtutil::SMTPortfolio>(
-		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout, _settings.printQuery
-	))
+	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider)
 {
-	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
+	solAssert(!_settings.printQuery || _settings.solvers == SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
+	std::vector<std::unique_ptr<SolverInterface>> solvers;
+	if (_settings.solvers.smtlib2)
+		solvers.emplace_back(std::make_unique<SMTLib2Interface>(_smtlib2Responses, _smtCallback, _settings.timeout));
+	if (_settings.solvers.cvc5)
+		solvers.emplace_back(std::make_unique<Cvc5SMTLib2Interface>(_smtCallback, _settings.timeout));
+#ifdef HAVE_Z3
+	if (_settings.solvers.z3 && Z3Interface::available())
+		solvers.emplace_back(std::make_unique<Z3Interface>(_settings.timeout));
+#endif
+	m_interface = std::make_unique<SMTPortfolio>(std::move(solvers), _settings.timeout);
 #if defined (HAVE_Z3)
 	if (m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
