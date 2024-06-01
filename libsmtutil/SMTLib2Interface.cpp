@@ -322,6 +322,7 @@ std::string SMTLib2Interface::querySolver(std::string const& _input)
 		return m_queryResponses.at(inputHash);
 	if (m_smtCallback)
 	{
+		setupSmtCallback();
 		auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), _input);
 		if (result.success)
 			return result.responseOrErrorMessage;

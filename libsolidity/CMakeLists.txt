@@ -109,6 +109,10 @@ set(sources
 	formal/BMC.h
 	formal/CHC.cpp
 	formal/CHC.h
+	formal/Cvc5SMTLib2Interface.cpp
+	formal/Cvc5SMTLib2Interface.h
+	formal/EldaricaCHCSmtLib2Interface.cpp
+	formal/EldaricaCHCSmtLib2Interface.h
 	formal/EncodingContext.cpp
 	formal/EncodingContext.h
 	formal/ExpressionFormatter.cpp

@@ -25,6 +25,7 @@
 #endif
 
 #include <libsolidity/formal/ArraySlicePredicate.h>
+#include <libsolidity/formal/EldaricaCHCSmtLib2Interface.h>
 #include <libsolidity/formal/Invariants.h>
 #include <libsolidity/formal/PredicateInstance.h>
 #include <libsolidity/formal/PredicateSort.h>
@@ -1289,15 +1290,23 @@ void CHC::resetSourceAnalysis()
 		solAssert(false);
 #endif
 	}
-	if (!m_settings.solvers.z3)
+	else
 	{
 		solAssert(m_settings.solvers.smtlib2 || m_settings.solvers.eld);
-
 		if (!m_interface)
-			m_interface = std::make_unique<CHCSmtLib2Interface>(m_smtlib2Responses, m_smtCallback, m_settings.solvers, m_settings.timeout);
+		{
+			if (m_settings.solvers.eld)
+				m_interface = std::make_unique<EldaricaCHCSmtLib2Interface>(
+					m_smtCallback,
+					m_settings.timeout,
+					m_settings.invariants != ModelCheckerInvariants::None()
+				);
+			else
+				m_interface = std::make_unique<CHCSmtLib2Interface>(m_smtlib2Responses, m_smtCallback, m_settings.timeout);
+		}
 
 		auto smtlib2Interface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
-		solAssert(smtlib2Interface, "");
+		solAssert(smtlib2Interface);
 		smtlib2Interface->reset();
 		m_context.setSolver(smtlib2Interface->smtlib2Interface());
 	}

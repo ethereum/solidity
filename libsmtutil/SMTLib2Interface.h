@@ -71,7 +71,9 @@ public:
 
 	std::string dumpQuery(std::vector<Expression> const& _expressionsToEvaluate);
 
-private:
+protected:
+	virtual void setupSmtCallback() {}
+
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
 
 	void write(std::string _data);
