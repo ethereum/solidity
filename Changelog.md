@@ -2,6 +2,7 @@
 
 Language Features:
  * Accept declarations of state variables with ``transient`` data location (parser support only, no code generation yet).
+ * Make ``require(bool, Error)`` available when using the legacy pipeline.
 
 
 Compiler Features:
