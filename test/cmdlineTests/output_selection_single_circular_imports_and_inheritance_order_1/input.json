@@ -1,0 +1,19 @@
+{
+    "language": "Solidity",
+    "sources": {
+        // I2 inherits from I1 defined in a separate source. This may or may not fail with "Definition of base
+        // has to precede definition of derived contract", depending on the order in which sources are analyzed.
+        // We don't guarantee a particular order, only that it's stable.
+        // Note that I1 sorts before all the other interfaces in alphabetical order.
+        "I1.sol": {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *; import {I4} from 'I4.sol'; interface I1 {}"},
+        "I2.sol": {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *; import {I1} from 'I1.sol'; interface I2 is I1 {}"},
+        "I3.sol": {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *; import {I2} from 'I2.sol'; interface I3 {}"},
+        "I4.sol": {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *; import {S}  from 'S.sol';  interface I4 {}"},
+        "S.sol":  {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *; import {I3} from 'I3.sol'; struct    S  { uint x; }"}
+    },
+    "settings": {
+        // Selecting only a single contract must not affect analysis order.
+        // It must trigger the error if the test selecting all outputs does not trigger it and vice=versa.
+        "outputSelection": {"I1.sol": {"*": []}}
+    }
+}
