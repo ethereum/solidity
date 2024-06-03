@@ -155,7 +155,7 @@ Interface Changes
   ``storage-layout`` are sub-objects now. Before 0.8.0 they used to be serialised as strings.
 
 * The "legacy AST" has been removed (``--ast-json`` on the commandline interface and ``legacyAST`` for standard JSON).
-  Use the "compact AST" (``--ast-compact--json`` resp. ``AST``) as replacement.
+  Use the "compact AST" (``--ast-compact-json`` resp. ``AST``) as replacement.
 
 * The old error reporter (``--old-reporter``) has been removed.
 
