@@ -273,7 +273,10 @@ void ControlFlowGraphBuilder::operator()(VariableDeclaration const& _varDecl)
 	}) | ranges::to<std::vector<VariableSlot>>;
 	Stack input;
 	if (_varDecl.value)
-		input = visitAssignmentRightHandSide(*_varDecl.value, declaredVariables.size());
+	{
+		visitAssignment(_varDecl.debugData, std::move(declaredVariables), *_varDecl.value);
+		return;
+	}
 	else
 		input = Stack(_varDecl.variables.size(), LiteralSlot{0, _varDecl.debugData});
 	m_currentBlock->operations.emplace_back(CFG::Operation{
@@ -287,16 +290,7 @@ void ControlFlowGraphBuilder::operator()(Assignment const& _assignment)
 	auto assignedVariables = _assignment.variableNames | ranges::views::transform([&](Identifier const& _var) {
 		return VariableSlot{lookupVariable(_var.name), _var.debugData};
 	}) | ranges::to<std::vector<VariableSlot>>;
-
-	Stack input = visitAssignmentRightHandSide(*_assignment.value, assignedVariables.size());
-	yulAssert(m_currentBlock);
-	m_currentBlock->operations.emplace_back(CFG::Operation{
-		std::move(input),
-		// output
-		assignedVariables | ranges::to<Stack>,
-		// operation
-		CFG::Assignment{_assignment.debugData, assignedVariables}
-	});
+	visitAssignment(_assignment.debugData, std::move(assignedVariables), *_assignment.value);
 }
 void ControlFlowGraphBuilder::operator()(ExpressionStatement const& _exprStmt)
 {
@@ -563,17 +557,22 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 	return *output;
 }
 
-Stack ControlFlowGraphBuilder::visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount)
+void ControlFlowGraphBuilder::visitAssignment(langutil::DebugData::ConstPtr _debugData, std::vector<VariableSlot> _assignedVariables, Expression const& _expression)
 {
-	return std::visit(util::GenericVisitor{
-		[&](FunctionCall const& _call) -> Stack {
+	std::visit(util::GenericVisitor{
+		[&](FunctionCall const& _call) {
 			Stack const& output = visitFunctionCall(_call);
-			yulAssert(_expectedSlotCount == output.size(), "");
-			return output;
+			yulAssert(_assignedVariables.size() == output.size(), "");
+			yulAssert(m_currentBlock->operations.back().output.size() == _assignedVariables.size(), "");
+			m_currentBlock->operations.back().output = _assignedVariables | ranges::to<Stack>;
 		},
-		[&](auto const& _identifierOrLiteral) -> Stack {
-			yulAssert(_expectedSlotCount == 1, "");
-			return {(*this)(_identifierOrLiteral)};
+		[&](auto const& _identifierOrLiteral) {
+			yulAssert(_assignedVariables.size() == 1, "");
+			m_currentBlock->operations.emplace_back(CFG::Operation{
+				{(*this)(_identifierOrLiteral)},
+				_assignedVariables | ranges::to<Stack>,
+				CFG::Assignment{_debugData, _assignedVariables}
+			});
 		}
 	}, _expression);
 }

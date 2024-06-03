@@ -404,6 +404,10 @@ void OptimizedEVMCodeTransform::operator()(CFG::BasicBlock const& _block)
 		yulAssert(static_cast<int>(m_stack.size()) == m_assembly.stackHeight(), "");
 		yulAssert(m_stack.size() == baseHeight + operation.output.size(), "");
 		yulAssert(m_stack.size() >= operation.output.size(), "");
+		// TODO: hack
+		for (size_t i = 0; i < operation.output.size(); ++i)
+			m_stack.pop_back();
+		m_stack += operation.output;
 		assertLayoutCompatibility(
 			m_stack | ranges::views::take_last(operation.output.size()) | ranges::to<Stack>,
 			operation.output

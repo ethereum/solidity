@@ -61,7 +61,7 @@ private:
 	);
 	void registerFunction(FunctionDefinition const& _function);
 	Stack const& visitFunctionCall(FunctionCall const&);
-	Stack visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount);
+	void visitAssignment(langutil::DebugData::ConstPtr _debugData, std::vector<VariableSlot> _outputs, Expression const& _expression);
 
 	Scope::Function const& lookupFunction(YulName _name) const;
 	Scope::Variable const& lookupVariable(YulName _name) const;
