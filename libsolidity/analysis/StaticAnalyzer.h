@@ -65,6 +65,7 @@ private:
 	bool visit(FunctionDefinition const& _function) override;
 	void endVisit(FunctionDefinition const& _function) override;
 
+	bool visit(Assignment const& _assignment) override;
 	bool visit(ExpressionStatement const& _statement) override;
 	bool visit(VariableDeclaration const& _variable) override;
 	bool visit(Identifier const& _identifier) override;
@@ -73,6 +74,10 @@ private:
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(BinaryOperation const& _operation) override;
 	bool visit(FunctionCall const& _functionCall) override;
+
+	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
+	/// Should only be called if the left hand side is tuple-typed.
+	void checkDoubleStorageAssignment(Assignment const& _assignment);
 
 	langutil::ErrorReporter& m_errorReporter;
 
