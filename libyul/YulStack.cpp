@@ -24,6 +24,7 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/backends/evm/ControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -32,6 +33,7 @@
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/YulControlFlowGraphExporter.h>
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
 #include <libsolidity/interface/OptimiserSettings.h>
@@ -317,6 +319,27 @@ Json YulStack::astJson() const
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
 	return  m_parserResult->toJson();
+}
+
+Json YulStack::cfgJson() const
+{
+	yulAssert(m_parserResult, "");
+	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->analysisInfo, "");
+	// FIXME: we should not regenerate the cfg, but for now this is sufficient for testing purposes
+	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(
+		*m_parserResult.get()->analysisInfo.get(),
+		languageToDialect(m_language, m_evmVersion),
+		*m_parserResult.get()->code.get()
+	);
+
+	Json cfgJson;
+	cfgJson["nodeType"] = "YulCFG";
+
+	YulControlFlowGraphExporter exporter{};
+	cfgJson["blocks"] = exporter(*cfg.get()->entry);
+
+	return cfgJson;
 }
 
 std::shared_ptr<Object> YulStack::parserResult() const

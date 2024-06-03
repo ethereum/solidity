@@ -955,6 +955,16 @@ Json const& CompilerStack::yulIRAst(std::string const& _contractName) const
 	return contract(_contractName).yulIRAst;
 }
 
+Json const& CompilerStack::yulCFGJson(std::string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		solThrow(CompilerError, "Compilation was not successful.");
+
+	solUnimplementedAssert(!isExperimentalSolidity());
+
+	return contract(_contractName).yulCFGJson;
+}
+
 std::string const& CompilerStack::yulIROptimized(std::string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
@@ -1571,6 +1581,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 
 	compiledContract.yulIRAst = stack.astJson();
 	stack.optimize();
+	compiledContract.yulCFGJson = stack.cfgJson();
 	compiledContract.yulIROptimized = stack.print(this);
 	compiledContract.yulIROptimizedAst = stack.astJson();
 }

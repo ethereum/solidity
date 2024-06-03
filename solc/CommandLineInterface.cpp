@@ -289,6 +289,30 @@ void CommandLineInterface::handleIRAst(std::string const& _contractName)
 	}
 }
 
+void CommandLineInterface::handleYulCFGExport(std::string const& _contractName)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.yulCFGJson)
+		return;
+
+	if (!m_options.output.dir.empty())
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_yul_cfg.json",
+			util::jsonPrint(
+				m_compiler->yulCFGJson(_contractName),
+				m_options.formatting.json
+			)
+		);
+	else
+	{
+		sout() << util::jsonPrint(
+			m_compiler->yulCFGJson(_contractName),
+			m_options.formatting.json
+		) << std::endl;
+	}
+}
+
 void CommandLineInterface::handleIROptimized(std::string const& _contractName)
 {
 	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
@@ -848,7 +872,8 @@ void CommandLineInterface::compile()
 			m_options.compiler.outputs.ir ||
 			m_options.compiler.outputs.irOptimized ||
 			m_options.compiler.outputs.irAstJson ||
-			m_options.compiler.outputs.irOptimizedAstJson
+			m_options.compiler.outputs.irOptimizedAstJson ||
+			m_options.compiler.outputs.yulCFGJson
 		);
 		m_compiler->enableEvmBytecodeGeneration(
 			m_options.compiler.estimateGas ||
@@ -1303,6 +1328,7 @@ void CommandLineInterface::outputCompilationResults()
 			handleIRAst(contract);
 			handleIROptimized(contract);
 			handleIROptimizedAst(contract);
+			handleYulCFGExport(contract);
 			handleSignatureHashes(contract);
 			handleMetadata(contract);
 			handleABI(contract);
