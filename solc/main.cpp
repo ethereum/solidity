@@ -51,10 +51,10 @@ int main(int argc, char** argv)
 		std::cerr << boost::diagnostic_information(_exception);
 		return 2;
 	}
-	catch (...)
-	{
-		std::cerr << "Uncaught exception:" << std::endl;
-		std::cerr << boost::current_exception_diagnostic_information() << std::endl;
-		return 2;
-	}
+	// catch (...)
+	// {
+	// 	std::cerr << "Uncaught exception:" << std::endl;
+	// 	std::cerr << boost::current_exception_diagnostic_information() << std::endl;
+	// 	return 2;
+	// }
 }

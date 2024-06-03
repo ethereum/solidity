@@ -29,6 +29,7 @@
 #include "solidity/BuildInfo.h"
 
 #include <libsolidity/interface/Version.h>
+#include <libsolidity/ast/ASTCoqExporter.h>
 #include <libsolidity/ast/ASTJsonExporter.h>
 #include <libsolidity/ast/ASTJsonImporter.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
@@ -1109,6 +1110,40 @@ void CommandLineInterface::handleAst()
 	}
 }
 
+void CommandLineInterface::handleCoq()
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	// if (!m_options.compiler.outputs.astCompactJson)
+	// 	return;
+
+	std::vector<ASTNode const*> asts;
+	for (auto const& sourceCode: m_fileReader.sourceUnits())
+		asts.push_back(&m_compiler->ast(sourceCode.first));
+
+	if (!m_options.output.dir.empty())
+	{
+		for (auto const& sourceCode: m_fileReader.sourceUnits())
+		{
+			std::stringstream data;
+			std::string postfix = "";
+			ASTCoqExporter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+			boost::filesystem::path path(sourceCode.first);
+			path.replace_extension(".v");
+			createFile(path.filename().string(), data.str());
+		}
+	}
+	else
+	{
+		sout() << "Coq AST:" << std::endl << std::endl;
+		for (auto const& sourceCode: m_fileReader.sourceUnits())
+		{
+			sout() << std::endl << "======= " << sourceCode.first << " =======" << std::endl;
+			ASTCoqExporter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
+		}
+	}
+}
+
 void CommandLineInterface::serveLSP()
 {
 	lsp::StdioTransport transport;
@@ -1340,6 +1375,8 @@ void CommandLineInterface::outputCompilationResults()
 
 	// do we need AST output?
 	handleAst();
+
+	handleCoq();
 
 	CompilerOutputs astOutputSelection;
 	astOutputSelection.astCompactJson = true;

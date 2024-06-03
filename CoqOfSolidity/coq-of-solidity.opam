@@ -1,0 +1,23 @@
+opam-version: "2.0"
+name: "coq-of-solidity"
+version: "0.1"
+synopsis: "Coq of Solidity"
+description: """
+Formal verification for Solidity by translation to the proof system Coq
+"""
+maintainer: "Guillaume Claret <dev@clarus.me>"
+authors: [
+  "Formal Land <contact@formal.land>"
+]
+license: "MIT"
+homepage: "https://github.com/formal-land/solidity"
+bug-reports: "https://github.com/formal-land/solidity/issues"
+dev-repo: "git+https://github.com/formal-land/solidity.git"
+depends: [
+  "ocaml" {>= "4.08"}
+  "coq" {>= "8.17.1" }
+  "coq-hammer"
+]
+build: [
+  [make]
+]
