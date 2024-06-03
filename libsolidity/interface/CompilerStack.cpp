@@ -1279,12 +1279,16 @@ bool CompilerStack::resolveImports()
 	// topological sorting (depth first search) of the import graph, cutting potential cycles
 	std::vector<Source const*> sourceOrder;
 	std::set<Source const*> sourcesSeen;
+	std::set<Source const*> sourcesNeeded;
 
-	std::function<void(Source const*)> toposort = [&](Source const* _source)
+	std::function<void(Source const*, bool)> toposort = [&](Source const* _source, bool _needed)
 	{
 		if (sourcesSeen.count(_source))
 			return;
 		sourcesSeen.insert(_source);
+		solAssert(sourcesNeeded.count(_source) == 0);
+		if (_needed)
+			sourcesNeeded.insert(_source);
 		solAssert(_source->ast);
 		for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
@@ -1292,7 +1296,7 @@ bool CompilerStack::resolveImports()
 				std::string const& path = *import->annotation().absolutePath;
 				solAssert(m_sources.count(path), "");
 				import->annotation().sourceUnit = m_sources[path].ast.get();
-				toposort(&m_sources[path]);
+				toposort(&m_sources[path], _needed);
 			}
 		sourceOrder.push_back(_source);
 	};
@@ -1300,8 +1304,10 @@ bool CompilerStack::resolveImports()
 	std::vector<PragmaDirective const*> experimentalPragmaDirectives;
 	for (auto const& sourcePair: m_sources)
 	{
-		if (isRequestedSource(sourcePair.first))
-			toposort(&sourcePair.second);
+		// NOTE: Non-requested sources can still be pulled in by imports. Skipping them here could
+		// produce a different order depending on what was requested, which could then affect
+		// analysis in situations where the order of definitions matters (e.g. contract inheritance).
+		toposort(&sourcePair.second, isRequestedSource(sourcePair.first));
 		if (sourcePair.second.ast && sourcePair.second.ast->experimentalSolidity())
 			for (ASTPointer<ASTNode> const& node: sourcePair.second.ast->nodes())
 				if (PragmaDirective const* pragma = dynamic_cast<PragmaDirective*>(node.get()))
@@ -1323,7 +1329,11 @@ bool CompilerStack::resolveImports()
 		return false;
 	}
 
-	swap(m_sourceOrder, sourceOrder);
+	m_sourceOrder.clear();
+	for (Source const* source: sourceOrder)
+		// Here we can safely filter out non-requested sources without affecting the analysis order.
+		if (sourcesNeeded.count(source) != 0)
+			m_sourceOrder.push_back(source);
 	return true;
 }
 

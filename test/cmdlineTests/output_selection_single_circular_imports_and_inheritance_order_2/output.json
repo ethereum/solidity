@@ -1,24 +1,19 @@
 {
-    "errors": [
-        {
-            "component": "general",
-            "errorCode": "2449",
-            "formattedMessage": "TypeError: Definition of base has to precede definition of derived contract
- --> I2.sol:2:63:
-  |
-2 | pragma solidity *; import {IX} from 'IX.sol'; interface I2 is IX {}
-  |                                                               ^^
-
-",
-            "message": "Definition of base has to precede definition of derived contract",
-            "severity": "error",
-            "sourceLocation": {
-                "end": 100,
-                "file": "I2.sol",
-                "start": 98
-            },
-            "type": "TypeError"
+    "sources": {
+        "I2.sol": {
+            "id": 0
+        },
+        "I3.sol": {
+            "id": 1
+        },
+        "I4.sol": {
+            "id": 2
+        },
+        "IX.sol": {
+            "id": 3
+        },
+        "S.sol": {
+            "id": 4
         }
-    ],
-    "sources": {}
+    }
 }
