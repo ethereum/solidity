@@ -96,6 +96,26 @@ Json YulControlFlowGraphExporter::toJson(CFG::Operation const& _operation)
 			opJson["op"] = _call.function.get().name.str();
 		},
 		[&](CFG::BuiltinCall const& _call) {
+			Json builtinArgsJson = Json::array();
+			auto const& builtin = _call.builtin.get();
+			if (!builtin.literalArguments.empty())
+			{
+				auto const& functionCallArgs = _call.functionCall.get().arguments;
+				for (size_t i = 0; i < builtin.literalArguments.size(); ++i)
+				{
+					std::optional<LiteralKind> const& argument = builtin.literalArguments[i];
+					if (argument.has_value() && i < functionCallArgs.size())
+					{
+						// The function call argument at index i must be a literal if builtin.literalArguments[i] is not nullopt
+						yulAssert(std::holds_alternative<Literal>(functionCallArgs[i]));
+						builtinArgsJson.push_back(std::get<Literal>(functionCallArgs[i]).value.str());
+					}
+				}
+			}
+
+			if (!builtinArgsJson.empty())
+				opJson["builtinArgs"] = builtinArgsJson;
+
 			opJson["op"] = _call.functionCall.get().functionName.name.str();
 		},
 		[&](CFG::Assignment const& _assignment) {
