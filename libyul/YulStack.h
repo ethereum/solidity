@@ -138,7 +138,10 @@ public:
 	) const;
 	Json astJson() const;
 
-	/// Return the parsed and analyzed object.
+	// return the JSON representation of the YuL CFG (experimental)
+	Json cfgJson() const;
+
+/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
 
 	langutil::DebugInfoSelection debugInfoSelection() const { return m_debugInfoSelection; }

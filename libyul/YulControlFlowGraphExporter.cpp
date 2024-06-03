@@ -28,7 +28,7 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-void YulControlFlowGraphExporter::operator()(CFG::BasicBlock const& _entry)
+Json YulControlFlowGraphExporter::operator()(CFG::BasicBlock const& _entry)
 {
 	Json ret = Json::array();
 	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_entry}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
@@ -47,7 +47,6 @@ void YulControlFlowGraphExporter::operator()(CFG::BasicBlock const& _entry)
 			{
 				exitBlockJson["exit"] = { "Block" + std::to_string(getBlockId(*_jump.target)) };
 				exitBlockJson["type"] = "Jump";
-				ret.push_back(exitBlockJson);
 
 				//TODO: handle backwards jump?
 				_addChild(_jump.target);
@@ -57,7 +56,6 @@ void YulControlFlowGraphExporter::operator()(CFG::BasicBlock const& _entry)
 				exitBlockJson["exit"] = { "Block" + std::to_string(getBlockId(*_conditionalJump.zero)), "Block" + std::to_string(getBlockId(*_conditionalJump.nonZero)) };
 				exitBlockJson["cond"] = stackSlotToJson(_conditionalJump.condition);
 				exitBlockJson["type"] = "ConditionalJump";
-				ret.push_back(exitBlockJson);
 
 				_addChild(_conditionalJump.zero);
 				_addChild(_conditionalJump.nonZero);
@@ -74,9 +72,7 @@ void YulControlFlowGraphExporter::operator()(CFG::BasicBlock const& _entry)
 		}, _block->exit);
 		ret.push_back(exitBlockJson);
 	});
-
-	// TODO: return Json, remove debug output, and add tests
-	std::cout << ret << std::endl;
+	return ret;
 }
 
 Json YulControlFlowGraphExporter::toJson(CFG::BasicBlock const& _block)
