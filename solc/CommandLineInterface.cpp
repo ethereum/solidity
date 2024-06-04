@@ -1304,6 +1304,11 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			sout() << "AST:" << std::endl << std::endl;
 			sout() << util::jsonPrint(stack.astJson(), m_options.formatting.json) << std::endl;
 		}
+		if (m_options.compiler.outputs.yulCFGJson)
+		{
+			sout() << "Yul Control Flow Graph:" << std::endl << std::endl;
+			sout() << util::jsonPrint(stack.cfgJson(), m_options.formatting.json) << std::endl;
+		}
 		solAssert(_targetMachine == yul::YulStack::Machine::EVM, "");
 		if (m_options.compiler.outputs.asm_)
 		{
