@@ -384,7 +384,8 @@ Json YulStack::cfgJson() const
 	yulAssert(m_parserResult->code, "");
 	yulAssert(m_parserResult->analysisInfo, "");
 	// FIXME: we should not regenerate the cfg, but for now this is sufficient for testing purposes
-	auto exportCFGFromObject = [&](Object const& _object) {
+	auto exportCFGFromObject = [&](Object const& _object) -> Json {
+		// NOTE: The block Ids are reset for each object
 		YulControlFlowGraphExporter exporter{};
 		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(
 			*_object.analysisInfo.get(),
@@ -394,25 +395,31 @@ Json YulStack::cfgJson() const
 		return exporter(*cfg.get()->entry);
 	};
 
+	std::function<Json(std::vector<std::shared_ptr<ObjectNode>>)> exportCFGFromSubObjects;
+	exportCFGFromSubObjects = [&](std::vector<std::shared_ptr<ObjectNode>> _subObjects) -> Json {
+		Json subObjectsJson = Json::array();
+		for (std::shared_ptr<ObjectNode> const& subObjectNode: _subObjects)
+			if (Object const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
+			{
+				Json subObjectJson;
+				subObjectJson["name"] = subObject->name.str();
+				subObjectJson["blocks"] = exportCFGFromObject(*subObject);
+				if (!subObject->subObjects.empty())
+					subObjectJson["subObjects"] = exportCFGFromSubObjects(subObject->subObjects);
+				subObjectsJson.emplace_back(subObjectJson);
+			}
+		return subObjectsJson;
+	};
+
 	Json objectJson;
 	Object const& object = *m_parserResult.get();
 	objectJson["name"] = object.name.str();
 	objectJson["blocks"] = exportCFGFromObject(object);
 
-	Json subObjectsJson = Json::array();
-	for (std::shared_ptr<ObjectNode> const& subObjectNode: m_parserResult.get()->subObjects)
-		if (Object const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
-		{
-			Json subObjectJson;
-			subObjectJson["name"] = subObject->name.str();
-			subObjectJson["blocks"] = exportCFGFromObject(*subObject);
-			subObjectsJson.emplace_back(subObjectJson);
-		}
-
 	Json ret;
 	ret["nodeType"] = "YulCFG";
 	ret["object"] = objectJson;
-	ret["subObjects"] = subObjectsJson;
+	ret["subObjects"] = exportCFGFromSubObjects(object.subObjects);
 	return ret;
 }
 
