@@ -197,20 +197,20 @@ void OptimiserSuite::run(
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{*evmDialect, *_meter}(ast);
-		if (usesOptimizedCodeGenerator)
-		{
-			StackCompressor::run(
-				_dialect,
-				_object,
-				_optimizeStackAllocation,
-				stackCompressorMaxIterations
-			);
-			if (evmDialect->providesObjectAccess())
-				StackLimitEvader::run(suite.m_context, _object);
-		}
-		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
-			StackLimitEvader::run(suite.m_context, _object);
+		//ConstantOptimiser{*evmDialect, *_meter}(ast);
+		//if (usesOptimizedCodeGenerator)
+		//{
+		//	StackCompressor::run(
+		//		_dialect,
+		//		_object,
+		//		_optimizeStackAllocation,
+		//		stackCompressorMaxIterations
+		//	);
+		//	if (evmDialect->providesObjectAccess())
+		//		StackLimitEvader::run(suite.m_context, _object);
+		//}
+		//else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
+		//	StackLimitEvader::run(suite.m_context, _object);
 	}
 
 	dispenser.reset(ast);
