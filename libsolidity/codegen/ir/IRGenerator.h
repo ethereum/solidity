@@ -76,6 +76,8 @@ public:
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 	);
 
+	std::map<std::string, ContractDefinition const*> const& dependencySubObjects() const { return m_dependencySubObjects; }
+
 private:
 	std::string generate(
 		ContractDefinition const& _contract,
@@ -145,6 +147,8 @@ private:
 	IRGenerationContext m_context;
 	YulUtilFunctions m_utils;
 	OptimiserSettings m_optimiserSettings;
+
+	std::map<std::string, ContractDefinition const*> m_dependencySubObjects;
 };
 
 }

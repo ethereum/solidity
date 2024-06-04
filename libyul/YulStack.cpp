@@ -38,6 +38,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <memory>
 #include <optional>
 
 using namespace solidity;
@@ -86,7 +87,7 @@ bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const
 	return analyzeParsed();
 }
 
-void YulStack::optimize()
+void YulStack::optimize(SourceView const& _optimizedSubObjectSources)
 {
 	yulAssert(m_analysisSuccessful, "Analysis was not successful.");
 	yulAssert(m_parserResult);
@@ -99,7 +100,7 @@ void YulStack::optimize()
 
 	m_analysisSuccessful = false;
 	yulAssert(m_parserResult, "");
-	optimize(*m_parserResult, true);
+	m_parserResult = optimize(m_parserResult, true, _optimizedSubObjectSources);
 	yulAssert(analyzeParsed(), "Invalid source code after optimization.");
 }
 
@@ -150,16 +151,55 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize, m_eofVersion);
 }
 
-void YulStack::optimize(Object& _object, bool _isCreation)
+std::shared_ptr<yul::Object> YulStack::optimize(
+	std::shared_ptr<yul::Object> _object,
+	bool _isCreation,
+	SourceView const& _optimizedSubObjectSources
+)
 {
-	yulAssert(_object.code, "");
-	yulAssert(_object.analysisInfo, "");
-	for (auto& subNode: _object.subObjects)
-		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
+	yulAssert(_object);
+	yulAssert(_object->code);
+	yulAssert(_object->analysisInfo);
+
+	std::string objectName = _object->name.str();
+	if (_optimizedSubObjectSources.size() == 1 && _optimizedSubObjectSources.begin()->first == objectName)
+	{
+		YulStack subStack(m_evmVersion, m_eofVersion, m_language, m_optimiserSettings, m_debugInfoSelection);
+		bool analysisSuccessful = subStack.parseAndAnalyze("", std::string(_optimizedSubObjectSources.begin()->second));
+		solAssert(analysisSuccessful, "Invalid IR for object " + objectName);
+
+		// A few sanity checks that might catch source not matching the object it replaces.
+		// TODO: Compare names of all subobjects, not just data.
+		// TODO: Compare debugData by content (ignoring pointers).
+		yulAssert(subStack.parserResult()->subObjects.size() == _object->subObjects.size());
+		yulAssert(subStack.parserResult()->qualifiedDataNames() == _object->qualifiedDataNames());
+		return subStack.parserResult();
+	}
+
+	std::map<std::string, SourceView> subObjectSourceMaps;
+	for (auto const& [subObjectPath, optimizedIR]: _optimizedSubObjectSources)
+	{
+		yulAssert(boost::starts_with(subObjectPath, objectName + '.'));
+		std::string subObjectPathNoPrefix = subObjectPath.substr(objectName.size() + 1);
+
+		std::vector<std::string> pathComponents;
+		boost::algorithm::split(pathComponents, subObjectPathNoPrefix, boost::is_any_of("."));
+		yulAssert(pathComponents.size() >= 1);
+
+		subObjectSourceMaps.try_emplace(pathComponents[0]);
+		yulAssert(subObjectSourceMaps[pathComponents[0]].count(subObjectPathNoPrefix) == 0);
+		subObjectSourceMaps[pathComponents[0]][subObjectPathNoPrefix] = optimizedIR;
+	}
+
+	for (std::shared_ptr<ObjectNode>& subNode: _object->subObjects)
+		if (auto subObject = std::dynamic_pointer_cast<Object>(subNode))
 		{
-			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
-			optimize(*subObject, isCreation);
+			std::string subName = subObject->name.str();
+			bool isCreation = !boost::ends_with(subName, "_deployed");
+			subNode = optimize(subObject, isCreation, util::valueOrDefault(subObjectSourceMaps, subName));
+			subObjectSourceMaps.erase(subName);
 		}
+	yulAssert(subObjectSourceMaps.empty());
 
 	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
 	std::unique_ptr<GasMeter> meter;
@@ -194,7 +234,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	OptimiserSuite::run(
 		dialect,
 		meter.get(),
-		_object,
+		*_object,
 		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
 		optimizeStackAllocation,
 		yulOptimiserSteps,
@@ -202,6 +242,8 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		_isCreation ? std::nullopt : std::make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
 	);
+
+	return _object;
 }
 
 MachineAssemblyObject YulStack::assemble(Machine _machine) const

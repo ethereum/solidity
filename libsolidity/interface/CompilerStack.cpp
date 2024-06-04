@@ -1519,6 +1519,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
+	std::map<std::string, ContractDefinition const*> dependencySubObjects;
 	if (m_experimentalAnalysis)
 	{
 		experimental::IRGenerator generator(
@@ -1535,6 +1536,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 			{}, // TODO: createCBORMetadata(compiledContract, /* _forIR */ true),
 			otherYulSources
 		);
+		// TODO: Use dependencySubObjects() to reuse optimized IR when it becomes available.
 	}
 	else
 	{
@@ -1552,6 +1554,15 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 			createCBORMetadata(compiledContract, /* _forIR */ true),
 			otherYulSources
 		);
+		dependencySubObjects = generator.dependencySubObjects();
+	}
+
+	std::map<std::string, std::string_view> optimizedSubObjectSources;
+	for (auto const& [subObjectPath, dependency]: dependencySubObjects)
+	{
+		solAssert(optimizedSubObjectSources.count(subObjectPath) == 0);
+		solAssert(dependency);
+		optimizedSubObjectSources[subObjectPath] = m_contracts.at(dependency->fullyQualifiedName()).yulIROptimized;
 	}
 
 	yul::YulStack stack(
@@ -1570,7 +1581,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	);
 
 	compiledContract.yulIRAst = stack.astJson();
-	stack.optimize();
+	stack.optimize(optimizedSubObjectSources);
 	compiledContract.yulIROptimized = stack.print(this);
 	compiledContract.yulIROptimizedAst = stack.astJson();
 }

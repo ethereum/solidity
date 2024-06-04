@@ -39,6 +39,8 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/JSON.h>
 
+#include <range/v3/algorithm/count.hpp>
+
 #include <sstream>
 #include <variant>
 
@@ -92,6 +94,7 @@ std::string IRGenerator::run(
 	std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 )
 {
+	m_dependencySubObjects.clear();
 	return yul::reindent(generate(_contract, _cborMetadata, _otherYulSources));
 }
 
@@ -181,7 +184,18 @@ std::string IRGenerator::generate(
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions(_contract);
 
 	t("functions", m_context.functionCollector().requestedFunctions());
-	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
+
+	std::set<ContractDefinition const*, ASTNode::CompareByID> const& creationDependencies = m_context.subObjectsCreated();
+	t("subObjects", subObjectSources(creationDependencies));
+	for (ContractDefinition const* dependency: creationDependencies)
+	{
+		std::string subObjectPath =
+			IRNames::creationObject(_contract) + '.' +
+			IRNames::creationObject(*dependency);
+		solAssert(ranges::count(subObjectPath, '.') == 1);
+		solAssert(m_dependencySubObjects.count(subObjectPath) == 0);
+		m_dependencySubObjects.emplace(subObjectPath, dependency);
+	}
 
 	// This has to be called only after all other code generation for the creation object is complete.
 	bool creationInvolvesMemoryUnsafeAssembly = m_context.memoryUnsafeInlineAssemblySeen();
@@ -203,7 +217,20 @@ std::string IRGenerator::generate(
 	std::set<FunctionDefinition const*> deployedFunctionList = generateQueuedFunctions();
 	generateInternalDispatchFunctions(_contract);
 	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
-	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
+
+	std::set<ContractDefinition const*, ASTNode::CompareByID> const& deployedDependencies = m_context.subObjectsCreated();
+	t("deployedSubObjects", subObjectSources(deployedDependencies));
+	for (ContractDefinition const* dependency: deployedDependencies)
+	{
+		std::string subObjectPath =
+			IRNames::creationObject(_contract) + '.' +
+			IRNames::deployedObject(_contract) + '.' +
+			IRNames::creationObject(*dependency);
+		solAssert(ranges::count(subObjectPath, '.') == 2);
+		solAssert(m_dependencySubObjects.count(subObjectPath) == 0);
+		m_dependencySubObjects.emplace(subObjectPath, dependency);
+	}
+
 	t("metadataName", yul::Object::metadataName());
 	t("cborMetadata", util::toHex(_cborMetadata));
 

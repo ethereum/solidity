@@ -68,6 +68,8 @@ public:
 	enum class Language { Yul, Assembly, StrictAssembly };
 	enum class Machine { EVM };
 
+	using SourceView = std::map<std::string, std::string_view>;
+
 	YulStack():
 		YulStack(
 			langutil::EVMVersion{},
@@ -102,7 +104,20 @@ public:
 
 	/// Run the optimizer suite. Can only be used with Yul or strict assembly.
 	/// If the settings (see constructor) disabled the optimizer, nothing is done here.
-	void optimize();
+	/// @param _optimizedSubObjectSources A map containing already optimized IR of selected subobjects
+	///     of the current object.
+	///     When provided, the corresponding subobjects are not optimized.
+	///     They are instead completely replaced with the provided source.
+	///     The keys represent subobject paths within the current object, consisting of dot-deparated object names.
+	///     The first object on the path must be the current object.
+	///     All specified subobjects must exist in the current object.
+	///     Paths may not overlap - if source is provided for a subobject, it may not be
+	///     provided for any of the objects nested in it at any level.
+	///     @warning Provided source must be valid and match the unoptimized object, however, aside
+	///     from some rudimentary sanity checks, this cannot be perfectly enforced.
+	///     Ensuring that the objects match is the responsibility of the caller and failure to do
+	///     so may result in semantic differences between optimized and unoptimized code.
+	void optimize(SourceView const& _optimizedSubObjectSources = {});
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine) const;
@@ -141,7 +156,11 @@ private:
 
 	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
 
-	void optimize(yul::Object& _object, bool _isCreation);
+	std::shared_ptr<yul::Object> optimize(
+		std::shared_ptr<yul::Object> _object,
+		bool _isCreation,
+		SourceView const& _optimizedSubObjectSources = {}
+	);
 
 	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;
