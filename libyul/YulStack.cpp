@@ -384,19 +384,36 @@ Json YulStack::cfgJson() const
 	yulAssert(m_parserResult->code, "");
 	yulAssert(m_parserResult->analysisInfo, "");
 	// FIXME: we should not regenerate the cfg, but for now this is sufficient for testing purposes
-	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(
-		*m_parserResult.get()->analysisInfo.get(),
-		languageToDialect(m_language, m_evmVersion),
-		*m_parserResult.get()->code.get()
-	);
+	auto exportCFGFromObject = [&](Object const& _object) {
+		YulControlFlowGraphExporter exporter{};
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(
+			*_object.analysisInfo.get(),
+			languageToDialect(m_language, m_evmVersion),
+			*_object.code.get()
+		);
+		return exporter(*cfg.get()->entry);
+	};
 
-	Json cfgJson;
-	cfgJson["nodeType"] = "YulCFG";
+	Json objectJson;
+	Object const& object = *m_parserResult.get();
+	objectJson["name"] = object.name.str();
+	objectJson["blocks"] = exportCFGFromObject(object);
 
-	YulControlFlowGraphExporter exporter{};
-	cfgJson["blocks"] = exporter(*cfg.get()->entry);
+	Json subObjectsJson = Json::array();
+	for (std::shared_ptr<ObjectNode> const& subObjectNode: m_parserResult.get()->subObjects)
+		if (Object const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
+		{
+			Json subObjectJson;
+			subObjectJson["name"] = subObject->name.str();
+			subObjectJson["blocks"] = exportCFGFromObject(*subObject);
+			subObjectsJson.emplace_back(subObjectJson);
+		}
 
-	return cfgJson;
+	Json ret;
+	ret["nodeType"] = "YulCFG";
+	ret["object"] = objectJson;
+	ret["subObjects"] = subObjectsJson;
+	return ret;
 }
 
 std::shared_ptr<Object> YulStack::parserResult() const
