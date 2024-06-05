@@ -108,7 +108,7 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 	}
 	catch (...)
 	{
-		return ReadCallback::Result{false, "Unknown exception in SMTQuery callback: " + boost::current_exception_diagnostic_information()};
+		return ReadCallback::Result{false, "Exception in SMTQuery callback: " + boost::current_exception_diagnostic_information()};
 	}
 }
 

@@ -131,9 +131,6 @@ void FuzzerUtil::testCompiler(
 	catch (Error const&)
 	{
 	}
-	catch (FatalError const&)
-	{
-	}
 	catch (UnimplementedFeatureError const&)
 	{
 	}

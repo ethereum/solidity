@@ -66,18 +66,9 @@ std::optional<Error> parseAndReturnFirstError(
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::None()
 	);
-	bool success = false;
-	try
-	{
-		success = stack.parseAndAnalyze("", _source);
-		if (success && _assemble)
-			stack.assemble(_machine);
-	}
-	catch (FatalError const&)
-	{
-		BOOST_FAIL("Fatal error leaked.");
-		success = false;
-	}
+	bool success = stack.parseAndAnalyze("", _source);
+	if (success && _assemble)
+		stack.assemble(_machine);
 	std::shared_ptr<Error const> error;
 	for (auto const& e: stack.errors())
 	{
