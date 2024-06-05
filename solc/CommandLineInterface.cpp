@@ -923,17 +923,9 @@ void CommandLineInterface::compile()
 	}
 	catch (Error const& _error)
 	{
-		if (_error.type() == Error::Type::DocstringParsingError)
-		{
-			report(Error::Severity::Error, *boost::get_error_info<errinfo_comment>(_error));
-			solThrow(CommandLineExecutionError, "Documentation parsing failed.");
-		}
-		else
-		{
-			m_hasOutput = true;
-			formatter.printErrorInformation(_error);
-			solThrow(CommandLineExecutionError, "");
-		}
+		m_hasOutput = true;
+		formatter.printErrorInformation(_error);
+		solThrow(CommandLineExecutionError, "");
 	}
 }
 
