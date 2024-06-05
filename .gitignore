@@ -41,7 +41,10 @@ emscripten_build/
 /docs/_build/
 /docs/_static/robots.txt
 /deps/
+
+# Reports and benchmarks
 /reports/
+/benchmarks/
 
 # vim stuff
 [._]*.sw[a-p]
