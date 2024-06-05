@@ -329,37 +329,50 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	yulAssert(m_currentBlock, "");
 	langutil::DebugData::ConstPtr preSwitchDebugData = debugDataOf(_switch);
 
-	auto ghostVariableId = m_graph.ghostVariables.size();
-	YulName ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
-	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulname, ghostVariableName});
+	auto makeGhostVariable = [&](auto _debugData) -> VariableSlot {
+		auto ghostVariableId = m_graph.ghostVariables.size();
+		YulString ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
+		auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulstring, ghostVariableName});
+		return VariableSlot{ghostVar, _debugData};
+	};
 
-	// Artificially generate:
-	// let <ghostVariable> := <switchExpression>
-	VariableSlot ghostVarSlot{ghostVar, debugDataOf(*_switch.expression)};
 	StackSlot expression = std::visit(*this, *_switch.expression);
-	m_currentBlock->operations.emplace_back(CFG::Operation{
-		Stack{std::move(expression)},
-		Stack{ghostVarSlot},
-		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
-	});
+	Expression switchExpression = *_switch.expression;
+	if (!(std::holds_alternative<LiteralSlot>(expression) || std::holds_alternative<VariableSlot>(expression)))
+	{
+		// Artificially generate:
+		// let <ghostVariable> := <switchExpression>
+		VariableSlot ghostVarSlot = makeGhostVariable(debugDataOf(*_switch.expression));
+		m_currentBlock->operations.emplace_back(CFG::Operation{
+			Stack{std::move(expression)},
+			Stack{ghostVarSlot},
+			CFG::Assignment{_switch.debugData, {ghostVarSlot}}
+		});
+		expression = std::move(ghostVarSlot);
+		switchExpression = Identifier{
+			ghostVarSlot.debugData,
+			ghostVarSlot.variable.get().name
+		};
+	}
 
 	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction({});
 	yulAssert(equalityBuiltin, "");
 
 	// Artificially generate:
-	// eq(<literal>, <ghostVariable>)
+	// eq(<literal>, <expression>)
 	auto makeValueCompare = [&](Case const& _case) {
 		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
 			debugDataOf(_case),
 			yul::Identifier{{}, "eq"_yulname},
-			{*_case.value, Identifier{{}, ghostVariableName}}
+			{*_case.value, switchExpression}
 		});
-		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
-			Stack{ghostVarSlot, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
-			Stack{TemporarySlot{ghostCall, 0}},
+		VariableSlot ghostVarSlot = makeGhostVariable(debugDataOf(_case));
+		m_currentBlock->operations.emplace_back(CFG::Operation{
+			Stack{expression, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
+			Stack{ghostVarSlot},
 			CFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall, 2},
 		});
-		return operation.output.front();
+		return ghostVarSlot;
 	};
 	CFG::BasicBlock& afterSwitch = m_graph.makeBlock(preSwitchDebugData);
 	yulAssert(!_switch.cases.empty(), "");
