@@ -563,8 +563,12 @@ void ControlFlowGraphBuilder::visitAssignment(langutil::DebugData::ConstPtr _deb
 		[&](FunctionCall const& _call) {
 			Stack const& output = visitFunctionCall(_call);
 			yulAssert(_assignedVariables.size() == output.size(), "");
-			yulAssert(m_currentBlock->operations.back().output.size() == _assignedVariables.size(), "");
-			m_currentBlock->operations.back().output = _assignedVariables | ranges::to<Stack>;
+			// TODO: Hack: operations are empty, if the function was non-returning, in which case the rest of the block doesn't matter
+			if (!m_currentBlock->operations.empty())
+			{
+				yulAssert(m_currentBlock->operations.back().output.size() == _assignedVariables.size(), "");
+				m_currentBlock->operations.back().output = _assignedVariables | ranges::to<Stack>;
+			}
 		},
 		[&](auto const& _identifierOrLiteral) {
 			yulAssert(_assignedVariables.size() == 1, "");
