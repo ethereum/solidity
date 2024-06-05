@@ -30,7 +30,7 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:c57f2bfb8c15d70fe290629358dd1c73dc126e3760f443b54764797556b887d4"
   evm-version:
     type: string
-    default: london
+    default: cancun
 
 orbs:
   win: circleci/windows@2.2.0
