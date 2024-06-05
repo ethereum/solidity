@@ -279,7 +279,7 @@ void CompilerStack::setOptimiserSettings(OptimiserSettings _settings)
 void CompilerStack::setRevertStringBehaviour(RevertStrings _revertStrings)
 {
 	if (m_stackState >= ParsedAndImported)
-		solThrow(CompilerError, "Must set revert std::string settings before parsing.");
+		solThrow(CompilerError, "Must set revert string settings before parsing.");
 	solUnimplementedAssert(_revertStrings != RevertStrings::VerboseDebug);
 	m_revertStrings = _revertStrings;
 }
@@ -984,7 +984,7 @@ evmasm::LinkerObject const& CompilerStack::runtimeObject(std::string const& _con
 	return contract(_contractName).runtimeObject;
 }
 
-/// TODO: cache this std::string
+/// TODO: cache this string
 std::string CompilerStack::assemblyString(std::string const& _contractName, StringMap const& _sourceCodes) const
 {
 	if (m_stackState != CompilationSuccessful)
