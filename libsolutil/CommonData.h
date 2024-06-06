@@ -575,7 +575,7 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f)
 	detail::iterateReplacingWindow(_vector, _f, std::make_index_sequence<N>{});
 }
 
-/// @returns true iff @a _str passess the hex address checksum test.
+/// @returns true iff @a _str passes the hex address checksum test.
 /// @param _strict if false, hex strings with only uppercase or only lowercase letters
 /// are considered valid.
 bool passesAddressChecksum(std::string const& _str, bool _strict);
