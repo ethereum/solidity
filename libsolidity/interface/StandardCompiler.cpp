@@ -1463,13 +1463,8 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 	// Note that not completing analysis due to stopAfter does not count as a failure. It's neither failure nor success.
 	bool analysisFailed = !analysisSuccess && _inputsAndSettings.stopAfter >= CompilerStack::State::AnalysisSuccessful;
 	bool compilationFailed = !compilationSuccess && binariesRequested;
-
-	/// Inconsistent state - stop here to receive error reports from users
-	if (
-		(compilationFailed || analysisFailed || !parsingSuccess) &&
-		errors.empty()
-	)
-		return formatFatalError(Error::Type::InternalCompilerError, "No error reported, but compilation failed.");
+	if (compilationFailed || analysisFailed || !parsingSuccess)
+		solAssert(!errors.empty(), "No error reported, but compilation failed.");
 
 	Json output;
 
