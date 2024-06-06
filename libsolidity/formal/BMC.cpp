@@ -376,7 +376,7 @@ bool BMC::visit(WhileStatement const& _node)
 			auto indices = copyVariableIndices();
 			_node.condition().accept(*this);
 			loopCondition = expr(_node.condition());
-			// asseert that the loop is complete
+			// assert that the loop is complete
 			m_context.addAssertion(!loopCondition || broke || !loopConditionOnPreviousIterations);
 			mergeVariables(
 				broke || !loopConditionOnPreviousIterations,

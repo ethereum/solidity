@@ -140,7 +140,7 @@ protected:
 	/// Parses a functional expression that has to push exactly one stack element
 	Expression parseExpression();
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
-	/// builtin functian call (only the name).
+	/// builtin function call (only the name).
 	std::variant<Literal, Identifier> parseLiteralOrIdentifier();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
