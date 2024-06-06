@@ -31,7 +31,7 @@ source "${REPO_ROOT}/scripts/common.sh"
 # shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
-(( $# <= 1 )) || fail "Too many arguments. Usage: run.sh [<solc-path>]"
+(( $# <= 1 )) || fail "Too many arguments. Usage: local.sh [<solc-path>]"
 
 solc="${1:-${SOLIDITY_BUILD_DIR}/solc/solc}"
 command_available "$solc" --version
