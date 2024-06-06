@@ -56,7 +56,7 @@ fi
 if [[ ! -e uniswap-v4/ ]]; then
     git clone --single-branch https://github.com/Uniswap/v4-core uniswap-v4/
     pushd uniswap-v4/
-    git checkout d0700ceb251afa48df8cc26d593fe04ee5e6b775 # branch main as of 2024-05-10
+    git checkout ae86975b058d386c9be24e8994236f662affacdb # branch main as of 2024-06-06
     forge install
     neutralize_via_ir
     popd
