@@ -489,10 +489,9 @@ bool CompilerStack::analyze()
 		else if (!analyzeLegacy(noErrors))
 			noErrors = false;
 	}
-	catch (FatalError const&)
+	catch (FatalError const& error)
 	{
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+		solAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
 		noErrors = false;
 	}
 
@@ -1174,9 +1173,9 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast)
 				}
 			}
 	}
-	catch (FatalError const&)
+	catch (FatalError const& error)
 	{
-		solAssert(m_errorReporter.hasErrors(), "");
+		solAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
 	}
 	return newSources;
 }

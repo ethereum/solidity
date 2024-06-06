@@ -176,10 +176,9 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 		solAssert(m_recursionDepth == 0, "");
 		return nodeFactory.createNode<SourceUnit>(findLicenseString(nodes), nodes, m_experimentalSolidityEnabledInCurrentSourceUnit);
 	}
-	catch (FatalError const&)
+	catch (FatalError const& error)
 	{
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+		solAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
 		return nullptr;
 	}
 }

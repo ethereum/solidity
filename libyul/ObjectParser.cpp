@@ -32,6 +32,7 @@
 
 #include <regex>
 
+using namespace std::string_literals;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
@@ -62,10 +63,9 @@ std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _sca
 			expectToken(Token::EOS);
 		return object;
 	}
-	catch (FatalError const&)
+	catch (FatalError const& error)
 	{
-		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+		yulAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
 	}
 	return nullptr;
 }
