@@ -921,12 +921,6 @@ void CommandLineInterface::compile()
 		);
 		solThrow(CommandLineExecutionError, "");
 	}
-	catch (Error const& _error)
-	{
-		m_hasOutput = true;
-		formatter.printErrorInformation(_error);
-		solThrow(CommandLineExecutionError, "");
-	}
 }
 
 void CommandLineInterface::handleCombinedJSON()

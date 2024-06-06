@@ -128,9 +128,6 @@ void FuzzerUtil::testCompiler(
 	{
 		compiler.compile();
 	}
-	catch (Error const&)
-	{
-	}
 	catch (UnimplementedFeatureError const&)
 	{
 	}

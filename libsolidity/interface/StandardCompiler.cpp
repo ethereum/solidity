@@ -1361,17 +1361,6 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 				));
 		}
 	}
-	/// This is only thrown in a very few locations.
-	catch (Error const& _error)
-	{
-		errors.emplace_back(formatErrorWithException(
-			compilerStack,
-			_error,
-			_error.type(),
-			"general",
-			"Uncaught error: "
-		));
-	}
 	catch (CompilerError const& _exception)
 	{
 		errors.emplace_back(formatErrorWithException(
