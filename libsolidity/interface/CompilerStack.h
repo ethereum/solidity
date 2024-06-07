@@ -298,6 +298,9 @@ public:
 	/// @returns the optimized IR representation of a contract AST in JSON format.
 	Json const& yulIROptimizedAst(std::string const& _contractName) const;
 
+	/// @returns the IR representation of a contract in Coq format.
+	std::string const& yulIRCoq(std::string const& _contractName) const;
+
 	Json const& yulCFGJson(std::string const& _contractName) const;
 
 	/// @returns the assembled object for a contract.
@@ -413,6 +416,7 @@ private:
 		std::string yulIROptimized; ///< Reparsed and possibly optimized Yul IR code.
 		Json yulIRAst; ///< JSON AST of Yul IR code.
 		Json yulIROptimizedAst; ///< JSON AST of optimized Yul IR code.
+		std::string yulIRCoq; ///< Yul IR code in Coq format.
 		Json yulCFGJson; ///< JSON CFG of Yul IR code.
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		util::LazyInit<Json const> abi;

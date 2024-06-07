@@ -90,6 +90,20 @@ public:
 	/// Compiles and deploys currently held source.
 	/// Returns true if deployment was successful, false otherwise.
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
+	std::string contractPathWithoutExtension() const;
+	std::string testCoqFilename() const;
+	std::string requirePathPrefix() const;
+	void writeCoqCallTest(
+		std::string const& asComment,
+		std::string const& _signature,
+		u256 const& _value,
+		bytes const& _arguments,
+		bytes const& _output,
+		FunctionCallExpectations const& expectations,
+		size_t testIndex
+	) const;
+
+	void outputCoqTestFile(std::string const& _filename);
 
 private:
 	TestResult runTest(

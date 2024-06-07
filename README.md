@@ -1,92 +1,201 @@
-# The Solidity Contract-Oriented Programming Language
+# 🪨🐓 coq-of-solidity
+> A formal verification tool for [Solidity](https://soliditylang.org/) using the [Coq](https://coq.inria.fr/) proof system
 
-[![Matrix Chat](https://img.shields.io/badge/Matrix%20-chat-brightgreen?style=plastic&logo=matrix)](https://matrix.to/#/#ethereum_solidity:gitter.im)
-[![Gitter Chat](https://img.shields.io/badge/Gitter%20-chat-brightgreen?style=plastic&logo=gitter)](https://gitter.im/ethereum/solidity)
-[![Solidity Forum](https://img.shields.io/badge/Solidity_Forum%20-discuss-brightgreen?style=plastic&logo=discourse)](https://forum.soliditylang.org/)
-[![X Follow](https://img.shields.io/twitter/follow/solidity_lang?style=plastic&logo=x)](https://X.com/solidity_lang)
-[![Mastodon Follow](https://img.shields.io/mastodon/follow/000335908?domain=https%3A%2F%2Ffosstodon.org%2F&logo=mastodon&style=plastic)](https://fosstodon.org/@solidity)
+_Disclaimer: work in progress on the proofs side_
 
-You can talk to us on Gitter and Matrix, tweet at us on X (previously Twitter) or create a new topic in the Solidity forum. Questions, feedback, and suggestions are welcome!
+The `coq-of-solidity` project is a tool to automatically translate Solidity smart contracts to the Coq proof system. This allows to formally verify the correctness of the smart contracts.
 
-Solidity is a statically typed, contract-oriented, high-level language for implementing smart contracts on the Ethereum platform.
+Formal verification is about verifying code for all possible input, and goes further than traditional testing that only covers a finite amount of cases. Formal verification relies on mathematical methods to analyze the code.
 
-For a good overview and starting point, please check out the official [Solidity Language Portal](https://soliditylang.org).
+This project provides:
 
-## Table of Contents
+1. **More security for code audits:** all the combination of inputs are covered, in contrast to testing.
+2. **Reusable audits** for future code changes: we can re-run the proofs as the code evolves.
 
-- [Background](#background)
-- [Build and Install](#build-and-install)
-- [Example](#example)
-- [Documentation](#documentation)
-- [Development](#development)
-- [Maintainers](#maintainers)
-- [License](#license)
-- [Security](#security)
+The `coq-of-solidity` tool is open-source and uses an interactive theorem prover (Coq) to be able to check arbitrarily complex code properties and business rules.
 
-## Background
+## 🙏 Thanks
 
-Solidity is a statically-typed curly-braces programming language designed for developing smart contracts
-that run on the Ethereum Virtual Machine. Smart contracts are programs that are executed inside a peer-to-peer
-network where nobody has special authority over the execution, and thus they allow anyone to implement tokens of value,
-ownership, voting, and other kinds of logic.
+We thanks the [AlephZero Foundation](https://alephzero.org/) for their support and funding this project.
 
-When deploying contracts, you should use the latest released version of
-Solidity. This is because breaking changes, as well as new features and bug fixes, are
-introduced regularly. We currently use a 0.x version
-number [to indicate this fast pace of change](https://semver.org/#spec-item-4).
+<!-- contact -->
+## 📬 Contact
 
-## Build and Install
+If you have smart contracts that you wish to audit with a maximum level of security, or want to know more about this project, do not hesitate to contact us at [contact@formal.land](mailto:contact@formal.land). We provide formal verification services for Solidity, Rust, OCaml, Python.
 
-Instructions about how to build and install the Solidity compiler can be
-found in the [Solidity documentation](https://docs.soliditylang.org/en/latest/installing-solidity.html#building-from-source).
+## 🚀 Quick start
 
+This project is based on a fork of the [`solc` Solidity compiler](https://github.com/ethereum/solidity). Compile it following the [manual of `solc`](https://docs.soliditylang.org/en/latest/installing-solidity.html#building-from-source) to obtain a `solc` binary.
 
-## Example
+Then, assuming that you are at the root of this project, run the following commands:
 
-A "Hello World" program in Solidity is of even less use than in other languages, but still:
+```sh
+build/solc/solc --ir-coq my_smart_contract.sol
+```
+
+It will pretty-print on the terminal a Coq version of the code. Examples of contracts that are already translated in Coq are in the [CoqOfSolidity/](CoqOfSolidity/) folder.
+
+We successfully translate and run more than 90% of the Solidity compiler tests in [test/libsolidity/semanticTests/](test/libsolidity/semanticTests/). The main missing features are the pre-compiled contracts and error cases in contract calls. The main file to extract the semantic tests with the execution trace to Coq is [test/libsolidity/SemanticTest.cpp](test/libsolidity/SemanticTest.cpp):
+
+- example source test: [test/libsolidity/semanticTests/various/erc20.sol](test/libsolidity/semanticTests/various/erc20.sol)
+- Coq output: [CoqOfSolidity/test/libsolidity/semanticTests/various/erc20/GeneratedTest.v](CoqOfSolidity/test/libsolidity/semanticTests/various/erc20/GeneratedTest.v)
+
+Assuming that you have a working installation of the Coq system, you can compile the existing translated code with:
+
+```sh
+cd CoqOfSolidity
+make -j4 -k
+```
+
+The Coq compilation take a lot of time as there are a lot of generated files.
+
+The translated Coq files can sometimes be a bit too verbose. You can have a better readability by generating the original Yul code that we use to generate the Coq translation with:
+
+```sh
+build/solc/solc --ir-optimized my_smart_contract.sol
+```
+
+## 🏗️ Architecture
+
+This project is build as a fork of the official `solc` compiler in order to re-use the frontend (parser, type-checker, ...) and stay up-to-date with the Solidity language. The `solc` compiler is a C++ project that compiles Solidity code to EVM bytecode.
+
+We translate the intermediate language [Yul](https://docs.soliditylang.org/en/latest/yul.html) to Coq. Yul is a low-level intermediate language used by the Solidity compiler that is both simpler than Solidity and more high-level than EVM bytecode. The relevant code is in [libyul/AsmCoqConverter.cpp](libyul/AsmCoqConverter.cpp).
+
+We then define in Coq the semantics of the Yul language as well as of all the EVM primitives (addition, multiplication, keccak256, contract calls, ...). This is done in the two following files:
+
+- [CoqOfSolidity/CoqOfSolidity.v](CoqOfSolidity/CoqOfSolidity.v) for the semantics of the Yul language
+- [CoqOfSolidity/simulations/CoqOfSolidity.v](CoqOfSolidity/simulations/CoqOfSolidity.v) for the semantics of the EVM primitives
+
+To prevent mistakes in our Coq definitions, we also translate the `semanticTests` of the Solidity compiler to Coq and re-run them in Coq. We then check that we get the exact same outputs as on code generated by the official Solidity compiler.
+
+## 🧪 Build the tests
+
+To build the tests you need to:
+
+1. Translate the test files to Coq with the following commands:
+    ```sh
+    cd CoqOfSolidity
+    python translate_from_tests.py
+    ```
+    This will generate one `.v` file per contract in the `semanticTests` and `syntaxTests` folders.
+2. Generate the test files corresponding to the execution traces with the following commands:
+    ```sh
+    build/test/soltest --run_test=semanticTests
+    ```
+    This will generate one `GeneratedTest.v` file per semantic test. This commands take several minutes to run, as it also compiles and executes each of the contract in the semantic tests. This command might require a few dependencies to run, like [evmone](https://github.com/ethereum/evmone). You can first try to make this test command work in upstream repository of Solidity.
+3. Then you can compile them with:
+    ```sh
+    cd CoqOfSolidity
+    make -j4 -k
+    ```
+    For the syntax tests it will verify that the translated Coq code type checks. For the semantic tests it will verify that the execution trace of the contract is the same in Coq as with the Solidity compiler, in addition of type checking the translated code.
+
+We do not support yet all the semantic tests but around 90% and are working on the remaining ones.
+
+## 📚 Example
+
+For now writing proofs on the generated code is still a work in progress and we focused on making a translation with a correct execution. To give an idea of what the Coq translation looks like, the following Solidity code:
 
 ```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.9.0;
-
-contract HelloWorld {
-    function helloWorld() external pure returns (string memory) {
-        return "Hello, World!";
-    }
+function balanceOf(address owner) public view returns (uint256) {
+  return _balances[owner];
 }
 ```
 
-To get started with Solidity, you can use [Remix](https://remix.ethereum.org/), which is a
-browser-based IDE. Here are some example contracts:
+translates in Coq to:
 
-1. [Voting](https://docs.soliditylang.org/en/latest/solidity-by-example.html#voting)
-2. [Blind Auction](https://docs.soliditylang.org/en/latest/solidity-by-example.html#blind-auction)
-3. [Safe remote purchase](https://docs.soliditylang.org/en/latest/solidity-by-example.html#safe-remote-purchase)
-4. [Micropayment Channel](https://docs.soliditylang.org/en/latest/solidity-by-example.html#micropayment-channel)
+```coq
+(* Generated by coq-of-solidity *)
 
-## Documentation
+M.function (|
+  "fun_balanceOf",
+  ["var_owner"],
+  ["var"],
+  M.scope (
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["zero_t_uint256"],
+        Some (M.call (|
+          "zero_value_for_split_uint256",
+          []
+        |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.assign (|
+        ["var"],
+        Some (M.get_var (| "zero_t_uint256" |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["_28_slot"],
+        Some ([Literal.number 0x00])
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["expr_54_slot"],
+        Some (M.get_var (| "_28_slot" |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["_1"],
+        Some (M.get_var (| "var_owner" |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["expr"],
+        Some (M.get_var (| "_1" |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["_2"],
+        Some (M.call (|
+          "mapping_index_access_mapping_address_uint256_of_address",
+          [
+            M.get_var (| "expr_54_slot" |);
+            M.get_var (| "expr" |)
+          ]
+        |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["_3"],
+        Some (M.call (|
+          "read_from_storage_split_offset_uint256",
+          [
+            M.get_var (| "_2" |)
+          ]
+        |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.declare (|
+        ["expr_1"],
+        Some (M.get_var (| "_3" |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.assign (|
+        ["var"],
+        Some (M.get_var (| "expr_1" |))
+      |)
+    )) in
+    do* ltac:(M.monadic (
+      M.leave (||)
+    )) in
+    M.pure BlockUnit.Tt
+  )
+|)
+```
 
-The Solidity documentation is hosted using [Read the Docs](https://docs.soliditylang.org).
+The Coq output is much more verbose than the original Solidity and must be simplified in a first proof step.
 
-## Development
+## 📝 License
 
-Solidity is still under development. Contributions are always welcome!
-Please follow the
-[Developers Guide](https://docs.soliditylang.org/en/latest/contributing.html)
-if you want to help.
-
-You can find our current feature and bug priorities for forthcoming
-releases in the [projects section](https://github.com/ethereum/solidity/projects).
-
-## Maintainers
-The Solidity programming language and compiler are open-source community projects governed by a core team.
-The core team is sponsored by the [Ethereum Foundation](https://ethereum.foundation/).
-
-## License
-Solidity is licensed under [GNU General Public License v3.0](LICENSE.txt).
-
-Some third-party code has its [own licensing terms](cmake/templates/license.h.in).
-
-## Security
-
-The security policy may be [found here](SECURITY.md).
+The code of the translation is under the GPL-3.0 license as this is a fork of the Solidity compiler. The code of the Coq semantics is under the MIT license.

@@ -58,6 +58,7 @@ struct ObjectNode
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const = 0;
 	virtual Json toJson() const = 0;
+	virtual std::string toCoq() const = 0;
 };
 
 /**
@@ -74,6 +75,7 @@ struct Data: public ObjectNode
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const override;
 	Json toJson() const override;
+	std::string toCoq() const override;
 };
 
 
@@ -98,6 +100,7 @@ public:
 	) const override;
 	/// @returns a compact JSON representation of the AST.
 	Json toJson() const override;
+	std::string toCoq() const;
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
 	/// Handles all names containing dots as reserved identifiers, not accessible as data.

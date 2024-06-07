@@ -148,7 +148,7 @@ u256 ExecutionFramework::blockNumber() const
 void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
 {
 	m_evmcHost->newBlock();
-
+	m_showMessages = true;
 	if (m_showMessages)
 	{
 		if (_isCreation)

@@ -116,6 +116,8 @@ SemanticTest::SemanticTest(
 		m_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 		m_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
 	}
+
+	outputCoqTestFile(_filename);
 }
 
 std::map<std::string, Builtin> SemanticTest::makeBuiltins()
@@ -317,9 +319,13 @@ TestCase::TestResult SemanticTest::run(std::ostream& _stream, std::string const&
 	TestResult result = TestResult::Success;
 
 	if (m_testCaseWantsLegacyRun && !m_eofVersion.has_value())
-		result = runTest(_stream, _linePrefix, _formatted, false /* _isYulRun */);
+	{
+		// We ignore the tests in non-Yul mode, whose results might differ in rare cases
+		// result = runTest(_stream, _linePrefix, _formatted, false /* _isYulRun */);
+	}
 
-	if (m_testCaseWantsYulRun && result == TestResult::Success)
+	// We ignore tests without the revert strings mode as default
+	if (m_testCaseWantsYulRun && result == TestResult::Success && m_revertStrings == RevertStrings::Default)
 	{
 		if (solidity::test::CommonOptions::get().optimize)
 			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */);
@@ -347,6 +353,8 @@ TestCase::TestResult SemanticTest::runTest(
 	bool success = true;
 	m_gasCostFailure = false;
 
+	soltestAssert(_isYulRun, "Runs without Yul are not handled.");
+
 	selectVM(evmc_capabilities::EVMC_CAPABILITY_EVM1);
 
 	reset();
@@ -362,6 +370,7 @@ TestCase::TestResult SemanticTest::runTest(
 	std::map<std::string, solidity::test::Address> libraries;
 
 	bool constructed = false;
+	size_t testIndex = 0;
 
 	for (TestFunctionCall& test: m_tests)
 	{
@@ -433,11 +442,28 @@ TestCase::TestResult SemanticTest::runTest(
 					"The function " + test.call().signature + " is not known to the compiler"
 				);
 
+				std::cout << std::endl;
+				std::cout << "Last contract name: " << m_compiler.lastContractName(m_sources.mainSourceFile) << std::endl;
+				std::cout << "Main source file: " <<  m_sources.mainSourceFile << std::endl;
+				std::cout << std::endl;
+
 				output = callContractFunctionWithValueNoEncoding(
 					test.call().signature,
 					test.call().value.value,
 					test.call().arguments.rawBytes()
 				);
+
+				writeCoqCallTest(
+					test.format(),
+					test.call().signature,
+					test.call().value.value,
+					test.call().arguments.rawBytes(),
+					output,
+					test.call().expectations,
+					testIndex
+				);
+
+				testIndex++;
 			}
 
 			bool outputMismatch = (output != test.call().expectations.rawBytes());
@@ -702,5 +728,200 @@ bool SemanticTest::deploy(
 )
 {
 	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries, m_sources.mainSourceFile);
+
+	std::cout << "DEPLOY" << std::endl;
+	std::cout << "Contract name: " << _contractName << std::endl;
+	std::cout << "Contract path: " << m_reader.fileName() << std::endl;
+
+	// Create the output file
+	std::ofstream outputFile(testCoqFilename());
+	// Write the contract name to the output file
+	outputFile << "(* Generated test file *)" << std::endl;
+	outputFile << "Require Import CoqOfSolidity.CoqOfSolidity." << std::endl;
+	outputFile << "Require Import simulations.CoqOfSolidity." << std::endl;
+	outputFile << std::endl;
+
+	// For each contract
+	for (std::string const& name: m_compiler.contractNames())
+	{
+		// We remove the first character of a contract name which is always a colon
+		std::string requirePath = requirePathPrefix() + "." + name.substr(1);
+		outputFile << "Require " << requirePath << "." << std::endl;
+	}
+	outputFile << std::endl;
+	std::string lastContractName = m_compiler.lastContractName(m_sources.mainSourceFile).substr(1);
+	outputFile << "Definition constructor_code : Code.t :=" << std::endl;
+	outputFile << "  " << requirePathPrefix() << "." << lastContractName << "." << lastContractName << ".code." << std::endl;
+	outputFile << std::endl;
+	outputFile << "Definition deployed_code : Code.t :=" << std::endl;
+	outputFile << "  " << requirePathPrefix() << "." << lastContractName << "." << lastContractName << ".deployed.code." << std::endl;
+	outputFile << std::endl;
+	outputFile << "Definition codes : list (U256.t * M.t BlockUnit.t) :=" << std::endl;
+	outputFile << "  " << requirePathPrefix() << "." << lastContractName << ".codes." << std::endl;
+	outputFile << std::endl;
+	outputFile << "Module Constructor." << std::endl;
+	outputFile << "  Definition environment : Environment.t :={|" << std::endl;
+	outputFile << "    Environment.caller := 0x" << m_sender << ";" << std::endl;
+	outputFile << "    Environment.callvalue := " << _value << ";" << std::endl;
+	outputFile << "    Environment.calldata := [];" << std::endl;
+	outputFile << "    Environment.address := 0x" << m_contractAddress << ";" << std::endl;
+	outputFile << "  |}." << std::endl;
+	outputFile << std::endl;
+	outputFile << "  Definition initial_state : State.t :=" << std::endl;
+	outputFile << "    let address := environment.(Environment.address) in" << std::endl;
+	outputFile << "    let account := {|" << std::endl;
+	outputFile << "      Account.balance := environment.(Environment.callvalue);" << std::endl;
+	outputFile << "      Account.nonce := 1;" << std::endl;
+	outputFile << "      Account.code := constructor_code.(Code.hex_name);" << std::endl;
+	outputFile << "      Account.codedata := Memory.hex_string_as_bytes \"" << util::toHex(_arguments) << "\";" << std::endl;
+	outputFile << "      Account.storage := Memory.init;" << std::endl;
+	outputFile << "      Account.immutables := [];" << std::endl;
+	outputFile << "    |} in" << std::endl;
+	outputFile << "    Stdlib.initial_state" << std::endl;
+	outputFile << "      <| State.accounts := [(address, account)] |>" << std::endl;
+	outputFile << "      <| State.codes := codes |>." << std::endl;
+	outputFile << std::endl;
+	outputFile << "  Definition result_state :=" << std::endl;
+	outputFile << "    eval_with_revert 5000 environment constructor_code.(Code.code) initial_state." << std::endl;
+	outputFile << std::endl;
+	outputFile << "  Definition result := fst result_state." << std::endl;
+	outputFile << "  Definition state := snd result_state." << std::endl;
+	outputFile << std::endl;
+	outputFile << "  Goal Test.is_return result state = inl (Memory.u256_as_bytes deployed_code.(Code.hex_name))." << std::endl;
+	outputFile << "  Proof." << std::endl;
+	outputFile << "    vm_compute." << std::endl;
+	outputFile << "    reflexivity." << std::endl;
+	outputFile << "  Qed." << std::endl;
+	outputFile << std::endl;
+	outputFile << "Definition final_state : State.t :=" << std::endl;
+	outputFile << "  snd (" << std::endl;
+	outputFile << "    eval 5000 environment (update_current_code_for_deploy deployed_code.(Code.hex_name)) state" << std::endl;
+	outputFile << "  )." << std::endl;
+	outputFile << "End Constructor." << std::endl;
+
+	// Close the output file
+	outputFile.close();
+
+	std::cout << "Value: " << _value << std::endl;
+	std::cout << "Arguments: " << util::toHex(_arguments) << std::endl;
+	std::cout << "Libraries: " << std::endl;
+	for (auto const& [name, address]: _libraries)
+		std::cout << name << ": " << address << std::endl;
+	std::cout << std::endl;
+
 	return !output.empty() && m_transactionSuccessful;
+}
+
+std::string SemanticTest::contractPathWithoutExtension() const
+{
+	std::string contractPath = fs::relative(m_reader.fileName(), fs::current_path()).generic_string();
+
+	return contractPath.substr(0, contractPath.size() - 4);
+}
+
+std::string SemanticTest::testCoqFilename() const
+{
+	return "CoqOfSolidity/" + contractPathWithoutExtension() + "/GeneratedTest.v";
+}
+
+std::string SemanticTest::requirePathPrefix() const
+{
+	std::string requirePathPrefix = contractPathWithoutExtension();
+	std::replace(requirePathPrefix.begin(), requirePathPrefix.end(), '/', '.');
+
+	return requirePathPrefix;
+}
+
+void SemanticTest::writeCoqCallTest(
+	std::string const& asComment,
+	std::string const& _signature,
+	u256 const& _value,
+	bytes const& _arguments,
+	bytes const& _output,
+	FunctionCallExpectations const& expectations,
+	size_t testIndex
+) const
+{
+	// Re-open the output file
+	std::ofstream outputFile(testCoqFilename(), std::ios::app);
+
+	outputFile << std::endl;
+	outputFile << "(* " << asComment << " *)" << std::endl;
+	outputFile << "Module Step" << testIndex + 1 << "." << std::endl;
+	outputFile << "  Definition environment : Environment.t :={|" << std::endl;
+	outputFile << "    Environment.caller := 0x" << m_sender << ";" << std::endl;
+	outputFile << "    Environment.callvalue := " << _value << ";" << std::endl;
+	bytes arguments = util::selectorFromSignatureH32(_signature).asBytes() + _arguments;
+	outputFile << "    Environment.calldata := Memory.hex_string_as_bytes \"" << util::toHex(arguments) << "\";" << std::endl;
+	outputFile << "    Environment.address := 0x" << m_contractAddress << ";" << std::endl;
+	outputFile << "  |}." << std::endl;
+	outputFile << std::endl;
+	std::string initialState =
+		testIndex == 0 ?
+			"Constructor.final_state" :
+			"Step" + std::to_string(testIndex) + ".state";
+	outputFile << "  Definition initial_state : State.t :=" << std::endl;
+	outputFile << "    Stdlib.initial_state" << std::endl;
+	outputFile << "      <| State.accounts := " << initialState << ".(State.accounts) |>" << std::endl;
+	outputFile << "      <| State.codes := " << initialState << ".(State.codes) |>." << std::endl;
+	outputFile << std::endl;
+	outputFile << "  Definition result_state :=" << std::endl;
+	outputFile << "    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state." << std::endl;
+	outputFile << std::endl;
+	outputFile << "  Definition result := fst result_state." << std::endl;
+	outputFile << "  Definition state := snd result_state." << std::endl;
+	outputFile << std::endl;
+	outputFile << "  Definition expected_output : list Z :=" << std::endl;
+	outputFile << "    Memory.hex_string_as_bytes \"" << util::toHex(_output) << "\"." << std::endl;
+	outputFile << std::endl;
+	std::string status = expectations.failure ? "Failure" : "Success";
+	// These three kinds of comments can appear in the expectations
+	if (
+		expectations.comment == " Out-of-gas " ||
+		expectations.comment == " out-of-gas " ||
+		expectations.comment == " Out of gas "
+	)
+		status = "OutOfGas";
+	std::cout << "COMMENT: " << expectations.comment << std::endl;
+	outputFile << "  Goal Test.extract_output result state Test.Status." << status << " = inl expected_output." << std::endl;
+	outputFile << "  Proof." << std::endl;
+	outputFile << "    vm_compute." << std::endl;
+	outputFile << "    reflexivity." << std::endl;
+	outputFile << "  Qed." << std::endl;
+	outputFile << "End Step" << testIndex + 1 << "." << std::endl;
+
+	// Close the output file
+	outputFile.close();
+}
+
+void SemanticTest::outputCoqTestFile(std::string const& _filename)
+{
+	std::cout << "Running " << _filename << " with " << m_tests.size() << " tests." << std::endl;
+
+	// for (auto const& [name, source]: m_sources.sources)
+	// {
+	// 	std::cout << "Source: " << name << std::endl;
+	// 	std::cout << source << std::endl;
+	// }
+
+	// Display each test case
+	for (TestFunctionCall const& test: m_tests)
+	{
+		std::cout << "Test: " << test.call().signature << std::endl;
+		// std::cout << "Expectations: " << test.call().expectations.rawString << std::endl;
+		std::cout << test.format() << std::endl;
+		std::cout << "Call description:" << std::endl;
+		std::cout << "Signature: " << test.call().signature << std::endl;
+		std::cout << "Selector: " << util::selectorFromSignatureH32(test.call().signature) << std::endl;
+		// std::cout << "Kind: " << test.call().kind << std::endl;
+		std::cout << "Value: " << test.call().value.value << std::endl;
+		std::cout << "Arguments: " << util::toHex(test.call().arguments.rawBytes()) << std::endl;
+		std::cout << "Expectations: " << util::toHex(test.call().expectations.rawBytes()) << std::endl;
+		// std::cout << "Expected side effects: " << test.call().expectedSideEffects << std::endl;
+		// std::cout << "Actual side effects: " << test.call().actualSideEffects << std::endl;
+		// std::cout << "Failure: " << test.call().failure << std::endl;
+		// std::cout << "Raw bytes: " << test.call().rawString << std::endl;
+		// std::cout << "Gas cost: " << test.call().gasCost << std::endl;
+		std::cout << std::endl;
+	}
 }

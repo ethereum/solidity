@@ -23,6 +23,7 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AsmCoqConverter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>

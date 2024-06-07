@@ -140,6 +140,7 @@ public:
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;
 	Json astJson() const;
+	std::string astCoq() const;
 
 	// return the JSON representation of the YuL CFG (experimental)
 	Json cfgJson() const;

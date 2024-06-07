@@ -71,6 +71,8 @@ public:
 
 	void ensureAllSettingsRead() const;
 
+	boost::filesystem::path fileName() const;
+
 private:
 	std::pair<SourceMap, std::size_t> parseSourcesAndSettingsWithLineNumber(std::istream& _file);
 	static std::string parseSimpleExpectations(std::istream& _file);

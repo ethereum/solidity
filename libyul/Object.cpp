@@ -22,6 +22,7 @@
 #include <libyul/Object.h>
 
 #include <libyul/AsmPrinter.h>
+#include <libyul/AsmCoqConverter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
@@ -108,6 +109,42 @@ Json Object::toJson() const
 	ret["code"] = codeJson;
 	ret["subObjects"] = subObjectsJson;
 	return ret;
+}
+
+std::string Data::toCoq() const
+{
+	return "Definition data : string :=\n  \"" + util::toHex(data) + "\".";
+}
+
+std::string Object::toCoq() const
+{
+	yulAssert(hasCode(), "No code");
+
+	std::string inner = "Definition code : Code.t := {|\n";
+	inner += "  Code.name := \"" + name + "\";\n";
+	std::string hex_name = util::toHex(util::asBytes(name));
+	inner += "  Code.hex_name := 0x" + hex_name + std::string(64 - hex_name.size(), '0') + ";\n";
+	inner += "  Code.code :=\n";
+	inner += prefixLines(AsmCoqConverter(0)(code()->root()), "    ") + ";\n";
+	inner += "|}.";
+
+	for (auto const& subObject: subObjects)
+		inner += "\n\n" + subObject->toCoq();
+
+	// We remove the id from the name has it makes things more difficult to find the definition in Coq,
+	// especially for the generated test files from the tests of the Solidity compiler.
+	std::string nameWithoutId = name;
+	bool hasDeployed = boost::ends_with(nameWithoutId, "_deployed");
+	if (hasDeployed)
+		nameWithoutId = "deployed";
+	else
+	{
+		std::size_t idPosition = nameWithoutId.rfind("_");
+		if (idPosition != std::string::npos)
+			nameWithoutId = nameWithoutId.substr(0, idPosition);
+	}
+
+	return "Module " + nameWithoutId + ".\n" + prefixLines(inner, "  ") + "\nEnd " + nameWithoutId + ".";
 }
 
 std::set<std::string> Object::qualifiedDataNames() const

@@ -68,6 +68,7 @@
 
 #include <libyul/YulName.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AsmCoqConverter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/YulStack.h>
 #include <libyul/AST.h>
@@ -947,6 +948,14 @@ Json const& CompilerStack::yulIROptimizedAst(std::string const& _contractName) c
 	return contract(_contractName).yulIROptimizedAst;
 }
 
+std::string const& CompilerStack::yulIRCoq(std::string const& _contractName) const
+{
+	if (m_stackState != CompilationSuccessful)
+		solThrow(CompilerError, "Compilation was not successful.");
+
+	return contract(_contractName).yulIRCoq;
+}
+
 evmasm::LinkerObject const& CompilerStack::object(std::string const& _contractName) const
 {
 	solAssert(m_stackState == CompilationSuccessful, "Compilation was not successful.");
@@ -1522,6 +1531,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract, bool _unopti
 		stack.optimize();
 		compiledContract.yulIROptimized = stack.print(this);
 		compiledContract.yulIROptimizedAst = stack.astJson();
+		compiledContract.yulIRCoq = stack.astCoq();
 	}
 }
 

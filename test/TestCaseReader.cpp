@@ -100,6 +100,11 @@ void TestCaseReader::ensureAllSettingsRead() const
 		));
 }
 
+boost::filesystem::path TestCaseReader::fileName() const
+{
+	return m_fileName;
+}
+
 std::pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(std::istream& _stream)
 {
 	std::map<std::string, std::string> sources;
