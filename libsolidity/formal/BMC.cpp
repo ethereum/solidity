@@ -118,13 +118,18 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 		);
 
 	if (!m_settings.showProvedSafe && !m_safeTargets.empty())
+	{
+		std::size_t provedSafeNum = 0;
+		for (auto&& [_, targets]: m_safeTargets)
+			provedSafeNum += targets.size();
 		m_errorReporter.info(
 			6002_error,
 			"BMC: " +
-			std::to_string(m_safeTargets.size()) +
+			std::to_string(provedSafeNum) +
 			" verification condition(s) proved safe!" +
 			" Enable the model checker option \"show proved safe\" to see all of them."
 		);
+	}
 	else if (m_settings.showProvedSafe)
 		for (auto const& [node, targets]: m_safeTargets)
 			for (auto const& target: targets)

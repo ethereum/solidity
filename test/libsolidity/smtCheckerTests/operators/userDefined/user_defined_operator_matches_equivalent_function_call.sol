@@ -77,4 +77,4 @@ contract C {
 // Warning 4144: (953-982): BMC: Underflow (resulting value less than -32768) happens here.
 // Warning 3046: (1149-1178): BMC: Division by zero happens here.
 // Warning 7812: (2245-2271): BMC: Assertion violation might happen here.
-// Info 6002: BMC: 8 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Info 6002: BMC: 10 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

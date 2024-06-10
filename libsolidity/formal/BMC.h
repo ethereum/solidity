@@ -149,7 +149,10 @@ private:
 
 		friend bool operator<(BMCVerificationTarget const& _a, BMCVerificationTarget const& _b)
 		{
-			return _a.expression->id() < _b.expression->id();
+			if (_a.expression->id() == _b.expression->id())
+				return _a.type < _b.type;
+			else
+				return _a.expression->id() < _b.expression->id();
 		}
 	};
 
