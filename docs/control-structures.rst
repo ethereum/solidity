@@ -639,10 +639,6 @@ The ``require`` function provides three overloads:
     For example, in ``require(condition, CustomError(f()));`` and ``require(condition, f());``,
     function ``f()`` will be called regardless of whether the supplied condition is ``true`` or ``false``.
 
-.. note::
-    Using custom errors with ``require`` is only supported by the via IR pipeline, i.e. compilation via Yul.
-    For the legacy pipeline, please use ``if (!condition) revert CustomError();`` instead.
-
 An ``Error(string)`` exception (or an exception without data) is generated
 by the compiler in the following situations:
 

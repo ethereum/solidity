@@ -19,7 +19,7 @@ as well as the newer approach with ``require`` in function ``transferWithRequire
 .. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.8.26;
+    pragma solidity ^0.8.27;
 
     /// Insufficient balance for transfer. Needed `required` but only
     /// `available` available.
@@ -27,7 +27,6 @@ as well as the newer approach with ``require`` in function ``transferWithRequire
     /// @param required requested amount to transfer.
     error InsufficientBalance(uint256 available, uint256 required);
 
-    // This will only compile via IR
     contract TestToken {
         mapping(address => uint) balance;
         function transferWithRevertError(address to, uint256 amount) public {
