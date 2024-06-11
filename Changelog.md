@@ -10,6 +10,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Standard JSON Interface: Fix ``outputSelection`` affecting contract compilation order, which sometimes resulted in different errors produced by analysis.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
 
