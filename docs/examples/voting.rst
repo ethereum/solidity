@@ -184,8 +184,6 @@ of votes.
 Possible Improvements
 =====================
 
-Currently, many transactions are needed to
-assign the rights to vote to all participants.
-Moreover, if two or more proposals have the same
+Currently, if two or more proposals have the same
 number of votes, ``winningProposal()`` is not able
 to register a tie. Can you think of a way to fix these issues?
