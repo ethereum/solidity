@@ -18,9 +18,14 @@
 
 #include <libsolidity/formal/BMC.h>
 
+#include <libsolidity/formal/Cvc5SMTLib2Interface.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
+#include <libsmtutil/SMTLib2Interface.h>
 #include <libsmtutil/SMTPortfolio.h>
+#ifdef HAVE_Z3
+#include <libsmtutil/Z3Interface.h>
+#endif
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/CharStreamProvider.h>
@@ -35,6 +40,8 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
+using namespace solidity::frontend::smt;
+using namespace solidity::smtutil;
 
 BMC::BMC(
 	smt::EncodingContext& _context,
@@ -45,21 +52,28 @@ BMC::BMC(
 	ModelCheckerSettings _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
-	m_interface(std::make_unique<smtutil::SMTPortfolio>(
-		_smtlib2Responses, _smtCallback, _settings.solvers, _settings.timeout, _settings.printQuery
-	))
+	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider)
 {
-	solAssert(!_settings.printQuery || _settings.solvers == smtutil::SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
-#if defined (HAVE_Z3) || defined (HAVE_CVC4)
-	if (m_settings.solvers.cvc4 || m_settings.solvers.z3)
+	solAssert(!_settings.printQuery || _settings.solvers == SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
+	std::vector<std::unique_ptr<SolverInterface>> solvers;
+	if (_settings.solvers.smtlib2)
+		solvers.emplace_back(std::make_unique<SMTLib2Interface>(_smtlib2Responses, _smtCallback, _settings.timeout));
+	if (_settings.solvers.cvc5)
+		solvers.emplace_back(std::make_unique<Cvc5SMTLib2Interface>(_smtCallback, _settings.timeout));
+#ifdef HAVE_Z3
+	if (_settings.solvers.z3 && Z3Interface::available())
+		solvers.emplace_back(std::make_unique<Z3Interface>(_settings.timeout));
+#endif
+	m_interface = std::make_unique<SMTPortfolio>(std::move(solvers), _settings.timeout);
+#if defined (HAVE_Z3)
+	if (m_settings.solvers.z3)
 		if (!_smtlib2Responses.empty())
 			m_errorReporter.warning(
 				5622_error,
 				"SMT-LIB2 query responses were given in the auxiliary input, "
-				"but this Solidity binary uses an SMT solver (Z3/CVC4) directly."
+				"but this Solidity binary uses an SMT solver Z3 directly."
 				"These responses will be ignored."
-				"Consider disabling Z3/CVC4 at compilation time in order to use SMT-LIB2 responses."
+				"Consider disabling Z3 at compilation time in order to use SMT-LIB2 responses."
 			);
 #endif
 }
@@ -67,13 +81,13 @@ BMC::BMC(
 void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
 {
 	// At this point every enabled solver is available.
-	if (!m_settings.solvers.cvc4 && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
+	if (!m_settings.solvers.cvc5 && !m_settings.solvers.smtlib2 && !m_settings.solvers.z3)
 	{
 		m_errorReporter.warning(
 			7710_error,
 			SourceLocation(),
 			"BMC analysis was not possible since no SMT solver was found and enabled."
-			" The accepted solvers for BMC are cvc4 and z3."
+			" The accepted solvers for BMC are cvc5 and z3."
 		);
 		return;
 	}
@@ -123,7 +137,7 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 				);
 
 
-	// If this check is true, Z3 and CVC4 are not available
+	// If this check is true, Z3 and cvc5 are not available
 	// and the query answers were not provided, since SMTPortfolio
 	// guarantees that SmtLib2Interface is the first solver, if enabled.
 	if (
@@ -134,7 +148,7 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 		m_errorReporter.warning(
 			8084_error,
 			SourceLocation(),
-			"BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available."
+			"BMC analysis was not possible. No SMT solver (Z3 or cvc5) was available."
 			" None of the installed solvers was enabled."
 #ifdef HAVE_Z3_DLOPEN
 			" Install libz3.so." + std::to_string(Z3_MAJOR_VERSION) + "." + std::to_string(Z3_MINOR_VERSION) + " to enable Z3."

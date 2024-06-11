@@ -653,12 +653,7 @@ bool CompilerStack::analyzeLegacy(bool _noErrorsSoFar)
 		// m_modelCheckerSettings is spread to engines and solver interfaces,
 		// so we need to check whether the enabled ones are available before building the classes.
 		if (m_modelCheckerSettings.engine.any())
-		{
 			m_modelCheckerSettings.solvers = ModelChecker::checkRequestedSolvers(m_modelCheckerSettings.solvers, m_errorReporter);
-			if (auto* universalCallback = m_readFile.target<frontend::UniversalCallback>())
-				if (m_modelCheckerSettings.solvers.eld)
-					universalCallback->smtCommand().setEldarica(m_modelCheckerSettings.timeout, m_modelCheckerSettings.invariants != ModelCheckerInvariants::None());
-		}
 
 		ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
 		modelChecker.checkRequestedSourcesAndContracts(allSources);
