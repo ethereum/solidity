@@ -99,9 +99,9 @@ public:
 		AsmPrinter::TypePrinting printingMode = AsmPrinter::TypePrinting::Full,
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
-	) const;
+	) const override;
 	/// @returns a compact JSON representation of the AST.
-	Json toJson() const;
+	Json toJson() const override;
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
 	/// Handles all names containing dots as reserved identifiers, not accessible as data.
