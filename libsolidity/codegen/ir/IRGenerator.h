@@ -28,6 +28,7 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
+#include <libsolidity/codegen/ir/IRGeneratorOutput.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 
@@ -70,19 +71,23 @@ public:
 	{}
 
 	/// Generates and returns (unoptimized) IR code.
-	std::string run(
+	IRGeneratorOutput run(
 		ContractDefinition const& _contract,
-		bytes const& _cborMetadata,
-		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
+		bytes const& _cborMetadata
 	);
 
 private:
-	std::string generate(
+	IRGeneratorOutput generate(
 		ContractDefinition const& _contract,
-		bytes const& _cborMetadata,
-		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
+		bytes const& _cborMetadata
 	);
 	std::string generate(Block const& _block);
+	std::pair<IRGeneratorOutput::Creation, InternalDispatchMap> generateCreation(ContractDefinition const& _contract);
+	IRGeneratorOutput::Deployed generateDeployed(
+		ContractDefinition const& _contract,
+		bytes const& _cborMetadata,
+		InternalDispatchMap _creationDispatch
+	);
 
 	/// Generates code for all the functions from the function generation queue.
 	/// The resulting code is stored in the function collector in IRGenerationContext.
@@ -138,6 +143,8 @@ private:
 	void resetContext(ContractDefinition const& _contract, ExecutionContext _context);
 
 	std::string dispenseLocationComment(ASTNode const& _node);
+
+	std::shared_ptr<yul::ObjectDebugData> buildObjectDebugData() const;
 
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;

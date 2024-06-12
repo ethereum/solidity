@@ -39,6 +39,8 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/JSON.h>
 
+#include <boost/algorithm/string/trim.hpp>
+
 #include <sstream>
 #include <variant>
 
@@ -86,68 +88,37 @@ std::set<CallableDeclaration const*, ASTNode::CompareByID> collectReachableCalla
 
 }
 
-std::string IRGenerator::run(
+IRGeneratorOutput IRGenerator::run(
 	ContractDefinition const& _contract,
-	bytes const& _cborMetadata,
-	std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
+	bytes const& _cborMetadata
 )
 {
-	return yul::reindent(generate(_contract, _cborMetadata, _otherYulSources));
+	IRGeneratorOutput::Creation creationOutput;
+	InternalDispatchMap creationDispatch;
+	std::tie(creationOutput, creationDispatch) = generateCreation(_contract);
+	IRGeneratorOutput::Deployed deployedOutput = generateDeployed(
+		_contract,
+		_cborMetadata,
+		std::move(creationDispatch)
+	);
+
+	return {std::move(creationOutput), std::move(deployedOutput)};
 }
 
-std::string IRGenerator::generate(
-	ContractDefinition const& _contract,
-	bytes const& _cborMetadata,
-	std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
-)
+std::pair<IRGeneratorOutput::Creation, InternalDispatchMap> IRGenerator::generateCreation(ContractDefinition const& _contract)
 {
-	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> std::string
-	{
-		std::string subObjectsSources;
-		for (ContractDefinition const* subObject: subObjects)
-			subObjectsSources += _otherYulSources.at(subObject);
-		return subObjectsSources;
-	};
-	auto formatUseSrcMap = [](IRGenerationContext const& _context) -> std::string
-	{
-		return joinHumanReadable(
-			ranges::views::transform(_context.usedSourceNames(), [_context](std::string const& _sourceName) {
-				return std::to_string(_context.sourceIndices().at(_sourceName)) + ":" + escapeAndQuoteString(_sourceName);
-			}),
-			", "
-		);
-	};
-
 	Whiskers t(R"(
-		/// @use-src <useSrcMapCreation>
-		object "<CreationObject>" {
-			code {
-				<sourceLocationCommentCreation>
-				<memoryInitCreation>
-				<callValueCheck>
-				<?library>
-				<!library>
-				<?constructorHasParams> let <constructorParams> := <copyConstructorArguments>() </constructorHasParams>
-				<constructor>(<constructorParams>)
-				</library>
-				<deploy>
-				<functions>
-			}
-			/// @use-src <useSrcMapDeployed>
-			object "<DeployedObject>" {
-				code {
-					<sourceLocationCommentDeployed>
-					<memoryInitDeployed>
-					<?library>
-					let called_via_delegatecall := iszero(eq(loadimmutable("<library_address>"), address()))
-					</library>
-					<dispatch>
-					<deployedFunctions>
-				}
-				<deployedSubObjects>
-				data "<metadataName>" hex"<cborMetadata>"
-			}
-			<subObjects>
+		{
+			<sourceLocationCommentCreation>
+			<memoryInitCreation>
+			<callValueCheck>
+			<?library>
+			<!library>
+			<?constructorHasParams> let <constructorParams> := <copyConstructorArguments>() </constructorHasParams>
+			<constructor>(<constructorParams>)
+			</library>
+			<deploy>
+			<functions>
 		}
 	)");
 
@@ -155,7 +126,6 @@ std::string IRGenerator::generate(
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
-	t("CreationObject", IRNames::creationObject(_contract));
 	t("sourceLocationCommentCreation", dispenseLocationComment(_contract));
 	t("library", _contract.isLibrary());
 
@@ -181,44 +151,73 @@ std::string IRGenerator::generate(
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions(_contract);
 
 	t("functions", m_context.functionCollector().requestedFunctions());
-	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
 	// This has to be called only after all other code generation for the creation object is complete.
 	bool creationInvolvesMemoryUnsafeAssembly = m_context.memoryUnsafeInlineAssemblySeen();
 	t("memoryInitCreation", memoryInit(!creationInvolvesMemoryUnsafeAssembly));
-	t("useSrcMapCreation", formatUseSrcMap(m_context));
+
+	solAssert(_contract.annotation().creationCallGraph->get() != nullptr, "");
+	verifyCallGraph(collectReachableCallables(**_contract.annotation().creationCallGraph), std::move(creationFunctionList));
+
+	return {
+		IRGeneratorOutput::Creation{
+			IRNames::creationObject(_contract),
+			boost::trim_copy(yul::reindent(t.render())),
+			buildObjectDebugData(),
+			m_context.subObjectsCreated(),
+		},
+		std::move(internalDispatchMap),
+	};
+}
+
+IRGeneratorOutput::Deployed IRGenerator::generateDeployed(
+	ContractDefinition const& _contract,
+	bytes const& _cborMetadata,
+	InternalDispatchMap _creationDispatch
+)
+{
+	Whiskers t(R"(
+		{
+			<sourceLocationCommentDeployed>
+			<memoryInitDeployed>
+			<?library>
+			let called_via_delegatecall := iszero(eq(loadimmutable("<library_address>"), address()))
+			</library>
+			<dispatch>
+			<deployedFunctions>
+		}
+	)");
 
 	resetContext(_contract, ExecutionContext::Deployed);
 
 	// NOTE: Function pointers can be passed from creation code via storage variables. We need to
 	// get all the functions they could point to into the dispatch functions even if they're never
 	// referenced by name in the deployed code.
-	m_context.initializeInternalDispatch(std::move(internalDispatchMap));
+	m_context.initializeInternalDispatch(std::move(_creationDispatch));
 
 	// Do not register immutables to avoid assignment.
-	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("sourceLocationCommentDeployed", dispenseLocationComment(_contract));
+	t("library", _contract.isLibrary());
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));
 	std::set<FunctionDefinition const*> deployedFunctionList = generateQueuedFunctions();
 	generateInternalDispatchFunctions(_contract);
 	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
-	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
-	t("metadataName", yul::Object::metadataName());
-	t("cborMetadata", util::toHex(_cborMetadata));
-
-	t("useSrcMapDeployed", formatUseSrcMap(m_context));
 
 	// This has to be called only after all other code generation for the deployed object is complete.
 	bool deployedInvolvesMemoryUnsafeAssembly = m_context.memoryUnsafeInlineAssemblySeen();
 	t("memoryInitDeployed", memoryInit(!deployedInvolvesMemoryUnsafeAssembly));
 
-	solAssert(_contract.annotation().creationCallGraph->get() != nullptr, "");
 	solAssert(_contract.annotation().deployedCallGraph->get() != nullptr, "");
-	verifyCallGraph(collectReachableCallables(**_contract.annotation().creationCallGraph), std::move(creationFunctionList));
 	verifyCallGraph(collectReachableCallables(**_contract.annotation().deployedCallGraph), std::move(deployedFunctionList));
 
-	return t.render();
+	return IRGeneratorOutput::Deployed{
+		IRNames::deployedObject(_contract),
+		boost::trim_copy(yul::reindent(t.render())),
+		buildObjectDebugData(),
+		m_context.subObjectsCreated(),
+		std::make_shared<yul::Data>(yul::YulString{yul::Object::metadataName()}, _cborMetadata),
+	};
 }
 
 std::string IRGenerator::generate(Block const& _block)
@@ -1110,4 +1109,20 @@ void IRGenerator::resetContext(ContractDefinition const& _contract, ExecutionCon
 std::string IRGenerator::dispenseLocationComment(ASTNode const& _node)
 {
 	return ::dispenseLocationComment(_node, m_context);
+}
+
+std::shared_ptr<yul::ObjectDebugData> IRGenerator::buildObjectDebugData() const
+{
+	auto makeIndexSourcePair = [this](std::string const& _sourceName) {
+		return std::pair<unsigned, std::shared_ptr<std::string>>{
+			m_context.sourceIndices().at(_sourceName),
+			std::make_shared<std::string>(_sourceName),
+		};
+	};
+
+	return std::make_shared<yul::ObjectDebugData>(yul::ObjectDebugData{
+		m_context.usedSourceNames() |
+		ranges::views::transform(makeIndexSourcePair) |
+		ranges::to<yul::SourceNameMap>()
+	});
 }

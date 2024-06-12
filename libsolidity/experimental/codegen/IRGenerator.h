@@ -18,12 +18,13 @@
 
 #pragma once
 
+#include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/ast/CallGraph.h>
+#include <libsolidity/codegen/ir/IRGeneratorOutput.h>
+#include <libsolidity/experimental/ast/TypeSystem.h>
 #include <libsolidity/experimental/codegen/IRGenerationContext.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/OptimiserSettings.h>
-#include <libsolidity/ast/ASTForward.h>
-#include <libsolidity/ast/CallGraph.h>
-#include <libsolidity/experimental/ast/TypeSystem.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
@@ -51,15 +52,18 @@ public:
 		Analysis const& _analysis
 	);
 
-	std::string run(
+	IRGeneratorOutput run(
 		ContractDefinition const& _contract,
-		bytes const& _cborMetadata,
-		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
+		bytes const& _cborMetadata
 	);
 
 	std::string generate(ContractDefinition const& _contract);
 	std::string generate(FunctionDefinition const& _function, Type _type);
+
 private:
+	IRGeneratorOutput::Creation generateCreation(ContractDefinition const& _contract);
+	IRGeneratorOutput::Deployed generateDeployed(ContractDefinition const& _contract);
+
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
 	OptimiserSettings const m_optimiserSettings;

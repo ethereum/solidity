@@ -1410,6 +1410,9 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	if (!compiledContract.yulIR.empty())
 		return;
 
+	solAssert(!compiledContract.yulIRGeneratorOutput.has_value() && compiledContract.yulIRAst.is_null());
+	solAssert(compiledContract.yulIROptimized.empty() && compiledContract.yulIROptimizedAst.is_null());
+
 	if (!*_contract.sourceUnit().annotation().useABICoderV2)
 		m_errorReporter.warning(
 			2066_error,
@@ -1425,10 +1428,6 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	if (!_contract.canBeDeployed())
 		return;
 
-	std::map<ContractDefinition const*, std::string_view const> otherYulSources;
-	for (auto const& pair: m_contracts)
-		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
-
 	if (m_experimentalAnalysis)
 	{
 		experimental::IRGenerator generator(
@@ -1440,10 +1439,9 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 			this,
 			*m_experimentalAnalysis
 		);
-		compiledContract.yulIR = generator.run(
+		compiledContract.yulIRGeneratorOutput = generator.run(
 			_contract,
-			{}, // TODO: createCBORMetadata(compiledContract, /* _forIR */ true),
-			otherYulSources
+			{} // TODO: createCBORMetadata(compiledContract, /* _forIR */ true)
 		);
 	}
 	else
@@ -1457,12 +1455,12 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 			this,
 			m_optimiserSettings
 		);
-		compiledContract.yulIR = generator.run(
+		compiledContract.yulIRGeneratorOutput = generator.run(
 			_contract,
-			createCBORMetadata(compiledContract, /* _forIR */ true),
-			otherYulSources
+			createCBORMetadata(compiledContract, /* _forIR */ true)
 		);
 	}
+	compiledContract.yulIR = linkIR(compiledContract);
 
 	yul::YulStack stack(
 		m_evmVersion,
@@ -1514,6 +1512,19 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	solAssert(!deployedName.empty(), "");
 	tie(compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly) = stack.assembleEVMWithDeployed(deployedName);
 	assembleYul(_contract, compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly);
+}
+
+std::string CompilerStack::linkIR(Contract const& _contract) const
+{
+	solAssert(_contract.yulIRGeneratorOutput.has_value());
+
+	auto const resolveContract = [&](ContractDefinition const* _contract) -> IRGeneratorOutput const& {
+		Contract const& contractInfo = m_contracts.at(_contract->fullyQualifiedName());
+		solAssert(contractInfo.yulIRGeneratorOutput.has_value());
+		return *contractInfo.yulIRGeneratorOutput;
+	};
+
+	return _contract.yulIRGeneratorOutput->toPrettyString(resolveContract);
 }
 
 CompilerStack::Contract const& CompilerStack::contract(std::string const& _contractName) const

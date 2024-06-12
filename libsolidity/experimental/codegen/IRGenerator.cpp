@@ -27,14 +27,17 @@
 
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
 
-#include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
+#include <libyul/YulStack.h>
 #include <libyul/optimiser/ASTCopier.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/Whiskers.h>
+
+#include <boost/algorithm/string/trim.hpp>
 
 #include <range/v3/view/drop_last.hpp>
 
@@ -62,31 +65,12 @@ IRGenerator::IRGenerator(
 {
 }
 
-std::string IRGenerator::run(
+frontend::IRGeneratorOutput IRGenerator::run(
 	ContractDefinition const& _contract,
-	bytes const& /*_cborMetadata*/,
-	std::map<ContractDefinition const*, std::string_view const> const& /*_otherYulSources*/
+	bytes const& /*_cborMetadata*/
 )
 {
-
-	Whiskers t(R"(
-		object "<CreationObject>" {
-			code {
-				codecopy(0, dataoffset("<DeployedObject>"), datasize("<DeployedObject>"))
-				return(0, datasize("<DeployedObject>"))
-			}
-			object "<DeployedObject>" {
-				code {
-					<code>
-				}
-			}
-		}
-	)");
-	t("CreationObject", IRNames::creationObject(_contract));
-	t("DeployedObject", IRNames::deployedObject(_contract));
-	t("code", generate(_contract));
-
-	return t.render();
+	return {generateCreation(_contract), generateDeployed(_contract)};
 }
 
 std::string IRGenerator::generate(ContractDefinition const& _contract)
@@ -156,4 +140,33 @@ std::string IRGenerator::generate(FunctionDefinition const& _function, Type _typ
 	}
 	code << "}\n";
 	return code.str();
+}
+
+frontend::IRGeneratorOutput::Creation IRGenerator::generateCreation(ContractDefinition const& _contract)
+{
+	Whiskers t(R"(
+		{
+			codecopy(0, dataoffset("<DeployedObject>"), datasize("<DeployedObject>"))
+			return(0, datasize("<DeployedObject>"))
+		}
+	)");
+	t("DeployedObject", IRNames::deployedObject(_contract));
+
+	return IRGeneratorOutput::Creation{
+		IRNames::creationObject(_contract),
+		boost::trim_copy(yul::reindent(t.render())),
+		std::make_shared<yul::ObjectDebugData>(),
+		{}, // dependencies
+	};
+}
+
+frontend::IRGeneratorOutput::Deployed IRGenerator::generateDeployed(ContractDefinition const& _contract)
+{
+	return IRGeneratorOutput::Deployed{
+		IRNames::deployedObject(_contract),
+		boost::trim_copy(yul::reindent("{" + generate(_contract) + "}")),
+		std::make_shared<yul::ObjectDebugData>(),
+		{},      // dependencies
+		nullptr, // metadata
+	};
 }

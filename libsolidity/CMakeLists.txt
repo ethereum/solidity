@@ -96,6 +96,8 @@ set(sources
 	codegen/ir/IRGenerator.h
 	codegen/ir/IRGeneratorForStatements.cpp
 	codegen/ir/IRGeneratorForStatements.h
+	codegen/ir/IRGeneratorOutput.cpp
+	codegen/ir/IRGeneratorOutput.h
 	codegen/ir/IRGenerationContext.cpp
 	codegen/ir/IRGenerationContext.h
 	codegen/ir/IRLValue.h
