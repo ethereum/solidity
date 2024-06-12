@@ -24,13 +24,14 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AST.h>
-#include <libyul/Exceptions.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 
+#include <range/v3/algorithm/none_of.hpp>
 #include <range/v3/view/transform.hpp>
 
 using namespace solidity;
@@ -172,4 +173,129 @@ std::vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
 	}
 
 	return path;
+}
+
+std::string ObjectSource::toString() const
+{
+	// Whitespace here was chosen to match what IRGenerator::run() used to do.
+	// TODO: Remove whitespace tweaks and update test expectations.
+
+	// NOTE: Debug info selection and source provider only matter for Object. In ObjectSource the
+	// debug data (if present at all) is hard-coded in the source.
+	return "\n" + reindent(toString(nullptr, DebugInfoSelection::None(), nullptr)) + "\n";
+}
+
+std::string ObjectSource::toString(
+	Dialect const* _dialect,
+	DebugInfoSelection const& _debugInfoSelection,
+	CharStreamProvider const* _soliditySourceProvider
+) const
+{
+	// These parameters make no sense for SourceObject but are present in ObjectNode.
+	// None of them will affect how the object is printed since these aspects are all hard-coded in the source.
+	yulAssert(!_dialect);
+	yulAssert(_debugInfoSelection == DebugInfoSelection::None());
+	yulAssert(!_soliditySourceProvider);
+	yulAssert(debugData);
+
+	std::string serializedSubObjects;
+	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)
+	{
+		yulAssert(subObject, "Incomplete objects cannot be printed.");
+		yulAssert(
+			dynamic_cast<ObjectSource const*>(subObject.get()) ||
+			dynamic_cast<Data const*>(subObject.get()),
+			"ObjectSource tree may be composed only of Data and SourceObjects."
+		);
+		serializedSubObjects += subObject->toString(_dialect, _debugInfoSelection, _soliditySourceProvider) + "\n";
+	}
+
+	// Whitespace here was chosen to match what IRGenerator::run() used to do.
+	// TODO: Remove whitespace tweaks and update test expectations.
+	if (subObjects.size() > 0 && subObjects.back()->name == YulString{yul::Object::metadataName()})
+		serializedSubObjects = "\n" + serializedSubObjects;
+	else
+		serializedSubObjects += "\n";
+
+	return
+		formatUseSrcComment(*debugData) +
+		"object \"" + name.str() + "\" {\n" +
+		"code " + code + "\n" +
+		serializedSubObjects +
+		"}";
+}
+
+void ObjectSource::addSubObject(std::shared_ptr<ObjectNode> _subObject)
+{
+	yulAssert(_subObject);
+	yulAssert(
+		!dynamic_cast<Object const*>(_subObject.get()),
+		"Mixing ObjectSource and Object in the same tree not supported."
+	);
+
+	subIndexByName[_subObject->name] = subObjects.size();
+	subObjects.push_back(std::move(_subObject));
+}
+
+void ObjectSource::addSubObjectPlaceholder(YulString _name)
+{
+	yulAssert(subIndexByName.count(_name) == 0);
+	subIndexByName[_name] = subObjects.size();
+	subObjects.push_back(nullptr);
+}
+
+void ObjectSource::addMetadata(bytes const& _cborMetadata)
+{
+	YulString subName = YulString{yul::Object::metadataName()};
+	yulAssert(subIndexByName.count(subName) == 0);
+
+	auto metadata = std::make_shared<Data>(subName, _cborMetadata);
+	subIndexByName[subName] = subObjects.size();
+	subObjects.push_back(std::move(metadata));
+}
+
+std::shared_ptr<ObjectSource> ObjectSource::clone() const
+{
+	std::vector<std::shared_ptr<ObjectNode>> clonedSubObjects;
+	for (std::shared_ptr<ObjectNode> subNode: subObjects)
+		if (!subNode)
+			clonedSubObjects.push_back(nullptr);
+		else if (dynamic_cast<Data const*>(subNode.get()))
+			clonedSubObjects.push_back(subNode);
+		else if (auto const& subObjectSource = dynamic_cast<ObjectSource const*>(subNode.get()))
+			clonedSubObjects.push_back(subObjectSource->clone());
+		else
+			yulAssert(false);
+
+	// TMP: Add constructors
+	auto clonedObject = std::make_shared<ObjectSource>();
+	clonedObject->name = name;
+	clonedObject->code = code;
+	clonedObject->subObjects = std::move(clonedSubObjects);
+	clonedObject->subIndexByName = subIndexByName;
+	clonedObject->debugData = debugData;
+	return clonedObject;
+}
+
+bool ObjectSource::fillPlaceholders(std::map<std::string, std::shared_ptr<ObjectSource>> const& _availableSources)
+{
+	auto isCurrentObject = [this](auto const& _nameAndObject) { return _nameAndObject.second.get() == this; };
+	solAssert(ranges::none_of(_availableSources, isCurrentObject));
+
+	bool allFilled = true;
+	for (auto const& [subName, subIndex]: subIndexByName)
+	{
+		yulAssert(subObjects.size() > subIndex);
+		if (!subObjects[subIndex])
+		{
+			if (_availableSources.count(subName.str()))
+				subObjects[subIndex] = _availableSources.at(subName.str());
+			else
+				allFilled = false;
+		}
+		else if (auto subObjectSource = std::dynamic_pointer_cast<ObjectSource>(subObjects[subIndex]))
+			subObjectSource->fillPlaceholders(_availableSources);
+	}
+
+	return allFilled;
 }

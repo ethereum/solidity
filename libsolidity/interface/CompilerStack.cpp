@@ -1410,6 +1410,9 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	if (!compiledContract.yulIR.empty())
 		return;
 
+	solAssert(!compiledContract.yulIRObjectSource && compiledContract.yulIRAst.is_null());
+	solAssert(compiledContract.yulIROptimized.empty() && compiledContract.yulIROptimizedAst.is_null());
+
 	if (!*_contract.sourceUnit().annotation().useABICoderV2)
 		m_errorReporter.warning(
 			2066_error,
@@ -1425,10 +1428,6 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	if (!_contract.canBeDeployed())
 		return;
 
-	std::map<ContractDefinition const*, std::string_view const> otherYulSources;
-	for (auto const& pair: m_contracts)
-		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
-
 	if (m_experimentalAnalysis)
 	{
 		experimental::IRGenerator generator(
@@ -1440,10 +1439,9 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 			this,
 			*m_experimentalAnalysis
 		);
-		compiledContract.yulIR = generator.run(
+		compiledContract.yulIRObjectSource = generator.run(
 			_contract,
-			{}, // TODO: createCBORMetadata(compiledContract, /* _forIR */ true),
-			otherYulSources
+			{} // TODO: createCBORMetadata(compiledContract, /* _forIR */ true)
 		);
 	}
 	else
@@ -1457,12 +1455,12 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 			this,
 			m_optimiserSettings
 		);
-		compiledContract.yulIR = generator.run(
+		compiledContract.yulIRObjectSource = generator.run(
 			_contract,
-			createCBORMetadata(compiledContract, /* _forIR */ true),
-			otherYulSources
+			createCBORMetadata(compiledContract, /* _forIR */ true)
 		);
 	}
+	compiledContract.yulIR = linkIR(compiledContract);
 
 	yul::YulStack stack(
 		m_evmVersion,
@@ -1514,6 +1512,34 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	solAssert(!deployedName.empty(), "");
 	tie(compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly) = stack.assembleEVMWithDeployed(deployedName);
 	assembleYul(_contract, compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly);
+}
+
+std::string CompilerStack::linkIR(Contract const& _contract) const
+{
+	solAssert(_contract.yulIRObjectSource);
+
+	// TMP: Introduce a ContractDefinition -> Contract map so that we don't have to process all
+	// contracts whenever this is called.
+
+	std::map<std::string, std::shared_ptr<ObjectSource>> irBySubObjectName;
+	for (Contract const& contractInfo: m_contracts | ranges::views::values)
+		if (contractInfo.yulIRObjectSource)
+		{
+			auto [it, inserted] = irBySubObjectName.emplace(
+				IRNames::creationObject(*contractInfo.contract),
+				contractInfo.yulIRObjectSource->clone()
+			);
+			solAssert(inserted);
+		}
+
+	for (Contract const& contractInfo: m_contracts | ranges::views::values)
+		if (contractInfo.yulIRObjectSource)
+		{
+			bool allFilled = contractInfo.yulIRObjectSource->fillPlaceholders(irBySubObjectName);
+			solAssert(allFilled);
+		}
+
+	return _contract.yulIRObjectSource->toString();
 }
 
 CompilerStack::Contract const& CompilerStack::contract(std::string const& _contractName) const

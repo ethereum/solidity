@@ -35,6 +35,8 @@
 
 #include <libsmtutil/SolverInterface.h>
 
+#include <libyul/Object.h>
+
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
@@ -387,6 +389,8 @@ private:
 		std::shared_ptr<evmasm::Assembly> evmRuntimeAssembly;
 		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
+		// TMP: docstring
+		std::shared_ptr<yul::ObjectSource> yulIRObjectSource;
 		std::string yulIR; ///< Yul IR code.
 		std::string yulIROptimized; ///< Optimized Yul IR code.
 		Json yulIRAst; ///< JSON AST of Yul IR code.
@@ -467,6 +471,9 @@ private:
 	/// @returns the source object for the given @a _sourceName.
 	/// Can only be called after state is SourcesSet.
 	Source const& source(std::string const& _sourceName) const;
+
+	// TMP: docstring
+	std::string linkIR(Contract const& _contract) const;
 
 	/// @param _forIR If true, include a flag that indicates that the bytecode comes from IR codegen.
 	/// @returns the metadata JSON as a compact string for the given contract.

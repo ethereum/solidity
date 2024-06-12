@@ -27,14 +27,17 @@
 
 #include <libsolidity/experimental/ast/TypeSystemHelper.h>
 
-#include <libyul/YulStack.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
+#include <libyul/YulStack.h>
 #include <libyul/optimiser/ASTCopier.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/Whiskers.h>
+
+#include <boost/algorithm/string/trim.hpp>
 
 #include <range/v3/view/drop_last.hpp>
 
@@ -62,31 +65,19 @@ IRGenerator::IRGenerator(
 {
 }
 
-std::string IRGenerator::run(
+std::shared_ptr<yul::ObjectSource> IRGenerator::run(
 	ContractDefinition const& _contract,
-	bytes const& /*_cborMetadata*/,
-	std::map<ContractDefinition const*, std::string_view const> const& /*_otherYulSources*/
+	bytes const& /*_cborMetadata*/
 )
 {
+	std::shared_ptr<yul::ObjectSource> creationObjectSource = generateCreation(_contract);
+	std::shared_ptr<yul::ObjectSource> deployedObjectSource = generateDeployed(_contract);
 
-	Whiskers t(R"(
-		object "<CreationObject>" {
-			code {
-				codecopy(0, dataoffset("<DeployedObject>"), datasize("<DeployedObject>"))
-				return(0, datasize("<DeployedObject>"))
-			}
-			object "<DeployedObject>" {
-				code {
-					<code>
-				}
-			}
-		}
-	)");
-	t("CreationObject", IRNames::creationObject(_contract));
-	t("DeployedObject", IRNames::deployedObject(_contract));
-	t("code", generate(_contract));
+	yul::YulString deplyedObjectName(IRNames::deployedObject(_contract));
+	solAssert(creationObjectSource->subIndexByName.count(deplyedObjectName) != 0);
+	creationObjectSource->subObjects[creationObjectSource->subIndexByName[deplyedObjectName]] = deployedObjectSource;
 
-	return t.render();
+	return creationObjectSource;
 }
 
 std::string IRGenerator::generate(ContractDefinition const& _contract)
@@ -156,4 +147,33 @@ std::string IRGenerator::generate(FunctionDefinition const& _function, Type _typ
 	}
 	code << "}\n";
 	return code.str();
+}
+
+std::shared_ptr<yul::ObjectSource> IRGenerator::generateCreation(ContractDefinition const& _contract)
+{
+	Whiskers t(R"(
+		{
+			codecopy(0, dataoffset("<DeployedObject>"), datasize("<DeployedObject>"))
+			return(0, datasize("<DeployedObject>"))
+		}
+	)");
+	t("DeployedObject", IRNames::deployedObject(_contract));
+
+	auto objectSource = std::make_shared<yul::ObjectSource>();
+	objectSource->name = yul::YulString(IRNames::creationObject(_contract));
+	objectSource->code = boost::trim_copy(yul::reindent(t.render()));
+	objectSource->debugData = std::make_shared<yul::ObjectDebugData>();
+	objectSource->addSubObjectPlaceholder(yul::YulString(IRNames::deployedObject(_contract)));
+
+	return objectSource;
+}
+
+std::shared_ptr<yul::ObjectSource> IRGenerator::generateDeployed(ContractDefinition const& _contract)
+{
+	auto objectSource = std::make_shared<yul::ObjectSource>();
+	objectSource->name = yul::YulString(IRNames::deployedObject(_contract));
+	objectSource->code = boost::trim_copy(yul::reindent("{" + generate(_contract) + "}"));
+	objectSource->debugData = std::make_shared<yul::ObjectDebugData>();
+
+	return objectSource;
 }

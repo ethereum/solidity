@@ -25,6 +25,10 @@
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/experimental/ast/TypeSystem.h>
 
+// TMP: Is it really a good idea to introduce a dependency on libyul here?
+// Should I put ObjectSource in libsolidity instead and make it independent of Object hierarchy?
+#include <libyul/Object.h>
+
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/EVMVersion.h>
@@ -51,15 +55,18 @@ public:
 		Analysis const& _analysis
 	);
 
-	std::string run(
+	std::shared_ptr<yul::ObjectSource> run(
 		ContractDefinition const& _contract,
-		bytes const& _cborMetadata,
-		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
+		bytes const& _cborMetadata
 	);
 
 	std::string generate(ContractDefinition const& _contract);
 	std::string generate(FunctionDefinition const& _function, Type _type);
+
 private:
+	std::shared_ptr<yul::ObjectSource> generateCreation(ContractDefinition const& _contract);
+	std::shared_ptr<yul::ObjectSource> generateDeployed( ContractDefinition const& _contract);
+
 	langutil::EVMVersion const m_evmVersion;
 	std::optional<uint8_t> const m_eofVersion;
 	OptimiserSettings const m_optimiserSettings;

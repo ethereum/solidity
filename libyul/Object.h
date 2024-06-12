@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
+#include <libyul/Exceptions.h>
 #include <libyul/YulString.h>
 
 #include <liblangutil/CharStreamProvider.h>
@@ -128,6 +129,41 @@ public:
 
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
+};
+
+// TMP: docstrings
+struct ObjectSource: public ObjectNode
+{
+public:
+	/// @returns a (parseable) string representation.
+	std::string toString() const;
+	std::string toString(
+		Dialect const* _dialect,
+		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
+		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
+	) const override;
+	// TMP: toJson() makes no sense in ObjectNode and should be moved out.
+	Json toJson() const override { yulAssert(false); }
+
+	void addSubObject(std::shared_ptr<ObjectNode> _subObject);
+	void addSubObjectPlaceholder(YulString _name);
+	void addMetadata(bytes const& _cborMetadata);
+
+	// TMP: docstring
+	std::shared_ptr<ObjectSource> clone() const;
+	// TMP: docstring
+	// Note: same object may be inserted multiple times, at multiple levels
+	// Note: no cycles
+	// Note: works best if _availableSources are all unlinked
+	// Note: _availableSources must not contain current object
+	bool fillPlaceholders(std::map<std::string, std::shared_ptr<ObjectSource>> const& _availableSources);
+
+	// TMP: Should the outer braces be a part of the value or added automatically when the object is printed?
+	std::string code;
+	std::vector<std::shared_ptr<ObjectNode>> subObjects;
+	std::map<YulString, size_t> subIndexByName;
+
+	std::shared_ptr<ObjectDebugData const> debugData;
 };
 
 }
