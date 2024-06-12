@@ -82,6 +82,8 @@ struct Data: public ObjectNode
 struct ObjectDebugData
 {
 	std::optional<SourceNameMap> sourceNames = {};
+
+	std::string formatUseSrcComment() const;
 };
 
 
