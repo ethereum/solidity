@@ -38,6 +38,26 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
+namespace
+{
+
+std::string formatUseSrcComment(ObjectDebugData const& _debugData)
+{
+	if (!_debugData.sourceNames)
+		return "";
+
+	static auto formatIdNamePair = [](auto&& _pair) {
+		return std::to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
+	};
+
+	std::string serializedSourceNames = joinHumanReadable(
+		ranges::views::transform(*_debugData.sourceNames, formatIdNamePair)
+	);
+	return "/// @use-src " + serializedSourceNames + "\n";
+}
+
+}
+
 std::string Data::toString(Dialect const*, DebugInfoSelection const&, CharStreamProvider const*) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
@@ -52,16 +72,6 @@ std::string Object::toString(
 	yulAssert(code, "No code");
 	yulAssert(debugData, "No debug data");
 
-	std::string useSrcComment;
-
-	if (debugData->sourceNames)
-		useSrcComment =
-			"/// @use-src " +
-			joinHumanReadable(ranges::views::transform(*debugData->sourceNames, [](auto&& _pair) {
-				return std::to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
-			})) +
-			"\n";
-
 	std::string inner = "code " + AsmPrinter(
 		_dialect,
 		debugData->sourceNames,
@@ -72,7 +82,11 @@ std::string Object::toString(
 	for (auto const& obj: subObjects)
 		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
 
-	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
+	return
+		formatUseSrcComment(*debugData) +
+		"object \"" + name.str() + "\" {\n" +
+		indent(inner) + "\n" +
+		"}";
 }
 
 Json Data::toJson() const
