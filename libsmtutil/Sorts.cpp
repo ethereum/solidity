@@ -1,219 +1,57 @@
 /*
-	This file is part of solidity.
+    This file is part of solidity.
 
-	solidity is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    solidity is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	solidity is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    solidity is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#pragma once
-
-#include <libsmtutil/Exceptions.h>
-#include <libsolutil/Common.h>
-#include <memory>
-#include <vector>
+#include <libsmtutil/Sorts.h>
 
 namespace solidity::smtutil
 {
 
-enum class Kind
+Sort* const SortProvider::boolSort{new Sort(Kind::Bool)};
+IntSort* const SortProvider::uintSort{new IntSort(false)};
+IntSort* const SortProvider::sintSort{new IntSort(true)};
+BitVectorSort* const SortProvider::bitVectorSort{new BitVectorSort(256)};
+
+IntSort* SortProvider::intSort(bool _signed)
 {
-	Int,
-	Bool,
-	BitVector,
-	Function,
-	Array,
-	Sort,
-	Tuple
-};
+    if (_signed)
+        return sintSort;
+    return uintSort;
+}
 
-struct Sort
+}
+
+// Ensure to properly manage memory in the client code using these pointers:
+
+// For example:
+
+int main()
 {
-	Sort(Kind _kind):
-		kind(_kind) {}
-	virtual ~Sort() = default;
-	virtual bool operator==(Sort const& _other) const { return kind == _other.kind; }
+    // Use the instances
+    solidity::smtutil::Sort* boolSort = solidity::smtutil::SortProvider::boolSort;
+    solidity::smtutil::IntSort* intSort = solidity::smtutil::SortProvider::intSort(true);
+    solidity::smtutil::BitVectorSort* bitVectorSort = solidity::smtutil::SortProvider::bitVectorSort;
 
-	Kind const kind;
-};
-using SortPointer = Sort*;
+    // Perform operations...
 
-struct IntSort: public Sort
-{
-	IntSort(bool _signed):
-		Sort(Kind::Int),
-		isSigned(_signed)
-	{}
+    // Clean up if necessary (for static instances, typically you don't delete them)
+    // delete boolSort; // Uncomment only if the lifetime management requires it
+    // delete intSort;  // Uncomment only if created with new
+    // delete bitVectorSort; // Uncomment only if created with new
 
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-
-		auto otherIntSort = dynamic_cast<IntSort const*>(&_other);
-		smtAssert(otherIntSort);
-		return isSigned == otherIntSort->isSigned;
-	}
-
-	bool isSigned;
-};
-
-struct BitVectorSort: public Sort
-{
-	BitVectorSort(unsigned _size):
-		Sort(Kind::BitVector),
-		size(_size)
-	{}
-
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-
-		auto otherBitVectorSort = dynamic_cast<BitVectorSort const*>(&_other);
-		smtAssert(otherBitVectorSort);
-		return size == otherBitVectorSort->size;
-	}
-
-	unsigned size;
-};
-
-struct FunctionSort: public Sort
-{
-	FunctionSort(std::vector<SortPointer> _domain, SortPointer _codomain):
-		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain)) {}
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-		auto _otherFunction = dynamic_cast<FunctionSort const*>(&_other);
-		smtAssert(_otherFunction, "");
-		if (domain.size() != _otherFunction->domain.size())
-			return false;
-		if (!std::equal(
-			domain.begin(),
-			domain.end(),
-			_otherFunction->domain.begin(),
-			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
-		))
-			return false;
-		smtAssert(codomain, "");
-		smtAssert(_otherFunction->codomain, "");
-		return *codomain == *_otherFunction->codomain;
-	}
-
-	std::vector<SortPointer> domain;
-	SortPointer codomain;
-};
-
-struct ArraySort: public Sort
-{
-	/// _domain is the sort of the indices
-	/// _range is the sort of the values
-	ArraySort(SortPointer _domain, SortPointer _range):
-		Sort(Kind::Array), domain(std::move(_domain)), range(std::move(_range)) {}
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-		auto _otherArray = dynamic_cast<ArraySort const*>(&_other);
-		smtAssert(_otherArray, "");
-		smtAssert(_otherArray->domain, "");
-		smtAssert(_otherArray->range, "");
-		smtAssert(domain, "");
-		smtAssert(range, "");
-		return *domain == *_otherArray->domain && *range == *_otherArray->range;
-	}
-
-	SortPointer domain;
-	SortPointer range;
-};
-
-struct SortSort: public Sort
-{
-	SortSort(SortPointer _inner): Sort(Kind::Sort), inner(std::move(_inner)) {}
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-		auto _otherSort = dynamic_cast<SortSort const*>(&_other);
-		smtAssert(_otherSort, "");
-		smtAssert(_otherSort->inner, "");
-		smtAssert(inner, "");
-		return *inner == *_otherSort->inner;
-	}
-
-	SortPointer inner;
-};
-
-struct TupleSort: public Sort
-{
-	TupleSort(
-		std::string _name,
-		std::vector<std::string> _members,
-		std::vector<SortPointer> _components
-	):
-		Sort(Kind::Tuple),
-		name(std::move(_name)),
-		members(std::move(_members)),
-		components(std::move(_components))
-	{
-		for (size_t i = 0; i < members.size(); ++i)
-			memberToIndex[members.at(i)] = i;
-	}
-
-	SortPointer memberSort(std::string const& _member)
-	{
-		return components.at(memberToIndex.at(_member));
-	}
-
-	bool operator==(Sort const& _other) const override
-	{
-		if (!Sort::operator==(_other))
-			return false;
-		auto _otherTuple = dynamic_cast<TupleSort const*>(&_other);
-		smtAssert(_otherTuple, "");
-		if (name != _otherTuple->name)
-			return false;
-		if (members != _otherTuple->members)
-			return false;
-		if (components.size() != _otherTuple->components.size())
-			return false;
-		if (!std::equal(
-			components.begin(),
-			components.end(),
-			_otherTuple->components.begin(),
-			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
-		))
-			return false;
-		return true;
-	}
-
-	std::string const name;
-	std::vector<std::string> const members;
-	std::vector<SortPointer> const components;
-	std::map<std::string, size_t> memberToIndex;
-};
-
-
-/** Frequently used sorts.*/
-struct SortProvider
-{
-	static Sort* const boolSort;
-	static IntSort* const uintSort;
-	static IntSort* const sintSort;
-	static IntSort* intSort(bool _signed = false);
-	static BitVectorSort* const bitVectorSort;
-};
-
+    return 0;
 }
