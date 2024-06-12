@@ -34,24 +34,3 @@ IntSort* SortProvider::intSort(bool _signed)
 }
 
 }
-
-// Ensure to properly manage memory in the client code using these pointers:
-
-// For example:
-
-int main()
-{
-    // Use the instances
-    solidity::smtutil::Sort* boolSort = solidity::smtutil::SortProvider::boolSort;
-    solidity::smtutil::IntSort* intSort = solidity::smtutil::SortProvider::intSort(true);
-    solidity::smtutil::BitVectorSort* bitVectorSort = solidity::smtutil::SortProvider::bitVectorSort;
-
-    // Perform operations...
-
-    // Clean up if necessary (for static instances, typically you don't delete them)
-    // delete boolSort; // Uncomment only if the lifetime management requires it
-    // delete intSort;  // Uncomment only if created with new
-    // delete bitVectorSort; // Uncomment only if created with new
-
-    return 0;
-}
