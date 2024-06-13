@@ -441,10 +441,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				m_context << Instruction::SWAP1 << Instruction::POP;
 		}
 		else
-			BOOST_THROW_EXCEPTION(
-				InternalCompilerError()
-					<< errinfo_sourceLocation(_location)
-					<< util::errinfo_comment("Invalid non-value type for assignment."));
+			solAssert(false, "Invalid non-value type for assignment.");
 	}
 }
 

@@ -30,10 +30,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/process.hpp>
 
-using solidity::langutil::InternalCompilerError;
-using solidity::util::errinfo_comment;
-
-
 namespace solidity::frontend
 {
 

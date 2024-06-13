@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <regex>
 
+using namespace std::string_literals;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -126,9 +127,9 @@ std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scan
 			fetchDebugDataFromComment();
 		return std::make_unique<Block>(parseBlock());
 	}
-	catch (FatalError const&)
+	catch (FatalError const& error)
 	{
-		yulAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
+		yulAssert(m_errorReporter.hasErrors(), "Unreported fatal error: "s + error.what());
 	}
 
 	return nullptr;

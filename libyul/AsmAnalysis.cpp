@@ -74,10 +74,13 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 		(*this)(_block);
 	}
-	catch (FatalError const&)
+	catch (FatalError const& error)
 	{
-		// This FatalError con occur if the errorReporter has too many errors.
-		yulAssert(!watcher.ok(), "Fatal error detected, but no error is reported.");
+		// NOTE: There's a cap on the number of reported errors, but watcher.ok() will work fine even if
+		// we exceed it because the reporter keeps counting (it just stops adding errors to the list).
+		// Note also that fact of exceeding the cap triggers a FatalError so one can get thrown even
+		// if we don't make any of our errors fatal.
+		yulAssert(!watcher.ok(), "Unreported fatal error: "s + error.what());
 	}
 	return watcher.ok();
 }

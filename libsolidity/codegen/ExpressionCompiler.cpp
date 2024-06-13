@@ -2952,9 +2952,7 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 	else if (m_context.isStateVariable(&_declaration))
 		setLValue<StorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError()
-			<< errinfo_sourceLocation(_expression.location())
-			<< util::errinfo_comment("Identifier type not supported or identifier not found."));
+		solAssert(false, "Identifier type not supported or identifier not found.");
 }
 
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
