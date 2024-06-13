@@ -178,7 +178,7 @@ ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 	}
 	catch (FatalError const& error)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
+		solAssert(m_errorReporter.hasErrors(), "Unreported fatal error: "s + error.what());
 		return nullptr;
 	}
 }

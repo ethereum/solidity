@@ -65,7 +65,7 @@ std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _sca
 	}
 	catch (FatalError const& error)
 	{
-		yulAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
+		yulAssert(m_errorReporter.hasErrors(), "Unreported fatal error: "s + error.what());
 	}
 	return nullptr;
 }

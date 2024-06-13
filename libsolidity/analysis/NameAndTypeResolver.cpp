@@ -63,7 +63,7 @@ bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit, ASTNode 
 	}
 	catch (langutil::FatalError const& error)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
+		solAssert(m_errorReporter.hasErrors(), "Unreported fatal error: "s + error.what());
 		return false;
 	}
 	return true;
@@ -137,7 +137,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(SourceUnit& _source)
 	}
 	catch (langutil::FatalError const& error)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
+		solAssert(m_errorReporter.hasErrors(), "Unreported fatal error: "s + error.what());
 		return false;
 	}
 	return true;
@@ -152,7 +152,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 	}
 	catch (langutil::FatalError const& error)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "Unreported fatal error: "s + error.what());
+		solAssert(m_errorReporter.hasErrors(), "Unreported fatal error: "s + error.what());
 		return false;
 	}
 	return true;
