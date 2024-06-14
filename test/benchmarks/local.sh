@@ -45,12 +45,6 @@ function cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-function bytecode_size {
-    local bytecode_chars
-    bytecode_chars=$(stripCLIDecorations | stripEmptyLines | wc --chars)
-    echo $(( bytecode_chars / 2 ))
-}
-
 function benchmark_contract {
     local pipeline="$1"
     local input_path="$2"
