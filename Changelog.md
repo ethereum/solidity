@@ -11,6 +11,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * SMTChecker: Fix error that reports invalid number of verified checks for BMC engine.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
 
