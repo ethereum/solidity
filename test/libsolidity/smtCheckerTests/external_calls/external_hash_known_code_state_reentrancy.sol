@@ -19,8 +19,7 @@ contract C {
 		address prevOwner = owner;
 		uint z = s.f();
 		assert(z == y);
-		// Disabled because of Spacer nondeterminism.
-		//assert(prevOwner == owner);
+		assert(prevOwner == owner);
 	}
 
 	function g() public view returns (uint) {
@@ -31,5 +30,5 @@ contract C {
 // SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (219-236): Unused local variable.
-// Warning 6328: (266-280): CHC: Assertion violation happens here.
+// Warning 6328: (266-280): CHC: Assertion violation happens here.\nCounterexample:\nowner = 0x0, y = 0, s = 0\nprevOwner = 0x0\nz = 1\n\nTransaction trace:\nC.constructor(){ msg.sender: 0x0 }\nState: owner = 0x0, y = 0, s = 0\nC.f()\n    s.f() -- untrusted external call
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
