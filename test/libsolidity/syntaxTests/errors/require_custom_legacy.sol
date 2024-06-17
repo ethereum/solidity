@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// UnimplementedFeatureError: Require with a custom error is only available using the via-ir pipeline.
+// UnimplementedFeatureError 1834: Require with a custom error is only available using the via-ir pipeline.

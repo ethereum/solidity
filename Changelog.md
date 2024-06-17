@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
  * EVM: Support for the EVM version "Prague".
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
  * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.

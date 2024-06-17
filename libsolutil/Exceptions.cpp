@@ -17,8 +17,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/Exceptions.h>
+#include <liblangutil/Exceptions.h>
 
 using namespace solidity::util;
+using namespace solidity::langutil;
 
 char const* Exception::what() const noexcept
 {
@@ -48,4 +50,12 @@ std::string Exception::lineInfo() const
 std::string const* Exception::comment() const noexcept
 {
 	return boost::get_error_info<errinfo_comment>(*this);
+}
+
+SourceLocation Exception::sourceLocation() const noexcept
+{
+	if (SourceLocation const* sourceLocation = boost::get_error_info<errinfo_sourceLocation>(*this))
+		return *sourceLocation;
+
+	return SourceLocation{};
 }

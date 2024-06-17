@@ -632,4 +632,14 @@ std::vector<T> make_vector(Args&&... _args)
 	return result;
 }
 
+inline std::string stringOrDefault(std::string _string, std::string _defaultString = "")
+{
+	return (!_string.empty() ? std::move(_string) : std::move(_defaultString));
+}
+
+inline std::string stringOrDefault(std::string const* _string, std::string const& _defaultString = "")
+{
+	return (_string ? stringOrDefault(*_string, _defaultString) : _defaultString);
+}
+
 }

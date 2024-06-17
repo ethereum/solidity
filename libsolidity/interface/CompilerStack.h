@@ -503,6 +503,8 @@ private:
 		FunctionDefinition const& _function
 	) const;
 
+	void reportUnimplementedFeatureError(langutil::UnimplementedFeatureError const& _error);
+
 	ReadCallback::Callback m_readFile;
 	OptimiserSettings m_optimiserSettings;
 	RevertStrings m_revertStrings = RevertStrings::Default;

@@ -67,6 +67,11 @@ class YulStack: public langutil::CharStreamProvider
 public:
 	enum class Language { Yul, Assembly, StrictAssembly };
 	enum class Machine { EVM };
+	enum State {
+		Empty,
+		Parsed,
+		AnalysisSuccessful
+	};
 
 	YulStack():
 		YulStack(
@@ -105,7 +110,7 @@ public:
 	void optimize();
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
-	MachineAssemblyObject assemble(Machine _machine) const;
+	MachineAssemblyObject assemble(Machine _machine);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	/// In addition to the value returned by @a assemble, returns
@@ -114,7 +119,7 @@ public:
 	std::pair<MachineAssemblyObject, MachineAssemblyObject>
 	assembleWithDeployed(
 		std::optional<std::string_view> _deployName = {}
-	) const;
+	);
 
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	/// Similar to @a assemblyWithDeployed, but returns EVM assembly objects.
@@ -122,7 +127,7 @@ public:
 	std::pair<std::shared_ptr<evmasm::Assembly>, std::shared_ptr<evmasm::Assembly>>
 	assembleEVMWithDeployed(
 		std::optional<std::string_view> _deployName = {}
-	) const;
+	);
 
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	langutil::ErrorList const& errors() const { return m_errors; }
@@ -136,12 +141,15 @@ public:
 	std::shared_ptr<Object> parserResult() const;
 
 private:
+	bool parse(std::string const& _sourceName, std::string const& _source);
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
 
 	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
 
 	void optimize(yul::Object& _object, bool _isCreation);
+
+	void reportUnimplementedFeatureError(langutil::UnimplementedFeatureError const& _error);
 
 	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;
@@ -151,7 +159,7 @@ private:
 
 	std::unique_ptr<langutil::CharStream> m_charStream;
 
-	bool m_analysisSuccessful = false;
+	State m_stackState = Empty;
 	std::shared_ptr<yul::Object> m_parserResult;
 	langutil::ErrorList m_errors;
 	langutil::ErrorReporter m_errorReporter;
