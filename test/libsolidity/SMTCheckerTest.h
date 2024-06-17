@@ -24,6 +24,9 @@
 
 #include <libsolidity/formal/ModelChecker.h>
 
+#include <libsolidity/interface/SMTSolverCommand.h>
+#include <libsolidity/interface/UniversalCallback.h>
+
 #include <string>
 
 namespace solidity::frontend::test
@@ -36,7 +39,7 @@ public:
 	{
 		return std::make_unique<SMTCheckerTest>(_config.filename);
 	}
-	SMTCheckerTest(std::string const& _filename);
+	explicit SMTCheckerTest(std::string const& _filename);
 
 	void setupCompiler(CompilerStack& _compiler) override;
 	void filterObtainedErrors() override;
@@ -44,6 +47,8 @@ public:
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 
 protected:
+	std::unique_ptr<CompilerStack> createStack() const override;
+
 	/*
 	Options that can be set in the test:
 	SMTEngine: `all`, `chc`, `bmc`, `none`, where the default is `all`.
@@ -56,7 +61,7 @@ protected:
 		Set in m_modelCheckerSettings.
 	SMTShowUnproved: `yes`, `no`, where the default is `yes`.
 		Set in m_modelCheckerSettings.
-	SMTSolvers: `all`, `cvc5`, `z3`, `none`, where the default is `all`.
+	SMTSolvers: `all`, `cvc5`, `z3`, `eld`, `none`, where the default is `z3`.
 		Set in m_modelCheckerSettings.
 	BMCLoopIterations: number of loop iterations for BMC engine, the default is 1.
 		Set in m_modelCheckerSettings.
@@ -67,6 +72,9 @@ protected:
 	bool m_ignoreCex = false;
 
 	std::vector<SyntaxTestError> m_unfilteredErrorList;
+
+	SMTSolverCommand smtCommand;
+	UniversalCallback universalCallback;
 };
 
 }

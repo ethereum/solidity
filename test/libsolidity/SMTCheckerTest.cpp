@@ -25,8 +25,11 @@ using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
+using namespace solidity::test;
 
-SMTCheckerTest::SMTCheckerTest(std::string const& _filename): SyntaxTest(_filename, EVMVersion{})
+SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
+	SyntaxTest(_filename, EVMVersion{}),
+	universalCallback(nullptr, smtCommand)
 {
 	auto contract = m_reader.stringSetting("SMTContract", "");
 	if (!contract.empty())
@@ -167,4 +170,8 @@ void SMTCheckerTest::printUpdatedExpectations(std::ostream &_stream, const std::
 		printErrorList(_stream, m_unfilteredErrorList, _linePrefix, false);
 	else
 		CommonSyntaxTest::printUpdatedExpectations(_stream, _linePrefix);
+}
+
+std::unique_ptr<CompilerStack> SMTCheckerTest::createStack() const {
+	return std::make_unique<CompilerStack>(universalCallback.callback());
 }
