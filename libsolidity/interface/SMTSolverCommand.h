@@ -29,9 +29,9 @@ class SMTSolverCommand
 {
 public:
 	/// Calls an SMT solver with the given query.
-	frontend::ReadCallback::Result solve(std::string const& _kind, std::string const& _query);
+	frontend::ReadCallback::Result solve(std::string const& _kind, std::string const& _query) const;
 
-	frontend::ReadCallback::Callback solver()
+	frontend::ReadCallback::Callback solver() const
 	{
 		return [this](std::string const& _kind, std::string const& _query) { return solve(_kind, _query); };
 	}
