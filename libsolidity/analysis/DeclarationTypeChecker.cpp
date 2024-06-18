@@ -329,7 +329,7 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 	Type const* baseType = _typeName.baseType().annotation().type;
 	if (!baseType)
 	{
-		solAssert(!m_errorReporter.errors().empty(), "");
+		solAssert(m_errorReporter.hasErrors(), "");
 		return;
 	}
 

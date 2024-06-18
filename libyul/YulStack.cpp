@@ -64,7 +64,7 @@ bool YulStack::parse(std::string const& _sourceName, std::string const& _source)
 		reportUnimplementedFeatureError(_error);
 	}
 
-	if (m_errorReporter.errors().empty())
+	if (!m_errorReporter.hasErrors())
 		m_stackState = Parsed;
 
 	return m_stackState == Parsed;
