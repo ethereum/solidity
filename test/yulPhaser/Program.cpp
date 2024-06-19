@@ -76,6 +76,8 @@ BOOST_AUTO_TEST_CASE(copy_constructor_should_make_deep_copy_of_ast)
 	// There might be a more direct way to compare ASTs but converting to JSON should be good enough
 	// as long as the conversion is deterministic. A very nice side effect of doing it this way is
 	// that BOOST_TEST will print the complete AST structure of both programs in case of a mismatch.
+	program.toJson();
+	programCopy.toJson();
 	BOOST_TEST(programCopy.toJson() == program.toJson());
 }
 
@@ -119,8 +121,9 @@ BOOST_AUTO_TEST_CASE(load_should_disambiguate)
 	VariableDeclaration const& declaration1 = get<VariableDeclaration>(innerBlock1.statements[0]);
 	VariableDeclaration const& declaration2 = get<VariableDeclaration>(innerBlock2.statements[0]);
 
-	BOOST_TEST(declaration1.variables[0].name.str() == "x");
-	BOOST_TEST(declaration2.variables[0].name.str() != "x");
+	BOOST_TEST(declaration1.variables[0].name != declaration2.variables[0].name);
+	BOOST_TEST(program.nameRepository().labelOf(declaration1.variables[0].name) == "x");
+	BOOST_TEST(program.nameRepository().labelOf(declaration2.variables[0].name) != "x");
 }
 
 BOOST_AUTO_TEST_CASE(load_should_do_function_grouping_and_hoisting)
@@ -344,7 +347,7 @@ BOOST_AUTO_TEST_CASE(optimise)
 
 BOOST_AUTO_TEST_CASE(output_operator)
 {
-	std::string sourceCode(
+	std::string const sourceCode(
 		"{\n"
 		"    let factor := 13\n"
 		"    {\n"

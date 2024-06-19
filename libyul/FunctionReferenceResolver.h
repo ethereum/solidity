@@ -41,7 +41,7 @@ private:
 	void operator()(Block const& _block) override;
 
 	std::map<FunctionCall const*, FunctionDefinition const*> m_functionReferences;
-	std::vector<std::map<YulString, FunctionDefinition const*>> m_scopes;
+	std::vector<std::map<YulName, FunctionDefinition const*>> m_scopes;
 };
 
 

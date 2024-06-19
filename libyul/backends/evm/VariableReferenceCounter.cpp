@@ -71,7 +71,7 @@ void VariableReferenceCounter::operator()(Block const& _block)
 	m_scope = originalScope;
 }
 
-void VariableReferenceCounter::increaseRefIfFound(YulString _variableName)
+void VariableReferenceCounter::increaseRefIfFound(YulName _variableName)
 {
 	m_scope->lookup(_variableName, util::GenericVisitor{
 		[&](Scope::Variable const& _var)

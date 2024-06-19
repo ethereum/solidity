@@ -10,18 +10,18 @@
 //
 // {
 //     {
-//         let _2 := mload(5)
-//         let _4 := mload(4)
-//         let _6 := mload(3)
-//         let _8 := mload(2)
-//         let c_13 := _4
-//         let b_14 := _6
-//         let a_15 := _8
-//         let x_16 := 0
-//         x_16 := add(a_15, b_14)
-//         x_16 := mul(x_16, c_13)
-//         let _10 := add(x_16, _2)
-//         let y := add(mload(1), _10)
+//         let _1 := mload(5)
+//         let _2 := mload(4)
+//         let _3 := mload(3)
+//         let _4 := mload(2)
+//         let c_1 := _2
+//         let b_1 := _3
+//         let a_1 := _4
+//         let x_1 := 0
+//         x_1 := add(a_1, b_1)
+//         x_1 := mul(x_1, c_1)
+//         let _5 := add(x_1, _1)
+//         let y := add(mload(1), _5)
 //     }
 //     function f(a, b, c) -> x
 //     {

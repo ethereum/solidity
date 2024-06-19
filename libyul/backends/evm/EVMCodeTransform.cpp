@@ -51,6 +51,7 @@ CodeTransform::CodeTransform(
 	AsmAnalysisInfo& _analysisInfo,
 	Block const& _block,
 	bool _allowStackOpt,
+	YulNameRepository const& _yulNameRepository,
 	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
@@ -61,6 +62,7 @@ CodeTransform::CodeTransform(
 ):
 	m_assembly(_assembly),
 	m_info(_analysisInfo),
+	m_yulNameRepository(_yulNameRepository),
 	m_dialect(_dialect),
 	m_builtinContext(_builtinContext),
 	m_allowStackOpt(_allowStackOpt),
@@ -79,7 +81,7 @@ CodeTransform::CodeTransform(
 	}
 }
 
-void CodeTransform::decreaseReference(YulString, Scope::Variable const& _var)
+void CodeTransform::decreaseReference(YulName /*_name*/, Scope::Variable const& _var)
 {
 	if (!m_allowStackOpt)
 		return;
@@ -158,7 +160,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	for (size_t varIndex = 0; varIndex < numVariables; ++varIndex)
 	{
 		size_t varIndexReverse = numVariables - 1 - varIndex;
-		YulString varName = _varDecl.variables[varIndexReverse].name;
+		YulName varName = _varDecl.variables[varIndexReverse].name;
 		auto& var = std::get<Scope::Variable>(m_scope->identifiers.at(varName));
 		m_context->variableStackHeights[&var] = heightAtStart + varIndexReverse;
 		if (!m_allowStackOpt)
@@ -230,13 +232,14 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	yulAssert(m_scope, "");
 
 	m_assembly.setSourceLocation(originLocationOf(_call));
-	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
+	if (auto const* builtin = m_yulNameRepository.builtin(_call.functionName.name))
 	{
+		auto const* evmBuiltin = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->data);
 		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin->literalArgument(i))
+			if (!evmBuiltin->literalArgument(i))
 				visitExpression(arg);
 		m_assembly.setSourceLocation(originLocationOf(_call));
-		builtin->generateCode(_call, m_assembly, m_builtinContext);
+		evmBuiltin->generateCode(_call, m_assembly, m_builtinContext);
 	}
 	else
 	{
@@ -385,6 +388,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_info,
 		_function.body,
 		m_allowStackOpt,
+		m_yulNameRepository,
 		m_dialect,
 		m_builtinContext,
 		m_identifierAccessCodeGen,
@@ -419,7 +423,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.markAsInvalid();
 		for (StackTooDeepError& stackError: subTransform.m_stackErrors)
 		{
-			if (stackError.functionName.empty())
+			if (stackError.functionName == YulNameRepository::emptyName())
 				stackError.functionName = _function.name;
 			m_stackErrors.emplace_back(std::move(stackError));
 		}
@@ -457,13 +461,12 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		{
 			StackTooDeepError error(
 				_function.name,
-				YulString{},
+				YulNameRepository::emptyName(),
 				static_cast<int>(stackLayout.size()) - 17,
-				"The function " +
-				_function.name.str() +
-				" has " +
-				std::to_string(stackLayout.size() - 17) +
-				" parameters or return variables too many to fit the stack size."
+				fmt::format(
+					"The function {} has {} parameters or return variables too many to fit the stack size.",
+					m_yulNameRepository.labelOf(_function.name), stackLayout.size() - 17
+				)
 			);
 			stackError(std::move(error), m_assembly.stackHeight() - static_cast<int>(_function.parameters.size()));
 		}
@@ -602,7 +605,7 @@ void CodeTransform::createFunctionEntryID(FunctionDefinition const& _function)
 			!nameAlreadySeen
 		) ?
 		m_assembly.namedLabel(
-			_function.name.str(),
+			std::string(m_yulNameRepository.labelOf(_function.name)),
 			_function.parameters.size(),
 			_function.returnVariables.size(),
 			astID
@@ -667,7 +670,7 @@ bool statementNeedsReturnVariableSetup(Statement const& _statement, std::vector<
 		std::holds_alternative<Assignment>(_statement)
 	)
 	{
-		std::map<YulString, size_t> references = VariableReferencesCounter::countReferences(_statement);
+		std::map<YulName, size_t> references = VariableReferencesCounter::countReferences(_statement);
 		auto isReferenced = [&references](TypedName const& _returnVariable) {
 			return references.count(_returnVariable.name);
 		};
@@ -771,7 +774,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
+size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulName _varName, bool _forSwap)
 {
 	yulAssert(m_context->variableStackHeights.count(&_var), "");
 	size_t heightDiff = static_cast<size_t>(m_assembly.stackHeight()) - m_context->variableStackHeights[&_var];
@@ -782,12 +785,10 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 		m_stackErrors.emplace_back(
 			_varName,
 			heightDiff - limit,
-			"Variable " +
-			_varName.str() +
-			" is " +
-			std::to_string(heightDiff - limit) +
-			" slot(s) too deep inside the stack. " +
-			stackTooDeepString
+			fmt::format(
+				"Variable {} is {} slot(s) too deep inside the stack. {}",
+				m_yulNameRepository.labelOf(_varName), heightDiff - limit, stackTooDeepString
+			)
 		);
 		m_assembly.markAsInvalid();
 		return _forSwap ? 2 : 1;
@@ -795,7 +796,7 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 	return heightDiff;
 }
 
-int CodeTransform::variableStackHeight(YulString _name) const
+int CodeTransform::variableStackHeight(YulName _name) const
 {
 	Scope::Variable const* var = std::get_if<Scope::Variable>(m_scope->lookup(_name));
 	yulAssert(var, "");

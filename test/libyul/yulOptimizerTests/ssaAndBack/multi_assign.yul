@@ -11,7 +11,7 @@
 //
 // {
 //     {
-//         let a_5 := mload(4)
-//         mstore(a_5, 0)
+//         let a := mload(4)
+//         mstore(a, 0)
 //     }
 // }

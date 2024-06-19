@@ -43,7 +43,8 @@ struct EVMDialect;
 class GasMeter
 {
 public:
-	GasMeter(EVMDialect const& _dialect, bool _isCreation, bigint _runs):
+	GasMeter(YulNameRepository const& _yulNameRepository, EVMDialect const& _dialect, bool _isCreation, bigint _runs):
+		m_yulNameRepository(_yulNameRepository),
 		m_dialect(_dialect),
 		m_isCreation{_isCreation},
 		m_runs(_isCreation? 1 : _runs)
@@ -58,6 +59,7 @@ public:
 private:
 	bigint combineCosts(std::pair<bigint, bigint> _costs) const;
 
+	YulNameRepository const& m_yulNameRepository;
 	EVMDialect const& m_dialect;
 	bool m_isCreation = false;
 	bigint m_runs;
@@ -68,18 +70,21 @@ class GasMeterVisitor: public ASTWalker
 public:
 	static std::pair<bigint, bigint> costs(
 		Expression const& _expression,
+		YulNameRepository const& _yulNameRepository,
 		EVMDialect const& _dialect,
 		bool _isCreation
 	);
 
 	static std::pair<bigint, bigint> instructionCosts(
 		evmasm::Instruction _instruction,
+		YulNameRepository const& _yulNameRepository,
 		EVMDialect const& _dialect,
 		bool _isCreation = false
 	);
 
 public:
-	GasMeterVisitor(EVMDialect const& _dialect, bool _isCreation):
+	GasMeterVisitor(YulNameRepository const& _yulNameRepository, EVMDialect const& _dialect, bool _isCreation):
+		m_yulNameRepository(_yulNameRepository),
 		m_dialect(_dialect),
 		m_isCreation{_isCreation}
 	{}
@@ -95,6 +100,7 @@ private:
 	/// Does not work particularly exact for anything apart from arithmetic.
 	void instructionCostsInternal(evmasm::Instruction _instruction);
 
+	YulNameRepository const& m_yulNameRepository;
 	EVMDialect const& m_dialect;
 	bool m_isCreation = false;
 	bigint m_runGas = 0;

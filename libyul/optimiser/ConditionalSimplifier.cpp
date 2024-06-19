@@ -29,8 +29,8 @@ using namespace solidity::util;
 void ConditionalSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
 	ConditionalSimplifier{
-		_context.dialect,
-		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+		_context.yulNameRepository,
+		ControlFlowSideEffectsCollector{_context.yulNameRepository, _ast}.functionSideEffectsNamed()
 	}(_ast);
 }
 
@@ -42,7 +42,7 @@ void ConditionalSimplifier::operator()(Switch& _switch)
 		ASTModifier::operator()(_switch);
 		return;
 	}
-	YulString expr = std::get<Identifier>(*_switch.expression).name;
+	auto expr = std::get<Identifier>(*_switch.expression).name;
 	for (auto& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -73,18 +73,18 @@ void ConditionalSimplifier::operator()(Block& _block)
 				if (
 					std::holds_alternative<Identifier>(*_if.condition) &&
 					!_if.body.statements.empty() &&
-					TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
+					TerminationFinder(m_yulNameRepository, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
 						TerminationFinder::ControlFlow::FlowOut
 				)
 				{
-					YulString condition = std::get<Identifier>(*_if.condition).name;
+					auto condition = std::get<Identifier>(*_if.condition).name;
 					langutil::DebugData::ConstPtr debugData = _if.debugData;
 					return make_vector<Statement>(
 						std::move(_s),
 						Assignment{
 							debugData,
 							{Identifier{debugData, condition}},
-							std::make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
+							std::make_unique<Expression>(m_yulNameRepository.dialect().zeroLiteralForType(m_yulNameRepository.predefined().boolType, m_yulNameRepository))
 						}
 					);
 				}

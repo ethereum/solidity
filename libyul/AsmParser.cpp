@@ -432,8 +432,14 @@ Statement Parser::parseStatement()
 
 			auto const& identifier = std::get<Identifier>(elementary);
 
-			if (m_dialect.builtin(identifier.name))
-				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
+			if (m_yulNameRepository.isBuiltinName(identifier.name))
+				fatalParserError(
+					6272_error,
+					fmt::format(
+						"Cannot assign to builtin function \"{}\".",
+						m_yulNameRepository.labelOf(identifier.name)
+					)
+				);
 
 			assignment.variableNames.emplace_back(identifier);
 
@@ -515,11 +521,11 @@ Expression Parser::parseExpression(bool _unlimitedLiteralArgument)
 		{
 			if (currentToken() == Token::LParen)
 				return parseCall(std::move(operation));
-			if (m_dialect.builtin(_identifier.name))
+			if (m_yulNameRepository.isBuiltinName(_identifier.name))
 				fatalParserError(
 					7104_error,
 					nativeLocationOf(_identifier),
-					"Builtin function \"" + _identifier.name.str() + "\" must be called."
+					fmt::format("Builtin function \"{}\" must be called.", m_yulNameRepository.labelOf(_identifier.name))
 				);
 			return std::move(_identifier);
 		},
@@ -537,7 +543,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimit
 	{
 	case Token::Identifier:
 	{
-		Identifier identifier{createDebugData(), YulString{currentLiteral()}};
+		Identifier identifier{createDebugData(), m_yulNameRepository.defineName(currentLiteral())};
 		advance();
 		return identifier;
 	}
@@ -571,7 +577,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimit
 			createDebugData(),
 			kind,
 			valueOfLiteral(currentLiteral(), kind, _unlimitedLiteralArgument && kind == LiteralKind::String),
-			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
+			kind == LiteralKind::Boolean ? m_yulNameRepository.predefined().boolType : m_yulNameRepository.predefined().defaultType
 		};
 		advance();
 		if (currentToken() == Token::Colon)
@@ -674,9 +680,9 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier>&& _initialOp)
 	FunctionCall ret;
 	ret.functionName = std::move(std::get<Identifier>(_initialOp));
 	ret.debugData = ret.functionName.debugData;
-	auto const isUnlimitedLiteralArgument = [f=m_dialect.builtin(ret.functionName.name)](size_t const index) {
-		if (f && index < f->literalArguments.size())
-			return f->literalArgument(index).has_value();
+	auto const isUnlimitedLiteralArgument = [f=m_yulNameRepository.builtin(ret.functionName.name)](size_t const index) {
+		if (f && index < f->data->literalArguments.size())
+			return f->data->literalArgument(index).has_value();
 		return false;
 	};
 	size_t argumentIndex {0};
@@ -707,16 +713,22 @@ TypedName Parser::parseTypedName()
 		typedName.type = expectAsmIdentifier();
 	}
 	else
-		typedName.type = m_dialect.defaultType;
+		typedName.type = m_yulNameRepository.predefined().defaultType;
 
 	return typedName;
 }
 
-YulString Parser::expectAsmIdentifier()
+Type Parser::expectAsmIdentifier()
 {
-	YulString name{currentLiteral()};
-	if (currentToken() == Token::Identifier && m_dialect.builtin(name))
-		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
+	auto const name = m_yulNameRepository.defineName(currentLiteral());
+	if (currentToken() == Token::Identifier && m_yulNameRepository.dialect().builtin(currentLiteral()))
+		fatalParserError(
+			5568_error,
+			fmt::format(
+				"Cannot use builtin function name \"{}\" as identifier name.",
+				currentLiteral()
+			)
+		);
 	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
 	expectToken(Token::Identifier);
 	return name;

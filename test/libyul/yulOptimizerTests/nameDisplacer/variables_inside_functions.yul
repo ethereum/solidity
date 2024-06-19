@@ -8,9 +8,9 @@
 // step: nameDisplacer
 //
 // {
-//     function f(illegal1_1, illegal2_2) -> illegal3_3
+//     function f(illegal1_1, illegal2_1) -> illegal3_1
 //     {
-//         let illegal4_4 := illegal1_1
-//         illegal3_3 := add(illegal1_1, illegal2_2)
+//         let illegal4_1 := illegal1_1
+//         illegal3_1 := add(illegal1_1, illegal2_1)
 //     }
 // }

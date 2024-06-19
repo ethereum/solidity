@@ -24,7 +24,7 @@ using namespace solidity::yul::test::yul_fuzzer;
 yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	std::ostream& _os,
 	std::shared_ptr<yul::Block> _ast,
-	Dialect const& _dialect,
+	YulNameRepository const& _yulNameRepository,
 	bool _disableMemoryTracing,
 	bool _outputStorageOnly,
 	size_t _maxSteps,
@@ -52,7 +52,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	TerminationReason reason = TerminationReason::None;
 	try
 	{
-		Interpreter::run(state, _dialect, *_ast, true, _disableMemoryTracing);
+		Interpreter::run(state, _yulNameRepository, *_ast, true, _disableMemoryTracing);
 	}
 	catch (StepLimitReached const&)
 	{

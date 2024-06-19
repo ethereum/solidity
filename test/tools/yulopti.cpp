@@ -92,7 +92,7 @@ public:
 		CharStream _charStream(_input, "");
 		try
 		{
-			m_ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
+			m_ast = yul::Parser(errorReporter, m_yulNameRepository).parse(_charStream);
 			if (!m_ast || !errorReporter.errors().empty())
 			{
 				std::cerr << "Error parsing source." << std::endl;
@@ -103,7 +103,7 @@ public:
 			AsmAnalyzer analyzer(
 				*m_analysisInfo,
 				errorReporter,
-				m_dialect
+				m_yulNameRepository
 			);
 			if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 			{
@@ -171,9 +171,8 @@ public:
 
 	void disambiguate()
 	{
-		*m_ast = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
+		*m_ast = std::get<yul::Block>(Disambiguator(m_yulNameRepository, *m_analysisInfo)(*m_ast));
 		m_analysisInfo.reset();
-		m_nameDispenser.reset(*m_ast);
 	}
 
 	void runSteps(std::string _source, std::string _steps)
@@ -181,7 +180,7 @@ public:
 		parse(_source);
 		disambiguate();
 		OptimiserSuite{m_context}.runSequence(_steps, *m_ast);
-		std::cout << AsmPrinter{m_dialect}(*m_ast) << std::endl;
+		std::cout << AsmPrinter{m_yulNameRepository}(*m_ast) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -212,7 +211,7 @@ public:
 					case '#':
 						return;
 					case ',':
-						VarNameCleaner::run(m_context, *m_ast);
+						// VarNameCleaner::run(m_context, *m_ast);
 						// VarNameCleaner destroys the unique names guarantee of the disambiguator.
 						disambiguated = false;
 						break;
@@ -220,7 +219,7 @@ public:
 					{
 						Object obj;
 						obj.code = m_ast;
-						StackCompressor::run(m_dialect, obj, true, 16);
+						StackCompressor::run(m_yulNameRepository, obj, true, 16);
 						break;
 					}
 					default:
@@ -229,7 +228,8 @@ public:
 							*m_ast
 						);
 				}
-				_source = AsmPrinter{m_dialect}(*m_ast);
+				m_yulNameRepository.generateLabels(*m_ast);
+				_source = AsmPrinter{m_yulNameRepository}(*m_ast);
 			}
 			catch (...)
 			{
@@ -243,13 +243,12 @@ public:
 
 private:
 	std::shared_ptr<yul::Block> m_ast;
-	Dialect const& m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
+	YulNameRepository m_yulNameRepository {EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
 	std::unique_ptr<AsmAnalysisInfo> m_analysisInfo;
-	std::set<YulString> const m_reservedIdentifiers = {};
-	NameDispenser m_nameDispenser{m_dialect, m_reservedIdentifiers};
+	std::set<YulName> const m_reservedIdentifiers = {};
 	OptimiserStepContext m_context{
-		m_dialect,
-		m_nameDispenser,
+		m_yulNameRepository.dialect(),
+		m_yulNameRepository,
 		m_reservedIdentifiers,
 		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	};

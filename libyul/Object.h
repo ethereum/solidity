@@ -22,7 +22,9 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
+#include <libyul/YulName.h>
 #include <libyul/YulString.h>
+#include <libyul/AsmPrinter.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>
@@ -54,11 +56,12 @@ struct ObjectNode
 	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	YulString name;
 	virtual std::string toString(
-		Dialect const* _dialect,
+		YulNameRepository const& _yulNameRepository,
+		AsmPrinter::Mode printingMode,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const = 0;
-	virtual Json toJson() const = 0;
+	virtual Json toJson(YulNameRepository const& _yulNameRepository) const = 0;
 };
 
 /**
@@ -71,11 +74,12 @@ struct Data: public ObjectNode
 	bytes data;
 
 	std::string toString(
-		Dialect const* _dialect,
+		YulNameRepository const& _yulNameRepository,
+		AsmPrinter::Mode printingMode,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const override;
-	Json toJson() const override;
+	Json toJson(YulNameRepository const& _yulNameRepository) const override;
 };
 
 
@@ -93,12 +97,13 @@ struct Object: public ObjectNode
 public:
 	/// @returns a (parseable) string representation.
 	std::string toString(
-		Dialect const* _dialect,
+		YulNameRepository const& _yulNameRepository,
+		AsmPrinter::Mode printingMode = AsmPrinter::Mode::FullTypeInfo,
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
-	) const;
+	) const override;
 	/// @returns a compact JSON representation of the AST.
-	Json toJson() const;
+	Json toJson(YulNameRepository const& _yulNameRepository) const override;
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
 	/// Handles all names containing dots as reserved identifiers, not accessible as data.

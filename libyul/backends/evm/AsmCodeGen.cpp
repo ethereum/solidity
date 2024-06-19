@@ -38,6 +38,7 @@ void CodeGenerator::assemble(
 	AsmAnalysisInfo& _analysisInfo,
 	evmasm::Assembly& _assembly,
 	langutil::EVMVersion _evmVersion,
+	YulNameRepository const& _yulNameRepository,
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 	bool _useNamedLabelsForFunctions,
 	bool _optimizeStackAllocation
@@ -49,6 +50,7 @@ void CodeGenerator::assemble(
 		assemblyAdapter,
 		_analysisInfo,
 		_parsedData,
+		_yulNameRepository,
 		EVMDialect::strictAssemblyForEVM(_evmVersion),
 		builtinContext,
 		_optimizeStackAllocation,

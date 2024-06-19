@@ -26,25 +26,25 @@
 // {
 //     {
 //         let x := calldataload(0)
-//         let _2 := 0xf
-//         let _5 := and(shr(248, x), 0)
-//         let _10 := 0xff
-//         let a := and(_5, 255)
-//         let _14 := and(shr(4, x), 3855)
-//         let _15 := 12
-//         let b := shl(_15, _14)
-//         let _19 := and(shr(4, x), 3855)
-//         let c := shl(_15, _19)
-//         let d := shl(_15, and(shr(255, x), 0))
-//         let e := shl(_10, _19)
+//         let _1 := 0xf
+//         let _2 := and(shr(248, x), 0)
+//         let _3 := 0xff
+//         let a := and(_2, 255)
+//         let _4 := and(shr(4, x), 3855)
+//         let _5 := 12
+//         let b := shl(_5, _4)
+//         let _6 := and(shr(4, x), 3855)
+//         let c := shl(_5, _6)
+//         let d := shl(_5, and(shr(255, x), 0))
+//         let e := shl(_3, _6)
 //         let f := 0
 //         let g := 0
 //         sstore(10, a)
 //         sstore(11, b)
-//         sstore(_15, c)
+//         sstore(_5, c)
 //         sstore(13, d)
 //         sstore(14, e)
-//         sstore(_2, f)
+//         sstore(_1, f)
 //         sstore(16, g)
 //     }
 // }

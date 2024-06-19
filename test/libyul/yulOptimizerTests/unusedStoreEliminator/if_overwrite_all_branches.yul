@@ -13,8 +13,8 @@
 // {
 //     {
 //         let c := calldataload(0)
-//         let _2 := 1
-//         if c { let _3 := 2 }
+//         let _1 := 1
+//         if c { let _2 := 2 }
 //         sstore(c, 3)
 //     }
 // }

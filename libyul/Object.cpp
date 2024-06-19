@@ -38,13 +38,14 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-std::string Data::toString(Dialect const*, DebugInfoSelection const&, CharStreamProvider const*) const
+std::string Data::toString(YulNameRepository const&, AsmPrinter::Mode, DebugInfoSelection const&, CharStreamProvider const*) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 std::string Object::toString(
-	Dialect const* _dialect,
+	YulNameRepository const& _yulNameRepository,
+	AsmPrinter::Mode const _printingMode,
 	DebugInfoSelection const& _debugInfoSelection,
 	CharStreamProvider const* _soliditySourceProvider
 ) const
@@ -63,19 +64,20 @@ std::string Object::toString(
 			"\n";
 
 	std::string inner = "code " + AsmPrinter(
-		_dialect,
+		_yulNameRepository,
+		_printingMode,
 		debugData->sourceNames,
 		_debugInfoSelection,
 		_soliditySourceProvider
 	)(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
+		inner += "\n" + obj->toString(_yulNameRepository, _printingMode, _debugInfoSelection, _soliditySourceProvider);
 
 	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
 
-Json Data::toJson() const
+Json Data::toJson(YulNameRepository const&) const
 {
 	Json ret;
 	ret["nodeType"] = "YulData";
@@ -83,21 +85,21 @@ Json Data::toJson() const
 	return ret;
 }
 
-Json Object::toJson() const
+Json Object::toJson(YulNameRepository const& _yulNameRepository) const
 {
 	yulAssert(code, "No code");
 
 	Json codeJson;
-	codeJson["nodeType"] = "YulCode";
-	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(*code);
+	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */, _yulNameRepository)(*code);
 
 	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)
-		subObjectsJson.emplace_back(subObject->toJson());
+		subObjectsJson.emplace_back(subObject->toJson(_yulNameRepository));
 
 	Json ret;
 	ret["nodeType"] = "YulObject";
 	ret["name"] = name.str();
+	codeJson["nodeType"] = "YulCode";
 	ret["code"] = codeJson;
 	ret["subObjects"] = subObjectsJson;
 	return ret;

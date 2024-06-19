@@ -19,7 +19,7 @@
 //         let x := calldataload(_1)
 //         let len := sload(x)
 //         let sum
-//         let i := _1
+//         let i := sum
 //         for { } lt(i, len) { i := add(i, 1) }
 //         {
 //             let p := add(add(x, i), 1)

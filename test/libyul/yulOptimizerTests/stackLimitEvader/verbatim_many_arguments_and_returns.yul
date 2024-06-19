@@ -71,27 +71,27 @@
 //         let a_18 := 18
 //         let a_19 := 19
 //         let a_20 := 20
-//         let b_1_1, b_2_2, b_3_3, b_4_4, b_5_5, b_6_6, b_7_7, b_8_8, b_9_9, b_10_10, b_11_11, b_12_12, b_13_13, b_14_14, b_15_15, b_16_16, b_17_17, b_18_18, b_19_19, b_20_20 := verbatim_20i_20o("test", mload(0x0100), mload(0x0120), mload(0x0140), mload(0x0160), mload(0x0180), mload(0x01a0), mload(0x01c0), mload(0x01e0), mload(0x0200), mload(0x0220), mload(0x0240), mload(0x0260), a_13, a_14, a_15, a_16, a_17, a_18, a_19, a_20)
-//         mstore(0x80, b_4_4)
-//         mstore(0xa0, b_3_3)
-//         mstore(0xc0, b_2_2)
-//         mstore(0xe0, b_1_1)
-//         let b_20 := b_20_20
-//         let b_19 := b_19_19
-//         let b_18 := b_18_18
-//         let b_17 := b_17_17
-//         let b_16 := b_16_16
-//         let b_15 := b_15_15
-//         let b_14 := b_14_14
-//         let b_13 := b_13_13
-//         let b_12 := b_12_12
-//         let b_11 := b_11_11
-//         let b_10 := b_10_10
-//         let b_9 := b_9_9
-//         let b_8 := b_8_8
-//         let b_7 := b_7_7
-//         let b_6 := b_6_6
-//         let b_5 := b_5_5
+//         let b_1, b_2, b_3, b_4, b_5_1, b_6_1, b_7_1, b_8_1, b_9_1, b_10_1, b_11_1, b_12_1, b_13_1, b_14_1, b_15_1, b_16_1, b_17_1, b_18_1, b_19_1, b_20_1 := verbatim_20i_20o("test", mload(0x0100), mload(0x0120), mload(0x0140), mload(0x0160), mload(0x0180), mload(0x01a0), mload(0x01c0), mload(0x01e0), mload(0x0200), mload(0x0220), mload(0x0240), mload(0x0260), a_13, a_14, a_15, a_16, a_17, a_18, a_19, a_20)
+//         mstore(0x80, b_4)
+//         mstore(0xa0, b_3)
+//         mstore(0xc0, b_2)
+//         mstore(0xe0, b_1)
+//         let b_20 := b_20_1
+//         let b_19 := b_19_1
+//         let b_18 := b_18_1
+//         let b_17 := b_17_1
+//         let b_16 := b_16_1
+//         let b_15 := b_15_1
+//         let b_14 := b_14_1
+//         let b_13 := b_13_1
+//         let b_12 := b_12_1
+//         let b_11 := b_11_1
+//         let b_10 := b_10_1
+//         let b_9 := b_9_1
+//         let b_8 := b_8_1
+//         let b_7 := b_7_1
+//         let b_6 := b_6_1
+//         let b_5 := b_5_1
 //         sstore(1, mload(0xe0))
 //         sstore(2, mload(0xc0))
 //         sstore(3, mload(0xa0))

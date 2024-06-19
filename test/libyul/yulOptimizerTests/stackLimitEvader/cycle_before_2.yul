@@ -64,9 +64,9 @@
 //         case 0 { v := h(x) }
 //         case 1 { v := g(sub(x, f())) }
 //     }
-//     function h(x_1) -> v_2
-//     { v_2 := g(x_1) }
-//     function f() -> v_3
+//     function h(x_1) -> v_1
+//     { v_1 := g(x_1) }
+//     function f() -> v_2
 //     {
 //         mstore(0x80, calldataload(mul(1, 4)))
 //         let a2 := calldataload(mul(2, 4))

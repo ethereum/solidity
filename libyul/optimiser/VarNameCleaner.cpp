@@ -30,7 +30,7 @@
 #include <limits>
 
 using namespace solidity::yul;
-
+/*
 VarNameCleaner::VarNameCleaner(
 	Block const& _ast,
 	Dialect const& _dialect,
@@ -123,3 +123,4 @@ YulString VarNameCleaner::stripSuffix(YulString const& _name) const
 		return {YulString{suffixMatch.prefix().str()}};
 	return _name;
 }
+*/

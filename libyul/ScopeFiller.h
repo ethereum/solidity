@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
+#include <libyul/YulName.h>
 
 #include <functional>
 #include <memory>
@@ -46,7 +47,7 @@ struct AsmAnalysisInfo;
 class ScopeFiller
 {
 public:
-	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter);
+	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter, YulNameRepository const& _yulNameRegistry);
 
 	bool operator()(Literal const&) { return true; }
 	bool operator()(Identifier const&) { return true; }
@@ -64,6 +65,7 @@ public:
 	bool operator()(Block const& _block);
 
 private:
+	YulNameRepository const& m_yulNameRegistry;
 	bool registerVariable(
 		TypedName const& _name,
 		langutil::SourceLocation const& _location,

@@ -72,7 +72,8 @@ TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::strin
 	EVMObjectCompiler::compile(
 		*stack.parserResult(),
 		adapter,
-		EVMDialect::strictAssemblyForEVMObjects(EVMVersion{}),
+		*stack.yulNameRepository(),
+		dynamic_cast<EVMDialect const&>(stack.yulNameRepository()->dialect()),
 		m_stackOpt,
 		std::nullopt
 	);

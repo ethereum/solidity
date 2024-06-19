@@ -35,8 +35,8 @@
 //         let a := 0
 //         for { } a { }
 //         {
-//             let _1 := add(a, a)
-//             let var := add(_1, _1)
+//             let _2 := add(a, a)
+//             let var := add(_2, _2)
 //             switch a
 //             case 0 { a := var }
 //             default { sstore(0, var) }

@@ -18,17 +18,17 @@
 //     let a := a_1
 //     let a_2 := 2
 //     a := a_2
-//     let b_3 := 3
-//     let b := b_3
-//     let b_4 := 4
-//     b := b_4
+//     let b_1 := 3
+//     let b := b_1
+//     let b_2 := 4
+//     b := b_2
 //     {
-//         let a_5 := 3
-//         a := a_5
-//         let a_6 := 4
-//         a := a_6
+//         let a_3 := 3
+//         a := a_3
+//         let a_4 := 4
+//         a := a_4
 //     }
-//     let a_8 := a
-//     let a_7 := add(b_4, a_8)
-//     a := a_7
+//     let a_6 := a
+//     let a_5 := add(b_2, a_6)
+//     a := a_5
 // }

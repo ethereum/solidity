@@ -113,10 +113,10 @@ private:
 class CodeCost: public ASTWalker
 {
 public:
-	static size_t codeCost(Dialect const& _dialect, Expression const& _expression);
+	static size_t codeCost(YulNameRepository const& _yulNameRepository, Expression const& _expression);
 
 private:
-	CodeCost(Dialect const& _dialect): m_dialect(_dialect) {}
+	CodeCost(YulNameRepository const& _yulNameRepository): m_yulNameRepository(_yulNameRepository) {}
 
 	void operator()(FunctionCall const& _funCall) override;
 	void operator()(Literal const& _literal) override;
@@ -126,7 +126,7 @@ private:
 private:
 	void addInstructionCost(evmasm::Instruction _instruction);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	size_t m_cost = 0;
 };
 
@@ -139,9 +139,9 @@ class AssignmentCounter: public ASTWalker
 public:
 	using ASTWalker::operator();
 	void operator()(Assignment const& _assignment) override;
-	std::size_t assignmentCount(YulString _name) const;
+	std::size_t assignmentCount(YulName _name) const;
 private:
-	std::map<YulString, size_t> m_assignmentCounters;
+	std::map<YulName, size_t> m_assignmentCounters;
 };
 
 }

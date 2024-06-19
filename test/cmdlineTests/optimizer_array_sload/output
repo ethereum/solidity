@@ -4,12 +4,12 @@ object "Arraysum_34" {
     code {
         {
             /// @src 0:80:429  "contract Arraysum {..."
-            let _1 := memoryguard(0x80)
-            mstore(64, _1)
+            let _2 := memoryguard(0x80)
+            mstore(64, _2)
             if callvalue() { revert(0, 0) }
-            let _2 := datasize("Arraysum_34_deployed")
-            codecopy(_1, dataoffset("Arraysum_34_deployed"), _2)
-            return(_1, _2)
+            let _1 := datasize("Arraysum_34_deployed")
+            codecopy(_2, dataoffset("Arraysum_34_deployed"), _1)
+            return(_2, _1)
         }
     }
     /// @use-src 0:"optimizer_array_sload/input.sol"
@@ -24,11 +24,11 @@ object "Arraysum_34" {
                     {
                         if callvalue() { revert(0, 0) }
                         if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
-                        let var_sum := 0
+                        let var_sum_8 := 0
                         /// @src 0:175:182  "sum = 0"
-                        var_sum := /** @src 0:80:429  "contract Arraysum {..." */ 0
+                        var_sum_8 := /** @src 0:80:429  "contract Arraysum {..." */ 0
                         /// @src 0:368:378  "uint i = 0"
-                        let var_i := /** @src 0:80:429  "contract Arraysum {..." */ 0
+                        let var_i_15 := /** @src 0:80:429  "contract Arraysum {..." */ 0
                         let _1 := sload(0)
                         /// @src 0:364:423  "for(uint i = 0; i < values.length; i++)..."
                         for { }
@@ -36,29 +36,29 @@ object "Arraysum_34" {
                         /// @src 0:368:378  "uint i = 0"
                         {
                             /// @src 0:399:402  "i++"
-                            var_i := /** @src 0:80:429  "contract Arraysum {..." */ add(/** @src 0:399:402  "i++" */ var_i, /** @src 0:80:429  "contract Arraysum {..." */ 1)
+                            var_i_15 := /** @src 0:80:429  "contract Arraysum {..." */ add(/** @src 0:399:402  "i++" */ var_i_15, /** @src 0:80:429  "contract Arraysum {..." */ 1)
                         }
                         /// @src 0:399:402  "i++"
                         {
                             /// @src 0:380:397  "i < values.length"
-                            let _2 := iszero(lt(var_i, _1))
+                            let _2 := iszero(lt(var_i_15, _1))
                             if _2 { break }
                             /// @src 0:80:429  "contract Arraysum {..."
                             _2 := 0
                             mstore(0, 0)
-                            let sum := add(var_sum, sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i)))
-                            if gt(var_sum, sum)
+                            let sum := add(var_sum_8, sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i_15)))
+                            if gt(var_sum_8, sum)
                             {
                                 mstore(0, shl(224, 0x4e487b71))
                                 mstore(4, 0x11)
                                 revert(0, 0x24)
                             }
                             /// @src 0:407:423  "sum += values[i]"
-                            var_sum := sum
+                            var_sum_8 := sum
                         }
                         /// @src 0:80:429  "contract Arraysum {..."
                         let memPos := mload(64)
-                        mstore(memPos, var_sum)
+                        mstore(memPos, var_sum_8)
                         return(memPos, 0x20)
                     }
                 }

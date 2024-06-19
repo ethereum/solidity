@@ -78,6 +78,7 @@ public:
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
+		YulNameRepository const& _yulNameRepository,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		bool _allowStackOpt = false,
@@ -88,6 +89,7 @@ public:
 		_analysisInfo,
 		_block,
 		_allowStackOpt,
+		_yulNameRepository,
 		_dialect,
 		_builtinContext,
 		_identifierAccessCodeGen,
@@ -109,6 +111,7 @@ protected:
 		AsmAnalysisInfo& _analysisInfo,
 		Block const& _block,
 		bool _allowStackOpt,
+		YulNameRepository const& _yulNameRepository,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
@@ -118,7 +121,7 @@ protected:
 		std::optional<AbstractAssembly::LabelID> _functionExitLabel
 	);
 
-	void decreaseReference(YulString _name, Scope::Variable const& _var);
+	void decreaseReference(YulName _name, Scope::Variable const& _var);
 	bool unreferenced(Scope::Variable const& _var) const;
 	/// Marks slots of variables that are not used anymore
 	/// and were defined in the current scope for reuse.
@@ -165,10 +168,10 @@ private:
 	/// the (positive) stack height difference otherwise.
 	/// @param _forSwap if true, produces stack error if the difference is invalid for a swap
 	///                 opcode, otherwise checks for validity for a dup opcode.
-	size_t variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
+	size_t variableHeightDiff(Scope::Variable const& _var, YulName _name, bool _forSwap);
 
 	/// Determines the stack height of the given variable. Throws if the variable is not in scope.
-	int variableStackHeight(YulString _name) const;
+	int variableStackHeight(YulName _name) const;
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
@@ -194,11 +197,12 @@ private:
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
+	YulNameRepository const& m_yulNameRepository;
 	EVMDialect const& m_dialect;
 	BuiltinContext& m_builtinContext;
 	bool const m_allowStackOpt = true;
 	UseNamedLabels const m_useNamedLabelsForFunctions = UseNamedLabels::Never;
-	std::set<YulString> m_assignedNamedLabels;
+	std::set<YulName> m_assignedNamedLabels;
 	ExternalIdentifierAccess::CodeGenerator m_identifierAccessCodeGen;
 	std::shared_ptr<Context> m_context;
 

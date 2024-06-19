@@ -28,11 +28,11 @@
 //         mstore(a, inv)
 //     }
 //     let a_1 := 1
-//     let inv_2 := add(b, 42)
+//     let inv_1 := add(b, 42)
 //     for { } iszero(eq(a_1, 10)) { a_1 := add(a_1, 1) }
 //     {
-//         let x_3 := extcodesize(mload(mul(inv_2, 3)))
-//         a_1 := add(x_3, 1)
-//         mstore(a_1, inv_2)
+//         let x_1 := extcodesize(mload(mul(inv_1, 3)))
+//         a_1 := add(x_1, 1)
+//         mstore(a_1, inv_1)
 //     }
 // }

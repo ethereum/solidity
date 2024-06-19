@@ -41,12 +41,12 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 		if (type.empty())
 		{
 			m_indexBoundaries.beginTypes = 0;
-			m_dialectTypes.emplace_back(emptyName(), type.str());
+			m_dialectTypes.emplace_back(emptyName(), type);
 		}
 		else
 		{
 			m_indexBoundaries.beginTypes = 1;
-			m_dialectTypes.emplace_back(defineName(type.str()), type.str());
+			m_dialectTypes.emplace_back(defineName(type), type);
 		}
 	m_indexBoundaries.endTypes = m_index;
 	m_indexBoundaries.beginBuiltins = m_index;
@@ -57,13 +57,13 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 		if (!label.empty())
 		{
 			auto const name = defineName(label);
-			if (auto const* function = m_dialect.get().builtin(YulString(label)))
+			if (auto const* function = m_dialect.get().builtin(label))
 				m_builtinFunctions[name] = convertBuiltinFunction(name, *function);
 		}
 	m_indexBoundaries.endBuiltins = m_index;
 
-	m_predefined.boolType = nameOfType(_dialect.boolType.str());
-	m_predefined.defaultType = nameOfType(_dialect.defaultType.str());
+	m_predefined.boolType = nameOfType(_dialect.boolType);
+	m_predefined.defaultType = nameOfType(_dialect.defaultType);
 
 	auto const predefinedName = [&](std::string const& label)
 	{
@@ -88,42 +88,42 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 
 		for (auto const& [typeName, typeLabel]: types)
 		{
-			if (auto const* discardFunction = m_dialect.get().discardFunction(YulString(typeLabel)))
-				m_predefinedBuiltinFunctions.discardFunctions.emplace_back(nameOfBuiltin(discardFunction->name.str()));
+			if (auto const* discardFunction = m_dialect.get().discardFunction(typeLabel))
+				m_predefinedBuiltinFunctions.discardFunctions.emplace_back(nameOfBuiltin(discardFunction->name));
 			else
 				m_predefinedBuiltinFunctions.discardFunctions.emplace_back(std::nullopt);
 
-			if (auto const* equalityFunction = m_dialect.get().equalityFunction(YulString(typeLabel)))
-				m_predefinedBuiltinFunctions.equalityFunctions.emplace_back(nameOfBuiltin(equalityFunction->name.str()));
+			if (auto const* equalityFunction = m_dialect.get().equalityFunction(typeLabel))
+				m_predefinedBuiltinFunctions.equalityFunctions.emplace_back(nameOfBuiltin(equalityFunction->name));
 			else
 				m_predefinedBuiltinFunctions.equalityFunctions.emplace_back(std::nullopt);
 
 			if (auto const* booleanNegationFunction = m_dialect.get().booleanNegationFunction())
-				m_predefinedBuiltinFunctions.booleanNegationFunction = nameOfBuiltin(booleanNegationFunction->name.str());
+				m_predefinedBuiltinFunctions.booleanNegationFunction = nameOfBuiltin(booleanNegationFunction->name);
 			else
 				m_predefinedBuiltinFunctions.booleanNegationFunction = std::nullopt;
 
-			if (auto const* memStoreFunction = m_dialect.get().memoryStoreFunction(YulString(typeLabel)))
-				m_predefinedBuiltinFunctions.memoryStoreFunctions.emplace_back(nameOfBuiltin(memStoreFunction->name.str()));
+			if (auto const* memStoreFunction = m_dialect.get().memoryStoreFunction(typeLabel))
+				m_predefinedBuiltinFunctions.memoryStoreFunctions.emplace_back(nameOfBuiltin(memStoreFunction->name));
 			else
 				m_predefinedBuiltinFunctions.memoryStoreFunctions.emplace_back(std::nullopt);
 
-			if (auto const* memLoadFunction = m_dialect.get().memoryLoadFunction(YulString(typeLabel)))
-				m_predefinedBuiltinFunctions.memoryLoadFunctions.emplace_back(nameOfBuiltin(memLoadFunction->name.str()));
+			if (auto const* memLoadFunction = m_dialect.get().memoryLoadFunction(typeLabel))
+				m_predefinedBuiltinFunctions.memoryLoadFunctions.emplace_back(nameOfBuiltin(memLoadFunction->name));
 			else
 				m_predefinedBuiltinFunctions.memoryLoadFunctions.emplace_back(std::nullopt);
 
-			if (auto const* storageStoreFunction = m_dialect.get().storageStoreFunction(YulString(typeLabel)))
-				m_predefinedBuiltinFunctions.storageStoreFunctions.emplace_back(nameOfBuiltin(storageStoreFunction->name.str()));
+			if (auto const* storageStoreFunction = m_dialect.get().storageStoreFunction(typeLabel))
+				m_predefinedBuiltinFunctions.storageStoreFunctions.emplace_back(nameOfBuiltin(storageStoreFunction->name));
 			else
 				m_predefinedBuiltinFunctions.storageStoreFunctions.emplace_back(std::nullopt);
 
-			if (auto const* storageLoadFunction = m_dialect.get().storageLoadFunction(YulString(typeLabel)))
-				m_predefinedBuiltinFunctions.storageLoadFunctions.emplace_back(nameOfBuiltin(storageLoadFunction->name.str()));
+			if (auto const* storageLoadFunction = m_dialect.get().storageLoadFunction(typeLabel))
+				m_predefinedBuiltinFunctions.storageLoadFunctions.emplace_back(nameOfBuiltin(storageLoadFunction->name));
 			else
 				m_predefinedBuiltinFunctions.storageLoadFunctions.emplace_back(std::nullopt);
 
-			m_predefinedBuiltinFunctions.hashFunctions.emplace_back(nameOfBuiltin(m_dialect.get().hashFunction(YulString(typeLabel)).str()));
+			m_predefinedBuiltinFunctions.hashFunctions.emplace_back(nameOfBuiltin(m_dialect.get().hashFunction(typeLabel)));
 		}
 	}
 
@@ -158,7 +158,7 @@ std::optional<std::string_view> YulNameRepository::labelOf(YulName const _name) 
 	{
 		auto const* builtinFun = builtin(_name);
 		yulAssert(builtinFun);
-		return builtinFun->data->name.str();
+		return builtinFun->data->name;
 	}
 	return std::nullopt;
 }
@@ -245,9 +245,9 @@ YulNameRepository::BuiltinFunction YulNameRepository::convertBuiltinFunction(Yul
 	BuiltinFunction result;
 	result.name = _name;
 	for (auto const& type: _builtin.parameters)
-		result.parameters.push_back(nameOfType(type.str()));
+		result.parameters.push_back(nameOfType(type));
 	for (auto const& type: _builtin.returns)
-		result.returns.push_back(nameOfType(type.str()));
+		result.returns.push_back(nameOfType(type));
 	result.data = &_builtin;
 	return result;
 }
@@ -312,9 +312,9 @@ bool YulNameRepository::isVerbatimFunction(YulName const _name) const
 
 YulName YulNameRepository::defineName(std::string_view const _label)
 {
-	if (auto const* builtin = m_dialect.get().builtin(YulString(std::string(_label))))
+	if (auto const* builtin = m_dialect.get().builtin(_label))
 	{
-		if (builtin->name.str().substr(0, std::string_view("verbatim").size()) == "verbatim")
+		if (builtin->name.substr(0, std::string_view("verbatim").size()) == "verbatim")
 		{
 			auto const key = std::make_tuple(builtin->parameters.size(), builtin->returns.size());
 			auto [it, emplaced] = m_verbatimNames.try_emplace(key);
@@ -423,10 +423,9 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 	}
 }
 
-// commented out for the time being until the AST is refactored to use YulName over YulString
-// void YulNameRepository::generateLabels(Block const& _ast, std::set<std::string> const& _illegal)
-// {
-// 	generateLabels(NameCollector(_ast).names(), _illegal);
-// }
+void YulNameRepository::generateLabels(Block const& _ast, std::set<std::string> const& _illegal)
+{
+	generateLabels(NameCollector(_ast).names(), _illegal);
+}
 
 }

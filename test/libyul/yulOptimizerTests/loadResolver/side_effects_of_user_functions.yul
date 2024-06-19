@@ -17,11 +17,11 @@
 //         let _2 := 2
 //         mstore(_2, _1)
 //         reads()
-//         let _4 := _1
-//         let _5 := 0
-//         sstore(_5, _4)
+//         let _3 := _1
+//         let _4 := 0
+//         sstore(_4, _3)
 //         stores()
-//         sstore(_5, mload(_2))
+//         sstore(_4, mload(_2))
 //     }
 //     function stores()
 //     { mstore(0, 1) }

@@ -24,6 +24,7 @@ namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 struct Block;
+class YulNameRepository;
 }
 
 namespace solidity::yul::test
@@ -47,6 +48,7 @@ private:
 
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<const YulNameRepository> m_yulNameRepository;
 	bool m_simulateExternalCallsToSelf = false;
 };
 

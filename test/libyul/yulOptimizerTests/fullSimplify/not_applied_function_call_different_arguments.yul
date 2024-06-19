@@ -7,9 +7,9 @@
 //
 // {
 //     {
-//         let _2 := f(1)
-//         let _3 := 0
-//         mstore(_3, sub(f(_3), _2))
+//         let _1 := f(1)
+//         let _2 := 0
+//         mstore(_2, sub(f(_2), _1))
 //     }
 //     function f(a) -> b
 //     { }

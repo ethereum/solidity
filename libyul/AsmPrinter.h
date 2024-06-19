@@ -25,6 +25,7 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -33,6 +34,7 @@
 #include <liblangutil/DebugData.h>
 
 #include <map>
+#include <utility>
 
 namespace solidity::yul
 {
@@ -46,13 +48,21 @@ struct Dialect;
 class AsmPrinter
 {
 public:
+	enum class Mode
+	{
+		OmitDefaultType,
+		FullTypeInfo
+	};
+
 	explicit AsmPrinter(
-		Dialect const* _dialect = nullptr,
+		YulNameRepository const& _nameRepository,
+		Mode const _printingMode = Mode::FullTypeInfo,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
-		m_dialect(_dialect),
+		m_nameRepository(_nameRepository),
+		m_printingMode(_printingMode),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{
@@ -60,13 +70,6 @@ public:
 			for (auto&& [index, name]: *_sourceIndexToName)
 				m_nameToSourceIndex[*name] = index;
 	}
-
-	explicit AsmPrinter(
-		Dialect const& _dialect,
-		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
-		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
-		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
-	): AsmPrinter(&_dialect, _sourceIndexToName, _debugInfoSelection, _soliditySourceProvider) {}
 
 	std::string operator()(Literal const& _literal);
 	std::string operator()(Identifier const& _identifier);
@@ -91,8 +94,8 @@ public:
 	);
 
 private:
-	std::string formatTypedName(TypedName _variable);
-	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
+	std::string formatTypedName(TypedName const& _variable);
+	std::string appendTypeName(Type _type, bool _isBoolLiteral = false) const;
 	std::string formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement);
 	template <class T>
 	std::string formatDebugData(T const& _node)
@@ -101,7 +104,8 @@ private:
 		return formatDebugData(_node.debugData, !isExpression);
 	}
 
-	Dialect const* const m_dialect = nullptr;
+	YulNameRepository const& m_nameRepository;
+	Mode const m_printingMode;
 	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
 	langutil::DebugInfoSelection m_debugInfoSelection = {};

@@ -82,23 +82,24 @@ FunctionSideEffects::FunctionSideEffects(std::string const& _filename):
 
 TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
 {
+	std::shared_ptr<YulNameRepository> nameRepository;
 	Object obj;
-	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(m_source, false);
+	std::tie(obj.code, obj.analysisInfo, nameRepository) = yul::test::parse(m_source, false);
 	if (!obj.code)
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
-	std::map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
+	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+		*nameRepository,
 		CallGraphGenerator::callGraph(*obj.code)
 	);
 
-	std::map<std::string, std::string> functionSideEffectsStr;
+	std::map<std::string_view, std::string> functionSideEffectsStr;
 	for (auto const& fun: functionSideEffects)
-		functionSideEffectsStr[fun.first.str()] = toString(fun.second);
+		functionSideEffectsStr[nameRepository->labelOf(fun.first)] = toString(fun.second);
 
 	m_obtainedResult.clear();
 	for (auto const& fun: functionSideEffectsStr)
-		m_obtainedResult += fun.first + ":" + (fun.second.empty() ? "" : " ") + fun.second + "\n";
+		m_obtainedResult += std::string(fun.first) + ":" + (fun.second.empty() ? "" : " ") + fun.second + "\n";
 
 	return checkResult(_stream, _linePrefix, _formatted);
 }

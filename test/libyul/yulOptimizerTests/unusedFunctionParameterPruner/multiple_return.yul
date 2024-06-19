@@ -19,6 +19,6 @@
 //         y := mload(1)
 //         z := mload(2)
 //     }
-//     function f_1(d_2) -> x_3, y_4, z_5
-//     { y_4, z_5 := f() }
+//     function f_1(d) -> x, y_1, z_1
+//     { y_1, z_1 := f() }
 // }

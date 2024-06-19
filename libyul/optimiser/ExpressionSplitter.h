@@ -24,7 +24,6 @@
 #include <libyul/ASTForward.h>
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/NameDispenser.h>
 
 #include <vector>
 
@@ -70,12 +69,10 @@ public:
 
 private:
 	explicit ExpressionSplitter(
-		Dialect const& _dialect,
-		NameDispenser& _nameDispenser,
+		YulNameRepository& _yulNameRepository,
 		TypeInfo& _typeInfo
 	):
-		m_dialect(_dialect),
-		m_nameDispenser(_nameDispenser),
+		m_yulNameRepository(_yulNameRepository),
 		m_typeInfo(_typeInfo)
 	{ }
 
@@ -87,8 +84,7 @@ private:
 	/// List of statements that should go in front of the currently visited AST element,
 	/// at the statement level.
 	std::vector<Statement> m_statementsToPrefix;
-	Dialect const& m_dialect;
-	NameDispenser& m_nameDispenser;
+	YulNameRepository& m_yulNameRepository;
 	TypeInfo& m_typeInfo;
 };
 

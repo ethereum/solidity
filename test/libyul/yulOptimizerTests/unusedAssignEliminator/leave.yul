@@ -31,10 +31,10 @@
 //         if b { leave }
 //         x := 8
 //     }
-//     function g(a_1, b_2) -> x_3
+//     function g(a_1, b_1) -> x_1
 //     {
-//         let t_4
-//         if b_2 { }
-//         x_3 := 8
+//         let t_1
+//         if b_1 { }
+//         x_1 := 8
 //     }
 // }

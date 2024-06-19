@@ -25,15 +25,15 @@
 //         let b := mload(1)
 //         switch mload(2)
 //         case 0 {
-//             let a_3 := mload(b)
-//             let b_4 := mload(a_3)
-//             a := mload(b_4)
+//             let a_1 := mload(b)
+//             let b_1 := mload(a_1)
+//             a := mload(b_1)
 //             b := mload(a)
 //         }
 //         default {
-//             let b_7 := mload(a)
-//             let a_8 := mload(b_7)
-//             b := mload(a_8)
+//             let b_2 := mload(a)
+//             let a_2 := mload(b_2)
+//             b := mload(a_2)
 //             a := mload(b)
 //         }
 //         mstore(a, b)

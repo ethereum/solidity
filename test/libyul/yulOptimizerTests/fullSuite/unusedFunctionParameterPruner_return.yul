@@ -21,9 +21,9 @@
 //
 // {
 //     {
-//         let out1, out2 := foo(sload(32))
+//         let out1_1, out2_1 := foo(sload(32))
 //         sstore(0, 0)
-//         let out1_1, out2_1 := foo(sload(8))
+//         let out1_2, out2_2 := foo(sload(8))
 //     }
 //     function foo(b) -> out1, out2
 //     {

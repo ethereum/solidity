@@ -10,12 +10,12 @@
 //
 // {
 //     {
-//         let _2 := mload(7)
-//         let a_7 := sload(mload(2))
-//         let x_8 := 0
-//         let r_9 := mul(a_7, a_7)
-//         x_8 := add(r_9, r_9)
-//         let y := add(x_8, _2)
+//         let _1 := mload(7)
+//         let a_1 := sload(mload(2))
+//         let x_1 := 0
+//         let r_1 := mul(a_1, a_1)
+//         x_1 := add(r_1, r_1)
+//         let y := add(x_1, _1)
 //     }
 //     function f(a) -> x
 //     {

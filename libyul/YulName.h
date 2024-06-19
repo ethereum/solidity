@@ -154,10 +154,19 @@ public:
 	/// This will change the state of all derived names in _usedNames to "not derived" with a label associated to them.
 	void generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal = {});
 
-	// commented out for the time being, as it requires AST refactoring to be YulName-based
-	// void generateLabels(Block const& _ast, std::set<std::string> const& _illegal = {});
+	void generateLabels(Block const& _ast, std::set<std::string> const& _illegal = {});
 
 private:
+	bool nameWithinBounds(YulName const _name) const { return _name < m_index; }
+
+	size_t indexOfType(YulName _type) const;
+	BuiltinFunction convertBuiltinFunction(YulName _name, yul::BuiltinFunction const& _builtin) const;
+	BuiltinFunction const* fetchTypedPredefinedFunction(YulName _type, std::vector<std::optional<YulName>> const& _functions) const;
+
+	Dialect const& m_dialect;
+	std::vector<std::tuple<YulName, std::string>> m_dialectTypes;
+	std::map<YulName, BuiltinFunction> m_builtinFunctions;
+
 	struct PredefinedBuiltinFunctions
 	{
 		std::vector<std::optional<YulName>> discardFunctions;
@@ -198,5 +207,6 @@ private:
 	IndexBoundaries m_indexBoundaries;
 };
 using YulName = YulNameRepository::YulName;
+using Type = YulName;
 
 }

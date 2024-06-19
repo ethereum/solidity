@@ -29,6 +29,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
+#include <libyul/YulName.h>
 
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/tail.hpp>
@@ -38,6 +39,7 @@
 
 #include <functional>
 #include <utility>
+#include <memory>
 
 using namespace solidity;
 using namespace solidity::frontend;
@@ -1059,6 +1061,24 @@ TryCatchClause const* TryStatement::errorClause() const {
 TryCatchClause const* TryStatement::fallbackClause() const {
 	return findClause(m_clauses);
 }
+
+InlineAssembly::InlineAssembly(
+	int64_t _id,
+	SourceLocation const& _location,
+	ASTPointer<ASTString> const& _docString,
+	std::unique_ptr<yul::YulNameRepository> _yulNameRepository,
+	ASTPointer<std::vector<ASTPointer<ASTString>>> _flags,
+	std::shared_ptr<yul::Block> _operations
+):
+	Statement(_id, _location, _docString),
+	m_yulNameRepository(std::move(_yulNameRepository)),
+	m_flags(std::move(_flags)),
+	m_operations(std::move(_operations))
+{
+	solAssert(m_yulNameRepository != nullptr);
+}
+
+InlineAssembly::~InlineAssembly() = default;
 
 /// Experimental Solidity nodes
 /// @{

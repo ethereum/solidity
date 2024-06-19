@@ -47,7 +47,7 @@ public:
 	/// Try to remove local variables until the AST is compilable.
 	/// @returns true if it was successful.
 	static bool run(
-		Dialect const& _dialect,
+		YulNameRepository& _yulNameRepository,
 		Object& _object,
 		bool _optimizeStackAllocation,
 		size_t _maxIterations

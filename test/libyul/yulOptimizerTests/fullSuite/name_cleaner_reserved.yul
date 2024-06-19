@@ -18,16 +18,16 @@
 // {
 //     {
 //         pop(mstore_(7))
-//         nonmstore(70)
+//         nonmstore_(70)
 //     }
-//     function nonmstore(x)
+//     function nonmstore_(x)
 //     {
-//         if calldataload(0) { nonmstore(x) }
+//         if calldataload(0) { nonmstore_(x) }
 //         sstore(10, calldataload(2))
 //     }
-//     function mstore_(x) -> y
+//     function mstore_(x_1) -> y
 //     {
-//         if calldataload(0) { pop(mstore_(x)) }
+//         if calldataload(0) { pop(mstore_(x_1)) }
 //         y := 8
 //         sstore(8, calldataload(8))
 //     }

@@ -31,18 +31,18 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-void Rematerialiser::run(Dialect const& _dialect, Block& _ast, std::set<YulString> _varsToAlwaysRematerialize, bool _onlySelectedVariables)
+void Rematerialiser::run(YulNameRepository const& _yulNameRepository, Block& _ast, std::set<YulName> _varsToAlwaysRematerialize, bool _onlySelectedVariables)
 {
-	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_ast);
+	Rematerialiser{_yulNameRepository, _ast, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_ast);
 }
 
 Rematerialiser::Rematerialiser(
-	Dialect const& _dialect,
+	YulNameRepository const& _yulNameRepository,
 	Block& _ast,
-	std::set<YulString> _varsToAlwaysRematerialize,
+	std::set<YulName> _varsToAlwaysRematerialize,
 	bool _onlySelectedVariables
 ):
-	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore),
+	DataFlowAnalyzer(_yulNameRepository, MemoryAndStorage::Ignore),
 	m_referenceCounts(VariableReferencesCounter::countReferences(_ast)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
 	m_onlySelectedVariables(_onlySelectedVariables)
@@ -54,12 +54,12 @@ void Rematerialiser::visit(Expression& _e)
 	if (std::holds_alternative<Identifier>(_e))
 	{
 		Identifier& identifier = std::get<Identifier>(_e);
-		YulString name = identifier.name;
+		YulName name = identifier.name;
 		if (AssignedValue const* value = variableValue(name))
 		{
 			assertThrow(value->value, OptimizerException, "");
 			size_t refs = m_referenceCounts[name];
-			size_t cost = CodeCost::codeCost(m_dialect, *value->value);
+			size_t cost = CodeCost::codeCost(m_yulNameRepository, *value->value);
 			if (
 				(
 					!m_onlySelectedVariables && (
@@ -93,7 +93,7 @@ void LiteralRematerialiser::visit(Expression& _e)
 	if (std::holds_alternative<Identifier>(_e))
 	{
 		Identifier& identifier = std::get<Identifier>(_e);
-		YulString name = identifier.name;
+		YulName name = identifier.name;
 		if (AssignedValue const* value = variableValue(name))
 		{
 			assertThrow(value->value, OptimizerException, "");

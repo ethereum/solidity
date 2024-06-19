@@ -42,15 +42,15 @@
 //         x := g(1)
 //         x := add(x, 1)
 //     }
-//     function f_1(a_3) -> x_4
-//     { x_4 := f() }
+//     function f_1(a) -> x_1
+//     { x_1 := f() }
 //     function j() -> w
 //     {
 //         w := 13
 //         w := add(13, 1)
 //     }
-//     function j_2(d_5) -> w_6
-//     { w_6 := j() }
+//     function j_1(d) -> w_1
+//     { w_1 := j() }
 //     function h(c) -> u
-//     { u := j_2(c) }
+//     { u := j_1(c) }
 // }

@@ -38,17 +38,17 @@ using namespace solidity::util;
 void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	CommonSubexpressionEliminator cse{
-		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
+		_context.yulNameRepository,
+		SideEffectsPropagator::sideEffects(_context.yulNameRepository, CallGraphGenerator::callGraph(_ast))
 	};
 	cse(_ast);
 }
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
-	Dialect const& _dialect,
-	std::map<YulString, SideEffects> _functionSideEffects
+	YulNameRepository const& _yulNameRepository,
+	std::map<YulName, SideEffects> _functionSideEffects
 ):
-	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
+	DataFlowAnalyzer(_yulNameRepository, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {
 }
 
@@ -72,13 +72,13 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	{
 		FunctionCall& funCall = std::get<FunctionCall>(_e);
 
-		if (BuiltinFunction const* builtin = m_dialect.builtin(funCall.functionName.name))
+		if (auto const* builtin = m_yulNameRepository.builtin(funCall.functionName.name))
 		{
 			for (size_t i = funCall.arguments.size(); i > 0; i--)
 				// We should not modify function arguments that have to be literals
 				// Note that replacing the function call entirely is fine,
 				// if the function call is movable.
-				if (!builtin->literalArgument(i - 1))
+				if (!builtin->data->literalArgument(i - 1))
 					visit(funCall.arguments[i - 1]);
 
 			descend = false;
@@ -95,7 +95,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 
 	if (Identifier const* identifier = std::get_if<Identifier>(&_e))
 	{
-		YulString identifierName = identifier->name;
+		YulName identifierName = identifier->name;
 		if (AssignedValue const* assignedValue = variableValue(identifierName))
 		{
 			assertThrow(assignedValue->value, OptimizerException, "");
@@ -126,7 +126,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 			}
 }
 
-void CommonSubexpressionEliminator::assignValue(YulString _variable, Expression const* _value)
+void CommonSubexpressionEliminator::assignValue(YulName _variable, Expression const* _value)
 {
 	if (_value)
 		m_replacementCandidates[*_value].insert(_variable);

@@ -52,11 +52,11 @@ static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 namespace
 {
 /// @returns true if there are recursive functions, false otherwise.
-bool recursiveFunctionExists(Dialect const& _dialect, yul::Object& _object)
+bool recursiveFunctionExists(YulNameRepository const& _nameRepository, yul::Object& _object)
 {
 	auto recursiveFunctions = CallGraphGenerator::callGraph(*_object.code).recursiveFunctions();
 	for(auto&& [function, variables]: CompilabilityChecker{
-			_dialect,
+			_nameRepository,
 			_object,
 			true
 		}.unreachableVariables
@@ -93,6 +93,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 
 	YulStringRepository::reset();
+	YulNameRepository nameRepository (EVMDialect::strictAssemblyForEVMObjects(version));
 
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::full();
 	settings.runYulOptimiser = false;
@@ -106,7 +107,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		unoptimisedByteCode = assembler.assemble();
 		auto yulObject = assembler.object();
 		recursiveFunction = recursiveFunctionExists(
-			EVMDialect::strictAssemblyForEVMObjects(version),
+			nameRepository,
 			*yulObject
 		);
 	}

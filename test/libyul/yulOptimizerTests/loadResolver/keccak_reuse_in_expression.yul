@@ -8,7 +8,7 @@
 // {
 //     {
 //         let _1 := 0
-//         let _3 := keccak256(_1, calldataload(_1))
-//         sstore(_3, _3)
+//         let _2 := keccak256(_1, calldataload(_1))
+//         sstore(_2, _2)
 //     }
 // }

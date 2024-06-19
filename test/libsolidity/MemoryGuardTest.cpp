@@ -59,9 +59,10 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 	for (std::string contractName: compiler().contractNames())
 	{
 		ErrorList errors;
+		YulNameRepository repository (EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()));
 		auto [object, analysisInfo] = yul::test::parse(
 			compiler().yulIR(contractName),
-			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()),
+			repository,
 			errors
 		);
 
@@ -75,7 +76,7 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		auto handleObject = [&](std::string const& _kind, Object const& _object) {
 			m_obtainedResult += contractName + "(" + _kind + ") " + (FunctionCallFinder::run(
 				*_object.code,
-				"memoryguard"_yulstring
+				repository.predefined().memoryguard
 			).empty() ? "false" : "true") + "\n";
 		};
 		handleObject("creation", *object);

@@ -22,7 +22,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/NameDispenser.h>
 
 #include <set>
 #include <map>
@@ -43,15 +42,12 @@ class NameDisplacer: public ASTModifier
 {
 public:
 	explicit NameDisplacer(
-		NameDispenser& _dispenser,
-		std::set<YulString> const& _namesToFree
+		std::set<YulName> const& _namesToFree,
+		YulNameRepository& _yulNameRepository
 	):
-		m_nameDispenser(_dispenser),
-		m_namesToFree(_namesToFree)
-	{
-		for (YulString n: _namesToFree)
-			m_nameDispenser.markUsed(n);
-	}
+		m_namesToFree(_namesToFree),
+		m_yulNameRepository(_yulNameRepository)
+	{}
 
 	using ASTModifier::operator();
 	void operator()(Identifier& _identifier) override;
@@ -60,17 +56,16 @@ public:
 	void operator()(FunctionCall& _funCall) override;
 	void operator()(Block& _block) override;
 
-	std::map<YulString, YulString> const& translations() const { return m_translations; }
+	std::map<YulName, YulName> const& translations() const { return m_translations; }
 
 protected:
 	/// Check if the newly introduced identifier @a _name has to be replaced.
-	void checkAndReplaceNew(YulString& _name);
+	void checkAndReplaceNew(YulName& _name);
 	/// Replace the identifier @a _name if it is in the translation map.
-	void checkAndReplace(YulString& _name) const;
+	void checkAndReplace(YulName& _name) const;
 
-	NameDispenser& m_nameDispenser;
-	std::set<YulString> const& m_namesToFree;
-	std::map<YulString, YulString> m_translations;
+	std::set<YulName> const& m_namesToFree;
+	std::map<YulName, YulName> m_translations;
+	YulNameRepository& m_yulNameRepository;
 };
-
 }

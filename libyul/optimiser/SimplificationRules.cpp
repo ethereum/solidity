@@ -39,18 +39,18 @@ using namespace solidity::yul;
 
 SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
-	Dialect const& _dialect,
-	std::function<AssignedValue const*(YulString)> const& _ssaValues
+	YulNameRepository const& _yulNameRepository,
+	std::function<AssignedValue const*(YulName)> const& _ssaValues
 )
 {
-	auto instruction = instructionAndArguments(_dialect, _expr);
+	auto instruction = instructionAndArguments(_yulNameRepository, _expr);
 	if (!instruction)
 		return nullptr;
 
 	static std::map<std::optional<EVMVersion>, std::unique_ptr<SimplificationRules>> evmRules;
 
 	std::optional<EVMVersion> version;
-	if (yul::EVMDialect const* evmDialect = dynamic_cast<yul::EVMDialect const*>(&_dialect))
+	if (yul::EVMDialect const* evmDialect = dynamic_cast<yul::EVMDialect const*>(&_yulNameRepository.dialect()))
 		version = evmDialect->evmVersion();
 
 	if (!evmRules[version])
@@ -62,7 +62,7 @@ SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	for (auto const& rule: rules.m_rules[uint8_t(instruction->first)])
 	{
 		rules.resetMatchGroups();
-		if (rule.pattern.matches(_expr, _dialect, _ssaValues))
+		if (rule.pattern.matches(_expr, _yulNameRepository, _ssaValues))
 			if (!rule.feasible || rule.feasible())
 				return &rule;
 	}
@@ -75,13 +75,13 @@ bool SimplificationRules::isInitialized() const
 }
 
 std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
-	SimplificationRules::instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
+	SimplificationRules::instructionAndArguments(YulNameRepository const& _yulNameRepository, Expression const& _expr)
 {
 	if (std::holds_alternative<FunctionCall>(_expr))
-		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
-				if (builtin->instruction)
-					return std::make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
+		if (_yulNameRepository.isEvmDialect())
+			if (auto const* builtin = _yulNameRepository.builtin(std::get<FunctionCall>(_expr).functionName.name))
+				if (auto const* builtinEVM = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->data); builtinEVM->instruction)
+					return std::make_pair(*builtinEVM->instruction, &std::get<FunctionCall>(_expr).arguments);
 
 	return {};
 }
@@ -136,8 +136,8 @@ void Pattern::setMatchGroup(unsigned _group, std::map<unsigned, Expression const
 
 bool Pattern::matches(
 	Expression const& _expr,
-	Dialect const& _dialect,
-	std::function<AssignedValue const*(YulString)> const& _ssaValues
+	YulNameRepository const& _yulNameRepository,
+	std::function<AssignedValue const*(YulName)> const& _ssaValues
 ) const
 {
 	Expression const* expr = &_expr;
@@ -146,7 +146,7 @@ bool Pattern::matches(
 	// Do not do it for "Any" because we can check identity better for variables.
 	if (m_kind != PatternKind::Any && std::holds_alternative<Identifier>(_expr))
 	{
-		YulString varName = std::get<Identifier>(_expr).name;
+		YulName varName = std::get<Identifier>(_expr).name;
 		if (AssignedValue const* value = _ssaValues(varName))
 			if (Expression const* new_expr = value->value)
 				expr = new_expr;
@@ -166,7 +166,7 @@ bool Pattern::matches(
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
-		auto instrAndArgs = SimplificationRules::instructionAndArguments(_dialect, *expr);
+		auto instrAndArgs = SimplificationRules::instructionAndArguments(_yulNameRepository, *expr);
 		if (!instrAndArgs || m_instruction != instrAndArgs->first)
 			return false;
 		assertThrow(m_arguments.size() == instrAndArgs->second->size(), OptimizerException, "");
@@ -178,7 +178,7 @@ bool Pattern::matches(
 			// arbitrarily modifying the code.
 			if (
 				std::holds_alternative<FunctionCall>(arg) ||
-				!m_arguments[i].matches(arg, _dialect, _ssaValues)
+				!m_arguments[i].matches(arg, _yulNameRepository, _ssaValues)
 			)
 				return false;
 		}
@@ -234,7 +234,7 @@ evmasm::Instruction Pattern::instruction() const
 	return m_instruction;
 }
 
-Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion) const
+Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion, YulNameRepository const& _yulNameRepository) const
 {
 	if (matchGroup())
 		return ASTCopier().translate(matchGroupValue());
@@ -247,12 +247,12 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 	{
 		std::vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
-			arguments.emplace_back(arg.toExpression(_debugData, _evmVersion));
+			arguments.emplace_back(arg.toExpression(_debugData, _evmVersion, _yulNameRepository));
 
-		std::string name = util::toLower(instructionInfo(m_instruction, _evmVersion).name);
+		auto const name = util::toLower(instructionInfo(m_instruction, _evmVersion).name);
 
 		return FunctionCall{_debugData,
-			Identifier{_debugData, YulString{name}},
+			Identifier{_debugData, _yulNameRepository.nameOfBuiltin(name)},
 			std::move(arguments)
 		};
 	}

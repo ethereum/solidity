@@ -19,7 +19,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
 #include <libyul/ASTForward.h>
@@ -67,13 +66,11 @@ public:
 
 private:
 	explicit FunctionSpecializer(
-		std::set<YulString> _recursiveFunctions,
-		NameDispenser& _nameDispenser,
-		Dialect const& _dialect
+		std::set<YulName> _recursiveFunctions,
+		YulNameRepository& _yulNameRepository
 	):
 		m_recursiveFunctions(std::move(_recursiveFunctions)),
-		m_nameDispenser(_nameDispenser),
-		m_dialect(_dialect)
+		m_yulNameRepository(_yulNameRepository)
 	{}
 	/// Returns a vector of Expressions, where the index `i` is an expression if the function's
 	/// `i`-th argument can be specialized, nullopt otherwise.
@@ -96,18 +93,17 @@ private:
 	///
 	FunctionDefinition specialize(
 		FunctionDefinition const& _f,
-		YulString _newName,
+		YulName _newName,
 		FunctionSpecializer::LiteralArguments _arguments
 	);
 
 	/// A mapping between the old function name and a pair of new function name and its arguments.
 	/// Note that at least one of the argument will have a literal value.
-	std::map<YulString, std::vector<std::pair<YulString, LiteralArguments>>> m_oldToNewMap;
+	std::map<YulName, std::vector<std::pair<YulName, LiteralArguments>>> m_oldToNewMap;
 	/// We skip specializing recursive functions. Need backtracking to properly deal with them.
-	std::set<YulString> const m_recursiveFunctions;
+	std::set<YulName> const m_recursiveFunctions;
 
-	NameDispenser& m_nameDispenser;
-	Dialect const& m_dialect;
+	YulNameRepository& m_yulNameRepository;
 };
 
 }

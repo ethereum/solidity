@@ -59,17 +59,17 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
 		std::set<YulString> _dataNames = {}
 	):
 		m_resolver(std::move(_resolver)),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
-		m_dialect(_dialect),
+		m_yulNameRepository(_yulNameRepository),
 		m_dataNames(std::move(_dataNames))
 	{
-		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_yulNameRepository.dialect()))
 			m_evmVersion = evmDialect->evmVersion();
 	}
 
@@ -77,15 +77,15 @@ public:
 
 	/// Performs analysis on the outermost code of the given object and returns the analysis info.
 	/// Asserts on failure.
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(YulNameRepository const& _yulNameRepository, Object const& _object);
 
-	std::vector<YulString> operator()(Literal const& _literal);
-	std::vector<YulString> operator()(Identifier const&);
+	std::vector<Type> operator()(Literal const& _literal);
+	std::vector<Type> operator()(Identifier const&);
 	void operator()(ExpressionStatement const&);
 	void operator()(Assignment const& _assignment);
 	void operator()(VariableDeclaration const& _variableDeclaration);
 	void operator()(FunctionDefinition const& _functionDefinition);
-	std::vector<YulString> operator()(FunctionCall const& _functionCall);
+	std::vector<Type> operator()(FunctionCall const& _functionCall);
 	void operator()(If const& _if);
 	void operator()(Switch const& _switch);
 	void operator()(ForLoop const& _forLoop);
@@ -99,23 +99,23 @@ public:
 private:
 	/// Visits the expression, expects that it evaluates to exactly one value and
 	/// returns the type. Reports errors on errors and returns the default type.
-	YulString expectExpression(Expression const& _expr);
-	YulString expectUnlimitedStringLiteral(Literal const& _literal);
+	Type expectExpression(Expression const& _expr);
+	Type expectUnlimitedStringLiteral(Literal const& _literal) const;
 	/// Visits the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);
 
 	/// Verifies that a variable to be assigned to exists, can be assigned to
 	/// and has the same type as the value.
-	void checkAssignment(Identifier const& _variable, YulString _valueType);
+	void checkAssignment(Identifier const& _variable, Type _valueType);
 
 	Scope& scope(Block const* _block);
-	void expectValidIdentifier(YulString _identifier, langutil::SourceLocation const& _location);
-	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
-	void expectType(YulString _expectedType, YulString _givenType, langutil::SourceLocation const& _location);
+	void expectValidIdentifier(YulName _identifier, langutil::SourceLocation const& _location);
+	void expectValidType(Type _type, langutil::SourceLocation const& _location);
+	void expectType(Type _expectedType, Type _givenType, langutil::SourceLocation const& _location);
 
 	bool validateInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
-	bool validateInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
+	bool validateInstructions(std::string_view _instrIdentifier, langutil::SourceLocation const& _location);
 	bool validateInstructions(FunctionCall const& _functionCall);
 
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
@@ -126,7 +126,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<YulString> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;

@@ -15,10 +15,10 @@
 //         let c
 //         let b
 //     }
-//     function f(a, c_1) -> b_2
+//     function f(a, c_1) -> b_1
 //     { let x }
 //     {
-//         let a_3
-//         let x_4
+//         let a_1
+//         let x_1
 //     }
 // }

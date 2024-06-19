@@ -36,17 +36,17 @@
 //         w := 13
 //         sstore(0, 13)
 //     }
-//     function g_1(d_3) -> w_4
-//     { w_4 := g() }
+//     function g_2(d) -> w_2
+//     { w_2 := g() }
 //     function f(c) -> u
-//     { u := g_1(c) }
-//     function g_3() -> w_5
+//     { u := g_2(c) }
+//     function g_1() -> w_1
 //     {
-//         w_5 := 13
+//         w_1 := 13
 //         sstore(0, 13)
 //     }
-//     function g_3_2(d_4_5) -> w_5_6
-//     { w_5_6 := g_3() }
-//     function h(c_1) -> u_2
-//     { u_2 := g_3_2(c_1) }
+//     function g_3(d_1) -> w_3
+//     { w_3 := g_1() }
+//     function h(c_1) -> u_1
+//     { u_1 := g_3(c_1) }
 // }

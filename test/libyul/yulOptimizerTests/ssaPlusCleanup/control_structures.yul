@@ -16,25 +16,25 @@
 // {
 //     function copy(from, to) -> length
 //     {
-//         let from_6 := from
-//         let to_7 := to
-//         let length_1 := mload(from_6)
+//         let from_2 := from
+//         let to_2 := to
+//         let length_1 := mload(from_2)
 //         length := length_1
-//         mstore(to_7, length_1)
-//         let from_2 := add(from_6, 0x20)
-//         let to_3 := add(to_7, 0x20)
-//         let x_4 := 1
-//         let x := x_4
+//         mstore(to_2, length_1)
+//         let from_1 := add(from_2, 0x20)
+//         let to_1 := add(to_2, 0x20)
+//         let x_1 := 1
+//         let x := x_1
 //         for { }
 //         lt(x, length_1)
 //         {
-//             let x_9 := x
-//             let x_5 := add(x_9, 0x20)
-//             x := x_5
+//             let x_4 := x
+//             let x_2 := add(x_4, 0x20)
+//             x := x_2
 //         }
 //         {
-//             let x_8 := x
-//             mstore(add(to_3, x_8), mload(add(from_2, x_8)))
+//             let x_3 := x
+//             mstore(add(to_1, x_3), mload(add(from_1, x_3)))
 //         }
 //     }
 // }

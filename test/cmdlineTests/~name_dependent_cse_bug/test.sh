@@ -19,7 +19,7 @@ function assemble_with_variable_name {
     local variable_name="$2"
 
     sed -e "s|__placeholder__|${variable_name}|g" "$input_file" | msg_on_error --no-stderr \
-        "$SOLC" --strict-assembly - --optimize --debug-info none |
+        "$SOLC" --strict-assembly - --optimize --debug-info none --asm |
             stripCLIDecorations
 }
 

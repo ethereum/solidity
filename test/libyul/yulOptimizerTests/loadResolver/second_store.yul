@@ -13,9 +13,9 @@
 //     {
 //         let x := calldataload(1)
 //         sstore(x, 7)
-//         let _3 := 6
-//         let _4 := 0
-//         sstore(calldataload(_4), _3)
-//         mstore(_4, sload(x))
+//         let _1 := 6
+//         let _2 := 0
+//         sstore(calldataload(_2), _1)
+//         mstore(_2, sload(x))
 //     }
 // }

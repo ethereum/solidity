@@ -31,7 +31,7 @@ class ControlFlowGraphBuilder
 public:
 	ControlFlowGraphBuilder(ControlFlowGraphBuilder const&) = delete;
 	ControlFlowGraphBuilder& operator=(ControlFlowGraphBuilder const&) = delete;
-	static std::unique_ptr<CFG> build(AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect, Block const& _block);
+	static std::unique_ptr<CFG> build(AsmAnalysisInfo const& _analysisInfo, YulNameRepository& _yulNameRepository, Block const& _block);
 
 	StackSlot operator()(Expression const& _literal);
 	StackSlot operator()(Literal const& _literal);
@@ -57,14 +57,14 @@ private:
 		CFG& _graph,
 		AsmAnalysisInfo const& _analysisInfo,
 		std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects,
-		Dialect const& _dialect
+		YulNameRepository& _yulNameRepository
 	);
 	void registerFunction(FunctionDefinition const& _function);
 	Stack const& visitFunctionCall(FunctionCall const&);
 	Stack visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount);
 
-	Scope::Function const& lookupFunction(YulString _name) const;
-	Scope::Variable const& lookupVariable(YulString _name) const;
+	Scope::Function const& lookupFunction(YulName _name) const;
+	Scope::Variable const& lookupVariable(YulName _name) const;
 	/// Resets m_currentBlock to enforce a subsequent explicit reassignment.
 	void makeConditionalJump(
 		langutil::DebugData::ConstPtr _debugData,
@@ -80,7 +80,7 @@ private:
 	CFG& m_graph;
 	AsmAnalysisInfo const& m_info;
 	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& m_functionSideEffects;
-	Dialect const& m_dialect;
+	YulNameRepository& m_yulNameRepository;
 	CFG::BasicBlock* m_currentBlock = nullptr;
 	Scope* m_scope = nullptr;
 	struct ForLoopInfo

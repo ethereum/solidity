@@ -19,7 +19,6 @@
 #pragma once
 
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/NameDispenser.h>
 
 #include <libyul/YulString.h>
 
@@ -28,9 +27,8 @@
 
 namespace solidity::yul
 {
-	struct AsmAnalysisInfo;
-	struct Object;
-	struct Dialect;
+struct AsmAnalysisInfo;
+struct Object;
 }
 
 namespace solidity::yul::test
@@ -40,7 +38,7 @@ class YulOptimizerTestCommon
 public:
 	explicit YulOptimizerTestCommon(
 		std::shared_ptr<Object> _obj,
-		Dialect const& _dialect
+		YulNameRepository& _yulNameRepository
 	);
 	/// Sets optimiser step to be run to @param
 	/// _optimiserStep.
@@ -62,9 +60,7 @@ private:
 
 	std::string m_optimizerStep;
 
-	Dialect const* m_dialect = nullptr;
-	std::set<YulString> m_reservedIdentifiers;
-	std::unique_ptr<NameDispenser> m_nameDispenser;
+	YulNameRepository& m_yulNameRepository;
 	std::unique_ptr<OptimiserStepContext> m_context;
 
 	std::shared_ptr<Object> m_object;

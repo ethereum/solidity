@@ -36,9 +36,9 @@ using namespace solidity::yul;
 
 void DeadCodeEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ControlFlowSideEffectsCollector sideEffects(_context.dialect, _ast);
+	ControlFlowSideEffectsCollector sideEffects(_context.yulNameRepository, _ast);
 	DeadCodeEliminator{
-		_context.dialect,
+		_context.yulNameRepository,
 		sideEffects.functionSideEffectsNamed()
 	}(_ast);
 }
@@ -53,7 +53,7 @@ void DeadCodeEliminator::operator()(Block& _block)
 {
 	TerminationFinder::ControlFlow controlFlowChange;
 	size_t index;
-	std::tie(controlFlowChange, index) = TerminationFinder{m_dialect, &m_functionSideEffects}.firstUnconditionalControlFlowChange(_block.statements);
+	std::tie(controlFlowChange, index) = TerminationFinder{m_yulNameRepository, &m_functionSideEffects}.firstUnconditionalControlFlowChange(_block.statements);
 
 	// Erase everything after the terminating statement that is not a function definition.
 	if (controlFlowChange != TerminationFinder::ControlFlow::FlowOut && index != std::numeric_limits<size_t>::max())

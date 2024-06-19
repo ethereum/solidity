@@ -43,6 +43,7 @@ void NameDisplacer::operator()(FunctionDefinition& _function)
 {
 	// Should have been done in the block already.
 	yulAssert(!m_namesToFree.count(_function.name), "");
+	// yulAssert(!m_namesToFree.count(m_yulNameRepository.baseNameOf(_function.name)));
 
 	for (auto& param: _function.parameters)
 		checkAndReplaceNew(param.name);
@@ -69,16 +70,15 @@ void NameDisplacer::operator()(Block& _block)
 	ASTModifier::operator()(_block);
 }
 
-void NameDisplacer::checkAndReplaceNew(YulString& _name)
+void NameDisplacer::checkAndReplaceNew(YulName& _name)
 {
 	yulAssert(!m_translations.count(_name), "");
 	if (m_namesToFree.count(_name))
-		_name = (m_translations[_name] = m_nameDispenser.newName(_name));
+		_name = (m_translations[_name] = m_yulNameRepository.deriveName(_name));
 }
 
-void NameDisplacer::checkAndReplace(YulString& _name) const
+void NameDisplacer::checkAndReplace(YulName& _name) const
 {
 	if (m_translations.count(_name))
 		_name = m_translations.at(_name);
 }
-

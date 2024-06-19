@@ -18,6 +18,6 @@
 //         function eq(x, y) -> z:bool
 //         { }
 //         for { let a_1 } eq(a_1, a_1) { a_1 := a_1 }
-//         { let b_2 := a_1 }
+//         { let b_1 := a_1 }
 //     }
 // }

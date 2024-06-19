@@ -92,7 +92,7 @@ class ControlFlowSideEffectsCollector
 {
 public:
 	explicit ControlFlowSideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block const& _ast
 	);
 
@@ -101,7 +101,7 @@ public:
 		return m_functionSideEffects;
 	}
 	/// Returns the side effects by function name, requires unique function names.
-	std::map<YulString, ControlFlowSideEffects> functionSideEffectsNamed() const;
+	std::map<YulName, ControlFlowSideEffects> functionSideEffectsNamed() const;
 private:
 
 	/// @returns false if nothing could be processed.
@@ -121,7 +121,7 @@ private:
 	/// `*_node->functionCall`.
 	void recordReachabilityAndQueue(FunctionDefinition const& _function, ControlFlowNode const* _node);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	ControlFlowBuilder m_cfgBuilder;
 	/// Function references, but only for calls to user-defined functions.
 	std::map<FunctionCall const*, FunctionDefinition const*> m_functionReferences;

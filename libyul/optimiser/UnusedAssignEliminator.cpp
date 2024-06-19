@@ -40,8 +40,8 @@ using namespace solidity::yul;
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	UnusedAssignEliminator uae{
-		_context.dialect,
-		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+		_context.yulNameRepository,
+		ControlFlowSideEffectsCollector{_context.yulNameRepository, _ast}.functionSideEffectsNamed()
 	};
 	uae(_ast);
 
@@ -79,8 +79,8 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 	UnusedStoreBase::operator()(_functionCall);
 
 	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->controlFlowSideEffects;
+	if (auto const* builtin = m_yulNameRepository.builtin(_functionCall.functionName.name))
+		sideEffects = builtin->data->controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 
@@ -92,7 +92,7 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 
 void UnusedAssignEliminator::operator()(Leave const&)
 {
-	for (YulString name: m_returnVariables)
+	for (YulName name: m_returnVariables)
 		markUsed(name);
 	m_activeStores.clear();
 }
@@ -115,7 +115,7 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 	{
 		// We do not remove assignments whose values might have side-effects,
 		// but clear the active stores to the assigned variables in any case.
-		if (SideEffectsCollector{m_dialect, *assignment->value}.movable())
+		if (SideEffectsCollector{m_yulNameRepository, *assignment->value}.movable())
 		{
 			m_allStores.insert(&_statement);
 			for (auto const& var: assignment->variableNames)
@@ -152,7 +152,7 @@ void UnusedAssignEliminator::finalizeFunctionDefinition(FunctionDefinition const
 		markUsed(retParam.name);
 }
 
-void UnusedAssignEliminator::markUsed(YulString _variable)
+void UnusedAssignEliminator::markUsed(YulName const _variable)
 {
 	for (auto& assignment: m_activeStores[_variable])
 		m_usedStores.insert(assignment);

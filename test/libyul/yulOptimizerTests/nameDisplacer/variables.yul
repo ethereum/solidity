@@ -5,7 +5,7 @@
 // {
 //     { let illegal1_1 := 1 }
 //     {
-//         let illegal2_2 := 2
-//         let illegal3_3, illegal4_4
+//         let illegal2_1 := 2
+//         let illegal3_1, illegal4_1
 //     }
 // }

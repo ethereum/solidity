@@ -50,9 +50,9 @@ public:
 	void operator()(ForLoop& _forLoop) override;
 
 private:
-	ForLoopConditionIntoBody(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit ForLoopConditionIntoBody(YulNameRepository const& _yulNameRepository): m_yulNameRepository(_yulNameRepository) {}
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 };
 
 }

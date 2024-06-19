@@ -22,6 +22,6 @@
 //         if iszero(x) { revert(0, 0) }
 //         if iszero(add(x, 1)) { revert(0, 0) }
 //     }
-//     function f_1(x_2) -> y_3
-//     { f(x_2) }
+//     function f_1(x_1) -> y
+//     { f(x_1) }
 // }

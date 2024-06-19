@@ -35,12 +35,12 @@ namespace solidity::yul
 class FunctionCallFinder: ASTModifier
 {
 public:
-	static std::vector<FunctionCall*> run(Block& _block, YulString _functionName);
+	static std::vector<FunctionCall*> run(Block& _block, YulName _functionName);
 private:
-	FunctionCallFinder(YulString _functionName);
+	FunctionCallFinder(YulName _functionName);
 	using ASTModifier::operator();
 	void operator()(FunctionCall& _functionCall) override;
-	YulString m_functionName;
+	YulName m_functionName;
 	std::vector<FunctionCall*> m_calls;
 };
 

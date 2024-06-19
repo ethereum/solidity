@@ -37,16 +37,16 @@ using namespace solidity::langutil;
 
 void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 {
-	TypeInfo typeInfo(_context.dialect, _ast);
-	ExpressionSplitter{_context.dialect, _context.dispenser, typeInfo}(_ast);
+	TypeInfo typeInfo(_context.yulNameRepository, _ast);
+	ExpressionSplitter{_context.yulNameRepository, typeInfo}(_ast);
 }
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
-	BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name);
+	auto const* builtin = m_yulNameRepository.builtin(_funCall.functionName.name);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
-		if (!builtin || !builtin->literalArgument(i - 1))
+		if (!builtin || !builtin->data->literalArgument(i - 1))
 			outlineExpression(_funCall.arguments[i - 1]);
 }
 
@@ -99,8 +99,8 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	visit(_expr);
 
 	langutil::DebugData::ConstPtr debugData = debugDataOf(_expr);
-	YulString var = m_nameDispenser.newName({});
-	YulString type = m_typeInfo.typeOf(_expr);
+	YulName var = m_yulNameRepository.deriveName(YulNameRepository::emptyName());
+	YulName type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		debugData,
 		{{TypedName{debugData, var, type}}},
@@ -109,4 +109,3 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	_expr = Identifier{debugData, var};
 	m_typeInfo.setVariableType(var, type);
 }
-

@@ -37,12 +37,12 @@ using namespace solidity::util;
 
 bigint GasMeter::costs(Expression const& _expression) const
 {
-	return combineCosts(GasMeterVisitor::costs(_expression, m_dialect, m_isCreation));
+	return combineCosts(GasMeterVisitor::costs(_expression, m_yulNameRepository, m_dialect, m_isCreation));
 }
 
 bigint GasMeter::instructionCosts(evmasm::Instruction _instruction) const
 {
-	return combineCosts(GasMeterVisitor::instructionCosts(_instruction, m_dialect, m_isCreation));
+	return combineCosts(GasMeterVisitor::instructionCosts(_instruction, m_yulNameRepository, m_dialect, m_isCreation));
 }
 
 bigint GasMeter::combineCosts(std::pair<bigint, bigint> _costs) const
@@ -53,22 +53,24 @@ bigint GasMeter::combineCosts(std::pair<bigint, bigint> _costs) const
 
 std::pair<bigint, bigint> GasMeterVisitor::costs(
 	Expression const& _expression,
+	YulNameRepository const& _yulNameRepository,
 	EVMDialect const& _dialect,
 	bool _isCreation
 )
 {
-	GasMeterVisitor gmv(_dialect, _isCreation);
+	GasMeterVisitor gmv(_yulNameRepository, _dialect, _isCreation);
 	gmv.visit(_expression);
 	return {gmv.m_runGas, gmv.m_dataGas};
 }
 
 std::pair<bigint, bigint> GasMeterVisitor::instructionCosts(
 	evmasm::Instruction _instruction,
+	YulNameRepository const& _yulNameRepository,
 	EVMDialect const& _dialect,
 	bool _isCreation
 )
 {
-	GasMeterVisitor gmv(_dialect, _isCreation);
+	GasMeterVisitor gmv(_yulNameRepository, _dialect, _isCreation);
 	gmv.instructionCostsInternal(_instruction);
 	return {gmv.m_runGas, gmv.m_dataGas};
 }
@@ -76,10 +78,10 @@ std::pair<bigint, bigint> GasMeterVisitor::instructionCosts(
 void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
-	if (BuiltinFunctionForEVM const* f = m_dialect.builtin(_funCall.functionName.name))
-		if (f->instruction)
+	if (auto const* f = m_yulNameRepository.builtin(_funCall.functionName.name))
+		if (auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(f->data); evmFun && evmFun->instruction)
 		{
-			instructionCostsInternal(*f->instruction);
+			instructionCostsInternal(*evmFun->instruction);
 			return;
 		}
 	yulAssert(false, "Functions not implemented.");

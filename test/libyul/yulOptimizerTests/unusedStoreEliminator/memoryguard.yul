@@ -15,9 +15,9 @@
 //     {
 //         mstore(0x40, memoryguard(100))
 //         let free_mem_ptr := mload(0x40)
-//         let _4 := 100
-//         let _5 := 200
-//         mstore8(add(free_mem_ptr, 31), _5)
+//         let _1 := 100
+//         let _2 := 200
+//         mstore8(add(free_mem_ptr, 31), _2)
 //         mstore(free_mem_ptr, 300)
 //         return(free_mem_ptr, add(free_mem_ptr, 100))
 //     }

@@ -22,6 +22,7 @@
 #include <libyul/ScopeFiller.h>
 
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Scope.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Exceptions.h>
@@ -38,8 +39,8 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
-	m_info(_info), m_errorReporter(_errorReporter)
+ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter, YulNameRepository const& _yulNameRegistry):
+	m_yulNameRegistry(_yulNameRegistry), m_info(_info), m_errorReporter(_errorReporter)
 {
 	m_currentScope = &scope(nullptr);
 }
@@ -135,13 +136,13 @@ bool ScopeFiller::operator()(Block const& _block)
 
 bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const& _location, Scope& _scope)
 {
-	if (!_scope.registerVariable(_name.name, _name.type))
+	if (!_scope.registerVariable(_name.name, _name.type, m_yulNameRegistry))
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
 			1395_error,
 			_location,
-			"Variable name " + _name.name.str() + " already taken in this scope."
+			fmt::format("Variable name {} already taken in this scope.", m_yulNameRegistry.labelOf(_name.name))
 		);
 		return false;
 	}
@@ -156,13 +157,13 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 	std::vector<Scope::YulType> returns;
 	for (auto const& returnVariable: _funDef.returnVariables)
 		returns.emplace_back(returnVariable.type);
-	if (!m_currentScope->registerFunction(_funDef.name, std::move(parameters), std::move(returns)))
+	if (!m_currentScope->registerFunction(_funDef.name, std::move(parameters), std::move(returns), m_yulNameRegistry))
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
 			6052_error,
 			nativeLocationOf(_funDef),
-			"Function name " + _funDef.name.str() + " already taken in this scope."
+			fmt::format("Function name {} already taken in this scope.", m_yulNameRegistry.labelOf(_funDef.name))
 		);
 		return false;
 	}

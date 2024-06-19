@@ -673,7 +673,7 @@ Optimized IR AST:
                             },
                             "variables": [
                                 {
-                                    "name": "_1",
+                                    "name": "_2",
                                     "nativeSrc": "122:16:0",
                                     "nodeType": "YulTypedName",
                                     "src": "60:13:0",
@@ -693,7 +693,7 @@ Optimized IR AST:
                                         "value": "64"
                                     },
                                     {
-                                        "name": "_1",
+                                        "name": "_2",
                                         "nativeSrc": "122:16:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
@@ -799,7 +799,7 @@ Optimized IR AST:
                             },
                             "variables": [
                                 {
-                                    "name": "_2",
+                                    "name": "_1",
                                     "nativeSrc": "363:24:0",
                                     "nodeType": "YulTypedName",
                                     "src": "60:13:0",
@@ -811,7 +811,7 @@ Optimized IR AST:
                             "expression": {
                                 "arguments": [
                                     {
-                                        "name": "_1",
+                                        "name": "_2",
                                         "nativeSrc": "331:2:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
@@ -839,7 +839,7 @@ Optimized IR AST:
                                         "src": "60:13:0"
                                     },
                                     {
-                                        "name": "_2",
+                                        "name": "_1",
                                         "nativeSrc": "363:24:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
@@ -863,13 +863,13 @@ Optimized IR AST:
                             "expression": {
                                 "arguments": [
                                     {
-                                        "name": "_1",
+                                        "name": "_2",
                                         "nativeSrc": "405:2:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
                                     },
                                     {
-                                        "name": "_2",
+                                        "name": "_1",
                                         "nativeSrc": "409:24:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"

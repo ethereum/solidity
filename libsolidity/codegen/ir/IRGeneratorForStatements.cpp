@@ -63,8 +63,8 @@ struct CopyTranslate: public yul::ASTCopier
 {
 	using ExternalRefsMap = std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo>;
 
-	CopyTranslate(yul::Dialect const& _dialect, IRGenerationContext& _context, ExternalRefsMap const& _references):
-		m_dialect(_dialect), m_context(_context), m_references(_references) {}
+	CopyTranslate(yul::YulNameRepository& _yulNameRepository, IRGenerationContext& _context, ExternalRefsMap const& _references):
+		m_yulNameRepository(_yulNameRepository), m_context(_context), m_references(_references) {}
 
 	using ASTCopier::operator();
 
@@ -78,16 +78,16 @@ struct CopyTranslate: public yul::ASTCopier
 			return ASTCopier::operator()(_identifier);
 	}
 
-	yul::YulString translateIdentifier(yul::YulString _name) override
+	yul::YulName translateIdentifier(yul::YulName _name) override
 	{
 		// Strictly, the dialect used by inline assembly (m_dialect) could be different
 		// from the Yul dialect we are compiling to. So we are assuming here that the builtin
 		// functions are identical. This should not be a problem for now since everything
 		// is EVM anyway.
-		if (m_dialect.builtin(_name))
+		if (m_yulNameRepository.isBuiltinName(_name))
 			return _name;
 		else
-			return yul::YulString{"usr$" + _name.str()};
+			return m_yulNameRepository.defineName("usr$" + std::string(m_yulNameRepository.labelOf(_name)));
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override
@@ -206,11 +206,11 @@ private:
 		if (isDigit(value.front()))
 			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfNumberLiteral(value), {}};
 		else
-			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
+			return yul::Identifier{_identifier.debugData, m_yulNameRepository.defineName(value)};
 	}
 
 
-	yul::Dialect const& m_dialect;
+	yul::YulNameRepository& m_yulNameRepository;
 	IRGenerationContext& m_context;
 	ExternalRefsMap const& m_references;
 };
@@ -2250,14 +2250,14 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 	setLocation(_inlineAsm);
 	if (*_inlineAsm.annotation().hasMemoryEffects && !_inlineAsm.annotation().markedMemorySafe)
 		m_context.setMemoryUnsafeInlineAssemblySeen();
-	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
+	CopyTranslate bodyCopier{_inlineAsm.nameRepository(), m_context, _inlineAsm.annotation().externalReferences};
 
 	yul::Statement modified = bodyCopier(_inlineAsm.operations());
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
 	// Do not provide dialect so that we get the full type information.
-	appendCode() << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+	appendCode() << yul::AsmPrinter(_inlineAsm.nameRepository())(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

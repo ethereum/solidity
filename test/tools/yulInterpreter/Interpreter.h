@@ -145,7 +145,7 @@ struct InterpreterState
 struct Scope
 {
 	/// Used for variables and functions. Value is nullptr for variables.
-	std::map<YulString, FunctionDefinition const*> names;
+	std::map<YulName, FunctionDefinition const*> names;
 	std::map<Block const*, std::unique_ptr<Scope>> subScopes;
 	Scope* parent = nullptr;
 };
@@ -162,7 +162,7 @@ public:
 	/// activated e.g., Redundant store eliminator, Equal store eliminator.
 	static void run(
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block const& _ast,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing
@@ -170,13 +170,13 @@ public:
 
 	Interpreter(
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Scope& _scope,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
-		std::map<YulString, u256> _variables = {}
+		std::map<YulName, u256> _variables = {}
 	):
-		m_dialect(_dialect),
+	    m_yulNameRepository(_yulNameRepository),
 		m_state(_state),
 		m_variables(std::move(_variables)),
 		m_scope(&_scope),
@@ -200,7 +200,7 @@ public:
 	bytes returnData() const { return m_state.returndata; }
 	std::vector<std::string> const& trace() const { return m_state.trace; }
 
-	u256 valueOfVariable(YulString _name) const { return m_variables.at(_name); }
+	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
 
 protected:
 	/// Asserts that the expression evaluates to exactly one value and returns it.
@@ -215,10 +215,10 @@ protected:
 	/// is reached.
 	void incrementStep();
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	InterpreterState& m_state;
 	/// Values of variables.
-	std::map<YulString, u256> m_variables;
+	std::map<YulName, u256> m_variables;
 	Scope* m_scope;
 	/// If not set, external calls (e.g. using `call()`) to the same contract
 	/// are evaluated in a new parser instance.
@@ -234,14 +234,14 @@ class ExpressionEvaluator: public ASTWalker
 public:
 	ExpressionEvaluator(
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& m_yulNameRepository,
 		Scope& _scope,
-		std::map<YulString, u256> const& _variables,
+		std::map<YulName, u256> const& _variables,
 		bool _disableExternalCalls,
 		bool _disableMemoryTrace
 	):
 		m_state(_state),
-		m_dialect(_dialect),
+	    m_yulNameRepository(m_yulNameRepository),
 		m_variables(_variables),
 		m_scope(_scope),
 		m_disableExternalCalls(_disableExternalCalls),
@@ -259,11 +259,11 @@ public:
 
 protected:
 	void runExternalCall(evmasm::Instruction _instruction);
-	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulString, u256> _variables = {}) const
+	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
 	{
 		return std::make_unique<Interpreter>(
 			m_state,
-			m_dialect,
+			m_yulNameRepository,
 			m_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace,
@@ -274,7 +274,7 @@ protected:
 	{
 		return std::make_unique<Interpreter>(
 			_state,
-			m_dialect,
+			m_yulNameRepository,
 			_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace
@@ -296,9 +296,9 @@ protected:
 	void incrementStep();
 
 	InterpreterState& m_state;
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	/// Values of variables.
-	std::map<YulString, u256> const& m_variables;
+	std::map<YulName, u256> const& m_variables;
 	Scope& m_scope;
 	/// Current value of the expression
 	std::vector<u256> m_values;

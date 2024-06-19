@@ -1472,13 +1472,14 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 		expectToken(Token::RParen);
 	}
 
-	yul::Parser asmParser(m_errorReporter, dialect);
+	auto nameRepository = std::make_unique<yul::YulNameRepository>(dialect);
+	yul::Parser asmParser(m_errorReporter, *nameRepository);
 	std::shared_ptr<yul::Block> block = asmParser.parseInline(m_scanner);
 	if (block == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());
 
 	location.end = nativeLocationOf(*block).end;
-	return std::make_shared<InlineAssembly>(nextID(), location, _docString, dialect, std::move(flags), block);
+	return std::make_shared<InlineAssembly>(nextID(), location, _docString, std::move(nameRepository), std::move(flags), block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)

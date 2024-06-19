@@ -38,10 +38,10 @@ class AssemblyViewPureChecker
 {
 public:
 	explicit AssemblyViewPureChecker(
-		yul::Dialect const& _dialect,
+		yul::YulNameRepository const& _yulNameRepository,
 		std::function<void(StateMutability, SourceLocation const&)> _reportMutability
 	):
-		m_dialect(_dialect),
+		m_yulNameRepository(_yulNameRepository),
 		m_reportMutability(std::move(_reportMutability)) {}
 
 	void operator()(yul::Literal const&) {}
@@ -65,10 +65,10 @@ public:
 	}
 	void operator()(yul::FunctionCall const& _funCall)
 	{
-		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
-			if (yul::BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
-				if (fun->instruction)
-					checkInstruction(nativeLocationOf(_funCall), *fun->instruction);
+		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_yulNameRepository.dialect()))
+			if (auto const* fun = m_yulNameRepository.builtin(_funCall.functionName.name))
+				if (auto const* evmFun = dynamic_cast<yul::BuiltinFunctionForEVM const*>(fun->data); evmFun->instruction)
+					checkInstruction(nativeLocationOf(_funCall), *evmFun->instruction);
 
 		for (auto const& arg: _funCall.arguments)
 			std::visit(*this, arg);
@@ -119,7 +119,7 @@ private:
 			m_reportMutability(StateMutability::View, _location);
 	}
 
-	yul::Dialect const& m_dialect;
+	yul::YulNameRepository const& m_yulNameRepository;
 	std::function<void(StateMutability, SourceLocation const&)> m_reportMutability;
 };
 
@@ -224,7 +224,7 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
-		_inlineAssembly.dialect(),
+		_inlineAssembly.nameRepository(),
 		[&](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
 	}(_inlineAssembly.operations());
 }

@@ -41,13 +41,13 @@ public:
 
 private:
 	explicit ConditionalUnsimplifier(
-		Dialect const& _dialect,
-		std::map<YulString, ControlFlowSideEffects> const& _sideEffects
+		YulNameRepository const& _yulNameRepository,
+		std::map<YulName, ControlFlowSideEffects> const& _sideEffects
 	):
-		m_dialect(_dialect), m_functionSideEffects(_sideEffects)
+		m_yulNameRepository(_yulNameRepository), m_functionSideEffects(_sideEffects)
 	{}
-	Dialect const& m_dialect;
-	std::map<YulString, ControlFlowSideEffects> const& m_functionSideEffects;
+	YulNameRepository const& m_yulNameRepository;
+	std::map<YulName, ControlFlowSideEffects> const& m_functionSideEffects;
 };
 
 }

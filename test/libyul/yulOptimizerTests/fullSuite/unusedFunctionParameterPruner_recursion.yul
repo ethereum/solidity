@@ -16,9 +16,9 @@
 //
 // {
 //     {
-//         let x, y, z := f()
-//         sstore(0, x)
-//         sstore(1, z)
+//         let x_2, y_2, z_2 := f()
+//         sstore(0, x_2)
+//         sstore(1, z_2)
 //     }
 //     function f() -> x, y, z
 //     {

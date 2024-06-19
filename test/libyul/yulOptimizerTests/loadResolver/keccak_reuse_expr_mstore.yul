@@ -16,10 +16,10 @@
 //     {
 //         let _1 := 0
 //         let a := calldataload(_1)
+//         let _2 := keccak256(_1, a)
+//         sstore(f(_2), _2)
 //         let _3 := keccak256(_1, a)
 //         sstore(f(_3), _3)
-//         let _8 := keccak256(_1, a)
-//         sstore(f(_8), _8)
 //         sstore(keccak256(_1, a), f(keccak256(_1, a)))
 //     }
 //     function f(x) -> y

@@ -30,10 +30,10 @@
 //     function f(x)
 //     {
 //         mstore(0, x)
-//         let t_8 := 0
-//         t_8 := 2
-//         mstore(7, t_8)
-//         let x_1_9 := 10
+//         let t_1 := 0
+//         t_1 := 2
+//         mstore(7, t_1)
+//         let x_2 := 10
 //         f(1)
 //         mstore(1, x)
 //     }

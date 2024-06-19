@@ -14,11 +14,11 @@
 // {
 //     {
 //         let _1 := 2
-//         let a_5 := 7
-//         let x_6 := 0
-//         let r_7 := mul(a_5, a_5)
-//         x_6 := add(r_7, r_7)
-//         pop(add(x_6, _1))
+//         let a_1 := 7
+//         let x_1 := 0
+//         let r_1 := mul(a_1, a_1)
+//         x_1 := add(r_1, r_1)
+//         pop(add(x_1, _1))
 //     }
 //     function f(a) -> x
 //     {

@@ -32,11 +32,11 @@ using namespace solidity::yul;
 
 void LoopInvariantCodeMotion::run(OptimiserStepContext& _context, Block& _ast)
 {
-	std::map<YulString, SideEffects> functionSideEffects =
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast));
-	bool containsMSize = MSizeFinder::containsMSize(_context.dialect, _ast);
-	std::set<YulString> ssaVars = SSAValueTracker::ssaVariables(_ast);
-	LoopInvariantCodeMotion{_context.dialect, ssaVars, functionSideEffects, containsMSize}(_ast);
+	std::map<YulName, SideEffects> functionSideEffects =
+		SideEffectsPropagator::sideEffects(_context.yulNameRepository, CallGraphGenerator::callGraph(_ast));
+	bool containsMSize = MSizeFinder::containsMSize(_context.yulNameRepository, _ast);
+	std::set<YulName> ssaVars = SSAValueTracker::ssaVariables(_ast);
+	LoopInvariantCodeMotion{_context.yulNameRepository, ssaVars, functionSideEffects, containsMSize}(_ast);
 }
 
 void LoopInvariantCodeMotion::operator()(Block& _block)
@@ -56,7 +56,7 @@ void LoopInvariantCodeMotion::operator()(Block& _block)
 
 bool LoopInvariantCodeMotion::canBePromoted(
 	VariableDeclaration const& _varDecl,
-	std::set<YulString> const& _varsDefinedInCurrentScope,
+	std::set<YulName> const& _varsDefinedInCurrentScope,
 	SideEffects const& _forLoopSideEffects
 ) const
 {
@@ -73,7 +73,7 @@ bool LoopInvariantCodeMotion::canBePromoted(
 		for (auto const& ref: VariableReferencesCounter::countReferences(*_varDecl.value))
 			if (_varsDefinedInCurrentScope.count(ref.first) || !m_ssaVariables.count(ref.first))
 				return false;
-		SideEffectsCollector sideEffects{m_dialect, *_varDecl.value, &m_functionSideEffects};
+		SideEffectsCollector sideEffects{m_yulNameRepository, *_varDecl.value, &m_functionSideEffects};
 		if (!sideEffects.movableRelativeTo(_forLoopSideEffects, m_containsMSize))
 			return false;
 	}
@@ -85,12 +85,12 @@ std::optional<std::vector<Statement>> LoopInvariantCodeMotion::rewriteLoop(ForLo
 	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
 
 	auto forLoopSideEffects =
-		SideEffectsCollector{m_dialect, _for, &m_functionSideEffects}.sideEffects();
+		SideEffectsCollector{m_yulNameRepository, _for, &m_functionSideEffects}.sideEffects();
 
 	std::vector<Statement> replacement;
 	for (Block* block: {&_for.post, &_for.body})
 	{
-		std::set<YulString> varsDefinedInScope;
+		std::set<YulName> varsDefinedInScope;
 		util::iterateReplacing(
 			block->statements,
 			[&](Statement& _s) -> std::optional<std::vector<Statement>>

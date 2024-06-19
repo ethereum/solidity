@@ -44,6 +44,7 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		evmasm::Assembly& _assembly,
 		langutil::EVMVersion _evmVersion,
+		YulNameRepository const& _yulNameRepository,
 		ExternalIdentifierAccess::CodeGenerator _identifierAccess = {},
 		bool _useNamedLabelsForFunctions = false,
 		bool _optimizeStackAllocation = false

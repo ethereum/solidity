@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AST.h>
 
 #include <liblangutil/Exceptions.h>
@@ -66,8 +65,7 @@ public:
 	Program(Program const& program);
 	Program(Program&& program):
 		m_ast(std::move(program.m_ast)),
-		m_dialect{program.m_dialect},
-		m_nameDispenser(std::move(program.m_nameDispenser))
+		m_yulNameRepository(std::move(program.m_yulNameRepository))
 	{}
 	Program operator=(Program const& program) = delete;
 	Program operator=(Program&& program) = delete;
@@ -81,40 +79,39 @@ public:
 	friend std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 	std::string toJson() const;
 
+	yul::YulNameRepository const& nameRepository() const;
+
 private:
 	Program(
-		yul::Dialect const& _dialect,
+		std::unique_ptr<yul::YulNameRepository> _yulNameRepository,
 		std::unique_ptr<yul::Block> _ast
 	):
 		m_ast(std::move(_ast)),
-		m_dialect{_dialect},
-		m_nameDispenser(_dialect, *m_ast, {})
+		m_yulNameRepository(std::move(_yulNameRepository))
 	{}
 
 	static std::variant<std::unique_ptr<yul::Block>, langutil::ErrorList> parseObject(
-		yul::Dialect const& _dialect,
+		yul::YulNameRepository& _yulNameRepository,
 		langutil::CharStream _source
 	);
 	static std::variant<std::unique_ptr<yul::AsmAnalysisInfo>, langutil::ErrorList> analyzeAST(
-		yul::Dialect const& _dialect,
+		yul::YulNameRepository const& _yulNameRepository,
 		yul::Block const& _ast
 	);
 	static std::unique_ptr<yul::Block> disambiguateAST(
-		yul::Dialect const& _dialect,
+		yul::YulNameRepository& _yulNameRepository,
 		yul::Block const& _ast,
 		yul::AsmAnalysisInfo const& _analysisInfo
 	);
 	static std::unique_ptr<yul::Block> applyOptimisationSteps(
-		yul::Dialect const& _dialect,
-		yul::NameDispenser& _nameDispenser,
+		yul::YulNameRepository& _yulNameRepository,
 		std::unique_ptr<yul::Block> _ast,
 		std::vector<std::string> const& _optimisationSteps
 	);
 	static size_t computeCodeSize(yul::Block const& _ast, yul::CodeWeights const& _weights);
 
 	std::unique_ptr<yul::Block> m_ast;
-	yul::Dialect const& m_dialect;
-	yul::NameDispenser m_nameDispenser;
+	std::unique_ptr<yul::YulNameRepository> m_yulNameRepository;
 };
 
 }

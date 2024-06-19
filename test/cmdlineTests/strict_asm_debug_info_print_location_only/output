@@ -8,10 +8,10 @@ object "C_6_deployed" {
         {
             /// @src 0:60:101
             mstore(64, 128)
-            fun_f()
+            fun_f_5()
         }
         /// @src 0:77:99
-        function fun_f()
+        function fun_f_5()
         { sstore(0, 42) }
     }
 }

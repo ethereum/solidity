@@ -6,7 +6,7 @@
 //
 // {
 //     {
-//         let _4 := 0
-//         mstore(_4, and(calldataload(_4), 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff))
+//         let _1 := 0
+//         mstore(_1, and(calldataload(_1), 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff))
 //     }
 // }

@@ -4,12 +4,12 @@ object "C_59" {
     code {
         {
             /// @src 0:346:625  "contract C {..."
-            let _1 := memoryguard(0x80)
-            mstore(64, _1)
+            let _2 := memoryguard(0x80)
+            mstore(64, _2)
             if callvalue() { revert(0, 0) }
-            let _2 := datasize("C_59_deployed")
-            codecopy(_1, dataoffset("C_59_deployed"), _2)
-            return(_1, _2)
+            let _1 := datasize("C_59_deployed")
+            codecopy(_2, dataoffset("C_59_deployed"), _1)
+            return(_2, _1)
         }
     }
     /// @use-src 0:"name_simplifier/input.sol"

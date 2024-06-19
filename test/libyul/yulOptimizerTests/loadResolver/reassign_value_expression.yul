@@ -21,14 +21,14 @@
 //     {
 //         let x := calldataload(1)
 //         let a := add(x, 10)
-//         let _3 := 7
-//         sstore(a, _3)
+//         let _1 := 7
+//         sstore(a, _1)
 //         x := 9
-//         let _4 := 11
-//         mstore(_3, _4)
+//         let _2 := 11
+//         mstore(_1, _2)
 //         a := 33
-//         mstore(sload(a), _4)
+//         mstore(sload(a), _2)
 //         a := 39
-//         mstore(sload(a), _4)
+//         mstore(sload(a), _2)
 //     }
 // }

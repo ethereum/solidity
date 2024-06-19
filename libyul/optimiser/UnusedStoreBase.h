@@ -49,7 +49,7 @@ struct Dialect;
 class UnusedStoreBase: public ASTWalker
 {
 public:
-	explicit UnusedStoreBase(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit UnusedStoreBase(YulNameRepository const& _yulNameRepository): m_yulNameRepository(_yulNameRepository) {}
 
 	using ASTWalker::operator();
 	void operator()(If const& _if) override;
@@ -60,7 +60,7 @@ public:
 	void operator()(Continue const&) override;
 
 protected:
-	using ActiveStores = std::map<YulString, std::set<Statement const*>>;
+	using ActiveStores = std::map<YulName, std::set<Statement const*>>;
 
 	/// This function is called for a loop that is nested too deep to avoid
 	/// horrible runtime and should just resolve the situation in a pragmatic
@@ -76,7 +76,7 @@ protected:
 	static void merge(ActiveStores& _target, ActiveStores&& _source);
 	static void merge(ActiveStores& _target, std::vector<ActiveStores>&& _source);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	/// Set of all stores encountered during the traversal (in the current function).
 	std::set<Statement const*> m_allStores;
 	/// Set of stores that are marked as being used (in the current function).

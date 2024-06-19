@@ -45,9 +45,9 @@ void SyntaxTest::parseAndAnalyze()
 	std::string const& source = m_sources.sources.begin()->second;
 
 	ErrorList errorList{};
-	soltestAssert(m_dialect, "");
+	soltestAssert(m_yulNameRepository, "");
 	// Silently ignoring the results.
-	yul::test::parse(source, *m_dialect, errorList);
+	yul::test::parse(source, *m_yulNameRepository, errorList);
 	for (auto const& error: errorList)
 	{
 		int locationStart = -1;
@@ -75,5 +75,5 @@ SyntaxTest::SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVe
 	CommonSyntaxTest(_filename, _evmVersion)
 {
 	std::string dialectName = m_reader.stringSetting("dialect", "evmTyped");
-	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
+	m_yulNameRepository = std::make_unique<YulNameRepository>(dialect(dialectName, solidity::test::CommonOptions::get().evmVersion()));
 }

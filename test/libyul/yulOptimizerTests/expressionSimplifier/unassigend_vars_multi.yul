@@ -10,6 +10,6 @@
 // {
 //     {
 //         let c, d
-//         sstore(d, 7)
+//         sstore(c, 7)
 //     }
 // }

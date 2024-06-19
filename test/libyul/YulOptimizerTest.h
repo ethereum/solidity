@@ -31,6 +31,7 @@ namespace solidity::yul
 struct AsmAnalysisInfo;
 struct Object;
 struct Dialect;
+class YulNameRepository;
 }
 
 namespace solidity::yul::test
@@ -55,6 +56,7 @@ private:
 	std::string m_optimizerStep;
 
 	Dialect const* m_dialect = nullptr;
+	std::unique_ptr<YulNameRepository> m_yulNameRepository;
 
 	std::shared_ptr<Object> m_object;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;

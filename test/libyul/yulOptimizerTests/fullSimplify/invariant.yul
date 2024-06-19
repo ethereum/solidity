@@ -13,8 +13,8 @@
 // {
 //     {
 //         let a := calldataload(0)
-//         let _4 := 0
+//         let _1 := 0
 //         let b := a
-//         mstore(b, eq(calldataload(_4), a))
+//         mstore(b, eq(calldataload(_1), a))
 //     }
 // }

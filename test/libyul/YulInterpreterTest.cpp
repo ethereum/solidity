@@ -72,6 +72,7 @@ bool YulInterpreterTest::parse(std::ostream& _stream, std::string const& _linePr
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::All()
 	);
+	m_yulNameRepository = stack.yulNameRepository();
 	if (stack.parseAndAnalyze("", m_source))
 	{
 		m_ast = stack.parserResult()->code;
@@ -97,7 +98,7 @@ std::string YulInterpreterTest::interpret()
 	{
 		Interpreter::run(
 			state,
-			EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion()),
+			*m_yulNameRepository,
 			*m_ast,
 			/*disableExternalCalls=*/ !m_simulateExternalCallsToSelf,
 			/*disableMemoryTracing=*/ false

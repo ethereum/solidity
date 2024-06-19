@@ -940,14 +940,14 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		_inlineAssembly.annotation().externalReferences.empty()
 	)
 	{
-		yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&_inlineAssembly.dialect());
+		yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&_inlineAssembly.nameRepository().dialect());
 		solAssert(dialect, "");
 
 		// Create a modifiable copy of the code and analysis
 		object.code = std::make_shared<yul::Block>(yul::ASTCopier().translate(*code));
-		object.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(*dialect, object));
+		object.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(_inlineAssembly.nameRepository(), object));
 
-		m_context.optimizeYul(object, *dialect, m_optimiserSettings);
+		m_context.optimizeYul(object, *dialect, _inlineAssembly.nameRepository(), m_optimiserSettings);
 
 		code = object.code.get();
 		analysisInfo = object.analysisInfo.get();
@@ -958,6 +958,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		*analysisInfo,
 		*m_context.assemblyPtr(),
 		m_context.evmVersion(),
+		_inlineAssembly.nameRepository(),
 		identifierAccessCodeGen,
 		false,
 		m_optimiserSettings.optimizeStackAllocation

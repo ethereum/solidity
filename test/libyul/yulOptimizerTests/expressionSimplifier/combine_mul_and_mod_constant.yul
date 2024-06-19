@@ -6,8 +6,8 @@
 //
 // {
 //     {
-//         let _3 := mload(1)
-//         let _4 := 0
-//         mstore(_4, mulmod(mload(_4), _3, 32))
+//         let _1 := mload(1)
+//         let _2 := 0
+//         mstore(_2, mulmod(mload(_2), _1, 32))
 //     }
 // }

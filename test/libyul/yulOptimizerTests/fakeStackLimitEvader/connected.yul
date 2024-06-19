@@ -29,34 +29,34 @@
 //     {
 //         a := 21
 //         mstore(0x60, 1)
-//         let b_1, a_2, $c_3 := z()
-//         mstore(0x60, $c_3)
-//         a := a_2
-//         b := b_1
+//         let b_2, a_3, $c := z()
+//         mstore(0x60, $c)
+//         a := a_3
+//         b := b_2
 //     }
 //     function f() -> x
 //     {
 //         mstore(0x40, 0)
 //         mstore(0x40, 42)
-//         let $x3_4, $x4_5 := g()
-//         mstore(0x00, $x4_5)
-//         mstore(0x20, $x3_4)
+//         let $x3, $x4 := g()
+//         mstore(0x00, $x4)
+//         mstore(0x20, $x3)
 //         x := mul(add(mload(0x40), mload(0x20)), h(mload(0x00)))
 //         sstore(mload(0x20), mload(0x00))
 //     }
 //     function h(v) -> a_1
 //     {
-//         let x_2_6, $z_7, y_8 := z()
-//         mstore(0x60, $z_7)
-//         let y := y_8
-//         let x_2 := x_2_6
-//         let a_1_9, $z_10, v_11 := z()
-//         mstore(0x60, $z_10)
-//         v := v_11
-//         a_1 := a_1_9
+//         let x_3, $z, y_2 := z()
+//         mstore(0x60, $z)
+//         let y := y_2
+//         let x_1 := x_3
+//         let a_4, $z_1, v_1 := z()
+//         mstore(0x60, $z_1)
+//         v := v_1
+//         a_1 := a_4
 //     }
-//     function z() -> a_3, b_4, c
+//     function z() -> a_2, b_1, c
 //     { mstore(0x80, 0) }
 //     sstore(0, f())
-//     let x_5, y_6 := g()
+//     let x_2, y_1 := g()
 // }

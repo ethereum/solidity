@@ -13,8 +13,8 @@
 // {
 //     {
 //         let c := calldataload(0)
-//         let _2 := 4
-//         if c { let _3 := 2 }
+//         let _1 := 4
+//         if c { let _2 := 2 }
 //         let d := 0
 //         revert(d, d)
 //     }

@@ -46,6 +46,7 @@ struct Dialect;
  *
  * Prerequisites: Disambiguator, FunctionHoister, FunctionGrouper
  */
+ /*
 class VarNameCleaner: public ASTModifier
 {
 public:
@@ -96,5 +97,5 @@ private:
 	/// Used to assert that a function definition cannot be inside another.
 	bool m_insideFunction = false;
 };
-
+*/
 }

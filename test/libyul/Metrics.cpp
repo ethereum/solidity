@@ -37,7 +37,7 @@ namespace
 
 size_t codeSize(std::string const& _source, CodeWeights const _weights = {})
 {
-	std::shared_ptr<Block> ast = parse(_source, false).first;
+	std::shared_ptr<Block> ast = std::get<0>(parse(_source, false));
 	BOOST_REQUIRE(ast);
 	return CodeSize::codeSize(*ast, _weights);
 }

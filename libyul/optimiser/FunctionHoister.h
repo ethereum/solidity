@@ -49,7 +49,7 @@ private:
 	FunctionHoister() = default;
 
 	bool m_isTopLevel = true;
-	std::vector<Statement> m_functions;
+	std::vector<Statement> m_functions {};
 };
 
 }

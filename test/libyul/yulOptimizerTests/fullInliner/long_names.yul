@@ -13,10 +13,10 @@
 // {
 //     {
 //         let verylongvariablename2_1 := 3
-//         let verylongvariablename_4 := verylongvariablename2_1
-//         let verylongvariablename2_5 := 0
-//         verylongvariablename2_5 := add(verylongvariablename_4, verylongvariablename_4)
-//         mstore(0, verylongvariablename2_5)
+//         let verylongvariablename_1 := verylongvariablename2_1
+//         let verylongvariablename2_2 := 0
+//         verylongvariablename2_2 := add(verylongvariablename_1, verylongvariablename_1)
+//         mstore(0, verylongvariablename2_2)
 //         mstore(1, verylongvariablename2_1)
 //     }
 //     function verylongfunctionname(verylongvariablename) -> verylongvariablename2

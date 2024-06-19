@@ -19,32 +19,32 @@
  * Yul dialect.
  */
 
-#include <libyul/Dialect.h>
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
+#include <range/v3/range/conversion.hpp>
 
 using namespace solidity::yul;
 using namespace solidity::langutil;
 
-Literal Dialect::zeroLiteralForType(solidity::yul::YulString _type) const
+Literal Dialect::zeroLiteralForType(YulName const _type, YulNameRepository const& _nameRepository) const
 {
-	if (_type == boolType && _type != defaultType)
+	if (_type == _nameRepository.predefined().boolType && _type != _nameRepository.predefined().defaultType)
 		return {DebugData::create(), LiteralKind::Boolean, LiteralValue(false), _type};
 	return {DebugData::create(), LiteralKind::Number, LiteralValue(0, std::nullopt), _type};
 }
 
-
-Literal Dialect::trueLiteral() const
-{
-	if (boolType != defaultType)
-		return {DebugData::create(), LiteralKind::Boolean, LiteralValue(true), boolType};
-	else
-		return {DebugData::create(), LiteralKind::Number, LiteralValue(1), defaultType};
-}
-
-bool Dialect::validTypeForLiteral(LiteralKind _kind, LiteralValue const&, YulString _type) const
+bool Dialect::validTypeForLiteral(LiteralKind _kind, LiteralValue const&, std::string_view _type) const
 {
 	if (_kind == LiteralKind::Boolean)
 		return _type == boolType;
+	else
+		return true;
+}
+
+bool Dialect::validTypeForLiteral(LiteralKind _kind, LiteralValue const&, Type _type, YulNameRepository const& _nameRepository) const
+{
+	if (_kind == LiteralKind::Boolean)
+		return _type == _nameRepository.predefined().boolType;
 	else
 		return true;
 }
@@ -58,22 +58,22 @@ Dialect const& Dialect::yulDeprecated()
 	{
 		// TODO will probably change, especially the list of types.
 		dialect = std::make_unique<Dialect>();
-		dialect->defaultType = "u256"_yulstring;
-		dialect->boolType = "bool"_yulstring;
+		dialect->defaultType = "u256";
+		dialect->boolType = "bool";
 		dialect->types = {
-			"bool"_yulstring,
-			"u8"_yulstring,
-			"s8"_yulstring,
-			"u32"_yulstring,
-			"s32"_yulstring,
-			"u64"_yulstring,
-			"s64"_yulstring,
-			"u128"_yulstring,
-			"s128"_yulstring,
-			"u256"_yulstring,
-			"s256"_yulstring
+			"bool",
+			"u8",
+			"s8",
+			"u32",
+			"s32",
+			"u64",
+			"s64",
+			"u128",
+			"s128",
+			"u256",
+			"s256"
 		};
-	};
+	}
 
 	return *dialect;
 }

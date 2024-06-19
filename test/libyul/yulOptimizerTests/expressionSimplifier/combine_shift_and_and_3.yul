@@ -27,8 +27,8 @@
 //         let b := and(shr(8, x), 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0)
 //         let c := and(shr(8, x), 0x0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
 //         let d := and(shl(8, x), 0x0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00)
-//         let _14 := 150
-//         let e := shl(_14, and(shl(148, x), 0x3ffffffffffffffffffffffffff0000000000000000000000000000000000000))
+//         let _1 := 150
+//         let e := shl(_1, and(shl(148, x), 0x3ffffffffffffffffffffffffff0000000000000000000000000000000000000))
 //         sstore(15, x)
 //         sstore(16, a)
 //         sstore(17, b)

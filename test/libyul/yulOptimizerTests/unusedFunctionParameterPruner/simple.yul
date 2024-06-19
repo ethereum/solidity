@@ -16,6 +16,6 @@
 //         let w := mload(1)
 //         y := mload(w)
 //     }
-//     function f_1(x_2) -> y_3
-//     { y_3 := f() }
+//     function f_1(x) -> y_1
+//     { y_1 := f() }
 // }

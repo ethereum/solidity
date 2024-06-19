@@ -10,14 +10,14 @@
 // step: ssaTransform
 //
 // {
-//     let x_1, y_2 := f(1, 2)
+//     let x_1, y_1 := f(1, 2)
 //     let x := x_1
-//     let y := y_2
-//     let x_3 := mload(y_2)
-//     x := x_3
-//     let y_4 := mload(x_3)
-//     y := y_4
-//     let a, b := f(x_3, y_4)
+//     let y := y_1
+//     let x_2 := mload(y_1)
+//     x := x_2
+//     let y_2 := mload(x_2)
+//     y := y_2
+//     let a, b := f(x_2, y_2)
 //     sstore(a, b)
 //     function f(t, v) -> w, z
 //     { }

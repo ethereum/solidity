@@ -582,13 +582,13 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 	solAssert(m_currentNode && m_inlineAssembly, "");
 	yul::ASTWalker::operator()(_functionCall);
 
-	if (auto const *builtinFunction = m_inlineAssembly->dialect().builtin(_functionCall.functionName.name))
+	if (auto const *builtinFunction = m_inlineAssembly->nameRepository().builtin(_functionCall.functionName.name))
 	{
-		if (builtinFunction->controlFlowSideEffects.canTerminate)
+		if (builtinFunction->data->controlFlowSideEffects.canTerminate)
 			connect(m_currentNode, m_transactionReturnNode);
-		if (builtinFunction->controlFlowSideEffects.canRevert)
+		if (builtinFunction->data->controlFlowSideEffects.canRevert)
 			connect(m_currentNode, m_revertNode);
-		if (!builtinFunction->controlFlowSideEffects.canContinue)
+		if (!builtinFunction->data->controlFlowSideEffects.canContinue)
 			m_currentNode = newLabel();
 	}
 }

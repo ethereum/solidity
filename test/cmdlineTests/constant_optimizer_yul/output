@@ -4,15 +4,15 @@ object "C_12" {
     code {
         {
             /// @src 0:61:418  "contract C {..."
-            let _1 := memoryguard(0x80)
-            mstore(64, _1)
+            let _2 := memoryguard(0x80)
+            mstore(64, _2)
             if callvalue() { revert(0, 0) }
             /// @src 0:103:238  "assembly {..."
             sstore(0, shl(180, 1))
             /// @src 0:61:418  "contract C {..."
-            let _2 := datasize("C_12_deployed")
-            codecopy(_1, dataoffset("C_12_deployed"), _2)
-            return(_1, _2)
+            let _1 := datasize("C_12_deployed")
+            codecopy(_2, dataoffset("C_12_deployed"), _1)
+            return(_2, _1)
         }
     }
     /// @use-src 0:"constant_optimizer_yul/input.sol"

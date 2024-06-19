@@ -44,10 +44,10 @@ public:
 
 private:
 	EqualStoreEliminator(
-		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects
+		YulNameRepository const& _yulNameRepository,
+		std::map<YulName, SideEffects> _functionSideEffects
 	):
-		DataFlowAnalyzer(_dialect, MemoryAndStorage::Analyze, std::move(_functionSideEffects))
+		DataFlowAnalyzer(_yulNameRepository, MemoryAndStorage::Analyze, std::move(_functionSideEffects))
 	{}
 
 protected:

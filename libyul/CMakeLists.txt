@@ -37,6 +37,8 @@ add_library(yul
 	ScopeFiller.h
 	Utilities.cpp
 	Utilities.h
+	YulName.cpp
+	YulName.h
 	YulString.h
 	YulName.cpp
 	YulName.h
@@ -135,12 +137,8 @@ add_library(yul
 	optimiser/Metrics.h
 	optimiser/NameCollector.cpp
 	optimiser/NameCollector.h
-	optimiser/NameDispenser.cpp
-	optimiser/NameDispenser.h
 	optimiser/NameDisplacer.cpp
 	optimiser/NameDisplacer.h
-	optimiser/NameSimplifier.cpp
-	optimiser/NameSimplifier.h
 	optimiser/OptimiserStep.h
 	optimiser/OptimizerUtilities.cpp
 	optimiser/OptimizerUtilities.h

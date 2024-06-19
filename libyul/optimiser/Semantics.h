@@ -41,24 +41,24 @@ class SideEffectsCollector: public ASTWalker
 {
 public:
 	explicit SideEffectsCollector(
-		Dialect const& _dialect,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
-	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
+		YulNameRepository const& _yulNameRepository,
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+	): m_yulNameRepository(_yulNameRepository), m_functionSideEffects(_functionSideEffects) {}
 	SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Expression const& _expression,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	);
-	SideEffectsCollector(Dialect const& _dialect, Statement const& _statement);
+	SideEffectsCollector(YulNameRepository const& _yulNameRepository, Statement const& _statement);
 	SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block const& _ast,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	);
 	SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		ForLoop const& _ast,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	);
 
 	using ASTWalker::operator();
@@ -116,8 +116,8 @@ public:
 	SideEffects sideEffects() { return m_sideEffects; }
 
 private:
-	Dialect const& m_dialect;
-	std::map<YulString, SideEffects> const* m_functionSideEffects = nullptr;
+	YulNameRepository const& m_yulNameRepository;
+	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
 	SideEffects m_sideEffects;
 };
 
@@ -130,8 +130,8 @@ private:
 class SideEffectsPropagator
 {
 public:
-	static std::map<YulString, SideEffects> sideEffects(
-		Dialect const& _dialect,
+	static std::map<YulName, SideEffects> sideEffects(
+		YulNameRepository const& _yulNameRepository,
 		CallGraph const& _directCallGraph
 	);
 };
@@ -148,15 +148,15 @@ public:
 class MSizeFinder: public ASTWalker
 {
 public:
-	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
-	static bool containsMSize(Dialect const& _dialect, Object const& _object);
+	static bool containsMSize(YulNameRepository const& _yulNameRepository, Block const& _ast);
+	static bool containsMSize(YulNameRepository const& _yulNameRepository, Object const& _object);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _funCall) override;
 
 private:
-	MSizeFinder(Dialect const& _dialect): m_dialect(_dialect) {}
-	Dialect const& m_dialect;
+	MSizeFinder(YulNameRepository const& _yulNameRepository): m_yulNameRepository(_yulNameRepository) {}
+	YulNameRepository const& m_yulNameRepository;
 	bool m_msizeFound = false;
 };
 
@@ -194,10 +194,10 @@ class MovableChecker: public SideEffectsCollector
 {
 public:
 	explicit MovableChecker(
-		Dialect const& _dialect,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
-	): SideEffectsCollector(_dialect, _functionSideEffects) {}
-	MovableChecker(Dialect const& _dialect, Expression const& _expression);
+		YulNameRepository const& _yulNameRepository,
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+	): SideEffectsCollector(_yulNameRepository, _functionSideEffects) {}
+	MovableChecker(YulNameRepository const& _yulNameRepository, Expression const& _expression);
 
 	void operator()(Identifier const& _identifier) override;
 
@@ -205,11 +205,11 @@ public:
 	void visit(Statement const&) override;
 	using ASTWalker::visit;
 
-	std::set<YulString> const& referencedVariables() const { return m_variableReferences; }
+	std::set<YulName> const& referencedVariables() const { return m_variableReferences; }
 
 private:
 	/// Which variables the current expression references.
-	std::set<YulString> m_variableReferences;
+	std::set<YulName> m_variableReferences;
 };
 
 struct ControlFlowSideEffects;
@@ -230,9 +230,9 @@ public:
 	enum class ControlFlow { FlowOut, Break, Continue, Terminate, Leave };
 
 	TerminationFinder(
-		Dialect const& _dialect,
-		std::map<YulString, ControlFlowSideEffects> const* _functionSideEffects = nullptr
-	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
+		YulNameRepository const& _yulNameRepository,
+		std::map<YulName, ControlFlowSideEffects> const* _functionSideEffects = nullptr
+	): m_yulNameRepository(_yulNameRepository), m_functionSideEffects(_functionSideEffects) {}
 
 	/// @returns the index of the first statement in the provided sequence
 	/// that is an unconditional ``break``, ``continue``, ``leave`` or a
@@ -255,8 +255,8 @@ public:
 	bool containsNonContinuingFunctionCall(Expression const& _expr);
 
 private:
-	Dialect const& m_dialect;
-	std::map<YulString, ControlFlowSideEffects> const* m_functionSideEffects;
+	YulNameRepository const& m_yulNameRepository;
+	std::map<YulName, ControlFlowSideEffects> const* m_functionSideEffects;
 };
 
 }

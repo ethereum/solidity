@@ -11,9 +11,9 @@
 // {
 //     {
 //         let _1 := msize()
-//         let _3 := calldataload(0)
-//         mstore(_3, _1)
+//         let _2 := calldataload(0)
+//         mstore(_2, _1)
 //         let t := mload(calldataload(10))
-//         sstore(t, mload(_3))
+//         sstore(t, mload(_2))
 //     }
 // }

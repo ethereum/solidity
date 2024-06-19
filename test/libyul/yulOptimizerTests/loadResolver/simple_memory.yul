@@ -9,8 +9,8 @@
 //
 // {
 //     {
-//         let _2 := calldataload(10)
-//         mstore(calldataload(0), _2)
-//         sstore(mload(_2), _2)
+//         let _1 := calldataload(10)
+//         mstore(calldataload(0), _1)
+//         sstore(mload(_1), _1)
 //     }
 // }

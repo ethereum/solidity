@@ -21,14 +21,14 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-std::vector<FunctionCall*> FunctionCallFinder::run(Block& _block, YulString _functionName)
+std::vector<FunctionCall*> FunctionCallFinder::run(Block& _block, YulName _functionName)
 {
 	FunctionCallFinder functionCallFinder(_functionName);
 	functionCallFinder(_block);
 	return functionCallFinder.m_calls;
 }
 
-FunctionCallFinder::FunctionCallFinder(YulString _functionName): m_functionName(_functionName) {}
+FunctionCallFinder::FunctionCallFinder(YulName _functionName): m_functionName(_functionName) {}
 
 void FunctionCallFinder::operator()(FunctionCall& _functionCall)
 {

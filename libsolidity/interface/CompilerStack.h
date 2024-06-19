@@ -69,6 +69,11 @@ class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 }
 
+namespace solidity::yul
+{
+class YulNameRepository;
+}
+
 namespace solidity::frontend
 {
 

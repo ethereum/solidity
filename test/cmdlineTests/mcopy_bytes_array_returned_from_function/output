@@ -3,12 +3,12 @@ Optimized IR:
 object "C_14" {
     code {
         {
-            let _1 := memoryguard(0x80)
-            mstore(64, _1)
+            let _2 := memoryguard(0x80)
+            mstore(64, _2)
             if callvalue() { revert(0, 0) }
-            let _2 := datasize("C_14_deployed")
-            codecopy(_1, dataoffset("C_14_deployed"), _2)
-            return(_1, _2)
+            let _1 := datasize("C_14_deployed")
+            codecopy(_2, dataoffset("C_14_deployed"), _1)
+            return(_2, _1)
         }
     }
     /// @use-src 0:"mcopy_bytes_array_returned_from_function/input.sol"

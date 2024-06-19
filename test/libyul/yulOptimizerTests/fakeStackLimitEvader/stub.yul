@@ -37,50 +37,50 @@
 //     }
 //     function g(gx)
 //     {
-//         let $gx_1, $gy_2 := tuple2()
-//         mstore(0x40, $gy_2)
-//         mstore(0x60, $gx_1)
+//         let $gx, $gy := tuple2()
+//         mstore(0x40, $gy)
+//         mstore(0x60, $gx)
 //         {
-//             let $gx_3, $gy_4 := tuple2()
-//             mstore(0x40, $gy_4)
-//             mstore(0x60, $gx_3)
+//             let $gx_1, $gy_1 := tuple2()
+//             mstore(0x40, $gy_1)
+//             mstore(0x60, $gx_1)
 //         }
 //         {
-//             let $gx_5, gx_6 := tuple2()
-//             mstore(0x60, $gx_5)
-//             gx := gx_6
+//             let $gx_2, gx_1 := tuple2()
+//             mstore(0x60, $gx_2)
+//             gx := gx_1
 //         }
 //         {
-//             let gx_7, $gy_8 := tuple2()
-//             mstore(0x40, $gy_8)
-//             gx := gx_7
+//             let gx_2, $gy_2 := tuple2()
+//             mstore(0x40, $gy_2)
+//             gx := gx_2
 //         }
 //     }
 //     function h(hx, hy, hz, hw)
 //     {
-//         let $hx_9, $hy_10, $hz_11, $hw_12 := tuple4()
-//         mstore(0x00, $hw_12)
-//         mstore(0x20, $hz_11)
-//         mstore(0x40, $hy_10)
-//         mstore(0x60, $hx_9)
+//         let $hx, $hy, $hz, $hw := tuple4()
+//         mstore(0x00, $hw)
+//         mstore(0x20, $hz)
+//         mstore(0x40, $hy)
+//         mstore(0x60, $hx)
 //         {
-//             let hx_13, $hy_14, hz_15, $hw_16 := tuple4()
-//             mstore(0x00, $hw_16)
-//             mstore(0x40, $hy_14)
-//             hz := hz_15
-//             hx := hx_13
+//             let hx_1, $hy_1, hz_1, $hw_1 := tuple4()
+//             mstore(0x00, $hw_1)
+//             mstore(0x40, $hy_1)
+//             hz := hz_1
+//             hx := hx_1
 //         }
 //         {
-//             let $hx_17, $hy_18, hz_19, hw_20 := tuple4()
-//             mstore(0x40, $hy_18)
-//             mstore(0x60, $hx_17)
-//             hw := hw_20
-//             hz := hz_19
+//             let $hx_1, $hy_2, hz_2, hw_1 := tuple4()
+//             mstore(0x40, $hy_2)
+//             mstore(0x60, $hx_1)
+//             hw := hw_1
+//             hz := hz_2
 //         }
 //     }
 //     function tuple2() -> a, b
 //     { }
-//     function tuple4() -> a_1, b_2, c, d
+//     function tuple4() -> a_1, b_1, c, d
 //     { }
 //     f()
 //     g(0)

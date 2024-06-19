@@ -39,18 +39,20 @@ struct AsmAnalysisInfo;
 struct Block;
 struct Object;
 struct Dialect;
+class YulStack;
+class YulNameRepository;
 }
 
 namespace solidity::yul::test
 {
 
-std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>>
+std::tuple<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>, std::shared_ptr<YulNameRepository>>
 parse(std::string const& _source, bool _yul = true);
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>>
-parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& _errors);
+parse(std::string const& _source, YulNameRepository& _yulNameRepository, langutil::ErrorList& _errors);
 
-Block disambiguate(std::string const& _source, bool _yul = true);
+std::tuple<Block, std::shared_ptr<YulNameRepository>> disambiguate(std::string const& _source, bool _yul = true);
 std::string format(std::string const& _source, bool _yul = true);
 
 solidity::yul::Dialect const& dialect(std::string const& _name, langutil::EVMVersion _evmVersion);

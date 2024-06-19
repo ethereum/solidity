@@ -22,9 +22,9 @@
 // {
 //     function ref1(a) -> x
 //     { x := add(a, 1) }
-//     function ref3(a_1) -> x_2
+//     function ref3(a_1) -> x_1
 //     {
-//         x_2 := add(a_1, mul(a_1, a_1))
+//         x_1 := add(a_1, mul(a_1, a_1))
 //     }
 //     let y1 := add(calldatasize(), 1)
 //     let y2 := add(calldatasize(), mul(calldatasize(), calldatasize()))

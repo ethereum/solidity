@@ -36,8 +36,8 @@ using namespace solidity::yul;
 void EqualStoreEliminator::run(OptimiserStepContext const& _context, Block& _ast)
 {
 	EqualStoreEliminator eliminator{
-		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
+		_context.yulNameRepository,
+		SideEffectsPropagator::sideEffects(_context.yulNameRepository, CallGraphGenerator::callGraph(_ast))
 	};
 	eliminator(_ast);
 
@@ -53,13 +53,13 @@ void EqualStoreEliminator::visit(Statement& _statement)
 	{
 		if (auto vars = isSimpleStore(StoreLoadLocation::Storage, *expression))
 		{
-			if (std::optional<YulString> currentValue = storageValue(vars->first))
+			if (std::optional<YulName> currentValue = storageValue(vars->first))
 				if (*currentValue == vars->second)
 					m_pendingRemovals.insert(&_statement);
 		}
 		else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, *expression))
 		{
-			if (std::optional<YulString> currentValue = memoryValue(vars->first))
+			if (std::optional<YulName> currentValue = memoryValue(vars->first))
 				if (*currentValue == vars->second)
 					m_pendingRemovals.insert(&_statement);
 		}

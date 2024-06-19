@@ -109,14 +109,14 @@ void InterpreterState::dumpTraceAndState(std::ostream& _out, bool _disableMemory
 
 void Interpreter::run(
 	InterpreterState& _state,
-	Dialect const& _dialect,
+	YulNameRepository const& _yulNameRepository,
 	Block const& _ast,
 	bool _disableExternalCalls,
 	bool _disableMemoryTrace
 )
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
+	Interpreter{_state, _yulNameRepository, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
 }
 
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
@@ -131,7 +131,7 @@ void Interpreter::operator()(Assignment const& _assignment)
 	solAssert(values.size() == _assignment.variableNames.size(), "");
 	for (size_t i = 0; i < values.size(); ++i)
 	{
-		YulString varName = _assignment.variableNames.at(i).name;
+		auto varName = _assignment.variableNames.at(i).name;
 		solAssert(m_variables.count(varName), "");
 		m_variables[varName] = values.at(i);
 	}
@@ -146,7 +146,7 @@ void Interpreter::operator()(VariableDeclaration const& _declaration)
 	solAssert(values.size() == _declaration.variables.size(), "");
 	for (size_t i = 0; i < values.size(); ++i)
 	{
-		YulString varName = _declaration.variables.at(i).name;
+		auto varName = _declaration.variables.at(i).name;
 		solAssert(!m_variables.count(varName), "");
 		m_variables[varName] = values.at(i);
 		m_scope->names.emplace(varName, nullptr);
@@ -251,14 +251,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_yulNameRepository, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 std::vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_yulNameRepository, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -309,29 +309,25 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
-		if (!builtin->literalArguments.empty())
-			literalArguments = &builtin->literalArguments;
+	if (auto const* builtin = m_yulNameRepository.builtin(_funCall.functionName.name))
+		if (!builtin->data->literalArguments.empty())
+			literalArguments = &builtin->data->literalArguments;
 	evaluateArgs(_funCall.arguments, literalArguments);
 
-	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_yulNameRepository.dialect()))
 	{
-		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
-		{
-			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
+		if (auto const* fun = m_yulNameRepository.builtin(_funCall.functionName.name))
+			if(auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(fun->data))
+			{
+				EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
+				u256 const value = interpreter.evalBuiltin(*evmFun, _funCall.arguments, values());
 
-			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, values());
+				if (!m_disableExternalCalls && evmFun->instruction && evmasm::isCallInstruction(*evmFun->instruction))
+					runExternalCall(*evmFun->instruction);
 
-			if (
-				!m_disableExternalCalls &&
-				fun->instruction &&
-				evmasm::isCallInstruction(*fun->instruction)
-			)
-				runExternalCall(*fun->instruction);
-
-			setValue(value);
-			return;
-		}
+				setValue(value);
+				return;
+			}
 	}
 
 	Scope* scope = &m_scope;
@@ -343,7 +339,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 	FunctionDefinition const* fun = scope->names.at(_funCall.functionName.name);
 	yulAssert(fun, "Function not found.");
 	yulAssert(m_values.size() == fun->parameters.size(), "");
-	std::map<YulString, u256> variables;
+	std::map<YulName, u256> variables;
 	for (size_t i = 0; i < fun->parameters.size(); ++i)
 		variables[fun->parameters.at(i).name] = m_values.at(i);
 	for (size_t i = 0; i < fun->returnVariables.size(); ++i)

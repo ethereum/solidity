@@ -44,16 +44,16 @@ public:
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
 private:
-	CircularReferencesPruner(std::set<YulString> const& _reservedIdentifiers):
+	CircularReferencesPruner(std::set<YulName> const& _reservedIdentifiers):
 		m_reservedIdentifiers(_reservedIdentifiers)
 	{}
 
 	/// Run a breadth-first search starting from the outermost context and
 	/// externally referenced functions to find all the functions that are
 	/// called from there either directly or indirectly.
-	std::set<YulString> functionsCalledFromOutermostContext(CallGraph const& _callGraph);
+	std::set<YulName> functionsCalledFromOutermostContext(CallGraph const& _callGraph);
 
-	std::set<YulString> const& m_reservedIdentifiers;
+	std::set<YulName> const& m_reservedIdentifiers;
 };
 
 }

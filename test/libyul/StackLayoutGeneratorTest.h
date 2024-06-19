@@ -22,7 +22,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 
 namespace test
 {
@@ -37,7 +37,7 @@ public:
 	explicit StackLayoutGeneratorTest(std::string const& _filename);
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 private:
-	Dialect const* m_dialect = nullptr;
+	std::unique_ptr<YulNameRepository> m_yulNameRepository;
 };
 }
 }

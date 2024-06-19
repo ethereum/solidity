@@ -46,20 +46,20 @@ public:
 		StepThroughNode,
 	};
 
-	Inspector(std::string const& _source, InterpreterState const& _state)
-		:m_source(_source), m_state(_state) {}
+	Inspector(std::string const& _source, InterpreterState const& _state, YulNameRepository const& _yulNameRepository)
+		:m_source(_source), m_state(_state), m_yulNameRepository(_yulNameRepository) {}
 
 	/* Asks the user what action to take.
 	 * @returns NodeAction::RunNode if the current AST node (and all children nodes!) should be
 	 *          processed without stopping, else NodeAction::StepThroughNode.
 	 */
-	NodeAction queryUser(langutil::DebugData const& _data, std::map<YulString, u256> const& _variables);
+	NodeAction queryUser(langutil::DebugData const& _data, std::map<YulName, u256> const& _variables);
 
 	void stepMode(NodeAction _action) { m_stepMode = _action; }
 
 	std::string const& source() const { return m_source; }
 
-	void interactiveVisit(langutil::DebugData const& _debugData, std::map<YulString, u256> const& _variables, std::function<void()> _visitNode)
+	void interactiveVisit(langutil::DebugData const& _debugData, std::map<YulName, u256> const& _variables, std::function<void()> _visitNode)
 	{
 		Inspector::NodeAction action = queryUser(_debugData, _variables);
 
@@ -91,6 +91,7 @@ private:
 
 	/// Used to run AST nodes without user interaction
 	NodeAction m_stepMode = NodeAction::StepThroughNode;
+	YulNameRepository const& m_yulNameRepository;
 };
 
 /**
@@ -103,7 +104,7 @@ public:
 	static void run(
 		std::shared_ptr<Inspector> _inspector,
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block const& _ast,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing
@@ -112,13 +113,13 @@ public:
 	InspectedInterpreter(
 		std::shared_ptr<Inspector> _inspector,
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Scope& _scope,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
-		std::map<YulString, u256> _variables = {}
+		std::map<YulName, u256> _variables = {}
 	):
-		Interpreter(_state, _dialect, _scope, _disableExternalCalls, _disableMemoryTracing, _variables),
+		Interpreter(_state, _yulNameRepository, _scope, _disableExternalCalls, _disableMemoryTracing, _variables),
 		m_inspector(_inspector)
 	{
 	}
@@ -158,13 +159,13 @@ public:
 	InspectedExpressionEvaluator(
 		std::shared_ptr<Inspector> _inspector,
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Scope& _scope,
-		std::map<YulString, u256> const& _variables,
+		std::map<YulName, u256> const& _variables,
 		bool _disableExternalCalls,
 		bool _disableMemoryTrace
 	):
-		ExpressionEvaluator(_state, _dialect, _scope, _variables, _disableExternalCalls, _disableMemoryTrace),
+		ExpressionEvaluator(_state, _yulNameRepository, _scope, _variables, _disableExternalCalls, _disableMemoryTrace),
 		m_inspector(_inspector)
 	{}
 
@@ -180,12 +181,12 @@ public:
 	void operator()(Identifier const& _node) override { helper(_node); }
 	void operator()(FunctionCall const& _node) override { helper(_node); }
 protected:
-	std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulString, u256> _variables = {}) const override
+	std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const override
 	{
 		return std::make_unique<InspectedInterpreter>(
 			m_inspector,
 			m_state,
-			m_dialect,
+			m_yulNameRepository,
 			m_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace,
@@ -197,10 +198,11 @@ protected:
 		return std::make_unique<InspectedInterpreter>(
 			std::make_unique<Inspector>(
 				m_inspector->source(),
-				_state
+				_state,
+				m_yulNameRepository
 			),
 			_state,
-			m_dialect,
+			m_yulNameRepository,
 			_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace

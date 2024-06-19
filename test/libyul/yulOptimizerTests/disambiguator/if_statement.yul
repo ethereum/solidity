@@ -14,6 +14,6 @@
 //     { let a, b, c }
 //     {
 //         let a_1:bool
-//         if a_1 { let b_2:bool := a_1 }
+//         if a_1 { let b_1:bool := a_1 }
 //     }
 // }

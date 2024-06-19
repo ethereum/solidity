@@ -27,13 +27,13 @@ using namespace solidity::yul;
 
 void ForLoopConditionIntoBody::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ForLoopConditionIntoBody{_context.dialect}(_ast);
+	ForLoopConditionIntoBody{_context.yulNameRepository}(_ast);
 }
 
 void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 {
 	if (
-		m_dialect.booleanNegationFunction() &&
+		m_yulNameRepository.booleanNegationFunction() &&
 		!std::holds_alternative<Literal>(*_forLoop.condition) &&
 		!std::holds_alternative<Identifier>(*_forLoop.condition)
 	)
@@ -47,7 +47,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 				std::make_unique<Expression>(
 					FunctionCall {
 						debugData,
-						{debugData, m_dialect.booleanNegationFunction()->name},
+						{debugData, m_yulNameRepository.booleanNegationFunction()->name},
 						util::make_vector<Expression>(std::move(*_forLoop.condition))
 					}
 				),
@@ -59,7 +59,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 				debugData,
 				LiteralKind::Boolean,
 				LiteralValue{true},
-				m_dialect.boolType
+				m_yulNameRepository.predefined().boolType
 			}
 		);
 	}

@@ -26,8 +26,8 @@
 //     { y := iszero(x) }
 //     function funcWithLoop(x_1)
 //     {
-//         let _7 := 0
-//         mstore(_7, _7)
+//         let _3 := 0
+//         mstore(_3, _3)
 //         for { } userNot(x_1) { }
 //         { }
 //     }

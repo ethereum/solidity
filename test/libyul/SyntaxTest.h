@@ -39,7 +39,7 @@ protected:
 	void parseAndAnalyze() override;
 
 private:
-	Dialect const* m_dialect = nullptr;
+	std::unique_ptr<YulNameRepository> m_yulNameRepository;
 };
 
 }

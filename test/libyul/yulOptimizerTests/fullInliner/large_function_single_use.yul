@@ -15,15 +15,15 @@
 //
 // {
 //     {
-//         let a_6 := mload(1)
-//         let b_7 := 0
-//         let x_8 := mload(a_6)
-//         b_7 := sload(x_8)
-//         let c_9 := 3
-//         mstore(mul(a_6, b_7), mload(x_8))
-//         let y_12 := add(a_6, x_8)
-//         sstore(y_12, 10)
-//         let r := b_7
+//         let a_1 := mload(1)
+//         let b_1 := 0
+//         let x_1 := mload(a_1)
+//         b_1 := sload(x_1)
+//         let c_1 := 3
+//         mstore(mul(a_1, b_1), mload(x_1))
+//         let y_1 := add(a_1, x_1)
+//         sstore(y_1, 10)
+//         let r := b_1
 //     }
 //     function f(a) -> b
 //     {

@@ -18,9 +18,9 @@
 //         let b := mload(1)
 //         if mload(2)
 //         {
-//             let a_3 := mload(b)
-//             let b_4 := mload(a_3)
-//             a := mload(b_4)
+//             let a_1 := mload(b)
+//             let b_1 := mload(a_1)
+//             a := mload(b_1)
 //             b := mload(a)
 //         }
 //         mstore(a, b)

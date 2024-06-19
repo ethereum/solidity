@@ -17,7 +17,7 @@
 //     }
 //     function g() -> a_1
 //     {
-//         let b_2 := mload(0)
-//         a_1 := b_2
+//         let b_1 := mload(0)
+//         a_1 := b_1
 //     }
 // }

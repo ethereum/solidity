@@ -17,7 +17,7 @@
 //     {
 //         let a_1
 //         switch a_1
-//         case 0 { let b_2 := a_1 }
-//         default { let c_3 := a_1 }
+//         case 0 { let b_1 := a_1 }
+//         default { let c_1 := a_1 }
 //     }
 // }

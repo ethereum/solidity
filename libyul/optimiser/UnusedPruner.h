@@ -61,20 +61,20 @@ public:
 
 	// Run the pruner until the code does not change anymore.
 	static void runUntilStabilised(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
 	static void run(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block& _ast,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	)
 	{
-		runUntilStabilisedOnFullAST(_dialect, _ast, _externallyUsedFunctions);
+		runUntilStabilisedOnFullAST(_yulNameRepository, _ast, _externallyUsedFunctions);
 	}
 
 	/// Run the pruner until the code does not change anymore.
@@ -82,9 +82,9 @@ public:
 	/// The pruner itself determines if msize is used and which user-defined functions
 	/// are side-effect free.
 	static void runUntilStabilisedOnFullAST(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block& _ast,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
 	// Run the pruner until the code does not change anymore.
@@ -93,35 +93,35 @@ public:
 	//        whose only side-effect is a potential change of the return value of
 	//        the msize instruction.
 	static void runUntilStabilised(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		FunctionDefinition& _functionDefinition,
 		bool _allowMSizeOptimization,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
 private:
 	UnusedPruner(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 	UnusedPruner(
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		FunctionDefinition& _function,
 		bool _allowMSizeOptimization,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
-	bool used(YulString _name) const;
-	void subtractReferences(std::map<YulString, size_t> const& _subtrahend);
+	bool used(YulName _name) const;
+	void subtractReferences(std::map<YulName, size_t> const& _subtrahend);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	bool m_allowMSizeOptimization = false;
-	std::map<YulString, SideEffects> const* m_functionSideEffects = nullptr;
+	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
 	bool m_shouldRunAgain = false;
-	std::map<YulString, size_t> m_references;
+	std::map<YulName, size_t> m_references;
 };
 
 }

@@ -13,8 +13,8 @@ object "object" {
         }
         function z() -> y
         { y := calldataload(0) }
-        function z_1() -> y
-        { y := calldataload(0x20) }
+        function z_1() -> y_1
+        { y_1 := calldataload(0x20) }
     }
 }
 

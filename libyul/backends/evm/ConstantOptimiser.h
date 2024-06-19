@@ -48,8 +48,9 @@ class GasMeter;
 class ConstantOptimiser: public ASTModifier
 {
 public:
-	ConstantOptimiser(EVMDialect const& _dialect, GasMeter const& _meter):
-		m_dialect(_dialect),
+	ConstantOptimiser(YulNameRepository const& _yulNameRepository, EVMDialect const& _dialect, GasMeter const& _meter):
+		m_yulNameRepository(_yulNameRepository),
+		m_evmDialect(_dialect),
 		m_meter(_meter)
 	{}
 
@@ -62,7 +63,8 @@ public:
 	};
 
 private:
-	EVMDialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
+	EVMDialect const& m_evmDialect;
 	GasMeter const& m_meter;
 	std::map<u256, Representation> m_cache;
 };
@@ -72,16 +74,12 @@ class RepresentationFinder
 public:
 	using Representation = ConstantOptimiser::Representation;
 	RepresentationFinder(
+		YulNameRepository const& _yulNameRepository,
 		EVMDialect const& _dialect,
 		GasMeter const& _meter,
 		langutil::DebugData::ConstPtr _debugData,
 		std::map<u256, Representation>& _cache
-	):
-		m_dialect(_dialect),
-		m_meter(_meter),
-		m_debugData(std::move(_debugData)),
-		m_cache(_cache)
-	{}
+	);
 
 	/// @returns a cheaper representation for the number than its representation
 	/// as a literal or nullptr otherwise.
@@ -93,17 +91,25 @@ private:
 	Representation const& findRepresentation(u256 const& _value);
 
 	Representation represent(u256 const& _value) const;
-	Representation represent(YulString _instruction, Representation const& _arg) const;
-	Representation represent(YulString _instruction, Representation const& _arg1, Representation const& _arg2) const;
+	Representation represent(YulName _instruction, Representation const& _arg) const;
+	Representation represent(YulName _instruction, Representation const& _arg1, Representation const& _arg2) const;
 
 	Representation min(Representation _a, Representation _b);
 
 	EVMDialect const& m_dialect;
+	YulNameRepository const& m_yulNameRepository;
 	GasMeter const& m_meter;
 	langutil::DebugData::ConstPtr m_debugData;
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
 	size_t m_maxSteps = 10000;
 	std::map<u256, Representation>& m_cache;
+
+	YulName m_instr_not;
+	YulName m_instr_shl;
+	YulName m_instr_exp;
+	YulName m_instr_mul;
+	YulName m_instr_add;
+	YulName m_instr_sub;
 };
 
 }

@@ -37,12 +37,13 @@ using namespace solidity::yul;
 void EVMObjectCompiler::compile(
 	Object& _object,
 	AbstractAssembly& _assembly,
+	YulNameRepository& _yulNameRepository,
 	EVMDialect const& _dialect,
 	bool _optimize,
 	std::optional<uint8_t> _eofVersion
 )
 {
-	EVMObjectCompiler compiler(_assembly, _dialect, _eofVersion);
+	EVMObjectCompiler compiler(_assembly, _yulNameRepository, _dialect, _eofVersion);
 	compiler.run(_object, _optimize);
 }
 
@@ -59,7 +60,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, subObject->name.str());
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
-			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize, m_eofVersion);
+			compile(*subObject, *subAssemblyAndID.first, m_yulNameRepository, m_dialect, _optimize, m_eofVersion);
 		}
 		else
 		{
@@ -84,7 +85,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			m_assembly,
 			*_object.analysisInfo,
 			*_object.code,
-			m_dialect,
+			m_yulNameRepository,
 			context,
 			OptimizedEVMCodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
 		);
@@ -92,7 +93,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		{
 			std::vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
 				*_object.code,
-				"memoryguard"_yulstring
+				m_yulNameRepository.predefined().memoryguard
 			);
 			auto stackError = stackErrors.front();
 			std::string msg = stackError.comment() ? *stackError.comment() : "";
@@ -114,6 +115,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			m_assembly,
 			*_object.analysisInfo,
 			*_object.code,
+			m_yulNameRepository,
 			m_dialect,
 			context,
 			_optimize,

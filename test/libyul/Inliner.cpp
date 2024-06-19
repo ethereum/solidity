@@ -42,14 +42,15 @@ namespace
 {
 std::string inlinableFunctions(std::string const& _source)
 {
-	auto ast = disambiguate(_source);
+	auto [ast, repository] = disambiguate(_source);
 
 	InlinableExpressionFunctionFinder funFinder;
 	funFinder(ast);
 
 	std::vector<std::string> functionNames;
 	for (auto const& f: funFinder.inlinableFunctions())
-		functionNames.emplace_back(f.first.str());
+		functionNames.emplace_back(repository->baseLabelOf(f.first));
+	std::sort(functionNames.begin(), functionNames.end());
 	return boost::algorithm::join(functionNames, ",");
 }
 
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(simple)
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
 		"function g(a:u256) -> b:u256 { b := a }"
 		"function f() -> x:u256 { x := g(2:u256) }"
-	"}"), "g,f");
+	"}"), "f,g");
 }
 
 BOOST_AUTO_TEST_CASE(simple_inside_structures)
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(simple_inside_structures)
 			"function g(a:u256) -> b:u256 { b := a }"
 			"function f() -> x:u256 { x := g(2:u256) }"
 		"}"
-	"}"), "g,f");
+	"}"), "f,g");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
 		"function g(a:u256) -> b:u256 { b := a }"
 		"for {"
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE(simple_inside_structures)
 		"{"
 			"function h() -> y:u256 { y := 2:u256 }"
 		"}"
-	"}"), "h,g,f");
+	"}"), "f,g,h");
 }
 
 BOOST_AUTO_TEST_CASE(negative)

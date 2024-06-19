@@ -34,7 +34,6 @@ namespace solidity::yul
 {
 
 class YulString;
-using Type = YulString;
 struct FunctionCall;
 struct Object;
 
@@ -66,23 +65,30 @@ struct BuiltinFunctionForEVM: public BuiltinFunction
  */
 struct EVMDialect: public Dialect
 {
+	using BuiltinsMap = std::map<std::string, BuiltinFunctionForEVM, std::less<>>;
+	using ReservedIdentifiers = std::set<std::string, std::less<>>;
+
 	/// Constructor, should only be used internally. Use the factory functions below.
 	EVMDialect(langutil::EVMVersion _evmVersion, bool _objectAccess);
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
-	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
+	BuiltinFunctionForEVM const* builtin(std::string_view _name) const override;
+	BuiltinFunctionForEVM const* builtinNoVerbatim(std::string_view _name) const;
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
-	bool reservedIdentifier(YulString _name) const override;
+	bool reservedIdentifier(std::string_view _name) const override;
 
-	BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override { return builtin("pop"_yulstring); }
-	BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override { return builtin("eq"_yulstring); }
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
-	BuiltinFunctionForEVM const* memoryStoreFunction(YulString /*_type*/) const override { return builtin("mstore"_yulstring); }
-	BuiltinFunctionForEVM const* memoryLoadFunction(YulString /*_type*/) const override { return builtin("mload"_yulstring); }
-	BuiltinFunctionForEVM const* storageStoreFunction(YulString /*_type*/) const override { return builtin("sstore"_yulstring); }
-	BuiltinFunctionForEVM const* storageLoadFunction(YulString /*_type*/) const override { return builtin("sload"_yulstring); }
-	YulString hashFunction(YulString /*_type*/) const override { return "keccak256"_yulstring; }
+	BuiltinFunctionForEVM const* discardFunction(std::string_view /*_type*/) const override { return builtinNoVerbatim("pop"); }
+	BuiltinFunctionForEVM const* equalityFunction(std::string_view /*_type*/) const override { return builtinNoVerbatim("eq"); }
+	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtinNoVerbatim("iszero"); }
+	BuiltinFunctionForEVM const* memoryStoreFunction(std::string_view /*_type*/) const override { return builtinNoVerbatim("mstore"); }
+	BuiltinFunctionForEVM const* memoryLoadFunction(std::string_view /*_type*/) const override { return builtinNoVerbatim("mload"); }
+	BuiltinFunctionForEVM const* storageStoreFunction(std::string_view /*_type*/) const override { return builtinNoVerbatim("sstore"); }
+	BuiltinFunctionForEVM const* storageLoadFunction(std::string_view /*_type*/) const override { return builtinNoVerbatim("sload"); }
+
+
+
+	std::string_view hashFunction(std::string_view /*_type*/) const override { return "keccak256"; }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
@@ -100,9 +106,9 @@ protected:
 
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
-	std::map<YulString, BuiltinFunctionForEVM> m_functions;
+	BuiltinsMap m_functions;
 	std::map<std::pair<size_t, size_t>, std::shared_ptr<BuiltinFunctionForEVM const>> mutable m_verbatimFunctions;
-	std::set<YulString> m_reserved;
+	ReservedIdentifiers m_reserved;
 };
 
 /**
@@ -120,11 +126,14 @@ struct EVMDialectTyped: public EVMDialect
 	/// Constructor, should only be used internally. Use the factory function below.
 	EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess);
 
-	BuiltinFunctionForEVM const* discardFunction(YulString _type) const override;
-	BuiltinFunctionForEVM const* equalityFunction(YulString _type) const override;
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("not"_yulstring); }
+	BuiltinFunctionForEVM const* discardFunction(std::string_view _type) const override;
+	BuiltinFunctionForEVM const* equalityFunction(std::string_view _type) const override;
+	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtinNoVerbatim(not_); }
 
 	static EVMDialectTyped const& instance(langutil::EVMVersion _version);
+
+	std::string not_;
+	std::string popbool_;
 };
 
 }

@@ -330,7 +330,7 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 		}
 	};
 
-	yul::SideEffectsCollector sideEffectsCollector(_inlineAsm.dialect(), _inlineAsm.operations());
+	yul::SideEffectsCollector sideEffectsCollector(_inlineAsm.nameRepository(), _inlineAsm.operations());
 	if (sideEffectsCollector.invalidatesMemory())
 		resetMemoryVariables();
 	if (sideEffectsCollector.invalidatesStorage())

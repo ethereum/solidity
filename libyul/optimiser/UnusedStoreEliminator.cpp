@@ -43,36 +43,30 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-/// Variable names for special constants that can never appear in actual Yul code.
-static std::string const zero{"@ 0"};
-static std::string const one{"@ 1"};
-static std::string const thirtyTwo{"@ 32"};
-
-
 void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
-	std::map<YulString, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
-		_context.dialect,
+	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
+		_context.yulNameRepository,
 		CallGraphGenerator::callGraph(_ast)
 	);
 
 	SSAValueTracker ssaValues;
 	ssaValues(_ast);
-	std::map<YulString, AssignedValue> values;
+	std::map<YulName, AssignedValue> values;
 	for (auto const& [name, expression]: ssaValues.values())
 		values[name] = AssignedValue{expression, {}};
 	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{0}), {}}};
 	Expression const oneLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{1}), {}}};
 	Expression const thirtyTwoLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{32}), {}}};
-	values[YulString{zero}] = AssignedValue{&zeroLiteral, {}};
-	values[YulString{one}] = AssignedValue{&oneLiteral, {}};
-	values[YulString{thirtyTwo}] = AssignedValue{&thirtyTwoLiteral, {}};
+	values[_context.yulNameRepository.predefined().placeholder_zero] = AssignedValue{&zeroLiteral, {}};
+	values[_context.yulNameRepository.predefined().placeholder_one] = AssignedValue{&oneLiteral, {}};
+	values[_context.yulNameRepository.predefined().placeholder_thirtytwo] = AssignedValue{&thirtyTwoLiteral, {}};
 
-	bool const ignoreMemory = MSizeFinder::containsMSize(_context.dialect, _ast);
+	bool const ignoreMemory = MSizeFinder::containsMSize(_context.yulNameRepository, _ast);
 	UnusedStoreEliminator rse{
-		_context.dialect,
+		_context.yulNameRepository,
 		functionSideEffects,
-		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed(),
+		ControlFlowSideEffectsCollector{_context.yulNameRepository, _ast}.functionSideEffectsNamed(),
 		values,
 		ignoreMemory
 	};
@@ -92,18 +86,19 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 }
 
 UnusedStoreEliminator::UnusedStoreEliminator(
-	Dialect const& _dialect,
-	std::map<YulString, SideEffects> const& _functionSideEffects,
-	std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
-	std::map<YulString, AssignedValue> const& _ssaValues,
+	YulNameRepository const& _yulNameRepository,
+	std::map<YulName, SideEffects> const& _functionSideEffects,
+	std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects,
+	std::map<YulName, AssignedValue> const& _ssaValues,
 	bool _ignoreMemory
 ):
-	UnusedStoreBase(_dialect),
+	UnusedStoreBase(_yulNameRepository),
 	m_ignoreMemory(_ignoreMemory),
 	m_functionSideEffects(_functionSideEffects),
 	m_controlFlowSideEffects(_controlFlowSideEffects),
 	m_ssaValues(_ssaValues),
-	m_knowledgeBase(_ssaValues)
+	m_knowledgeBase(_ssaValues, _yulNameRepository),
+	m_yulNameRepository(_yulNameRepository)
 {}
 
 void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
@@ -114,8 +109,8 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 		applyOperation(op);
 
 	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->controlFlowSideEffects;
+	if (auto builtin = m_yulNameRepository.builtin(_functionCall.functionName.name))
+		sideEffects = builtin->data->controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 
@@ -153,7 +148,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 
 	FunctionCall const* funCall = std::get_if<FunctionCall>(&exprStatement->expression);
 	yulAssert(funCall);
-	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, funCall->functionName.name);
+	std::optional<Instruction> instruction = toEVMInstruction(m_yulNameRepository, funCall->functionName.name);
 	if (!instruction)
 		return;
 
@@ -201,7 +196,7 @@ void UnusedStoreEliminator::visit(Statement const& _statement)
 				if (
 					m_knowledgeBase.knownToBeZero(*startOffset) &&
 					lengthCall &&
-					toEVMInstruction(m_dialect, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
+					toEVMInstruction(m_yulNameRepository, lengthCall->functionName.name) == Instruction::RETURNDATASIZE
 				)
 					allowReturndatacopyToBeRemoved = true;
 			}
@@ -228,14 +223,14 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 {
 	using evmasm::Instruction;
 
-	YulString functionName = _functionCall.functionName.name;
+	YulName functionName = _functionCall.functionName.name;
 	SideEffects sideEffects;
-	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
-		sideEffects = f->sideEffects;
+	if (auto const* f = m_yulNameRepository.builtin(functionName))
+		sideEffects = f->data->sideEffects;
 	else
 		sideEffects = m_functionSideEffects.at(functionName);
 
-	std::optional<Instruction> instruction = toEVMInstruction(m_dialect, functionName);
+	std::optional<Instruction> instruction = toEVMInstruction(m_yulNameRepository, functionName);
 	if (!instruction)
 	{
 		std::vector<Operation> result;
@@ -263,8 +258,8 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 			if (_op.lengthConstant)
 				switch (*_op.lengthConstant)
 				{
-				case 1: ourOp.length = YulString(one); break;
-				case 32: ourOp.length = YulString(thirtyTwo); break;
+				case 1: ourOp.length = m_yulNameRepository.predefined().placeholder_one; break;
+				case 32: ourOp.length = m_yulNameRepository.predefined().placeholder_thirtytwo; break;
 				default: yulAssert(false);
 				}
 			return ourOp;
@@ -435,7 +430,7 @@ void UnusedStoreEliminator::clearActive(
 		activeStorageStores() = {};
 }
 
-std::optional<YulString> UnusedStoreEliminator::identifierNameIfSSA(Expression const& _expression) const
+std::optional<YulName> UnusedStoreEliminator::identifierNameIfSSA(Expression const& _expression) const
 {
 	if (Identifier const* identifier = std::get_if<Identifier>(&_expression))
 		if (m_ssaValues.count(identifier->name))

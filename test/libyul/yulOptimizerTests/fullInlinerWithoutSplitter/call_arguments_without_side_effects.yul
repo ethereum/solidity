@@ -23,14 +23,14 @@
 // {
 //     {
 //         let c_1 := 333
-//         let b_2 := 222
-//         let a_3 := 111
+//         let b_1 := 222
+//         let a_2 := 111
 //         let x := 111
 //         let y := 222
 //         let z := 333
-//         let c_4 := z
-//         let b_5 := y
-//         let a_6 := x
+//         let c_2 := z
+//         let b_2 := y
+//         let a_3 := x
 //         empty(mload(111), sload(222), calldataload(333))
 //         let a_1 := 222
 //         empty(111, a_1, mload(333))

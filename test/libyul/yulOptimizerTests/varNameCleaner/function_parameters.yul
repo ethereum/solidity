@@ -13,13 +13,13 @@
 //
 // {
 //     {
-//         let f_1
 //         let f_2
+//         let f_10
 //     }
-//     function f(x) -> x_1, y
+//     function f(x_12) -> x, y_14
 //     {
-//         let y_1 := x
-//         y := y_1
-//         x_1 := y
+//         let y := x_12
+//         y_14 := y
+//         x := y_14
 //     }
 // }

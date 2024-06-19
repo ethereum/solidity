@@ -14,10 +14,10 @@
 //         let _1 := 20
 //         let _2 := 10
 //         sstore(_2, _1)
-//         let _4 := _1
-//         let _5 := 30
-//         sstore(_5, _4)
+//         let _3 := _1
+//         let _4 := 30
+//         sstore(_4, _3)
 //         verbatim_0i_0o("test")
-//         sstore(_5, sload(_2))
+//         sstore(_4, sload(_2))
 //     }
 // }

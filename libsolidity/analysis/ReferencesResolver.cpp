@@ -236,7 +236,9 @@ bool ReferencesResolver::visit(UsingForDirective const& _usingFor)
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
 	m_yulAnnotation = &_inlineAssembly.annotation();
+	m_yulNameRepository = &_inlineAssembly.nameRepository();
 	(*this)(_inlineAssembly.operations());
+	m_yulNameRepository = nullptr;
 	m_yulAnnotation = nullptr;
 
 	return false;
@@ -270,12 +272,13 @@ bool ReferencesResolver::visit(BinaryOperation const& _binaryOperation)
 
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
+	solAssert(m_yulNameRepository != nullptr);
 	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
-	validateYulIdentifierName(_function.name, nativeLocationOf(_function));
+	validateYulIdentifierName(m_yulNameRepository->labelOf(_function.name), nativeLocationOf(_function));
 	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
 	{
 		solAssert(nativeLocationOf(varName) == originLocationOf(varName), "");
-		validateYulIdentifierName(varName.name, nativeLocationOf(varName));
+		validateYulIdentifierName(m_yulNameRepository->labelOf(varName.name), nativeLocationOf(varName));
 	}
 
 	bool wasInsideFunction = m_yulInsideFunction;
@@ -286,12 +289,13 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
+	solAssert(m_yulNameRepository != nullptr);
 	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
-
+	auto const identifierLabel = m_yulNameRepository->labelOf(_identifier.name);
 	if (m_resolver.experimentalSolidity())
 	{
 		std::vector<std::string> splitName;
-		boost::split(splitName, _identifier.name.str(), boost::is_any_of("."));
+		boost::split(splitName, identifierLabel, boost::is_any_of("."));
 		solAssert(!splitName.empty());
 		if (splitName.size() > 2)
 		{
@@ -332,22 +336,22 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	static std::set<std::string> suffixes{"slot", "offset", "length", "address", "selector"};
 	std::string suffix;
 	for (std::string const& s: suffixes)
-		if (boost::algorithm::ends_with(_identifier.name.str(), "." + s))
+		if (boost::algorithm::ends_with(identifierLabel, "." + s))
 			suffix = s;
 
 	// Could also use `pathFromCurrentScope`, split by '.'.
 	// If we do that, suffix should only be set for when it has a special
 	// meaning, not for normal identifierPaths.
-	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
+	auto declarations = m_resolver.nameFromCurrentScope(std::string(identifierLabel));
 	if (!suffix.empty())
 	{
 		// special mode to access storage variables
 		if (!declarations.empty())
 			// the special identifier exists itself, we should not allow that.
 			return;
-		std::string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - suffix.size() - 1);
+		auto const realName = identifierLabel.substr(0, identifierLabel.size() - suffix.size() - 1);
 		solAssert(!realName.empty(), "Empty name.");
-		declarations = m_resolver.nameFromCurrentScope(realName);
+		declarations = m_resolver.nameFromCurrentScope(std::string(realName));
 		if (!declarations.empty())
 			// To support proper path resolution, we have to use pathFromCurrentScope.
 			solAssert(!util::contains(realName, '.'), "");
@@ -364,8 +368,8 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	else if (declarations.size() == 0)
 	{
 		if (
-			boost::algorithm::ends_with(_identifier.name.str(), "_slot") ||
-			boost::algorithm::ends_with(_identifier.name.str(), "_offset")
+			boost::algorithm::ends_with(identifierLabel, "_slot") ||
+			boost::algorithm::ends_with(identifierLabel, "_offset")
 		)
 			m_errorReporter.declarationError(
 				9467_error,
@@ -391,13 +395,14 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 
 void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 {
+	solAssert(m_yulNameRepository != nullptr);
 	for (auto const& identifier: _varDecl.variables)
 	{
 		solAssert(nativeLocationOf(identifier) == originLocationOf(identifier), "");
-		validateYulIdentifierName(identifier.name, nativeLocationOf(identifier));
+		validateYulIdentifierName(m_yulNameRepository->labelOf(identifier.name), nativeLocationOf(identifier));
 
 		if (
-			auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
+			auto declarations = m_resolver.nameFromCurrentScope(std::string(m_yulNameRepository->labelOf(identifier.name)));
 			!declarations.empty()
 		)
 		{
@@ -488,19 +493,19 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 	}
 }
 
-void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceLocation const& _location)
+void ReferencesResolver::validateYulIdentifierName(std::string_view const _name, SourceLocation const& _location)
 {
-	if (util::contains(_name.str(), '.'))
+	if (util::contains(_name, '.'))
 		m_errorReporter.declarationError(
 			3927_error,
 			_location,
 			"User-defined identifiers in inline assembly cannot contain '.'."
 		);
 
-	if (std::set<std::string>{"this", "super", "_"}.count(_name.str()))
+	if (std::set<std::string, std::less<>>{"this", "super", "_"}.count(_name))
 		m_errorReporter.declarationError(
 			4113_error,
 			_location,
-			"The identifier name \"" + _name.str() + "\" is reserved."
+			fmt::format("The identifier name \"{}\" is reserved.", _name)
 		);
 }

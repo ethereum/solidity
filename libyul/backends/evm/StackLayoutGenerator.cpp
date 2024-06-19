@@ -58,21 +58,21 @@ StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 	return stackLayout;
 }
 
-std::map<YulString, std::vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg)
+std::map<YulName, std::vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg)
 {
-	std::map<YulString, std::vector<StackLayoutGenerator::StackTooDeep>> stackTooDeepErrors;
-	stackTooDeepErrors[YulString{}] = reportStackTooDeep(_cfg, YulString{});
+	std::map<YulName, std::vector<StackLayoutGenerator::StackTooDeep>> stackTooDeepErrors;
+	stackTooDeepErrors[YulNameRepository::emptyName()] = reportStackTooDeep(_cfg, YulNameRepository::emptyName());
 	for (auto const& function: _cfg.functions)
 		if (auto errors = reportStackTooDeep(_cfg, function->name); !errors.empty())
 			stackTooDeepErrors[function->name] = std::move(errors);
 	return stackTooDeepErrors;
 }
 
-std::vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulString _functionName)
+std::vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulName _functionName)
 {
 	StackLayout stackLayout;
 	CFG::FunctionInfo const* functionInfo = nullptr;
-	if (!_functionName.empty())
+	if (_functionName != YulNameRepository::emptyName())
 	{
 		functionInfo = &ranges::find(
 			_cfg.functionInfo,
@@ -102,7 +102,7 @@ std::vector<StackLayoutGenerator::StackTooDeep> findStackTooDeep(Stack const& _s
 	Stack currentStack = _source;
 	std::vector<StackLayoutGenerator::StackTooDeep> stackTooDeepErrors;
 	auto getVariableChoices = [](auto&& _range) {
-		std::vector<YulString> result;
+		std::vector<YulName> result;
 		for (auto const& slot: _range)
 			if (auto const* variableSlot = std::get_if<VariableSlot>(&slot))
 				if (!util::contains(result, variableSlot->variable.get().name))

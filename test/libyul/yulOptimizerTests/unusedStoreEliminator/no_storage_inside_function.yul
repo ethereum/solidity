@@ -14,7 +14,7 @@
 // {
 //     {
 //         let x := 5
-//         let _2 := 10
+//         let _1 := 10
 //         mstore(0, 42)
 //         pop(f())
 //         sstore(x, 10)
@@ -22,6 +22,6 @@
 //     function f() -> r
 //     {
 //         r := mload(0x20)
-//         let r_7 := r
+//         let r_1 := r
 //     }
 // }

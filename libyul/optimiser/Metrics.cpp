@@ -125,9 +125,9 @@ void CodeSize::visit(Expression const& _expression)
 }
 
 
-size_t CodeCost::codeCost(Dialect const& _dialect, Expression const& _expr)
+size_t CodeCost::codeCost(YulNameRepository const& _yulNameRepository, Expression const& _expr)
 {
-	CodeCost cc(_dialect);
+	CodeCost cc(_yulNameRepository);
 	cc.visit(_expr);
 	return cc.m_cost;
 }
@@ -137,7 +137,7 @@ void CodeCost::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
 
-	if (auto instruction = toEVMInstruction(m_dialect, _funCall.functionName.name))
+	if (auto instruction = toEVMInstruction(m_yulNameRepository, _funCall.functionName.name))
 	{
 		addInstructionCost(*instruction);
 		return;
@@ -158,7 +158,7 @@ void CodeCost::operator()(Literal const& _literal)
 		for (u256 n = _literal.value.value(); n >= 0x100; n >>= 8)
 			cost++;
 		if (_literal.value.value() == 0)
-			if (auto evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+			if (auto evmDialect = dynamic_cast<EVMDialect const*>(&m_yulNameRepository.dialect()))
 				if (evmDialect->evmVersion().hasPush0())
 					--m_cost;
 		break;
@@ -184,7 +184,7 @@ void CodeCost::visit(Expression const& _expression)
 
 void CodeCost::addInstructionCost(evmasm::Instruction _instruction)
 {
-	evmasm::Tier gasPriceTier = evmasm::instructionInfo(_instruction, evmVersionFromDialect(m_dialect)).gasPriceTier;
+	evmasm::Tier gasPriceTier = evmasm::instructionInfo(_instruction, evmVersionFromDialect(m_yulNameRepository.dialect())).gasPriceTier;
 	if (gasPriceTier < evmasm::Tier::VeryLow)
 		m_cost -= 1;
 	else if (gasPriceTier < evmasm::Tier::High)
@@ -199,7 +199,7 @@ void AssignmentCounter::operator()(Assignment const& _assignment)
 		++m_assignmentCounters[variable.name];
 }
 
-size_t AssignmentCounter::assignmentCount(YulString _name) const
+size_t AssignmentCounter::assignmentCount(YulName const _name) const
 {
 	auto it = m_assignmentCounters.find(_name);
 	return (it == m_assignmentCounters.end()) ? 0 : it->second;

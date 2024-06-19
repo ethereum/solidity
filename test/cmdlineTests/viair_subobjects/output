@@ -10,12 +10,12 @@ object "C_3" {
     code {
         {
             /// @src 0:82:95  "contract C {}"
-            let _1 := memoryguard(0x80)
-            mstore(64, _1)
+            let _2 := memoryguard(0x80)
+            mstore(64, _2)
             if callvalue() { revert(0, 0) }
-            let _2 := datasize("C_3_deployed")
-            codecopy(_1, dataoffset("C_3_deployed"), _2)
-            return(_1, _2)
+            let _1 := datasize("C_3_deployed")
+            codecopy(_2, dataoffset("C_3_deployed"), _1)
+            return(_2, _1)
         }
     }
     /// @use-src 0:"viair_subobjects/input.sol"
@@ -42,12 +42,12 @@ object "D_16" {
     code {
         {
             /// @src 0:96:165  "contract D {..."
-            let _1 := memoryguard(0x80)
-            mstore(64, _1)
+            let _2 := memoryguard(0x80)
+            mstore(64, _2)
             if callvalue() { revert(0, 0) }
-            let _2 := datasize("D_16_deployed")
-            codecopy(_1, dataoffset("D_16_deployed"), _2)
-            return(_1, _2)
+            let _1 := datasize("D_16_deployed")
+            codecopy(_2, dataoffset("D_16_deployed"), _1)
+            return(_2, _1)
         }
     }
     /// @use-src 0:"viair_subobjects/input.sol"
@@ -65,8 +65,8 @@ object "D_16" {
                         if slt(add(calldatasize(), not(3)), 0) { revert(0, 0) }
                         /// @src 0:149:156  "new C()"
                         let _2 := datasize("C_3")
-                        let _3 := add(_1, _2)
-                        if or(gt(_3, 0xffffffffffffffff), lt(_3, _1))
+                        let _2_1 := add(_1, _2)
+                        if or(gt(_2_1, 0xffffffffffffffff), lt(_2_1, _1))
                         {
                             /// @src 0:96:165  "contract D {..."
                             mstore(0, shl(224, 0x4e487b71))
@@ -75,7 +75,7 @@ object "D_16" {
                         }
                         /// @src 0:149:156  "new C()"
                         datacopy(_1, dataoffset("C_3"), _2)
-                        if iszero(create(/** @src 0:96:165  "contract D {..." */ 0, /** @src 0:149:156  "new C()" */ _1, sub(_3, _1)))
+                        if iszero(create(/** @src 0:96:165  "contract D {..." */ 0, /** @src 0:149:156  "new C()" */ _1, sub(_2_1, _1)))
                         {
                             /// @src 0:96:165  "contract D {..."
                             let pos := mload(64)
@@ -93,12 +93,12 @@ object "D_16" {
             code {
                 {
                     /// @src 0:82:95  "contract C {}"
-                    let _1 := memoryguard(0x80)
-                    mstore(64, _1)
+                    let _2 := memoryguard(0x80)
+                    mstore(64, _2)
                     if callvalue() { revert(0, 0) }
-                    let _2 := datasize("C_3_deployed")
-                    codecopy(_1, dataoffset("C_3_deployed"), _2)
-                    return(_1, _2)
+                    let _1 := datasize("C_3_deployed")
+                    codecopy(_2, dataoffset("C_3_deployed"), _1)
+                    return(_2, _1)
                 }
             }
             /// @use-src 0:"viair_subobjects/input.sol"

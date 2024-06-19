@@ -24,7 +24,7 @@
 #include <libevmasm/SimplificationRule.h>
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
@@ -63,8 +63,8 @@ public:
 	/// @param _ssaValues values of variables that are assigned exactly once.
 	static Rule const* findFirstMatch(
 		Expression const& _expr,
-		Dialect const& _dialect,
-		std::function<AssignedValue const*(YulString)> const& _ssaValues
+		YulNameRepository const& _yulNameRepository,
+		std::function<AssignedValue const*(YulName)> const& _ssaValues
 	);
 
 	/// Checks whether the rulelist is non-empty. This is usually enforced
@@ -72,7 +72,7 @@ public:
 	bool isInitialized() const;
 
 	static std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
-	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
+	instructionAndArguments(YulNameRepository const& _yulNameRepository, Expression const& _expr);
 
 private:
 	void addRules(std::vector<Rule> const& _rules);
@@ -120,8 +120,8 @@ public:
 	unsigned matchGroup() const { return m_matchGroup; }
 	bool matches(
 		Expression const& _expr,
-		Dialect const& _dialect,
-		std::function<AssignedValue const*(YulString)> const& _ssaValues
+		YulNameRepository const& _yulNameRepository,
+		std::function<AssignedValue const*(YulName)> const& _ssaValues
 	) const;
 
 	std::vector<Pattern> arguments() const { return m_arguments; }
@@ -133,7 +133,7 @@ public:
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
-	Expression toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion) const;
+	Expression toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion, YulNameRepository const& _yulNameRepository) const;
 
 private:
 	Expression const& matchGroupValue() const;

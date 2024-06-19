@@ -41,7 +41,7 @@ struct yulFuzzerUtil
 	static TerminationReason interpret(
 		std::ostream& _os,
 		std::shared_ptr<yul::Block> _ast,
-		Dialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		bool _disableMemoryTracing = false,
 		bool _outputStorageOnly = false,
 		size_t _maxSteps = maxSteps,

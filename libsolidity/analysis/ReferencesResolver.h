@@ -94,7 +94,7 @@ private:
 	void resolveInheritDoc(StructuredDocumentation const& _documentation, StructurallyDocumentedAnnotation& _annotation);
 
 	/// Checks if the name contains a '.'.
-	void validateYulIdentifierName(yul::YulString _name, langutil::SourceLocation const& _location);
+	void validateYulIdentifierName(std::string_view _name, langutil::SourceLocation const& _location);
 
 	langutil::ErrorReporter& m_errorReporter;
 	NameAndTypeResolver& m_resolver;
@@ -104,6 +104,7 @@ private:
 	bool const m_resolveInsideCode;
 
 	InlineAssemblyAnnotation* m_yulAnnotation = nullptr;
+	yul::YulNameRepository const* m_yulNameRepository = nullptr;
 	bool m_yulInsideFunction = false;
 	bool m_typeContext = false;
 };

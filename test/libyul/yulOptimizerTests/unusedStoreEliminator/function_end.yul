@@ -14,7 +14,7 @@
 //     function f()
 //     {
 //         let x := calldataload(2)
-//         let _2 := 2
+//         let _1 := 2
 //         mstore(x, 3)
 //     }
 // }

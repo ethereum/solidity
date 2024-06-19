@@ -88,12 +88,13 @@ void interpret(std::string const& _source, bool _inspect, bool _disableExternalC
 	try
 	{
 		Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
+		YulNameRepository repository (dialect);
 
 		if (_inspect)
-			InspectedInterpreter::run(std::make_shared<Inspector>(_source, state), state, dialect, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
+			InspectedInterpreter::run(std::make_shared<Inspector>(_source, state, repository), state, repository, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
 
 		else
-			Interpreter::run(state, dialect, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
+			Interpreter::run(state, repository, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

@@ -40,6 +40,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -54,7 +55,7 @@ namespace solidity::yul::test
 namespace
 {
 
-std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
+std::shared_ptr<Block> parse(std::string const& _source, YulNameRepository& _yulNameRepository, ErrorReporter& errorReporter)
 {
 	auto stream = CharStream(_source, "");
 	std::map<unsigned, std::shared_ptr<std::string const>> indicesToSourceNames;
@@ -63,7 +64,7 @@ std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect
 
 	auto parserResult = yul::Parser(
 		errorReporter,
-		_dialect,
+		_yulNameRepository,
 		std::move(indicesToSourceNames)
 	).parse(stream);
 	if (parserResult)
@@ -72,18 +73,18 @@ std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect
 		if (yul::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
-			_dialect
+			_yulNameRepository
 		).analyze(*parserResult))
 			return parserResult;
 	}
 	return {};
 }
 
-std::optional<Error> parseAndReturnFirstError(std::string const& _source, Dialect const& _dialect, bool _allowWarningsAndInfos = true)
+std::optional<Error> parseAndReturnFirstError(std::string const& _source, YulNameRepository& _yulNameRepository, bool _allowWarningsAndInfos = true)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	if (!parse(_source, _dialect, errorReporter))
+	if (!parse(_source, _yulNameRepository, errorReporter))
 	{
 		BOOST_REQUIRE(!errors.empty());
 		BOOST_CHECK_EQUAL(errors.size(), 1);
@@ -106,13 +107,14 @@ std::optional<Error> parseAndReturnFirstError(std::string const& _source, Dialec
 
 bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = true)
 {
-	return !parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);
+	YulNameRepository repository (_dialect);
+	return !parseAndReturnFirstError(_source, repository, _allowWarningsAndInfos);
 }
 
 Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = false)
 {
-
-	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);
+	YulNameRepository repository (_dialect);
+	auto error = parseAndReturnFirstError(_source, repository, _allowWarningsAndInfos);
 	BOOST_REQUIRE(error);
 	return *error;
 }
@@ -135,11 +137,25 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
 	struct SimpleDialect: public Dialect
 	{
-		BuiltinFunction const* builtin(YulString _name) const override
+		BuiltinFunction const* builtin(std::string_view _name) const override
 		{
-			return _name == "builtin"_yulstring ? &f : nullptr;
+			return _name == "builtin" ? &f : nullptr;
 		}
-		BuiltinFunction f{"builtin"_yulstring, std::vector<Type>(2), std::vector<Type>(3), {}, {}, false, {}};
+
+		std::set<std::string> builtinNames() const override { return {"builtin"}; }
+
+		BuiltinFunction f = []()
+		{
+			BuiltinFunction fun;
+			fun.name = "builtin";
+			fun.parameters = std::vector<std::string>(2);
+			fun.returns = std::vector<std::string>(3);
+			fun.sideEffects = {};
+			fun.controlFlowSideEffects = {};
+			fun.isMSize = false;
+			fun.literalArguments = {};
+			return fun;
+		}();
 	};
 
 	SimpleDialect dialect;
@@ -150,6 +166,7 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 
 BOOST_AUTO_TEST_CASE(default_types_set)
 {
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
 	ErrorList errorList;
 	ErrorReporter reporter(errorList);
 	std::shared_ptr<Block> result = parse(
@@ -159,14 +176,14 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 			"let y := add(1, 2) "
 			"switch y case 0 {} default {} "
 		"}",
-		EVMDialectTyped::instance(EVMVersion{}),
+		repository,
 		reporter
 	);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 
-	// Use no dialect so that all types are printed.
+	// By default, all types are printed.
 	// This tests that the default types are properly assigned.
-	BOOST_CHECK_EQUAL(AsmPrinter{}(*result),
+	BOOST_CHECK_EQUAL(AsmPrinter{repository}(*result),
 		"{\n"
 		"    let x:bool := true:bool\n"
 		"    let z:bool := true:bool\n"
@@ -177,9 +194,9 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 		"}"
 	);
 
-	// Now test again with type dialect. Now the default types
-	// should be omitted.
-	BOOST_CHECK_EQUAL(AsmPrinter{EVMDialectTyped::instance(EVMVersion{})}(*result),
+	// got to declare the string representation outside the check due to macro weirdness
+	std::string stringRepr = AsmPrinter{repository, AsmPrinter::Mode::OmitDefaultType}(*result);
+	BOOST_CHECK_EQUAL(stringRepr,
 		"{\n"
 		"    let x:bool := true\n"
 		"    let z:bool := true\n"
@@ -205,8 +222,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_empty_block)
 	auto const sourceText =
 		"/// @src 0:234:543\n"
 		"{}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository (EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 }
@@ -223,8 +240,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_with_children)
 			"let z:bool := true\n"
 			"let y := add(1, 2)\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 	BOOST_REQUIRE_EQUAL(3, result->statements.size());
@@ -246,8 +263,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_different_sources)
 			"let z:bool := true\n"
 			"let y := add(1, 2)\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 	BOOST_REQUIRE_EQUAL(3, result->statements.size());
@@ -268,8 +285,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_nested)
 			"/// @src 0:343:434\n"
 			"switch y case 0 {} default {}\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 	BOOST_REQUIRE_EQUAL(2, result->statements.size());
@@ -292,8 +309,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_block_switch_case)
 			"    let z := add(3, 4)\n"
 			"}\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 234, 543);
 
@@ -324,8 +341,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_inherit_into_outer_scope)
 			"let z:bool := true\n"
 			"let y := add(1, 2)\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 1, 100);
@@ -355,8 +372,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_assign_empty)
 			"/// @src 1:1:10\n"
 			"a := true:bool\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0); // should still parse
 	BOOST_REQUIRE_EQUAL(2, result->statements.size());
 	CHECK_LOCATION(originLocationOf(result->statements.at(0)), "source0", 123, 432);
@@ -376,8 +393,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_source_index)
 			"let b:bool := true:bool\n"
 			"\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result); // should still parse
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -396,8 +413,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_1)
 			"/// @src 0:234:2026\n"
 			":= true:bool\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 
 	BOOST_REQUIRE_EQUAL(1, result->statements.size());
@@ -419,8 +436,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_2)
 			2)
 		}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(1, result->statements.size());
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 0, 5);
@@ -453,8 +470,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_mixed_locations_3)
 			mstore(1, 2)                // FunctionCall
 		}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(2, result->statements.size());
 	CHECK_LOCATION(result->debugData->originLocation, "source1", 23, 45);
@@ -489,8 +506,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_comments_after_valid)
 			let a:bool := true
 		}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(1, result->statements.size());
 	CHECK_LOCATION(result->debugData->originLocation, "source1", 23, 45);
@@ -508,8 +525,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_suffix)
 		/// @src 0:420:680foo
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -525,8 +542,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_prefix)
 		/// abc@src 0:111:222
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
@@ -539,8 +556,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_unspecified)
 		/// @src -1:-1:-1
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "", -1, -1);
 }
@@ -553,8 +570,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_non_integer)
 		/// @src a:b:c
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -570,8 +587,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_bad_integer)
 		/// @src 111111111111111111111:222222222222222222222:333333333333333333333
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -591,8 +608,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_ensure_last_match)
 			let x:bool := true
 		}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE(std::holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varDecl = std::get<VariableDeclaration>(result->statements.at(0));
@@ -609,8 +626,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_no_whitespace)
 		/// @src 0:111:222@src 1:333:444
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -626,8 +643,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_separated_with_single_s
 		/// @src 0:111:222 @src 1:333:444
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source1", 333, 444);
 }
@@ -637,8 +654,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_leading_trailing_whitespace)
 	ErrorList errorList;
 	ErrorReporter reporter(errorList);
 	auto const sourceText = "///     @src 0:111:222    \n{}";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 111, 222);
 }
@@ -654,8 +671,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_reference_original_sloc)
 			let x:bool := true
 		}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE(std::holds_alternative<VariableDeclaration>(result->statements.at(0)));
 	VariableDeclaration const& varDecl = std::get<VariableDeclaration>(result->statements.at(0));
@@ -676,8 +693,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets)
 			let y := /** @src 1:96:165  "contract D {..." */ 128
 		}
 	)~~~";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(result->statements.size(), 2);
 
@@ -701,8 +718,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_empty_snippet)
 		/// @src 0:111:222 ""
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 111, 222);
 }
@@ -715,8 +732,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_befo
 		/// @src 0:111:222"abc" def
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -732,8 +749,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_no_whitespace_afte
 		/// @src 0:111:222 "abc"def
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 111, 222);
 }
@@ -746,8 +763,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_no_whites
 		/// @src 0:111:222 "abc"@src 1:333:444 "abc"
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source1", 333, 444);
 }
@@ -760,8 +777,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_locations_with_snippets_untermina
 		/// @src 0:111:222 " abc @src 1:333:444
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -778,8 +795,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_single_quote)
 		///
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -795,8 +812,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_two_snippets_with_hex_comment)
 		/// @src 0:111:222 hex"abc"@src 1:333:444 "abc"
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	// the second source location is not parsed as such, as the hex string isn't interpreted as snippet but
 	// as the beginning of the tail in AsmParser
@@ -811,8 +828,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_invalid_escapes)
 		/// @src 0:111:222 "\n\\x\x\w\uö\xy\z\y\fq"
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 111, 222);
 }
@@ -826,8 +843,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_single_quote_snippet_with_whitespaces
 		/// @src 1 :		222 : 333 '\x33\u1234\t\n'
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	CHECK_LOCATION(result->debugData->originLocation, "source1", 222, 333);
 }
@@ -841,8 +858,8 @@ BOOST_DATA_TEST_CASE(customSourceLocations_scanner_errors_outside_string_lits_ar
 		/// @src 1:222:333
 		{{}}
 	)", invalid);
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.empty());
 	CHECK_LOCATION(result->debugData->originLocation, "source1", 222, 333);
 }
@@ -859,8 +876,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_multi_line_source_loc)
 		/// " @src 0:333:444
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.empty());
 	CHECK_LOCATION(result->debugData->originLocation, "source0", 333, 444);
 }
@@ -877,8 +894,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_with_code_snippets_with_nested_locati
 			let y := /** @src 1:96:165  "function f() internal { \"\/** @src 0:6:7 *\/\"; }" */ 128
 		}
 	)~~~";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(result->statements.size(), 2);
 
@@ -906,8 +923,8 @@ BOOST_AUTO_TEST_CASE(astid)
 			mstore(1, 2)
 		}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_CHECK(result->debugData->astID == int64_t(7));
 	auto const& funDef = std::get<FunctionDefinition>(result->statements.at(0));
@@ -928,8 +945,8 @@ BOOST_AUTO_TEST_CASE(astid_reset)
 			mstore(1, 2)
 		}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_CHECK(result->debugData->astID == int64_t(7));
 	auto const& funDef = std::get<FunctionDefinition>(result->statements.at(0));
@@ -946,8 +963,8 @@ BOOST_AUTO_TEST_CASE(astid_multi)
 		/// @src -1:-1:-1 @ast-id 7 @src 1:1:1 @ast-id 8
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_CHECK(result->debugData->astID == int64_t(8));
 }
@@ -960,8 +977,8 @@ BOOST_AUTO_TEST_CASE(astid_invalid)
 		/// @src -1:-1:-1 @ast-id abc @src 1:1:1
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -977,8 +994,8 @@ BOOST_AUTO_TEST_CASE(astid_too_large)
 		/// @ast-id 9223372036854775808
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -993,8 +1010,8 @@ BOOST_AUTO_TEST_CASE(astid_way_too_large)
 		/// @ast-id 999999999999999999999999999999999999999
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -1009,8 +1026,8 @@ BOOST_AUTO_TEST_CASE(astid_not_fully_numeric)
 		/// @ast-id 9x
 		{}
 	)";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result);
 	BOOST_REQUIRE(errorList.size() == 1);
 	BOOST_TEST(errorList[0]->type() == Error::Type::SyntaxError);
@@ -1031,8 +1048,8 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_multiple_src_tags_on_one_line)
 		"\n"
 		"    let x := 123\n"
 		"}\n";
-	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
-	std::shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	YulNameRepository repository(EVMDialectTyped::instance(EVMVersion{}));
+	std::shared_ptr<Block> result = parse(sourceText, repository, reporter);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 	BOOST_REQUIRE_EQUAL(result->statements.size(), 1);
 

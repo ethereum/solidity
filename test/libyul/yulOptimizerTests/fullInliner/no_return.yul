@@ -9,8 +9,8 @@
 //
 // {
 //     {
-//         let a_3 := mload(0)
-//         sstore(a_3, a_3)
+//         let a_1 := mload(0)
+//         sstore(a_1, a_1)
 //     }
 //     function f(a)
 //     { sstore(a, a) }

@@ -55,12 +55,13 @@ bool StackShufflingTest::parse(std::string const& _source)
 				{
 					scanner.next();
 					std::string functionName = scanner.currentLiteral();
+					auto const funcYulName = m_yulNameRepository.defineName(functionName);
 					auto call = yul::FunctionCall{
-						{}, yul::Identifier{{}, YulString(functionName)}, {}
+						{}, yul::Identifier{{}, funcYulName}, {}
 					};
 					stack.emplace_back(FunctionCallReturnLabelSlot{
 						m_functions.insert(
-							make_pair(functionName, call)
+							std::make_pair(funcYulName, call)
 						).first->second
 					});
 					expectToken(Token::RBrack);
@@ -77,14 +78,15 @@ bool StackShufflingTest::parse(std::string const& _source)
 				expectToken(Token::LBrack);
 				scanner.next();
 				std::string functionName = scanner.currentLiteral();
+				auto const functionYulName = m_yulNameRepository.defineName(functionName);
 				auto call = yul::FunctionCall{
-					{}, yul::Identifier{{}, YulString(functionName)}, {}
+					{}, yul::Identifier{{}, functionYulName}, {}
 				};
 				expectToken(Token::Comma);
 				scanner.next();
 				size_t index = size_t(atoi(scanner.currentLiteral().c_str()));
 				stack.emplace_back(TemporarySlot{
-					m_functions.insert(make_pair(functionName, call)).first->second,
+					m_functions.insert(std::make_pair(functionYulName, call)).first->second,
 					index
 				});
 				expectToken(Token::RBrack);
@@ -102,7 +104,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 				expectToken(Token::LBrack);
 				scanner.next(); // read number of ghost variables as ghostVariableId
 				std::string ghostVariableId = scanner.currentLiteral();
-				Scope::Variable ghostVar = Scope::Variable{""_yulstring, YulString(literal + "[" + ghostVariableId + "]")};
+				Scope::Variable ghostVar = Scope::Variable{YulNameRepository::emptyName(), m_yulNameRepository.defineName(literal + "[" + ghostVariableId + "]")};
 				stack.emplace_back(VariableSlot{
 					m_variables.insert(std::make_pair(ghostVar.name, ghostVar)).first->second
 				});
@@ -110,10 +112,11 @@ bool StackShufflingTest::parse(std::string const& _source)
 			}
 			else
 			{
-				Scope::Variable var = Scope::Variable{""_yulstring, YulString(literal)};
+				auto const literalName = m_yulNameRepository.defineName(literal);
+				Scope::Variable var = Scope::Variable{YulNameRepository::emptyName(), literalName};
 				stack.emplace_back(VariableSlot{
 					m_variables.insert(
-						make_pair(literal, var)
+						std::make_pair(literalName, var)
 					).first->second
 				});
 			}
@@ -129,7 +132,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 }
 
 StackShufflingTest::StackShufflingTest(std::string const& _filename):
-	TestCase(_filename)
+	TestCase(_filename), m_yulNameRepository(Dialect::yulDeprecated())
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
@@ -149,14 +152,14 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 		m_targetStack,
 		[&](unsigned _swapDepth) // swap
 		{
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 			output << "SWAP" << _swapDepth << std::endl;
 		},
 		[&](StackSlot const& _slot) // dupOrPush
 		{
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 			if (canBeFreelyGenerated(_slot))
-				output << "PUSH " << stackSlotToString(_slot) << std::endl;
+				output << "PUSH " << stackSlotToString(_slot, m_yulNameRepository) << std::endl;
 			else
 			{
 				if (auto depth = util::findOffset(m_sourceStack | ranges::views::reverse, _slot))
@@ -166,12 +169,12 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 			}
 		},
 		[&](){ // pop
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 			output << "POP" << std::endl;
 		}
     );
 
-	output << stackToString(m_sourceStack) << std::endl;
+	output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 	m_obtainedResult = output.str();
 
 	return checkResult(_stream, _linePrefix, _formatted);

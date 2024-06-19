@@ -171,7 +171,7 @@ std::optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 
 std::shared_ptr<Block> ObjectParser::parseBlock(std::optional<SourceNameMap> _sourceNames)
 {
-	Parser parser(m_errorReporter, m_dialect, std::move(_sourceNames));
+	Parser parser(m_errorReporter, m_yulNameRepository, std::move(_sourceNames));
 	std::shared_ptr<Block> block = parser.parseInline(m_scanner);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;

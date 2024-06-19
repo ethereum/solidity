@@ -9,19 +9,19 @@
 //
 // {
 //     {
-//         let a_2 := calldataload(0)
-//         let b_3 := 0
-//         let c_4 := 0
-//         b_3 := sload(mload(a_2))
-//         c_4 := 3
-//         let b3 := b_3
-//         let a_6 := c_4
-//         let b_7 := 0
-//         let c_8 := 0
-//         b_7 := sload(mload(a_6))
-//         c_8 := 3
-//         let b4 := b_7
-//         let c4 := c_8
+//         let a_1 := calldataload(0)
+//         let b_1 := 0
+//         let c_1 := 0
+//         b_1 := sload(mload(a_1))
+//         c_1 := 3
+//         let b3 := b_1
+//         let a_2 := c_1
+//         let b_2 := 0
+//         let c_2 := 0
+//         b_2 := sload(mload(a_2))
+//         c_2 := 3
+//         let b4 := b_2
+//         let c4 := c_2
 //     }
 //     function f(a) -> b, c
 //     {

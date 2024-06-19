@@ -14,11 +14,11 @@
 //     f_1()
 //     function f_1()
 //     {
-//         let a_4 := 1
-//         let b_3 := 2
-//         let c_2 := 3
-//         sstore(a_4, b_3)
-//         sstore(b_3, c_2)
+//         let a_1 := 1
+//         let b_1 := 2
+//         let c_1 := 3
+//         sstore(a_1, b_1)
+//         sstore(b_1, c_1)
 //     }
 //     function f(a, b, c)
 //     {
