@@ -31,7 +31,6 @@
 #include <functional>
 
 using solidity::frontend::ReadCallback;
-using solidity::langutil::InternalCompilerError;
 using solidity::util::errinfo_comment;
 using solidity::util::readFileAsString;
 using solidity::util::joinHumanReadable;

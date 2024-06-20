@@ -123,11 +123,11 @@ std::pair<CheckResult, std::vector<std::string>> SMTLib2Interface::check(std::ve
 
 	CheckResult result;
 	// TODO proper parsing
-	if (boost::starts_with(response, "sat\n"))
+	if (boost::starts_with(response, "sat"))
 		result = CheckResult::SATISFIABLE;
-	else if (boost::starts_with(response, "unsat\n"))
+	else if (boost::starts_with(response, "unsat"))
 		result = CheckResult::UNSATISFIABLE;
-	else if (boost::starts_with(response, "unknown\n"))
+	else if (boost::starts_with(response, "unknown"))
 		result = CheckResult::UNKNOWN;
 	else
 		result = CheckResult::ERROR;
@@ -322,6 +322,7 @@ std::string SMTLib2Interface::querySolver(std::string const& _input)
 		return m_queryResponses.at(inputHash);
 	if (m_smtCallback)
 	{
+		setupSmtCallback();
 		auto result = m_smtCallback(ReadCallback::kindString(ReadCallback::Kind::SMTQuery), _input);
 		if (result.success)
 			return result.responseOrErrorMessage;

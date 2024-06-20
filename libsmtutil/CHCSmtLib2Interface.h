@@ -33,9 +33,8 @@ class CHCSmtLib2Interface: public CHCSolverInterface
 {
 public:
 	explicit CHCSmtLib2Interface(
-		std::map<util::h256, std::string> const& _queryResponses = {},
+		std::map<util::h256, std::string> _queryResponses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
-		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
 		std::optional<unsigned> _queryTimeout = {}
 	);
 
@@ -59,7 +58,7 @@ public:
 
 	auto const& sortNames() const { return m_smtlib2->sortNames(); }
 
-private:
+protected:
 	std::string toSmtLibSort(SortPointer _sort);
 	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
 
@@ -79,17 +78,19 @@ private:
 	/// Translates CHC solver response with a model to our representation of invariants. Returns None on error.
 	std::optional<smtutil::Expression> invariantsFromSolverResponse(std::string const& response) const;
 
+	/// Hook to setup external solver call
+	virtual void setupSmtCallback() {}
+
 	/// Used to access toSmtLibSort, SExpr, and handle variables.
 	std::unique_ptr<SMTLib2Interface> m_smtlib2;
 
 	std::string m_accumulatedOutput;
 	std::set<std::string> m_variables;
 
-	std::map<util::h256, std::string> const& m_queryResponses;
+	std::map<util::h256, std::string> m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
 
 	frontend::ReadCallback::Callback m_smtCallback;
-	SMTSolverChoice m_enabledSolvers;
 };
 
 }

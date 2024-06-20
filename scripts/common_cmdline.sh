@@ -169,3 +169,11 @@ function stripEmptyLines
 {
     sed -e '/^\s*$/d'
 }
+
+# Calculates the total size of bytecode of one or more contracts in bytes.
+# Expects the output from `solc --bin` on standard input.
+function bytecode_size {
+    local bytecode_chars
+    bytecode_chars=$(stripCLIDecorations | stripEmptyLines | wc --chars)
+    echo $(( bytecode_chars / 2 ))
+}

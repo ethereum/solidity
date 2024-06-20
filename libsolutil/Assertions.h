@@ -26,6 +26,7 @@
 #pragma once
 
 #include <libsolutil/Exceptions.h>
+#include <libsolutil/CommonData.h>
 
 #include <string>
 #include <utility>
@@ -63,18 +64,6 @@ namespace solidity::util
 }
 #endif
 
-namespace assertions
-{
-
-inline std::string stringOrDefault(std::string _string, std::string _defaultString)
-{
-	// NOTE: Putting this in a function rather than directly in a macro prevents the string from
-	// being evaluated multiple times if it's not just a literal.
-	return (!_string.empty() ? std::move(_string) : std::move(_defaultString));
-}
-
-}
-
 /// Base macro that can be used to implement assertion macros.
 /// Throws an exception containing the given description if the condition is not met.
 /// Allows you to provide the default description for the case where the user of your macro does
@@ -86,7 +75,7 @@ inline std::string stringOrDefault(std::string _string, std::string _defaultStri
 		if (!(_condition)) \
 			solThrow( \
 				_exceptionType, \
-				::solidity::util::assertions::stringOrDefault((_description), (_defaultDescription)) \
+				::solidity::util::stringOrDefault((_description), (_defaultDescription)) \
 			); \
 	} \
 	while (false)

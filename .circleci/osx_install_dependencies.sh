@@ -84,6 +84,16 @@ then
   sudo mv /tmp/eldarica/{eld,eld-client,target,eldEnv} /usr/local/bin
   rm -rf /tmp/{eldarica,eld_binaries.zip}
 
+  #cvc5
+  cvc5_version="1.1.2"
+  wget "https://github.com/cvc5/cvc5/releases/download/cvc5-${cvc5_version}/cvc5-macOS-arm64-static.zip" -O /tmp/cvc5.zip
+  validate_checksum /tmp/cvc5.zip 2017d683d924676cb713865c6d4fcf70115c65b7ec2848f242ab938902f115b5
+  unzip /tmp/cvc5.zip -x "cvc5-macOS-arm64-static/lib/cmake/*" -d /tmp
+  sudo mv /tmp/cvc5-macOS-arm64-static/bin/* /usr/local/bin
+  sudo mv /tmp/cvc5-macOS-arm64-static/include/* /usr/local/include
+  sudo mv /tmp/cvc5-macOS-arm64-static/lib/* /usr/local/lib
+  rm -rf /tmp/{cvc5-macOS-arm64-static,cvc5.zip}
+
   # z3
   z3_version="4.12.1"
   z3_dir="z3-z3-$z3_version"

@@ -187,10 +187,10 @@
         {
             "component": "general",
             "errorCode": "8084",
-            "formattedMessage": "Warning: BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.
+            "formattedMessage": "Warning: BMC analysis was not possible. No SMT solver (Z3 or cvc5) was available. None of the installed solvers was enabled.
 
 ",
-            "message": "BMC analysis was not possible. No SMT solver (Z3 or CVC4) was available. None of the installed solvers was enabled.",
+            "message": "BMC analysis was not possible. No SMT solver (Z3 or cvc5) was available. None of the installed solvers was enabled.",
             "severity": "warning",
             "type": "Warning"
         }
