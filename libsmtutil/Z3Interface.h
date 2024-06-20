@@ -18,13 +18,13 @@
 
 #pragma once
 
-#include <libsmtutil/SolverInterface.h>
+#include <libsmtutil/BMCSolverInterface.h>
 #include <z3++.h>
 
 namespace solidity::smtutil
 {
 
-class Z3Interface: public SolverInterface
+class Z3Interface: public BMCSolverInterface
 {
 public:
 	/// Noncopyable.

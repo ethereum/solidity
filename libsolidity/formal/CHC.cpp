@@ -1312,7 +1312,7 @@ void CHC::resetSourceAnalysis()
 		auto smtlib2Interface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
 		solAssert(smtlib2Interface);
 		smtlib2Interface->reset();
-		m_context.setSolver(smtlib2Interface->smtlib2Interface());
+		m_context.setSolver(smtlib2Interface);
 	}
 
 	m_context.reset();
@@ -1743,7 +1743,6 @@ void CHC::createErrorBlock()
 		"error_target_" + std::to_string(m_context.newUniqueId()),
 		PredicateType::Error
 	);
-	m_interface->registerRelation(m_errorPredicate->functor());
 }
 
 void CHC::connectBlocks(smtutil::Expression const& _from, smtutil::Expression const& _to, smtutil::Expression const& _constraints)

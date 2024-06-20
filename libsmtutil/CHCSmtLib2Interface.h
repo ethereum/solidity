@@ -25,6 +25,7 @@
 #include <libsmtutil/CHCSolverInterface.h>
 
 #include <libsmtutil/SMTLib2Interface.h>
+#include <libsmtutil/SMTLib2Parser.h>
 
 namespace solidity::smtutil
 {
@@ -54,38 +55,49 @@ public:
 
 	std::vector<std::string> unhandledQueries() const { return m_unhandledQueries; }
 
-	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
-
-	auto const& sortNames() const { return m_smtlib2->sortNames(); }
-
 protected:
-	std::string toSmtLibSort(SortPointer _sort);
-	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
+	class ScopedParser
+	{
+	public:
+		ScopedParser(SMTLib2Context const& _context): m_context(_context) {}
 
-	void writeHeader();
-	std::string forall();
+		smtutil::Expression toSMTUtilExpression(SMTLib2Expression const& _expr);
 
-	void declareFunction(std::string const& _name, SortPointer const& _sort);
+		SortPointer toSort(SMTLib2Expression const& _expr);
 
-	void write(std::string _data);
+		void addVariableDeclaration(std::string _name, SortPointer _sort);
 
-	std::string createQueryAssertion(std::string name);
-	std::string createHeaderAndDeclarations();
+	private:
+		std::optional<SortPointer> lookupKnownTupleSort(std::string const& _name) const;
+
+		smtutil::Expression parseQuantifier(
+			std::string const& _quantifierName,
+			std::vector<SMTLib2Expression> const& _varList,
+			SMTLib2Expression const& _coreExpression
+			);
+
+		SMTLib2Context const& m_context;
+		std::unordered_map<std::string, SortPointer> m_localVariables;
+	};
+
+	std::string toSmtLibSort(SortPointer const& _sort);
+	std::vector<std::string> toSmtLibSort(std::vector<SortPointer> const& _sort);
+
+	std::string forall(Expression const& _expr);
+
+	static std::string createQueryAssertion(std::string _name);
+	void createHeader();
 
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
-	std::string querySolver(std::string const& _input);
+	virtual std::string querySolver(std::string const& _input);
 
 	/// Translates CHC solver response with a model to our representation of invariants. Returns None on error.
-	std::optional<smtutil::Expression> invariantsFromSolverResponse(std::string const& response) const;
+	std::optional<smtutil::Expression> invariantsFromSolverResponse(std::string const& _response) const;
 
-	/// Hook to setup external solver call
-	virtual void setupSmtCallback() {}
+	std::set<std::string> collectVariableNames(Expression const& _expr) const;
 
-	/// Used to access toSmtLibSort, SExpr, and handle variables.
-	std::unique_ptr<SMTLib2Interface> m_smtlib2;
-
-	std::string m_accumulatedOutput;
-	std::set<std::string> m_variables;
+	SMTLib2Commands m_commands;
+	SMTLib2Context m_context;
 
 	std::map<util::h256, std::string> m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
