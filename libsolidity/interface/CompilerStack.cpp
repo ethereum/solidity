@@ -744,8 +744,10 @@ bool CompilerStack::compile(State _stopAfter)
 					}
 					catch (Error const& _error)
 					{
-						if (_error.type() != Error::Type::CodeGenerationError)
-							throw;
+						// Since codegen has no access to the error reporter, the only way for it to
+						// report an error is to throw. In most cases it uses dedicated exceptions,
+						// but CodeGenerationError is one case where someone decided to just throw Error.
+						solAssert(_error.type() == Error::Type::CodeGenerationError);
 						m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
 						return false;
 					}

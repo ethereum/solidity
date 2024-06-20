@@ -54,32 +54,25 @@ namespace
 
 std::shared_ptr<Block> parse(std::string const& _source, Dialect const& _dialect, ErrorReporter& errorReporter)
 {
-	try
-	{
-		auto stream = CharStream(_source, "");
-		std::map<unsigned, std::shared_ptr<std::string const>> indicesToSourceNames;
-		indicesToSourceNames[0] = std::make_shared<std::string const>("source0");
-		indicesToSourceNames[1] = std::make_shared<std::string const>("source1");
+	auto stream = CharStream(_source, "");
+	std::map<unsigned, std::shared_ptr<std::string const>> indicesToSourceNames;
+	indicesToSourceNames[0] = std::make_shared<std::string const>("source0");
+	indicesToSourceNames[1] = std::make_shared<std::string const>("source1");
 
-		auto parserResult = yul::Parser(
-			errorReporter,
-			_dialect,
-			std::move(indicesToSourceNames)
-		).parse(stream);
-		if (parserResult)
-		{
-			yul::AsmAnalysisInfo analysisInfo;
-			if (yul::AsmAnalyzer(
-				analysisInfo,
-				errorReporter,
-				_dialect
-			).analyze(*parserResult))
-				return parserResult;
-		}
-	}
-	catch (FatalError const&)
+	auto parserResult = yul::Parser(
+		errorReporter,
+		_dialect,
+		std::move(indicesToSourceNames)
+	).parse(stream);
+	if (parserResult)
 	{
-		BOOST_FAIL("Fatal error leaked.");
+		yul::AsmAnalysisInfo analysisInfo;
+		if (yul::AsmAnalyzer(
+			analysisInfo,
+			errorReporter,
+			_dialect
+		).analyze(*parserResult))
+			return parserResult;
 	}
 	return {};
 }

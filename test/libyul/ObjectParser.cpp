@@ -55,23 +55,15 @@ namespace
 
 std::pair<bool, ErrorList> parse(std::string const& _source)
 {
-	try
-	{
-		YulStack asmStack(
-			solidity::test::CommonOptions::get().evmVersion(),
-			solidity::test::CommonOptions::get().eofVersion(),
-			YulStack::Language::StrictAssembly,
-			solidity::frontend::OptimiserSettings::none(),
-			DebugInfoSelection::All()
-		);
-		bool success = asmStack.parseAndAnalyze("source", _source);
-		return {success, asmStack.errors()};
-	}
-	catch (FatalError const&)
-	{
-		BOOST_FAIL("Fatal error leaked.");
-	}
-	return {false, {}};
+	YulStack asmStack(
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().eofVersion(),
+		YulStack::Language::StrictAssembly,
+		solidity::frontend::OptimiserSettings::none(),
+		DebugInfoSelection::All()
+	);
+	bool success = asmStack.parseAndAnalyze("source", _source);
+	return {success, asmStack.errors()};
 }
 
 std::optional<Error> parseAndReturnFirstError(std::string const& _source, bool _allowWarningsAndInfos = true)
