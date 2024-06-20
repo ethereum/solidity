@@ -46,6 +46,7 @@ Json StorageLayout::generate(ContractDefinition const& _contractDef)
 
 Json StorageLayout::generate(VariableDeclaration const& _var, u256 const& _slot, unsigned _offset)
 {
+	solUnimplementedAssert(_var.referenceLocation() != VariableDeclaration::Location::Transient, "Transient storage layout is not supported yet.");
 	Json varEntry;
 	Type const* varType = _var.type();
 

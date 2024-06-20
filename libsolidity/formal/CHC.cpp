@@ -143,6 +143,9 @@ bool CHC::visit(ContractDefinition const& _contract)
 	if (!shouldAnalyze(_contract))
 		return false;
 
+	// Raises UnimplementedFeatureError in the presence of transient storage variables
+	TransientDataLocationChecker checker(_contract);
+
 	resetContractAnalysis();
 	initContract(_contract);
 	clearIndices(&_contract);

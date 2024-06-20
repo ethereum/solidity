@@ -2563,6 +2563,9 @@ std::string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 			templ("advance", toCompactHexWithPrefix(size));
 			break;
 		}
+		case DataLocation::Transient:
+			solUnimplemented("Transient data location is only supported for value types.");
+			break;
 		case DataLocation::CallData:
 		{
 			u256 size = _type.calldataStride();
