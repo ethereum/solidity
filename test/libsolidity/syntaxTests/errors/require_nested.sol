@@ -9,7 +9,5 @@ contract C
     }
 }
 
-// ====
-// compileViaYul: true
 // ----
 // TypeError 9322: (118-125): No matching declaration found after argument-dependent lookup.

@@ -21,8 +21,6 @@ contract C
     }
 }
 
-// ====
-// compileViaYul: true
 // ----
 // f() -> 7
 // g() -> 7

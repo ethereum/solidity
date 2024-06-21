@@ -4,6 +4,4 @@ contract C {
         require(c, E(2, 7));
     }
 }
-// ====
-// compileViaYul: true
 // ----
