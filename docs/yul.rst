@@ -932,7 +932,8 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | blockhash(b)            |     | F | hash of block nr b - only for last 256 blocks excluding current |
 +-------------------------+-----+---+-----------------------------------------------------------------+
-| blobhash(i)             |     | N | versioned hash of transaction's i-th blob                       |
+| blobhash(i)             |     | N | versioned hash of transaction's i-th blob, 0 if blob does not   |
+|                         |     |   | exist                                                           |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | coinbase()              |     | F | current mining beneficiary                                      |
 +-------------------------+-----+---+-----------------------------------------------------------------+
