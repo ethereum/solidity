@@ -58,6 +58,7 @@ public:
 		smt::EncodingContext& _context,
 		langutil::UniqueErrorReporter& _errorReporter,
 		langutil::UniqueErrorReporter& _unsupportedErrorReporter,
+		langutil::ErrorReporter& _provedSafeReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		ModelCheckerSettings _settings,
@@ -77,6 +78,17 @@ public:
 		}
 	};
 
+	struct SafeTargetsCompare
+	{
+		bool operator()(CHCVerificationTarget const & _lhs, CHCVerificationTarget const & _rhs) const
+		{
+			if (_lhs.errorNode->id() == _rhs.errorNode->id())
+				return _lhs.type  < _rhs.type;
+			else
+				return _lhs.errorNode->id() == _rhs.errorNode->id();
+		}
+	};
+
 	struct ReportTargetInfo
 	{
 		langutil::ErrorId error;
@@ -84,7 +96,7 @@ public:
 		std::string message;
 	};
 
-	std::map<ASTNode const*, std::set<CHCVerificationTarget>, smt::EncodingContext::IdCompare> const& safeTargets() const { return m_safeTargets; }
+	std::map<ASTNode const*, std::set<CHCVerificationTarget, SafeTargetsCompare>, smt::EncodingContext::IdCompare> const& safeTargets() const { return m_safeTargets; }
 	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> const& unsafeTargets() const { return m_unsafeTargets; }
 
 	/// This is used if the Horn solver is not directly linked into this binary.
@@ -423,7 +435,7 @@ private:
 	std::map<unsigned, CHCVerificationTarget> m_verificationTargets;
 
 	/// Targets proved safe.
-	std::map<ASTNode const*, std::set<CHCVerificationTarget>, smt::EncodingContext::IdCompare> m_safeTargets;
+	std::map<ASTNode const*, std::set<CHCVerificationTarget, SafeTargetsCompare>, smt::EncodingContext::IdCompare> m_safeTargets;
 	/// Targets proved unsafe.
 	std::map<ASTNode const*, std::map<VerificationTargetType, ReportTargetInfo>, smt::EncodingContext::IdCompare> m_unsafeTargets;
 	/// Targets not proved.

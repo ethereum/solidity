@@ -51,10 +51,12 @@ SMTEncoder::SMTEncoder(
 	ModelCheckerSettings _settings,
 	UniqueErrorReporter& _errorReporter,
 	UniqueErrorReporter& _unsupportedErrorReporter,
+	ErrorReporter& _provedSafeReporter,
 	langutil::CharStreamProvider const& _charStreamProvider
 ):
 	m_errorReporter(_errorReporter),
 	m_unsupportedErrors(_unsupportedErrorReporter),
+	m_provedSafeReporter(_provedSafeReporter),
 	m_context(_context),
 	m_settings(std::move(_settings)),
 	m_charStreamProvider(_charStreamProvider)

@@ -47,12 +47,13 @@ BMC::BMC(
 	smt::EncodingContext& _context,
 	UniqueErrorReporter& _errorReporter,
 	UniqueErrorReporter& _unsupportedErrorReporter,
+	ErrorReporter& _provedSafeReporter,
 	std::map<h256, std::string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	ModelCheckerSettings _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider)
+	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _provedSafeReporter, _charStreamProvider)
 {
 	solAssert(!_settings.printQuery || _settings.solvers == SMTSolverChoice::SMTLIB2(), "Only SMTLib2 solver can be enabled to print queries");
 	std::vector<std::unique_ptr<SolverInterface>> solvers;
@@ -133,14 +134,13 @@ void BMC::analyze(SourceUnit const& _source, std::map<ASTNode const*, std::set<V
 	else if (m_settings.showProvedSafe)
 		for (auto const& [node, targets]: m_safeTargets)
 			for (auto const& target: targets)
-				m_errorReporter.info(
+				m_provedSafeReporter.info(
 					2961_error,
 					node->location(),
 					"BMC: " +
 					targetDescription(target) +
 					" check is safe!"
 				);
-
 
 	// If this check is true, Z3 and cvc5 are not available
 	// and the query answers were not provided, since SMTPortfolio

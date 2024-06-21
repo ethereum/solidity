@@ -63,12 +63,13 @@ CHC::CHC(
 	EncodingContext& _context,
 	UniqueErrorReporter& _errorReporter,
 	UniqueErrorReporter& _unsupportedErrorReporter,
+	ErrorReporter& _provedSafeReporter,
 	std::map<util::h256, std::string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	ModelCheckerSettings _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _charStreamProvider),
+	SMTEncoder(_context, _settings, _errorReporter, _unsupportedErrorReporter, _provedSafeReporter, _charStreamProvider),
 	m_smtlib2Responses(_smtlib2Responses),
 	m_smtCallback(_smtCallback)
 {
@@ -2116,17 +2117,22 @@ void CHC::checkVerificationTargets()
 		);
 
 	if (!m_settings.showProvedSafe && !m_safeTargets.empty())
+	{
+		std::size_t provedSafeNum = 0;
+		for (auto&& [_, targets]: m_safeTargets)
+			provedSafeNum += targets.size();
 		m_errorReporter.info(
 			1391_error,
 			"CHC: " +
-			std::to_string(m_safeTargets.size()) +
+			std::to_string(provedSafeNum) +
 			" verification condition(s) proved safe!" +
 			" Enable the model checker option \"show proved safe\" to see all of them."
 		);
+	}
 	else if (m_settings.showProvedSafe)
 		for (auto const& [node, targets]: m_safeTargets)
 			for (auto const& target: targets)
-				m_errorReporter.info(
+				m_provedSafeReporter.info(
 					9576_error,
 					node->location(),
 					"CHC: " +
