@@ -21,15 +21,15 @@ contract C is A {
 
 	function f() public view override {
 		assert(x == 1); // should hold
-		//Disabled because of Spacer nondeterminism.
-		//assert(x == 0); // should fail
+		assert(x == 0); // should fail
 	}
 }
 // ====
-// SMTEngine: all
+// SMTEngine: chc
 // SMTIgnoreCex: yes
 // SMTIgnoreInv: yes
-// SMTIgnoreOS: macos
+// SMTSolvers: eld
 // ----
 // Warning 6328: (154-168): CHC: Assertion violation happens here.
+// Warning 6328: (352-366): CHC: Assertion violation happens here.
 // Info 1391: CHC: 2 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

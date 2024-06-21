@@ -93,7 +93,8 @@ Prerequisites
 
 For running all compiler tests you may want to optionally install a few
 dependencies (`evmone <https://github.com/ethereum/evmone/releases>`_,
-`libz3 <https://github.com/Z3Prover/z3>`_).
+`libz3 <https://github.com/Z3Prover/z3>`_, `Eldarica <https://github.com/uuverifiers/eldarica/>`_,
+`cvc5 <https://github.com/cvc5/cvc5>`).
 
 On macOS systems, some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.
@@ -133,11 +134,14 @@ extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
 
 For running SMT tests, the ``libz3`` library must be installed and locatable
 by ``cmake`` during compiler configure stage.
+A few SMT tests use ``Eldarica`` instead of ``Z3``.
+``Eldarica`` is a runtime dependency, its executable (``eld``) must be present in ``PATH`` for the tests to pass.
+However, if ``Eldarica`` is not found, these tests will be automatically skipped.
 
 If the ``libz3`` library is not installed on your system, you should disable the
 SMT tests by exporting ``SMT_FLAGS=--no-smt`` before running ``./scripts/tests.sh`` or
 running ``./scripts/soltest.sh --no-smt``.
-These tests are ``libsolidity/smtCheckerTests`` and ``libsolidity/smtCheckerTestsJSON``.
+These tests are ``libsolidity/smtCheckerTests``.
 
 .. note::
 

@@ -63,7 +63,7 @@ void SMTSolverCommand::setCvc5(std::optional<unsigned int> timeoutInMilliseconds
 	}
 }
 
-ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query)
+ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::string const& _query) const
 {
 	try
 	{
