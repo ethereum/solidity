@@ -11,7 +11,7 @@
 Language: Cpp
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
-AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: BlockIndent
 AlignEscapedNewlines: Left
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
