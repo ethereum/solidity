@@ -34,6 +34,7 @@ SpaceBeforeCtorInitializerColon: false
 SpaceBeforeInheritanceColon: false
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: false
+QualifierAlignment: Right
 TabWidth: 4
 UseTab: Always
 
