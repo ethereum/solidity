@@ -29,7 +29,7 @@ class YulControlFlowGraphExporter
 {
 public:
 	YulControlFlowGraphExporter(){}
-	Json operator()(CFG::BasicBlock const& _block);
+	Json operator()(CFG const& _cfg);
 
 private:
 	size_t getBlockId(CFG::BasicBlock const& _block);

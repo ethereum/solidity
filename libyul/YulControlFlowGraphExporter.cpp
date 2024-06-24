@@ -22,16 +22,21 @@
 #include <libsolutil/Algorithms.h>
 
 #include <range/v3/view/transform.hpp>
+#include <range/v3/view/map.hpp>
 
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-Json YulControlFlowGraphExporter::operator()(CFG::BasicBlock const& _entry)
+Json YulControlFlowGraphExporter::operator()(CFG const& _cfg)
 {
 	Json ret = Json::array();
-	util::BreadthFirstSearch<CFG::BasicBlock const*>{{&_entry}}.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+	util::BreadthFirstSearch<CFG::BasicBlock const*> bfs{{_cfg.entry}};
+	for (auto const& functionInfo: _cfg.functionInfo | ranges::views::values)
+		bfs.verticesToTraverse.emplace_back(functionInfo.entry);
+
+	bfs.run([&](CFG::BasicBlock const* _block, auto _addChild) {
 		// Convert current block to JSON
 		ret.push_back(toJson(*_block));
 

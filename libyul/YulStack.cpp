@@ -392,7 +392,7 @@ Json YulStack::cfgJson() const
 			languageToDialect(m_language, m_evmVersion),
 			*_object.code.get()
 		);
-		return exporter(*cfg.get()->entry);
+		return exporter(*cfg);
 	};
 
 	std::function<Json(std::vector<std::shared_ptr<ObjectNode>>)> exportCFGFromSubObjects;

@@ -220,7 +220,7 @@ TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::strin
 
 	// TODO: remove and add commandline test
 	YulControlFlowGraphExporter exporter{};
-	exporter(*cfg->entry);
+	exporter(*cfg);
 
 	m_obtainedResult = output.str();
 
