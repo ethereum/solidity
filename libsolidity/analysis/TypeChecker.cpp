@@ -1851,48 +1851,43 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(FunctionCa
 					solAssert(argArrayType->isByteArray() && resultType->category() == Type::Category::FixedBytes, "");
 			}
 		}
-		else
+		else if (resultType->category() == Type::Category::Contract && argType->category() == Type::Category::Address)
 		{
-			if (resultType->category() == Type::Category::Contract && argType->category() == Type::Category::Address)
-			{
-				solAssert(dynamic_cast<ContractType const*>(resultType)->isPayable(), "");
-				solAssert(dynamic_cast<AddressType const*>(argType)->stateMutability() < StateMutability::Payable, "");
-				SecondarySourceLocation ssl;
-				if (auto const* identifier = dynamic_cast<Identifier const*>(arguments.front().get()))
-					if (auto const* variableDeclaration
-						= dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
-						ssl.append(
-							"Did you mean to declare this variable as \"address payable\"?",
-							variableDeclaration->location()
-						);
-				m_errorReporter.typeError(
-					7398_error,
-					_functionCall.location(),
-					ssl,
-					"Explicit type conversion not allowed from non-payable \"address\" to \""
-						+ resultType->humanReadableName() + "\", which has a payable fallback function."
-				);
-			}
-			else if (auto const* functionType = dynamic_cast<FunctionType const*>(argType);
-					 functionType && functionType->kind() == FunctionType::Kind::External
-					 && resultType->category() == Type::Category::Address)
-				m_errorReporter.typeError(
-					5030_error,
-					_functionCall.location(),
-					"Explicit type conversion not allowed from \"" + argType->humanReadableName() + "\" to \""
-						+ resultType->humanReadableName()
-						+ "\". To obtain the address of the contract of the function, "
-						+ "you can use the .address member of the function."
-				);
-			else
-				m_errorReporter.typeErrorConcatenateDescriptions(
-					9640_error,
-					_functionCall.location(),
-					"Explicit type conversion not allowed from \"" + argType->humanReadableName() + "\" to \""
-						+ resultType->humanReadableName() + "\".",
-					result.message()
-				);
+			solAssert(dynamic_cast<ContractType const*>(resultType)->isPayable(), "");
+			solAssert(dynamic_cast<AddressType const*>(argType)->stateMutability() < StateMutability::Payable, "");
+			SecondarySourceLocation ssl;
+			if (auto const* identifier = dynamic_cast<Identifier const*>(arguments.front().get()))
+				if (auto const* variableDeclaration
+					= dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
+					ssl.append(
+						"Did you mean to declare this variable as \"address payable\"?", variableDeclaration->location()
+					);
+			m_errorReporter.typeError(
+				7398_error,
+				_functionCall.location(),
+				ssl,
+				"Explicit type conversion not allowed from non-payable \"address\" to \""
+					+ resultType->humanReadableName() + "\", which has a payable fallback function."
+			);
 		}
+		else if (auto const* functionType = dynamic_cast<FunctionType const*>(argType);
+				 functionType && functionType->kind() == FunctionType::Kind::External
+				 && resultType->category() == Type::Category::Address)
+			m_errorReporter.typeError(
+				5030_error,
+				_functionCall.location(),
+				"Explicit type conversion not allowed from \"" + argType->humanReadableName() + "\" to \""
+					+ resultType->humanReadableName() + "\". To obtain the address of the contract of the function, "
+					+ "you can use the .address member of the function."
+			);
+		else
+			m_errorReporter.typeErrorConcatenateDescriptions(
+				9640_error,
+				_functionCall.location(),
+				"Explicit type conversion not allowed from \"" + argType->humanReadableName() + "\" to \""
+					+ resultType->humanReadableName() + "\".",
+				result.message()
+			);
 	}
 	return resultType;
 }
@@ -3221,12 +3216,10 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		{
 			u256 length = 1;
 			if (expectType(*index, *TypeProvider::uint256()))
-			{
 				if (auto indexValue = dynamic_cast<RationalNumberType const*>(type(*index)))
 					length = indexValue->literalValue(nullptr);
 				else
 					m_errorReporter.fatalTypeError(3940_error, index->location(), "Integer constant expected.");
-			}
 			else
 				solAssert(m_errorReporter.hasErrors(), "Expected errors as expectType returned false");
 
@@ -3389,11 +3382,9 @@ bool TypeChecker::visit(Identifier const& _identifier)
 			std::vector<Declaration const*> candidates;
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
-			{
 				if (VariableDeclaration const* variableDeclaration
 					= dynamic_cast<decltype(variableDeclaration)>(declaration))
 					candidates.push_back(declaration);
-			}
 			if (candidates.empty())
 				m_errorReporter.fatalTypeError(
 					2144_error, _identifier.location(), "No matching declaration found after variable lookup."

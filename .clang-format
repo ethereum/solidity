@@ -27,6 +27,7 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 2
 PenaltyBreakBeforeFirstCallParameter: 2000
 PointerAlignment: Left
+RemoveBracesLLVM: true
 SpaceAfterCStyleCast: true
 SpaceAfterTemplateKeyword: false
 SpaceBeforeCtorInitializerColon: false
