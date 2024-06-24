@@ -24,12 +24,12 @@
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
-#include <libsolidity/ast/UserDefinableOperators.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/ast/UserDefinableOperators.h>
 
+#include <libyul/AST.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AST.h>
 
 #include <liblangutil/ErrorReporter.h>
 
@@ -66,7 +66,8 @@ bool TypeChecker::typeSupportedByOldABIEncoder(Type const& _type, bool _isLibrar
 	{
 		auto const& arrayType = dynamic_cast<ArrayType const&>(_type);
 		auto base = arrayType.baseType();
-		if (!typeSupportedByOldABIEncoder(*base, _isLibraryCall) || (base->category() == Type::Category::Array && base->isDynamicallySized()))
+		if (!typeSupportedByOldABIEncoder(*base, _isLibraryCall)
+			|| (base->category() == Type::Category::Array && base->isDynamicallySized()))
 			return false;
 	}
 	return true;
@@ -101,24 +102,17 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 		m_errorReporter.typeError(
 			5782_error,
 			_functionCall.location(),
-			"This function takes two arguments, but " +
-			toString(arguments.size()) +
-			" were provided."
-		);
+			"This function takes two arguments, but " + toString(arguments.size()) + " were provided.");
 
 	if (arguments.size() >= 1)
-		if (
-			!type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()) &&
-			!type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesCalldata())
-		)
+		if (!type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory())
+			&& !type(*arguments.front())->isImplicitlyConvertibleTo(*TypeProvider::bytesCalldata()))
 			m_errorReporter.typeError(
 				1956_error,
 				arguments.front()->location(),
 				"The first argument to \"abi.decode\" must be implicitly convertible to "
-				"bytes memory or bytes calldata, but is of type " +
-				type(*arguments.front())->humanReadableName() +
-				"."
-			);
+				"bytes memory or bytes calldata, but is of type "
+					+ type(*arguments.front())->humanReadableName() + ".");
 
 	if (arguments.size() < 2)
 		return {};
@@ -129,10 +123,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 	if (!tupleExpression)
 	{
 		m_errorReporter.typeError(
-			6444_error,
-			arguments[1]->location(),
-			"The second argument to \"abi.decode\" has to be a tuple of types."
-		);
+			6444_error, arguments[1]->location(), "The second argument to \"abi.decode\" has to be a tuple of types.");
 		return {};
 	}
 
@@ -152,26 +143,19 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 			if (actualType->category() == Type::Category::Address)
 				actualType = TypeProvider::payableAddress();
 			solAssert(
-				!actualType->dataStoredIn(DataLocation::CallData) &&
-				!actualType->dataStoredIn(DataLocation::Storage),
-				""
-			);
+				!actualType->dataStoredIn(DataLocation::CallData) && !actualType->dataStoredIn(DataLocation::Storage),
+				"");
 			if (!actualType->fullEncodingType(false, _abiEncoderV2, false))
 				m_errorReporter.typeError(
 					9611_error,
 					typeArgument->location(),
-					"Decoding type " + actualType->humanReadableName() + " not supported."
-				);
+					"Decoding type " + actualType->humanReadableName() + " not supported.");
 
 			if (auto referenceType = dynamic_cast<ReferenceType const*>(actualType))
 			{
 				auto result = referenceType->validForLocation(referenceType->location());
 				if (!result)
-					m_errorReporter.typeError(
-						6118_error,
-						typeArgument->location(),
-						result.message()
-					);
+					m_errorReporter.typeError(6118_error, typeArgument->location(), result.message());
 			}
 
 			components.push_back(actualType);
@@ -192,10 +176,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		m_errorReporter.fatalTypeError(
 			8885_error,
 			_functionCall.location(),
-			"This function takes one argument, but " +
-			toString(arguments.size()) +
-			" were provided."
-		);
+			"This function takes one argument, but " + toString(arguments.size()) + " were provided.");
 	Type const* firstArgType = type(*arguments.front());
 
 	bool wrongType = false;
@@ -205,10 +186,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		Type::Category typeCategory = typeTypePtr->actualType()->category();
 		if (auto const* contractType = dynamic_cast<ContractType const*>(typeTypePtr->actualType()))
 			wrongType = contractType->isSuper();
-		else if (
-			typeCategory != Type::Category::Integer &&
-			typeCategory != Type::Category::Enum
-		)
+		else if (typeCategory != Type::Category::Integer && typeCategory != Type::Category::Enum)
 			wrongType = true;
 	}
 	else
@@ -219,17 +197,13 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			4259_error,
 			arguments.front()->location(),
 			"Invalid type for argument in the function call. "
-			"An enum type, contract type or an integer type is required, but " +
-			type(*arguments.front())->humanReadableName() + " provided."
-		);
+			"An enum type, contract type or an integer type is required, but "
+				+ type(*arguments.front())->humanReadableName() + " provided.");
 
 	return {TypeProvider::meta(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
 }
 
-bool TypeChecker::visit(ImportDirective const&)
-{
-	return false;
-}
+bool TypeChecker::visit(ImportDirective const&) { return false; }
 
 void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 {
@@ -238,7 +212,8 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	solAssert(m_currentContract, "");
 
 	if (m_currentContract->isInterface() && !base->isInterface())
-		m_errorReporter.typeError(6536_error, _inheritance.location(), "Interfaces can only inherit from other interfaces.");
+		m_errorReporter
+			.typeError(6536_error, _inheritance.location(), "Interfaces can only inherit from other interfaces.");
 
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes;
@@ -253,12 +228,10 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 			m_errorReporter.typeError(
 				7927_error,
 				_inheritance.location(),
-				"Wrong argument count for constructor call: " +
-				toString(arguments->size()) +
-				" arguments given but expected " +
-				toString(parameterTypes.size()) +
-				(arguments->size() == 0 ? ". Remove parentheses if you do not want to provide arguments here." : "")
-			);
+				"Wrong argument count for constructor call: " + toString(arguments->size())
+					+ " arguments given but expected " + toString(parameterTypes.size())
+					+ (arguments->size() == 0 ? ". Remove parentheses if you do not want to provide arguments here."
+											  : ""));
 		}
 		for (size_t i = 0; i < std::min(arguments->size(), parameterTypes.size()); ++i)
 		{
@@ -268,13 +241,10 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 					9827_error,
 					(*arguments)[i]->location(),
 					"Invalid type for argument in constructor call. "
-					"Invalid implicit conversion from " +
-					type(*(*arguments)[i])->humanReadableName() +
-					" to " +
-					parameterTypes[i]->humanReadableName() +
-					" requested.",
-					result.message()
-				);
+					"Invalid implicit conversion from "
+						+ type(*(*arguments)[i])->humanReadableName() + " to " + parameterTypes[i]->humanReadableName()
+						+ " requested.",
+					result.message());
 		}
 	}
 }
@@ -284,22 +254,16 @@ void TypeChecker::endVisit(ModifierDefinition const& _modifier)
 	if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(_modifier.scope()))
 	{
 		if (_modifier.virtualSemantics() && contractDef->isLibrary())
-			m_errorReporter.typeError(
-				3275_error,
-				_modifier.location(),
-				"Modifiers in a library cannot be virtual."
-			);
+			m_errorReporter.typeError(3275_error, _modifier.location(), "Modifiers in a library cannot be virtual.");
 
 		if (contractDef->isInterface())
-			m_errorReporter.typeError(
-				6408_error,
-				_modifier.location(),
-				"Modifiers cannot be defined or declared in interfaces."
-			);
+			m_errorReporter
+				.typeError(6408_error, _modifier.location(), "Modifiers cannot be defined or declared in interfaces.");
 	}
 
 	if (!_modifier.isImplemented() && !_modifier.virtualSemantics())
-		m_errorReporter.typeError(8063_error, _modifier.location(), "Modifiers without implementation must be marked virtual.");
+		m_errorReporter
+			.typeError(8063_error, _modifier.location(), "Modifiers without implementation must be marked virtual.");
 }
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
@@ -313,7 +277,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else if (_function.annotation().contract->isInterface())
 			m_errorReporter.warning(5815_error, _function.location(), "Interface functions are implicitly \"virtual\"");
 		else if (_function.visibility() == Visibility::Private)
-			m_errorReporter.typeError(3942_error, _function.location(), "\"virtual\" and \"private\" cannot be used together.");
+			m_errorReporter
+				.typeError(3942_error, _function.location(), "\"virtual\" and \"private\" cannot be used together.");
 		else if (_function.libraryFunction())
 			m_errorReporter.typeError(7801_error, _function.location(), "Library functions cannot be \"virtual\".");
 	}
@@ -330,33 +295,29 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else if (_function.isFree())
 			m_errorReporter.typeError(9559_error, _function.location(), "Free functions cannot be payable.");
 		else if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
-			m_errorReporter.typeError(5587_error, _function.location(), "\"internal\" and \"private\" functions cannot be payable.");
+			m_errorReporter.typeError(
+				5587_error, _function.location(), "\"internal\" and \"private\" functions cannot be payable.");
 	}
 
 	std::vector<VariableDeclaration const*> internalParametersInConstructor;
 
-	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& _var) {
+	auto checkArgumentAndReturnParameter = [&](VariableDeclaration const& _var)
+	{
 		if (type(_var)->containsNestedMapping())
 			if (_var.referenceLocation() == VariableDeclaration::Location::Storage)
 				solAssert(
 					_function.libraryFunction() || _function.isConstructor() || !_function.isPublic(),
 					"Mapping types for parameters or return variables "
-					"can only be used in internal or library functions."
-				);
-		bool functionIsExternallyVisible =
-			(!_function.isConstructor() && _function.isPublic()) ||
-			(_function.isConstructor() && !m_currentContract->abstract());
-		if (
-			_function.isConstructor() &&
-			_var.referenceLocation() == VariableDeclaration::Location::Storage &&
-			!m_currentContract->abstract()
-		)
+					"can only be used in internal or library functions.");
+		bool functionIsExternallyVisible = (!_function.isConstructor() && _function.isPublic())
+										   || (_function.isConstructor() && !m_currentContract->abstract());
+		if (_function.isConstructor() && _var.referenceLocation() == VariableDeclaration::Location::Storage
+			&& !m_currentContract->abstract())
 			m_errorReporter.fatalTypeError(
 				3644_error,
 				_var.location(),
 				"This parameter has a type that can only be used internally. "
-				"You can make the contract abstract to avoid this problem."
-			);
+				"You can make the contract abstract to avoid this problem.");
 		else if (functionIsExternallyVisible)
 		{
 			auto iType = type(_var)->interfaceType(_function.libraryFunction());
@@ -369,23 +330,14 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 					message += " You can make the contract abstract to avoid this problem.";
 				m_errorReporter.fatalTypeError(4103_error, _var.location(), message);
 			}
-			else if (
-				!useABICoderV2() &&
-				!typeSupportedByOldABIEncoder(*type(_var), _function.libraryFunction())
-			)
+			else if (!useABICoderV2() && !typeSupportedByOldABIEncoder(*type(_var), _function.libraryFunction()))
 			{
-				std::string message =
-					"This type is only supported in ABI coder v2. "
-					"Use \"pragma abicoder v2;\" to enable the feature.";
+				std::string message = "This type is only supported in ABI coder v2. "
+									  "Use \"pragma abicoder v2;\" to enable the feature.";
 				if (_function.isConstructor())
-					message +=
-						" Alternatively, make the contract abstract and supply the "
-						"constructor arguments from a derived contract.";
-				m_errorReporter.typeError(
-					4957_error,
-					_var.location(),
-					message
-				);
+					message += " Alternatively, make the contract abstract and supply the "
+							   "constructor arguments from a derived contract.";
+				m_errorReporter.typeError(4957_error, _var.location(), message);
 			}
 		}
 	};
@@ -411,15 +363,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			baseContracts.erase(baseContracts.begin());
 		}
 
-		visitManually(
-			*modifier,
-			_function.isConstructor() ? baseContracts : std::vector<ContractDefinition const*>()
-		);
+		visitManually(*modifier, _function.isConstructor() ? baseContracts : std::vector<ContractDefinition const*>());
 		Declaration const* decl = &dereference(modifier->name());
 		if (modifiers.count(decl))
 		{
 			if (dynamic_cast<ContractDefinition const*>(decl))
-				m_errorReporter.declarationError(1697_error, modifier->location(), "Base constructor already provided.");
+				m_errorReporter
+					.declarationError(1697_error, modifier->location(), "Base constructor already provided.");
 		}
 		else
 			modifiers.insert(decl);
@@ -435,12 +385,14 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	else if (m_currentContract->isInterface())
 	{
 		if (_function.isImplemented())
-			m_errorReporter.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
+			m_errorReporter
+				.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
 
 		if (_function.isConstructor())
 			m_errorReporter.typeError(6482_error, _function.location(), "Constructor cannot be defined in interfaces.");
 		else if (_function.visibility() != Visibility::External)
-			m_errorReporter.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
+			m_errorReporter
+				.typeError(1560_error, _function.location(), "Functions in interfaces must be declared external.");
 	}
 	else if (m_currentContract->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
@@ -451,13 +403,15 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	else if (_function.isConstructor())
 		m_errorReporter.typeError(5700_error, _function.location(), "Constructor must be implemented if declared.");
 	else if (_function.libraryFunction())
-		m_errorReporter.typeError(9231_error, _function.location(), "Library functions must be implemented if declared.");
+		m_errorReporter
+			.typeError(9231_error, _function.location(), "Library functions must be implemented if declared.");
 	else if (!_function.virtualSemantics())
 	{
 		if (_function.isFree())
 			solAssert(m_errorReporter.hasErrors(), "");
 		else
-			m_errorReporter.typeError(5424_error, _function.location(), "Functions without implementation must be marked virtual.");
+			m_errorReporter.typeError(
+				5424_error, _function.location(), "Functions without implementation must be marked virtual.");
 	}
 
 
@@ -485,8 +439,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(
 				6280_error,
 				_variable.location(),
-				"Types in storage containing (nested) mappings cannot be assigned to."
-			);
+				"Types in storage containing (nested) mappings cannot be assigned to.");
 			_variable.value()->accept(*this);
 		}
 		else
@@ -500,33 +453,32 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			m_errorReporter.typeError(
 				8349_error,
 				_variable.value()->location(),
-				"Initial value for constant variable has to be compile-time constant."
-			);
+				"Initial value for constant variable has to be compile-time constant.");
 	}
 	else if (_variable.immutable())
 	{
 		if (!_variable.type()->isValueType())
-			m_errorReporter.typeError(6377_error, _variable.location(), "Immutable variables cannot have a non-value type.");
-		if (
-			auto const* functionType = dynamic_cast<FunctionType const*>(_variable.type());
-			functionType && functionType->kind() == FunctionType::Kind::External
-		)
-			m_errorReporter.typeError(3366_error, _variable.location(), "Immutable variables of external function type are not yet supported.");
+			m_errorReporter
+				.typeError(6377_error, _variable.location(), "Immutable variables cannot have a non-value type.");
+		if (auto const* functionType = dynamic_cast<FunctionType const*>(_variable.type());
+			functionType && functionType->kind() == FunctionType::Kind::External)
+			m_errorReporter.typeError(
+				3366_error,
+				_variable.location(),
+				"Immutable variables of external function type are not yet supported.");
 		solAssert(_variable.type()->sizeOnStack() == 1 || m_errorReporter.hasErrors(), "");
 	}
 
 	if (!_variable.isStateVariable())
 	{
-		if (
-			_variable.referenceLocation() == VariableDeclaration::Location::CallData ||
-			_variable.referenceLocation() == VariableDeclaration::Location::Memory
-		)
+		if (_variable.referenceLocation() == VariableDeclaration::Location::CallData
+			|| _variable.referenceLocation() == VariableDeclaration::Location::Memory)
 			if (varType->containsNestedMapping())
 				m_errorReporter.fatalTypeError(
 					4061_error,
 					_variable.location(),
-					"Type " + varType->humanReadableName() + " is only valid in storage because it contains a (nested) mapping."
-				);
+					"Type " + varType->humanReadableName()
+						+ " is only valid in storage because it contains a (nested) mapping.");
 	}
 	else if (_variable.visibility() >= Visibility::Public)
 	{
@@ -541,19 +493,24 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				m_errorReporter.typeError(
 					2763_error,
 					_variable.location(),
-					"The following types are only supported for getters in ABI coder v2: " +
-					joinHumanReadable(unsupportedTypes) +
-					". Either remove \"public\" or use \"pragma abicoder v2;\" to enable the feature."
-				);
+					"The following types are only supported for getters in ABI coder v2: "
+						+ joinHumanReadable(unsupportedTypes)
+						+ ". Either remove \"public\" or use \"pragma abicoder v2;\" to enable the feature.");
 		}
 		if (!getter.interfaceFunctionType())
 		{
 			solAssert(getter.returnParameterNames().size() == getter.returnParameterTypes().size());
 			solAssert(getter.parameterNames().size() == getter.parameterTypes().size());
 			if (getter.returnParameterTypes().empty() && getter.parameterTypes().empty())
-				m_errorReporter.typeError(5359_error, _variable.location(), "The struct has all its members omitted, therefore the getter cannot return any values.");
+				m_errorReporter.typeError(
+					5359_error,
+					_variable.location(),
+					"The struct has all its members omitted, therefore the getter cannot return any values.");
 			else
-				m_errorReporter.typeError(6744_error, _variable.location(), "Internal or recursive type is not allowed for public state variables.");
+				m_errorReporter.typeError(
+					6744_error,
+					_variable.location(),
+					"Internal or recursive type is not allowed for public state variables.");
 		}
 	}
 
@@ -566,13 +523,15 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		BoolResult result = referenceType->validForLocation(referenceType->location());
 		if (result)
 		{
-			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && referenceType->location() == DataLocation::Storage);
+			bool isLibraryStorageParameter
+				= (_variable.isLibraryFunctionParameter() && referenceType->location() == DataLocation::Storage);
 			// We skip the calldata check for abstract contract constructors.
-			bool isAbstractConstructorParam = _variable.isConstructorParameter() && m_currentContract && m_currentContract->abstract();
-			bool callDataCheckRequired =
-				!isAbstractConstructorParam &&
-				(_variable.isConstructorParameter() || _variable.isPublicCallableParameter()) &&
-				!isLibraryStorageParameter;
+			bool isAbstractConstructorParam
+				= _variable.isConstructorParameter() && m_currentContract && m_currentContract->abstract();
+			bool callDataCheckRequired
+				= !isAbstractConstructorParam
+				  && (_variable.isConstructorParameter() || _variable.isPublicCallableParameter())
+				  && !isLibraryStorageParameter;
 			if (callDataCheckRequired)
 			{
 				if (!referenceType->interfaceType(false))
@@ -596,19 +555,14 @@ void TypeChecker::endVisit(StructDefinition const& _struct)
 {
 	for (auto const& member: _struct.members())
 		solAssert(
-			member->annotation().type &&
-			member->annotation().type->canBeStored(),
-			"Type cannot be used in struct."
-		);
+			member->annotation().type && member->annotation().type->canBeStored(), "Type cannot be used in struct.");
 }
 
 void TypeChecker::visitManually(
-	ModifierInvocation const& _modifier,
-	std::vector<ContractDefinition const*> const& _bases
-)
+	ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases)
 {
-	std::vector<ASTPointer<Expression>> const& arguments =
-		_modifier.arguments() ? *_modifier.arguments() : std::vector<ASTPointer<Expression>>();
+	std::vector<ASTPointer<Expression>> const& arguments
+		= _modifier.arguments() ? *_modifier.arguments() : std::vector<ASTPointer<Expression>>();
 	for (ASTPointer<Expression> const& argument: arguments)
 		argument->accept(*this);
 
@@ -627,18 +581,15 @@ void TypeChecker::visitManually(
 					m_errorReporter.typeError(
 						9428_error,
 						_modifier.location(),
-						"Can only use modifiers defined in the current contract or in base contracts."
-					);
+						"Can only use modifiers defined in the current contract or in base contracts.");
 			}
-		if (
-			*_modifier.name().annotation().requiredLookup == VirtualLookup::Static &&
-			!modifierDecl->isImplemented()
-		)
+		if (*_modifier.name().annotation().requiredLookup == VirtualLookup::Static && !modifierDecl->isImplemented())
 			m_errorReporter.typeError(
 				1835_error,
 				_modifier.location(),
-				"Cannot call unimplemented modifier. The modifier has no implementation in the referenced contract. Refer to it by its unqualified name if you want to call the implementation from the most derived contract."
-			);
+				"Cannot call unimplemented modifier. The modifier has no implementation in the referenced contract. "
+				"Refer to it by its unqualified name if you want to call the implementation from the most derived "
+				"contract.");
 	}
 	else
 		// check parameters for Base constructors
@@ -653,7 +604,8 @@ void TypeChecker::visitManually(
 			}
 	if (!parameters)
 	{
-		m_errorReporter.typeError(4659_error, _modifier.location(), "Referenced declaration is neither modifier nor base class.");
+		m_errorReporter
+			.typeError(4659_error, _modifier.location(), "Referenced declaration is neither modifier nor base class.");
 		return;
 	}
 	if (parameters->size() != arguments.size())
@@ -661,12 +613,8 @@ void TypeChecker::visitManually(
 		m_errorReporter.typeError(
 			2973_error,
 			_modifier.location(),
-			"Wrong argument count for modifier invocation: " +
-			toString(arguments.size()) +
-			" arguments given but expected " +
-			toString(parameters->size()) +
-			"."
-		);
+			"Wrong argument count for modifier invocation: " + toString(arguments.size())
+				+ " arguments given but expected " + toString(parameters->size()) + ".");
 		return;
 	}
 	for (size_t i = 0; i < arguments.size(); ++i)
@@ -677,13 +625,10 @@ void TypeChecker::visitManually(
 				4649_error,
 				arguments[i]->location(),
 				"Invalid type for argument in modifier invocation. "
-				"Invalid implicit conversion from " +
-				type(*arguments[i])->humanReadableName() +
-				" to " +
-				type(*(*parameters)[i])->humanReadableName() +
-				" requested.",
-				result.message()
-			);
+				"Invalid implicit conversion from "
+					+ type(*arguments[i])->humanReadableName() + " to " + type(*(*parameters)[i])->humanReadableName()
+					+ " requested.",
+				result.message());
 	}
 }
 
@@ -692,12 +637,11 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	solAssert(_eventDef.visibility() > Visibility::Internal, "");
 	checkErrorAndEventParameters(_eventDef);
 
-	auto numIndexed = ranges::count_if(
-		_eventDef.parameters(),
-		[](ASTPointer<VariableDeclaration> const& var) { return var->isIndexed(); }
-	);
+	auto numIndexed = ranges::
+		count_if(_eventDef.parameters(), [](ASTPointer<VariableDeclaration> const& var) { return var->isIndexed(); });
 	if (_eventDef.isAnonymous() && numIndexed > 4)
-		m_errorReporter.typeError(8598_error, _eventDef.location(), "More than 4 indexed arguments for anonymous event.");
+		m_errorReporter
+			.typeError(8598_error, _eventDef.location(), "More than 4 indexed arguments for anonymous event.");
 	else if (!_eventDef.isAnonymous() && numIndexed > 3)
 		m_errorReporter.typeError(7249_error, _eventDef.location(), "More than 3 indexed arguments for event.");
 	return true;
@@ -719,7 +663,8 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 		{
 			solAssert(t->annotation().type, "Type not set for parameter.");
 			if (!t->annotation().type->interfaceType(false).get())
-				m_errorReporter.fatalTypeError(2582_error, t->location(), "Internal type cannot be used for external function type.");
+				m_errorReporter.fatalTypeError(
+					2582_error, t->location(), "Internal type cannot be used for external function type.");
 		}
 		solAssert(fun.interfaceType(false), "External function type uses internal types.");
 	}
@@ -730,17 +675,14 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	bool lvalueAccessToMemoryVariable = false;
 	// External references have already been resolved in a prior stage and stored in the annotation.
 	// We run the resolve step again regardless.
-	yul::ExternalIdentifierAccess::Resolver identifierAccess = [&](
-		yul::Identifier const& _identifier,
-		yul::IdentifierContext _context,
-		bool
-	) -> bool
+	yul::ExternalIdentifierAccess::Resolver identifierAccess
+		= [&](yul::Identifier const& _identifier, yul::IdentifierContext _context, bool) -> bool
 	{
 		if (_context == yul::IdentifierContext::NonExternal)
 		{
 			// Hack until we can disallow any shadowing: If we found an internal reference,
 			// clear the external references, so that codegen does not use it.
-			_inlineAssembly.annotation().externalReferences.erase(& _identifier);
+			_inlineAssembly.annotation().externalReferences.erase(&_identifier);
 			return false;
 		}
 		auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
@@ -756,18 +698,18 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				lvalueAccessToMemoryVariable = true;
 			if (var->immutable())
 			{
-				m_errorReporter.typeError(3773_error, nativeLocationOf(_identifier), "Assembly access to immutable variables is not supported.");
+				m_errorReporter.typeError(
+					3773_error,
+					nativeLocationOf(_identifier),
+					"Assembly access to immutable variables is not supported.");
 				return false;
 			}
 			if (var->isConstant())
 			{
 				if (isConstantVariableRecursive(*var))
 				{
-					m_errorReporter.typeError(
-						3558_error,
-						nativeLocationOf(_identifier),
-						"Constant variable is circular."
-					);
+					m_errorReporter
+						.typeError(3558_error, nativeLocationOf(_identifier), "Constant variable is circular.");
 					return false;
 				}
 
@@ -780,29 +722,39 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				}
 				else if (_context == yul::IdentifierContext::LValue)
 				{
-					m_errorReporter.typeError(6252_error, nativeLocationOf(_identifier), "Constant variables cannot be assigned to.");
+					m_errorReporter.typeError(
+						6252_error, nativeLocationOf(_identifier), "Constant variables cannot be assigned to.");
 					return false;
 				}
 				else if (identifierInfo.suffix == "slot" || identifierInfo.suffix == "offset")
 				{
-					m_errorReporter.typeError(6617_error, nativeLocationOf(_identifier), "The suffixes .offset and .slot can only be used on non-constant storage variables.");
+					m_errorReporter.typeError(
+						6617_error,
+						nativeLocationOf(_identifier),
+						"The suffixes .offset and .slot can only be used on non-constant storage variables.");
 					return false;
 				}
-				else if (var && var->value() && !var->value()->annotation().type && !dynamic_cast<Literal const*>(var->value().get()))
+				else if (
+					var && var->value() && !var->value()->annotation().type
+					&& !dynamic_cast<Literal const*>(var->value().get()))
 				{
 					m_errorReporter.typeError(
 						2249_error,
 						nativeLocationOf(_identifier),
-						"Constant variables with non-literal values cannot be forward referenced from inline assembly."
-					);
+						"Constant variables with non-literal values cannot be forward referenced from inline "
+						"assembly.");
 					return false;
 				}
-				else if (!var || !type(*var)->isValueType() || (
-					!dynamic_cast<Literal const*>(var->value().get()) &&
-					type(*var->value())->category() != Type::Category::RationalNumber
-				))
+				else if (
+					!var || !type(*var)->isValueType()
+					|| (!dynamic_cast<Literal const*>(var->value().get())
+						&& type(*var->value())->category() != Type::Category::RationalNumber))
 				{
-					m_errorReporter.typeError(7615_error, nativeLocationOf(_identifier), "Only direct number constants and references to such constants are supported by inline assembly.");
+					m_errorReporter.typeError(
+						7615_error,
+						nativeLocationOf(_identifier),
+						"Only direct number constants and references to such constants are supported by inline "
+						"assembly.");
 					return false;
 				}
 			}
@@ -817,31 +769,40 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				{
 					if (suffix != "slot" && suffix != "offset")
 					{
-						m_errorReporter.typeError(4656_error, nativeLocationOf(_identifier), "State variables only support \".slot\" and \".offset\".");
+						m_errorReporter.typeError(
+							4656_error,
+							nativeLocationOf(_identifier),
+							"State variables only support \".slot\" and \".offset\".");
 						return false;
 					}
 					else if (_context == yul::IdentifierContext::LValue)
 					{
 						if (var->isStateVariable())
 						{
-							m_errorReporter.typeError(4713_error, nativeLocationOf(_identifier), "State variables cannot be assigned to - you have to use \"sstore()\".");
+							m_errorReporter.typeError(
+								4713_error,
+								nativeLocationOf(_identifier),
+								"State variables cannot be assigned to - you have to use \"sstore()\".");
 							return false;
 						}
 						else if (suffix != "slot")
 						{
-							m_errorReporter.typeError(9739_error, nativeLocationOf(_identifier), "Only .slot can be assigned to.");
+							m_errorReporter
+								.typeError(9739_error, nativeLocationOf(_identifier), "Only .slot can be assigned to.");
 							return false;
 						}
 					}
 				}
-				else if (
-					auto const* arrayType = dynamic_cast<ArrayType const*>(var->type());
-					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData)
-				)
+				else if (auto const* arrayType = dynamic_cast<ArrayType const*>(var->type());
+						 arrayType && arrayType->isDynamicallySized()
+						 && arrayType->dataStoredIn(DataLocation::CallData))
 				{
 					if (suffix != "offset" && suffix != "length")
 					{
-						m_errorReporter.typeError(1536_error, nativeLocationOf(_identifier), "Calldata variables only support \".offset\" and \".length\".");
+						m_errorReporter.typeError(
+							1536_error,
+							nativeLocationOf(_identifier),
+							"Calldata variables only support \".offset\" and \".length\".");
 						return false;
 					}
 				}
@@ -849,18 +810,27 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				{
 					if (suffix != "selector" && suffix != "address")
 					{
-						m_errorReporter.typeError(9272_error, nativeLocationOf(_identifier), "Variables of type function pointer only support \".selector\" and \".address\".");
+						m_errorReporter.typeError(
+							9272_error,
+							nativeLocationOf(_identifier),
+							"Variables of type function pointer only support \".selector\" and \".address\".");
 						return false;
 					}
 					if (fpType->kind() != FunctionType::Kind::External)
 					{
-						m_errorReporter.typeError(8533_error, nativeLocationOf(_identifier), "Only Variables of type external function pointer support \".selector\" and \".address\".");
+						m_errorReporter.typeError(
+							8533_error,
+							nativeLocationOf(_identifier),
+							"Only Variables of type external function pointer support \".selector\" and \".address\".");
 						return false;
 					}
 				}
 				else
 				{
-					m_errorReporter.typeError(3622_error, nativeLocationOf(_identifier), "The suffix \"." + suffix + "\" is not supported by this variable or type.");
+					m_errorReporter.typeError(
+						3622_error,
+						nativeLocationOf(_identifier),
+						"The suffix \"." + suffix + "\" is not supported by this variable or type.");
 					return false;
 				}
 			}
@@ -869,33 +839,42 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				m_errorReporter.typeError(
 					1408_error,
 					nativeLocationOf(_identifier),
-					"Only local variables are supported. To access storage variables, use the \".slot\" and \".offset\" suffixes."
-				);
+					"Only local variables are supported. To access storage variables, use the \".slot\" and "
+					"\".offset\" suffixes.");
 				return false;
 			}
 			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
-				m_errorReporter.typeError(9068_error, nativeLocationOf(_identifier), "You have to use the \".slot\" or \".offset\" suffix to access storage reference variables.");
+				m_errorReporter.typeError(
+					9068_error,
+					nativeLocationOf(_identifier),
+					"You have to use the \".slot\" or \".offset\" suffix to access storage reference variables.");
 				return false;
 			}
 			else if (var->type()->sizeOnStack() != 1)
 			{
-				if (
-					auto const* arrayType = dynamic_cast<ArrayType const*>(var->type());
-					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData)
-				)
-					m_errorReporter.typeError(1397_error, nativeLocationOf(_identifier), "Call data elements cannot be accessed directly. Use \".offset\" and \".length\" to access the calldata offset and length of this array and then use \"calldatacopy\".");
+				if (auto const* arrayType = dynamic_cast<ArrayType const*>(var->type());
+					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData))
+					m_errorReporter.typeError(
+						1397_error,
+						nativeLocationOf(_identifier),
+						"Call data elements cannot be accessed directly. Use \".offset\" and \".length\" to access the "
+						"calldata offset and length of this array and then use \"calldatacopy\".");
 				else
 				{
 					solAssert(!var->type()->dataStoredIn(DataLocation::CallData), "");
-					m_errorReporter.typeError(9857_error, nativeLocationOf(_identifier), "Only types that use one stack slot are supported.");
+					m_errorReporter.typeError(
+						9857_error, nativeLocationOf(_identifier), "Only types that use one stack slot are supported.");
 				}
 				return false;
 			}
 		}
 		else if (!identifierInfo.suffix.empty())
 		{
-			m_errorReporter.typeError(7944_error, nativeLocationOf(_identifier), "The suffixes \".offset\", \".slot\" and \".length\" can only be used with variables.");
+			m_errorReporter.typeError(
+				7944_error,
+				nativeLocationOf(_identifier),
+				"The suffixes \".offset\", \".slot\" and \".length\" can only be used with variables.");
 			return false;
 		}
 		else if (_context == yul::IdentifierContext::LValue)
@@ -903,7 +882,10 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			if (dynamic_cast<MagicVariableDeclaration const*>(declaration))
 				return false;
 
-			m_errorReporter.typeError(1990_error, nativeLocationOf(_identifier), "Only local variables can be assigned to in inline assembly.");
+			m_errorReporter.typeError(
+				1990_error,
+				nativeLocationOf(_identifier),
+				"Only local variables can be assigned to in inline assembly.");
 			return false;
 		}
 
@@ -912,7 +894,10 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
 			{
-				m_errorReporter.declarationError(2025_error, nativeLocationOf(_identifier), "Access to functions is not allowed in inline assembly.");
+				m_errorReporter.declarationError(
+					2025_error,
+					nativeLocationOf(_identifier),
+					"Access to functions is not allowed in inline assembly.");
 				return false;
 			}
 			else if (dynamic_cast<VariableDeclaration const*>(declaration))
@@ -935,16 +920,11 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	solAssert(!_inlineAssembly.annotation().analysisInfo, "");
 	_inlineAssembly.annotation().analysisInfo = std::make_shared<yul::AsmAnalysisInfo>();
 	yul::AsmAnalyzer analyzer(
-		*_inlineAssembly.annotation().analysisInfo,
-		m_errorReporter,
-		_inlineAssembly.dialect(),
-		identifierAccess
-	);
+		*_inlineAssembly.annotation().analysisInfo, m_errorReporter, _inlineAssembly.dialect(), identifierAccess);
 	if (!analyzer.analyze(_inlineAssembly.operations()))
 		solAssert(m_errorReporter.hasErrors());
-	_inlineAssembly.annotation().hasMemoryEffects =
-		lvalueAccessToMemoryVariable ||
-		(analyzer.sideEffects().memory != yul::SideEffects::None);
+	_inlineAssembly.annotation().hasMemoryEffects
+		= lvalueAccessToMemoryVariable || (analyzer.sideEffects().memory != yul::SideEffects::None);
 	return false;
 }
 
@@ -965,23 +945,18 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 		m_errorReporter.typeError(
 			5347_error,
 			_tryStatement.externalCall().location(),
-			"Try can only be used with external function calls and contract creation calls."
-		);
+			"Try can only be used with external function calls and contract creation calls.");
 		return;
 	}
 
 	FunctionType const& functionType = dynamic_cast<FunctionType const&>(*externalCall->expression().annotation().type);
-	if (
-		functionType.kind() != FunctionType::Kind::External &&
-		functionType.kind() != FunctionType::Kind::Creation &&
-		functionType.kind() != FunctionType::Kind::DelegateCall
-	)
+	if (functionType.kind() != FunctionType::Kind::External && functionType.kind() != FunctionType::Kind::Creation
+		&& functionType.kind() != FunctionType::Kind::DelegateCall)
 	{
 		m_errorReporter.typeError(
 			2536_error,
 			_tryStatement.externalCall().location(),
-			"Try can only be used with external function calls and contract creation calls."
-		);
+			"Try can only be used with external function calls and contract creation calls.");
 		return;
 	}
 
@@ -993,22 +968,16 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 	TryCatchClause const& successClause = *_tryStatement.clauses().front();
 	if (successClause.parameters())
 	{
-		TypePointers returnTypes =
-			m_evmVersion.supportsReturndata() ?
-			functionType.returnParameterTypes() :
-			functionType.returnParameterTypesWithoutDynamicTypes();
-		std::vector<ASTPointer<VariableDeclaration>> const& parameters =
-			successClause.parameters()->parameters();
+		TypePointers returnTypes = m_evmVersion.supportsReturndata()
+									   ? functionType.returnParameterTypes()
+									   : functionType.returnParameterTypesWithoutDynamicTypes();
+		std::vector<ASTPointer<VariableDeclaration>> const& parameters = successClause.parameters()->parameters();
 		if (returnTypes.size() != parameters.size())
 			m_errorReporter.typeError(
 				2800_error,
 				successClause.location(),
-				"Function returns " +
-				std::to_string(functionType.returnParameterTypes().size()) +
-				" values, but returns clause has " +
-				std::to_string(parameters.size()) +
-				" variables."
-			);
+				"Function returns " + std::to_string(functionType.returnParameterTypes().size())
+					+ " values, but returns clause has " + std::to_string(parameters.size()) + " variables.");
 		for (auto&& [parameter, returnType]: ranges::views::zip(parameters, returnTypes))
 		{
 			solAssert(returnType, "");
@@ -1016,12 +985,8 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 				m_errorReporter.typeError(
 					6509_error,
 					parameter->location(),
-					"Invalid type, expected " +
-					returnType->humanReadableName() +
-					" but got " +
-					parameter->annotation().type->humanReadableName() +
-					"."
-				);
+					"Invalid type, expected " + returnType->humanReadableName() + " but got "
+						+ parameter->annotation().type->humanReadableName() + ".");
 		}
 	}
 
@@ -1037,24 +1002,22 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 					5320_error,
 					clause.location(),
 					SecondarySourceLocation{}.append("The first clause is here:", lowLevelClause->location()),
-					"This try statement already has a low-level catch clause."
-				);
+					"This try statement already has a low-level catch clause.");
 			lowLevelClause = &clause;
 			if (clause.parameters() && !clause.parameters()->parameters().empty())
 			{
-				if (
-					clause.parameters()->parameters().size() != 1 ||
-					*clause.parameters()->parameters().front()->type() != *TypeProvider::bytesMemory()
-				)
-					m_errorReporter.typeError(6231_error, clause.location(), "Expected `catch (bytes memory ...) { ... }` or `catch { ... }`.");
+				if (clause.parameters()->parameters().size() != 1
+					|| *clause.parameters()->parameters().front()->type() != *TypeProvider::bytesMemory())
+					m_errorReporter.typeError(
+						6231_error,
+						clause.location(),
+						"Expected `catch (bytes memory ...) { ... }` or `catch { ... }`.");
 				if (!m_evmVersion.supportsReturndata())
 					m_errorReporter.typeError(
 						9908_error,
 						clause.location(),
-						"This catch clause type cannot be used on the selected EVM version (" +
-						m_evmVersion.name() +
-						"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
-					);
+						"This catch clause type cannot be used on the selected EVM version (" + m_evmVersion.name()
+							+ "). You need at least a Byzantium-compatible EVM or use `catch { ... }`.");
 			}
 		}
 		else if (clause.errorName() == "Error" || clause.errorName() == "Panic")
@@ -1063,10 +1026,8 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 				m_errorReporter.typeError(
 					1812_error,
 					clause.location(),
-					"This catch clause type cannot be used on the selected EVM version (" +
-					m_evmVersion.name() +
-					"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
-				);
+					"This catch clause type cannot be used on the selected EVM version (" + m_evmVersion.name()
+						+ "). You need at least a Byzantium-compatible EVM or use `catch { ... }`.");
 
 			if (clause.errorName() == "Error")
 			{
@@ -1075,15 +1036,12 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 						1036_error,
 						clause.location(),
 						SecondarySourceLocation{}.append("The first clause is here:", errorClause->location()),
-						"This try statement already has an \"Error\" catch clause."
-					);
+						"This try statement already has an \"Error\" catch clause.");
 				errorClause = &clause;
-				if (
-					!clause.parameters() ||
-					clause.parameters()->parameters().size() != 1 ||
-					*clause.parameters()->parameters().front()->type() != *TypeProvider::stringMemory()
-				)
-					m_errorReporter.typeError(2943_error, clause.location(), "Expected `catch Error(string memory ...) { ... }`.");
+				if (!clause.parameters() || clause.parameters()->parameters().size() != 1
+					|| *clause.parameters()->parameters().front()->type() != *TypeProvider::stringMemory())
+					m_errorReporter
+						.typeError(2943_error, clause.location(), "Expected `catch Error(string memory ...) { ... }`.");
 			}
 			else
 			{
@@ -1092,23 +1050,19 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 						6732_error,
 						clause.location(),
 						SecondarySourceLocation{}.append("The first clause is here:", panicClause->location()),
-						"This try statement already has a \"Panic\" catch clause."
-					);
+						"This try statement already has a \"Panic\" catch clause.");
 				panicClause = &clause;
-				if (
-					!clause.parameters() ||
-					clause.parameters()->parameters().size() != 1 ||
-					*clause.parameters()->parameters().front()->type() != *TypeProvider::uint256()
-				)
-					m_errorReporter.typeError(1271_error, clause.location(), "Expected `catch Panic(uint ...) { ... }`.");
+				if (!clause.parameters() || clause.parameters()->parameters().size() != 1
+					|| *clause.parameters()->parameters().front()->type() != *TypeProvider::uint256())
+					m_errorReporter
+						.typeError(1271_error, clause.location(), "Expected `catch Panic(uint ...) { ... }`.");
 			}
 		}
 		else
 			m_errorReporter.typeError(
 				3542_error,
 				clause.location(),
-				"Invalid catch clause name. Expected either `catch (...)`, `catch Error(...)`, or `catch Panic(...)`."
-			);
+				"Invalid catch clause name. Expected either `catch (...)`, `catch Error(...)`, or `catch Panic(...)`.");
 	}
 }
 
@@ -1151,7 +1105,10 @@ void TypeChecker::endVisit(Return const& _return)
 	if (auto tupleType = dynamic_cast<TupleType const*>(type(*_return.expression())))
 	{
 		if (tupleType->components().size() != params->parameters().size())
-			m_errorReporter.typeError(5132_error, _return.location(), "Different number of arguments in return statement than in returns declaration.");
+			m_errorReporter.typeError(
+				5132_error,
+				_return.location(),
+				"Different number of arguments in return statement than in returns declaration.");
 		else
 		{
 			BoolResult result = tupleType->isImplicitlyConvertibleTo(TupleType(returnTypes));
@@ -1159,16 +1116,17 @@ void TypeChecker::endVisit(Return const& _return)
 				m_errorReporter.typeErrorConcatenateDescriptions(
 					5992_error,
 					_return.expression()->location(),
-					"Return argument type " +
-					type(*_return.expression())->humanReadableName() +
-					" is not implicitly convertible to expected type " +
-					TupleType(returnTypes).humanReadableName() + ".",
-					result.message()
-				);
+					"Return argument type " + type(*_return.expression())->humanReadableName()
+						+ " is not implicitly convertible to expected type "
+						+ TupleType(returnTypes).humanReadableName() + ".",
+					result.message());
 		}
 	}
 	else if (params->parameters().size() != 1)
-		m_errorReporter.typeError(8863_error, _return.location(), "Different number of arguments in return statement than in returns declaration.");
+		m_errorReporter.typeError(
+			8863_error,
+			_return.location(),
+			"Different number of arguments in return statement than in returns declaration.");
 	else
 	{
 		Type const* expected = type(*params->parameters().front());
@@ -1177,43 +1135,36 @@ void TypeChecker::endVisit(Return const& _return)
 			m_errorReporter.typeErrorConcatenateDescriptions(
 				6359_error,
 				_return.expression()->location(),
-				"Return argument type " +
-				type(*_return.expression())->humanReadableName() +
-				" is not implicitly convertible to expected type (type of first return variable) " +
-				expected->humanReadableName() + ".",
-				result.message()
-			);
+				"Return argument type " + type(*_return.expression())->humanReadableName()
+					+ " is not implicitly convertible to expected type (type of first return variable) "
+					+ expected->humanReadableName() + ".",
+				result.message());
 	}
 }
 
 void TypeChecker::endVisit(EmitStatement const& _emit)
 {
-	if (
-		*_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
-		type(_emit.eventCall().expression())->category() != Type::Category::Function ||
-		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
-	)
-		m_errorReporter.typeError(9292_error, _emit.eventCall().expression().location(), "Expression has to be an event invocation.");
+	if (*_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall
+		|| type(_emit.eventCall().expression())->category() != Type::Category::Function
+		|| dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event)
+		m_errorReporter.typeError(
+			9292_error, _emit.eventCall().expression().location(), "Expression has to be an event invocation.");
 }
 
 void TypeChecker::endVisit(RevertStatement const& _revert)
 {
 	FunctionCall const& errorCall = _revert.errorCall();
-	if (
-		*errorCall.annotation().kind != FunctionCallKind::FunctionCall ||
-		type(errorCall.expression())->category() != Type::Category::Function ||
-		dynamic_cast<FunctionType const&>(*type(errorCall.expression())).kind() != FunctionType::Kind::Error
-	)
+	if (*errorCall.annotation().kind != FunctionCallKind::FunctionCall
+		|| type(errorCall.expression())->category() != Type::Category::Function
+		|| dynamic_cast<FunctionType const&>(*type(errorCall.expression())).kind() != FunctionType::Kind::Error)
 		m_errorReporter.typeError(1885_error, errorCall.expression().location(), "Expression has to be an error.");
 }
 
 void TypeChecker::endVisit(ArrayTypeName const& _typeName)
 {
 	solAssert(
-		_typeName.baseType().annotation().type &&
-		_typeName.baseType().annotation().type->storageBytes() != 0,
-		"Illegal base type of storage size zero for array."
-	);
+		_typeName.baseType().annotation().type && _typeName.baseType().annotation().type->storageBytes() != 0,
+		"Illegal base type of storage size zero for array.");
 }
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
@@ -1238,8 +1189,8 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			m_errorReporter.typeError(
 				4182_error,
 				varDecl.location(),
-				"Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state variable."
-			);
+				"Uninitialized mapping. Mappings cannot be created dynamically, you have to assign them from a state "
+				"variable.");
 		varDecl.accept(*this);
 		return false;
 	}
@@ -1262,12 +1213,8 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		m_errorReporter.typeError(
 			7364_error,
 			_statement.location(),
-			"Different number of components on the left hand side (" +
-			toString(variables.size()) +
-			") than on the right hand side (" +
-			toString(valueTypes.size()) +
-			")."
-		);
+			"Different number of components on the left hand side (" + toString(variables.size())
+				+ ") than on the right hand side (" + toString(valueTypes.size()) + ").");
 
 	for (size_t i = 0; i < std::min(variables.size(), valueTypes.size()); ++i)
 	{
@@ -1283,39 +1230,26 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		BoolResult result = valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type);
 		if (!result)
 		{
-			auto errorMsg = "Type " +
-				valueComponentType->humanReadableName() +
-				" is not implicitly convertible to expected type " +
-				var.annotation().type->humanReadableName();
-			if (
-				valueComponentType->category() == Type::Category::RationalNumber &&
-				dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
-				valueComponentType->mobileType()
-			)
+			auto errorMsg = "Type " + valueComponentType->humanReadableName()
+							+ " is not implicitly convertible to expected type "
+							+ var.annotation().type->humanReadableName();
+			if (valueComponentType->category() == Type::Category::RationalNumber
+				&& dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional()
+				&& valueComponentType->mobileType())
 			{
 				if (var.annotation().type->operator==(*valueComponentType->mobileType()))
 					m_errorReporter.typeError(
-						5107_error,
-						_statement.location(),
-						errorMsg + ", but it can be explicitly converted."
-					);
+						5107_error, _statement.location(), errorMsg + ", but it can be explicitly converted.");
 				else
 					m_errorReporter.typeError(
 						4486_error,
 						_statement.location(),
-						errorMsg +
-						". Try converting to type " +
-						valueComponentType->mobileType()->humanReadableName() +
-						" or use an explicit conversion."
-					);
+						errorMsg + ". Try converting to type " + valueComponentType->mobileType()->humanReadableName()
+							+ " or use an explicit conversion.");
 			}
 			else
 				m_errorReporter.typeErrorConcatenateDescriptions(
-					9574_error,
-					_statement.location(),
-					errorMsg + ".",
-					result.message()
-				);
+					9574_error, _statement.location(), errorMsg + ".", result.message());
 		}
 	}
 
@@ -1341,15 +1275,14 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 		if (auto callType = dynamic_cast<FunctionType const*>(type(call->expression())))
 		{
 			auto kind = callType->kind();
-			if (
-				kind == FunctionType::Kind::BareCall ||
-				kind == FunctionType::Kind::BareCallCode ||
-				kind == FunctionType::Kind::BareDelegateCall ||
-				kind == FunctionType::Kind::BareStaticCall
-			)
+			if (kind == FunctionType::Kind::BareCall || kind == FunctionType::Kind::BareCallCode
+				|| kind == FunctionType::Kind::BareDelegateCall || kind == FunctionType::Kind::BareStaticCall)
 				m_errorReporter.warning(9302_error, _statement.location(), "Return value of low-level calls not used.");
 			else if (kind == FunctionType::Kind::Send)
-				m_errorReporter.warning(5878_error, _statement.location(), "Failure condition of 'send' ignored. Consider using 'transfer' instead.");
+				m_errorReporter.warning(
+					5878_error,
+					_statement.location(),
+					"Failure condition of 'send' ignored. Consider using 'transfer' instead.");
 		}
 	}
 }
@@ -1367,12 +1300,14 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	Type const* commonType = nullptr;
 
 	if (!trueType)
-		m_errorReporter.typeError(9717_error, _conditional.trueExpression().location(), "Invalid mobile type in true expression.");
+		m_errorReporter
+			.typeError(9717_error, _conditional.trueExpression().location(), "Invalid mobile type in true expression.");
 	else
 		commonType = trueType;
 
 	if (!falseType)
-		m_errorReporter.typeError(3703_error, _conditional.falseExpression().location(), "Invalid mobile type in false expression.");
+		m_errorReporter.typeError(
+			3703_error, _conditional.falseExpression().location(), "Invalid mobile type in false expression.");
 	else
 		commonType = falseType;
 
@@ -1385,14 +1320,10 @@ bool TypeChecker::visit(Conditional const& _conditional)
 		if (!commonType)
 		{
 			m_errorReporter.typeError(
-					1080_error,
-					_conditional.location(),
-					"True expression's type " +
-					trueType->humanReadableName() +
-					" does not match false expression's type " +
-					falseType->humanReadableName() +
-					"."
-					);
+				1080_error,
+				_conditional.location(),
+				"True expression's type " + trueType->humanReadableName() + " does not match false expression's type "
+					+ falseType->humanReadableName() + ".");
 			// even we can't find a common type, we have to set a type here,
 			// otherwise the upper statement will not be able to check the type.
 			commonType = trueType;
@@ -1401,19 +1332,15 @@ bool TypeChecker::visit(Conditional const& _conditional)
 
 	_conditional.annotation().isConstant = false;
 	_conditional.annotation().type = commonType;
-	_conditional.annotation().isPure =
-		*_conditional.condition().annotation().isPure &&
-		*_conditional.trueExpression().annotation().isPure &&
-		*_conditional.falseExpression().annotation().isPure;
+	_conditional.annotation().isPure = *_conditional.condition().annotation().isPure
+									   && *_conditional.trueExpression().annotation().isPure
+									   && *_conditional.falseExpression().annotation().isPure;
 
 	_conditional.annotation().isLValue = false;
 
 	if (_conditional.annotation().willBeWrittenTo)
 		m_errorReporter.typeError(
-			2212_error,
-			_conditional.location(),
-			"Conditional expression as left value is not supported yet."
-		);
+			2212_error, _conditional.location(), "Conditional expression as left value is not supported yet.");
 
 	return false;
 }
@@ -1426,12 +1353,12 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 			m_errorReporter.typeError(5547_error, _expression.location(), "Empty tuple on the left hand side.");
 
 		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
-		auto const& types = tupleType && tupleExpression->components().size() != 1 ? tupleType->components() : std::vector<Type const*> { &_type };
+		auto const& types = tupleType && tupleExpression->components().size() != 1 ? tupleType->components()
+																				   : std::vector<Type const*>{&_type};
 
 		solAssert(
 			tupleExpression->components().size() == types.size() || m_errorReporter.hasErrors(),
-			"Array sizes don't match and no errors generated."
-		);
+			"Array sizes don't match and no errors generated.");
 
 		for (size_t i = 0; i < std::min(tupleExpression->components().size(), types.size()); i++)
 			if (types[i])
@@ -1444,20 +1371,21 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 	{
 		bool isLocalOrReturn = false;
 		if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
-			if (auto const *variableDeclaration = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
+			if (auto const* variableDeclaration
+				= dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
 				if (variableDeclaration->isLocalOrReturn())
 					isLocalOrReturn = true;
 		if (!isLocalOrReturn)
-			m_errorReporter.typeError(9214_error, _expression.location(), "Types in storage containing (nested) mappings cannot be assigned to.");
+			m_errorReporter.typeError(
+				9214_error,
+				_expression.location(),
+				"Types in storage containing (nested) mappings cannot be assigned to.");
 	}
 }
 
 bool TypeChecker::visit(Assignment const& _assignment)
 {
-	requireLValue(
-		_assignment.leftHandSide(),
-		_assignment.assignmentOperator() == Token::Assign
-	);
+	requireLValue(_assignment.leftHandSide(), _assignment.assignmentOperator() == Token::Assign);
 	Type const* t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
 	_assignment.annotation().isPure = false;
@@ -1469,11 +1397,8 @@ bool TypeChecker::visit(Assignment const& _assignment)
 	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t))
 	{
 		if (_assignment.assignmentOperator() != Token::Assign)
-			m_errorReporter.typeError(
-				4289_error,
-				_assignment.location(),
-				"Compound assignment is not allowed for tuple types."
-			);
+			m_errorReporter
+				.typeError(4289_error, _assignment.location(), "Compound assignment is not allowed for tuple types.");
 		// Sequenced assignments of tuples is not valid, make the result a "void" type.
 		_assignment.annotation().type = TypeProvider::emptyTuple();
 
@@ -1486,21 +1411,14 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		// compound assignment
 		_assignment.rightHandSide().accept(*this);
 		Type const* resultType = t->binaryOperatorResult(
-			TokenTraits::AssignmentToBinaryOp(_assignment.assignmentOperator()),
-			type(_assignment.rightHandSide())
-		);
+			TokenTraits::AssignmentToBinaryOp(_assignment.assignmentOperator()), type(_assignment.rightHandSide()));
 		if (!resultType || *resultType != *t)
 			m_errorReporter.typeError(
 				7366_error,
 				_assignment.location(),
-				"Operator " +
-				std::string(TokenTraits::friendlyName(_assignment.assignmentOperator())) +
-				" not compatible with types " +
-				t->humanReadableName() +
-				" and " +
-				type(_assignment.rightHandSide())->humanReadableName() +
-				"."
-			);
+				"Operator " + std::string(TokenTraits::friendlyName(_assignment.assignmentOperator()))
+					+ " not compatible with types " + t->humanReadableName() + " and "
+					+ type(_assignment.rightHandSide())->humanReadableName() + ".");
 	}
 	return false;
 }
@@ -1514,14 +1432,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	if (_tuple.annotation().willBeWrittenTo)
 	{
 		if (_tuple.isInlineArray())
-			m_errorReporter.fatalTypeError(3025_error, _tuple.location(), "Inline array type cannot be declared as LValue.");
+			m_errorReporter
+				.fatalTypeError(3025_error, _tuple.location(), "Inline array type cannot be declared as LValue.");
 		for (auto const& component: components)
 			if (component)
 			{
-				requireLValue(
-					*component,
-					_tuple.annotation().lValueOfOrdinaryAssignment
-				);
+				requireLValue(*component, _tuple.annotation().lValueOfOrdinaryAssignment);
 				types.push_back(type(*component));
 			}
 			else
@@ -1551,8 +1467,10 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				if (dynamic_cast<TupleType const&>(*types[i]).components().empty())
 				{
 					if (_tuple.isInlineArray())
-						m_errorReporter.fatalTypeError(5604_error, components[i]->location(), "Array component cannot be empty.");
-					m_errorReporter.typeError(6473_error, components[i]->location(), "Tuple component cannot be empty.");
+						m_errorReporter
+							.fatalTypeError(5604_error, components[i]->location(), "Array component cannot be empty.");
+					m_errorReporter
+						.typeError(6473_error, components[i]->location(), "Tuple component cannot be empty.");
 				}
 
 			// Note: code generation will visit each of the expression even if they are not assigned from.
@@ -1579,19 +1497,19 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		if (_tuple.isInlineArray())
 		{
 			if (!inlineArrayType)
-				m_errorReporter.fatalTypeError(6378_error, _tuple.location(), "Unable to deduce common type for array elements.");
+				m_errorReporter
+					.fatalTypeError(6378_error, _tuple.location(), "Unable to deduce common type for array elements.");
 			else if (!inlineArrayType->nameable())
 				m_errorReporter.fatalTypeError(
 					9656_error,
 					_tuple.location(),
-					"Unable to deduce nameable type for array elements. Try adding explicit type conversion for the first element."
-				);
+					"Unable to deduce nameable type for array elements. Try adding explicit type conversion for the "
+					"first element.");
 			else if (inlineArrayType->containsNestedMapping())
 				m_errorReporter.fatalTypeError(
 					1545_error,
 					_tuple.location(),
-					"Type " + inlineArrayType->humanReadableName() + " is only valid in storage."
-				);
+					"Type " + inlineArrayType->humanReadableName() + " is only valid in storage.");
 
 			_tuple.annotation().type = TypeProvider::array(DataLocation::Memory, inlineArrayType, types.size());
 		}
@@ -1650,8 +1568,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		std::string description = fmt::format(
 			"Built-in unary operator {} cannot be applied to type {}.",
 			TokenTraits::friendlyName(op),
-			operandType->humanReadableName()
-		);
+			operandType->humanReadableName());
 		if (!builtinResult.message().empty())
 			description += " " + builtinResult.message();
 		if (operandType->typeDefinition() && util::contains(userDefinableOperators, op))
@@ -1673,10 +1590,9 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		resultType = _operation.userDefinedFunctionType()->returnParameterTypes()[0];
 	_operation.annotation().type = resultType;
 	_operation.annotation().isConstant = false;
-	_operation.annotation().isPure =
-		!modifying &&
-		*_operation.subExpression().annotation().isPure &&
-		(!_operation.userDefinedFunctionType() || _operation.userDefinedFunctionType()->isPure());
+	_operation.annotation().isPure
+		= !modifying && *_operation.subExpression().annotation().isPure
+		  && (!_operation.userDefinedFunctionType() || _operation.userDefinedFunctionType()->isPure());
 	_operation.annotation().isLValue = false;
 
 	return false;
@@ -1719,8 +1635,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			"Built-in binary operator {} cannot be applied to types {} and {}.",
 			TokenTraits::friendlyName(_operation.getOperator()),
 			leftType->humanReadableName(),
-			rightType->humanReadableName()
-		);
+			rightType->humanReadableName());
 		if (!builtinResult.message().empty())
 			description += " " + builtinResult.message();
 		if (leftType->typeDefinition() && util::contains(userDefinableOperators, _operation.getOperator()))
@@ -1738,10 +1653,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 
 	// By default use the type we'd expect from correct code. This way we can continue analysis
 	// of other expressions in a sensible way in case of a non-fatal error.
-	Type const* resultType =
-		TokenTraits::isCompareOp(_operation.getOperator()) ?
-		TypeProvider::boolean() :
-		commonType;
+	Type const* resultType = TokenTraits::isCompareOp(_operation.getOperator()) ? TypeProvider::boolean() : commonType;
 
 	if (operatorDefinition)
 	{
@@ -1760,9 +1672,7 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 					"The type of the second operand of this user-defined binary operator {} "
 					"does not match the type of the first operand, which is {}.",
 					TokenTraits::friendlyName(_operation.getOperator()),
-					parameterTypes[0]->humanReadableName()
-				)
-			);
+					parameterTypes[0]->humanReadableName()));
 
 		if (!returnParameterTypes.empty())
 			// Use the actual result type from operator definition. Ignore all values but the
@@ -1771,10 +1681,9 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	}
 
 	_operation.annotation().type = resultType;
-	_operation.annotation().isPure =
-		*_operation.leftExpression().annotation().isPure &&
-		*_operation.rightExpression().annotation().isPure &&
-		(!userDefinedFunctionType || userDefinedFunctionType->isPure());
+	_operation.annotation().isPure = *_operation.leftExpression().annotation().isPure
+									 && *_operation.rightExpression().annotation().isPure
+									 && (!userDefinedFunctionType || userDefinedFunctionType->isPure());
 	_operation.annotation().isLValue = false;
 	_operation.annotation().isConstant = false;
 
@@ -1782,30 +1691,23 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	{
 		auto const* leftFunction = dynamic_cast<FunctionType const*>(leftType);
 		auto const* rightFunction = dynamic_cast<FunctionType const*>(rightType);
-		if (
-			leftFunction &&
-			rightFunction &&
-			leftFunction->kind() == FunctionType::Kind::Internal &&
-			rightFunction->kind() == FunctionType::Kind::Internal
-		)
+		if (leftFunction && rightFunction && leftFunction->kind() == FunctionType::Kind::Internal
+			&& rightFunction->kind() == FunctionType::Kind::Internal)
 		{
 			m_errorReporter.warning(
 				3075_error,
 				_operation.location(),
 				"Comparison of internal function pointers can yield unexpected results "
 				"in the legacy pipeline with the optimizer enabled, and will be disallowed entirely "
-				"in the next breaking release."
-			);
+				"in the next breaking release.");
 		}
 	}
 
 	if (_operation.getOperator() == Token::Exp || _operation.getOperator() == Token::SHL)
 	{
 		std::string operation = _operation.getOperator() == Token::Exp ? "exponentiation" : "shift";
-		if (
-			leftType->category() == Type::Category::RationalNumber &&
-			rightType->category() != Type::Category::RationalNumber
-		)
+		if (leftType->category() == Type::Category::RationalNumber
+			&& rightType->category() != Type::Category::RationalNumber)
 		{
 			// These rules are enforced by the binary operator, but assert them here too.
 			if (auto type = dynamic_cast<IntegerType const*>(commonType))
@@ -1813,30 +1715,24 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			if (auto type = dynamic_cast<FixedPointType const*>(commonType))
 				solAssert(type->numBits() == 256, "");
 		}
-		if (
-			commonType->category() == Type::Category::Integer &&
-			rightType->category() == Type::Category::Integer &&
-			dynamic_cast<IntegerType const&>(*commonType).numBits() <
-			dynamic_cast<IntegerType const&>(*rightType).numBits()
-		)
+		if (commonType->category() == Type::Category::Integer && rightType->category() == Type::Category::Integer
+			&& dynamic_cast<IntegerType const&>(*commonType).numBits()
+				   < dynamic_cast<IntegerType const&>(*rightType).numBits())
 			m_errorReporter.warning(
 				3149_error,
 				_operation.location(),
 				fmt::format(
 					"The result type of the {} operation is equal to the type of the first operand ({}) "
 					"ignoring the (larger) type of the second operand ({}) which might be unexpected. "
-					"Silence this warning by either converting the first or the second operand to the type of the other.",
+					"Silence this warning by either converting the first or the second operand to the type of the "
+					"other.",
 					operation,
 					commonType->humanReadableName(),
-					rightType->humanReadableName()
-				)
-			);
+					rightType->humanReadableName()));
 	}
 }
 
-Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
-	FunctionCall const& _functionCall
-)
+Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(FunctionCall const& _functionCall)
 {
 	solAssert(*_functionCall.annotation().kind == FunctionCallKind::TypeConversion, "");
 	Type const* expressionType = type(_functionCall.expression());
@@ -1847,16 +1743,10 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 	Type const* resultType = dynamic_cast<TypeType const&>(*expressionType).actualType();
 	if (arguments.size() != 1)
 		m_errorReporter.typeError(
-			2558_error,
-			_functionCall.location(),
-			"Exactly one argument expected for explicit type conversion."
-		);
+			2558_error, _functionCall.location(), "Exactly one argument expected for explicit type conversion.");
 	else if (!isPositionalCall)
-		m_errorReporter.typeError(
-			5153_error,
-			_functionCall.location(),
-			"Type conversion cannot allow named arguments."
-		);
+		m_errorReporter
+			.typeError(5153_error, _functionCall.location(), "Type conversion cannot allow named arguments.");
 	else
 	{
 		Type const* argType = type(*arguments.front());
@@ -1875,94 +1765,58 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 			{
 				if (auto resultArrayType = dynamic_cast<ArrayType const*>(resultType))
 					solAssert(
-						argArrayType->location() != DataLocation::Storage ||
-						(
-							(
-								resultArrayType->isPointer() ||
-								(argArrayType->isByteArrayOrString() && resultArrayType->isByteArrayOrString())
-							) &&
-							resultArrayType->location() == DataLocation::Storage
-						),
-						"Invalid explicit conversion to storage type."
-					);
+						argArrayType->location() != DataLocation::Storage
+							|| ((resultArrayType->isPointer()
+								 || (argArrayType->isByteArrayOrString() && resultArrayType->isByteArrayOrString()))
+								&& resultArrayType->location() == DataLocation::Storage),
+						"Invalid explicit conversion to storage type.");
 				else
-					solAssert(
-						argArrayType->isByteArray() && resultType->category() == Type::Category::FixedBytes,
-						""
-					);
+					solAssert(argArrayType->isByteArray() && resultType->category() == Type::Category::FixedBytes, "");
 			}
 		}
 		else
 		{
-			if (
-				resultType->category() == Type::Category::Contract &&
-				argType->category() == Type::Category::Address
-			)
+			if (resultType->category() == Type::Category::Contract && argType->category() == Type::Category::Address)
 			{
 				solAssert(dynamic_cast<ContractType const*>(resultType)->isPayable(), "");
-				solAssert(
-					dynamic_cast<AddressType const*>(argType)->stateMutability() <
-						StateMutability::Payable,
-					""
-				);
+				solAssert(dynamic_cast<AddressType const*>(argType)->stateMutability() < StateMutability::Payable, "");
 				SecondarySourceLocation ssl;
-				if (
-					auto const* identifier = dynamic_cast<Identifier const*>(arguments.front().get())
-				)
-					if (
-						auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(
-							identifier->annotation().referencedDeclaration
-						)
-					)
+				if (auto const* identifier = dynamic_cast<Identifier const*>(arguments.front().get()))
+					if (auto const* variableDeclaration
+						= dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
 						ssl.append(
 							"Did you mean to declare this variable as \"address payable\"?",
-							variableDeclaration->location()
-						);
+							variableDeclaration->location());
 				m_errorReporter.typeError(
 					7398_error,
 					_functionCall.location(),
 					ssl,
-					"Explicit type conversion not allowed from non-payable \"address\" to \"" +
-					resultType->humanReadableName() +
-					"\", which has a payable fallback function."
-				);
+					"Explicit type conversion not allowed from non-payable \"address\" to \""
+						+ resultType->humanReadableName() + "\", which has a payable fallback function.");
 			}
-			else if (
-				auto const* functionType = dynamic_cast<FunctionType const*>(argType);
-				functionType &&
-				functionType->kind() == FunctionType::Kind::External &&
-				resultType->category() == Type::Category::Address
-			)
+			else if (auto const* functionType = dynamic_cast<FunctionType const*>(argType);
+					 functionType && functionType->kind() == FunctionType::Kind::External
+					 && resultType->category() == Type::Category::Address)
 				m_errorReporter.typeError(
 					5030_error,
 					_functionCall.location(),
-					"Explicit type conversion not allowed from \"" +
-					argType->humanReadableName() +
-					"\" to \"" +
-					resultType->humanReadableName() +
-					"\". To obtain the address of the contract of the function, " +
-					"you can use the .address member of the function."
-				);
+					"Explicit type conversion not allowed from \"" + argType->humanReadableName() + "\" to \""
+						+ resultType->humanReadableName()
+						+ "\". To obtain the address of the contract of the function, "
+						+ "you can use the .address member of the function.");
 			else
 				m_errorReporter.typeErrorConcatenateDescriptions(
 					9640_error,
 					_functionCall.location(),
-					"Explicit type conversion not allowed from \"" +
-					argType->humanReadableName() +
-					"\" to \"" +
-					resultType->humanReadableName() +
-					"\".",
-					result.message()
-				);
+					"Explicit type conversion not allowed from \"" + argType->humanReadableName() + "\" to \""
+						+ resultType->humanReadableName() + "\".",
+					result.message());
 		}
 	}
 	return resultType;
 }
 
-void TypeChecker::typeCheckFunctionCall(
-	FunctionCall const& _functionCall,
-	FunctionTypePointer _functionType
-)
+void TypeChecker::typeCheckFunctionCall(FunctionCall const& _functionCall, FunctionTypePointer _functionType)
 {
 	// Actual function call or struct constructor call.
 
@@ -1972,35 +1826,19 @@ void TypeChecker::typeCheckFunctionCall(
 	if (_functionType->kind() == FunctionType::Kind::Declaration)
 	{
 		solAssert(_functionType->declaration().annotation().contract, "");
-		if (
-			m_currentContract &&
-			m_currentContract->derivesFrom(*_functionType->declaration().annotation().contract) &&
-			!dynamic_cast<FunctionDefinition const&>(_functionType->declaration()).isImplemented()
-		)
-			m_errorReporter.typeError(
-				7501_error,
-				_functionCall.location(),
-				"Cannot call unimplemented base function."
-			);
+		if (m_currentContract && m_currentContract->derivesFrom(*_functionType->declaration().annotation().contract)
+			&& !dynamic_cast<FunctionDefinition const&>(_functionType->declaration()).isImplemented())
+			m_errorReporter.typeError(7501_error, _functionCall.location(), "Cannot call unimplemented base function.");
 		else
-			m_errorReporter.typeError(
-				3419_error,
-				_functionCall.location(),
-				"Cannot call function via contract type name."
-			);
+			m_errorReporter
+				.typeError(3419_error, _functionCall.location(), "Cannot call function via contract type name.");
 		return;
 	}
 
 	// Check for unsupported use of bare static call
-	if (
-		_functionType->kind() == FunctionType::Kind::BareStaticCall &&
-		!m_evmVersion.hasStaticCall()
-	)
-		m_errorReporter.typeError(
-			5052_error,
-			_functionCall.location(),
-			"\"staticcall\" is not supported by the VM version."
-		);
+	if (_functionType->kind() == FunctionType::Kind::BareStaticCall && !m_evmVersion.hasStaticCall())
+		m_errorReporter
+			.typeError(5052_error, _functionCall.location(), "\"staticcall\" is not supported by the VM version.");
 
 	// Perform standard function call type checking
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
@@ -2012,30 +1850,28 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 
 	if (_function.libraryFunction())
 		m_errorReporter.typeError(5982_error, _function.location(), "Libraries cannot have fallback functions.");
-	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
+	if (_function.stateMutability() != StateMutability::NonPayable
+		&& _function.stateMutability() != StateMutability::Payable)
 		m_errorReporter.typeError(
 			4575_error,
 			_function.location(),
-			"Fallback function must be payable or non-payable, but is \"" +
-			stateMutabilityToString(_function.stateMutability()) +
-			"\"."
-		);
+			"Fallback function must be payable or non-payable, but is \""
+				+ stateMutabilityToString(_function.stateMutability()) + "\".");
 	if (_function.visibility() != Visibility::External)
-		m_errorReporter.typeError(1159_error, _function.location(), "Fallback function must be defined as \"external\".");
+		m_errorReporter
+			.typeError(1159_error, _function.location(), "Fallback function must be defined as \"external\".");
 
 	if (!_function.returnParameters().empty() || !_function.parameters().empty())
 	{
-		if (
-			_function.returnParameters().size() != 1 ||
-			*type(*_function.returnParameters().front()) != *TypeProvider::bytesMemory() ||
-			_function.parameters().size() != 1 ||
-			*type(*_function.parameters().front()) != *TypeProvider::bytesCalldata()
-		)
+		if (_function.returnParameters().size() != 1
+			|| *type(*_function.returnParameters().front()) != *TypeProvider::bytesMemory()
+			|| _function.parameters().size() != 1
+			|| *type(*_function.parameters().front()) != *TypeProvider::bytesCalldata())
 			m_errorReporter.typeError(
 				5570_error,
 				_function.returnParameterList()->location(),
-				"Fallback function either has to have the signature \"fallback()\" or \"fallback(bytes calldata) returns (bytes memory)\"."
-			);
+				"Fallback function either has to have the signature \"fallback()\" or \"fallback(bytes calldata) "
+				"returns (bytes memory)\".");
 	}
 }
 
@@ -2045,15 +1881,17 @@ void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 	if (_function.overrides())
 		m_errorReporter.typeError(1209_error, _function.location(), "Constructors cannot override.");
 	if (!_function.returnParameters().empty())
-		m_errorReporter.typeError(9712_error, _function.returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
-	if (_function.stateMutability() != StateMutability::NonPayable && _function.stateMutability() != StateMutability::Payable)
+		m_errorReporter.typeError(
+			9712_error,
+			_function.returnParameterList()->location(),
+			"Non-empty \"returns\" directive for constructor.");
+	if (_function.stateMutability() != StateMutability::NonPayable
+		&& _function.stateMutability() != StateMutability::Payable)
 		m_errorReporter.typeError(
 			1558_error,
 			_function.location(),
-			"Constructor must be payable or non-payable, but is \"" +
-			stateMutabilityToString(_function.stateMutability()) +
-			"\"."
-		);
+			"Constructor must be payable or non-payable, but is \""
+				+ stateMutabilityToString(_function.stateMutability()) + "\".");
 	if (!_function.noVisibilitySpecified())
 	{
 		auto const& contract = dynamic_cast<ContractDefinition const&>(*_function.scope());
@@ -2063,37 +1901,32 @@ void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 			m_errorReporter.declarationError(
 				8295_error,
 				_function.location(),
-				"Abstract contracts cannot have public constructors. Remove the \"public\" keyword to fix this."
-			);
+				"Abstract contracts cannot have public constructors. Remove the \"public\" keyword to fix this.");
 		else if (!_function.isPublic() && !contract.abstract())
 			m_errorReporter.declarationError(
 				1845_error,
 				_function.location(),
-				"Non-abstract contracts cannot have internal constructors. Remove the \"internal\" keyword and make the contract abstract to fix this."
-			);
+				"Non-abstract contracts cannot have internal constructors. Remove the \"internal\" keyword and make "
+				"the contract abstract to fix this.");
 		else
 			m_errorReporter.warning(
 				2462_error,
 				_function.location(),
-				"Visibility for constructor is ignored. If you want the contract to be non-deployable, making it \"abstract\" is sufficient."
-			);
+				"Visibility for constructor is ignored. If you want the contract to be non-deployable, making it "
+				"\"abstract\" is sufficient.");
 	}
 }
 
-void TypeChecker::typeCheckABIEncodeFunctions(
-	FunctionCall const& _functionCall,
-	FunctionTypePointer _functionType
-)
+void TypeChecker::typeCheckABIEncodeFunctions(FunctionCall const& _functionCall, FunctionTypePointer _functionType)
 {
 	solAssert(!!_functionType, "");
 	solAssert(
-		_functionType->kind() == FunctionType::Kind::ABIEncode ||
-		_functionType->kind() == FunctionType::Kind::ABIEncodePacked ||
-		_functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector ||
-		_functionType->kind() == FunctionType::Kind::ABIEncodeCall ||
-		_functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature,
-		"ABI function has unexpected FunctionType::Kind."
-	);
+		_functionType->kind() == FunctionType::Kind::ABIEncode
+			|| _functionType->kind() == FunctionType::Kind::ABIEncodePacked
+			|| _functionType->kind() == FunctionType::Kind::ABIEncodeWithSelector
+			|| _functionType->kind() == FunctionType::Kind::ABIEncodeCall
+			|| _functionType->kind() == FunctionType::Kind::ABIEncodeWithSignature,
+		"ABI function has unexpected FunctionType::Kind.");
 	solAssert(_functionType->takesArbitraryParameters(), "ABI functions should be variadic.");
 
 	bool const isPacked = _functionType->kind() == FunctionType::Kind::ABIEncodePacked;
@@ -2107,8 +1940,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 		m_errorReporter.typeError(
 			2627_error,
 			_functionCall.location(),
-			"Named arguments cannot be used for functions that take arbitrary parameters."
-		);
+			"Named arguments cannot be used for functions that take arbitrary parameters.");
 		return;
 	}
 
@@ -2133,20 +1965,14 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 			auto const& rationalType = dynamic_cast<RationalNumberType const&>(*argType);
 			if (rationalType.isFractional())
 			{
-				m_errorReporter.typeError(
-					6090_error,
-					arguments[i]->location(),
-					"Fractional numbers cannot yet be encoded."
-				);
+				m_errorReporter
+					.typeError(6090_error, arguments[i]->location(), "Fractional numbers cannot yet be encoded.");
 				continue;
 			}
 			else if (!argType->mobileType())
 			{
 				m_errorReporter.typeError(
-					8009_error,
-					arguments[i]->location(),
-					"Invalid rational number (too large or division by zero)."
-				);
+					8009_error, arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 				continue;
 			}
 			else if (isPacked)
@@ -2155,28 +1981,19 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 					7279_error,
 					arguments[i]->location(),
 					"Cannot perform packed encoding for a literal."
-					" Please convert it to an explicit type first."
-				);
+					" Please convert it to an explicit type first.");
 				continue;
 			}
 		}
 
 		if (isPacked && !typeSupportedByOldABIEncoder(*argType, false /* isLibrary */))
 		{
-			m_errorReporter.typeError(
-				9578_error,
-				arguments[i]->location(),
-				"Type not supported in packed mode."
-			);
+			m_errorReporter.typeError(9578_error, arguments[i]->location(), "Type not supported in packed mode.");
 			continue;
 		}
 
 		if (!argType->fullEncodingType(false, abiEncoderV2, !_functionType->padArguments()))
-			m_errorReporter.typeError(
-				2056_error,
-				arguments[i]->location(),
-				"This type cannot be encoded."
-			);
+			m_errorReporter.typeError(2056_error, arguments[i]->location(), "This type cannot be encoded.");
 	}
 }
 
@@ -2188,10 +2005,7 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 	if (arguments.size() != 2)
 	{
 		m_errorReporter.typeError(
-			6219_error,
-			_functionCall.location(),
-			"Expected two arguments: a function pointer followed by a tuple."
-		);
+			6219_error, _functionCall.location(), "Expected two arguments: a function pointer followed by a tuple.");
 		return;
 	}
 
@@ -2207,39 +2021,35 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 		m_errorReporter.typeError(
 			5511_error,
 			arguments.front()->location(),
-			"Expected first argument to be a function pointer, not \"" +
-			type(*arguments.front())->humanReadableName() +
-			"\"."
-		);
+			"Expected first argument to be a function pointer, not \"" + type(*arguments.front())->humanReadableName()
+				+ "\".");
 		return;
 	}
 
-	if (
-		externalFunctionType->kind() != FunctionType::Kind::External &&
-		externalFunctionType->kind() != FunctionType::Kind::Declaration
-	)
+	if (externalFunctionType->kind() != FunctionType::Kind::External
+		&& externalFunctionType->kind() != FunctionType::Kind::Declaration)
 	{
 		std::string msg = "Expected regular external function type, or external view on public function.";
 
 		switch (externalFunctionType->kind())
 		{
-			case FunctionType::Kind::Internal:
-				msg += " Provided internal function.";
-				break;
-			case FunctionType::Kind::DelegateCall:
-				msg += " Cannot use library functions for abi.encodeCall.";
-				break;
-			case FunctionType::Kind::Creation:
-				msg += " Provided creation function.";
-				break;
-			case FunctionType::Kind::Event:
-				msg += " Cannot use events for abi.encodeCall.";
-				break;
-			case FunctionType::Kind::Error:
-				msg += " Cannot use errors for abi.encodeCall.";
-				break;
-			default:
-				msg += " Cannot use special function.";
+		case FunctionType::Kind::Internal:
+			msg += " Provided internal function.";
+			break;
+		case FunctionType::Kind::DelegateCall:
+			msg += " Cannot use library functions for abi.encodeCall.";
+			break;
+		case FunctionType::Kind::Creation:
+			msg += " Provided creation function.";
+			break;
+		case FunctionType::Kind::Event:
+			msg += " Cannot use events for abi.encodeCall.";
+			break;
+		case FunctionType::Kind::Error:
+			msg += " Cannot use errors for abi.encodeCall.";
+			break;
+		default:
+			msg += " Cannot use special function.";
 		}
 
 		SecondarySourceLocation ssl{};
@@ -2247,19 +2057,14 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 		if (externalFunctionType->hasDeclaration())
 		{
 			ssl.append("Function is declared here:", externalFunctionType->declaration().location());
-			if (
-				externalFunctionType->declaration().visibility() == Visibility::Public &&
-				externalFunctionType->declaration().scope() == m_currentContract
-			)
+			if (externalFunctionType->declaration().visibility() == Visibility::Public
+				&& externalFunctionType->declaration().scope() == m_currentContract)
 				msg += " Did you forget to prefix \"this.\"?";
 			else if (
-				m_currentContract &&
-				externalFunctionType->declaration().scope() != m_currentContract &&
-				util::contains(
+				m_currentContract && externalFunctionType->declaration().scope() != m_currentContract
+				&& util::contains(
 					m_currentContract->annotation().linearizedBaseContracts,
-					externalFunctionType->declaration().scope()
-				)
-			)
+					externalFunctionType->declaration().scope()))
 				msg += " Functions from base contracts have to be external.";
 		}
 
@@ -2274,14 +2079,12 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 	if (tupleType)
 	{
 		if (TupleExpression const* argumentTuple = dynamic_cast<TupleExpression const*>(arguments[1].get()))
-			callArguments = decltype(callArguments){argumentTuple->components().begin(), argumentTuple->components().end()};
+			callArguments
+				= decltype(callArguments){argumentTuple->components().begin(), argumentTuple->components().end()};
 		else
 		{
 			m_errorReporter.typeError(
-				9062_error,
-				arguments[1]->location(),
-				"Expected an inline tuple, not an expression of a tuple type."
-			);
+				9062_error, arguments[1]->location(), "Expected an inline tuple, not an expression of a tuple type.");
 			return;
 		}
 	}
@@ -2294,20 +2097,14 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 			m_errorReporter.typeError(
 				7788_error,
 				_functionCall.location(),
-				"Expected " +
-				std::to_string(externalFunctionType->parameterTypes().size()) +
-				" instead of " +
-				std::to_string(callArguments.size()) +
-				" components for the tuple parameter."
-			);
+				"Expected " + std::to_string(externalFunctionType->parameterTypes().size()) + " instead of "
+					+ std::to_string(callArguments.size()) + " components for the tuple parameter.");
 		else
 			m_errorReporter.typeError(
 				7515_error,
 				_functionCall.location(),
-				"Expected a tuple with " +
-				std::to_string(externalFunctionType->parameterTypes().size()) +
-				" components instead of a single non-tuple parameter."
-			);
+				"Expected a tuple with " + std::to_string(externalFunctionType->parameterTypes().size())
+					+ " components instead of a single non-tuple parameter.");
 	}
 
 	// Use min() to check as much as we can before failing fatally
@@ -2321,23 +2118,15 @@ void TypeChecker::typeCheckABIEncodeCallFunction(FunctionCall const& _functionCa
 			m_errorReporter.typeError(
 				5407_error,
 				callArguments[i]->location(),
-				"Cannot implicitly convert component at position " +
-				std::to_string(i) +
-				" from \"" +
-				argType.humanReadableName() +
-				"\" to \"" +
-				externalFunctionType->parameterTypes()[i]->humanReadableName() +
-				"\"" +
-				(result.message().empty() ?  "." : ": " + result.message())
-			);
+				"Cannot implicitly convert component at position " + std::to_string(i) + " from \""
+					+ argType.humanReadableName() + "\" to \""
+					+ externalFunctionType->parameterTypes()[i]->humanReadableName() + "\""
+					+ (result.message().empty() ? "." : ": " + result.message()));
 	}
 }
 
 
-void TypeChecker::typeCheckStringConcatFunction(
-	FunctionCall const& _functionCall,
-	FunctionType const* _functionType
-)
+void TypeChecker::typeCheckStringConcatFunction(FunctionCall const& _functionCall, FunctionType const* _functionType)
 {
 	solAssert(_functionType);
 	solAssert(_functionType->kind() == FunctionType::Kind::StringConcat);
@@ -2355,16 +2144,12 @@ void TypeChecker::typeCheckStringConcatFunction(
 				9977_error,
 				argument->location(),
 				"Invalid type for argument in the string.concat function call. "
-				"string type is required, but " +
-				argumentType->identifier() + " provided."
-			);
+				"string type is required, but "
+					+ argumentType->identifier() + " provided.");
 	}
 }
 
-void TypeChecker::typeCheckBytesConcatFunction(
-	FunctionCall const& _functionCall,
-	FunctionType const* _functionType
-)
+void TypeChecker::typeCheckBytesConcatFunction(FunctionCall const& _functionCall, FunctionType const* _functionType)
 {
 	solAssert(_functionType);
 	solAssert(_functionType->kind() == FunctionType::Kind::BytesConcat);
@@ -2375,9 +2160,8 @@ void TypeChecker::typeCheckBytesConcatFunction(
 	for (std::shared_ptr<Expression const> const& argument: _functionCall.arguments())
 	{
 		Type const* argumentType = type(*argument);
-		bool notConvertibleToBytes =
-			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::fixedBytes(32)) &&
-			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory());
+		bool notConvertibleToBytes = !argumentType->isImplicitlyConvertibleTo(*TypeProvider::fixedBytes(32))
+									 && !argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory());
 		bool numberLiteral = (dynamic_cast<RationalNumberType const*>(argumentType) != nullptr);
 
 		if (notConvertibleToBytes || numberLiteral)
@@ -2385,16 +2169,12 @@ void TypeChecker::typeCheckBytesConcatFunction(
 				8015_error,
 				argument->location(),
 				"Invalid type for argument in the bytes.concat function call. "
-				"bytes or fixed bytes type is required, but " +
-				argumentType->humanReadableName() + " provided."
-			);
+				"bytes or fixed bytes type is required, but "
+					+ argumentType->humanReadableName() + " provided.");
 	}
 }
 
-void TypeChecker::typeCheckFunctionGeneralChecks(
-	FunctionCall const& _functionCall,
-	FunctionTypePointer _functionType
-)
+void TypeChecker::typeCheckFunctionGeneralChecks(FunctionCall const& _functionCall, FunctionTypePointer _functionType)
 {
 	// Actual function call or struct constructor call.
 
@@ -2408,87 +2188,70 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 
 	solAssert(
 		!isVariadic || functionCallKind == FunctionCallKind::FunctionCall,
-		"Struct constructor calls cannot be variadic."
-	);
+		"Struct constructor calls cannot be variadic.");
 
 	TypePointers const& parameterTypes = _functionType->parameterTypes();
 	std::vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
 	std::vector<ASTPointer<ASTString>> const& argumentNames = _functionCall.names();
 
 	// Check number of passed in arguments
-	if (
-		arguments.size() < parameterTypes.size() ||
-		(!isVariadic && arguments.size() > parameterTypes.size())
-	)
+	if (arguments.size() < parameterTypes.size() || (!isVariadic && arguments.size() > parameterTypes.size()))
 	{
-		bool const isStructConstructorCall =
-			functionCallKind == FunctionCallKind::StructConstructorCall;
+		bool const isStructConstructorCall = functionCallKind == FunctionCallKind::StructConstructorCall;
 
-		auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string> {
-			std::string msg = isVariadic ?
-				"Need at least " +
-				toString(parameterTypes.size()) +
-				" arguments for " +
-				std::string(isStructConstructorCall ? "struct constructor" : "function call") +
-				", but provided only " +
-				toString(arguments.size()) +
-				"."
-				:
-				"Wrong argument count for " +
-				std::string(isStructConstructorCall ? "struct constructor" : "function call") +
-				": " +
-				toString(arguments.size()) +
-				" arguments given but " +
-				std::string(isVariadic ? "need at least " : "expected ") +
-				toString(parameterTypes.size()) +
-				".";
+		auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string>
+		{
+			std::string msg = isVariadic
+								  ? "Need at least " + toString(parameterTypes.size()) + " arguments for "
+										+ std::string(isStructConstructorCall ? "struct constructor" : "function call")
+										+ ", but provided only " + toString(arguments.size()) + "."
+								  : "Wrong argument count for "
+										+ std::string(isStructConstructorCall ? "struct constructor" : "function call")
+										+ ": " + toString(arguments.size()) + " arguments given but "
+										+ std::string(isVariadic ? "need at least " : "expected ")
+										+ toString(parameterTypes.size()) + ".";
 
 			if (isStructConstructorCall)
 			{
 				solAssert(!isVariadic, "");
-				return { 9755_error, msg };
+				return {9755_error, msg};
 			}
 			else if (
-				_functionType->kind() == FunctionType::Kind::BareCall ||
-				_functionType->kind() == FunctionType::Kind::BareCallCode ||
-				_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-				_functionType->kind() == FunctionType::Kind::BareStaticCall
-			)
+				_functionType->kind() == FunctionType::Kind::BareCall
+				|| _functionType->kind() == FunctionType::Kind::BareCallCode
+				|| _functionType->kind() == FunctionType::Kind::BareDelegateCall
+				|| _functionType->kind() == FunctionType::Kind::BareStaticCall)
 			{
 				solAssert(!isVariadic, "");
 				if (arguments.empty())
 					return {
 						6138_error,
-						msg +
-						" This function requires a single bytes argument."
-						" Use \"\" as argument to provide empty calldata."
-					};
+						msg
+							+ " This function requires a single bytes argument."
+							  " Use \"\" as argument to provide empty calldata."};
 				else
 					return {
 						8922_error,
-						msg +
-						" This function requires a single bytes argument."
-						" If all your arguments are value types, you can use"
-						" abi.encode(...) to properly generate it."
-					};
+						msg
+							+ " This function requires a single bytes argument."
+							  " If all your arguments are value types, you can use"
+							  " abi.encode(...) to properly generate it."};
 			}
 			else if (
-				_functionType->kind() == FunctionType::Kind::KECCAK256 ||
-				_functionType->kind() == FunctionType::Kind::SHA256 ||
-				_functionType->kind() == FunctionType::Kind::RIPEMD160
-			)
+				_functionType->kind() == FunctionType::Kind::KECCAK256
+				|| _functionType->kind() == FunctionType::Kind::SHA256
+				|| _functionType->kind() == FunctionType::Kind::RIPEMD160)
 			{
 				solAssert(!isVariadic, "");
 				return {
 					4323_error,
-					msg +
-					" This function requires a single bytes argument."
-					" Use abi.encodePacked(...) to obtain the pre-0.5.0"
-					" behaviour or abi.encode(...) to use ABI encoding."
-				};
+					msg
+						+ " This function requires a single bytes argument."
+						  " Use abi.encodePacked(...) to obtain the pre-0.5.0"
+						  " behaviour or abi.encode(...) to use ABI encoding."};
 			}
 			else
-				return { isVariadic ? 9308_error : 6160_error, msg };
+				return {isVariadic ? 9308_error : 6160_error, msg};
 		}();
 
 		m_errorReporter.typeError(errorId, _functionCall.location(), description);
@@ -2506,10 +2269,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	{
 		auto const& parameterNames = _functionType->parameterNames();
 
-		solAssert(
-			parameterNames.size() == argumentNames.size(),
-			"Unexpected parameter length mismatch!"
-		);
+		solAssert(parameterNames.size() == argumentNames.size(), "Unexpected parameter length mismatch!");
 
 		// Check for duplicate argument names
 		{
@@ -2522,8 +2282,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 						m_errorReporter.typeError(
 							6995_error,
 							arguments[i]->location(),
-							"Duplicate named argument \"" + *argumentNames[i] + "\"."
-						);
+							"Duplicate named argument \"" + *argumentNames[i] + "\".");
 					}
 			if (duplication)
 				return;
@@ -2548,10 +2307,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 					m_errorReporter.typeError(
 						4974_error,
 						_functionCall.location(),
-						"Named argument \"" +
-						*argumentNames[i] +
-						"\" does not match function declaration."
-					);
+						"Named argument \"" + *argumentNames[i] + "\" does not match function declaration.");
 				}
 			}
 
@@ -2567,43 +2323,36 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 		BoolResult result = type(*paramArgMap[i])->isImplicitlyConvertibleTo(*parameterTypes[i]);
 		if (!result)
 		{
-			auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string> {
-				std::string msg =
-					"Invalid type for argument in function call. "
-					"Invalid implicit conversion from " +
-					type(*paramArgMap[i])->humanReadableName() +
-					" to " +
-					parameterTypes[i]->humanReadableName() +
-					" requested.";
+			auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string>
+			{
+				std::string msg = "Invalid type for argument in function call. "
+								  "Invalid implicit conversion from "
+								  + type(*paramArgMap[i])->humanReadableName() + " to "
+								  + parameterTypes[i]->humanReadableName() + " requested.";
 				if (!result.message().empty())
 					msg += " " + result.message();
-				if (
-					_functionType->kind() == FunctionType::Kind::BareCall ||
-					_functionType->kind() == FunctionType::Kind::BareCallCode ||
-					_functionType->kind() == FunctionType::Kind::BareDelegateCall ||
-					_functionType->kind() == FunctionType::Kind::BareStaticCall
-				)
+				if (_functionType->kind() == FunctionType::Kind::BareCall
+					|| _functionType->kind() == FunctionType::Kind::BareCallCode
+					|| _functionType->kind() == FunctionType::Kind::BareDelegateCall
+					|| _functionType->kind() == FunctionType::Kind::BareStaticCall)
 					return {
 						8051_error,
-						msg +
-						" This function requires a single bytes argument."
-						" If all your arguments are value types, you can"
-						" use abi.encode(...) to properly generate it."
-					};
+						msg
+							+ " This function requires a single bytes argument."
+							  " If all your arguments are value types, you can"
+							  " use abi.encode(...) to properly generate it."};
 				else if (
-					_functionType->kind() == FunctionType::Kind::KECCAK256 ||
-					_functionType->kind() == FunctionType::Kind::SHA256 ||
-					_functionType->kind() == FunctionType::Kind::RIPEMD160
-				)
+					_functionType->kind() == FunctionType::Kind::KECCAK256
+					|| _functionType->kind() == FunctionType::Kind::SHA256
+					|| _functionType->kind() == FunctionType::Kind::RIPEMD160)
 					return {
 						7556_error,
-						msg +
-						" This function requires a single bytes argument."
-						" Use abi.encodePacked(...) to obtain the pre-0.5.0"
-						" behaviour or abi.encode(...) to use ABI encoding."
-					};
+						msg
+							+ " This function requires a single bytes argument."
+							  " Use abi.encodePacked(...) to obtain the pre-0.5.0"
+							  " behaviour or abi.encode(...) to use ABI encoding."};
 				else
-					return { 9553_error, msg };
+					return {9553_error, msg};
 			}();
 			m_errorReporter.typeError(errorId, paramArgMap[i]->location(), description);
 		}
@@ -2614,11 +2363,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	bool callRequiresABIEncoding =
 		// ABIEncode/ABIDecode calls not included because they should have been already validated
 		// at this point and they have variadic arguments so they need special handling.
-		_functionType->kind() == FunctionType::Kind::DelegateCall ||
-		_functionType->kind() == FunctionType::Kind::External ||
-		_functionType->kind() == FunctionType::Kind::Creation ||
-		_functionType->kind() == FunctionType::Kind::Event ||
-		_functionType->kind() == FunctionType::Kind::Error;
+		_functionType->kind() == FunctionType::Kind::DelegateCall
+		|| _functionType->kind() == FunctionType::Kind::External
+		|| _functionType->kind() == FunctionType::Kind::Creation || _functionType->kind() == FunctionType::Kind::Event
+		|| _functionType->kind() == FunctionType::Kind::Error;
 
 	if (callRequiresABIEncoding && !useABICoderV2())
 	{
@@ -2635,10 +2383,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				m_errorReporter.typeError(
 					2443_error,
 					paramArgMap[i]->location(),
-					"The type of this parameter, " + parameterTypes[i]->humanReadableName() + ", "
-					"is only supported in ABI coder v2. "
-					"Use \"pragma abicoder v2;\" to enable the feature."
-				);
+					"The type of this parameter, " + parameterTypes[i]->humanReadableName()
+						+ ", "
+						  "is only supported in ABI coder v2. "
+						  "Use \"pragma abicoder v2;\" to enable the feature.");
 		}
 
 		for (size_t i = 0; i < returnParameterTypes.size(); ++i)
@@ -2649,10 +2397,11 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				m_errorReporter.typeError(
 					2428_error,
 					_functionCall.location(),
-					"The type of return parameter " + toString(i + 1) + ", " + returnParameterTypes[i]->humanReadableName() + ", "
-					"is only supported in ABI coder v2. "
-					"Use \"pragma abicoder v2;\" to enable the feature."
-				);
+					"The type of return parameter " + toString(i + 1) + ", "
+						+ returnParameterTypes[i]->humanReadableName()
+						+ ", "
+						  "is only supported in ABI coder v2. "
+						  "Use \"pragma abicoder v2;\" to enable the feature.");
 		}
 	}
 }
@@ -2710,10 +2459,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				_functionCall.expression().annotation().calledDirectly = true;
 
 		// Purity for function calls also depends upon the callee and its FunctionType
-		funcCallAnno.isPure =
-			argumentsArePure &&
-			*_functionCall.expression().annotation().isPure &&
-			functionType->isPure();
+		funcCallAnno.isPure
+			= argumentsArePure && *_functionCall.expression().annotation().isPure && functionType->isPure();
 
 		if (functionType->kind() == FunctionType::Kind::ArrayPush)
 			isLValue = functionType->parameterTypes().empty();
@@ -2732,8 +2479,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 				m_errorReporter.fatalTypeError(
 					9515_error,
 					_functionCall.location(),
-					"Struct containing a (nested) mapping cannot be constructed."
-				);
+					"Struct containing a (nested) mapping cannot be constructed.");
 			functionType = dynamic_cast<StructType const&>(*actualType).constructorType();
 			funcCallAnno.kind = FunctionCallKind::StructConstructorCall;
 		}
@@ -2741,11 +2487,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		{
 			if (auto const* contractType = dynamic_cast<ContractType const*>(actualType))
 				if (contractType->isSuper())
-					m_errorReporter.fatalTypeError(
-						1744_error,
-						_functionCall.location(),
-						"Cannot convert to the super type."
-					);
+					m_errorReporter
+						.fatalTypeError(1744_error, _functionCall.location(), "Cannot convert to the super type.");
 			funcCallAnno.kind = FunctionCallKind::TypeConversion;
 		}
 
@@ -2780,10 +2523,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		{
 		case FunctionType::Kind::ABIDecode:
 		{
-			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(
-				_functionCall,
-				useABICoderV2()
-			);
+			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(_functionCall, useABICoderV2());
 			break;
 		}
 		case FunctionType::Kind::ABIEncode:
@@ -2821,16 +2561,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		default:
 		{
 			typeCheckFunctionCall(_functionCall, functionType);
-			returnTypes = m_evmVersion.supportsReturndata() ?
-				functionType->returnParameterTypes() :
-				functionType->returnParameterTypesWithoutDynamicTypes();
+			returnTypes = m_evmVersion.supportsReturndata() ? functionType->returnParameterTypes()
+															: functionType->returnParameterTypesWithoutDynamicTypes();
 			break;
 		}
 		}
 
-		funcCallAnno.type = returnTypes.size() == 1 ?
-			std::move(returnTypes.front()) :
-			TypeProvider::tuple(std::move(returnTypes));
+		funcCallAnno.type
+			= returnTypes.size() == 1 ? std::move(returnTypes.front()) : TypeProvider::tuple(std::move(returnTypes));
 
 		break;
 	}
@@ -2848,7 +2586,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 {
-	solAssert(_functionCallOptions.options().size() == _functionCallOptions.names().size(), "Lengths of name & value arrays differ!");
+	solAssert(
+		_functionCallOptions.options().size() == _functionCallOptions.names().size(),
+		"Lengths of name & value arrays differ!");
 
 	_functionCallOptions.expression().annotation().arguments = _functionCallOptions.annotation().arguments;
 
@@ -2861,7 +2601,8 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 	auto expressionFunctionType = dynamic_cast<FunctionType const*>(type(_functionCallOptions.expression()));
 	if (!expressionFunctionType)
 	{
-		m_errorReporter.fatalTypeError(2622_error, _functionCallOptions.location(), "Expected callable expression before call options.");
+		m_errorReporter.fatalTypeError(
+			2622_error, _functionCallOptions.location(), "Expected callable expression before call options.");
 		return false;
 	}
 
@@ -2870,43 +2611,29 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 	bool setGas = false;
 
 	FunctionType::Kind kind = expressionFunctionType->kind();
-	if (
-		kind != FunctionType::Kind::Creation &&
-		kind != FunctionType::Kind::External &&
-		kind != FunctionType::Kind::BareCall &&
-		kind != FunctionType::Kind::BareCallCode &&
-		kind != FunctionType::Kind::BareDelegateCall &&
-		kind != FunctionType::Kind::BareStaticCall
-	)
+	if (kind != FunctionType::Kind::Creation && kind != FunctionType::Kind::External
+		&& kind != FunctionType::Kind::BareCall && kind != FunctionType::Kind::BareCallCode
+		&& kind != FunctionType::Kind::BareDelegateCall && kind != FunctionType::Kind::BareStaticCall)
 	{
 		m_errorReporter.fatalTypeError(
 			2193_error,
 			_functionCallOptions.location(),
-			"Function call options can only be set on external function calls or contract creations."
-		);
+			"Function call options can only be set on external function calls or contract creations.");
 		return false;
 	}
 
-	if (
-		expressionFunctionType->valueSet() ||
-		expressionFunctionType->gasSet() ||
-		expressionFunctionType->saltSet()
-	)
+	if (expressionFunctionType->valueSet() || expressionFunctionType->gasSet() || expressionFunctionType->saltSet())
 		m_errorReporter.typeError(
 			1645_error,
 			_functionCallOptions.location(),
 			"Function call options have already been set, you have to combine them into a single "
-			"{...}-option."
-		);
+			"{...}-option.");
 
 	auto setCheckOption = [&](bool& _option, std::string const& _name)
 	{
 		if (_option)
 			m_errorReporter.typeError(
-				9886_error,
-				_functionCallOptions.location(),
-				"Duplicate option \"" + std::move(_name) + "\"."
-			);
+				9886_error, _functionCallOptions.location(), "Duplicate option \"" + std::move(_name) + "\".");
 
 		_option = true;
 	};
@@ -2925,33 +2652,25 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 				m_errorReporter.typeError(
 					2721_error,
 					_functionCallOptions.location(),
-					"Function call option \"salt\" can only be used with \"new\"."
-				);
+					"Function call option \"salt\" can only be used with \"new\".");
 		}
 		else if (name == "value")
 		{
 			if (kind == FunctionType::Kind::BareDelegateCall)
 				m_errorReporter.typeError(
-					6189_error,
-					_functionCallOptions.location(),
-					"Cannot set option \"value\" for delegatecall."
-				);
+					6189_error, _functionCallOptions.location(), "Cannot set option \"value\" for delegatecall.");
 			else if (kind == FunctionType::Kind::BareStaticCall)
 				m_errorReporter.typeError(
-					2842_error,
-					_functionCallOptions.location(),
-					"Cannot set option \"value\" for staticcall."
-				);
+					2842_error, _functionCallOptions.location(), "Cannot set option \"value\" for staticcall.");
 			else if (!expressionFunctionType->isPayable())
 				m_errorReporter.typeError(
 					7006_error,
 					_functionCallOptions.location(),
-					kind == FunctionType::Kind::Creation ?
-						"Cannot set option \"value\", since the constructor of " +
-						expressionFunctionType->returnParameterTypes().front()->humanReadableName() +
-						" is not payable." :
-						"Cannot set option \"value\" on a non-payable function type."
-				);
+					kind == FunctionType::Kind::Creation
+						? "Cannot set option \"value\", since the constructor of "
+							  + expressionFunctionType->returnParameterTypes().front()->humanReadableName()
+							  + " is not payable."
+						: "Cannot set option \"value\" on a non-payable function type.");
 			else
 			{
 				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
@@ -2965,8 +2684,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 				m_errorReporter.typeError(
 					9903_error,
 					_functionCallOptions.location(),
-					"Function call option \"gas\" cannot be used with \"new\"."
-				);
+					"Function call option \"gas\" cannot be used with \"new\".");
 			else
 			{
 				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
@@ -2978,16 +2696,14 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 			m_errorReporter.typeError(
 				9318_error,
 				_functionCallOptions.location(),
-				"Unknown call option \"" + name + "\". Valid options are \"salt\", \"value\" and \"gas\"."
-			);
+				"Unknown call option \"" + name + "\". Valid options are \"salt\", \"value\" and \"gas\".");
 	}
 
 	if (setSalt && !m_evmVersion.hasCreate2())
 		m_errorReporter.typeError(
 			5189_error,
 			_functionCallOptions.location(),
-			"Unsupported call option \"salt\" (requires Constantinople-compatible VMs)."
-		);
+			"Unsupported call option \"salt\" (requires Constantinople-compatible VMs).");
 
 	_functionCallOptions.annotation().type = expressionFunctionType->copyAndSetCallOptions(setGas, setValue, setSalt);
 	return false;
@@ -3010,7 +2726,8 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->isInterface())
 			m_errorReporter.fatalTypeError(2971_error, _newExpression.location(), "Cannot instantiate an interface.");
 		if (contract->abstract())
-			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
+			m_errorReporter
+				.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 
 		_newExpression.annotation().type = FunctionType::newExpressionType(*contract);
 		_newExpression.annotation().isPure = false;
@@ -3021,14 +2738,12 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			m_errorReporter.fatalTypeError(
 				1164_error,
 				_newExpression.typeName().location(),
-				"Array containing a (nested) mapping cannot be constructed in memory."
-			);
+				"Array containing a (nested) mapping cannot be constructed in memory.");
 		if (!type->isDynamicallySized())
 			m_errorReporter.typeError(
 				3904_error,
 				_newExpression.typeName().location(),
-				"Length has to be placed in parentheses after the array type for new expression."
-			);
+				"Length has to be placed in parentheses after the array type for new expression.");
 		type = TypeProvider::withLocationIfReference(DataLocation::Memory, type);
 		_newExpression.annotation().type = TypeProvider::function(
 			TypePointers{TypeProvider::uint256()},
@@ -3036,8 +2751,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			strings(1, ""),
 			strings(1, ""),
 			FunctionType::Kind::ObjectCreation,
-			StateMutability::Pure
-		);
+			StateMutability::Pure);
 		_newExpression.annotation().isPure = true;
 	}
 	else
@@ -3063,10 +2777,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	{
 		// do overload resolution
 		for (auto it = possibleMembers.begin(); it != possibleMembers.end();)
-			if (
-				it->type->category() == Type::Category::Function &&
-				!dynamic_cast<FunctionType const&>(*it->type).canTakeArguments(*arguments, exprType)
-			)
+			if (it->type->category() == Type::Category::Function
+				&& !dynamic_cast<FunctionType const&>(*it->type).canTakeArguments(*arguments, exprType))
 				it = possibleMembers.erase(it);
 			else
 				++it;
@@ -3079,23 +2791,21 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		if (initialMemberCount == 0 && !dynamic_cast<ArraySliceType const*>(exprType))
 		{
 			// Try to see if the member was removed because it is only available for storage types.
-			auto storageType = TypeProvider::withLocationIfReference(
-				DataLocation::Storage,
-				exprType
-			);
+			auto storageType = TypeProvider::withLocationIfReference(DataLocation::Storage, exprType);
 			if (!storageType->members(currentDefinitionScope()).membersByName(memberName).empty())
 				m_errorReporter.fatalTypeError(
 					4994_error,
 					_memberAccess.location(),
-					"Member \"" + memberName + "\" is not available in " +
-					exprType->humanReadableName() +
-					" outside of storage."
-				);
+					"Member \"" + memberName + "\" is not available in " + exprType->humanReadableName()
+						+ " outside of storage.");
 		}
 
-		auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string> {
-			std::string errorMsg = "Member \"" + memberName + "\" not found or not visible "
-				"after argument-dependent lookup in " + exprType->humanReadableName() + ".";
+		auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string>
+		{
+			std::string errorMsg = "Member \"" + memberName
+								   + "\" not found or not visible "
+									 "after argument-dependent lookup in "
+								   + exprType->humanReadableName() + ".";
 
 			if (auto const* funType = dynamic_cast<FunctionType const*>(exprType))
 			{
@@ -3106,23 +2816,22 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					if (funType->kind() == FunctionType::Kind::Creation)
 						return {
 							8827_error,
-							"Constructor for " + t.front()->humanReadableName() + " must be payable for member \"value\" to be available."
-						};
+							"Constructor for " + t.front()->humanReadableName()
+								+ " must be payable for member \"value\" to be available."};
 					else if (
-						funType->kind() == FunctionType::Kind::DelegateCall ||
-						funType->kind() == FunctionType::Kind::BareDelegateCall
-					)
-						return { 8477_error, "Member \"value\" is not allowed in delegated calls due to \"msg.value\" persisting." };
+						funType->kind() == FunctionType::Kind::DelegateCall
+						|| funType->kind() == FunctionType::Kind::BareDelegateCall)
+						return {
+							8477_error,
+							"Member \"value\" is not allowed in delegated calls due to \"msg.value\" persisting."};
 					else
-						return { 8820_error, "Member \"value\" is only available for payable functions." };
+						return {8820_error, "Member \"value\" is only available for payable functions."};
 				}
 				else if (
-					t.size() == 1 && (
-						t.front()->category() == Type::Category::Struct ||
-						t.front()->category() == Type::Category::Contract
-					)
-				)
-					return { 6005_error, errorMsg + " Did you intend to call the function?" };
+					t.size() == 1
+					&& (t.front()->category() == Type::Category::Struct
+						|| t.front()->category() == Type::Category::Contract))
+					return {6005_error, errorMsg + " Did you intend to call the function?"};
 			}
 			else if (exprType->category() == Type::Category::Contract)
 			{
@@ -3131,8 +2840,9 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					{
 						auto const* var = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 						std::string varName = var ? var->name() : "...";
-						errorMsg += " Use \"address(" + varName + ")." + memberName + "\" to access this address member.";
-						return { 3125_error, errorMsg };
+						errorMsg
+							+= " Use \"address(" + varName + ")." + memberName + "\" to access this address member.";
+						return {3125_error, errorMsg};
 					}
 			}
 			else if (auto const* addressType = dynamic_cast<AddressType const*>(exprType))
@@ -3142,30 +2852,29 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				{
 					solAssert(
 						addressType->stateMutability() != StateMutability::Payable,
-						"Expected address not-payable as members were not found"
-					);
+						"Expected address not-payable as members were not found");
 
-					return { 9862_error, "\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \"" + exprType->humanReadableName() + "\"." };
+					return {
+						9862_error,
+						"\"send\" and \"transfer\" are only available for objects of type \"address payable\", not \""
+							+ exprType->humanReadableName() + "\"."};
 				}
 			}
 
-			return { 9582_error, errorMsg };
+			return {9582_error, errorMsg};
 		}();
 
-		m_errorReporter.fatalTypeError(
-			errorId,
-			_memberAccess.location(),
-			description
-		);
+		m_errorReporter.fatalTypeError(errorId, _memberAccess.location(), description);
 	}
 	else if (possibleMembers.size() > 1)
 		m_errorReporter.fatalTypeError(
 			6675_error,
 			_memberAccess.location(),
-			"Member \"" + memberName + "\" not unique "
-			"after argument-dependent lookup in " + exprType->humanReadableName() +
-			(memberName == "value" ? " - did you forget the \"payable\" modifier?" : ".")
-		);
+			"Member \"" + memberName
+				+ "\" not unique "
+				  "after argument-dependent lookup in "
+				+ exprType->humanReadableName()
+				+ (memberName == "value" ? " - did you forget the \"payable\" modifier?" : "."));
 
 	annotation.referencedDeclaration = possibleMembers.front().declaration;
 	annotation.type = possibleMembers.front().type;
@@ -3176,31 +2885,22 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	{
 		solAssert(
 			!funType->hasBoundFirstArgument() || exprType->isImplicitlyConvertibleTo(*funType->selfType()),
-			"Function \"" + memberName + "\" cannot be called on an object of type " +
-			exprType->humanReadableName() + " (expected " + funType->selfType()->humanReadableName() + ")."
-		);
+			"Function \"" + memberName + "\" cannot be called on an object of type " + exprType->humanReadableName()
+				+ " (expected " + funType->selfType()->humanReadableName() + ").");
 
-		if (
-			dynamic_cast<FunctionType const*>(exprType) &&
-			!annotation.referencedDeclaration &&
-			(memberName == "value" || memberName == "gas")
-		)
+		if (dynamic_cast<FunctionType const*>(exprType) && !annotation.referencedDeclaration
+			&& (memberName == "value" || memberName == "gas"))
 			m_errorReporter.typeError(
 				1621_error,
 				_memberAccess.location(),
-				"Using \"." + memberName + "(...)\" is deprecated. Use \"{" + memberName + ": ...}\" instead."
-			);
+				"Using \"." + memberName + "(...)\" is deprecated. Use \"{" + memberName + ": ...}\" instead.");
 
-		if (
-			funType->kind() == FunctionType::Kind::ArrayPush &&
-			arguments.value().numArguments() != 0 &&
-			exprType->containsNestedMapping()
-		)
+		if (funType->kind() == FunctionType::Kind::ArrayPush && arguments.value().numArguments() != 0
+			&& exprType->containsNestedMapping())
 			m_errorReporter.typeError(
 				8871_error,
 				_memberAccess.location(),
-				"Storage arrays with nested mappings do not support .push(<arg>)."
-			);
+				"Storage arrays with nested mappings do not support .push(<arg>).");
 
 		if (!funType->hasBoundFirstArgument())
 			if (auto typeType = dynamic_cast<TypeType const*>(exprType))
@@ -3224,11 +2924,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		if (ContractType const* contractType = dynamic_cast<decltype(contractType)>(typeType->actualType()))
 		{
 			annotation.isLValue = annotation.referencedDeclaration->isLValue();
-			if (
-				auto const* functionType = dynamic_cast<FunctionType const*>(annotation.type);
-				functionType &&
-				functionType->kind() == FunctionType::Kind::Declaration
-			)
+			if (auto const* functionType = dynamic_cast<FunctionType const*>(annotation.type);
+				functionType && functionType->kind() == FunctionType::Kind::Declaration)
 				annotation.isPure = *_memberAccess.expression().annotation().isPure;
 		}
 		else
@@ -3245,18 +2942,12 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	// TODO some members might be pure, but for example `address(0x123).balance` is not pure
 	// although every subexpression is, so leaving this limited for now.
 	if (auto tt = dynamic_cast<TypeType const*>(exprType))
-		if (
-			tt->actualType()->category() == Type::Category::Enum ||
-			tt->actualType()->category() == Type::Category::UserDefinedValueType
-		)
+		if (tt->actualType()->category() == Type::Category::Enum
+			|| tt->actualType()->category() == Type::Category::UserDefinedValueType)
 			annotation.isPure = true;
-	if (
-		auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
-		functionType &&
-		functionType->hasDeclaration() &&
-		dynamic_cast<FunctionDefinition const*>(&functionType->declaration()) &&
-		memberName == "selector"
-	)
+	if (auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
+		functionType && functionType->hasDeclaration()
+		&& dynamic_cast<FunctionDefinition const*>(&functionType->declaration()) && memberName == "selector")
 		if (auto const* parentAccess = dynamic_cast<MemberAccess const*>(&_memberAccess.expression()))
 		{
 			bool isPure = *parentAccess->expression().annotation().isPure;
@@ -3266,89 +2957,62 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 			annotation.isPure = isPure;
 		}
-	if (
-		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
-		!annotation.isPure.set() &&
-		varDecl &&
-		varDecl->isConstant()
-	)
+	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(annotation.referencedDeclaration);
+		!annotation.isPure.set() && varDecl && varDecl->isConstant())
 		annotation.isPure = true;
 
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType))
 	{
 		if (magicType->kind() == MagicType::Kind::ABI)
 			annotation.isPure = true;
-		else if (magicType->kind() == MagicType::Kind::MetaType && (
-			memberName == "creationCode" || memberName == "runtimeCode"
-		))
+		else if (
+			magicType->kind() == MagicType::Kind::MetaType
+			&& (memberName == "creationCode" || memberName == "runtimeCode"))
 		{
 			annotation.isPure = true;
 			ContractType const& accessedContractType = dynamic_cast<ContractType const&>(*magicType->typeArgument());
 			solAssert(!accessedContractType.isSuper(), "");
-			if (
-				memberName == "runtimeCode" &&
-				!accessedContractType.immutableVariables().empty()
-			)
+			if (memberName == "runtimeCode" && !accessedContractType.immutableVariables().empty())
 				m_errorReporter.typeError(
 					9274_error,
 					_memberAccess.location(),
-					"\"runtimeCode\" is not available for contracts containing immutable variables."
-				);
+					"\"runtimeCode\" is not available for contracts containing immutable variables.");
 		}
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "name")
 			annotation.isPure = true;
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "interfaceId")
 			annotation.isPure = true;
-		else if (
-			magicType->kind() == MagicType::Kind::MetaType &&
-			(memberName == "min" || memberName == "max")
-		)
+		else if (magicType->kind() == MagicType::Kind::MetaType && (memberName == "min" || memberName == "max"))
 			annotation.isPure = true;
 		else if (magicType->kind() == MagicType::Kind::Block)
 		{
 			if (memberName == "chainid" && !m_evmVersion.hasChainID())
-				m_errorReporter.typeError(
-					3081_error,
-					_memberAccess.location(),
-					"\"chainid\" is not supported by the VM version."
-				);
+				m_errorReporter
+					.typeError(3081_error, _memberAccess.location(), "\"chainid\" is not supported by the VM version.");
 			else if (memberName == "basefee" && !m_evmVersion.hasBaseFee())
-				m_errorReporter.typeError(
-					5921_error,
-					_memberAccess.location(),
-					"\"basefee\" is not supported by the VM version."
-				);
+				m_errorReporter
+					.typeError(5921_error, _memberAccess.location(), "\"basefee\" is not supported by the VM version.");
 			else if (memberName == "blobbasefee" && !m_evmVersion.hasBlobBaseFee())
 				m_errorReporter.typeError(
-					1006_error,
-					_memberAccess.location(),
-					"\"blobbasefee\" is not supported by the VM version."
-				);
+					1006_error, _memberAccess.location(), "\"blobbasefee\" is not supported by the VM version.");
 			else if (memberName == "prevrandao" && !m_evmVersion.hasPrevRandao())
 				m_errorReporter.warning(
 					9432_error,
 					_memberAccess.location(),
-					"\"prevrandao\" is not supported by the VM version and will be treated as \"difficulty\"."
-				);
+					"\"prevrandao\" is not supported by the VM version and will be treated as \"difficulty\".");
 			else if (memberName == "difficulty" && m_evmVersion.hasPrevRandao())
 				m_errorReporter.warning(
 					8417_error,
 					_memberAccess.location(),
-					"Since the VM version paris, \"difficulty\" was replaced by \"prevrandao\", which now returns a random number based on the beacon chain."
-				);
+					"Since the VM version paris, \"difficulty\" was replaced by \"prevrandao\", which now returns a "
+					"random number based on the beacon chain.");
 		}
 	}
 
-	if (
-		_memberAccess.expression().annotation().type->category() == Type::Category::Address &&
-		memberName == "codehash" &&
-		!m_evmVersion.hasExtCodeHash()
-	)
-		m_errorReporter.typeError(
-			7598_error,
-			_memberAccess.location(),
-			"\"codehash\" is not supported by the VM version."
-		);
+	if (_memberAccess.expression().annotation().type->category() == Type::Category::Address && memberName == "codehash"
+		&& !m_evmVersion.hasExtCodeHash())
+		m_errorReporter
+			.typeError(7598_error, _memberAccess.location(), "\"codehash\" is not supported by the VM version.");
 
 	if (!annotation.isPure.set())
 		annotation.isPure = false;
@@ -3371,7 +3035,10 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	{
 		auto const& arrayType = dynamic_cast<ArraySliceType const&>(*baseType).arrayType();
 		if (arrayType.location() != DataLocation::CallData || !arrayType.isDynamicallySized())
-			m_errorReporter.typeError(4802_error, _access.location(), "Index access is only implemented for slices of dynamic calldata arrays.");
+			m_errorReporter.typeError(
+				4802_error,
+				_access.location(),
+				"Index access is only implemented for slices of dynamic calldata arrays.");
 		baseType = &arrayType;
 		[[fallthrough]];
 	}
@@ -3416,7 +3083,10 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		TypeType const& typeType = dynamic_cast<TypeType const&>(*baseType);
 		if (auto const* contractType = dynamic_cast<ContractType const*>(typeType.actualType()))
 			if (contractType->contractDefinition().isLibrary())
-				m_errorReporter.typeError(2876_error, _access.location(), "Index access for library types and arrays of libraries are not possible.");
+				m_errorReporter.typeError(
+					2876_error,
+					_access.location(),
+					"Index access for library types and arrays of libraries are not possible.");
 		if (!index)
 			resultType = TypeProvider::typeType(TypeProvider::array(DataLocation::Memory, typeType.actualType()));
 		else
@@ -3432,11 +3102,8 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			else
 				solAssert(m_errorReporter.hasErrors(), "Expected errors as expectType returned false");
 
-			resultType = TypeProvider::typeType(TypeProvider::array(
-				DataLocation::Memory,
-				typeType.actualType(),
-				length
-			));
+			resultType
+				= TypeProvider::typeType(TypeProvider::array(DataLocation::Memory, typeType.actualType(), length));
 		}
 		break;
 	}
@@ -3448,7 +3115,8 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		else
 		{
 			if (!expectType(*index, *TypeProvider::uint256()))
-				m_errorReporter.fatalTypeError(6318_error, _access.location(), "Index expression cannot be represented as an unsigned integer.");
+				m_errorReporter.fatalTypeError(
+					6318_error, _access.location(), "Index expression cannot be represented as an unsigned integer.");
 			if (auto integerType = dynamic_cast<RationalNumberType const*>(type(*index)))
 				if (bytesType.numBytes() <= integerType->literalValue(nullptr))
 					m_errorReporter.typeError(1859_error, _access.location(), "Out of bounds array access.");
@@ -3461,8 +3129,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		m_errorReporter.fatalTypeError(
 			2614_error,
 			_access.baseExpression().location(),
-			"Indexed expression has to be a type, mapping or array (is " + baseType->humanReadableName() + ")"
-		);
+			"Indexed expression has to be a type, mapping or array (is " + baseType->humanReadableName() + ")");
 	}
 	_access.annotation().type = resultType;
 	_access.annotation().isLValue = isLValue;
@@ -3509,21 +3176,24 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	if (auto const* arraySlice = dynamic_cast<ArraySliceType const*>(exprType))
 		arrayType = &arraySlice->arrayType();
 	else if (!(arrayType = dynamic_cast<ArrayType const*>(exprType)))
-		m_errorReporter.fatalTypeError(4781_error, _access.location(), "Index range access is only possible for arrays and array slices.");
+		m_errorReporter.fatalTypeError(
+			4781_error, _access.location(), "Index range access is only possible for arrays and array slices.");
 
 	if (arrayType->location() != DataLocation::CallData || !arrayType->isDynamicallySized())
-		m_errorReporter.typeError(1227_error, _access.location(), "Index range access is only supported for dynamic calldata arrays.");
+		m_errorReporter.typeError(
+			1227_error, _access.location(), "Index range access is only supported for dynamic calldata arrays.");
 	else if (arrayType->baseType()->isDynamicallyEncoded())
-		m_errorReporter.typeError(2148_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");
+		m_errorReporter.typeError(
+			2148_error,
+			_access.location(),
+			"Index range access is not supported for arrays with dynamically encoded base types.");
 	_access.annotation().type = TypeProvider::arraySlice(*arrayType);
 
 	return false;
 }
 
 std::vector<Declaration const*> TypeChecker::cleanOverloadedDeclarations(
-	Identifier const& _identifier,
-	std::vector<Declaration const*> const& _candidates
-)
+	Identifier const& _identifier, std::vector<Declaration const*> const& _candidates)
 {
 	solAssert(_candidates.size() > 1, "");
 	std::vector<Declaration const*> uniqueDeclarations;
@@ -3533,33 +3203,32 @@ std::vector<Declaration const*> TypeChecker::cleanOverloadedDeclarations(
 		solAssert(declaration, "");
 		// the declaration is functionDefinition, eventDefinition or a VariableDeclaration while declarations > 1
 		solAssert(
-			dynamic_cast<FunctionDefinition const*>(declaration) ||
-			dynamic_cast<EventDefinition const*>(declaration) ||
-			dynamic_cast<VariableDeclaration const*>(declaration) ||
-			dynamic_cast<MagicVariableDeclaration const*>(declaration),
-			"Found overloading involving something not a function, event or a (magic) variable."
-		);
+			dynamic_cast<FunctionDefinition const*>(declaration) || dynamic_cast<EventDefinition const*>(declaration)
+				|| dynamic_cast<VariableDeclaration const*>(declaration)
+				|| dynamic_cast<MagicVariableDeclaration const*>(declaration),
+			"Found overloading involving something not a function, event or a (magic) variable.");
 
-		FunctionTypePointer functionType {declaration->functionType(false)};
+		FunctionTypePointer functionType{declaration->functionType(false)};
 		if (!functionType)
 			functionType = declaration->functionType(true);
 		solAssert(functionType, "Failed to determine the function type of the overloaded.");
 
 		for (Type const* parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
 			if (!parameter)
-				m_errorReporter.fatalDeclarationError(3893_error, _identifier.location(), "Function type can not be used in this context.");
+				m_errorReporter.fatalDeclarationError(
+					3893_error, _identifier.location(), "Function type can not be used in this context.");
 
-		if (uniqueDeclarations.end() == find_if(
-			uniqueDeclarations.begin(),
-			uniqueDeclarations.end(),
-			[&](Declaration const* d)
-			{
-				FunctionType const* newFunctionType = d->functionType(false);
-				if (!newFunctionType)
-					newFunctionType = d->functionType(true);
-				return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
-			}
-		))
+		if (uniqueDeclarations.end()
+			== find_if(
+				uniqueDeclarations.begin(),
+				uniqueDeclarations.end(),
+				[&](Declaration const* d)
+				{
+					FunctionType const* newFunctionType = d->functionType(false);
+					if (!newFunctionType)
+						newFunctionType = d->functionType(true);
+					return newFunctionType && functionType->hasEqualParameterTypes(*newFunctionType);
+				}))
 			uniqueDeclarations.push_back(declaration);
 	}
 	return uniqueDeclarations;
@@ -3573,7 +3242,8 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	{
 		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);
 		if (annotation.overloadedDeclarations.empty())
-			m_errorReporter.fatalTypeError(7593_error, _identifier.location(), "No candidates for overload resolution found.");
+			m_errorReporter
+				.fatalTypeError(7593_error, _identifier.location(), "No candidates for overload resolution found.");
 		else if (annotation.overloadedDeclarations.size() == 1)
 			annotation.referencedDeclaration = *annotation.overloadedDeclarations.begin();
 		else if (!annotation.arguments)
@@ -3583,15 +3253,18 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
-				if (VariableDeclaration const* variableDeclaration = dynamic_cast<decltype(variableDeclaration)>(declaration))
+				if (VariableDeclaration const* variableDeclaration
+					= dynamic_cast<decltype(variableDeclaration)>(declaration))
 					candidates.push_back(declaration);
 			}
 			if (candidates.empty())
-				m_errorReporter.fatalTypeError(2144_error, _identifier.location(), "No matching declaration found after variable lookup.");
+				m_errorReporter.fatalTypeError(
+					2144_error, _identifier.location(), "No matching declaration found after variable lookup.");
 			else if (candidates.size() == 1)
 				annotation.referencedDeclaration = candidates.front();
 			else
-				m_errorReporter.fatalTypeError(7589_error, _identifier.location(), "No unique declaration found after variable lookup.");
+				m_errorReporter.fatalTypeError(
+					7589_error, _identifier.location(), "No unique declaration found after variable lookup.");
 		}
 		else
 		{
@@ -3624,16 +3297,21 @@ bool TypeChecker::visit(Identifier const& _identifier)
 					else
 						ssl.append("Candidate:", declaration->location());
 				if (candidates.empty())
-					m_errorReporter.fatalTypeError(9322_error, _identifier.location(), ssl, "No matching declaration found after argument-dependent lookup.");
+					m_errorReporter.fatalTypeError(
+						9322_error,
+						_identifier.location(),
+						ssl,
+						"No matching declaration found after argument-dependent lookup.");
 				else
-					m_errorReporter.fatalTypeError(4487_error, _identifier.location(), ssl, "No unique declaration found after argument-dependent lookup.");
+					m_errorReporter.fatalTypeError(
+						4487_error,
+						_identifier.location(),
+						ssl,
+						"No unique declaration found after argument-dependent lookup.");
 			}
 		}
 	}
-	solAssert(
-		!!annotation.referencedDeclaration,
-		"Referenced declaration is null after overload resolution."
-	);
+	solAssert(!!annotation.referencedDeclaration, "Referenced declaration is null after overload resolution.");
 	bool isConstant = false;
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
 	annotation.type = annotation.referencedDeclaration->type();
@@ -3651,9 +3329,9 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 	annotation.isConstant = isConstant;
 
-	annotation.requiredLookup =
-		dynamic_cast<CallableDeclaration const*>(annotation.referencedDeclaration) ?
-		VirtualLookup::Virtual : VirtualLookup::Static;
+	annotation.requiredLookup = dynamic_cast<CallableDeclaration const*>(annotation.referencedDeclaration)
+									? VirtualLookup::Virtual
+									: VirtualLookup::Static;
 
 	// Check for deprecated function names.
 	// The check is done here for the case without an actual function call.
@@ -3661,16 +3339,10 @@ bool TypeChecker::visit(Identifier const& _identifier)
 	{
 		if (_identifier.name() == "sha3" && fType->kind() == FunctionType::Kind::KECCAK256)
 			m_errorReporter.typeError(
-				3557_error,
-				_identifier.location(),
-				"\"sha3\" has been deprecated in favour of \"keccak256\"."
-			);
+				3557_error, _identifier.location(), "\"sha3\" has been deprecated in favour of \"keccak256\".");
 		else if (_identifier.name() == "suicide" && fType->kind() == FunctionType::Kind::Selfdestruct)
 			m_errorReporter.typeError(
-				8050_error,
-				_identifier.location(),
-				"\"suicide\" has been deprecated in favour of \"selfdestruct\"."
-			);
+				8050_error, _identifier.location(), "\"suicide\" has been deprecated in favour of \"selfdestruct\".");
 		else if (_identifier.name() == "selfdestruct" && fType->kind() == FunctionType::Kind::Selfdestruct)
 			m_errorReporter.warning(
 				5159_error,
@@ -3679,23 +3351,18 @@ bool TypeChecker::visit(Identifier const& _identifier)
 				"Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and "
 				"data associated with an account and only transfers its Ether to the beneficiary, "
 				"unless executed in the same transaction in which the contract was created (see EIP-6780). "
-				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. "
-				"Future changes to the EVM might further reduce the functionality of the opcode."
-			);
+				"Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into "
+				"account. "
+				"Future changes to the EVM might further reduce the functionality of the opcode.");
 	}
 
-	if (
-		MagicVariableDeclaration const* magicVar =
-		dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration)
-	)
+	if (MagicVariableDeclaration const* magicVar
+		= dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
 		if (magicVar->type()->category() == Type::Category::Integer)
 		{
 			solAssert(_identifier.name() == "now", "");
 			m_errorReporter.typeError(
-				7359_error,
-				_identifier.location(),
-				"\"now\" has been deprecated. Use \"block.timestamp\" instead."
-			);
+				7359_error, _identifier.location(), "\"now\" has been deprecated. Use \"block.timestamp\" instead.");
 		}
 
 	return false;
@@ -3703,10 +3370,8 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 void TypeChecker::endVisit(IdentifierPath const& _identifierPath)
 {
-	if (
-		dynamic_cast<CallableDeclaration const*>(_identifierPath.annotation().referencedDeclaration) &&
-		_identifierPath.path().size() == 1
-	)
+	if (dynamic_cast<CallableDeclaration const*>(_identifierPath.annotation().referencedDeclaration)
+		&& _identifierPath.path().size() == 1)
 		_identifierPath.annotation().requiredLookup = VirtualLookup::Virtual;
 	else
 		_identifierPath.annotation().requiredLookup = VirtualLookup::Static;
@@ -3715,12 +3380,14 @@ void TypeChecker::endVisit(IdentifierPath const& _identifierPath)
 void TypeChecker::endVisit(UserDefinedTypeName const& _userDefinedTypeName)
 {
 	if (!_userDefinedTypeName.annotation().type)
-		_userDefinedTypeName.annotation().type = _userDefinedTypeName.pathNode().annotation().referencedDeclaration->type();
+		_userDefinedTypeName.annotation().type
+			= _userDefinedTypeName.pathNode().annotation().referencedDeclaration->type();
 }
 
 void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 {
-	_expr.annotation().type = TypeProvider::typeType(TypeProvider::fromElementaryTypeName(_expr.type().typeName(), _expr.type().stateMutability()));
+	_expr.annotation().type = TypeProvider::typeType(
+		TypeProvider::fromElementaryTypeName(_expr.type().typeName(), _expr.type().stateMutability()));
 	_expr.annotation().isPure = true;
 	_expr.annotation().isLValue = false;
 	_expr.annotation().isConstant = false;
@@ -3736,10 +3403,8 @@ void TypeChecker::endVisit(Literal const& _literal)
 		std::string msg;
 		if (_literal.valueWithoutUnderscores().length() != 42) // "0x" + 40 hex digits
 			// looksLikeAddress enforces that it is a hex literal starting with "0x"
-			msg =
-				"This looks like an address but is not exactly 40 hex digits. It is " +
-				std::to_string(_literal.valueWithoutUnderscores().length() - 2) +
-				" hex digits.";
+			msg = "This looks like an address but is not exactly 40 hex digits. It is "
+				  + std::to_string(_literal.valueWithoutUnderscores().length() - 2) + " hex digits.";
 		else if (!_literal.passesAddressChecksum())
 		{
 			msg = "This looks like an address but has an invalid checksum.";
@@ -3751,10 +3416,9 @@ void TypeChecker::endVisit(Literal const& _literal)
 			m_errorReporter.syntaxError(
 				9429_error,
 				_literal.location(),
-				msg +
-				" If this is not used as an address, please prepend '00'. " +
-				"For more information please see https://docs.soliditylang.org/en/develop/types.html#address-literals"
-			);
+				msg + " If this is not used as an address, please prepend '00'. "
+					+ "For more information please see "
+					  "https://docs.soliditylang.org/en/develop/types.html#address-literals");
 	}
 
 	if (_literal.isHexNumber() && _literal.subDenomination() != Literal::SubDenomination::None)
@@ -3762,15 +3426,11 @@ void TypeChecker::endVisit(Literal const& _literal)
 			5145_error,
 			_literal.location(),
 			"Hexadecimal numbers cannot be used with unit denominations. "
-			"You can use an expression of the form \"0x1234 * 1 days\" instead."
-		);
+			"You can use an expression of the form \"0x1234 * 1 days\" instead.");
 
 	if (_literal.subDenomination() == Literal::SubDenomination::Year)
-		m_errorReporter.typeError(
-			4820_error,
-			_literal.location(),
-			"Using \"years\" as a unit denomination is deprecated."
-		);
+		m_errorReporter
+			.typeError(4820_error, _literal.location(), "Using \"years\" as a unit denomination is deprecated.");
 
 	if (!_literal.annotation().type)
 		_literal.annotation().type = TypeProvider::forLiteral(_literal);
@@ -3800,23 +3460,18 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				m_errorReporter.typeError(
 					4117_error,
 					_usingFor.location(),
-					"Can only use \"global\" with types defined in the same source unit at file level."
-				);
+					"Can only use \"global\" with types defined in the same source unit at file level.");
 		}
 		else
-			m_errorReporter.typeError(
-				8841_error,
-				_usingFor.location(),
-				"Can only use \"global\" with user-defined types."
-			);
+			m_errorReporter
+				.typeError(8841_error, _usingFor.location(), "Can only use \"global\" with user-defined types.");
 	}
 
 	if (!_usingFor.usesBraces())
 	{
 		solAssert(_usingFor.functionsOrLibrary().size() == 1);
 		ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
-			_usingFor.functionsOrLibrary().front()->annotation().referencedDeclaration
-		);
+			_usingFor.functionsOrLibrary().front()->annotation().referencedDeclaration);
 		solAssert(library && library->isLibrary());
 		// No type checking for libraries
 		return;
@@ -3831,23 +3486,18 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 	Type const* usingForType = _usingFor.typeName()->annotation().type;
 	solAssert(usingForType);
 
-	Type const* normalizedType = TypeProvider::withLocationIfReference(
-		DataLocation::Storage,
-		usingForType
-	);
+	Type const* normalizedType = TypeProvider::withLocationIfReference(DataLocation::Storage, usingForType);
 	solAssert(normalizedType);
 
 	for (auto const& [path, operator_]: _usingFor.functionsAndOperators())
 	{
 		solAssert(path->annotation().referencedDeclaration);
-		FunctionDefinition const& functionDefinition =
-			dynamic_cast<FunctionDefinition const&>(*path->annotation().referencedDeclaration);
+		FunctionDefinition const& functionDefinition
+			= dynamic_cast<FunctionDefinition const&>(*path->annotation().referencedDeclaration);
 
 		FunctionType const* functionType = dynamic_cast<FunctionType const*>(
-			functionDefinition.libraryFunction() ?
-				functionDefinition.typeViaContractName() :
-				functionDefinition.type()
-			);
+			functionDefinition.libraryFunction() ? functionDefinition.typeViaContractName()
+												 : functionDefinition.type());
 
 		solAssert(functionType);
 
@@ -3855,82 +3505,56 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			m_errorReporter.fatalTypeError(
 				4731_error,
 				path->location(),
-				SecondarySourceLocation().append(
-					"Function defined here:",
-					functionDefinition.location()
-				),
+				SecondarySourceLocation().append("Function defined here:", functionDefinition.location()),
 				fmt::format(
-					"The function \"{}\" does not have any parameters, and therefore cannot be attached to the type \"{}\".",
+					"The function \"{}\" does not have any parameters, and therefore cannot be attached to the type "
+					"\"{}\".",
 					joinHumanReadable(path->path(), "."),
-					normalizedType ? normalizedType->toString(true /* withoutDataLocation */) : "*"
-				)
-			);
+					normalizedType ? normalizedType->toString(true /* withoutDataLocation */) : "*"));
 
-		if (
-			functionDefinition.visibility() == Visibility::Private &&
-			functionDefinition.scope() != m_currentContract
-		)
+		if (functionDefinition.visibility() == Visibility::Private && functionDefinition.scope() != m_currentContract)
 		{
 			solAssert(functionDefinition.libraryFunction());
 			m_errorReporter.typeError(
 				6772_error,
 				path->location(),
-				SecondarySourceLocation().append(
-					"Function defined here:",
-					functionDefinition.location()
-				),
+				SecondarySourceLocation().append("Function defined here:", functionDefinition.location()),
 				fmt::format(
 					"Function \"{}\" is private and therefore cannot be attached"
 					" to a type outside of the library where it is defined.",
-					joinHumanReadable(path->path(), ".")
-				)
-			);
+					joinHumanReadable(path->path(), ".")));
 		}
 
 		FunctionType const* functionTypeWithBoundFirstArgument = functionType->withBoundFirstArgument();
 		solAssert(functionTypeWithBoundFirstArgument && functionTypeWithBoundFirstArgument->selfType(), "");
 		BoolResult result = normalizedType->isImplicitlyConvertibleTo(
-			*TypeProvider::withLocationIfReference(DataLocation::Storage, functionTypeWithBoundFirstArgument->selfType())
-		);
+			*TypeProvider::
+				withLocationIfReference(DataLocation::Storage, functionTypeWithBoundFirstArgument->selfType()));
 		if (!result && !operator_)
 			m_errorReporter.typeError(
 				3100_error,
 				path->location(),
-				SecondarySourceLocation().append(
-					"Function defined here:",
-					functionDefinition.location()
-				),
+				SecondarySourceLocation().append("Function defined here:", functionDefinition.location()),
 				fmt::format(
 					"The function \"{}\" cannot be attached to the type \"{}\" because the type cannot "
 					"be implicitly converted to the first argument of the function (\"{}\"){}",
 					joinHumanReadable(path->path(), "."),
 					usingForType->toString(true /* withoutDataLocation */),
 					functionTypeWithBoundFirstArgument->selfType()->humanReadableName(),
-					result.message().empty() ? "." : ": " +  result.message()
-				)
-			);
+					result.message().empty() ? "." : ": " + result.message()));
 		else if (operator_.has_value())
 		{
 			if (!_usingFor.global())
 				m_errorReporter.typeError(
-					3320_error,
-					path->location(),
-					"Operators can only be defined in a global 'using for' directive."
-				);
+					3320_error, path->location(), "Operators can only be defined in a global 'using for' directive.");
 
-			if (
-				functionType->stateMutability() != StateMutability::Pure ||
-				!functionDefinition.isFree()
-			)
+			if (functionType->stateMutability() != StateMutability::Pure || !functionDefinition.isFree())
 				m_errorReporter.typeError(
 					7775_error,
 					path->location(),
-					SecondarySourceLocation().append(
-						"Function defined as non-pure here:",
-						functionDefinition.location()
-					),
-					"Only pure free functions can be used to define operators."
-				);
+					SecondarySourceLocation()
+						.append("Function defined as non-pure here:", functionDefinition.location()),
+					"Only pure free functions can be used to define operators.");
 
 			solAssert(!functionType->hasBoundFirstArgument());
 			TypePointers const& parameterTypes = functionType->parameterTypes();
@@ -3938,43 +3562,40 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			if (usingForType->category() != Type::Category::UserDefinedValueType)
 			{
 				m_errorReporter.typeError(
-					5332_error,
-					path->location(),
-					"Operators can only be implemented for user-defined value types."
-				);
+					5332_error, path->location(), "Operators can only be implemented for user-defined value types.");
 				continue;
 			}
 			solAssert(usingForType->typeDefinition());
 
 			bool identicalFirstTwoParameters = (parameterCount < 2 || *parameterTypes.at(0) == *parameterTypes.at(1));
-			bool isUnaryOnlyOperator = (!TokenTraits::isBinaryOp(operator_.value()) && TokenTraits::isUnaryOp(operator_.value()));
-			bool isBinaryOnlyOperator = (TokenTraits::isBinaryOp(operator_.value()) && !TokenTraits::isUnaryOp(operator_.value()));
+			bool isUnaryOnlyOperator
+				= (!TokenTraits::isBinaryOp(operator_.value()) && TokenTraits::isUnaryOp(operator_.value()));
+			bool isBinaryOnlyOperator
+				= (TokenTraits::isBinaryOp(operator_.value()) && !TokenTraits::isUnaryOp(operator_.value()));
 			bool firstParameterMatchesUsingFor = parameterCount == 0 || *usingForType == *parameterTypes.front();
 
 			std::optional<std::string> wrongParametersMessage;
 			if (isBinaryOnlyOperator && (parameterCount != 2 || !identicalFirstTwoParameters))
-				wrongParametersMessage = fmt::format("two parameters of type {} and the same data location", usingForType->canonicalName());
+				wrongParametersMessage = fmt::
+					format("two parameters of type {} and the same data location", usingForType->canonicalName());
 			else if (isUnaryOnlyOperator && (parameterCount != 1 || !firstParameterMatchesUsingFor))
 				wrongParametersMessage = fmt::format("exactly one parameter of type {}", usingForType->canonicalName());
 			else if (parameterCount >= 3 || !firstParameterMatchesUsingFor || !identicalFirstTwoParameters)
-				wrongParametersMessage = fmt::format("one or two parameters of type {} and the same data location", usingForType->canonicalName());
+				wrongParametersMessage = fmt::format(
+					"one or two parameters of type {} and the same data location", usingForType->canonicalName());
 
 			if (wrongParametersMessage.has_value())
 				m_errorReporter.typeError(
 					1884_error,
 					functionDefinition.parameterList().location(),
-					SecondarySourceLocation().append(
-						"Function was used to implement an operator here:",
-						path->location()
-					),
+					SecondarySourceLocation()
+						.append("Function was used to implement an operator here:", path->location()),
 					fmt::format(
 						"Wrong parameters in operator definition. "
 						"The function \"{}\" needs to have {} to be used for the operator {}.",
 						joinHumanReadable(path->path(), "."),
 						wrongParametersMessage.value(),
-						TokenTraits::friendlyName(operator_.value())
-					)
-				);
+						TokenTraits::friendlyName(operator_.value())));
 
 			// This case is separately validated for all attached functions and is a fatal error
 			solAssert(parameterCount != 0);
@@ -3998,18 +3619,14 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 				m_errorReporter.typeError(
 					7743_error,
 					functionDefinition.returnParameterList()->location(),
-					SecondarySourceLocation().append(
-						"Function was used to implement an operator here:",
-						path->location()
-					),
+					SecondarySourceLocation()
+						.append("Function was used to implement an operator here:", path->location()),
 					fmt::format(
 						"Wrong return parameters in operator definition. "
 						"The function \"{}\" needs to return {} to be used for the operator {}.",
 						joinHumanReadable(path->path(), "."),
 						wrongReturnParametersMessage.value(),
-						TokenTraits::friendlyName(operator_.value())
-					)
-				);
+						TokenTraits::friendlyName(operator_.value())));
 
 			if (parameterCount != 1 && parameterCount != 2)
 				solAssert(m_errorReporter.hasErrors());
@@ -4017,11 +3634,12 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			{
 				// TODO: This is pretty inefficient. For every operator binding we find, we're
 				// traversing all bindings in all `using for` directives in the current scope.
-				std::set<FunctionDefinition const*, ASTNode::CompareByID> matchingDefinitions = usingForType->operatorDefinitions(
-					operator_.value(),
-					*currentDefinitionScope(),
-					parameterCount == 1 // _unary
-				);
+				std::set<FunctionDefinition const*, ASTNode::CompareByID> matchingDefinitions
+					= usingForType->operatorDefinitions(
+						operator_.value(),
+						*currentDefinitionScope(),
+						parameterCount == 1 // _unary
+					);
 
 				if (matchingDefinitions.size() >= 2)
 				{
@@ -4030,18 +3648,17 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 					SecondarySourceLocation secondaryLocation;
 					for (FunctionDefinition const* definition: matchingDefinitions)
 						if (functionDefinition != *definition)
-						secondaryLocation.append("Conflicting definition:", definition->location());
+							secondaryLocation.append("Conflicting definition:", definition->location());
 
 					m_errorReporter.typeError(
 						4705_error,
 						path->location(),
 						secondaryLocation,
 						fmt::format(
-							"User-defined {} operator {} has more than one definition matching the operand type visible in the current scope.",
+							"User-defined {} operator {} has more than one definition matching the operand type "
+							"visible in the current scope.",
 							parameterCount == 1 ? "unary" : "binary",
-							TokenTraits::friendlyName(operator_.value())
-						)
-					);
+							TokenTraits::friendlyName(operator_.value())));
 				}
 			}
 		}
@@ -4057,20 +3674,18 @@ void TypeChecker::checkErrorAndEventParameters(CallableDeclaration const& _calla
 			m_errorReporter.fatalTypeError(
 				3448_error,
 				var->location(),
-				"Type containing a (nested) mapping is not allowed as " + kind + " parameter type."
-			);
+				"Type containing a (nested) mapping is not allowed as " + kind + " parameter type.");
 		if (!type(*var)->interfaceType(false))
-			m_errorReporter.typeError(3417_error, var->location(), "Internal or recursive type is not allowed as " + kind + " parameter type.");
-		if (
-			!useABICoderV2() &&
-			!typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */)
-		)
+			m_errorReporter.typeError(
+				3417_error,
+				var->location(),
+				"Internal or recursive type is not allowed as " + kind + " parameter type.");
+		if (!useABICoderV2() && !typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */))
 			m_errorReporter.typeError(
 				3061_error,
 				var->location(),
 				"This type is only supported in ABI coder v2. "
-				"Use \"pragma abicoder v2;\" to enable the feature."
-			);
+				"Use \"pragma abicoder v2;\" to enable the feature.");
 	}
 }
 
@@ -4092,40 +3707,26 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 	BoolResult result = type(_expression)->isImplicitlyConvertibleTo(_expectedType);
 	if (!result)
 	{
-		auto errorMsg = "Type " +
-			type(_expression)->humanReadableName() +
-			" is not implicitly convertible to expected type " +
-			_expectedType.humanReadableName();
-		if (
-			type(_expression)->category() == Type::Category::RationalNumber &&
-			dynamic_cast<RationalNumberType const*>(type(_expression))->isFractional() &&
-			type(_expression)->mobileType()
-		)
+		auto errorMsg = "Type " + type(_expression)->humanReadableName()
+						+ " is not implicitly convertible to expected type " + _expectedType.humanReadableName();
+		if (type(_expression)->category() == Type::Category::RationalNumber
+			&& dynamic_cast<RationalNumberType const*>(type(_expression))->isFractional()
+			&& type(_expression)->mobileType())
 		{
 			if (_expectedType.operator==(*type(_expression)->mobileType()))
-				m_errorReporter.typeError(
-					4426_error,
-					_expression.location(),
-					errorMsg + ", but it can be explicitly converted."
-				);
+				m_errorReporter
+					.typeError(4426_error, _expression.location(), errorMsg + ", but it can be explicitly converted.");
 			else
 				m_errorReporter.typeErrorConcatenateDescriptions(
 					2326_error,
 					_expression.location(),
-					errorMsg +
-					". Try converting to type " +
-					type(_expression)->mobileType()->humanReadableName() +
-					" or use an explicit conversion.",
-					result.message()
-				);
+					errorMsg + ". Try converting to type " + type(_expression)->mobileType()->humanReadableName()
+						+ " or use an explicit conversion.",
+					result.message());
 		}
 		else
-			m_errorReporter.typeErrorConcatenateDescriptions(
-				7407_error,
-				_expression.location(),
-				errorMsg + ".",
-				result.message()
-			);
+			m_errorReporter
+				.typeErrorConcatenateDescriptions(7407_error, _expression.location(), errorMsg + ".", result.message());
 		return false;
 	}
 	return true;
@@ -4140,17 +3741,18 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 	if (*_expression.annotation().isLValue)
 		return;
 
-	auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string> {
+	auto [errorId, description] = [&]() -> std::tuple<ErrorId, std::string>
+	{
 		if (*_expression.annotation().isConstant)
-			return { 6520_error, "Cannot assign to a constant variable." };
+			return {6520_error, "Cannot assign to a constant variable."};
 
 		if (auto indexAccess = dynamic_cast<IndexAccess const*>(&_expression))
 		{
 			if (type(indexAccess->baseExpression())->category() == Type::Category::FixedBytes)
-				return { 4360_error, "Single bytes in fixed bytes arrays cannot be modified." };
+				return {4360_error, "Single bytes in fixed bytes arrays cannot be modified."};
 			else if (auto arrayType = dynamic_cast<ArrayType const*>(type(indexAccess->baseExpression())))
 				if (arrayType->dataStoredIn(DataLocation::CallData))
-					return { 6182_error, "Calldata arrays are read-only." };
+					return {6182_error, "Calldata arrays are read-only."};
 		}
 
 		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
@@ -4158,19 +3760,20 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 			if (auto structType = dynamic_cast<StructType const*>(type(memberAccess->expression())))
 			{
 				if (structType->dataStoredIn(DataLocation::CallData))
-					return { 4156_error, "Calldata structs are read-only." };
+					return {4156_error, "Calldata structs are read-only."};
 			}
 			else if (dynamic_cast<ArrayType const*>(type(memberAccess->expression())))
 				if (memberAccess->memberName() == "length")
-					return { 7567_error, "Member \"length\" is read-only and cannot be used to resize arrays." };
+					return {7567_error, "Member \"length\" is read-only and cannot be used to resize arrays."};
 		}
 
 		if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
 			if (auto varDecl = dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration))
-				if (varDecl->isExternalCallableParameter() && dynamic_cast<ReferenceType const*>(identifier->annotation().type))
-					return { 7128_error, "External function arguments of reference type are read-only." };
+				if (varDecl->isExternalCallableParameter()
+					&& dynamic_cast<ReferenceType const*>(identifier->annotation().type))
+					return {7128_error, "External function arguments of reference type are read-only."};
 
-		return { 4247_error, "Expression has to be an lvalue." };
+		return {4247_error, "Expression has to be an lvalue."};
 	}();
 
 	m_errorReporter.typeError(errorId, _expression.location(), description);
@@ -4182,5 +3785,4 @@ bool TypeChecker::useABICoderV2() const
 	if (m_currentContract)
 		solAssert(m_currentSourceUnit == &m_currentContract->sourceUnit(), "");
 	return *m_currentSourceUnit->annotation().useABICoderV2;
-
 }

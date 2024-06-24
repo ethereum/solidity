@@ -47,10 +47,10 @@ class TypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	TypeChecker(langutil::EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter):
-		m_evmVersion(_evmVersion),
-		m_errorReporter(_errorReporter)
-	{}
+	TypeChecker(langutil::EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter)
+		: m_evmVersion(_evmVersion), m_errorReporter(_errorReporter)
+	{
+	}
 
 	/// Performs type checking on the given source and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
@@ -59,7 +59,6 @@ public:
 	static bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall);
 
 private:
-
 	bool visit(ContractDefinition const& _contract) override;
 	// Checks whether the expression @arg _expression can be assigned from type @arg _type
 	// and reports an error, if not.
@@ -68,53 +67,34 @@ private:
 	/// Performs type checks for ``abi.decode(bytes memory, (...))`` and returns the
 	/// vector of return types (which is basically the second argument) if successful. It returns
 	/// the empty vector on error.
-	TypePointers typeCheckABIDecodeAndRetrieveReturnType(
-		FunctionCall const& _functionCall,
-		bool _abiEncoderV2
-	);
+	TypePointers typeCheckABIDecodeAndRetrieveReturnType(FunctionCall const& _functionCall, bool _abiEncoderV2);
 
 	TypePointers typeCheckMetaTypeFunctionAndRetrieveReturnType(FunctionCall const& _functionCall);
 
 	/// Performs type checks and determines result types for type conversion FunctionCall nodes.
-	Type const* typeCheckTypeConversionAndRetrieveReturnType(
-		FunctionCall const& _functionCall
-	);
+	Type const* typeCheckTypeConversionAndRetrieveReturnType(FunctionCall const& _functionCall);
 
 	/// Performs type checks on function call and struct ctor FunctionCall nodes (except for kind ABIDecode).
-	void typeCheckFunctionCall(
-		FunctionCall const& _functionCall,
-		FunctionTypePointer _functionType
-	);
+	void typeCheckFunctionCall(FunctionCall const& _functionCall, FunctionTypePointer _functionType);
 
 	void typeCheckFallbackFunction(FunctionDefinition const& _function);
 	void typeCheckConstructor(FunctionDefinition const& _function);
 
-	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node parameters.
-	void typeCheckFunctionGeneralChecks(
-		FunctionCall const& _functionCall,
-		FunctionTypePointer _functionType
-	);
+	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node
+	/// parameters.
+	void typeCheckFunctionGeneralChecks(FunctionCall const& _functionCall, FunctionTypePointer _functionType);
 
 	/// Performs general checks and checks specific to ABI encode functions
-	void typeCheckABIEncodeFunctions(
-		FunctionCall const& _functionCall,
-		FunctionTypePointer _functionType
-	);
+	void typeCheckABIEncodeFunctions(FunctionCall const& _functionCall, FunctionTypePointer _functionType);
 
 	/// Performs checks specific to the ABI encode functions of type ABIEncodeCall
 	void typeCheckABIEncodeCallFunction(FunctionCall const& _functionCall);
 
 	/// Performs general checks and checks specific to string concat function call
-	void typeCheckStringConcatFunction(
-		FunctionCall const& _functionCall,
-		FunctionType const* _functionType
-	);
+	void typeCheckStringConcatFunction(FunctionCall const& _functionCall, FunctionType const* _functionType);
 
 	/// Performs general checks and checks specific to bytes concat function call
-	void typeCheckBytesConcatFunction(
-		FunctionCall const& _functionCall,
-		FunctionType const* _functionType
-	);
+	void typeCheckBytesConcatFunction(FunctionCall const& _functionCall, FunctionType const* _functionType);
 
 	bool visit(ImportDirective const&) override;
 
@@ -165,10 +145,8 @@ private:
 	/// @returns the referenced declaration and throws on error.
 	Declaration const& dereference(IdentifierPath const& _path) const;
 
-	std::vector<Declaration const*> cleanOverloadedDeclarations(
-		Identifier const& _reference,
-		std::vector<Declaration const*> const& _candidates
-	);
+	std::vector<Declaration const*>
+	cleanOverloadedDeclarations(Identifier const& _reference, std::vector<Declaration const*> const& _candidates);
 
 	/// Runs type checks on @a _expression to infer its type and then checks that it is implicitly
 	/// convertible to @a _expectedType.
