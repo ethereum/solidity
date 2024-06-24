@@ -135,6 +135,7 @@ static std::string const g_strSources = "sources";
 static std::string const g_strSrcMap = "srcmap";
 static std::string const g_strSrcMapRuntime = "srcmap-runtime";
 static std::string const g_strStorageLayout = "storage-layout";
+static std::string const g_strTransientStorageLayout = "transient-storage-layout";
 static std::string const g_strVersion = "version";
 
 static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
@@ -154,7 +155,8 @@ static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 		_options.compiler.outputs.natspecDev ||
 		_options.compiler.outputs.opcodes ||
 		_options.compiler.outputs.signatureHashes ||
-		_options.compiler.outputs.storageLayout;
+		_options.compiler.outputs.storageLayout ||
+		_options.compiler.outputs.transientStorageLayout;
 }
 
 static bool coloredOutput(CommandLineOptions const& _options)
@@ -418,6 +420,19 @@ void CommandLineInterface::handleStorageLayout(std::string const& _contract)
 		createFile(m_compiler->filesystemFriendlyName(_contract) + "_storage.json", data);
 	else
 		sout() << "Contract Storage Layout:" << std::endl << data << std::endl;
+}
+
+void CommandLineInterface::handleTransientStorageLayout(std::string const& _contract)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.transientStorageLayout)
+		return;
+	std::string data = jsonPrint(removeNullMembers(m_compiler->transientStorageLayout(_contract)), m_options.formatting.json);
+	if (!m_options.output.dir.empty())
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_transient_storage.json", data);
+	else
+		sout() << "Contract Transient Storage Layout:" << std::endl << data << std::endl;
 }
 
 void CommandLineInterface::handleNatspec(bool _natspecDev, std::string const& _contract)
@@ -956,6 +971,8 @@ void CommandLineInterface::handleCombinedJSON()
 				contractData["metadata"] = m_compiler->metadata(contractName);
 			if (m_options.compiler.combinedJsonRequests->storageLayout)
 				contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
+			if (m_options.compiler.combinedJsonRequests->transientStorageLayout)
+				contractData[g_strTransientStorageLayout] = m_compiler->transientStorageLayout(contractName);
 			if (m_options.compiler.combinedJsonRequests->generatedSources)
 				contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
 			if (m_options.compiler.combinedJsonRequests->generatedSourcesRuntime)
@@ -1322,6 +1339,7 @@ void CommandLineInterface::outputCompilationResults()
 			handleMetadata(contract);
 			handleABI(contract);
 			handleStorageLayout(contract);
+			handleTransientStorageLayout(contract);
 			handleNatspec(true, contract);
 			handleNatspec(false, contract);
 		} // end of contracts iteration

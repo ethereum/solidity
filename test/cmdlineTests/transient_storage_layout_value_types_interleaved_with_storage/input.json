@@ -1,7 +1,7 @@
 {
 	"language": "Solidity",
 	"sources": {
-		"fileA": {"urls": ["storage_layout_transient_value_types/in.sol"]}
+		"fileA": {"urls": ["transient_storage_layout_value_types_interleaved_with_storage/in.sol"]}
 	},
 	"settings": {
 		"outputSelection": {

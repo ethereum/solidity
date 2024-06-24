@@ -1,0 +1,67 @@
+
+======= transient_storage_layout/input.sol:C =======
+Contract Transient Storage Layout:
+{
+    "storage": [
+        {
+            "astId": 4,
+            "contract": "transient_storage_layout/input.sol:C",
+            "label": "x",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+        },
+        {
+            "astId": 8,
+            "contract": "transient_storage_layout/input.sol:C",
+            "label": "w",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+        },
+        {
+            "astId": 12,
+            "contract": "transient_storage_layout/input.sol:C",
+            "label": "b",
+            "offset": 20,
+            "slot": "1",
+            "type": "t_bool"
+        },
+        {
+            "astId": 15,
+            "contract": "transient_storage_layout/input.sol:C",
+            "label": "d",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(D)2"
+        }
+    ],
+    "types": {
+        "t_address": {
+            "encoding": "inplace",
+            "label": "address",
+            "numberOfBytes": "20"
+        },
+        "t_bool": {
+            "encoding": "inplace",
+            "label": "bool",
+            "numberOfBytes": "1"
+        },
+        "t_contract(D)2": {
+            "encoding": "inplace",
+            "label": "contract D",
+            "numberOfBytes": "20"
+        },
+        "t_uint256": {
+            "encoding": "inplace",
+            "label": "uint256",
+            "numberOfBytes": "32"
+        }
+    }
+}
+
+======= transient_storage_layout/input.sol:D =======
+Contract Transient Storage Layout:
+{
+    "storage": []
+}

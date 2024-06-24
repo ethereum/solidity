@@ -338,6 +338,10 @@ public:
 	/// Prerequisite: Successful call to parse or compile.
 	Json const& storageLayout(std::string const& _contractName) const;
 
+	/// @returns a JSON representing the transient storage layout of the contract.
+	/// Prerequisite: Successful call to parse or compile.
+	Json const& transientStorageLayout(std::string const& _contractName) const;
+
 	/// @returns a JSON representing the contract's user documentation.
 	/// Prerequisite: Successful call to parse or compile.
 	Json const& natspecUser(std::string const& _contractName) const;
@@ -406,6 +410,7 @@ private:
 		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
 		util::LazyInit<Json const> abi;
 		util::LazyInit<Json const> storageLayout;
+		util::LazyInit<Json const> transientStorageLayout;
 		util::LazyInit<Json const> userDocumentation;
 		util::LazyInit<Json const> devDocumentation;
 		util::LazyInit<Json const> generatedSources;
@@ -501,6 +506,10 @@ private:
 	/// @returns the storage layout of the contract as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
 	Json const& storageLayout(Contract const&) const;
+
+	/// @returns the transient storage layout of the contract as a JSON object.
+	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
+	Json const& transientStorageLayout(Contract const&) const;
 
 	/// @returns the Natspec User documentation as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.

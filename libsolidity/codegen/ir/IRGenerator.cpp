@@ -39,6 +39,8 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/JSON.h>
 
+#include <range/v3/algorithm/all_of.hpp>
+
 #include <sstream>
 #include <variant>
 
@@ -101,6 +103,16 @@ std::string IRGenerator::generate(
 	std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 )
 {
+	auto notTransient = [](VariableDeclaration const* _varDeclaration) {
+		solAssert(_varDeclaration);
+		return _varDeclaration->referenceLocation() != VariableDeclaration::Location::Transient;
+	};
+
+	solUnimplementedAssert(
+		ranges::all_of(_contract.stateVariables(), notTransient),
+		"Transient storage variables are not supported."
+	);
+
 	auto subObjectSources = [&_otherYulSources](UniqueVector<ContractDefinition const*> const& _subObjects) -> std::string
 	{
 		std::string subObjectsSources;

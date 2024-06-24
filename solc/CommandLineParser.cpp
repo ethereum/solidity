@@ -760,7 +760,8 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecUser).c_str(), "Natspec user documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::natspecDev).c_str(), "Natspec developer documentation of all contracts.")
 		(CompilerOutputs::componentName(&CompilerOutputs::metadata).c_str(), "Combined Metadata JSON whose IPFS hash is stored on-chain.")
-		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables.")
+		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in storage.")
+		(CompilerOutputs::componentName(&CompilerOutputs::transientStorageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in transient storage.")
 	;
 	desc.add(outputComponents);
 
@@ -1469,7 +1470,8 @@ void CommandLineParser::parseCombinedJsonOption()
 			&CombinedJsonRequests::natspecDev,
 			&CombinedJsonRequests::natspecUser,
 			&CombinedJsonRequests::signatureHashes,
-			&CombinedJsonRequests::storageLayout
+			&CombinedJsonRequests::storageLayout,
+			&CombinedJsonRequests::transientStorageLayout
 		};
 
 		for (auto const invalidOption: invalidOptions)
