@@ -585,8 +585,11 @@ void ContractCompiler::initializeStateVariables(ContractDefinition const& _contr
 {
 	solAssert(!_contract.isLibrary(), "Tried to initialize state variables of library.");
 	for (VariableDeclaration const* variable: _contract.stateVariables())
+	{
+		solUnimplementedAssert(variable->referenceLocation() != VariableDeclaration::Location::Transient, "Transient storage variables not supported.");
 		if (variable->value() && !variable->isConstant())
 			ExpressionCompiler(m_context, m_optimiserSettings.runOrderLiterals).appendStateVariableInitialization(*variable);
+	}
 }
 
 bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)

@@ -2,10 +2,61 @@
     "errors": [
         {
             "component": "general",
-            "formattedMessage": "Transient storage layout is not supported yet.",
-            "message": "Transient storage layout is not supported yet.",
+            "errorCode": "6715",
+            "formattedMessage": "UnimplementedFeatureError: Transient storage is not yet implemented.
+ --> fileA:4:5:
+  |
+4 |     uint transient x;
+  |     ^^^^^^^^^^^^^^^^
+
+",
+            "message": "Transient storage is not yet implemented.",
             "severity": "error",
+            "sourceLocation": {
+                "end": 91,
+                "file": "fileA",
+                "start": 75
+            },
+            "type": "UnimplementedFeatureError"
+        },
+        {
+            "component": "general",
+            "errorCode": "6715",
+            "formattedMessage": "UnimplementedFeatureError: Transient storage is not yet implemented.
+ --> fileA:6:5:
+  |
+6 |     bytes32 transient b;
+  |     ^^^^^^^^^^^^^^^^^^^
+
+",
+            "message": "Transient storage is not yet implemented.",
+            "severity": "error",
+            "sourceLocation": {
+                "end": 128,
+                "file": "fileA",
+                "start": 109
+            },
+            "type": "UnimplementedFeatureError"
+        },
+        {
+            "component": "general",
+            "errorCode": "6715",
+            "formattedMessage": "UnimplementedFeatureError: Transient storage is not yet implemented.
+ --> fileA:8:5:
+  |
+8 |     address transient a;
+  |     ^^^^^^^^^^^^^^^^^^^
+
+",
+            "message": "Transient storage is not yet implemented.",
+            "severity": "error",
+            "sourceLocation": {
+                "end": 168,
+                "file": "fileA",
+                "start": 149
+            },
             "type": "UnimplementedFeatureError"
         }
-    ]
+    ],
+    "sources": {}
 }

@@ -5,4 +5,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// UnimplementedFeatureError 1834: Transient storage variables are not supported.
+// UnimplementedFeatureError 6715: (17-38): Transient storage is not yet implemented.
