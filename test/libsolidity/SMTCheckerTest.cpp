@@ -107,8 +107,6 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
 				filtered.emplace_back(e);
 		return filtered;
 	};
-	if (m_modelCheckerSettings.invariants.invariants.empty())
-		m_expectations = removeInv(std::move(m_expectations));
 
 	auto const& ignoreInv = m_reader.stringSetting("SMTIgnoreInv", "yes");
 	if (ignoreInv == "no")
@@ -117,6 +115,9 @@ SMTCheckerTest::SMTCheckerTest(std::string const& _filename):
 		m_modelCheckerSettings.invariants = ModelCheckerInvariants::None();
 	else
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SMT invariant choice."));
+
+	if (m_modelCheckerSettings.invariants.invariants.empty())
+		m_expectations = removeInv(std::move(m_expectations));
 
 	auto const& ignoreOSSetting = m_reader.stringSetting("SMTIgnoreOS", "none");
 	for (std::string const& os: ignoreOSSetting | ranges::views::split(',') | ranges::to<std::vector<std::string>>())
