@@ -61,7 +61,7 @@ struct OptimiserSettings
 
 		"jmul[jul] VcTOcul jmul";      // Make source short and pretty
 
-	static char constexpr DefaultYulOptimiserCleanupSteps[] = "fDnTOcmuOIxTu";
+	static char constexpr DefaultYulOptimiserCleanupSteps[] = "fDnTOcmuOITux";
 
 	/// No optimisations at all - not recommended.
 	static OptimiserSettings none()

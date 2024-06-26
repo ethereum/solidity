@@ -44,7 +44,7 @@ namespace
 			[](VariableSlot const&) {},
 			[](LiteralSlot const&) {},
 			[](TemporarySlot const&) { solAssert(false); },
-			[](JunkSlot const&) {},
+			[](JunkSlot const&) { solAssert(false); },
 		}, _slot);
 	}
 }
