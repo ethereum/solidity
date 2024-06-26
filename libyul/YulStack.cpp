@@ -402,7 +402,7 @@ Json YulStack::cfgJson() const
 			if (Object const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
 			{
 				Json subObjectJson;
-				subObjectJson["name"] = subObject->name.str();
+				subObjectJson[subObject->name.str()];
 				subObjectJson["blocks"] = exportCFGFromObject(*subObject);
 				if (!subObject->subObjects.empty())
 					subObjectJson["subObjects"] = exportCFGFromSubObjects(subObject->subObjects);
@@ -411,14 +411,11 @@ Json YulStack::cfgJson() const
 		return subObjectsJson;
 	};
 
-	Json objectJson;
 	Object const& object = *m_parserResult.get();
-	objectJson["name"] = object.name.str();
-	objectJson["blocks"] = exportCFGFromObject(object);
 
 	Json ret;
 	ret["nodeType"] = "YulCFG";
-	ret["object"] = objectJson;
+	ret["object"] = exportCFGFromObject(object);
 	ret["subObjects"] = exportCFGFromSubObjects(object.subObjects);
 	return ret;
 }

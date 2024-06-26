@@ -30,11 +30,13 @@ class YulControlFlowGraphExporter
 public:
 	YulControlFlowGraphExporter(){}
 	Json operator()(CFG const& _cfg);
+	Json exportBlock(CFG::BasicBlock const& _block);
+	Json exportFunction(CFG::FunctionInfo const& _functionInfo);
 
 private:
 	size_t getBlockId(CFG::BasicBlock const& _block);
 	Json toJson(CFG::BasicBlock const& _entry);
-	Json toJson(CFG::Operation const& _operation);
+	Json toJson(Json& _ret, CFG::Operation const& _operation);
 	Json stackToJson(Stack const& _stack);
 	Json stackSlotToJson(StackSlot const& _slot);
 

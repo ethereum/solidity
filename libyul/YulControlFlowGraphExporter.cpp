@@ -29,16 +29,61 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
+namespace
+{
+	std::string variableSlotToString(VariableSlot const& _slot)
+	{
+		return _slot.variable.get().name.str();
+	}
+
+	void validateStackSlot(StackSlot const& _slot)
+	{
+		std::visit(util::GenericVisitor{
+			[](FunctionCallReturnLabelSlot const&) { solAssert(false); },
+			[](FunctionReturnLabelSlot const&) { solAssert(false); },
+			[](VariableSlot const&) {},
+			[](LiteralSlot const&) {},
+			[](TemporarySlot const&) { solAssert(false); },
+			[](JunkSlot const&) {},
+		}, _slot);
+	}
+}
+
 Json YulControlFlowGraphExporter::operator()(CFG const& _cfg)
 {
-	Json ret = Json::array();
-	util::BreadthFirstSearch<CFG::BasicBlock const*> bfs{{_cfg.entry}};
-	for (auto const& functionInfo: _cfg.functionInfo | ranges::views::values)
-		bfs.verticesToTraverse.emplace_back(functionInfo.entry);
+	Json yulObjectJson = Json::object();
+	yulObjectJson["blocks"] = exportBlock(*_cfg.entry);
 
+	Json functionsJson = Json::object();
+	for (auto const& functionInfo: _cfg.functionInfo | ranges::views::values)
+		functionsJson[functionInfo.function.name.str()] = exportFunction(functionInfo);
+	yulObjectJson["functions"] = functionsJson;
+
+	return yulObjectJson;
+}
+
+Json YulControlFlowGraphExporter::exportFunction(CFG::FunctionInfo const& _functionInfo)
+{
+	Json functionJson = Json::object();
+	functionJson["type"] = "Function";
+	functionJson["entry"] = "Block" + std::to_string(getBlockId(*_functionInfo.entry));
+	functionJson["arguments"] = Json::array();
+	for (auto const& parameter: _functionInfo.parameters)
+		functionJson["arguments"].emplace_back(variableSlotToString(parameter));
+	functionJson["returns"] = Json::array();
+	for (auto const& returnValue: _functionInfo.returnVariables)
+		functionJson["returns"].emplace_back(variableSlotToString(returnValue));
+	functionJson["blocks"] = exportBlock(*_functionInfo.entry);
+	return functionJson;
+}
+
+Json YulControlFlowGraphExporter::exportBlock(CFG::BasicBlock const& _block)
+{
+	Json blocksJson = Json::array();
+	util::BreadthFirstSearch<CFG::BasicBlock const*> bfs{{&_block}};
 	bfs.run([&](CFG::BasicBlock const* _block, auto _addChild) {
 		// Convert current block to JSON
-		ret.push_back(toJson(*_block));
+		blocksJson.emplace_back(toJson(*_block));
 
 		Json exitBlockJson;
 		exitBlockJson["id"] = "Block" + std::to_string(getBlockId(*_block)) + "Exit";
@@ -52,7 +97,6 @@ Json YulControlFlowGraphExporter::operator()(CFG const& _cfg)
 			{
 				exitBlockJson["exit"] = { "Block" + std::to_string(getBlockId(*_jump.target)) };
 				exitBlockJson["type"] = "Jump";
-
 				//TODO: handle backwards jump?
 				_addChild(_jump.target);
 			},
@@ -75,9 +119,10 @@ Json YulControlFlowGraphExporter::operator()(CFG const& _cfg)
 				exitBlockJson["type"] = "Terminated";
 			},
 		}, _block->exit);
-		ret.push_back(exitBlockJson);
+		blocksJson.emplace_back(exitBlockJson);
 	});
-	return ret;
+
+	return blocksJson;
 }
 
 Json YulControlFlowGraphExporter::toJson(CFG::BasicBlock const& _block)
@@ -86,21 +131,36 @@ Json YulControlFlowGraphExporter::toJson(CFG::BasicBlock const& _block)
 	blockJson["id"] = "Block" + std::to_string(getBlockId(_block));
 	blockJson["instructions"] = Json::array();
 	for (auto const& operation: _block.operations)
-		blockJson["instructions"].push_back(toJson(operation));
+		blockJson["instructions"].push_back(toJson(blockJson, operation));
 	blockJson["exit"] = "Block" + std::to_string(getBlockId(_block)) + "Exit";
-	blockJson["type"] = "BasicBlock";
 
 	return blockJson;
 }
 
-Json YulControlFlowGraphExporter::toJson(CFG::Operation const& _operation)
+Json YulControlFlowGraphExporter::toJson(Json& _ret, CFG::Operation const& _operation)
 {
 	Json opJson;
+
+	Stack input = _operation.input;
 	std::visit(util::GenericVisitor{
 		[&](CFG::FunctionCall const& _call) {
+			solAssert(!input.empty(), "FunctionCall must have a return label as first input");
+			StackSlot const& slot = input.front();
+			if (
+				std::holds_alternative<FunctionCallReturnLabelSlot>(slot) ||
+				std::holds_alternative<FunctionReturnLabelSlot>(slot)
+			)
+			{
+				if (auto* returnLabelSlot = std::get_if<FunctionCallReturnLabelSlot>(&slot))
+					solAssert(returnLabelSlot->call.get().functionName.name == _call.function.get().name, "FunctionCallReturnLabelSlot must refer to the same function as the FunctionCall");
+				// remove the return label from the input
+				input.erase(input.begin());
+			}
+			_ret["type"] = "FunctionCall";
 			opJson["op"] = _call.function.get().name.str();
 		},
 		[&](CFG::BuiltinCall const& _call) {
+			_ret["type"] = "BuiltinCall";
 			Json builtinArgsJson = Json::array();
 			auto const& builtin = _call.builtin.get();
 			if (!builtin.literalArguments.empty())
@@ -124,6 +184,7 @@ Json YulControlFlowGraphExporter::toJson(CFG::Operation const& _operation)
 			opJson["op"] = _call.functionCall.get().functionName.name.str();
 		},
 		[&](CFG::Assignment const& _assignment) {
+			_ret["type"] = "Assignment";
 			Json::array_t assignmentJson;
 			for (auto const& variable: _assignment.variables)
 				assignmentJson.push_back(stackSlotToString(variable));
@@ -132,7 +193,7 @@ Json YulControlFlowGraphExporter::toJson(CFG::Operation const& _operation)
 	}, _operation.operation);
 
 	opJson["in"] = Json::array();
-	opJson["in"] = stackToJson(_operation.input);
+	opJson["in"] = stackToJson(input);
 
 	opJson["out"] = Json::array();
 	opJson["out"] = stackToJson(_operation.output);
@@ -144,13 +205,17 @@ Json YulControlFlowGraphExporter::stackToJson(Stack const& _stack)
 {
 	Json ret = Json::array();
 	for (auto const& slot: _stack)
+	{
+		validateStackSlot(slot);
 		ret.push_back(stackSlotToString(slot));
+	}
 	return ret;
 }
 
 Json YulControlFlowGraphExporter::stackSlotToJson(StackSlot const& _slot)
 {
 	Json ret = Json::array();
+	validateStackSlot(_slot);
 	ret.push_back(stackSlotToString(_slot));
 	return ret;
 }
