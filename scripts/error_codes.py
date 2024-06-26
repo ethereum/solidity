@@ -203,7 +203,6 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
                 # Due to 3805, the warning lists look different for different compiler builds.
         "1920", # Unimplemented feature error from YulStack (currently there are no UnimplementedFeatureErrors thrown by libyul)
         "7053", # Unimplemented feature error (parsing stage), currently has no tests
-        "1180", # SMTChecker, covered by CL tests
         "2339", # SMTChecker, covered by CL tests
         "6240", # SMTChecker, covered by CL tests
     }

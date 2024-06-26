@@ -115,6 +115,8 @@ std::string formatUnaryOp(smtutil::Expression const& _expr, std::vector<std::str
 {
 	if (_expr.name == "not")
 		return "!" + _args.at(0);
+	if (_expr.name == "-")
+		return "-" + _args.at(0);
 	// Other operators such as exists may end up here.
 	return formatGenericOp(_expr, _args);
 }
@@ -166,7 +168,7 @@ std::string toSolidityStr(smtutil::Expression const& _expr)
 		{"mod", "%"}
 	};
 	// Some of these (and, or, +, *) may have >= 2 arguments from z3.
-	if (infixOps.count(op))
+	if (infixOps.count(op) && args.size() >= 2)
 		return formatInfixOp(infixOps.at(op), strArgs);
 
 	static std::set<std::string> const arrayOps{"select", "store", "const_array"};
