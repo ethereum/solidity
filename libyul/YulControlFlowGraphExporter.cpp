@@ -144,17 +144,15 @@ Json YulControlFlowGraphExporter::toJson(Json& _ret, CFG::Operation const& _oper
 	Stack input = _operation.input;
 	std::visit(util::GenericVisitor{
 		[&](CFG::FunctionCall const& _call) {
-			solAssert(!input.empty(), "FunctionCall must have a return label as first input");
-			StackSlot const& slot = input.front();
-			if (
-				std::holds_alternative<FunctionCallReturnLabelSlot>(slot) ||
-				std::holds_alternative<FunctionReturnLabelSlot>(slot)
-			)
+			if (_call.canContinue)
 			{
-				if (auto* returnLabelSlot = std::get_if<FunctionCallReturnLabelSlot>(&slot))
-					solAssert(returnLabelSlot->call.get().functionName.name == _call.function.get().name, "FunctionCallReturnLabelSlot must refer to the same function as the FunctionCall");
-				// remove the return label from the input
-				input.erase(input.begin());
+				solAssert(!input.empty(), "FunctionCall must have a return label as first input");
+				if (auto* returnLabelSlot = std::get_if<FunctionCallReturnLabelSlot>(&input.front()))
+				{
+					solAssert(&returnLabelSlot->call.get() == &_call.functionCall.get(), "FunctionCallReturnLabelSlot must refer to the same function as the FunctionCall");
+					// remove the return label from the input
+					input.erase(input.begin());
+				}
 			}
 			_ret["type"] = "FunctionCall";
 			opJson["op"] = _call.function.get().name.str();
