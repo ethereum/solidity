@@ -18,11 +18,10 @@
 
 #pragma once
 
-#include <libsolidity/formal/SymbolicVariables.h>
-#include <libsolidity/formal/SymbolicVariables.h>
 
 #include <libsolidity/ast/AST.h>
 
+#include <libsmtutil/SolverInterface.h>
 #include <libsmtutil/Sorts.h>
 
 #include <map>
@@ -36,6 +35,11 @@ class CharStreamProvider;
 
 namespace solidity::frontend
 {
+
+namespace smt
+{
+class EncodingContext;
+}
 
 enum class PredicateType
 {
@@ -69,7 +73,8 @@ public:
 	);
 
 	Predicate(
-		smt::SymbolicFunctionVariable&& _predicate,
+		std::string _name,
+		smtutil::SortPointer _sort,
 		PredicateType _type,
 		bool _bytesConcatFunctionInContext,
 		ASTNode const* _node = nullptr,
@@ -91,11 +96,7 @@ public:
 	smtutil::Expression operator()(std::vector<smtutil::Expression> const& _args) const;
 
 	/// @returns the function declaration of the predicate.
-	smtutil::Expression functor() const;
-	/// @returns the function declaration of the predicate with index _idx.
-	smtutil::Expression functor(unsigned _idx) const;
-	/// Increases the index of the function declaration of the predicate.
-	void newFunctor();
+	smtutil::Expression const& functor() const;
 
 	/// @returns the program node this predicate represents.
 	ASTNode const* programNode() const;
@@ -204,8 +205,7 @@ private:
 	/// @returns index at which state variables values start in args list
 	size_t firstStateVarIndex() const { return m_bytesConcatFunctionInContext ? 8 : 7; }
 
-	/// The actual SMT expression.
-	smt::SymbolicFunctionVariable m_predicate;
+	smtutil::Expression m_functor;
 
 	/// The type of this predicate.
 	PredicateType m_type;

@@ -4,7 +4,7 @@ contract C {
 	bool guard = true;
 
 	function dec() public returns (uint) {
-		if (guard) return 0;
+		require(!guard);
 		--v;
 		return v;
 	}
@@ -21,4 +21,4 @@ contract C {
 // SMTIgnoreCex: no
 // SMTTargets: underflow
 // ----
-// Warning 3944: (109-112): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\nv = 0, guard = false\n = 0\n\nTransaction trace:\nC.constructor()\nState: v = 0, guard = true\nC.f()\n    C.dec() -- trusted external call
+// Warning 3944: (105-108): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\nv = 0, guard = false\n = 0\n\nTransaction trace:\nC.constructor()\nState: v = 0, guard = true\nC.f()\n    C.dec() -- trusted external call

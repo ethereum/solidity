@@ -1657,11 +1657,6 @@ smtutil::Expression CHC::error()
 	return (*m_errorPredicate)({});
 }
 
-smtutil::Expression CHC::error(unsigned _idx)
-{
-	return m_errorPredicate->functor(_idx)({});
-}
-
 smtutil::Expression CHC::initializer(ContractDefinition const& _contract, ContractDefinition const& _contractContext)
 {
 	return predicate(*m_contractInitializers.at(&_contractContext).at(&_contract));

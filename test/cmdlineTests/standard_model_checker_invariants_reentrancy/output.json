@@ -33,14 +33,14 @@
             "component": "general",
             "errorCode": "1180",
             "formattedMessage": "Info: Reentrancy property(ies) for A:test:
-(((!(x <= 0) || !(x' >= 1)) && (!(x <= 0) || !(<errorCode> >= 1))) || true)
+(((!(x <= 0) || !(<errorCode> >= 1)) && (!(x <= 0) || !(x' >= 1))) || true)
 <errorCode> = 0 -> no errors
 <errorCode> = 1 -> Assertion failed at assert(x < 10)
 
 
 ",
             "message": "Reentrancy property(ies) for A:test:
-(((!(x <= 0) || !(x' >= 1)) && (!(x <= 0) || !(<errorCode> >= 1))) || true)
+(((!(x <= 0) || !(<errorCode> >= 1)) && (!(x <= 0) || !(x' >= 1))) || true)
 <errorCode> = 0 -> no errors
 <errorCode> = 1 -> Assertion failed at assert(x < 10)
 ",
