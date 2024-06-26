@@ -85,7 +85,7 @@ Json YulControlFlowGraphExporter::exportBlock(CFG::BasicBlock const& _block)
 		// Convert current block to JSON
 		blocksJson.emplace_back(toJson(*_block));
 
-		Json exitBlockJson;
+		Json exitBlockJson = Json::object();
 		exitBlockJson["id"] = "Block" + std::to_string(getBlockId(*_block)) + "Exit";
 		exitBlockJson["instructions"] = Json::array();
 		std::visit(util::GenericVisitor{
@@ -127,7 +127,7 @@ Json YulControlFlowGraphExporter::exportBlock(CFG::BasicBlock const& _block)
 
 Json YulControlFlowGraphExporter::toJson(CFG::BasicBlock const& _block)
 {
-	Json blockJson;
+	Json blockJson = Json::object();
 	blockJson["id"] = "Block" + std::to_string(getBlockId(_block));
 	blockJson["instructions"] = Json::array();
 	for (auto const& operation: _block.operations)
@@ -139,7 +139,7 @@ Json YulControlFlowGraphExporter::toJson(CFG::BasicBlock const& _block)
 
 Json YulControlFlowGraphExporter::toJson(Json& _ret, CFG::Operation const& _operation)
 {
-	Json opJson;
+	Json opJson = Json::object();
 
 	Stack input = _operation.input;
 	std::visit(util::GenericVisitor{

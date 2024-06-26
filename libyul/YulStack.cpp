@@ -397,27 +397,24 @@ Json YulStack::cfgJson() const
 
 	std::function<Json(std::vector<std::shared_ptr<ObjectNode>>)> exportCFGFromSubObjects;
 	exportCFGFromSubObjects = [&](std::vector<std::shared_ptr<ObjectNode>> _subObjects) -> Json {
-		Json subObjectsJson = Json::array();
+		Json subObjectsJson = Json::object();
 		for (std::shared_ptr<ObjectNode> const& subObjectNode: _subObjects)
 			if (Object const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
 			{
-				Json subObjectJson;
-				subObjectJson[subObject->name.str()];
-				subObjectJson["blocks"] = exportCFGFromObject(*subObject);
+				subObjectsJson[subObject->name.str()] = exportCFGFromObject(*subObject);
+				subObjectsJson["type"] = "subObject";
 				if (!subObject->subObjects.empty())
-					subObjectJson["subObjects"] = exportCFGFromSubObjects(subObject->subObjects);
-				subObjectsJson.emplace_back(subObjectJson);
+					subObjectsJson["subObjects"] = exportCFGFromSubObjects(subObject->subObjects);
 			}
 		return subObjectsJson;
 	};
 
 	Object const& object = *m_parserResult.get();
-
-	Json ret;
-	ret["nodeType"] = "YulCFG";
-	ret["object"] = exportCFGFromObject(object);
-	ret["subObjects"] = exportCFGFromSubObjects(object.subObjects);
-	return ret;
+	Json jsonObject = Json::object();
+	jsonObject[object.name.str()] = exportCFGFromObject(object);
+	jsonObject["type"] = "Object";
+	jsonObject["subObjects"] = exportCFGFromSubObjects(object.subObjects);
+	return jsonObject;
 }
 
 std::shared_ptr<Object> YulStack::parserResult() const
