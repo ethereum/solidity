@@ -25,6 +25,7 @@
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
@@ -34,8 +35,8 @@
 
 #include <range/v3/view/transform.hpp>
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 using namespace solidity;
 using namespace solidity::langutil;
@@ -44,21 +45,22 @@ using namespace solidity::yul;
 
 std::string AsmPrinter::operator()(Literal const& _literal)
 {
+	yulAssert(validLiteral(_literal));
+
 	std::string const locationComment = formatDebugData(_literal);
+	std::string const formattedValue = formatLiteral(_literal);
 
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
-		yulAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
-		return locationComment + _literal.value.str() + appendTypeName(_literal.type);
+		return locationComment + formattedValue + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
-		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "Invalid bool literal.");
-		return locationComment + ((_literal.value == "true"_yulstring) ? "true" : "false") + appendTypeName(_literal.type, true);
+		return locationComment + formattedValue + appendTypeName(_literal.type, true);
 	case LiteralKind::String:
 		break;
 	}
 
-	return locationComment + escapeAndQuoteString(_literal.value.str()) + appendTypeName(_literal.type);
+	return locationComment + escapeAndQuoteString(formattedValue) + appendTypeName(_literal.type);
 }
 
 std::string AsmPrinter::operator()(Identifier const& _identifier)

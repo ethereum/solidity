@@ -78,7 +78,7 @@ std::optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expre
 	if (Identifier const* ident = std::get_if<Identifier>(&_expression))
 		return valueIfKnownConstant(ident->name);
 	else if (Literal const* lit = std::get_if<Literal>(&_expression))
-		return valueOfLiteral(*lit);
+		return lit->value.value();
 	else
 		return std::nullopt;
 }
@@ -113,7 +113,7 @@ KnowledgeBase::VariableOffset KnowledgeBase::explore(YulString _var)
 std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const& _value)
 {
 	if (Literal const* literal = std::get_if<Literal>(&_value))
-		return VariableOffset{YulString{}, valueOfLiteral(*literal)};
+		return VariableOffset{YulString{}, literal->value.value()};
 	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
 		return explore(identifier->name);
 	else if (FunctionCall const* f = std::get_if<FunctionCall>(&_value))

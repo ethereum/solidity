@@ -61,9 +61,9 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	std::map<YulString, AssignedValue> values;
 	for (auto const& [name, expression]: ssaValues.values())
 		values[name] = AssignedValue{expression, {}};
-	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
-	Expression const oneLiteral{Literal{{}, LiteralKind::Number, YulString{"1"}, {}}};
-	Expression const thirtyTwoLiteral{Literal{{}, LiteralKind::Number, YulString{"32"}, {}}};
+	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{0}), {}}};
+	Expression const oneLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{1}), {}}};
+	Expression const thirtyTwoLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{32}), {}}};
 	values[YulString{zero}] = AssignedValue{&zeroLiteral, {}};
 	values[YulString{one}] = AssignedValue{&oneLiteral, {}};
 	values[YulString{thirtyTwo}] = AssignedValue{&thirtyTwoLiteral, {}};

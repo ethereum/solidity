@@ -71,7 +71,7 @@ size_t CodeWeights::costOf(Expression const& _expression) const
 	else if (Literal const* literal = std::get_if<Literal>(&_expression))
 	{
 		// Avoid strings because they could be longer than 32 bytes.
-		if (literal->kind != LiteralKind::String && valueOfLiteral(*literal) == 0)
+		if (literal->kind != LiteralKind::String && literal->value.value() == 0)
 			return literalZeroCost;
 		else
 			return literalCost;
@@ -155,15 +155,15 @@ void CodeCost::operator()(Literal const& _literal)
 	case LiteralKind::Boolean:
 		break;
 	case LiteralKind::Number:
-		for (u256 n = u256(_literal.value.str()); n >= 0x100; n >>= 8)
+		for (u256 n = _literal.value.value(); n >= 0x100; n >>= 8)
 			cost++;
-		if (valueOfLiteral(_literal) == 0)
+		if (_literal.value.value() == 0)
 			if (auto evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 				if (evmDialect->evmVersion().hasPush0())
 					--m_cost;
 		break;
 	case LiteralKind::String:
-		cost = _literal.value.str().size();
+		cost = formatLiteral(_literal).size();
 		break;
 	}
 

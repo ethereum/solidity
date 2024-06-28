@@ -59,7 +59,7 @@ void ConditionalUnsimplifier::operator()(Switch& _switch)
 					assignment.variableNames.size() == 1 &&
 					assignment.variableNames.front().name == expr &&
 					std::holds_alternative<Literal>(*assignment.value) &&
-					valueOfLiteral(std::get<Literal>(*assignment.value)) == valueOfLiteral(*_case.value)
+					std::get<Literal>(*assignment.value).value == _case.value->value
 				)
 					_case.body.statements.erase(_case.body.statements.begin());
 			}
@@ -95,7 +95,7 @@ void ConditionalUnsimplifier::operator()(Block& _block)
 							assignment.variableNames.size() == 1 &&
 							assignment.variableNames.front().name == condition &&
 							std::holds_alternative<Literal>(*assignment.value) &&
-							valueOfLiteral(std::get<Literal>(*assignment.value)) == 0
+							std::get<Literal>(*assignment.value).value.value() == 0
 						)
 							return {make_vector<Statement>(std::move(_stmt1))};
 					}

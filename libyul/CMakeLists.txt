@@ -5,6 +5,7 @@ add_library(yul
 	AsmAnalysis.h
 	AsmAnalysisInfo.h
 	AST.h
+	AST.cpp
 	ASTForward.h
 	AsmJsonConverter.h
 	AsmJsonConverter.cpp

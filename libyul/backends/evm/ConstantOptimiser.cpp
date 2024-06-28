@@ -81,7 +81,7 @@ struct MiniEVMInterpreter
 	}
 	u256 operator()(Literal const& _literal)
 	{
-		return valueOfLiteral(_literal);
+		return _literal.value.value();
 	}
 	u256 operator()(Identifier const&) { yulAssert(false, ""); }
 
@@ -100,7 +100,7 @@ void ConstantOptimiser::visit(Expression& _e)
 		if (
 			Expression const* repr =
 				RepresentationFinder(m_dialect, m_meter, debugDataOf(_e), m_cache)
-				.tryFindRepresentation(valueOfLiteral(literal))
+				.tryFindRepresentation(literal.value.value())
 		)
 			_e = ASTCopier{}.translate(*repr);
 	}
@@ -179,7 +179,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 Representation RepresentationFinder::represent(u256 const& _value) const
 {
 	Representation repr;
-	repr.expression = std::make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
+	repr.expression = std::make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, LiteralValue{_value, formatNumber(_value)}, {}});
 	repr.cost = m_meter.costs(*repr.expression);
 	return repr;
 }

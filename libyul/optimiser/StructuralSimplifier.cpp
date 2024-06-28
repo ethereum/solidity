@@ -36,7 +36,7 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 
 	for (auto& _case: _switchStmt.cases)
 	{
-		if (_case.value && valueOfLiteral(*_case.value) == _constExprVal)
+		if (_case.value && _case.value->value.value() == _constExprVal)
 		{
 			matchingCaseBlock = &_case.body;
 			break;
@@ -57,9 +57,9 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 std::optional<u256> hasLiteralValue(Expression const& _expression)
 {
 	if (std::holds_alternative<Literal>(_expression))
-		return valueOfLiteral(std::get<Literal>(_expression));
+		return std::get<Literal>(_expression).value.value();
 	else
-		return std::optional<u256>();
+		return std::nullopt;
 }
 
 bool expressionAlwaysTrue(Expression const& _expression)

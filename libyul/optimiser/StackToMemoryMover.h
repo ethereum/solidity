@@ -165,13 +165,13 @@ private:
 
 		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
-		std::optional<YulString> operator()(YulString _variable) const;
+		std::optional<LiteralValue> operator()(YulString const& _variable) const;
 		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
-		std::optional<YulString> operator()(TypedName const& _variable) const;
+		std::optional<LiteralValue> operator()(TypedName const& _variable) const;
 		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
-		std::optional<YulString> operator()(Identifier const& _variable) const;
+		std::optional<LiteralValue> operator()(Identifier const& _variable) const;
 
 	private:
 		u256 m_reservedMemory;
