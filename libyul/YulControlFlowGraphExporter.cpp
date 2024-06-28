@@ -16,8 +16,9 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/YulControlFlowGraphExporter.h>
 #include <libyul/backends/evm/StackHelpers.h>
+#include <libyul/Utilities.h>
+#include <libyul/YulControlFlowGraphExporter.h>
 
 #include <libsolutil/Algorithms.h>
 
@@ -171,7 +172,7 @@ Json YulControlFlowGraphExporter::toJson(Json& _ret, CFG::Operation const& _oper
 					{
 						// The function call argument at index i must be a literal if builtin.literalArguments[i] is not nullopt
 						yulAssert(std::holds_alternative<Literal>(functionCallArgs[i]));
-						builtinArgsJson.push_back(std::get<Literal>(functionCallArgs[i]).value.str());
+						builtinArgsJson.push_back(formatLiteral(std::get<Literal>(functionCallArgs[i])));
 					}
 				}
 			}
