@@ -27,7 +27,9 @@
 #include <libyul/Exceptions.h>
 #include <libyul/Scope.h>
 
+#include <libsolutil/Dominator.h>
 #include <libsolutil/Numeric.h>
+#include <libsolutil/Visitor.h>
 
 #include <functional>
 #include <list>
@@ -173,6 +175,8 @@ struct CFG
 	/// Maintains a list of entry blocks and a typed exit.
 	struct BasicBlock
 	{
+		using Id = size_t;
+
 		struct MainExit {};
 		struct ConditionalJump
 		{
@@ -194,6 +198,9 @@ struct CFG
 			CFG::FunctionInfo* info = nullptr;
 		};
 		struct Terminated {};
+
+		// Unique block id
+		Id const id = 0;
 		langutil::DebugData::ConstPtr debugData;
 		std::vector<BasicBlock*> entries;
 		std::vector<Operation> operations;
@@ -220,6 +227,26 @@ struct CFG
 		bool canContinue = true;
 	};
 
+	struct ForEachVertexSuccessorCFG
+	{
+		template <typename Callable>
+		void operator()(BasicBlock const& _block, Callable&& _callable) const
+		{
+			std::visit(util::GenericVisitor{
+				[&](BasicBlock::Jump const& _jump) {
+					_callable(*_jump.target);
+				},
+				[&](BasicBlock::ConditionalJump const& _jump) {
+					_callable(*_jump.zero);
+					_callable(*_jump.nonZero);
+				},
+				[&](BasicBlock::FunctionReturn const&) {},
+				[&](BasicBlock::Terminated const&) {},
+				[](BasicBlock::MainExit const&) {},
+			}, _block.exit);
+		}
+	};
+
 	/// The main entry point, i.e. the start of the outermost Yul block.
 	BasicBlock* entry = nullptr;
 	/// Subgraphs for functions.
@@ -228,6 +255,7 @@ struct CFG
 	std::list<Scope::Function const*> functions;
 
 	/// Container for blocks for explicit ownership.
+	/// NOTE: Not all blocks in this list are expected to be reachable.
 	std::list<BasicBlock> blocks;
 	/// Container for generated variables for explicit ownership.
 	/// Ghost variables are generated to store switch conditions when transforming the control flow
@@ -240,8 +268,12 @@ struct CFG
 
 	BasicBlock& makeBlock(langutil::DebugData::ConstPtr _debugData)
 	{
-		return blocks.emplace_back(BasicBlock{std::move(_debugData), {}, {}});
+		size_t const id = blocks.size();
+		BasicBlock& newBlock = blocks.emplace_back(BasicBlock{id, std::move(_debugData), {}, {}});
+		return newBlock;
 	}
 };
+
+typedef util::DominatorFinder<CFG::BasicBlock, CFG::ForEachVertexSuccessorCFG> CFGDominatorFinder;
 
 }

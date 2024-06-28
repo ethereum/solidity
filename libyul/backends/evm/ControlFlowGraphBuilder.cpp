@@ -26,6 +26,7 @@
 #include <libyul/ControlFlowSideEffectsCollector.h>
 
 #include <libsolutil/cxx20.h>
+#include <libsolutil/Dominator.h>
 #include <libsolutil/Visitor.h>
 #include <libsolutil/Algorithms.h>
 
@@ -48,6 +49,30 @@ using namespace solidity::yul;
 
 namespace
 {
+
+size_t countBlocksOfSubGraph(CFG::BasicBlock const* _block)
+{
+	std::set<CFG::BasicBlock const*> visited;
+	size_t count = 0;
+	util::BreadthFirstSearch<CFG::BasicBlock const*> bfs{{_block}};
+	bfs.run([&](CFG::BasicBlock const* _block, auto&& _addChild) {
+		count++;
+		visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::Jump const& _jump) {
+				_addChild(_jump.target);
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _jump) {
+				_addChild(_jump.zero);
+				_addChild(_jump.nonZero);
+			},
+			[](CFG::BasicBlock::FunctionReturn const&) {},
+			[](CFG::BasicBlock::Terminated const&) {},
+			[](CFG::BasicBlock::MainExit const&) {}
+		}, _block->exit);
+	});
+	return count;
+}
+
 /// Removes edges to blocks that are not reachable.
 void cleanUnreachable(CFG& _cfg)
 {
@@ -220,6 +245,15 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 	builder(_block);
 
 	cleanUnreachable(*result);
+
+	auto n = countBlocksOfSubGraph(result->entry);
+	CFGDominatorFinder findDominators(*result->entry, n);
+
+	for (auto& functionInfo: result->functionInfo | ranges::views::values)
+	{
+		auto n = countBlocksOfSubGraph(functionInfo.entry);
+		CFGDominatorFinder findDominators(*functionInfo.entry, n);
+	}
 	markRecursiveCalls(*result);
 	markStartsOfSubGraphs(*result);
 	markNeedsCleanStack(*result);
@@ -558,6 +592,8 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 	if (!canContinue)
 	{
 		m_currentBlock->exit = CFG::BasicBlock::Terminated{};
+		// We add a new block after a terminating one is created so there is always a current block to work on.
+		// It won't be reachable and cleanUnreachable should effectively remove it from the graph.
 		m_currentBlock = &m_graph.makeBlock(debugDataOf(*m_currentBlock));
 	}
 	return *output;
