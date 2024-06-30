@@ -120,7 +120,12 @@ void YulStack::optimize()
 			return;
 
 		m_stackState = Parsed;
-		optimize(*m_parserResult, true);
+		optimize(
+			*m_parserResult,
+			true, // _isCreation
+			languageToDialect(m_language, m_evmVersion),
+			m_optimiserSettings
+		);
 		yulAssert(analyzeParsed(), "Invalid source code after optimization.");
 	}
 	catch (UnimplementedFeatureError const& _error)
@@ -191,7 +196,12 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize, m_eofVersion);
 }
 
-void YulStack::optimize(Object& _object, bool _isCreation)
+void YulStack::optimize(
+	Object& _object,
+	bool _isCreation,
+	Dialect const& _dialect,
+	OptimiserSettings const& _optimiserSettings
+)
 {
 	yulAssert(_object.code, "");
 	yulAssert(_object.analysisInfo, "");
@@ -199,48 +209,47 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 		{
 			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
-			optimize(*subObject, isCreation);
+			optimize(*subObject, isCreation, _dialect, _optimiserSettings);
 		}
 
-	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
 	std::unique_ptr<GasMeter> meter;
-	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
-		meter = std::make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
+		meter = std::make_unique<GasMeter>(*evmDialect, _isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 
 	auto [optimizeStackAllocation, yulOptimiserSteps, yulOptimiserCleanupSteps] = [&]() -> std::tuple<bool, std::string, std::string>
 	{
-		if (!m_optimiserSettings.runYulOptimiser)
+		if (!_optimiserSettings.runYulOptimiser)
 		{
 			// Yul optimizer disabled, but empty sequence (:) explicitly provided
-			if (OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps))
+			if (OptimiserSuite::isEmptyOptimizerSequence(_optimiserSettings.yulOptimiserSteps + ":" + _optimiserSettings.yulOptimiserCleanupSteps))
 				return std::make_tuple(true, "", "");
 			// Yul optimizer disabled, and no sequence explicitly provided (assumes default sequence)
 			else
 			{
 				yulAssert(
-					m_optimiserSettings.yulOptimiserSteps == OptimiserSettings::DefaultYulOptimiserSteps &&
-					m_optimiserSettings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps
+					_optimiserSettings.yulOptimiserSteps == OptimiserSettings::DefaultYulOptimiserSteps &&
+					_optimiserSettings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps
 				);
 				return std::make_tuple(true, "u", "");
 			}
 
 		}
 		return std::make_tuple(
-			m_optimiserSettings.optimizeStackAllocation,
-			m_optimiserSettings.yulOptimiserSteps,
-			m_optimiserSettings.yulOptimiserCleanupSteps
+			_optimiserSettings.optimizeStackAllocation,
+			_optimiserSettings.yulOptimiserSteps,
+			_optimiserSettings.yulOptimiserCleanupSteps
 		);
 	}();
 
 	OptimiserSuite::run(
-		dialect,
+		_dialect,
 		meter.get(),
 		_object,
 		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
 		optimizeStackAllocation,
 		yulOptimiserSteps,
 		yulOptimiserCleanupSteps,
-		_isCreation ? std::nullopt : std::make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
+		_isCreation ? std::nullopt : std::make_optional(_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
 	);
 }

@@ -438,6 +438,9 @@ private:
 	// TMP: docstring
 	void parseAndAnalyzeYul(ContractDefinition const& _contract);
 
+	// TMP: docstring
+	void optimizeYul(ContractDefinition const& _contract);
+
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
 	void assembleYul(

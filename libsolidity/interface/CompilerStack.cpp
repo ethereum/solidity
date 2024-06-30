@@ -1392,6 +1392,22 @@ void CompilerStack::parseAndAnalyzeYul(ContractDefinition const& _contract)
 	contractInfo.yulIRObjectWithoutDependencies = std::move(creationObject);
 }
 
+void CompilerStack::optimizeYul(ContractDefinition const& _contract)
+{
+	solAssert(m_stackState >= AnalysisSuccessful);
+
+	Contract& contractInfo = m_contracts.at(_contract.fullyQualifiedName());
+	solAssert(contractInfo.yulIRObjectWithoutDependencies);
+
+	YulStack::optimize(
+		// TMP: Do not do it in place?
+		*contractInfo.yulIRObjectWithoutDependencies,
+		true, // _isCreation
+		EVMDialect::strictAssemblyForEVMObjects(m_evmVersion),
+		m_optimiserSettings
+	);
+}
+
 namespace
 {
 bool onlySafeExperimentalFeaturesActivated(std::set<ExperimentalFeature> const& features)

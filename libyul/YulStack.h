@@ -109,6 +109,13 @@ public:
 	/// If the settings (see constructor) disabled the optimizer, nothing is done here.
 	void optimize();
 
+	static void optimize(
+		Object& _object,
+		bool _isCreation,
+		Dialect const& _dialect,
+		frontend::OptimiserSettings const& _optimiserSettings
+	);
+
 	/// Run the assembly step (should only be called after parseAndAnalyze).
 	MachineAssemblyObject assemble(Machine _machine);
 
@@ -146,8 +153,6 @@ private:
 	bool analyzeParsed(yul::Object& _object);
 
 	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
-
-	void optimize(yul::Object& _object, bool _isCreation);
 
 	void reportUnimplementedFeatureError(langutil::UnimplementedFeatureError const& _error);
 
