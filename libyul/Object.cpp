@@ -92,6 +92,22 @@ std::string ObjectDebugData::formatUseSrcComment() const
 	return "/// @use-src " + serializedSourceNames + "\n";
 }
 
+void Object::addSubNode(std::shared_ptr<ObjectNode> _subNode)
+{
+	yulAssert(_subNode);
+
+	size_t index = subObjects.size();
+	subIndexByName[_subNode->name] = index;
+
+	if (auto* subObject = dynamic_cast<Object*>(_subNode.get()))
+	{
+		yulAssert(subObject->subId == std::numeric_limits<size_t>::max());
+		subObject->subId = index;
+	}
+
+	subObjects.push_back(std::move(_subNode));
+}
+
 Json Object::toJson() const
 {
 	yulAssert(code, "No code");
