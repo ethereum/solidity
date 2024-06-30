@@ -67,6 +67,7 @@
 #include <libstdlib/stdlib.h>
 
 #include <libyul/YulString.h>
+#include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/YulStack.h>
@@ -1283,6 +1284,99 @@ void CompilerStack::annotateInternalFunctionIDs()
 							solAssert(contract->annotation().internalFunctionIDs.count(function) != 0);
 		}
 	}
+}
+
+namespace
+{
+
+// TMP: better name?
+std::shared_ptr<Object> parseAndAnalyzeYulSourceWithoutDependencies(
+	std::string const& _name,
+	std::string const& _sourceCode,
+	std::shared_ptr<ObjectDebugData const> _debugData,
+	std::set<YulString> _fullyQualifiedDataNames,
+	EVMVersion const& _evmVersion
+)
+{
+	ErrorList errors;
+	ErrorReporter errorReporter(errors);
+	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(_evmVersion);
+	CharStream charStream(_sourceCode, ""); // TMP: source name
+	auto const scanner = std::make_shared<Scanner>(charStream);
+
+	auto const debugMessageWithSourceAndErrors = [&]() {
+		return fmt::format(
+			"Invalid IR generated:\n{}\n\n"
+			"Errors reported during parsing and analysis of IR object {}:\n{}\n",
+			_sourceCode,
+			_name,
+			langutil::SourceReferenceFormatter::formatErrorInformation(
+				errorReporter.errors(),
+				SingletonCharStreamProvider(charStream)
+			)
+		);
+	};
+
+	ObjectParser objectParser(errorReporter, dialect);
+	std::shared_ptr<Object> object = objectParser.parse(scanner, false /* _reuseScanner */);
+	solAssert(object && errorReporter.errors().empty(), debugMessageWithSourceAndErrors());
+	// TMP: other asserts?
+
+	// The @use-src annotation is not supposed to appear in the code we get from the codegen.
+	solAssert(object->debugData && !object->debugData->sourceNames.has_value());
+	solAssert(object->name == "object"_yulstring);
+	object->debugData = std::move(_debugData);
+	object->name = YulString{_name};
+
+	object->analysisInfo = std::make_shared<AsmAnalysisInfo>();
+	AsmAnalyzer asmAnalyzer(
+		*object->analysisInfo,
+		errorReporter,
+		dialect,
+		{}, // _resolver
+		std::move(_fullyQualifiedDataNames)
+	);
+
+	bool analysisSuccessful = asmAnalyzer.analyze(*object->code);
+	solAssert(analysisSuccessful, debugMessageWithSourceAndErrors());
+
+	return object;
+}
+
+}
+
+void CompilerStack::parseAndAnalyzeYul(ContractDefinition const& _contract)
+{
+	solAssert(m_stackState >= AnalysisSuccessful);
+
+	Contract& contractInfo = m_contracts.at(_contract.fullyQualifiedName());
+	solAssert(contractInfo.yulIRGeneratorOutput.has_value());
+	solAssert(contractInfo.yulIRGeneratorOutput->isValid());
+	IRGeneratorOutput::Creation creation = contractInfo.yulIRGeneratorOutput->creation;
+	IRGeneratorOutput::Deployed deployed = contractInfo.yulIRGeneratorOutput->deployed;
+
+	std::shared_ptr<Object> creationObject = parseAndAnalyzeYulSourceWithoutDependencies(
+		creation.name,
+		creation.code,
+		creation.debugData,
+		{}, // TMP: This should probably include data names from dependencies
+		m_evmVersion
+	);
+	std::shared_ptr<Object> deployedObject = parseAndAnalyzeYulSourceWithoutDependencies(
+		deployed.name,
+		deployed.code,
+		deployed.debugData,
+		{}, // TMP: This should probably include data names from dependencies
+		m_evmVersion
+	);
+	solAssert(creationObject && creationObject->subObjects.empty());
+	solAssert(deployedObject && deployedObject->subObjects.empty());
+
+	creationObject->addSubNode(deployedObject);
+	if (deployed.metadata)
+		deployedObject->addSubNode(deployed.metadata);
+
+	contractInfo.yulIRObjectWithoutDependencies = std::move(creationObject);
 }
 
 namespace

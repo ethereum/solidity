@@ -389,6 +389,7 @@ private:
 		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
 		std::optional<IRGeneratorOutput> yulIRGeneratorOutput; ///< Yul IR code of the current contract only (without dependencies).
+		std::shared_ptr<yul::Object> yulIRObjectWithoutDependencies; // TMP: docstring // TMP: It may be optimized
 		std::string yulIR; ///< Yul IR code.
 		std::string yulIROptimized; ///< Optimized Yul IR code.
 		Json yulIRAst; ///< JSON AST of Yul IR code.
@@ -433,6 +434,9 @@ private:
 	/// Perform the analysis steps of experimental language mode.
 	/// @returns false on error.
 	bool analyzeExperimental();
+
+	// TMP: docstring
+	void parseAndAnalyzeYul(ContractDefinition const& _contract);
 
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
