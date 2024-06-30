@@ -44,6 +44,7 @@ using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::yul;
 using namespace solidity::langutil;
+using namespace solidity::util;
 
 namespace
 {
@@ -257,8 +258,7 @@ MachineAssemblyObject YulStack::assemble(Machine _machine)
 	case Machine::EVM:
 		return assembleWithDeployed().first;
 	}
-	// unreachable
-	return MachineAssemblyObject();
+	unreachable();
 }
 
 std::pair<MachineAssemblyObject, MachineAssemblyObject>
