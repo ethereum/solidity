@@ -130,6 +130,8 @@ Json Object::toJson() const
 
 std::set<YulString> Object::qualifiedDataNames() const
 {
+	// NOTE: The implementation here should be kept in sync with IRGeneratorOutput::qualifiedDataNames()
+
 	std::set<YulString> qualifiedNames =
 		name.empty() || util::contains(name.str(), '.') ?
 		std::set<YulString>{} :

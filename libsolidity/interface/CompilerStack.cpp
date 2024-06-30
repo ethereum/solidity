@@ -89,8 +89,10 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
 
 #include <fmt/format.h>
 
@@ -1355,18 +1357,29 @@ void CompilerStack::parseAndAnalyzeYul(ContractDefinition const& _contract)
 	IRGeneratorOutput::Creation creation = contractInfo.yulIRGeneratorOutput->creation;
 	IRGeneratorOutput::Deployed deployed = contractInfo.yulIRGeneratorOutput->deployed;
 
+	auto const resolveContract = [this](ContractDefinition const* _contractToResolve) -> IRGeneratorOutput const& {
+		Contract const& contractInfoToResolve = m_contracts.at(_contractToResolve->fullyQualifiedName());
+		solAssert(contractInfoToResolve.yulIRGeneratorOutput.has_value());
+		return *contractInfoToResolve.yulIRGeneratorOutput;
+	};
+
+	static auto const toString = [](std::string _string) { return YulString{_string}; };
+
+	std::set<std::string> creationDataNames = contractInfo.yulIRGeneratorOutput->qualifiedDataNames(resolveContract);
+	std::set<std::string> deployedDataNames = deployed.qualifiedDataNames(resolveContract);
+
 	std::shared_ptr<Object> creationObject = parseAndAnalyzeYulSourceWithoutDependencies(
 		creation.name,
 		creation.code,
 		creation.debugData,
-		{}, // TMP: This should probably include data names from dependencies
+		creationDataNames | ranges::views::transform(toString) | ranges::to<std::set>,
 		m_evmVersion
 	);
 	std::shared_ptr<Object> deployedObject = parseAndAnalyzeYulSourceWithoutDependencies(
 		deployed.name,
 		deployed.code,
 		deployed.debugData,
-		{}, // TMP: This should probably include data names from dependencies
+		deployedDataNames | ranges::views::transform(toString) | ranges::to<std::set>,
 		m_evmVersion
 	);
 	solAssert(creationObject && creationObject->subObjects.empty());

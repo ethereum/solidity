@@ -51,6 +51,9 @@ struct IRGeneratorOutput
 		std::shared_ptr<yul::ObjectDebugData const> debugData;
 		std::set<ContractDefinition const*, ASTNode::CompareByID> dependencies;
 		std::shared_ptr<yul::Data> metadata;
+
+		// TMP: docstring
+		std::set<std::string> qualifiedDataNames(DependencyResolver const& _dependencyResolver) const;
 	} deployed;
 
 	bool isValid() const;
@@ -62,6 +65,12 @@ struct IRGeneratorOutput
 	///     corresponding to every dependency contract in the hierarchy, including those found
 	///     (recursively) in the @a IRGeneratorOutput instances returned by the function.
 	std::string toPrettyString(DependencyResolver const& _dependencyResolver) const;
+
+	// TMP: docstring
+	/// @returns the set of names of data objects accessible from within the code of
+	/// this object, including the name of object itself
+	/// Handles all names containing dots as reserved identifiers, not accessible as data.
+	std::set<std::string> qualifiedDataNames(DependencyResolver const& _dependencyResolver) const;
 
 private:
 	/// Implementation detail of @a toPrettyString(). The only difference is that the output is not

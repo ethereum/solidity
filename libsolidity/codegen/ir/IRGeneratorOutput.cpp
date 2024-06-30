@@ -33,6 +33,53 @@ using namespace solidity::frontend;
 using namespace solidity::util;
 using namespace solidity::yul;
 
+namespace
+{
+
+std::set<std::string> qualifiedDataNamesForObject(
+	std::string const& _name,
+	std::set<ContractDefinition const*, ASTNode::CompareByID> const& _dependencies,
+	IRGeneratorOutput::DependencyResolver const& _dependencyResolver
+)
+{
+	// NOTE: The implementation here should be kept in sync with Object::qualifiedDataNames()
+
+	// ASSUMPTION: Codegen never creates Data objects other than metadata.
+	// ASSUMPTION: Codegen never uses reserved identifiers to name objects generated from contracts.
+	solAssert(!contains(_name, '.'));
+	solAssert(!_name.empty());
+	std::set<std::string> qualifiedNames{{_name}};
+
+	for (IRGeneratorOutput const& subOutput: _dependencies | ranges::views::transform(_dependencyResolver))
+	{
+		solAssert(!contains(subOutput.creation.name, '.'));
+		auto [_, subInserted] = qualifiedNames.insert(subOutput.creation.name);
+		solAssert(subInserted);
+
+		for (std::string subSubDataName: subOutput.qualifiedDataNames(_dependencyResolver))
+			if (subSubDataName != subOutput.creation.name)
+			{
+				auto [_, subSubInserted] = qualifiedNames.insert(subOutput.creation.name + "." + subSubDataName);
+				solAssert(subSubInserted);
+			}
+	}
+
+	solAssert(!contains(qualifiedNames, ""));
+	return qualifiedNames;
+}
+
+}
+
+std::set<std::string> IRGeneratorOutput::Deployed::qualifiedDataNames(DependencyResolver const& _dependencyResolver) const
+{
+	// ASSUMPTION: metadata name is a reserved identifier (i.e. should not be accessible as data).
+	// If this ever changes, the implementation here will need to be updated.
+	if (metadata)
+		solAssert(contains(metadata->name.str(), '.'));
+
+	return qualifiedDataNamesForObject(name, dependencies, _dependencyResolver);
+}
+
 bool IRGeneratorOutput::isValid() const
 {
 	static auto const isNull = [](ContractDefinition const* _contract) -> bool { return !_contract; };
@@ -51,6 +98,23 @@ bool IRGeneratorOutput::isValid() const
 std::string IRGeneratorOutput::toPrettyString(DependencyResolver const& _dependencyResolver) const
 {
 	return yul::reindent(toString(_dependencyResolver));
+}
+
+std::set<std::string> IRGeneratorOutput::qualifiedDataNames(DependencyResolver const& _dependencyResolver) const
+{
+	using ranges::views::transform;
+
+	solAssert(isValid());
+
+	auto const prefixWithCreationName = [this](std::string const& _dataName) {
+		return creation.name + '.' + _dataName;
+	};
+
+	std::set<std::string> deployedNames = deployed.qualifiedDataNames(_dependencyResolver);
+	return
+		qualifiedDataNamesForObject(creation.name, creation.dependencies, _dependencyResolver) +
+		std::set<std::string>{deployed.name} +
+		(deployedNames | transform(prefixWithCreationName));
 }
 
 std::string IRGeneratorOutput::toString(DependencyResolver const& _dependencyResolver) const
