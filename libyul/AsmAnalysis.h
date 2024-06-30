@@ -61,13 +61,16 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
-		std::set<YulString> _dataNames = {}
+		std::set<YulString> _dataNames = {},
+		// TMP: Should I instead store unlinked references in the object?
+		bool _ignoreMissingData = false
 	):
 		m_resolver(std::move(_resolver)),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
 		m_dialect(_dialect),
-		m_dataNames(std::move(_dataNames))
+		m_dataNames(std::move(_dataNames)),
+		m_ignoreMissingData(_ignoreMissingData)
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			m_evmVersion = evmDialect->evmVersion();
@@ -77,7 +80,7 @@ public:
 
 	/// Performs analysis on the outermost code of the given object and returns the analysis info.
 	/// Asserts on failure.
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object, bool _ignoreMissingData = false);
 
 	std::vector<YulString> operator()(Literal const& _literal);
 	std::vector<YulString> operator()(Identifier const&);
@@ -132,6 +135,7 @@ private:
 	ForLoop const* m_currentForLoop = nullptr;
 	/// Worst side effects encountered during analysis (including within defined functions).
 	SideEffects m_sideEffects;
+	bool m_ignoreMissingData{};
 };
 
 }

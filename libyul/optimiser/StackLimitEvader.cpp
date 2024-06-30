@@ -129,7 +129,7 @@ void StackLimitEvader::run(
 	);
 	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _object);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _object, true /* _ignoreMissingData */);
 		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, *_object.code);
 		run(_context, _object, StackLayoutGenerator::reportStackTooDeep(*cfg));
 	}

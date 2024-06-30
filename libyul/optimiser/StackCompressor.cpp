@@ -256,7 +256,7 @@ bool StackCompressor::run(
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, *_object.code);
 	if (usesOptimizedCodeGenerator)
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object, true /* _ignoreMissingData */);
 		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, *_object.code);
 		eliminateVariablesOptimizedCodegen(
 			_dialect,

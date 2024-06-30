@@ -221,7 +221,7 @@ void OptimiserSuite::run(
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
 
-	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
+	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object, true /* _ignoreMissingData */);
 }
 
 namespace

@@ -84,7 +84,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	return watcher.ok();
 }
 
-AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
+AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object, bool _ignoreMissingData)
 {
 	ErrorList errorList;
 	langutil::ErrorReporter errors(errorList);
@@ -94,7 +94,8 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 		errors,
 		_dialect,
 		{},
-		_object.qualifiedDataNames()
+		_object.qualifiedDataNames(),
+		_ignoreMissingData
 	).analyze(*_object.code);
 	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;
@@ -428,7 +429,7 @@ std::vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				if (functionName == "datasize" || functionName == "dataoffset")
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
-					if (!m_dataNames.count(YulString(formatLiteral(argumentAsLiteral))))
+					if (!m_ignoreMissingData && !m_dataNames.count(YulString(formatLiteral(argumentAsLiteral))))
 						m_errorReporter.typeError(
 							3517_error,
 							nativeLocationOf(arg),
