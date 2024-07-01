@@ -55,6 +55,11 @@ Editor Integrations
     * `Package for SublimeText - Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
         Solidity syntax highlighting for SublimeText editor.
 
+* Tools for Solidity
+
+    * `Tools for Solidity <https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity>`_
+        An extension for VS Code, powered by Wake Framework, that offers most of the language server features and displays real-time results of vulnerability detectors and compiler warnings/errors in custom UI.
+
 * Vim
 
     * `Vim Solidity by Thesis <https://github.com/thesis/vim-solidity/>`_
@@ -139,6 +144,9 @@ Solidity Tools
 
 * `Universal Mutator <https://github.com/agroce/universalmutator>`_
     A tool for mutation generation, with configurable rules and support for Solidity and Vyper.
+
+* `Wake <https://github.com/Ackee-Blockchain/wake>`_
+    A Python-based Solidity development and testing framework with built-in vulnerability detectors.
 
 Third-Party Solidity Parsers and Grammars
 =========================================
