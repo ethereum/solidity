@@ -28,10 +28,9 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/Common.h>
 #include <libsolutil/Common.h>
 #include <libsolutil/Visitor.h>
-
-#include <range/v3/view/subrange.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -53,7 +52,7 @@ std::optional<int> toInt(std::string const& _value)
 	{
 		return stoi(_value);
 	}
-	catch (...)
+	catch (std::out_of_range const&)
 	{
 		return std::nullopt;
 	}
@@ -193,13 +192,41 @@ std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComme
 	langutil::SourceLocation const& _commentLocation
 )
 {
-	static std::regex const argsRegex = std::regex(
-		R"~~(^(-1|\d+):(-1|\d+):(-1|\d+)(?:\s+|$))~~"  // index and location, e.g.: 1:234:-1
-		R"~~(("(?:[^"\\]|\\.)*"?)?)~~",                // optional code snippet, e.g.: "string memory s = \"abc\";..."
-		std::regex_constants::ECMAScript | std::regex_constants::optimize
-	);
-	std::match_results<std::string_view::const_iterator> match;
-	if (!regex_search(_arguments.cbegin(), _arguments.cend(), match, argsRegex))
+	CharStream argumentStream(std::string(_arguments), "");
+	Scanner scanner(argumentStream, ScannerKind::SpecialComment);
+
+	std::string_view tail{_arguments.substr(_arguments.size())};
+	auto const parseLocationComponent = [](Scanner& _scanner, bool expectTrailingColon) -> std::optional<std::string>
+	{
+		bool negative = false;
+		if (_scanner.currentToken() == Token::Sub)
+		{
+			negative = true;
+			_scanner.next();
+		}
+		if (_scanner.currentToken() != Token::Number)
+			return std::nullopt;
+		if (expectTrailingColon && _scanner.peekNextToken() != Token::Colon)
+			return std::nullopt;
+		if (!isValidDecimal(_scanner.currentLiteral()))
+			return std::nullopt;
+		std::string decimal = (negative ? "-" : "") + _scanner.currentLiteral();
+		_scanner.next();
+		if (expectTrailingColon)
+			_scanner.next();
+		return decimal;
+	};
+	std::optional<std::string> rawSourceIndex = parseLocationComponent(scanner, true);
+	std::optional<std::string> rawStart = parseLocationComponent(scanner, true);
+	std::optional<std::string> rawEnd = parseLocationComponent(scanner, false);
+
+	size_t const snippetStart = static_cast<size_t>(scanner.currentLocation().start);
+	bool const locationScannedSuccessfully = rawSourceIndex && rawStart && rawEnd;
+	bool const locationIsWhitespaceSeparated =
+		scanner.peekNextToken() == Token::EOS ||
+		(snippetStart > 0 && langutil::isWhiteSpace(_arguments[snippetStart - 1]));
+
+	if (!locationScannedSuccessfully || !locationIsWhitespaceSeparated)
 	{
 		m_errorReporter.syntaxError(
 			8387_error,
@@ -209,13 +236,16 @@ std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComme
 		return std::nullopt;
 	}
 
-	solAssert(match.size() == 5, "");
-	std::string_view tail = _arguments.substr(static_cast<size_t>(match.position() + match.length()));
+	// captures error cases `"test` (illegal end quote) and `"test\` (illegal escape sequence / dangling backslash)
+	bool const illegalLiteral = scanner.currentToken() == Token::Illegal && (scanner.currentError() == ScannerError::IllegalStringEndQuote || scanner.currentError() == ScannerError::IllegalEscapeSequence);
+	if (scanner.currentToken() == Token::StringLiteral || illegalLiteral)
+		tail = _arguments.substr(static_cast<size_t>(scanner.currentLocation().end));
+	else
+		tail = _arguments.substr(static_cast<size_t>(scanner.currentLocation().start));
 
-	if (match[4].matched && (
-		!boost::algorithm::ends_with(match[4].str(), "\"") ||
-		boost::algorithm::ends_with(match[4].str(), "\\\"")
-	))
+	// Other scanner errors may occur if there is no string literal which follows
+	// (f.ex. IllegalHexDigit, IllegalCommentTerminator), but these are ignored
+	if (illegalLiteral)
 	{
 		m_errorReporter.syntaxError(
 			1544_error,
@@ -225,11 +255,15 @@ std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComme
 		return {{tail, SourceLocation{}}};
 	}
 
-	std::optional<int> const sourceIndex = toInt(match[1].str());
-	std::optional<int> const start = toInt(match[2].str());
-	std::optional<int> const end = toInt(match[3].str());
+	std::optional<int> const sourceIndex = toInt(*rawSourceIndex);
+	std::optional<int> const start = toInt(*rawStart);
+	std::optional<int> const end = toInt(*rawEnd);
 
-	if (!sourceIndex.has_value() || !start.has_value() || !end.has_value())
+	if (
+		!sourceIndex.has_value() || *sourceIndex < -1 ||
+		!start.has_value() || *start < -1 ||
+		!end.has_value() || *end < -1
+	)
 		m_errorReporter.syntaxError(
 			6367_error,
 			_commentLocation,
@@ -237,8 +271,8 @@ std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComme
 			"Expected non-negative integer values or -1 for source index and location."
 		);
 	else if (sourceIndex == -1)
-		return {{tail, SourceLocation{start.value(), end.value(), nullptr}}};
-	else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(sourceIndex.value()))))
+		return {{tail, SourceLocation{*start, *end, nullptr}}};
+	else if (!(sourceIndex >= 0 && m_sourceNames->count(static_cast<unsigned>(*sourceIndex))))
 		m_errorReporter.syntaxError(
 			2674_error,
 			_commentLocation,
@@ -246,9 +280,9 @@ std::optional<std::pair<std::string_view, SourceLocation>> Parser::parseSrcComme
 		);
 	else
 	{
-		std::shared_ptr<std::string const> sourceName = m_sourceNames->at(static_cast<unsigned>(sourceIndex.value()));
+		std::shared_ptr<std::string const> sourceName = m_sourceNames->at(static_cast<unsigned>(*sourceIndex));
 		solAssert(sourceName, "");
-		return {{tail, SourceLocation{start.value(), end.value(), std::move(sourceName)}}};
+		return {{tail, SourceLocation{*start, *end, std::move(sourceName)}}};
 	}
 	return {{tail, SourceLocation{}}};
 }
