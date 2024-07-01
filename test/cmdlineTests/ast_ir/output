@@ -637,24 +637,24 @@ Optimized IR AST:
 {
     "code": {
         "block": {
-            "nativeSrc": "59:790:0",
+            "nativeSrc": "58:315:0",
             "nodeType": "YulBlock",
             "src": "-1:-1:0",
             "statements": [
                 {
-                    "nativeSrc": "59:790:0",
+                    "nativeSrc": "68:299:0",
                     "nodeType": "YulBlock",
                     "src": "-1:-1:0",
                     "statements": [
                         {
-                            "nativeSrc": "122:16:0",
+                            "nativeSrc": "128:27:0",
                             "nodeType": "YulVariableDeclaration",
                             "src": "60:13:0",
                             "value": {
                                 "arguments": [
                                     {
                                         "kind": "number",
-                                        "nativeSrc": "134:3:0",
+                                        "nativeSrc": "150:4:0",
                                         "nodeType": "YulLiteral",
                                         "src": "60:13:0",
                                         "type": "",
@@ -663,18 +663,18 @@ Optimized IR AST:
                                 ],
                                 "functionName": {
                                     "name": "memoryguard",
-                                    "nativeSrc": "122:11:0",
+                                    "nativeSrc": "138:11:0",
                                     "nodeType": "YulIdentifier",
                                     "src": "60:13:0"
                                 },
-                                "nativeSrc": "122:16:0",
+                                "nativeSrc": "138:17:0",
                                 "nodeType": "YulFunctionCall",
                                 "src": "60:13:0"
                             },
                             "variables": [
                                 {
                                     "name": "_1",
-                                    "nativeSrc": "122:16:0",
+                                    "nativeSrc": "132:2:0",
                                     "nodeType": "YulTypedName",
                                     "src": "60:13:0",
                                     "type": ""
@@ -686,7 +686,7 @@ Optimized IR AST:
                                 "arguments": [
                                     {
                                         "kind": "number",
-                                        "nativeSrc": "118:2:0",
+                                        "nativeSrc": "175:2:0",
                                         "nodeType": "YulLiteral",
                                         "src": "60:13:0",
                                         "type": "",
@@ -694,28 +694,28 @@ Optimized IR AST:
                                     },
                                     {
                                         "name": "_1",
-                                        "nativeSrc": "122:16:0",
+                                        "nativeSrc": "179:2:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
                                     }
                                 ],
                                 "functionName": {
                                     "name": "mstore",
-                                    "nativeSrc": "111:6:0",
+                                    "nativeSrc": "168:6:0",
                                     "nodeType": "YulIdentifier",
                                     "src": "60:13:0"
                                 },
-                                "nativeSrc": "111:28:0",
+                                "nativeSrc": "168:14:0",
                                 "nodeType": "YulFunctionCall",
                                 "src": "60:13:0"
                             },
-                            "nativeSrc": "111:28:0",
+                            "nativeSrc": "168:14:0",
                             "nodeType": "YulExpressionStatement",
                             "src": "60:13:0"
                         },
                         {
                             "body": {
-                                "nativeSrc": "163:83:0",
+                                "nativeSrc": "210:16:0",
                                 "nodeType": "YulBlock",
                                 "src": "60:13:0",
                                 "statements": [
@@ -724,7 +724,7 @@ Optimized IR AST:
                                             "arguments": [
                                                 {
                                                     "kind": "number",
-                                                    "nativeSrc": "650:1:0",
+                                                    "nativeSrc": "219:1:0",
                                                     "nodeType": "YulLiteral",
                                                     "src": "60:13:0",
                                                     "type": "",
@@ -732,7 +732,7 @@ Optimized IR AST:
                                                 },
                                                 {
                                                     "kind": "number",
-                                                    "nativeSrc": "650:1:0",
+                                                    "nativeSrc": "222:1:0",
                                                     "nodeType": "YulLiteral",
                                                     "src": "60:13:0",
                                                     "type": "",
@@ -741,15 +741,15 @@ Optimized IR AST:
                                             ],
                                             "functionName": {
                                                 "name": "revert",
-                                                "nativeSrc": "640:6:0",
+                                                "nativeSrc": "212:6:0",
                                                 "nodeType": "YulIdentifier",
                                                 "src": "60:13:0"
                                             },
-                                            "nativeSrc": "640:12:0",
+                                            "nativeSrc": "212:12:0",
                                             "nodeType": "YulFunctionCall",
                                             "src": "60:13:0"
                                         },
-                                        "nativeSrc": "640:12:0",
+                                        "nativeSrc": "212:12:0",
                                         "nodeType": "YulExpressionStatement",
                                         "src": "60:13:0"
                                     }
@@ -759,20 +759,20 @@ Optimized IR AST:
                                 "arguments": [],
                                 "functionName": {
                                     "name": "callvalue",
-                                    "nativeSrc": "151:9:0",
+                                    "nativeSrc": "198:9:0",
                                     "nodeType": "YulIdentifier",
                                     "src": "60:13:0"
                                 },
-                                "nativeSrc": "151:11:0",
+                                "nativeSrc": "198:11:0",
                                 "nodeType": "YulFunctionCall",
                                 "src": "60:13:0"
                             },
-                            "nativeSrc": "148:98:0",
+                            "nativeSrc": "195:31:0",
                             "nodeType": "YulIf",
                             "src": "60:13:0"
                         },
                         {
-                            "nativeSrc": "363:24:0",
+                            "nativeSrc": "239:34:0",
                             "nodeType": "YulVariableDeclaration",
                             "src": "60:13:0",
                             "value": {
@@ -780,7 +780,7 @@ Optimized IR AST:
                                     {
                                         "hexValue": "435f325f6465706c6f796564",
                                         "kind": "string",
-                                        "nativeSrc": "372:14:0",
+                                        "nativeSrc": "258:14:0",
                                         "nodeType": "YulLiteral",
                                         "src": "60:13:0",
                                         "type": "",
@@ -789,18 +789,18 @@ Optimized IR AST:
                                 ],
                                 "functionName": {
                                     "name": "datasize",
-                                    "nativeSrc": "363:8:0",
+                                    "nativeSrc": "249:8:0",
                                     "nodeType": "YulIdentifier",
                                     "src": "60:13:0"
                                 },
-                                "nativeSrc": "363:24:0",
+                                "nativeSrc": "249:24:0",
                                 "nodeType": "YulFunctionCall",
                                 "src": "60:13:0"
                             },
                             "variables": [
                                 {
                                     "name": "_2",
-                                    "nativeSrc": "363:24:0",
+                                    "nativeSrc": "243:2:0",
                                     "nodeType": "YulTypedName",
                                     "src": "60:13:0",
                                     "type": ""
@@ -812,7 +812,7 @@ Optimized IR AST:
                                 "arguments": [
                                     {
                                         "name": "_1",
-                                        "nativeSrc": "331:2:0",
+                                        "nativeSrc": "295:2:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
                                     },
@@ -821,7 +821,7 @@ Optimized IR AST:
                                             {
                                                 "hexValue": "435f325f6465706c6f796564",
                                                 "kind": "string",
-                                                "nativeSrc": "346:14:0",
+                                                "nativeSrc": "310:14:0",
                                                 "nodeType": "YulLiteral",
                                                 "src": "60:13:0",
                                                 "type": "",
@@ -830,32 +830,32 @@ Optimized IR AST:
                                         ],
                                         "functionName": {
                                             "name": "dataoffset",
-                                            "nativeSrc": "335:10:0",
+                                            "nativeSrc": "299:10:0",
                                             "nodeType": "YulIdentifier",
                                             "src": "60:13:0"
                                         },
-                                        "nativeSrc": "335:26:0",
+                                        "nativeSrc": "299:26:0",
                                         "nodeType": "YulFunctionCall",
                                         "src": "60:13:0"
                                     },
                                     {
                                         "name": "_2",
-                                        "nativeSrc": "363:24:0",
+                                        "nativeSrc": "327:2:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
                                     }
                                 ],
                                 "functionName": {
                                     "name": "codecopy",
-                                    "nativeSrc": "322:8:0",
+                                    "nativeSrc": "286:8:0",
                                     "nodeType": "YulIdentifier",
                                     "src": "60:13:0"
                                 },
-                                "nativeSrc": "322:66:0",
+                                "nativeSrc": "286:44:0",
                                 "nodeType": "YulFunctionCall",
                                 "src": "60:13:0"
                             },
-                            "nativeSrc": "322:66:0",
+                            "nativeSrc": "286:44:0",
                             "nodeType": "YulExpressionStatement",
                             "src": "60:13:0"
                         },
@@ -864,28 +864,28 @@ Optimized IR AST:
                                 "arguments": [
                                     {
                                         "name": "_1",
-                                        "nativeSrc": "405:2:0",
+                                        "nativeSrc": "350:2:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
                                     },
                                     {
                                         "name": "_2",
-                                        "nativeSrc": "409:24:0",
+                                        "nativeSrc": "354:2:0",
                                         "nodeType": "YulIdentifier",
                                         "src": "60:13:0"
                                     }
                                 ],
                                 "functionName": {
                                     "name": "return",
-                                    "nativeSrc": "398:6:0",
+                                    "nativeSrc": "343:6:0",
                                     "nodeType": "YulIdentifier",
                                     "src": "60:13:0"
                                 },
-                                "nativeSrc": "398:36:0",
+                                "nativeSrc": "343:14:0",
                                 "nodeType": "YulFunctionCall",
                                 "src": "60:13:0"
                             },
-                            "nativeSrc": "398:36:0",
+                            "nativeSrc": "343:14:0",
                             "nodeType": "YulExpressionStatement",
                             "src": "60:13:0"
                         }
@@ -901,12 +901,12 @@ Optimized IR AST:
         {
             "code": {
                 "block": {
-                    "nativeSrc": "929:588:0",
+                    "nativeSrc": "453:118:0",
                     "nodeType": "YulBlock",
                     "src": "-1:-1:0",
                     "statements": [
                         {
-                            "nativeSrc": "929:588:0",
+                            "nativeSrc": "467:94:0",
                             "nodeType": "YulBlock",
                             "src": "-1:-1:0",
                             "statements": [
@@ -915,7 +915,7 @@ Optimized IR AST:
                                         "arguments": [
                                             {
                                                 "kind": "number",
-                                                "nativeSrc": "1490:1:0",
+                                                "nativeSrc": "542:1:0",
                                                 "nodeType": "YulLiteral",
                                                 "src": "60:13:0",
                                                 "type": "",
@@ -923,7 +923,7 @@ Optimized IR AST:
                                             },
                                             {
                                                 "kind": "number",
-                                                "nativeSrc": "1490:1:0",
+                                                "nativeSrc": "545:1:0",
                                                 "nodeType": "YulLiteral",
                                                 "src": "60:13:0",
                                                 "type": "",
@@ -932,15 +932,15 @@ Optimized IR AST:
                                         ],
                                         "functionName": {
                                             "name": "revert",
-                                            "nativeSrc": "1480:6:0",
+                                            "nativeSrc": "535:6:0",
                                             "nodeType": "YulIdentifier",
                                             "src": "60:13:0"
                                         },
-                                        "nativeSrc": "1480:12:0",
+                                        "nativeSrc": "535:12:0",
                                         "nodeType": "YulFunctionCall",
                                         "src": "60:13:0"
                                     },
-                                    "nativeSrc": "1480:12:0",
+                                    "nativeSrc": "535:12:0",
                                     "nodeType": "YulExpressionStatement",
                                     "src": "60:13:0"
                                 }

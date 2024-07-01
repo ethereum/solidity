@@ -1462,25 +1462,36 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	}
 	compiledContract.yulIR = linkIR(compiledContract);
 
-	yul::YulStack stack(
-		m_evmVersion,
-		m_eofVersion,
-		yul::YulStack::Language::StrictAssembly,
-		m_optimiserSettings,
-		m_debugInfoSelection
-	);
-	bool yulAnalysisSuccessful = stack.parseAndAnalyze("", compiledContract.yulIR);
-	solAssert(
-		yulAnalysisSuccessful,
-		compiledContract.yulIR + "\n\n"
-		"Invalid IR generated:\n" +
-		langutil::SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
-	);
+	auto const reparseYul = [&](std::string const& _irSource) {
+		YulStack stack(
+			m_evmVersion,
+			m_eofVersion,
+			YulStack::Language::StrictAssembly,
+			m_optimiserSettings,
+			m_debugInfoSelection
+		);
+		bool yulAnalysisSuccessful = stack.parseAndAnalyze("", _irSource);
+		solAssert(
+			yulAnalysisSuccessful,
+			_irSource + "\n\n"
+			"Invalid IR generated:\n" +
+			langutil::SourceReferenceFormatter::formatErrorInformation(stack.errors(), stack) + "\n"
+		);
+		return stack;
+	};
 
-	compiledContract.yulIRAst = stack.astJson();
-	stack.optimize();
-	compiledContract.yulIROptimized = stack.print(this);
-	compiledContract.yulIROptimizedAst = stack.astJson();
+	{
+		YulStack stack = reparseYul(compiledContract.yulIR);
+		compiledContract.yulIRAst = stack.astJson();
+		stack.optimize();
+		compiledContract.yulIROptimized = stack.print(this);
+	}
+	{
+		// Optimizer does not maintain correct native source locations in the AST.
+		// We can work around it by regenerating the AST from scratch from optimized IR.
+		YulStack stack = reparseYul(compiledContract.yulIROptimized);
+		compiledContract.yulIROptimizedAst = stack.astJson();
+	}
 }
 
 void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
