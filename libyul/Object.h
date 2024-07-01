@@ -100,6 +100,10 @@ public:
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const override;
 
+	// TMP: docstring
+	// TMP: make it clear that code remains shared
+	std::shared_ptr<Object> structuralClone() const;
+
 	void addSubNode(std::shared_ptr<ObjectNode> _subNode);
 
 	/// @returns a compact JSON representation of the AST.

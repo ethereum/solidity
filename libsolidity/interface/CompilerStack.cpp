@@ -1408,6 +1408,38 @@ void CompilerStack::optimizeYul(ContractDefinition const& _contract)
 	);
 }
 
+std::shared_ptr<Object> CompilerStack::linkIRObject(ContractDefinition const& _contract) const
+{
+	Contract const& contractInfo = contract(_contract.fullyQualifiedName());
+	solAssert(contractInfo.yulIRGeneratorOutput.has_value());
+	solAssert(contractInfo.yulIRObjectWithoutDependencies);
+
+	std::shared_ptr<Object> fullCreationObject = contractInfo.yulIRObjectWithoutDependencies->structuralClone();
+	solAssert(fullCreationObject->name.str() == contractInfo.yulIRGeneratorOutput->creation.name);
+	solAssert(fullCreationObject->subObjects.size() == 1);
+	solAssert(fullCreationObject->subObjects[0]);
+	for (ContractDefinition const* dependency: contractInfo.yulIRGeneratorOutput->creation.dependencies)
+		fullCreationObject->addSubNode(linkIRObject(*dependency));
+
+	auto* fullDeployedObject = dynamic_cast<Object*>(fullCreationObject->subObjects[0].get());
+	solAssert(fullDeployedObject->name.str() == contractInfo.yulIRGeneratorOutput->deployed.name);
+	solAssert(fullDeployedObject->subObjects.size() <= 1);
+
+	bool hasMetadata = (fullDeployedObject->subObjects.size() != 0);
+	if (hasMetadata)
+		solAssert(fullDeployedObject->subObjects[0] == contractInfo.yulIRGeneratorOutput->deployed.metadata);
+	fullDeployedObject->subObjects.clear();
+	fullDeployedObject->subIndexByName.clear();
+
+	for (ContractDefinition const* dependency: contractInfo.yulIRGeneratorOutput->deployed.dependencies)
+		fullDeployedObject->addSubNode(linkIRObject(*dependency));
+
+	if (hasMetadata)
+		fullDeployedObject->addSubNode(contractInfo.yulIRGeneratorOutput->deployed.metadata);
+
+	return fullCreationObject;
+}
+
 namespace
 {
 bool onlySafeExperimentalFeaturesActivated(std::set<ExperimentalFeature> const& features)

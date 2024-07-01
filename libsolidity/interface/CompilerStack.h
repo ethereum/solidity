@@ -441,6 +441,10 @@ private:
 	// TMP: docstring
 	void optimizeYul(ContractDefinition const& _contract);
 
+	// TMP: docstring, name, argument
+	// TMP: Can't even guarantee it's really optimized
+	std::shared_ptr<yul::Object> linkIRObject(ContractDefinition const& _contract) const;
+
 	/// Assembles the contract.
 	/// This function should only be internally called by compileContract and generateEVMFromIR.
 	void assembleYul(
