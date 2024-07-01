@@ -225,7 +225,6 @@ private:
 	smtutil::Expression interface(ContractDefinition const& _contract);
 	/// Error predicate over current variables.
 	smtutil::Expression error();
-	smtutil::Expression error(unsigned _idx);
 
 	/// Creates a block for the given _node.
 	Predicate const* createBlock(ASTNode const* _node, PredicateType _predType, std::string const& _prefix = "");

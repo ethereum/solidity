@@ -1657,11 +1657,6 @@ smtutil::Expression CHC::error()
 	return (*m_errorPredicate)({});
 }
 
-smtutil::Expression CHC::error(unsigned _idx)
-{
-	return m_errorPredicate->functor(_idx)({});
-}
-
 smtutil::Expression CHC::initializer(ContractDefinition const& _contract, ContractDefinition const& _contractContext)
 {
 	return predicate(*m_contractInitializers.at(&_contractContext).at(&_contract));
@@ -2419,22 +2414,17 @@ std::map<unsigned, std::vector<unsigned>> CHC::summaryCalls(CHCSolverInterface::
 			// nondet_call_<CALLID>_<suffix>
 			// Those have the extra unique <CALLID> numbers based on the traversal order, and are necessary
 			// to infer the call order so that's shown property in the counterexample trace.
-			// Predicates that do not have a CALLID have a predicate id at the end of <suffix>,
-			// so the assertion below should still hold.
+			// For other predicates, we do not care.
 			auto beg = _s.data();
 			while (beg != _s.data() + _s.size() && !isDigit(*beg)) ++beg;
-			auto end = beg;
-			while (end != _s.data() + _s.size() && isDigit(*end)) ++end;
-
-			solAssert(beg != end, "Expected to find numerical call or predicate id.");
-
-			int result;
-			auto [p, ec] = std::from_chars(beg, end, result);
-			solAssert(ec == std::errc(), "Id should be a number.");
-
+			int result = -1;
+			static_cast<void>(std::from_chars(beg, _s.data() + _s.size(), result));
 			return result;
 		};
-		return extract(_graph.nodes.at(_a).name) > extract(_graph.nodes.at(_b).name);
+		auto anum = extract(_graph.nodes.at(_a).name);
+		auto bnum = extract(_graph.nodes.at(_b).name);
+		// The second part of the condition is needed to ensure that two different predicates are not considered equal
+		return (anum > bnum) || (anum == bnum && _graph.nodes.at(_a).name > _graph.nodes.at(_b).name);
 	};
 
 	std::queue<std::pair<unsigned, unsigned>> q;

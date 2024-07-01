@@ -49,26 +49,25 @@ Predicate const* Predicate::create(
 	std::vector<ScopeOpener const*> _scopeStack
 )
 {
-	smt::SymbolicFunctionVariable predicate{_sort, std::move(_name), _context};
-	std::string functorName = predicate.currentName();
-	solAssert(!m_predicates.count(functorName), "");
+	solAssert(!m_predicates.count(_name), "");
 	return &m_predicates.emplace(
 		std::piecewise_construct,
-		std::forward_as_tuple(functorName),
-		std::forward_as_tuple(std::move(predicate), _type, _context.state().hasBytesConcatFunction(),
+		std::forward_as_tuple(_name),
+		std::forward_as_tuple(_name, std::move(_sort), _type, _context.state().hasBytesConcatFunction(),
 			_node, _contractContext, std::move(_scopeStack))
 	).first->second;
 }
 
 Predicate::Predicate(
-	smt::SymbolicFunctionVariable&& _predicate,
+	std::string _name,
+	SortPointer _sort,
 	PredicateType _type,
 	bool _bytesConcatFunctionInContext,
 	ASTNode const* _node,
 	ContractDefinition const* _contractContext,
 	std::vector<ScopeOpener const*> _scopeStack
 ):
-	m_predicate(std::move(_predicate)),
+	m_functor(std::move(_name), {}, std::move(_sort)),
 	m_type(_type),
 	m_node(_node),
 	m_contractContext(_contractContext),
@@ -89,22 +88,12 @@ void Predicate::reset()
 
 smtutil::Expression Predicate::operator()(std::vector<smtutil::Expression> const& _args) const
 {
-	return m_predicate(_args);
+	return smtutil::Expression(m_functor.name, _args, SortProvider::boolSort);
 }
 
-smtutil::Expression Predicate::functor() const
+smtutil::Expression const& Predicate::functor() const
 {
-	return m_predicate.currentFunctionValue();
-}
-
-smtutil::Expression Predicate::functor(unsigned _idx) const
-{
-	return m_predicate.functionValueAtIndex(_idx);
-}
-
-void Predicate::newFunctor()
-{
-	m_predicate.increaseIndex();
+	return m_functor;
 }
 
 ASTNode const* Predicate::programNode() const

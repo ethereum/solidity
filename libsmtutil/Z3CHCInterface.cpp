@@ -58,6 +58,8 @@ void Z3CHCInterface::declareVariable(std::string const& _name, SortPointer const
 
 void Z3CHCInterface::registerRelation(Expression const& _expr)
 {
+	smtAssert(_expr.sort->kind == Kind::Function);
+	m_z3Interface->declareVariable(_expr.name, _expr.sort);
 	m_solver.register_relation(m_z3Interface->functions().at(_expr.name));
 }
 
