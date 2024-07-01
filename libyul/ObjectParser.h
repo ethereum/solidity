@@ -49,15 +49,23 @@ public:
 	explicit ObjectParser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
 		ParserBase(_errorReporter), m_dialect(_dialect) {}
 
+	// TMP: update docstring
 	/// Parses a Yul object.
 	/// Falls back to code-only parsing if the source starts with `{`.
 	/// @param _reuseScanner if true, do check for end of input after the last `}`.
 	/// @returns an empty shared pointer on error.
-	std::shared_ptr<Object> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
+	std::shared_ptr<Object> parse(
+		std::shared_ptr<langutil::Scanner> const& _scanner,
+		bool _reuseScanner,
+		std::optional<SourceNameMap> _sourceNames = std::nullopt
+	);
 
 private:
 	std::optional<SourceNameMap> tryParseSourceNameMapping() const;
-	std::shared_ptr<Object> parseObject(Object* _containingObject = nullptr);
+	std::shared_ptr<Object> parseObject(
+		Object* _containingObject = nullptr,
+		std::optional<SourceNameMap> _sourceNames = std::nullopt
+	);
 	std::shared_ptr<Block> parseCode(std::optional<SourceNameMap> _sourceNames);
 	std::shared_ptr<Block> parseBlock(std::optional<SourceNameMap> _sourceNames);
 	void parseData(Object& _containingObject);

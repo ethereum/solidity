@@ -38,7 +38,11 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
+std::shared_ptr<Object> ObjectParser::parse(
+	std::shared_ptr<Scanner> const& _scanner,
+	bool _reuseScanner,
+	std::optional<SourceNameMap> _sourceNames
+)
 {
 	m_recursionDepth = 0;
 	try
@@ -51,9 +55,10 @@ std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _sca
 			// Special case: Code-only form.
 			object = std::make_shared<Object>();
 			object->name = "object"_yulstring;
-			auto sourceNameMapping = tryParseSourceNameMapping();
-			object->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
-			object->code = parseBlock(sourceNameMapping);
+			object->debugData = _sourceNames.has_value() ?
+				std::make_shared<ObjectDebugData>(ObjectDebugData{std::move(_sourceNames)}) :
+				std::make_shared<ObjectDebugData>(ObjectDebugData{tryParseSourceNameMapping()});
+			object->code = parseBlock(object->debugData->sourceNames);
 			if (!object->code)
 				return nullptr;
 		}
@@ -70,14 +75,15 @@ std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _sca
 	return nullptr;
 }
 
-std::shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
+std::shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject, std::optional<SourceNameMap> _sourceNames)
 {
 	RecursionGuard guard(*this);
 
 	std::shared_ptr<Object> ret = std::make_shared<Object>();
 
-	auto sourceNameMapping = tryParseSourceNameMapping();
-	ret->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
+	ret->debugData = _sourceNames.has_value() ?
+		std::make_shared<ObjectDebugData>(ObjectDebugData{std::move(_sourceNames)}) :
+		std::make_shared<ObjectDebugData>(ObjectDebugData{tryParseSourceNameMapping()});
 
 	if (currentToken() != Token::Identifier || currentLiteral() != "object")
 		fatalParserError(4294_error, "Expected keyword \"object\".");
@@ -87,7 +93,7 @@ std::shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 
 	expectToken(Token::LBrace);
 
-	ret->code = parseCode(std::move(sourceNameMapping));
+	ret->code = parseCode(ret->debugData->sourceNames);
 
 	while (currentToken() != Token::RBrace)
 	{

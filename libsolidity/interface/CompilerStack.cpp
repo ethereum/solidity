@@ -1320,12 +1320,11 @@ std::shared_ptr<Object> parseAndAnalyzeYulSourceWithoutDependencies(
 	};
 
 	ObjectParser objectParser(errorReporter, dialect);
-	std::shared_ptr<Object> object = objectParser.parse(scanner, false /* _reuseScanner */);
+	std::shared_ptr<Object> object = objectParser.parse(scanner, false /* _reuseScanner */, _debugData->sourceNames);
 	solAssert(object && errorReporter.errors().empty(), debugMessageWithSourceAndErrors());
 	// TMP: other asserts?
 
-	// The @use-src annotation is not supposed to appear in the code we get from the codegen.
-	solAssert(object->debugData && !object->debugData->sourceNames.has_value());
+	solAssert(object->debugData->sourceNames == _debugData->sourceNames);
 	solAssert(object->name == "object"_yulstring);
 	object->debugData = std::move(_debugData);
 	object->name = YulString{_name};
