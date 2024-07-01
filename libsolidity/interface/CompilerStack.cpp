@@ -1615,6 +1615,20 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		);
 	}
 	compiledContract.yulIR = linkIR(compiledContract);
+	// TMP:
+	solAssert(!compiledContract.yulIRObjectWithoutDependencies);
+	parseAndAnalyzeYul(*compiledContract.contract);
+
+	std::shared_ptr<Object> irObject = linkIRObject(*compiledContract.contract);
+
+	optimizeYul(*compiledContract.contract);
+	std::shared_ptr<Object> optimizedIRObject = linkIRObject(*compiledContract.contract);
+
+	compiledContract.yulIROptimized = optimizedIRObject->toString(
+		&EVMDialect::strictAssemblyForEVMObjects(m_evmVersion),
+		m_debugInfoSelection,
+		this // _soliditySourceProvider // TMP:
+	) + "\n";
 
 	auto const reparseYul = [&](std::string const& _irSource) {
 		YulStack stack(
@@ -1637,8 +1651,6 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	{
 		YulStack stack = reparseYul(compiledContract.yulIR);
 		compiledContract.yulIRAst = stack.astJson();
-		stack.optimize();
-		compiledContract.yulIROptimized = stack.print(this);
 	}
 	{
 		// Optimizer does not maintain correct native source locations in the AST.
