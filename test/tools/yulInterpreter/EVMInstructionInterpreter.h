@@ -38,7 +38,6 @@ enum class Instruction: uint8_t;
 
 namespace solidity::yul
 {
-class YulString;
 struct BuiltinFunctionForEVM;
 }
 

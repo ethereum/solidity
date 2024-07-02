@@ -22,7 +22,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
 
 namespace solidity::yul
 {

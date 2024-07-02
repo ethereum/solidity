@@ -440,7 +440,7 @@ std::vector<Type> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				if (functionName == m_yulNameRepository.predefined().datasize || functionName == m_yulNameRepository.predefined().dataoffset)
 				{
 					auto const& argumentAsLiteral = std::get<Literal>(arg);
-					if (!m_dataNames.count(YulString(formatLiteral(argumentAsLiteral))))
+					if (!m_dataNames.count(formatLiteral(argumentAsLiteral)))
 						m_errorReporter.typeError(
 							3517_error,
 							nativeLocationOf(arg),

@@ -28,7 +28,6 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AST.h>
 #include <libyul/ObjectParser.h>
-#include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
@@ -143,7 +142,7 @@ std::variant<std::unique_ptr<Block>, ErrorList> Program::parseObject(yul::YulNam
 			// The other object references the nested one which makes analysis fail. Below we try to
 			// extract just the nested one for that reason. This is just a heuristic. If there's no
 			// subobject with such a suffix we fall back to accepting the whole object as is.
-			if (subObject != nullptr && subObject->name.str() == object->name.str() + "_deployed")
+			if (subObject != nullptr && subObject->name == object->name + "_deployed")
 			{
 				deployedObject = dynamic_cast<Object*>(subObject.get());
 				if (deployedObject != nullptr)

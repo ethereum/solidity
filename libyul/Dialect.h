@@ -32,7 +32,6 @@
 namespace solidity::yul
 {
 
-class YulString;
 enum class LiteralKind;
 class LiteralValue;
 struct Literal;

@@ -23,7 +23,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/YulString.h>
 
 #include <map>
 #include <set>

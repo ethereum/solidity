@@ -38,7 +38,6 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/Object.h>
-#include <libyul/YulString.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/Whiskers.h>

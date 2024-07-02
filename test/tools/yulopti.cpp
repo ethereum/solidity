@@ -35,7 +35,6 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/StackCompressor.h>
-#include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Suite.h>
 
 #include <libyul/backends/evm/EVMDialect.h>

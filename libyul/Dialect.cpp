@@ -52,7 +52,6 @@ bool Dialect::validTypeForLiteral(LiteralKind _kind, LiteralValue const&, Type _
 Dialect const& Dialect::yulDeprecated()
 {
 	static std::unique_ptr<Dialect> dialect;
-	static YulStringRepository::ResetCallback callback{[&] { dialect.reset(); }};
 
 	if (!dialect)
 	{

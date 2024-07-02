@@ -24,7 +24,6 @@
 #include <libsolc/libsolc.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
-#include <libyul/YulString.h>
 
 #include <cstdlib>
 #include <list>
@@ -153,7 +152,6 @@ extern void solidity_reset() noexcept
 {
 	// This is called right before each compilation, but not at the end, so additional memory
 	// can be freed here.
-	yul::YulStringRepository::reset();
 	solidityAllocations.clear();
 }
 }

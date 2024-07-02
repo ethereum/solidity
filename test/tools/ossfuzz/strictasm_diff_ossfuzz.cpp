@@ -57,8 +57,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 	}))
 		return 0;
 
-	YulStringRepository::reset();
-
 	YulStack stack(
 		langutil::EVMVersion(),
 		std::nullopt,

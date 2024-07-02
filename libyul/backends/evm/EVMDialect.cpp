@@ -249,7 +249,7 @@ EVMDialect::BuiltinsMap createBuiltins(langutil::EVMVersion _evmVersion, bool _o
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulString const dataName (formatLiteral(std::get<Literal>(arg)));
+			auto const dataName = formatLiteral(std::get<Literal>(arg));
 			if (_context.currentObject->name == dataName)
 				_assembly.appendAssemblySize();
 			else
@@ -258,7 +258,7 @@ EVMDialect::BuiltinsMap createBuiltins(langutil::EVMVersion _evmVersion, bool _o
 					_context.subIDs.count(dataName) == 0 ?
 						_context.currentObject->pathToSubObject(dataName) :
 						std::vector<size_t>{_context.subIDs.at(dataName)};
-				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
+				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName + ">.");
 				_assembly.appendDataSize(subIdPath);
 			}
 		}));
@@ -270,7 +270,7 @@ EVMDialect::BuiltinsMap createBuiltins(langutil::EVMVersion _evmVersion, bool _o
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulString const dataName (formatLiteral(std::get<Literal>(arg)));
+			auto const dataName = formatLiteral(std::get<Literal>(arg));
 			if (_context.currentObject->name == dataName)
 				_assembly.appendConstant(0);
 			else
@@ -279,7 +279,7 @@ EVMDialect::BuiltinsMap createBuiltins(langutil::EVMVersion _evmVersion, bool _o
 					_context.subIDs.count(dataName) == 0 ?
 						_context.currentObject->pathToSubObject(dataName) :
 						std::vector<size_t>{_context.subIDs.at(dataName)};
-				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
+				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName + ">.");
 				_assembly.appendDataOffset(subIdPath);
 			}
 		}));
@@ -402,7 +402,6 @@ bool EVMDialect::reservedIdentifier(std::string_view const _name) const
 EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
 {
 	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialect const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = std::make_unique<EVMDialect>(_version, false);
 	return *dialects[_version];
@@ -411,7 +410,6 @@ EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version
 EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
 {
 	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialect const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = std::make_unique<EVMDialect>(_version, true);
 	return *dialects[_version];
@@ -594,7 +592,6 @@ BuiltinFunctionForEVM const* EVMDialectTyped::equalityFunction(std::string_view 
 EVMDialectTyped const& EVMDialectTyped::instance(langutil::EVMVersion _version)
 {
 	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialectTyped const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = std::make_unique<EVMDialectTyped>(_version, true);
 	return *dialects[_version];

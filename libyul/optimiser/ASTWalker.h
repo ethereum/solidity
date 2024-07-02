@@ -24,7 +24,6 @@
 #include <libyul/ASTForward.h>
 
 #include <libyul/Exceptions.h>
-#include <libyul/YulString.h>
 
 #include <map>
 #include <optional>

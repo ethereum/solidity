@@ -24,7 +24,6 @@
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/Assertions.h>
 
-#include <libyul/YulString.h>
 #include <libyul/YulName.h>
 
 #include <boost/preprocessor/cat.hpp>

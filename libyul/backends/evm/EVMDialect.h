@@ -33,7 +33,6 @@
 namespace solidity::yul
 {
 
-class YulString;
 struct FunctionCall;
 struct Object;
 
@@ -44,7 +43,7 @@ struct BuiltinContext
 {
 	Object const* currentObject = nullptr;
 	/// Mapping from named objects to abstract assembly sub IDs.
-	std::map<YulString, AbstractAssembly::SubID> subIDs;
+	std::map<std::string, AbstractAssembly::SubID> subIDs;
 };
 
 struct BuiltinFunctionForEVM: public BuiltinFunction

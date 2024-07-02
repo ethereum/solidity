@@ -20,8 +20,6 @@
 
 #include <libyul/optimiser/OptimiserStep.h>
 
-#include <libyul/YulString.h>
-
 #include <set>
 #include <memory>
 
