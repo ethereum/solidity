@@ -5,80 +5,51 @@ Module C.
   Definition code : Code.t := {|
     Code.name := "C_105";
     Code.hex_name := 0x435f313035000000000000000000000000000000000000000000000000000000;
-    Code.code :=
+    Code.functions :=
+      [
+        
+      ];
+    Code.body :=
       M.scope (
-        do* ltac:(M.monadic (
-          M.function (|
-            "allocate_unbounded",
-            [],
-            ["memPtr"],
-            M.scope (
-              do* ltac:(M.monadic (
-                M.assign (|
-                  ["memPtr"],
-                  Some (M.call (|
-                    "mload",
-                    [
-                      [Literal.number 64]
-                    ]
-                  |))
-                |)
-              )) in
-              M.pure BlockUnit.Tt
-            )
-          |)
-        )) in
-        do* ltac:(M.monadic (
-          M.function (|
-            "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-            [],
-            [],
-            M.scope (
-              do* ltac:(M.monadic (
-                M.expr_stmt (|
-                  M.call (|
-                    "revert",
-                    [
-                      [Literal.number 0];
-                      [Literal.number 0]
-                    ]
-                  |)
-                |)
-              )) in
-              M.pure BlockUnit.Tt
-            )
-          |)
-        )) in
-        do* ltac:(M.monadic (
+        do! ltac:(M.monadic (
           M.scope (
-            do* ltac:(M.monadic (
+            do! ltac:(M.monadic (
+              M.declare (|
+                ["_1"],
+                Some (M.call_function (|
+                  "memoryguard",
+                  [
+                    [Literal.number 0x80]
+                  ]
+                |))
+              |)
+            )) in
+            do! ltac:(M.monadic (
               M.expr_stmt (|
-                M.call (|
+                M.call_function (|
                   "mstore",
                   [
                     [Literal.number 64];
-                    M.call (|
-                      "memoryguard",
-                      [
-                        [Literal.number 0x80]
-                      ]
-                    |)
+                    M.get_var (| "_1" |)
                   ]
                 |)
               |)
             )) in
-            do* ltac:(M.monadic (
+            do! ltac:(M.monadic (
               M.if_ (|
-                M.call (|
+                M.call_function (|
                   "callvalue",
                   []
                 |),
                 M.scope (
-                  do* ltac:(M.monadic (
+                  do! ltac:(M.monadic (
                     M.expr_stmt (|
-                      M.call (|
-                        "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-                        []
+                      M.call_function (|
+                        "revert",
+                        [
+                          [Literal.number 0];
+                          [Literal.number 0]
+                        ]
                       |)
                     |)
                   )) in
@@ -86,49 +57,41 @@ Module C.
                 )
               |)
             )) in
-            do* ltac:(M.monadic (
+            do! ltac:(M.monadic (
               M.declare (|
-                ["_1"],
-                Some (M.call (|
-                  "allocate_unbounded",
-                  []
+                ["_2"],
+                Some (M.call_function (|
+                  "datasize",
+                  [
+                    [Literal.string 0x435f3130355f6465706c6f796564000000000000000000000000000000000000]
+                  ]
                 |))
               |)
             )) in
-            do* ltac:(M.monadic (
+            do! ltac:(M.monadic (
               M.expr_stmt (|
-                M.call (|
+                M.call_function (|
                   "codecopy",
                   [
                     M.get_var (| "_1" |);
-                    M.call (|
+                    M.call_function (|
                       "dataoffset",
                       [
                         [Literal.string 0x435f3130355f6465706c6f796564000000000000000000000000000000000000]
                       ]
                     |);
-                    M.call (|
-                      "datasize",
-                      [
-                        [Literal.string 0x435f3130355f6465706c6f796564000000000000000000000000000000000000]
-                      ]
-                    |)
+                    M.get_var (| "_2" |)
                   ]
                 |)
               |)
             )) in
-            do* ltac:(M.monadic (
+            do! ltac:(M.monadic (
               M.expr_stmt (|
-                M.call (|
+                M.call_function (|
                   "return",
                   [
                     M.get_var (| "_1" |);
-                    M.call (|
-                      "datasize",
-                      [
-                        [Literal.string 0x435f3130355f6465706c6f796564000000000000000000000000000000000000]
-                      ]
-                    |)
+                    M.get_var (| "_2" |)
                   ]
                 |)
               |)
@@ -144,2313 +107,227 @@ Module C.
     Definition code : Code.t := {|
       Code.name := "C_105_deployed";
       Code.hex_name := 0x435f3130355f6465706c6f796564000000000000000000000000000000000000;
-      Code.code :=
-        M.scope (
-          do* ltac:(M.monadic (
-            M.function (|
-              "shift_right_unsigned",
-              ["value"],
-              ["newValue"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["newValue"],
-                    Some (M.call (|
-                      "shr",
-                      [
-                        [Literal.number 224];
-                        M.get_var (| "value" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "allocate_unbounded",
-              [],
-              ["memPtr"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["memPtr"],
-                    Some (M.call (|
-                      "mload",
-                      [
-                        [Literal.number 64]
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "revert",
-                      [
-                        [Literal.number 0];
-                        [Literal.number 0]
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "revert",
-                      [
-                        [Literal.number 0];
-                        [Literal.number 0]
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_uint256",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "validator_revert_uint256",
-              ["value"],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "iszero",
-                      [
-                        M.call (|
-                          "eq",
-                          [
-                            M.get_var (| "value" |);
-                            M.call (|
-                              "cleanup_uint256",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert",
-                            [
-                              [Literal.number 0];
-                              [Literal.number 0]
-                            ]
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "abi_decode_uint256",
-              ["offset"; "end"],
-              ["value"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["value"],
-                    Some (M.call (|
-                      "calldataload",
-                      [
-                        M.get_var (| "offset" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "validator_revert_uint256",
-                      [
-                        M.get_var (| "value" |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "abi_decode_uint256t_uint256",
-              ["headStart"; "dataEnd"],
-              ["value0"; "value1"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "slt",
-                      [
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "dataEnd" |);
-                            M.get_var (| "headStart" |)
-                          ]
-                        |);
-                        [Literal.number 64]
-                      ]
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["offset"],
-                    Some ([Literal.number 0])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["value0"],
-                    Some (M.call (|
-                      "abi_decode_uint256",
-                      [
-                        M.call (|
-                          "add",
-                          [
-                            M.get_var (| "headStart" |);
-                            M.get_var (| "offset" |)
-                          ]
-                        |);
-                        M.get_var (| "dataEnd" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["offset_1"],
-                    Some ([Literal.number 32])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["value1"],
-                    Some (M.call (|
-                      "abi_decode_uint256",
-                      [
-                        M.call (|
-                          "add",
-                          [
-                            M.get_var (| "headStart" |);
-                            M.get_var (| "offset_1" |)
-                          ]
-                        |);
-                        M.get_var (| "dataEnd" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "abi_encode_uint256_to_uint256",
-              ["value"; "pos"],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "mstore",
-                      [
-                        M.get_var (| "pos" |);
-                        M.call (|
-                          "cleanup_uint256",
-                          [
-                            M.get_var (| "value" |)
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "abi_encode_uint256",
-              ["headStart"; "value0"],
-              ["tail"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["tail"],
-                    Some (M.call (|
-                      "add",
-                      [
-                        M.get_var (| "headStart" |);
-                        [Literal.number 32]
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "abi_encode_uint256_to_uint256",
-                      [
-                        M.get_var (| "value0" |);
-                        M.call (|
-                          "add",
-                          [
-                            M.get_var (| "headStart" |);
-                            [Literal.number 0]
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "external_fun_f_32",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "callvalue",
-                      []
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["param"; "param_1"],
-                    Some (M.call (|
-                      "abi_decode_uint256t_uint256",
-                      [
-                        [Literal.number 4];
-                        M.call (|
-                          "calldatasize",
-                          []
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["ret"],
-                    Some (M.call (|
-                      "fun_f_32",
-                      [
-                        M.get_var (| "param" |);
-                        M.get_var (| "param_1" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memPos"],
-                    Some (M.call (|
-                      "allocate_unbounded",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memEnd"],
-                    Some (M.call (|
-                      "abi_encode_uint256",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.get_var (| "ret" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "return",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "memEnd" |);
-                            M.get_var (| "memPos" |)
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "abi_decode",
-              ["headStart"; "dataEnd"],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "slt",
-                      [
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "dataEnd" |);
-                            M.get_var (| "headStart" |)
-                          ]
-                        |);
-                        [Literal.number 0]
-                      ]
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "external_fun_f_8",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "callvalue",
-                      []
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "abi_decode",
-                      [
-                        [Literal.number 4];
-                        M.call (|
-                          "calldatasize",
-                          []
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["ret"],
-                    Some (M.call (|
-                      "fun_f",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memPos"],
-                    Some (M.call (|
-                      "allocate_unbounded",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memEnd"],
-                    Some (M.call (|
-                      "abi_encode_uint256",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.get_var (| "ret" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "return",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "memEnd" |);
-                            M.get_var (| "memPos" |)
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "abi_decode_tuple_uint256",
-              ["headStart"; "dataEnd"],
-              ["value0"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "slt",
-                      [
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "dataEnd" |);
-                            M.get_var (| "headStart" |)
-                          ]
-                        |);
-                        [Literal.number 32]
-                      ]
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["offset"],
-                    Some ([Literal.number 0])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["value0"],
-                    Some (M.call (|
-                      "abi_decode_uint256",
-                      [
-                        M.call (|
-                          "add",
-                          [
-                            M.get_var (| "headStart" |);
-                            M.get_var (| "offset" |)
-                          ]
-                        |);
-                        M.get_var (| "dataEnd" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "external_fun_call",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "callvalue",
-                      []
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["param"],
-                    Some (M.call (|
-                      "abi_decode_tuple_uint256",
-                      [
-                        [Literal.number 4];
-                        M.call (|
-                          "calldatasize",
-                          []
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["ret"],
-                    Some (M.call (|
-                      "fun_call",
-                      [
-                        M.get_var (| "param" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memPos"],
-                    Some (M.call (|
-                      "allocate_unbounded",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memEnd"],
-                    Some (M.call (|
-                      "abi_encode_uint256",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.get_var (| "ret" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "return",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "memEnd" |);
-                            M.get_var (| "memPos" |)
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "external_fun_f_18",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "callvalue",
-                      []
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["param"],
-                    Some (M.call (|
-                      "abi_decode_tuple_uint256",
-                      [
-                        [Literal.number 4];
-                        M.call (|
-                          "calldatasize",
-                          []
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["ret"],
-                    Some (M.call (|
-                      "fun_f_18",
-                      [
-                        M.get_var (| "param" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memPos"],
-                    Some (M.call (|
-                      "allocate_unbounded",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memEnd"],
-                    Some (M.call (|
-                      "abi_encode_uint256",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.get_var (| "ret" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "return",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "memEnd" |);
-                            M.get_var (| "memPos" |)
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "abi_decode_uint256t_uint256t_uint256",
-              ["headStart"; "dataEnd"],
-              ["value0"; "value1"; "value2"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "slt",
-                      [
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "dataEnd" |);
-                            M.get_var (| "headStart" |)
-                          ]
-                        |);
-                        [Literal.number 96]
-                      ]
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["offset"],
-                    Some ([Literal.number 0])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["value0"],
-                    Some (M.call (|
-                      "abi_decode_uint256",
-                      [
-                        M.call (|
-                          "add",
-                          [
-                            M.get_var (| "headStart" |);
-                            M.get_var (| "offset" |)
-                          ]
-                        |);
-                        M.get_var (| "dataEnd" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["offset_1"],
-                    Some ([Literal.number 32])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["value1"],
-                    Some (M.call (|
-                      "abi_decode_uint256",
-                      [
-                        M.call (|
-                          "add",
-                          [
-                            M.get_var (| "headStart" |);
-                            M.get_var (| "offset_1" |)
-                          ]
-                        |);
-                        M.get_var (| "dataEnd" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["offset_2"],
-                    Some ([Literal.number 64])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["value2"],
-                    Some (M.call (|
-                      "abi_decode_uint256",
-                      [
-                        M.call (|
-                          "add",
-                          [
-                            M.get_var (| "headStart" |);
-                            M.get_var (| "offset_2" |)
-                          ]
-                        |);
-                        M.get_var (| "dataEnd" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "external_fun_f",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "callvalue",
-                      []
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["param"; "param_1"; "param_2"],
-                    Some (M.call (|
-                      "abi_decode_uint256t_uint256t_uint256",
-                      [
-                        [Literal.number 4];
-                        M.call (|
-                          "calldatasize",
-                          []
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["ret"],
-                    Some (M.call (|
-                      "fun_f_50",
-                      [
-                        M.get_var (| "param" |);
-                        M.get_var (| "param_1" |);
-                        M.get_var (| "param_2" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memPos"],
-                    Some (M.call (|
-                      "allocate_unbounded",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["memEnd"],
-                    Some (M.call (|
-                      "abi_encode_uint256",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.get_var (| "ret" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "return",
-                      [
-                        M.get_var (| "memPos" |);
-                        M.call (|
-                          "sub",
-                          [
-                            M.get_var (| "memEnd" |);
-                            M.get_var (| "memPos" |)
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "revert",
-                      [
-                        [Literal.number 0];
-                        [Literal.number 0]
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "zero_value_for_split_uint256",
-              [],
-              ["ret"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["ret"],
-                    Some ([Literal.number 0])
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "panic_error_0x11",
-              [],
-              [],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "mstore",
-                      [
-                        [Literal.number 0];
-                        M.call (|
-                          "shl",
-                          [
-                            [Literal.number 224];
-                            [Literal.number 0x4e487b71]
-                          ]
-                        |)
-                      ]
-                    |)
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "mstore",
-                      [
-                        [Literal.number 4];
-                        [Literal.number 0x11]
-                      ]
-                    |)
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.expr_stmt (|
-                    M.call (|
-                      "revert",
-                      [
-                        [Literal.number 0];
-                        [Literal.number 0x24]
-                      ]
-                    |)
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "checked_add_uint256",
-              ["x"; "y"],
-              ["sum"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["x"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.get_var (| "x" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["y"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.get_var (| "y" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["sum"],
-                    Some (M.call (|
-                      "add",
-                      [
-                        M.get_var (| "x" |);
-                        M.get_var (| "y" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.call (|
-                      "gt",
-                      [
-                        M.get_var (| "x" |);
-                        M.get_var (| "sum" |)
-                      ]
-                    |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.expr_stmt (|
-                          M.call (|
-                            "panic_error_0x11",
-                            []
-                          |)
-                        |)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "fun_f_32",
-              ["var_a"; "var_b"],
-              ["var_"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["zero_uint256"],
-                    Some (M.call (|
-                      "zero_value_for_split_uint256",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var_"],
-                    Some (M.get_var (| "zero_uint256" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_1"],
-                    Some (M.get_var (| "var_a" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr"],
-                    Some (M.get_var (| "_1" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_2"],
-                    Some (M.get_var (| "var_b" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_1"],
-                    Some (M.get_var (| "_2" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_2"],
-                    Some (M.call (|
-                      "checked_add_uint256",
-                      [
-                        M.get_var (| "expr" |);
-                        M.get_var (| "expr_1" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var_"],
-                    Some (M.get_var (| "expr_2" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.leave (||)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_rational_0_by",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "identity",
-              ["value"],
-              ["ret"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["ret"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "convert_rational_0_by_1_to_uint256",
-              ["value"],
-              ["converted"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["converted"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.call (|
-                          "identity",
-                          [
-                            M.call (|
-                              "cleanup_rational_0_by",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "fun_f",
-              [],
-              ["var"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["zero_uint256"],
-                    Some (M.call (|
-                      "zero_value_for_split_uint256",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.get_var (| "zero_uint256" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr"],
-                    Some ([Literal.number 0x00])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.call (|
-                      "convert_rational_0_by_1_to_uint256",
-                      [
-                        M.get_var (| "expr" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.leave (||)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_rational_by_1",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "convert_rational_1_by_1_to_uint256",
-              ["value"],
-              ["converted"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["converted"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.call (|
-                          "identity",
-                          [
-                            M.call (|
-                              "cleanup_rational_by_1",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_rational_2_by",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "convert_rational_2_by_1_to_uint256",
-              ["value"],
-              ["converted"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["converted"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.call (|
-                          "identity",
-                          [
-                            M.call (|
-                              "cleanup_rational_2_by",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_rational_3_by",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "convert_rational_3_by_1_to_uint256",
-              ["value"],
-              ["converted"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["converted"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.call (|
-                          "identity",
-                          [
-                            M.call (|
-                              "cleanup_rational_3_by",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_rational_by",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "convert_t_rational_by_to_t_uint256",
-              ["value"],
-              ["converted"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["converted"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.call (|
-                          "identity",
-                          [
-                            M.call (|
-                              "cleanup_rational_by",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_t_rational_by_1",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "convert_rational_5_by_1_to_uint256",
-              ["value"],
-              ["converted"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["converted"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.call (|
-                          "identity",
-                          [
-                            M.call (|
-                              "cleanup_t_rational_by_1",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "cleanup_t_rational_by",
-              ["value"],
-              ["cleaned"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["cleaned"],
-                    Some (M.get_var (| "value" |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "convert_rational_by_to_uint256",
-              ["value"],
-              ["converted"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["converted"],
-                    Some (M.call (|
-                      "cleanup_uint256",
-                      [
-                        M.call (|
-                          "identity",
-                          [
-                            M.call (|
-                              "cleanup_t_rational_by",
-                              [
-                                M.get_var (| "value" |)
-                              ]
-                            |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "fun_call",
-              ["var_num"],
-              ["var"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["zero_uint256"],
-                    Some (M.call (|
-                      "zero_value_for_split_uint256",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.get_var (| "zero_uint256" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_1"],
-                    Some (M.get_var (| "var_num" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr"],
-                    Some (M.get_var (| "_1" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_1"],
-                    Some ([Literal.number 0x00])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_2"],
-                    Some (M.call (|
-                      "eq",
-                      [
-                        M.call (|
-                          "cleanup_uint256",
-                          [
-                            M.get_var (| "expr" |)
-                          ]
-                        |);
-                        M.call (|
-                          "convert_rational_0_by_1_to_uint256",
-                          [
-                            M.get_var (| "expr_1" |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.get_var (| "expr_2" |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_3"],
-                          Some (M.call (|
-                            "fun_f",
-                            []
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.assign (|
-                          ["var"],
-                          Some (M.get_var (| "expr_3" |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.leave (||)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_2"],
-                    Some (M.get_var (| "var_num" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_4"],
-                    Some (M.get_var (| "_2" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_5"],
-                    Some ([Literal.number 0x01])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_6"],
-                    Some (M.call (|
-                      "eq",
-                      [
-                        M.call (|
-                          "cleanup_uint256",
-                          [
-                            M.get_var (| "expr_4" |)
-                          ]
-                        |);
-                        M.call (|
-                          "convert_rational_1_by_1_to_uint256",
-                          [
-                            M.get_var (| "expr_5" |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.get_var (| "expr_6" |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_7"],
-                          Some ([Literal.number 0x01])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_3"],
-                          Some (M.call (|
-                            "convert_rational_1_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_7" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_8"],
-                          Some (M.call (|
-                            "fun_f_18",
-                            [
-                              M.get_var (| "_3" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.assign (|
-                          ["var"],
-                          Some (M.get_var (| "expr_8" |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.leave (||)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_4"],
-                    Some (M.get_var (| "var_num" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_9"],
-                    Some (M.get_var (| "_4" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_10"],
-                    Some ([Literal.number 0x02])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_11"],
-                    Some (M.call (|
-                      "eq",
-                      [
-                        M.call (|
-                          "cleanup_uint256",
-                          [
-                            M.get_var (| "expr_9" |)
-                          ]
-                        |);
-                        M.call (|
-                          "convert_rational_2_by_1_to_uint256",
-                          [
-                            M.get_var (| "expr_10" |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.get_var (| "expr_11" |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_12"],
-                          Some ([Literal.number 0x01])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_13"],
-                          Some ([Literal.number 0x02])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_5"],
-                          Some (M.call (|
-                            "convert_rational_2_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_13" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_6"],
-                          Some (M.call (|
-                            "convert_rational_1_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_12" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_14"],
-                          Some (M.call (|
-                            "fun_f_32",
-                            [
-                              M.get_var (| "_5" |);
-                              M.get_var (| "_6" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.assign (|
-                          ["var"],
-                          Some (M.get_var (| "expr_14" |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.leave (||)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_7"],
-                    Some (M.get_var (| "var_num" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_15"],
-                    Some (M.get_var (| "_7" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_16"],
-                    Some ([Literal.number 0x03])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_17"],
-                    Some (M.call (|
-                      "eq",
-                      [
-                        M.call (|
-                          "cleanup_uint256",
-                          [
-                            M.get_var (| "expr_15" |)
-                          ]
-                        |);
-                        M.call (|
-                          "convert_rational_3_by_1_to_uint256",
-                          [
-                            M.get_var (| "expr_16" |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.get_var (| "expr_17" |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_18"],
-                          Some ([Literal.number 0x01])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_19"],
-                          Some ([Literal.number 0x02])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_20"],
-                          Some ([Literal.number 0x03])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_8"],
-                          Some (M.call (|
-                            "convert_rational_2_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_19" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_9"],
-                          Some (M.call (|
-                            "convert_rational_3_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_20" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_10"],
-                          Some (M.call (|
-                            "convert_rational_1_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_18" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_21"],
-                          Some (M.call (|
-                            "fun_f_50",
-                            [
-                              M.get_var (| "_8" |);
-                              M.get_var (| "_9" |);
-                              M.get_var (| "_10" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.assign (|
-                          ["var"],
-                          Some (M.get_var (| "expr_21" |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.leave (||)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_11"],
-                    Some (M.get_var (| "var_num" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_22"],
-                    Some (M.get_var (| "_11" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_23"],
-                    Some ([Literal.number 0x04])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_24"],
-                    Some (M.call (|
-                      "eq",
-                      [
-                        M.call (|
-                          "cleanup_uint256",
-                          [
-                            M.get_var (| "expr_22" |)
-                          ]
-                        |);
-                        M.call (|
-                          "convert_t_rational_by_to_t_uint256",
-                          [
-                            M.get_var (| "expr_23" |)
-                          ]
-                        |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.if_ (|
-                    M.get_var (| "expr_24" |),
-                    M.scope (
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_25"],
-                          Some ([Literal.number 0x05])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_26"],
-                          Some ([Literal.number 0x01])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_27"],
-                          Some ([Literal.number 0x02])
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_12"],
-                          Some (M.call (|
-                            "convert_rational_2_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_27" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_13"],
-                          Some (M.call (|
-                            "convert_rational_5_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_25" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["_14"],
-                          Some (M.call (|
-                            "convert_rational_1_by_1_to_uint256",
-                            [
-                              M.get_var (| "expr_26" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.declare (|
-                          ["expr_28"],
-                          Some (M.call (|
-                            "fun_f_50",
-                            [
-                              M.get_var (| "_12" |);
-                              M.get_var (| "_13" |);
-                              M.get_var (| "_14" |)
-                            ]
-                          |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.assign (|
-                          ["var"],
-                          Some (M.get_var (| "expr_28" |))
-                        |)
-                      )) in
-                      do* ltac:(M.monadic (
-                        M.leave (||)
-                      )) in
-                      M.pure BlockUnit.Tt
-                    )
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_29"],
-                    Some ([Literal.number 0x01f4])
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.call (|
-                      "convert_rational_by_to_uint256",
-                      [
-                        M.get_var (| "expr_29" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.leave (||)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "fun_f_18",
-              ["var_a"],
-              ["var"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["zero_uint256"],
-                    Some (M.call (|
-                      "zero_value_for_split_uint256",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.get_var (| "zero_uint256" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_1"],
-                    Some (M.get_var (| "var_a" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr"],
-                    Some (M.get_var (| "_1" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.get_var (| "expr" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.leave (||)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
-            M.function (|
-              "fun_f_50",
-              ["var_a"; "var_b"; "var_c"],
-              ["var"],
-              M.scope (
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["zero_t_uint256"],
-                    Some (M.call (|
-                      "zero_value_for_split_uint256",
-                      []
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.get_var (| "zero_t_uint256" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_1"],
-                    Some (M.get_var (| "var_a" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr"],
-                    Some (M.get_var (| "_1" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_2"],
-                    Some (M.get_var (| "var_b" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_1"],
-                    Some (M.get_var (| "_2" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_2"],
-                    Some (M.call (|
-                      "checked_add_uint256",
-                      [
-                        M.get_var (| "expr" |);
-                        M.get_var (| "expr_1" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["_3"],
-                    Some (M.get_var (| "var_c" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_3"],
-                    Some (M.get_var (| "_3" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.declare (|
-                    ["expr_4"],
-                    Some (M.call (|
-                      "checked_add_uint256",
-                      [
-                        M.get_var (| "expr_2" |);
-                        M.get_var (| "expr_3" |)
-                      ]
-                    |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.assign (|
-                    ["var"],
-                    Some (M.get_var (| "expr_4" |))
-                  |)
-                )) in
-                do* ltac:(M.monadic (
-                  M.leave (||)
-                )) in
-                M.pure BlockUnit.Tt
-              )
-            |)
-          )) in
-          do* ltac:(M.monadic (
+      Code.functions :=
+        [
+          Code.Function.make (
+            "checked_add_uint256",
+            ["x"; "y"],
+            ["sum"],
             M.scope (
-              do* ltac:(M.monadic (
+              do! ltac:(M.monadic (
+                M.assign (|
+                  ["sum"],
+                  Some (M.call_function (|
+                    "add",
+                    [
+                      M.get_var (| "x" |);
+                      M.get_var (| "y" |)
+                    ]
+                  |))
+                |)
+              )) in
+              do! ltac:(M.monadic (
+                M.if_ (|
+                  M.call_function (|
+                    "gt",
+                    [
+                      M.get_var (| "x" |);
+                      M.get_var (| "sum" |)
+                    ]
+                  |),
+                  M.scope (
+                    do! ltac:(M.monadic (
+                      M.expr_stmt (|
+                        M.call_function (|
+                          "mstore",
+                          [
+                            [Literal.number 0];
+                            M.call_function (|
+                              "shl",
+                              [
+                                [Literal.number 224];
+                                [Literal.number 0x4e487b71]
+                              ]
+                            |)
+                          ]
+                        |)
+                      |)
+                    )) in
+                    do! ltac:(M.monadic (
+                      M.expr_stmt (|
+                        M.call_function (|
+                          "mstore",
+                          [
+                            [Literal.number 4];
+                            [Literal.number 0x11]
+                          ]
+                        |)
+                      |)
+                    )) in
+                    do! ltac:(M.monadic (
+                      M.expr_stmt (|
+                        M.call_function (|
+                          "revert",
+                          [
+                            [Literal.number 0];
+                            [Literal.number 0x24]
+                          ]
+                        |)
+                      |)
+                    )) in
+                    M.pure BlockUnit.Tt
+                  )
+                |)
+              )) in
+              M.pure BlockUnit.Tt
+            )
+          );
+          Code.Function.make (
+            "fun_call",
+            ["var_num"],
+            ["var"],
+            M.scope (
+              do! ltac:(M.monadic (
+                M.assign (|
+                  ["var"],
+                  Some ([Literal.number 0])
+                |)
+              )) in
+              do! ltac:(M.monadic (
+                M.if_ (|
+                  M.call_function (|
+                    "iszero",
+                    [
+                      M.get_var (| "var_num" |)
+                    ]
+                  |),
+                  M.scope (
+                    do! ltac:(M.monadic (
+                      M.assign (|
+                        ["var"],
+                        Some ([Literal.number 0])
+                      |)
+                    )) in
+                    do! ltac:(M.monadic (
+                      M.leave (||)
+                    )) in
+                    M.pure BlockUnit.Tt
+                  )
+                |)
+              )) in
+              do! ltac:(M.monadic (
+                M.if_ (|
+                  M.call_function (|
+                    "eq",
+                    [
+                      M.get_var (| "var_num" |);
+                      [Literal.number 0x01]
+                    ]
+                  |),
+                  M.scope (
+                    do! ltac:(M.monadic (
+                      M.assign (|
+                        ["var"],
+                        Some ([Literal.number 0x01])
+                      |)
+                    )) in
+                    do! ltac:(M.monadic (
+                      M.leave (||)
+                    )) in
+                    M.pure BlockUnit.Tt
+                  )
+                |)
+              )) in
+              do! ltac:(M.monadic (
+                M.if_ (|
+                  M.call_function (|
+                    "eq",
+                    [
+                      M.get_var (| "var_num" |);
+                      [Literal.number 0x02]
+                    ]
+                  |),
+                  M.scope (
+                    do! ltac:(M.monadic (
+                      M.assign (|
+                        ["var"],
+                        Some ([Literal.number 3])
+                      |)
+                    )) in
+                    do! ltac:(M.monadic (
+                      M.leave (||)
+                    )) in
+                    M.pure BlockUnit.Tt
+                  )
+                |)
+              )) in
+              do! ltac:(M.monadic (
+                M.if_ (|
+                  M.call_function (|
+                    "eq",
+                    [
+                      M.get_var (| "var_num" |);
+                      [Literal.number 0x03]
+                    ]
+                  |),
+                  M.scope (
+                    do! ltac:(M.monadic (
+                      M.assign (|
+                        ["var"],
+                        Some ([Literal.number 6])
+                      |)
+                    )) in
+                    do! ltac:(M.monadic (
+                      M.leave (||)
+                    )) in
+                    M.pure BlockUnit.Tt
+                  )
+                |)
+              )) in
+              do! ltac:(M.monadic (
+                M.if_ (|
+                  M.call_function (|
+                    "eq",
+                    [
+                      M.get_var (| "var_num" |);
+                      [Literal.number 0x04]
+                    ]
+                  |),
+                  M.scope (
+                    do! ltac:(M.monadic (
+                      M.assign (|
+                        ["var"],
+                        Some ([Literal.number 8])
+                      |)
+                    )) in
+                    do! ltac:(M.monadic (
+                      M.leave (||)
+                    )) in
+                    M.pure BlockUnit.Tt
+                  )
+                |)
+              )) in
+              do! ltac:(M.monadic (
+                M.assign (|
+                  ["var"],
+                  Some ([Literal.number 0x01f4])
+                |)
+              )) in
+              M.pure BlockUnit.Tt
+            )
+          )
+        ];
+      Code.body :=
+        M.scope (
+          do! ltac:(M.monadic (
+            M.scope (
+              do! ltac:(M.monadic (
                 M.expr_stmt (|
-                  M.call (|
+                  M.call_function (|
                     "mstore",
                     [
                       [Literal.number 64];
-                      M.call (|
+                      M.call_function (|
                         "memoryguard",
                         [
                           [Literal.number 0x80]
@@ -2460,15 +337,15 @@ Module C.
                   |)
                 |)
               )) in
-              do* ltac:(M.monadic (
+              do! ltac:(M.monadic (
                 M.if_ (|
-                  M.call (|
+                  M.call_function (|
                     "iszero",
                     [
-                      M.call (|
+                      M.call_function (|
                         "lt",
                         [
-                          M.call (|
+                          M.call_function (|
                             "calldatasize",
                             []
                           |);
@@ -2478,34 +355,137 @@ Module C.
                     ]
                   |),
                   M.scope (
-                    do* ltac:(M.monadic (
-                      M.declare (|
-                        ["selector"],
-                        Some (M.call (|
-                          "shift_right_unsigned",
+                    do! ltac:(M.monadic (
+                      M.switch (|
+                        M.call_function (|
+                          "shr",
                           [
-                            M.call (|
+                            [Literal.number 224];
+                            M.call_function (|
                               "calldataload",
                               [
                                 [Literal.number 0]
                               ]
                             |)
                           ]
-                        |))
-                      |)
-                    )) in
-                    do* ltac:(M.monadic (
-                      M.switch (|
-                        M.get_var (| "selector" |),
+                        |),
                         [
                           (
                             Some (Literal.number 0x13d1aa2e),
                             M.scope (
-                              do* ltac:(M.monadic (
-                                M.expr_stmt (|
-                                  M.call (|
-                                    "external_fun_f_32",
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "callvalue",
                                     []
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "slt",
+                                    [
+                                      M.call_function (|
+                                        "add",
+                                        [
+                                          M.call_function (|
+                                            "calldatasize",
+                                            []
+                                          |);
+                                          M.call_function (|
+                                            "not",
+                                            [
+                                              [Literal.number 3]
+                                            ]
+                                          |)
+                                        ]
+                                      |);
+                                      [Literal.number 64]
+                                    ]
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["ret"],
+                                  Some (M.call_function (|
+                                    "checked_add_uint256",
+                                    [
+                                      M.call_function (|
+                                        "calldataload",
+                                        [
+                                          [Literal.number 4]
+                                        ]
+                                      |);
+                                      M.call_function (|
+                                        "calldataload",
+                                        [
+                                          [Literal.number 36]
+                                        ]
+                                      |)
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["memPos"],
+                                  Some (M.call_function (|
+                                    "mload",
+                                    [
+                                      [Literal.number 64]
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "mstore",
+                                    [
+                                      M.get_var (| "memPos" |);
+                                      M.get_var (| "ret" |)
+                                    ]
+                                  |)
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "return",
+                                    [
+                                      M.get_var (| "memPos" |);
+                                      [Literal.number 32]
+                                    ]
                                   |)
                                 |)
                               )) in
@@ -2515,11 +495,97 @@ Module C.
                           (
                             Some (Literal.number 0x26121ff0),
                             M.scope (
-                              do* ltac:(M.monadic (
-                                M.expr_stmt (|
-                                  M.call (|
-                                    "external_fun_f_8",
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "callvalue",
                                     []
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "slt",
+                                    [
+                                      M.call_function (|
+                                        "add",
+                                        [
+                                          M.call_function (|
+                                            "calldatasize",
+                                            []
+                                          |);
+                                          M.call_function (|
+                                            "not",
+                                            [
+                                              [Literal.number 3]
+                                            ]
+                                          |)
+                                        ]
+                                      |);
+                                      [Literal.number 0]
+                                    ]
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["memPos_1"],
+                                  Some (M.call_function (|
+                                    "mload",
+                                    [
+                                      [Literal.number 64]
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "mstore",
+                                    [
+                                      M.get_var (| "memPos_1" |);
+                                      [Literal.number 0]
+                                    ]
+                                  |)
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "return",
+                                    [
+                                      M.get_var (| "memPos_1" |);
+                                      [Literal.number 32]
+                                    ]
                                   |)
                                 |)
                               )) in
@@ -2529,11 +595,113 @@ Module C.
                           (
                             Some (Literal.number 0x2b096926),
                             M.scope (
-                              do* ltac:(M.monadic (
-                                M.expr_stmt (|
-                                  M.call (|
-                                    "external_fun_call",
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "callvalue",
                                     []
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "slt",
+                                    [
+                                      M.call_function (|
+                                        "add",
+                                        [
+                                          M.call_function (|
+                                            "calldatasize",
+                                            []
+                                          |);
+                                          M.call_function (|
+                                            "not",
+                                            [
+                                              [Literal.number 3]
+                                            ]
+                                          |)
+                                        ]
+                                      |);
+                                      [Literal.number 32]
+                                    ]
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["ret_1"],
+                                  Some (M.call_function (|
+                                    "fun_call",
+                                    [
+                                      M.call_function (|
+                                        "calldataload",
+                                        [
+                                          [Literal.number 4]
+                                        ]
+                                      |)
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["memPos_2"],
+                                  Some (M.call_function (|
+                                    "mload",
+                                    [
+                                      [Literal.number 64]
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "mstore",
+                                    [
+                                      M.get_var (| "memPos_2" |);
+                                      M.get_var (| "ret_1" |)
+                                    ]
+                                  |)
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "return",
+                                    [
+                                      M.get_var (| "memPos_2" |);
+                                      [Literal.number 32]
+                                    ]
                                   |)
                                 |)
                               )) in
@@ -2543,11 +711,102 @@ Module C.
                           (
                             Some (Literal.number 0xb3de648b),
                             M.scope (
-                              do* ltac:(M.monadic (
-                                M.expr_stmt (|
-                                  M.call (|
-                                    "external_fun_f_18",
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "callvalue",
                                     []
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "slt",
+                                    [
+                                      M.call_function (|
+                                        "add",
+                                        [
+                                          M.call_function (|
+                                            "calldatasize",
+                                            []
+                                          |);
+                                          M.call_function (|
+                                            "not",
+                                            [
+                                              [Literal.number 3]
+                                            ]
+                                          |)
+                                        ]
+                                      |);
+                                      [Literal.number 32]
+                                    ]
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["memPos_3"],
+                                  Some (M.call_function (|
+                                    "mload",
+                                    [
+                                      [Literal.number 64]
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "mstore",
+                                    [
+                                      M.get_var (| "memPos_3" |);
+                                      M.call_function (|
+                                        "calldataload",
+                                        [
+                                          [Literal.number 4]
+                                        ]
+                                      |)
+                                    ]
+                                  |)
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "return",
+                                    [
+                                      M.get_var (| "memPos_3" |);
+                                      [Literal.number 32]
+                                    ]
                                   |)
                                 |)
                               )) in
@@ -2557,20 +816,133 @@ Module C.
                           (
                             Some (Literal.number 0xbf06dbf1),
                             M.scope (
-                              do* ltac:(M.monadic (
-                                M.expr_stmt (|
-                                  M.call (|
-                                    "external_fun_f",
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "callvalue",
                                     []
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.if_ (|
+                                  M.call_function (|
+                                    "slt",
+                                    [
+                                      M.call_function (|
+                                        "add",
+                                        [
+                                          M.call_function (|
+                                            "calldatasize",
+                                            []
+                                          |);
+                                          M.call_function (|
+                                            "not",
+                                            [
+                                              [Literal.number 3]
+                                            ]
+                                          |)
+                                        ]
+                                      |);
+                                      [Literal.number 96]
+                                    ]
+                                  |),
+                                  M.scope (
+                                    do! ltac:(M.monadic (
+                                      M.expr_stmt (|
+                                        M.call_function (|
+                                          "revert",
+                                          [
+                                            [Literal.number 0];
+                                            [Literal.number 0]
+                                          ]
+                                        |)
+                                      |)
+                                    )) in
+                                    M.pure BlockUnit.Tt
+                                  )
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["ret_2"],
+                                  Some (M.call_function (|
+                                    "checked_add_uint256",
+                                    [
+                                      M.call_function (|
+                                        "checked_add_uint256",
+                                        [
+                                          M.call_function (|
+                                            "calldataload",
+                                            [
+                                              [Literal.number 4]
+                                            ]
+                                          |);
+                                          M.call_function (|
+                                            "calldataload",
+                                            [
+                                              [Literal.number 36]
+                                            ]
+                                          |)
+                                        ]
+                                      |);
+                                      M.call_function (|
+                                        "calldataload",
+                                        [
+                                          [Literal.number 68]
+                                        ]
+                                      |)
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.declare (|
+                                  ["memPos_4"],
+                                  Some (M.call_function (|
+                                    "mload",
+                                    [
+                                      [Literal.number 64]
+                                    ]
+                                  |))
+                                |)
+                              )) in
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "mstore",
+                                    [
+                                      M.get_var (| "memPos_4" |);
+                                      M.get_var (| "ret_2" |)
+                                    ]
                                   |)
                                 |)
                               )) in
-                              M.pure BlockUnit.Tt
-                            )
-                          );
-                          (
-                            None,
-                            M.scope (
+                              do! ltac:(M.monadic (
+                                M.expr_stmt (|
+                                  M.call_function (|
+                                    "return",
+                                    [
+                                      M.get_var (| "memPos_4" |);
+                                      [Literal.number 32]
+                                    ]
+                                  |)
+                                |)
+                              )) in
                               M.pure BlockUnit.Tt
                             )
                           )
@@ -2581,11 +953,14 @@ Module C.
                   )
                 |)
               )) in
-              do* ltac:(M.monadic (
+              do! ltac:(M.monadic (
                 M.expr_stmt (|
-                  M.call (|
-                    "revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74",
-                    []
+                  M.call_function (|
+                    "revert",
+                    [
+                      [Literal.number 0];
+                      [Literal.number 0]
+                    ]
                   |)
                 |)
               )) in
@@ -2595,13 +970,12 @@ Module C.
           M.pure BlockUnit.Tt
         );
     |}.
-
-    Definition data : string :=
-      "a26469706673582212201bb4c642f1815b381982372490c2a9a1a84cce1dd8d173d77fa042dd695a9a4764736f6c634300081b0033".
   End deployed.
 End C.
 
-Definition codes : list (U256.t * M.t BlockUnit.t) :=
+Import Ltac2.
+
+Definition codes : list Code.t :=
   ltac2:(
     let codes := Code.get_codes () in
     exact $codes

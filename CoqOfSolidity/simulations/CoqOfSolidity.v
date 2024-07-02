@@ -10,49 +10,147 @@ Module Dict.
   Definition t (K V : Set) : Set :=
     list (K * V).
 
-  Fixpoint get {K V : Set} (eqb : K -> K -> bool) (dict : t K V) (key : K) : option V :=
+  Module Valid.
+    Definition t {K V : Set} (P_K : K -> Prop) (P_V : V -> Prop) (dict : Dict.t K V) : Prop :=
+      List.Forall (fun '(k, v) => P_K k /\ P_V v) dict.
+  End Valid.
+
+  Module Eq.
+    Class C (A : Set) : Set :=
+      eqb : A -> A -> bool.
+
+    Global Instance IZ : C Z :=
+      Z.eqb.
+
+    Global Instance IString : C string :=
+      String.eqb.
+
+    Global Instance ITuple2 {A B : Set} `{C A} `{C B} : C (A * B) :=
+      fun '(a1, b1) '(a2, b2) =>
+        andb (eqb a1 a2) (eqb b1 b2).
+  End Eq.
+
+  Fixpoint get {K V : Set} `{Eq.C K} (dict : t K V) (key : K) : option V :=
     match dict with
     | [] => None
     | (current_key, current_value) :: dict =>
-      if eqb key current_key then
+      if Eq.eqb key current_key then
         Some current_value
       else
-        get eqb dict key
+        get dict key
     end.
+
+  Lemma get_is_valid {K V : Set} `{Eq.C K} P_K P_V (dict : t K V) (key : K)
+      (H_dict : Valid.t P_K P_V dict) :
+    match get dict key with
+    | None => True
+    | Some value => P_V value
+    end.
+  Proof.
+    induction dict as [|(current_key, current_value) dict IH]; cbn; trivial.
+    sauto q: on.
+  Qed.
+
+  Lemma get_map_commut {K V1 V2 : Set} `{Eq.C K}
+      (dict : t K V1) (key : K) (f : V1 -> V2) :
+    match get dict key with
+    | None => None
+    | Some value => Some (f value)
+    end =
+    get (List.map (fun '(k, v) => (k, f v)) dict) key.
+  Proof.
+    induction dict as [|(current_key, current_value) dict IH]; cbn; trivial.
+    hauto q: on.
+  Qed.
 
   Definition declare {K V : Set} (dict : t K V) (key : K) (value : V) : t K V :=
     (key, value) :: dict.
 
-  Fixpoint assign_function {K V : Set}
-      (eqb : K -> K -> bool) (dict : t K V) (key : K) (f : V -> V) :
+  Fixpoint assign_function {K V : Set} `{Eq.C K}
+      (dict : t K V) (key : K) (f : V -> V) :
       option (t K V) :=
     match dict with
     | [] => None
     | ((current_key, current_value) as entry) :: dict =>
-      if eqb current_key key then
+      if Eq.eqb current_key key then
         Some ((current_key, f current_value) :: dict)
       else
-        match assign_function eqb dict key f with
+        match assign_function dict key f with
         | None => None
         | Some dict => Some (entry :: dict)
         end
     end.
 
-  Definition assign {K V : Set} (eqb : K -> K -> bool) (dict : t K V) (key : K) (value : V) :
+  Definition assign {K V : Set} `{Eq.C K} (dict : t K V) (key : K) (value : V) :
       option (t K V) :=
-    assign_function eqb dict key (fun _ => value).
+    assign_function dict key (fun _ => value).
+
+  Fixpoint declare_or_assign_function {K V : Set} `{Eq.C K}
+      (dict : t K V) (key : K) (f : option V -> V) :
+      t K V :=
+    match dict with
+    | [] => [(key, f None)]
+    | ((current_key, current_value) as entry) :: dict =>
+      if Eq.eqb current_key key then
+        (key, f (Some current_value)) :: dict
+      else
+        entry :: declare_or_assign_function dict key f
+    end.
+
+  Definition declare_or_assign {K V : Set} `{Eq.C K}
+      (dict : t K V) (key : K) (value : V) :
+      t K V :=
+    declare_or_assign_function dict key (fun _ => value).
+
+  Lemma declare_or_assign_is_valid {K V : Set} `{Eq.C K} P_K P_V
+      (dict : t K V) (key : K) (value : V)
+      (H_dict : Valid.t P_K P_V dict)
+      (H_key : P_K key)
+      (H_value : P_V value) :
+    Valid.t P_K P_V (declare_or_assign dict key value).
+  Proof.
+    induction dict as [|(current_key, current_value) dict IH]; cbn; sauto q: on.
+  Qed.
+
+  Lemma declare_or_assign_map_commut {K V1 V2 : Set} `{Eq.C K}
+      (dict : t K V1) (key : K) (value : V1) (f : V1 -> V2) :
+    List.map (fun '(k, v) => (k, f v)) (declare_or_assign dict key value) =
+    declare_or_assign (List.map (fun '(k, v) => (k, f v)) dict) key (f value).
+  Proof.
+    induction dict as [|(current_key, current_value) dict IH]; cbn; trivial.
+    hauto q: on.
+  Qed.
 End Dict.
 
-Module Locals.
-  Record t : Set := {
-    functions : list (string * (list U256.t -> M.t (list U256.t)));
-    variables : list (string * U256.t)
-  }.
+(** Some additional list primitives *)
+Module List.
+  Fixpoint update_nth {A : Set} (l : list A) (index : nat) (x : A) : option (list A) :=
+    match index, l with
+    | O, h :: t => Some (x :: t)
+    | S index', h :: t => 
+        match update_nth t index' x with
+        | Some l' => Some (h :: l')
+        | None => None
+        end
+    | _, [] => None
+    end.
 
-  Definition empty : t := {|
-    functions := [];
-    variables := [];
-  |}.
+  (** Like [firstn] but we guarantee to always return [n] values, filling up with [default] if the
+      list is empty. *)
+  Fixpoint firstn_or_default {A : Set} (n : nat) (default : A) (l : list A) : list A :=
+    match n with
+    | O => []
+    | S n' =>
+      match l with
+      | [] => default :: firstn_or_default n' default []
+      | x :: xs => x :: firstn_or_default n' default xs
+      end
+    end.
+End List.
+
+Module Locals.
+  Definition t : Set :=
+    list (string * U256.t).
 End Locals.
 
 Module Stack.
@@ -60,7 +158,7 @@ Module Stack.
     list Locals.t.
 
   Definition open_scope (stack : t) : t :=
-    Locals.empty :: stack.
+    [] :: stack.
 
   Definition close_scope (stack : t) : t + string :=
     match stack with
@@ -72,7 +170,7 @@ Module Stack.
     match stack with
     | [] => inr ("variable '" ++ name ++ "' not found")%string
     | locals :: stack =>
-      match Dict.get String.eqb locals.(Locals.variables) name with
+      match Dict.get locals name with
       | None => get_var stack name
       | Some value => inl value
       end
@@ -81,11 +179,7 @@ Module Stack.
   Definition declare_var (stack : t) (name : string) (value : U256.t) : t + string :=
     match stack with
     | [] => inr "no scope to declare the variable"
-    | locals :: stack =>
-      inl (
-        locals <| Locals.variables := Dict.declare locals.(Locals.variables) name value |> ::
-        stack
-      )
+    | locals :: stack => inl (Dict.declare locals name value :: stack)
     end.
 
   Fixpoint declare_vars_aux (stack : t) (names : list string) (values : list U256.t) :
@@ -114,13 +208,13 @@ Module Stack.
     match stack with
     | [] => inr ("variable '" ++ name ++ "' not found")%string
     | locals :: stack =>
-      match Dict.assign String.eqb locals.(Locals.variables) name value with
+      match Dict.assign locals name value with
       | None =>
         match assign_var stack name value with
         | inl stack => inl (locals :: stack)
         | inr error => inr error
         end
-      | Some variables => inl (locals <| Locals.variables := variables |> :: stack)
+      | Some locals => inl (locals :: stack)
       end
     end.
 
@@ -145,30 +239,6 @@ Module Stack.
         String.concat ", " names
       )%string
     end.
-
-  Fixpoint get_function (stack : t) (name : string) : list U256.t -> M.t (list U256.t) :=
-    match stack with
-    | [] => fun _ => LowM.Impossible ("function '" ++ name ++ "' not found")
-    | locals :: stack =>
-      match Dict.get String.eqb locals.(Locals.functions) name with
-      | None => get_function stack name
-      | Some function => function
-      end
-    end.
-
-  Definition declare_function
-      (stack : t)
-      (name : string)
-      (body : list U256.t -> M.t (list U256.t)) :
-      t + string :=
-    match stack with
-    | [] => inr "no scope to declare the function"
-    | locals :: stack =>
-      inl (
-        locals <| Locals.functions := Dict.declare locals.(Locals.functions) name body |> ::
-        stack
-      )
-    end.
 End Stack.
 
 Module Memory.
@@ -177,7 +247,7 @@ Module Memory.
   Definition t : Set :=
     U256.t -> Z.
 
-  Definition init : t :=
+  Definition empty : t :=
     fun _ => 0.
 
   (** Get the bytes from some memory from a start adress and for a certain length. *)
@@ -202,13 +272,23 @@ Module Memory.
       (fun (i : nat) => Z.shiftr value (8 * (31 - Z.of_nat i)) mod 256)
       (List.seq 0 32).
 
+  Fixpoint bytes_as_u256_aux (acc : Z) (bytes : list Z) : U256.t :=
+    match bytes with
+    | [] => acc
+    | byte :: bytes =>
+      bytes_as_u256_aux
+        (acc * 256 + byte)
+        bytes
+    end.
+
   Definition bytes_as_u256 (bytes : list Z) : U256.t :=
-    List.fold_left
-      (fun (acc : U256.t) (byte : Z) =>
-        (acc * 256) + byte
-      )
-      bytes
-      0.
+    bytes_as_u256_aux 0 bytes.
+
+  Lemma bytes_as_u256_bounds (bytes : list Z)
+      (H_bytes : List.Forall (fun byte => 0 <= byte < 256) bytes) :
+    0 <= bytes_as_u256 bytes < 2 ^ (8 * Z.of_nat (List.length bytes)).
+  Proof.
+  Admitted.
 
   Definition bytes_as_bytes (bytes : list Z) : list Nibble.byte :=
     List.map
@@ -234,6 +314,9 @@ Module Storage.
       bytes. *)
   Definition t : Set :=
     U256.t -> U256.t.
+
+  Definition empty : t :=
+    fun _ => 0.
 
   Definition update (storage : Storage.t) (address value : U256.t) : Storage.t :=
     fun current_address =>
@@ -271,136 +354,301 @@ Module State.
     return_data : list Z;
     transient_storage : Storage.t;
     accounts : list (U256.t * Account.t);
-    codes : list (U256.t * M.t BlockUnit.t);
     logs : list (list U256.t * list Z);
     (** This is only for debugging *)
     call_stack : CallStack.t;
   }.
+
+  Definition init : State.t :=
+    {|
+      State.stack := [];
+      State.memory := Memory.empty;
+      State.return_data := [];
+      State.transient_storage := Memory.empty;
+      State.accounts := [];
+      State.logs := [];
+      State.call_stack := [];
+    |}.
 End State.
 
-Module Stdlib.
+(** Compute a selector from the signature of an entrypoint *)
+Definition get_selector (entrypoint_name : string) : U256.t :=
+  let hash : list Nibble.byte := EVM.Crypto.Keccak.keccak_256_of_string entrypoint_name in
+  let hash : list Z := (List.map (fun byte => Z.of_N (Nibble.N_of_byte byte))) hash in
+  Memory.bytes_as_u256 (List.firstn 4 hash).
+
+Goal get_selector "transfer()" = 0x8a4068dd.
+Proof. reflexivity. Qed.
+
+Module StdlibAux.
   Definition get_signed_value (value : U256.t) : Z :=
     ((value + (2 ^ 255)) mod (2 ^ 256)) - (2 ^ 255).
 
   Goal List.map get_signed_value [0; 10; (2 ^ 256) - 3] = [0; 10; -3].
   Proof. reflexivity. Qed.
 
+  Definition keccak256 (bytes : list U256.t) : U256.t :=
+    let bytes := Memory.bytes_as_bytes bytes in
+    let hash : list Nibble.byte := EVM.Crypto.Keccak.keccak_256 bytes in
+    let hash : list Z := List.map (fun byte => Z.of_N (Nibble.N_of_byte byte)) hash in
+    Memory.bytes_as_u256 hash.
+
+  Definition get_calldata_u256 (calldata : list Z) (index : U256.t) : U256.t :=
+    let index := Z.to_nat index in
+    let bytes := List.firstn_or_default 32 0 (List.skipn index calldata) in
+    Memory.bytes_as_u256 bytes.
+
+  Lemma get_calldata_u256_is_valid (calldata : list Z) (index : U256.t)
+      (H_calldata : List.Forall (fun byte => 0 <= byte < 256) calldata) :
+    U256.Valid.t (get_calldata_u256 calldata index).
+  Proof.
+  Admitted.
+End StdlibAux.
+
+Module Stdlib.
+  (** The pure functions from the stdlib. *)
+  Module Pure.
+    Definition add (x y : U256.t) : U256.t :=
+      (x + y) mod (2 ^ 256).
+
+    Definition sub (x y : U256.t) : U256.t :=
+      (x - y) mod (2 ^ 256).
+
+    Definition mul (x y : U256.t) : U256.t :=
+      (x * y) mod (2 ^ 256).
+
+    Definition div (x y : U256.t) : U256.t :=
+      if y =? 0 then
+        0
+      else
+        x / y.
+
+    Definition sdiv (x y : U256.t) : U256.t :=
+      if y =? 0 then
+        0
+      else
+        let x := StdlibAux.get_signed_value x in
+        let y := StdlibAux.get_signed_value y in
+        let result := x / y in
+        result mod (2 ^ 256).
+
+    Definition mod_ (x y : U256.t) : U256.t :=
+      if y =? 0 then
+        0
+      else
+        x mod y.
+
+    Definition smod (a b : Z) : U256.t :=
+      let a := StdlibAux.get_signed_value a in
+      let b := StdlibAux.get_signed_value b in
+      if b =? 0 then
+        0
+      else
+        (Z.rem a b) mod (2 ^ 256).
+
+    Goal List.map (fun '(x, y) => smod x y)
+      [(10, 3); (10, 0); (10, 10); (2^256 -8, 2^256 -3); (7, 5); (7, 2^256 -5)] =
+      [1; 0; 0; 2^256 -2; 2; 2].
+    Proof. vm_compute. reflexivity. Qed.
+
+    Definition exp (x y : U256.t) : U256.t :=
+      x ^ y.
+
+    Definition not (x : U256.t) : U256.t :=
+      2^256 - x - 1.
+
+    Definition lt (x y : U256.t) : U256.t :=
+      if x <? y then
+        1
+      else
+        0.
+
+    Definition gt (x y : U256.t) : U256.t :=
+      if x >? y then
+        1
+      else
+        0.
+
+    (* Signed version of [lt] *)
+    Definition slt (x y : U256.t) : U256.t :=
+      let x := (x + 2 ^ 255) mod (2 ^ 256) in
+      let y := (y + 2 ^ 255) mod (2 ^ 256) in
+      lt x y.
+
+    Definition sgt (x y : U256.t) : U256.t :=
+      let x := (x + 2 ^ 255) mod (2 ^ 256) in
+      let y := (y + 2 ^ 255) mod (2 ^ 256) in
+      gt x y.
+
+    Definition eq (x y : U256.t) : U256.t :=
+      if x =? y then
+        1
+      else
+        0.
+
+    Definition iszero (x : U256.t) : U256.t :=
+      if x =? 0 then
+        1
+      else
+        0.
+
+    Definition and (x y : U256.t) : U256.t :=
+      Z.land x y.
+
+    Definition or (x y : U256.t) : U256.t :=
+      Z.lor x y.
+
+    Definition xor (x y : U256.t) : U256.t :=
+      Z.lxor x y.
+
+    Definition byte (n x : U256.t) : U256.t :=
+      (x / (256 ^ (31 - n))) mod 256.
+
+    Definition shl (x y : U256.t) : U256.t :=
+      (y * (2 ^ x)) mod (2 ^ 256).
+
+    Definition shr (x y : U256.t) : U256.t :=
+      y / (2 ^ x).
+
+    Definition sar (shift : U256.t) (value : U256.t) : U256.t :=
+      let signed_value := StdlibAux.get_signed_value value in
+      let shifted_value := signed_value / (2 ^ shift) in
+      shifted_value mod (2 ^ 256).
+
+    Definition test_sar :=
+      let test_cases := [
+        (* Test case 1: shift right by 0 *)
+        (0, 123456789, 123456789);
+        (* Test case 2: shift right by 1 *)
+        (1, 123456789, 61728394);
+        (* Test case 3: shift right by 8 *)
+        (8, 123456789, 482253);
+        (* Test case 4: shift right by 16 *)
+        (16, 123456789, 1883);
+        (* Test case 5: shift right by 31 *)
+        (31, 123456789, 0);
+        (* Test case 6: shift right by 0 for a negative number *)
+        (0, -123456789 mod (2 ^ 256), -123456789 mod (2 ^ 256));
+        (* Test case 7: shift right by 1 for a negative number *)
+        (1, -123456789 mod (2 ^ 256), -61728395 mod (2 ^ 256));
+        (* Test case 8: shift right by 8 for a negative number *)
+        (8, -123456789 mod (2 ^ 256), -482254 mod (2 ^ 256));
+        (* Test case 9: shift right by 16 for a negative number *)
+        (16, -123456789 mod (2 ^ 256), -1884 mod (2 ^ 256));
+        (* Test case 10: shift right by 31 for a negative number *)
+        (31, -123456789 mod (2 ^ 256), -1 mod (2 ^ 256))
+      ] in
+      List.forallb (fun '(shift, value, expected) =>
+        let result := Stdlib.Pure.sar shift value in
+        result =? expected
+      ) test_cases.
+
+    Goal test_sar = true.
+    Proof. reflexivity. Qed.
+
+    Definition addmod (x y m : U256.t) : U256.t :=
+      (x + y) mod m.
+
+    Definition mulmod (x y m : U256.t) : U256.t :=
+      (x * y) mod m.
+
+    Definition signextend (i x : Z) : U256.t :=
+      if i >=? 31 then
+        x
+      else
+        let size := 8 * (i + 1) in
+        let byte := (x / 2 ^ (8 * i)) mod 256 in
+        let sign_bit := byte / 128 in
+        let extend_bit (bit size : Z) : Z :=
+          if bit =? 1 then
+            (2 ^ 256) - (2 ^ size)
+          else
+            0 in
+        (x mod (2 ^ size)) + extend_bit sign_bit size.
+  End Pure.
+
   Definition stop : M.t unit :=
     LowM.Pure (Result.Return 0 0).
 
-  Definition add (x y : U256.t) : U256.t :=
-    (x + y) mod (2 ^ 256).
+  Definition add (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.add x y).
 
-  Definition sub (x y : U256.t) : U256.t :=
-    (x - y) mod (2 ^ 256).
+  Definition sub (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.sub x y).
 
-  Definition mul (x y : U256.t) : U256.t :=
-    (x * y) mod (2 ^ 256).
+  Definition mul (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.mul x y).
 
-  Definition div (x y : U256.t) : U256.t :=
-    if y =? 0 then 0 else x / y.
+  Definition div (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.div x y).
 
-  Definition sdiv (x y : U256.t) : U256.t :=
-    if y =? 0 then
-      0
-    else
-      let x := get_signed_value x in
-      let y := get_signed_value y in
-      let result := x / y in
-      result mod (2 ^ 256).
+  Definition sdiv (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.sdiv x y).
 
-  Definition mod_ (x y : U256.t) : U256.t :=
-    if y =? 0 then 0 else x mod y.
+  Definition mod_ (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.mod_ x y).
 
-  Definition smod (a b : Z) : Z :=
-    let a := get_signed_value a in
-    let b := get_signed_value b in
-    if b =? 0 then
-      0
-    else
-      (Z.rem a b) mod (2 ^ 256).
+  Definition smod (a b : Z) : M.t U256.t :=
+    M.pure (Pure.smod a b).
 
-  Goal List.map (fun '(x, y) => smod x y)
-    [(10, 3); (10, 0); (10, 10); (2^256 -8, 2^256 -3); (7, 5); (7, 2^256 -5)] =
-    [1; 0; 0; 2^256 -2; 2; 2].
-  Proof. vm_compute. reflexivity. Qed.
+  Definition exp (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.exp x y).
 
-  Definition exp (x y : U256.t) : U256.t :=
-    x ^ y.
+  Definition not (x : U256.t) : M.t U256.t :=
+    M.pure (Pure.not x).
 
-  Definition not (x : U256.t) : U256.t :=
-    2^256 - x - 1.
+  Definition lt (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.lt x y).
 
-  Definition lt (x y : U256.t) : U256.t :=
-    if x <? y then 1 else 0.
-
-  Definition gt (x y : U256.t) : U256.t :=
-    if x >? y then 1 else 0.
+  Definition gt (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.gt x y).
 
   (* Signed version of [lt] *)
-  Definition slt (x y : U256.t) : U256.t :=
-    let x := (x + 2 ^ 255) mod (2 ^ 256) in
-    let y := (y + 2 ^ 255) mod (2 ^ 256) in
-    lt x y.
+  Definition slt (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.slt x y).
 
-  Definition sgt (x y : U256.t) : U256.t :=
-    let x := (x + 2 ^ 255) mod (2 ^ 256) in
-    let y := (y + 2 ^ 255) mod (2 ^ 256) in
-    gt x y.
+  Definition sgt (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.sgt x y).
 
-  Definition eq (x y : U256.t) : U256.t :=
-    if x =? y then 1 else 0.
+  Definition eq (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.eq x y).
 
-  Definition iszero (x : U256.t) : U256.t :=
-    if x =? 0 then 1 else 0.
+  Definition iszero (x : U256.t) : M.t U256.t :=
+    M.pure (Pure.iszero x).
 
-  Definition and (x y : U256.t) : U256.t :=
-    Z.land x y.
+  Definition and (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.and x y).
 
-  Definition or (x y : U256.t) : U256.t :=
-    Z.lor x y.
+  Definition or (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.or x y).
 
-  Definition xor (x y : U256.t) : U256.t :=
-    Z.lxor x y.
+  Definition xor (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.xor x y).
 
-  Definition byte (n x : U256.t) : U256.t :=
-    (x / (256 ^ (31 - n))) mod 256.
+  Definition byte (n x : U256.t) : M.t U256.t :=
+    M.pure (Pure.byte n x).
 
-  Definition shl (x y : U256.t) : U256.t :=
-    (y * (2 ^ x)) mod (2 ^ 256).
+  Definition shl (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.shl x y).
 
-  Definition shr (x y : U256.t) : U256.t :=
-    y / (2 ^ x).
+  Definition shr (x y : U256.t) : M.t U256.t :=
+    M.pure (Pure.shr x y).
 
   Definition sar (x y : U256.t) : M.t U256.t :=
-    LowM.Impossible "sar".
+    M.pure (Pure.sar x y).
 
-  Definition addmod (x y m : U256.t) : U256.t :=
-    (x + y) mod m.
+  Definition addmod (x y m : U256.t) : M.t U256.t :=
+    M.pure (Pure.addmod x y m).
 
-  Definition mulmod (x y m : U256.t) : U256.t :=
-    (x * y) mod m.
+  Definition mulmod (x y m : U256.t) : M.t U256.t :=
+    M.pure (Pure.mulmod x y m).
 
-  Definition signextend (i x : Z) : Z :=
-    if i >=? 31 then
-      x
-    else
-      let size := 8 * (i + 1) in
-      let byte := (x / 2 ^ (8 * i)) mod 256 in
-      let sign_bit := byte / 128 in
-      let extend_bit (bit size : Z) : Z :=
-        if bit =? 1 then
-          (2 ^ 256) - (2 ^ size)
-        else
-          0 in
-      (x mod (2 ^ size)) + extend_bit sign_bit size.
+  Definition signextend (i x : Z) : M.t U256.t :=
+    M.pure (Pure.signextend i x).
 
   Definition keccak256 (p n : U256.t) : M.t U256.t :=
     let* bytes := LowM.Primitive (Primitive.MLoad p n) M.pure in
-    let bytes := Memory.bytes_as_bytes bytes in
-    let hash : list Nibble.byte := EVM.Crypto.Keccak.keccak_256 bytes in
-    let hash : list Z := (List.map (fun byte => Z.of_N (Nibble.N_of_byte byte))) hash in
-    M.pure (Memory.bytes_as_u256 hash).
+    M.pure (StdlibAux.keccak256 bytes).
 
   Definition pc : M.t U256.t :=
     LowM.Impossible "pc".
@@ -439,8 +687,8 @@ Module Stdlib.
     M.pure 1000.
 
   Definition address : M.t U256.t :=
-    let* environemnt := LowM.Primitive Primitive.GetEnvironment M.pure in
-    M.pure environemnt.(Environment.address).
+    let* environment := LowM.Primitive Primitive.GetEnvironment M.pure in
+    M.pure environment.(Environment.address).
 
   Definition balance (a : U256.t) : M.t U256.t :=
     LowM.Impossible "balance".
@@ -457,14 +705,7 @@ Module Stdlib.
   Definition calldataload (p : U256.t) : M.t U256.t :=
     let* environment := LowM.Primitive Primitive.GetEnvironment M.pure in
     let calldata := environment.(Environment.calldata) in
-    let bytes : list Z :=
-      List.map
-        (fun (i : nat) =>
-          let address : nat := (Z.to_nat p + i)%nat in
-          List.nth_default 0 calldata address
-        )
-        (List.seq 0 32) in
-    M.pure (Memory.bytes_as_u256 bytes).
+    M.pure (StdlibAux.get_calldata_u256 calldata p).
 
   Definition calldatasize : M.t U256.t :=
     let* environment := LowM.Primitive Primitive.GetEnvironment M.pure in
@@ -606,7 +847,7 @@ Module Stdlib.
   Definition invalid : M.t unit :=
     LowM.Impossible "invalid".
 
-  Definition log0 (p s : U256.t) : M.t unit :=
+  (* Definition log0 (p s : U256.t) : M.t unit :=
     let* payload := LowM.Primitive (Primitive.MLoad p s) M.pure in
     LowM.Primitive (Primitive.Log [] payload) M.pure.
 
@@ -624,7 +865,24 @@ Module Stdlib.
 
   Definition log4 (p s t1 t2 t3 t4 : U256.t) : M.t unit :=
     let* payload := LowM.Primitive (Primitive.MLoad p s) M.pure in
-    LowM.Primitive (Primitive.Log [t1; t2; t3; t4] payload) M.pure.
+    LowM.Primitive (Primitive.Log [t1; t2; t3; t4] payload) M.pure. *)
+
+  (** ** For now we ignore the log operations. *)
+
+  Definition log0 (p s : U256.t) : M.t unit :=
+    M.pure tt.
+
+  Definition log1 (p s t1 : U256.t) : M.t unit :=
+    M.pure tt.
+
+  Definition log2 (p s t1 t2 : U256.t) : M.t unit :=
+    M.pure tt.
+
+  Definition log3 (p s t1 t2 t3 : U256.t) : M.t unit :=
+    M.pure tt.
+
+  Definition log4 (p s t1 t2 t3 t4 : U256.t) : M.t unit :=
+    M.pure tt.
 
   Definition chainid : M.t U256.t :=
     LowM.Impossible "chainid".
@@ -671,29 +929,27 @@ Module Stdlib.
   Definition setimmutable (_offset name value : U256.t) : M.t unit :=
     LowM.Primitive (Primitive.SetImmutable name value) M.pure.
 
-  (** Additional functions for the object mode of Yul. *)
-  Module Object.
-    (** We assume that the optimizer does not use any additional memory. *)
-    Definition memoryguard (size : U256.t) : M.t U256.t :=
-      M.pure size.
+  (** ** Additional functions for the object mode of Yul. *)
+  (** We assume that the optimizer does not use any additional memory. *)
+  Definition memoryguard (size : U256.t) : M.t U256.t :=
+    M.pure size.
 
-    (** For the [dataoffset] function we use the [name] of the code. We shift this
-        address by 256 bits in order to be able to complete it with the address constructor call's
-        parameters that are concatenated to the constructor's code at startup.
+  (** For the [dataoffset] function we use the [name] of the code. We shift this
+      address by 256 bits in order to be able to complete it with the address constructor call's
+      parameters that are concatenated to the constructor's code at startup.
 
-        Having an address that is more than 256 bits long is not realistic but not an issue for us
-        as we store the addresses in [Z].
-    *)
-    Definition dataoffset (name : U256.t) : M.t U256.t :=
-      M.pure (name * (2 ^ 256)).
+      Having an address that is more than 256 bits long is not realistic but not an issue for us
+      as we store the addresses in [Z].
+  *)
+  Definition dataoffset (name : U256.t) : M.t U256.t :=
+    M.pure (name * (2 ^ 256)).
 
-    (** We suppose that the size of the code is a word's size, and is one word that is the name. *)
-    Definition datasize (name : U256.t) : M.t U256.t :=
-      M.pure 32.
+  (** We suppose that the size of the code is a word's size, and is one word that is the name. *)
+  Definition datasize (name : U256.t) : M.t U256.t :=
+    M.pure 32.
 
-    Definition datacopy (t f s : U256.t) : M.t unit :=
-      codecopy t f s.
-  End Object.
+  Definition datacopy (t f s : U256.t) : M.t unit :=
+    codecopy t f s.
 
   Notation "'fn' p '=>' body" :=
     (fun arguments =>
@@ -711,31 +967,31 @@ Module Stdlib.
 
   Definition functions : list (string * (list U256.t -> M.t (list U256.t))) := [
     ("stop", fn [] => return_unit stop);
-    ("add", fn [x; y] => return_u256 (M.pure (add x y)));
-    ("sub", fn [x; y] => return_u256 (M.pure (sub x y)));
-    ("mul", fn [x; y] => return_u256 (M.pure (mul x y)));
-    ("div", fn [x; y] => return_u256 (M.pure (div x y)));
-    ("sdiv", fn [x; y] => return_u256 (M.pure (sdiv x y)));
-    ("mod", fn [x; y] => return_u256 (M.pure (mod_ x y)));
-    ("smod", fn [x; y] => return_u256 (M.pure (smod x y)));
-    ("exp", fn [x; y] => return_u256 (M.pure (exp x y)));
-    ("not", fn [x] => return_u256 (M.pure (not x)));
-    ("lt", fn [x; y] => return_u256 (M.pure (lt x y)));
-    ("gt", fn [x; y] => return_u256 (M.pure (gt x y)));
-    ("slt", fn [x; y] => return_u256 (M.pure (slt x y)));
-    ("sgt", fn [x; y] => return_u256 (M.pure (sgt x y)));
-    ("eq", fn [x; y] => return_u256 (M.pure (eq x y)));
-    ("iszero", fn [x] => return_u256 (M.pure (iszero x)));
-    ("and", fn [x; y] => return_u256 (M.pure (and x y)));
-    ("or", fn [x; y] => return_u256 (M.pure (or x y)));
-    ("xor", fn [x; y] => return_u256 (M.pure (xor x y)));
-    ("byte", fn [n; x] => return_u256 (M.pure (byte n x)));
-    ("shl", fn [x; y] => return_u256 (M.pure (shl x y)));
-    ("shr", fn [x; y] => return_u256 (M.pure (shr x y)));
+    ("add", fn [x; y] => return_u256 (add x y));
+    ("sub", fn [x; y] => return_u256 (sub x y));
+    ("mul", fn [x; y] => return_u256 (mul x y));
+    ("div", fn [x; y] => return_u256 (div x y));
+    ("sdiv", fn [x; y] => return_u256 (sdiv x y));
+    ("mod", fn [x; y] => return_u256 (mod_ x y));
+    ("smod", fn [x; y] => return_u256 (smod x y));
+    ("exp", fn [x; y] => return_u256 (exp x y));
+    ("not", fn [x] => return_u256 (not x));
+    ("lt", fn [x; y] => return_u256 (lt x y));
+    ("gt", fn [x; y] => return_u256 (gt x y));
+    ("slt", fn [x; y] => return_u256 (slt x y));
+    ("sgt", fn [x; y] => return_u256 (sgt x y));
+    ("eq", fn [x; y] => return_u256 (eq x y));
+    ("iszero", fn [x] => return_u256 (iszero x));
+    ("and", fn [x; y] => return_u256 (and x y));
+    ("or", fn [x; y] => return_u256 (or x y));
+    ("xor", fn [x; y] => return_u256 (xor x y));
+    ("byte", fn [n; x] => return_u256 (byte n x));
+    ("shl", fn [x; y] => return_u256 (shl x y));
+    ("shr", fn [x; y] => return_u256 (shr x y));
     ("sar", fn [x; y] => return_u256 (sar x y));
-    ("addmod", fn [x; y; m] => return_u256 (M.pure (addmod x y m)));
-    ("mulmod", fn [x; y; m] => return_u256 (M.pure (mulmod x y m)));
-    ("signextend", fn [i; x] => return_u256 (M.pure (signextend i x)));
+    ("addmod", fn [x; y; m] => return_u256 (addmod x y m));
+    ("mulmod", fn [x; y; m] => return_u256 (mulmod x y m));
+    ("signextend", fn [i; x] => return_u256 (signextend i x));
     ("keccak256", fn [p; n] => return_u256 (keccak256 p n));
     ("pc", fn [] => return_u256 pc);
     ("pop", fn [x] => return_unit (pop x));
@@ -798,32 +1054,53 @@ Module Stdlib.
     ("gaslimit", fn [] => return_u256 gaslimit);
     ("loadimmutable", fn [name] => return_u256 (loadimmutable name));
     ("setimmutable", fn [offset; name; value] => return_unit (setimmutable offset name value));
-    ("memoryguard", fn [p] => return_u256 (Object.memoryguard p));
-    ("dataoffset", fn [name] => return_u256 (Object.dataoffset name));
-    ("datasize", fn [name] => return_u256 (Object.datasize name));
-    ("datacopy", fn [p; s; n] => return_unit (Object.datacopy p s n))
+    ("memoryguard", fn [p] => return_u256 (memoryguard p));
+    ("dataoffset", fn [name] => return_u256 (dataoffset name));
+    ("datasize", fn [name] => return_u256 (datasize name));
+    ("datacopy", fn [p; s; n] => return_unit (datacopy p s n))
   ].
-
-  Definition init_stack : Stack.t :=
-    [
-      {|
-        Locals.functions := Stdlib.functions;
-        Locals.variables := [];
-      |}
-    ].
-
-  Definition initial_state : State.t :=
-    {|
-      State.stack := init_stack;
-      State.memory := Memory.init;
-      State.return_data := [];
-      State.transient_storage := Memory.init;
-      State.accounts := [];
-      State.codes := [];
-      State.logs := [];
-      State.call_stack := [];
-    |}.
 End Stdlib.
+
+Module Codes.
+  Definition t : Set :=
+    list Code.t.
+
+  Fixpoint get (codes : t) (hex_name : U256.t) : option Code.t :=
+    match codes with
+    | [] => None
+    | code :: codes =>
+      if code.(Code.hex_name) =? hex_name then
+        Some code
+      else
+        get codes hex_name
+    end.
+
+  Definition get_function
+      (codes : t)
+      (environment : Environment.t)
+      (name : string) :
+      list U256.t -> M.t (list U256.t) :=
+    match Dict.get Stdlib.functions name with
+    | Some function => function
+    | None =>
+      match get codes environment.(Environment.code_name) with
+      | None => fun _ =>
+        LowM.Impossible (
+          "code '" ++ HexString.of_Z environment.(Environment.code_name) ++ "' not found"
+        )
+      | Some code =>
+        match Dict.get code.(Code.functions) name with
+        | None => fun _ => LowM.Impossible ("function '" ++ name ++ "' not found")
+        | Some function =>
+          M.make_function
+            name
+            function.(Code.Function.arguments)
+            function.(Code.Function.results)
+            function.(Code.Function.body)
+        end
+      end
+    end.
+End Codes.
 
 (** We consider that all the primitives can be defined as a function over the state. *)
 Definition eval_primitive {A : Set}
@@ -889,8 +1166,8 @@ Definition eval_primitive {A : Set}
     )
   | Primitive.SLoad slot =>
     let address := environment.(Environment.address) in
-    let storage := Dict.get Z.eqb state.(State.accounts) address in
-    match storage with
+    let account := Dict.get state.(State.accounts) address in
+    match account with
     | None => inr ("storage not found for the address " ++ HexString.of_Z address)%string
     | Some account =>
       inl (
@@ -901,7 +1178,7 @@ Definition eval_primitive {A : Set}
   | Primitive.SStore slot value =>
     let address := environment.(Environment.address) in
     let accounts :=
-      Dict.assign_function Z.eqb state.(State.accounts) address (fun account =>
+      Dict.assign_function state.(State.accounts) address (fun account =>
         account <| Account.storage := Storage.update account.(Account.storage) slot value |>
       ) in
     match accounts with
@@ -942,7 +1219,7 @@ Definition eval_primitive {A : Set}
   | Primitive.GetNonce =>
     let address := environment.(Environment.address) in
     let accounts := state.(State.accounts) in
-    match Dict.get Z.eqb accounts address with
+    match Dict.get accounts address with
     | None => inr ("nonce not found for the address " ++ HexString.of_Z address)%string
     | Some account =>
       inl (
@@ -952,7 +1229,7 @@ Definition eval_primitive {A : Set}
     end
   | Primitive.GetCodedata address =>
     let accounts := state.(State.accounts) in
-    match Dict.get Z.eqb accounts address with
+    match Dict.get accounts address with
     | None => inr ("codedata not found for the address " ++ HexString.of_Z address)%string
     | Some account =>
       inl (
@@ -966,7 +1243,7 @@ Definition eval_primitive {A : Set}
       Account.nonce := 1;
       Account.code := code;
       Account.codedata := codedata;
-      Account.storage := Memory.init;
+      Account.storage := Memory.empty;
       Account.immutables := [];
     |} in
     inl (
@@ -975,7 +1252,7 @@ Definition eval_primitive {A : Set}
     )
   | Primitive.UpdateCodeForDeploy address code =>
     let accounts := state.(State.accounts) in
-    match Dict.assign_function Z.eqb accounts address (fun account =>
+    match Dict.assign_function accounts address (fun account =>
       account <| Account.code := code |>
     ) with
     | None => inr ("code not found for the address " ++ HexString.of_Z address)%string
@@ -988,10 +1265,10 @@ Definition eval_primitive {A : Set}
   | Primitive.LoadImmutable name =>
     let address := environment.(Environment.address) in
     let accounts := state.(State.accounts) in
-    match Dict.get Z.eqb accounts address with
+    match Dict.get accounts address with
     | None => inr ("immutables not found for the address " ++ HexString.of_Z address)%string
     | Some account =>
-      match Dict.get Z.eqb account.(Account.immutables) name with
+      match Dict.get account.(Account.immutables) name with
       | None => inr ("immutable not found for the name " ++ HexString.of_Z name)%string
       | Some value =>
         inl (
@@ -1003,7 +1280,7 @@ Definition eval_primitive {A : Set}
   | Primitive.SetImmutable name value =>
     let address := environment.(Environment.address) in
     let accounts := state.(State.accounts) in
-    match Dict.assign_function Z.eqb accounts address (fun account =>
+    match Dict.assign_function accounts address (fun account =>
       account <| Account.immutables := Dict.declare account.(Account.immutables) name value |>
     ) with
     | None => inr ("immutables not found for the address " ++ HexString.of_Z address)%string
@@ -1044,11 +1321,11 @@ Notation "'letS?' x ':=' e 'in' body" :=
 (** We assume that there is engouh value in the contract we are transfering from. We also use this
     opportunity to increase the nonce of the account. *)
 Definition decrease_value_of_current_contract
-    (environemnt : Environment.t) (state : State.t) (transferred_value : U256.t) :
+    (environment : Environment.t) (state : State.t) (transferred_value : U256.t) :
     State.t + string :=
-  let address := environemnt.(Environment.address) in
+  let address := environment.(Environment.address) in
   let accounts :=
-    Dict.assign_function Z.eqb state.(State.accounts) address (fun account =>
+    Dict.assign_function state.(State.accounts) address (fun account =>
       account
         <| Account.balance := account.(Account.balance) - transferred_value |>
         <| Account.nonce := account.(Account.nonce) + 1 |>
@@ -1064,6 +1341,7 @@ Definition decrease_value_of_current_contract
 (** A function to evaluate an expression assuming that we have enough [fuel]. *)
 Fixpoint eval {A : Set}
     (fuel : nat)
+    (codes : Codes.t)
     (environment : Environment.t)
     (e : LowM.t A) :
     State.t -> (A + string) * State.t :=
@@ -1076,60 +1354,50 @@ Fixpoint eval {A : Set}
       fun state =>
       let value_state := eval_primitive environment primitive state in
       match value_state with
-      | inl (value, state) => eval fuel environment (k value) state
+      | inl (value, state) => eval fuel codes environment (k value) state
       | inr error => (inr error, state)
-      end
-    | LowM.DeclareFunction name body k =>
-      fun state =>
-      let stack := Stack.declare_function state.(State.stack) name body in
-      match stack with
-      | inr error => (inr error, state)
-      | inl stack =>
-        eval fuel environment k (state <| State.stack := stack |>)
       end
     | LowM.CallFunction name arguments k =>
       fun state =>
-      let function := Stack.get_function state.(State.stack) name in
-      (letS? results := eval fuel environment (function arguments) in
-      eval fuel environment (k results)) state
+      let function := Codes.get_function codes environment name in
+      (letS? results := eval fuel codes environment (function arguments) in
+      eval fuel codes environment (k results)) state
     | LowM.Loop body break_with k =>
-      letS? output := eval fuel environment body in
+      letS? output := eval fuel codes environment body in
       match break_with output with
-      | None => eval fuel environment (LowM.Loop body break_with k)
-      | Some output => eval fuel environment (k output)
+      | None => eval fuel codes environment (LowM.Loop body break_with k)
+      | Some output => eval fuel codes environment (k output)
       end
     | LowM.CallContract address value input k => fun state =>
       if value >? environment.(Environment.callvalue) then
         (* When there is not enough balance, the call fails but we do not revert *)
-        eval fuel environment (k 0) state
+        eval fuel codes environment (k 0) state
       else
         match decrease_value_of_current_contract environment state value with
         | inr error => (inr error, state)
         | inl state =>
-          let callee_environment := {|
-            Environment.caller := environment.(Environment.address);
-            Environment.callvalue := value;
-            Environment.calldata := input;
-            Environment.address := address;
-          |} in
-          let callee_account := Dict.get Z.eqb state.(State.accounts) address in
+          let callee_account := Dict.get state.(State.accounts) address in
           match callee_account with
           | None =>
             (* If the contract only contains code, we transfer the [value] and succeed immediately *)
-            eval fuel environment (k 1) state
+            eval fuel codes environment (k 1) state
           | Some callee_account =>
-            let callee_state :=
-              Stdlib.initial_state
-                <| State.accounts := state.(State.accounts) |>
-                <| State.codes := state.(State.codes) |> in
+            let callee_code_name : U256.t := callee_account.(Account.code) in
+            let callee_environment := {|
+              Environment.caller := environment.(Environment.address);
+              Environment.callvalue := value;
+              Environment.calldata := input;
+              Environment.address := address;
+              Environment.code_name := callee_code_name;
+            |} in
             let callee_contract :=
-              let code := callee_account.(Account.code) in
-              match Dict.get Z.eqb state.(State.codes) code with
+              match Codes.get codes callee_code_name with
               | None => LowM.Impossible "code not found"
-              | Some contract => contract
+              | Some code => code.(Code.body)
               end in
+            let callee_state := State.init <| State.accounts := state.(State.accounts) |> in
             let '(result, callee_state) :=
-              eval fuel callee_environment callee_contract callee_state in
+              eval fuel codes callee_environment callee_contract callee_state in
             match result with
             | inr error => (inr error, state)
             | inl (Result.Ok _) => (inr "call: expected a return or a revert", state)
@@ -1138,54 +1406,167 @@ Fixpoint eval {A : Set}
                 state
                   <| State.accounts := callee_state.(State.accounts) |>
                   <| State.return_data := Memory.get_bytes callee_state.(State.memory) p s |> in
-              eval fuel environment (k 1) state
+              eval fuel codes environment (k 1) state
             | inl (Result.Revert p s) =>
               let state :=
                 state
                   <| State.accounts := callee_state.(State.accounts) |>
                   <| State.return_data := Memory.get_bytes callee_state.(State.memory) p s |> in
-              eval fuel environment (k 0) state
+              eval fuel codes environment (k 0) state
             end
           end
         end
-    | LowM.Let e1 k =>
-      letS? value := eval fuel environment e1 in
-      eval fuel environment (k value)
+    | LowM.Let e1 k | LowM.Call e1 k =>
+      letS? value := eval fuel codes environment e1 in
+      eval fuel codes environment (k value)
     | LowM.Impossible message => fun state => (inr ("Impossible: " ++ message)%string, state)
     end
   end.
 
 Module Run.
-  Reserved Notation "{{ environment , state | e ⇓ output | state' }}"
+  Reserved Notation "{{ codes , environment , state | e ⇓ output | state' }}"
     (at level 70, no associativity).
 
-  Inductive t {A : Set} (environment : Environment.t) (state : State.t) (output : A) :
+  Inductive t {A : Set} (codes : Codes.t) (environment : Environment.t)
+      (state : State.t) (output : A) :
       LowM.t A -> State.t -> Prop :=
-  | Pure : {{ environment, state | LowM.Pure output ⇓ output | state }}
+  | Pure : {{ codes, environment, state | LowM.Pure output ⇓ output | state }}
   | Primitive {B : Set} (primitive : Primitive.t B) (k : B -> LowM.t A) value state_inter state' :
     inl (value, state_inter) = eval_primitive environment primitive state ->
-    {{ environment, state_inter | k value ⇓ output | state' }} ->
-    {{ environment, state | LowM.Primitive primitive k ⇓ output | state' }}
-  | DeclareFunction name body k stack_inter state' :
-    inl stack_inter = Stack.declare_function state.(State.stack) name body ->
-    let state_inter := state <| State.stack := stack_inter |> in
-    {{ environment, state_inter | k ⇓ output | state' }} ->
-    {{ environment, state | LowM.DeclareFunction name body k ⇓ output | state' }}
+    {{ codes, environment, state_inter | k value ⇓ output | state' }} ->
+    {{ codes, environment, state | LowM.Primitive primitive k ⇓ output | state' }}
   | CallFunction name arguments k results state_inter state' :
-    let function := Stack.get_function state.(State.stack) name in
-    {{ environment, state | function arguments ⇓ results | state_inter }} ->
-    {{ environment, state_inter | k results ⇓ output | state' }} ->
-    {{ environment, state | LowM.CallFunction name arguments k ⇓ output | state' }}
+    let function := Codes.get_function codes environment name in
+    {{ codes, environment, state | function arguments ⇓ results | state_inter }} ->
+    {{ codes, environment, state_inter | k results ⇓ output | state' }} ->
+    {{ codes, environment, state | LowM.CallFunction name arguments k ⇓ output | state' }}
   | Let {B : Set} (e1 : LowM.t B) k state_inter output_inter state' :
-    {{ environment, state | e1 ⇓ output_inter | state_inter }} ->
-    {{ environment, state_inter | k output_inter ⇓ output | state' }} ->
-    {{ environment, state | LowM.Let e1 k ⇓ output | state' }}
+    {{ codes, environment, state | e1 ⇓ output_inter | state_inter }} ->
+    {{ codes, environment, state_inter | k output_inter ⇓ output | state' }} ->
+    {{ codes, environment, state | LowM.Let e1 k ⇓ output | state' }}
+  | Call {B : Set} (e1 : LowM.t B) k state_inter output_inter state' :
+    {{ codes, environment, state | e1 ⇓ output_inter | state_inter }} ->
+    {{ codes, environment, state_inter | k output_inter ⇓ output | state' }} ->
+    {{ codes, environment, state | LowM.Call e1 k ⇓ output | state' }}
 
-  where "{{ environment , state | e ⇓ output | state' }}" :=
-    (t environment state output e state').
+  where "{{ codes , environment , state | e ⇓ output | state' }}" :=
+    (t codes environment state output e state').
 End Run.
 
 Import Run.
+
+Module RunO.
+  Reserved Notation "{{? codes , environment , state | e ⇓ output | state' ?}}"
+    (at level 70, no associativity).
+
+  Inductive t {A : Set} (codes : Codes.t) (environment : Environment.t) (output : A) :
+      option State.t -> LowM.t A -> option State.t -> Prop :=
+  | Pure state :
+    {{? codes, environment, state | LowM.Pure output ⇓ output | state ?}}
+  | PureNone state :
+    {{? codes, environment, state | LowM.Pure output ⇓ output | None ?}}
+  | Primitive {B : Set} (primitive : Primitive.t B) (k : B -> LowM.t A) value
+      state state_inter state' :
+    inl (value, state_inter) = eval_primitive environment primitive state ->
+    {{? codes, environment, Some state_inter | k value ⇓ output | state' ?}} ->
+    {{? codes, environment, Some state | LowM.Primitive primitive k ⇓ output | state' ?}}
+  | PrimitiveNone {B : Set} (primitive : Primitive.t B) (k : B -> LowM.t A) state state' :
+    (forall (value : B),
+      {{? codes, environment, None | k value ⇓ output | state' ?}}
+    ) ->
+    {{? codes, environment, state | LowM.Primitive primitive k ⇓ output | state' ?}}
+  | CallFunction name arguments k results state state_inter state' :
+    let function := Codes.get_function codes environment name in
+    {{? codes, environment, state | function arguments ⇓ results | state_inter ?}} ->
+    {{? codes, environment, state_inter | k results ⇓ output | state' ?}} ->
+    {{? codes, environment, state | LowM.CallFunction name arguments k ⇓ output | state' ?}}
+  | Let {B : Set} (e1 : LowM.t B) k state state_inter output_inter state' :
+    {{? codes, environment, state | e1 ⇓ output_inter | state_inter ?}} ->
+    {{? codes, environment, state_inter | k output_inter ⇓ output | state' ?}} ->
+    {{? codes, environment, state | LowM.Let e1 k ⇓ output | state' ?}}
+  | LetUnfold {B : Set} (e1 : LowM.t B) k state state' :
+    {{? codes, environment, state | LowM.let_ e1 k ⇓ output | state' ?}} ->
+    {{? codes, environment, state | LowM.Let e1 k ⇓ output | state' ?}}
+  | Call {B : Set} (e1 : LowM.t B) k state state_inter output_inter state' :
+    {{? codes, environment, state | e1 ⇓ output_inter | state_inter ?}} ->
+    {{? codes, environment, state_inter | k output_inter ⇓ output | state' ?}} ->
+    {{? codes, environment, state | LowM.Call e1 k ⇓ output | state' ?}}
+  | CallUnfold {B : Set} (e1 : LowM.t B) k state state' :
+    {{? codes, environment, state | LowM.let_ e1 k ⇓ output | state' ?}} ->
+    {{? codes, environment, state | LowM.Call e1 k ⇓ output | state' ?}}
+
+  where "{{? codes , environment , state | e ⇓ output | state' ?}}" :=
+    (t codes environment output state e state').
+
+  Lemma If codes environment {A : Set} (condition : bool) (e1 e2 : LowM.t A)
+      state output1 output2 state'1 state'2 :
+    {{? codes, environment, state | e1 ⇓ output1 | state'1 ?}} ->
+    {{? codes, environment, state | e2 ⇓ output2 | state'2 ?}} ->
+    {{? codes, environment, state |
+      if condition then e1 else e2 ⇓
+      if condition then output1 else output2
+    | if condition then state'1 else state'2 ?}}.
+  Proof.
+    now destruct condition.
+  Qed.
+
+  Lemma PureEq codes environment {A : Set} (output output' : A) state state' :
+    output = output' ->
+    state = state' ->
+    {{? codes, environment, state | LowM.Pure output ⇓ output' | state' ?}}.
+  Proof.
+    intros -> ->.
+    now constructor.
+  Qed.
+End RunO.
+
+Import RunO.
+
+Module RunP.
+  Reserved Notation "{{{ codes , environment , state | e ⇓ P_output_state' }}}"
+    (at level 70, no associativity).
+
+  Inductive t {A : Set} (codes : Codes.t) (environment : Environment.t)
+      (state : State.t) (P_output_state' : A -> State.t -> Prop) :
+      LowM.t A -> Prop :=
+  | Pure (output : A) :
+    P_output_state' output state ->
+    {{{ codes, environment, state | LowM.Pure output ⇓ P_output_state' }}}
+  | Primitive {B : Set} (primitive : Primitive.t B) (k : B -> LowM.t A) value state_inter :
+    inl (value, state_inter) = eval_primitive environment primitive state ->
+    {{{ codes, environment, state_inter | k value ⇓ P_output_state' }}} ->
+    {{{ codes, environment, state | LowM.Primitive primitive k ⇓ P_output_state' }}}
+  | CallFunction name arguments k P_results_state_inter :
+    let function := Codes.get_function codes environment name in
+    {{{ codes, environment, state | function arguments ⇓ P_results_state_inter }}} ->
+    (forall results state_inter,
+      P_results_state_inter results state_inter ->
+      {{{ codes, environment, state_inter | k results ⇓ P_output_state' }}}
+    ) ->
+    {{{ codes, environment, state | LowM.CallFunction name arguments k ⇓ P_output_state' }}}
+  | Let {B : Set} (e1 : LowM.t B) k P_output_state_inter :
+    {{{ codes, environment, state | e1 ⇓ P_output_state_inter }}} ->
+    (forall output_inter state_inter,
+      P_output_state_inter output_inter state_inter ->
+      {{{ codes, environment, state_inter | k output_inter ⇓ P_output_state' }}}
+     ) ->
+    {{{ codes, environment, state | LowM.Let e1 k ⇓ P_output_state' }}}
+  | Call {B : Set} (e1 : LowM.t B) k P_output_state_inter :
+    {{{ codes, environment, state | e1 ⇓ P_output_state_inter }}} ->
+    (forall output_inter state_inter,
+      P_output_state_inter output_inter state_inter ->
+      {{{ codes, environment, state_inter | k output_inter ⇓ P_output_state' }}}
+     ) ->
+    {{{ codes, environment, state | LowM.Call e1 k ⇓ P_output_state' }}}
+
+  where "{{{ codes , environment , state | e ⇓ P_output_state' }}}" :=
+    (t codes environment state P_output_state' e).
+
+  Ltac apply_pure :=
+    now eapply RunP.Pure with (P_output_state' := fun output state' => output = _ /\ state' = _).
+End RunP.
+
+Import RunP.
 
 (** The [eval] function follows the semantics given by [Run.t]. *)
 (* Fixpoint eval_is_run {A : Set}
@@ -1238,15 +1619,507 @@ Qed. *)
 
 Definition eval_with_revert
     (fuel : nat)
+    (codes : Codes.t)
     (environment : Environment.t)
     (e : M.t BlockUnit.t)
     (state : State.t) :
     (Result.t BlockUnit.t + string) * State.t :=
-  let '(output, state') := eval fuel environment e state in
+  let '(output, state') := eval fuel codes environment e state in
   match output with
   | inl (Result.Revert _ _) => (output, state' <| State.accounts := state.(State.accounts) |>)
   | _ => (output, state')
   end.
+
+Module Compare.
+  (** [None] if not a stack primitive, [Some None] for a stack primitive with error,
+      and [Some (Some result)] otherwise. *)
+  Definition eval_stack_primitive {A : Set} (primitive : Primitive.t A) :
+      option (Stack.t -> option (A * Stack.t)) :=
+    match primitive with
+    | Primitive.OpenScope => Some (fun stack => Some (tt, Stack.open_scope stack))
+    | Primitive.CloseScope =>
+      Some (fun stack => match Stack.close_scope stack with
+      | inr _ => None
+      | inl stack => Some (tt, stack)
+      end)
+    | Primitive.GetVar name =>
+      Some (fun stack => match Stack.get_var stack name with
+      | inr _ => None
+      | inl value => Some (value, stack)
+      end)
+    | Primitive.DeclareVars names values =>
+      Some (fun stack => match Stack.declare_vars stack names values with
+      | inr _ => None
+      | inl stack => Some (tt, stack)
+      end)
+    | Primitive.AssignVars names values =>
+      Some (fun stack => match Stack.assign_vars stack names values with
+      | inr _ => None
+      | inl stack => Some (tt, stack)
+      end)
+    | _ => None
+    end.
+
+  Lemma eval_stack_primitive_none_eq {A : Set} (primitive : Primitive.t A) :
+    eval_stack_primitive primitive = None ->
+    forall (environment : Environment.t) (state : State.t),
+    match eval_primitive environment primitive state with
+    | inl (_, state') => state'.(State.stack) = state.(State.stack)
+    | inr _ => True
+    end.
+  Proof.
+    destruct primitive; simpl; intros; try congruence; hauto l: on.
+  Qed.
+
+  Lemma eval_stack_primitive_some_eq {A : Set} (primitive : Primitive.t A) :
+    match eval_stack_primitive primitive with
+    | Some eval_stack =>
+      forall (environment : Environment.t) (state : State.t),
+      match eval_primitive environment primitive state, eval_stack state.(State.stack) with
+      | inl (value, state'), Some (value', stack') =>
+          value = value' /\ state' = state <| State.stack := stack' |>
+      | inr _, None => True
+      | _, _ => False
+      end
+    | None => True
+    end.
+  Proof.
+    destruct primitive; simpl; intros; try apply I; hauto l: on.
+  Qed.
+
+  Definition map_on_output_state_of_eval_primitive {A : Set}
+      (f : State.t -> State.t) (output : (A * State.t) + string) :
+      (A * State.t) + string :=
+    match output with
+    | inl (value, state) => inl (value, f state)
+    | inr _ => output
+    end.
+
+  Lemma eval_stack_primitive_none_does_not_use_stack {A : Set} (primitive : Primitive.t A) :
+    eval_stack_primitive primitive = None ->
+    forall (environment : Environment.t) (state : State.t) (stack : Stack.t),
+    eval_primitive environment primitive (state <| State.stack := stack |>) =
+    map_on_output_state_of_eval_primitive
+      (fun state => state <| State.stack := stack |>)
+      (eval_primitive environment primitive state).
+  Proof.
+    intros; destruct primitive; simpl in *; try congruence; hauto lq: on.
+  Qed.
+
+  Lemma eval_stack_primitive_some_only_use_stack {A : Set} (primitive : Primitive.t A) :
+    eval_stack_primitive primitive <> None ->
+    forall (environment : Environment.t) (state state' : State.t),
+    eval_primitive environment primitive (state' <| State.stack := state.(State.stack) |>) =
+    map_on_output_state_of_eval_primitive
+      (fun state => state' <| State.stack := state.(State.stack) |>)
+      (eval_primitive environment primitive state).
+  Proof.
+    intros; destruct primitive; simpl in *; try congruence; hauto q: on.
+  Qed.
+
+  Module Liftable.
+    Class C (A A' : Set) := {
+      lift : A' -> A;
+      IsInjection : forall (a1 a2: A'), lift a1 = lift a2 -> a1 = a2;
+    }.
+
+    #[refine]
+    Global Instance I_BlockUnit : C BlockUnit.t BlockUnit.t := {
+      lift := fun v => v;
+    }.
+    Proof.
+      sfirstorder.
+    Defined.
+
+    #[refine]
+    Global Instance I_Unit : C BlockUnit.t unit := {
+      lift := fun _ => BlockUnit.Tt;
+    }.
+    Proof.
+      sauto lq: on.
+    Defined.
+
+    #[refine]
+    Global Instance I_Tuple0 : C (list U256.t) unit := {
+      lift := fun _ => [];
+    }.
+    Proof.
+      sauto lq: on.
+    Defined.
+
+    #[refine]
+    Global Instance I_Tuple1 : C (list U256.t) U256.t := {
+      lift := fun v1 =>  [v1];
+    }.
+    Proof.
+      hauto lq: on.
+    Defined.
+
+    #[refine]
+    Global Instance I_Tuple2 : C (list U256.t) (U256.t * U256.t) := {
+      lift := fun '(v1, v2) => [v1; v2];
+    }.
+    Proof.
+      hauto lq: on.
+    Defined.
+
+    #[refine]
+    Global Instance I_Tuple3 : C (list U256.t) (U256.t * U256.t * U256.t) := {
+      lift := fun '(v1, v2, v3) => [v1; v2; v3];
+    }.
+    Proof.
+      hauto lq: on.
+    Defined.
+
+    #[refine]
+    Global Instance I_Tuple4 : C (list U256.t) (U256.t * U256.t * U256.t * U256.t) := {
+      lift := fun '(v1, v2, v3, v4) => [v1; v2; v3; v4];
+    }.
+    Proof.
+      hauto lq: on.
+    Defined.
+
+    #[refine]
+    Global Instance I_Tuple5 : C (list U256.t) (U256.t * U256.t * U256.t * U256.t * U256.t) := {
+      lift := fun '(v1, v2, v3, v4, v5) => [v1; v2; v3; v4; v5];
+    }.
+    Proof.
+      hauto lq: on.
+    Defined.
+  End Liftable.
+
+  Lemma result_map_injection {A A' : Set} `{Liftable.C A A'}
+      (output1 output2 : Result.t A') :
+    Result.map Liftable.lift output1 = Result.map Liftable.lift output2 ->
+    output1 = output2.
+  Proof.
+    destruct H, output1, output2; cbn; hauto q: on.
+  Qed.
+
+  Definition is_function_name_pure (name : string) : bool :=
+    match name with
+    | "add"
+    | "sub"
+    | "mul"
+    | "div"
+    | "sdiv"
+    | "mod"
+    | "smod"
+    | "exp"
+    | "not"
+    | "lt"
+    | "gt"
+    | "slt"
+    | "sgt"
+    | "eq"
+    | "iszero"
+    | "and"
+    | "or"
+    | "xor"
+    | "byte"
+    | "shl"
+    | "shr"
+    | "sar"
+    | "addmod"
+    | "mulmod"
+    | "signextend" => true
+    | _ => false
+    end.
+
+  (** We use this predicate to construct a proof that a program without stack is equivalent to the
+      original version putting local variables on a stack of scopes.
+      We do not yet have a proof that this predicate is correct. This is a work that we will need
+      to do, but we first need to introduce concepts to reason at the meta-level of the language,
+      introducing concepts like simulations between computations. *)
+  Inductive t
+      (codes : Codes.t) (environment : Environment.t) (stack : Stack.t) :
+      forall {A A' : Set} `{Liftable.C A A'},
+      Stack.t -> M.t A -> M.t A' -> Prop :=
+  | Pure {A A' : Set} `{Liftable.C A A'}
+      (output : Result.t A) (output' : Result.t A') :
+    output = Result.map Liftable.lift output' ->
+    t codes environment stack stack
+      (LowM.Pure output) (LowM.Pure output')
+  | PrimitiveNonStack {A A' : Set} `{Liftable.C A A'} {B : Set}
+      (primitive : Primitive.t B) (k1 : B -> M.t A) (k2 : B -> M.t A') stack' :
+    eval_stack_primitive primitive = None ->
+    (forall value,
+      t codes environment stack stack'
+        (k1 value) (k2 value)
+    ) ->
+    t codes environment stack stack'
+      (LowM.Primitive primitive k1) (LowM.Primitive primitive k2)
+  | PrimitiveStack {A A' : Set} `{Liftable.C A A'} {B : Set}
+      (primitive : Primitive.t B) (value : B) (k1 : B -> M.t A) (e2 : M.t A')
+      eval_stack stack_inter stack' :
+    eval_stack_primitive primitive = Some eval_stack ->
+    eval_stack stack = Some (value, stack_inter) ->
+    t codes environment stack_inter stack' (k1 value) e2 ->
+    t codes environment stack stack' (LowM.Primitive primitive k1) e2
+  | CallFunction {A A' : Set} `{Liftable.C A A'} {B : Set} `{Liftable.C (list U256.t) B}
+      name arguments
+      (k1 : Result.t (list U256.t) -> M.t A) (e2 : M.t B) (k2 : Result.t B -> M.t A') stack' :
+    let f1 : list U256.t -> M.t (list U256.t) :=
+      Codes.get_function codes environment name in
+    t codes environment stack stack (f1 arguments) e2 ->
+    (forall (value : Result.t B),
+      t codes environment stack stack'
+        (k1 (Result.map Liftable.lift value)) (k2 value)
+    ) ->
+    t codes environment stack stack'
+      (LowM.CallFunction name arguments k1)
+      (LowM.Call e2 k2)
+  | LetUnfold {A A' : Set} `{Liftable.C A A'} {B B' : Set}
+      (e1 : M.t B) (k1 : Result.t B -> M.t A) (e2 : M.t B') (k2 : Result.t B' -> M.t A') stack' :
+    t codes environment stack stack'
+      (LowM.let_ e1 k1)
+      (LowM.let_ e2 k2) ->
+    t codes environment stack stack'
+      (LowM.Let e1 k1)
+      (LowM.Let e2 k2)
+  | Let {A A' : Set} `{Liftable.C A A'} {B B' : Set} `{Liftable.C B B'}
+      (e1 : M.t B) (k1 : Result.t B -> M.t A) (e2 : M.t B') (k2 : Result.t B' -> M.t A')
+      stack_inter stack' :
+    t codes environment stack stack_inter
+      e1 e2 ->
+    (forall (value : Result.t B'),
+      t codes environment stack_inter stack'
+        (k1 (Result.map Liftable.lift value)) (k2 value)
+    ) ->
+    t codes environment stack stack'
+      (LowM.Let e1 k1)
+      (LowM.Let e2 k2)
+  | ReturnUnit (body : M.t unit) :
+    t codes environment stack stack
+      (Stdlib.return_unit body)
+      body
+  | ReturnU256 (body : M.t U256.t) :
+    t codes environment stack stack
+      (Stdlib.return_u256 body)
+      body.
+
+  (** This is a beginning of proof for the comparison predicate above. We will need more
+      preliminary work like defining what it means for a computation to simulate another one, how
+      to reason on potentially non-terminating terms, clearly separating the stack operations in
+      the semantics, ... *)
+  Module WorkInProgressVerifytheComparePredicate.
+  (*
+  Module ImpliesOriginalEval.
+    Definition t {A A' : Set} `{Liftable.C A A'}
+        (codes : Codes.t) (environment : Environment.t) (stack stack' : Stack.t)
+        (body_with_stack : M.t A) (body : M.t A') : Prop :=
+      forall (fuel : nat) (state state' : State.t) (output : Result.t A'),
+      eval fuel codes environment body state = (inl output, state') ->
+      exists fuel_with_stack,
+      eval fuel_with_stack codes environment body_with_stack (state <| State.stack := stack |>) =
+        (inl (Result.map Liftable.lift output), (state' <| State.stack := stack' |>)).
+  End ImpliesOriginalEval.
+
+  Module DoesNotUseStack.
+    Definition t {A' : Set}
+        (codes : Codes.t) (environment : Environment.t) (body : M.t A') : Prop :=
+      forall (fuel : nat) (state : State.t) (stack : Stack.t),
+      eval fuel codes environment body (state <| State.stack := stack |>) =
+      let '(result, state') := eval fuel codes environment body state in
+      (result, state' <| State.stack := stack |>).
+  End DoesNotUseStack.
+
+  Module Def.
+    Record t {A A' : Set} `{Liftable.C A A'}
+        (codes : Codes.t) (environment : Environment.t) (stack stack' : Stack.t)
+        (body_with_stack : M.t A) (body : M.t A') : Prop := {
+      implies_original_eval :
+        ImpliesOriginalEval.t codes environment stack stack' body_with_stack body;
+      does_not_use_stack :
+        DoesNotUseStack.t codes environment body;
+    }.
+  End Def.
+
+  Lemma pure {A A' : Set} `{Liftable.C A A'}
+      (codes : Codes.t) (environment : Environment.t) (stack : Stack.t)
+      (output : Result.t A) (output' : Result.t A')
+      (H_output : output = Result.map Liftable.lift output') :
+    Def.t codes environment stack stack
+      (LowM.Pure output) (LowM.Pure output').
+  Proof.
+    constructor.
+    { unfold ImpliesOriginalEval.t; intros.
+      exists fuel.
+      destruct fuel; best.
+    }
+    { unfold DoesNotUseStack.t; intros.
+      destruct fuel; best.
+    }
+  Qed.
+
+  Lemma primitive_no_stack {A A' : Set} `{Liftable.C A A'}
+      (codes : Codes.t) (environment : Environment.t) (stack : Stack.t)
+      {B : Set} (primitive : Primitive.t B) k1 k2 stack'
+      (H_primitive : eval_stack_primitive primitive = None)
+      (H_k : forall value,
+        Def.t codes environment stack stack'
+          (k1 value) (k2 value)
+      ) :
+    Def.t codes environment stack stack'
+      (LowM.Primitive primitive k1) (LowM.Primitive primitive k2).
+  Proof.
+    constructor.
+    { unfold ImpliesOriginalEval.t; intros * H_eval.
+      destruct fuel as [|fuel]; simpl in *; [congruence|].
+      match goal with
+      | H : _ |- _ => pose proof (eval_stack_primitive_none_eq _ H environment state)
+      end.
+      destruct eval_primitive eqn:?; [|congruence].
+      Tactics.destruct_pairs.
+      match goal with
+      | value : B |- _ => destruct (H_k value)
+      end.
+      unfold ImpliesOriginalEval.t in implies_original_eval.
+      epose proof (H_eval_k := implies_original_eval _ _ _ _ H_eval).
+      destruct H_eval_k as [fuel_with_stack ?].
+      exists (S fuel_with_stack).
+      simpl.
+      best.
+      Unshelve.
+      best.
+    }
+    { unfold DoesNotUseStack.t; intros.
+      destruct fuel; simpl; [reflexivity|].
+      rewrite eval_stack_primitive_none_does_not_use_stack by assumption.
+      destruct eval_primitive; simpl; [|reflexivity].
+      Tactics.destruct_pairs.
+      match goal with
+      | value : B |- _ => destruct (H_k value)
+      end.
+      apply does_not_use_stack.
+    }
+  Qed.
+
+  Lemma primitive_stack {A A' : Set} `{Liftable.C A A'}
+      (codes : Codes.t) (environment : Environment.t) (stack : Stack.t)
+      {B : Set}
+      (primitive : Primitive.t B) (value : B) (k1 : B -> M.t A) (e2 : M.t A')
+      eval_stack stack_inter stack'
+      (H_eval_stack : eval_stack_primitive primitive = Some eval_stack)
+      (H_stack : eval_stack stack = Some (value, stack_inter))
+      (H_k : Def.t codes environment stack_inter stack' (k1 value) e2) :
+    Def.t codes environment stack stack' (LowM.Primitive primitive k1) e2.
+  Proof.
+    constructor.
+    { unfold ImpliesOriginalEval.t; intros * H_state H_state' H_eval.
+      epose proof (H_eval_eq := eval_stack_primitive_some_eq primitive).
+      pose proof (H_eval_primitive_only_stack :=
+        eval_stack_primitive_some_only_use_stack primitive ltac:(congruence) environment).
+      destruct eval_stack_primitive; [|congruence].
+      injection H_eval_stack; intros H_eval_stack_eq;
+        rewrite H_eval_stack_eq in *; clear H_eval_stack_eq.
+      pose proof (H_eval_eq environment state); clear H_eval_eq.
+      rewrite H_state in *.
+      rewrite H_stack in *.
+      destruct eval_primitive eqn:?; [|easy].
+      Tactics.destruct_pairs.
+      subst.
+      destruct H_k.
+      unfold ImpliesOriginalEval.t, DoesNotUseStack.t in *.
+      epose proof (H_k_instance :=
+        implies_original_eval fuel (state<|State.stack:= stack_inter|>) state' output
+        _ ltac:(reflexivity)).
+  Admitted.
+
+  Definition def {A A' : Set} `{Liftable.C A A'}
+      (codes : Codes.t) (environment : Environment.t) (stack stack' : Stack.t)
+      (body_with_stack : M.t A) (body : M.t A') : Prop :=
+    forall (fuel : nat) (state state' : State.t) (output : Result.t A'),
+    eval fuel codes environment body_with_stack (state <| State.stack := stack |>) =
+      (inl (Result.map Liftable.lift output), state') ->
+    state'.(State.stack) = stack' /\
+    eval fuel codes environment body state =
+      (inl output, state' <| State.stack := state.(State.stack) |>).
+
+  Lemma pure {A A' : Set} `{Liftable.C A A'}
+      (codes : Codes.t) (environment : Environment.t) (stack : Stack.t)
+      (output : Result.t A) (output' : Result.t A')
+      (H_output : output = Result.map Liftable.lift output') :
+    def codes environment stack stack
+      (LowM.Pure output) (LowM.Pure output').
+  Proof.
+    unfold def; intros.
+    destruct fuel; simpl in *; best using result_map_injection.
+  Qed.
+
+  Definition def {A A' : Set} `{Liftable.C A A'}
+      (codes : Codes.t) (environment : Environment.t) (stack stack' : Stack.t)
+      (body_with_stack : M.t A) (body : M.t A') : Prop :=
+    forall (state : State.t),
+    exists (state' : State.t) (output : Result.t A'),
+    {{ codes, environment, state <| State.stack := stack |> |
+      body_with_stack ⇓
+      Result.map Liftable.lift output
+    | state' <| State.stack := stack' |> }}.
+
+  Fixpoint def_implies {A A' : Set} `{Liftable.C A A'}
+      (codes : Codes.t) (environment : Environment.t) (stack stack' : Stack.t)
+      (body_with_stack : M.t A) (body : M.t A')
+      (H_compare : t codes environment stack stack' body_with_stack body) :
+    def codes environment stack stack' body_with_stack body.
+  Proof.
+    destruct H_compare;
+      unfold def; intros; repeat eexists.
+    { subst.
+      apply Run.Pure.
+    }
+    { eapply Run.Primitive.
+
+    }
+  Qed.
+  *)
+  End WorkInProgressVerifytheComparePredicate.
+
+  Module Tactic.
+    Ltac stack_primitives :=
+      repeat (eapply Compare.PrimitiveStack; [reflexivity|reflexivity|]).
+
+    Ltac make_intro :=
+      intros []; repeat (eapply Compare.PrimitiveStack; [reflexivity|reflexivity|]);
+        try now apply Compare.Pure.
+
+
+    Ltac expression helper :=
+      repeat (
+        (* Literal *)
+        (now apply Compare.Pure) ||
+        (* Variable *)
+        Compare.Tactic.stack_primitives ||
+        (* Impure function call *)
+        (eapply Compare.CallFunction; [
+          apply Compare.ReturnUnit ||
+          apply Compare.ReturnU256 ||
+          helper |
+          Compare.Tactic.make_intro
+        ])
+      ).
+
+    Ltac open_if :=
+      unfold M.if_, M.if_unit; simpl;
+        match goal with
+        | |- Compare.t _ _ _ _ (if ?cond then _ else _) _ =>
+          destruct cond; [now apply Compare.Pure|]
+        end.
+
+    Ltac open_switch_case :=
+      match goal with
+      | |- Compare.t _ _ _ _ ?left ?right =>
+        let left' := eval hnf in left in
+        change left with left';
+        let right' := eval hnf in right in
+        change right with right'
+      end;
+      match goal with
+      | |- Compare.t _ _ _ _ (if ?cond then _ else _) _ =>
+        destruct cond
+      end.
+  End Tactic.
+End Compare.
 
 Definition update_current_code_for_deploy (hex_name : Z) : M.t BlockUnit.t :=
   let* environment := LowM.Primitive Primitive.GetEnvironment M.pure in
@@ -1305,4 +2178,4 @@ Module Test.
 End Test.
 
 Definition declared_vars (state : State.t) : list (list (string * U256.t)) :=
-  List.map (fun locals => locals.(Locals.variables)) state.(State.stack).
+  state.(State.stack).

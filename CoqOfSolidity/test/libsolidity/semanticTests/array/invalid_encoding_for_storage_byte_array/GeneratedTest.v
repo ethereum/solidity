@@ -10,7 +10,7 @@ Definition constructor_code : Code.t :=
 Definition deployed_code : Code.t :=
   test.libsolidity.semanticTests.array.invalid_encoding_for_storage_byte_array.C.C.deployed.code.
 
-Definition codes : list (U256.t * M.t BlockUnit.t) :=
+Definition codes : list Code.t :=
   test.libsolidity.semanticTests.array.invalid_encoding_for_storage_byte_array.C.codes.
 
 Module Constructor.
@@ -19,6 +19,7 @@ Module Constructor.
     Environment.callvalue := 0;
     Environment.calldata := [];
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := constructor_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
@@ -28,15 +29,13 @@ Module Constructor.
       Account.nonce := 1;
       Account.code := constructor_code.(Code.hex_name);
       Account.codedata := Memory.hex_string_as_bytes "";
-      Account.storage := Memory.init;
+      Account.storage := Memory.empty;
       Account.immutables := [];
     |} in
-    Stdlib.initial_state
-      <| State.accounts := [(address, account)] |>
-      <| State.codes := codes |>.
+    State.init <| State.accounts := [(address, account)] |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment constructor_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment constructor_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -49,7 +48,7 @@ Module Constructor.
 
 Definition final_state : State.t :=
   snd (
-    eval 5000 environment (update_current_code_for_deploy deployed_code.(Code.hex_name)) state
+    eval 5000 codes environment (update_current_code_for_deploy deployed_code.(Code.hex_name)) state
   ).
 End Constructor.
 
@@ -60,15 +59,14 @@ Module Step1.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Constructor.final_state.(State.accounts) |>
-      <| State.codes := Constructor.final_state.(State.codes) |>.
+    State.init <| State.accounts := Constructor.final_state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -90,15 +88,14 @@ Module Step2.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "6097e7a3";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step1.state.(State.accounts) |>
-      <| State.codes := Step1.state.(State.codes) |>.
+    State.init <| State.accounts := Step1.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -120,15 +117,14 @@ Module Step3.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "48f8459c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step2.state.(State.accounts) |>
-      <| State.codes := Step2.state.(State.codes) |>.
+    State.init <| State.accounts := Step2.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -150,15 +146,14 @@ Module Step4.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "5b1a8042";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step3.state.(State.accounts) |>
-      <| State.codes := Step3.state.(State.codes) |>.
+    State.init <| State.accounts := Step3.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -180,15 +175,14 @@ Module Step5.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "5636494c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step4.state.(State.accounts) |>
-      <| State.codes := Step4.state.(State.codes) |>.
+    State.init <| State.accounts := Step4.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -210,15 +204,14 @@ Module Step6.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "c1b8a1f4";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step5.state.(State.accounts) |>
-      <| State.codes := Step5.state.(State.codes) |>.
+    State.init <| State.accounts := Step5.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -240,15 +233,14 @@ Module Step7.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "47f6ac11";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step6.state.(State.accounts) |>
-      <| State.codes := Step6.state.(State.codes) |>.
+    State.init <| State.accounts := Step6.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -270,15 +262,14 @@ Module Step8.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step7.state.(State.accounts) |>
-      <| State.codes := Step7.state.(State.codes) |>.
+    State.init <| State.accounts := Step7.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -300,15 +291,14 @@ Module Step9.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "d661981d";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step8.state.(State.accounts) |>
-      <| State.codes := Step8.state.(State.codes) |>.
+    State.init <| State.accounts := Step8.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -330,15 +320,14 @@ Module Step10.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "2366fc70";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step9.state.(State.accounts) |>
-      <| State.codes := Step9.state.(State.codes) |>.
+    State.init <| State.accounts := Step9.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -360,15 +349,14 @@ Module Step11.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step10.state.(State.accounts) |>
-      <| State.codes := Step10.state.(State.codes) |>.
+    State.init <| State.accounts := Step10.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -390,15 +378,14 @@ Module Step12.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "99fe85f5";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step11.state.(State.accounts) |>
-      <| State.codes := Step11.state.(State.codes) |>.
+    State.init <| State.accounts := Step11.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -420,15 +407,14 @@ Module Step13.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step12.state.(State.accounts) |>
-      <| State.codes := Step12.state.(State.codes) |>.
+    State.init <| State.accounts := Step12.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -450,15 +436,14 @@ Module Step14.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "dec8843a";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step13.state.(State.accounts) |>
-      <| State.codes := Step13.state.(State.codes) |>.
+    State.init <| State.accounts := Step13.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -480,15 +465,14 @@ Module Step15.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step14.state.(State.accounts) |>
-      <| State.codes := Step14.state.(State.codes) |>.
+    State.init <| State.accounts := Step14.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -504,7 +488,7 @@ Module Step15.
 End Step15.
 
 (* // copyFromStorageLong()
-// gas irOptimized: 121104
+// gas irOptimized: 121095
 // gas legacy: 121904
 // gas legacyOptimized: 121388 *)
 Module Step16.
@@ -513,15 +497,14 @@ Module Step16.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "e35e57a1";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step15.state.(State.accounts) |>
-      <| State.codes := Step15.state.(State.codes) |>.
+    State.init <| State.accounts := Step15.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -543,15 +526,14 @@ Module Step17.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step16.state.(State.accounts) |>
-      <| State.codes := Step16.state.(State.codes) |>.
+    State.init <| State.accounts := Step16.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -573,15 +555,14 @@ Module Step18.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "988acb1d";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step17.state.(State.accounts) |>
-      <| State.codes := Step17.state.(State.codes) |>.
+    State.init <| State.accounts := Step17.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -603,15 +584,14 @@ Module Step19.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step18.state.(State.accounts) |>
-      <| State.codes := Step18.state.(State.codes) |>.
+    State.init <| State.accounts := Step18.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -633,15 +613,14 @@ Module Step20.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "a56dfe4a";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step19.state.(State.accounts) |>
-      <| State.codes := Step19.state.(State.codes) |>.
+    State.init <| State.accounts := Step19.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -663,15 +642,14 @@ Module Step21.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "b6588ffd";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step20.state.(State.accounts) |>
-      <| State.codes := Step20.state.(State.codes) |>.
+    State.init <| State.accounts := Step20.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -693,15 +671,14 @@ Module Step22.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step21.state.(State.accounts) |>
-      <| State.codes := Step21.state.(State.codes) |>.
+    State.init <| State.accounts := Step21.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -723,15 +700,14 @@ Module Step23.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "5f51a73e";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step22.state.(State.accounts) |>
-      <| State.codes := Step22.state.(State.codes) |>.
+    State.init <| State.accounts := Step22.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -753,15 +729,14 @@ Module Step24.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step23.state.(State.accounts) |>
-      <| State.codes := Step23.state.(State.codes) |>.
+    State.init <| State.accounts := Step23.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -783,15 +758,14 @@ Module Step25.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "6097e7a3";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step24.state.(State.accounts) |>
-      <| State.codes := Step24.state.(State.codes) |>.
+    State.init <| State.accounts := Step24.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -813,15 +787,14 @@ Module Step26.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "48f8459c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step25.state.(State.accounts) |>
-      <| State.codes := Step25.state.(State.codes) |>.
+    State.init <| State.accounts := Step25.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -843,15 +816,14 @@ Module Step27.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "5b1a8042";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step26.state.(State.accounts) |>
-      <| State.codes := Step26.state.(State.codes) |>.
+    State.init <| State.accounts := Step26.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -873,15 +845,14 @@ Module Step28.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "5636494c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step27.state.(State.accounts) |>
-      <| State.codes := Step27.state.(State.codes) |>.
+    State.init <| State.accounts := Step27.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -903,15 +874,14 @@ Module Step29.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "c1b8a1f4";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step28.state.(State.accounts) |>
-      <| State.codes := Step28.state.(State.codes) |>.
+    State.init <| State.accounts := Step28.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -933,15 +903,14 @@ Module Step30.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "47f6ac11";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step29.state.(State.accounts) |>
-      <| State.codes := Step29.state.(State.codes) |>.
+    State.init <| State.accounts := Step29.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -963,15 +932,14 @@ Module Step31.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step30.state.(State.accounts) |>
-      <| State.codes := Step30.state.(State.codes) |>.
+    State.init <| State.accounts := Step30.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -993,15 +961,14 @@ Module Step32.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "d661981d";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step31.state.(State.accounts) |>
-      <| State.codes := Step31.state.(State.codes) |>.
+    State.init <| State.accounts := Step31.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1023,15 +990,14 @@ Module Step33.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "2366fc70";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step32.state.(State.accounts) |>
-      <| State.codes := Step32.state.(State.codes) |>.
+    State.init <| State.accounts := Step32.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1053,15 +1019,14 @@ Module Step34.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step33.state.(State.accounts) |>
-      <| State.codes := Step33.state.(State.codes) |>.
+    State.init <| State.accounts := Step33.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1083,15 +1048,14 @@ Module Step35.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "99fe85f5";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step34.state.(State.accounts) |>
-      <| State.codes := Step34.state.(State.codes) |>.
+    State.init <| State.accounts := Step34.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1113,15 +1077,14 @@ Module Step36.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step35.state.(State.accounts) |>
-      <| State.codes := Step35.state.(State.codes) |>.
+    State.init <| State.accounts := Step35.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1143,15 +1106,14 @@ Module Step37.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "dec8843a";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step36.state.(State.accounts) |>
-      <| State.codes := Step36.state.(State.codes) |>.
+    State.init <| State.accounts := Step36.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1173,15 +1135,14 @@ Module Step38.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step37.state.(State.accounts) |>
-      <| State.codes := Step37.state.(State.codes) |>.
+    State.init <| State.accounts := Step37.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1203,15 +1164,14 @@ Module Step39.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "e35e57a1";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step38.state.(State.accounts) |>
-      <| State.codes := Step38.state.(State.codes) |>.
+    State.init <| State.accounts := Step38.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1233,15 +1193,14 @@ Module Step40.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step39.state.(State.accounts) |>
-      <| State.codes := Step39.state.(State.codes) |>.
+    State.init <| State.accounts := Step39.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1263,15 +1222,14 @@ Module Step41.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "988acb1d";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step40.state.(State.accounts) |>
-      <| State.codes := Step40.state.(State.codes) |>.
+    State.init <| State.accounts := Step40.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1293,15 +1251,14 @@ Module Step42.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step41.state.(State.accounts) |>
-      <| State.codes := Step41.state.(State.codes) |>.
+    State.init <| State.accounts := Step41.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1323,15 +1280,14 @@ Module Step43.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "a56dfe4a";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step42.state.(State.accounts) |>
-      <| State.codes := Step42.state.(State.codes) |>.
+    State.init <| State.accounts := Step42.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1353,15 +1309,14 @@ Module Step44.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "b6588ffd";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step43.state.(State.accounts) |>
-      <| State.codes := Step43.state.(State.codes) |>.
+    State.init <| State.accounts := Step43.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1383,15 +1338,14 @@ Module Step45.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step44.state.(State.accounts) |>
-      <| State.codes := Step44.state.(State.codes) |>.
+    State.init <| State.accounts := Step44.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1413,15 +1367,14 @@ Module Step46.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "dc689af7";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step45.state.(State.accounts) |>
-      <| State.codes := Step45.state.(State.codes) |>.
+    State.init <| State.accounts := Step45.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1443,15 +1396,14 @@ Module Step47.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step46.state.(State.accounts) |>
-      <| State.codes := Step46.state.(State.codes) |>.
+    State.init <| State.accounts := Step46.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1473,15 +1425,14 @@ Module Step48.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "6097e7a3";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step47.state.(State.accounts) |>
-      <| State.codes := Step47.state.(State.codes) |>.
+    State.init <| State.accounts := Step47.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1503,15 +1454,14 @@ Module Step49.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "48f8459c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step48.state.(State.accounts) |>
-      <| State.codes := Step48.state.(State.codes) |>.
+    State.init <| State.accounts := Step48.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1533,15 +1483,14 @@ Module Step50.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "5b1a8042";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step49.state.(State.accounts) |>
-      <| State.codes := Step49.state.(State.codes) |>.
+    State.init <| State.accounts := Step49.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1563,15 +1512,14 @@ Module Step51.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "5636494c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step50.state.(State.accounts) |>
-      <| State.codes := Step50.state.(State.codes) |>.
+    State.init <| State.accounts := Step50.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1593,15 +1541,14 @@ Module Step52.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "c1b8a1f4";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step51.state.(State.accounts) |>
-      <| State.codes := Step51.state.(State.codes) |>.
+    State.init <| State.accounts := Step51.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1623,15 +1570,14 @@ Module Step53.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "47f6ac11";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step52.state.(State.accounts) |>
-      <| State.codes := Step52.state.(State.codes) |>.
+    State.init <| State.accounts := Step52.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1653,15 +1599,14 @@ Module Step54.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step53.state.(State.accounts) |>
-      <| State.codes := Step53.state.(State.codes) |>.
+    State.init <| State.accounts := Step53.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1683,15 +1628,14 @@ Module Step55.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "d661981d";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step54.state.(State.accounts) |>
-      <| State.codes := Step54.state.(State.codes) |>.
+    State.init <| State.accounts := Step54.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1713,15 +1657,14 @@ Module Step56.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "2366fc70";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step55.state.(State.accounts) |>
-      <| State.codes := Step55.state.(State.codes) |>.
+    State.init <| State.accounts := Step55.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1743,15 +1686,14 @@ Module Step57.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step56.state.(State.accounts) |>
-      <| State.codes := Step56.state.(State.codes) |>.
+    State.init <| State.accounts := Step56.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1773,15 +1715,14 @@ Module Step58.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "99fe85f5";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step57.state.(State.accounts) |>
-      <| State.codes := Step57.state.(State.codes) |>.
+    State.init <| State.accounts := Step57.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1803,15 +1744,14 @@ Module Step59.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step58.state.(State.accounts) |>
-      <| State.codes := Step58.state.(State.codes) |>.
+    State.init <| State.accounts := Step58.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1833,15 +1773,14 @@ Module Step60.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "dec8843a";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step59.state.(State.accounts) |>
-      <| State.codes := Step59.state.(State.codes) |>.
+    State.init <| State.accounts := Step59.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1863,15 +1802,14 @@ Module Step61.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step60.state.(State.accounts) |>
-      <| State.codes := Step60.state.(State.codes) |>.
+    State.init <| State.accounts := Step60.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1893,15 +1831,14 @@ Module Step62.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "e35e57a1";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step61.state.(State.accounts) |>
-      <| State.codes := Step61.state.(State.codes) |>.
+    State.init <| State.accounts := Step61.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1923,15 +1860,14 @@ Module Step63.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step62.state.(State.accounts) |>
-      <| State.codes := Step62.state.(State.codes) |>.
+    State.init <| State.accounts := Step62.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1953,15 +1889,14 @@ Module Step64.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "988acb1d";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step63.state.(State.accounts) |>
-      <| State.codes := Step63.state.(State.codes) |>.
+    State.init <| State.accounts := Step63.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -1983,15 +1918,14 @@ Module Step65.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0c55699c";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step64.state.(State.accounts) |>
-      <| State.codes := Step64.state.(State.codes) |>.
+    State.init <| State.accounts := Step64.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -2013,15 +1947,14 @@ Module Step66.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "a56dfe4a";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Step65.state.(State.accounts) |>
-      <| State.codes := Step65.state.(State.codes) |>.
+    State.init <| State.accounts := Step65.state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.

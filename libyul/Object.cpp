@@ -111,11 +111,6 @@ Json Object::toJson() const
 	return ret;
 }
 
-std::string Data::toCoq() const
-{
-	return "Definition data : string :=\n  \"" + util::toHex(data) + "\".";
-}
-
 std::string Object::toCoq() const
 {
 	yulAssert(hasCode(), "No code");
@@ -124,12 +119,15 @@ std::string Object::toCoq() const
 	inner += "  Code.name := \"" + name + "\";\n";
 	std::string hex_name = util::toHex(util::asBytes(name));
 	inner += "  Code.hex_name := 0x" + hex_name + std::string(64 - hex_name.size(), '0') + ";\n";
-	inner += "  Code.code :=\n";
-	inner += prefixLines(AsmCoqConverter(0)(code()->root()), "    ") + ";\n";
+	inner += "  Code.functions :=\n";
+	inner += prefixLines(AsmCoqConverter(0).functions(code()->root()), "    ") + ";\n";
+	inner += "  Code.body :=\n";
+	inner += prefixLines(AsmCoqConverter(0).body(code()->root()), "    ") + ";\n";
 	inner += "|}.";
 
 	for (auto const& subObject: subObjects)
-		inner += "\n\n" + subObject->toCoq();
+		if (auto* objectPtr = dynamic_cast<Object*>(subObject.get()))
+			inner += "\n\n" + objectPtr->toCoq();
 
 	// We remove the id from the name has it makes things more difficult to find the definition in Coq,
 	// especially for the generated test files from the tests of the Solidity compiler.

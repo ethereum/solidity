@@ -1,13 +1,14 @@
 .PHONY: all clean clean-util distclean default
 
-VFILES := $(shell find . -name "*.v")
+VFILES := $(shell find -L . -name "*.v" | grep -v -f blacklist.txt | sort)
 
 default: all
 
-CoqMakefile: $(VFILES)
+CoqMakefile: $(VFILES) blacklist.txt
 	echo "-R . CoqOfSolidity" > _CoqProject
 	echo "-arg -impredicative-set" >> _CoqProject
-	find . -name "*.v" | sort >> _CoqProject
+	# We copy & paste the command to find files as this variable is too long on command line
+	find -L . -name "*.v" | grep -v -f blacklist.txt | sort >> _CoqProject
 	coq_makefile -f _CoqProject -o $@
 
 MAKECOQ := +$(MAKE) -f CoqMakefile

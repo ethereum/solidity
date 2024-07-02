@@ -1,27 +1,25 @@
 # 🪨🐓 coq-of-solidity
 > A formal verification tool for [Solidity](https://soliditylang.org/) using the [Coq](https://coq.inria.fr/) proof system
 
-_Disclaimer: work in progress on the proofs side_
-
 The `coq-of-solidity` project is a tool to automatically translate Solidity smart contracts to the Coq proof system. This allows to formally verify the correctness of the smart contracts.
 
 Formal verification is about verifying code for all possible input, and goes further than traditional testing that only covers a finite amount of cases. Formal verification relies on mathematical methods to analyze the code.
 
 This project provides:
 
-1. **More security for code audits:** all the combination of inputs are covered, in contrast to testing.
+1. **More security for code audits:** all the combinations of inputs are covered, in contrast to testing.
 2. **Reusable audits** for future code changes: we can re-run the proofs as the code evolves.
 
-The `coq-of-solidity` tool is open-source and uses an interactive theorem prover (Coq) to be able to check arbitrarily complex code properties and business rules.
+The `coq-of-solidity` tool uses an interactive theorem prover (Coq) to check arbitrarily complex code properties and business rules for your smart contracts.
 
 ## 🙏 Thanks
 
-We thanks the [AlephZero Foundation](https://alephzero.org/) for their support and funding this project.
+We thank the [AlephZero Foundation](https://alephzero.org/) for their support and funding of this project.
 
 <!-- contact -->
 ## 📬 Contact
 
-If you have smart contracts that you wish to audit with a maximum level of security, or want to know more about this project, do not hesitate to contact us at [contact@formal.land](mailto:contact@formal.land). We provide formal verification services for Solidity, Rust, OCaml, Python.
+If you have smart contracts that you wish to audit with a maximum level of security, or want to know more about this project, do not hesitate to contact us at [contact@formal.land](mailto:contact@formal.land). We provide formal verification services for [Solidity](https://soliditylang.org/), [Rust](https://www.rust-lang.org/), and [OCaml](https://ocaml.org/), and we already secured thousands of lines of code for the blockchain industry ([Tezos](https://tezos.com/), [Aleph Zero](https://alephzero.org/), [Sui](https://sui.io/)).
 
 ## 🚀 Quick start
 
@@ -30,7 +28,7 @@ This project is based on a fork of the [`solc` Solidity compiler](https://github
 Then, assuming that you are at the root of this project, run the following commands:
 
 ```sh
-build/solc/solc --ir-coq my_smart_contract.sol
+build/solc/solc --ir-coq --optimize my_smart_contract.sol
 ```
 
 It will pretty-print on the terminal a Coq version of the code. Examples of contracts that are already translated in Coq are in the [CoqOfSolidity/](CoqOfSolidity/) folder.
@@ -47,17 +45,17 @@ cd CoqOfSolidity
 make -j4 -k
 ```
 
-The Coq compilation take a lot of time as there are a lot of generated files.
+The Coq compilation takes a lot of time as there are a lot of generated files.
 
 The translated Coq files can sometimes be a bit too verbose. You can have a better readability by generating the original Yul code that we use to generate the Coq translation with:
 
 ```sh
-build/solc/solc --ir-optimized my_smart_contract.sol
+build/solc/solc --ir-optimized --optimize my_smart_contract.sol
 ```
 
 ## 🏗️ Architecture
 
-This project is build as a fork of the official `solc` compiler in order to re-use the frontend (parser, type-checker, ...) and stay up-to-date with the Solidity language. The `solc` compiler is a C++ project that compiles Solidity code to EVM bytecode.
+This project is built as a fork of the official `solc` compiler in order to re-use the frontend (parser, type-checker, ...) and stay up-to-date with the Solidity language. The `solc` compiler is a C++ project that compiles Solidity code to EVM bytecode.
 
 We translate the intermediate language [Yul](https://docs.soliditylang.org/en/latest/yul.html) to Coq. Yul is a low-level intermediate language used by the Solidity compiler that is both simpler than Solidity and more high-level than EVM bytecode. The relevant code is in [libyul/AsmCoqConverter.cpp](libyul/AsmCoqConverter.cpp).
 
@@ -82,7 +80,7 @@ To build the tests you need to:
     ```sh
     build/test/soltest --run_test=semanticTests
     ```
-    This will generate one `GeneratedTest.v` file per semantic test. This commands take several minutes to run, as it also compiles and executes each of the contract in the semantic tests. This command might require a few dependencies to run, like [evmone](https://github.com/ethereum/evmone). You can first try to make this test command work in upstream repository of Solidity.
+    This will generate one `GeneratedTest.v` file per semantic test. This command takes several minutes to run, as it also compiles and executes each of the contracts in the semantic tests. This command might require a few dependencies to run, like [evmone](https://github.com/ethereum/evmone). You can first try to make this test command work in te upstream repository of Solidity.
 3. Then you can compile them with:
     ```sh
     cd CoqOfSolidity
@@ -94,11 +92,16 @@ We do not support yet all the semantic tests but around 90% and are working on t
 
 ## 📚 Example
 
-For now writing proofs on the generated code is still a work in progress and we focused on making a translation with a correct execution. To give an idea of what the Coq translation looks like, the following Solidity code:
+Here is what the Coq translation looks like for an example of Solidity code:
 
 ```solidity
-function balanceOf(address owner) public view returns (uint256) {
-  return _balances[owner];
+function _transfer(address from, address to, uint256 value) internal {
+    require(to != address(0), "ERC20: transfer to the zero address");
+
+    // The subtraction and addition here will revert on overflow.
+    _balances[from] = _balances[from] - value;
+    _balances[to] = _balances[to] + value;
+    emit Transfer(from, to, value);
 }
 ```
 
@@ -107,95 +110,51 @@ translates in Coq to:
 ```coq
 (* Generated by coq-of-solidity *)
 
-M.function (|
-  "fun_balanceOf",
-  ["var_owner"],
-  ["var"],
-  M.scope (
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["zero_t_uint256"],
-        Some (M.call (|
-          "zero_value_for_split_uint256",
-          []
-        |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.assign (|
-        ["var"],
-        Some (M.get_var (| "zero_t_uint256" |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["_28_slot"],
-        Some ([Literal.number 0x00])
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["expr_54_slot"],
-        Some (M.get_var (| "_28_slot" |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["_1"],
-        Some (M.get_var (| "var_owner" |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["expr"],
-        Some (M.get_var (| "_1" |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["_2"],
-        Some (M.call (|
-          "mapping_index_access_mapping_address_uint256_of_address",
-          [
-            M.get_var (| "expr_54_slot" |);
-            M.get_var (| "expr" |)
-          ]
-        |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["_3"],
-        Some (M.call (|
-          "read_from_storage_split_offset_uint256",
-          [
-            M.get_var (| "_2" |)
-          ]
-        |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.declare (|
-        ["expr_1"],
-        Some (M.get_var (| "_3" |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.assign (|
-        ["var"],
-        Some (M.get_var (| "expr_1" |))
-      |)
-    )) in
-    do* ltac:(M.monadic (
-      M.leave (||)
-    )) in
-    M.pure BlockUnit.Tt
-  )
-|)
+Definition fun_transfer (var_from : U256.t) (var_to : U256.t) (var_value : U256.t) : M.t unit :=
+  let~ _1 := [[ and ~(| var_to, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
+  do~ [[
+    M.if_unit (| iszero ~(| _1 |),
+      let~ memPtr := [[ mload ~(| 64 |) ]] in
+      do~ [[ mstore ~(| memPtr, (shl ~(| 229, 4594637 |)) |) ]] in
+      do~ [[ mstore ~(| (add ~(| memPtr, 4 |)), 32 |) ]] in
+      do~ [[ mstore ~(| (add ~(| memPtr, 36 |)), 35 |) ]] in
+      do~ [[ mstore ~(| (add ~(| memPtr, 68 |)), 0x45524332303a207472616e7366657220746f20746865207a65726f2061646472 |) ]] in
+      do~ [[ mstore ~(| (add ~(| memPtr, 100 |)), 0x6573730000000000000000000000000000000000000000000000000000000000 |) ]] in
+      do~ [[ revert ~(| memPtr, 132 |) ]] in
+      M.pure tt
+    |)
+  ]] in
+  let~ _2 := [[ and ~(| var_from, (sub ~(| (shl ~(| 160, 1 |)), 1 |)) |) ]] in
+  do~ [[ mstore ~(| 0x00, _2 |) ]] in
+  do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+  let~ _3 := [[ checked_sub_uint256 ~(| (sload ~(| (keccak256 ~(| 0x00, 0x40 |)) |)), var_value |) ]] in
+  do~ [[ mstore ~(| 0x00, _2 |) ]] in
+  do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+  do~ [[ sstore ~(| (keccak256 ~(| 0x00, 0x40 |)), _3 |) ]] in
+  do~ [[ mstore ~(| 0x00, _1 |) ]] in
+  do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+  let~ _4 := [[ checked_add_uint256 ~(| (sload ~(| (keccak256 ~(| 0x00, 0x40 |)) |)), var_value |) ]] in
+  do~ [[ mstore ~(| 0x00, _1 |) ]] in
+  do~ [[ mstore ~(| 0x20, 0x00 |) ]] in
+  do~ [[ sstore ~(| (keccak256 ~(| 0x00, 0x40 |)), _4 |) ]] in
+  let~ _5 := [[ mload ~(| 0x40 |) ]] in
+  do~ [[ mstore ~(| _5, var_value |) ]] in
+  do~ [[ log3 ~(| _5, 0x20, 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef, _2, _1 |) ]] in
+  M.pure tt.
 ```
 
-The Coq output is much more verbose than the original Solidity and must be simplified in a first proof step.
+The Coq output is based of the Yul compilation of the above Solidity code.
 
 ## 📝 License
 
 The code of the translation is under the GPL-3.0 license as this is a fork of the Solidity compiler. The code of the Coq semantics is under the MIT license.
+
+## 👥 Developers
+
+Some scripts or commands that can be useful for the development of this project:
+
+To generate the JSON of the Yul of an example:
+
+```sh
+./build/solc/solc --ir-optimized-ast-json --optimize test/libsolidity/semanticTests/various/erc20.sol |tail -1 |jq 'walk(if type == "object" then del(.nativeSrc, .src, .type) else . end)' >CoqOfSolidity/test/libsolidity/semanticTests/various/erc20/ERC20.json
+```

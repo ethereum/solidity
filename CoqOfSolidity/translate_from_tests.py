@@ -29,6 +29,7 @@ def translate_file(root_file):
             "-o",
             os.path.join("test", root, file[:-4]),
             "--overwrite",
+            "--optimize",
             "--ir-coq",
             os.path.join(root, file)
         ],

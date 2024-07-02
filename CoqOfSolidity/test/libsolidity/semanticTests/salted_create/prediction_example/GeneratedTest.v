@@ -11,7 +11,7 @@ Definition constructor_code : Code.t :=
 Definition deployed_code : Code.t :=
   test.libsolidity.semanticTests.salted_create.prediction_example.C.C.deployed.code.
 
-Definition codes : list (U256.t * M.t BlockUnit.t) :=
+Definition codes : list Code.t :=
   test.libsolidity.semanticTests.salted_create.prediction_example.C.codes.
 
 Module Constructor.
@@ -20,6 +20,7 @@ Module Constructor.
     Environment.callvalue := 0;
     Environment.calldata := [];
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := constructor_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
@@ -29,15 +30,13 @@ Module Constructor.
       Account.nonce := 1;
       Account.code := constructor_code.(Code.hex_name);
       Account.codedata := Memory.hex_string_as_bytes "";
-      Account.storage := Memory.init;
+      Account.storage := Memory.empty;
       Account.immutables := [];
     |} in
-    Stdlib.initial_state
-      <| State.accounts := [(address, account)] |>
-      <| State.codes := codes |>.
+    State.init <| State.accounts := [(address, account)] |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment constructor_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment constructor_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.
@@ -50,12 +49,12 @@ Module Constructor.
 
 Definition final_state : State.t :=
   snd (
-    eval 5000 environment (update_current_code_for_deploy deployed_code.(Code.hex_name)) state
+    eval 5000 codes environment (update_current_code_for_deploy deployed_code.(Code.hex_name)) state
   ).
 End Constructor.
 
 (* // createDSalted(bytes32,uint256): 42, 64 ->
-// gas legacy: 78574
+// gas legacy: 78573
 // gas legacy code: 23600 *)
 Module Step1.
   Definition environment : Environment.t :={|
@@ -63,15 +62,14 @@ Module Step1.
     Environment.callvalue := 0;
     Environment.calldata := Memory.hex_string_as_bytes "0bd38f2f000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000000040";
     Environment.address := 0xc06afe3a8444fc0004668591e8306bfb9968e79e;
+    Environment.code_name := deployed_code.(Code.hex_name);
   |}.
 
   Definition initial_state : State.t :=
-    Stdlib.initial_state
-      <| State.accounts := Constructor.final_state.(State.accounts) |>
-      <| State.codes := Constructor.final_state.(State.codes) |>.
+    State.init <| State.accounts := Constructor.final_state.(State.accounts) |>.
 
   Definition result_state :=
-    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state.
+    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state.
 
   Definition result := fst result_state.
   Definition state := snd result_state.

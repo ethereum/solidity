@@ -43,6 +43,8 @@ public:
 	/// @a _sourceIndex to be used to abbreviate source name in the source locations
 	explicit AsmCoqConverter(std::optional<size_t> _sourceIndex): m_sourceIndex(_sourceIndex) {}
 
+	std::string functions(Block const& _node);
+	std::string body(Block const& _node);
 	std::string operator()(Block const& _node);
 	std::string operator()(NameWithDebugData const& _node);
 	std::string operator()(Literal const& _node);

@@ -756,7 +756,7 @@ bool SemanticTest::deploy(
 	outputFile << "Definition deployed_code : Code.t :=" << std::endl;
 	outputFile << "  " << requirePathPrefix() << "." << lastContractName << "." << lastContractName << ".deployed.code." << std::endl;
 	outputFile << std::endl;
-	outputFile << "Definition codes : list (U256.t * M.t BlockUnit.t) :=" << std::endl;
+	outputFile << "Definition codes : list Code.t :=" << std::endl;
 	outputFile << "  " << requirePathPrefix() << "." << lastContractName << ".codes." << std::endl;
 	outputFile << std::endl;
 	outputFile << "Module Constructor." << std::endl;
@@ -765,6 +765,7 @@ bool SemanticTest::deploy(
 	outputFile << "    Environment.callvalue := " << _value << ";" << std::endl;
 	outputFile << "    Environment.calldata := [];" << std::endl;
 	outputFile << "    Environment.address := 0x" << m_contractAddress << ";" << std::endl;
+	outputFile << "    Environment.code_name := constructor_code.(Code.hex_name);" << std::endl;
 	outputFile << "  |}." << std::endl;
 	outputFile << std::endl;
 	outputFile << "  Definition initial_state : State.t :=" << std::endl;
@@ -774,15 +775,13 @@ bool SemanticTest::deploy(
 	outputFile << "      Account.nonce := 1;" << std::endl;
 	outputFile << "      Account.code := constructor_code.(Code.hex_name);" << std::endl;
 	outputFile << "      Account.codedata := Memory.hex_string_as_bytes \"" << util::toHex(_arguments) << "\";" << std::endl;
-	outputFile << "      Account.storage := Memory.init;" << std::endl;
+	outputFile << "      Account.storage := Memory.empty;" << std::endl;
 	outputFile << "      Account.immutables := [];" << std::endl;
 	outputFile << "    |} in" << std::endl;
-	outputFile << "    Stdlib.initial_state" << std::endl;
-	outputFile << "      <| State.accounts := [(address, account)] |>" << std::endl;
-	outputFile << "      <| State.codes := codes |>." << std::endl;
+	outputFile << "    State.init <| State.accounts := [(address, account)] |>." << std::endl;
 	outputFile << std::endl;
 	outputFile << "  Definition result_state :=" << std::endl;
-	outputFile << "    eval_with_revert 5000 environment constructor_code.(Code.code) initial_state." << std::endl;
+	outputFile << "    eval_with_revert 5000 codes environment constructor_code.(Code.body) initial_state." << std::endl;
 	outputFile << std::endl;
 	outputFile << "  Definition result := fst result_state." << std::endl;
 	outputFile << "  Definition state := snd result_state." << std::endl;
@@ -795,7 +794,7 @@ bool SemanticTest::deploy(
 	outputFile << std::endl;
 	outputFile << "Definition final_state : State.t :=" << std::endl;
 	outputFile << "  snd (" << std::endl;
-	outputFile << "    eval 5000 environment (update_current_code_for_deploy deployed_code.(Code.hex_name)) state" << std::endl;
+	outputFile << "    eval 5000 codes environment (update_current_code_for_deploy deployed_code.(Code.hex_name)) state" << std::endl;
 	outputFile << "  )." << std::endl;
 	outputFile << "End Constructor." << std::endl;
 
@@ -854,6 +853,7 @@ void SemanticTest::writeCoqCallTest(
 	bytes arguments = util::selectorFromSignatureH32(_signature).asBytes() + _arguments;
 	outputFile << "    Environment.calldata := Memory.hex_string_as_bytes \"" << util::toHex(arguments) << "\";" << std::endl;
 	outputFile << "    Environment.address := 0x" << m_contractAddress << ";" << std::endl;
+	outputFile << "    Environment.code_name := deployed_code.(Code.hex_name);" << std::endl;
 	outputFile << "  |}." << std::endl;
 	outputFile << std::endl;
 	std::string initialState =
@@ -861,12 +861,10 @@ void SemanticTest::writeCoqCallTest(
 			"Constructor.final_state" :
 			"Step" + std::to_string(testIndex) + ".state";
 	outputFile << "  Definition initial_state : State.t :=" << std::endl;
-	outputFile << "    Stdlib.initial_state" << std::endl;
-	outputFile << "      <| State.accounts := " << initialState << ".(State.accounts) |>" << std::endl;
-	outputFile << "      <| State.codes := " << initialState << ".(State.codes) |>." << std::endl;
+	outputFile << "    State.init <| State.accounts := " << initialState << ".(State.accounts) |>." << std::endl;
 	outputFile << std::endl;
 	outputFile << "  Definition result_state :=" << std::endl;
-	outputFile << "    eval_with_revert 5000 environment deployed_code.(Code.code) initial_state." << std::endl;
+	outputFile << "    eval_with_revert 5000 codes environment deployed_code.(Code.body) initial_state." << std::endl;
 	outputFile << std::endl;
 	outputFile << "  Definition result := fst result_state." << std::endl;
 	outputFile << "  Definition state := snd result_state." << std::endl;
