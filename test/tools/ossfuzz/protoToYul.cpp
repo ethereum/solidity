@@ -1162,6 +1162,11 @@ void ProtoConverter::visit(IfStmt const& _x)
 void ProtoConverter::visit(StoreFunc const& _x)
 {
 	auto storeType = _x.st();
+	// Skip statement generation if tstore is not
+	// supported in EVM version
+	if (storeType == StoreFunc::TSTORE && !m_evmVersion.supportsTransientStorage())
+		return;
+
 	switch (storeType)
 	{
 	case StoreFunc::MSTORE:
