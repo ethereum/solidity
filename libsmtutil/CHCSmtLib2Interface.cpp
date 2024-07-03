@@ -28,7 +28,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <range/v3/algorithm/all_of.hpp>
-#include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view.hpp>
 

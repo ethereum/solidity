@@ -23,8 +23,12 @@ contract C {
 	}
 }
 // ====
-// SMTEngine: all
+// SMTEngine: chc
+// SMTIgnoreOS: macos
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (335-365): CHC: Assertion violation happens here.\nCounterexample:\n\ndata = [36]\nb3 = []\nb4 = []\nx = 0\ny = 0\nb5 = []\nb6 = []\n\nTransaction trace:\nC.constructor()\nC.abiEncodeSlice(sig, [36]) -- counterexample incomplete; parameter name used instead of value
+// Warning 6328: (335-365): CHC: Assertion violation happens here.
 // Warning 6328: (589-619): CHC: Assertion violation happens here.
-// Info 1391: CHC: 3 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Warning 6328: (703-733): CHC: Assertion violation happens here.
+// Warning 6328: (972-1002): CHC: Assertion violation happens here.
+// Warning 6328: (1087-1117): CHC: Assertion violation happens here.

@@ -18,18 +18,14 @@
 
 #include <libsolidity/formal/CHC.h>
 
-#include <libsolidity/formal/ModelChecker.h>
-
-#ifdef HAVE_Z3
-#include <libsmtutil/Z3CHCInterface.h>
-#endif
-
 #include <libsolidity/formal/ArraySlicePredicate.h>
 #include <libsolidity/formal/EldaricaCHCSmtLib2Interface.h>
 #include <libsolidity/formal/Invariants.h>
+#include <libsolidity/formal/ModelChecker.h>
 #include <libsolidity/formal/PredicateInstance.h>
 #include <libsolidity/formal/PredicateSort.h>
 #include <libsolidity/formal/SymbolicTypes.h>
+#include <libsolidity/formal/Z3CHCSmtLib2Interface.h>
 
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -37,10 +33,6 @@
 #include <liblangutil/CharStreamProvider.h>
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/StringUtils.h>
-
-#ifdef HAVE_Z3_DLOPEN
-#include <z3_version.h>
-#endif
 
 #include <boost/algorithm/string.hpp>
 
@@ -1279,41 +1271,29 @@ void CHC::resetSourceAnalysis()
 	ArraySlicePredicate::reset();
 	m_blockCounter = 0;
 
-	// At this point every enabled solver is available.
-	// If more than one Horn solver is selected we go with z3.
-	// We still need the ifdef because of Z3CHCInterface.
-	if (m_settings.solvers.z3)
+	solAssert(m_settings.solvers.smtlib2 || m_settings.solvers.eld || m_settings.solvers.z3);
+	if (!m_interface)
 	{
-#ifdef HAVE_Z3
-		// z3::fixedpoint does not have a reset mechanism, so we need to create another.
-		m_interface = std::make_unique<Z3CHCInterface>(m_settings.timeout);
-		auto z3Interface = dynamic_cast<Z3CHCInterface const*>(m_interface.get());
-		solAssert(z3Interface, "");
-		m_context.setSolver(z3Interface->z3Interface());
-#else
-		solAssert(false);
-#endif
+		if (m_settings.solvers.z3)
+			m_interface = std::make_unique<Z3CHCSmtLib2Interface>(
+				m_smtCallback,
+				m_settings.timeout,
+				m_settings.invariants != ModelCheckerInvariants::None()
+			);
+		else if (m_settings.solvers.eld)
+			m_interface = std::make_unique<EldaricaCHCSmtLib2Interface>(
+				m_smtCallback,
+				m_settings.timeout,
+				m_settings.invariants != ModelCheckerInvariants::None()
+			);
+		else
+			m_interface = std::make_unique<CHCSmtLib2Interface>(m_smtlib2Responses, m_smtCallback, m_settings.timeout);
 	}
-	else
-	{
-		solAssert(m_settings.solvers.smtlib2 || m_settings.solvers.eld);
-		if (!m_interface)
-		{
-			if (m_settings.solvers.eld)
-				m_interface = std::make_unique<EldaricaCHCSmtLib2Interface>(
-					m_smtCallback,
-					m_settings.timeout,
-					m_settings.invariants != ModelCheckerInvariants::None()
-				);
-			else
-				m_interface = std::make_unique<CHCSmtLib2Interface>(m_smtlib2Responses, m_smtCallback, m_settings.timeout);
-		}
 
-		auto smtlib2Interface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
-		solAssert(smtlib2Interface);
-		smtlib2Interface->reset();
-		m_context.setSolver(smtlib2Interface);
-	}
+	auto smtlib2Interface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
+	solAssert(smtlib2Interface);
+	smtlib2Interface->reset();
+	m_context.setSolver(smtlib2Interface);
 
 	m_context.reset();
 	m_context.resetUniqueId();
@@ -1932,29 +1912,6 @@ CHCSolverInterface::QueryResult CHC::query(smtutil::Expression const& _query, la
 	switch (result.answer)
 	{
 	case CheckResult::SATISFIABLE:
-	{
-	// We still need the ifdef because of Z3CHCInterface.
-		if (m_settings.solvers.z3)
-		{
-#ifdef HAVE_Z3
-			// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
-			// We now disable those optimizations and check whether we can still solve the problem.
-			auto* spacer = dynamic_cast<Z3CHCInterface*>(m_interface.get());
-			solAssert(spacer, "");
-			spacer->setSpacerOptions(false);
-
-			auto resultNoOpt = m_interface->query(_query);
-
-			if (resultNoOpt.answer == CheckResult::SATISFIABLE)
-				result.cex = std::move(resultNoOpt.cex);
-
-			spacer->setSpacerOptions(true);
-#else
-			solAssert(false);
-#endif
-		}
-		break;
-	}
 	case CheckResult::UNSATISFIABLE:
 	case CheckResult::UNKNOWN:
 		break;
