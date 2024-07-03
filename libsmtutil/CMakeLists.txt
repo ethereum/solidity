@@ -17,7 +17,7 @@ set(sources
 )
 
 if (${Z3_FOUND})
-  set(z3_SRCS Z3Interface.cpp Z3Interface.h Z3CHCInterface.cpp Z3CHCInterface.h)
+  set(z3_SRCS Z3Interface.cpp Z3Interface.h)
 else()
   set(z3_SRCS)
 endif()
