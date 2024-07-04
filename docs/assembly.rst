@@ -392,3 +392,9 @@ This is admissible under either of the following conditions:
 
 - The assembly block terminates, i.e. execution can never return to high-level Solidity code. This is the case, for example,
   if your assembly block unconditionally ends in a ``revert`` statement.
+
+Furthermore, you need to be aware that the default-value of dynamic arrays in Solidity point to memory offset ``0x60``, so
+for the duration of temporarily changing the value at memory offset ``0x60``, you can no longer rely on getting accurate
+length values when reading dynamic arrays, until you restore the zero value at ``0x60``. To be more precise, we only guarantee
+safety when overwriting the zero pointer, if the remainder of the assembly snippet does not interact with the memory of
+high-level Solidity objects (including by reading from offsets previously stored in variables).
