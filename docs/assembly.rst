@@ -391,7 +391,7 @@ This is admissible under either of the following conditions:
   is restored to a value of zero.
 
 - The assembly block terminates, i.e. execution can never return to high-level Solidity code. This is the case, for example,
-  if your assembly block unconditionally ends in a ``revert`` statement.
+  if your assembly block unconditionally ends in calling the ``revert`` opcode.
 
 Furthermore, you need to be aware that the default-value of dynamic arrays in Solidity point to memory offset ``0x60``, so
 for the duration of temporarily changing the value at memory offset ``0x60``, you can no longer rely on getting accurate
