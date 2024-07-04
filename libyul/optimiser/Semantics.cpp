@@ -93,17 +93,22 @@ bool MSizeFinder::containsMSize(YulNameRepository const& _yulNameRepository, Blo
 	return finder.m_msizeFound;
 }
 
-bool MSizeFinder::containsMSize(YulNameRepository const& _yulNameRepository, Object const& _object)
+bool MSizeFinder::containsMSize(Object const& _object)
 {
-	if (containsMSize(_yulNameRepository, *_object.code))
+	if (containsMSize(_object.code->nameRepository(), _object.code->block()))
 		return true;
 
 	for (std::shared_ptr<ObjectNode> const& node: _object.subObjects)
 		if (auto const* object = dynamic_cast<Object const*>(node.get()))
-			if (containsMSize(_yulNameRepository, *object))
+			if (containsMSize(*object))
 				return true;
 
 	return false;
+}
+
+bool MSizeFinder::containsMSize(AST const& _ast)
+{
+	return containsMSize(_ast.nameRepository(), _ast.block());
 }
 
 void MSizeFinder::operator()(FunctionCall const& _functionCall)

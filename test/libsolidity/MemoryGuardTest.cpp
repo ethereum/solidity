@@ -26,6 +26,7 @@
 #include <libyul/Object.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
+#include <libyul/AST.h>
 #include <fstream>
 #include <memory>
 #include <stdexcept>
@@ -59,10 +60,9 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 	for (std::string contractName: compiler().contractNames())
 	{
 		ErrorList errors;
-		YulNameRepository repository (EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()));
 		auto [object, analysisInfo] = yul::test::parse(
 			compiler().yulIR(contractName),
-			repository,
+			EVMDialect::strictAssemblyForEVMObjects(CommonOptions::get().evmVersion()),
 			errors
 		);
 
@@ -75,8 +75,8 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 
 		auto handleObject = [&](std::string const& _kind, Object const& _object) {
 			m_obtainedResult += contractName + "(" + _kind + ") " + (FunctionCallFinder::run(
-				*_object.code,
-				repository.predefined().memoryguard
+				_object.code->block(),
+				_object.code->nameRepository().predefined().memoryguard
 			).empty() ? "false" : "true") + "\n";
 		};
 		handleObject("creation", *object);

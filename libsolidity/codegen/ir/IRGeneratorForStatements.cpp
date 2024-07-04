@@ -2250,14 +2250,16 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 	setLocation(_inlineAsm);
 	if (*_inlineAsm.annotation().hasMemoryEffects && !_inlineAsm.annotation().markedMemorySafe)
 		m_context.setMemoryUnsafeInlineAssemblySeen();
-	CopyTranslate bodyCopier{_inlineAsm.nameRepository(), m_context, _inlineAsm.annotation().externalReferences};
+	// make a copy of the name repository so that the "usr$" prefixed names can be defined on it
+	yul::YulNameRepository nameRepository = _inlineAsm.operations().nameRepository();
+	CopyTranslate bodyCopier{nameRepository, m_context, _inlineAsm.annotation().externalReferences};
 
-	yul::Statement modified = bodyCopier(_inlineAsm.operations());
+	yul::Statement modified = bodyCopier(_inlineAsm.operations().block());
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
 	// Do not provide dialect so that we get the full type information.
-	appendCode() << yul::AsmPrinter(_inlineAsm.nameRepository())(std::get<yul::Block>(modified)) << "\n";
+	appendCode() << yul::AsmPrinter(nameRepository)(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

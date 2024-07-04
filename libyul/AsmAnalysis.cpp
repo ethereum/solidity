@@ -84,7 +84,7 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	return watcher.ok();
 }
 
-AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(YulNameRepository const& _yulNameRepository, Object const& _object)
+AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Object const& _object)
 {
 	ErrorList errorList;
 	langutil::ErrorReporter errors(errorList);
@@ -92,10 +92,10 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(YulNameRepository const&
 	bool success = yul::AsmAnalyzer(
 		analysisInfo,
 		errors,
-		_yulNameRepository,
+		_object.code->nameRepository(),
 		{},
 		_object.qualifiedDataNames()
-	).analyze(*_object.code);
+	).analyze(_object.code->block());
 	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;
 }

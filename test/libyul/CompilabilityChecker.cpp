@@ -22,6 +22,7 @@
 #include <test/Common.h>
 
 #include <libyul/CompilabilityChecker.h>
+#include <libyul/AST.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -32,15 +33,14 @@ namespace
 {
 std::string check(std::string const& _input)
 {
-	std::shared_ptr<YulNameRepository> nameRepository;
 	Object obj;
-	std::tie(obj.code, obj.analysisInfo, nameRepository) = yul::test::parse(_input, false);
+	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(_input, false);
 	BOOST_REQUIRE(obj.code);
-	auto functions = CompilabilityChecker(*nameRepository, obj, true).stackDeficit;
+	auto functions = CompilabilityChecker(obj, true).stackDeficit;
 	// recast into map string -> int s.t. order is predictable
 	std::map<std::string, int> labelledFunctions;
 	for(const auto& [k, v] : functions)
-		labelledFunctions[std::string(nameRepository->labelOf(k))] = v;
+		labelledFunctions[std::string(obj.code->nameRepository().labelOf(k))] = v;
 	std::string out;
 	for (auto const& function: labelledFunctions)
 		out += function.first + ": " + std::to_string(function.second) + " ";

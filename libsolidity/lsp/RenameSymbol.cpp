@@ -283,7 +283,7 @@ void RenameSymbol::extractNameAndDeclaration(InlineAssembly const& _inlineAssemb
 		if (location.containsOffset(_cursorBytePosition))
 		{
 			m_declarationToRename = externalReference.declaration;
-			m_symbolName = _inlineAssembly.nameRepository().labelOf(identifier->name);
+			m_symbolName = _inlineAssembly.operations().nameRepository().labelOf(identifier->name);
 
 			if (!externalReference.suffix.empty())
 				m_symbolName = m_symbolName.substr(0, m_symbolName.length() - externalReference.suffix.size() - 1);
@@ -296,7 +296,7 @@ void RenameSymbol::Visitor::endVisit(InlineAssembly const& _node)
 {
 	for (auto&& [identifier, externalReference]: _node.annotation().externalReferences)
 	{
-		auto identifierName = _node.nameRepository().labelOf(identifier->name);
+		auto identifierName = _node.operations().nameRepository().labelOf(identifier->name);
 		if (!externalReference.suffix.empty())
 			identifierName = identifierName.substr(0, identifierName.length() - externalReference.suffix.size() - 1);
 

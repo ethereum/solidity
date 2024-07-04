@@ -244,7 +244,7 @@ bool StackCompressor::run(
 {
 	yulAssert(
 		_object.code &&
-		_object.code->statements.size() > 0 && std::holds_alternative<Block>(_object.code->statements.at(0)),
+		_object.code->block().statements.size() > 0 && std::holds_alternative<Block>(_object.code->block().statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool usesOptimizedCodeGenerator = false;
@@ -253,15 +253,15 @@ bool StackCompressor::run(
 			_optimizeStackAllocation &&
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
-	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_yulNameRepository, *_object.code);
-	_yulNameRepository.generateLabels(*_object.code);
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(*_object.code);
+	_yulNameRepository.generateLabels(_object.code->block());
 	if (usesOptimizedCodeGenerator)
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_yulNameRepository, _object);
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _yulNameRepository, *_object.code);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_object);
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _yulNameRepository, _object.code->block());
 		eliminateVariablesOptimizedCodegen(
 			_yulNameRepository,
-			*_object.code,
+			_object.code->block(),
 			StackLayoutGenerator::reportStackTooDeep(*cfg),
 			allowMSizeOptimization
 		);
@@ -270,10 +270,10 @@ bool StackCompressor::run(
 	{
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			std::map<YulName, int> stackSurplus = CompilabilityChecker(_yulNameRepository, _object, _optimizeStackAllocation).stackDeficit;
+			std::map<YulName, int> stackSurplus = CompilabilityChecker(_object, _optimizeStackAllocation).stackDeficit;
 			if (stackSurplus.empty())
 				return true;
-			eliminateVariables(_yulNameRepository, *_object.code, stackSurplus, allowMSizeOptimization);
+			eliminateVariables(_yulNameRepository, _object.code->block(), stackSurplus, allowMSizeOptimization);
 		}
 	}
 	return false;

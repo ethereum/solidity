@@ -90,7 +90,14 @@ public:
 		Language _language,
 		solidity::frontend::OptimiserSettings _optimiserSettings,
 		langutil::DebugInfoSelection const& _debugInfoSelection
-	);
+	):
+		m_language(_language),
+		m_evmVersion(_evmVersion),
+		m_eofVersion(_eofVersion),
+		m_optimiserSettings(std::move(_optimiserSettings)),
+		m_debugInfoSelection(_debugInfoSelection),
+		m_errorReporter(m_errors)
+	{}
 
 	/// @returns the char stream used during parsing
 	langutil::CharStream const& charStream(std::string const& _sourceName) const override;
@@ -134,8 +141,6 @@ public:
 	/// Return the parsed and analyzed object.
 	std::shared_ptr<Object> parserResult() const;
 
-	std::shared_ptr<YulNameRepository> const yulNameRepository() const;
-
 private:
 	bool parse(std::string const& _sourceName, std::string const& _source);
 	bool analyzeParsed();
@@ -147,8 +152,7 @@ private:
 
 	void reportUnimplementedFeatureError(langutil::UnimplementedFeatureError const& _error);
 
-	std::shared_ptr<YulNameRepository> m_yulNameRepository;
-
+	Language m_language = Language::Assembly;
 	langutil::EVMVersion m_evmVersion;
 	std::optional<uint8_t> m_eofVersion;
 	solidity::frontend::OptimiserSettings m_optimiserSettings;

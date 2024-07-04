@@ -132,7 +132,6 @@ void outputPerformanceMetrics(map<string, int64_t> const& _metrics)
 
 
 void OptimiserSuite::run(
-	YulNameRepository& _yulNameRepository,
 	GasMeter const* _meter,
 	Object& _object,
 	bool _optimizeStackAllocation,
@@ -142,7 +141,8 @@ void OptimiserSuite::run(
 	std::set<YulName> const& _externallyUsedIdentifiers
 )
 {
-	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_yulNameRepository.dialect());
+	auto const& dialect = _object.code->nameRepository().dialect();
+	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect);
 	bool usesOptimizedCodeGenerator =
 		_optimizeStackAllocation &&
 		evmDialect &&
@@ -150,14 +150,14 @@ void OptimiserSuite::run(
 		evmDialect->providesObjectAccess();
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 
-	*_object.code = std::get<Block>(Disambiguator(
-		_yulNameRepository,
+	_object.code->block() = std::get<Block>(Disambiguator(
+		_object.code->nameRepository(),
 		*_object.analysisInfo,
 		reservedIdentifiers
-	)(*_object.code));
-	Block& ast = *_object.code;
+	)(_object.code->block()));
+	Block& ast = _object.code->block();
 
-	OptimiserStepContext context{_yulNameRepository.dialect(), _yulNameRepository, reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{dialect, _object.code->nameRepository(), reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 
@@ -176,7 +176,7 @@ void OptimiserSuite::run(
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
 		StackCompressor::run(
-			_yulNameRepository,
+			_object.code->nameRepository(),
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
@@ -192,11 +192,11 @@ void OptimiserSuite::run(
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{_yulNameRepository, *evmDialect, *_meter}(ast);
+		ConstantOptimiser{_object.code->nameRepository(), *evmDialect, *_meter}(ast);
 		if (usesOptimizedCodeGenerator)
 		{
 			StackCompressor::run(
-				_yulNameRepository,
+				_object.code->nameRepository(),
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
@@ -211,8 +211,8 @@ void OptimiserSuite::run(
 #ifdef PROFILE_OPTIMIZER_STEPS
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
-	_yulNameRepository.generateLabels(*_object.code);
-	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_yulNameRepository, _object);
+	_object.code->nameRepository().generateLabels(_object.code->block());
+	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_object);
 }
 
 namespace

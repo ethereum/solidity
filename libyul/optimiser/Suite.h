@@ -60,7 +60,6 @@ public:
 
 	/// The value nullopt for `_expectedExecutionsPerDeployment` represents creation code.
 	static void run(
-		YulNameRepository& _yulNameRepository,
 		GasMeter const* _meter,
 		Object& _object,
 		bool _optimizeStackAllocation,

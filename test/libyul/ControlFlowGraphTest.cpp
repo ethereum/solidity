@@ -46,7 +46,6 @@ ControlFlowGraphTest::ControlFlowGraphTest(std::string const& _filename):
 	m_source = m_reader.source();
 	auto dialectName = m_reader.stringSetting("dialect", "evm");
 	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
-	m_yulNameRepository = std::make_unique<YulNameRepository>(*m_dialect);
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -199,7 +198,7 @@ private:
 TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
 {
 	ErrorList errors;
-	auto [object, analysisInfo] = parse(m_source, *m_yulNameRepository, errors);
+	auto [object, analysisInfo] = parse(m_source, *m_dialect, errors);
 	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;
@@ -208,11 +207,11 @@ TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::strin
 
 	std::ostringstream output;
 
-	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_yulNameRepository, *object->code);
+	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, object->code->nameRepository(), object->code->block());
 
-	m_yulNameRepository->generateLabels(*object->code);
+	object->code->nameRepository().generateLabels(object->code->block());
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
-	ControlFlowGraphPrinter printer{output, *m_yulNameRepository};
+	ControlFlowGraphPrinter printer{output, object->code->nameRepository()};
 	printer(*cfg->entry);
 	for (auto function: cfg->functions)
 		printer(cfg->functionInfo.at(function));

@@ -82,20 +82,19 @@ FunctionSideEffects::FunctionSideEffects(std::string const& _filename):
 
 TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
 {
-	std::shared_ptr<YulNameRepository> nameRepository;
 	Object obj;
-	std::tie(obj.code, obj.analysisInfo, nameRepository) = yul::test::parse(m_source, false);
+	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(m_source, false);
 	if (!obj.code)
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
 	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
-		*nameRepository,
-		CallGraphGenerator::callGraph(*obj.code)
+		obj.code->nameRepository(),
+		CallGraphGenerator::callGraph(obj.code->block())
 	);
 
 	std::map<std::string_view, std::string> functionSideEffectsStr;
 	for (auto const& fun: functionSideEffects)
-		functionSideEffectsStr[nameRepository->labelOf(fun.first)] = toString(fun.second);
+		functionSideEffectsStr[obj.code->nameRepository().labelOf(fun.first)] = toString(fun.second);
 
 	m_obtainedResult.clear();
 	for (auto const& fun: functionSideEffectsStr)

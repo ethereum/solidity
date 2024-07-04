@@ -25,6 +25,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/YulStack.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/DebugInfoSelection.h>
 #include <liblangutil/ErrorReporter.h>
@@ -72,7 +73,6 @@ bool YulInterpreterTest::parse(std::ostream& _stream, std::string const& _linePr
 		solidity::frontend::OptimiserSettings::none(),
 		DebugInfoSelection::All()
 	);
-	m_yulNameRepository = stack.yulNameRepository();
 	if (stack.parseAndAnalyze("", m_source))
 	{
 		m_ast = stack.parserResult()->code;
@@ -98,8 +98,8 @@ std::string YulInterpreterTest::interpret()
 	{
 		Interpreter::run(
 			state,
-			*m_yulNameRepository,
-			*m_ast,
+			m_ast->nameRepository(),
+			m_ast->block(),
 			/*disableExternalCalls=*/ !m_simulateExternalCallsToSelf,
 			/*disableMemoryTracing=*/ false
 		);

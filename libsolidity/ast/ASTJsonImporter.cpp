@@ -733,12 +733,10 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json const& _no
 			flags->emplace_back(std::make_shared<ASTString>(flag.get<std::string>()));
 		}
 	}
-	auto repository = std::make_unique<yul::YulNameRepository>(dialect);
-	std::shared_ptr<yul::Block> operations = std::make_shared<yul::Block>(yul::AsmJsonImporter(m_sourceNames, *repository).createBlock(member(_node, "AST")));
+	auto operations = std::make_shared<yul::AST>(yul::AsmJsonImporter(m_sourceNames, dialect).createAST(member(_node, "AST")));
 	return createASTNode<InlineAssembly>(
 		_node,
 		nullOrASTString(_node, "documentation"),
-		std::move(repository),
 		std::move(flags),
 		operations
 	);

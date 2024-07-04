@@ -236,8 +236,8 @@ bool ReferencesResolver::visit(UsingForDirective const& _usingFor)
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
 	m_yulAnnotation = &_inlineAssembly.annotation();
-	m_yulNameRepository = &_inlineAssembly.nameRepository();
-	(*this)(_inlineAssembly.operations());
+	m_yulNameRepository = &_inlineAssembly.operations().nameRepository();
+	(*this)(_inlineAssembly.operations().block());
 	m_yulNameRepository = nullptr;
 	m_yulAnnotation = nullptr;
 

@@ -17,14 +17,15 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
+#include <libyul/AST.h>
+
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test::yul_fuzzer;
 
 yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	std::ostream& _os,
-	std::shared_ptr<yul::Block> _ast,
-	YulNameRepository const& _yulNameRepository,
+	std::shared_ptr<yul::AST> _ast,
 	bool _disableMemoryTracing,
 	bool _outputStorageOnly,
 	size_t _maxSteps,
@@ -52,7 +53,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	TerminationReason reason = TerminationReason::None;
 	try
 	{
-		Interpreter::run(state, _yulNameRepository, *_ast, true, _disableMemoryTracing);
+		Interpreter::run(state, _ast->nameRepository(), _ast->block(), true, _disableMemoryTracing);
 	}
 	catch (StepLimitReached const&)
 	{

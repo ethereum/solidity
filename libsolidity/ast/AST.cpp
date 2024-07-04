@@ -1066,17 +1066,13 @@ InlineAssembly::InlineAssembly(
 	int64_t _id,
 	SourceLocation const& _location,
 	ASTPointer<ASTString> const& _docString,
-	std::unique_ptr<yul::YulNameRepository> _yulNameRepository,
 	ASTPointer<std::vector<ASTPointer<ASTString>>> _flags,
-	std::shared_ptr<yul::Block> _operations
+	std::shared_ptr<yul::AST> _operations
 ):
 	Statement(_id, _location, _docString),
-	m_yulNameRepository(std::move(_yulNameRepository)),
 	m_flags(std::move(_flags)),
 	m_operations(std::move(_operations))
-{
-	solAssert(m_yulNameRepository != nullptr);
-}
+{}
 
 InlineAssembly::~InlineAssembly() = default;
 

@@ -224,9 +224,9 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
-		_inlineAssembly.nameRepository(),
+		_inlineAssembly.operations().nameRepository(),
 		[&](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
-	}(_inlineAssembly.operations());
+	}(_inlineAssembly.operations().block());
 }
 
 void ViewPureChecker::reportMutability(

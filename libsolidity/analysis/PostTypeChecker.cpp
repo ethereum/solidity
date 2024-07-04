@@ -507,8 +507,8 @@ public:
 		if (m_willBeWrittenTo)
 			return;
 
-		YulLValueChecker yulChecker{m_declaration->name(), _inlineAssembly.nameRepository()};
-		yulChecker(_inlineAssembly.operations());
+		YulLValueChecker yulChecker{m_declaration->name(), _inlineAssembly.operations().nameRepository()};
+		yulChecker(_inlineAssembly.operations().block());
 		m_willBeWrittenTo = yulChecker.willBeWrittenTo();
 	}
 private:

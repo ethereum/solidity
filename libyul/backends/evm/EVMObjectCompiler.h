@@ -37,20 +37,18 @@ public:
 	static void compile(
 		Object& _object,
 		AbstractAssembly& _assembly,
-		YulNameRepository& _yulNameRepository,
 		EVMDialect const& _dialect,
 		bool _optimize,
 		std::optional<uint8_t> _eofVersion
 	);
 private:
-	EVMObjectCompiler(AbstractAssembly& _assembly, YulNameRepository& _yulNameRepository, EVMDialect const& _dialect, std::optional<uint8_t> _eofVersion):
-		m_assembly(_assembly), m_yulNameRepository(_yulNameRepository), m_dialect(_dialect), m_eofVersion(_eofVersion)
+	EVMObjectCompiler(AbstractAssembly& _assembly, EVMDialect const& _dialect, std::optional<uint8_t> _eofVersion):
+		m_assembly(_assembly), m_dialect(_dialect), m_eofVersion(_eofVersion)
 	{}
 
 	void run(Object& _object, bool _optimize);
 
 	AbstractAssembly& m_assembly;
-	YulNameRepository& m_yulNameRepository;
 	EVMDialect const& m_dialect;
 	std::optional<uint8_t> m_eofVersion;
 };

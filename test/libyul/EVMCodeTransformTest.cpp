@@ -21,9 +21,10 @@
 
 #include <test/Common.h>
 
-#include <libyul/YulStack.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
+#include <libyul/YulStack.h>
+#include <libyul/AST.h>
 
 #include <libevmasm/Assembly.h>
 
@@ -72,8 +73,7 @@ TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::strin
 	EVMObjectCompiler::compile(
 		*stack.parserResult(),
 		adapter,
-		*stack.yulNameRepository(),
-		dynamic_cast<EVMDialect const&>(stack.yulNameRepository()->dialect()),
+		dynamic_cast<EVMDialect const&>(stack.parserResult()->code->nameRepository().dialect()),
 		m_stackOpt,
 		std::nullopt
 	);

@@ -27,6 +27,7 @@ namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 struct Object;
+class AST;
 }
 
 namespace solidity::yul::test
@@ -34,16 +35,13 @@ namespace solidity::yul::test
 class YulOptimizerTestCommon
 {
 public:
-	explicit YulOptimizerTestCommon(
-		std::shared_ptr<Object> _obj,
-		YulNameRepository& _yulNameRepository
-	);
+	explicit YulOptimizerTestCommon(std::shared_ptr<Object> _obj);
 	/// Sets optimiser step to be run to @param
 	/// _optimiserStep.
 	void setStep(std::string const& _optimizerStep);
 	/// Runs chosen optimiser step returning pointer
 	/// to yul AST Block post optimisation.
-	std::shared_ptr<Block> run();
+	Block* run();
 	/// Runs chosen optimiser step returning true if
 	/// successful, false otherwise.
 	bool runStep();
@@ -62,7 +60,7 @@ private:
 	std::unique_ptr<OptimiserStepContext> m_context;
 
 	std::shared_ptr<Object> m_object;
-	std::shared_ptr<Block> m_ast;
+	Block& m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::map<std::string, std::function<void(void)>> m_namedSteps;
 };

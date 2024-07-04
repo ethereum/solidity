@@ -54,7 +54,7 @@ namespace po = boost::program_options;
 namespace
 {
 
-std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>> parse(std::string const& _source)
+std::pair<std::shared_ptr<AST>, std::shared_ptr<AsmAnalysisInfo>> parse(std::string const& _source)
 {
 	YulStack stack(
 		langutil::EVMVersion(),
@@ -77,7 +77,7 @@ std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>> parse(std::s
 
 void interpret(std::string const& _source, bool _inspect, bool _disableExternalCalls)
 {
-	std::shared_ptr<Block> ast;
+	std::shared_ptr<AST> ast;
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 	tie(ast, analysisInfo) = parse(_source);
 	if (!ast || !analysisInfo)
@@ -87,14 +87,12 @@ void interpret(std::string const& _source, bool _inspect, bool _disableExternalC
 	state.maxTraceSize = 10000;
 	try
 	{
-		Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
-		YulNameRepository repository (dialect);
-
+		YulNameRepository& repository = ast->nameRepository();
 		if (_inspect)
-			InspectedInterpreter::run(std::make_shared<Inspector>(_source, state, repository), state, repository, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
+			InspectedInterpreter::run(std::make_shared<Inspector>(_source, state, repository), state, repository, ast->block(), _disableExternalCalls, /*disableMemoryTracing=*/false);
 
 		else
-			Interpreter::run(state, repository, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
+			Interpreter::run(state, repository, ast->block(), _disableExternalCalls, /*disableMemoryTracing=*/false);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

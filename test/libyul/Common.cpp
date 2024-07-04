@@ -42,7 +42,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::langutil;
 
-std::tuple<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>, std::shared_ptr<YulNameRepository>> yul::test::parse(std::string const& _source, bool _yul)
+std::tuple<std::shared_ptr<AST>, std::shared_ptr<AsmAnalysisInfo>> yul::test::parse(std::string const& _source, bool _yul)
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
@@ -55,43 +55,44 @@ std::tuple<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>, std::shared
 	);
 	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
 		BOOST_FAIL("Invalid source.");
-	return std::make_tuple(stack.parserResult()->code, stack.parserResult()->analysisInfo, stack.yulNameRepository());
+	return std::make_tuple(stack.parserResult()->code, stack.parserResult()->analysisInfo);
 }
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 	std::string const& _source,
-	YulNameRepository& _yulNameRepository,
+	Dialect const& _dialect,
 	ErrorList& _errors
 )
 {
 	ErrorReporter errorReporter(_errors);
 	CharStream stream(_source, "");
 	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(stream);
-	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _yulNameRepository).parse(scanner, false);
+	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
 	if (!parserResult)
 		return {};
 	if (!parserResult->code || errorReporter.hasErrors())
 		return {};
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo = std::make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _yulNameRepository, {}, parserResult->qualifiedDataNames());
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, parserResult->code->nameRepository(), {}, parserResult->qualifiedDataNames());
 	// TODO this should be done recursively.
-	if (!analyzer.analyze(*parserResult->code) || errorReporter.hasErrors())
+	if (!analyzer.analyze(parserResult->code->block()) || errorReporter.hasErrors())
 		return {};
 	return {std::move(parserResult), std::move(analysisInfo)};
 }
 
-std::tuple<Block, std::shared_ptr<YulNameRepository>> yul::test::disambiguate(std::string const& _source, bool _yul)
+std::shared_ptr<AST> yul::test::disambiguate(std::string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
-	auto const& [code, analysisInfo, nameRepository] = result;
-	return std::make_tuple(std::get<Block>(Disambiguator(*nameRepository, *analysisInfo, {})(*code)), nameRepository);
+	auto const& [code, analysisInfo] = result;
+	Disambiguator(code->nameRepository(), *analysisInfo, {})(code->block());
+	return code;
 }
 
 std::string yul::test::format(std::string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
-	auto const& [code, analysisInfo, nameRepository] = result;
-	return yul::AsmPrinter(*nameRepository)(*code);
+	auto const& [code, analysisInfo] = result;
+	return yul::AsmPrinter(code->nameRepository())(code->block());
 }
 
 namespace

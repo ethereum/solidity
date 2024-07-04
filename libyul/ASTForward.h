@@ -47,6 +47,7 @@ struct Leave;
 struct ExpressionStatement;
 struct Block;
 struct Dialect;
+class AST;
 
 struct TypedName;
 

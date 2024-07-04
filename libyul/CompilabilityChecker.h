@@ -44,7 +44,7 @@ namespace solidity::yul
  */
 struct CompilabilityChecker
 {
-	CompilabilityChecker(YulNameRepository const& _yulNameRepository, Object const& _object, bool _optimizeStackAllocation);
+	CompilabilityChecker(Object const& _object, bool _optimizeStackAllocation);
 	std::map<YulName, std::vector<YulName>> unreachableVariables;
 	std::map<YulName, int> stackDeficit;
 };

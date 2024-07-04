@@ -60,6 +60,10 @@ public:
 		ForLoop const& _ast,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	);
+	SideEffectsCollector(
+		AST const& _ast,
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
+	) : SideEffectsCollector(_ast.nameRepository(), _ast.block(), _functionSideEffects) {}
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _functionCall) override;
@@ -149,7 +153,8 @@ class MSizeFinder: public ASTWalker
 {
 public:
 	static bool containsMSize(YulNameRepository const& _yulNameRepository, Block const& _ast);
-	static bool containsMSize(YulNameRepository const& _yulNameRepository, Object const& _object);
+	static bool containsMSize(Object const& _object);
+	static bool containsMSize(AST const& _ast);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _funCall) override;

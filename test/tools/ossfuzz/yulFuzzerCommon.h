@@ -40,8 +40,7 @@ struct yulFuzzerUtil
 	/// eliminator.
 	static TerminationReason interpret(
 		std::ostream& _os,
-		std::shared_ptr<yul::Block> _ast,
-		YulNameRepository const& _yulNameRepository,
+		std::shared_ptr<yul::AST> _ast,
 		bool _disableMemoryTracing = false,
 		bool _outputStorageOnly = false,
 		size_t _maxSteps = maxSteps,

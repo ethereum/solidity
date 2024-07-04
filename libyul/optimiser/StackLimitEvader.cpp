@@ -128,13 +128,12 @@ void StackLimitEvader::run(
 	);
 	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_context.yulNameRepository, _object);
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _context.yulNameRepository, *_object.code);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_object);
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _context.yulNameRepository, _object.code->block());
 		run(_context, _object, StackLayoutGenerator::reportStackTooDeep(*cfg));
 	}
 	else
 		run(_context, _object, CompilabilityChecker{
-			_context.yulNameRepository,
 			_object,
 			true
 		}.unreachableVariables);
@@ -174,7 +173,7 @@ void StackLimitEvader::run(
 	);
 
 	std::vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
-		*_object.code,
+		_object.code->block(),
 		_context.yulNameRepository.predefined().memoryguard
 	);
 	// Do not optimise, if no ``memoryguard`` call is found.
@@ -189,23 +188,23 @@ void StackLimitEvader::run(
 		if (reservedMemory != literalArgumentValue(*memoryGuardCall))
 			return;
 
-	CallGraph callGraph = CallGraphGenerator::callGraph(*_object.code);
+	CallGraph callGraph = CallGraphGenerator::callGraph(_object.code->block());
 
 	// We cannot move variables in recursive functions to fixed memory offsets.
 	for (YulName function: callGraph.recursiveFunctions())
 		if (_unreachableVariables.count(function))
 			return;
 
-	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(*_object.code);
+	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(_object.code->block());
 
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
 	yulAssert(requiredSlots < (uint64_t(1) << 32) - 1, "");
 
-	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, *_object.code);
+	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, _object.code->block());
 
 	reservedMemory += 32 * requiredSlots;
-	for (FunctionCall* memoryGuardCall: FunctionCallFinder::run(*_object.code, _context.yulNameRepository.predefined().memoryguard))
+	for (FunctionCall* memoryGuardCall: FunctionCallFinder::run(_object.code->block(), _context.yulNameRepository.predefined().memoryguard))
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");

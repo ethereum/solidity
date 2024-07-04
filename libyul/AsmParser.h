@@ -55,11 +55,11 @@ public:
 
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
-		YulNameRepository& _yulNameRepository,
+		Dialect const& _dialect,
 		std::optional<langutil::SourceLocation> _locationOverride = {}
 	):
 		ParserBase(_errorReporter),
-		m_yulNameRepository(_yulNameRepository),
+		m_dialect(_dialect),
 		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
 		m_useSourceLocationFrom{
 			_locationOverride ?
@@ -72,11 +72,11 @@ public:
 	/// from the comments (via @src and other tags).
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
-		YulNameRepository& _yulNameRepository,
+		Dialect const& _dialect,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceNames
 	):
 		ParserBase(_errorReporter),
-		m_yulNameRepository(_yulNameRepository),
+		m_dialect(_dialect),
 		m_sourceNames{std::move(_sourceNames)},
 		m_useSourceLocationFrom{
 			m_sourceNames.has_value() ?
@@ -87,12 +87,12 @@ public:
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner);
+	std::unique_ptr<AST> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner, std::unique_ptr<YulNameRepository> _nameRepository = nullptr);
 
 	/// Parses an assembly block starting with `{` and ending with `}`
 	/// and expects end of input after the '}'.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parse(langutil::CharStream& _charStream);
+	std::unique_ptr<AST> parse(langutil::CharStream& _charStream, std::unique_ptr<YulNameRepository> _nameRepository = nullptr);
 
 protected:
 	langutil::SourceLocation currentLocation() const override
@@ -133,20 +133,20 @@ protected:
 		return r;
 	}
 
-	Block parseBlock();
-	Statement parseStatement();
-	Case parseCase();
-	ForLoop parseForLoop();
+	Block parseBlock(YulNameRepository& _nameRepository);
+	Statement parseStatement(YulNameRepository& _nameRepository);
+	Case parseCase(YulNameRepository& _nameRepository);
+	ForLoop parseForLoop(YulNameRepository& _nameRepository);
 	/// Parses a functional expression that has to push exactly one stack element
-	Expression parseExpression(bool _unlimitedLiteralArgument = false);
+	Expression parseExpression(YulNameRepository& _nameRepository, bool _unlimitedLiteralArgument = false);
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin function call (only the name).
-	std::variant<Literal, Identifier> parseLiteralOrIdentifier(bool _unlimitedLiteralArgument = false);
-	VariableDeclaration parseVariableDeclaration();
-	FunctionDefinition parseFunctionDefinition();
-	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
-	TypedName parseTypedName();
-	Type expectAsmIdentifier();
+	std::variant<Literal, Identifier> parseLiteralOrIdentifier(YulNameRepository& _nameRepository, bool _unlimitedLiteralArgument = false);
+	VariableDeclaration parseVariableDeclaration(YulNameRepository& _nameRepository);
+	FunctionDefinition parseFunctionDefinition(YulNameRepository& _nameRepository);
+	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp, YulNameRepository& _nameRepository);
+	TypedName parseTypedName(YulNameRepository& _nameRepository);
+	Type expectAsmIdentifier(YulNameRepository& _nameRepository);
 
 	/// Reports an error if we are currently not inside the body part of a for loop.
 	void checkBreakContinuePosition(std::string const& _which);
@@ -154,7 +154,7 @@ protected:
 	static bool isValidNumberLiteral(std::string const& _literal);
 
 private:
-	YulNameRepository& m_yulNameRepository;
+	Dialect const& m_dialect;
 
 	std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> m_sourceNames;
 	langutil::SourceLocation m_locationOverride;

@@ -50,6 +50,13 @@ SourceLocation const AsmJsonImporter::createSourceLocation(Json const& _node)
 	return solidity::langutil::parseSourceLocation(_node["src"].get<std::string>(), m_sourceNames);
 }
 
+AST AsmJsonImporter::createAST(solidity::Json const& _node)
+{
+	auto nameRepository = std::make_unique<YulNameRepository>(m_dialect);
+	auto block = createBlock(_node, *nameRepository);
+	return {std::move(nameRepository), std::move(block)};
+}
+
 template <class T>
 T AsmJsonImporter::createAsmNode(Json const& _node)
 {
@@ -70,15 +77,15 @@ Json AsmJsonImporter::member(Json const& _node, std::string const& _name)
 	return _node[_name];
 }
 
-TypedName AsmJsonImporter::createTypedName(Json const& _node)
+TypedName AsmJsonImporter::createTypedName(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto typedName = createAsmNode<TypedName>(_node);
-	typedName.type = m_yulNameRepository.nameOfType(member(_node, "type").get<std::string>());
-	typedName.name = m_yulNameRepository.defineName(member(_node, "name").get<std::string>());
+	typedName.type = _nameRepository.nameOfType(member(_node, "type").get<std::string>());
+	typedName.name = _nameRepository.defineName(member(_node, "name").get<std::string>());
 	return typedName;
 }
 
-Statement AsmJsonImporter::createStatement(Json const& _node)
+Statement AsmJsonImporter::createStatement(Json const& _node, YulNameRepository& _nameRepository)
 {
 	Json jsonNodeType = member(_node, "nodeType");
 	yulAssert(jsonNodeType.is_string(), "Expected \"nodeType\" to be of type string!");
@@ -88,19 +95,19 @@ Statement AsmJsonImporter::createStatement(Json const& _node)
 	nodeType = nodeType.substr(3);
 
 	if (nodeType == "ExpressionStatement")
-		return createExpressionStatement(_node);
+		return createExpressionStatement(_node, _nameRepository);
 	else if (nodeType == "Assignment")
-		return createAssignment(_node);
+		return createAssignment(_node, _nameRepository);
 	else if (nodeType == "VariableDeclaration")
-		return createVariableDeclaration(_node);
+		return createVariableDeclaration(_node, _nameRepository);
 	else if (nodeType == "FunctionDefinition")
-		return createFunctionDefinition(_node);
+		return createFunctionDefinition(_node, _nameRepository);
 	else if (nodeType == "If")
-		return createIf(_node);
+		return createIf(_node, _nameRepository);
 	else if (nodeType == "Switch")
-		return createSwitch(_node);
+		return createSwitch(_node, _nameRepository);
 	else if (nodeType == "ForLoop")
-		return createForLoop(_node);
+		return createForLoop(_node, _nameRepository);
 	else if (nodeType == "Break")
 		return createBreak(_node);
 	else if (nodeType == "Continue")
@@ -108,7 +115,7 @@ Statement AsmJsonImporter::createStatement(Json const& _node)
 	else if (nodeType == "Leave")
 		return createLeave(_node);
 	else if (nodeType == "Block")
-		return createBlock(_node);
+		return createBlock(_node, _nameRepository);
 	else
 		yulAssert(false, "Invalid nodeType as statement");
 
@@ -116,7 +123,7 @@ Statement AsmJsonImporter::createStatement(Json const& _node)
 	util::unreachable();
 }
 
-Expression AsmJsonImporter::createExpression(Json const& _node)
+Expression AsmJsonImporter::createExpression(Json const& _node, YulNameRepository& _nameRepository)
 {
 	Json jsonNodeType = member(_node, "nodeType");
 	yulAssert(jsonNodeType.is_string(), "Expected \"nodeType\" to be of type string!");
@@ -126,11 +133,11 @@ Expression AsmJsonImporter::createExpression(Json const& _node)
 	nodeType = nodeType.substr(3);
 
 	if (nodeType == "FunctionCall")
-		return createFunctionCall(_node);
+		return createFunctionCall(_node, _nameRepository);
 	else if (nodeType == "Identifier")
-		return createIdentifier(_node);
+		return createIdentifier(_node, _nameRepository);
 	else if (nodeType == "Literal")
-		return createLiteral(_node);
+		return createLiteral(_node, _nameRepository);
 	else
 		yulAssert(false, "Invalid nodeType as expression");
 
@@ -138,30 +145,30 @@ Expression AsmJsonImporter::createExpression(Json const& _node)
 	util::unreachable();
 }
 
-std::vector<Expression> AsmJsonImporter::createExpressionVector(Json const& _array)
+std::vector<Expression> AsmJsonImporter::createExpressionVector(Json const& _array, YulNameRepository& _nameRepository)
 {
 	std::vector<Expression> ret;
 	for (auto& var: _array)
-		ret.emplace_back(createExpression(var));
+		ret.emplace_back(createExpression(var, _nameRepository));
 	return ret;
 }
 
-std::vector<Statement> AsmJsonImporter::createStatementVector(Json const& _array)
+std::vector<Statement> AsmJsonImporter::createStatementVector(Json const& _array, YulNameRepository& _nameRepository)
 {
 	std::vector<Statement> ret;
 	for (auto& var: _array)
-		ret.emplace_back(createStatement(var));
+		ret.emplace_back(createStatement(var, _nameRepository));
 	return ret;
 }
 
-Block AsmJsonImporter::createBlock(Json const& _node)
+Block AsmJsonImporter::createBlock(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto block = createAsmNode<Block>(_node);
-	block.statements = createStatementVector(_node["statements"]);
+	block.statements = createStatementVector(_node["statements"], _nameRepository);
 	return block;
 }
 
-Literal AsmJsonImporter::createLiteral(Json const& _node)
+Literal AsmJsonImporter::createLiteral(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto lit = createAsmNode<Literal>(_node);
 	std::string kind = member(_node, "kind").get<std::string>();
@@ -172,7 +179,7 @@ Literal AsmJsonImporter::createLiteral(Json const& _node)
 		value = util::asString(util::fromHex(member(_node, "hexValue").get<std::string>()));
 	else
 		value = member(_node, "value").get<std::string>();
-	lit.type = m_yulNameRepository.nameOfType(member(_node, "type").get<std::string>());
+	lit.type = _nameRepository.nameOfType(member(_node, "type").get<std::string>());
 	if (kind == "number")
 	{
 		langutil::CharStream charStream(value, "");
@@ -217,109 +224,109 @@ Leave AsmJsonImporter::createLeave(Json const& _node)
 	return createAsmNode<Leave>(_node);
 }
 
-Identifier AsmJsonImporter::createIdentifier(Json const& _node)
+Identifier AsmJsonImporter::createIdentifier(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto identifier = createAsmNode<Identifier>(_node);
-	identifier.name = m_yulNameRepository.defineName(member(_node, "name").get<std::string>());
+	identifier.name = _nameRepository.defineName(member(_node, "name").get<std::string>());
 	return identifier;
 }
 
-Assignment AsmJsonImporter::createAssignment(Json const& _node)
+Assignment AsmJsonImporter::createAssignment(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto assignment = createAsmNode<Assignment>(_node);
 
 	if (_node.contains("variableNames"))
 		for (auto const& var: member(_node, "variableNames"))
-			assignment.variableNames.emplace_back(createIdentifier(var));
+			assignment.variableNames.emplace_back(createIdentifier(var, _nameRepository));
 
-	assignment.value = std::make_unique<Expression>(createExpression(member(_node, "value")));
+	assignment.value = std::make_unique<Expression>(createExpression(member(_node, "value"), _nameRepository));
 	return assignment;
 }
 
-FunctionCall AsmJsonImporter::createFunctionCall(Json const& _node)
+FunctionCall AsmJsonImporter::createFunctionCall(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto functionCall = createAsmNode<FunctionCall>(_node);
 
 	for (auto const& var: member(_node, "arguments"))
-		functionCall.arguments.emplace_back(createExpression(var));
+		functionCall.arguments.emplace_back(createExpression(var, _nameRepository));
 
-	functionCall.functionName = createIdentifier(member(_node, "functionName"));
+	functionCall.functionName = createIdentifier(member(_node, "functionName"), _nameRepository);
 
 	return functionCall;
 }
 
-ExpressionStatement AsmJsonImporter::createExpressionStatement(Json const& _node)
+ExpressionStatement AsmJsonImporter::createExpressionStatement(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto statement = createAsmNode<ExpressionStatement>(_node);
-	statement.expression = createExpression(member(_node, "expression"));
+	statement.expression = createExpression(member(_node, "expression"), _nameRepository);
 	return statement;
 }
 
-VariableDeclaration AsmJsonImporter::createVariableDeclaration(Json const& _node)
+VariableDeclaration AsmJsonImporter::createVariableDeclaration(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto varDec = createAsmNode<VariableDeclaration>(_node);
 	for (auto const& var: member(_node, "variables"))
-		varDec.variables.emplace_back(createTypedName(var));
+		varDec.variables.emplace_back(createTypedName(var, _nameRepository));
 
 	if (_node.contains("value"))
-		varDec.value = std::make_unique<Expression>(createExpression(member(_node, "value")));
+		varDec.value = std::make_unique<Expression>(createExpression(member(_node, "value"), _nameRepository));
 
 	return varDec;
 }
 
-FunctionDefinition AsmJsonImporter::createFunctionDefinition(Json const& _node)
+FunctionDefinition AsmJsonImporter::createFunctionDefinition(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto funcDef = createAsmNode<FunctionDefinition>(_node);
-	funcDef.name = m_yulNameRepository.defineName(member(_node, "name").get<std::string>());
+	funcDef.name = _nameRepository.defineName(member(_node, "name").get<std::string>());
 
 	if (_node.contains("parameters"))
 		for (auto const& var: member(_node, "parameters"))
-			funcDef.parameters.emplace_back(createTypedName(var));
+			funcDef.parameters.emplace_back(createTypedName(var, _nameRepository));
 
 	if (_node.contains("returnVariables"))
 		for (auto const& var: member(_node, "returnVariables"))
-			funcDef.returnVariables.emplace_back(createTypedName(var));
+			funcDef.returnVariables.emplace_back(createTypedName(var, _nameRepository));
 
-	funcDef.body = createBlock(member(_node, "body"));
+	funcDef.body = createBlock(member(_node, "body"), _nameRepository);
 	return funcDef;
 }
 
-If AsmJsonImporter::createIf(Json const& _node)
+If AsmJsonImporter::createIf(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto ifStatement = createAsmNode<If>(_node);
-	ifStatement.condition = std::make_unique<Expression>(createExpression(member(_node, "condition")));
-	ifStatement.body = createBlock(member(_node, "body"));
+	ifStatement.condition = std::make_unique<Expression>(createExpression(member(_node, "condition"), _nameRepository));
+	ifStatement.body = createBlock(member(_node, "body"), _nameRepository);
 	return ifStatement;
 }
 
-Case AsmJsonImporter::createCase(Json const& _node)
+Case AsmJsonImporter::createCase(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto caseStatement = createAsmNode<Case>(_node);
 	auto const& value = member(_node, "value");
 	if (value.is_string())
 		yulAssert(value.get<std::string>() == "default", "Expected default case");
 	else
-		caseStatement.value = std::make_unique<Literal>(createLiteral(value));
-	caseStatement.body = createBlock(member(_node, "body"));
+		caseStatement.value = std::make_unique<Literal>(createLiteral(value, _nameRepository));
+	caseStatement.body = createBlock(member(_node, "body"), _nameRepository);
 	return caseStatement;
 }
 
-Switch AsmJsonImporter::createSwitch(Json const& _node)
+Switch AsmJsonImporter::createSwitch(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto switchStatement = createAsmNode<Switch>(_node);
-	switchStatement.expression = std::make_unique<Expression>(createExpression(member(_node, "expression")));
+	switchStatement.expression = std::make_unique<Expression>(createExpression(member(_node, "expression"), _nameRepository));
 	for (auto const& var: member(_node, "cases"))
-		switchStatement.cases.emplace_back(createCase(var));
+		switchStatement.cases.emplace_back(createCase(var, _nameRepository));
 	return switchStatement;
 }
 
-ForLoop AsmJsonImporter::createForLoop(Json const& _node)
+ForLoop AsmJsonImporter::createForLoop(Json const& _node, YulNameRepository& _nameRepository)
 {
 	auto forLoop = createAsmNode<ForLoop>(_node);
-	forLoop.pre = createBlock(member(_node, "pre"));
-	forLoop.condition = std::make_unique<Expression>(createExpression(member(_node, "condition")));
-	forLoop.post = createBlock(member(_node, "post"));
-	forLoop.body = createBlock(member(_node, "body"));
+	forLoop.pre = createBlock(member(_node, "pre"), _nameRepository);
+	forLoop.condition = std::make_unique<Expression>(createExpression(member(_node, "condition"), _nameRepository));
+	forLoop.post = createBlock(member(_node, "post"), _nameRepository);
+	forLoop.body = createBlock(member(_node, "body"), _nameRepository);
 	return forLoop;
 }
 

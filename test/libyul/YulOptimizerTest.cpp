@@ -25,6 +25,7 @@
 
 #include <libyul/Object.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -56,8 +57,6 @@ YulOptimizerTest::YulOptimizerTest(std::string const& _filename):
 
 	auto dialectName = m_reader.stringSetting("dialect", "evm");
 	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
-	m_yulNameRepository = std::make_unique<YulNameRepository>(*m_dialect);
-
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -70,7 +69,7 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 	soltestAssert(m_dialect, "Dialect not set.");
 
 	m_object->analysisInfo = m_analysisInfo;
-	YulOptimizerTestCommon tester(m_object, *m_yulNameRepository);
+	YulOptimizerTestCommon tester(m_object);
 	tester.setStep(m_optimizerStep);
 
 	if (!tester.runStep())
@@ -79,7 +78,7 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 		return TestResult::FatalError;
 	}
 
-	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_yulNameRepository, AsmPrinter::Mode::OmitDefaultType }(*m_object->code) : m_object->toString(*m_yulNameRepository));
+	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ m_object->code->nameRepository(), AsmPrinter::Mode::OmitDefaultType }(m_object->code->block()) : m_object->toString());
 
 	// Re-parse new code for compilability
 	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))
@@ -106,7 +105,7 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> YulOptimize
 	soltestAssert(m_dialect, "");
 	std::shared_ptr<Object> object;
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
-	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_yulNameRepository, errors);
+	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_dialect, errors);
 	if (!object || !analysisInfo || Error::containsErrors(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << std::endl;

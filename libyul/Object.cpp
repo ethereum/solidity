@@ -38,13 +38,12 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-std::string Data::toString(YulNameRepository const&, AsmPrinter::Mode, DebugInfoSelection const&, CharStreamProvider const*) const
+std::string Data::toString(AsmPrinter::Mode, DebugInfoSelection const&, CharStreamProvider const*) const
 {
 	return "data \"" + name + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 std::string Object::toString(
-	YulNameRepository const& _yulNameRepository,
 	AsmPrinter::Mode const _printingMode,
 	DebugInfoSelection const& _debugInfoSelection,
 	CharStreamProvider const* _soliditySourceProvider
@@ -64,15 +63,15 @@ std::string Object::toString(
 			"\n";
 
 	std::string inner = "code " + AsmPrinter(
-		_yulNameRepository,
+		code->nameRepository(),
 		_printingMode,
 		debugData->sourceNames,
 		_debugInfoSelection,
 		_soliditySourceProvider
-	)(*code);
+	)(code->block());
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_yulNameRepository, _printingMode, _debugInfoSelection, _soliditySourceProvider);
+		inner += "\n" + obj->toString(_printingMode, _debugInfoSelection, _soliditySourceProvider);
 
 	return useSrcComment + "object \"" + name + "\" {\n" + indent(inner) + "\n}";
 }
@@ -90,7 +89,7 @@ Json Object::toJson(YulNameRepository const& _yulNameRepository) const
 	yulAssert(code, "No code");
 
 	Json codeJson;
-	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */, _yulNameRepository)(*code);
+	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */, code->nameRepository())(code->block());
 
 	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)

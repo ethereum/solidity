@@ -926,7 +926,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 
-	yul::Block const* code = &_inlineAssembly.operations();
+	yul::AST const* code = &_inlineAssembly.operations();
 	yul::AsmAnalysisInfo* analysisInfo = _inlineAssembly.annotation().analysisInfo.get();
 
 	// Only used in the scope below, but required to live outside to keep the
@@ -939,14 +939,14 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		_inlineAssembly.annotation().externalReferences.empty()
 	)
 	{
-		yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&_inlineAssembly.nameRepository().dialect());
+		yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&code->nameRepository().dialect());
 		solAssert(dialect, "");
 
 		// Create a modifiable copy of the code and analysis
-		object.code = std::make_shared<yul::Block>(yul::ASTCopier().translate(*code));
-		object.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(_inlineAssembly.nameRepository(), object));
+		object.code = std::make_shared<yul::AST>(*code);
+		object.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(object));
 
-		m_context.optimizeYul(object, *dialect, _inlineAssembly.nameRepository(), m_optimiserSettings);
+		m_context.optimizeYul(object, *dialect, m_optimiserSettings);
 
 		code = object.code.get();
 		analysisInfo = object.analysisInfo.get();
@@ -957,7 +957,6 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		*analysisInfo,
 		*m_context.assemblyPtr(),
 		m_context.evmVersion(),
-		_inlineAssembly.nameRepository(),
 		identifierAccessCodeGen,
 		false,
 		m_optimiserSettings.optimizeStackAllocation

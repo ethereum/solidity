@@ -129,10 +129,11 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tupleExpression)
 
 bool IRGeneratorForStatements::visit(InlineAssembly const& _assembly)
 {
-	CopyTranslate bodyCopier{m_context, _assembly.nameRepository(), _assembly.annotation().externalReferences};
-	yul::Statement modified = bodyCopier(_assembly.operations());
+	yul::YulNameRepository nameRepository(_assembly.operations().nameRepository());
+	CopyTranslate bodyCopier{m_context, nameRepository, _assembly.annotation().externalReferences};
+	yul::Statement modified = bodyCopier(_assembly.operations().block());
 	solAssert(std::holds_alternative<yul::Block>(modified));
-	m_code << yul::AsmPrinter(_assembly.nameRepository())(std::get<yul::Block>(modified)) << "\n";
+	m_code << yul::AsmPrinter(nameRepository)(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

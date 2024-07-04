@@ -73,18 +73,13 @@ using namespace solidity::yul::test;
 using namespace solidity::frontend;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
-	std::shared_ptr<Object> _obj,
-	YulNameRepository& _yulNameRepository
-): m_yulNameRepository(_yulNameRepository)
+	std::shared_ptr<Object> _obj
+): m_yulNameRepository(_obj->code->nameRepository()), m_object(_obj), m_ast(m_object->code->block()), m_analysisInfo(m_object->analysisInfo)
 {
-	m_object = _obj;
-	m_ast = m_object->code;
-	m_analysisInfo = m_object->analysisInfo;
-
 	m_namedSteps = {
 		{"disambiguator", [&]() {
 			 disambiguate();
-			 m_context->yulNameRepository.generateLabels(*m_ast);
+			 m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"nameDisplacer", [&]() {
 			disambiguate();
@@ -95,281 +90,280 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 					m_yulNameRepository.defineName("illegal5")
 				},
 				m_yulNameRepository
-			}(*m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast, {"illegal1", "illegal2", "illegal3", "illegal4", "illegal5"});
+			}(m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast, {"illegal1", "illegal2", "illegal3", "illegal4", "illegal5"});
 		}},
 		{"blockFlattener", [&]() {
 			disambiguate();
-			FunctionGrouper::run(*m_context, *m_ast);
-			BlockFlattener::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
+			BlockFlattener::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"constantOptimiser", [&]() {
 			GasMeter meter(m_yulNameRepository, dynamic_cast<EVMDialect const&>(m_yulNameRepository.dialect()), false, 200);
-			ConstantOptimiser{_yulNameRepository, dynamic_cast<EVMDialect const&>(m_yulNameRepository.dialect()), meter}(*m_ast);
+			ConstantOptimiser{m_yulNameRepository, dynamic_cast<EVMDialect const&>(m_yulNameRepository.dialect()), meter}(m_ast);
 		}},
-		{"varDeclInitializer", [&]() { VarDeclInitializer::run(*m_context, *m_ast); }},
+		{"varDeclInitializer", [&]() { VarDeclInitializer::run(*m_context, m_ast); }},
 		{"varNameCleaner", [&]() {
 			disambiguate();
-			FunctionHoister::run(*m_context, *m_ast);
-			FunctionGrouper::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"forLoopConditionIntoBody", [&]() {
 			disambiguate();
-			ForLoopConditionIntoBody::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopConditionIntoBody::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"forLoopInitRewriter", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"commonSubexpressionEliminator", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			CommonSubexpressionEliminator::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			CommonSubexpressionEliminator::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"conditionalUnsimplifier", [&]() {
 			disambiguate();
-			ConditionalUnsimplifier::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ConditionalUnsimplifier::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"conditionalSimplifier", [&]() {
 			disambiguate();
-			ConditionalSimplifier::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ConditionalSimplifier::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"expressionSplitter", [&]() {
-			 ExpressionSplitter::run(*m_context, *m_ast);
-			 m_context->yulNameRepository.generateLabels(*m_ast);
+			 ExpressionSplitter::run(*m_context, m_ast);
+			 m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"expressionJoiner", [&]() {
 			disambiguate();
-			ExpressionJoiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"splitJoin", [&]() {
 			disambiguate();
-			ExpressionSplitter::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ExpressionSplitter::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"functionGrouper", [&]() {
 			disambiguate();
-			FunctionGrouper::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"functionHoister", [&]() {
 			disambiguate();
-			FunctionHoister::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"functionSpecializer", [&]() {
 			disambiguate();
-			FunctionHoister::run(*m_context, *m_object->code);
-			FunctionSpecializer::run(*m_context, *m_object->code);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			FunctionSpecializer::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"expressionInliner", [&]() {
 			disambiguate();
-			ExpressionInliner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ExpressionInliner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"fullInliner", [&]() {
 			disambiguate();
-			FunctionHoister::run(*m_context, *m_ast);
-			FunctionGrouper::run(*m_context, *m_ast);
-			ExpressionSplitter::run(*m_context, *m_ast);
-			FullInliner::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
+			ExpressionSplitter::run(*m_context, m_ast);
+			FullInliner::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"fullInlinerWithoutSplitter", [&]() {
 			disambiguate();
-			FunctionHoister::run(*m_context, *m_ast);
-			FunctionGrouper::run(*m_context, *m_ast);
-			FullInliner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
+			FullInliner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"rematerialiser", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			Rematerialiser::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			Rematerialiser::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"expressionSimplifier", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			ExpressionSplitter::run(*m_context, *m_ast);
-			CommonSubexpressionEliminator::run(*m_context, *m_ast);
-			ExpressionSimplifier::run(*m_context, *m_ast);
-			ExpressionSimplifier::run(*m_context, *m_ast);
-			ExpressionSimplifier::run(*m_context, *m_ast);
-			UnusedPruner::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			ExpressionSplitter::run(*m_context, m_ast);
+			CommonSubexpressionEliminator::run(*m_context, m_ast);
+			ExpressionSimplifier::run(*m_context, m_ast);
+			ExpressionSimplifier::run(*m_context, m_ast);
+			ExpressionSimplifier::run(*m_context, m_ast);
+			UnusedPruner::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"fullSimplify", [&]() {
 			disambiguate();
-			FunctionGrouper::run(*m_context, *m_ast);
-			BlockFlattener::run(*m_context, *m_ast);
-			ExpressionSplitter::run(*m_context, *m_ast);
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			CommonSubexpressionEliminator::run(*m_context, *m_ast);
-			ExpressionSimplifier::run(*m_context, *m_ast);
-			UnusedPruner::run(*m_context, *m_ast);
-			CircularReferencesPruner::run(*m_context, *m_ast);
-			DeadCodeEliminator::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
+			BlockFlattener::run(*m_context, m_ast);
+			ExpressionSplitter::run(*m_context, m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			CommonSubexpressionEliminator::run(*m_context, m_ast);
+			ExpressionSimplifier::run(*m_context, m_ast);
+			UnusedPruner::run(*m_context, m_ast);
+			CircularReferencesPruner::run(*m_context, m_ast);
+			DeadCodeEliminator::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"unusedFunctionParameterPruner", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_object->code);
-			LiteralRematerialiser::run(*m_context, *m_object->code);
-			UnusedFunctionParameterPruner::run(*m_context, *m_object->code);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			LiteralRematerialiser::run(*m_context, m_ast);
+			UnusedFunctionParameterPruner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"unusedPruner", [&]() {
 			disambiguate();
-			UnusedPruner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			UnusedPruner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"circularReferencesPruner", [&]() {
 			disambiguate();
-			FunctionHoister::run(*m_context, *m_ast);
-			CircularReferencesPruner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			CircularReferencesPruner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"deadCodeEliminator", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			DeadCodeEliminator::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			DeadCodeEliminator::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"ssaTransform", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			SSATransform::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			SSATransform::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"unusedAssignEliminator", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			UnusedAssignEliminator::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			UnusedAssignEliminator::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"unusedStoreEliminator", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			ExpressionSplitter::run(*m_context, *m_ast);
-			SSATransform::run(*m_context, *m_ast);
-			UnusedStoreEliminator::run(*m_context, *m_ast);
-			SSAReverser::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			ExpressionSplitter::run(*m_context, m_ast);
+			SSATransform::run(*m_context, m_ast);
+			UnusedStoreEliminator::run(*m_context, m_ast);
+			SSAReverser::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"equalStoreEliminator", [&]() {
 			disambiguate();
-			FunctionHoister::run(*m_context, *m_ast);
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			EqualStoreEliminator::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			EqualStoreEliminator::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"ssaPlusCleanup", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			SSATransform::run(*m_context, *m_ast);
-			UnusedAssignEliminator::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			SSATransform::run(*m_context, m_ast);
+			UnusedAssignEliminator::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"loadResolver", [&]() {
 			disambiguate();
-			FunctionGrouper::run(*m_context, *m_ast);
-			BlockFlattener::run(*m_context, *m_ast);
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			ExpressionSplitter::run(*m_context, *m_ast);
-			CommonSubexpressionEliminator::run(*m_context, *m_ast);
-			ExpressionSimplifier::run(*m_context, *m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
+			BlockFlattener::run(*m_context, m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			ExpressionSplitter::run(*m_context, m_ast);
+			CommonSubexpressionEliminator::run(*m_context, m_ast);
+			ExpressionSimplifier::run(*m_context, m_ast);
 
-			LoadResolver::run(*m_context, *m_ast);
+			LoadResolver::run(*m_context, m_ast);
 
-			UnusedPruner::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			ExpressionJoiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			UnusedPruner::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			ExpressionJoiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"loopInvariantCodeMotion", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			LoopInvariantCodeMotion::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			LoopInvariantCodeMotion::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"controlFlowSimplifier", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			ControlFlowSimplifier::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			ControlFlowSimplifier::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"structuralSimplifier", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			LiteralRematerialiser::run(*m_context, *m_ast);
-			StructuralSimplifier::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			LiteralRematerialiser::run(*m_context, m_ast);
+			StructuralSimplifier::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"equivalentFunctionCombiner", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			EquivalentFunctionCombiner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			EquivalentFunctionCombiner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"ssaReverser", [&]() {
 			disambiguate();
-			SSAReverser::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			SSAReverser::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"ssaAndBack", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
 			// apply SSA
-			SSATransform::run(*m_context, *m_ast);
-			UnusedAssignEliminator::run(*m_context, *m_ast);
+			SSATransform::run(*m_context, m_ast);
+			UnusedAssignEliminator::run(*m_context, m_ast);
 			// reverse SSA
-			SSAReverser::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			CommonSubexpressionEliminator::run(*m_context, *m_ast);
-			UnusedPruner::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			SSAReverser::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			CommonSubexpressionEliminator::run(*m_context, m_ast);
+			UnusedPruner::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"stackCompressor", [&]() {
 			disambiguate();
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-			FunctionGrouper::run(*m_context, *m_ast);
+			ForLoopInitRewriter::run(*m_context, m_ast);
+			FunctionHoister::run(*m_context, m_ast);
+			FunctionGrouper::run(*m_context, m_ast);
 			size_t maxIterations = 16;
 			StackCompressor::run(m_yulNameRepository, *m_object, true, maxIterations);
-			BlockFlattener::run(*m_context, *m_ast);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			BlockFlattener::run(*m_context, m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"fullSuite", [&]() {
 			GasMeter meter(m_yulNameRepository, dynamic_cast<EVMDialect const&>(m_yulNameRepository.dialect()), false, 200);
 			OptimiserSuite::run(
-				m_yulNameRepository,
 				&meter,
 				*m_object,
 				true,
@@ -377,17 +371,16 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				frontend::OptimiserSettings::DefaultYulOptimiserCleanupSteps,
 				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 			);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"stackLimitEvader", [&]() {
 			disambiguate();
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 			StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
-				m_yulNameRepository,
 				*m_object,
 				true
 			}.unreachableVariables);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
 		{"fakeStackLimitEvader", [&]() {
 			disambiguate();
@@ -429,9 +422,9 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				YulNameRepository const& m_yulNameRepository;
 			};
 			FakeUnreachableGenerator fakeUnreachableGenerator (m_yulNameRepository);
-			fakeUnreachableGenerator(*m_ast);
+			fakeUnreachableGenerator(m_ast);
 			StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
-			m_context->yulNameRepository.generateLabels(*m_ast);
+			m_context->yulNameRepository.generateLabels(m_ast);
 		}}
 	};
 }
@@ -482,14 +475,14 @@ std::string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 	yulAssert(false, "Optimiser step selection failed.");
 }
 
-std::shared_ptr<Block> YulOptimizerTestCommon::run()
+Block* YulOptimizerTestCommon::run()
 {
-	return runStep() ? m_ast : nullptr;
+	return runStep() ? &m_ast : nullptr;
 }
 
 void YulOptimizerTestCommon::disambiguate()
 {
-	*m_object->code = std::get<Block>(Disambiguator(m_yulNameRepository, *m_analysisInfo)(*m_object->code));
+	m_object->code->block() = std::get<Block>(Disambiguator(m_yulNameRepository, *m_analysisInfo)(m_object->code->block()));
 	m_analysisInfo.reset();
 	updateContext();
 }

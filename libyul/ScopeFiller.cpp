@@ -136,7 +136,7 @@ bool ScopeFiller::operator()(Block const& _block)
 
 bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const& _location, Scope& _scope)
 {
-	if (!_scope.registerVariable(_name.name, _name.type, m_yulNameRegistry))
+	if (!_scope.registerVariable(_name.name, _name.type))
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
@@ -157,7 +157,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 	std::vector<Scope::YulType> returns;
 	for (auto const& returnVariable: _funDef.returnVariables)
 		returns.emplace_back(returnVariable.type);
-	if (!m_currentScope->registerFunction(_funDef.name, std::move(parameters), std::move(returns), m_yulNameRegistry))
+	if (!m_currentScope->registerFunction(_funDef.name, std::move(parameters), std::move(returns)))
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(

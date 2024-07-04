@@ -51,12 +51,11 @@ struct Scope
 
 	using Identifier = std::variant<Variable, Function>;
 
-	bool registerVariable(YulName _name, YulType const& _type, YulNameRepository const& _nameRepository);
+	bool registerVariable(YulName _name, YulType const& _type);
 	bool registerFunction(
 		YulName _name,
 		std::vector<YulType> _arguments,
-		std::vector<YulType> _returns,
-		YulNameRepository const& _nameRepository
+		std::vector<YulType> _returns
 	);
 
 	/// Looks up the identifier in this or super scopes and returns a valid pointer if found
@@ -81,7 +80,7 @@ struct Scope
 	}
 	/// @returns true if the name exists in this scope or in super scopes (also searches
 	/// across function and assembly boundaries).
-	bool exists(YulName _name, YulNameRepository const& _nameRepository) const;
+	bool exists(YulName _name) const;
 
 	/// @returns the number of variables directly registered inside the scope.
 	size_t numberOfVariables() const;

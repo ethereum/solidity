@@ -101,6 +101,26 @@ struct Continue { langutil::DebugData::ConstPtr debugData; };
 /// Leave statement (valid within function)
 struct Leave { langutil::DebugData::ConstPtr debugData; };
 
+class AST
+{
+public:
+	AST(std::unique_ptr<YulNameRepository> _nameRepository, Block _block);
+	AST(AST&&) = default;
+	AST& operator=(AST&& _rhs) = default;
+	AST(AST const& _rhs);
+	AST& operator=(AST const& _rhs);
+	~AST() = default;
+
+	Block const& block() const { return m_block; }
+	Block& block() { return m_block; }
+	YulNameRepository const& nameRepository() const { return *m_nameRepository; }
+	YulNameRepository& nameRepository() { return *m_nameRepository; }
+
+private:
+	std::unique_ptr<YulNameRepository> m_nameRepository;
+	Block m_block;
+};
+
 /// Extracts the IR source location from a Yul node.
 template <class T> inline langutil::SourceLocation nativeLocationOf(T const& _node)
 {

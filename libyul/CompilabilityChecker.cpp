@@ -31,17 +31,15 @@ using namespace solidity::yul;
 using namespace solidity::util;
 
 CompilabilityChecker::CompilabilityChecker(
-	YulNameRepository const& _yulNameRepository,
 	Object const& _object,
 	bool _optimizeStackAllocation
 )
 {
-	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_yulNameRepository.dialect()))
+	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_object.code->nameRepository().dialect()))
 	{
 		NoOutputEVMDialect noOutputDialect(*evmDialect);
 
-		yul::AsmAnalysisInfo analysisInfo =
-			yul::AsmAnalyzer::analyzeStrictAssertCorrect(_yulNameRepository, _object);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_object);
 
 		BuiltinContext builtinContext;
 		builtinContext.currentObject = &_object;
@@ -54,12 +52,11 @@ CompilabilityChecker::CompilabilityChecker(
 			assembly,
 			analysisInfo,
 			*_object.code,
-			_yulNameRepository,
 			noOutputDialect,
 			builtinContext,
 			_optimizeStackAllocation
 		);
-		transform(*_object.code);
+		transform(_object.code->block());
 
 		for (StackTooDeepError const& error: transform.stackErrors())
 		{

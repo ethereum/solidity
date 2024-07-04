@@ -48,7 +48,7 @@
 namespace solidity::yul
 {
 // Forward-declaration to <yul/AST.h>
-struct Block;
+class AST;
 class YulNameRepository;
 }
 
@@ -1567,24 +1567,21 @@ public:
 		int64_t _id,
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _docString,
-		std::unique_ptr<yul::YulNameRepository> _yulNameRepository,
 		ASTPointer<std::vector<ASTPointer<ASTString>>> _flags,
-		std::shared_ptr<yul::Block> _operations
+		std::shared_ptr<yul::AST> _operations
 	);
 	~InlineAssembly() override;
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	yul::YulNameRepository& nameRepository() const { return *m_yulNameRepository; }
-	yul::Block const& operations() const { return *m_operations; }
+	yul::AST const& operations() const { return *m_operations; }
 	ASTPointer<std::vector<ASTPointer<ASTString>>> const& flags() const { return m_flags; }
 
 	InlineAssemblyAnnotation& annotation() const override;
 
 private:
-	std::unique_ptr<yul::YulNameRepository> mutable m_yulNameRepository;
 	ASTPointer<std::vector<ASTPointer<ASTString>>> m_flags;
-	std::shared_ptr<yul::Block> m_operations;
+	std::shared_ptr<yul::AST> m_operations;
 };
 
 /**

@@ -17,10 +17,30 @@ along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/AST.h>
+
+#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/Exceptions.h>
 
 namespace solidity::yul
 {
+
+AST::AST(std::unique_ptr<YulNameRepository> _nameRepository, Block _block):
+	m_nameRepository(std::move(_nameRepository)), m_block(std::move(_block))
+{
+	yulAssert(m_nameRepository != nullptr);
+}
+
+AST::AST(solidity::yul::AST const& _rhs)
+{
+	*this = _rhs;
+}
+
+AST& AST::operator=(AST const& _rhs)
+{
+	m_nameRepository = std::make_unique<YulNameRepository>(*_rhs.m_nameRepository);
+	m_block = ASTCopier().translate(_rhs.m_block);
+	return *this;
+}
 
 LiteralValue::LiteralValue(std::string _builtinStringLiteralValue):
 	m_numericValue(std::nullopt),

@@ -91,7 +91,7 @@ public:
 		CharStream _charStream(_input, "");
 		try
 		{
-			m_ast = yul::Parser(errorReporter, m_yulNameRepository).parse(_charStream);
+			m_ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
 			if (!m_ast || !errorReporter.errors().empty())
 			{
 				std::cerr << "Error parsing source." << std::endl;
@@ -102,9 +102,9 @@ public:
 			AsmAnalyzer analyzer(
 				*m_analysisInfo,
 				errorReporter,
-				m_yulNameRepository
+				m_ast->nameRepository()
 			);
-			if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
+			if (!analyzer.analyze(m_ast->block()) || !errorReporter.errors().empty())
 			{
 				std::cerr << "Error analyzing source." << std::endl;
 				printErrors(_charStream, errors);
@@ -170,7 +170,7 @@ public:
 
 	void disambiguate()
 	{
-		*m_ast = std::get<yul::Block>(Disambiguator(m_yulNameRepository, *m_analysisInfo)(*m_ast));
+		m_ast->block() = std::get<yul::Block>(Disambiguator(m_ast->nameRepository(), *m_analysisInfo)(m_ast->block()));
 		m_analysisInfo.reset();
 	}
 
@@ -178,8 +178,9 @@ public:
 	{
 		parse(_source);
 		disambiguate();
-		OptimiserSuite{m_context}.runSequence(_steps, *m_ast);
-		std::cout << AsmPrinter{m_yulNameRepository}(*m_ast) << std::endl;
+		OptimiserStepContext context {m_dialect, m_ast->nameRepository(), m_reservedIdentifiers, solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment};
+		OptimiserSuite{context}.runSequence(_steps, m_ast->block());
+		std::cout << AsmPrinter{m_ast->nameRepository()}(m_ast->block()) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -218,17 +219,17 @@ public:
 					{
 						Object obj;
 						obj.code = m_ast;
-						StackCompressor::run(m_yulNameRepository, obj, true, 16);
+						StackCompressor::run(m_ast->nameRepository(), obj, true, 16);
 						break;
 					}
 					default:
-						OptimiserSuite{m_context}.runSequence(
-							std::string_view(&option, 1),
-							*m_ast
-						);
+					{
+						OptimiserStepContext context {m_dialect, m_ast->nameRepository(), m_reservedIdentifiers, solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment};
+						OptimiserSuite{context}.runSequence(std::string_view(&option, 1), m_ast->block());
+					}
 				}
-				m_yulNameRepository.generateLabels(*m_ast);
-				_source = AsmPrinter{m_yulNameRepository}(*m_ast);
+				m_ast->nameRepository().generateLabels(m_ast->block());
+				_source = AsmPrinter{m_ast->nameRepository()}(m_ast->block());
 			}
 			catch (...)
 			{
@@ -241,16 +242,10 @@ public:
 	}
 
 private:
-	std::shared_ptr<yul::Block> m_ast;
-	YulNameRepository m_yulNameRepository {EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
+	std::shared_ptr<yul::AST> m_ast;
+	Dialect const& m_dialect {EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
 	std::unique_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::set<YulName> const m_reservedIdentifiers = {};
-	OptimiserStepContext m_context{
-		m_yulNameRepository.dialect(),
-		m_yulNameRepository,
-		m_reservedIdentifiers,
-		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
-	};
 };
 
 int main(int argc, char** argv)

@@ -62,20 +62,6 @@ EVMDialect const& languageToDialect(YulStack::Language _language, EVMVersion _ve
 
 }
 
-YulStack::YulStack(
-	langutil::EVMVersion _evmVersion,
-	std::optional<uint8_t> _eofVersion,
-	solidity::yul::YulStack::Language _language,
-	solidity::frontend::OptimiserSettings _optimiserSettings,
-	langutil::DebugInfoSelection const& _debugInfoSelection
-):
-	m_yulNameRepository(std::make_shared<YulNameRepository>(languageToDialect(_language, _evmVersion))),
-	m_evmVersion(_evmVersion),
-	m_eofVersion(_eofVersion),
-	m_optimiserSettings(std::move(_optimiserSettings)),
-	m_debugInfoSelection(_debugInfoSelection),
-	m_errorReporter(m_errors)
-{}
 
 CharStream const& YulStack::charStream(std::string const& _sourceName) const
 {
@@ -91,7 +77,7 @@ bool YulStack::parse(std::string const& _sourceName, std::string const& _source)
 	{
 		m_charStream = std::make_unique<CharStream>(_source, _sourceName);
 		std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(*m_charStream);
-		m_parserResult = ObjectParser(m_errorReporter, *yulNameRepository()).parse(scanner, false);
+		m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion)).parse(scanner, false);
 	}
 	catch (UnimplementedFeatureError const& _error)
 	{
@@ -128,7 +114,7 @@ void YulStack::optimize()
 	{
 		if (
 			!m_optimiserSettings.runYulOptimiser &&
-			yul::MSizeFinder::containsMSize(*yulNameRepository(), *m_parserResult)
+			yul::MSizeFinder::containsMSize(*m_parserResult)
 		)
 			return;
 
@@ -158,7 +144,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	AsmAnalyzer analyzer(
 		*_object.analysisInfo,
 		m_errorReporter,
-		*yulNameRepository(),
+		_object.code->nameRepository(),
 		{},
 		_object.qualifiedDataNames()
 	);
@@ -166,7 +152,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	bool success = false;
 	try
 	{
-		success = analyzer.analyze(*_object.code);
+		success = analyzer.analyze(_object.code->block());
 		for (auto& subNode: _object.subObjects)
 			if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 				if (!analyzeParsed(*subObject))
@@ -186,17 +172,19 @@ bool YulStack::analyzeParsed(Object& _object)
 
 void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize)
 {
-	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&yulNameRepository()->dialect());
-	yulAssert(evmDialect);
-	EVMObjectCompiler::compile(*m_parserResult, _assembly, *yulNameRepository(), *evmDialect, _optimize, m_eofVersion);
+	EVMObjectCompiler::compile(
+		*m_parserResult,
+		_assembly,
+		languageToDialect(m_language, m_evmVersion),
+		_optimize,
+		m_eofVersion
+	);
 }
 
 void YulStack::optimize(Object& _object, bool _isCreation)
 {
 	yulAssert(_object.code, "");
 	yulAssert(_object.analysisInfo, "");
-	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&yulNameRepository()->dialect());
-	yulAssert(evmDialect);
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 		{
@@ -205,7 +193,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		}
 
 	std::unique_ptr<GasMeter> meter;
-	meter = std::make_unique<GasMeter>(*yulNameRepository(), *evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+	meter = std::make_unique<GasMeter>(_object.code->nameRepository(), languageToDialect(m_language, m_evmVersion), _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
 
 	auto [optimizeStackAllocation, yulOptimiserSteps, yulOptimiserCleanupSteps] = [&]() -> std::tuple<bool, std::string, std::string>
 	{
@@ -233,7 +221,6 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	}();
 
 	OptimiserSuite::run(
-		*yulNameRepository(),
 		meter.get(),
 		_object,
 		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
@@ -318,7 +305,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 	// it with the minimal steps required to avoid "stack too deep".
 	bool optimize = m_optimiserSettings.optimizeStackAllocation || (
 		!m_optimiserSettings.runYulOptimiser &&
-		!yul::MSizeFinder::containsMSize(*yulNameRepository(), *m_parserResult)
+		!yul::MSizeFinder::containsMSize(*m_parserResult)
 	);
 	try
 	{
@@ -365,7 +352,7 @@ std::string YulStack::print(
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
-	return m_parserResult->toString(*yulNameRepository(), AsmPrinter::Mode::FullTypeInfo, m_debugInfoSelection, _soliditySourceProvider) + "\n";
+	return m_parserResult->toString(AsmPrinter::Mode::FullTypeInfo, m_debugInfoSelection, _soliditySourceProvider) + "\n";
 }
 
 Json YulStack::astJson() const
@@ -373,7 +360,7 @@ Json YulStack::astJson() const
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
-	return m_parserResult->toJson(*yulNameRepository());
+	return m_parserResult->toJson(m_parserResult->code->nameRepository());
 }
 
 std::shared_ptr<Object> YulStack::parserResult() const
@@ -388,9 +375,4 @@ void YulStack::reportUnimplementedFeatureError(UnimplementedFeatureError const& 
 {
 	solAssert(_error.comment(), "Unimplemented feature errors must include a message for the user");
 	m_errorReporter.unimplementedFeatureError(1920_error, _error.sourceLocation(), *_error.comment());
-}
-
-std::shared_ptr<YulNameRepository> const YulStack::yulNameRepository() const
-{
-	return m_yulNameRepository;
 }
