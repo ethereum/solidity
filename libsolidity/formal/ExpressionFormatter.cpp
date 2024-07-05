@@ -245,7 +245,14 @@ std::optional<std::string> expressionToString(smtutil::Expression const& _expr, 
 	if (smt::isNumber(*_type))
 	{
 		solAssert(_expr.sort->kind == Kind::Int);
-		solAssert(_expr.arguments.empty());
+		solAssert(_expr.arguments.empty() || _expr.name == "-");
+		if (_expr.name == "-")
+		{
+			solAssert(_expr.arguments.size() == 1);
+			smtutil::Expression const& val = _expr.arguments[0];
+			solAssert(val.sort->kind == Kind::Int && val.arguments.empty());
+			return "(- " + val.name + ")";
+		}
 
 		if (
 			_type->category() == frontend::Type::Category::Address ||
