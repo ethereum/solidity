@@ -26,6 +26,7 @@
 #include <libsolutil/JSON.h>
 #include <liblangutil/SourceLocation.h>
 #include <libyul/ASTForward.h>
+#include <libyul/YulName.h>
 
 #include <utility>
 
@@ -38,11 +39,11 @@ namespace solidity::yul
 class AsmJsonImporter
 {
 public:
-	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames):
-		m_sourceNames(_sourceNames)
+	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames, Dialect const& _dialect):
+		m_dialect(_dialect), m_sourceNames(_sourceNames)
 	{}
-	yul::Block createBlock(Json const& _node);
 
+	yul::AST createAST(Json const& node);
 private:
 	langutil::SourceLocation const createSourceLocation(Json const& _node);
 	template <class T>
@@ -51,6 +52,7 @@ private:
 	/// and throw an error if it does not exist
 	Json member(Json const& _node, std::string const& _name);
 
+	yul::Block createBlock(Json const& _node);
 	yul::Statement createStatement(Json const& _node);
 	yul::Expression createExpression(Json const& _node);
 	std::vector<yul::Statement> createStatementVector(Json const& _array);
@@ -72,6 +74,7 @@ private:
 	yul::Break createBreak(Json const& _node);
 	yul::Continue createContinue(Json const& _node);
 
+	Dialect const& m_dialect;
 	std::vector<std::shared_ptr<std::string const>> const& m_sourceNames;
 };
 

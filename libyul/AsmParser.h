@@ -24,7 +24,6 @@
 #pragma once
 
 #include <libyul/AST.h>
-#include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 
 #include <liblangutil/SourceLocation.h>
@@ -85,14 +84,22 @@ public:
 		}
 	{}
 
-	/// Parses an inline assembly block starting with `{` and ending with `}`.
+	/// Parses an inline assembly block starting with `{` and ending with `}`. Optionally accepts an external name
+	/// repository with definitions of existing names of, e.g., external identifiers.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner);
+	std::unique_ptr<AST> parseInline(
+		std::shared_ptr<langutil::Scanner> const& _scanner,
+		std::optional<YulNameRepository> _nameRepository = std::nullopt
+	);
 
 	/// Parses an assembly block starting with `{` and ending with `}`
-	/// and expects end of input after the '}'.
+	/// and expects end of input after the '}'. Optionally accepts an external name
+	/// repository with definitions of existing names of, e.g., external identifiers.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parse(langutil::CharStream& _charStream);
+	std::unique_ptr<AST> parse(
+		langutil::CharStream& _charStream,
+		std::optional<YulNameRepository> _nameRepository = std::nullopt
+	);
 
 protected:
 	langutil::SourceLocation currentLocation() const override

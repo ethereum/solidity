@@ -60,8 +60,8 @@ static std::string variableSlotToString(VariableSlot const& _slot)
 class ControlFlowGraphPrinter
 {
 public:
-	ControlFlowGraphPrinter(std::ostream& _stream):
-	m_stream(_stream)
+	ControlFlowGraphPrinter(std::ostream& _stream, YulNameRepository const& _yulNameRepository):
+	m_stream(_stream), m_yulNameRepository(_yulNameRepository)
 	{
 	}
 	void operator()(CFG::BasicBlock const& _block, bool _isMainEntry = true)
@@ -138,7 +138,7 @@ private:
 					m_stream << "): ";
 				}
 			}, operation.operation);
-			m_stream << stackToString(operation.input) << " => " << stackToString(operation.output) << "\\l\\\n";
+			m_stream << stackToString(operation.input, m_yulNameRepository) << " => " << stackToString(operation.output, m_yulNameRepository) << "\\l\\\n";
 		}
 		m_stream << "\"];\n";
 		std::visit(util::GenericVisitor{
@@ -160,7 +160,7 @@ private:
 			{
 				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
 				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"{ ";
-				m_stream << stackSlotToString(_conditionalJump.condition);
+				m_stream << stackSlotToString(_conditionalJump.condition, m_yulNameRepository);
 				m_stream << "| { <0> Zero | <1> NonZero }}\" shape=Mrecord];\n";
 				m_stream << "Block" << getBlockId(_block);
 				m_stream << "Exit:0 -> Block" << getBlockId(*_conditionalJump.zero) << ";\n";
@@ -192,6 +192,7 @@ private:
 	std::map<CFG::BasicBlock const*, size_t> m_blockIds;
 	size_t m_blockCount = 0;
 	std::list<CFG::BasicBlock const*> m_blocksToPrint;
+	YulNameRepository const& m_yulNameRepository;
 };
 
 TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)
@@ -205,11 +206,10 @@ TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::strin
 	}
 
 	std::ostringstream output;
-
-	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, *object->code);
+	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, object->code->nameRepository(), object->code->block());
 
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
-	ControlFlowGraphPrinter printer{output};
+	ControlFlowGraphPrinter printer{output, *cfg->nameRepository};
 	printer(*cfg->entry);
 	for (auto function: cfg->functions)
 		printer(cfg->functionInfo.at(function));

@@ -29,8 +29,8 @@ using namespace solidity::util;
 void ConditionalSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
 	ConditionalSimplifier{
-		_context.dialect,
-		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+		_context.nameRepository,
+		ControlFlowSideEffectsCollector{_context.nameRepository, _ast}.functionSideEffectsNamed()
 	}(_ast);
 }
 
@@ -73,7 +73,7 @@ void ConditionalSimplifier::operator()(Block& _block)
 				if (
 					std::holds_alternative<Identifier>(*_if.condition) &&
 					!_if.body.statements.empty() &&
-					TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
+					TerminationFinder(m_nameRepository, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=
 						TerminationFinder::ControlFlow::FlowOut
 				)
 				{
@@ -84,7 +84,7 @@ void ConditionalSimplifier::operator()(Block& _block)
 						Assignment{
 							debugData,
 							{Identifier{debugData, condition}},
-							std::make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
+							std::make_unique<Expression>(m_nameRepository.dialect().zeroLiteralForType(m_nameRepository.dialect().boolType))
 						}
 					);
 				}

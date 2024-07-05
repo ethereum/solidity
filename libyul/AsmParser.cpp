@@ -104,16 +104,18 @@ void Parser::updateLocationEndFrom(
 	}
 }
 
-std::unique_ptr<Block> Parser::parse(CharStream& _charStream)
+std::unique_ptr<AST> Parser::parse(CharStream& _charStream, std::optional<YulNameRepository> _nameRepository)
 {
 	m_scanner = std::make_shared<Scanner>(_charStream);
-	std::unique_ptr<Block> block = parseInline(m_scanner);
+	std::unique_ptr<AST> ast = parseInline(m_scanner, std::move(_nameRepository));
 	expectToken(Token::EOS);
-	return block;
+	return ast;
 }
 
-std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner)
+std::unique_ptr<AST> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner, std::optional<YulNameRepository> _nameRepository)
 {
+	if (!_nameRepository.has_value())
+		_nameRepository = YulNameRepository(m_dialect);
 	m_recursionDepth = 0;
 
 	auto previousScannerKind = _scanner->scannerKind();
@@ -125,7 +127,7 @@ std::unique_ptr<Block> Parser::parseInline(std::shared_ptr<Scanner> const& _scan
 		m_scanner = _scanner;
 		if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
 			fetchDebugDataFromComment();
-		return std::make_unique<Block>(parseBlock());
+		return std::make_unique<AST>(std::move(*_nameRepository), parseBlock());
 	}
 	catch (FatalError const& error)
 	{

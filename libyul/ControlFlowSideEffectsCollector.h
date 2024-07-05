@@ -29,7 +29,7 @@
 namespace solidity::yul
 {
 
-struct Dialect;
+class YulNameRepository;
 
 struct ControlFlowNode
 {
@@ -92,7 +92,7 @@ class ControlFlowSideEffectsCollector
 {
 public:
 	explicit ControlFlowSideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block const& _ast
 	);
 
@@ -121,7 +121,7 @@ private:
 	/// `*_node->functionCall`.
 	void recordReachabilityAndQueue(FunctionDefinition const& _function, ControlFlowNode const* _node);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	ControlFlowBuilder m_cfgBuilder;
 	/// Function references, but only for calls to user-defined functions.
 	std::map<FunctionCall const*, FunctionDefinition const*> m_functionReferences;

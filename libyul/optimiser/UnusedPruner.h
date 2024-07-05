@@ -61,7 +61,7 @@ public:
 
 	// Run the pruner until the code does not change anymore.
 	static void runUntilStabilised(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block& _ast,
 		bool _allowMSizeOptimization,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
@@ -69,12 +69,12 @@ public:
 	);
 
 	static void run(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block& _ast,
 		std::set<YulName> const& _externallyUsedFunctions = {}
 	)
 	{
-		runUntilStabilisedOnFullAST(_dialect, _ast, _externallyUsedFunctions);
+		runUntilStabilisedOnFullAST(_nameRepository, _ast, _externallyUsedFunctions);
 	}
 
 	/// Run the pruner until the code does not change anymore.
@@ -82,7 +82,7 @@ public:
 	/// The pruner itself determines if msize is used and which user-defined functions
 	/// are side-effect free.
 	static void runUntilStabilisedOnFullAST(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block& _ast,
 		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
@@ -93,7 +93,7 @@ public:
 	//        whose only side-effect is a potential change of the return value of
 	//        the msize instruction.
 	static void runUntilStabilised(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		FunctionDefinition& _functionDefinition,
 		bool _allowMSizeOptimization,
 		std::set<YulName> const& _externallyUsedFunctions = {}
@@ -101,14 +101,14 @@ public:
 
 private:
 	UnusedPruner(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block& _ast,
 		bool _allowMSizeOptimization,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
 		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 	UnusedPruner(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		FunctionDefinition& _function,
 		bool _allowMSizeOptimization,
 		std::set<YulName> const& _externallyUsedFunctions = {}
@@ -117,7 +117,7 @@ private:
 	bool used(YulName _name) const;
 	void subtractReferences(std::map<YulName, size_t> const& _subtrahend);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	bool m_allowMSizeOptimization = false;
 	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
 	bool m_shouldRunAgain = false;

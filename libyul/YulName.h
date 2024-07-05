@@ -20,7 +20,6 @@
 
 #include <libyul/ControlFlowSideEffects.h>
 #include <libyul/SideEffects.h>
-#include <libyul/YulString.h>
 
 #include <fmt/format.h>
 
@@ -38,6 +37,7 @@ namespace solidity::yul
 
 enum class LiteralKind;
 struct Dialect;
+struct EVMDialect;
 struct Block;
 struct BuiltinFunction;
 
@@ -194,6 +194,8 @@ public:
 	/// Whether the contained dialect is an EVM dialect (see `EVMDialect`).
 	[[nodiscard]] bool isEvmDialect() const;
 
+	EVMDialect const* evmDialect() const;
+
 	/// Generates labels for derived names over the set of _usedNames, respecting a set of _illegal labels.
 	/// This will change the state of all derived names in _usedNames to "not derived" with a label associated to them.
 	void generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal = {});
@@ -242,6 +244,7 @@ private:
 
 	InstanceCounter m_instanceCounter;
 	std::reference_wrapper<Dialect const> m_dialect;
+	EVMDialect const* m_evmDialect;
 	std::vector<std::tuple<YulName, std::string>> m_dialectTypes;
 	std::map<YulName, BuiltinFunctionWrapper> m_builtinFunctions;
 
@@ -253,6 +256,6 @@ private:
 	PredefinedHandles m_predefined{};
 	IndexBoundaries m_indexBoundaries;
 };
-using YulName = YulString;
+using YulName = YulNameRepository::YulName;
 
 }

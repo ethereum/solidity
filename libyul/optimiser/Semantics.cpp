@@ -38,37 +38,37 @@ using namespace solidity::yul;
 
 
 SideEffectsCollector::SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Expression const& _expression,
 		std::map<YulName, SideEffects> const* _functionSideEffects
 ):
-	SideEffectsCollector(_dialect, _functionSideEffects)
+	SideEffectsCollector(_nameRepository, _functionSideEffects)
 {
 	visit(_expression);
 }
 
-SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Statement const& _statement):
-	SideEffectsCollector(_dialect)
+SideEffectsCollector::SideEffectsCollector(YulNameRepository const& _nameRepository, Statement const& _statement):
+	SideEffectsCollector(_nameRepository)
 {
 	visit(_statement);
 }
 
 SideEffectsCollector::SideEffectsCollector(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	Block const& _ast,
 	std::map<YulName, SideEffects> const* _functionSideEffects
 ):
-	SideEffectsCollector(_dialect, _functionSideEffects)
+	SideEffectsCollector(_nameRepository, _functionSideEffects)
 {
 	operator()(_ast);
 }
 
 SideEffectsCollector::SideEffectsCollector(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	ForLoop const& _ast,
 	std::map<YulName, SideEffects> const* _functionSideEffects
 ):
-	SideEffectsCollector(_dialect, _functionSideEffects)
+	SideEffectsCollector(_nameRepository, _functionSideEffects)
 {
 	operator()(_ast);
 }
@@ -78,7 +78,7 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 	ASTWalker::operator()(_functionCall);
 
 	YulName functionName = _functionCall.functionName.name;
-	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
+	if (BuiltinFunction const* f = m_nameRepository.dialect().builtin(functionName))
 		m_sideEffects += f->sideEffects;
 	else if (m_functionSideEffects && m_functionSideEffects->count(functionName))
 		m_sideEffects += m_functionSideEffects->at(functionName);
@@ -86,37 +86,42 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 		m_sideEffects += SideEffects::worst();
 }
 
-bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
+bool MSizeFinder::containsMSize(YulNameRepository const& _nameRepository, Block const& _ast)
 {
-	MSizeFinder finder(_dialect);
+	MSizeFinder finder(_nameRepository);
 	finder(_ast);
 	return finder.m_msizeFound;
 }
 
-bool MSizeFinder::containsMSize(Dialect const& _dialect, Object const& _object)
+bool MSizeFinder::containsMSize(Object const& _object)
 {
-	if (containsMSize(_dialect, *_object.code))
+	if (containsMSize(_object.code->nameRepository(), _object.code->block()))
 		return true;
 
 	for (std::shared_ptr<ObjectNode> const& node: _object.subObjects)
 		if (auto const* object = dynamic_cast<Object const*>(node.get()))
-			if (containsMSize(_dialect, *object))
+			if (containsMSize(*object))
 				return true;
 
 	return false;
+}
+
+bool MSizeFinder::containsMSize(AST const& _ast)
+{
+	return containsMSize(_ast.nameRepository(), _ast.block());
 }
 
 void MSizeFinder::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_functionCall.functionName.name))
+	if (BuiltinFunction const* f = m_nameRepository.dialect().builtin(_functionCall.functionName.name))
 		if (f->isMSize)
 			m_msizeFound = true;
 }
 
 std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	CallGraph const& _directCallGraph
 )
 {
@@ -144,7 +149,7 @@ std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
 				return;
 			if (sideEffects == SideEffects::worst())
 				return;
-			if (BuiltinFunction const* f = _dialect.builtin(_function))
+			if (BuiltinFunction const* f = _nameRepository.dialect().builtin(_function))
 				sideEffects += f->sideEffects;
 			else
 			{
@@ -161,8 +166,8 @@ std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
 	return ret;
 }
 
-MovableChecker::MovableChecker(Dialect const& _dialect, Expression const& _expression):
-	MovableChecker(_dialect)
+MovableChecker::MovableChecker(YulNameRepository const& _yulNameRepository, Expression const& _expression):
+	MovableChecker(_yulNameRepository)
 {
 	visit(_expression);
 }
@@ -227,7 +232,7 @@ bool TerminationFinder::containsNonContinuingFunctionCall(Expression const& _exp
 			if (containsNonContinuingFunctionCall(arg))
 				return true;
 
-		if (auto builtin = m_dialect.builtin(functionCall->functionName.name))
+		if (auto builtin = m_nameRepository.dialect().builtin(functionCall->functionName.name))
 			return !builtin->controlFlowSideEffects.canContinue;
 		else if (m_functionSideEffects && m_functionSideEffects->count(functionCall->functionName.name))
 			return !m_functionSideEffects->at(functionCall->functionName.name).canContinue;

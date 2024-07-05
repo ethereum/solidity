@@ -45,7 +45,7 @@ std::string inlinableFunctions(std::string const& _source)
 	auto ast = disambiguate(_source);
 
 	InlinableExpressionFunctionFinder funFinder;
-	funFinder(ast);
+	funFinder(ast.block());
 
 	std::vector<std::string> functionNames;
 	for (auto const& f: funFinder.inlinableFunctions())

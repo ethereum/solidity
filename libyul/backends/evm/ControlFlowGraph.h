@@ -237,6 +237,8 @@ struct CFG
 	/// Ghost calls are used for the equality comparisons of the switch condition ghost variable with
 	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
 	std::list<yul::FunctionCall> ghostCalls;
+	/// Name repository that holds yul names for added artificial nodes.
+	std::unique_ptr<YulNameRepository> nameRepository;
 
 	BasicBlock& makeBlock(langutil::DebugData::ConstPtr _debugData)
 	{

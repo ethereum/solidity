@@ -59,7 +59,7 @@ std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 }
 
 Program::Program(Program const& program):
-	m_ast(std::make_unique<Block>(std::get<Block>(ASTCopier{}(*program.m_ast)))),
+	m_ast(std::make_unique<AST>(program.m_ast->nameRepository(), std::get<Block>(ASTCopier{}(program.m_ast->block())))),
 	m_dialect{program.m_dialect},
 	m_nameDispenser(program.m_nameDispenser)
 {
@@ -70,13 +70,12 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 	// ASSUMPTION: parseSource() rewinds the stream on its own
 	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
 
-	std::variant<std::unique_ptr<Block>, ErrorList> astOrErrors = parseObject(dialect, _sourceCode);
+	std::variant<std::unique_ptr<AST>, ErrorList> astOrErrors = parseObject(dialect, _sourceCode);
 	if (std::holds_alternative<ErrorList>(astOrErrors))
 		return std::get<ErrorList>(astOrErrors);
 
 	std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> analysisInfoOrErrors = analyzeAST(
-		dialect,
-		*std::get<std::unique_ptr<Block>>(astOrErrors)
+		*std::get<std::unique_ptr<AST>>(astOrErrors)
 	);
 	if (std::holds_alternative<ErrorList>(analysisInfoOrErrors))
 		return std::get<ErrorList>(analysisInfoOrErrors);
@@ -84,8 +83,7 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 	Program program(
 		dialect,
 		disambiguateAST(
-			dialect,
-			*std::get<std::unique_ptr<Block>>(astOrErrors),
+			*std::get<std::unique_ptr<AST>>(astOrErrors),
 			*std::get<std::unique_ptr<AsmAnalysisInfo>>(analysisInfoOrErrors)
 		)
 	);
@@ -100,21 +98,21 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 
 void Program::optimise(std::vector<std::string> const& _optimisationSteps)
 {
-	m_ast = applyOptimisationSteps(m_dialect, m_nameDispenser, std::move(m_ast), _optimisationSteps);
+	m_ast = applyOptimisationSteps(m_nameDispenser, *m_ast, _optimisationSteps);
 }
 
 std::ostream& phaser::operator<<(std::ostream& _stream, Program const& _program)
 {
-	return _stream << AsmPrinter()(*_program.m_ast);
+	return _stream << AsmPrinter(AsmPrinter::Mode::FullTypeInfo, _program.m_ast->nameRepository())(_program.m_ast->block());
 }
 
 std::string Program::toJson() const
 {
-	Json serializedAst = AsmJsonConverter(0)(*m_ast);
+	Json serializedAst = AsmJsonConverter(0, m_ast->nameRepository())(m_ast->block());
 	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 
-std::variant<std::unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)
+std::variant<std::unique_ptr<AST>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -149,19 +147,22 @@ std::variant<std::unique_ptr<Block>, ErrorList> Program::parseObject(Dialect con
 	// The public API of the class does not provide access to the smart pointer so it won't be hard
 	// to switch to shared_ptr if the copying turns out to be an issue (though it would be better
 	// to refactor ObjectParser and Object to use unique_ptr instead).
-	auto astCopy = std::make_unique<Block>(std::get<Block>(ASTCopier{}(*selectedObject->code)));
+	auto astCopy = std::make_unique<AST>(
+		selectedObject->code->nameRepository(),
+		std::get<Block>(ASTCopier{}(selectedObject->code->block()))
+	);
 
-	return std::variant<std::unique_ptr<Block>, ErrorList>(std::move(astCopy));
+	return {std::move(astCopy)};
 }
 
-std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect const& _dialect, Block const& _ast)
+std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(AST const& _ast)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto analysisInfo = std::make_unique<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect);
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _ast.nameRepository());
 
-	bool analysisSuccessful = analyzer.analyze(_ast);
+	bool analysisSuccessful = analyzer.analyze(_ast.block());
 	if (!analysisSuccessful)
 		return errors;
 
@@ -169,39 +170,42 @@ std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Di
 	return std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList>(std::move(analysisInfo));
 }
 
-std::unique_ptr<Block> Program::disambiguateAST(
-	Dialect const& _dialect,
-	Block const& _ast,
+std::unique_ptr<AST> Program::disambiguateAST(
+	AST const& _ast,
 	AsmAnalysisInfo const& _analysisInfo
 )
 {
+	YulNameRepository nameRepository(_ast.nameRepository());
 	std::set<YulName> const externallyUsedIdentifiers = {};
-	Disambiguator disambiguator(_dialect, _analysisInfo, externallyUsedIdentifiers);
+	Disambiguator disambiguator(nameRepository, _analysisInfo, externallyUsedIdentifiers);
 
-	return std::make_unique<Block>(std::get<Block>(disambiguator(_ast)));
+	auto block = std::get<Block>(disambiguator(_ast.block()));
+	return std::make_unique<AST>(std::move(nameRepository), std::move(block));
 }
 
-std::unique_ptr<Block> Program::applyOptimisationSteps(
-	Dialect const& _dialect,
+std::unique_ptr<AST> Program::applyOptimisationSteps(
 	NameDispenser& _nameDispenser,
-	std::unique_ptr<Block> _ast,
+	AST const& _ast,
 	std::vector<std::string> const& _optimisationSteps
 )
 {
 	// An empty set of reserved identifiers. It could be a constructor parameter but I don't
 	// think it would be useful in this tool. Other tools (like yulopti) have it empty too.
 	std::set<YulName> const externallyUsedIdentifiers = {};
+	YulNameRepository nameRepository (_ast.nameRepository());
 	OptimiserStepContext context{
-		_dialect,
+		nameRepository.dialect(),
+		nameRepository,
 		_nameDispenser,
 		externallyUsedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	};
 
+	auto block = std::get<Block>(ASTCopier{}(_ast.block()));
 	for (std::string const& step: _optimisationSteps)
-		OptimiserSuite::allSteps().at(step)->run(context, *_ast);
+		OptimiserSuite::allSteps().at(step)->run(context, block);
 
-	return _ast;
+	return std::make_unique<AST>(std::move(nameRepository), std::move(block));
 }
 
 size_t Program::computeCodeSize(Block const& _ast, CodeWeights const& _weights)

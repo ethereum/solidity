@@ -63,8 +63,8 @@ struct CopyTranslate: public yul::ASTCopier
 {
 	using ExternalRefsMap = std::map<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo>;
 
-	CopyTranslate(yul::Dialect const& _dialect, IRGenerationContext& _context, ExternalRefsMap const& _references):
-		m_dialect(_dialect), m_context(_context), m_references(_references) {}
+	CopyTranslate(yul::YulNameRepository& _nameRepository, IRGenerationContext& _context, ExternalRefsMap const& _references):
+		m_nameRepository(_nameRepository), m_context(_context), m_references(_references) {}
 
 	using ASTCopier::operator();
 
@@ -84,7 +84,7 @@ struct CopyTranslate: public yul::ASTCopier
 		// from the Yul dialect we are compiling to. So we are assuming here that the builtin
 		// functions are identical. This should not be a problem for now since everything
 		// is EVM anyway.
-		if (m_dialect.builtin(_name))
+		if (m_nameRepository.dialect().builtin(_name))
 			return _name;
 		else
 			return yul::YulName{"usr$" + _name.str()};
@@ -210,7 +210,7 @@ private:
 	}
 
 
-	yul::Dialect const& m_dialect;
+	yul::YulNameRepository& m_nameRepository;
 	IRGenerationContext& m_context;
 	ExternalRefsMap const& m_references;
 };
@@ -2250,14 +2250,15 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 	setLocation(_inlineAsm);
 	if (*_inlineAsm.annotation().hasMemoryEffects && !_inlineAsm.annotation().markedMemorySafe)
 		m_context.setMemoryUnsafeInlineAssemblySeen();
-	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
+	// make a copy of the name repository so that the "usr$" prefixed names can be defined on it
+	yul::YulNameRepository nameRepository = _inlineAsm.operations().nameRepository();
+	CopyTranslate bodyCopier{nameRepository, m_context, _inlineAsm.annotation().externalReferences};
 
-	yul::Statement modified = bodyCopier(_inlineAsm.operations());
+	yul::Statement modified = bodyCopier(_inlineAsm.operations().block());
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
-	// Do not provide dialect so that we get the full type information.
-	appendCode() << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+	appendCode() << yul::AsmPrinter(yul::AsmPrinter::Mode::FullTypeInfo, nameRepository)(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 

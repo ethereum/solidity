@@ -47,13 +47,13 @@ public:
 
 private:
 	explicit LoopInvariantCodeMotion(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::set<YulName> const& _ssaVariables,
 		std::map<YulName, SideEffects> const& _functionSideEffects,
 		bool _containsMSize
 	):
 		m_containsMSize(_containsMSize),
-		m_dialect(_dialect),
+		m_nameRepository(_nameRepository),
 		m_ssaVariables(_ssaVariables),
 		m_functionSideEffects(_functionSideEffects)
 	{ }
@@ -67,7 +67,7 @@ private:
 	std::optional<std::vector<Statement>> rewriteLoop(ForLoop& _for);
 
 	bool m_containsMSize = true;
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	std::set<YulName> const& m_ssaVariables;
 	std::map<YulName, SideEffects> const& m_functionSideEffects;
 };

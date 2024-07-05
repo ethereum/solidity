@@ -77,19 +77,21 @@ public:
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
+		YulNameRepository const& _nameRepository,
 		Block const& _block,
-		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
+		EVMDialect const* _dialectOverride = nullptr,
 		bool _allowStackOpt = false,
 		ExternalIdentifierAccess::CodeGenerator const& _identifierAccessCodeGen = {},
 		UseNamedLabels _useNamedLabelsForFunctions = UseNamedLabels::Never
 	): CodeTransform(
 		_assembly,
 		_analysisInfo,
+		_nameRepository,
 		_block,
 		_allowStackOpt,
-		_dialect,
 		_builtinContext,
+		_dialectOverride,
 		_identifierAccessCodeGen,
 		_useNamedLabelsForFunctions,
 		nullptr,
@@ -107,10 +109,11 @@ protected:
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
+		YulNameRepository const& _nameRepository,
 		Block const& _block,
 		bool _allowStackOpt,
-		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
+		EVMDialect const* _dialectOverride,
 		ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 		UseNamedLabels _useNamedLabelsForFunctions,
 		std::shared_ptr<Context> _context,
@@ -194,7 +197,8 @@ private:
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
 	Scope* m_scope = nullptr;
-	EVMDialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
+	EVMDialect const* m_evmDialect;
 	BuiltinContext& m_builtinContext;
 	bool const m_allowStackOpt = true;
 	UseNamedLabels const m_useNamedLabelsForFunctions = UseNamedLabels::Never;

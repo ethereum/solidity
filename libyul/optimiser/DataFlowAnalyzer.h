@@ -87,7 +87,7 @@ public:
 	///            if this is not provided or the function is not found.
 	///            The parameter is mostly used to determine movability of expressions.
 	explicit DataFlowAnalyzer(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		MemoryAndStorage _analyzeStores,
 		std::map<YulName, SideEffects> _functionSideEffects = {}
 	);
@@ -162,7 +162,7 @@ protected:
 	/// where s and l are variables and returns these variables in that case.
 	std::optional<std::pair<YulName, YulName>> isKeccak(Expression const& _expression) const;
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
 	/// if this is not provided or the function is not found.
 	std::map<YulName, SideEffects> m_functionSideEffects;

@@ -129,7 +129,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 }
 
 StackShufflingTest::StackShufflingTest(std::string const& _filename):
-	TestCase(_filename)
+	TestCase(_filename), m_yulNameRepository(Dialect::yulDeprecated())
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
@@ -149,14 +149,14 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 		m_targetStack,
 		[&](unsigned _swapDepth) // swap
 		{
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 			output << "SWAP" << _swapDepth << std::endl;
 		},
 		[&](StackSlot const& _slot) // dupOrPush
 		{
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 			if (canBeFreelyGenerated(_slot))
-				output << "PUSH " << stackSlotToString(_slot) << std::endl;
+				output << "PUSH " << stackSlotToString(_slot, m_yulNameRepository) << std::endl;
 			else
 			{
 				if (auto depth = util::findOffset(m_sourceStack | ranges::views::reverse, _slot))
@@ -166,12 +166,12 @@ TestCase::TestResult StackShufflingTest::run(std::ostream& _stream, std::string 
 			}
 		},
 		[&](){ // pop
-			output << stackToString(m_sourceStack) << std::endl;
+			output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 			output << "POP" << std::endl;
 		}
     );
 
-	output << stackToString(m_sourceStack) << std::endl;
+	output << stackToString(m_sourceStack, m_yulNameRepository) << std::endl;
 	m_obtainedResult = output.str();
 
 	return checkResult(_stream, _linePrefix, _formatted);

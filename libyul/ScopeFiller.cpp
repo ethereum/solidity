@@ -38,7 +38,7 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
+ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter, YulNameRepository const&):
 	m_info(_info), m_errorReporter(_errorReporter)
 {
 	m_currentScope = &scope(nullptr);

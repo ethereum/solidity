@@ -19,6 +19,7 @@
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -27,13 +28,13 @@ using namespace solidity::yul;
 
 void ForLoopConditionIntoBody::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ForLoopConditionIntoBody{_context.dialect}(_ast);
+	ForLoopConditionIntoBody{_context.nameRepository}(_ast);
 }
 
 void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 {
 	if (
-		m_dialect.booleanNegationFunction() &&
+		m_nameRepository.dialect().booleanNegationFunction() &&
 		!std::holds_alternative<Literal>(*_forLoop.condition) &&
 		!std::holds_alternative<Identifier>(*_forLoop.condition)
 	)
@@ -47,7 +48,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 				std::make_unique<Expression>(
 					FunctionCall {
 						debugData,
-						{debugData, m_dialect.booleanNegationFunction()->name},
+						{debugData, m_nameRepository.dialect().booleanNegationFunction()->name},
 						util::make_vector<Expression>(std::move(*_forLoop.condition))
 					}
 				),
@@ -59,7 +60,7 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 				debugData,
 				LiteralKind::Boolean,
 				LiteralValue{true},
-				m_dialect.boolType
+				m_nameRepository.dialect().boolType
 			}
 		);
 	}

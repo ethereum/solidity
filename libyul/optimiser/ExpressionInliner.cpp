@@ -37,7 +37,7 @@ void ExpressionInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
 	InlinableExpressionFunctionFinder funFinder;
 	funFinder(_ast);
-	ExpressionInliner inliner{_context.dialect, funFinder.inlinableFunctions()};
+	ExpressionInliner inliner{_context.nameRepository, funFinder.inlinableFunctions()};
 	inliner(_ast);
 }
 
@@ -62,11 +62,11 @@ void ExpressionInliner::visit(Expression& _expression)
 			Expression const& arg = funCall.arguments[i];
 			YulName paraName = fun.parameters[i].name;
 
-			if (!SideEffectsCollector(m_dialect, arg).movable())
+			if (!SideEffectsCollector(m_nameRepository, arg).movable())
 				return;
 
 			size_t refs = ReferencesCounter::countReferences(fun.body)[paraName];
-			size_t cost = CodeCost::codeCost(m_dialect, arg);
+			size_t cost = CodeCost::codeCost(m_nameRepository, arg);
 
 			if (refs > 1 && cost > 1)
 				return;

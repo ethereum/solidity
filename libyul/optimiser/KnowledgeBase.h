@@ -33,7 +33,7 @@
 namespace solidity::yul
 {
 
-struct Dialect;
+class YulNameRepository;
 struct AssignedValue;
 
 /**
@@ -62,11 +62,11 @@ class KnowledgeBase
 public:
 	/// Constructor for arbitrary value callback that allows for variable values
 	/// to change in between calls to functions of this class.
-	explicit KnowledgeBase(std::function<AssignedValue const*(YulName)> _variableValues):
+	explicit KnowledgeBase(std::function<AssignedValue const*(YulName)> _variableValues, YulNameRepository const&):
 		m_variableValues(std::move(_variableValues))
 	{}
 	/// Constructor to use if source code is in SSA form and values are constant.
-	explicit KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues);
+	explicit KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues, YulNameRepository const& _nameRepository);
 
 	bool knownToBeDifferent(YulName _a, YulName _b);
 	std::optional<u256> differenceIfKnownConstant(YulName _a, YulName _b);

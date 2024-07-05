@@ -944,10 +944,10 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
-		_inlineAssembly.dialect(),
+		_inlineAssembly.operations().nameRepository(),
 		identifierAccess
 	);
-	if (!analyzer.analyze(_inlineAssembly.operations()))
+	if (!analyzer.analyze(_inlineAssembly.operations().block()))
 		solAssert(m_errorReporter.hasErrors());
 	_inlineAssembly.annotation().hasMemoryEffects =
 		lvalueAccessToMemoryVariable ||

@@ -30,7 +30,8 @@ namespace solidity::yul
 {
 
 YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
-	m_dialect(_dialect)
+	m_dialect(_dialect),
+	m_evmDialect(dynamic_cast<EVMDialect const*>(&_dialect))
 {
 	m_predefined.empty = defineName("");
 	yulAssert(m_predefined.empty == emptyName());
@@ -360,6 +361,8 @@ size_t YulNameRepository::typeCount() const
 
 bool YulNameRepository::isEvmDialect() const { return dynamic_cast<EVMDialect const*>(&m_dialect.get()) != nullptr; }
 
+EVMDialect const* YulNameRepository::evmDialect() const { return m_evmDialect; }
+
 void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal)
 {
 	std::set<std::string> used (m_definedLabels.begin(), m_definedLabels.begin() + static_cast<std::ptrdiff_t>(m_indexBoundaries.endBuiltins));
@@ -394,12 +397,15 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 				std::string label (baseLabel);
 				size_t bump = 1;
 				while (used.count(label) > 0 || _illegal.count(label) > 0)
+				{
 					label = fmt::format(FMT_COMPILE("{}_{}"), baseLabel, bump++);
 				if (auto const& existingDefinedName = nameOfLabel(label); existingDefinedName != emptyName() || name == emptyName())
 				{
 					std::get<0>(m_names[static_cast<size_t>(name.value)]).value = existingDefinedName.value;
 					std::get<1>(m_names[static_cast<size_t>(name.value)]) = YulNameState::DEFINED;
 				}
+				if (auto const existingDefinedName = nameOfLabel(label); existingDefinedName != emptyName() || name == emptyName())
+					m_names[name] = m_names[existingDefinedName];
 				else
 					generated.emplace_back(label, name);
 				used.insert(label);

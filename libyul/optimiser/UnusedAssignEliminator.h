@@ -120,10 +120,10 @@ public:
 	static void run(OptimiserStepContext&, Block& _ast);
 
 	explicit UnusedAssignEliminator(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects
 	):
-		UnusedStoreBase(_dialect),
+		UnusedStoreBase(_nameRepository),
 		m_controlFlowSideEffects(_controlFlowSideEffects)
 	{}
 

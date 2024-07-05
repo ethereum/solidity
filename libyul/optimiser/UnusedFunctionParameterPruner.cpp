@@ -76,7 +76,7 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 
 	// Step 2 of UnusedFunctionParameterPruner: Renames the function and replaces all references to
 	// the function, say `f`, by its new name, say `f_1`.
-	NameDisplacer replace{_context.dispenser, functionNamesToFree};
+	NameDisplacer replace{_context.dispenser, _context.nameRepository, functionNamesToFree};
 	replace(_ast);
 
 	// Inverse-Map of the above translations. In the above example, this will store an element with
@@ -108,7 +108,8 @@ void UnusedFunctionParameterPruner::run(OptimiserStepContext& _context, Block& _
 					used,
 					originalFunctionName,
 					linkingFunctionName,
-					_context.dispenser
+					_context.dispenser,
+					_context.nameRepository
 				);
 
 				originalFunction.name = originalFunctionName;

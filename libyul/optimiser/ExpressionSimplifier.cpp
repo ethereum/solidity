@@ -34,7 +34,7 @@ using namespace solidity::yul;
 
 void ExpressionSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ExpressionSimplifier{_context.dialect}(_ast);
+	ExpressionSimplifier{_context.nameRepository}(_ast);
 }
 
 void ExpressionSimplifier::visit(Expression& _expression)
@@ -43,13 +43,13 @@ void ExpressionSimplifier::visit(Expression& _expression)
 
 	while (auto const* match = SimplificationRules::findFirstMatch(
 		_expression,
-		m_dialect,
+		m_nameRepository,
 		[this](YulName _var) { return variableValue(_var); }
 	))
-		_expression = match->action().toExpression(debugDataOf(_expression), evmVersionFromDialect(m_dialect));
+		_expression = match->action().toExpression(debugDataOf(_expression), evmVersionFromDialect(m_nameRepository.dialect()), m_nameRepository);
 
 	if (auto* functionCall = std::get_if<FunctionCall>(&_expression))
-		if (std::optional<evmasm::Instruction> instruction = toEVMInstruction(m_dialect, functionCall->functionName.name))
+		if (std::optional<evmasm::Instruction> instruction = toEVMInstruction(m_nameRepository, functionCall->functionName.name))
 			for (auto op: evmasm::SemanticInformation::readWriteOperations(*instruction))
 				if (op.startParameter && op.lengthParameter)
 				{

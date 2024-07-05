@@ -23,6 +23,7 @@
 #include <test/libyul/Common.h>
 
 #include <libyul/Object.h>
+#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/NameDispenser.h>
@@ -48,16 +49,20 @@ protected:
 		std::tie(m_object, analysisInfo) = yul::test::parse(_source, m_dialect, errorList);
 		BOOST_REQUIRE(m_object && errorList.empty() && m_object->code);
 
-		NameDispenser dispenser(m_dialect, *m_object->code);
+		YulNameRepository nameRepository(m_object->code->nameRepository());
+		auto block = std::get<Block>(yul::ASTCopier{}(m_object->code->block()));
+		NameDispenser dispenser(m_dialect, block);
 		std::set<YulName> reserved;
-		OptimiserStepContext context{m_dialect, dispenser, reserved, 0};
-		CommonSubexpressionEliminator::run(context, *m_object->code);
+		OptimiserStepContext context{m_dialect, nameRepository, dispenser, reserved, 0};
+		CommonSubexpressionEliminator::run(context, block);
 
-		m_ssaValues(*m_object->code);
+		m_ssaValues(block);
 		for (auto const& [name, expression]: m_ssaValues.values())
 			m_values[name].value = expression;
 
-		return KnowledgeBase([this](YulName _var) { return util::valueOrNullptr(m_values, _var); });
+		m_object->code = std::make_shared<AST>(std::move(nameRepository), std::move(block));
+
+		return KnowledgeBase([this](YulName _var) { return util::valueOrNullptr(m_values, _var); }, m_object->code->nameRepository());
 	}
 
 	EVMDialect m_dialect{EVMVersion{}, true};

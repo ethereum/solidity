@@ -245,11 +245,11 @@ std::string AsmPrinter::formatTypedName(TypedName _variable)
 
 std::string AsmPrinter::appendTypeName(YulName _type, bool _isBoolLiteral) const
 {
-	if (m_dialect && !_type.empty())
+	if (m_printingMode == Mode::OmitDefaultType && !_type.empty())
 	{
-		if (!_isBoolLiteral && _type == m_dialect->defaultType)
+		if (!_isBoolLiteral && _type == m_nameRepository.dialect().defaultType)
 			_type = {};
-		else if (_isBoolLiteral && _type == m_dialect->boolType && !m_dialect->defaultType.empty())
+		else if (_isBoolLiteral && _type == m_nameRepository.dialect().boolType && !m_nameRepository.dialect().defaultType.empty())
 			// Special case: If we have a bool type but empty default type, do not remove the type.
 			_type = {};
 	}

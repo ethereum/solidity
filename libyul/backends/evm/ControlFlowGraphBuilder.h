@@ -31,7 +31,7 @@ class ControlFlowGraphBuilder
 public:
 	ControlFlowGraphBuilder(ControlFlowGraphBuilder const&) = delete;
 	ControlFlowGraphBuilder& operator=(ControlFlowGraphBuilder const&) = delete;
-	static std::unique_ptr<CFG> build(AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect, Block const& _block);
+	static std::unique_ptr<CFG> build(AsmAnalysisInfo const& _analysisInfo, YulNameRepository const& _nameRepository, Block const& _block);
 
 	StackSlot operator()(Expression const& _literal);
 	StackSlot operator()(Literal const& _literal);
@@ -56,8 +56,7 @@ private:
 	ControlFlowGraphBuilder(
 		CFG& _graph,
 		AsmAnalysisInfo const& _analysisInfo,
-		std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects,
-		Dialect const& _dialect
+		std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects
 	);
 	void registerFunction(FunctionDefinition const& _function);
 	Stack const& visitFunctionCall(FunctionCall const&);
@@ -80,7 +79,6 @@ private:
 	CFG& m_graph;
 	AsmAnalysisInfo const& m_info;
 	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& m_functionSideEffects;
-	Dialect const& m_dialect;
 	CFG::BasicBlock* m_currentBlock = nullptr;
 	Scope* m_scope = nullptr;
 	struct ForLoopInfo

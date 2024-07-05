@@ -43,10 +43,10 @@ using namespace solidity::yul;
 
 void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 {
-	bool containsMSize = MSizeFinder::containsMSize(_context.dialect, _ast);
+	bool containsMSize = MSizeFinder::containsMSize(_context.nameRepository, _ast);
 	LoadResolver{
-		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
+		_context.nameRepository,
+		SideEffectsPropagator::sideEffects(_context.nameRepository, CallGraphGenerator::callGraph(_ast)),
 		containsMSize,
 		_context.expectedExecutionsPerDeployment
 	}(_ast);
@@ -62,7 +62,7 @@ void LoadResolver::visit(Expression& _e)
 			tryResolve(_e, StoreLoadLocation::Memory, funCall->arguments);
 		else if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)])
 			tryResolve(_e, StoreLoadLocation::Storage, funCall->arguments);
-		else if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction({}))
+		else if (!m_containsMSize && funCall->functionName.name == m_nameRepository.dialect().hashFunction({}))
 		{
 			Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0));
 			Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1));
@@ -114,7 +114,7 @@ void LoadResolver::tryEvaluateKeccak(
 
 	// The costs are only correct for hashes of 32 bytes or 1 word (when rounded up).
 	GasMeter gasMeter{
-		dynamic_cast<EVMDialect const&>(m_dialect),
+		m_nameRepository,
 		!m_expectedExecutionsPerDeployment,
 		m_expectedExecutionsPerDeployment ? *m_expectedExecutionsPerDeployment : 1
 	};
@@ -151,7 +151,7 @@ void LoadResolver::tryEvaluateKeccak(
 				debugDataOf(_e),
 				LiteralKind::Number,
 				LiteralValue{contentHash},
-				m_dialect.defaultType
+				m_nameRepository.dialect().defaultType
 			};
 		}
 	}

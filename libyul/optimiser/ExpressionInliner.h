@@ -29,7 +29,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 struct OptimiserStepContext;
 
 /**
@@ -59,12 +59,12 @@ public:
 
 private:
 	ExpressionInliner(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::map<YulName, FunctionDefinition const*> const& _inlinableFunctions
-	): m_dialect(_dialect), m_inlinableFunctions(_inlinableFunctions)
+	): m_nameRepository(_nameRepository), m_inlinableFunctions(_inlinableFunctions)
 	{}
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	std::map<YulName, FunctionDefinition const*> const& m_inlinableFunctions;
 
 	std::map<YulName, YulName> m_varReplacements;

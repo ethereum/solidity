@@ -31,7 +31,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 
 /**
  * Creates a copy of a Yul AST replacing all identifiers by unique names.
@@ -40,16 +40,10 @@ class Disambiguator: public ASTCopier
 {
 public:
 	explicit Disambiguator(
-		Dialect const& _dialect,
+		YulNameRepository& _nameRepository,
 		AsmAnalysisInfo const& _analysisInfo,
 		std::set<YulName> const& _externallyUsedIdentifiers = {}
-	):
-		m_info(_analysisInfo),
-		m_dialect(_dialect),
-		m_externallyUsedIdentifiers(_externallyUsedIdentifiers),
-		m_nameDispenser(_dialect, m_externallyUsedIdentifiers)
-	{
-	}
+	);
 
 protected:
 	void enterScope(Block const& _block) override;
@@ -62,7 +56,7 @@ protected:
 	void leaveScopeInternal(Scope& _scope);
 
 	AsmAnalysisInfo const& m_info;
-	Dialect const& m_dialect;
+	YulNameRepository& m_nameRepository;
 	std::set<YulName> const& m_externallyUsedIdentifiers;
 
 	std::vector<Scope*> m_scopes;

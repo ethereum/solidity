@@ -34,10 +34,9 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 
 void CodeGenerator::assemble(
-	Block const& _parsedData,
+	AST const& _parsedData,
 	AsmAnalysisInfo& _analysisInfo,
 	evmasm::Assembly& _assembly,
-	langutil::EVMVersion _evmVersion,
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 	bool _useNamedLabelsForFunctions,
 	bool _optimizeStackAllocation
@@ -48,16 +47,17 @@ void CodeGenerator::assemble(
 	CodeTransform transform(
 		assemblyAdapter,
 		_analysisInfo,
-		_parsedData,
-		EVMDialect::strictAssemblyForEVM(_evmVersion),
+		_parsedData.nameRepository(),
+		_parsedData.block(),
 		builtinContext,
+		nullptr,
 		_optimizeStackAllocation,
 		_identifierAccessCodeGen,
 			_useNamedLabelsForFunctions ?
 			CodeTransform::UseNamedLabels::YesAndForceUnique :
 			CodeTransform::UseNamedLabels::Never
 	);
-	transform(_parsedData);
+	transform(_parsedData.block());
 	if (!transform.stackErrors().empty())
 		assertThrow(
 			false,

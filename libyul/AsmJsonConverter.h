@@ -33,6 +33,8 @@
 namespace solidity::yul
 {
 
+class YulNameRepository;
+
 /**
  * Converter of the yul AST into JSON format
  */
@@ -41,7 +43,7 @@ class AsmJsonConverter: public boost::static_visitor<Json>
 public:
 	/// Create a converter to JSON for any block of inline assembly
 	/// @a _sourceIndex to be used to abbreviate source name in the source locations
-	explicit AsmJsonConverter(std::optional<size_t> _sourceIndex): m_sourceIndex(_sourceIndex) {}
+	explicit AsmJsonConverter(std::optional<size_t> _sourceIndex, YulNameRepository const& _nameRepository);
 
 	Json operator()(Block const& _node) const;
 	Json operator()(TypedName const& _node) const;
@@ -67,6 +69,7 @@ private:
 	Json vectorOfVariantsToJson(std::vector<T> const& vec) const;
 
 	std::optional<size_t> const m_sourceIndex;
+	YulNameRepository const& m_nameRepository;
 };
 
 }

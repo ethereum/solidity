@@ -21,6 +21,7 @@
 
 #include <libyul/optimiser/StackCompressor.h>
 
+#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -55,7 +56,7 @@ namespace
 class RematCandidateSelector: public DataFlowAnalyzer
 {
 public:
-	explicit RematCandidateSelector(Dialect const& _dialect): DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore) {}
+	explicit RematCandidateSelector(YulNameRepository const& _nameRepository): DataFlowAnalyzer(_nameRepository, MemoryAndStorage::Ignore) {}
 
 	/// @returns a map from function name to rematerialisation costs to a vector of variables to rematerialise
 	/// and variables that occur in their expression.
@@ -93,7 +94,7 @@ public:
 			{
 				yulAssert(!m_expressionCodeCost.count(varName), "");
 				m_candidates.emplace_back(m_currentFunctionName, varName);
-				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *value->value);
+				m_expressionCodeCost[varName] = CodeCost::codeCost(m_nameRepository, *value->value);
 			}
 		}
 	}
@@ -158,13 +159,13 @@ std::set<YulName> chooseVarsToEliminate(
 }
 
 void eliminateVariables(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	Block& _ast,
 	std::map<YulName, int> const& _numVariables,
 	bool _allowMSizeOptimization
 )
 {
-	RematCandidateSelector selector{_dialect};
+	RematCandidateSelector selector{_nameRepository};
 	selector(_ast);
 	std::map<YulName, std::map<size_t, std::vector<YulName>>> candidates = selector.candidates();
 
@@ -175,14 +176,14 @@ void eliminateVariables(
 		varsToEliminate += chooseVarsToEliminate(candidates[functionName], static_cast<size_t>(numVariables));
 	}
 
-	Rematerialiser::run(_dialect, _ast, std::move(varsToEliminate));
+	Rematerialiser::run(_nameRepository, _ast, std::move(varsToEliminate));
 	// Do not remove functions.
 	std::set<YulName> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
-	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);
+	UnusedPruner::runUntilStabilised(_nameRepository, _ast, _allowMSizeOptimization, nullptr, allFunctions);
 }
 
 void eliminateVariablesOptimizedCodegen(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	Block& _ast,
 	std::map<YulName, std::vector<StackLayoutGenerator::StackTooDeep>> const& _unreachables,
 	bool _allowMSizeOptimization
@@ -191,7 +192,7 @@ void eliminateVariablesOptimizedCodegen(
 	if (std::all_of(_unreachables.begin(), _unreachables.end(), [](auto const& _item) { return _item.second.empty(); }))
 		return;
 
-	RematCandidateSelector selector{_dialect};
+	RematCandidateSelector selector{_nameRepository};
 	selector(_ast);
 
 	std::map<YulName, size_t> candidates;
@@ -227,40 +228,53 @@ void eliminateVariablesOptimizedCodegen(
 					break;
 			}
 		}
-	Rematerialiser::run(_dialect, _ast, std::move(varsToEliminate), true);
+	Rematerialiser::run(_nameRepository, _ast, std::move(varsToEliminate), true);
 	// Do not remove functions.
 	std::set<YulName> allFunctions = NameCollector{_ast, NameCollector::OnlyFunctions}.names();
-	UnusedPruner::runUntilStabilised(_dialect, _ast, _allowMSizeOptimization, nullptr, allFunctions);
+	UnusedPruner::runUntilStabilised(_nameRepository, _ast, _allowMSizeOptimization, nullptr, allFunctions);
 }
 
 }
 
 bool StackCompressor::run(
-	Dialect const& _dialect,
 	Object& _object,
 	bool _optimizeStackAllocation,
 	size_t _maxIterations
 )
 {
+	yulAssert(_object.code);
+	YulNameRepository nameRepository(_object.code->nameRepository());
+	auto block = std::get<Block>(ASTCopier{}(_object.code->block()));
+	auto result = run(nameRepository, block, _object, _optimizeStackAllocation, _maxIterations);
+	_object.code = std::make_shared<AST>(std::move(nameRepository), std::move(block));
+	return result;
+}
+
+bool StackCompressor::run(
+	YulNameRepository const& _nameRepository,
+	Block& _block,
+	Object const& _object,
+	bool _optimizeStackAllocation,
+	size_t _maxIterations)
+{
 	yulAssert(
-		_object.code &&
-		_object.code->statements.size() > 0 && std::holds_alternative<Block>(_object.code->statements.at(0)),
+		!_block.statements.empty() && std::holds_alternative<Block>(_block.statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool usesOptimizedCodeGenerator = false;
-	if (auto evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
+	if (auto evmDialect = dynamic_cast<EVMDialect const*>(&_nameRepository.dialect()))
 		usesOptimizedCodeGenerator =
 			_optimizeStackAllocation &&
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
-	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, *_object.code);
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_nameRepository, _block);
 	if (usesOptimizedCodeGenerator)
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, *_object.code);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_nameRepository, _block, _object.qualifiedDataNames());
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _nameRepository, _block);
 		eliminateVariablesOptimizedCodegen(
-			_dialect,
-			*_object.code,
+			_nameRepository,
+			_block,
 			StackLayoutGenerator::reportStackTooDeep(*cfg),
 			allowMSizeOptimization
 		);
@@ -268,12 +282,12 @@ bool StackCompressor::run(
 	else
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			std::map<YulName, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
+			std::map<YulName, int> stackSurplus = CompilabilityChecker(_object, _optimizeStackAllocation, &_nameRepository, &_block).stackDeficit;
 			if (stackSurplus.empty())
 				return true;
 			eliminateVariables(
-				_dialect,
-				*_object.code,
+				_nameRepository,
+				_block,
 				stackSurplus,
 				allowMSizeOptimization
 			);

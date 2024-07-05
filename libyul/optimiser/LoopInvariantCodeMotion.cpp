@@ -33,10 +33,10 @@ using namespace solidity::yul;
 void LoopInvariantCodeMotion::run(OptimiserStepContext& _context, Block& _ast)
 {
 	std::map<YulName, SideEffects> functionSideEffects =
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast));
-	bool containsMSize = MSizeFinder::containsMSize(_context.dialect, _ast);
+		SideEffectsPropagator::sideEffects(_context.nameRepository, CallGraphGenerator::callGraph(_ast));
+	bool containsMSize = MSizeFinder::containsMSize(_context.nameRepository, _ast);
 	std::set<YulName> ssaVars = SSAValueTracker::ssaVariables(_ast);
-	LoopInvariantCodeMotion{_context.dialect, ssaVars, functionSideEffects, containsMSize}(_ast);
+	LoopInvariantCodeMotion{_context.nameRepository, ssaVars, functionSideEffects, containsMSize}(_ast);
 }
 
 void LoopInvariantCodeMotion::operator()(Block& _block)
@@ -73,7 +73,7 @@ bool LoopInvariantCodeMotion::canBePromoted(
 		for (auto const& ref: VariableReferencesCounter::countReferences(*_varDecl.value))
 			if (_varsDefinedInCurrentScope.count(ref.first) || !m_ssaVariables.count(ref.first))
 				return false;
-		SideEffectsCollector sideEffects{m_dialect, *_varDecl.value, &m_functionSideEffects};
+		SideEffectsCollector sideEffects{m_nameRepository, *_varDecl.value, &m_functionSideEffects};
 		if (!sideEffects.movableRelativeTo(_forLoopSideEffects, m_containsMSize))
 			return false;
 	}
@@ -85,7 +85,7 @@ std::optional<std::vector<Statement>> LoopInvariantCodeMotion::rewriteLoop(ForLo
 	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
 
 	auto forLoopSideEffects =
-		SideEffectsCollector{m_dialect, _for, &m_functionSideEffects}.sideEffects();
+		SideEffectsCollector{m_nameRepository, _for, &m_functionSideEffects}.sideEffects();
 
 	std::vector<Statement> replacement;
 	for (Block* block: {&_for.post, &_for.body})

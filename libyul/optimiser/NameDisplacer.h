@@ -29,7 +29,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 
 /**
  * Optimiser component that renames identifiers to free up certain names.
@@ -44,9 +44,11 @@ class NameDisplacer: public ASTModifier
 public:
 	explicit NameDisplacer(
 		NameDispenser& _dispenser,
+		YulNameRepository& _nameRepository,
 		std::set<YulName> const& _namesToFree
 	):
 		m_nameDispenser(_dispenser),
+		m_nameRepository(_nameRepository),
 		m_namesToFree(_namesToFree)
 	{
 		for (YulName n: _namesToFree)
@@ -69,6 +71,7 @@ protected:
 	void checkAndReplace(YulName& _name) const;
 
 	NameDispenser& m_nameDispenser;
+	YulNameRepository& m_nameRepository;
 	std::set<YulName> const& m_namesToFree;
 	std::map<YulName, YulName> m_translations;
 };

@@ -23,6 +23,8 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <libyul/AST.h>
+
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
@@ -881,6 +883,11 @@ VariableDeclarationAnnotation& VariableDeclaration::annotation() const
 StatementAnnotation& Statement::annotation() const
 {
 	return initAnnotation<StatementAnnotation>();
+}
+
+yul::Dialect const& InlineAssembly::dialect() const
+{
+	return m_operations->nameRepository().dialect();
 }
 
 InlineAssemblyAnnotation& InlineAssembly::annotation() const

@@ -28,7 +28,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 
 /**
  * Helper class that keeps track of the types while performing optimizations.
@@ -38,7 +38,7 @@ struct Dialect;
 class TypeInfo
 {
 public:
-	TypeInfo(Dialect const& _dialect, Block const& _ast);
+	TypeInfo(YulNameRepository const& _nameRepository, Block const& _ast);
 
 	void setVariableType(YulName _name, YulName _type) { m_variableTypes[_name] = _type; }
 
@@ -57,7 +57,7 @@ private:
 		std::vector<YulName> returns;
 	};
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	std::map<YulName, YulName> m_variableTypes;
 	std::map<YulName, FunctionType> m_functionTypes;
 };

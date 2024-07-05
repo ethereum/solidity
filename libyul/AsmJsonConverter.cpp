@@ -30,6 +30,9 @@
 namespace solidity::yul
 {
 
+AsmJsonConverter::AsmJsonConverter(std::optional<size_t> _sourceIndex, YulNameRepository const& _nameRepository):
+	m_sourceIndex(_sourceIndex), m_nameRepository(_nameRepository) {}
+
 Json AsmJsonConverter::operator()(Block const& _node) const
 {
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulBlock");

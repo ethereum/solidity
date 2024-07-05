@@ -45,10 +45,10 @@ public:
 	static void run(
 		OptimiserStepContext& _context,
 		Block& _ast
-	) { run(_context.dialect, _ast); }
+	) { run(_context.nameRepository, _ast); }
 
 	static void run(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block& _ast,
 		std::set<YulName> _varsToAlwaysRematerialize = {},
 		bool _onlySelectedVariables = false
@@ -56,7 +56,7 @@ public:
 
 protected:
 	Rematerialiser(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block& _ast,
 		std::set<YulName> _varsToAlwaysRematerialize = {},
 		bool _onlySelectedVariables = false
@@ -88,14 +88,14 @@ public:
 	static void run(
 		OptimiserStepContext& _context,
 		Block& _ast
-	) { LiteralRematerialiser{_context.dialect}(_ast); }
+	) { LiteralRematerialiser{_context.nameRepository}(_ast); }
 
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;
 
 private:
-	LiteralRematerialiser(Dialect const& _dialect):
-		DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore)
+	LiteralRematerialiser(YulNameRepository const& _nameRepository):
+		DataFlowAnalyzer(_nameRepository, MemoryAndStorage::Ignore)
 	{}
 };
 

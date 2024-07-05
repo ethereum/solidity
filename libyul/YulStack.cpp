@@ -48,7 +48,7 @@ using namespace solidity::util;
 
 namespace
 {
-Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _version)
+EVMDialect const& languageToDialect(YulStack::Language _language, EVMVersion _version)
 {
 	switch (_language)
 	{
@@ -59,7 +59,6 @@ Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _versi
 		return EVMDialectTyped::instance(_version);
 	}
 	yulAssert(false, "");
-	return Dialect::yulDeprecated();
 }
 
 }
@@ -116,7 +115,7 @@ void YulStack::optimize()
 	{
 		if (
 			!m_optimiserSettings.runYulOptimiser &&
-			yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+			yul::MSizeFinder::containsMSize(*m_parserResult)
 		)
 			return;
 
@@ -146,7 +145,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	AsmAnalyzer analyzer(
 		*_object.analysisInfo,
 		m_errorReporter,
-		languageToDialect(m_language, m_evmVersion),
+		_object.code->nameRepository(),
 		{},
 		_object.qualifiedDataNames()
 	);
@@ -154,7 +153,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	bool success = false;
 	try
 	{
-		success = analyzer.analyze(*_object.code);
+		success = analyzer.analyze(_object.code->block());
 		for (auto& subNode: _object.subObjects)
 			if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 				if (!analyzeParsed(*subObject))
@@ -174,22 +173,12 @@ bool YulStack::analyzeParsed(Object& _object)
 
 void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 {
-	EVMDialect const* dialect = nullptr;
-	switch (m_language)
-	{
-		case Language::Assembly:
-		case Language::StrictAssembly:
-			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
-			break;
-		case Language::Yul:
-			dialect = &EVMDialectTyped::instance(m_evmVersion);
-			break;
-		default:
-			yulAssert(false, "Invalid language.");
-			break;
-	}
-
-	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize, m_eofVersion);
+	EVMObjectCompiler::compile(
+		*m_parserResult,
+		_assembly,
+		_optimize,
+		m_eofVersion
+	);
 }
 
 void YulStack::optimize(Object& _object, bool _isCreation)
@@ -203,10 +192,12 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 			optimize(*subObject, isCreation);
 		}
 
-	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
 	std::unique_ptr<GasMeter> meter;
-	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
-		meter = std::make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+	meter = std::make_unique<GasMeter>(
+		_object.code->nameRepository(),
+		_isCreation,
+		m_optimiserSettings.expectedExecutionsPerDeployment
+	);
 
 	auto [optimizeStackAllocation, yulOptimiserSteps, yulOptimiserCleanupSteps] = [&]() -> std::tuple<bool, std::string, std::string>
 	{
@@ -234,7 +225,6 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	}();
 
 	OptimiserSuite::run(
-		dialect,
 		meter.get(),
 		_object,
 		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
@@ -318,7 +308,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 	// it with the minimal steps required to avoid "stack too deep".
 	bool optimize = m_optimiserSettings.optimizeStackAllocation || (
 		!m_optimiserSettings.runYulOptimiser &&
-		!yul::MSizeFinder::containsMSize(languageToDialect(m_language, m_evmVersion), *m_parserResult)
+		!yul::MSizeFinder::containsMSize(*m_parserResult)
 	);
 	try
 	{
@@ -365,7 +355,10 @@ std::string YulStack::print(
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
-	return m_parserResult->toString(&languageToDialect(m_language, m_evmVersion), m_debugInfoSelection, _soliditySourceProvider) + "\n";
+	return m_parserResult->toString(
+		AsmPrinter::Mode::OmitDefaultType,
+		m_debugInfoSelection, _soliditySourceProvider
+	) + "\n";
 }
 
 Json YulStack::astJson() const
@@ -373,7 +366,7 @@ Json YulStack::astJson() const
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
-	return  m_parserResult->toJson();
+	return m_parserResult->toJson();
 }
 
 std::shared_ptr<Object> YulStack::parserResult() const
