@@ -91,6 +91,8 @@ struct Dialect
 	virtual Literal zeroLiteralForType(YulString _type) const;
 	virtual Literal trueLiteral() const;
 
+	virtual std::set<std::string> builtinNames() const { return {}; }
+
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 
 	Dialect() = default;
