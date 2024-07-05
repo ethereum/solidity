@@ -18,12 +18,12 @@
 
 #include <libsolidity/formal/ExpressionFormatter.h>
 
+#include <libsolidity/formal/SymbolicTypes.h>
+
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string.hpp>
-
-#include <range/v3/algorithm/for_each.hpp>
 
 #include <map>
 #include <vector>
@@ -180,6 +180,178 @@ std::string toSolidityStr(smtutil::Expression const& _expr)
 
 	// Other operators such as bv2int, int2bv may end up here.
 	return op + "(" + boost::algorithm::join(strArgs, ", ") + ")";
+}
+
+namespace
+{
+bool fillArray(smtutil::Expression const& _expr, std::vector<std::string>& _array, ArrayType const& _type)
+{
+	// Base case
+	if (_expr.name == "const_array")
+	{
+		auto length = _array.size();
+		std::optional<std::string> elemStr = expressionToString(_expr.arguments.at(1), _type.baseType());
+		if (!elemStr)
+			return false;
+		_array.clear();
+		_array.resize(length, *elemStr);
+		return true;
+	}
+
+	// Recursive case.
+	if (_expr.name == "store")
+	{
+		if (!fillArray(_expr.arguments.at(0), _array, _type))
+			return false;
+		std::optional<std::string> indexStr = expressionToString(_expr.arguments.at(1), TypeProvider::uint256());
+		if (!indexStr)
+			return false;
+		// Sometimes the solver assigns huge lengths that are not related,
+		// we should catch and ignore those.
+		unsigned long index;
+		try
+		{
+			index = stoul(*indexStr);
+		}
+		catch (std::out_of_range const&)
+		{
+			return true;
+		}
+		catch (std::invalid_argument const&)
+		{
+			return true;
+		}
+		std::optional<std::string> elemStr = expressionToString(_expr.arguments.at(2), _type.baseType());
+		if (!elemStr)
+			return false;
+		if (index < _array.size())
+			_array.at(index) = *elemStr;
+		return true;
+	}
+
+	// Special base case, not supported yet.
+	if (_expr.name.rfind("(_ as-array") == 0)
+	{
+		// Z3 expression representing reinterpretation of a different term as an array
+		return false;
+	}
+
+	solAssert(false);
+}
+}
+
+std::optional<std::string> expressionToString(smtutil::Expression const& _expr, frontend::Type const* _type)
+{
+	if (smt::isNumber(*_type))
+	{
+		solAssert(_expr.sort->kind == Kind::Int);
+		solAssert(_expr.arguments.empty());
+
+		if (
+			_type->category() == frontend::Type::Category::Address ||
+			_type->category() == frontend::Type::Category::FixedBytes
+		)
+		{
+			try
+			{
+				if (_expr.name == "0")
+					return "0x0";
+				// For some reason the code below returns "0x" for "0".
+				return util::toHex(toCompactBigEndian(bigint(_expr.name)), util::HexPrefix::Add, util::HexCase::Lower);
+			}
+			catch (std::out_of_range const&)
+			{
+			}
+			catch (std::invalid_argument const&)
+			{
+			}
+		}
+
+		return _expr.name;
+	}
+	if (smt::isBool(*_type))
+	{
+		solAssert(_expr.sort->kind == Kind::Bool);
+		solAssert(_expr.arguments.empty());
+		solAssert(_expr.name == "true" || _expr.name == "false");
+		return _expr.name;
+	}
+	if (smt::isFunction(*_type))
+	{
+		solAssert(_expr.arguments.empty());
+		return _expr.name;
+	}
+	if (smt::isArray(*_type))
+	{
+		auto const& arrayType = dynamic_cast<ArrayType const&>(*_type);
+		if (_expr.name != "tuple_constructor")
+			return {};
+
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
+		solAssert(tupleSort.components.size() == 2);
+
+		unsigned long length;
+		try
+		{
+			length = stoul(_expr.arguments.at(1).name);
+		}
+		catch(std::out_of_range const&)
+		{
+			return {};
+		}
+		catch(std::invalid_argument const&)
+		{
+			return {};
+		}
+
+		// Limit this counterexample size to 1k.
+		// Some OSs give you "unlimited" memory through swap and other virtual memory,
+		// so purely relying on bad_alloc being thrown is not a good idea.
+		// In that case, the array allocation might cause OOM and the program is killed.
+		if (length >= 1024)
+			return {};
+		try
+		{
+			std::vector<std::string> array(length);
+			if (!fillArray(_expr.arguments.at(0), array, arrayType))
+				return {};
+			return "[" + boost::algorithm::join(array, ", ") + "]";
+		}
+		catch (std::bad_alloc const&)
+		{
+			// Solver gave a concrete array but length is too large.
+		}
+	}
+	if (smt::isNonRecursiveStruct(*_type))
+	{
+		auto const& structType = dynamic_cast<StructType const&>(*_type);
+		solAssert(_expr.name == "tuple_constructor");
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
+		auto members = structType.structDefinition().members();
+		solAssert(tupleSort.components.size() == members.size());
+		solAssert(_expr.arguments.size() == members.size());
+		std::vector<std::string> elements;
+		for (unsigned i = 0; i < members.size(); ++i)
+		{
+			std::optional<std::string> elementStr = expressionToString(_expr.arguments.at(i), members[i]->type());
+			elements.push_back(members[i]->name() + (elementStr.has_value() ?  ": " + elementStr.value() : ""));
+		}
+		return "{" + boost::algorithm::join(elements, ", ") + "}";
+	}
+
+	return {};
+}
+
+std::vector<std::optional<std::string>> formatExpressions(
+	std::vector<smtutil::Expression> const& _exprs,
+	std::vector<frontend::Type const*> const& _types
+)
+{
+	solAssert(_exprs.size() == _types.size());
+	std::vector<std::optional<std::string>> strExprs;
+	for (unsigned i = 0; i < _exprs.size(); ++i)
+		strExprs.push_back(expressionToString(_exprs.at(i), _types.at(i)));
+	return strExprs;
 }
 
 }
