@@ -35,6 +35,8 @@
 
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/tail.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/concat.hpp>
 
 #include <regex>
 
@@ -460,6 +462,13 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 		function = std::make_shared<BuiltinFunctionForEVM const>(std::move(builtinFunction));
 	}
 	return function.get();
+}
+
+std::set<std::string> EVMDialect::builtinNames() const {
+	static std::array verbatim {YulString("verbatim")};
+	auto const keys = ranges::views::concat(ranges::views::keys(m_functions), verbatim)
+		| ranges::views::transform([](auto const& name) { return name.str(); });
+	return { keys.begin(), keys.end() };
 }
 
 EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess):

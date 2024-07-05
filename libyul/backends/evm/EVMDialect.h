@@ -92,6 +92,8 @@ struct EVMDialect: public Dialect
 
 	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
+	std::set<std::string> builtinNames() const override;
+
 protected:
 	BuiltinFunctionForEVM const* verbatimFunction(size_t _arguments, size_t _returnVariables) const;
 
