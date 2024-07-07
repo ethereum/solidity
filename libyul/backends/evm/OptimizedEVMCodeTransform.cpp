@@ -302,7 +302,7 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 					varNameDeep.empty() ? varNameTop : varNameDeep,
 					deficit,
 					msg
-				));
+				) << langutil::errinfo_sourceLocation(sourceLocation));
 				m_assembly.markAsInvalid();
 			}
 		},
