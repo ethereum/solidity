@@ -1,0 +1,1 @@
+--no-cbor-metadata --ir-optimized --debug-info none

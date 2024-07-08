@@ -7,5 +7,6 @@ contract C {
     uint transient internal ti;
     uint transient private tprv;
 }
+// ====
+// EVMVersion: >=cancun
 // ----
-// UnimplementedFeatureError 1834: Transient storage variables are not supported.

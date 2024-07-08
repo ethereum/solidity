@@ -8,5 +8,5 @@ contract C {
     }
 }
 // ----
-// TypeError 4713: (84-90): State variables cannot be assigned to - you have to use "sstore()".
-// TypeError 4713: (108-116): State variables cannot be assigned to - you have to use "sstore()".
+// TypeError 4713: (84-90): State variables cannot be assigned to - you have to use "sstore()" or "tstore()".
+// TypeError 4713: (108-116): State variables cannot be assigned to - you have to use "sstore()" or "tstore()".
