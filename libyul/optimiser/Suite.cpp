@@ -197,7 +197,7 @@ void OptimiserSuite::run(
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		//ConstantOptimiser{*evmDialect, *_meter}(ast);
+		ConstantOptimiser{*evmDialect, *_meter}(ast);
 		//if (usesOptimizedCodeGenerator)
 		//{
 		//	StackCompressor::run(
@@ -212,6 +212,7 @@ void OptimiserSuite::run(
 		//else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 		//	StackLimitEvader::run(suite.m_context, _object);
 	}
+	suite.runSequence("x", ast);
 
 	dispenser.reset(ast);
 //	NameSimplifier::run(suite.m_context, ast);
