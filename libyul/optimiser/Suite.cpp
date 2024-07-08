@@ -212,7 +212,7 @@ void OptimiserSuite::run(
 		//else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 		//	StackLimitEvader::run(suite.m_context, _object);
 	}
-	suite.runSequence("x", ast);
+	suite.runSequence("xTu", ast);
 
 	dispenser.reset(ast);
 //	NameSimplifier::run(suite.m_context, ast);
