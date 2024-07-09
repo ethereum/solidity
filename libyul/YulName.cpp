@@ -31,32 +31,24 @@
 namespace solidity::yul
 {
 
-struct YulNameRepository::IndexBoundaries
-{
-	size_t beginTypes {};
-	size_t endTypes {};
-	size_t beginBuiltins {};
-	size_t endBuiltins {};
-};
-
 YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
-	m_dialect(_dialect), m_indexBoundaries(std::make_unique<IndexBoundaries>())
+	m_dialect(_dialect)
 {
 	defineName("");
 
 	for (auto const& type: _dialect.types)
 		if (type.empty())
 		{
-			m_indexBoundaries->beginTypes = 0;
+			m_indexBoundaries.beginTypes = 0;
 			m_dialectTypes.emplace_back(emptyName(), type.str());
 		}
 		else
 		{
-			m_indexBoundaries->beginTypes = 1;
+			m_indexBoundaries.beginTypes = 1;
 			m_dialectTypes.emplace_back(defineName(type.str()), type.str());
 		}
-	m_indexBoundaries->endTypes = m_index;
-	m_indexBoundaries->beginBuiltins = m_index;
+	m_indexBoundaries.endTypes = m_index;
+	m_indexBoundaries.beginBuiltins = m_index;
 
 	auto const& builtinNames = _dialect.builtinNames();
 	m_predefined.verbatim = defineName("@ verbatim");
@@ -64,45 +56,29 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 		if (!label.empty())
 		{
 			auto const name = defineName(label);
-			if (auto const* function = m_dialect.builtin(YulString(label)))
+			if (auto const* function = m_dialect.get().builtin(YulString(label)))
 				m_builtinFunctions[name] = convertBuiltinFunction(name, *function);
 		}
-	m_indexBoundaries->endBuiltins = m_index;
+	m_indexBoundaries.endBuiltins = m_index;
 
 	m_predefined.boolType = nameOfType(_dialect.boolType.str());
 	m_predefined.defaultType = nameOfType(_dialect.defaultType.str());
-	if (builtinNames.count("dataoffset") > 0)
-		m_predefined.dataoffset = nameOfBuiltin("dataoffset");
-	else
-		m_predefined.dataoffset = defineName("dataoffset");
-	if (builtinNames.count("datasize") > 0)
-		m_predefined.datasize = nameOfBuiltin("datasize");
-	else
-		m_predefined.datasize = defineName("datasize");
-	if (builtinNames.count("selfdestruct") > 0)
-		m_predefined.selfdestruct = nameOfBuiltin("selfdestruct");
-	else
-		m_predefined.selfdestruct = defineName("selfdestruct");
-	if (builtinNames.count("tstore") > 0)
-		m_predefined.tstore = nameOfBuiltin("tstore");
-	else
-		m_predefined.tstore = defineName("tstore");
-	if (builtinNames.count("memoryguard") > 0)
-		m_predefined.memoryguard = nameOfBuiltin("memoryguard");
-	else
-		m_predefined.memoryguard = defineName("memoryguard");
-	if (builtinNames.count("eq") > 0)
-		m_predefined.eq = nameOfBuiltin("eq");
-	else
-		m_predefined.eq = defineName("eq");
-	if (builtinNames.count("add") > 0)
-		m_predefined.add = nameOfBuiltin("add");
-	else
-		m_predefined.add = defineName("add");
-	if (builtinNames.count("sub") > 0)
-		m_predefined.sub = nameOfBuiltin("sub");
-	else
-		m_predefined.sub = defineName("sub");
+
+	auto const predefinedName = [&](std::string const& label)
+	{
+		if (builtinNames.count(label) > 0)
+			return nameOfBuiltin(label);
+		else
+			return defineName(label);
+	};
+	m_predefined.dataoffset = predefinedName("dataoffset");
+	m_predefined.datasize = predefinedName("datasize");
+	m_predefined.selfdestruct = predefinedName("selfdestruct");
+	m_predefined.tstore = predefinedName("tstore");
+	m_predefined.memoryguard = predefinedName("memoryguard");
+	m_predefined.eq = predefinedName("eq");
+	m_predefined.add = predefinedName("add");
+	m_predefined.sub = predefinedName("sub");
 
 	{
 		auto types = m_dialectTypes;
@@ -111,42 +87,42 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 
 		for (auto const& [typeName, typeLabel]: types)
 		{
-			if (auto const* discardFunction = m_dialect.discardFunction(YulString(typeLabel)))
+			if (auto const* discardFunction = m_dialect.get().discardFunction(YulString(typeLabel)))
 				m_predefinedBuiltinFunctions.discardFunctions.emplace_back(nameOfBuiltin(discardFunction->name.str()));
 			else
 				m_predefinedBuiltinFunctions.discardFunctions.emplace_back(std::nullopt);
 
-			if (auto const* equalityFunction = m_dialect.equalityFunction(YulString(typeLabel)))
+			if (auto const* equalityFunction = m_dialect.get().equalityFunction(YulString(typeLabel)))
 				m_predefinedBuiltinFunctions.equalityFunctions.emplace_back(nameOfBuiltin(equalityFunction->name.str()));
 			else
 				m_predefinedBuiltinFunctions.equalityFunctions.emplace_back(std::nullopt);
 
-			if (auto const* booleanNegationFunction = m_dialect.booleanNegationFunction())
+			if (auto const* booleanNegationFunction = m_dialect.get().booleanNegationFunction())
 				m_predefinedBuiltinFunctions.booleanNegationFunction = nameOfBuiltin(booleanNegationFunction->name.str());
 			else
 				m_predefinedBuiltinFunctions.booleanNegationFunction = std::nullopt;
 
-			if (auto const* memStoreFunction = m_dialect.memoryStoreFunction(YulString(typeLabel)))
+			if (auto const* memStoreFunction = m_dialect.get().memoryStoreFunction(YulString(typeLabel)))
 				m_predefinedBuiltinFunctions.memoryStoreFunctions.emplace_back(nameOfBuiltin(memStoreFunction->name.str()));
 			else
 				m_predefinedBuiltinFunctions.memoryStoreFunctions.emplace_back(std::nullopt);
 
-			if (auto const* memLoadFunction = m_dialect.memoryLoadFunction(YulString(typeLabel)))
+			if (auto const* memLoadFunction = m_dialect.get().memoryLoadFunction(YulString(typeLabel)))
 				m_predefinedBuiltinFunctions.memoryLoadFunctions.emplace_back(nameOfBuiltin(memLoadFunction->name.str()));
 			else
 				m_predefinedBuiltinFunctions.memoryLoadFunctions.emplace_back(std::nullopt);
 
-			if (auto const* storageStoreFunction = m_dialect.storageStoreFunction(YulString(typeLabel)))
+			if (auto const* storageStoreFunction = m_dialect.get().storageStoreFunction(YulString(typeLabel)))
 				m_predefinedBuiltinFunctions.storageStoreFunctions.emplace_back(nameOfBuiltin(storageStoreFunction->name.str()));
 			else
 				m_predefinedBuiltinFunctions.storageStoreFunctions.emplace_back(std::nullopt);
 
-			if (auto const* storageLoadFunction = m_dialect.storageLoadFunction(YulString(typeLabel)))
+			if (auto const* storageLoadFunction = m_dialect.get().storageLoadFunction(YulString(typeLabel)))
 				m_predefinedBuiltinFunctions.storageLoadFunctions.emplace_back(nameOfBuiltin(storageLoadFunction->name.str()));
 			else
 				m_predefinedBuiltinFunctions.storageLoadFunctions.emplace_back(std::nullopt);
 
-			m_predefinedBuiltinFunctions.hashFunctions.emplace_back(nameOfBuiltin(m_dialect.hashFunction(YulString(typeLabel)).str()));
+			m_predefinedBuiltinFunctions.hashFunctions.emplace_back(nameOfBuiltin(m_dialect.get().hashFunction(YulString(typeLabel)).str()));
 		}
 	}
 
@@ -172,7 +148,7 @@ YulNameRepository::BuiltinFunction const* YulNameRepository::builtin(YulName con
 
 std::optional<std::string_view> YulNameRepository::labelOf(YulName const _name) const
 {
-	yulAssert(_name < m_names.size(), "YulName exceeds repository size, probably stems from another instance.");
+	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");
 	if (!isDerivedName(_name))
 	{
 		// if the parent is directly a defined label, we take that one
@@ -192,7 +168,7 @@ std::optional<std::string_view> YulNameRepository::labelOf(YulName const _name) 
 
 YulNameRepository::YulName YulNameRepository::baseNameOf(YulName _name) const
 {
-	yulAssert(_name < m_names.size(), "YulName exceeds repository size, probably stems from another instance.");
+	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");
 	while (isDerivedName(_name))
 		_name = std::get<0>(m_names[_name]);
 	return _name;
@@ -200,7 +176,7 @@ YulNameRepository::YulName YulNameRepository::baseNameOf(YulName _name) const
 
 std::string_view YulNameRepository::baseLabelOf(YulName const _name) const
 {
-	yulAssert(_name < m_names.size(), "YulName exceeds repository size, probably stems from another instance.");
+	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");
 	return m_definedLabels[std::get<0>(m_names[baseNameOf(_name)])];
 }
 
@@ -263,7 +239,7 @@ bool YulNameRepository::isBuiltinName(YulName const _name) const
 {
 	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");
 	auto const baseName = baseNameOf(_name);
-	return baseName >= m_indexBoundaries->beginBuiltins && baseName < m_indexBoundaries->endBuiltins;
+	return baseName >= m_indexBoundaries.beginBuiltins && baseName < m_indexBoundaries.endBuiltins;
 }
 
 YulNameRepository::BuiltinFunction YulNameRepository::convertBuiltinFunction(YulName const _name, yul::BuiltinFunction const& _builtin) const
@@ -289,7 +265,7 @@ YulName YulNameRepository::nameOfLabel(std::string_view const label) const
 		if (!isDerivedName(labelIndex) && std::get<0>(m_names[labelIndex]) == static_cast<size_t>(labelIndex))
 			return labelIndex;
 		// if not iota, we have to search
-		auto itName = std::find(m_names.rbegin(), m_names.rend(), std::make_tuple(labelIndex, false));
+		auto itName = std::find(m_names.rbegin(), m_names.rend(), std::make_tuple(labelIndex, YulNameState::DEFINED));
 		if (itName != m_names.rend())
 			return YulName{static_cast<size_t>(std::distance(itName, m_names.rend())) - 1};
 	}
@@ -298,7 +274,7 @@ YulName YulNameRepository::nameOfLabel(std::string_view const label) const
 
 YulName YulNameRepository::nameOfBuiltin(std::string_view const builtin) const
 {
-	for (size_t i = m_indexBoundaries->beginBuiltins; i < m_indexBoundaries->endBuiltins; ++i)
+	for (size_t i = m_indexBoundaries.beginBuiltins; i < m_indexBoundaries.endBuiltins; ++i)
 		if (baseLabelOf(std::get<0>(m_names[i])) == builtin)
 			return i;
 	return emptyName();
@@ -339,7 +315,7 @@ bool YulNameRepository::isVerbatimFunction(YulName const _name) const
 
 YulName YulNameRepository::defineName(std::string_view const _label)
 {
-	if (auto const* builtin = m_dialect.builtin(YulString(std::string(_label))))
+	if (auto const* builtin = m_dialect.get().builtin(YulString(std::string(_label))))
 	{
 		if (builtin->name.str().substr(0, std::string_view("verbatim").size()) == "verbatim")
 		{
@@ -358,7 +334,7 @@ YulName YulNameRepository::defineName(std::string_view const _label)
 			if (builtinName == emptyName())
 			{
 				m_definedLabels.emplace_back(_label);
-				m_names.emplace_back(m_definedLabels.size() - 1, false);
+				m_names.emplace_back(m_definedLabels.size() - 1, YulNameState::DEFINED);
 				return m_index++;
 			}
 			else
@@ -371,7 +347,7 @@ YulName YulNameRepository::defineName(std::string_view const _label)
 			return name;
 
 		m_definedLabels.emplace_back(_label);
-		m_names.emplace_back(m_definedLabels.size() - 1, false);
+		m_names.emplace_back(m_definedLabels.size() - 1, YulNameState::DEFINED);
 		return m_index++;
 	}
 }
@@ -379,7 +355,7 @@ YulName YulNameRepository::defineName(std::string_view const _label)
 YulName YulNameRepository::deriveName(YulName const _name)
 {
 	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");
-	m_names.emplace_back(_name, true);
+	m_names.emplace_back(_name, YulNameState::DERIVED);
 	return m_index++;
 }
 
@@ -389,20 +365,20 @@ YulName YulNameRepository::addGhost()
 }
 
 bool YulNameRepository::isType(YulName const _name) const {
-	return _name >= m_indexBoundaries->beginTypes && _name < m_indexBoundaries->endTypes;
+	return _name >= m_indexBoundaries.beginTypes && _name < m_indexBoundaries.endTypes;
 }
 
 size_t YulNameRepository::nTypes() const
 {
-	return m_indexBoundaries->endTypes - m_indexBoundaries->beginTypes;
+	return m_indexBoundaries.endTypes - m_indexBoundaries.beginTypes;
 }
 
-bool YulNameRepository::isEvmDialect() const { return dynamic_cast<EVMDialect const*>(&m_dialect) != nullptr; }
+bool YulNameRepository::isEvmDialect() const { return dynamic_cast<EVMDialect const*>(&m_dialect.get()) != nullptr; }
 
-void YulNameRepository::generateLabels(std::set<YulName> _usedNames, std::set<std::string> const& _illegal)
+void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal)
 {
-	std::set<std::string> used (m_definedLabels.begin(), m_definedLabels.begin() + static_cast<std::ptrdiff_t>(m_indexBoundaries->endBuiltins));
-	std::set<size_t> toDerive;
+	std::set<std::string> used (m_definedLabels.begin(), m_definedLabels.begin() + static_cast<std::ptrdiff_t>(m_indexBoundaries.endBuiltins));
+	std::set<YulName> toDerive;
 	for (auto const name: _usedNames)
 		if (!isDerivedName(name) || isVerbatimFunction(name))
 		{
@@ -419,7 +395,7 @@ void YulNameRepository::generateLabels(std::set<YulName> _usedNames, std::set<st
 
 	std::vector<std::tuple<std::string, YulName>> generated;
 	auto namesIt = _usedNames.begin();
-	for (size_t name = m_indexBoundaries->endBuiltins; name < m_names.size(); ++name)
+	for (size_t name = m_indexBoundaries.endBuiltins; name < m_names.size(); ++name)
 	{
 		if (namesIt != _usedNames.end() && name == *namesIt)
 		{
@@ -446,7 +422,7 @@ void YulNameRepository::generateLabels(std::set<YulName> _usedNames, std::set<st
 	{
 		m_definedLabels.emplace_back(label);
 		std::get<0>(m_names[name]) = m_definedLabels.size() - 1;
-		std::get<1>(m_names[name]) = false;
+		std::get<1>(m_names[name]) = YulNameState::DEFINED;
 	}
 }
 
@@ -455,21 +431,5 @@ void YulNameRepository::generateLabels(std::set<YulName> _usedNames, std::set<st
 // {
 // 	generateLabels(NameCollector(_ast).names(), _illegal);
 // }
-
-YulNameRepository::YulNameRepository(YulNameRepository const& _rhs):
-	m_dialect(_rhs.m_dialect),
-	m_dialectTypes(_rhs.m_dialectTypes),
-	m_builtinFunctions(_rhs.m_builtinFunctions),
-	m_predefinedBuiltinFunctions(_rhs.m_predefinedBuiltinFunctions),
-	m_index(_rhs.m_index),
-	m_nGhosts(_rhs.m_nGhosts),
-	m_definedLabels(_rhs.m_definedLabels),
-	m_names(_rhs.m_names),
-	m_verbatimNames(_rhs.m_verbatimNames),
-	m_predefined(_rhs.m_predefined),
-	m_indexBoundaries(std::make_unique<IndexBoundaries>(*_rhs.m_indexBoundaries))
-{}
-
-YulNameRepository::~YulNameRepository() = default;
 
 }

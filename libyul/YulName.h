@@ -79,12 +79,11 @@ public:
 	/// Construct via dialect. It is important that the dialect instance lives at least as long as the name repository
 	/// instance.
 	explicit YulNameRepository(Dialect const& _dialect);
-	YulNameRepository(YulNameRepository const&);
-	~YulNameRepository();
-
+	~YulNameRepository() = default;
 	YulNameRepository(YulNameRepository&&) = default;
-	YulNameRepository& operator=(YulNameRepository&&) = delete;
-	YulNameRepository& operator=(YulNameRepository const&) = delete;
+	YulNameRepository& operator=(YulNameRepository&&) = default;
+	YulNameRepository(YulNameRepository const&) = default;
+	YulNameRepository& operator=(YulNameRepository const&) = default;
 
 	/// Defines a new name based on a label. If the label already was defined, it returns the corresponding YulName
 	/// instead of a new one.
@@ -111,7 +110,7 @@ public:
 	std::string_view baseLabelOf(YulName _name) const;
 
 	/// Whether a name is considered derived, i.e., has no label but a parent name.
-	bool isDerivedName(YulName const _name) const { return std::get<1>(m_names[_name]); }
+	bool isDerivedName(YulName const _name) const { return std::get<1>(m_names[_name]) == YulNameState::DERIVED; }
 
 	/// Whether a name corresponds to a verbatim builtin function.
 	bool isVerbatimFunction(YulName _name) const;
@@ -154,22 +153,12 @@ public:
 
 	/// Generates labels for derived names over the set of _usedNames, respecting a set of _illegal labels.
 	/// This will change the state of all derived names in _usedNames to "not derived" with a label associated to them.
-	void generateLabels(std::set<YulName> _usedNames, std::set<std::string> const& _illegal = {});
+	void generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal = {});
 
 	// commented out for the time being, as it requires AST refactoring to be YulName-based
 	// void generateLabels(Block const& _ast, std::set<std::string> const& _illegal = {});
 
 private:
-	bool nameWithinBounds(YulName const _name) const { return _name < m_index; }
-
-	size_t indexOfType(YulName _type) const;
-	BuiltinFunction convertBuiltinFunction(YulName _name, yul::BuiltinFunction const& _builtin) const;
-	BuiltinFunction const* fetchTypedPredefinedFunction(YulName _type, std::vector<std::optional<YulName>> const& _functions) const;
-
-	Dialect const& m_dialect;
-	std::vector<std::tuple<YulName, std::string>> m_dialectTypes;
-	std::map<YulName, BuiltinFunction> m_builtinFunctions;
-
 	struct PredefinedBuiltinFunctions
 	{
 		std::vector<std::optional<YulName>> discardFunctions;
@@ -181,17 +170,33 @@ private:
 		std::vector<std::optional<YulName>> storageLoadFunctions;
 		std::vector<YulName> hashFunctions;
 	};
+	struct IndexBoundaries
+	{
+		size_t beginTypes {};
+		size_t endTypes {};
+		size_t beginBuiltins {};
+		size_t endBuiltins {};
+	};
+	enum class YulNameState	{ DERIVED, DEFINED };
+	bool nameWithinBounds(YulName const _name) const { return _name < m_index; }
+
+	size_t indexOfType(YulName _type) const;
+	BuiltinFunction convertBuiltinFunction(YulName _name, yul::BuiltinFunction const& _builtin) const;
+	BuiltinFunction const* fetchTypedPredefinedFunction(YulName _type, std::vector<std::optional<YulName>> const& _functions) const;
+
+	std::reference_wrapper<Dialect const> m_dialect;
+	std::vector<std::tuple<YulName, std::string>> m_dialectTypes;
+	std::map<YulName, BuiltinFunction> m_builtinFunctions;
+
 	PredefinedBuiltinFunctions m_predefinedBuiltinFunctions;
 
 	size_t m_index {0};
 	size_t m_nGhosts {0};
 	std::vector<std::string> m_definedLabels {};
-	std::vector<std::tuple<YulName, bool>> m_names {};
+	std::vector<std::tuple<YulName, YulNameState>> m_names {};
 	std::map<std::tuple<size_t, size_t>, YulName> m_verbatimNames {};
 	PredefinedHandles m_predefined{};
-
-	struct IndexBoundaries;
-	std::unique_ptr<IndexBoundaries> m_indexBoundaries;
+	IndexBoundaries m_indexBoundaries;
 };
 using YulName = YulString;
 
