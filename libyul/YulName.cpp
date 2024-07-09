@@ -19,12 +19,10 @@
 #include <libyul/YulName.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-
 #include <libyul/optimiser/NameCollector.h>
-
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AST.h>
 
 #include <fmt/compile.h>
 
