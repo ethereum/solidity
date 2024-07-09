@@ -40,12 +40,12 @@ namespace
 	void validateStackSlot(StackSlot const& _slot)
 	{
 		std::visit(util::GenericVisitor{
-			[](FunctionCallReturnLabelSlot const&) { solAssert(false); },
-			[](FunctionReturnLabelSlot const&) { solAssert(false); },
+			[](FunctionCallReturnLabelSlot const&) { solAssert(false, "RET[] slot found"); },
+			[](FunctionReturnLabelSlot const&) { solAssert(false, "RET slot found"); },
 			[](VariableSlot const&) {},
 			[](LiteralSlot const&) {},
-			[](TemporarySlot const&) { solAssert(false); },
-			[](JunkSlot const&) { solAssert(false); },
+			[](TemporarySlot const&) { solAssert(false, "TMP slot found"); },
+			[](JunkSlot const&) { solAssert(false, "JUNK slot found"); },
 		}, _slot);
 	}
 }

@@ -105,12 +105,13 @@ void UnusedPruner::operator()(Block& _block)
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.debugData), {}};
 				}
-				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction(varDecl.variables.front().type))
-					statement = ExpressionStatement{varDecl.debugData, FunctionCall{
-						varDecl.debugData,
-						{varDecl.debugData, m_dialect.discardFunction(varDecl.variables.front().type)->name},
-						{*std::move(varDecl.value)}
-					}};
+				// TODO: hack to avoid creating TMP slots for unused variables in discard functions
+				///else if (varDecl.variables.size() == 1 && m_dialect.discardFunction(varDecl.variables.front().type))
+				///	statement = ExpressionStatement{varDecl.debugData, FunctionCall{
+				///		varDecl.debugData,
+				///		{varDecl.debugData, m_dialect.discardFunction(varDecl.variables.front().type)->name},
+				///		{*std::move(varDecl.value)}
+				///	}};
 			}
 		}
 		else if (std::holds_alternative<ExpressionStatement>(statement))
