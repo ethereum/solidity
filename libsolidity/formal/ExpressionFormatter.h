@@ -19,10 +19,12 @@
 #pragma once
 
 /**
- * Formats SMT expressions into Solidity-like strings.
+ * Helper methods for formatting SMT expressions
  */
 
-#include <libsolidity/formal/Predicate.h>
+#include <libsmtutil/SolverInterface.h>
+
+#include <libsolidity/ast/Types.h>
 
 #include <map>
 #include <string>
@@ -38,4 +40,9 @@ smtutil::Expression substitute(smtutil::Expression _from, std::map<std::string, 
 /// This is done at best-effort and is not guaranteed to always create a perfect Solidity expression string.
 std::string toSolidityStr(smtutil::Expression const& _expr);
 
+/// @returns a string representation of the SMT expression based on a Solidity type.
+std::optional<std::string> expressionToString(smtutil::Expression const& _expr, Type const* _type);
+
+/// @returns the formatted version of the given SMT expressions. Those expressions must be SMT constants.
+std::vector<std::optional<std::string>> formatExpressions(std::vector<smtutil::Expression> const& _exprs, std::vector<Type const*> const& _types);
 }
