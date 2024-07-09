@@ -34,7 +34,10 @@ namespace solidity::yul
 YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 	m_dialect(_dialect)
 {
-	defineName("");
+	{
+		auto const emptyName = defineName("");
+		yulAssert(emptyName == YulNameRepository::emptyName());
+	}
 
 	for (auto const& type: _dialect.types)
 		if (type.empty())
@@ -140,8 +143,6 @@ YulNameRepository::BuiltinFunction const* YulNameRepository::builtin(YulName con
 		auto const it = m_builtinFunctions.find(_name);
 		if (it != m_builtinFunctions.end())
 			return &it->second;
-		else
-			return nullptr;
 	}
 	return nullptr;
 }
@@ -152,18 +153,16 @@ std::optional<std::string_view> YulNameRepository::labelOf(YulName const _name) 
 	if (!isDerivedName(_name))
 	{
 		// if the parent is directly a defined label, we take that one
+		yulAssert(std::get<0>(m_names[_name]) < m_definedLabels.size());
 		return m_definedLabels[std::get<0>(m_names[_name])];
 	}
-	else
+	if (isVerbatimFunction(_name))
 	{
-		if (isVerbatimFunction(_name))
-		{
-			auto const* builtinFun = builtin(_name);
-			yulAssert(builtinFun);
-			return builtinFun->data->name.str();
-		}
-		return std::nullopt;
+		auto const* builtinFun = builtin(_name);
+		yulAssert(builtinFun);
+		return builtinFun->data->name.str();
 	}
+	return std::nullopt;
 }
 
 YulNameRepository::YulName YulNameRepository::baseNameOf(YulName _name) const
