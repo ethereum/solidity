@@ -52,8 +52,8 @@ SourceLocation const AsmJsonImporter::createSourceLocation(Json const& _node)
 
 AST AsmJsonImporter::createAST(solidity::Json const& _node)
 {
-	auto nameRepository = std::make_unique<YulNameRepository>(m_dialect);
-	auto block = createBlock(_node, *nameRepository);
+	YulNameRepository nameRepository(m_dialect);
+	auto block = createBlock(_node, nameRepository);
 	return {std::move(nameRepository), std::move(block)};
 }
 

@@ -105,7 +105,7 @@ void Parser::updateLocationEndFrom(
 	}
 }
 
-std::unique_ptr<AST> Parser::parse(CharStream& _charStream, std::unique_ptr<YulNameRepository> _nameRepository)
+std::unique_ptr<AST> Parser::parse(CharStream& _charStream, std::optional<YulNameRepository> _nameRepository)
 {
 	m_scanner = std::make_shared<Scanner>(_charStream);
 	std::unique_ptr<AST> ast = parseInline(m_scanner, std::move(_nameRepository));
@@ -113,10 +113,10 @@ std::unique_ptr<AST> Parser::parse(CharStream& _charStream, std::unique_ptr<YulN
 	return ast;
 }
 
-std::unique_ptr<AST> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner, std::unique_ptr<YulNameRepository> _nameRepository)
+std::unique_ptr<AST> Parser::parseInline(std::shared_ptr<Scanner> const& _scanner, std::optional<YulNameRepository> _nameRepository)
 {
-	if (_nameRepository == nullptr)
-		_nameRepository = std::make_unique<YulNameRepository>(m_dialect);
+	if (!_nameRepository.has_value())
+		_nameRepository = YulNameRepository(m_dialect);
 	// todo assert that the input name repository dialect and m_dialect are compatible
 	m_recursionDepth = 0;
 
@@ -130,7 +130,7 @@ std::unique_ptr<AST> Parser::parseInline(std::shared_ptr<Scanner> const& _scanne
 		if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
 			fetchDebugDataFromComment();
 		auto block = parseBlock(*_nameRepository);
-		return std::make_unique<AST>(std::move(_nameRepository), std::move(block));
+		return std::make_unique<AST>(std::move(*_nameRepository), std::move(block));
 	}
 	catch (FatalError const& error)
 	{

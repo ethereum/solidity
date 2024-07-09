@@ -58,7 +58,7 @@ std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 }
 
 Program::Program(Program const& program):
-	m_ast(std::make_unique<AST>(*program.m_ast)),
+	m_ast(std::make_unique<AST>(program.m_ast->nameRepository(), std::get<Block>(ASTCopier{}(program.m_ast->block())))),
 	m_dialect(program.m_dialect)
 {
 }
@@ -154,9 +154,8 @@ std::variant<std::unique_ptr<AST>, ErrorList> Program::parseObject(yul::Dialect 
 	// The public API of the class does not provide access to the smart pointer so it won't be hard
 	// to switch to shared_ptr if the copying turns out to be an issue (though it would be better
 	// to refactor ObjectParser and Object to use unique_ptr instead).
-	auto astCopy = std::make_unique<AST>(*selectedObject->code);
-
-	return std::variant<std::unique_ptr<AST>, ErrorList>(std::move(astCopy));
+	auto astCopy = std::make_unique<AST>(selectedObject->code->nameRepository(), std::get<Block>(ASTCopier{}(selectedObject->code->block())));
+	return {std::move(astCopy)};
 }
 
 std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(AST const& _ast)
@@ -179,9 +178,9 @@ std::unique_ptr<AST> Program::disambiguateAST(
 	AsmAnalysisInfo const& _analysisInfo
 )
 {
-	auto nameRepository = std::make_unique<YulNameRepository>(_ast.nameRepository());
+	YulNameRepository nameRepository(_ast.nameRepository());
 	std::set<YulName> const externallyUsedIdentifiers = {};
-	Disambiguator disambiguator(*nameRepository, _analysisInfo, externallyUsedIdentifiers);
+	Disambiguator disambiguator(nameRepository, _analysisInfo, externallyUsedIdentifiers);
 
 	auto block = std::get<Block>(disambiguator(_ast.block()));
 	return std::make_unique<AST>(std::move(nameRepository), std::move(block));

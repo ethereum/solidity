@@ -236,44 +236,49 @@ void eliminateVariablesOptimizedCodegen(
 }
 
 bool StackCompressor::run(
-	YulNameRepository& _yulNameRepository,
-	Object& _object,
+	YulNameRepository& _nameRepository,
+	Block& _block,
+	Object const& _object,
 	bool _optimizeStackAllocation,
 	size_t _maxIterations
 )
 {
 	yulAssert(
-		_object.code &&
-		_object.code->block().statements.size() > 0 && std::holds_alternative<Block>(_object.code->block().statements.at(0)),
+		!_block.statements.empty() && std::holds_alternative<Block>(_block.statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool usesOptimizedCodeGenerator = false;
-	if (auto evmDialect = dynamic_cast<EVMDialect const*>(&_yulNameRepository.dialect()))
+	if (auto evmDialect = dynamic_cast<EVMDialect const*>(&_nameRepository.dialect()))
 		usesOptimizedCodeGenerator =
 			_optimizeStackAllocation &&
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
-	bool allowMSizeOptimization = !MSizeFinder::containsMSize(*_object.code);
-	_yulNameRepository.generateLabels(_object.code->block());
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_nameRepository, _block);
+	_nameRepository.generateLabels(_block);
 	if (usesOptimizedCodeGenerator)
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_object);
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _yulNameRepository, _object.code->block());
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_nameRepository, _block, _object.qualifiedDataNames());
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _nameRepository, _block);
 		eliminateVariablesOptimizedCodegen(
-			_yulNameRepository,
-			_object.code->block(),
+			_nameRepository,
+			_block,
 			StackLayoutGenerator::reportStackTooDeep(*cfg),
 			allowMSizeOptimization
 		);
 	}
 	else
 	{
+		Object object(_object);
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			std::map<YulName, int> stackSurplus = CompilabilityChecker(_object, _optimizeStackAllocation).stackDeficit;
+			// todo...
+			object.code = std::make_shared<AST>(std::move(_nameRepository), std::move(_block));
+			std::map<YulName, int> stackSurplus = CompilabilityChecker(object, _optimizeStackAllocation).stackDeficit;
+			_nameRepository = std::move(object.code->nameRepository());
+			_block = std::move(object.code->block());
 			if (stackSurplus.empty())
 				return true;
-			eliminateVariables(_yulNameRepository, _object.code->block(), stackSurplus, allowMSizeOptimization);
+			eliminateVariables(_nameRepository, _block, stackSurplus, allowMSizeOptimization);
 		}
 	}
 	return false;

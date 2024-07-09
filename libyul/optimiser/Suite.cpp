@@ -150,14 +150,14 @@ void OptimiserSuite::run(
 		evmDialect->providesObjectAccess();
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 
-	_object.code->block() = std::get<Block>(Disambiguator(
-		_object.code->nameRepository(),
+	YulNameRepository nameRepository (_object.code->nameRepository());
+	auto ast = std::get<Block>(Disambiguator(
+		nameRepository,
 		*_object.analysisInfo,
 		reservedIdentifiers
 	)(_object.code->block()));
-	Block& ast = _object.code->block();
 
-	OptimiserStepContext context{dialect, _object.code->nameRepository(), reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{dialect, nameRepository, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 
@@ -176,7 +176,8 @@ void OptimiserSuite::run(
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
 		StackCompressor::run(
-			_object.code->nameRepository(),
+			nameRepository,
+			ast,
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
@@ -192,26 +193,27 @@ void OptimiserSuite::run(
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{_object.code->nameRepository(), *evmDialect, *_meter}(ast);
+		ConstantOptimiser{nameRepository, *evmDialect, *_meter}(ast);
 		if (usesOptimizedCodeGenerator)
 		{
 			StackCompressor::run(
-				_object.code->nameRepository(),
+				nameRepository,
+				ast,
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
 			);
 			if (evmDialect->providesObjectAccess())
-				StackLimitEvader::run(suite.m_context, _object);
+				StackLimitEvader::run(suite.m_context, ast, _object);
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
-			StackLimitEvader::run(suite.m_context, _object);
+			StackLimitEvader::run(suite.m_context, ast, _object);
 	}
 
 #ifdef PROFILE_OPTIMIZER_STEPS
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
-	_object.code->nameRepository().generateLabels(_object.code->block());
+	_object.code = std::make_shared<AST>(std::move(nameRepository), std::move(ast));
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_object);
 }
 

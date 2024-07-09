@@ -389,13 +389,13 @@ void CompilerContext::appendInlineAssembly(
 {
 	unsigned startStackHeight = stackHeight();
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-	auto nameRepository = std::make_unique<yul::YulNameRepository>(dialect);
+	yul::YulNameRepository nameRepository(dialect);
 
 	std::vector<yul::YulName> externallyUsedFunctionNames = _externallyUsedFunctions
-		| ranges::views::transform([&nameRepository](auto const& label) { return nameRepository->defineName(label); })
+		| ranges::views::transform([&nameRepository](auto const& label) { return nameRepository.defineName(label); })
 		| ranges::to_vector;
 	std::vector<yul::YulName> localVariableNames = _localVariables
-		| ranges::views::transform([&nameRepository](auto const& label) { return nameRepository->defineName(label); })
+		| ranges::views::transform([&nameRepository](auto const& label) { return nameRepository.defineName(label); })
 		| ranges::to_vector;
 	std::set<yul::YulName> externallyUsedIdentifiers;
 	externallyUsedIdentifiers += externallyUsedFunctionNames + localVariableNames;
@@ -496,7 +496,7 @@ void CompilerContext::appendInlineAssembly(
 		{
 			// Store as generated sources, but first re-parse to update the source references.
 			solAssert(m_generatedYulUtilityCode.empty(), "");
-			std::string code = yul::AsmPrinter(parserResult->nameRepository())(obj.code->block());
+			std::string code = yul::AsmPrinter(obj.code->nameRepository())(obj.code->block());
 			m_generatedYulUtilityCode = code;
 			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
 			obj.code = yul::Parser(errorReporter, dialect).parse(charStream);

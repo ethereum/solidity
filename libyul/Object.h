@@ -42,8 +42,6 @@ struct AsmAnalysisInfo;
 
 using SourceNameMap = std::map<unsigned, std::shared_ptr<std::string const>>;
 
-struct Object;
-
 /**
  * Generic base class for both Yul objects and Yul data.
  */
@@ -89,7 +87,7 @@ struct ObjectDebugData
 /**
  * Yul code and data object container.
  */
-struct Object: public ObjectNode
+class Object: public ObjectNode
 {
 public:
 	/// @returns a (parseable) string representation.

@@ -357,7 +357,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionHoister::run(*m_context, m_ast);
 			FunctionGrouper::run(*m_context, m_ast);
 			size_t maxIterations = 16;
-			StackCompressor::run(m_yulNameRepository, *m_object, true, maxIterations);
+			StackCompressor::run(m_yulNameRepository, m_ast, *m_object, true, maxIterations);
 			BlockFlattener::run(*m_context, m_ast);
 			m_context->yulNameRepository.generateLabels(m_ast);
 		}},
@@ -371,12 +371,12 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				frontend::OptimiserSettings::DefaultYulOptimiserCleanupSteps,
 				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 			);
-			m_context->yulNameRepository.generateLabels(m_ast);
+			m_object->code->nameRepository().generateLabels(m_object->code->block());
 		}},
 		{"stackLimitEvader", [&]() {
 			disambiguate();
 			m_context->yulNameRepository.generateLabels(m_ast);
-			StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
+			StackLimitEvader::run(*m_context, m_ast, CompilabilityChecker{
 				*m_object,
 				true
 			}.unreachableVariables);
@@ -423,7 +423,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			};
 			FakeUnreachableGenerator fakeUnreachableGenerator (m_yulNameRepository);
 			fakeUnreachableGenerator(m_ast);
-			StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
+			StackLimitEvader::run(*m_context, m_ast, fakeUnreachableGenerator.fakeUnreachables);
 			m_context->yulNameRepository.generateLabels(m_ast);
 		}}
 	};

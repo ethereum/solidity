@@ -104,20 +104,20 @@ struct Leave { langutil::DebugData::ConstPtr debugData; };
 class AST
 {
 public:
-	AST(std::unique_ptr<YulNameRepository> _nameRepository, Block _block);
+	AST(YulNameRepository _nameRepository, Block _block);
 	AST(AST&&) = default;
 	AST& operator=(AST&& _rhs) = default;
-	AST(AST const& _rhs);
-	AST& operator=(AST const& _rhs);
+	AST(AST const& _rhs) = default;
+	AST& operator=(AST const& _rhs) = default;
 	~AST() = default;
 
 	Block const& block() const { return m_block; }
 	Block& block() { return m_block; }
-	YulNameRepository const& nameRepository() const { return *m_nameRepository; }
-	YulNameRepository& nameRepository() { return *m_nameRepository; }
+	YulNameRepository const& nameRepository() const { return m_nameRepository; }
+	YulNameRepository& nameRepository() { return m_nameRepository; }
 
 private:
-	std::unique_ptr<YulNameRepository> m_nameRepository;
+	YulNameRepository m_nameRepository;
 	Block m_block;
 };
 

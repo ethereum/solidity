@@ -47,8 +47,9 @@ public:
 	/// Try to remove local variables until the AST is compilable.
 	/// @returns true if it was successful.
 	static bool run(
-		YulNameRepository& _yulNameRepository,
-		Object& _object,
+		YulNameRepository& _nameRepository,
+		Block& _block,
+		Object const& _object,
 		bool _optimizeStackAllocation,
 		size_t _maxIterations
 	);

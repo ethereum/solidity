@@ -24,22 +24,10 @@ along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 namespace solidity::yul
 {
 
-AST::AST(std::unique_ptr<YulNameRepository> _nameRepository, Block _block):
+AST::AST(YulNameRepository _nameRepository, Block _block):
 	m_nameRepository(std::move(_nameRepository)), m_block(std::move(_block))
 {
-	yulAssert(m_nameRepository != nullptr);
-}
-
-AST::AST(solidity::yul::AST const& _rhs)
-{
-	*this = _rhs;
-}
-
-AST& AST::operator=(AST const& _rhs)
-{
-	m_nameRepository = std::make_unique<YulNameRepository>(*_rhs.m_nameRepository);
-	m_block = ASTCopier().translate(_rhs.m_block);
-	return *this;
+	m_nameRepository.generateLabels(m_block);
 }
 
 LiteralValue::LiteralValue(std::string _builtinStringLiteralValue):
