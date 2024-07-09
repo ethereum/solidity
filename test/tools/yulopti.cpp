@@ -219,7 +219,7 @@ public:
 					{
 						Object obj;
 						obj.code = m_ast;
-						StackCompressor::run(m_ast->nameRepository(), obj, true, 16);
+						StackCompressor::run(m_ast->nameRepository(), m_ast->block(), obj, true, 16);
 						break;
 					}
 					default:
