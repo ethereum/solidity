@@ -45,8 +45,8 @@ Json AsmJsonConverter::operator()(TypedName const& _node) const
 {
 	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid variable name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulTypedName");
-	ret["name"] = m_yulNameRepository.labelOf(_node.name);
-	ret["type"] = m_yulNameRepository.labelOf(_node.type);
+	ret["name"] = m_yulNameRepository.requiredLabelOf(_node.name);
+	ret["type"] = m_yulNameRepository.requiredLabelOf(_node.type);
 	return ret;
 }
 
@@ -67,7 +67,7 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 		ret["hexValue"] = util::toHex(util::asBytes(formatLiteral(_node)));
 		break;
 	}
-	ret["type"] = m_yulNameRepository.labelOf(_node.type);
+	ret["type"] = m_yulNameRepository.requiredLabelOf(_node.type);
 	{
 		auto const formattedLiteral = formatLiteral(_node);
 		if (util::validateUTF8(formattedLiteral))
@@ -80,7 +80,7 @@ Json AsmJsonConverter::operator()(Identifier const& _node) const
 {
 	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid identifier");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
-	ret["name"] = m_yulNameRepository.labelOf(_node.name);
+	ret["name"] = m_yulNameRepository.requiredLabelOf(_node.name);
 	return ret;
 }
 
@@ -122,7 +122,7 @@ Json AsmJsonConverter::operator()(FunctionDefinition const& _node) const
 {
 	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid function name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulFunctionDefinition");
-	ret["name"] = m_yulNameRepository.labelOf(_node.name);
+	ret["name"] = m_yulNameRepository.requiredLabelOf(_node.name);
 	for (auto const& var: _node.parameters)
 		ret["parameters"].emplace_back((*this)(var));
 	for (auto const& var: _node.returnVariables)

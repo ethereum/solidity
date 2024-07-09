@@ -102,6 +102,10 @@ public:
 	/// generated with ``generateLabels``, or it is a builtin.
 	std::optional<std::string_view> labelOf(YulName _name) const;
 
+	/// If it can be assumed that the label was already generated, this function will yield it (or fail with an
+	/// assertion error).
+	std::string_view requiredLabelOf(YulName _name) const;
+
 	/// Yields the name that the provided name was based on - or the name itself, if the name was directly "defined".
 	YulName baseNameOf(YulName _name) const;
 
@@ -157,16 +161,6 @@ public:
 	void generateLabels(Block const& _ast, std::set<std::string> const& _illegal = {});
 
 private:
-	bool nameWithinBounds(YulName const _name) const { return _name < m_index; }
-
-	size_t indexOfType(YulName _type) const;
-	BuiltinFunction convertBuiltinFunction(YulName _name, yul::BuiltinFunction const& _builtin) const;
-	BuiltinFunction const* fetchTypedPredefinedFunction(YulName _type, std::vector<std::optional<YulName>> const& _functions) const;
-
-	Dialect const& m_dialect;
-	std::vector<std::tuple<YulName, std::string>> m_dialectTypes;
-	std::map<YulName, BuiltinFunction> m_builtinFunctions;
-
 	struct PredefinedBuiltinFunctions
 	{
 		std::vector<std::optional<YulName>> discardFunctions;
@@ -186,8 +180,8 @@ private:
 		size_t endBuiltins {};
 	};
 	enum class YulNameState	{ DERIVED, DEFINED };
-	bool nameWithinBounds(YulName const _name) const { return _name < m_index; }
 
+	bool nameWithinBounds(YulName const _name) const { return _name < m_index; }
 	size_t indexOfType(YulName _type) const;
 	BuiltinFunction convertBuiltinFunction(YulName _name, yul::BuiltinFunction const& _builtin) const;
 	BuiltinFunction const* fetchTypedPredefinedFunction(YulName _type, std::vector<std::optional<YulName>> const& _functions) const;

@@ -57,7 +57,7 @@ namespace
 {
 static std::string variableSlotToString(VariableSlot const& _slot, YulNameRepository const& _yulNameRepository)
 {
-	return std::string(_yulNameRepository.labelOf(_slot.variable.get().name));
+	return std::string(_yulNameRepository.requiredLabelOf(_slot.variable.get().name));
 }
 }
 
@@ -87,8 +87,8 @@ public:
 		CFG::FunctionInfo const& _info
 	)
 	{
-		m_stream << "FunctionEntry_" << m_yulNameRepository.labelOf(_info.function.name) << " [label=\"";
-		m_stream << "function " << m_yulNameRepository.labelOf(_info.function.name) << "(";
+		m_stream << "FunctionEntry_" << m_yulNameRepository.requiredLabelOf(_info.function.name) << " [label=\"";
+		m_stream << "function " << m_yulNameRepository.requiredLabelOf(_info.function.name) << "(";
 		m_stream << joinHumanReadable(_info.parameters | ranges::views::transform([&](auto const& var) { return variableSlotToString(var, m_yulNameRepository); }));
 		m_stream << ")";
 		if (!_info.returnVariables.empty())
@@ -100,7 +100,7 @@ public:
 		Stack functionEntryStack = {FunctionReturnLabelSlot{_info.function}};
 		functionEntryStack += _info.parameters | ranges::views::reverse;
 		m_stream << stackToString(functionEntryStack, m_yulNameRepository) << "\"];\n";
-		m_stream << "FunctionEntry_" << m_yulNameRepository.labelOf(_info.function.name) << " -> Block" << getBlockId(*_info.entry) << ";\n";
+		m_stream << "FunctionEntry_" << m_yulNameRepository.requiredLabelOf(_info.function.name) << " -> Block" << getBlockId(*_info.entry) << ";\n";
 		(*this)(*_info.entry, false);
 	}
 
@@ -137,10 +137,10 @@ private:
 			m_stream << stackToString(m_stackLayout.operationEntryLayout.at(&operation), m_yulNameRepository) << "\\l\\\n";
 			std::visit(util::GenericVisitor{
 				[&](CFG::FunctionCall const& _call) {
-					m_stream << m_yulNameRepository.labelOf(_call.function.get().name);
+					m_stream << m_yulNameRepository.requiredLabelOf(_call.function.get().name);
 				},
 				[&](CFG::BuiltinCall const& _call) {
-					m_stream << m_yulNameRepository.labelOf(_call.functionCall.get().functionName.name);
+					m_stream << m_yulNameRepository.requiredLabelOf(_call.functionCall.get().functionName.name);
 
 				},
 				[&](CFG::Assignment const& _assignment) {
@@ -186,7 +186,7 @@ private:
 			},
 			[&](CFG::BasicBlock::FunctionReturn const& _return)
 			{
-				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"FunctionReturn[" << m_yulNameRepository.labelOf(_return.info->function.name) << "]\"];\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"FunctionReturn[" << m_yulNameRepository.requiredLabelOf(_return.info->function.name) << "]\"];\n";
 				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
 			},
 			[&](CFG::BasicBlock::Terminated const&)

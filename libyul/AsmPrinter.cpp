@@ -66,7 +66,7 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 std::string AsmPrinter::operator()(Identifier const& _identifier)
 {
 	yulAssert(_identifier.name != YulNameRepository::emptyName(), "Invalid identifier.");
-	return formatDebugData(_identifier) + std::string(m_nameRepository.labelOf(_identifier.name));
+	return formatDebugData(_identifier) + std::string(m_nameRepository.requiredLabelOf(_identifier.name));
 }
 
 std::string AsmPrinter::operator()(ExpressionStatement const& _statement)
@@ -112,7 +112,7 @@ std::string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition
 	yulAssert(_functionDefinition.name != YulNameRepository::emptyName(), "Invalid function name.");
 
 	std::string out = formatDebugData(_functionDefinition);
-	out += "function " + std::string(m_nameRepository.labelOf(_functionDefinition.name)) + "(";
+	out += "function " + std::string(m_nameRepository.requiredLabelOf(_functionDefinition.name)) + "(";
 	out += boost::algorithm::join(
 		_functionDefinition.parameters | ranges::views::transform(
 			[this](TypedName argument) { return formatTypedName(argument); }
@@ -240,7 +240,7 @@ std::string AsmPrinter::operator()(Block const& _block)
 std::string AsmPrinter::formatTypedName(TypedName const& _variable)
 {
 	yulAssert(_variable.name != YulNameRepository::emptyName(), "Invalid variable name.");
-	return formatDebugData(_variable) + std::string(m_nameRepository.labelOf(_variable.name)) + appendTypeName(_variable.type);
+	return formatDebugData(_variable) + std::string(m_nameRepository.requiredLabelOf(_variable.name)) + appendTypeName(_variable.type);
 }
 
 std::string AsmPrinter::appendTypeName(Type _type, bool const _isBoolLiteral) const
@@ -256,7 +256,7 @@ std::string AsmPrinter::appendTypeName(Type _type, bool const _isBoolLiteral) co
 	if (_type == YulNameRepository::emptyName())
 		return {};
 	else
-		return fmt::format(":{}", m_nameRepository.labelOf(_type));
+		return fmt::format(":{}", m_nameRepository.requiredLabelOf(_type));
 }
 
 std::string AsmPrinter::formatSourceLocation(

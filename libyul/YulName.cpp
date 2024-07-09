@@ -163,6 +163,13 @@ std::optional<std::string_view> YulNameRepository::labelOf(YulName const _name) 
 	return std::nullopt;
 }
 
+std::string_view YulNameRepository::requiredLabelOf(YulName const _name) const
+{
+	auto const label = labelOf(_name);
+	yulAssert(label.has_value(), "YulName currently has no defined label in the YulNameRepository.");
+	return label.value();
+}
+
 YulNameRepository::YulName YulNameRepository::baseNameOf(YulName _name) const
 {
 	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");

@@ -99,7 +99,7 @@ Inspector::NodeAction Inspector::queryUser(langutil::DebugData const& _data, std
 		else if (input == "variables" || input == "v")
 		{
 			for (auto &&[yulName, val]: _variables)
-				printVariable(m_yulNameRepository.labelOf(yulName), val);
+				printVariable(m_yulNameRepository.requiredLabelOf(yulName), val);
 			std::cout << std::endl;
 		}
 		else if (
@@ -119,7 +119,7 @@ Inspector::NodeAction Inspector::queryUser(langutil::DebugData const& _data, std
 			bool found = false;
 			for (auto &&[yulName, val]: _variables)
 			{
-				auto const yulStr = m_yulNameRepository.labelOf(yulName);
+				auto const yulStr = m_yulNameRepository.requiredLabelOf(yulName);
 				if (yulStr == varname)
 				{
 					printVariable(yulStr, val);

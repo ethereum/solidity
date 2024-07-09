@@ -75,7 +75,7 @@ struct CopyTranslate: public yul::ASTCopier
 		if (m_yulNameRepository.isBuiltinName(_name))
 			return _name;
 		else
-			return m_yulNameRepository.defineName("usr$" + std::string(m_yulNameRepository.labelOf(_name)));
+			return m_yulNameRepository.defineName("usr$" + std::string(m_yulNameRepository.requiredLabelOf(_name)));
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override

@@ -654,7 +654,7 @@ bool ASTJsonExporter::visit(InlineAssembly const& _node)
 	for (auto const& it: _node.annotation().externalReferences)
 		if (it.first)
 			externalReferences.emplace_back(std::make_pair(
-				_node.operations().nameRepository().labelOf(it.first->name),
+				_node.operations().nameRepository().requiredLabelOf(it.first->name),
 				inlineAssemblyIdentifierToJson(it)
 			));
 

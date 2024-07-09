@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(load_should_disambiguate)
 	VariableDeclaration const& declaration2 = get<VariableDeclaration>(innerBlock2.statements[0]);
 
 	BOOST_TEST(declaration1.variables[0].name != declaration2.variables[0].name);
-	BOOST_TEST(program.nameRepository().labelOf(declaration1.variables[0].name) == "x");
-	BOOST_TEST(program.nameRepository().labelOf(declaration2.variables[0].name) != "x");
+	BOOST_TEST(program.nameRepository().requiredLabelOf(declaration1.variables[0].name) == "x");
+	BOOST_TEST(program.nameRepository().requiredLabelOf(declaration2.variables[0].name) != "x");
 }
 
 BOOST_AUTO_TEST_CASE(load_should_do_function_grouping_and_hoisting)

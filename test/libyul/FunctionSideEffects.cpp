@@ -94,7 +94,7 @@ TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string
 
 	std::map<std::string_view, std::string> functionSideEffectsStr;
 	for (auto const& fun: functionSideEffects)
-		functionSideEffectsStr[obj.code->nameRepository().labelOf(fun.first)] = toString(fun.second);
+		functionSideEffectsStr[obj.code->nameRepository().requiredLabelOf(fun.first)] = toString(fun.second);
 
 	m_obtainedResult.clear();
 	for (auto const& fun: functionSideEffectsStr)

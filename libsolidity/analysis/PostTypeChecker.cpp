@@ -473,7 +473,7 @@ public:
 
 		if (ranges::any_of(
 			_assignment.variableNames,
-			[&](auto const& yulIdentifier) { return m_yulNameRepository.labelOf(yulIdentifier.name) == m_identifierName; }
+			[&](auto const& yulIdentifier) { return m_yulNameRepository.requiredLabelOf(yulIdentifier.name) == m_identifierName; }
 		))
 			m_willBeWrittenTo = true;
 	}

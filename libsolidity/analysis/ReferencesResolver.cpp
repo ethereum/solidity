@@ -274,11 +274,11 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
 	solAssert(m_yulNameRepository != nullptr);
 	solAssert(nativeLocationOf(_function) == originLocationOf(_function), "");
-	validateYulIdentifierName(m_yulNameRepository->labelOf(_function.name), nativeLocationOf(_function));
+	validateYulIdentifierName(m_yulNameRepository->requiredLabelOf(_function.name), nativeLocationOf(_function));
 	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
 	{
 		solAssert(nativeLocationOf(varName) == originLocationOf(varName), "");
-		validateYulIdentifierName(m_yulNameRepository->labelOf(varName.name), nativeLocationOf(varName));
+		validateYulIdentifierName(m_yulNameRepository->requiredLabelOf(varName.name), nativeLocationOf(varName));
 	}
 
 	bool wasInsideFunction = m_yulInsideFunction;
@@ -291,7 +291,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
 	solAssert(m_yulNameRepository != nullptr);
 	solAssert(nativeLocationOf(_identifier) == originLocationOf(_identifier), "");
-	auto const identifierLabel = m_yulNameRepository->labelOf(_identifier.name);
+	auto const identifierLabel = m_yulNameRepository->requiredLabelOf(_identifier.name);
 	if (m_resolver.experimentalSolidity())
 	{
 		std::vector<std::string> splitName;
@@ -399,10 +399,10 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 	for (auto const& identifier: _varDecl.variables)
 	{
 		solAssert(nativeLocationOf(identifier) == originLocationOf(identifier), "");
-		validateYulIdentifierName(m_yulNameRepository->labelOf(identifier.name), nativeLocationOf(identifier));
+		validateYulIdentifierName(m_yulNameRepository->requiredLabelOf(identifier.name), nativeLocationOf(identifier));
 
 		if (
-			auto declarations = m_resolver.nameFromCurrentScope(std::string(m_yulNameRepository->labelOf(identifier.name)));
+			auto declarations = m_resolver.nameFromCurrentScope(std::string(m_yulNameRepository->requiredLabelOf(identifier.name)));
 			!declarations.empty()
 		)
 		{

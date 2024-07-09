@@ -40,7 +40,7 @@ std::string check(std::string const& _input)
 	// recast into map string -> int s.t. order is predictable
 	std::map<std::string, int> labelledFunctions;
 	for(const auto& [k, v] : functions)
-		labelledFunctions[std::string(obj.code->nameRepository().labelOf(k))] = v;
+		labelledFunctions[std::string(obj.code->nameRepository().requiredLabelOf(k))] = v;
 	std::string out;
 	for (auto const& function: labelledFunctions)
 		out += function.first + ": " + std::to_string(function.second) + " ";

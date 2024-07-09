@@ -442,7 +442,7 @@ Statement Parser::parseStatement(YulNameRepository& _nameRepository)
 					6272_error,
 					fmt::format(
 						"Cannot assign to builtin function \"{}\".",
-						_nameRepository.labelOf(identifier.name)
+						_nameRepository.requiredLabelOf(identifier.name)
 					)
 				);
 
@@ -530,7 +530,7 @@ Expression Parser::parseExpression(YulNameRepository& _nameRepository, bool _unl
 				fatalParserError(
 					7104_error,
 					nativeLocationOf(_identifier),
-					fmt::format("Builtin function \"{}\" must be called.", _nameRepository.labelOf(_identifier.name))
+					fmt::format("Builtin function \"{}\" must be called.", _nameRepository.requiredLabelOf(_identifier.name))
 				);
 			return std::move(_identifier);
 		},

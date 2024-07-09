@@ -476,13 +476,6 @@ std::set<std::string> EVMDialect::builtinNames() const {
 	return { keys.begin(), keys.end() };
 }
 
-std::set<std::string> EVMDialect::builtinNames() const {
-	static std::array verbatim {YulString("verbatim")};
-	auto const keys = ranges::views::concat(ranges::views::keys(m_functions), verbatim)
-		| ranges::views::transform([](auto const& name) { return name.str(); });
-	return { keys.begin(), keys.end() };
-}
-
 EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess):
 	EVMDialect(_evmVersion, _objectAccess)
 {
