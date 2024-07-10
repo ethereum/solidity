@@ -21,6 +21,7 @@
 
 #include <libyul/optimiser/StackCompressor.h>
 
+#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -236,17 +237,30 @@ void eliminateVariablesOptimizedCodegen(
 }
 
 bool StackCompressor::run(
+	Object& _object,
+	bool _optimizeStackAllocation,
+	size_t _maxIterations)
+{
+	yulAssert(_object.code);
+	YulNameRepository nameRepository(_object.code->nameRepository());
+	auto block = std::get<Block>(ASTCopier{}(_object.code->block()));
+	auto result = run(nameRepository, block, _object, _optimizeStackAllocation, _maxIterations);
+	_object.code = std::make_shared<AST>(std::move(nameRepository), std::move(block));
+	return result;
+}
+
+bool StackCompressor::run(
 	YulNameRepository& _nameRepository,
 	Block& _block,
 	Object const& _object,
 	bool _optimizeStackAllocation,
-	size_t _maxIterations
-)
+	size_t _maxIterations)
 {
 	yulAssert(
-		!_block.statements.empty() && std::holds_alternative<Block>(_block.statements.at(0)),
+		!_object.code->block().statements.empty() && std::holds_alternative<Block>(_object.code->block().statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
+
 	bool usesOptimizedCodeGenerator = false;
 	if (auto evmDialect = dynamic_cast<EVMDialect const*>(&_nameRepository.dialect()))
 		usesOptimizedCodeGenerator =

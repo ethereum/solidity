@@ -112,7 +112,6 @@ public:
 	~AST() = default;
 
 	Block const& block() const { return m_block; }
-	Block& block() { return m_block; }
 	YulNameRepository const& nameRepository() const { return m_nameRepository; }
 	YulNameRepository& nameRepository() { return m_nameRepository; }
 

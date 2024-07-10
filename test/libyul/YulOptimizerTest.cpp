@@ -77,8 +77,9 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << std::endl;
 		return TestResult::FatalError;
 	}
+	auto result = tester.resultObject();
 
-	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ m_object->code->nameRepository(), AsmPrinter::Mode::OmitDefaultType }(m_object->code->block()) : m_object->toString());
+	auto const printed = (result->subObjects.empty() ? AsmPrinter{ result->code->nameRepository(), AsmPrinter::Mode::OmitDefaultType }(result->code->block()) : result->toString());
 
 	// Re-parse new code for compilability
 	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))

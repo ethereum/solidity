@@ -194,17 +194,19 @@ std::unique_ptr<AST> Program::applyOptimisationSteps(
 	// An empty set of reserved identifiers. It could be a constructor parameter but I don't
 	// think it would be useful in this tool. Other tools (like yulopti) have it empty too.
 	std::set<YulName> const externallyUsedIdentifiers = {};
+	YulNameRepository nameRepository (_ast->nameRepository());
 	OptimiserStepContext context{
-		_ast->nameRepository().dialect(),
-		_ast->nameRepository(),
+		nameRepository.dialect(),
+		nameRepository,
 		externallyUsedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	};
 
+	auto block = std::get<Block>(ASTCopier{}(_ast->block()));
 	for (std::string const& step: _optimisationSteps)
-		OptimiserSuite::allSteps().at(step)->run(context, _ast->block());
+		OptimiserSuite::allSteps().at(step)->run(context, block);
 
-	return _ast;
+	return std::make_unique<AST>(std::move(nameRepository), std::move(block));
 }
 
 size_t Program::computeCodeSize(Block const& _ast, CodeWeights const& _weights)

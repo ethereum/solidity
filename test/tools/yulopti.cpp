@@ -57,9 +57,7 @@
 #include <range/v3/view/stride.hpp>
 #include <range/v3/view/transform.hpp>
 
-#include <cctype>
 #include <string>
-#include <sstream>
 #include <iostream>
 #include <variant>
 
@@ -91,20 +89,22 @@ public:
 		CharStream _charStream(_input, "");
 		try
 		{
-			m_ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
-			if (!m_ast || !errorReporter.errors().empty())
+			auto ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
+			if (!m_block || !errorReporter.errors().empty())
 			{
 				std::cerr << "Error parsing source." << std::endl;
 				printErrors(_charStream, errors);
 				throw std::runtime_error("Could not parse source.");
 			}
+			m_nameRepository = std::make_shared<YulNameRepository>(ast->nameRepository());
+			m_block = std::make_shared<yul::Block>(std::get<yul::Block>(ASTCopier{}(ast->block())));
 			m_analysisInfo = std::make_unique<yul::AsmAnalysisInfo>();
 			AsmAnalyzer analyzer(
 				*m_analysisInfo,
 				errorReporter,
-				m_ast->nameRepository()
+				*m_nameRepository
 			);
-			if (!analyzer.analyze(m_ast->block()) || !errorReporter.errors().empty())
+			if (!analyzer.analyze(*m_block) || !errorReporter.errors().empty())
 			{
 				std::cerr << "Error analyzing source." << std::endl;
 				printErrors(_charStream, errors);
@@ -170,7 +170,7 @@ public:
 
 	void disambiguate()
 	{
-		m_ast->block() = std::get<yul::Block>(Disambiguator(m_ast->nameRepository(), *m_analysisInfo)(m_ast->block()));
+		*m_block = std::get<yul::Block>(Disambiguator(*m_nameRepository, *m_analysisInfo)(*m_block));
 		m_analysisInfo.reset();
 	}
 
@@ -178,9 +178,8 @@ public:
 	{
 		parse(_source);
 		disambiguate();
-		OptimiserStepContext context {m_dialect, m_ast->nameRepository(), m_reservedIdentifiers, solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment};
-		OptimiserSuite{context}.runSequence(_steps, m_ast->block());
-		std::cout << AsmPrinter{m_ast->nameRepository()}(m_ast->block()) << std::endl;
+		OptimiserSuite{m_context}.runSequence(_steps, *m_block);
+		std::cout << AsmPrinter{*m_nameRepository}(*m_block) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -218,18 +217,17 @@ public:
 					case ';':
 					{
 						Object obj;
-						obj.code = m_ast;
-						StackCompressor::run(m_ast->nameRepository(), m_ast->block(), obj, true, 16);
+						StackCompressor::run(*m_nameRepository, *m_block, obj, true, 16);
 						break;
 					}
 					default:
-					{
-						OptimiserStepContext context {m_dialect, m_ast->nameRepository(), m_reservedIdentifiers, solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment};
-						OptimiserSuite{context}.runSequence(std::string_view(&option, 1), m_ast->block());
-					}
+						OptimiserSuite{m_context}.runSequence(
+							std::string_view(&option, 1),
+							*m_block
+						);
 				}
-				m_ast->nameRepository().generateLabels(m_ast->block());
-				_source = AsmPrinter{m_ast->nameRepository()}(m_ast->block());
+				m_nameRepository->generateLabels(*m_block);
+				_source = AsmPrinter{*m_nameRepository}(*m_block);
 			}
 			catch (...)
 			{
@@ -242,10 +240,17 @@ public:
 	}
 
 private:
-	std::shared_ptr<yul::AST> m_ast;
+	std::shared_ptr<yul::Block> m_block;
+	std::shared_ptr<yul::YulNameRepository> m_nameRepository;
 	Dialect const& m_dialect {EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
 	std::unique_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::set<YulName> const m_reservedIdentifiers = {};
+	OptimiserStepContext m_context{
+		m_dialect,
+		*m_nameRepository,
+		m_reservedIdentifiers,
+		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+	};
 };
 
 int main(int argc, char** argv)
