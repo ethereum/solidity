@@ -1,9 +1,5 @@
 contract Other {
-	C c;
-	constructor(C _c) {
-		c = _c;
-	}
-	function h() public {
+	function h(C c) public {
 		c.setOwner(address(0));
 	}
 }
@@ -11,13 +7,11 @@ contract Other {
 contract State {
 	uint x;
 	Other o;
-	C c;
-	constructor(C _c) {
-		c = _c;
-		o = new Other(_c);
+	constructor() {
+		o = new Other();
 	}
-	function f() public returns (uint) {
-		o.h();
+	function f(C c) public returns (uint) {
+		o.h(c);
 		return c.g();
 	}
 }
@@ -29,7 +23,7 @@ contract C {
 
 	constructor() {
 		owner = msg.sender;
-		s = new State(this);
+		s = new State();
 	}
 
 	function setOwner(address _owner) public {
@@ -38,7 +32,7 @@ contract C {
 
 	function f() public {
 		address prevOwner = owner;
-		uint z = s.f();
+		uint z = s.f(this);
 		assert(z == y); // should hold
 		assert(prevOwner == owner); // should not hold because of reentrancy
 	}
@@ -52,5 +46,5 @@ contract C {
 // SMTEngine: chc
 // SMTExtCalls: trusted
 // ----
-// Warning 6328: (531-545): CHC: Assertion violation might happen here.
-// Warning 6328: (564-590): CHC: Assertion violation happens here.
+// Warning 6328: (509-535): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
