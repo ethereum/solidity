@@ -216,6 +216,7 @@ public:
 						break;
 					case ';':
 					{
+						m_nameRepository->generateLabels(*m_block);
 						Object obj;
 						StackCompressor::run(*m_nameRepository, *m_block, obj, true, 16);
 						break;

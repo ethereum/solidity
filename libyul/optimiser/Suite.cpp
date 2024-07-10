@@ -175,13 +175,10 @@ void OptimiserSuite::run(
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
-		StackCompressor::run(
-			nameRepository,
-			ast,
-			_object,
-			_optimizeStackAllocation,
-			stackCompressorMaxIterations
-		);
+	{
+		nameRepository.generateLabels(ast);
+		StackCompressor::run(nameRepository, ast, _object, _optimizeStackAllocation, stackCompressorMaxIterations);
+	}
 
 	// Run the user-supplied clean up sequence
 	suite.runSequence(_optimisationCleanupSequence, ast);
@@ -196,6 +193,7 @@ void OptimiserSuite::run(
 		ConstantOptimiser{nameRepository, *evmDialect, *_meter}(ast);
 		if (usesOptimizedCodeGenerator)
 		{
+			nameRepository.generateLabels(ast);
 			StackCompressor::run(
 				nameRepository,
 				ast,

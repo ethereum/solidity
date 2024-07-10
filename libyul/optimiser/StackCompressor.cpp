@@ -250,7 +250,7 @@ bool StackCompressor::run(
 }
 
 bool StackCompressor::run(
-	YulNameRepository& _nameRepository,
+	YulNameRepository const& _nameRepository,
 	Block& _block,
 	Object const& _object,
 	bool _optimizeStackAllocation,
@@ -268,7 +268,6 @@ bool StackCompressor::run(
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_nameRepository, _block);
-	_nameRepository.generateLabels(_block);
 	if (usesOptimizedCodeGenerator)
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_nameRepository, _block, _object.qualifiedDataNames());

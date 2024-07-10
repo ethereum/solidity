@@ -56,7 +56,7 @@ public:
 	/// disregards the AST contained in object.
 	/// @returns true if it was successful.
 	static bool run(
-		YulNameRepository& _nameRepository,
+		YulNameRepository const& _nameRepository,
 		Block& _block,
 		Object const& _object,
 		bool _optimizeStackAllocation,
