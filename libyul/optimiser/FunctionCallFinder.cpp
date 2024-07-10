@@ -21,18 +21,39 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-std::vector<FunctionCall*> FunctionCallFinder::run(Block& _block, YulName _functionName)
+namespace
 {
-	FunctionCallFinder functionCallFinder(_functionName);
-	functionCallFinder(_block);
-	return functionCallFinder.m_calls;
+template<typename Base, typename ResultType>
+class FunctionCallFinderBase: Base
+{
+public:
+	using MaybeConstBlock = std::conditional_t<std::is_const_v<ResultType>, Block const, Block>;
+	static std::vector<ResultType*> run(MaybeConstBlock& _block, YulName _functionName)
+	{
+		FunctionCallFinderBase functionCallFinder(_functionName);
+		functionCallFinder(_block);
+		return functionCallFinder.m_calls;
+	}
+private:
+	explicit FunctionCallFinderBase(YulName _functionName): m_functionName(_functionName) {}
+	using Base::operator();
+	void operator()(ResultType& _functionCall) override
+	{
+		Base::operator()(_functionCall);
+		if (_functionCall.functionName.name == m_functionName)
+			m_calls.emplace_back(&_functionCall);
+	}
+	YulName m_functionName;
+	std::vector<ResultType*> m_calls;
+};
 }
 
-FunctionCallFinder::FunctionCallFinder(YulName _functionName): m_functionName(_functionName) {}
-
-void FunctionCallFinder::operator()(FunctionCall& _functionCall)
+std::vector<FunctionCall*> FunctionCallFinder::run(Block& _block, YulName _functionName)
 {
-	ASTModifier::operator()(_functionCall);
-	if (_functionCall.functionName.name == m_functionName)
-		m_calls.emplace_back(&_functionCall);
+	return FunctionCallFinderBase<ASTModifier, FunctionCall>::run(_block, _functionName);
+}
+
+std::vector<FunctionCall const*> FunctionCallFinder::run(Block const& _block, YulName _functionName)
+{
+	return FunctionCallFinderBase<ASTWalker, FunctionCall const>::run(_block, _functionName);
 }
