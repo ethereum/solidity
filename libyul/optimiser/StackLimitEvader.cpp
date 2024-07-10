@@ -136,9 +136,7 @@ void StackLimitEvader::run(
 	}
 	else
 	{
-		Object object(_object);
-		object.code = std::make_shared<AST>(_context.yulNameRepository, std::get<Block>(ASTCopier{}(_block)));
-		run(_context, _block, CompilabilityChecker{object, true}.unreachableVariables);
+		run(_context, _block, CompilabilityChecker{_object, true, &_context.yulNameRepository, &_block}.unreachableVariables);
 	}
 
 }

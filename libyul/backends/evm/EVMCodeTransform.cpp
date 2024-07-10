@@ -49,8 +49,8 @@ using namespace solidity::util;
 CodeTransform::CodeTransform(
 	AbstractAssembly& _assembly,
 	AsmAnalysisInfo& _analysisInfo,
-	Block const& _block,
 	YulNameRepository const& _nameRepository,
+	Block const& _block,
 	bool _allowStackOpt,
 	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
@@ -386,8 +386,8 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	CodeTransform subTransform(
 		m_assembly,
 		m_info,
-		_function.body,
 		m_yulNameRepository,
+		_function.body,
 		m_allowStackOpt,
 		m_dialect,
 		m_builtinContext,

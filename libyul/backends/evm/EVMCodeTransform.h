@@ -77,7 +77,8 @@ public:
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
-		AST const& _ast,
+		YulNameRepository const& _nameRepository,
+		Block const& _block,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		bool _allowStackOpt = false,
@@ -86,8 +87,8 @@ public:
 	): CodeTransform(
 		_assembly,
 		_analysisInfo,
-		_ast.block(),
-		_ast.nameRepository(),
+		_nameRepository,
+		_block,
 		_allowStackOpt,
 		_dialect,
 		_builtinContext,
@@ -108,8 +109,8 @@ protected:
 	CodeTransform(
 		AbstractAssembly& _assembly,
 		AsmAnalysisInfo& _analysisInfo,
-		Block const& _block,
 		YulNameRepository const& _nameRepository,
+		Block const& _block,
 		bool _allowStackOpt,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,

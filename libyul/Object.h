@@ -87,7 +87,7 @@ struct ObjectDebugData
 /**
  * Yul code and data object container.
  */
-class Object: public ObjectNode
+struct Object: public ObjectNode
 {
 public:
 	/// @returns a (parseable) string representation.

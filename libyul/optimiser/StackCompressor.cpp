@@ -268,14 +268,9 @@ bool StackCompressor::run(
 	}
 	else
 	{
-		Object object(_object);
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			// todo...
-			object.code = std::make_shared<AST>(std::move(_nameRepository), std::move(_block));
-			std::map<YulName, int> stackSurplus = CompilabilityChecker(object, _optimizeStackAllocation).stackDeficit;
-			_nameRepository = std::move(object.code->nameRepository());
-			_block = std::move(object.code->block());
+			std::map<YulName, int> stackSurplus = CompilabilityChecker(_object, _optimizeStackAllocation, &_nameRepository, &_block).stackDeficit;
 			if (stackSurplus.empty())
 				return true;
 			eliminateVariables(_nameRepository, _block, stackSurplus, allowMSizeOptimization);

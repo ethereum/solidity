@@ -48,7 +48,8 @@ void CodeGenerator::assemble(
 	CodeTransform transform(
 		assemblyAdapter,
 		_analysisInfo,
-		_parsedData,
+		_parsedData.nameRepository(),
+		_parsedData.block(),
 		EVMDialect::strictAssemblyForEVM(_evmVersion),
 		builtinContext,
 		_optimizeStackAllocation,

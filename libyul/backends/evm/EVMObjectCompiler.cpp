@@ -113,7 +113,8 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		CodeTransform transform{
 			m_assembly,
 			*_object.analysisInfo,
-			*_object.code,
+			_object.code->nameRepository(),
+			_object.code->block(),
 			m_dialect,
 			context,
 			_optimize,
