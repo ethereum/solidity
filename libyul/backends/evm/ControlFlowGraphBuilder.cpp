@@ -207,15 +207,16 @@ void markNeedsCleanStack(CFG& _cfg)
 
 std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 	AsmAnalysisInfo const& _analysisInfo,
-	YulNameRepository& _yulNameRepository,
+	YulNameRepository const& _yulNameRepository,
 	Block const& _block
 )
 {
 	auto result = std::make_unique<CFG>();
 	result->entry = &result->makeBlock(debugDataOf(_block));
+	result->nameRepository = std::make_unique<YulNameRepository>(_yulNameRepository);
 
-	ControlFlowSideEffectsCollector sideEffects(_yulNameRepository, _block);
-	ControlFlowGraphBuilder builder(*result, _analysisInfo, sideEffects.functionSideEffects(), _yulNameRepository);
+	ControlFlowSideEffectsCollector sideEffects(*result->nameRepository, _block);
+	ControlFlowGraphBuilder builder(*result, _analysisInfo, sideEffects.functionSideEffects());
 	builder.m_currentBlock = result->entry;
 	builder(_block);
 
@@ -233,13 +234,11 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 ControlFlowGraphBuilder::ControlFlowGraphBuilder(
 	CFG& _graph,
 	AsmAnalysisInfo const& _analysisInfo,
-	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects,
-	YulNameRepository& _yulNameRepository
+	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects
 ):
 	m_graph(_graph),
 	m_info(_analysisInfo),
-	m_functionSideEffects(_functionSideEffects),
-	m_yulNameRepository(_yulNameRepository)
+	m_functionSideEffects(_functionSideEffects)
 {
 }
 
@@ -335,7 +334,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	yulAssert(m_currentBlock, "");
 	langutil::DebugData::ConstPtr preSwitchDebugData = debugDataOf(_switch);
 
-	auto const ghostVariableName = m_yulNameRepository.addGhost();
+	auto const ghostVariableName = m_graph.nameRepository->addGhost();
 	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{YulNameRepository::emptyName(), ghostVariableName});
 
 	// Artificially generate:
@@ -348,7 +347,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
 	});
 
-	auto const* equalityBuiltin = m_yulNameRepository.equalityFunction({});
+	auto const* equalityBuiltin = m_graph.nameRepository->equalityFunction({});
 	yulAssert(equalityBuiltin, "");
 
 	// Artificially generate:
@@ -356,7 +355,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	auto makeValueCompare = [&](Case const& _case) {
 		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
 			debugDataOf(_case),
-			yul::Identifier{{}, m_yulNameRepository.predefined().eq},
+			yul::Identifier{{}, m_graph.nameRepository->predefined().eq},
 			{*_case.value, Identifier{{}, ghostVariableName}}
 		});
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
@@ -467,7 +466,7 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 
 	CFG::FunctionInfo& functionInfo = m_graph.functionInfo.at(&function);
 
-	ControlFlowGraphBuilder builder{m_graph, m_info, m_functionSideEffects, m_yulNameRepository};
+	ControlFlowGraphBuilder builder{m_graph, m_info, m_functionSideEffects};
 	builder.m_currentFunction = &functionInfo;
 	builder.m_currentBlock = functionInfo.entry;
 	builder(_function.body);
@@ -515,7 +514,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 
 	Stack const* output = nullptr;
 	bool canContinue = true;
-	if (auto const* builtin = m_yulNameRepository.builtin(_call.functionName.name))
+	if (auto const* builtin = m_graph.nameRepository->builtin(_call.functionName.name))
 	{
 		Stack inputs;
 		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)

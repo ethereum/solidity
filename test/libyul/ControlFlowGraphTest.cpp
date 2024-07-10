@@ -206,12 +206,10 @@ TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::strin
 	}
 
 	std::ostringstream output;
-
 	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, object->code->nameRepository(), object->code->block());
 
-	object->code->nameRepository().generateLabels(object->code->block());
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
-	ControlFlowGraphPrinter printer{output, object->code->nameRepository()};
+	ControlFlowGraphPrinter printer{output, *cfg->nameRepository};
 	printer(*cfg->entry);
 	for (auto function: cfg->functions)
 		printer(cfg->functionInfo.at(function));

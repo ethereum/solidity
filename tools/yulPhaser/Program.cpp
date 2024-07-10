@@ -91,7 +91,6 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 		FunctionGrouper::name,
 		ForLoopInitRewriter::name,
 	});
-	program.m_ast->nameRepository().generateLabels(program.m_ast->block());
 
 	return program;
 }

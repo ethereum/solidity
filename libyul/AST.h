@@ -113,7 +113,6 @@ public:
 
 	Block const& block() const { return m_block; }
 	YulNameRepository const& nameRepository() const { return m_nameRepository; }
-	YulNameRepository& nameRepository() { return m_nameRepository; }
 
 private:
 	YulNameRepository m_nameRepository;

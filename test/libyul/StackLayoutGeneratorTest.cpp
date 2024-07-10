@@ -229,8 +229,7 @@ TestCase::TestResult StackLayoutGeneratorTest::run(std::ostream& _stream, std::s
 	StackLayout stackLayout = StackLayoutGenerator::run(*cfg);
 
 	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
-	StackLayoutPrinter printer{output, stackLayout, object->code->nameRepository()};
-	object->code->nameRepository().generateLabels(object->code->block()); // todo need more?
+	StackLayoutPrinter printer{output, stackLayout, *cfg->nameRepository};
 	printer(*cfg->entry);
 	for (auto function: cfg->functions)
 		printer(cfg->functionInfo.at(function));

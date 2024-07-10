@@ -84,8 +84,9 @@ std::shared_ptr<AST> yul::test::disambiguate(std::string const& _source, bool _y
 {
 	auto result = parse(_source, _yul);
 	auto const& [code, analysisInfo] = result;
-	Disambiguator(code->nameRepository(), *analysisInfo, {})(code->block());
-	return code;
+	YulNameRepository nameRepository(code->nameRepository());
+	auto block = std::get<Block>(Disambiguator(nameRepository, *analysisInfo, {})(code->block()));
+	return std::make_shared<AST>(std::move(nameRepository), std::move(block));
 }
 
 std::string yul::test::format(std::string const& _source, bool _yul)
