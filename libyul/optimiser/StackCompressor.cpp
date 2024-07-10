@@ -257,7 +257,7 @@ bool StackCompressor::run(
 	size_t _maxIterations)
 {
 	yulAssert(
-		!_object.code->block().statements.empty() && std::holds_alternative<Block>(_object.code->block().statements.at(0)),
+		!_block.statements.empty() && std::holds_alternative<Block>(_block.statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 
