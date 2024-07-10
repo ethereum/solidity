@@ -90,8 +90,8 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		);
 		if (!stackErrors.empty())
 		{
-			std::vector<FunctionCall*> memoryGuardCalls = FunctionCallFinder::run(
-				*_object.code,
+			std::vector<FunctionCall const*> memoryGuardCalls = findFunctionCalls(
+				std::as_const(*_object.code),
 				"memoryguard"_yulstring
 			);
 			auto stackError = stackErrors.front();
