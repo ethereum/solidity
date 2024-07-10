@@ -105,11 +105,6 @@ class AST
 {
 public:
 	AST(YulNameRepository _nameRepository, Block _block);
-	AST(AST&&) = default;
-	AST& operator=(AST&& _rhs) = default;
-	AST(AST const& _rhs) = default;
-	AST& operator=(AST const& _rhs) = default;
-	~AST() = default;
 
 	Block const& block() const { return m_block; }
 	YulNameRepository const& nameRepository() const { return m_nameRepository; }
