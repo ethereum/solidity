@@ -366,6 +366,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionHoister::run(*m_context, block);
 			FunctionGrouper::run(*m_context, block);
 			size_t maxIterations = 16;
+			_nameRepository.generateLabels(block);
 			StackCompressor::run(_nameRepository, block, *m_object, true, maxIterations);
 			BlockFlattener::run(*m_context, block);
 			return block;
