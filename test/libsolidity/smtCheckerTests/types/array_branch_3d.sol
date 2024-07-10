@@ -15,6 +15,6 @@ contract C
 // ====
 // SMTEngine: chc
 // SMTSolvers: eld
+// SMTTargets: assert
 // ----
-// Warning 6328: (152-174): CHC: Assertion violation happens here.
-// Info 1391: CHC: 9 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Warning 6328: (152-174): CHC: Assertion violation happens here.\nCounterexample:\nc = [[[0]]]\nb = false\n\nTransaction trace:\nC.constructor()\nState: c = [[[0]]]\nC.f(false)
