@@ -25,6 +25,7 @@
 
 #include <libyul/Object.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -77,8 +78,8 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << std::endl;
 		return TestResult::FatalError;
 	}
-
-	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect));
+	auto result = tester.resultObject();
+	auto const printed = (result->subObjects.empty() ? AsmPrinter{ *m_dialect }(result->code->block()) : result->toString(m_dialect));
 
 	// Re-parse new code for compilability
 	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))

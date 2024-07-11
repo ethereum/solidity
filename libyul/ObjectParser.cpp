@@ -106,7 +106,7 @@ std::shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 	return ret;
 }
 
-std::shared_ptr<Block> ObjectParser::parseCode(std::optional<SourceNameMap> _sourceNames)
+std::shared_ptr<AST> ObjectParser::parseCode(std::optional<SourceNameMap> _sourceNames)
 {
 	if (currentToken() != Token::Identifier || currentLiteral() != "code")
 		fatalParserError(4846_error, "Expected keyword \"code\".");
@@ -169,12 +169,12 @@ std::optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 	return std::nullopt;
 }
 
-std::shared_ptr<Block> ObjectParser::parseBlock(std::optional<SourceNameMap> _sourceNames)
+std::shared_ptr<AST> ObjectParser::parseBlock(std::optional<SourceNameMap> _sourceNames)
 {
 	Parser parser(m_errorReporter, m_dialect, std::move(_sourceNames));
-	std::shared_ptr<Block> block = parser.parseInline(m_scanner);
-	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
-	return block;
+	auto ast = parser.parseInline(m_scanner);
+	yulAssert(ast || m_errorReporter.hasErrors(), "Invalid block but no error!");
+	return ast;
 }
 
 void ObjectParser::parseData(Object& _containingObject)

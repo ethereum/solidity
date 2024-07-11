@@ -130,7 +130,7 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tupleExpression)
 bool IRGeneratorForStatements::visit(InlineAssembly const& _assembly)
 {
 	CopyTranslate bodyCopier{m_context, _assembly.dialect(), _assembly.annotation().externalReferences};
-	yul::Statement modified = bodyCopier(_assembly.operations());
+	yul::Statement modified = bodyCopier(_assembly.operations().block());
 	solAssert(std::holds_alternative<yul::Block>(modified));
 	m_code << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
 	return false;

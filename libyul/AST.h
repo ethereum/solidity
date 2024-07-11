@@ -101,6 +101,18 @@ struct Continue { langutil::DebugData::ConstPtr debugData; };
 /// Leave statement (valid within function)
 struct Leave { langutil::DebugData::ConstPtr debugData; };
 
+/// Immutable AST comprised of its top-level block
+class AST
+{
+public:
+	explicit AST(Block _block): m_block(std::move(_block)) {}
+
+	Block const& block() const { return m_block; }
+private:
+	Block m_block;
+};
+
+
 /// Extracts the IR source location from a Yul node.
 template <class T> inline langutil::SourceLocation nativeLocationOf(T const& _node)
 {

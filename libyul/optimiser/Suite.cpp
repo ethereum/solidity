@@ -153,12 +153,11 @@ void OptimiserSuite::run(
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	*_object.code = std::get<Block>(Disambiguator(
+	auto ast = std::get<Block>(Disambiguator(
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
-	)(*_object.code));
-	Block& ast = *_object.code;
+	)(_object.code->block()));
 
 	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
 	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
@@ -182,6 +181,7 @@ void OptimiserSuite::run(
 	if (!usesOptimizedCodeGenerator)
 		StackCompressor::run(
 			_dialect,
+			ast,
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
@@ -202,15 +202,16 @@ void OptimiserSuite::run(
 		{
 			StackCompressor::run(
 				_dialect,
+				ast,
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
 			);
 			if (evmDialect->providesObjectAccess())
-				StackLimitEvader::run(suite.m_context, _object);
+				StackLimitEvader::run(suite.m_context, ast, _object);
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
-			StackLimitEvader::run(suite.m_context, _object);
+			StackLimitEvader::run(suite.m_context, ast, _object);
 	}
 
 	dispenser.reset(ast);
@@ -220,7 +221,7 @@ void OptimiserSuite::run(
 #ifdef PROFILE_OPTIMIZER_STEPS
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
-
+	_object.code = std::make_shared<AST>(std::move(ast));
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
 }
 

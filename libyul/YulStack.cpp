@@ -154,7 +154,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	bool success = false;
 	try
 	{
-		success = analyzer.analyze(*_object.code);
+		success = analyzer.analyze(_object.code->block());
 		for (auto& subNode: _object.subObjects)
 			if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 				if (!analyzeParsed(*subObject))

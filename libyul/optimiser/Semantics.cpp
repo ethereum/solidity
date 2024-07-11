@@ -95,7 +95,7 @@ bool MSizeFinder::containsMSize(Dialect const& _dialect, Block const& _ast)
 
 bool MSizeFinder::containsMSize(Dialect const& _dialect, Object const& _object)
 {
-	if (containsMSize(_dialect, *_object.code))
+	if (containsMSize(_dialect, _object.code->block()))
 		return true;
 
 	for (std::shared_ptr<ObjectNode> const& node: _object.subObjects)

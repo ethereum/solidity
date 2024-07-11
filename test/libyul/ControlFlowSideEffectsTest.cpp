@@ -63,10 +63,10 @@ TestCase::TestResult ControlFlowSideEffectsTest::run(std::ostream& _stream, std:
 
 	ControlFlowSideEffectsCollector sideEffects(
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
-		*obj.code
+		obj.code->block()
 	);
 	m_obtainedResult.clear();
-	forEach<FunctionDefinition const>(*obj.code, [&](FunctionDefinition const& _fun) {
+	forEach<FunctionDefinition const>(obj.code->block(), [&](FunctionDefinition const& _fun) {
 		std::string effectStr = toString(sideEffects.functionSideEffects().at(&_fun));
 		m_obtainedResult += _fun.name.str() + (effectStr.empty() ? ":" : ": " + effectStr) + "\n";
 	});

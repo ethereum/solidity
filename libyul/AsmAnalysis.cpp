@@ -86,6 +86,14 @@ bool AsmAnalyzer::analyze(Block const& _block)
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
 {
+	return analyzeStrictAssertCorrect(_dialect, _object.code->block(), _object.qualifiedDataNames());
+}
+
+AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
+	Dialect const& _dialect,
+	Block const& _block,
+	std::set<YulString> const& _qualifiedDataNames)
+{
 	ErrorList errorList;
 	langutil::ErrorReporter errors(errorList);
 	AsmAnalysisInfo analysisInfo;
@@ -94,8 +102,8 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect,
 		errors,
 		_dialect,
 		{},
-		_object.qualifiedDataNames()
-	).analyze(*_object.code);
+		_qualifiedDataNames
+	).analyze(_block);
 	yulAssert(success && !errors.hasErrors(), "Invalid assembly/yul code.");
 	return analysisInfo;
 }
