@@ -122,7 +122,7 @@ public:
 	/// sub id for object if it is subobject of another object, max value if it is not subobject
 	size_t subId = std::numeric_limits<size_t>::max();
 
-	std::shared_ptr<Block> code;
+	std::shared_ptr<AST> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;
 	std::map<std::string, size_t, std::less<>> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;

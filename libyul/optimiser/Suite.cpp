@@ -153,74 +153,76 @@ void OptimiserSuite::run(
 	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	*_object.code = std::get<Block>(Disambiguator(
+	auto astRoot = std::get<Block>(Disambiguator(
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
-	)(*_object.code));
-	Block& ast = *_object.code;
+	)(_object.code->root()));
 
-	NameDispenser dispenser{_dialect, ast, reservedIdentifiers};
+	NameDispenser dispenser{_dialect, astRoot, reservedIdentifiers};
 	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 
 	// Some steps depend on properties ensured by FunctionHoister, BlockFlattener, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
-	suite.runSequence("hgfo", ast);
+	suite.runSequence("hgfo", astRoot);
 
-	NameSimplifier::run(suite.m_context, ast);
+	NameSimplifier::run(suite.m_context, astRoot);
 	// Now the user-supplied part
-	suite.runSequence(_optimisationSequence, ast);
+	suite.runSequence(_optimisationSequence, astRoot);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
 	size_t stackCompressorMaxIterations = 16;
-	suite.runSequence("g", ast);
+	suite.runSequence("g", astRoot);
 
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
 		StackCompressor::run(
 			_dialect,
+			astRoot,
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
 		);
 
 	// Run the user-supplied clean up sequence
-	suite.runSequence(_optimisationCleanupSequence, ast);
+	suite.runSequence(_optimisationCleanupSequence, astRoot);
 	// Hard-coded FunctionGrouper step is used to bring the AST into a canonical form required by the StackCompressor
 	// and StackLimitEvader. This is hard-coded as the last step, as some previously executed steps may break the
 	// aforementioned form, thus causing the StackCompressor/StackLimitEvader to throw.
-	suite.runSequence("g", ast);
+	suite.runSequence("g", astRoot);
 
 	if (evmDialect)
 	{
 		yulAssert(_meter, "");
-		ConstantOptimiser{*evmDialect, *_meter}(ast);
+		ConstantOptimiser{*evmDialect, *_meter}(astRoot);
 		if (usesOptimizedCodeGenerator)
 		{
 			StackCompressor::run(
 				_dialect,
+				astRoot,
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
 			);
 			if (evmDialect->providesObjectAccess())
-				StackLimitEvader::run(suite.m_context, _object);
+				StackLimitEvader::run(suite.m_context, astRoot, _object);
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
-			StackLimitEvader::run(suite.m_context, _object);
+			StackLimitEvader::run(suite.m_context, astRoot, _object);
 	}
 
-	dispenser.reset(ast);
-	NameSimplifier::run(suite.m_context, ast);
-	VarNameCleaner::run(suite.m_context, ast);
+	dispenser.reset(astRoot);
+	NameSimplifier::run(suite.m_context, astRoot);
+	VarNameCleaner::run(suite.m_context, astRoot);
 
 #ifdef PROFILE_OPTIMIZER_STEPS
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
 
+	_object.code = std::make_shared<AST>(std::move(astRoot));
 	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
 }
 

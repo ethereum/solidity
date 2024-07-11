@@ -75,8 +75,8 @@ public:
 	static std::variant<Program, langutil::ErrorList> load(langutil::CharStream& _sourceCode);
 	void optimise(std::vector<std::string> const& _optimisationSteps);
 
-	size_t codeSize(yul::CodeWeights const& _weights) const { return computeCodeSize(*m_ast, _weights); }
-	yul::Block const& ast() const { return *m_ast; }
+	size_t codeSize(yul::CodeWeights const& _weights) const { return computeCodeSize(m_ast->root(), _weights); }
+	yul::Block const& ast() const { return m_ast->root(); }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 	std::string toJson() const;
@@ -84,35 +84,35 @@ public:
 private:
 	Program(
 		yul::Dialect const& _dialect,
-		std::unique_ptr<yul::Block> _ast
+		std::unique_ptr<yul::AST> _ast
 	):
 		m_ast(std::move(_ast)),
 		m_dialect{_dialect},
-		m_nameDispenser(_dialect, *m_ast, {})
+		m_nameDispenser(_dialect, m_ast->root(), {})
 	{}
 
-	static std::variant<std::unique_ptr<yul::Block>, langutil::ErrorList> parseObject(
+	static std::variant<std::unique_ptr<yul::AST>, langutil::ErrorList> parseObject(
 		yul::Dialect const& _dialect,
 		langutil::CharStream _source
 	);
 	static std::variant<std::unique_ptr<yul::AsmAnalysisInfo>, langutil::ErrorList> analyzeAST(
 		yul::Dialect const& _dialect,
-		yul::Block const& _ast
+		yul::AST const& _ast
 	);
-	static std::unique_ptr<yul::Block> disambiguateAST(
+	static std::unique_ptr<yul::AST> disambiguateAST(
 		yul::Dialect const& _dialect,
-		yul::Block const& _ast,
+		yul::AST const& _ast,
 		yul::AsmAnalysisInfo const& _analysisInfo
 	);
-	static std::unique_ptr<yul::Block> applyOptimisationSteps(
+	static std::unique_ptr<yul::AST> applyOptimisationSteps(
 		yul::Dialect const& _dialect,
 		yul::NameDispenser& _nameDispenser,
-		std::unique_ptr<yul::Block> _ast,
+		std::unique_ptr<yul::AST> _ast,
 		std::vector<std::string> const& _optimisationSteps
 	);
 	static size_t computeCodeSize(yul::Block const& _ast, yul::CodeWeights const& _weights);
 
-	std::unique_ptr<yul::Block> m_ast;
+	std::unique_ptr<yul::AST> m_ast;
 	yul::Dialect const& m_dialect;
 	yul::NameDispenser m_nameDispenser;
 };

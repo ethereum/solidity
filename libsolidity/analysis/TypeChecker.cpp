@@ -940,7 +940,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		_inlineAssembly.dialect(),
 		identifierAccess
 	);
-	if (!analyzer.analyze(_inlineAssembly.operations()))
+	if (!analyzer.analyze(_inlineAssembly.operations().root()))
 		solAssert(m_errorReporter.hasErrors());
 	_inlineAssembly.annotation().hasMemoryEffects =
 		lvalueAccessToMemoryVariable ||

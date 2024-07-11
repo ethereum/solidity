@@ -1473,12 +1473,12 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	}
 
 	yul::Parser asmParser(m_errorReporter, dialect);
-	std::shared_ptr<yul::Block> block = asmParser.parseInline(m_scanner);
-	if (block == nullptr)
+	std::shared_ptr<yul::AST> ast = asmParser.parseInline(m_scanner);
+	if (ast == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());
 
-	location.end = nativeLocationOf(*block).end;
-	return std::make_shared<InlineAssembly>(nextID(), location, _docString, dialect, std::move(flags), block);
+	location.end = nativeLocationOf(ast->root()).end;
+	return std::make_shared<InlineAssembly>(nextID(), location, _docString, dialect, std::move(flags), ast);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)

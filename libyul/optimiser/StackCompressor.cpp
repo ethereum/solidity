@@ -21,6 +21,7 @@
 
 #include <libyul/optimiser/StackCompressor.h>
 
+#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>
@@ -242,9 +243,22 @@ bool StackCompressor::run(
 	size_t _maxIterations
 )
 {
+	yulAssert(_object.code);
+	auto block = std::get<Block>(ASTCopier{}(_object.code->root()));
+	auto result = run(_dialect, block, _object, _optimizeStackAllocation, _maxIterations);
+	_object.code = std::make_shared<AST>(std::move(block));
+	return result;
+}
+
+bool StackCompressor::run(
+	Dialect const& _dialect,
+	Block& _astRoot,
+	Object const& _object,
+	bool _optimizeStackAllocation,
+	size_t _maxIterations)
+{
 	yulAssert(
-		_object.code &&
-		_object.code->statements.size() > 0 && std::holds_alternative<Block>(_object.code->statements.at(0)),
+		!_astRoot.statements.empty() && std::holds_alternative<Block>(_astRoot.statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool usesOptimizedCodeGenerator = false;
@@ -253,14 +267,14 @@ bool StackCompressor::run(
 			_optimizeStackAllocation &&
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
-	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, *_object.code);
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _astRoot);
 	if (usesOptimizedCodeGenerator)
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, *_object.code);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _astRoot, _object.qualifiedDataNames());
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, _astRoot);
 		eliminateVariablesOptimizedCodegen(
 			_dialect,
-			*_object.code,
+			_astRoot,
 			StackLayoutGenerator::reportStackTooDeep(*cfg),
 			allowMSizeOptimization
 		);
@@ -268,12 +282,12 @@ bool StackCompressor::run(
 	else
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			std::map<YulName, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
+			std::map<YulName, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation, &_astRoot).stackDeficit;
 			if (stackSurplus.empty())
 				return true;
 			eliminateVariables(
 				_dialect,
-				*_object.code,
+				_astRoot,
 				stackSurplus,
 				allowMSizeOptimization
 			);

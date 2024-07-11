@@ -89,7 +89,7 @@ TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string
 
 	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
-		CallGraphGenerator::callGraph(*obj.code)
+		CallGraphGenerator::callGraph(obj.code->root())
 	);
 
 	std::map<std::string, std::string> functionSideEffectsStr;

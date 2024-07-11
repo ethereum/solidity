@@ -2252,7 +2252,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 		m_context.setMemoryUnsafeInlineAssemblySeen();
 	CopyTranslate bodyCopier{_inlineAsm.dialect(), m_context, _inlineAsm.annotation().externalReferences};
 
-	yul::Statement modified = bodyCopier(_inlineAsm.operations());
+	yul::Statement modified = bodyCopier(_inlineAsm.operations().root());
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 

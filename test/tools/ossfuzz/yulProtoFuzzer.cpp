@@ -84,6 +84,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	std::shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	yulAssert(astBlock != nullptr, "Optimiser error.");
+	auto const* astRoot = optimizerTest.run();
+	yulAssert(astRoot != nullptr, "Optimiser error.");
 }

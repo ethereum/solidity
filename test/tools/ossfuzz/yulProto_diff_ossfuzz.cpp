@@ -26,6 +26,7 @@
 
 #include <src/libfuzzer/libfuzzer_macro.h>
 
+#include <libyul/AST.h>
 #include <libyul/YulStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/Exceptions.h>
@@ -88,7 +89,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// that would be removed by the redundant store eliminator.
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		os1,
-		stack.parserResult()->code,
+		stack.parserResult()->code->root(),
 		EVMDialect::strictAssemblyForEVMObjects(version),
 		/*disableMemoryTracing=*/true
 	);
@@ -101,11 +102,11 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	std::shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	yulAssert(astBlock != nullptr, "Optimiser error.");
+	auto const* astRoot = optimizerTest.run();
+	yulAssert(astRoot != nullptr, "Optimiser error.");
 	termReason = yulFuzzerUtil::interpret(
 		os2,
-		astBlock,
+		*astRoot,
 		EVMDialect::strictAssemblyForEVMObjects(version),
 		true
 	);

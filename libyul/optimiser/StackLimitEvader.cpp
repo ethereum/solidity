@@ -119,7 +119,8 @@ u256 literalArgumentValue(FunctionCall const& _call)
 
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
-	Object& _object
+	Block& _astRoot,
+	Object const& _object
 )
 {
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
@@ -129,22 +130,23 @@ void StackLimitEvader::run(
 	);
 	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _object);
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, *_object.code);
-		run(_context, _object, StackLayoutGenerator::reportStackTooDeep(*cfg));
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _astRoot, _object.qualifiedDataNames());
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, _astRoot);
+		run(_context, _astRoot, StackLayoutGenerator::reportStackTooDeep(*cfg));
 	}
 	else
-		run(_context, _object, CompilabilityChecker{
+		run(_context, _astRoot, CompilabilityChecker{
 			_context.dialect,
 			_object,
-			true
+			true,
+			&_astRoot
 		}.unreachableVariables);
 
 }
 
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
-	Object& _object,
+	Block& _astRoot,
 	std::map<YulName, std::vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
 )
 {
@@ -158,23 +160,22 @@ void StackLimitEvader::run(
 				if (!util::contains(unreachables, variable))
 					unreachables.emplace_back(variable);
 	}
-	run(_context, _object, unreachableVariables);
+	run(_context, _astRoot, unreachableVariables);
 }
 
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
-	Object& _object,
+	Block& _astRoot,
 	std::map<YulName, std::vector<YulName>> const& _unreachableVariables
 )
 {
-	yulAssert(_object.code, "");
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
 	yulAssert(
 		evmDialect && evmDialect->providesObjectAccess(),
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
 
-	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(*_object.code, "memoryguard"_yulname);
+	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(_astRoot, "memoryguard"_yulname);
 	// Do not optimise, if no ``memoryguard`` call is found.
 	if (memoryGuardCalls.empty())
 		return;
@@ -187,23 +188,23 @@ void StackLimitEvader::run(
 		if (reservedMemory != literalArgumentValue(*memoryGuardCall))
 			return;
 
-	CallGraph callGraph = CallGraphGenerator::callGraph(*_object.code);
+	CallGraph callGraph = CallGraphGenerator::callGraph(_astRoot);
 
 	// We cannot move variables in recursive functions to fixed memory offsets.
 	for (YulName function: callGraph.recursiveFunctions())
 		if (_unreachableVariables.count(function))
 			return;
 
-	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(*_object.code);
+	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(_astRoot);
 
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
 	yulAssert(requiredSlots < (uint64_t(1) << 32) - 1, "");
 
-	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, *_object.code);
+	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, _astRoot);
 
 	reservedMemory += 32 * requiredSlots;
-	for (FunctionCall* memoryGuardCall: findFunctionCalls(*_object.code, "memoryguard"_yulname))
+	for (FunctionCall* memoryGuardCall: findFunctionCalls(_astRoot, "memoryguard"_yulname))
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");

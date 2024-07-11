@@ -69,7 +69,7 @@ std::string Object::toString(
 		debugData->sourceNames,
 		_debugInfoSelection,
 		_soliditySourceProvider
-	)(*code);
+	)(code->root());
 
 	for (auto const& obj: subObjects)
 		inner += "\n" + obj->toString(_dialect, _printingMode, _debugInfoSelection, _soliditySourceProvider);
@@ -91,7 +91,7 @@ Json Object::toJson() const
 
 	Json codeJson;
 	codeJson["nodeType"] = "YulCode";
-	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(*code);
+	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(code->root());
 
 	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)

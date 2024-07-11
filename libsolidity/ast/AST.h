@@ -48,7 +48,7 @@
 namespace solidity::yul
 {
 // Forward-declaration to <yul/AST.h>
-struct Block;
+class AST;
 struct Dialect;
 }
 
@@ -1569,7 +1569,7 @@ public:
 		ASTPointer<ASTString> const& _docString,
 		yul::Dialect const& _dialect,
 		ASTPointer<std::vector<ASTPointer<ASTString>>> _flags,
-		std::shared_ptr<yul::Block> _operations
+		std::shared_ptr<yul::AST> _operations
 	):
 		Statement(_id, _location, _docString),
 		m_dialect(_dialect),
@@ -1580,7 +1580,7 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	yul::Dialect const& dialect() const { return m_dialect; }
-	yul::Block const& operations() const { return *m_operations; }
+	yul::AST const& operations() const { return *m_operations; }
 	ASTPointer<std::vector<ASTPointer<ASTString>>> const& flags() const { return m_flags; }
 
 	InlineAssemblyAnnotation& annotation() const override;
@@ -1588,7 +1588,7 @@ public:
 private:
 	yul::Dialect const& m_dialect;
 	ASTPointer<std::vector<ASTPointer<ASTString>>> m_flags;
-	std::shared_ptr<yul::Block> m_operations;
+	std::shared_ptr<yul::AST> m_operations;
 };
 
 /**

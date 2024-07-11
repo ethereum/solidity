@@ -927,7 +927,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		}
 	};
 
-	yul::Block const* code = &_inlineAssembly.operations();
+	yul::AST const* code = &_inlineAssembly.operations();
 	yul::AsmAnalysisInfo* analysisInfo = _inlineAssembly.annotation().analysisInfo.get();
 
 	// Only used in the scope below, but required to live outside to keep the
@@ -944,7 +944,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		solAssert(dialect, "");
 
 		// Create a modifiable copy of the code and analysis
-		object.code = std::make_shared<yul::Block>(yul::ASTCopier().translate(*code));
+		object.code = std::make_shared<yul::AST>(yul::ASTCopier().translate(code->root()));
 		object.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(*dialect, object));
 
 		m_context.optimizeYul(object, *dialect, m_optimiserSettings);
@@ -954,7 +954,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 	}
 
 	yul::CodeGenerator::assemble(
-		*code,
+		code->root(),
 		*analysisInfo,
 		*m_context.assemblyPtr(),
 		m_context.evmVersion(),

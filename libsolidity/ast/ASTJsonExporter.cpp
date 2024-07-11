@@ -665,7 +665,7 @@ bool ASTJsonExporter::visit(InlineAssembly const& _node)
 		externalReferencesJson.emplace_back(std::move(it));
 
 	std::vector<std::pair<std::string, Json>> attributes = {
-		std::make_pair("AST", Json(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations()))),
+		std::make_pair("AST", Json(yul::AsmJsonConverter(sourceIndexFromLocation(_node.location()))(_node.operations().root()))),
 		std::make_pair("externalReferences", std::move(externalReferencesJson)),
 		std::make_pair("evmVersion", dynamic_cast<solidity::yul::EVMDialect const&>(_node.dialect()).evmVersion().name())
 	};

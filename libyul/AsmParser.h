@@ -87,12 +87,12 @@ public:
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner);
+	std::unique_ptr<AST> parseInline(std::shared_ptr<langutil::Scanner> const& _scanner);
 
 	/// Parses an assembly block starting with `{` and ending with `}`
 	/// and expects end of input after the '}'.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parse(langutil::CharStream& _charStream);
+	std::unique_ptr<AST> parse(langutil::CharStream& _charStream);
 
 protected:
 	langutil::SourceLocation currentLocation() const override

@@ -57,8 +57,8 @@ public:
 private:
 	std::optional<SourceNameMap> tryParseSourceNameMapping() const;
 	std::shared_ptr<Object> parseObject(Object* _containingObject = nullptr);
-	std::shared_ptr<Block> parseCode(std::optional<SourceNameMap> _sourceNames);
-	std::shared_ptr<Block> parseBlock(std::optional<SourceNameMap> _sourceNames);
+	std::shared_ptr<AST> parseCode(std::optional<SourceNameMap> _sourceNames);
+	std::shared_ptr<AST> parseBlock(std::optional<SourceNameMap> _sourceNames);
 	void parseData(Object& _containingObject);
 
 	/// Tries to parse a name that is non-empty and unique inside the containing object.
