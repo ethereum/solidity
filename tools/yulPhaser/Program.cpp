@@ -105,7 +105,7 @@ void Program::optimise(std::vector<std::string> const& _optimisationSteps)
 
 std::ostream& phaser::operator<<(std::ostream& _stream, Program const& _program)
 {
-	return _stream << AsmPrinter()(_program.m_ast->block());
+	return _stream << AsmPrinter(AsmPrinter::Mode::FullTypeInfo, _program.m_dialect)(_program.m_ast->block());
 }
 
 std::string Program::toJson() const
