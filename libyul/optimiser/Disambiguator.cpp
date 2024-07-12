@@ -30,9 +30,20 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
+Disambiguator::Disambiguator(
+	YulNameRepository& _nameRepository,
+	AsmAnalysisInfo const& _analysisInfo,
+	std::set<YulName> const& _externallyUsedIdentifiers
+):
+	m_info(_analysisInfo),
+	m_nameRepository(_nameRepository),
+	m_externallyUsedIdentifiers(_externallyUsedIdentifiers),
+	m_nameDispenser(_nameRepository.dialect(), m_externallyUsedIdentifiers)
+{}
+
 YulName Disambiguator::translateIdentifier(YulName _originalName)
 {
-	if (m_dialect.builtin(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
+	if (m_nameRepository.dialect().builtin(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
 		return _originalName;
 
 	assertThrow(!m_scopes.empty() && m_scopes.back(), OptimizerException, "");

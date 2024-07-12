@@ -29,7 +29,7 @@
 namespace solidity::yul
 {
 
-struct EVMDialect;
+class YulNameRepository;
 
 /**
  * Gas meter for expressions only involving literals, identifiers and
@@ -43,11 +43,7 @@ struct EVMDialect;
 class GasMeter
 {
 public:
-	GasMeter(EVMDialect const& _dialect, bool _isCreation, bigint _runs):
-		m_dialect(_dialect),
-		m_isCreation{_isCreation},
-		m_runs(_isCreation? 1 : _runs)
-	{}
+	GasMeter(YulNameRepository const& _nameRepository, bool _isCreation, bigint _runs);
 
 	/// @returns the full combined costs of deploying and evaluating the expression.
 	bigint costs(Expression const& _expression) const;
@@ -58,7 +54,7 @@ public:
 private:
 	bigint combineCosts(std::pair<bigint, bigint> _costs) const;
 
-	EVMDialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	bool m_isCreation = false;
 	bigint m_runs;
 };
@@ -68,21 +64,18 @@ class GasMeterVisitor: public ASTWalker
 public:
 	static std::pair<bigint, bigint> costs(
 		Expression const& _expression,
-		EVMDialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		bool _isCreation
 	);
 
 	static std::pair<bigint, bigint> instructionCosts(
 		evmasm::Instruction _instruction,
-		EVMDialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		bool _isCreation = false
 	);
 
 public:
-	GasMeterVisitor(EVMDialect const& _dialect, bool _isCreation):
-		m_dialect(_dialect),
-		m_isCreation{_isCreation}
-	{}
+	GasMeterVisitor(YulNameRepository const& _nameRepository, bool _isCreation);
 
 	void operator()(FunctionCall const& _funCall) override;
 	void operator()(Literal const& _literal) override;
@@ -95,7 +88,7 @@ private:
 	/// Does not work particularly exact for anything apart from arithmetic.
 	void instructionCostsInternal(evmasm::Instruction _instruction);
 
-	EVMDialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	bool m_isCreation = false;
 	bigint m_runGas = 0;
 	bigint m_dataGas = 0;

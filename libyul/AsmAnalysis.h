@@ -47,6 +47,7 @@ namespace solidity::yul
 {
 
 struct AsmAnalysisInfo;
+class YulNameRepository;
 
 /**
  * Performs the full analysis stage, calls the ScopeFiller internally, then resolves
@@ -59,27 +60,18 @@ public:
 	explicit AsmAnalyzer(
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
 		std::set<std::string> _dataNames = {}
-	):
-		m_resolver(std::move(_resolver)),
-		m_info(_analysisInfo),
-		m_errorReporter(_errorReporter),
-		m_dialect(_dialect),
-		m_dataNames(std::move(_dataNames))
-	{
-		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			m_evmVersion = evmDialect->evmVersion();
-	}
+	);
 
 	bool analyze(Block const& _block);
 
 	/// Performs analysis on the outermost code of the given object and returns the analysis info.
 	/// Asserts on failure.
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(Object const& _object);
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block const& _block,
 		std::set<YulString> const& _qualifiedDataNames
 	);
@@ -131,7 +123,7 @@ private:
 	AsmAnalysisInfo& m_info;
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
 	std::set<std::string> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;

@@ -40,8 +40,8 @@ using namespace solidity::yul;
 void UnusedAssignEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	UnusedAssignEliminator uae{
-		_context.dialect,
-		ControlFlowSideEffectsCollector{_context.dialect, _ast}.functionSideEffectsNamed()
+		_context.nameRepository,
+		ControlFlowSideEffectsCollector{_context.nameRepository, _ast}.functionSideEffectsNamed()
 	};
 	uae(_ast);
 
@@ -79,7 +79,7 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 	UnusedStoreBase::operator()(_functionCall);
 
 	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_dialect.builtin(_functionCall.functionName.name))
+	if (auto builtin = m_nameRepository.dialect().builtin(_functionCall.functionName.name))
 		sideEffects = builtin->controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
@@ -115,7 +115,7 @@ void UnusedAssignEliminator::visit(Statement const& _statement)
 	{
 		// We do not remove assignments whose values might have side-effects,
 		// but clear the active stores to the assigned variables in any case.
-		if (SideEffectsCollector{m_dialect, *assignment->value}.movable())
+		if (SideEffectsCollector{m_nameRepository, *assignment->value}.movable())
 		{
 			m_allStores.insert(&_statement);
 			for (auto const& var: assignment->variableNames)

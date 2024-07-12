@@ -61,12 +61,12 @@ public:
 
 private:
 	explicit ConditionalSimplifier(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::map<YulName, ControlFlowSideEffects> _sideEffects
 	):
-		m_dialect(_dialect), m_functionSideEffects(std::move(_sideEffects))
+		m_nameRepository(_nameRepository), m_functionSideEffects(std::move(_sideEffects))
 	{}
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	std::map<YulName, ControlFlowSideEffects> m_functionSideEffects;
 };
 

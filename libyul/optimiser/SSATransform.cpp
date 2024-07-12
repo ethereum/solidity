@@ -379,7 +379,7 @@ void PropagateValues::operator()(Block& _block)
 
 void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
-	TypeInfo typeInfo(_context.dialect, _ast);
+	TypeInfo typeInfo(_context.nameRepository, _ast);
 	std::set<YulName> assignedVariables = assignedVariableNames(_ast);
 	IntroduceSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
 	IntroduceControlFlowSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);

@@ -37,17 +37,17 @@ using namespace solidity::yul;
 void EVMObjectCompiler::compile(
 	Object& _object,
 	AbstractAssembly& _assembly,
-	EVMDialect const& _dialect,
 	bool _optimize,
 	std::optional<uint8_t> _eofVersion
 )
 {
-	EVMObjectCompiler compiler(_assembly, _dialect, _eofVersion);
+	EVMObjectCompiler compiler(_assembly, _eofVersion);
 	compiler.run(_object, _optimize);
 }
 
 void EVMObjectCompiler::run(Object& _object, bool _optimize)
 {
+	yulAssert(_object.code->nameRepository().isEvmDialect());
 	BuiltinContext context;
 	context.currentObject = &_object;
 
@@ -59,7 +59,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, subObject->name);
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
-			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize, m_eofVersion);
+			compile(*subObject, *subAssemblyAndID.first, _optimize, m_eofVersion);
 		}
 		else
 		{
@@ -75,16 +75,16 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	yulAssert(_object.code, "No code.");
 	if (m_eofVersion.has_value())
 		yulAssert(
-			_optimize && (m_dialect.evmVersion() == langutil::EVMVersion()),
+			_optimize && (_object.code->nameRepository().evmDialect()->evmVersion() == langutil::EVMVersion()),
 			"Experimental EOF support is only available for optimized via-IR compilation and the most recent EVM version."
 		);
-	if (_optimize && m_dialect.evmVersion().canOverchargeGasForCall())
+	if (_optimize && _object.code->nameRepository().evmDialect()->evmVersion().canOverchargeGasForCall())
 	{
 		auto stackErrors = OptimizedEVMCodeTransform::run(
 			m_assembly,
 			*_object.analysisInfo,
 			_object.code->block(),
-			m_dialect,
+			_object.code->nameRepository(),
 			context,
 			OptimizedEVMCodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
 		);
@@ -113,9 +113,10 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		CodeTransform transform{
 			m_assembly,
 			*_object.analysisInfo,
+			_object.code->nameRepository(),
 			_object.code->block(),
-			m_dialect,
 			context,
+			nullptr,
 			_optimize,
 			{},
 			CodeTransform::UseNamedLabels::ForFirstFunctionOfEachName

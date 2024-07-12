@@ -33,7 +33,7 @@
 namespace solidity::yul
 {
 
-inline std::string stackSlotToString(StackSlot const& _slot)
+inline std::string stackSlotToString(StackSlot const& _slot, YulNameRepository const&)
 {
 	return std::visit(util::GenericVisitor{
 		[](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + _ret.call.get().functionName.name.str() + "]"; },
@@ -45,11 +45,11 @@ inline std::string stackSlotToString(StackSlot const& _slot)
 	}, _slot);
 }
 
-inline std::string stackToString(Stack const& _stack)
+inline std::string stackToString(Stack const& _stack, YulNameRepository const& _nameRepository)
 {
 	std::string result("[ ");
 	for (auto const& slot: _stack)
-		result += stackSlotToString(slot) + ' ';
+		result += stackSlotToString(slot, _nameRepository) + ' ';
 	result += ']';
 	return result;
 }

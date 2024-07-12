@@ -54,13 +54,13 @@ public:
 
 	explicit AsmPrinter(
 		Mode const _printingMode,
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
 		m_printingMode(_printingMode),
-		m_dialect(_dialect),
+		m_nameRepository(_nameRepository),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
 	{
@@ -103,7 +103,7 @@ private:
 	}
 
 	Mode const m_printingMode;
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
 	langutil::DebugInfoSelection m_debugInfoSelection = {};

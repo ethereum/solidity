@@ -74,130 +74,132 @@ using namespace solidity::yul::test;
 using namespace solidity::frontend;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
-	std::shared_ptr<Object> _obj,
-	Dialect const& _dialect
-): m_dialect(&_dialect), m_object(_obj), m_resultObject(std::make_shared<Object>()), m_analysisInfo(m_object->analysisInfo)
+	std::shared_ptr<Object> _obj
+): m_object(_obj), m_resultObject(std::make_shared<Object>()), m_analysisInfo(m_object->analysisInfo)
 {
 	*m_resultObject = *m_object;
 	m_namedSteps = {
-		{"disambiguator", [&]() { return disambiguate(); }},
-		{"nameDisplacer", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"disambiguator", [&](YulNameRepository& _nameRepository) {
+			 return disambiguate(_nameRepository);
+		}},
+		{"nameDisplacer", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			NameDisplacer{
 				*m_nameDispenser,
+				_nameRepository,
 				{"illegal1"_yulname, "illegal2"_yulname, "illegal3"_yulname, "illegal4"_yulname, "illegal5"_yulname}
 			}(block);
 			return block;
 		}},
-		{"blockFlattener", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"blockFlattener", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionGrouper::run(*m_context, block);
 			BlockFlattener::run(*m_context, block);
 			return block;
 		}},
-		{"constantOptimiser", [&]() {
+		{"constantOptimiser", [&](YulNameRepository& _nameRepository) {
 			auto block = std::get<Block>(ASTCopier{}(m_object->code->block()));
-			updateContext(block);
-			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-			ConstantOptimiser{dynamic_cast<EVMDialect const&>(*m_dialect), meter}(block);
+			updateContext(_nameRepository, block);
+			GasMeter meter(_nameRepository, false, 200);
+			ConstantOptimiser{_nameRepository, meter}(block);
 			return block;
 		}},
-		{"varDeclInitializer", [&]() {
+		{"varDeclInitializer", [&](YulNameRepository& _nameRepository) {
 			auto block = std::get<Block>(ASTCopier{}(m_object->code->block()));
-			updateContext(block);
+			updateContext(_nameRepository, block);
 			VarDeclInitializer::run(*m_context, block);
 			return block;
 		}},
-		{"varNameCleaner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"varNameCleaner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionHoister::run(*m_context, block);
 			FunctionGrouper::run(*m_context, block);
 			VarNameCleaner::run(*m_context, block);
 			return block;
 		}},
-		{"forLoopConditionIntoBody", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"forLoopConditionIntoBody", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopConditionIntoBody::run(*m_context, block);
 			return block;
 		}},
-		{"forLoopInitRewriter", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"forLoopInitRewriter", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			return block;
 		}},
-		{"commonSubexpressionEliminator", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"commonSubexpressionEliminator", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			CommonSubexpressionEliminator::run(*m_context, block);
 			return block;
 		}},
-		{"conditionalUnsimplifier", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"conditionalUnsimplifier", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ConditionalUnsimplifier::run(*m_context, block);
 			return block;
 		}},
-		{"conditionalSimplifier", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"conditionalSimplifier", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ConditionalSimplifier::run(*m_context, block);
 			return block;
 		}},
-		{"expressionSplitter", [&]() {
+		{"expressionSplitter", [&](YulNameRepository& _nameRepository) {
 			auto block = std::get<Block>(ASTCopier{}(m_object->code->block()));
-			updateContext(block);
+			updateContext(_nameRepository, block);
 			ExpressionSplitter::run(*m_context, block);
 			return block;
 		}},
-		{"expressionJoiner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"expressionJoiner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"splitJoin", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"splitJoin", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ExpressionSplitter::run(*m_context, block);
 			ExpressionJoiner::run(*m_context, block);
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"functionGrouper", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"functionGrouper", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionGrouper::run(*m_context, block);
 			return block;
 		}},
-		{"functionHoister", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"functionHoister", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionHoister::run(*m_context, block);
 			return block;
 		}},
-		{"functionSpecializer", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"functionSpecializer", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionHoister::run(*m_context, block);
 			FunctionSpecializer::run(*m_context, block);
 			return block;
 		}},
-		{"expressionInliner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"expressionInliner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ExpressionInliner::run(*m_context, block);
 			return block;
 		}},
-		{"fullInliner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"fullInliner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionHoister::run(*m_context, block);
 			FunctionGrouper::run(*m_context, block);
 			ExpressionSplitter::run(*m_context, block);
@@ -205,25 +207,25 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"fullInlinerWithoutSplitter", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"fullInlinerWithoutSplitter", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionHoister::run(*m_context, block);
 			FunctionGrouper::run(*m_context, block);
 			FullInliner::run(*m_context, block);
 			return block;
 		}},
-		{"rematerialiser", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"rematerialiser", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			Rematerialiser::run(*m_context, block);
 			return block;
 		}},
-		{"expressionSimplifier", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"expressionSimplifier", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			ExpressionSplitter::run(*m_context, block);
@@ -236,9 +238,9 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"fullSimplify", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"fullSimplify", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionGrouper::run(*m_context, block);
 			BlockFlattener::run(*m_context, block);
 			ExpressionSplitter::run(*m_context, block);
@@ -253,52 +255,52 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"unusedFunctionParameterPruner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"unusedFunctionParameterPruner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			LiteralRematerialiser::run(*m_context, block);
 			UnusedFunctionParameterPruner::run(*m_context, block);
 			return block;
 		}},
-		{"unusedPruner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"unusedPruner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			UnusedPruner::run(*m_context, block);
 			return block;
 		}},
-		{"circularReferencesPruner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"circularReferencesPruner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionHoister::run(*m_context, block);
 			CircularReferencesPruner::run(*m_context, block);
 			return block;
 		}},
-		{"deadCodeEliminator", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"deadCodeEliminator", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			DeadCodeEliminator::run(*m_context, block);
 			return block;
 		}},
-		{"ssaTransform", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"ssaTransform", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			SSATransform::run(*m_context, block);
 			return block;
 		}},
-		{"unusedAssignEliminator", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"unusedAssignEliminator", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			UnusedAssignEliminator::run(*m_context, block);
 			return block;
 		}},
-		{"unusedStoreEliminator", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"unusedStoreEliminator", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			ExpressionSplitter::run(*m_context, block);
 			SSATransform::run(*m_context, block);
@@ -307,25 +309,25 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"equalStoreEliminator", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"equalStoreEliminator", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionHoister::run(*m_context, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			EqualStoreEliminator::run(*m_context, block);
 			return block;
 		}},
-		{"ssaPlusCleanup", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"ssaPlusCleanup", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			SSATransform::run(*m_context, block);
 			UnusedAssignEliminator::run(*m_context, block);
 			return block;
 		}},
-		{"loadResolver", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"loadResolver", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			FunctionGrouper::run(*m_context, block);
 			BlockFlattener::run(*m_context, block);
 			ForLoopInitRewriter::run(*m_context, block);
@@ -341,47 +343,47 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			ExpressionJoiner::run(*m_context, block);
 			return block;
 		}},
-		{"loopInvariantCodeMotion", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"loopInvariantCodeMotion", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			LoopInvariantCodeMotion::run(*m_context, block);
 			return block;
 		}},
-		{"controlFlowSimplifier", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"controlFlowSimplifier", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			ControlFlowSimplifier::run(*m_context, block);
 			return block;
 		}},
-		{"structuralSimplifier", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"structuralSimplifier", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			LiteralRematerialiser::run(*m_context, block);
 			StructuralSimplifier::run(*m_context, block);
 			return block;
 		}},
-		{"equivalentFunctionCombiner", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"equivalentFunctionCombiner", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			EquivalentFunctionCombiner::run(*m_context, block);
 			return block;
 		}},
-		{"ssaReverser", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"ssaReverser", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			SSAReverser::run(*m_context, block);
 			return block;
 		}},
-		{"ssaAndBack", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"ssaAndBack", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			// apply SSA
 			SSATransform::run(*m_context, block);
@@ -393,21 +395,20 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			UnusedPruner::run(*m_context, block);
 			return block;
 		}},
-		{"stackCompressor", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"stackCompressor", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			ForLoopInitRewriter::run(*m_context, block);
 			FunctionHoister::run(*m_context, block);
 			FunctionGrouper::run(*m_context, block);
 			size_t maxIterations = 16;
-			StackCompressor::run(*m_dialect, block, *m_object, true, maxIterations);
+			StackCompressor::run(_nameRepository, block, *m_object, true, maxIterations);
 			BlockFlattener::run(*m_context, block);
 			return block;
 		}},
-		{"fullSuite", [&]() {
-			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+		{"fullSuite", [&](YulNameRepository& _nameRepository) {
+			GasMeter meter(_nameRepository, false, 200);
 			OptimiserSuite::run(
-				*m_dialect,
 				&meter,
 				*m_resultObject,
 				true,
@@ -417,20 +418,20 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			);
 			return std::get<Block>(ASTCopier{}(m_resultObject->code->block()));
 		}},
-		{"stackLimitEvader", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"stackLimitEvader", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			StackLimitEvader::run(*m_context, block, CompilabilityChecker{
-				*m_dialect,
 				*m_object,
 				true,
+				&_nameRepository,
 				&block
 			}.unreachableVariables);
 			return block;
 		}},
-		{"fakeStackLimitEvader", [&]() {
-			auto block = disambiguate();
-			updateContext(block);
+		{"fakeStackLimitEvader", [&](YulNameRepository& _nameRepository) {
+			auto block = disambiguate(_nameRepository);
+			updateContext(_nameRepository, block);
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
@@ -481,12 +482,13 @@ void YulOptimizerTestCommon::setStep(std::string const& _optimizerStep)
 
 bool YulOptimizerTestCommon::runStep()
 {
-	yulAssert(m_dialect, "Dialect not set.");
-
+	yulAssert(m_object, "Object not set.");
+	yulAssert(m_object->code, "Code of object not set.");
 	if (m_namedSteps.count(m_optimizerStep))
 	{
-		auto block = m_namedSteps[m_optimizerStep]();
-		m_resultObject->code = std::make_shared<AST>(std::move(block));
+		YulNameRepository nameRepository(m_object->code->nameRepository());
+		auto block = m_namedSteps[m_optimizerStep](nameRepository);
+		m_resultObject->code = std::make_shared<AST>(std::move(nameRepository), std::move(block));
 	}
 	else
 		return false;
@@ -528,18 +530,19 @@ Block const* YulOptimizerTestCommon::run()
 	return runStep() ? &m_resultObject->code->block() : nullptr;
 }
 
-Block YulOptimizerTestCommon::disambiguate()
+Block YulOptimizerTestCommon::disambiguate(YulNameRepository& _nameRepository)
 {
-	auto block = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(m_object->code->block()));
+	auto block = std::get<Block>(Disambiguator(_nameRepository, *m_analysisInfo)(m_object->code->block()));
 	m_analysisInfo.reset();
 	return block;
 }
 
-void YulOptimizerTestCommon::updateContext(Block const& _block)
+void YulOptimizerTestCommon::updateContext(YulNameRepository& _nameRepository, Block const& _block)
 {
-	m_nameDispenser = std::make_unique<NameDispenser>(*m_dialect, _block, m_reservedIdentifiers);
+	m_nameDispenser = std::make_unique<NameDispenser>(_nameRepository.dialect(), _block, m_reservedIdentifiers);
 	m_context = std::make_unique<OptimiserStepContext>(OptimiserStepContext{
-		*m_dialect,
+		_nameRepository.dialect(),
+		_nameRepository,
 		*m_nameDispenser,
 		m_reservedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment

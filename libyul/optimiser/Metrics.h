@@ -27,7 +27,7 @@
 namespace solidity::yul
 {
 
-struct Dialect;
+class YulNameRepository;
 struct EVMDialect;
 
 /**
@@ -113,10 +113,10 @@ private:
 class CodeCost: public ASTWalker
 {
 public:
-	static size_t codeCost(Dialect const& _dialect, Expression const& _expression);
+	static size_t codeCost(YulNameRepository const& _nameRepository, Expression const& _expression);
 
 private:
-	CodeCost(Dialect const& _dialect): m_dialect(_dialect) {}
+	CodeCost(YulNameRepository const& _nameRepository): m_nameRepository(_nameRepository) {}
 
 	void operator()(FunctionCall const& _funCall) override;
 	void operator()(Literal const& _literal) override;
@@ -126,7 +126,7 @@ private:
 private:
 	void addInstructionCost(evmasm::Instruction _instruction);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	size_t m_cost = 0;
 };
 

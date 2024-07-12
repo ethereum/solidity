@@ -387,6 +387,8 @@ void CompilerContext::appendInlineAssembly(
 )
 {
 	unsigned startStackHeight = stackHeight();
+	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+	yul::YulNameRepository nameRepository(dialect);
 
 	std::set<yul::YulName> externallyUsedIdentifiers;
 	for (auto const& fun: _externallyUsedFunctions)
@@ -436,13 +438,12 @@ void CompilerContext::appendInlineAssembly(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	langutil::CharStream charStream(_assembly, _sourceName);
-	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
 	std::optional<langutil::SourceLocation> locationOverride;
 	if (!_system)
 		locationOverride = m_asm->currentSourceLocation();
 	std::shared_ptr<yul::AST> parserResult =
 		yul::Parser(errorReporter, dialect, std::move(locationOverride))
-		.parse(charStream);
+		.parse(charStream, std::move(nameRepository));
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
@@ -470,7 +471,7 @@ void CompilerContext::appendInlineAssembly(
 		analyzerResult = yul::AsmAnalyzer(
 			analysisInfo,
 			errorReporter,
-			dialect,
+			parserResult->nameRepository(),
 			identifierAccess.resolve
 		).analyze(parserResult->block());
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
@@ -485,7 +486,7 @@ void CompilerContext::appendInlineAssembly(
 		obj.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(analysisInfo);
 
 		solAssert(!dialect.providesObjectAccess());
-		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
+		optimizeYul(obj, _optimiserSettings, externallyUsedIdentifiers);
 
 		if (_system)
 		{
@@ -495,7 +496,7 @@ void CompilerContext::appendInlineAssembly(
 			std::string code = yul::AsmPrinter{yul::AsmPrinter::Mode::OmitDefaultType, dialect}(obj.code->block());
 			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
 			obj.code = yul::Parser(errorReporter, dialect).parse(charStream);
-			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(dialect, obj);
+			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(obj);
 		}
 
 		analysisInfo = std::move(*obj.analysisInfo);
@@ -518,10 +519,9 @@ void CompilerContext::appendInlineAssembly(
 
 	solAssert(errorReporter.errors().empty(), "Failed to analyze inline assembly block.");
 	yul::CodeGenerator::assemble(
-		parserResult->block(),
+		*parserResult,
 		analysisInfo,
 		*m_asm,
-		m_evmVersion,
 		identifierAccess.generateCode,
 		_system,
 		_optimiserSettings.optimizeStackAllocation
@@ -532,16 +532,15 @@ void CompilerContext::appendInlineAssembly(
 }
 
 
-void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulName> const& _externalIdentifiers)
+void CompilerContext::optimizeYul(yul::Object& _object, OptimiserSettings const& _optimiserSettings, std::set<yul::YulName> const& _externalIdentifiers)
 {
 #ifdef SOL_OUTPUT_ASM
-	cout << yul::AsmPrinter(*dialect)(*_object.code) << endl;
+	cout << yul::AsmPrinter(yul::AsmPrinter::Mode::OmitDefaultType, _object.code->nameRepository())(_object.code->block()) << endl;
 #endif
-
+	yulAssert(_object.code->nameRepository().isEvmDialect());
 	bool const isCreation = runtimeContext() != nullptr;
-	yul::GasMeter meter(_dialect, isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
+	yul::GasMeter meter(_object.code->nameRepository(), isCreation, _optimiserSettings.expectedExecutionsPerDeployment);
 	yul::OptimiserSuite::run(
-		_dialect,
 		&meter,
 		_object,
 		_optimiserSettings.optimizeStackAllocation,
@@ -553,7 +552,7 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 
 #ifdef SOL_OUTPUT_ASM
 	cout << "After optimizer:" << endl;
-	cout << yul::AsmPrinter(*dialect)(*object.code) << endl;
+	cout << yul::AsmPrinter(yul::AsmPrinter::Mode::OmitDefaultType, _object.code->nameRepository())(object.code->block()) << endl;
 #endif
 }
 

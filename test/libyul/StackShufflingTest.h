@@ -43,5 +43,6 @@ private:
 	Stack m_targetStack;
 	std::map<YulName, yul::FunctionCall> m_functions;
 	std::map<YulName, Scope::Variable> m_variables;
+	YulNameRepository m_yulNameRepository;
 };
 }

@@ -207,15 +207,16 @@ void markNeedsCleanStack(CFG& _cfg)
 
 std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 	AsmAnalysisInfo const& _analysisInfo,
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	Block const& _block
 )
 {
 	auto result = std::make_unique<CFG>();
 	result->entry = &result->makeBlock(debugDataOf(_block));
+	result->nameRepository = std::make_unique<YulNameRepository>(_nameRepository);
 
-	ControlFlowSideEffectsCollector sideEffects(_dialect, _block);
-	ControlFlowGraphBuilder builder(*result, _analysisInfo, sideEffects.functionSideEffects(), _dialect);
+	ControlFlowSideEffectsCollector sideEffects(*result->nameRepository, _block);
+	ControlFlowGraphBuilder builder(*result, _analysisInfo, sideEffects.functionSideEffects());
 	builder.m_currentBlock = result->entry;
 	builder(_block);
 
@@ -233,13 +234,11 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 ControlFlowGraphBuilder::ControlFlowGraphBuilder(
 	CFG& _graph,
 	AsmAnalysisInfo const& _analysisInfo,
-	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects,
-	Dialect const& _dialect
+	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects
 ):
 	m_graph(_graph),
 	m_info(_analysisInfo),
-	m_functionSideEffects(_functionSideEffects),
-	m_dialect(_dialect)
+	m_functionSideEffects(_functionSideEffects)
 {
 }
 
@@ -349,7 +348,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
 	});
 
-	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction({});
+	BuiltinFunction const* equalityBuiltin = m_graph.nameRepository->dialect().equalityFunction({});
 	yulAssert(equalityBuiltin, "");
 
 	// Artificially generate:
@@ -468,7 +467,7 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 
 	CFG::FunctionInfo& functionInfo = m_graph.functionInfo.at(&function);
 
-	ControlFlowGraphBuilder builder{m_graph, m_info, m_functionSideEffects, m_dialect};
+	ControlFlowGraphBuilder builder{m_graph, m_info, m_functionSideEffects};
 	builder.m_currentFunction = &functionInfo;
 	builder.m_currentBlock = functionInfo.entry;
 	builder(_function.body);
@@ -516,7 +515,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 
 	Stack const* output = nullptr;
 	bool canContinue = true;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+	if (BuiltinFunction const* builtin = m_graph.nameRepository->dialect().builtin(_call.functionName.name))
 	{
 		Stack inputs;
 		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)

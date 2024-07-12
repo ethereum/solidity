@@ -72,7 +72,6 @@ TestCase::TestResult EVMCodeTransformTest::run(std::ostream& _stream, std::strin
 	EVMObjectCompiler::compile(
 		*stack.parserResult(),
 		adapter,
-		EVMDialect::strictAssemblyForEVMObjects(EVMVersion{}),
 		m_stackOpt,
 		std::nullopt
 	);

@@ -38,6 +38,7 @@ namespace solidity::yul
 
 enum class LiteralKind;
 struct Dialect;
+struct EVMDialect;
 struct Block;
 struct BuiltinFunction;
 
@@ -151,6 +152,8 @@ public:
 
 	bool isEvmDialect() const;
 
+	EVMDialect const* evmDialect() const;
+
 	/// Generates labels for derived names over the set of _usedNames, respecting a set of _illegal labels.
 	/// This will change the state of all derived names in _usedNames to "not derived" with a label associated to them.
 	void generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal = {});
@@ -185,6 +188,7 @@ private:
 	BuiltinFunction const* fetchTypedPredefinedFunction(YulName _type, std::vector<std::optional<YulName>> const& _functions) const;
 
 	std::reference_wrapper<Dialect const> m_dialect;
+	EVMDialect const* m_evmDialect;
 	std::vector<std::tuple<YulName, std::string>> m_dialectTypes;
 	std::map<YulName, BuiltinFunction> m_builtinFunctions;
 

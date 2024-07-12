@@ -93,7 +93,7 @@ public:
 private:
 	enum Pass { InlineTiny, InlineRest };
 
-	FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& _dialect);
+	FullInliner(Block& _ast, NameDispenser& _dispenser, YulNameRepository& _nameRepository);
 	void run(Pass _pass);
 
 	/// @returns a map containing the maximum depths of a call chain starting at each
@@ -121,7 +121,7 @@ private:
 	std::set<YulName> m_constants;
 	std::map<YulName, size_t> m_functionSizes;
 	NameDispenser& m_nameDispenser;
-	Dialect const& m_dialect;
+	YulNameRepository& m_nameRepository;
 };
 
 /**
@@ -131,11 +131,11 @@ private:
 class InlineModifier: public ASTModifier
 {
 public:
-	InlineModifier(FullInliner& _driver, NameDispenser& _nameDispenser, YulName _functionName, Dialect const& _dialect):
+	InlineModifier(FullInliner& _driver, NameDispenser& _nameDispenser, YulName _functionName, YulNameRepository& _nameRepository):
 		m_currentFunction(std::move(_functionName)),
 		m_driver(_driver),
 		m_nameDispenser(_nameDispenser),
-		m_dialect(_dialect)
+		m_nameRepository(_nameRepository)
 	{ }
 
 	void operator()(Block& _block) override;
@@ -147,7 +147,7 @@ private:
 	YulName m_currentFunction;
 	FullInliner& m_driver;
 	NameDispenser& m_nameDispenser;
-	Dialect const& m_dialect;
+	YulNameRepository& m_nameRepository;
 };
 
 /**
@@ -160,9 +160,11 @@ class BodyCopier: public ASTCopier
 public:
 	BodyCopier(
 		NameDispenser& _nameDispenser,
+		YulNameRepository& _nameRepository,
 		std::map<YulName, YulName> _variableReplacements
 	):
 		m_nameDispenser(_nameDispenser),
+		m_nameRepository(_nameRepository),
 		m_variableReplacements(std::move(_variableReplacements))
 	{}
 
@@ -174,6 +176,7 @@ public:
 	YulName translateIdentifier(YulName _name) override;
 
 	NameDispenser& m_nameDispenser;
+	YulNameRepository& m_nameRepository;
 	std::map<YulName, YulName> m_variableReplacements;
 };
 

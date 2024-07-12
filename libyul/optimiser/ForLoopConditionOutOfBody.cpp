@@ -28,7 +28,7 @@ using namespace solidity::yul;
 
 void ForLoopConditionOutOfBody::run(OptimiserStepContext& _context, Block& _ast)
 {
-	ForLoopConditionOutOfBody{_context.dialect}(_ast);
+	ForLoopConditionOutOfBody{_context.nameRepository}(_ast);
 }
 
 void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
@@ -36,7 +36,7 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 	ASTModifier::operator()(_forLoop);
 
 	if (
-		!m_dialect.booleanNegationFunction() ||
+		!m_nameRepository.dialect().booleanNegationFunction() ||
 		!std::holds_alternative<Literal>(*_forLoop.condition) ||
 		std::get<Literal>(*_forLoop.condition).value.value() == 0 ||
 		_forLoop.body.statements.empty() ||
@@ -50,10 +50,10 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 		!std::holds_alternative<Break>(firstStatement.body.statements.front())
 	)
 		return;
-	if (!SideEffectsCollector(m_dialect, *firstStatement.condition).movable())
+	if (!SideEffectsCollector(m_nameRepository, *firstStatement.condition).movable())
 		return;
 
-	YulName iszero = m_dialect.booleanNegationFunction()->name;
+	YulName iszero = m_nameRepository.dialect().booleanNegationFunction()->name;
 	langutil::DebugData::ConstPtr debugData = debugDataOf(*firstStatement.condition);
 
 	if (

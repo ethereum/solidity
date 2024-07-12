@@ -37,13 +37,13 @@ using namespace solidity::langutil;
 
 void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 {
-	TypeInfo typeInfo(_context.dialect, _ast);
-	ExpressionSplitter{_context.dialect, _context.dispenser, typeInfo}(_ast);
+	TypeInfo typeInfo(_context.nameRepository, _ast);
+	ExpressionSplitter{_context.nameRepository, _context.dispenser, typeInfo}(_ast);
 }
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
-	BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name);
+	BuiltinFunction const* builtin = m_nameRepository.dialect().builtin(_funCall.functionName.name);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 		if (!builtin || !builtin->literalArgument(i - 1))
@@ -109,4 +109,3 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	_expr = Identifier{debugData, var};
 	m_typeInfo.setVariableType(var, type);
 }
-

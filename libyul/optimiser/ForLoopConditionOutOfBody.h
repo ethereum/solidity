@@ -65,11 +65,10 @@ public:
 	void operator()(ForLoop& _forLoop) override;
 
 private:
-	ForLoopConditionOutOfBody(Dialect const& _dialect):
-		m_dialect(_dialect)
+	ForLoopConditionOutOfBody(YulNameRepository const& _nameRepository): m_nameRepository(_nameRepository)
 	{}
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 };
 
 }

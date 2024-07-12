@@ -41,25 +41,29 @@ class SideEffectsCollector: public ASTWalker
 {
 public:
 	explicit SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
-	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
+	): m_nameRepository(_nameRepository), m_functionSideEffects(_functionSideEffects) {}
 	SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Expression const& _expression,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	);
-	SideEffectsCollector(Dialect const& _dialect, Statement const& _statement);
+	SideEffectsCollector(YulNameRepository const& _nameRepository, Statement const& _statement);
 	SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block const& _ast,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	);
 	SideEffectsCollector(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		ForLoop const& _ast,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	);
+	SideEffectsCollector(
+		AST const& _ast,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	) : SideEffectsCollector(_ast.nameRepository(), _ast.block(), _functionSideEffects) {}
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _functionCall) override;
@@ -116,7 +120,7 @@ public:
 	SideEffects sideEffects() { return m_sideEffects; }
 
 private:
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
 	SideEffects m_sideEffects;
 };
@@ -131,7 +135,7 @@ class SideEffectsPropagator
 {
 public:
 	static std::map<YulName, SideEffects> sideEffects(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		CallGraph const& _directCallGraph
 	);
 };
@@ -148,15 +152,16 @@ public:
 class MSizeFinder: public ASTWalker
 {
 public:
-	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
-	static bool containsMSize(Dialect const& _dialect, Object const& _object);
+	static bool containsMSize(YulNameRepository const& _nameRepository, Block const& _ast);
+	static bool containsMSize(Object const& _object);
+	static bool containsMSize(AST const& _ast);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _funCall) override;
 
 private:
-	MSizeFinder(Dialect const& _dialect): m_dialect(_dialect) {}
-	Dialect const& m_dialect;
+	MSizeFinder(YulNameRepository const& _nameRepository): m_nameRepository(_nameRepository) {}
+	YulNameRepository const& m_nameRepository;
 	bool m_msizeFound = false;
 };
 
@@ -194,10 +199,10 @@ class MovableChecker: public SideEffectsCollector
 {
 public:
 	explicit MovableChecker(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
-	): SideEffectsCollector(_dialect, _functionSideEffects) {}
-	MovableChecker(Dialect const& _dialect, Expression const& _expression);
+	): SideEffectsCollector(_nameRepository, _functionSideEffects) {}
+	MovableChecker(YulNameRepository const& _yulNameRepository, Expression const& _expression);
 
 	void operator()(Identifier const& _identifier) override;
 
@@ -230,9 +235,9 @@ public:
 	enum class ControlFlow { FlowOut, Break, Continue, Terminate, Leave };
 
 	TerminationFinder(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::map<YulName, ControlFlowSideEffects> const* _functionSideEffects = nullptr
-	): m_dialect(_dialect), m_functionSideEffects(_functionSideEffects) {}
+	): m_nameRepository(_nameRepository), m_functionSideEffects(_functionSideEffects) {}
 
 	/// @returns the index of the first statement in the provided sequence
 	/// that is an unconditional ``break``, ``continue``, ``leave`` or a
@@ -255,7 +260,7 @@ public:
 	bool containsNonContinuingFunctionCall(Expression const& _expr);
 
 private:
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	std::map<YulName, ControlFlowSideEffects> const* m_functionSideEffects;
 };
 

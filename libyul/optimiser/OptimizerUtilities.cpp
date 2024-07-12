@@ -60,10 +60,10 @@ bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulName const& _identi
 	return _identifier.empty() || hasLeadingOrTrailingDot(_identifier.str()) || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier);
 }
 
-std::optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulName const& _name)
+std::optional<evmasm::Instruction> yul::toEVMInstruction(YulNameRepository const& _yulNameRepository, YulName const& _name)
 {
-	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-		if (BuiltinFunctionForEVM const* builtin = dialect->builtin(_name))
+	if (_yulNameRepository.isEvmDialect())
+		if (auto const* builtin = dynamic_cast<EVMDialect const&>(_yulNameRepository.dialect()).builtin(_name))
 			return builtin->instruction;
 	return std::nullopt;
 }

@@ -59,7 +59,7 @@ std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 }
 
 Program::Program(Program const& program):
-	m_ast(std::make_unique<AST>(std::get<Block>(ASTCopier{}(program.m_ast->block())))),
+	m_ast(std::make_unique<AST>(program.m_ast->nameRepository(), std::get<Block>(ASTCopier{}(program.m_ast->block())))),
 	m_dialect{program.m_dialect},
 	m_nameDispenser(program.m_nameDispenser)
 {
@@ -75,7 +75,6 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 		return std::get<ErrorList>(astOrErrors);
 
 	std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> analysisInfoOrErrors = analyzeAST(
-		dialect,
 		*std::get<std::unique_ptr<AST>>(astOrErrors)
 	);
 	if (std::holds_alternative<ErrorList>(analysisInfoOrErrors))
@@ -84,7 +83,6 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 	Program program(
 		dialect,
 		disambiguateAST(
-			dialect,
 			*std::get<std::unique_ptr<AST>>(astOrErrors),
 			*std::get<std::unique_ptr<AsmAnalysisInfo>>(analysisInfoOrErrors)
 		)
@@ -100,17 +98,17 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 
 void Program::optimise(std::vector<std::string> const& _optimisationSteps)
 {
-	m_ast = applyOptimisationSteps(m_dialect, m_nameDispenser, std::move(m_ast), _optimisationSteps);
+	m_ast = applyOptimisationSteps(m_nameDispenser, *m_ast, _optimisationSteps);
 }
 
 std::ostream& phaser::operator<<(std::ostream& _stream, Program const& _program)
 {
-	return _stream << AsmPrinter(AsmPrinter::Mode::FullTypeInfo, _program.m_dialect)(_program.m_ast->block());
+	return _stream << AsmPrinter(AsmPrinter::Mode::FullTypeInfo, _program.m_ast->nameRepository())(_program.m_ast->block());
 }
 
 std::string Program::toJson() const
 {
-	Json serializedAst = AsmJsonConverter(0)(m_ast->block());
+	Json serializedAst = AsmJsonConverter(0, m_ast->nameRepository())(m_ast->block());
 	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 
@@ -149,17 +147,20 @@ std::variant<std::unique_ptr<AST>, ErrorList> Program::parseObject(Dialect const
 	// The public API of the class does not provide access to the smart pointer so it won't be hard
 	// to switch to shared_ptr if the copying turns out to be an issue (though it would be better
 	// to refactor ObjectParser and Object to use unique_ptr instead).
-	auto astCopy = std::make_unique<AST>(std::get<Block>(ASTCopier{}(selectedObject->code->block())));
+	auto astCopy = std::make_unique<AST>(
+		selectedObject->code->nameRepository(),
+		std::get<Block>(ASTCopier{}(selectedObject->code->block()))
+	);
 
-	return std::variant<std::unique_ptr<AST>, ErrorList>(std::move(astCopy));
+	return {std::move(astCopy)};
 }
 
-std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect const& _dialect, AST const& _ast)
+std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(AST const& _ast)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	auto analysisInfo = std::make_unique<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect);
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _ast.nameRepository());
 
 	bool analysisSuccessful = analyzer.analyze(_ast.block());
 	if (!analysisSuccessful)
@@ -170,39 +171,41 @@ std::variant<std::unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Di
 }
 
 std::unique_ptr<AST> Program::disambiguateAST(
-	Dialect const& _dialect,
 	AST const& _ast,
 	AsmAnalysisInfo const& _analysisInfo
 )
 {
+	YulNameRepository nameRepository(_ast.nameRepository());
 	std::set<YulName> const externallyUsedIdentifiers = {};
-	Disambiguator disambiguator(_dialect, _analysisInfo, externallyUsedIdentifiers);
+	Disambiguator disambiguator(nameRepository, _analysisInfo, externallyUsedIdentifiers);
 
-	return std::make_unique<AST>(std::get<Block>(disambiguator(_ast.block())));
+	auto block = std::get<Block>(disambiguator(_ast.block()));
+	return std::make_unique<AST>(std::move(nameRepository), std::move(block));
 }
 
 std::unique_ptr<AST> Program::applyOptimisationSteps(
-	Dialect const& _dialect,
 	NameDispenser& _nameDispenser,
-	std::unique_ptr<AST> _ast,
+	AST const& _ast,
 	std::vector<std::string> const& _optimisationSteps
 )
 {
 	// An empty set of reserved identifiers. It could be a constructor parameter but I don't
 	// think it would be useful in this tool. Other tools (like yulopti) have it empty too.
 	std::set<YulName> const externallyUsedIdentifiers = {};
+	YulNameRepository nameRepository (_ast.nameRepository());
 	OptimiserStepContext context{
-		_dialect,
+		nameRepository.dialect(),
+		nameRepository,
 		_nameDispenser,
 		externallyUsedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	};
 
-	auto block = std::get<Block>(ASTCopier{}(_ast->block()));
+	auto block = std::get<Block>(ASTCopier{}(_ast.block()));
 	for (std::string const& step: _optimisationSteps)
 		OptimiserSuite::allSteps().at(step)->run(context, block);
 
-	return std::make_unique<AST>(std::move(block));
+	return std::make_unique<AST>(std::move(nameRepository), std::move(block));
 }
 
 size_t Program::computeCodeSize(Block const& _ast, CodeWeights const& _weights)

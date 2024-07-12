@@ -42,15 +42,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::langutil;
 
-namespace
-{
-Dialect const& defaultDialect(bool _yul)
-{
-	return _yul ? yul::Dialect::yulDeprecated() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
-}
-}
-
-std::pair<std::shared_ptr<AST>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(std::string const& _source, bool _yul)
+std::pair<std::shared_ptr<AST>, std::shared_ptr<AsmAnalysisInfo>> yul::test::parse(std::string const& _source, bool _yul)
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
@@ -81,17 +73,20 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::t
 	if (!parserResult->code || errorReporter.hasErrors())
 		return {};
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo = std::make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->qualifiedDataNames());
+	AsmAnalyzer analyzer(*analysisInfo, errorReporter, parserResult->code->nameRepository(), {}, parserResult->qualifiedDataNames());
 	// TODO this should be done recursively.
 	if (!analyzer.analyze(parserResult->code->block()) || errorReporter.hasErrors())
 		return {};
 	return {std::move(parserResult), std::move(analysisInfo)};
 }
 
-yul::Block yul::test::disambiguate(std::string const& _source, bool _yul)
+AST yul::test::disambiguate(std::string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
-	return std::get<Block>(Disambiguator(defaultDialect(_yul), *result.second, {})(result.first->block()));
+	auto const& [code, analysisInfo] = result;
+	YulNameRepository nameRepository(code->nameRepository());
+	auto block = std::get<Block>(Disambiguator(nameRepository, *analysisInfo, {})(code->block()));
+	return AST{std::move(nameRepository), std::move(block)};
 }
 
 std::string yul::test::format(std::string const& _source, bool _yul)

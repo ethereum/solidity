@@ -63,8 +63,8 @@ public:
 	void visit(Statement& _st) override;
 
 private:
-	ControlFlowSimplifier(Dialect const& _dialect, TypeInfo const& _typeInfo):
-		m_dialect(_dialect),
+	ControlFlowSimplifier(YulNameRepository const& _nameRepository, TypeInfo const& _typeInfo):
+		m_nameRepository(_nameRepository),
 		m_typeInfo(_typeInfo)
 	{}
 
@@ -73,7 +73,7 @@ private:
 	std::optional<std::vector<Statement>> reduceNoCaseSwitch(Switch& _switchStmt) const;
 	std::optional<std::vector<Statement>> reduceSingleCaseSwitch(Switch& _switchStmt) const;
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	TypeInfo const& m_typeInfo;
 	size_t m_numBreakStatements = 0;
 	size_t m_numContinueStatements = 0;

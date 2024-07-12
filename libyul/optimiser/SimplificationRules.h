@@ -38,7 +38,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 struct AssignedValue;
 class Pattern;
 
@@ -63,7 +63,7 @@ public:
 	/// @param _ssaValues values of variables that are assigned exactly once.
 	static Rule const* findFirstMatch(
 		Expression const& _expr,
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::function<AssignedValue const*(YulName)> const& _ssaValues
 	);
 
@@ -72,7 +72,7 @@ public:
 	bool isInitialized() const;
 
 	static std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
-	instructionAndArguments(Dialect const& _dialect, Expression const& _expr);
+	instructionAndArguments(YulNameRepository const& _nameRepository, Expression const& _expr);
 
 private:
 	void addRules(std::vector<Rule> const& _rules);
@@ -120,7 +120,7 @@ public:
 	unsigned matchGroup() const { return m_matchGroup; }
 	bool matches(
 		Expression const& _expr,
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::function<AssignedValue const*(YulName)> const& _ssaValues
 	) const;
 
@@ -133,7 +133,7 @@ public:
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
-	Expression toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion) const;
+	Expression toExpression(langutil::DebugData::ConstPtr const& _debugData, langutil::EVMVersion _evmVersion, YulNameRepository const& _nameRepository) const;
 
 private:
 	Expression const& matchGroupValue() const;

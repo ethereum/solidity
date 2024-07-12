@@ -35,14 +35,14 @@ class VarDeclInitializer: public ASTModifier
 {
 public:
 	static constexpr char const* name{"VarDeclInitializer"};
-	static void run(OptimiserStepContext& _ctx, Block& _ast) { VarDeclInitializer{_ctx.dialect}(_ast); }
+	static void run(OptimiserStepContext& _ctx, Block& _ast) { VarDeclInitializer{_ctx.nameRepository}(_ast); }
 
 	void operator()(Block& _block) override;
 
 private:
-	explicit VarDeclInitializer(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit VarDeclInitializer(YulNameRepository const& _nameRepository): m_nameRepository(_nameRepository) {}
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 };
 
 }

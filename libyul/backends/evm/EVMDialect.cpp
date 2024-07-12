@@ -465,10 +465,10 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 }
 
 std::set<std::string> EVMDialect::builtinNames() const {
-	static std::array verbatim {YulString("verbatim")};
-	auto const keys = ranges::views::concat(ranges::views::keys(m_functions), verbatim)
-		| ranges::views::transform([](auto const& name) { return name.str(); });
-	return { keys.begin(), keys.end() };
+	std::set<std::string> builtins{"verbatim"};
+	for (auto const& [key, _]: m_functions)
+		builtins.insert(key.str());
+	return builtins;
 }
 
 EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess):

@@ -38,17 +38,17 @@ using namespace solidity::util;
 void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	CommonSubexpressionEliminator cse{
-		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
+		_context.nameRepository,
+		SideEffectsPropagator::sideEffects(_context.nameRepository, CallGraphGenerator::callGraph(_ast))
 	};
 	cse(_ast);
 }
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	std::map<YulName, SideEffects> _functionSideEffects
 ):
-	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
+	DataFlowAnalyzer(_nameRepository, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {
 }
 
@@ -72,7 +72,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	{
 		FunctionCall& funCall = std::get<FunctionCall>(_e);
 
-		if (BuiltinFunction const* builtin = m_dialect.builtin(funCall.functionName.name))
+		if (BuiltinFunction const* builtin = m_nameRepository.dialect().builtin(funCall.functionName.name))
 		{
 			for (size_t i = funCall.arguments.size(); i > 0; i--)
 				// We should not modify function arguments that have to be literals

@@ -30,7 +30,8 @@ namespace solidity::yul
 {
 
 YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
-	m_dialect(_dialect)
+	m_dialect(_dialect),
+	m_evmDialect(dynamic_cast<EVMDialect const*>(&_dialect))
 {
 	{
 		auto const emptyName = defineName("");
@@ -370,7 +371,9 @@ size_t YulNameRepository::nTypes() const
 	return m_indexBoundaries.endTypes - m_indexBoundaries.beginTypes;
 }
 
-bool YulNameRepository::isEvmDialect() const { return dynamic_cast<EVMDialect const*>(&m_dialect.get()) != nullptr; }
+bool YulNameRepository::isEvmDialect() const { return m_evmDialect != nullptr; }
+
+EVMDialect const* YulNameRepository::evmDialect() const { return m_evmDialect; }
 
 void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal)
 {

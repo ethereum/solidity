@@ -55,7 +55,7 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 
 	// TODO When backtracking is implemented, the restriction of recursive functions can be lifted.
 	if (
-		m_dialect.builtin(_f.functionName.name) ||
+		m_nameRepository.dialect().builtin(_f.functionName.name) ||
 		m_recursiveFunctions.count(_f.functionName.name)
 	)
 		return;
@@ -129,7 +129,7 @@ void FunctionSpecializer::run(OptimiserStepContext& _context, Block& _ast)
 	FunctionSpecializer f{
 		CallGraphGenerator::callGraph(_ast).recursiveFunctions(),
 		_context.dispenser,
-		_context.dialect
+		_context.nameRepository
 	};
 	f(_ast);
 

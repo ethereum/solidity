@@ -40,10 +40,9 @@ class CodeGenerator
 public:
 	/// Performs code generation and appends generated to _assembly.
 	static void assemble(
-		Block const& _parsedData,
+		AST const& _parsedData,
 		AsmAnalysisInfo& _analysisInfo,
 		evmasm::Assembly& _assembly,
-		langutil::EVMVersion _evmVersion,
 		ExternalIdentifierAccess::CodeGenerator _identifierAccess = {},
 		bool _useNamedLabelsForFunctions = false,
 		bool _optimizeStackAllocation = false

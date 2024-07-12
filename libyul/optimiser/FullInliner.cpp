@@ -46,16 +46,16 @@ using namespace solidity::yul;
 
 void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
-	FullInliner inliner{_ast, _context.dispenser, _context.dialect};
+	FullInliner inliner{_ast, _context.dispenser, _context.nameRepository};
 	inliner.run(Pass::InlineTiny);
 	inliner.run(Pass::InlineRest);
 }
 
-FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& _dialect):
+FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, YulNameRepository& _nameRepository):
 	m_ast(_ast),
 	m_recursiveFunctions(CallGraphGenerator::callGraph(_ast).recursiveFunctions()),
 	m_nameDispenser(_dispenser),
-	m_dialect(_dialect)
+	m_nameRepository(_nameRepository)
 {
 
 	// Determine constants
@@ -131,7 +131,7 @@ std::map<YulName, size_t> FullInliner::callDepths() const
 	// Remove calls to builtin functions.
 	for (auto& call: cg.functionCalls)
 		for (auto it = call.second.begin(); it != call.second.end();)
-			if (m_dialect.builtin(*it))
+			if (m_nameRepository.dialect().builtin(*it))
 				it = call.second.erase(it);
 			else
 				++it;
@@ -203,7 +203,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulName _callSite)
 	bool aggressiveInlining = true;
 
 	if (
-		EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect);
+		EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_nameRepository.dialect());
 		!evmDialect || !evmDialect->providesObjectAccess() || evmDialect->evmVersion() <= langutil::EVMVersion::homestead()
 	)
 		// No aggressive inlining with the old code transform.
@@ -246,7 +246,7 @@ void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
 
 void FullInliner::handleBlock(YulName _currentFunctionName, Block& _block)
 {
-	InlineModifier{*this, m_nameDispenser, _currentFunctionName, m_dialect}(_block);
+	InlineModifier{*this, m_nameDispenser, _currentFunctionName, m_nameRepository}(_block);
 }
 
 bool FullInliner::recursive(FunctionDefinition const& _fun) const
@@ -305,7 +305,7 @@ std::vector<Statement> InlineModifier::performInline(Statement& _statement, Func
 		if (_value)
 			varDecl.value = std::make_unique<Expression>(std::move(*_value));
 		else
-			varDecl.value = std::make_unique<Expression>(m_dialect.zeroLiteralForType(varDecl.variables.front().type));
+			varDecl.value = std::make_unique<Expression>(m_nameRepository.dialect().zeroLiteralForType(varDecl.variables.front().type));
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
@@ -314,7 +314,7 @@ std::vector<Statement> InlineModifier::performInline(Statement& _statement, Func
 	for (auto const& var: function->returnVariables)
 		newVariable(var, nullptr);
 
-	Statement newBody = BodyCopier(m_nameDispenser, variableReplacements)(function->body);
+	Statement newBody = BodyCopier(m_nameDispenser, m_nameRepository, variableReplacements)(function->body);
 	newStatements += std::move(std::get<Block>(newBody).statements);
 
 	std::visit(util::GenericVisitor{

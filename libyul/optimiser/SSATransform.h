@@ -32,8 +32,6 @@
 namespace solidity::yul
 {
 
-class NameDispenser;
-
 /**
  * Optimizer stage that tries to replace repeated assignments to
  * existing variables by declarations of new variables as much as

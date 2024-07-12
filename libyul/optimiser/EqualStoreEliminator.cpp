@@ -36,8 +36,8 @@ using namespace solidity::yul;
 void EqualStoreEliminator::run(OptimiserStepContext const& _context, Block& _ast)
 {
 	EqualStoreEliminator eliminator{
-		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
+		_context.nameRepository,
+		SideEffectsPropagator::sideEffects(_context.nameRepository, CallGraphGenerator::callGraph(_ast))
 	};
 	eliminator(_ast);
 

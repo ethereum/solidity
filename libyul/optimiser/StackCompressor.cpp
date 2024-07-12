@@ -94,7 +94,7 @@ public:
 			{
 				yulAssert(!m_expressionCodeCost.count(varName), "");
 				m_candidates.emplace_back(m_currentFunctionName, varName);
-				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *value->value);
+				m_expressionCodeCost[varName] = CodeCost::codeCost(m_nameRepository, *value->value);
 			}
 		}
 	}

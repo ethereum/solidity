@@ -39,10 +39,7 @@ namespace solidity::yul::test
 class YulOptimizerTestCommon
 {
 public:
-	explicit YulOptimizerTestCommon(
-		std::shared_ptr<Object> _obj,
-		Dialect const& _dialect
-	);
+	explicit YulOptimizerTestCommon(std::shared_ptr<Object> _obj);
 	/// Sets optimiser step to be run to @param
 	/// _optimiserStep.
 	void setStep(std::string const& _optimizerStep);
@@ -60,12 +57,11 @@ public:
 	/// the resulting object after performing optimization steps
 	std::shared_ptr<Object> resultObject() const;
 private:
-	Block disambiguate();
-	void updateContext(Block const& _block);
+	Block disambiguate(YulNameRepository& _nameRepository);
+	void updateContext(YulNameRepository& _nameRepository, Block const& _block);
 
 	std::string m_optimizerStep;
 
-	Dialect const* m_dialect = nullptr;
 	std::set<YulName> m_reservedIdentifiers;
 	std::unique_ptr<NameDispenser> m_nameDispenser;
 	std::unique_ptr<OptimiserStepContext> m_context;
@@ -73,7 +69,7 @@ private:
 	std::shared_ptr<Object> m_object;
 	std::shared_ptr<Object> m_resultObject;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
-	std::map<std::string, std::function<Block(void)>> m_namedSteps;
+	std::map<std::string, std::function<Block(YulNameRepository&)>> m_namedSteps;
 };
 
 }

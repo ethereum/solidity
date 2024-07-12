@@ -31,21 +31,23 @@ using namespace solidity::yul;
 using namespace solidity::util;
 
 CompilabilityChecker::CompilabilityChecker(
-	Dialect const& _dialect,
 	Object const& _object,
 	bool _optimizeStackAllocation,
+	YulNameRepository const* _nameRepository,
 	Block const* _block
 )
 {
-	yulAssert(_object.code || _block);
-	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
+	yulAssert(_object.code || (_nameRepository && _block));
+	if (!_nameRepository)
+		_nameRepository = &_object.code->nameRepository();
+	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_nameRepository->dialect()))
 	{
 		if (!_block)
 			_block = &_object.code->block();
 		NoOutputEVMDialect noOutputDialect(*evmDialect);
 
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
-			noOutputDialect,
+			*_nameRepository,
 			*_block,
 			_object.qualifiedDataNames()
 		);
@@ -60,9 +62,10 @@ CompilabilityChecker::CompilabilityChecker(
 		CodeTransform transform(
 			assembly,
 			analysisInfo,
+			*_nameRepository,
 			*_block,
-			noOutputDialect,
 			builtinContext,
+			&noOutputDialect,
 			_optimizeStackAllocation
 		);
 		transform(*_block);

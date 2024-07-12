@@ -63,12 +63,29 @@ inline std::string to_string(LiteralKind _kind)
 }
 }
 
+AsmAnalyzer::AsmAnalyzer(
+	AsmAnalysisInfo& _analysisInfo,
+	langutil::ErrorReporter& _errorReporter,
+	YulNameRepository const& _nameRepository,
+	ExternalIdentifierAccess::Resolver _resolver,
+	std::set<YulString> _dataNames
+):
+	m_resolver(std::move(_resolver)),
+	m_info(_analysisInfo),
+	m_errorReporter(_errorReporter),
+	m_nameRepository(_nameRepository),
+	m_dataNames(std::move(_dataNames))
+{
+	if (EVMDialect const* evmDialect = m_nameRepository.evmDialect())
+		m_evmVersion = evmDialect->evmVersion();
+}
+
 bool AsmAnalyzer::analyze(Block const& _block)
 {
 	auto watcher = m_errorReporter.errorWatcher();
 	try
 	{
-		if (!(ScopeFiller(m_info, m_errorReporter))(_block))
+		if (!(ScopeFiller(m_info, m_errorReporter, m_nameRepository))(_block))
 			return false;
 
 		(*this)(_block);
@@ -84,13 +101,13 @@ bool AsmAnalyzer::analyze(Block const& _block)
 	return watcher.ok();
 }
 
-AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object)
+AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Object const& _object)
 {
-	return analyzeStrictAssertCorrect(_dialect, _object.code->block(), _object.qualifiedDataNames());
+	return analyzeStrictAssertCorrect(_object.code->nameRepository(), _object.code->block(), _object.qualifiedDataNames());
 }
 
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	Block const& _block,
 	std::set<YulString> const& _qualifiedDataNames)
 {
@@ -100,7 +117,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	bool success = yul::AsmAnalyzer(
 		analysisInfo,
 		errors,
-		_dialect,
+		_nameRepository,
 		{},
 		_qualifiedDataNames
 	).analyze(_block);
@@ -127,7 +144,7 @@ std::vector<YulName> AsmAnalyzer::operator()(Literal const& _literal)
 		m_errorReporter.typeError(6708_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
 	}
 
-	if (!m_dialect.validTypeForLiteral(_literal.kind, _literal.value, _literal.type))
+	if (!m_nameRepository.dialect().validTypeForLiteral(_literal.kind, _literal.value, _literal.type))
 	{
 		m_errorReporter.typeError(
 			5170_error,
@@ -144,7 +161,7 @@ std::vector<YulName> AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
-	YulName type = m_dialect.defaultType;
+	YulName type = m_nameRepository.dialect().defaultType;
 
 	if (m_currentScope->lookup(_identifier.name, GenericVisitor{
 		[&](Scope::Variable const& _var)
@@ -283,7 +300,7 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 
 		for (size_t i = 0; i < _varDecl.variables.size(); ++i)
 		{
-			YulName givenType = m_dialect.defaultType;
+			YulName givenType = m_nameRepository.dialect().defaultType;
 			if (i < types.size())
 				givenType = types[i];
 			TypedName const& variable = _varDecl.variables[i];
@@ -327,7 +344,7 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	std::vector<YulName> const* returnTypes = nullptr;
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 
-	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
+	if (BuiltinFunction const* f = m_nameRepository.dialect().builtin(_funCall.functionName.name))
 	{
 		if (_funCall.functionName.name == "selfdestruct"_yulname)
 			m_errorReporter.warning(
@@ -473,7 +490,7 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		return *returnTypes;
 	}
 	else if (returnTypes)
-		return std::vector<YulName>(returnTypes->size(), m_dialect.defaultType);
+		return std::vector<YulName>(returnTypes->size(), m_nameRepository.dialect().defaultType);
 	else
 		return {};
 }
@@ -572,13 +589,13 @@ YulName AsmAnalyzer::expectExpression(Expression const& _expr)
 			std::to_string(types.size()) +
 			" values instead."
 		);
-	return types.empty() ? m_dialect.defaultType : types.front();
+	return types.empty() ? m_nameRepository.dialect().defaultType : types.front();
 }
 
 YulName AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::String);
-	yulAssert(m_dialect.validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type));
+	yulAssert(m_nameRepository.dialect().validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type));
 	yulAssert(_literal.value.unlimited());
 
 	return {_literal.type};
@@ -587,12 +604,12 @@ YulName AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
 void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
 {
 	YulName type = expectExpression(_expr);
-	if (type != m_dialect.boolType)
+	if (type != m_nameRepository.dialect().boolType)
 		m_errorReporter.typeError(
 			1733_error,
 			nativeLocationOf(_expr),
 			"Expected a value of boolean type \"" +
-			m_dialect.boolType.str() +
+			m_nameRepository.dialect().boolType.str() +
 			"\" but got \"" +
 			type.str() +
 			"\""
@@ -633,7 +650,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueTyp
 		if (m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction))
 		{
 			found = true;
-			variableType = &m_dialect.defaultType;
+			variableType = &m_nameRepository.dialect().defaultType;
 		}
 	}
 
@@ -679,7 +696,7 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 			"\"" + _identifier.str() + "\" is not a valid identifier (contains consecutive dots)."
 		);
 
-	if (m_dialect.reservedIdentifier(_identifier))
+	if (m_nameRepository.dialect().reservedIdentifier(_identifier))
 		m_errorReporter.declarationError(
 			5017_error,
 			_location,
@@ -689,7 +706,7 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 
 void AsmAnalyzer::expectValidType(YulName _type, SourceLocation const& _location)
 {
-	if (!m_dialect.types.count(_type))
+	if (!m_nameRepository.dialect().types.count(_type))
 		m_errorReporter.typeError(
 			5473_error,
 			_location,

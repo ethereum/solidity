@@ -49,10 +49,11 @@ using namespace solidity::util;
 CodeTransform::CodeTransform(
 	AbstractAssembly& _assembly,
 	AsmAnalysisInfo& _analysisInfo,
+	YulNameRepository const& _nameRepository,
 	Block const& _block,
 	bool _allowStackOpt,
-	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
+	EVMDialect const* _dialectOverride,
 	ExternalIdentifierAccess::CodeGenerator _identifierAccessCodeGen,
 	UseNamedLabels _useNamedLabelsForFunctions,
 	std::shared_ptr<Context> _context,
@@ -61,7 +62,8 @@ CodeTransform::CodeTransform(
 ):
 	m_assembly(_assembly),
 	m_info(_analysisInfo),
-	m_dialect(_dialect),
+	m_nameRepository(_nameRepository),
+	m_evmDialect(_dialectOverride ? _dialectOverride : _nameRepository.evmDialect()),
 	m_builtinContext(_builtinContext),
 	m_allowStackOpt(_allowStackOpt),
 	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
@@ -70,6 +72,7 @@ CodeTransform::CodeTransform(
 	m_delayedReturnVariables(std::move(_delayedReturnVariables)),
 	m_functionExitLabel(_functionExitLabel)
 {
+	yulAssert(m_evmDialect);
 	if (!m_context)
 	{
 		// initialize
@@ -230,7 +233,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	yulAssert(m_scope, "");
 
 	m_assembly.setSourceLocation(originLocationOf(_call));
-	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
+	if (BuiltinFunctionForEVM const* builtin = m_evmDialect->builtin(_call.functionName.name))
 	{
 		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
 			if (!builtin->literalArgument(i))
@@ -383,10 +386,11 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	CodeTransform subTransform(
 		m_assembly,
 		m_info,
+		m_nameRepository,
 		_function.body,
 		m_allowStackOpt,
-		m_dialect,
 		m_builtinContext,
+		m_evmDialect,
 		m_identifierAccessCodeGen,
 		m_useNamedLabelsForFunctions,
 		m_context,

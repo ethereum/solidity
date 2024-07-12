@@ -31,7 +31,7 @@
 namespace solidity::yul
 {
 
-struct Dialect;
+class YulNameRepository;
 struct OptimiserStepContext;
 class TypeInfo;
 
@@ -70,11 +70,11 @@ public:
 
 private:
 	explicit ExpressionSplitter(
-		Dialect const& _dialect,
+		YulNameRepository& _nameRepository,
 		NameDispenser& _nameDispenser,
 		TypeInfo& _typeInfo
 	):
-		m_dialect(_dialect),
+		m_nameRepository(_nameRepository),
 		m_nameDispenser(_nameDispenser),
 		m_typeInfo(_typeInfo)
 	{ }
@@ -87,7 +87,7 @@ private:
 	/// List of statements that should go in front of the currently visited AST element,
 	/// at the statement level.
 	std::vector<Statement> m_statementsToPrefix;
-	Dialect const& m_dialect;
+	YulNameRepository& m_nameRepository;
 	NameDispenser& m_nameDispenser;
 	TypeInfo& m_typeInfo;
 };

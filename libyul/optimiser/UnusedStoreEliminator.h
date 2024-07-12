@@ -63,7 +63,7 @@ public:
 	static void run(OptimiserStepContext& _context, Block& _ast);
 
 	explicit UnusedStoreEliminator(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		std::map<YulName, SideEffects> const& _functionSideEffects,
 		std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects,
 		std::map<YulName, AssignedValue> const& _ssaValues,
@@ -123,6 +123,7 @@ private:
 	std::map<Statement const*, Operation> m_storeOperations;
 
 	KnowledgeBase mutable m_knowledgeBase;
+	YulNameRepository const& m_nameRepository;
 };
 
 }

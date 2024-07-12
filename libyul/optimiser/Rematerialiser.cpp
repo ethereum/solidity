@@ -31,18 +31,18 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-void Rematerialiser::run(Dialect const& _dialect, Block& _ast, std::set<YulName> _varsToAlwaysRematerialize, bool _onlySelectedVariables)
+void Rematerialiser::run(YulNameRepository const& _nameRepository, Block& _ast, std::set<YulName> _varsToAlwaysRematerialize, bool _onlySelectedVariables)
 {
-	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_ast);
+	Rematerialiser{_nameRepository, _ast, std::move(_varsToAlwaysRematerialize), _onlySelectedVariables}(_ast);
 }
 
 Rematerialiser::Rematerialiser(
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	Block& _ast,
 	std::set<YulName> _varsToAlwaysRematerialize,
 	bool _onlySelectedVariables
 ):
-	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore),
+	DataFlowAnalyzer(_nameRepository, MemoryAndStorage::Ignore),
 	m_referenceCounts(VariableReferencesCounter::countReferences(_ast)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize)),
 	m_onlySelectedVariables(_onlySelectedVariables)
@@ -59,7 +59,7 @@ void Rematerialiser::visit(Expression& _e)
 		{
 			assertThrow(value->value, OptimizerException, "");
 			size_t refs = m_referenceCounts[name];
-			size_t cost = CodeCost::codeCost(m_dialect, *value->value);
+			size_t cost = CodeCost::codeCost(m_nameRepository, *value->value);
 			if (
 				(
 					!m_onlySelectedVariables && (

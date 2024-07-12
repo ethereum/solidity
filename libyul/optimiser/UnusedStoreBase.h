@@ -31,7 +31,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 
 /**
  * Base class for both UnusedAssignEliminator and UnusedStoreEliminator.
@@ -49,7 +49,7 @@ struct Dialect;
 class UnusedStoreBase: public ASTWalker
 {
 public:
-	explicit UnusedStoreBase(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit UnusedStoreBase(YulNameRepository const& _nameRepository): m_nameRepository(_nameRepository) {}
 
 	using ASTWalker::operator();
 	void operator()(If const& _if) override;
@@ -76,7 +76,7 @@ protected:
 	static void merge(ActiveStores& _target, ActiveStores&& _source);
 	static void merge(ActiveStores& _target, std::vector<ActiveStores>&& _source);
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	/// Set of all stores encountered during the traversal (in the current function).
 	std::set<Statement const*> m_allStores;
 	/// Set of stores that are marked as being used (in the current function).

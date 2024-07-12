@@ -70,7 +70,7 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 	soltestAssert(m_dialect, "Dialect not set.");
 
 	m_object->analysisInfo = m_analysisInfo;
-	YulOptimizerTestCommon tester(m_object, *m_dialect);
+	YulOptimizerTestCommon tester(m_object);
 	tester.setStep(m_optimizerStep);
 
 	if (!tester.runStep())
@@ -79,7 +79,7 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 		return TestResult::FatalError;
 	}
 	auto result = tester.resultObject();
-	auto const printed = (result->subObjects.empty() ? AsmPrinter{ AsmPrinter::Mode::OmitDefaultType, *m_dialect }(result->code->block()) : result->toString(*m_dialect));
+	auto const printed = (result->subObjects.empty() ? AsmPrinter{ AsmPrinter::Mode::OmitDefaultType, *m_dialect }(result->code->block()) : result->toString());
 
 	// Re-parse new code for compilability
 	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))

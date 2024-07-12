@@ -944,7 +944,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 	yul::AsmAnalyzer analyzer(
 		*_inlineAssembly.annotation().analysisInfo,
 		m_errorReporter,
-		_inlineAssembly.dialect(),
+		_inlineAssembly.operations().nameRepository(),
 		identifierAccess
 	);
 	if (!analyzer.analyze(_inlineAssembly.operations().block()))

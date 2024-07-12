@@ -97,12 +97,14 @@ public:
 				printErrors(_charStream, errors);
 				throw std::runtime_error("Could not parse source.");
 			}
+			m_nameRepository = std::make_shared<YulNameRepository>(ast->nameRepository());
+			m_context.nameRepository = *m_nameRepository;
 			m_block = std::make_shared<yul::Block>(std::get<yul::Block>(ASTCopier{}(ast->block())));
 			m_analysisInfo = std::make_unique<yul::AsmAnalysisInfo>();
 			AsmAnalyzer analyzer(
 				*m_analysisInfo,
 				errorReporter,
-				m_dialect
+				*m_nameRepository
 			);
 			if (!analyzer.analyze(*m_block) || !errorReporter.errors().empty())
 			{
@@ -170,7 +172,7 @@ public:
 
 	void disambiguate()
 	{
-		*m_block = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_block));
+		*m_block = std::get<yul::Block>(Disambiguator(*m_nameRepository, *m_analysisInfo)(*m_block));
 		m_analysisInfo.reset();
 		m_nameDispenser.reset(*m_block);
 	}
@@ -180,7 +182,7 @@ public:
 		parse(_source);
 		disambiguate();
 		OptimiserSuite{m_context}.runSequence(_steps, *m_block);
-		std::cout << AsmPrinter{AsmPrinter::Mode::OmitDefaultType, m_dialect}(*m_block) << std::endl;
+		std::cout << AsmPrinter{AsmPrinter::Mode::OmitDefaultType, *m_nameRepository}(*m_block) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -218,7 +220,7 @@ public:
 					case ';':
 					{
 						Object obj;
-						StackCompressor::run(m_dialect, *m_block, obj, true, 16);
+						StackCompressor::run(*m_nameRepository, *m_block, obj, true, 16);
 						break;
 					}
 					default:
@@ -227,7 +229,7 @@ public:
 							*m_block
 						);
 				}
-				_source = AsmPrinter{AsmPrinter::Mode::OmitDefaultType, m_dialect}(*m_block);
+				_source = AsmPrinter{AsmPrinter::Mode::OmitDefaultType, *m_nameRepository}(*m_block);
 			}
 			catch (...)
 			{
@@ -242,11 +244,13 @@ public:
 private:
 	std::shared_ptr<yul::Block> m_block;
 	Dialect const& m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
+	std::shared_ptr<yul::YulNameRepository> m_nameRepository{std::make_shared<yul::YulNameRepository>(m_dialect)};
 	std::unique_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::set<YulName> const m_reservedIdentifiers = {};
 	NameDispenser m_nameDispenser{m_dialect, m_reservedIdentifiers};
 	OptimiserStepContext m_context{
 		m_dialect,
+		*m_nameRepository,
 		m_nameDispenser,
 		m_reservedIdentifiers,
 		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment

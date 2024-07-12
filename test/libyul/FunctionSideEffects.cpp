@@ -88,7 +88,7 @@ TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
 
 	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
-		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
+		obj.code->nameRepository(),
 		CallGraphGenerator::callGraph(obj.code->block())
 	);
 

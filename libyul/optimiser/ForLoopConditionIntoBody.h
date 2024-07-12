@@ -18,12 +18,12 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/Dialect.h>
 
 namespace solidity::yul
 {
 
 struct OptimiserStepContext;
+class YulNameRepository;
 
 /**
  * Rewrites ForLoop by moving iteration condition into the ForLoop body.
@@ -50,9 +50,9 @@ public:
 	void operator()(ForLoop& _forLoop) override;
 
 private:
-	ForLoopConditionIntoBody(Dialect const& _dialect): m_dialect(_dialect) {}
+	explicit ForLoopConditionIntoBody(YulNameRepository const& _nameRepository): m_nameRepository(_nameRepository) {}
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 };
 
 }

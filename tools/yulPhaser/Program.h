@@ -96,18 +96,15 @@ private:
 		langutil::CharStream _source
 	);
 	static std::variant<std::unique_ptr<yul::AsmAnalysisInfo>, langutil::ErrorList> analyzeAST(
-		yul::Dialect const& _dialect,
 		yul::AST const& _ast
 	);
 	static std::unique_ptr<yul::AST> disambiguateAST(
-		yul::Dialect const& _dialect,
 		yul::AST const& _ast,
 		yul::AsmAnalysisInfo const& _analysisInfo
 	);
 	static std::unique_ptr<yul::AST> applyOptimisationSteps(
-		yul::Dialect const& _dialect,
 		yul::NameDispenser& _nameDispenser,
-		std::unique_ptr<yul::AST> _ast,
+		yul::AST const& _ast,
 		std::vector<std::string> const& _optimisationSteps
 	);
 	static size_t computeCodeSize(yul::Block const& _ast, yul::CodeWeights const& _weights);

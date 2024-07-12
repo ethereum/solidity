@@ -37,7 +37,7 @@
 
 namespace solidity::yul
 {
-struct Dialect;
+class YulNameRepository;
 class GasMeter;
 
 /**
@@ -48,10 +48,7 @@ class GasMeter;
 class ConstantOptimiser: public ASTModifier
 {
 public:
-	ConstantOptimiser(EVMDialect const& _dialect, GasMeter const& _meter):
-		m_dialect(_dialect),
-		m_meter(_meter)
-	{}
+	ConstantOptimiser(YulNameRepository const& _nameRepository, GasMeter const& _meter);
 
 	void visit(Expression& _e) override;
 
@@ -62,7 +59,7 @@ public:
 	};
 
 private:
-	EVMDialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	GasMeter const& m_meter;
 	std::map<u256, Representation> m_cache;
 };
@@ -72,16 +69,11 @@ class RepresentationFinder
 public:
 	using Representation = ConstantOptimiser::Representation;
 	RepresentationFinder(
-		EVMDialect const& _dialect,
+		YulNameRepository const& _yulNameRepository,
 		GasMeter const& _meter,
 		langutil::DebugData::ConstPtr _debugData,
 		std::map<u256, Representation>& _cache
-	):
-		m_dialect(_dialect),
-		m_meter(_meter),
-		m_debugData(std::move(_debugData)),
-		m_cache(_cache)
-	{}
+	);
 
 	/// @returns a cheaper representation for the number than its representation
 	/// as a literal or nullptr otherwise.
@@ -98,7 +90,7 @@ private:
 
 	Representation min(Representation _a, Representation _b);
 
-	EVMDialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	GasMeter const& m_meter;
 	langutil::DebugData::ConstPtr m_debugData;
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
