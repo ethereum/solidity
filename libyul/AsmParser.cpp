@@ -125,7 +125,7 @@ std::unique_ptr<AST> Parser::parseInline(std::shared_ptr<Scanner> const& _scanne
 		m_scanner = _scanner;
 		if (m_useSourceLocationFrom == UseSourceLocationFrom::Comments)
 			fetchDebugDataFromComment();
-		return std::make_unique<AST>(parseBlock());
+		return std::make_unique<AST>(YulNameRepository(m_dialect), parseBlock());
 	}
 	catch (FatalError const& error)
 	{

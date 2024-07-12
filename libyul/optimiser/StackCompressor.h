@@ -47,7 +47,6 @@ public:
 	/// Try to remove local variables until the AST is compilable. Modifies the object's AST.
 	/// @returns true if it was successful.
 	static bool run(
-		Dialect const& _dialect,
 		Object& _object,
 		bool _optimizeStackAllocation,
 		size_t _maxIterations
@@ -57,7 +56,7 @@ public:
 	/// disregards the AST contained in object.
 	/// @returns true if it was successful.
 	static bool run(
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block& _block,
 		Object const& _object,
 		bool _optimizeStackAllocation,

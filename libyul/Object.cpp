@@ -63,6 +63,7 @@ std::string Object::toString(
 			"\n";
 
 	std::string inner = "code " + AsmPrinter(
+		code->nameRepository(),
 		_dialect,
 		debugData->sourceNames,
 		_debugInfoSelection,
@@ -89,7 +90,7 @@ Json Object::toJson() const
 
 	Json codeJson;
 	codeJson["nodeType"] = "YulCode";
-	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(code->block());
+	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */, code->nameRepository())(code->block());
 
 	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)

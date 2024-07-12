@@ -51,7 +51,7 @@ SourceLocation const AsmJsonImporter::createSourceLocation(Json const& _node)
 
 AST AsmJsonImporter::createAST(solidity::Json const& _node)
 {
-	return AST(createBlock(_node));
+	return AST(YulNameRepository(m_dialect), createBlock(_node));
 }
 
 template <class T>

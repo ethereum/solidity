@@ -24,7 +24,6 @@
 #pragma once
 
 #include <libyul/AST.h>
-#include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 
 #include <liblangutil/SourceLocation.h>

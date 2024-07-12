@@ -26,6 +26,7 @@
 #include <libsolutil/JSON.h>
 #include <liblangutil/SourceLocation.h>
 #include <libyul/ASTForward.h>
+#include <libyul/YulName.h>
 
 #include <utility>
 
@@ -38,8 +39,8 @@ namespace solidity::yul
 class AsmJsonImporter
 {
 public:
-	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames):
-		m_sourceNames(_sourceNames)
+	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames, Dialect const& _dialect):
+		m_dialect(_dialect), m_sourceNames(_sourceNames)
 	{}
 
 	yul::AST createAST(Json const& node);
@@ -73,6 +74,7 @@ private:
 	yul::Break createBreak(Json const& _node);
 	yul::Continue createContinue(Json const& _node);
 
+	Dialect const& m_dialect;
 	std::vector<std::shared_ptr<std::string const>> const& m_sourceNames;
 };
 
