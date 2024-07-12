@@ -181,7 +181,7 @@ public:
 		parse(_source);
 		disambiguate();
 		OptimiserSuite{m_context}.runSequence(_steps, *m_ast);
-		std::cout << AsmPrinter{m_dialect}(*m_ast) << std::endl;
+		std::cout << AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, m_dialect}(*m_ast) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -229,7 +229,7 @@ public:
 							*m_ast
 						);
 				}
-				_source = AsmPrinter{m_dialect}(*m_ast);
+				_source = AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, m_dialect}(*m_ast);
 			}
 			catch (...)
 			{

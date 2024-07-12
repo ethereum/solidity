@@ -164,9 +164,8 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 	);
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 
-	// Use no dialect so that all types are printed.
-	// This tests that the default types are properly assigned.
-	BOOST_CHECK_EQUAL(AsmPrinter{}(*result),
+	// All types are printed.
+	BOOST_CHECK_EQUAL(AsmPrinter(AsmPrinter::TypePrinting::Full, EVMDialectTyped::instance(EVMVersion()))(*result),
 		"{\n"
 		"    let x:bool := true:bool\n"
 		"    let z:bool := true:bool\n"
@@ -177,9 +176,8 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 		"}"
 	);
 
-	// Now test again with type dialect. Now the default types
-	// should be omitted.
-	BOOST_CHECK_EQUAL(AsmPrinter{EVMDialectTyped::instance(EVMVersion{})}(*result),
+	// Now the default types should be omitted.
+	BOOST_CHECK_EQUAL(AsmPrinter(AsmPrinter::TypePrinting::OmitDefault, EVMDialectTyped::instance(EVMVersion()))(*result),
 		"{\n"
 		"    let x:bool := true\n"
 		"    let z:bool := true\n"

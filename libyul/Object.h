@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <libyul/AsmPrinter.h>
 #include <libyul/ASTForward.h>
 
 #include <liblangutil/CharStreamProvider.h>
@@ -53,7 +54,8 @@ struct ObjectNode
 	/// Can be empty since .yul files can also just contain code, without explicitly placing it in an object.
 	std::string name;
 	virtual std::string toString(
-		Dialect const* _dialect,
+		Dialect const& _dialect,
+		AsmPrinter::TypePrinting printingMode,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const = 0;
@@ -70,7 +72,8 @@ struct Data: public ObjectNode
 	bytes data;
 
 	std::string toString(
-		Dialect const* _dialect,
+		Dialect const& _dialect,
+		AsmPrinter::TypePrinting printingMode,
 		langutil::DebugInfoSelection const& _debugInfoSelection,
 		langutil::CharStreamProvider const* _soliditySourceProvider
 	) const override;
@@ -92,7 +95,8 @@ struct Object: public ObjectNode
 public:
 	/// @returns a (parseable) string representation.
 	std::string toString(
-		Dialect const* _dialect,
+		Dialect const& _dialect,
+		AsmPrinter::TypePrinting printingMode = AsmPrinter::TypePrinting::Full,
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	) const;

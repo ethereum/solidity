@@ -365,7 +365,12 @@ std::string YulStack::print(
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->code, "");
-	return m_parserResult->toString(&languageToDialect(m_language, m_evmVersion), m_debugInfoSelection, _soliditySourceProvider) + "\n";
+	return m_parserResult->toString(
+		languageToDialect(m_language, m_evmVersion),
+		AsmPrinter::TypePrinting::OmitDefault,
+		m_debugInfoSelection,
+		_soliditySourceProvider
+	) + "\n";
 }
 
 Json YulStack::astJson() const
