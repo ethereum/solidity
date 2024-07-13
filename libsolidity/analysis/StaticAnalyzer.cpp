@@ -124,6 +124,7 @@ bool StaticAnalyzer::visit(FunctionDefinition const& _function)
 		solAssert(!m_currentFunction, "");
 	solAssert(m_localVarUseCount.empty(), "");
 	m_constructor = _function.isConstructor();
+	m_reentrant = false;
 	return true;
 }
 
@@ -345,6 +346,8 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 							"Arithmetic modulo zero."
 						);
 		}
+		if (functionType->kind() == FunctionType::Kind::External)
+			m_reentrant = true;
 		if (
 			m_currentContract &&
 			m_currentContract->isLibrary() &&
@@ -362,6 +365,26 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 			);
 	}
 	return true;
+}
+
+bool StaticAnalyzer::visit(Block const& _node)
+{
+	if (_node.statements().size() > 0)
+		if (m_reentrant && !_node.unchecked())
+			m_errorReporter.typeError(
+				0000_error,
+				_node.location(),
+				SecondarySourceLocation().append(
+					"Statements after external calls must be placed inside an uncheck block:",
+					_node.scope()->location()),
+				"Statements after external calls must be placed inside an uncheck block.");
+	return true;
+}
+
+void StaticAnalyzer::endVisit(Block const& _node)
+{
+	if (m_reentrant && _node.unchecked())
+		m_reentrant = false;
 }
 
 void StaticAnalyzer::checkDoubleStorageAssignment(Assignment const& _assignment)

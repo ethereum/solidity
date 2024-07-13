@@ -75,6 +75,9 @@ private:
 	bool visit(BinaryOperation const& _operation) override;
 	bool visit(FunctionCall const& _functionCall) override;
 
+	bool visit(Block const& _node) override;
+	void endVisit(Block const& _node) override;
+
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
 	/// Should only be called if the left hand side is tuple-typed.
 	void checkDoubleStorageAssignment(Assignment const& _assignment);
@@ -100,6 +103,9 @@ private:
 
 	/// Current contract.
 	ContractDefinition const* m_currentContract = nullptr;
+
+	/// True, after external calls, False otherwise.
+	bool m_reentrant = false;
 };
 
 }
