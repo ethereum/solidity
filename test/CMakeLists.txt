@@ -31,6 +31,7 @@ set(libsolutil_sources
     libsolutil/Checksum.cpp
     libsolutil/CommonData.cpp
     libsolutil/CommonIO.cpp
+    libsolutil/DominatorFinderTest.cpp
     libsolutil/FixedHash.cpp
     libsolutil/FunctionSelector.cpp
     libsolutil/IpfsHash.cpp
