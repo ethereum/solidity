@@ -56,7 +56,6 @@ bool recursiveFunctionExists(Dialect const& _dialect, yul::Object& _object)
 {
 	auto recursiveFunctions = CallGraphGenerator::callGraph(_object.code->block()).recursiveFunctions();
 	for(auto&& [function, variables]: CompilabilityChecker{
-			_dialect,
 			_object,
 			true
 		}.unreachableVariables

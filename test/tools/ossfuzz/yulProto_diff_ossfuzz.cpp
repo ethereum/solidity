@@ -98,8 +98,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		return;
 
 	YulOptimizerTestCommon optimizerTest(
-		stack.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		stack.parserResult()
 	);
 	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
 	auto const* astBlock = optimizerTest.run();
