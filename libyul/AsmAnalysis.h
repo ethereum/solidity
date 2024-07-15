@@ -61,7 +61,7 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
 		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
-		std::set<YulString> _dataNames = {}
+		std::set<std::string> _dataNames = {}
 	):
 		m_resolver(std::move(_resolver)),
 		m_info(_analysisInfo),
@@ -128,7 +128,7 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	Dialect const& m_dialect;
 	/// Names of data objects to be referenced by builtin functions with literal arguments.
-	std::set<YulString> m_dataNames;
+	std::set<std::string> m_dataNames;
 	ForLoop const* m_currentForLoop = nullptr;
 	/// Worst side effects encountered during analysis (including within defined functions).
 	SideEffects m_sideEffects;
