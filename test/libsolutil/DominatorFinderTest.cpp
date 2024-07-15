@@ -67,7 +67,8 @@ public:
 		std::vector<Edge> const& _edges,
 		std::map<TestVertexLabel, TestVertexLabel> const& _expectedImmediateDominators,
 		std::map<TestVertexLabel, TestDominatorFinder::DfsIndex> const& _expectedDFSIndices,
-		std::map<TestVertexLabel, std::vector<TestVertexLabel>> const& _expectedDominatorTree
+		std::map<TestVertexLabel, std::vector<TestVertexLabel>> const& _expectedDominatorTree,
+		std::map<TestVertexLabel, std::vector<TestVertexLabel>> const& _expectedDominanceFrontier
 	)
 	{
 		soltestAssert(!_vertices.empty());
@@ -121,11 +122,14 @@ public:
 		solAssert(allDFSIndexInRange);
 		validateVertices(_expectedDominatorTree | ranges::views::keys | ranges::to<std::set<TestVertexLabel>>);
 		validateVertices(_expectedDominatorTree | ranges::views::values | ranges::views::join | ranges::to<std::set<TestVertexLabel>>);
+		validateVertices(_expectedDominanceFrontier | ranges::views::keys | ranges::to<std::set<TestVertexLabel>>);
+		validateVertices(_expectedDominanceFrontier | ranges::views::values | ranges::views::join | ranges::to<std::set<TestVertexLabel>>);
 
 		entry = &vertices[0];
 		expectedImmediateDominators = labelMapToIdMap(_expectedImmediateDominators);
 		expectedDFSIndices = toVertexMapById(_expectedDFSIndices);
 		expectedDominatorTree = vertexMapToVertexId(_expectedDominatorTree);
+		expectedDominanceFrontier = vertexMapToVertexId(_expectedDominanceFrontier);
 	}
 
 	// Converts a map of vertex labels to map of vertex IDs
@@ -173,6 +177,7 @@ public:
 	std::map<TestVertexId, std::optional<TestVertexId>> expectedImmediateDominators;
 	std::map<TestVertexId, TestDominatorFinder::DfsIndex> expectedDFSIndices;
 	std::map<TestVertexId, std::vector<TestVertexId>> expectedDominatorTree;
+	std::map<TestVertexId, std::vector<TestVertexId>> expectedDominanceFrontier;
 };
 
 BOOST_AUTO_TEST_SUITE(Dominators)
@@ -233,6 +238,13 @@ BOOST_AUTO_TEST_CASE(immediate_dominator_1)
 			{"C", {"G"}},
 			{"D", {"E"}},
 			{"G", {"H"}}
+		},
+		{ // Dominance frontier
+			{"C", {"F", "D"}},
+			{"D", {"F"}},
+			{"E", {"F"}},
+			{"G", {"F"}},
+			{"H", {"F"}}
 		}
 	);
 
@@ -240,6 +252,7 @@ BOOST_AUTO_TEST_CASE(immediate_dominator_1)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(immediate_dominator_2)
@@ -287,6 +300,14 @@ BOOST_AUTO_TEST_CASE(immediate_dominator_2)
 		{
 			{"A", {"B", "C", "G", "D"}},
 			{"D", {"E", "F"}}
+		},
+		{
+			{"B", {"C"}},
+			{"C", {"G"}},
+			{"D", {"G"}},
+			{"E", {"G"}},
+			{"F", {"G"}},
+			{"G", {"C"}}
 		}
 	);
 
@@ -294,6 +315,7 @@ BOOST_AUTO_TEST_CASE(immediate_dominator_2)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(immediate_dominator_3)
@@ -366,6 +388,16 @@ BOOST_AUTO_TEST_CASE(immediate_dominator_3)
 			{"A", {"B", "C", "D"}},
 			{"B", {"I", "E", "H", "G"}},
 			{"E", {"F"}}
+		},
+		{
+			{"B", {"D", "C"}},
+			{"C", {"D"}},
+			{"D", {"B"}},
+			{"E", {"G", "H", "C"}},
+			{"F", {"G", "C"}},
+			{"G", {"E", "D"}},
+			{"H", {"G"}},
+			{"I", {"H", "E"}}
 		}
 	);
 
@@ -373,6 +405,7 @@ BOOST_AUTO_TEST_CASE(immediate_dominator_3)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(langauer_tarjan_p122_fig1)
@@ -439,6 +472,20 @@ BOOST_AUTO_TEST_CASE(langauer_tarjan_p122_fig1)
 			{"D", {"L"}},
 			{"C", {"F", "G"}},
 			{"G", {"J"}}
+		},
+		{
+			{"A", {"D"}},
+			{"B", {"E", "D", "A"}},
+			{"C", {"I"}},
+			{"D", {"H"}},
+			{"E", {"H"}},
+			{"F", {"I"}},
+			{"G", {"I"}},
+			{"H", {"K", "E"}},
+			{"I", {"K"}},
+			{"J", {"I"}},
+			{"L", {"H"}},
+			{"K", {"I"}}
 		}
 	);
 
@@ -446,6 +493,7 @@ BOOST_AUTO_TEST_CASE(langauer_tarjan_p122_fig1)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(loukas_georgiadis)
@@ -499,6 +547,17 @@ BOOST_AUTO_TEST_CASE(loukas_georgiadis)
 		},
 		{
 			{"R", {"W", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "Y"}},
+		},
+		{
+			{"W", {"X1"}},
+			{"X1", {"X2"}},
+			{"X2", {"X3", "X1"}},
+			{"X3", {"X4", "X2"}},
+			{"X4", {"X5", "X3"}},
+			{"X5", {"X6", "X4"}},
+			{"X6", {"X7", "X5"}},
+			{"X7", {"X6"}},
+			{"Y", {"X7"}}
 		}
 	);
 
@@ -506,6 +565,7 @@ BOOST_AUTO_TEST_CASE(loukas_georgiadis)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(itworst)
@@ -578,6 +638,19 @@ BOOST_AUTO_TEST_CASE(itworst)
 			{"X3", {"Y1"}},
 			{"Y1", {"Y2"}},
 			{"Y2", {"Y3"}}
+		},
+		{
+			{"W1", {"W2"}},
+			{"W2", {"W3"}},
+			{"X1", {"Z1", "W3", "W2", "W1"}},
+			{"X2", {"Z1", "W3", "W2", "W1"}},
+			{"X3", {"Z1", "W3", "W2", "W1"}},
+			{"Y1", {"Z1", "W3", "W2", "W1"}},
+			{"Y2", {"Z1", "W3", "W2", "W1"}},
+			{"Y3", {"Z1", "W3", "W2", "W1"}},
+			{"Z1", {"Z2"}},
+			{"Z2", {"Z3", "Z1"}},
+			{"Z3", {"Z2"}}
 		}
 	);
 
@@ -585,6 +658,7 @@ BOOST_AUTO_TEST_CASE(itworst)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(idfsquad)
@@ -639,6 +713,17 @@ BOOST_AUTO_TEST_CASE(idfsquad)
 			{"R", {"X1", "Y1", "Z1", "Z2", "Y2", "Z3", "Y3"}},
 			{"X1", {"X2"}},
 			{"X2", {"X3"}}
+		},
+		{
+			{"X1", {"Y3", "Y2", "Y1"}},
+			{"X2", {"Y3", "Y2"}},
+			{"X3", {"Y3"}},
+			{"Y1", {"Z2", "Z1"}},
+			{"Y2", {"Z3", "Z2"}},
+			{"Y3", {"Z3"}},
+			{"Z1", {"Y1"}},
+			{"Z2", {"Y2"}},
+			{"Z3", {"Y3"}}
 		}
 	);
 
@@ -646,6 +731,7 @@ BOOST_AUTO_TEST_CASE(idfsquad)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(ibsfquad)
@@ -687,6 +773,13 @@ BOOST_AUTO_TEST_CASE(ibsfquad)
 		{
 			{"R", {"W", "X1", "X2", "X3", "Y"}},
 			{"Y", {"Z"}}
+		},
+		{
+			{"W", {"X3", "X2", "X1"}},
+			{"X2", {"X1"}},
+			{"X3", {"X2"}},
+			{"Y", {"X3"}},
+			{"Z", {"X3"}}
 		}
 	);
 
@@ -694,6 +787,7 @@ BOOST_AUTO_TEST_CASE(ibsfquad)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(sncaworst)
@@ -736,6 +830,11 @@ BOOST_AUTO_TEST_CASE(sncaworst)
 			{"R", {"X1", "Y1", "Y2", "Y3"}},
 			{"X1", {"X2"}},
 			{"X2", {"X3"}}
+		},
+		{
+			{"X1", {"Y3", "Y2", "Y1"}},
+			{"X2", {"Y3", "Y2", "Y1"}},
+			{"X3", {"Y3", "Y2", "Y1"}}
 		}
 	);
 
@@ -743,6 +842,7 @@ BOOST_AUTO_TEST_CASE(sncaworst)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_CASE(collect_all_dominators_of_a_vertex)
@@ -775,6 +875,7 @@ BOOST_AUTO_TEST_CASE(collect_all_dominators_of_a_vertex)
 			Edge("G", "H"),
 			Edge("H", "F")
 		},
+		{},
 		{},
 		{},
 		{}
@@ -840,6 +941,7 @@ BOOST_AUTO_TEST_CASE(check_dominance)
 			{"G", 6},
 			{"H", 7}
 		},
+		{},
 		{}
 	);
 
@@ -906,6 +1008,7 @@ BOOST_AUTO_TEST_CASE(no_edges)
 		{
 			{"A", 0},
 		},
+		{},
 		{}
 	);
 
@@ -913,6 +1016,7 @@ BOOST_AUTO_TEST_CASE(no_edges)
 	BOOST_TEST(dominatorFinder.immediateDominators() == test.expectedImmediateDominators);
 	BOOST_TEST(dominatorFinder.dfsIndexById() == test.expectedDFSIndices);
 	BOOST_TEST(dominatorFinder.dominatorTree() == test.expectedDominatorTree);
+	BOOST_TEST(dominatorFinder.dominanceFrontier() == test.expectedDominanceFrontier);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
