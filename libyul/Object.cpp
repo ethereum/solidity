@@ -40,7 +40,7 @@ using namespace solidity::yul;
 
 std::string Data::toString(Dialect const*, DebugInfoSelection const&, CharStreamProvider const*) const
 {
-	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
+	return "data \"" + name + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 std::string Object::toString(
@@ -72,7 +72,7 @@ std::string Object::toString(
 	for (auto const& obj: subObjects)
 		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
 
-	return useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
+	return useSrcComment + "object \"" + name + "\" {\n" + indent(inner) + "\n}";
 }
 
 Json Data::toJson() const
@@ -97,62 +97,61 @@ Json Object::toJson() const
 
 	Json ret;
 	ret["nodeType"] = "YulObject";
-	ret["name"] = name.str();
+	ret["name"] = name;
 	ret["code"] = codeJson;
 	ret["subObjects"] = subObjectsJson;
 	return ret;
 }
 
-std::set<YulString> Object::qualifiedDataNames() const
+std::set<std::string> Object::qualifiedDataNames() const
 {
-	std::set<YulString> qualifiedNames =
-		name.empty() || util::contains(name.str(), '.') ?
-		std::set<YulString>{} :
-		std::set<YulString>{name};
+	std::set<std::string> qualifiedNames =
+		name.empty() || util::contains(name, '.') ?
+		std::set<std::string>{} :
+		std::set<std::string>{name};
 	for (std::shared_ptr<ObjectNode> const& subObjectNode: subObjects)
 	{
 		yulAssert(qualifiedNames.count(subObjectNode->name) == 0, "");
-		if (util::contains(subObjectNode->name.str(), '.'))
+		if (util::contains(subObjectNode->name, '.'))
 			continue;
 		qualifiedNames.insert(subObjectNode->name);
 		if (auto const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
-			for (YulString const& subSubObj: subObject->qualifiedDataNames())
+			for (auto const& subSubObj: subObject->qualifiedDataNames())
 				if (subObject->name != subSubObj)
 				{
-					yulAssert(qualifiedNames.count(YulString{subObject->name.str() + "." + subSubObj.str()}) == 0, "");
-					qualifiedNames.insert(YulString{subObject->name.str() + "." + subSubObj.str()});
+					yulAssert(qualifiedNames.count(subObject->name + "." + subSubObj) == 0, "");
+					qualifiedNames.insert(subObject->name + "." + subSubObj);
 				}
 	}
 
-	yulAssert(qualifiedNames.count(YulString{}) == 0, "");
-	qualifiedNames.erase(YulString{});
+	yulAssert(qualifiedNames.count("") == 0, "");
 	return qualifiedNames;
 }
 
-std::vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
+std::vector<size_t> Object::pathToSubObject(std::string_view _qualifiedName) const
 {
 	yulAssert(_qualifiedName != name, "");
 	yulAssert(subIndexByName.count(name) == 0, "");
 
-	if (boost::algorithm::starts_with(_qualifiedName.str(), name.str() + "."))
-		_qualifiedName = YulString{_qualifiedName.str().substr(name.str().length() + 1)};
+	if (boost::algorithm::starts_with(_qualifiedName, name + "."))
+		_qualifiedName = _qualifiedName.substr(name.length() + 1);
 	yulAssert(!_qualifiedName.empty(), "");
 
 	std::vector<std::string> subObjectPathComponents;
-	boost::algorithm::split(subObjectPathComponents, _qualifiedName.str(), boost::is_any_of("."));
+	boost::algorithm::split(subObjectPathComponents, _qualifiedName, boost::is_any_of("."));
 
 	std::vector<size_t> path;
 	Object const* object = this;
 	for (std::string const& currentSubObjectName: subObjectPathComponents)
 	{
 		yulAssert(!currentSubObjectName.empty(), "");
-		auto subIndexIt = object->subIndexByName.find(YulString{currentSubObjectName});
+		auto subIndexIt = object->subIndexByName.find(currentSubObjectName);
 		yulAssert(
 			subIndexIt != object->subIndexByName.end(),
-			"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code."
+			"Assembly object <" + std::string(_qualifiedName) + "> not found or does not contain code."
 		);
 		object = dynamic_cast<Object const*>(object->subObjects[subIndexIt->second].get());
-		yulAssert(object, "Assembly object <" + _qualifiedName.str() + "> not found or does not contain code.");
+		yulAssert(object, "Assembly object <" + std::string(_qualifiedName) + "> not found or does not contain code.");
 		yulAssert(object->subId != std::numeric_limits<size_t>::max(), "");
 		path.push_back({object->subId});
 	}

@@ -1638,7 +1638,7 @@ Json StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return output;
 	}
 
-	std::string contractName = stack.parserResult()->name.str();
+	std::string contractName = stack.parserResult()->name;
 
 	bool const wildcardMatchesExperimental = true;
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "ir", wildcardMatchesExperimental))

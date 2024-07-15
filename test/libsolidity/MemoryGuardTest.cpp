@@ -80,7 +80,7 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		};
 		handleObject("creation", *object);
 		size_t deployedIndex = object->subIndexByName.at(
-			YulString(IRNames::deployedObject(compiler().contractDefinition(contractName)))
+			IRNames::deployedObject(compiler().contractDefinition(contractName))
 		);
 		handleObject("runtime", dynamic_cast<Object const&>(*object->subObjects[deployedIndex]));
 	}

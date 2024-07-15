@@ -55,8 +55,8 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	for (auto const& subNode: _object.subObjects)
 		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
-			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
-			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, subObject->name.str());
+			bool isCreation = !boost::ends_with(subObject->name, "_deployed");
+			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, subObject->name);
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
 			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize, m_eofVersion);
@@ -65,7 +65,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		{
 			Data const& data = dynamic_cast<Data const&>(*subNode);
 			// Special handling of metadata.
-			if (data.name.str() == Object::metadataName())
+			if (data.name == Object::metadataName())
 				m_assembly.appendToAuxiliaryData(data.data);
 			else
 				context.subIDs[data.name] = m_assembly.appendData(data.data);

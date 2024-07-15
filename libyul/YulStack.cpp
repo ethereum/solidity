@@ -198,7 +198,7 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 		{
-			bool isCreation = !boost::ends_with(subObject->name.str(), "_deployed");
+			bool isCreation = !boost::ends_with(subObject->name, "_deployed");
 			optimize(*subObject, isCreation);
 		}
 

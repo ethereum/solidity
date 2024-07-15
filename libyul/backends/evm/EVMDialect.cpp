@@ -249,14 +249,14 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
 			YulString const dataName (formatLiteral(std::get<Literal>(arg)));
-			if (_context.currentObject->name == dataName)
+			if (_context.currentObject->name == dataName.str())
 				_assembly.appendAssemblySize();
 			else
 			{
 			std::vector<size_t> subIdPath =
-					_context.subIDs.count(dataName) == 0 ?
-						_context.currentObject->pathToSubObject(dataName) :
-						std::vector<size_t>{_context.subIDs.at(dataName)};
+					_context.subIDs.count(dataName.str()) == 0 ?
+						_context.currentObject->pathToSubObject(dataName.str()) :
+						std::vector<size_t>{_context.subIDs.at(dataName.str())};
 				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
 				_assembly.appendDataSize(subIdPath);
 			}
@@ -270,14 +270,14 @@ std::map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
 			YulString const dataName (formatLiteral(std::get<Literal>(arg)));
-			if (_context.currentObject->name == dataName)
+			if (_context.currentObject->name == dataName.str())
 				_assembly.appendConstant(0);
 			else
 			{
 			std::vector<size_t> subIdPath =
-					_context.subIDs.count(dataName) == 0 ?
-						_context.currentObject->pathToSubObject(dataName) :
-						std::vector<size_t>{_context.subIDs.at(dataName)};
+					_context.subIDs.count(dataName.str()) == 0 ?
+						_context.currentObject->pathToSubObject(dataName.str()) :
+						std::vector<size_t>{_context.subIDs.at(dataName.str())};
 				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
 				_assembly.appendDataOffset(subIdPath);
 			}
