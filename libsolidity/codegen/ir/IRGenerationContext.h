@@ -143,7 +143,8 @@ public:
 
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
-	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
+	util::UniqueVector<ContractDefinition const*> const& subObjectsCreated() const { return m_subObjects; }
+	void addSubObject(ContractDefinition const* _contractDefinition) { m_subObjects.pushBack(_contractDefinition); }
 
 	bool memoryUnsafeInlineAssemblySeen() const { return m_memoryUnsafeInlineAssemblySeen; }
 	void setMemoryUnsafeInlineAssemblySeen() { m_memoryUnsafeInlineAssemblySeen = true; }
@@ -195,7 +196,7 @@ private:
 	/// It will fail at runtime but the code must still compile.
 	InternalDispatchMap m_internalDispatchMap;
 
-	std::set<ContractDefinition const*, ASTNode::CompareByID> m_subObjects;
+	util::UniqueVector<ContractDefinition const*> m_subObjects;
 
 	langutil::DebugInfoSelection m_debugInfoSelection = {};
 	langutil::CharStreamProvider const* m_soliditySourceProvider = nullptr;

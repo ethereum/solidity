@@ -1559,7 +1559,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		ContractDefinition const* contract =
 			&dynamic_cast<ContractType const&>(*functionType->returnParameterTypes().front()).contractDefinition();
-		m_context.subObjectsCreated().insert(contract);
+		m_context.addSubObject(contract);
 
 		Whiskers t(R"(let <memPos> := <allocateUnbounded>()
 			let <memEnd> := add(<memPos>, datasize("<object>"))
@@ -1947,7 +1947,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			auto const& contractType = dynamic_cast<ContractType const&>(*arg);
 			solAssert(!contractType.isSuper());
 			ContractDefinition const& contract = contractType.contractDefinition();
-			m_context.subObjectsCreated().insert(&contract);
+			m_context.addSubObject(&contract);
 			appendCode() << Whiskers(R"(
 				let <size> := datasize("<objectName>")
 				let <result> := <allocationFunction>(add(<size>, 32))

@@ -101,10 +101,10 @@ std::string IRGenerator::generate(
 	std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 )
 {
-	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> std::string
+	auto subObjectSources = [&_otherYulSources](UniqueVector<ContractDefinition const*> const& _subObjects) -> std::string
 	{
 		std::string subObjectsSources;
-		for (ContractDefinition const* subObject: subObjects)
+		for (ContractDefinition const* subObject: _subObjects)
 			subObjectsSources += _otherYulSources.at(subObject);
 		return subObjectsSources;
 	};
