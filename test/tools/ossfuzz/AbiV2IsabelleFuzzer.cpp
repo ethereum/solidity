@@ -22,6 +22,7 @@
 
 #include <src/libfuzzer/libfuzzer_macro.h>
 #include <abicoder.hpp>
+#include <fstream>
 
 using namespace solidity::frontend;
 using namespace solidity::test::fuzzer;
