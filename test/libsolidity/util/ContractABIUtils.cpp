@@ -142,6 +142,8 @@ std::optional<ABIType> isFixedPoint(std::string const& type)
 
 std::string functionSignatureFromABI(Json const& _functionABI)
 {
+	soltestAssert(_functionABI.contains("name"));
+
 	auto inputs = _functionABI["inputs"];
 	std::string signature = {_functionABI["name"].get<std::string>() + "("};
 	size_t parameterCount = 0;
@@ -169,7 +171,9 @@ std::optional<solidity::frontend::test::ParameterList> ContractABIUtils::paramet
 		return std::nullopt;
 
 	for (auto const& function: _contractABI)
-		if (_functionSignature == functionSignatureFromABI(function))
+		// ABI may contain functions without names (constructor, fallback, receive). Since name is
+		// necessary to calculate the signature, these cannot possibly match and can be safely ignored.
+		if (function.contains("name") && _functionSignature == functionSignatureFromABI(function))
 		{
 			ParameterList inplaceTypeParams;
 			ParameterList dynamicTypeParams;
