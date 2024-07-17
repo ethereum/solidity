@@ -380,12 +380,6 @@ private:
 	std::vector<T> m_contents;
 };
 
-template<typename T>
-void swap(UniqueVector<T>& _lhs, UniqueVector<T>& _rhs)
-{
-	std::swap(_lhs.contents(), _rhs.contents());
-}
-
 namespace detail
 {
 
