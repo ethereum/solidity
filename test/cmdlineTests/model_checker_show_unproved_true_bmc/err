@@ -1,6 +1,0 @@
-Warning: BMC: Assertion violation might happen here.
-  --> model_checker_show_unproved_true_bmc/input.sol:10:9:
-   |
-10 |         assert(s.x > 0);
-   |         ^^^^^^^^^^^^^^^
-Note:

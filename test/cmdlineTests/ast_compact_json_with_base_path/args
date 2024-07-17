@@ -1,1 +1,0 @@
---ast-compact-json --pretty-json --base-path . --allow-paths .

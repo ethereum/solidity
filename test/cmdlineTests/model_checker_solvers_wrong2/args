@@ -1,1 +1,0 @@
---model-checker-engine all --model-checker-solvers z3, smtlib2

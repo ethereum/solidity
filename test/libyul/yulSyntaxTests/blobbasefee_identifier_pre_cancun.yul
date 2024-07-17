@@ -1,6 +1,0 @@
-{
-    function blobbasefee() {}
-}
-// ====
-// EVMVersion: <=shanghai
-// ----

@@ -1,5 +1,0 @@
-Unimplemented feature:
-/solidity/libsolidity/codegen/CompilerUtils.cpp(771): Throw in function void solidity::frontend::CompilerUtils::convertType(const solidity::frontend::Type&, const solidity::frontend::Type&, bool, bool, bool)
-Dynamic exception type: boost::wrapexcept<solidity::langutil::UnimplementedFeatureError>
-std::exception::what: Not yet implemented - FixedPointType.
-[solidity::util::tag_comment*] = Not yet implemented - FixedPointType.

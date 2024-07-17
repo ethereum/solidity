@@ -1,2 +1,0 @@
-abstract contract A { constructor() {} }
-// ----

@@ -1,1 +1,0 @@
---yul --yul-dialect evm --optimize --optimize-runs 10000

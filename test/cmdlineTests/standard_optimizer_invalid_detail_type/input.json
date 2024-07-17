@@ -1,9 +1,0 @@
-{
-	"language": "Solidity",
-	"sources": {
-		"A": {"urls": ["standard_optimizer_invalid_detail_type/in.sol"]}
-	},
-	"settings": {
-		"optimizer": {"details": {"peephole": 7}}
-	}
-}

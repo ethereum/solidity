@@ -1,5 +1,0 @@
-Error: Identifier not found or not unique.
- --> too_long_line/input.sol:5:164:
-  |
-5 |  ... ffffffffffffffffffffffffffffffffff(announcementType Type, string Announcement, string  ...
-  |                                         ^^^^^^^^^^^^^^^^

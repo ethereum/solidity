@@ -1,8 +1,0 @@
-contract.sol:1:1: Warning: Source file does not specify required compiler version! Consider adding "pragma solidity ^0.4.0;".
-contract C {}
-^
-Spanning multiple lines.
-
-======= C =======
-Binary:
-6060604052600c8060106000396000f360606040526008565b600256

@@ -1,1 +1,0 @@
---model-checker-engine all --model-checker-print-query --model-checker-solvers smtlib2 --model-checker-timeout 1000

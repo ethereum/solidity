@@ -1,5 +1,0 @@
-Warning: CHC: Assertion violation might happen here.
-  --> model_checker_show_unproved_true_chc/input.sol:10:9:
-   |
-10 |         assert(s.x > 0);
-   |         ^^^^^^^^^^^^^^^

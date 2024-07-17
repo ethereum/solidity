@@ -1,5 +1,0 @@
-Warning (2066): Contract requests the ABI coder v1, which is incompatible with the IR. Using ABI coder v2 instead.
- --> viair_abicoder_v1/input.sol:4:1:
-  |
-4 | contract test {
-  | ^ (Relevant source part starts here and spans across multiple lines).

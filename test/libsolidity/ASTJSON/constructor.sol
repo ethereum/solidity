@@ -1,6 +1,0 @@
-contract C {
-	constructor() {
-	}
-}
-
-// ----

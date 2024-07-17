@@ -1,1 +1,0 @@
-linking_unqualified_library_name/contract1.sol linking_unqualified_library_name/contract2.sol --bin --libraries Log:0x7777777777777777777777777777777777777777

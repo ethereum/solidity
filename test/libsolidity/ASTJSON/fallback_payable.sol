@@ -1,5 +1,0 @@
-contract C {
-	fallback() external {}
-}
-
-// ----
