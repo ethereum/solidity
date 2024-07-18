@@ -19,6 +19,7 @@ Bugfixes:
  * SMTChecker: Fix formatting of unary minus expressions in invariants.
  * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
+ * Yul AST: Fix ``nativeSrc`` attributes in optimized IR AST referring to locations in unoptimized IR.
  * Yul IR Code Generation: Deterministic order of Yul subobjects.
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
  * Yul Parser: Fix segfault when parsing very long location comments.
