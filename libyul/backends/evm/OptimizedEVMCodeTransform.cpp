@@ -185,7 +185,7 @@ OptimizedEVMCodeTransform::OptimizedEVMCodeTransform(
 	m_stackLayout(_stackLayout),
 	m_functionLabels([&](){
 		std::map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> functionLabels;
-		std::set<YulString> assignedFunctionNames;
+		std::set<YulName> assignedFunctionNames;
 		for (Scope::Function const* function: m_dfg.functions)
 		{
 			CFG::FunctionInfo const& functionInfo = m_dfg.functionInfo.at(function);
@@ -242,7 +242,7 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 	static constexpr auto slotVariableName = [](StackSlot const& _slot) {
 		return std::visit(util::GenericVisitor{
 			[](VariableSlot const& _var) { return _var.variable.get().name; },
-			[](auto const&) { return YulString{}; }
+			[](auto const&) { return YulName{}; }
 		}, _slot);
 	};
 
@@ -264,14 +264,14 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 			{
 				int deficit = static_cast<int>(_i) - 16;
 				StackSlot const& deepSlot = m_stack.at(m_stack.size() - _i - 1);
-				YulString varNameDeep = slotVariableName(deepSlot);
-				YulString varNameTop = slotVariableName(m_stack.back());
+				YulName varNameDeep = slotVariableName(deepSlot);
+				YulName varNameTop = slotVariableName(m_stack.back());
 				std::string msg =
 					"Cannot swap " + (varNameDeep.empty() ? "Slot " + stackSlotToString(deepSlot) : "Variable " + varNameDeep.str()) +
 					" with " + (varNameTop.empty() ? "Slot " + stackSlotToString(m_stack.back()) : "Variable " + varNameTop.str()) +
 					": too deep in the stack by " + std::to_string(deficit) + " slots in " + stackToString(m_stack);
 				m_stackErrors.emplace_back(StackTooDeepError(
-					m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulString{},
+					m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulName{},
 					varNameDeep.empty() ? varNameTop : varNameDeep,
 					deficit,
 					msg
@@ -295,12 +295,12 @@ void OptimizedEVMCodeTransform::createStackLayout(langutil::DebugData::ConstPtr 
 				else if (!canBeFreelyGenerated(_slot))
 				{
 					int deficit = static_cast<int>(*depth - 15);
-					YulString varName = slotVariableName(_slot);
+					YulName varName = slotVariableName(_slot);
 					std::string msg =
 						(varName.empty() ? "Slot " + stackSlotToString(_slot) : "Variable " + varName.str())
 						+ " is " + std::to_string(*depth - 15) + " too deep in the stack " + stackToString(m_stack);
 					m_stackErrors.emplace_back(StackTooDeepError(
-						m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulString{},
+						m_currentFunctionInfo ? m_currentFunctionInfo->function.name : YulName{},
 						varName,
 						deficit,
 						msg

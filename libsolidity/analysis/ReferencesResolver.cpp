@@ -488,7 +488,7 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 	}
 }
 
-void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceLocation const& _location)
+void ReferencesResolver::validateYulIdentifierName(yul::YulName _name, SourceLocation const& _location)
 {
 	if (util::contains(_name.str(), '.'))
 		m_errorReporter.declarationError(

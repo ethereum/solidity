@@ -46,7 +46,7 @@ void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _
 
 CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	Dialect const& _dialect,
-	std::map<YulString, SideEffects> _functionSideEffects
+	std::map<YulName, SideEffects> _functionSideEffects
 ):
 	DataFlowAnalyzer(_dialect, MemoryAndStorage::Ignore, std::move(_functionSideEffects))
 {
@@ -95,7 +95,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 
 	if (Identifier const* identifier = std::get_if<Identifier>(&_e))
 	{
-		YulString identifierName = identifier->name;
+		YulName identifierName = identifier->name;
 		if (AssignedValue const* assignedValue = variableValue(identifierName))
 		{
 			assertThrow(assignedValue->value, OptimizerException, "");
@@ -126,7 +126,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 			}
 }
 
-void CommonSubexpressionEliminator::assignValue(YulString _variable, Expression const* _value)
+void CommonSubexpressionEliminator::assignValue(YulName _variable, Expression const* _value)
 {
 	if (_value)
 		m_replacementCandidates[*_value].insert(_variable);

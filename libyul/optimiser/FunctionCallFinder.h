@@ -21,7 +21,7 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <vector>
 
@@ -33,13 +33,13 @@ namespace solidity::yul
  *
  * Prerequisite: Disambiguator
  */
-std::vector<FunctionCall*> findFunctionCalls(Block& _block, YulString _functionName);
+std::vector<FunctionCall*> findFunctionCalls(Block& _block, YulName _functionName);
 
 /**
  * Finds all calls to a function of a given name using an ASTWalker.
  *
  * Prerequisite: Disambiguator
  */
-std::vector<FunctionCall const*> findFunctionCalls(Block const& _block, YulString _functionName);
+std::vector<FunctionCall const*> findFunctionCalls(Block const& _block, YulName _functionName);
 
 }

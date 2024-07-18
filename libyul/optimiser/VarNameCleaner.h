@@ -21,7 +21,7 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
 #include <map>
@@ -64,33 +64,33 @@ private:
 	VarNameCleaner(
 		Block const& _ast,
 		Dialect const& _dialect,
-		std::set<YulString> _namesToKeep = {}
+		std::set<YulName> _namesToKeep = {}
 	);
 
 	/// Tries to rename a list of variables.
 	void renameVariables(std::vector<TypedName>& _variables);
 
 	/// @returns suffix-stripped name, if a suffix was detected, none otherwise.
-	YulString stripSuffix(YulString const& _name) const;
+	YulName stripSuffix(YulName const& _name) const;
 
 	/// Looks out for a "clean name" the given @p name could be trimmed down to.
 	/// @returns a trimmed down and "clean name" in case it found one, none otherwise.
-	YulString findCleanName(YulString const& name) const;
+	YulName findCleanName(YulName const& name) const;
 
 	/// Tests whether a given name was already used within this pass
 	/// or was set to be kept.
-	bool isUsedName(YulString const& _name) const;
+	bool isUsedName(YulName const& _name) const;
 
 	Dialect const& m_dialect;
 
 	/// These names will not be modified.
-	std::set<YulString> m_namesToKeep;
+	std::set<YulName> m_namesToKeep;
 
 	/// Set of names that are in use.
-	std::set<YulString> m_usedNames;
+	std::set<YulName> m_usedNames;
 
 	/// Maps old to new names.
-	std::map<YulString, YulString> m_translatedNames;
+	std::map<YulName, YulName> m_translatedNames;
 
 	/// Whether the traverse is inside a function definition.
 	/// Used to assert that a function definition cannot be inside another.

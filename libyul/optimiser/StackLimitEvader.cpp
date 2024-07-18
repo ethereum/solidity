@@ -56,7 +56,7 @@ namespace
  */
 struct MemoryOffsetAllocator
 {
-	uint64_t run(YulString _function = YulString{})
+	uint64_t run(YulName _function = YulName{})
 	{
 		if (slotsRequiredForFunction.count(_function))
 			return slotsRequiredForFunction[_function];
@@ -66,7 +66,7 @@ struct MemoryOffsetAllocator
 
 		uint64_t requiredSlots = 0;
 		if (callGraph.count(_function))
-			for (YulString child: callGraph.at(_function))
+			for (YulName child: callGraph.at(_function))
 				requiredSlots = std::max(run(child), requiredSlots);
 
 		if (auto const* unreachables = util::valueOrNullptr(unreachableVariables, _function))
@@ -84,7 +84,7 @@ struct MemoryOffsetAllocator
 
 			// Assign slots for all variables that become unreachable in the function body, if the above did not
 			// assign a slot for them already.
-			for (YulString variable: *unreachables)
+			for (YulName variable: *unreachables)
 				// The empty case is a function with too many arguments or return values,
 				// which was already handled above.
 				if (!variable.empty() && !slotAllocations.count(variable))
@@ -96,16 +96,16 @@ struct MemoryOffsetAllocator
 
 	/// Maps function names to the set of unreachable variables in that function.
 	/// An empty variable name means that the function has too many arguments or return variables.
-	std::map<YulString, std::vector<YulString>> const& unreachableVariables;
+	std::map<YulName, std::vector<YulName>> const& unreachableVariables;
 	/// The graph of immediate function calls of all functions.
-	std::map<YulString, std::vector<YulString>> const& callGraph;
+	std::map<YulName, std::vector<YulName>> const& callGraph;
 	/// Maps the name of each user-defined function to its definition.
-	std::map<YulString, FunctionDefinition const*> const& functionDefinitions;
+	std::map<YulName, FunctionDefinition const*> const& functionDefinitions;
 
 	/// Maps variable names to the memory slot the respective variable is assigned.
-	std::map<YulString, uint64_t> slotAllocations{};
+	std::map<YulName, uint64_t> slotAllocations{};
 	/// Maps function names to the number of memory slots the respective function requires.
-	std::map<YulString, uint64_t> slotsRequiredForFunction{};
+	std::map<YulName, uint64_t> slotsRequiredForFunction{};
 };
 
 u256 literalArgumentValue(FunctionCall const& _call)
@@ -145,10 +145,10 @@ void StackLimitEvader::run(
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
 	Object& _object,
-	std::map<YulString, std::vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
+	std::map<YulName, std::vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
 )
 {
-	std::map<YulString, std::vector<YulString>> unreachableVariables;
+	std::map<YulName, std::vector<YulName>> unreachableVariables;
 	for (auto&& [function, stackTooDeepErrors]: _stackTooDeepErrors)
 	{
 		auto& unreachables = unreachableVariables[function];
@@ -164,7 +164,7 @@ void StackLimitEvader::run(
 void StackLimitEvader::run(
 	OptimiserStepContext& _context,
 	Object& _object,
-	std::map<YulString, std::vector<YulString>> const& _unreachableVariables
+	std::map<YulName, std::vector<YulName>> const& _unreachableVariables
 )
 {
 	yulAssert(_object.code, "");
@@ -174,10 +174,7 @@ void StackLimitEvader::run(
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
 
-	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(
-		*_object.code,
-		"memoryguard"_yulstring
-	);
+	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(*_object.code, "memoryguard"_yulname);
 	// Do not optimise, if no ``memoryguard`` call is found.
 	if (memoryGuardCalls.empty())
 		return;
@@ -193,11 +190,11 @@ void StackLimitEvader::run(
 	CallGraph callGraph = CallGraphGenerator::callGraph(*_object.code);
 
 	// We cannot move variables in recursive functions to fixed memory offsets.
-	for (YulString function: callGraph.recursiveFunctions())
+	for (YulName function: callGraph.recursiveFunctions())
 		if (_unreachableVariables.count(function))
 			return;
 
-	std::map<YulString, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(*_object.code);
+	std::map<YulName, FunctionDefinition const*> functionDefinitions = allFunctionDefinitions(*_object.code);
 
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
@@ -206,7 +203,7 @@ void StackLimitEvader::run(
 	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, *_object.code);
 
 	reservedMemory += 32 * requiredSlots;
-	for (FunctionCall* memoryGuardCall: findFunctionCalls(*_object.code, "memoryguard"_yulstring))
+	for (FunctionCall* memoryGuardCall: findFunctionCalls(*_object.code, "memoryguard"_yulname))
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");

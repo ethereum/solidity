@@ -25,7 +25,7 @@
 using namespace solidity::yul;
 using namespace solidity::langutil;
 
-Literal Dialect::zeroLiteralForType(solidity::yul::YulString _type) const
+Literal Dialect::zeroLiteralForType(solidity::yul::YulName _type) const
 {
 	if (_type == boolType && _type != defaultType)
 		return {DebugData::create(), LiteralKind::Boolean, LiteralValue(false), _type};
@@ -41,7 +41,7 @@ Literal Dialect::trueLiteral() const
 		return {DebugData::create(), LiteralKind::Number, LiteralValue(1), defaultType};
 }
 
-bool Dialect::validTypeForLiteral(LiteralKind _kind, LiteralValue const&, YulString _type) const
+bool Dialect::validTypeForLiteral(LiteralKind _kind, LiteralValue const&, YulName _type) const
 {
 	if (_kind == LiteralKind::Boolean)
 		return _type == boolType;
@@ -58,21 +58,20 @@ Dialect const& Dialect::yulDeprecated()
 	{
 		// TODO will probably change, especially the list of types.
 		dialect = std::make_unique<Dialect>();
-		dialect->defaultType = "u256"_yulstring;
-		dialect->boolType = "bool"_yulstring;
+		dialect->defaultType = "u256"_yulname;
+		dialect->boolType = "bool"_yulname;
 		dialect->types = {
-			"bool"_yulstring,
-			"u8"_yulstring,
-			"s8"_yulstring,
-			"u32"_yulstring,
-			"s32"_yulstring,
-			"u64"_yulstring,
-			"s64"_yulstring,
-			"u128"_yulstring,
-			"s128"_yulstring,
-			"u256"_yulstring,
-			"s256"_yulstring
-		};
+			"bool"_yulname,
+			"u8"_yulname,
+			"s8"_yulname,
+			"u32"_yulname,
+			"s32"_yulname,
+			"u64"_yulname,
+			"s64"_yulname,
+			"u128"_yulname,
+			"s128"_yulname,
+			"u256"_yulname,
+			"s256"_yulname};
 	};
 
 	return *dialect;

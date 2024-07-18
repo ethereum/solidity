@@ -141,7 +141,7 @@ void OptimiserSuite::run(
 	std::string_view _optimisationSequence,
 	std::string_view _optimisationCleanupSequence,
 	std::optional<size_t> _expectedExecutionsPerDeployment,
-	std::set<YulString> const& _externallyUsedIdentifiers
+	std::set<YulName> const& _externallyUsedIdentifiers
 )
 {
 	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect);
@@ -150,7 +150,7 @@ void OptimiserSuite::run(
 		evmDialect &&
 		evmDialect->evmVersion().canOverchargeGasForCall() &&
 		evmDialect->providesObjectAccess();
-	std::set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
+	std::set<YulName> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
 	*_object.code = std::get<Block>(Disambiguator(

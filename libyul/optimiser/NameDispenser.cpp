@@ -25,7 +25,6 @@
 #include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-#include <libyul/YulString.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -33,31 +32,31 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-NameDispenser::NameDispenser(Dialect const& _dialect, Block const& _ast, std::set<YulString> _reservedNames):
+NameDispenser::NameDispenser(Dialect const& _dialect, Block const& _ast, std::set<YulName> _reservedNames):
 	NameDispenser(_dialect, NameCollector(_ast).names() + _reservedNames)
 {
 	m_reservedNames = std::move(_reservedNames);
 }
 
-NameDispenser::NameDispenser(Dialect const& _dialect, std::set<YulString> _usedNames):
+NameDispenser::NameDispenser(Dialect const& _dialect, std::set<YulName> _usedNames):
 	m_dialect(_dialect),
 	m_usedNames(std::move(_usedNames))
 {
 }
 
-YulString NameDispenser::newName(YulString _nameHint)
+YulName NameDispenser::newName(YulName _nameHint)
 {
-	YulString name = _nameHint;
+	YulName name = _nameHint;
 	while (illegalName(name))
 	{
 		m_counter++;
-		name = YulString(_nameHint.str() + "_" + std::to_string(m_counter));
+		name = YulName(_nameHint.str() + "_" + std::to_string(m_counter));
 	}
 	m_usedNames.emplace(name);
 	return name;
 }
 
-bool NameDispenser::illegalName(YulString _name)
+bool NameDispenser::illegalName(YulName _name)
 {
 	return isRestrictedIdentifier(m_dialect, _name) || m_usedNames.count(_name);
 }

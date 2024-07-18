@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/ASTForward.h>
@@ -93,8 +93,8 @@ private:
 	Representation const& findRepresentation(u256 const& _value);
 
 	Representation represent(u256 const& _value) const;
-	Representation represent(YulString _instruction, Representation const& _arg) const;
-	Representation represent(YulString _instruction, Representation const& _arg1, Representation const& _arg2) const;
+	Representation represent(YulName _instruction, Representation const& _arg) const;
+	Representation represent(YulName _instruction, Representation const& _arg1, Representation const& _arg2) const;
 
 	Representation min(Representation _a, Representation _b);
 

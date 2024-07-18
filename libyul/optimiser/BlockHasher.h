@@ -22,7 +22,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 namespace solidity::yul
 {
@@ -112,8 +112,8 @@ private:
 		size_t id = 0;
 		bool isExternal = false;
 	};
-	std::map<YulString, VariableReference> m_variableReferences;
-	std::vector<YulString> m_externalReferences;
+	std::map<YulName, VariableReference> m_variableReferences;
+	std::vector<YulName> m_externalReferences;
 	size_t m_externalIdentifierCount = 0;
 	size_t m_internalIdentifierCount = 0;
 };

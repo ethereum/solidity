@@ -40,7 +40,7 @@ using namespace solidity::yul;
 SideEffectsCollector::SideEffectsCollector(
 		Dialect const& _dialect,
 		Expression const& _expression,
-		std::map<YulString, SideEffects> const* _functionSideEffects
+		std::map<YulName, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -56,7 +56,7 @@ SideEffectsCollector::SideEffectsCollector(Dialect const& _dialect, Statement co
 SideEffectsCollector::SideEffectsCollector(
 	Dialect const& _dialect,
 	Block const& _ast,
-	std::map<YulString, SideEffects> const* _functionSideEffects
+	std::map<YulName, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -66,7 +66,7 @@ SideEffectsCollector::SideEffectsCollector(
 SideEffectsCollector::SideEffectsCollector(
 	Dialect const& _dialect,
 	ForLoop const& _ast,
-	std::map<YulString, SideEffects> const* _functionSideEffects
+	std::map<YulName, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -77,7 +77,7 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	YulString functionName = _functionCall.functionName.name;
+	YulName functionName = _functionCall.functionName.name;
 	if (BuiltinFunction const* f = m_dialect.builtin(functionName))
 		m_sideEffects += f->sideEffects;
 	else if (m_functionSideEffects && m_functionSideEffects->count(functionName))
@@ -115,7 +115,7 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 			m_msizeFound = true;
 }
 
-std::map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
+std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
 	Dialect const& _dialect,
 	CallGraph const& _directCallGraph
 )
@@ -126,7 +126,7 @@ std::map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	// In the future, we should refine that, because the property
 	// is actually a bit different from "not movable".
 
-	std::map<YulString, SideEffects> ret;
+	std::map<YulName, SideEffects> ret;
 	for (auto const& function: _directCallGraph.functionsWithLoops + _directCallGraph.recursiveFunctions())
 	{
 		ret[function].movable = false;
@@ -137,9 +137,9 @@ std::map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 
 	for (auto const& call: _directCallGraph.functionCalls)
 	{
-		YulString funName = call.first;
+		YulName funName = call.first;
 		SideEffects sideEffects;
-		auto _visit = [&, visited = std::set<YulString>{}](YulString _function, auto&& _recurse) mutable {
+		auto _visit = [&, visited = std::set<YulName>{}](YulName _function, auto&& _recurse) mutable {
 			if (!visited.insert(_function).second)
 				return;
 			if (sideEffects == SideEffects::worst())
@@ -150,7 +150,7 @@ std::map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 			{
 				if (ret.count(_function))
 					sideEffects += ret[_function];
-				for (YulString callee: _directCallGraph.functionCalls.at(_function))
+				for (YulName callee: _directCallGraph.functionCalls.at(_function))
 					_recurse(callee, _recurse);
 			}
 		};

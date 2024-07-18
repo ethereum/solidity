@@ -43,7 +43,7 @@ void ConditionalUnsimplifier::operator()(Switch& _switch)
 		ASTModifier::operator()(_switch);
 		return;
 	}
-	YulString expr = std::get<Identifier>(*_switch.expression).name;
+	YulName expr = std::get<Identifier>(*_switch.expression).name;
 	for (auto& _case: _switch.cases)
 	{
 		if (_case.value)
@@ -83,7 +83,7 @@ void ConditionalUnsimplifier::operator()(Block& _block)
 					!_if.body.statements.empty()
 				)
 				{
-					YulString condition = std::get<Identifier>(*_if.condition).name;
+					YulName condition = std::get<Identifier>(*_if.condition).name;
 					if (
 						std::holds_alternative<Assignment>(_stmt2) &&
 						TerminationFinder(m_dialect, &m_functionSideEffects).controlFlowKind(_if.body.statements.back()) !=

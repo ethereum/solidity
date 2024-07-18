@@ -44,7 +44,7 @@ void ExpressionSimplifier::visit(Expression& _expression)
 	while (auto const* match = SimplificationRules::findFirstMatch(
 		_expression,
 		m_dialect,
-		[this](YulString _var) { return variableValue(_var); }
+		[this](YulName _var) { return variableValue(_var); }
 	))
 		_expression = match->action().toExpression(debugDataOf(_expression), evmVersionFromDialect(m_dialect));
 

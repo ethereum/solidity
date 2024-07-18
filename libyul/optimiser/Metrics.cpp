@@ -199,7 +199,7 @@ void AssignmentCounter::operator()(Assignment const& _assignment)
 		++m_assignmentCounters[variable.name];
 }
 
-size_t AssignmentCounter::assignmentCount(YulString _name) const
+size_t AssignmentCounter::assignmentCount(YulName _name) const
 {
 	auto it = m_assignmentCounters.find(_name);
 	return (it == m_assignmentCounters.end()) ? 0 : it->second;

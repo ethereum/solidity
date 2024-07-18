@@ -135,11 +135,11 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
 	struct SimpleDialect: public Dialect
 	{
-		BuiltinFunction const* builtin(YulString _name) const override
+		BuiltinFunction const* builtin(YulName _name) const override
 		{
-			return _name == "builtin"_yulstring ? &f : nullptr;
+			return _name == "builtin"_yulname ? &f : nullptr;
 		}
-		BuiltinFunction f{"builtin"_yulstring, std::vector<Type>(2), std::vector<Type>(3), {}, {}, false, {}};
+		BuiltinFunction f{"builtin"_yulname, std::vector<Type>(2), std::vector<Type>(3), {}, {}, false, {}};
 	};
 
 	SimpleDialect dialect;

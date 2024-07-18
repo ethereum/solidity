@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <libyul/YulString.h>
 #include <libyul/Object.h>
 #include <libyul/Dialect.h>
 

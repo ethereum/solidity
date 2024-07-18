@@ -243,7 +243,7 @@ std::string AsmPrinter::formatTypedName(TypedName _variable)
 	return formatDebugData(_variable) + _variable.name.str() + appendTypeName(_variable.type);
 }
 
-std::string AsmPrinter::appendTypeName(YulString _type, bool _isBoolLiteral) const
+std::string AsmPrinter::appendTypeName(YulName _type, bool _isBoolLiteral) const
 {
 	if (m_dialect && !_type.empty())
 	{

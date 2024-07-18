@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/ControlFlowSideEffects.h>
 #include <libyul/SideEffects.h>
 
@@ -32,15 +32,14 @@
 namespace solidity::yul
 {
 
-class YulString;
-using Type = YulString;
+using Type = YulName;
 enum class LiteralKind;
 class LiteralValue;
 struct Literal;
 
 struct BuiltinFunction
 {
-	YulString name;
+	YulName name;
 	std::vector<Type> parameters;
 	std::vector<Type> returns;
 	SideEffects sideEffects;
@@ -63,35 +62,35 @@ struct Dialect
 	Dialect& operator=(Dialect const&) = delete;
 
 	/// Default type, can be omitted.
-	YulString defaultType;
+	YulName defaultType;
 	/// Type used for the literals "true" and "false".
-	YulString boolType;
-	std::set<YulString> types = {{}};
+	YulName boolType;
+	std::set<YulName> types = {{}};
 
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
-	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
+	virtual BuiltinFunction const* builtin(YulName /*_name*/) const { return nullptr; }
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
-	virtual bool reservedIdentifier(YulString _name) const { return builtin(_name) != nullptr; }
+	virtual bool reservedIdentifier(YulName _name) const { return builtin(_name) != nullptr; }
 
-	virtual BuiltinFunction const* discardFunction(YulString /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* equalityFunction(YulString /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* discardFunction(YulName /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* equalityFunction(YulName /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
 
-	virtual BuiltinFunction const* memoryStoreFunction(YulString /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* memoryLoadFunction(YulString /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* storageStoreFunction(YulString /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* storageLoadFunction(YulString /* _type */) const { return nullptr; }
-	virtual YulString hashFunction(YulString /* _type */ ) const { return YulString{}; }
+	virtual BuiltinFunction const* memoryStoreFunction(YulName /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* memoryLoadFunction(YulName /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* storageStoreFunction(YulName /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* storageLoadFunction(YulName /* _type */) const { return nullptr; }
+	virtual YulName hashFunction(YulName /* _type */ ) const { return YulName{}; }
 
 	/// Check whether the given type is legal for the given literal value.
 	/// Should only be called if the type exists in the dialect at all.
-	virtual bool validTypeForLiteral(LiteralKind _kind, LiteralValue const& _value, YulString _type) const;
+	virtual bool validTypeForLiteral(LiteralKind _kind, LiteralValue const& _value, YulName _type) const;
 
-	virtual Literal zeroLiteralForType(YulString _type) const;
+	virtual Literal zeroLiteralForType(YulName _type) const;
 	virtual Literal trueLiteral() const;
 
-	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
+	virtual std::set<YulName> fixedFunctionNames() const { return {}; }
 
 	Dialect() = default;
 	virtual ~Dialect() = default;

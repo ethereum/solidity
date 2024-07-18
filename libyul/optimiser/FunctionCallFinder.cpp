@@ -30,14 +30,14 @@ class MaybeConstFunctionCallFinder: Base
 {
 public:
 	using MaybeConstBlock = std::conditional_t<std::is_const_v<ResultType>, Block const, Block>;
-	static std::vector<ResultType*> run(MaybeConstBlock& _block, YulString const _functionName)
+	static std::vector<ResultType*> run(MaybeConstBlock& _block, YulName const _functionName)
 	{
 		MaybeConstFunctionCallFinder functionCallFinder(_functionName);
 		functionCallFinder(_block);
 		return functionCallFinder.m_calls;
 	}
 private:
-	explicit MaybeConstFunctionCallFinder(YulString const _functionName): m_functionName(_functionName), m_calls() {}
+	explicit MaybeConstFunctionCallFinder(YulName const _functionName): m_functionName(_functionName), m_calls() {}
 	using Base::operator();
 	void operator()(ResultType& _functionCall) override
 	{
@@ -45,17 +45,17 @@ private:
 		if (_functionCall.functionName.name == m_functionName)
 			m_calls.emplace_back(&_functionCall);
 	}
-	YulString m_functionName;
+	YulName m_functionName;
 	std::vector<ResultType*> m_calls;
 };
 }
 
-std::vector<FunctionCall*> solidity::yul::findFunctionCalls(Block& _block, YulString _functionName)
+std::vector<FunctionCall*> solidity::yul::findFunctionCalls(Block& _block, YulName _functionName)
 {
 	return MaybeConstFunctionCallFinder<ASTModifier, FunctionCall>::run(_block, _functionName);
 }
 
-std::vector<FunctionCall const*> solidity::yul::findFunctionCalls(Block const& _block, YulString _functionName)
+std::vector<FunctionCall const*> solidity::yul::findFunctionCalls(Block const& _block, YulName _functionName)
 {
 	return MaybeConstFunctionCallFinder<ASTWalker, FunctionCall const>::run(_block, _functionName);
 }

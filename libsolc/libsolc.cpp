@@ -24,7 +24,7 @@
 #include <libsolc/libsolc.h>
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <cstdlib>
 #include <list>

@@ -24,7 +24,7 @@
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/Assertions.h>
 
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
@@ -40,18 +40,18 @@ struct YulAssertion: virtual YulException {};
 
 struct StackTooDeepError: virtual YulException
 {
-	StackTooDeepError(YulString _variable, int _depth, std::string const& _message):
+	StackTooDeepError(YulName _variable, int _depth, std::string const& _message):
 		variable(_variable), depth(_depth)
 	{
 		*this << util::errinfo_comment(_message);
 	}
-	StackTooDeepError(YulString _functionName, YulString _variable, int _depth, std::string const& _message):
+	StackTooDeepError(YulName _functionName, YulName _variable, int _depth, std::string const& _message):
 		functionName(_functionName), variable(_variable), depth(_depth)
 	{
 		*this << util::errinfo_comment(_message);
 	}
-	YulString functionName;
-	YulString variable;
+	YulName functionName;
+	YulName variable;
 	int depth;
 };
 

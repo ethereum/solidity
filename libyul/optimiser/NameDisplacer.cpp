@@ -69,14 +69,14 @@ void NameDisplacer::operator()(Block& _block)
 	ASTModifier::operator()(_block);
 }
 
-void NameDisplacer::checkAndReplaceNew(YulString& _name)
+void NameDisplacer::checkAndReplaceNew(YulName& _name)
 {
 	yulAssert(!m_translations.count(_name), "");
 	if (m_namesToFree.count(_name))
 		_name = (m_translations[_name] = m_nameDispenser.newName(_name));
 }
 
-void NameDisplacer::checkAndReplace(YulString& _name) const
+void NameDisplacer::checkAndReplace(YulName& _name) const
 {
 	if (m_translations.count(_name))
 		_name = m_translations.at(_name);

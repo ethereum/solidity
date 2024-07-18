@@ -38,7 +38,7 @@
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/Object.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/Whiskers.h>
@@ -388,11 +388,11 @@ void CompilerContext::appendInlineAssembly(
 {
 	unsigned startStackHeight = stackHeight();
 
-	std::set<yul::YulString> externallyUsedIdentifiers;
+	std::set<yul::YulName> externallyUsedIdentifiers;
 	for (auto const& fun: _externallyUsedFunctions)
-		externallyUsedIdentifiers.insert(yul::YulString(fun));
+		externallyUsedIdentifiers.insert(yul::YulName(fun));
 	for (auto const& var: _localVariables)
-		externallyUsedIdentifiers.insert(yul::YulString(var));
+		externallyUsedIdentifiers.insert(yul::YulName(var));
 
 	yul::ExternalIdentifierAccess identifierAccess;
 	identifierAccess.resolve = [&](
@@ -532,7 +532,7 @@ void CompilerContext::appendInlineAssembly(
 }
 
 
-void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulString> const& _externalIdentifiers)
+void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulName> const& _externalIdentifiers)
 {
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(*dialect)(*_object.code) << endl;

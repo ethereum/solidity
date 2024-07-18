@@ -52,18 +52,18 @@ public:
 		/// Number of slots that need to be saved.
 		size_t deficit = 0;
 		/// Set of variables, eliminating which would decrease the stack deficit.
-		std::vector<YulString> variableChoices;
+		std::vector<YulName> variableChoices;
 	};
 
 	static StackLayout run(CFG const& _cfg);
 	/// @returns a map from function names to the stack too deep errors occurring in that function.
 	/// Requires @a _cfg to be a control flow graph generated from disambiguated Yul.
 	/// The empty string is mapped to the stack too deep errors of the main entry point.
-	static std::map<YulString, std::vector<StackTooDeep>> reportStackTooDeep(CFG const& _cfg);
+	static std::map<YulName, std::vector<StackTooDeep>> reportStackTooDeep(CFG const& _cfg);
 	/// @returns all stack too deep errors in the function named @a _functionName.
 	/// Requires @a _cfg to be a control flow graph generated from disambiguated Yul.
 	/// If @a _functionName is empty, the stack too deep errors of the main entry point are reported instead.
-	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulString _functionName);
+	static std::vector<StackTooDeep> reportStackTooDeep(CFG const& _cfg, YulName _functionName);
 
 private:
 	StackLayoutGenerator(StackLayout& _context, CFG::FunctionInfo const* _functionInfo);

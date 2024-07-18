@@ -99,8 +99,8 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	visit(_expr);
 
 	langutil::DebugData::ConstPtr debugData = debugDataOf(_expr);
-	YulString var = m_nameDispenser.newName({});
-	YulString type = m_typeInfo.typeOf(_expr);
+	YulName var = m_nameDispenser.newName({});
+	YulName type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		debugData,
 		{{TypedName{debugData, var, type}}},

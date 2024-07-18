@@ -197,7 +197,7 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 
 	auto& switchCase = _switchStmt.cases.front();
 	langutil::DebugData::ConstPtr debugData = debugDataOf(*_switchStmt.expression);
-	YulString type = m_typeInfo.typeOf(*_switchStmt.expression);
+	YulName type = m_typeInfo.typeOf(*_switchStmt.expression);
 	if (switchCase.value)
 	{
 		if (!m_dialect.equalityFunction(type))

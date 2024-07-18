@@ -56,7 +56,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 					scanner.next();
 					std::string functionName = scanner.currentLiteral();
 					auto call = yul::FunctionCall{
-						{}, yul::Identifier{{}, YulString(functionName)}, {}
+						{}, yul::Identifier{{}, YulName(functionName)}, {}
 					};
 					stack.emplace_back(FunctionCallReturnLabelSlot{
 						m_functions.insert(
@@ -78,7 +78,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 				scanner.next();
 				std::string functionName = scanner.currentLiteral();
 				auto call = yul::FunctionCall{
-					{}, yul::Identifier{{}, YulString(functionName)}, {}
+					{}, yul::Identifier{{}, YulName(functionName)}, {}
 				};
 				expectToken(Token::Comma);
 				scanner.next();
@@ -102,7 +102,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 				expectToken(Token::LBrack);
 				scanner.next(); // read number of ghost variables as ghostVariableId
 				std::string ghostVariableId = scanner.currentLiteral();
-				Scope::Variable ghostVar = Scope::Variable{""_yulstring, YulString(literal + "[" + ghostVariableId + "]")};
+				Scope::Variable ghostVar = Scope::Variable{""_yulname, YulName(literal + "[" + ghostVariableId + "]")};
 				stack.emplace_back(VariableSlot{
 					m_variables.insert(std::make_pair(ghostVar.name, ghostVar)).first->second
 				});
@@ -110,7 +110,7 @@ bool StackShufflingTest::parse(std::string const& _source)
 			}
 			else
 			{
-				Scope::Variable var = Scope::Variable{""_yulstring, YulString(literal)};
+				Scope::Variable var = Scope::Variable{""_yulname, YulName(literal)};
 				stack.emplace_back(VariableSlot{
 					m_variables.insert(
 						make_pair(literal, var)

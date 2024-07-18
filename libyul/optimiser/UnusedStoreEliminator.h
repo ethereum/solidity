@@ -64,9 +64,9 @@ public:
 
 	explicit UnusedStoreEliminator(
 		Dialect const& _dialect,
-		std::map<YulString, SideEffects> const& _functionSideEffects,
-		std::map<YulString, ControlFlowSideEffects> _controlFlowSideEffects,
-		std::map<YulString, AssignedValue> const& _ssaValues,
+		std::map<YulName, SideEffects> const& _functionSideEffects,
+		std::map<YulName, ControlFlowSideEffects> _controlFlowSideEffects,
+		std::map<YulName, AssignedValue> const& _ssaValues,
 		bool _ignoreMemory
 	);
 
@@ -85,15 +85,15 @@ public:
 		Location location;
 		Effect effect;
 		/// Start of affected area. Unknown if not provided.
-		std::optional<YulString> start;
+		std::optional<YulName> start;
 		/// Length of affected area, unknown if not provided.
 		/// Unused for storage.
-		std::optional<YulString> length;
+		std::optional<YulName> length;
 	};
 
 private:
-	std::set<Statement const*>& activeMemoryStores() { return m_activeStores["m"_yulstring]; }
-	std::set<Statement const*>& activeStorageStores() { return m_activeStores["s"_yulstring]; }
+	std::set<Statement const*>& activeMemoryStores() { return m_activeStores["m"_yulname]; }
+	std::set<Statement const*>& activeStorageStores() { return m_activeStores["s"_yulname]; }
 
 	void shortcutNestedLoop(ActiveStores const&) override
 	{
@@ -113,12 +113,12 @@ private:
 	void markActiveAsUsed(std::optional<Location> _onlyLocation = std::nullopt);
 	void clearActive(std::optional<Location> _onlyLocation = std::nullopt);
 
-	std::optional<YulString> identifierNameIfSSA(Expression const& _expression) const;
+	std::optional<YulName> identifierNameIfSSA(Expression const& _expression) const;
 
 	bool const m_ignoreMemory;
-	std::map<YulString, SideEffects> const& m_functionSideEffects;
-	std::map<YulString, ControlFlowSideEffects> m_controlFlowSideEffects;
-	std::map<YulString, AssignedValue> const& m_ssaValues;
+	std::map<YulName, SideEffects> const& m_functionSideEffects;
+	std::map<YulName, ControlFlowSideEffects> m_controlFlowSideEffects;
+	std::map<YulName, AssignedValue> const& m_ssaValues;
 
 	std::map<Statement const*, Operation> m_storeOperations;
 

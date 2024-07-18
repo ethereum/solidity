@@ -66,7 +66,7 @@
 
 #include <libstdlib/stdlib.h>
 
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/YulStack.h>
