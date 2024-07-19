@@ -66,7 +66,29 @@ struct BuiltinFunction;
 class YulNameRepository
 {
 public:
-	using YulName = size_t;
+	struct YulName
+	{
+		using ValueType = std::uint64_t;
+		ValueType value;
+		YulNameRepository const* nameRepository;
+
+		bool operator==(YulName const& other) const
+		{
+			return nameRepository == other.nameRepository && value == other.value;
+		}
+		bool operator!=(YulName const& other) const
+		{
+			return !(*this == other);
+		}
+		bool operator<(YulName const& other) const
+		{
+			if (nameRepository < other.nameRepository)
+				return true;
+			return value < other.value;
+		}
+
+		[[nodiscard]] bool empty() const { return value == 0; }
+	};
 
 	/// Decorating a yul dialect builtin function with `YulName`s.
 	struct BuiltinFunction
@@ -116,7 +138,7 @@ public:
 	YulName deriveName(YulName _id);
 
 	/// The empty name.
-	static constexpr YulName emptyName() { return 0; }
+	YulName emptyName() const { return YulName{0, this}; }
 
 	/// Yields the label of a yul name. The name must have been added via `defineName`, a label must have been
 	/// generated with `generateLabels`, or it is a builtin.
@@ -129,7 +151,7 @@ public:
 	std::string_view baseLabelOf(YulName _name) const;
 
 	/// Whether a name is considered derived, i.e., has no label but a parent name.
-	[[nodiscard]] bool isDerivedName(YulName const _name) const { return std::get<1>(m_names[_name]) == YulNameState::DERIVED; }
+	[[nodiscard]] bool isDerivedName(YulName const& _name) const;
 
 	/// Whether a name corresponds to a verbatim builtin function.
 	[[nodiscard]] bool isVerbatimFunction(YulName _name) const;
@@ -176,9 +198,6 @@ public:
 	/// This will change the state of all derived names in _usedNames to "not derived" with a label associated to them.
 	void generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal = {});
 
-	// commented out for the time being, as it requires AST refactoring to be YulName-based
-	// void generateLabels(Block const& _ast, std::set<std::string> const& _illegal = {});
-
 private:
 	struct PredefinedBuiltinFunctions
 	{
@@ -199,7 +218,7 @@ private:
 		size_t endBuiltins {};
 	};
 	enum class YulNameState	{ DERIVED, DEFINED };
-	bool nameWithinBounds(YulName const _name) const { return _name < m_names.size(); }
+	bool nameCompatible(YulName const _name) const { return _name.nameRepository == this && _name.value < m_names.size(); }
 
 	size_t indexOfType(YulName _type) const;
 	BuiltinFunction convertBuiltinFunction(YulName _name, yul::BuiltinFunction const& _builtin) const;

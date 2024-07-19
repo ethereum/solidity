@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(repository_with_blank_dialect)
 	YulNameRepository nameRepository(dialect);
 	BOOST_CHECK(!nameRepository.isEvmDialect());
 	BOOST_CHECK(nameRepository.nTypes() == 1);
-	BOOST_CHECK(nameRepository.isType(YulNameRepository::emptyName()));
+	BOOST_CHECK(nameRepository.isType(nameRepository.emptyName()));
 	BOOST_CHECK(nameRepository.labelOf(nameRepository.predefined().empty).value().empty());
 	BOOST_CHECK(nameRepository.labelOf(nameRepository.predefined().datasize) == "datasize");
 	BOOST_CHECK(nameRepository.labelOf(nameRepository.predefined().dataoffset) == "dataoffset");
@@ -71,6 +71,8 @@ BOOST_AUTO_TEST_CASE(repository_generate_labels_for_derived_types)
 	auto const test2_1 = nameRepository.deriveName(test2);
 	auto const test3 = nameRepository.defineName("test3");
 	auto const test3_1 = nameRepository.deriveName(test3);
+	BOOST_CHECK(test1 != test1_1);
+	BOOST_CHECK(test1 < test1_1);
 	nameRepository.generateLabels({test1, test1_1, test1_2, test1_2_1, test2_1, test3, test3_1}, {"test1"});
 
 	// marking test1 as invalid means that all labels get bumped up by one
@@ -110,10 +112,10 @@ BOOST_AUTO_TEST_CASE(repository_with_evm_dialect)
 	YulNameRepository nameRepository(dialect);
 	BOOST_CHECK(nameRepository.isEvmDialect());
 	BOOST_CHECK(nameRepository.nTypes() == 1);
-	BOOST_CHECK(nameRepository.isType(YulNameRepository::emptyName()));
+	BOOST_CHECK(nameRepository.isType(nameRepository.emptyName()));
 
 	auto const extractEVMFunction = [](auto const* function) { return function ? function->data : nullptr; };
-	auto const type = YulNameRepository::emptyName();
+	auto const type = nameRepository.emptyName();
 	YulString typeLabel(std::string(nameRepository.labelOf(type).value()));
 	BOOST_CHECK(extractEVMFunction(nameRepository.discardFunction(type)) == dialect.discardFunction(typeLabel));
 	BOOST_CHECK(extractEVMFunction(nameRepository.equalityFunction(type)) == dialect.equalityFunction(typeLabel));;
@@ -138,7 +140,7 @@ BOOST_AUTO_TEST_CASE(repository_with_typed_evm_dialect)
 	BOOST_CHECK(nameRepository.labelOf(boolType) == "bool");
 	BOOST_CHECK(nameRepository.isType(wordType));
 	BOOST_CHECK(nameRepository.isType(boolType));
-	BOOST_CHECK(!nameRepository.isType(YulNameRepository::emptyName()));
+	BOOST_CHECK(!nameRepository.isType(nameRepository.emptyName()));
 	BOOST_CHECK(nameRepository.nTypes() == 2);
 
 	auto const extractEVMFunction = [](auto const* function) { return function ? function->data : nullptr; };
@@ -162,7 +164,7 @@ BOOST_AUTO_TEST_CASE(verbatim_functions)
 	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects({});
 	YulNameRepository nameRepository(dialect);
 	auto const verbatimName = nameRepository.defineName("verbatim_5i_3o");
-	BOOST_CHECK(verbatimName != YulNameRepository::emptyName());
+	BOOST_CHECK(!verbatimName.empty());
 	BOOST_CHECK(nameRepository.isBuiltinName(verbatimName));
 	BOOST_CHECK(nameRepository.isDerivedName(verbatimName));
 	BOOST_CHECK(nameRepository.baseNameOf(verbatimName) == nameRepository.predefined().verbatim);
