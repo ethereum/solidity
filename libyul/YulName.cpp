@@ -46,8 +46,8 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 			m_indexBoundaries.beginTypes = 1;
 			m_dialectTypes.emplace_back(defineName(type.str()), type.str());
 		}
-	m_indexBoundaries.endTypes = m_index;
-	m_indexBoundaries.beginBuiltins = m_index;
+	m_indexBoundaries.endTypes = m_names.size();
+	m_indexBoundaries.beginBuiltins = m_names.size();
 
 	auto const& builtinNames = _dialect.builtinNames();
 	m_predefined.verbatim = defineName("@ verbatim");
@@ -58,7 +58,7 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 			if (auto const* function = m_dialect.get().builtin(YulString(label)))
 				m_builtinFunctions[name] = convertBuiltinFunction(name, *function);
 		}
-	m_indexBoundaries.endBuiltins = m_index;
+	m_indexBoundaries.endBuiltins = m_names.size();
 
 	m_predefined.boolType = nameOfType(_dialect.boolType.str());
 	m_predefined.defaultType = nameOfType(_dialect.defaultType.str());
@@ -330,7 +330,7 @@ YulNameRepository::YulName YulNameRepository::defineName(std::string_view const 
 			{
 				m_definedLabels.emplace_back(_label);
 				m_names.emplace_back(m_definedLabels.size() - 1, YulNameState::DEFINED);
-				return m_index++;
+				return m_names.size() - 1;
 			}
 			else
 				return builtinName;
@@ -343,7 +343,7 @@ YulNameRepository::YulName YulNameRepository::defineName(std::string_view const 
 
 		m_definedLabels.emplace_back(_label);
 		m_names.emplace_back(m_definedLabels.size() - 1, YulNameState::DEFINED);
-		return m_index++;
+		return m_names.size() - 1;
 	}
 }
 
@@ -351,12 +351,7 @@ YulNameRepository::YulName YulNameRepository::deriveName(YulName const _name)
 {
 	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");
 	m_names.emplace_back(_name, YulNameState::DERIVED);
-	return m_index++;
-}
-
-YulNameRepository::YulName YulNameRepository::addGhost()
-{
-	return defineName(fmt::format(FMT_COMPILE("GHOST[{}]"), m_nGhosts++));
+	return m_names.size() - 1;
 }
 
 bool YulNameRepository::isType(YulName const _name) const {
