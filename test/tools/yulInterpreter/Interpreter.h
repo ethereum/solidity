@@ -162,7 +162,7 @@ public:
 	/// activated e.g., Redundant store eliminator, Equal store eliminator.
 	static void run(
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Block const& _ast,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing
@@ -170,13 +170,13 @@ public:
 
 	Interpreter(
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Scope& _scope,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
 		std::map<YulName, u256> _variables = {}
 	):
-		m_dialect(_dialect),
+	    m_nameRepository(_nameRepository),
 		m_state(_state),
 		m_variables(std::move(_variables)),
 		m_scope(&_scope),
@@ -215,7 +215,7 @@ protected:
 	/// is reached.
 	void incrementStep();
 
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	InterpreterState& m_state;
 	/// Values of variables.
 	std::map<YulName, u256> m_variables;
@@ -234,14 +234,14 @@ class ExpressionEvaluator: public ASTWalker
 public:
 	ExpressionEvaluator(
 		InterpreterState& _state,
-		Dialect const& _dialect,
+		YulNameRepository const& _nameRepository,
 		Scope& _scope,
 		std::map<YulName, u256> const& _variables,
 		bool _disableExternalCalls,
 		bool _disableMemoryTrace
 	):
 		m_state(_state),
-		m_dialect(_dialect),
+	    m_nameRepository(_nameRepository),
 		m_variables(_variables),
 		m_scope(_scope),
 		m_disableExternalCalls(_disableExternalCalls),
@@ -263,7 +263,7 @@ protected:
 	{
 		return std::make_unique<Interpreter>(
 			m_state,
-			m_dialect,
+			m_nameRepository,
 			m_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace,
@@ -274,7 +274,7 @@ protected:
 	{
 		return std::make_unique<Interpreter>(
 			_state,
-			m_dialect,
+			m_nameRepository,
 			_scope,
 			m_disableExternalCalls,
 			m_disableMemoryTrace
@@ -296,7 +296,7 @@ protected:
 	void incrementStep();
 
 	InterpreterState& m_state;
-	Dialect const& m_dialect;
+	YulNameRepository const& m_nameRepository;
 	/// Values of variables.
 	std::map<YulName, u256> const& m_variables;
 	Scope& m_scope;

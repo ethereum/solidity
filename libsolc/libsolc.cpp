@@ -153,7 +153,6 @@ extern void solidity_reset() noexcept
 {
 	// This is called right before each compilation, but not at the end, so additional memory
 	// can be freed here.
-	yul::YulStringRepository::reset();
 	solidityAllocations.clear();
 }
 }

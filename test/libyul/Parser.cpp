@@ -40,6 +40,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 using namespace solidity;
 using namespace solidity::util;
@@ -135,11 +136,25 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
 	struct SimpleDialect: public Dialect
 	{
-		BuiltinFunction const* builtin(YulName _name) const override
+		BuiltinFunction const* builtin(std::string_view _name) const override
 		{
-			return _name == "builtin"_yulname ? &f : nullptr;
+			return _name == "builtin" ? &f : nullptr;
 		}
-		BuiltinFunction f{"builtin"_yulname, std::vector<Type>(2), std::vector<Type>(3), {}, {}, false, {}};
+
+		std::set<std::string> builtinNames() const override { return {"builtin"}; }
+
+		BuiltinFunction f = []()
+		{
+			BuiltinFunction fun;
+			fun.name = "builtin";
+			fun.parameters = std::vector<std::string>(2);
+			fun.returns = std::vector<std::string>(3);
+			fun.sideEffects = {};
+			fun.controlFlowSideEffects = {};
+			fun.isMSize = false;
+			fun.literalArguments = {};
+			return fun;
+		}();
 	};
 
 	SimpleDialect dialect;

@@ -24,6 +24,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libyul/CompilabilityChecker.h>
+#include <libyul/AST.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -38,9 +39,13 @@ std::string check(std::string const& _input)
 	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(_input, false);
 	BOOST_REQUIRE(obj.code);
 	auto functions = CompilabilityChecker(obj, true).stackDeficit;
+	// recast into map string -> int s.t. order is predictable
+	std::map<std::string, int> labelledFunctions;
+	for(const auto& [k, v] : functions)
+		labelledFunctions[std::string(obj.code->nameRepository().requiredLabelOf(k))] = v;
 	std::string out;
-	for (auto const& function: functions)
-		out += function.first.str() + ": " + std::to_string(function.second) + " ";
+	for (auto const& function: labelledFunctions)
+		out += function.first + ": " + std::to_string(function.second) + " ";
 	return out;
 }
 }
@@ -168,7 +173,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_used_arguments)
 			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "h: 9 g: 5 f: 5 ");
+	BOOST_CHECK_EQUAL(out, "f: 5 g: 5 h: 9 ");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_functions_unused_arguments)
@@ -200,7 +205,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_unused_arguments)
 			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "h: 9 f: 3 ");
+	BOOST_CHECK_EQUAL(out, "f: 3 h: 9 ");
 }
 
 BOOST_AUTO_TEST_CASE(nested_used_arguments)
@@ -236,7 +241,7 @@ BOOST_AUTO_TEST_CASE(nested_used_arguments)
 			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "h: 9 g: 5 f: 5 ");
+	BOOST_CHECK_EQUAL(out, "f: 5 g: 5 h: 9 ");
 }
 
 
@@ -269,7 +274,7 @@ BOOST_AUTO_TEST_CASE(nested_unused_arguments)
 			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "h: 9 f: 3 ");
+	BOOST_CHECK_EQUAL(out, "f: 3 h: 9 ");
 }
 
 
@@ -301,7 +306,7 @@ BOOST_AUTO_TEST_CASE(also_in_outer_block_used_arguments)
 				sstore(s1, s2)
 			}
 	})");
-	BOOST_CHECK_EQUAL(out, "g: 5 : 9 ");
+	BOOST_CHECK_EQUAL(out, ": 9 g: 5 ");
 }
 
 BOOST_AUTO_TEST_CASE(also_in_outer_block_unused_arguments)

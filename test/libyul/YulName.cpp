@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(repository_with_evm_dialect)
 
 	auto const extractEVMFunction = [](auto const* function) { return function ? function->definition : nullptr; };
 	auto const type = nameRepository.emptyName();
-	YulString typeLabel(std::string(nameRepository.labelOf(type).value()));
+	auto typeLabel(std::string(nameRepository.labelOf(type).value()));
 	BOOST_CHECK(extractEVMFunction(nameRepository.discardFunction(type)) == dialect.discardFunction(typeLabel));
 	BOOST_CHECK(extractEVMFunction(nameRepository.equalityFunction(type)) == dialect.equalityFunction(typeLabel));;
 	BOOST_CHECK(extractEVMFunction(nameRepository.booleanNegationFunction()) == dialect.booleanNegationFunction());
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(repository_with_evm_dialect)
 	BOOST_CHECK(extractEVMFunction(nameRepository.memoryLoadFunction(type)) == dialect.memoryLoadFunction(typeLabel));
 	BOOST_CHECK(extractEVMFunction(nameRepository.storageStoreFunction(type)) == dialect.storageStoreFunction(typeLabel));
 	BOOST_CHECK(extractEVMFunction(nameRepository.storageLoadFunction(type)) == dialect.storageLoadFunction(typeLabel));
-	BOOST_CHECK(nameRepository.labelOf(nameRepository.hashFunction(type)) == dialect.hashFunction(typeLabel).str());
+	BOOST_CHECK(nameRepository.labelOf(nameRepository.hashFunction(type)) == dialect.hashFunction(typeLabel));
 }
 
 BOOST_AUTO_TEST_CASE(repository_with_typed_evm_dialect)
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(repository_with_typed_evm_dialect)
 
 	for (auto const type : {wordType, boolType})
 	{
-		YulString typeLabel(std::string(nameRepository.labelOf(type).value()));
+		auto typeLabel(std::string(nameRepository.labelOf(type).value()));
 		BOOST_CHECK(extractEVMFunction(nameRepository.discardFunction(type)) == dialect.discardFunction(typeLabel));
 		BOOST_CHECK(extractEVMFunction(nameRepository.equalityFunction(type)) == dialect.equalityFunction(typeLabel));
 		BOOST_CHECK(extractEVMFunction(nameRepository.booleanNegationFunction()) == dialect.booleanNegationFunction());
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(repository_with_typed_evm_dialect)
 		BOOST_CHECK(extractEVMFunction(nameRepository.memoryLoadFunction(type)) == dialect.memoryLoadFunction(typeLabel));
 		BOOST_CHECK(extractEVMFunction(nameRepository.storageStoreFunction(type)) == dialect.storageStoreFunction(typeLabel));
 		BOOST_CHECK(extractEVMFunction(nameRepository.storageLoadFunction(type)) == dialect.storageLoadFunction(typeLabel));
-		BOOST_CHECK(nameRepository.labelOf(nameRepository.hashFunction(type)) == dialect.hashFunction(typeLabel).str());
+		BOOST_CHECK(nameRepository.labelOf(nameRepository.hashFunction(type)) == dialect.hashFunction(typeLabel));
 	}
 }
 
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(verbatim_functions)
 	BOOST_CHECK(nameRepository.isBuiltinName(verbatimName));
 	BOOST_CHECK(nameRepository.isDerivedName(verbatimName));
 	BOOST_CHECK(nameRepository.baseNameOf(verbatimName) == nameRepository.predefined().verbatim);
-	BOOST_CHECK(nameRepository.builtin(verbatimName)->definition == dialect.builtin(YulString{"verbatim_5i_3o"}));
+	BOOST_CHECK(nameRepository.builtin(verbatimName)->definition == dialect.builtin("verbatim_5i_3o"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

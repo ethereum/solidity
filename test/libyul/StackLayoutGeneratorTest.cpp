@@ -55,9 +55,9 @@ StackLayoutGeneratorTest::StackLayoutGeneratorTest(std::string const& _filename)
 
 namespace
 {
-static std::string variableSlotToString(VariableSlot const& _slot)
+static std::string variableSlotToString(VariableSlot const& _slot, YulNameRepository const& _nameRepository)
 {
-	return _slot.variable.get().name.str();
+	return std::string(_nameRepository.requiredLabelOf(_slot.variable.get().name));
 }
 }
 
@@ -65,7 +65,7 @@ class StackLayoutPrinter
 {
 public:
 	StackLayoutPrinter(std::ostream& _stream, StackLayout const& _stackLayout, YulNameRepository const& _yulNameRepository):
-	m_stream(_stream), m_stackLayout(_stackLayout), m_yulNameRepository(_yulNameRepository)
+	m_stream(_stream), m_stackLayout(_stackLayout), m_nameRepository(_yulNameRepository)
 	{
 	}
 	void operator()(CFG::BasicBlock const& _block, bool _isMainEntry = true)
@@ -87,20 +87,20 @@ public:
 		CFG::FunctionInfo const& _info
 	)
 	{
-		m_stream << "FunctionEntry_" << _info.function.name.str() << " [label=\"";
-		m_stream << "function " << _info.function.name.str() << "(";
-		m_stream << joinHumanReadable(_info.parameters | ranges::views::transform(variableSlotToString));
+		m_stream << "FunctionEntry_" << m_nameRepository.requiredLabelOf(_info.function.name) << " [label=\"";
+		m_stream << "function " << m_nameRepository.requiredLabelOf(_info.function.name) << "(";
+		m_stream << joinHumanReadable(_info.parameters | ranges::views::transform([&](auto const& var) { return variableSlotToString(var, m_nameRepository); }));
 		m_stream << ")";
 		if (!_info.returnVariables.empty())
 		{
 			m_stream << " -> ";
-			m_stream << joinHumanReadable(_info.returnVariables | ranges::views::transform(variableSlotToString));
+			m_stream << joinHumanReadable(_info.returnVariables | ranges::views::transform([&](auto const& var) { return variableSlotToString(var, m_nameRepository); }));
 		}
 		m_stream << "\\l\\\n";
 		Stack functionEntryStack = {FunctionReturnLabelSlot{_info.function}};
 		functionEntryStack += _info.parameters | ranges::views::reverse;
-		m_stream << stackToString(functionEntryStack, m_yulNameRepository) << "\"];\n";
-		m_stream << "FunctionEntry_" << _info.function.name.str() << " -> Block" << getBlockId(*_info.entry) << ";\n";
+		m_stream << stackToString(functionEntryStack, m_nameRepository) << "\"];\n";
+		m_stream << "FunctionEntry_" << m_nameRepository.requiredLabelOf(_info.function.name) << " -> Block" << getBlockId(*_info.entry) << ";\n";
 		(*this)(*_info.entry, false);
 	}
 
@@ -130,22 +130,22 @@ private:
 			}, entry->exit);
 
 		auto const& blockInfo = m_stackLayout.blockInfos.at(&_block);
-		m_stream << stackToString(blockInfo.entryLayout, m_yulNameRepository) << "\\l\\\n";
+		m_stream << stackToString(blockInfo.entryLayout, m_nameRepository) << "\\l\\\n";
 		for (auto const& operation: _block.operations)
 		{
 			auto entryLayout = m_stackLayout.operationEntryLayout.at(&operation);
-			m_stream << stackToString(m_stackLayout.operationEntryLayout.at(&operation), m_yulNameRepository) << "\\l\\\n";
+			m_stream << stackToString(m_stackLayout.operationEntryLayout.at(&operation), m_nameRepository) << "\\l\\\n";
 			std::visit(util::GenericVisitor{
 				[&](CFG::FunctionCall const& _call) {
-					m_stream << _call.function.get().name.str();
+					m_stream << m_nameRepository.requiredLabelOf(_call.function.get().name);
 				},
 				[&](CFG::BuiltinCall const& _call) {
-					m_stream << _call.functionCall.get().functionName.name.str();
+					m_stream << m_nameRepository.requiredLabelOf(_call.functionCall.get().functionName.name);
 
 				},
 				[&](CFG::Assignment const& _assignment) {
 					m_stream << "Assignment(";
-					m_stream << joinHumanReadable(_assignment.variables | ranges::views::transform(variableSlotToString));
+					m_stream << joinHumanReadable(_assignment.variables | ranges::views::transform([&](auto const& var) { return variableSlotToString(var, m_nameRepository); }));
 					m_stream << ")";
 				}
 			}, operation.operation);
@@ -154,9 +154,9 @@ private:
 			for (size_t i = 0; i < operation.input.size(); ++i)
 				entryLayout.pop_back();
 			entryLayout += operation.output;
-			m_stream << stackToString(entryLayout, m_yulNameRepository) << "\\l\\\n";
+			m_stream << stackToString(entryLayout, m_nameRepository) << "\\l\\\n";
 		}
-		m_stream << stackToString(blockInfo.exitLayout, m_yulNameRepository) << "\\l\\\n";
+		m_stream << stackToString(blockInfo.exitLayout, m_nameRepository) << "\\l\\\n";
 		m_stream << "\"];\n";
 		std::visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::MainExit const&)
@@ -177,7 +177,7 @@ private:
 			{
 				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
 				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"{ ";
-				m_stream << stackSlotToString(_conditionalJump.condition, m_yulNameRepository);
+				m_stream << stackSlotToString(_conditionalJump.condition, m_nameRepository);
 				m_stream << "| { <0> Zero | <1> NonZero }}\" shape=Mrecord];\n";
 				m_stream << "Block" << getBlockId(_block);
 				m_stream << "Exit:0 -> Block" << getBlockId(*_conditionalJump.zero) << ";\n";
@@ -186,7 +186,7 @@ private:
 			},
 			[&](CFG::BasicBlock::FunctionReturn const& _return)
 			{
-				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"FunctionReturn[" << _return.info->function.name.str() << "]\"];\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"FunctionReturn[" << m_nameRepository.requiredLabelOf(_return.info->function.name) << "]\"];\n";
 				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
 			},
 			[&](CFG::BasicBlock::Terminated const&)
@@ -210,7 +210,7 @@ private:
 	std::map<CFG::BasicBlock const*, size_t> m_blockIds;
 	size_t m_blockCount = 0;
 	std::list<CFG::BasicBlock const*> m_blocksToPrint;
-	YulNameRepository const& m_yulNameRepository;
+	YulNameRepository const& m_nameRepository;
 };
 
 TestCase::TestResult StackLayoutGeneratorTest::run(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted)

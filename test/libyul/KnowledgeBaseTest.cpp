@@ -26,11 +26,8 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/optimiser/SSAValueTracker.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 #include <libyul/backends/evm/EVMDialect.h>
-
-#include <liblangutil/ErrorReporter.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -51,9 +48,8 @@ protected:
 
 		YulNameRepository nameRepository(m_object->code->nameRepository());
 		auto block = std::get<Block>(yul::ASTCopier{}(m_object->code->block()));
-		NameDispenser dispenser(m_dialect, block);
-		std::set<YulName> reserved;
-		OptimiserStepContext context{m_dialect, nameRepository, dispenser, reserved, 0};
+		std::set<YulName> reserved{};
+		OptimiserStepContext context{nameRepository.dialect(), nameRepository, reserved, 0};
 		CommonSubexpressionEliminator::run(context, block);
 
 		m_ssaValues(block);
@@ -83,15 +79,16 @@ BOOST_AUTO_TEST_CASE(basic)
 		let d := mul(b, 0)
 		let e := sub(a, b)
 	})");
+	auto const& nameRepository = m_object->code->nameRepository();
 
-	BOOST_CHECK(!kb.knownToBeDifferent("a"_yulname, "b"_yulname));
+	BOOST_CHECK(!kb.knownToBeDifferent(nameRepository.nameOfLabel("a"), nameRepository.nameOfLabel("b")));
 	// This only works if the variable names are the same.
 	// It assumes that SSA+CSE+Simplifier actually replaces the variables.
-	BOOST_CHECK(!kb.valueIfKnownConstant("a"_yulname));
-	BOOST_CHECK(kb.valueIfKnownConstant("zero"_yulname) == u256(0));
-	BOOST_CHECK(kb.differenceIfKnownConstant("a"_yulname, "b"_yulname) == u256(0));
-	BOOST_CHECK(kb.differenceIfKnownConstant("a"_yulname, "c"_yulname) == u256(0));
-	BOOST_CHECK(kb.valueIfKnownConstant("e"_yulname) == u256(0));
+	BOOST_CHECK(!kb.valueIfKnownConstant(nameRepository.nameOfLabel("a")));
+	BOOST_CHECK(kb.valueIfKnownConstant(nameRepository.nameOfLabel("zero")) == u256(0));
+	BOOST_CHECK(kb.differenceIfKnownConstant(nameRepository.nameOfLabel("a"), nameRepository.nameOfLabel("b")) == u256(0));
+	BOOST_CHECK(kb.differenceIfKnownConstant(nameRepository.nameOfLabel("a"), nameRepository.nameOfLabel("c")) == u256(0));
+	BOOST_CHECK(kb.valueIfKnownConstant(nameRepository.nameOfLabel("e")) == u256(0));
 }
 
 BOOST_AUTO_TEST_CASE(difference)
@@ -103,22 +100,33 @@ BOOST_AUTO_TEST_CASE(difference)
 		let d := add(12, c)
 		let e := sub(c, 12)
 	})");
+	auto const& nameRepository = m_object->code->nameRepository();
 
-	BOOST_CHECK(kb.differenceIfKnownConstant("c"_yulname, "b"_yulname) ==
+	BOOST_CHECK(
+		kb.differenceIfKnownConstant(nameRepository.nameOfLabel("c"), nameRepository.nameOfLabel("b")) ==
 		u256(20)
 	);
-	BOOST_CHECK(kb.differenceIfKnownConstant("b"_yulname, "c"_yulname) ==
+	BOOST_CHECK(
+		kb.differenceIfKnownConstant(nameRepository.nameOfLabel("b"), nameRepository.nameOfLabel("c")) ==
 		u256(-20)
 	);
-	BOOST_CHECK(!kb.knownToBeDifferentByAtLeast32("b"_yulname, "c"_yulname));
-	BOOST_CHECK(kb.knownToBeDifferentByAtLeast32("b"_yulname, "d"_yulname));
-	BOOST_CHECK(kb.knownToBeDifferentByAtLeast32("a"_yulname, "b"_yulname));
-	BOOST_CHECK(kb.knownToBeDifferentByAtLeast32("b"_yulname, "a"_yulname));
+	BOOST_CHECK(!kb.knownToBeDifferentByAtLeast32(nameRepository.nameOfLabel("b"), nameRepository.nameOfLabel("c")));
+	BOOST_CHECK(kb.knownToBeDifferentByAtLeast32(nameRepository.nameOfLabel("b"), nameRepository.nameOfLabel("d")));
+	BOOST_CHECK(kb.knownToBeDifferentByAtLeast32(nameRepository.nameOfLabel("a"), nameRepository.nameOfLabel("b")));
+	BOOST_CHECK(kb.knownToBeDifferentByAtLeast32(nameRepository.nameOfLabel("b"), nameRepository.nameOfLabel("a")));
 
-	BOOST_CHECK(kb.differenceIfKnownConstant("e"_yulname, "a"_yulname) == u256(208));
-	BOOST_CHECK(kb.differenceIfKnownConstant("e"_yulname, "b"_yulname) == u256(8));
-	BOOST_CHECK(kb.differenceIfKnownConstant("a"_yulname, "e"_yulname) == u256(-208));
-	BOOST_CHECK(kb.differenceIfKnownConstant("b"_yulname, "e"_yulname) == u256(-8));
+	BOOST_CHECK(
+		kb.differenceIfKnownConstant(nameRepository.nameOfLabel("e"), nameRepository.nameOfLabel("a")) == u256(208)
+	);
+	BOOST_CHECK(
+		kb.differenceIfKnownConstant(nameRepository.nameOfLabel("e"), nameRepository.nameOfLabel("b")) == u256(8)
+	);
+	BOOST_CHECK(
+		kb.differenceIfKnownConstant(nameRepository.nameOfLabel("a"), nameRepository.nameOfLabel("e")) == u256(-208)
+	);
+	BOOST_CHECK(
+		kb.differenceIfKnownConstant(nameRepository.nameOfLabel("b"), nameRepository.nameOfLabel("e")) == u256(-8)
+	);
 }
 
 

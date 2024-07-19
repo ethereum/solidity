@@ -109,14 +109,14 @@ void InterpreterState::dumpTraceAndState(std::ostream& _out, bool _disableMemory
 
 void Interpreter::run(
 	InterpreterState& _state,
-	Dialect const& _dialect,
+	YulNameRepository const& _nameRepository,
 	Block const& _ast,
 	bool _disableExternalCalls,
 	bool _disableMemoryTrace
 )
 {
 	Scope scope;
-	Interpreter{_state, _dialect, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
+	Interpreter{_state, _nameRepository, scope, _disableExternalCalls, _disableMemoryTrace}(_ast);
 }
 
 void Interpreter::operator()(ExpressionStatement const& _expressionStatement)
@@ -251,14 +251,14 @@ void Interpreter::operator()(Block const& _block)
 
 u256 Interpreter::evaluate(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_nameRepository, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.value();
 }
 
 std::vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 {
-	ExpressionEvaluator ev(m_state, m_dialect, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
+	ExpressionEvaluator ev(m_state, m_nameRepository, *m_scope, m_variables, m_disableExternalCalls, m_disableMemoryTrace);
 	ev.visit(_expression);
 	return ev.values();
 }
@@ -309,25 +309,25 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
-		if (!builtin->literalArguments.empty())
-			literalArguments = &builtin->literalArguments;
+	if (auto const* builtin = m_nameRepository.builtin(_funCall.functionName.name))
+		if (!builtin->data->literalArguments.empty())
+			literalArguments = &builtin->data->literalArguments;
 	evaluateArgs(_funCall.arguments, literalArguments);
 
-	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+	if (EVMDialect const* dialect = m_nameRepository.evmDialect())
 	{
-		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
-		{
-			EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
+		if (auto const* fun = m_nameRepository.builtin(_funCall.functionName.name))
+			if(auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(fun->data))
+			{
+				EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
+				u256 const value = interpreter.evalBuiltin(*evmFun, _funCall.arguments, values());
 
-			u256 const value = interpreter.evalBuiltin(*fun, _funCall.arguments, values());
-
-			if (
-				!m_disableExternalCalls &&
-				fun->instruction &&
-				evmasm::isCallInstruction(*fun->instruction)
-			)
-				runExternalCall(*fun->instruction);
+				if (
+					!m_disableExternalCalls &&
+					evmFun->instruction &&
+					evmasm::isCallInstruction(*evmFun->instruction)
+				)
+					runExternalCall(*evmFun->instruction);
 
 			setValue(value);
 			return;

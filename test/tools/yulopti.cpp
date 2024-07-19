@@ -35,7 +35,6 @@
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/StackCompressor.h>
-#include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Suite.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
@@ -174,7 +173,6 @@ public:
 	{
 		*m_block = std::get<yul::Block>(Disambiguator(*m_nameRepository, *m_analysisInfo)(*m_block));
 		m_analysisInfo.reset();
-		m_nameDispenser.reset(*m_block);
 	}
 
 	void runSteps(std::string _source, std::string _steps)
@@ -213,7 +211,7 @@ public:
 					case '#':
 						return;
 					case ',':
-						VarNameCleaner::run(m_context, *m_block);
+						// VarNameCleaner::run(m_context, *m_ast);
 						// VarNameCleaner destroys the unique names guarantee of the disambiguator.
 						disambiguated = false;
 						break;
@@ -247,11 +245,9 @@ private:
 	std::shared_ptr<yul::YulNameRepository> m_nameRepository{std::make_shared<yul::YulNameRepository>(m_dialect)};
 	std::unique_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::set<YulName> const m_reservedIdentifiers = {};
-	NameDispenser m_nameDispenser{m_dialect, m_reservedIdentifiers};
 	OptimiserStepContext m_context{
 		m_dialect,
 		*m_nameRepository,
-		m_nameDispenser,
 		m_reservedIdentifiers,
 		solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	};

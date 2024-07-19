@@ -60,8 +60,7 @@ std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 
 Program::Program(Program const& program):
 	m_ast(std::make_unique<AST>(program.m_ast->nameRepository(), std::get<Block>(ASTCopier{}(program.m_ast->block())))),
-	m_dialect{program.m_dialect},
-	m_nameDispenser(program.m_nameDispenser)
+	m_dialect(program.m_dialect)
 {
 }
 
@@ -80,12 +79,13 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 	if (std::holds_alternative<ErrorList>(analysisInfoOrErrors))
 		return std::get<ErrorList>(analysisInfoOrErrors);
 
+	auto ast = disambiguateAST(
+		*std::get<std::unique_ptr<AST>>(astOrErrors),
+		*std::get<std::unique_ptr<AsmAnalysisInfo>>(analysisInfoOrErrors)
+	);
 	Program program(
 		dialect,
-		disambiguateAST(
-			*std::get<std::unique_ptr<AST>>(astOrErrors),
-			*std::get<std::unique_ptr<AsmAnalysisInfo>>(analysisInfoOrErrors)
-		)
+		std::move(ast)
 	);
 	program.optimise({
 		FunctionHoister::name,
@@ -98,11 +98,13 @@ std::variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 
 void Program::optimise(std::vector<std::string> const& _optimisationSteps)
 {
-	m_ast = applyOptimisationSteps(m_nameDispenser, *m_ast, _optimisationSteps);
+	m_ast = applyOptimisationSteps(*m_ast, _optimisationSteps);
 }
 
 std::ostream& phaser::operator<<(std::ostream& _stream, Program const& _program)
 {
+	YulNameRepository nameRepository (_program.m_ast->nameRepository());
+	nameRepository.generateLabels(_program.m_ast->block());
 	return _stream << AsmPrinter(AsmPrinter::Mode::FullTypeInfo, _program.m_ast->nameRepository())(_program.m_ast->block());
 }
 
@@ -110,6 +112,11 @@ std::string Program::toJson() const
 {
 	Json serializedAst = AsmJsonConverter(0, m_ast->nameRepository())(m_ast->block());
 	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
+}
+
+yul::YulNameRepository const& Program::nameRepository() const
+{
+	return m_ast->nameRepository();
 }
 
 std::variant<std::unique_ptr<AST>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)
@@ -184,7 +191,6 @@ std::unique_ptr<AST> Program::disambiguateAST(
 }
 
 std::unique_ptr<AST> Program::applyOptimisationSteps(
-	NameDispenser& _nameDispenser,
 	AST const& _ast,
 	std::vector<std::string> const& _optimisationSteps
 )
@@ -196,7 +202,6 @@ std::unique_ptr<AST> Program::applyOptimisationSteps(
 	OptimiserStepContext context{
 		nameRepository.dialect(),
 		nameRepository,
-		_nameDispenser,
 		externallyUsedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	};

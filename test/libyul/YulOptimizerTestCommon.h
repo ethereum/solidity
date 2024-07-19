@@ -58,7 +58,7 @@ public:
 	std::shared_ptr<Object> resultObject() const;
 private:
 	Block disambiguate(YulNameRepository& _nameRepository);
-	void updateContext(YulNameRepository& _nameRepository, Block const& _block);
+	void updateContext(YulNameRepository& _nameRepository);
 
 	std::string m_optimizerStep;
 

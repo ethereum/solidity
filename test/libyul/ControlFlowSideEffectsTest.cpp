@@ -68,7 +68,7 @@ TestCase::TestResult ControlFlowSideEffectsTest::run(std::ostream& _stream, std:
 	m_obtainedResult.clear();
 	forEach<FunctionDefinition const>(obj.code->block(), [&](FunctionDefinition const& _fun) {
 		std::string effectStr = toString(sideEffects.functionSideEffects().at(&_fun));
-		m_obtainedResult += _fun.name.str() + (effectStr.empty() ? ":" : ": " + effectStr) + "\n";
+		m_obtainedResult += std::string(obj.code->nameRepository().requiredLabelOf(_fun.name)) + (effectStr.empty() ? ":" : ": " + effectStr) + "\n";
 	});
 
 	return checkResult(_stream, _linePrefix, _formatted);
