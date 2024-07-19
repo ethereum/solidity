@@ -390,14 +390,17 @@ void CompilerContext::appendInlineAssembly(
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
 	yul::YulNameRepository nameRepository(dialect);
 
+	std::vector<yul::YulName> externallyUsedFunctionNames = _externallyUsedFunctions
+		| ranges::views::transform([&nameRepository](auto const& label) { return nameRepository.defineName(label); })
+		| ranges::to_vector;
+	std::vector<yul::YulName> localVariableNames = _localVariables
+		| ranges::views::transform([&nameRepository](auto const& label) { return nameRepository.defineName(label); })
+		| ranges::to_vector;
 	std::set<yul::YulName> externallyUsedIdentifiers;
-	for (auto const& fun: _externallyUsedFunctions)
-		externallyUsedIdentifiers.insert(yul::YulName(fun));
-	for (auto const& var: _localVariables)
-		externallyUsedIdentifiers.insert(yul::YulName(var));
+	externallyUsedIdentifiers += externallyUsedFunctionNames + localVariableNames;
 
 	yul::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](
+	identifierAccess.resolve = [&localVariableNames](
 		yul::Identifier const& _identifier,
 		yul::IdentifierContext,
 		bool _insideFunction
@@ -405,7 +408,7 @@ void CompilerContext::appendInlineAssembly(
 	{
 		if (_insideFunction)
 			return false;
-		return util::contains(_localVariables, _identifier.name.str());
+		return util::contains(localVariableNames, _identifier.name);
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,
@@ -414,9 +417,9 @@ void CompilerContext::appendInlineAssembly(
 	)
 	{
 		solAssert(_context == yul::IdentifierContext::RValue || _context == yul::IdentifierContext::LValue, "");
-		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
-		solAssert(it != _localVariables.end(), "");
-		auto stackDepth = static_cast<size_t>(distance(it, _localVariables.end()));
+		auto it = std::find(localVariableNames.begin(), localVariableNames.end(), _identifier.name);
+		solAssert(it != localVariableNames.end(), "");
+		auto stackDepth = static_cast<size_t>(distance(it, localVariableNames.end()));
 		size_t stackDiff = static_cast<size_t>(_assembly.stackHeight()) - startStackHeight + stackDepth;
 		if (_context == yul::IdentifierContext::LValue)
 			stackDiff -= 1;

@@ -42,10 +42,10 @@ Json AsmJsonConverter::operator()(Block const& _node) const
 
 Json AsmJsonConverter::operator()(TypedName const& _node) const
 {
-	yulAssert(!_node.name.empty(), "Invalid variable name.");
+	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid variable name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulTypedName");
-	ret["name"] = _node.name.str();
-	ret["type"] = _node.type.str();
+	ret["name"] = m_nameRepository.requiredLabelOf(_node.name);
+	ret["type"] = m_nameRepository.requiredLabelOf(_node.type);
 	return ret;
 }
 
@@ -66,7 +66,7 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 		ret["hexValue"] = util::toHex(util::asBytes(formatLiteral(_node)));
 		break;
 	}
-	ret["type"] = _node.type.str();
+	ret["type"] = m_nameRepository.requiredLabelOf(_node.type);
 	{
 		auto const formattedLiteral = formatLiteral(_node);
 		if (util::validateUTF8(formattedLiteral))
@@ -77,9 +77,9 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 
 Json AsmJsonConverter::operator()(Identifier const& _node) const
 {
-	yulAssert(!_node.name.empty(), "Invalid identifier");
+	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid identifier");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
-	ret["name"] = _node.name.str();
+	ret["name"] = m_nameRepository.requiredLabelOf(_node.name);
 	return ret;
 }
 
@@ -119,9 +119,9 @@ Json AsmJsonConverter::operator()(VariableDeclaration const& _node) const
 
 Json AsmJsonConverter::operator()(FunctionDefinition const& _node) const
 {
-	yulAssert(!_node.name.empty(), "Invalid function name.");
+	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid function name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulFunctionDefinition");
-	ret["name"] = _node.name.str();
+	ret["name"] = m_nameRepository.requiredLabelOf(_node.name);
 	for (auto const& var: _node.parameters)
 		ret["parameters"].emplace_back((*this)(var));
 	for (auto const& var: _node.returnVariables)

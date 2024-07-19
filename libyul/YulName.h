@@ -20,7 +20,6 @@
 
 #include <libyul/ControlFlowSideEffects.h>
 #include <libyul/SideEffects.h>
-#include <libyul/YulString.h>
 
 #include <fmt/format.h>
 
@@ -145,6 +144,10 @@ public:
 	/// generated with `generateLabels`, or it is a builtin.
 	std::optional<std::string_view> labelOf(YulName const& _name) const;
 
+	/// If it can be assumed that the label was already generated, this function will yield it (or fail with an
+	/// assertion error).
+	std::string_view requiredLabelOf(YulName _name) const;
+
 	/// Yields the name that the provided name was based on - or the name itself, if the name was directly "defined".
 	YulName const& baseNameOf(YulName const& _name) const;
 
@@ -200,6 +203,7 @@ public:
 	/// Generates labels for derived names over the set of _usedNames, respecting a set of _illegal labels.
 	/// This will change the state of all derived names in _usedNames to "not derived" with a label associated to them.
 	void generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal = {});
+	void generateLabels(Block const& _ast, std::set<std::string> const& _illegal = {});
 
 private:
 	struct InstanceCounter
@@ -257,6 +261,7 @@ private:
 	PredefinedHandles m_predefined{};
 	IndexBoundaries m_indexBoundaries;
 };
-using YulName = YulString;
+using YulName = YulNameRepository::YulName;
+using Type = YulName;
 
 }

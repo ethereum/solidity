@@ -33,14 +33,14 @@
 namespace solidity::yul
 {
 
-inline std::string stackSlotToString(StackSlot const& _slot, YulNameRepository const&)
+inline std::string stackSlotToString(StackSlot const& _slot, YulNameRepository const& _nameRepository)
 {
 	return std::visit(util::GenericVisitor{
-		[](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + _ret.call.get().functionName.name.str() + "]"; },
+		[&_nameRepository](FunctionCallReturnLabelSlot const& _ret) -> std::string { return fmt::format("RET[{}]", _nameRepository.requiredLabelOf(_ret.call.get().functionName.name)); },
 		[](FunctionReturnLabelSlot const&) -> std::string { return "RET"; },
-		[](VariableSlot const& _var) { return _var.variable.get().name.str(); },
+		[&_nameRepository](VariableSlot const& _var) { return std::string(_nameRepository.requiredLabelOf(_var.variable.get().name)); },
 		[](LiteralSlot const& _lit) { return toCompactHexWithPrefix(_lit.value); },
-		[](TemporarySlot const& _tmp) -> std::string { return "TMP[" + _tmp.call.get().functionName.name.str() + ", " + std::to_string(_tmp.index) + "]"; },
+		[&_nameRepository](TemporarySlot const& _tmp) -> std::string { return fmt::format("TMP[{}, {}]", _nameRepository.requiredLabelOf(_tmp.call.get().functionName.name), _tmp.index); },
 		[](JunkSlot const&) -> std::string { return "JUNK"; }
 	}, _slot);
 }

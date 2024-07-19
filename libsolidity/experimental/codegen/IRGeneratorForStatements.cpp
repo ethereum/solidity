@@ -72,10 +72,10 @@ struct CopyTranslate: public yul::ASTCopier
 
 	yul::YulName translateIdentifier(yul::YulName _name) override
 	{
-		if (m_nameRepository.dialect().builtin(_name))
+		if (m_nameRepository.isBuiltinName(_name))
 			return _name;
 		else
-			return yul::YulName{"usr$" + _name.str()};
+			return m_nameRepository.defineName("usr$" + std::string(m_nameRepository.requiredLabelOf(_name)));
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override
@@ -102,7 +102,7 @@ private:
 		solAssert(type);
 		solAssert(m_context.env->typeEquals(*type, m_context.analysis.typeSystem().type(PrimitiveType::Word, {})));
 		std::string value = IRNames::localVariable(*varDecl);
-		return yul::Identifier{_identifier.debugData, yul::YulName{value}};
+		return yul::Identifier{_identifier.debugData, m_nameRepository.defineName(value)};
 	}
 
 	IRGenerationContext const& m_context;

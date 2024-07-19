@@ -233,13 +233,14 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	yulAssert(m_scope, "");
 
 	m_assembly.setSourceLocation(originLocationOf(_call));
-	if (BuiltinFunctionForEVM const* builtin = m_evmDialect->builtin(_call.functionName.name))
+	if (auto const* builtin = m_nameRepository.builtin(_call.functionName.name))
 	{
+		auto const* evmBuiltin = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->data);
 		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin->literalArgument(i))
+			if (!evmBuiltin->literalArgument(i))
 				visitExpression(arg);
 		m_assembly.setSourceLocation(originLocationOf(_call));
-		builtin->generateCode(_call, m_assembly, m_builtinContext);
+		evmBuiltin->generateCode(_call, m_assembly, m_builtinContext);
 	}
 	else
 	{
@@ -423,7 +424,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.markAsInvalid();
 		for (StackTooDeepError& stackError: subTransform.m_stackErrors)
 		{
-			if (stackError.functionName.empty())
+			if (stackError.functionName == YulNameRepository::emptyName())
 				stackError.functionName = _function.name;
 			m_stackErrors.emplace_back(std::move(stackError));
 		}
@@ -461,13 +462,12 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		{
 			StackTooDeepError error(
 				_function.name,
-				YulName{},
+				YulNameRepository::emptyName(),
 				static_cast<int>(stackLayout.size()) - 17,
-				"The function " +
-				_function.name.str() +
-				" has " +
-				std::to_string(stackLayout.size() - 17) +
-				" parameters or return variables too many to fit the stack size."
+				fmt::format(
+					"The function {} has {} parameters or return variables too many to fit the stack size.",
+					m_nameRepository.requiredLabelOf(_function.name), stackLayout.size() - 17
+				)
 			);
 			stackError(std::move(error), m_assembly.stackHeight() - static_cast<int>(_function.parameters.size()));
 		}
@@ -606,7 +606,7 @@ void CodeTransform::createFunctionEntryID(FunctionDefinition const& _function)
 			!nameAlreadySeen
 		) ?
 		m_assembly.namedLabel(
-			_function.name.str(),
+			std::string(m_nameRepository.requiredLabelOf(_function.name)),
 			_function.parameters.size(),
 			_function.returnVariables.size(),
 			astID
@@ -786,12 +786,10 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulName _v
 		m_stackErrors.emplace_back(
 			_varName,
 			heightDiff - limit,
-			"Variable " +
-			_varName.str() +
-			" is " +
-			std::to_string(heightDiff - limit) +
-			" slot(s) too deep inside the stack. " +
-			stackTooDeepString
+			fmt::format(
+				"Variable {} is {} slot(s) too deep inside the stack. {}",
+				m_nameRepository.requiredLabelOf(_varName), heightDiff - limit, stackTooDeepString
+			)
 		);
 		m_assembly.markAsInvalid();
 		return _forSwap ? 2 : 1;

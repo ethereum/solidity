@@ -38,8 +38,8 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter, YulNameRepository const&):
-	m_info(_info), m_errorReporter(_errorReporter)
+ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter, YulNameRepository const& _nameRepository):
+	m_nameRepository(_nameRepository), m_info(_info), m_errorReporter(_errorReporter)
 {
 	m_currentScope = &scope(nullptr);
 }
@@ -141,7 +141,7 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 		m_errorReporter.declarationError(
 			1395_error,
 			_location,
-			"Variable name " + _name.name.str() + " already taken in this scope."
+			fmt::format("Variable name {} already taken in this scope.", m_nameRepository.requiredLabelOf(_name.name))
 		);
 		return false;
 	}
@@ -162,7 +162,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 		m_errorReporter.declarationError(
 			6052_error,
 			nativeLocationOf(_funDef),
-			"Function name " + _funDef.name.str() + " already taken in this scope."
+			fmt::format("Function name {} already taken in this scope.", m_nameRepository.requiredLabelOf(_funDef.name))
 		);
 		return false;
 	}

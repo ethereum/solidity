@@ -39,14 +39,14 @@ struct Scope
 
 	struct Variable
 	{
-		YulType type;
-		YulName name;
+		YulType type {};
+		YulName name {};
 	};
 	struct Function
 	{
 		std::vector<YulType> arguments;
 		std::vector<YulType> returns;
-		YulName name;
+		YulName name {};
 	};
 
 	using Identifier = std::variant<Variable, Function>;
@@ -91,7 +91,7 @@ struct Scope
 	/// If true, variables from the super scope are not visible here (other identifiers are),
 	/// but they are still taken into account to prevent shadowing.
 	bool functionScope = false;
-	std::map<YulName, Identifier> identifiers;
+	std::map<YulType, Identifier> identifiers;
 };
 
 }

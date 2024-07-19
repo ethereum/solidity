@@ -78,10 +78,10 @@ std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
 	SimplificationRules::instructionAndArguments(YulNameRepository const& _nameRepository, Expression const& _expr)
 {
 	if (std::holds_alternative<FunctionCall>(_expr))
-		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_nameRepository.dialect()))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
-				if (builtin->instruction)
-					return std::make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
+		if (_nameRepository.isEvmDialect())
+			if (auto const* builtin = _nameRepository.builtin(std::get<FunctionCall>(_expr).functionName.name))
+				if (auto const* builtinEVM = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->data); builtinEVM->instruction)
+					return std::make_pair(*builtinEVM->instruction, &std::get<FunctionCall>(_expr).arguments);
 
 	return {};
 }
@@ -252,7 +252,7 @@ Expression Pattern::toExpression(langutil::DebugData::ConstPtr const& _debugData
 		std::string name = util::toLower(instructionInfo(m_instruction, _evmVersion).name);
 
 		return FunctionCall{_debugData,
-			Identifier{_debugData, YulName{name}},
+			Identifier{_debugData, _nameRepository.nameOfBuiltin(name)},
 			std::move(arguments)
 		};
 	}

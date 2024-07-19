@@ -84,10 +84,10 @@ struct CopyTranslate: public yul::ASTCopier
 		// from the Yul dialect we are compiling to. So we are assuming here that the builtin
 		// functions are identical. This should not be a problem for now since everything
 		// is EVM anyway.
-		if (m_nameRepository.dialect().builtin(_name))
+		if (m_nameRepository.isBuiltinName(_name))
 			return _name;
 		else
-			return yul::YulName{"usr$" + _name.str()};
+			return m_nameRepository.defineName("usr$" + std::string(m_nameRepository.requiredLabelOf(_name)));
 	}
 
 	yul::Identifier translate(yul::Identifier const& _identifier) override
@@ -206,7 +206,7 @@ private:
 		if (isDigit(value.front()))
 			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::valueOfNumberLiteral(value), {}};
 		else
-			return yul::Identifier{_identifier.debugData, yul::YulName{value}};
+			return yul::Identifier{_identifier.debugData, m_nameRepository.defineName(value)};
 	}
 
 

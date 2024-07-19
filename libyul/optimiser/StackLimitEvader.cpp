@@ -18,7 +18,6 @@
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
@@ -56,7 +55,7 @@ namespace
  */
 struct MemoryOffsetAllocator
 {
-	uint64_t run(YulName _function = YulName{})
+	uint64_t run(YulName _function = YulNameRepository::emptyName())
 	{
 		if (slotsRequiredForFunction.count(_function))
 			return slotsRequiredForFunction[_function];
@@ -87,7 +86,7 @@ struct MemoryOffsetAllocator
 			for (YulName variable: *unreachables)
 				// The empty case is a function with too many arguments or return values,
 				// which was already handled above.
-				if (!variable.empty() && !slotAllocations.count(variable))
+				if (variable != YulNameRepository::emptyName() && !slotAllocations.count(variable))
 					slotAllocations[variable] = requiredSlots++;
 		}
 
@@ -175,7 +174,10 @@ void StackLimitEvader::run(
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
 
-	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(_block, "memoryguard"_yulname);
+	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(
+		_block,
+		_context.nameRepository.predefined().memoryguard
+	);
 	// Do not optimise, if no ``memoryguard`` call is found.
 	if (memoryGuardCalls.empty())
 		return;
@@ -204,7 +206,7 @@ void StackLimitEvader::run(
 	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, _block);
 
 	reservedMemory += 32 * requiredSlots;
-	for (FunctionCall* memoryGuardCall: findFunctionCalls(_block, "memoryguard"_yulname))
+	for (FunctionCall* memoryGuardCall: findFunctionCalls(_block, _context.nameRepository.predefined().memoryguard))
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");

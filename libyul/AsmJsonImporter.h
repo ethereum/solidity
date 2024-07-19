@@ -52,25 +52,25 @@ private:
 	/// and throw an error if it does not exist
 	Json member(Json const& _node, std::string const& _name);
 
-	yul::Block createBlock(Json const& _node);
-	yul::Statement createStatement(Json const& _node);
-	yul::Expression createExpression(Json const& _node);
-	std::vector<yul::Statement> createStatementVector(Json const& _array);
-	std::vector<yul::Expression> createExpressionVector(Json const& _array);
+	yul::Block createBlock(Json const& _node, YulNameRepository& _nameRepository);
+	yul::Statement createStatement(Json const& _node, YulNameRepository& _nameRepository);
+	yul::Expression createExpression(Json const& _node, YulNameRepository& _nameRepository);
+	std::vector<yul::Statement> createStatementVector(Json const& _array, YulNameRepository& _nameRepository);
+	std::vector<yul::Expression> createExpressionVector(Json const& _array, YulNameRepository& _nameRepository);
 
-	yul::TypedName createTypedName(Json const& _node);
-	yul::Literal createLiteral(Json const& _node);
+	yul::TypedName createTypedName(Json const& _node, YulNameRepository& _nameRepository);
+	yul::Literal createLiteral(Json const& _node, YulNameRepository& _nameRepository);
 	yul::Leave createLeave(Json const& _node);
-	yul::Identifier createIdentifier(Json const& _node);
-	yul::Assignment createAssignment(Json const& _node);
-	yul::FunctionCall createFunctionCall(Json const& _node);
-	yul::ExpressionStatement createExpressionStatement(Json const& _node);
-	yul::VariableDeclaration createVariableDeclaration(Json const& _node);
-	yul::FunctionDefinition createFunctionDefinition(Json const& _node);
-	yul::If createIf(Json const& _node);
-	yul::Case createCase(Json const& _node);
-	yul::Switch createSwitch(Json const& _node);
-	yul::ForLoop createForLoop(Json const& _node);
+	yul::Identifier createIdentifier(Json const& _node, YulNameRepository& _nameRepository);
+	yul::Assignment createAssignment(Json const& _node, YulNameRepository& _nameRepository);
+	yul::FunctionCall createFunctionCall(Json const& _node, YulNameRepository& _nameRepository);
+	yul::ExpressionStatement createExpressionStatement(Json const& _node, YulNameRepository& _nameRepository);
+	yul::VariableDeclaration createVariableDeclaration(Json const& _node, YulNameRepository& _nameRepository);
+	yul::FunctionDefinition createFunctionDefinition(Json const& _node, YulNameRepository& _nameRepository);
+	yul::If createIf(Json const& _node, YulNameRepository& _nameRepository);
+	yul::Case createCase(Json const& _node, YulNameRepository& _nameRepository);
+	yul::Switch createSwitch(Json const& _node, YulNameRepository& _nameRepository);
+	yul::ForLoop createForLoop(Json const& _node, YulNameRepository& _nameRepository);
 	yul::Break createBreak(Json const& _node);
 	yul::Continue createContinue(Json const& _node);
 

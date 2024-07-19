@@ -38,15 +38,15 @@ using namespace solidity::langutil;
 void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 {
 	TypeInfo typeInfo(_context.nameRepository, _ast);
-	ExpressionSplitter{_context.nameRepository, _context.dispenser, typeInfo}(_ast);
+	ExpressionSplitter{_context.nameRepository, typeInfo}(_ast);
 }
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
-	BuiltinFunction const* builtin = m_nameRepository.dialect().builtin(_funCall.functionName.name);
+	auto const* builtin = m_nameRepository.builtin(_funCall.functionName.name);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
-		if (!builtin || !builtin->literalArgument(i - 1))
+		if (!builtin || !builtin->data->literalArgument(i - 1))
 			outlineExpression(_funCall.arguments[i - 1]);
 }
 
@@ -99,7 +99,7 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	visit(_expr);
 
 	langutil::DebugData::ConstPtr debugData = debugDataOf(_expr);
-	YulName var = m_nameDispenser.newName({});
+	YulName var = m_nameRepository.deriveName(YulNameRepository::emptyName());
 	YulName type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		debugData,

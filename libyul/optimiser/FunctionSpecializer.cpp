@@ -21,10 +21,8 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/NameDispenser.h>
 
 #include <libyul/AST.h>
-#include <libyul/YulName.h>
 #include <libsolutil/CommonData.h>
 
 #include <range/v3/algorithm/any_of.hpp>
@@ -55,7 +53,7 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 
 	// TODO When backtracking is implemented, the restriction of recursive functions can be lifted.
 	if (
-		m_nameRepository.dialect().builtin(_f.functionName.name) ||
+		m_nameRepository.isBuiltinName(_f.functionName.name) ||
 		m_recursiveFunctions.count(_f.functionName.name)
 	)
 		return;
@@ -64,8 +62,8 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 
 	if (ranges::any_of(arguments, [](auto& _a) { return _a.has_value(); }))
 	{
-		YulName oldName = std::move(_f.functionName.name);
-		auto newName = m_nameDispenser.newName(oldName);
+		auto oldName = std::move(_f.functionName.name);
+		auto newName = m_nameRepository.deriveName(oldName);
 
 		m_oldToNewMap[oldName].emplace_back(std::make_pair(newName, arguments));
 
@@ -89,7 +87,7 @@ FunctionDefinition FunctionSpecializer::specialize(
 		NameCollector{_f, NameCollector::OnlyVariables}.names(),
 		[&](auto& _name) -> std::pair<YulName, YulName>
 		{
-			return std::make_pair(_name, m_nameDispenser.newName(_name));
+			return std::make_pair(_name, m_nameRepository.deriveName(_name));
 		},
 		std::map<YulName, YulName>{}
 	);
@@ -119,7 +117,7 @@ FunctionDefinition FunctionSpecializer::specialize(
 			applyMap(_arguments, [&](auto const& _v) { return !_v; })
 		);
 
-	newFunction.name = std::move(_newName);
+	newFunction.name = _newName;
 
 	return newFunction;
 }
@@ -128,7 +126,6 @@ void FunctionSpecializer::run(OptimiserStepContext& _context, Block& _ast)
 {
 	FunctionSpecializer f{
 		CallGraphGenerator::callGraph(_ast).recursiveFunctions(),
-		_context.dispenser,
 		_context.nameRepository
 	};
 	f(_ast);

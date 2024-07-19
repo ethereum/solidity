@@ -24,7 +24,6 @@
 #include <libyul/ASTForward.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/optimiser/ASTCopier.h>
-#include <libyul/optimiser/NameDispenser.h>
 
 #include <optional>
 #include <set>
@@ -61,7 +60,6 @@ protected:
 
 	std::vector<Scope*> m_scopes;
 	std::map<void const*, YulName> m_translations;
-	NameDispenser m_nameDispenser;
 };
 
 }

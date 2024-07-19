@@ -62,7 +62,7 @@ void LoadResolver::visit(Expression& _e)
 			tryResolve(_e, StoreLoadLocation::Memory, funCall->arguments);
 		else if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)])
 			tryResolve(_e, StoreLoadLocation::Storage, funCall->arguments);
-		else if (!m_containsMSize && funCall->functionName.name == m_nameRepository.dialect().hashFunction({}))
+		else if (!m_containsMSize && funCall->functionName.name == m_nameRepository.hashFunction({}))
 		{
 			Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0));
 			Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1));
@@ -151,7 +151,7 @@ void LoadResolver::tryEvaluateKeccak(
 				debugDataOf(_e),
 				LiteralKind::Number,
 				LiteralValue{contentHash},
-				m_nameRepository.dialect().defaultType
+				m_nameRepository.predefined().defaultType
 			};
 		}
 	}

@@ -78,8 +78,8 @@ void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 	ASTWalker::operator()(_functionCall);
 
 	YulName functionName = _functionCall.functionName.name;
-	if (BuiltinFunction const* f = m_nameRepository.dialect().builtin(functionName))
-		m_sideEffects += f->sideEffects;
+	if (auto const* f = m_nameRepository.builtin(functionName))
+		m_sideEffects += f->data->sideEffects;
 	else if (m_functionSideEffects && m_functionSideEffects->count(functionName))
 		m_sideEffects += m_functionSideEffects->at(functionName);
 	else
@@ -115,8 +115,8 @@ void MSizeFinder::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
 
-	if (BuiltinFunction const* f = m_nameRepository.dialect().builtin(_functionCall.functionName.name))
-		if (f->isMSize)
+	if (auto const* f = m_nameRepository.builtin(_functionCall.functionName.name))
+		if (f->data->isMSize)
 			m_msizeFound = true;
 }
 
@@ -149,8 +149,8 @@ std::map<YulName, SideEffects> SideEffectsPropagator::sideEffects(
 				return;
 			if (sideEffects == SideEffects::worst())
 				return;
-			if (BuiltinFunction const* f = _nameRepository.dialect().builtin(_function))
-				sideEffects += f->sideEffects;
+			if (auto const* f = _nameRepository.builtin(_function))
+				sideEffects += f->data->sideEffects;
 			else
 			{
 				if (ret.count(_function))
@@ -232,8 +232,8 @@ bool TerminationFinder::containsNonContinuingFunctionCall(Expression const& _exp
 			if (containsNonContinuingFunctionCall(arg))
 				return true;
 
-		if (auto builtin = m_nameRepository.dialect().builtin(functionCall->functionName.name))
-			return !builtin->controlFlowSideEffects.canContinue;
+		if (auto builtin = m_nameRepository.builtin(functionCall->functionName.name))
+			return !builtin->data->controlFlowSideEffects.canContinue;
 		else if (m_functionSideEffects && m_functionSideEffects->count(functionCall->functionName.name))
 			return !m_functionSideEffects->at(functionCall->functionName.name).canContinue;
 	}

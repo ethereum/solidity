@@ -92,8 +92,8 @@ public:
 	};
 
 private:
-	std::set<Statement const*>& activeMemoryStores() { return m_activeStores["m"_yulname]; }
-	std::set<Statement const*>& activeStorageStores() { return m_activeStores["s"_yulname]; }
+	std::set<Statement const*>& activeMemoryStores() { return m_activeStores[0]; }
+	std::set<Statement const*>& activeStorageStores() { return m_activeStores[1]; }
 
 	void shortcutNestedLoop(ActiveStores const&) override
 	{

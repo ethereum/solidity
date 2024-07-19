@@ -47,7 +47,7 @@ struct AsmAnalysisInfo;
 class ScopeFiller
 {
 public:
-	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter, YulNameRepository const& _nameRegistry);
+	ScopeFiller(AsmAnalysisInfo& _info, langutil::ErrorReporter& _errorReporter, YulNameRepository const& _nameRepository);
 
 	bool operator()(Literal const&) { return true; }
 	bool operator()(Identifier const&) { return true; }
@@ -65,6 +65,7 @@ public:
 	bool operator()(Block const& _block);
 
 private:
+	YulNameRepository const& m_nameRepository;
 	bool registerVariable(
 		TypedName const& _name,
 		langutil::SourceLocation const& _location,

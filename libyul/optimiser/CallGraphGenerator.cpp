@@ -93,7 +93,7 @@ void CallGraphGenerator::operator()(ForLoop const& _forLoop)
 
 void CallGraphGenerator::operator()(FunctionDefinition const& _functionDefinition)
 {
-	YulName previousFunction = m_currentFunction;
+	auto previousFunction = m_currentFunction;
 	m_currentFunction = _functionDefinition.name;
 	yulAssert(m_callGraph.functionCalls.count(m_currentFunction) == 0, "");
 	m_callGraph.functionCalls[m_currentFunction] = {};
@@ -103,6 +103,6 @@ void CallGraphGenerator::operator()(FunctionDefinition const& _functionDefinitio
 
 CallGraphGenerator::CallGraphGenerator()
 {
-	m_callGraph.functionCalls[YulName{}] = {};
+	m_callGraph.functionCalls[YulNameRepository::emptyName()] = {};
 }
 

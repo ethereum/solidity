@@ -53,15 +53,22 @@ DataFlowAnalyzer::DataFlowAnalyzer(
 {
 	if (m_analyzeStores)
 	{
-		auto const& _dialect = m_nameRepository.dialect();
-		if (auto const* builtin = _dialect.memoryStoreFunction(YulName{}))
+		if (auto const* builtin = _nameRepository.memoryStoreFunction(YulNameRepository::emptyName()))
 			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-		if (auto const* builtin = _dialect.memoryLoadFunction(YulName{}))
+		else
+			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = std::nullopt;
+		if (auto const* builtin = _nameRepository.memoryLoadFunction(YulNameRepository::emptyName()))
 			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
-		if (auto const* builtin = _dialect.storageStoreFunction(YulName{}))
+		else
+			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = std::nullopt;
+		if (auto const* builtin = _nameRepository.storageStoreFunction(YulNameRepository::emptyName()))
 			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
-		if (auto const* builtin = _dialect.storageLoadFunction(YulName{}))
+		else
+			m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = std::nullopt;
+		if (auto const* builtin = _nameRepository.storageLoadFunction(YulNameRepository::emptyName()))
 			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
+		else
+			m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = std::nullopt;
 	}
 }
 
@@ -440,13 +447,13 @@ std::optional<YulName> DataFlowAnalyzer::isSimpleLoad(
 		if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(_location)])
 			if (Identifier const* key = std::get_if<Identifier>(&funCall->arguments.front()))
 				return key->name;
-	return {};
+	return std::nullopt;
 }
 
 std::optional<std::pair<YulName, YulName>> DataFlowAnalyzer::isKeccak(Expression const& _expression) const
 {
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_expression))
-		if (funCall->functionName.name == m_nameRepository.dialect().hashFunction({}))
+		if (funCall->functionName.name == m_nameRepository.hashFunction(m_nameRepository.predefined().defaultType))
 			if (Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(0)))
 				if (Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(1)))
 					return std::make_pair(start->name, length->name);

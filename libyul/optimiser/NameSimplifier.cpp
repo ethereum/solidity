@@ -67,8 +67,8 @@ void NameSimplifier::operator()(Identifier& _identifier)
 void NameSimplifier::operator()(FunctionCall& _funCall)
 {
 	// The visitor on its own does not visit the function name.
-	if (!m_context.dialect.builtin(_funCall.functionName.name))
-		(*this)(_funCall.functionName);
+	/*if (!m_context.dialect.builtin(_funCall.functionName.name))
+		(*this)(_funCall.functionName);*/
 	ASTModifier::operator()(_funCall);
 }
 
@@ -77,7 +77,7 @@ void NameSimplifier::findSimplification(YulName const& _name)
 	if (m_translations.count(_name))
 		return;
 
-	std::string name = _name.str();
+	std::string name = "";
 
 	static auto replacements = std::vector<std::pair<std::regex, std::string>>{
 		{std::regex("_\\$|\\$_"), "_"}, // remove type mangling delimiters
@@ -99,7 +99,7 @@ void NameSimplifier::findSimplification(YulName const& _name)
 		{std::regex("[0-9]*_$"), ""}
 	};
 
-	for (auto const& [pattern, substitute]: replacements)
+	/*for (auto const& [pattern, substitute]: replacements)
 	{
 		std::string candidate = regex_replace(name, pattern, substitute);
 		if (!candidate.empty() && !m_context.dispenser.illegalName(YulName(candidate)))
@@ -111,7 +111,7 @@ void NameSimplifier::findSimplification(YulName const& _name)
 		YulName newName{name};
 		m_context.dispenser.markUsed(newName);
 		m_translations[_name] = std::move(newName);
-	}
+	}*/
 }
 
 void NameSimplifier::translate(YulName& _name)

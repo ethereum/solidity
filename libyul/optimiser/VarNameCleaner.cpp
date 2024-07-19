@@ -95,7 +95,7 @@ void VarNameCleaner::operator()(Identifier& _identifier)
 
 YulName VarNameCleaner::findCleanName(YulName const& _name) const
 {
-	auto newName = stripSuffix(_name);
+	/*auto newName = stripSuffix(_name);
 	if (!isUsedName(newName))
 		return newName;
 
@@ -106,7 +106,8 @@ YulName VarNameCleaner::findCleanName(YulName const& _name) const
 		if (!isUsedName(newNameSuffixed))
 			return newNameSuffixed;
 	}
-	yulAssert(false, "Exhausted by attempting to find an available suffix.");
+	yulAssert(false, "Exhausted by attempting to find an available suffix.");*/
+	return _name;
 }
 
 bool VarNameCleaner::isUsedName(YulName const& _name) const
@@ -116,10 +117,10 @@ bool VarNameCleaner::isUsedName(YulName const& _name) const
 
 YulName VarNameCleaner::stripSuffix(YulName const& _name) const
 {
-	static std::regex const suffixRegex("(_+[0-9]+)+$");
+	/*static std::regex const suffixRegex("(_+[0-9]+)+$");
 
 	std::smatch suffixMatch;
 	if (regex_search(_name.str(), suffixMatch, suffixRegex))
-		return {YulName{suffixMatch.prefix().str()}};
+		return {YulName{suffixMatch.prefix().str()}};*/
 	return _name;
 }

@@ -24,7 +24,6 @@
 #include <libyul/ASTForward.h>
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/NameDispenser.h>
 
 #include <vector>
 
@@ -71,11 +70,9 @@ public:
 private:
 	explicit ExpressionSplitter(
 		YulNameRepository& _nameRepository,
-		NameDispenser& _nameDispenser,
 		TypeInfo& _typeInfo
 	):
 		m_nameRepository(_nameRepository),
-		m_nameDispenser(_nameDispenser),
 		m_typeInfo(_typeInfo)
 	{ }
 
@@ -88,7 +85,6 @@ private:
 	/// at the statement level.
 	std::vector<Statement> m_statementsToPrefix;
 	YulNameRepository& m_nameRepository;
-	NameDispenser& m_nameDispenser;
 	TypeInfo& m_typeInfo;
 };
 

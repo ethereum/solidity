@@ -33,24 +33,23 @@ using namespace solidity::util;
 Disambiguator::Disambiguator(
 	YulNameRepository& _nameRepository,
 	AsmAnalysisInfo const& _analysisInfo,
-	std::set<YulString> const& _externallyUsedIdentifiers
+	std::set<YulName> const& _externallyUsedIdentifiers
 ):
 	m_info(_analysisInfo),
 	m_nameRepository(_nameRepository),
-	m_externallyUsedIdentifiers(_externallyUsedIdentifiers),
-	m_nameDispenser(_nameRepository.dialect(), m_externallyUsedIdentifiers)
+	m_externallyUsedIdentifiers(_externallyUsedIdentifiers)
 {}
 
 YulName Disambiguator::translateIdentifier(YulName _originalName)
 {
-	if (m_nameRepository.dialect().builtin(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
+	if (m_nameRepository.isBuiltinName(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
 		return _originalName;
 
 	assertThrow(!m_scopes.empty() && m_scopes.back(), OptimizerException, "");
 	Scope::Identifier const* id = m_scopes.back()->lookup(_originalName);
 	assertThrow(id, OptimizerException, "");
 	if (!m_translations.count(id))
-		m_translations[id] = m_nameDispenser.newName(_originalName);
+		m_translations[id] = m_nameRepository.deriveName(_originalName);
 	return m_translations.at(id);
 }
 

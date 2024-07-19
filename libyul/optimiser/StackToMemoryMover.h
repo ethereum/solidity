@@ -192,7 +192,6 @@ private:
 
 	OptimiserStepContext& m_context;
 	VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
-	NameDispenser& m_nameDispenser;
 	/// Map from function names to the return variables of the function with that name.
 	std::map<YulName, std::vector<TypedName>> m_functionReturnVariables;
 	/// List of functions generated while running this step that are to be appended to the code in the end.

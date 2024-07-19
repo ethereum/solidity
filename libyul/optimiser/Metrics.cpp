@@ -158,7 +158,7 @@ void CodeCost::operator()(Literal const& _literal)
 		for (u256 n = _literal.value.value(); n >= 0x100; n >>= 8)
 			cost++;
 		if (_literal.value.value() == 0)
-			if (auto evmDialect = dynamic_cast<EVMDialect const*>(&m_nameRepository.dialect()))
+			if (auto evmDialect = m_nameRepository.evmDialect())
 				if (evmDialect->evmVersion().hasPush0())
 					--m_cost;
 		break;

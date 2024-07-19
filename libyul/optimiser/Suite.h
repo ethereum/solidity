@@ -22,10 +22,7 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulName.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/NameDispenser.h>
-#include <liblangutil/EVMVersion.h>
 
 #include <set>
 #include <string>

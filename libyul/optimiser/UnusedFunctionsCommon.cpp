@@ -32,15 +32,14 @@ FunctionDefinition unusedFunctionsCommon::createLinkingFunction(
 	std::pair<std::vector<bool>, std::vector<bool>> const& _usedParametersAndReturns,
 	YulName const& _originalFunctionName,
 	YulName const& _linkingFunctionName,
-	NameDispenser& _nameDispenser,
-	YulNameRepository& /*_nameRepository*/
+	YulNameRepository& _nameRepository
 )
 {
 	auto generateTypedName = [&](TypedName t)
 	{
 		return TypedName{
 			t.debugData,
-			_nameDispenser.newName(t.name),
+			_nameRepository.deriveName(t.name),
 			t.type
 		};
 	};

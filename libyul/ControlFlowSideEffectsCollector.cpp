@@ -271,8 +271,8 @@ ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(Func
 
 ControlFlowSideEffects const& ControlFlowSideEffectsCollector::sideEffects(FunctionCall const& _call) const
 {
-	if (auto const* builtin = m_nameRepository.dialect().builtin(_call.functionName.name))
-		return builtin->controlFlowSideEffects;
+	if (auto const* builtin = m_nameRepository.builtin(_call.functionName.name))
+		return builtin->data->controlFlowSideEffects;
 	else
 		return m_functionSideEffects.at(m_functionReferences.at(&_call));
 }

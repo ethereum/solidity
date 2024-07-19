@@ -20,6 +20,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/ControlFlowSideEffects.h>
+#include <libyul/YulName.h>
 
 #include <set>
 #include <stack>
@@ -28,8 +29,6 @@
 
 namespace solidity::yul
 {
-
-class YulNameRepository;
 
 struct ControlFlowNode
 {

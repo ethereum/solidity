@@ -23,7 +23,6 @@
 #include <libyul/optimiser/SSATransform.h>
 
 #include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
@@ -45,11 +44,11 @@ class IntroduceSSA: public ASTModifier
 {
 public:
 	explicit IntroduceSSA(
-		NameDispenser& _nameDispenser,
+		YulNameRepository& _nameRepository,
 		std::set<YulName> const& _variablesToReplace,
 		TypeInfo& _typeInfo
 	):
-		m_nameDispenser(_nameDispenser),
+		m_nameRepository(_nameRepository),
 		m_variablesToReplace(_variablesToReplace),
 		m_typeInfo(_typeInfo)
 	{ }
@@ -57,7 +56,7 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	NameDispenser& m_nameDispenser;
+	YulNameRepository& m_nameRepository;
 	std::set<YulName> const& m_variablesToReplace;
 	TypeInfo const& m_typeInfo;
 };
@@ -90,8 +89,8 @@ void IntroduceSSA::operator()(Block& _block)
 				TypedNameList newVariables;
 				for (auto const& var: varDecl.variables)
 				{
-					YulName oldName = var.name;
-					YulName newName = m_nameDispenser.newName(oldName);
+					auto oldName = var.name;
+					auto newName = m_nameRepository.deriveName(oldName);
 					newVariables.emplace_back(TypedName{debugData, newName, var.type});
 					statements.emplace_back(VariableDeclaration{
 						debugData,
@@ -117,8 +116,8 @@ void IntroduceSSA::operator()(Block& _block)
 				TypedNameList newVariables;
 				for (auto const& var: assignment.variableNames)
 				{
-					YulName oldName = var.name;
-					YulName newName = m_nameDispenser.newName(oldName);
+					auto oldName = var.name;
+					auto newName = m_nameRepository.deriveName(oldName);
 					newVariables.emplace_back(TypedName{debugData,
 						newName,
 						m_typeInfo.typeOfVariable(oldName)
@@ -147,11 +146,11 @@ class IntroduceControlFlowSSA: public ASTModifier
 {
 public:
 	explicit IntroduceControlFlowSSA(
-		NameDispenser& _nameDispenser,
+		YulNameRepository& _nameRepository,
 		std::set<YulName> const& _variablesToReplace,
 		TypeInfo const& _typeInfo
 	):
-		m_nameDispenser(_nameDispenser),
+		m_nameRepository(_nameRepository),
 		m_variablesToReplace(_variablesToReplace),
 		m_typeInfo(_typeInfo)
 	{ }
@@ -162,7 +161,7 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	NameDispenser& m_nameDispenser;
+	YulNameRepository& m_nameRepository;
 	std::set<YulName> const& m_variablesToReplace;
 	/// Variables (that are to be replaced) currently in scope.
 	std::set<YulName> m_variablesInScope;
@@ -229,7 +228,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 			std::vector<Statement> toPrepend;
 			for (YulName toReassign: m_variablesToReassign)
 			{
-				YulName newName = m_nameDispenser.newName(toReassign);
+				YulName newName = m_nameRepository.deriveName(toReassign);
 				toPrepend.emplace_back(VariableDeclaration{
 					debugDataOf(_s),
 					{TypedName{debugDataOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
@@ -381,8 +380,8 @@ void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 {
 	TypeInfo typeInfo(_context.nameRepository, _ast);
 	std::set<YulName> assignedVariables = assignedVariableNames(_ast);
-	IntroduceSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
-	IntroduceControlFlowSSA{_context.dispenser, assignedVariables, typeInfo}(_ast);
+	IntroduceSSA{_context.nameRepository, assignedVariables, typeInfo}(_ast);
+	IntroduceControlFlowSSA{_context.nameRepository, assignedVariables, typeInfo}(_ast);
 	PropagateValues{assignedVariables}(_ast);
 }
 

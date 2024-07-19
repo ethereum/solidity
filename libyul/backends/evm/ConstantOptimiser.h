@@ -22,7 +22,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/YulName.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/ASTForward.h>
@@ -96,6 +95,13 @@ private:
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
 	size_t m_maxSteps = 10000;
 	std::map<u256, Representation>& m_cache;
+
+	YulName m_instr_not;
+	YulName m_instr_shl;
+	YulName m_instr_exp;
+	YulName m_instr_mul;
+	YulName m_instr_add;
+	YulName m_instr_sub;
 };
 
 }

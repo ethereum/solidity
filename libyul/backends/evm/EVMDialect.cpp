@@ -48,7 +48,7 @@ using namespace solidity::util;
 namespace
 {
 
-std::pair<YulName, BuiltinFunctionForEVM> createEVMFunction(
+std::pair<std::string, BuiltinFunctionForEVM> createEVMFunction(
 	langutil::EVMVersion _evmVersion,
 	std::string const& _name,
 	evmasm::Instruction _instruction
@@ -56,7 +56,7 @@ std::pair<YulName, BuiltinFunctionForEVM> createEVMFunction(
 {
 	evmasm::InstructionInfo info = evmasm::instructionInfo(_instruction, _evmVersion);
 	BuiltinFunctionForEVM f;
-	f.name = YulName{_name};
+	f.name = _name;
 	f.parameters.resize(static_cast<size_t>(info.args));
 	f.returns.resize(static_cast<size_t>(info.ret));
 	f.sideEffects = EVMDialect::sideEffectsOfInstruction(_instruction);
@@ -85,12 +85,12 @@ std::pair<YulName, BuiltinFunctionForEVM> createEVMFunction(
 		_assembly.appendInstruction(_instruction);
 	};
 
-	YulName name = f.name;
+	auto const name = f.name;
 	return {name, std::move(f)};
 }
 
-std::pair<YulName, BuiltinFunctionForEVM> createFunction(
-	std::string _name,
+std::pair<std::string, BuiltinFunctionForEVM> createFunction(
+	std::string const& _name,
 	size_t _params,
 	size_t _returns,
 	SideEffects _sideEffects,
@@ -100,9 +100,8 @@ std::pair<YulName, BuiltinFunctionForEVM> createFunction(
 {
 	yulAssert(_literalArguments.size() == _params || _literalArguments.empty(), "");
 
-	YulName name{std::move(_name)};
 	BuiltinFunctionForEVM f;
-	f.name = name;
+	f.name = _name;
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
 	f.sideEffects = std::move(_sideEffects);
@@ -110,10 +109,10 @@ std::pair<YulName, BuiltinFunctionForEVM> createFunction(
 	f.isMSize = false;
 	f.instruction = {};
 	f.generateCode = std::move(_generateCode);
-	return {name, f};
+	return {f.name, f};
 }
 
-std::set<YulName> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
+EVMDialect::ReservedIdentifiers createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 {
 	// TODO remove this in 0.9.0. We allow creating functions or identifiers in Yul with the name
 	// basefee for VMs before london.
@@ -159,7 +158,7 @@ std::set<YulName> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 			(_instr == evmasm::Instruction::TSTORE || _instr == evmasm::Instruction::TLOAD);
 	};
 
-	std::set<YulName> reserved;
+	EVMDialect::ReservedIdentifiers reserved;
 	for (auto const& instr: evmasm::c_instructions)
 	{
 		std::string name = toLower(instr.first);
@@ -173,18 +172,18 @@ std::set<YulName> createReservedIdentifiers(langutil::EVMVersion _evmVersion)
 		)
 			reserved.emplace(name);
 	}
-	reserved += std::vector<YulName>{
-		"linkersymbol"_yulname,
-		"datasize"_yulname,
-		"dataoffset"_yulname,
-		"datacopy"_yulname,
-		"setimmutable"_yulname,
-		"loadimmutable"_yulname,
+	reserved += std::vector<std::string>{
+		"linkersymbol",
+		"datasize",
+		"dataoffset",
+		"datacopy",
+		"setimmutable",
+		"loadimmutable"
 	};
 	return reserved;
 }
 
-std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
+EVMDialect::BuiltinsMap createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
 
 	// Exclude prevrandao as builtin for VMs before paris and difficulty for VMs after paris.
@@ -193,7 +192,7 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 		return (_instrName == "prevrandao" && _evmVersion < langutil::EVMVersion::paris()) || (_instrName == "difficulty" && _evmVersion >= langutil::EVMVersion::paris());
 	};
 
-	std::map<YulName, BuiltinFunctionForEVM> builtins;
+	EVMDialect::BuiltinsMap builtins;
 	for (auto const& instr: evmasm::c_instructions)
 	{
 		std::string name = toLower(instr.first);
@@ -250,16 +249,16 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulName const dataName (formatLiteral(std::get<Literal>(arg)));
-			if (_context.currentObject->name == dataName.str())
+			auto const dataName = formatLiteral(std::get<Literal>(arg));
+			if (_context.currentObject->name == dataName)
 				_assembly.appendAssemblySize();
 			else
 			{
 			std::vector<size_t> subIdPath =
-					_context.subIDs.count(dataName.str()) == 0 ?
-						_context.currentObject->pathToSubObject(dataName.str()) :
-						std::vector<size_t>{_context.subIDs.at(dataName.str())};
-				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
+					_context.subIDs.count(dataName) == 0 ?
+						_context.currentObject->pathToSubObject(dataName) :
+						std::vector<size_t>{_context.subIDs.at(dataName)};
+				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName + ">.");
 				_assembly.appendDataSize(subIdPath);
 			}
 		}));
@@ -271,16 +270,16 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 			yulAssert(_context.currentObject, "No object available.");
 			yulAssert(_call.arguments.size() == 1, "");
 			Expression const& arg = _call.arguments.front();
-			YulName const dataName (formatLiteral(std::get<Literal>(arg)));
-			if (_context.currentObject->name == dataName.str())
+			auto const dataName = formatLiteral(std::get<Literal>(arg));
+			if (_context.currentObject->name == dataName)
 				_assembly.appendConstant(0);
 			else
 			{
 			std::vector<size_t> subIdPath =
-					_context.subIDs.count(dataName.str()) == 0 ?
-						_context.currentObject->pathToSubObject(dataName.str()) :
-						std::vector<size_t>{_context.subIDs.at(dataName.str())};
-				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName.str() + ">.");
+					_context.subIDs.count(dataName) == 0 ?
+						_context.currentObject->pathToSubObject(dataName) :
+						std::vector<size_t>{_context.subIDs.at(dataName)};
+				yulAssert(!subIdPath.empty(), "Could not find assembly object <" + dataName + ">.");
 				_assembly.appendDataOffset(subIdPath);
 			}
 		}));
@@ -370,12 +369,13 @@ EVMDialect::EVMDialect(langutil::EVMVersion _evmVersion, bool _objectAccess):
 {
 }
 
-BuiltinFunctionForEVM const* EVMDialect::builtin(YulName _name) const
+BuiltinFunctionForEVM const* EVMDialect::builtin(std::string_view const _name) const
 {
 	if (m_objectAccess)
 	{
 		std::smatch match;
-		if (regex_match(_name.str(), match, verbatimPattern()))
+		auto const input = std::string(_name);
+		if (std::regex_match(input, match, verbatimPattern()))
 			return verbatimFunction(stoul(match[1]), stoul(match[2]));
 	}
 	auto it = m_functions.find(_name);
@@ -385,10 +385,19 @@ BuiltinFunctionForEVM const* EVMDialect::builtin(YulName _name) const
 		return nullptr;
 }
 
-bool EVMDialect::reservedIdentifier(YulName _name) const
+BuiltinFunctionForEVM const* EVMDialect::builtinNoVerbatim(std::string_view const _name) const
+{
+	auto const it = m_functions.find(_name);
+	if (it != m_functions.end())
+		return &it->second;
+	else
+		return nullptr;
+}
+
+bool EVMDialect::reservedIdentifier(std::string_view const _name) const
 {
 	if (m_objectAccess)
-		if (_name.str().substr(0, "verbatim"s.size()) == "verbatim")
+		if (_name.substr(0, "verbatim"s.size()) == "verbatim")
 			return true;
 	return m_reserved.count(_name) != 0;
 }
@@ -396,7 +405,6 @@ bool EVMDialect::reservedIdentifier(YulName _name) const
 EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version)
 {
 	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialect const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = std::make_unique<EVMDialect>(_version, false);
 	return *dialects[_version];
@@ -405,7 +413,6 @@ EVMDialect const& EVMDialect::strictAssemblyForEVM(langutil::EVMVersion _version
 EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _version)
 {
 	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialect const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = std::make_unique<EVMDialect>(_version, true);
 	return *dialects[_version];
@@ -434,11 +441,12 @@ SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instructio
 BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, size_t _returnVariables) const
 {
 	std::pair<size_t, size_t> key{_arguments, _returnVariables};
-	std::shared_ptr<BuiltinFunctionForEVM const>& function = m_verbatimFunctions[key];
-	if (!function)
+	auto [it, emplaced] = m_verbatimFunctions.try_emplace(std::make_pair(_arguments, _returnVariables));
+	if (emplaced)
 	{
+		auto const name = "verbatim_" + std::to_string(_arguments) + "i_" + std::to_string(_returnVariables) + "o";
 		BuiltinFunctionForEVM builtinFunction = createFunction(
-			"verbatim_" + std::to_string(_arguments) + "i_" + std::to_string(_returnVariables) + "o",
+			name,
 			1 + _arguments,
 			_returnVariables,
 			SideEffects::worst(),
@@ -459,24 +467,28 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 			}
 		).second;
 		builtinFunction.isMSize = true;
-		function = std::make_shared<BuiltinFunctionForEVM const>(std::move(builtinFunction));
+		std::fill(builtinFunction.parameters.begin(), builtinFunction.parameters.end(), defaultType);
+		std::fill(builtinFunction.returns.begin(), builtinFunction.returns.end(), defaultType);
+		it->second = std::make_shared<BuiltinFunctionForEVM const>(std::move(builtinFunction));
 	}
-	return function.get();
+	return it->second.get();
 }
 
 std::set<std::string> EVMDialect::builtinNames() const {
 	std::set<std::string> builtins{"verbatim"};
 	for (auto const& [key, _]: m_functions)
-		builtins.insert(key.str());
+		builtins.insert(key);
 	return builtins;
 }
 
 EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess):
 	EVMDialect(_evmVersion, _objectAccess)
 {
-	defaultType = "u256"_yulname;
-	boolType = "bool"_yulname;
+	defaultType = "u256";
+	boolType = "bool";
 	types = {defaultType, boolType};
+	not_ = "not";
+	popbool_ = "popbool";
 
 	// Set all types to ``defaultType``
 	for (auto& fun: m_functions)
@@ -487,43 +499,43 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 			r = defaultType;
 	}
 
-	m_functions["lt"_yulname].returns = {"bool"_yulname};
-	m_functions["gt"_yulname].returns = {"bool"_yulname};
-	m_functions["slt"_yulname].returns = {"bool"_yulname};
-	m_functions["sgt"_yulname].returns = {"bool"_yulname};
-	m_functions["eq"_yulname].returns = {"bool"_yulname};
+	m_functions["lt"].returns = {boolType};
+	m_functions["gt"].returns = {boolType};
+	m_functions["slt"].returns = {boolType};
+	m_functions["sgt"].returns = {boolType};
+	m_functions["eq"].returns = {boolType};
 
 	// "not" and "bitnot" replace "iszero" and "not"
-	m_functions["bitnot"_yulname] = m_functions["not"_yulname];
-	m_functions["bitnot"_yulname].name = "bitnot"_yulname;
-	m_functions["not"_yulname] = m_functions["iszero"_yulname];
-	m_functions["not"_yulname].name = "not"_yulname;
-	m_functions["not"_yulname].returns = {"bool"_yulname};
-	m_functions["not"_yulname].parameters = {"bool"_yulname};
-	m_functions.erase("iszero"_yulname);
+	m_functions["bitnot"] = m_functions[not_];
+	m_functions["bitnot"].name = "bitnot";
+	m_functions[not_] = m_functions["iszero"];
+	m_functions[not_].name = not_;
+	m_functions[not_].returns = {boolType};
+	m_functions[not_].parameters = {boolType};
+	m_functions.erase("iszero");
 
-	m_functions["bitand"_yulname] = m_functions["and"_yulname];
-	m_functions["bitand"_yulname].name = "bitand"_yulname;
-	m_functions["bitor"_yulname] = m_functions["or"_yulname];
-	m_functions["bitor"_yulname].name = "bitor"_yulname;
-	m_functions["bitxor"_yulname] = m_functions["xor"_yulname];
-	m_functions["bitxor"_yulname].name = "bitxor"_yulname;
-	m_functions["and"_yulname].parameters = {"bool"_yulname, "bool"_yulname};
-	m_functions["and"_yulname].returns = {"bool"_yulname};
-	m_functions["or"_yulname].parameters = {"bool"_yulname, "bool"_yulname};
-	m_functions["or"_yulname].returns = {"bool"_yulname};
-	m_functions["xor"_yulname].parameters = {"bool"_yulname, "bool"_yulname};
-	m_functions["xor"_yulname].returns = {"bool"_yulname};
-	m_functions["popbool"_yulname] = m_functions["pop"_yulname];
-	m_functions["popbool"_yulname].name = "popbool"_yulname;
-	m_functions["popbool"_yulname].parameters = {"bool"_yulname};
+	m_functions["bitand"] = m_functions["and"];
+	m_functions["bitand"].name = "bitand";
+	m_functions["bitor"] = m_functions["or"];
+	m_functions["bitor"].name = "bitor";
+	m_functions["bitxor"] = m_functions["xor"];
+	m_functions["bitxor"].name = "bitxor";
+	m_functions["and"].parameters = {boolType, boolType};
+	m_functions["and"].returns = {boolType};
+	m_functions["or"].parameters = {boolType, boolType};
+	m_functions["or"].returns = {boolType};
+	m_functions["xor"].parameters = {boolType, boolType};
+	m_functions["xor"].returns = {boolType};
+	m_functions["popbool"] = m_functions["pop"];
+	m_functions["popbool"].name = "popbool";
+	m_functions["popbool"].parameters = {boolType};
 	m_functions.insert(createFunction("bool_to_u256", 1, 1, {}, {}, [](
 		FunctionCall const&,
 		AbstractAssembly&,
 		BuiltinContext&
 	) {}));
-	m_functions["bool_to_u256"_yulname].parameters = {"bool"_yulname};
-	m_functions["bool_to_u256"_yulname].returns = {"u256"_yulname};
+	m_functions["bool_to_u256"].parameters = {boolType};
+	m_functions["bool_to_u256"].returns = {defaultType};
 	m_functions.insert(createFunction("u256_to_bool", 1, 1, {}, {}, [](
 		FunctionCall const&,
 		AbstractAssembly& _assembly,
@@ -539,36 +551,35 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 		_assembly.appendInstruction(evmasm::Instruction::INVALID);
 		_assembly.appendLabel(inRange);
 	}));
-	m_functions["u256_to_bool"_yulname].parameters = {"u256"_yulname};
-	m_functions["u256_to_bool"_yulname].returns = {"bool"_yulname};
+	m_functions["u256_to_bool"].parameters = {defaultType};
+	m_functions["u256_to_bool"].returns = {boolType};
 }
 
-BuiltinFunctionForEVM const* EVMDialectTyped::discardFunction(YulName _type) const
+BuiltinFunctionForEVM const* EVMDialectTyped::discardFunction(std::string_view const _type) const
 {
-	if (_type == "bool"_yulname)
-		return builtin("popbool"_yulname);
+	if (_type == boolType)
+		return builtinNoVerbatim(popbool_);
 	else
 	{
 		yulAssert(_type == defaultType, "");
-		return builtin("pop"_yulname);
+		return builtinNoVerbatim("pop");
 	}
 }
 
-BuiltinFunctionForEVM const* EVMDialectTyped::equalityFunction(YulName _type) const
+BuiltinFunctionForEVM const* EVMDialectTyped::equalityFunction(std::string_view _type) const
 {
-	if (_type == "bool"_yulname)
+	if (_type == boolType)
 		return nullptr;
 	else
 	{
 		yulAssert(_type == defaultType, "");
-		return builtin("eq"_yulname);
+		return builtinNoVerbatim("eq");
 	}
 }
 
 EVMDialectTyped const& EVMDialectTyped::instance(langutil::EVMVersion _version)
 {
 	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialectTyped const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
 	if (!dialects[_version])
 		dialects[_version] = std::make_unique<EVMDialectTyped>(_version, true);
 	return *dialects[_version];

@@ -91,10 +91,10 @@ GasMeterVisitor::GasMeterVisitor(YulNameRepository const& _nameRepository, bool 
 void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
-	if (BuiltinFunctionForEVM const* f = m_nameRepository.evmDialect()->builtin(_funCall.functionName.name))
-		if (f->instruction)
+	if (auto const* f = m_nameRepository.builtin(_funCall.functionName.name))
+		if (auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(f->data); evmFun && evmFun->instruction)
 		{
-			instructionCostsInternal(*f->instruction);
+			instructionCostsInternal(*evmFun->instruction);
 			return;
 		}
 	yulAssert(false, "Functions not implemented.");

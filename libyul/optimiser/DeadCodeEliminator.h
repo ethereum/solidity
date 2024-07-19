@@ -22,7 +22,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/YulName.h>
 #include <libyul/ControlFlowSideEffects.h>
 
 #include <map>

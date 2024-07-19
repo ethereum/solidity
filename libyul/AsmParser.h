@@ -140,20 +140,20 @@ protected:
 		return r;
 	}
 
-	Block parseBlock();
-	Statement parseStatement();
-	Case parseCase();
-	ForLoop parseForLoop();
+	Block parseBlock(YulNameRepository& _nameRepository);
+	Statement parseStatement(YulNameRepository& _nameRepository);
+	Case parseCase(YulNameRepository& _nameRepository);
+	ForLoop parseForLoop(YulNameRepository& _nameRepository);
 	/// Parses a functional expression that has to push exactly one stack element
-	Expression parseExpression(bool _unlimitedLiteralArgument = false);
+	Expression parseExpression(YulNameRepository& _nameRepository, bool _unlimitedLiteralArgument = false);
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin function call (only the name).
-	std::variant<Literal, Identifier> parseLiteralOrIdentifier(bool _unlimitedLiteralArgument = false);
-	VariableDeclaration parseVariableDeclaration();
-	FunctionDefinition parseFunctionDefinition();
-	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
-	TypedName parseTypedName();
-	YulName expectAsmIdentifier();
+	std::variant<Literal, Identifier> parseLiteralOrIdentifier(YulNameRepository& _nameRepository, bool _unlimitedLiteralArgument = false);
+	VariableDeclaration parseVariableDeclaration(YulNameRepository& _nameRepository);
+	FunctionDefinition parseFunctionDefinition(YulNameRepository& _nameRepository);
+	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp, YulNameRepository& _nameRepository);
+	TypedName parseTypedName(YulNameRepository& _nameRepository);
+	YulName expectAsmIdentifier(YulNameRepository& _nameRepository);
 
 	/// Reports an error if we are currently not inside the body part of a for loop.
 	void checkBreakContinuePosition(std::string const& _which);

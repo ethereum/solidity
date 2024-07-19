@@ -50,7 +50,7 @@ struct StackTooDeepError: virtual YulException
 	{
 		*this << util::errinfo_comment(_message);
 	}
-	YulName functionName;
+	YulName functionName {YulNameRepository::emptyName()};
 	YulName variable;
 	int depth;
 };

@@ -25,7 +25,6 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/KnowledgeBase.h>
-#include <libyul/YulName.h>
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
 
@@ -203,8 +202,8 @@ protected:
 
 	/// If true, analyzes memory and storage content via mload/mstore and sload/sstore.
 	bool m_analyzeStores = true;
-	YulName m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
-	YulName m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	std::optional<YulName> m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	std::optional<YulName> m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
 
 	/// Current nesting depth of loops.
 	size_t m_loopDepth{0};
@@ -217,7 +216,7 @@ protected:
 	};
 	/// Special expression whose address will be used in m_value.
 	/// YulName does not need to be reset because DataFlowAnalyzer is short-lived.
-	Expression const m_zero{Literal{{}, LiteralKind::Number, LiteralValue{0, "0"}, {}}};
+	Expression const m_zero{Literal{{}, LiteralKind::Number, LiteralValue(0, std::nullopt), {}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
 };

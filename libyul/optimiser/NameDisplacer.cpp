@@ -73,7 +73,7 @@ void NameDisplacer::checkAndReplaceNew(YulName& _name)
 {
 	yulAssert(!m_translations.count(_name), "");
 	if (m_namesToFree.count(_name))
-		_name = (m_translations[_name] = m_nameDispenser.newName(_name));
+		_name = (m_translations[_name] = m_nameRepository.deriveName(_name));
 }
 
 void NameDisplacer::checkAndReplace(YulName& _name) const

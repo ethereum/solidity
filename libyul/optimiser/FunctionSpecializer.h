@@ -19,7 +19,6 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
 #include <libyul/ASTForward.h>
@@ -68,11 +67,9 @@ public:
 private:
 	explicit FunctionSpecializer(
 		std::set<YulName> _recursiveFunctions,
-		NameDispenser& _nameDispenser,
 		YulNameRepository& _nameRepository
 	):
 		m_recursiveFunctions(std::move(_recursiveFunctions)),
-		m_nameDispenser(_nameDispenser),
 		m_nameRepository(_nameRepository)
 	{}
 	/// Returns a vector of Expressions, where the index `i` is an expression if the function's
@@ -106,7 +103,6 @@ private:
 	/// We skip specializing recursive functions. Need backtracking to properly deal with them.
 	std::set<YulName> const m_recursiveFunctions;
 
-	NameDispenser& m_nameDispenser;
 	YulNameRepository& m_nameRepository;
 };
 

@@ -62,7 +62,7 @@ private:
 
 	CallGraph m_callGraph;
 	/// The name of the function we are currently visiting during traversal.
-	YulName m_currentFunction;
+	YulName m_currentFunction {};
 };
 
 }

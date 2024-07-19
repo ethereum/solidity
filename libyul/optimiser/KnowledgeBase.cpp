@@ -32,9 +32,10 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues, YulNameRepository const&):
+KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues, YulNameRepository const& _nameRepository):
 	m_valuesAreSSA(true),
-	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); })
+	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); }),
+	m_nameRepository(_nameRepository)
 {}
 
 bool KnowledgeBase::knownToBeDifferent(YulName _a, YulName _b)
@@ -113,12 +114,12 @@ KnowledgeBase::VariableOffset KnowledgeBase::explore(YulName _var)
 std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const& _value)
 {
 	if (Literal const* literal = std::get_if<Literal>(&_value))
-		return VariableOffset{YulName{}, literal->value.value()};
+		return VariableOffset{YulNameRepository::emptyName(), literal->value.value()};
 	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
 		return explore(identifier->name);
 	else if (FunctionCall const* f = std::get_if<FunctionCall>(&_value))
 	{
-		if (f->functionName.name == "add"_yulname)
+		if (f->functionName.name == m_nameRepository.predefined().add)
 		{
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
@@ -132,13 +133,13 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 						return VariableOffset{a->reference, offset};
 				}
 		}
-		else if (f->functionName.name == "sub"_yulname)
+		else if (f->functionName.name == m_nameRepository.predefined().sub)
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
 				{
 					u256 offset = a->offset - b->offset;
 					if (a->reference == b->reference)
-						return VariableOffset{YulName{}, offset};
+						return VariableOffset{YulNameRepository::emptyName(), offset};
 					else if (b->isAbsolute())
 						// b is constant
 						return VariableOffset{a->reference, offset};
@@ -205,7 +206,7 @@ KnowledgeBase::VariableOffset KnowledgeBase::setOffset(YulName _variable, Variab
 	m_offsets[_variable] = _value;
 	// Constants are not tracked in m_groupMembers because
 	// the "representative" can never be reset.
-	if (!_value.reference.empty())
+	if (_value.reference != YulNameRepository::emptyName())
 		m_groupMembers[_value.reference].insert(_variable);
 	return _value;
 }

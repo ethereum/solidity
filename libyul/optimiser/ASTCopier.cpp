@@ -83,7 +83,7 @@ Statement ASTCopier::operator()(Switch const& _switch)
 
 Statement ASTCopier::operator()(FunctionDefinition const& _function)
 {
-	YulName translatedName = translateIdentifier(_function.name);
+	auto const translatedName = translateIdentifier(_function.name);
 
 	enterFunction(_function);
 	ScopeGuard g([&]() { this->leaveFunction(_function); });

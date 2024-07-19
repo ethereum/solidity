@@ -43,12 +43,6 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-/// Variable names for special constants that can never appear in actual Yul code.
-static std::string const zero{"@ 0"};
-static std::string const one{"@ 1"};
-static std::string const thirtyTwo{"@ 32"};
-
-
 void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 {
 	std::map<YulName, SideEffects> functionSideEffects = SideEffectsPropagator::sideEffects(
@@ -64,9 +58,9 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{0}), {}}};
 	Expression const oneLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{1}), {}}};
 	Expression const thirtyTwoLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{32}), {}}};
-	values[YulName{zero}] = AssignedValue{&zeroLiteral, {}};
-	values[YulName{one}] = AssignedValue{&oneLiteral, {}};
-	values[YulName{thirtyTwo}] = AssignedValue{&thirtyTwoLiteral, {}};
+	values[_context.nameRepository.predefined().placeholder_zero] = AssignedValue{&zeroLiteral, {}};
+	values[_context.nameRepository.predefined().placeholder_one] = AssignedValue{&oneLiteral, {}};
+	values[_context.nameRepository.predefined().placeholder_thirtytwo] = AssignedValue{&thirtyTwoLiteral, {}};
 
 	bool const ignoreMemory = MSizeFinder::containsMSize(_context.nameRepository, _ast);
 	UnusedStoreEliminator rse{
@@ -115,8 +109,8 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 		applyOperation(op);
 
 	ControlFlowSideEffects sideEffects;
-	if (auto builtin = m_nameRepository.dialect().builtin(_functionCall.functionName.name))
-		sideEffects = builtin->controlFlowSideEffects;
+	if (auto builtin = m_nameRepository.builtin(_functionCall.functionName.name))
+		sideEffects = builtin->data->controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 
@@ -231,8 +225,8 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 
 	YulName functionName = _functionCall.functionName.name;
 	SideEffects sideEffects;
-	if (BuiltinFunction const* f = m_nameRepository.dialect().builtin(functionName))
-		sideEffects = f->sideEffects;
+	if (auto const* f = m_nameRepository.builtin(functionName))
+		sideEffects = f->data->sideEffects;
 	else
 		sideEffects = m_functionSideEffects.at(functionName);
 
@@ -264,8 +258,8 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 			if (_op.lengthConstant)
 				switch (*_op.lengthConstant)
 				{
-				case 1: ourOp.length = YulName(one); break;
-				case 32: ourOp.length = YulName(thirtyTwo); break;
+				case 1: ourOp.length = m_nameRepository.predefined().placeholder_one; break;
+				case 32: ourOp.length = m_nameRepository.predefined().placeholder_thirtytwo; break;
 				default: yulAssert(false);
 				}
 			return ourOp;

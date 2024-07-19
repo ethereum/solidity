@@ -46,15 +46,14 @@ using namespace solidity::yul;
 
 void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
-	FullInliner inliner{_ast, _context.dispenser, _context.nameRepository};
+	FullInliner inliner{_ast, _context.nameRepository};
 	inliner.run(Pass::InlineTiny);
 	inliner.run(Pass::InlineRest);
 }
 
-FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, YulNameRepository& _nameRepository):
+FullInliner::FullInliner(Block& _ast, YulNameRepository& _nameRepository):
 	m_ast(_ast),
 	m_recursiveFunctions(CallGraphGenerator::callGraph(_ast).recursiveFunctions()),
-	m_nameDispenser(_dispenser),
 	m_nameRepository(_nameRepository)
 {
 
@@ -66,7 +65,7 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, YulNameReposito
 			m_constants.emplace(ssaValue.first);
 
 	// Store size of global statements.
-	m_functionSizes[YulName{}] = CodeSize::codeSize(_ast);
+	m_functionSizes[YulNameRepository::emptyName()] = CodeSize::codeSize(_ast);
 	std::map<YulName, size_t> references = ReferencesCounter::countReferences(m_ast);
 	for (auto& statement: m_ast.statements)
 	{
@@ -83,7 +82,10 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, YulNameReposito
 	}
 
 	// Check for memory guard.
-	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(_ast, "memoryguard"_yulname);
+	std::vector<FunctionCall*> memoryGuardCalls = findFunctionCalls(
+		_ast,
+		m_nameRepository.predefined().memoryguard
+	);
 	// We will perform less aggressive inlining, if no ``memoryguard`` call is found.
 	if (!memoryGuardCalls.empty())
 		m_hasMemoryGuard = true;
@@ -126,12 +128,12 @@ void FullInliner::run(Pass _pass)
 std::map<YulName, size_t> FullInliner::callDepths() const
 {
 	CallGraph cg = CallGraphGenerator::callGraph(m_ast);
-	cg.functionCalls.erase(""_yulname);
+	cg.functionCalls.erase(YulNameRepository::emptyName());
 
 	// Remove calls to builtin functions.
 	for (auto& call: cg.functionCalls)
 		for (auto it = call.second.begin(); it != call.second.end();)
-			if (m_nameRepository.dialect().builtin(*it))
+			if (m_nameRepository.isBuiltinName(*it))
 				it = call.second.erase(it);
 			else
 				++it;
@@ -203,7 +205,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulName _callSite)
 	bool aggressiveInlining = true;
 
 	if (
-		EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_nameRepository.dialect());
+		EVMDialect const* evmDialect = m_nameRepository.evmDialect();
 		!evmDialect || !evmDialect->providesObjectAccess() || evmDialect->evmVersion() <= langutil::EVMVersion::homestead()
 	)
 		// No aggressive inlining with the old code transform.
@@ -246,7 +248,7 @@ void FullInliner::updateCodeSize(FunctionDefinition const& _fun)
 
 void FullInliner::handleBlock(YulName _currentFunctionName, Block& _block)
 {
-	InlineModifier{*this, m_nameDispenser, _currentFunctionName, m_nameRepository}(_block);
+	InlineModifier{*this, _currentFunctionName, m_nameRepository}(_block);
 }
 
 bool FullInliner::recursive(FunctionDefinition const& _fun) const
@@ -299,13 +301,13 @@ std::vector<Statement> InlineModifier::performInline(Statement& _statement, Func
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
-		YulName newName = m_nameDispenser.newName(_existingVariable.name);
+		auto newName = m_nameRepository.deriveName(_existingVariable.name);
 		variableReplacements[_existingVariable.name] = newName;
 		VariableDeclaration varDecl{_funCall.debugData, {{_funCall.debugData, newName, _existingVariable.type}}, {}};
 		if (_value)
 			varDecl.value = std::make_unique<Expression>(std::move(*_value));
 		else
-			varDecl.value = std::make_unique<Expression>(m_nameRepository.dialect().zeroLiteralForType(varDecl.variables.front().type));
+			varDecl.value = std::make_unique<Expression>(m_nameRepository.dialect().zeroLiteralForType(varDecl.variables.front().type, m_nameRepository));
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
@@ -314,7 +316,7 @@ std::vector<Statement> InlineModifier::performInline(Statement& _statement, Func
 	for (auto const& var: function->returnVariables)
 		newVariable(var, nullptr);
 
-	Statement newBody = BodyCopier(m_nameDispenser, m_nameRepository, variableReplacements)(function->body);
+	Statement newBody = BodyCopier(m_nameRepository, variableReplacements)(function->body);
 	newStatements += std::move(std::get<Block>(newBody).statements);
 
 	std::visit(util::GenericVisitor{
@@ -351,7 +353,7 @@ std::vector<Statement> InlineModifier::performInline(Statement& _statement, Func
 Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)
 {
 	for (auto const& var: _varDecl.variables)
-		m_variableReplacements[var.name] = m_nameDispenser.newName(var.name);
+		m_variableReplacements[var.name] = m_nameRepository.deriveName(var.name);
 	return ASTCopier::operator()(_varDecl);
 }
 

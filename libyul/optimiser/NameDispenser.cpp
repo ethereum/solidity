@@ -46,14 +46,15 @@ NameDispenser::NameDispenser(Dialect const& _dialect, std::set<YulName> _usedNam
 
 YulName NameDispenser::newName(YulName _nameHint)
 {
-	YulName name = _nameHint;
+	/*YulName name = _nameHint;
 	while (illegalName(name))
 	{
 		m_counter++;
 		name = YulName(_nameHint.str() + "_" + std::to_string(m_counter));
 	}
 	m_usedNames.emplace(name);
-	return name;
+	return name;*/
+	return _nameHint;
 }
 
 bool NameDispenser::illegalName(YulName _name)

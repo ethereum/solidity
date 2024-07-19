@@ -57,11 +57,9 @@
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/UnusedAssignEliminator.h>
 #include <libyul/optimiser/UnusedStoreEliminator.h>
-#include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
-#include <libyul/optimiser/NameSimplifier.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -161,8 +159,7 @@ void OptimiserSuite::run(
 		reservedIdentifiers
 	)(_object.code->block()));
 
-	NameDispenser dispenser{dialect, ast, reservedIdentifiers};
-	OptimiserStepContext context{dialect, nameRepository, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
+	OptimiserStepContext context{dialect, nameRepository, reservedIdentifiers, _expectedExecutionsPerDeployment};
 
 	OptimiserSuite suite(context, Debug::None);
 
@@ -170,7 +167,6 @@ void OptimiserSuite::run(
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
 	suite.runSequence("hgfo", ast);
 
-	NameSimplifier::run(suite.m_context, ast);
 	// Now the user-supplied part
 	suite.runSequence(_optimisationSequence, ast);
 
@@ -181,13 +177,10 @@ void OptimiserSuite::run(
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
-		StackCompressor::run(
-			nameRepository,
-			ast,
-			_object,
-			_optimizeStackAllocation,
-			stackCompressorMaxIterations
-		);
+	{
+		nameRepository.generateLabels(ast);
+		StackCompressor::run(nameRepository, ast, _object, _optimizeStackAllocation, stackCompressorMaxIterations);
+	}
 
 	// Run the user-supplied clean up sequence
 	suite.runSequence(_optimisationCleanupSequence, ast);
@@ -202,6 +195,7 @@ void OptimiserSuite::run(
 		ConstantOptimiser{nameRepository, *_meter}(ast);
 		if (usesOptimizedCodeGenerator)
 		{
+			nameRepository.generateLabels(ast);
 			StackCompressor::run(
 				nameRepository,
 				ast,
@@ -215,10 +209,6 @@ void OptimiserSuite::run(
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 			StackLimitEvader::run(suite.m_context, ast, _object);
 	}
-
-	dispenser.reset(ast);
-	NameSimplifier::run(suite.m_context, ast);
-	VarNameCleaner::run(suite.m_context, ast);
 
 #ifdef PROFILE_OPTIMIZER_STEPS
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);

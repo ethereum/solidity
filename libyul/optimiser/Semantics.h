@@ -62,7 +62,7 @@ public:
 	);
 	SideEffectsCollector(
 		AST const& _ast,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr
 	) : SideEffectsCollector(_ast.nameRepository(), _ast.block(), _functionSideEffects) {}
 
 	using ASTWalker::operator();

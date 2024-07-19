@@ -38,7 +38,7 @@ namespace solidity::yul
 
 using Type = YulName;
 
-struct TypedName { langutil::DebugData::ConstPtr debugData; YulName name; Type type; };
+struct TypedName { langutil::DebugData::ConstPtr debugData; YulName name {}; Type type {}; };
 using TypedNameList = std::vector<TypedName>;
 
 /// Literal number or string (up to 32 bytes)
@@ -68,9 +68,9 @@ private:
 	std::optional<Data> m_numericValue;
 	std::shared_ptr<std::string> m_stringValue;
 };
-struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; LiteralValue value; Type type; };
+struct Literal { langutil::DebugData::ConstPtr debugData; LiteralKind kind; LiteralValue value; Type type {}; };
 /// External / internal identifier or label reference
-struct Identifier { langutil::DebugData::ConstPtr debugData; YulName name; };
+struct Identifier { langutil::DebugData::ConstPtr debugData; YulName name {}; };
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 ///
@@ -86,7 +86,7 @@ struct VariableDeclaration { langutil::DebugData::ConstPtr debugData; TypedNameL
 /// Block that creates a scope (frees declared stack variables)
 struct Block { langutil::DebugData::ConstPtr debugData; std::vector<Statement> statements; };
 /// Function definition ("function f(a, b) -> (d, e) { ... }")
-struct FunctionDefinition { langutil::DebugData::ConstPtr debugData; YulName name; TypedNameList parameters; TypedNameList returnVariables; Block body; };
+struct FunctionDefinition { langutil::DebugData::ConstPtr debugData; YulName name{}; TypedNameList parameters; TypedNameList returnVariables; Block body; };
 /// Conditional execution without "else" part.
 struct If { langutil::DebugData::ConstPtr debugData; std::unique_ptr<Expression> condition; Block body; };
 /// Switch case or default case
@@ -105,8 +105,11 @@ struct Leave { langutil::DebugData::ConstPtr debugData; };
 class AST
 {
 public:
-	explicit AST(YulNameRepository _nameRepository, Block _block):
-		m_nameRepository(std::move(_nameRepository)), m_block(std::move(_block)) {}
+	AST(YulNameRepository _nameRepository, Block _block):
+		m_nameRepository(std::move(_nameRepository)), m_block(std::move(_block))
+	{
+		m_nameRepository.generateLabels(m_block);
+	}
 
 	Block const& block() const { return m_block; }
 	YulNameRepository const& nameRepository() const { return m_nameRepository; }
@@ -115,7 +118,6 @@ private:
 	YulNameRepository m_nameRepository;
 	Block m_block;
 };
-
 
 /// Extracts the IR source location from a Yul node.
 template <class T> inline langutil::SourceLocation nativeLocationOf(T const& _node)
