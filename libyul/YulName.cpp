@@ -223,7 +223,7 @@ YulNameRepository::BuiltinFunction const* YulNameRepository::storageStoreFunctio
 	return fetchTypedPredefinedFunction(_type, m_predefinedBuiltinFunctions.storageStoreFunctions);
 }
 
-YulName YulNameRepository::hashFunction(YulName const _type) const
+YulNameRepository::YulName YulNameRepository::hashFunction(YulName const _type) const
 {
 	yulAssert(nameWithinBounds(_type), "Type exceeds repository size, probably stems from another instance.");
 	auto const typeIndex = indexOfType(_type);
@@ -250,7 +250,7 @@ YulNameRepository::BuiltinFunction YulNameRepository::convertBuiltinFunction(Yul
 	return result;
 }
 
-YulName YulNameRepository::nameOfLabel(std::string_view const label) const
+YulNameRepository::YulName YulNameRepository::nameOfLabel(std::string_view const label) const
 {
 	auto const it = std::find(m_definedLabels.begin(), m_definedLabels.end(), label);
 	if (it != m_definedLabels.end())
@@ -267,7 +267,7 @@ YulName YulNameRepository::nameOfLabel(std::string_view const label) const
 	return emptyName();
 }
 
-YulName YulNameRepository::nameOfBuiltin(std::string_view const builtin) const
+YulNameRepository::YulName YulNameRepository::nameOfBuiltin(std::string_view const builtin) const
 {
 	for (size_t i = m_indexBoundaries.beginBuiltins; i < m_indexBoundaries.endBuiltins; ++i)
 		if (baseLabelOf(std::get<0>(m_names[i])) == builtin)
@@ -275,7 +275,7 @@ YulName YulNameRepository::nameOfBuiltin(std::string_view const builtin) const
 	return emptyName();
 }
 
-YulName YulNameRepository::nameOfType(std::string_view const _type) const
+YulNameRepository::YulName YulNameRepository::nameOfType(std::string_view const _type) const
 {
 	if (!m_dialectTypes.empty())
 	{
@@ -308,7 +308,7 @@ bool YulNameRepository::isVerbatimFunction(YulName const _name) const
 	return baseNameOf(_name) == predefined().verbatim;
 }
 
-YulName YulNameRepository::defineName(std::string_view const _label)
+YulNameRepository::YulName YulNameRepository::defineName(std::string_view const _label)
 {
 	if (auto const* builtin = m_dialect.get().builtin(YulString(std::string(_label))))
 	{
@@ -347,14 +347,14 @@ YulName YulNameRepository::defineName(std::string_view const _label)
 	}
 }
 
-YulName YulNameRepository::deriveName(YulName const _name)
+YulNameRepository::YulName YulNameRepository::deriveName(YulName const _name)
 {
 	yulAssert(nameWithinBounds(_name), "YulName exceeds repository size, probably stems from another instance.");
 	m_names.emplace_back(_name, YulNameState::DERIVED);
 	return m_index++;
 }
 
-YulName YulNameRepository::addGhost()
+YulNameRepository::YulName YulNameRepository::addGhost()
 {
 	return defineName(fmt::format(FMT_COMPILE("GHOST[{}]"), m_nGhosts++));
 }
