@@ -11,9 +11,8 @@ contract C {
 	}
 }
 // ====
-// SMTEngine: all
-// SMTIgnoreOS: macos
+// SMTEngine: chc
+// SMTSolvers: eld
 // ----
-// Warning 6328: (150-183): CHC: Assertion violation might happen here.
-// Warning 6328: (202-236): CHC: Assertion violation happens here.\nCounterexample:\n\ni = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)\n    i.f{value: 20}() -- untrusted external call
-// Warning 4661: (150-183): BMC: Assertion violation happens here.
+// Warning 6328: (202-236): CHC: Assertion violation happens here.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.

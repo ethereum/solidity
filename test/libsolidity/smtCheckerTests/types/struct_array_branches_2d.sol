@@ -14,6 +14,7 @@ contract C
 	}
 }
 // ====
-// SMTEngine: all
+// SMTEngine: chc
+// SMTTargets: assert
 // ----
-// Info 1391: CHC: 10 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
+// Info 1391: CHC: 1 verification condition(s) proved safe! Enable the model checker option "show proved safe" to see all of them.
