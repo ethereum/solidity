@@ -145,7 +145,7 @@ struct InterpreterState
 struct Scope
 {
 	/// Used for variables and functions. Value is nullptr for variables.
-	std::map<YulString, FunctionDefinition const*> names;
+	std::map<YulName, FunctionDefinition const*> names;
 	std::map<Block const*, std::unique_ptr<Scope>> subScopes;
 	Scope* parent = nullptr;
 };
@@ -174,7 +174,7 @@ public:
 		Scope& _scope,
 		bool _disableExternalCalls,
 		bool _disableMemoryTracing,
-		std::map<YulString, u256> _variables = {}
+		std::map<YulName, u256> _variables = {}
 	):
 		m_dialect(_dialect),
 		m_state(_state),
@@ -200,7 +200,7 @@ public:
 	bytes returnData() const { return m_state.returndata; }
 	std::vector<std::string> const& trace() const { return m_state.trace; }
 
-	u256 valueOfVariable(YulString _name) const { return m_variables.at(_name); }
+	u256 valueOfVariable(YulName _name) const { return m_variables.at(_name); }
 
 protected:
 	/// Asserts that the expression evaluates to exactly one value and returns it.
@@ -218,7 +218,7 @@ protected:
 	Dialect const& m_dialect;
 	InterpreterState& m_state;
 	/// Values of variables.
-	std::map<YulString, u256> m_variables;
+	std::map<YulName, u256> m_variables;
 	Scope* m_scope;
 	/// If not set, external calls (e.g. using `call()`) to the same contract
 	/// are evaluated in a new parser instance.
@@ -236,7 +236,7 @@ public:
 		InterpreterState& _state,
 		Dialect const& _dialect,
 		Scope& _scope,
-		std::map<YulString, u256> const& _variables,
+		std::map<YulName, u256> const& _variables,
 		bool _disableExternalCalls,
 		bool _disableMemoryTrace
 	):
@@ -259,7 +259,7 @@ public:
 
 protected:
 	void runExternalCall(evmasm::Instruction _instruction);
-	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulString, u256> _variables = {}) const
+	virtual std::unique_ptr<Interpreter> makeInterpreterCopy(std::map<YulName, u256> _variables = {}) const
 	{
 		return std::make_unique<Interpreter>(
 			m_state,
@@ -298,7 +298,7 @@ protected:
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
-	std::map<YulString, u256> const& m_variables;
+	std::map<YulName, u256> const& m_variables;
 	Scope& m_scope;
 	/// Current value of the expression
 	std::vector<u256> m_values;

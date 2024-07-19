@@ -24,7 +24,7 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -92,7 +92,7 @@ public:
 
 private:
 	std::string formatTypedName(TypedName _variable);
-	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
+	std::string appendTypeName(YulName _type, bool _isBoolLiteral = false) const;
 	std::string formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement);
 	template <class T>
 	std::string formatDebugData(T const& _node)

@@ -24,7 +24,7 @@
 #include <libsolutil/Common.h>
 #include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <liblangutil/EVMVersion.h>
 
@@ -45,10 +45,10 @@ void removeEmptyBlocks(Block& _block);
 
 /// Returns true if a given literal can not be used as an identifier.
 /// This includes Yul keywords and builtins of the given dialect.
-bool isRestrictedIdentifier(Dialect const& _dialect, YulString const& _identifier);
+bool isRestrictedIdentifier(Dialect const& _dialect, YulName const& _identifier);
 
 /// Helper function that returns the instruction, if the `_name` is a BuiltinFunction
-std::optional<evmasm::Instruction> toEVMInstruction(Dialect const& _dialect, YulString const& _name);
+std::optional<evmasm::Instruction> toEVMInstruction(Dialect const& _dialect, YulName const& _name);
 
 /// Helper function that returns the EVM version from a dialect.
 /// It returns the default EVM version if dialect is not an EVMDialect.

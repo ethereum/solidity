@@ -35,7 +35,7 @@ namespace solidity::yul
 class EquivalentFunctionDetector: public ASTWalker
 {
 public:
-	static std::map<YulString, FunctionDefinition const*> run(Block& _block)
+	static std::map<YulName, FunctionDefinition const*> run(Block& _block)
 	{
 		EquivalentFunctionDetector detector{BlockHasher::run(_block)};
 		detector(_block);
@@ -50,7 +50,7 @@ private:
 
 	std::map<Block const*, uint64_t> m_blockHashes;
 	std::map<uint64_t, std::vector<FunctionDefinition const*>> m_candidates;
-	std::map<YulString, FunctionDefinition const*> m_duplicates;
+	std::map<YulName, FunctionDefinition const*> m_duplicates;
 };
 
 

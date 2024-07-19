@@ -56,11 +56,11 @@ void ExpressionInliner::visit(Expression& _expression)
 			return;
 		FunctionDefinition const& fun = *m_inlinableFunctions.at(funCall.functionName.name);
 
-		std::map<YulString, Expression const*> substitutions;
+		std::map<YulName, Expression const*> substitutions;
 		for (size_t i = 0; i < funCall.arguments.size(); i++)
 		{
 			Expression const& arg = funCall.arguments[i];
-			YulString paraName = fun.parameters[i].name;
+			YulName paraName = fun.parameters[i].name;
 
 			if (!SideEffectsCollector(m_dialect, arg).movable())
 				return;

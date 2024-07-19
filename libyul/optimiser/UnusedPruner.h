@@ -23,7 +23,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <map>
 #include <set>
@@ -64,14 +64,14 @@ public:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
 	static void run(
 		Dialect const& _dialect,
 		Block& _ast,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	)
 	{
 		runUntilStabilisedOnFullAST(_dialect, _ast, _externallyUsedFunctions);
@@ -84,7 +84,7 @@ public:
 	static void runUntilStabilisedOnFullAST(
 		Dialect const& _dialect,
 		Block& _ast,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
 	// Run the pruner until the code does not change anymore.
@@ -96,7 +96,7 @@ public:
 		Dialect const& _dialect,
 		FunctionDefinition& _functionDefinition,
 		bool _allowMSizeOptimization,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
 private:
@@ -104,24 +104,24 @@ private:
 		Dialect const& _dialect,
 		Block& _ast,
 		bool _allowMSizeOptimization,
-		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::map<YulName, SideEffects> const* _functionSideEffects = nullptr,
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 	UnusedPruner(
 		Dialect const& _dialect,
 		FunctionDefinition& _function,
 		bool _allowMSizeOptimization,
-		std::set<YulString> const& _externallyUsedFunctions = {}
+		std::set<YulName> const& _externallyUsedFunctions = {}
 	);
 
-	bool used(YulString _name) const;
-	void subtractReferences(std::map<YulString, size_t> const& _subtrahend);
+	bool used(YulName _name) const;
+	void subtractReferences(std::map<YulName, size_t> const& _subtrahend);
 
 	Dialect const& m_dialect;
 	bool m_allowMSizeOptimization = false;
-	std::map<YulString, SideEffects> const* m_functionSideEffects = nullptr;
+	std::map<YulName, SideEffects> const* m_functionSideEffects = nullptr;
 	bool m_shouldRunAgain = false;
-	std::map<YulString, size_t> m_references;
+	std::map<YulName, size_t> m_references;
 };
 
 }

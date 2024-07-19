@@ -29,14 +29,13 @@ namespace solidity::yul
 
 struct Dialect;
 struct Block;
-class YulString;
 class NameDispenser;
 
 struct OptimiserStepContext
 {
 	Dialect const& dialect;
 	NameDispenser& dispenser;
-	std::set<YulString> const& reservedIdentifiers;
+	std::set<YulName> const& reservedIdentifiers;
 	/// The value nullopt represents creation code
 	std::optional<size_t> expectedExecutionsPerDeployment;
 };

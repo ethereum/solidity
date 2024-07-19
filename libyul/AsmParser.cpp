@@ -537,7 +537,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimit
 	{
 	case Token::Identifier:
 	{
-		Identifier identifier{createDebugData(), YulString{currentLiteral()}};
+		Identifier identifier{createDebugData(), YulName{currentLiteral()}};
 		advance();
 		return identifier;
 	}
@@ -712,9 +712,9 @@ TypedName Parser::parseTypedName()
 	return typedName;
 }
 
-YulString Parser::expectAsmIdentifier()
+YulName Parser::expectAsmIdentifier()
 {
-	YulString name{currentLiteral()};
+	YulName name{currentLiteral()};
 	if (currentToken() == Token::Identifier && m_dialect.builtin(name))
 		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	// NOTE: We keep the expectation here to ensure the correct source location for the error above.

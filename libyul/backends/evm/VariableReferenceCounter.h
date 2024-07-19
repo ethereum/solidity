@@ -58,7 +58,7 @@ private:
 	): m_info(_assemblyInfo)
 	{}
 
-	void increaseRefIfFound(YulString _variableName);
+	void increaseRefIfFound(YulName _variableName);
 
 	AsmAnalysisInfo const& m_info;
 	Scope* m_scope = nullptr;

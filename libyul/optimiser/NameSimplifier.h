@@ -20,7 +20,7 @@
 
 #include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
 #include <map>
@@ -62,11 +62,11 @@ private:
 	/// Tries to rename a list of variables.
 	void renameVariables(std::vector<TypedName>& _variables);
 
-	void findSimplification(YulString const& _name);
-	void translate(YulString& _name);
+	void findSimplification(YulName const& _name);
+	void translate(YulName& _name);
 
 	OptimiserStepContext& m_context;
-	std::map<YulString, YulString> m_translations;
+	std::map<YulName, YulName> m_translations;
 };
 
 }

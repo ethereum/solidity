@@ -25,7 +25,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-bool Scope::registerVariable(YulString _name, YulType const& _type)
+bool Scope::registerVariable(YulName _name, YulType const& _type)
 {
 	if (exists(_name))
 		return false;
@@ -36,7 +36,7 @@ bool Scope::registerVariable(YulString _name, YulType const& _type)
 	return true;
 }
 
-bool Scope::registerFunction(YulString _name, std::vector<YulType> _arguments, std::vector<YulType> _returns)
+bool Scope::registerFunction(YulName _name, std::vector<YulType> _arguments, std::vector<YulType> _returns)
 {
 	if (exists(_name))
 		return false;
@@ -44,7 +44,7 @@ bool Scope::registerFunction(YulString _name, std::vector<YulType> _arguments, s
 	return true;
 }
 
-Scope::Identifier* Scope::lookup(YulString _name)
+Scope::Identifier* Scope::lookup(YulName _name)
 {
 	bool crossedFunctionBoundary = false;
 	for (Scope* s = this; s; s = s->superScope)
@@ -64,7 +64,7 @@ Scope::Identifier* Scope::lookup(YulString _name)
 	return nullptr;
 }
 
-bool Scope::exists(YulString _name) const
+bool Scope::exists(YulName _name) const
 {
 	if (identifiers.count(_name))
 		return true;

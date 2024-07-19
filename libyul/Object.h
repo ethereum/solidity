@@ -22,7 +22,6 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
 
 #include <liblangutil/CharStreamProvider.h>
 #include <liblangutil/DebugInfoSelection.h>

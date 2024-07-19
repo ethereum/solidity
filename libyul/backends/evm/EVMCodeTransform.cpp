@@ -79,7 +79,7 @@ CodeTransform::CodeTransform(
 	}
 }
 
-void CodeTransform::decreaseReference(YulString, Scope::Variable const& _var)
+void CodeTransform::decreaseReference(YulName, Scope::Variable const& _var)
 {
 	if (!m_allowStackOpt)
 		return;
@@ -158,7 +158,7 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 	for (size_t varIndex = 0; varIndex < numVariables; ++varIndex)
 	{
 		size_t varIndexReverse = numVariables - 1 - varIndex;
-		YulString varName = _varDecl.variables[varIndexReverse].name;
+		YulName varName = _varDecl.variables[varIndexReverse].name;
 		auto& var = std::get<Scope::Variable>(m_scope->identifiers.at(varName));
 		m_context->variableStackHeights[&var] = heightAtStart + varIndexReverse;
 		if (!m_allowStackOpt)
@@ -457,7 +457,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		{
 			StackTooDeepError error(
 				_function.name,
-				YulString{},
+				YulName{},
 				static_cast<int>(stackLayout.size()) - 17,
 				"The function " +
 				_function.name.str() +
@@ -667,7 +667,7 @@ bool statementNeedsReturnVariableSetup(Statement const& _statement, std::vector<
 		std::holds_alternative<Assignment>(_statement)
 	)
 	{
-		std::map<YulString, size_t> references = VariableReferencesCounter::countReferences(_statement);
+		std::map<YulName, size_t> references = VariableReferencesCounter::countReferences(_statement);
 		auto isReferenced = [&references](TypedName const& _returnVariable) {
 			return references.count(_returnVariable.name);
 		};
@@ -771,7 +771,7 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
+size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulName _varName, bool _forSwap)
 {
 	yulAssert(m_context->variableStackHeights.count(&_var), "");
 	size_t heightDiff = static_cast<size_t>(m_assembly.stackHeight()) - m_context->variableStackHeights[&_var];
@@ -795,7 +795,7 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 	return heightDiff;
 }
 
-int CodeTransform::variableStackHeight(YulString _name) const
+int CodeTransform::variableStackHeight(YulName _name) const
 {
 	Scope::Variable const* var = std::get_if<Scope::Variable>(m_scope->lookup(_name));
 	yulAssert(var, "");

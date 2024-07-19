@@ -75,7 +75,7 @@ TestCase::TestResult MemoryGuardTest::run(std::ostream& _stream, std::string con
 		auto handleObject = [&](std::string const& _kind, Object const& _object) {
 			m_obtainedResult += contractName + "(" + _kind + ") " + (findFunctionCalls(
 				*_object.code,
-				"memoryguard"_yulstring
+				"memoryguard"_yulname
 			).empty() ? "false" : "true") + "\n";
 		};
 		handleObject("creation", *object);

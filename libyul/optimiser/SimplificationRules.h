@@ -24,7 +24,7 @@
 #include <libevmasm/SimplificationRule.h>
 
 #include <libyul/ASTForward.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Numeric.h>
@@ -64,7 +64,7 @@ public:
 	static Rule const* findFirstMatch(
 		Expression const& _expr,
 		Dialect const& _dialect,
-		std::function<AssignedValue const*(YulString)> const& _ssaValues
+		std::function<AssignedValue const*(YulName)> const& _ssaValues
 	);
 
 	/// Checks whether the rulelist is non-empty. This is usually enforced
@@ -121,7 +121,7 @@ public:
 	bool matches(
 		Expression const& _expr,
 		Dialect const& _dialect,
-		std::function<AssignedValue const*(YulString)> const& _ssaValues
+		std::function<AssignedValue const*(YulName)> const& _ssaValues
 	) const;
 
 	std::vector<Pattern> arguments() const { return m_arguments; }

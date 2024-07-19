@@ -23,7 +23,7 @@
 
 #include <libyul/ASTForward.h>
 
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 
 #include <memory>
 #include <optional>
@@ -106,7 +106,7 @@ protected:
 	virtual void leaveScope(Block const&) { }
 	virtual void enterFunction(FunctionDefinition const&) { }
 	virtual void leaveFunction(FunctionDefinition const&) { }
-	virtual YulString translateIdentifier(YulString _name) { return _name; }
+	virtual YulName translateIdentifier(YulName _name) { return _name; }
 };
 
 template <typename T>
@@ -124,16 +124,16 @@ class FunctionCopier: public ASTCopier
 {
 public:
 	FunctionCopier(
-		std::map<YulString, YulString> const& _translations
+		std::map<YulName, YulName> const& _translations
 	):
 		m_translations(_translations)
 	{}
 	using ASTCopier::operator();
-	YulString translateIdentifier(YulString _name) override;
+	YulName translateIdentifier(YulName _name) override;
 private:
 	/// A mapping between old and new names. We replace the names of variable declarations contained
 	/// in the mapping with their new names.
-	std::map<YulString, YulString> const& m_translations;
+	std::map<YulName, YulName> const& m_translations;
 };
 
 }

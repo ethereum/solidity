@@ -49,7 +49,7 @@ public:
 private:
 	LoadResolver(
 		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects,
+		std::map<YulName, SideEffects> _functionSideEffects,
 		bool _containsMSize,
 		std::optional<size_t> _expectedExecutionsPerDeployment
 	):

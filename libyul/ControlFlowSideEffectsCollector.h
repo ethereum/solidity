@@ -101,7 +101,7 @@ public:
 		return m_functionSideEffects;
 	}
 	/// Returns the side effects by function name, requires unique function names.
-	std::map<YulString, ControlFlowSideEffects> functionSideEffectsNamed() const;
+	std::map<YulName, ControlFlowSideEffects> functionSideEffectsNamed() const;
 private:
 
 	/// @returns false if nothing could be processed.

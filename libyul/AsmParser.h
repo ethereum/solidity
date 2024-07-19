@@ -146,7 +146,7 @@ protected:
 	FunctionDefinition parseFunctionDefinition();
 	FunctionCall parseCall(std::variant<Literal, Identifier>&& _initialOp);
 	TypedName parseTypedName();
-	YulString expectAsmIdentifier();
+	YulName expectAsmIdentifier();
 
 	/// Reports an error if we are currently not inside the body part of a for loop.
 	void checkBreakContinuePosition(std::string const& _which);

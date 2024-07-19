@@ -30,7 +30,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-YulString Disambiguator::translateIdentifier(YulString _originalName)
+YulName Disambiguator::translateIdentifier(YulName _originalName)
 {
 	if (m_dialect.builtin(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
 		return _originalName;

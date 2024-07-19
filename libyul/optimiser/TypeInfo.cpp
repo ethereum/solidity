@@ -62,8 +62,8 @@ public:
 		}
 	}
 
-	std::map<YulString, YulString> variableTypes;
-	std::map<YulString, FunctionType> functionTypes;
+	std::map<YulName, YulName> variableTypes;
+	std::map<YulName, FunctionType> functionTypes;
 };
 
 
@@ -75,12 +75,12 @@ TypeInfo::TypeInfo(Dialect const& _dialect, Block const& _ast):
 	m_variableTypes = std::move(types.variableTypes);
 }
 
-YulString TypeInfo::typeOf(Expression const& _expression) const
+YulName TypeInfo::typeOf(Expression const& _expression) const
 {
 	return std::visit(GenericVisitor{
 		[&](FunctionCall const& _funCall) {
-			YulString name = _funCall.functionName.name;
-			std::vector<YulString> const* retTypes = nullptr;
+			YulName name = _funCall.functionName.name;
+			std::vector<YulName> const* retTypes = nullptr;
 			if (BuiltinFunction const* fun = m_dialect.builtin(name))
 				retTypes = &fun->returns;
 			else
@@ -97,7 +97,7 @@ YulString TypeInfo::typeOf(Expression const& _expression) const
 	}, _expression);
 }
 
-YulString TypeInfo::typeOfVariable(YulString _name) const
+YulName TypeInfo::typeOfVariable(YulName _name) const
 {
 	return m_variableTypes.at(_name);
 }

@@ -25,7 +25,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/KnowledgeBase.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
 
@@ -89,7 +89,7 @@ public:
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
 		MemoryAndStorage _analyzeStores,
-		std::map<YulString, SideEffects> _functionSideEffects = {}
+		std::map<YulName, SideEffects> _functionSideEffects = {}
 	);
 
 	using ASTModifier::operator();
@@ -103,16 +103,16 @@ public:
 	void operator()(Block& _block) override;
 
 	/// @returns the current value of the given variable, if known - always movable.
-	AssignedValue const* variableValue(YulString _variable) const { return util::valueOrNullptr(m_state.value, _variable); }
-	std::set<YulString> const* references(YulString _variable) const { return util::valueOrNullptr(m_state.references, _variable); }
-	std::map<YulString, AssignedValue> const& allValues() const { return m_state.value; }
-	std::optional<YulString> storageValue(YulString _key) const;
-	std::optional<YulString> memoryValue(YulString _key) const;
-	std::optional<YulString> keccakValue(YulString _start, YulString _length) const;
+	AssignedValue const* variableValue(YulName _variable) const { return util::valueOrNullptr(m_state.value, _variable); }
+	std::set<YulName> const* references(YulName _variable) const { return util::valueOrNullptr(m_state.references, _variable); }
+	std::map<YulName, AssignedValue> const& allValues() const { return m_state.value; }
+	std::optional<YulName> storageValue(YulName _key) const;
+	std::optional<YulName> memoryValue(YulName _key) const;
+	std::optional<YulName> keccakValue(YulName _start, YulName _length) const;
 
 protected:
 	/// Registers the assignment.
-	void handleAssignment(std::set<YulString> const& _names, Expression* _value, bool _isDeclaration);
+	void handleAssignment(std::set<YulName> const& _names, Expression* _value, bool _isDeclaration);
 
 	/// Creates a new inner scope.
 	void pushScope(bool _functionScope);
@@ -122,9 +122,9 @@ protected:
 
 	/// Clears information about the values assigned to the given variables,
 	/// for example at points where control flow is merged.
-	void clearValues(std::set<YulString> _names);
+	void clearValues(std::set<YulName> _names);
 
-	virtual void assignValue(YulString _variable, Expression const* _value);
+	virtual void assignValue(YulName _variable, Expression const* _value);
 
 	/// Clears knowledge about storage or memory if they may be modified inside the block.
 	void clearKnowledgeIfInvalidated(Block const& _block);
@@ -133,10 +133,10 @@ protected:
 	void clearKnowledgeIfInvalidated(Expression const& _expression);
 
 	/// Returns true iff the variable is in scope.
-	bool inScope(YulString _variableName) const;
+	bool inScope(YulName _variableName) const;
 
 	/// Returns the literal value of the identifier, if it exists.
-	std::optional<u256> valueOfIdentifier(YulString const& _name) const;
+	std::optional<u256> valueOfIdentifier(YulName const& _name) const;
 
 	enum class StoreLoadLocation {
 		Memory = 0,
@@ -146,41 +146,41 @@ protected:
 
 	/// Checks if the statement is sstore(a, b) / mstore(a, b)
 	/// where a and b are variables and returns these variables in that case.
-	std::optional<std::pair<YulString, YulString>> isSimpleStore(
+	std::optional<std::pair<YulName, YulName>> isSimpleStore(
 		StoreLoadLocation _location,
 		ExpressionStatement const& _statement
 	) const;
 
 	/// Checks if the expression is sload(a) / mload(a)
 	/// where a is a variable and returns the variable in that case.
-	std::optional<YulString> isSimpleLoad(
+	std::optional<YulName> isSimpleLoad(
 		StoreLoadLocation _location,
 		Expression const& _expression
 	) const;
 
 	/// Checks if the expression is keccak256(s, l)
 	/// where s and l are variables and returns these variables in that case.
-	std::optional<std::pair<YulString, YulString>> isKeccak(Expression const& _expression) const;
+	std::optional<std::pair<YulName, YulName>> isKeccak(Expression const& _expression) const;
 
 	Dialect const& m_dialect;
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed
 	/// if this is not provided or the function is not found.
-	std::map<YulString, SideEffects> m_functionSideEffects;
+	std::map<YulName, SideEffects> m_functionSideEffects;
 
 private:
 	struct Environment
 	{
-		std::unordered_map<YulString, YulString> storage;
-		std::unordered_map<YulString, YulString> memory;
+		std::unordered_map<YulName, YulName> storage;
+		std::unordered_map<YulName, YulName> memory;
 		/// If keccak[s, l] = y then y := keccak256(s, l) occurs in the code.
-		std::map<std::pair<YulString, YulString>, YulString> keccak;
+		std::map<std::pair<YulName, YulName>, YulName> keccak;
 	};
 	struct State
 	{
 		/// Current values of variables, always movable.
-		std::map<YulString, AssignedValue> value;
+		std::map<YulName, AssignedValue> value;
 		/// m_references[a].contains(b) <=> the current expression assigned to a references b
-		std::unordered_map<YulString, std::set<YulString>> references;
+		std::unordered_map<YulName, std::set<YulName>> references;
 
 		Environment environment;
 	};
@@ -192,8 +192,8 @@ private:
 	void joinKnowledge(Environment const& _olderEnvironment);
 
 	static void joinKnowledgeHelper(
-		std::unordered_map<YulString, YulString>& _thisData,
-		std::unordered_map<YulString, YulString> const& _olderData
+		std::unordered_map<YulName, YulName>& _thisData,
+		std::unordered_map<YulName, YulName> const& _olderData
 	);
 
 	State m_state;
@@ -203,8 +203,8 @@ protected:
 
 	/// If true, analyzes memory and storage content via mload/mstore and sload/sstore.
 	bool m_analyzeStores = true;
-	YulString m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
-	YulString m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	YulName m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	YulName m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
 
 	/// Current nesting depth of loops.
 	size_t m_loopDepth{0};
@@ -212,11 +212,11 @@ protected:
 	struct Scope
 	{
 		explicit Scope(bool _isFunction): isFunction(_isFunction) {}
-		std::set<YulString> variables;
+		std::set<YulName> variables;
 		bool isFunction;
 	};
 	/// Special expression whose address will be used in m_value.
-	/// YulString does not need to be reset because DataFlowAnalyzer is short-lived.
+	/// YulName does not need to be reset because DataFlowAnalyzer is short-lived.
 	Expression const m_zero{Literal{{}, LiteralKind::Number, LiteralValue{0, "0"}, {}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;

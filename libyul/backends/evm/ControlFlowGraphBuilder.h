@@ -63,8 +63,8 @@ private:
 	Stack const& visitFunctionCall(FunctionCall const&);
 	Stack visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount);
 
-	Scope::Function const& lookupFunction(YulString _name) const;
-	Scope::Variable const& lookupVariable(YulString _name) const;
+	Scope::Function const& lookupFunction(YulName _name) const;
+	Scope::Variable const& lookupVariable(YulName _name) const;
 	/// Resets m_currentBlock to enforce a subsequent explicit reassignment.
 	void makeConditionalJump(
 		langutil::DebugData::ConstPtr _debugData,

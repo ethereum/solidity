@@ -32,19 +32,19 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-KnowledgeBase::KnowledgeBase(std::map<YulString, AssignedValue> const& _ssaValues):
+KnowledgeBase::KnowledgeBase(std::map<YulName, AssignedValue> const& _ssaValues):
 	m_valuesAreSSA(true),
-	m_variableValues([_ssaValues](YulString _var) { return util::valueOrNullptr(_ssaValues, _var); })
+	m_variableValues([_ssaValues](YulName _var) { return util::valueOrNullptr(_ssaValues, _var); })
 {}
 
-bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
+bool KnowledgeBase::knownToBeDifferent(YulName _a, YulName _b)
 {
 	if (std::optional<u256> difference = differenceIfKnownConstant(_a, _b))
 		return difference != 0;
 	return false;
 }
 
-std::optional<u256> KnowledgeBase::differenceIfKnownConstant(YulString _a, YulString _b)
+std::optional<u256> KnowledgeBase::differenceIfKnownConstant(YulName _a, YulName _b)
 {
 	VariableOffset offA = explore(_a);
 	VariableOffset offB = explore(_b);
@@ -55,7 +55,7 @@ std::optional<u256> KnowledgeBase::differenceIfKnownConstant(YulString _a, YulSt
 }
 
 
-bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
+bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulName _a, YulName _b)
 {
 	if (std::optional<u256> difference = differenceIfKnownConstant(_a, _b))
 		return difference >= 32 && difference <= u256(0) - 32;
@@ -63,12 +63,12 @@ bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 	return false;
 }
 
-bool KnowledgeBase::knownToBeZero(YulString _a)
+bool KnowledgeBase::knownToBeZero(YulName _a)
 {
 	return valueIfKnownConstant(_a) == 0;
 }
 
-std::optional<u256> KnowledgeBase::valueIfKnownConstant(YulString _a)
+std::optional<u256> KnowledgeBase::valueIfKnownConstant(YulName _a)
 {
 	return explore(_a).absoluteValue();
 }
@@ -83,7 +83,7 @@ std::optional<u256> KnowledgeBase::valueIfKnownConstant(Expression const& _expre
 		return std::nullopt;
 }
 
-KnowledgeBase::VariableOffset KnowledgeBase::explore(YulString _var)
+KnowledgeBase::VariableOffset KnowledgeBase::explore(YulName _var)
 {
 	Expression const* value = nullptr;
 	if (m_valuesAreSSA)
@@ -113,12 +113,12 @@ KnowledgeBase::VariableOffset KnowledgeBase::explore(YulString _var)
 std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression const& _value)
 {
 	if (Literal const* literal = std::get_if<Literal>(&_value))
-		return VariableOffset{YulString{}, literal->value.value()};
+		return VariableOffset{YulName{}, literal->value.value()};
 	else if (Identifier const* identifier = std::get_if<Identifier>(&_value))
 		return explore(identifier->name);
 	else if (FunctionCall const* f = std::get_if<FunctionCall>(&_value))
 	{
-		if (f->functionName.name == "add"_yulstring)
+		if (f->functionName.name == "add"_yulname)
 		{
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
@@ -132,13 +132,13 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 						return VariableOffset{a->reference, offset};
 				}
 		}
-		else if (f->functionName.name == "sub"_yulstring)
+		else if (f->functionName.name == "sub"_yulname)
 			if (std::optional<VariableOffset> a = explore(f->arguments[0]))
 				if (std::optional<VariableOffset> b = explore(f->arguments[1]))
 				{
 					u256 offset = a->offset - b->offset;
 					if (a->reference == b->reference)
-						return VariableOffset{YulString{}, offset};
+						return VariableOffset{YulName{}, offset};
 					else if (b->isAbsolute())
 						// b is constant
 						return VariableOffset{a->reference, offset};
@@ -148,7 +148,7 @@ std::optional<KnowledgeBase::VariableOffset> KnowledgeBase::explore(Expression c
 	return std::nullopt;
 }
 
-Expression const* KnowledgeBase::valueOf(YulString _var)
+Expression const* KnowledgeBase::valueOf(YulName _var)
 {
 	AssignedValue const* assignedValue = m_variableValues(_var);
 	Expression const* currentValue = assignedValue ? assignedValue->value : nullptr;
@@ -162,7 +162,7 @@ Expression const* KnowledgeBase::valueOf(YulString _var)
 	return currentValue;
 }
 
-void KnowledgeBase::reset(YulString _var)
+void KnowledgeBase::reset(YulName _var)
 {
 	yulAssert(!m_valuesAreSSA);
 
@@ -174,16 +174,16 @@ void KnowledgeBase::reset(YulString _var)
 			m_groupMembers[offset->reference].erase(_var);
 		m_offsets.erase(_var);
 	}
-	if (std::set<YulString>* group = util::valueOrNullptr(m_groupMembers, _var))
+	if (std::set<YulName>* group = util::valueOrNullptr(m_groupMembers, _var))
 	{
 		// _var was a representative, we might have to find a new one.
 		if (!group->empty())
 		{
-			YulString newRepresentative = *group->begin();
+			YulName newRepresentative = *group->begin();
 			yulAssert(newRepresentative != _var);
 			u256 newOffset = m_offsets[newRepresentative].offset;
 			// newOffset = newRepresentative - _var
-			for (YulString groupMember: *group)
+			for (YulName groupMember: *group)
 			{
 				yulAssert(m_offsets[groupMember].reference == _var);
 				m_offsets[groupMember].reference = newRepresentative;
@@ -200,7 +200,7 @@ void KnowledgeBase::reset(YulString _var)
 	}
 }
 
-KnowledgeBase::VariableOffset KnowledgeBase::setOffset(YulString _variable, VariableOffset _value)
+KnowledgeBase::VariableOffset KnowledgeBase::setOffset(YulName _variable, VariableOffset _value)
 {
 	m_offsets[_variable] = _value;
 	// Constants are not tracked in m_groupMembers because

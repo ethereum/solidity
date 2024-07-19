@@ -19,7 +19,7 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-#include <libyul/YulString.h>
+#include <libyul/YulName.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 
@@ -32,10 +32,10 @@ using namespace solidity::yul;
 NameSimplifier::NameSimplifier(OptimiserStepContext& _context, Block const& _ast):
 	m_context(_context)
 {
-	for (YulString name: _context.reservedIdentifiers)
+	for (YulName name: _context.reservedIdentifiers)
 		m_translations[name] = name;
 
-	for (YulString const& name: NameCollector(_ast).names())
+	for (YulName const& name: NameCollector(_ast).names())
 		findSimplification(name);
 }
 
@@ -72,7 +72,7 @@ void NameSimplifier::operator()(FunctionCall& _funCall)
 	ASTModifier::operator()(_funCall);
 }
 
-void NameSimplifier::findSimplification(YulString const& _name)
+void NameSimplifier::findSimplification(YulName const& _name)
 {
 	if (m_translations.count(_name))
 		return;
@@ -102,19 +102,19 @@ void NameSimplifier::findSimplification(YulString const& _name)
 	for (auto const& [pattern, substitute]: replacements)
 	{
 		std::string candidate = regex_replace(name, pattern, substitute);
-		if (!candidate.empty() && !m_context.dispenser.illegalName(YulString(candidate)))
+		if (!candidate.empty() && !m_context.dispenser.illegalName(YulName(candidate)))
 			name = candidate;
 	}
 
 	if (name != _name.str())
 	{
-		YulString newName{name};
+		YulName newName{name};
 		m_context.dispenser.markUsed(newName);
 		m_translations[_name] = std::move(newName);
 	}
 }
 
-void NameSimplifier::translate(YulString& _name)
+void NameSimplifier::translate(YulName& _name)
 {
 	auto it = m_translations.find(_name);
 	if (it != m_translations.end())

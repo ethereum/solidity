@@ -89,7 +89,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			disambiguate();
 			NameDisplacer{
 				*m_nameDispenser,
-				{"illegal1"_yulstring, "illegal2"_yulstring, "illegal3"_yulstring, "illegal4"_yulstring, "illegal5"_yulstring}
+				{"illegal1"_yulname, "illegal2"_yulname, "illegal3"_yulname, "illegal4"_yulname, "illegal5"_yulname}
 			}(*m_ast);
 		}},
 		{"blockFlattener", [&]() {
@@ -348,11 +348,11 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			// Mark all variables with a name starting with "$" for escalation to memory.
 			struct FakeUnreachableGenerator: ASTWalker
 			{
-				std::map<YulString, std::vector<YulString>> fakeUnreachables;
+				std::map<YulName, std::vector<YulName>> fakeUnreachables;
 				using ASTWalker::operator();
 				void operator()(FunctionDefinition const& _function) override
 				{
-					YulString originalFunctionName = m_currentFunction;
+					YulName originalFunctionName = m_currentFunction;
 					m_currentFunction = _function.name;
 					for (TypedName const& _argument: _function.parameters)
 						visitVariableName(_argument.name);
@@ -361,7 +361,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 					ASTWalker::operator()(_function);
 					m_currentFunction = originalFunctionName;
 				}
-				void visitVariableName(YulString _var)
+				void visitVariableName(YulName _var)
 				{
 					if (!_var.empty() && _var.str().front() == '$')
 						if (!util::contains(fakeUnreachables[m_currentFunction], _var))
@@ -378,7 +378,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 					visitVariableName(_identifier.name);
 					ASTWalker::operator()(_identifier);
 				}
-				YulString m_currentFunction = YulString{};
+				YulName m_currentFunction = YulName{};
 			};
 			FakeUnreachableGenerator fakeUnreachableGenerator;
 			fakeUnreachableGenerator(*m_ast);
