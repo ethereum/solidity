@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 	BOOST_REQUIRE(!!result && errorList.size() == 0);
 
 	// All types are printed.
-	BOOST_CHECK_EQUAL(AsmPrinter(AsmPrinter::Mode::FullTypeInfo, EVMDialectTyped::instance(EVMVersion()))(result->block()),
+	BOOST_CHECK_EQUAL(AsmPrinter(AsmPrinter::Mode::FullTypeInfo, result->nameRepository())(result->block()),
 		"{\n"
 		"    let x:bool := true:bool\n"
 		"    let z:bool := true:bool\n"
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(default_types_set)
 	);
 
 	// Now the default types should be omitted.
-	BOOST_CHECK_EQUAL(AsmPrinter(AsmPrinter::Mode::OmitDefaultType, EVMDialectTyped::instance(EVMVersion()))(result->block()),
+	BOOST_CHECK_EQUAL(AsmPrinter(AsmPrinter::Mode::OmitDefaultType, result->nameRepository())(result->block()),
 		"{\n"
 		"    let x:bool := true\n"
 		"    let z:bool := true\n"

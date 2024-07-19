@@ -65,7 +65,6 @@ std::string Object::toString(
 	std::string inner = "code " + AsmPrinter(
 		_printingMode,
 		code->nameRepository(),
-		_dialect,
 		debugData->sourceNames,
 		_debugInfoSelection,
 		_soliditySourceProvider

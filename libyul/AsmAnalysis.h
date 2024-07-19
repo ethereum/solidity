@@ -73,7 +73,7 @@ public:
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(
 		YulNameRepository const& _nameRepository,
 		Block const& _block,
-		std::set<YulString> const& _qualifiedDataNames
+		std::set<std::string> const& _qualifiedDataNames
 	);
 
 	std::vector<YulName> operator()(Literal const& _literal);

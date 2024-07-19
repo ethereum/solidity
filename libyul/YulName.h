@@ -20,6 +20,7 @@
 
 #include <libyul/ControlFlowSideEffects.h>
 #include <libyul/SideEffects.h>
+#include <libyul/YulString.h>
 
 #include <fmt/format.h>
 
@@ -256,6 +257,6 @@ private:
 	PredefinedHandles m_predefined{};
 	IndexBoundaries m_indexBoundaries;
 };
-using YulName = YulNameRepository::YulName;
+using YulName = YulString;
 
 }

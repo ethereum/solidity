@@ -68,7 +68,7 @@ AsmAnalyzer::AsmAnalyzer(
 	langutil::ErrorReporter& _errorReporter,
 	YulNameRepository const& _nameRepository,
 	ExternalIdentifierAccess::Resolver _resolver,
-	std::set<YulString> _dataNames
+	std::set<std::string> _dataNames
 ):
 	m_resolver(std::move(_resolver)),
 	m_info(_analysisInfo),
@@ -109,7 +109,7 @@ AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(Object const& _object)
 AsmAnalysisInfo AsmAnalyzer::analyzeStrictAssertCorrect(
 	YulNameRepository const& _nameRepository,
 	Block const& _block,
-	std::set<YulString> const& _qualifiedDataNames)
+	std::set<std::string> const& _qualifiedDataNames)
 {
 	ErrorList errorList;
 	langutil::ErrorReporter errors(errorList);
