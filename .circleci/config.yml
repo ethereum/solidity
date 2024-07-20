@@ -487,8 +487,7 @@ defaults:
 
   - base_node_small: &base_node_small
       docker:
-        # TODO: Revert to cimg/node:current once https://github.com/npm/cli/issues/7657 is resolved.
-        - image: cimg/node:22.4
+        - image: cimg/node:current
       resource_class: small
       environment: &base_node_small_env
         TERM: xterm
@@ -762,7 +761,6 @@ defaults:
       # which does not support shanghai EVM.
       compile_only: 1
       resource_class: medium
-      image: cimg/node:18.16
 
   - job_native_test_ext_yield_liquidator: &job_native_test_ext_yield_liquidator
       <<: *requires_b_ubu_static
