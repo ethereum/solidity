@@ -127,8 +127,11 @@ std::optional<std::string_view> YulNameRepository::labelOf(YulName const& _name)
 	if (!isDerivedName(_name))
 	{
 		// if the parent is directly a defined label, we take that one
-		yulAssert(std::get<0>(m_names[_name.value]).value < m_definedLabels.size());
-		return m_definedLabels[std::get<0>(m_names[_name.value]).value];
+		yulAssert(_name.value <= std::numeric_limits<size_t>::max());
+		YulName::ValueType const labelIndex = std::get<0>(m_names[static_cast<size_t>(_name.value)]).value;
+		yulAssert(labelIndex <= std::numeric_limits<size_t>::max());
+		yulAssert(static_cast<size_t>(labelIndex) < m_definedLabels.size());
+		return m_definedLabels[static_cast<size_t>(labelIndex)];
 	}
 	if (isVerbatimFunction(_name))
 	{
@@ -143,15 +146,18 @@ YulNameRepository::YulName const& YulNameRepository::baseNameOf(YulName const& _
 {
 	assertCompatibility(_name);
 	YulName const* result = &_name;
+	yulAssert(result->value <= std::numeric_limits<size_t>::max());
 	while (isDerivedName(*result))
-		result = &std::get<0>(m_names[result->value]);
+		result = &std::get<0>(m_names[static_cast<size_t>(result->value)]);
 	return *result;
 }
 
 std::string_view YulNameRepository::baseLabelOf(YulName const& _name) const
 {
 	assertCompatibility(_name);
-	return m_definedLabels[std::get<0>(m_names[baseNameOf(_name).value]).value];
+	YulName::ValueType const labelIndex = std::get<0>(m_names[static_cast<size_t>(baseNameOf(_name).value)]).value;
+	yulAssert(labelIndex <= std::numeric_limits<size_t>::max());
+	return m_definedLabels[static_cast<size_t>(labelIndex)];
 }
 
 YulNameRepository::BuiltinFunction const* YulNameRepository::fetchTypedPredefinedFunction(YulName const& _type, std::vector<std::optional<YulName>> const& _functions) const
@@ -235,9 +241,10 @@ YulNameRepository::YulName const& YulNameRepository::nameOfLabel(std::string_vie
 	if (it != m_definedLabels.end())
 	{
 		YulName labelName{static_cast<YulName::ValueType>(std::distance(m_definedLabels.begin(), it)), m_instanceCounter.value};
+		yulAssert(labelName.value <= std::numeric_limits<size_t>::max());
 		// mostly it'll be iota
-		if (!isDerivedName(labelName) && std::get<0>(m_names[labelName.value]) == labelName)
-			return std::get<0>(m_names[labelName.value]);
+		if (!isDerivedName(labelName) && std::get<0>(m_names[static_cast<size_t>(labelName.value)]) == labelName)
+			return std::get<0>(m_names[static_cast<size_t>(labelName.value)]);
 		// if not iota, we have to search
 		auto itName = std::find(m_names.rbegin(), m_names.rend(), std::make_tuple(labelName, YulNameState::DEFINED));
 		if (itName != m_names.rend())
@@ -339,7 +346,8 @@ bool YulNameRepository::isType(YulName const& _name) const {
 bool YulNameRepository::isDerivedName(YulName const& _name) const
 {
 	assertCompatibility(_name);
-	return std::get<1>(m_names[_name.value]) == YulNameState::DERIVED;
+	yulAssert(_name.value <= std::numeric_limits<size_t>::max());
+	return std::get<1>(m_names[static_cast<size_t>(_name.value)]) == YulNameState::DERIVED;
 }
 
 size_t YulNameRepository::nTypes() const
@@ -386,8 +394,8 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 					label = fmt::format(FMT_COMPILE("{}_{}"), baseLabel, bump++);
 				if (auto const& existingDefinedName = nameOfLabel(label); existingDefinedName != emptyName() || name == emptyName())
 				{
-					std::get<0>(m_names[name.value]).value = existingDefinedName.value;
-					std::get<1>(m_names[name.value]) = YulNameState::DEFINED;
+					std::get<0>(m_names[static_cast<size_t>(name.value)]).value = existingDefinedName.value;
+					std::get<1>(m_names[static_cast<size_t>(name.value)]) = YulNameState::DEFINED;
 				}
 				else
 					generated.emplace_back(label, name);
@@ -401,8 +409,8 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 	{
 		yulAssert(_illegal.count(label) == 0);
 		m_definedLabels.emplace_back(label);
-		std::get<0>(m_names[name.value]).value = m_definedLabels.size() - 1;
-		std::get<1>(m_names[name.value]) = YulNameState::DEFINED;
+		std::get<0>(m_names[static_cast<size_t>(name.value)]).value = m_definedLabels.size() - 1;
+		std::get<1>(m_names[static_cast<size_t>(name.value)]) = YulNameState::DEFINED;
 	}
 }
 
