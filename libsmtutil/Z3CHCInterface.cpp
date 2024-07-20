@@ -78,7 +78,7 @@ void Z3CHCInterface::addRule(Expression const& _expr, std::string const& _name)
 	}
 }
 
-std::tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
+CHCSolverInterface::QueryResult Z3CHCInterface::query(Expression const& _expr)
 {
 	CheckResult result;
 	try

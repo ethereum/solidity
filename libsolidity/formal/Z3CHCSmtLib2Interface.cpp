@@ -43,7 +43,7 @@ void Z3CHCSmtLib2Interface::setupSmtCallback(bool _enablePreprocessing)
 		universalCallback->smtCommand().setZ3(m_queryTimeout, _enablePreprocessing, m_computeInvariants);
 }
 
-std::tuple<CheckResult, Expression, CHCSolverInterface::CexGraph> Z3CHCSmtLib2Interface::query(smtutil::Expression const& _block)
+CHCSolverInterface::QueryResult Z3CHCSmtLib2Interface::query(smtutil::Expression const& _block)
 {
 	setupSmtCallback(true);
 	std::string query = dumpQuery(_block);
