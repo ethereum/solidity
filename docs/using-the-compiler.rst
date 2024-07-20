@@ -404,7 +404,8 @@ Input Description
         // but to the whole source file like the AST.
         // A star as contract name refers to all contracts in the file.
         // Similarly, a star as a file name matches all files.
-        // To select all outputs the compiler can possibly generate, use
+        // To select all outputs the compiler can possibly generate, with the exclusion of
+        // Yul intermediate representation outputs, use
         // "outputSelection: { "*": { "*": [ "*" ], "": [ "*" ] } }"
         // but note that this might slow down the compilation process needlessly.
         //
