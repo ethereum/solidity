@@ -33,7 +33,7 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 	m_dialect(_dialect)
 {
 	m_predefined.empty = defineName("");
-	yulAssert(m_predefined.empty == YulNameRepository::emptyName());
+	yulAssert(m_predefined.empty == emptyName());
 
 	for (auto const& type: _dialect.types)
 		if (type.empty())
@@ -103,12 +103,12 @@ YulNameRepository::YulNameRepository(solidity::yul::Dialect const& _dialect):
 		}
 	}
 
-	m_predefined.placeholder_zero = defineName("@ 0");
-	m_predefined.placeholder_one = defineName("@ 1");
-	m_predefined.placeholder_thirtytwo = defineName("@ 32");
+	m_predefined.placeholderZero = defineName("@ 0");
+	m_predefined.placeholderOne = defineName("@ 1");
+	m_predefined.placeholderThirtyTwo = defineName("@ 32");
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::builtin(YulName const& _name) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::builtin(YulName const& _name) const
 {
 	assertCompatibility(_name);
 	auto const baseName = baseNameOf(_name);
@@ -137,7 +137,7 @@ std::optional<std::string_view> YulNameRepository::labelOf(YulName const& _name)
 	{
 		auto const* builtinFun = builtin(_name);
 		yulAssert(builtinFun);
-		return builtinFun->data->name.str();
+		return builtinFun->definition->name.str();
 	}
 	return std::nullopt;
 }
@@ -160,7 +160,7 @@ std::string_view YulNameRepository::baseLabelOf(YulName const& _name) const
 	return m_definedLabels[static_cast<size_t>(labelIndex)];
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::fetchTypedPredefinedFunction(YulName const& _type, std::vector<std::optional<YulName>> const& _functions) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::fetchTypedPredefinedFunction(YulName const& _type, std::vector<std::optional<YulName>> const& _functions) const
 {
 	assertCompatibility(_type);
 	auto const typeIndex = indexOfType(_type);
@@ -171,39 +171,39 @@ YulNameRepository::BuiltinFunction const* YulNameRepository::fetchTypedPredefine
 	return builtin(*functionName);
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::discardFunction(YulName const& _type) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::discardFunction(YulName const& _type) const
 {
 	return fetchTypedPredefinedFunction(_type, m_predefinedBuiltinFunctions.discardFunctions);
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::equalityFunction(YulName const& _type) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::equalityFunction(YulName const& _type) const
 {
 	return fetchTypedPredefinedFunction(_type, m_predefinedBuiltinFunctions.equalityFunctions);
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::booleanNegationFunction() const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::booleanNegationFunction() const
 {
 	if (!m_predefinedBuiltinFunctions.booleanNegationFunction)
 		return nullptr;
 	return builtin(*m_predefinedBuiltinFunctions.booleanNegationFunction);
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::memoryLoadFunction(YulName const& _type) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::memoryLoadFunction(YulName const& _type) const
 {
 	return fetchTypedPredefinedFunction(_type, m_predefinedBuiltinFunctions.memoryLoadFunctions);
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::memoryStoreFunction(YulName const& _type) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::memoryStoreFunction(YulName const& _type) const
 {
 	return fetchTypedPredefinedFunction(_type, m_predefinedBuiltinFunctions.memoryStoreFunctions);
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::storageLoadFunction(YulName const& _type) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::storageLoadFunction(YulName const& _type) const
 {
 	return fetchTypedPredefinedFunction(_type, m_predefinedBuiltinFunctions.storageLoadFunctions);
 }
 
-YulNameRepository::BuiltinFunction const* YulNameRepository::storageStoreFunction(YulName const& _type) const
+YulNameRepository::BuiltinFunctionWrapper const* YulNameRepository::storageStoreFunction(YulName const& _type) const
 {
 	return fetchTypedPredefinedFunction(_type, m_predefinedBuiltinFunctions.storageStoreFunctions);
 }
@@ -222,22 +222,24 @@ bool YulNameRepository::isBuiltinName(YulName const& _name) const
 	return baseName.value >= m_indexBoundaries.beginBuiltins && baseName.value < m_indexBoundaries.endBuiltins;
 }
 
-YulNameRepository::BuiltinFunction YulNameRepository::convertBuiltinFunction(YulName const& _name, yul::BuiltinFunction const& _builtin) const
+YulNameRepository::BuiltinFunctionWrapper
+YulNameRepository::convertBuiltinFunction(YulName const& _name, yul::BuiltinFunction const& _builtin) const
 {
 	assertCompatibility(_name);
-	BuiltinFunction result;
+	BuiltinFunctionWrapper result;
 	result.name = _name;
 	for (auto const& type: _builtin.parameters)
 		result.parameters.push_back(nameOfType(type.str()));
 	for (auto const& type: _builtin.returns)
 		result.returns.push_back(nameOfType(type.str()));
-	result.data = &_builtin;
+	result.definition = &_builtin;
 	return result;
 }
 
-YulNameRepository::YulName const& YulNameRepository::nameOfLabel(std::string_view const label) const
+YulNameRepository::YulName const& YulNameRepository::nameOfLabel(std::string_view const _label) const
 {
-	auto const it = std::find(m_definedLabels.begin(), m_definedLabels.end(), label);
+	yulAssert(!_label.empty());
+	auto const it = std::find(m_definedLabels.begin(), m_definedLabels.end(), _label);
 	if (it != m_definedLabels.end())
 	{
 		YulName labelName{static_cast<YulName::ValueType>(std::distance(m_definedLabels.begin(), it)), m_instanceCounter.value};
@@ -253,16 +255,18 @@ YulNameRepository::YulName const& YulNameRepository::nameOfLabel(std::string_vie
 	return emptyName();
 }
 
-YulNameRepository::YulName const& YulNameRepository::nameOfBuiltin(std::string_view const builtin) const
+YulNameRepository::YulName const& YulNameRepository::nameOfBuiltin(std::string_view const _builtin) const
 {
+	yulAssert(!_builtin.empty());
 	for (size_t i = m_indexBoundaries.beginBuiltins; i < m_indexBoundaries.endBuiltins; ++i)
-		if (baseLabelOf(std::get<0>(m_names[i])) == builtin)
+		if (baseLabelOf(std::get<0>(m_names[i])) == _builtin)
 			return std::get<0>(m_names[i]);
 	return emptyName();
 }
 
 YulNameRepository::YulName const& YulNameRepository::nameOfType(std::string_view const _type) const
 {
+	yulAssert(!_type.empty());
 	if (!m_dialectTypes.empty())
 	{
 		for (auto const& m_dialectType: m_dialectTypes)
@@ -350,7 +354,7 @@ bool YulNameRepository::isDerivedName(YulName const& _name) const
 	return std::get<1>(m_names[static_cast<size_t>(_name.value)]) == YulNameState::DERIVED;
 }
 
-size_t YulNameRepository::nTypes() const
+size_t YulNameRepository::typeCount() const
 {
 	return m_indexBoundaries.endTypes - m_indexBoundaries.beginTypes;
 }
@@ -422,6 +426,6 @@ void YulNameRepository::assertCompatibility(YulName const& _name) const
 
 YulNameRepository::YulName const& YulNameRepository::emptyName() const { return m_predefined.empty; }
 
-std::uint32_t YulNameRepository::YulNameRepositoryInstanceCounter::count = 0;
+std::uint32_t YulNameRepository::InstanceCounter::count = 0;
 
 }
