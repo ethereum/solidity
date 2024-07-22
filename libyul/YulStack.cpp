@@ -279,6 +279,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 				{{m_charStream->name(), 0}}
 			);
 		}
+		creationObject.ethdebug["not yet implemented @ MachineAssemblyObject::ethdebug"] = true;
 
 		if (deployedAssembly)
 		{
@@ -362,7 +363,7 @@ std::string YulStack::print() const
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
-	return m_parserResult->toString(
+	return (m_debugInfoSelection.ethdebug ? "/// ethdebug: enabled\n" : "") + m_parserResult->toString(
 		m_debugInfoSelection,
 		m_soliditySourceProvider
 	) + "\n";
@@ -374,6 +375,17 @@ Json YulStack::astJson() const
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
 	return  m_parserResult->toJson();
+}
+
+Json YulStack::ethdebug() const
+{
+	yulAssert(m_parserResult, "");
+	yulAssert(m_parserResult->hasCode(), "");
+	yulAssert(m_parserResult->analysisInfo, "");
+
+	Json result = Json::object();
+	result["sources"] = Json::array({m_charStream->name()});
+	return result;
 }
 
 Json YulStack::cfgJson() const

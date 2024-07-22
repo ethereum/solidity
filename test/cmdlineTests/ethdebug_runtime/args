@@ -1,0 +1,1 @@
+--ethdebug-runtime --via-ir --optimize --ir-optimized
