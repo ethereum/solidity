@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <set>
+#include <utility>
 
 using namespace solidity::evmasm;
 using namespace std::string_literals;
@@ -150,6 +151,132 @@ Json compile(std::string _input)
 	Json ret;
 	BOOST_REQUIRE(util::jsonParseStrict(output, ret));
 	return ret;
+}
+
+Json createLanguageAndSourcesSection(std::string const& _language, std::string const& _file, Json const& _content)
+{
+	Json result = Json::object();
+	result["language"] = _language;
+	result["sources"] = Json::object();
+	result["sources"][_file] = Json::object();
+	result["sources"][_file]["content"] = _content;
+	return result;
+}
+
+class Code
+{
+public:
+	virtual ~Code() = default;
+	explicit Code(std::string  _code = {}) : m_code(std::move(_code)) {}
+	[[nodiscard]] virtual Json json() const = 0;
+protected:
+	std::string m_code;
+};
+
+class SolidityCode: public Code
+{
+public:
+	explicit SolidityCode(std::string const& _code = {}) : Code(_code) {}
+	[[nodiscard]] Json json() const override
+	{
+		static std::string defaultCode = "pragma solidity >=0.0; contract C { function f() public pure {} }";
+		return createLanguageAndSourcesSection("Solidity", "fileA", m_code.empty() ? defaultCode : m_code);
+	}
+};
+
+class YulCode: public Code
+{
+public:
+	explicit YulCode(std::string const& _code = {}) : Code(_code) {}
+	[[nodiscard]] Json json() const override
+	{
+		static std::string defaultCode = "{}";
+		return createLanguageAndSourcesSection("Yul", "fileA", m_code.empty() ? defaultCode : m_code);
+	}
+};
+
+class EvmAssemblyCode: public Code
+{
+public:
+	explicit EvmAssemblyCode(std::string const& _code = {}) : Code(_code) {}
+	[[nodiscard]] Json json() const override
+	{
+		static std::string defaultCode = R"(
+			{
+				"assemblyJson": {
+					".code": [
+						{
+							"begin": 36,
+							"end": 51,
+							"name": "PUSH",
+							"source": 0,
+							"value": "0"
+						}
+					],
+					"sourceList": [
+						"<stdin>"
+					]
+				}
+			})";
+		return createLanguageAndSourcesSection("EVMAssembly", "fileA", m_code.empty() ? Json::parse(defaultCode) : Json::parse(m_code));
+	}
+};
+
+class SolidityAstCode: public Code
+{
+public:
+	explicit SolidityAstCode(std::string const& _code = {}) : Code(_code) {}
+	[[nodiscard]] Json json() const override
+	{
+		static std::string defaultCode = R"(
+		 {
+			"ast": {
+				"absolutePath": "empty_contract.sol",
+				"exportedSymbols": {
+					"test": [
+						1
+					]
+				},
+				"id": 2,
+				"nodeType": "SourceUnit",
+				"nodes": [
+				{
+					"abstract": false,
+					"baseContracts": [],
+					"canonicalName": "test",
+					"contractDependencies": [],
+					"contractKind": "contract",
+					"fullyImplemented": true,
+					"id": 1,
+					"linearizedBaseContracts": [
+						1
+					],
+					"name": "test",
+					"nameLocation": "9:4:0",
+					"nodeType": "ContractDefinition",
+					"nodes": [],
+					"scope": 2,
+					"src": "0:17:0",
+					"usedErrors": []
+				}
+				],
+			"src": "0:124:0"
+			},
+			"id": 0
+		})";
+		return createLanguageAndSourcesSection("SolidityAST", "fileA", m_code.empty() ? Json::parse(defaultCode) : Json::parse(m_code));
+	}
+};
+
+Json generateStandardJson(bool _viaIr, std::optional<Json> const& _debugInfoSelection, Json const& _outputSelection, Code const& _code = SolidityCode())
+{
+	Json result = _code.json();
+	result["settings"] = Json::object();
+	result["settings"]["viaIR"] = _viaIr;
+	if (_debugInfoSelection.has_value())
+		result["settings"]["debug"]["debugInfo"] = _debugInfoSelection.value();
+	result["settings"]["outputSelection"]["*"]["*"] = _outputSelection;
+	return result;
 }
 
 } // end anonymous namespace
@@ -1780,6 +1907,118 @@ BOOST_AUTO_TEST_CASE(source_location_of_bare_block)
 		":" +
 		std::to_string(std::string{"{ uint y = 3; }"}.size());
 	BOOST_REQUIRE(sourceMap.find(sourceRef) != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(ethdebug_excluded_from_wildcards)
+{
+	frontend::StandardCompiler compiler;
+	// excluded from output selection wildcard
+	Json result = compiler.compile(generateStandardJson(true, {}, Json::array({"*"})));
+	BOOST_REQUIRE(result.dump().find("ethdebug") == std::string::npos);
+	// excluded from debug info selection wildcard
+	result = compiler.compile(generateStandardJson(true, {"*"}, Json::array({"ir"})));
+	BOOST_REQUIRE(result.dump().find("ethdebug") == std::string::npos);
+	// excluded from both - just in case ;)
+	result = compiler.compile(generateStandardJson(true, {"*"}, Json::array({"*"})));
+	BOOST_REQUIRE(result.dump().find("ethdebug") == std::string::npos);
+	// "evm.bytecode.ethdebug" / "evm.deployedBytecode.ethdebug" is excluded from "evm.bytecode" / "evm.deployedBytecode"
+	result = compiler.compile(generateStandardJson(true, {"*"}, Json::array({"evm.bytecode"})));
+	BOOST_REQUIRE(result.dump().find("ethdebug") == std::string::npos);
+	result = compiler.compile(generateStandardJson(true, {"*"}, Json::array({"evm.deployedBytecode"})));
+	BOOST_REQUIRE(result.dump().find("ethdebug") == std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(ethdebug_debug_info_ethdebug)
+{
+	frontend::StandardCompiler compiler;
+	// it will only work if ir, irOptimized and / or ethdebug was selected as output
+	// - debug-info selection "ethdebug" will not work on output selection wildcard.
+	Json result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"*"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({"*"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	// debug-info selection "ethdebug" only works with via-ir, if "ethdebug" was selected as output.
+	// - this one will not work, because via-ir is disabled:
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"evm.bytecode.ethdebug"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	// - via-ir enabled, everything is fine:
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({"evm.bytecode.ethdebug"})));
+	BOOST_REQUIRE(result.contains("ethdebug"));
+	BOOST_REQUIRE(result["contracts"]["fileA"]["C"]["evm"]["bytecode"].contains("ethdebug"));
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({"evm.deployedBytecode.ethdebug"})));
+	BOOST_REQUIRE(result.contains("ethdebug"));
+	BOOST_REQUIRE(result["contracts"]["fileA"]["C"]["evm"]["deployedBytecode"].contains("ethdebug"));
+	// 'settings.debug.debugInfo' can only include 'ethdebug', if output 'ir', 'irOptimized' and/or 'ethdebug' was selected.
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"bin"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({ "bin"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	// debug-info selection "ethdebug" works with ir, irOptimized.
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"ir"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"irOptimized"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	// ir and irOptimized works if selected at the same time, of course.
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"ir", "irOptimized"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	// output selection "ethdebug" only works with via-ir, even if "ir" and "irOptimized" was selected.
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"ir", "irOptimized", "evm.bytecode.ethdebug"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({"ir", "irOptimized", "evm.bytecode.ethdebug"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	BOOST_REQUIRE(result.contains("ethdebug"));
+	BOOST_REQUIRE(result["contracts"]["fileA"]["C"]["evm"]["bytecode"].contains("ethdebug"));
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"ir", "irOptimized", "evm.deployedBytecode.ethdebug"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({"ir", "irOptimized", "evm.deployedBytecode.ethdebug"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	BOOST_REQUIRE(result.contains("ethdebug"));
+	BOOST_REQUIRE(result["contracts"]["fileA"]["C"]["evm"]["deployedBytecode"].contains("ethdebug"));
+	// debug-info ethdebug always works with yul
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"*"}), YulCode()));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	// debug-info ethdebug only supported for languages Solidity and Yul.
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"*"}), EvmAssemblyCode()));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"*"}), SolidityAstCode()));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(ethdebug_ethdebug_output)
+{
+	frontend::StandardCompiler compiler;
+	// if no debug-info was selected, it implicitly set debug-info to ethdebug.
+	Json result = compiler.compile(generateStandardJson(true, std::nullopt, Json::array({"evm.deployedBytecode.ethdebug", "ir"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	result = compiler.compile(generateStandardJson(true, std::nullopt, Json::array({"evm.bytecode.ethdebug", "ir"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("/// ethdebug: enabled") != std::string::npos);
+	// if via-ir was not specified, it will error with a message stating that ethdebug can only be selected as output, if via-ir was defined. solc <contract> --ethdebug only works with --via-ir
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"evm.bytecode.ethdebug"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	result = compiler.compile(generateStandardJson(false, Json::array({"ethdebug"}), Json::array({"evm.deployedBytecode.ethdebug"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	// via-ir enabled, everything is fine:
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({"evm.bytecode.ethdebug"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	result = compiler.compile(generateStandardJson(true, Json::array({"ethdebug"}), Json::array({"evm.deployedBytecode.ethdebug"})));
+	BOOST_REQUIRE(result.contains("contracts"));
+	// if debug-info was selected and did not contain ethdebug, an error will be generated stating that ethdebug need to be set in debug-info solc <contract> --ethdebug --debug-info location
+	result = compiler.compile(generateStandardJson(false, Json::array({"all"}), Json::array({"evm.bytecode.ethdebug"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	result = compiler.compile(generateStandardJson(false, Json::array({"all"}), Json::array({"evm.deployedBytecode.ethdebug"})));
+	BOOST_REQUIRE(result["errors"].size() == 1);
+	// strict-assembly will always work e.g. solc --strict-assembly <yul> --ethdebug
+	result = compiler.compile(generateStandardJson(false, std::nullopt, Json::array({"evm.bytecode.ethdebug"}), YulCode()));
+	BOOST_REQUIRE(result.contains("contracts"));
+	BOOST_REQUIRE(result.dump().find("ethdebug") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -69,7 +69,7 @@ TestCase::TestResult ObjectCompilerTest::run(std::ostream& _stream, std::string 
 		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		OptimiserSettings::preset(m_optimisationPreset),
-		DebugInfoSelection::All()
+		DebugInfoSelection::ExceptExperimental()
 	);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{

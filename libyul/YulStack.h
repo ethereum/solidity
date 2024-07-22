@@ -58,6 +58,7 @@ struct MachineAssemblyObject
 	std::shared_ptr<evmasm::LinkerObject> bytecode;
 	std::shared_ptr<evmasm::Assembly> assembly;
 	std::unique_ptr<std::string> sourceMappings;
+	Json ethdebug = Json::object();
 };
 
 /*

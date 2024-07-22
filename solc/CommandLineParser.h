@@ -87,6 +87,8 @@ struct CompilerOutputs
 			{"metadata", &CompilerOutputs::metadata},
 			{"storage-layout", &CompilerOutputs::storageLayout},
 			{"transient-storage-layout", &CompilerOutputs::transientStorageLayout},
+			{"ethdebug", &CompilerOutputs::ethdebug},
+			{"ethdebug-runtime", &CompilerOutputs::ethdebugRuntime},
 		};
 		return components;
 	}
@@ -108,6 +110,8 @@ struct CompilerOutputs
 	bool metadata = false;
 	bool storageLayout = false;
 	bool transientStorageLayout = false;
+	bool ethdebug = false;
+	bool ethdebugRuntime = false;
 };
 
 struct CombinedJsonRequests
