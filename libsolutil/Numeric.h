@@ -96,13 +96,13 @@ bool fitsPrecisionBaseX(bigint const& _mantissa, double _log2OfBase, uint32_t _e
 /// @a Out will typically be either std::string or bytes.
 /// @a T will typically by unsigned, u160, u256 or bigint.
 template <class T, class Out>
-inline void toBigEndian(T _val, Out& o_out)
+inline void toBigEndian(T _val, Out&& o_out)
 {
 	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
-	for (auto i = o_out.size(); i != 0; _val >>= 8, i--)
+	for (auto i = o_out.size(); i != 0u; _val >>= 8u, i--)
 	{
-		T v = _val & (T)0xff;
-		o_out[i - 1] = (typename Out::value_type)(uint8_t)v;
+		T v = _val & (T)0xffu;
+		o_out[i - 1u] = (typename std::remove_reference_t<Out>::value_type)(uint8_t)v;
 	}
 }
 
