@@ -235,7 +235,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	m_assembly.setSourceLocation(originLocationOf(_call));
 	if (auto const* builtin = m_nameRepository.builtin(_call.functionName.name))
 	{
-		auto const* evmBuiltin = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->data);
+		auto const* evmBuiltin = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->definition);
 		for (auto&& [i, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
 			if (!evmBuiltin->literalArgument(i))
 				visitExpression(arg);
@@ -424,7 +424,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_assembly.markAsInvalid();
 		for (StackTooDeepError& stackError: subTransform.m_stackErrors)
 		{
-			if (stackError.functionName == YulNameRepository::emptyName())
+			if (!stackError.functionName.empty())
 				stackError.functionName = _function.name;
 			m_stackErrors.emplace_back(std::move(stackError));
 		}

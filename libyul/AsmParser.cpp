@@ -684,8 +684,8 @@ FunctionCall Parser::parseCall(std::variant<Literal, Identifier>&& _initialOp, Y
 	ret.functionName = std::move(std::get<Identifier>(_initialOp));
 	ret.debugData = ret.functionName.debugData;
 	auto const isUnlimitedLiteralArgument = [f=_nameRepository.builtin(ret.functionName.name)](size_t const index) {
-		if (f && index < f->data->literalArguments.size())
-			return f->data->literalArgument(index).has_value();
+		if (f && index < f->definition->literalArguments.size())
+			return f->definition->literalArgument(index).has_value();
 		return false;
 	};
 	size_t argumentIndex {0};

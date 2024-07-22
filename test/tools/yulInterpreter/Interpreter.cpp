@@ -310,14 +310,14 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
 	std::vector<std::optional<LiteralKind>> const* literalArguments = nullptr;
 	if (auto const* builtin = m_nameRepository.builtin(_funCall.functionName.name))
-		if (!builtin->data->literalArguments.empty())
-			literalArguments = &builtin->data->literalArguments;
+		if (!builtin->definition->literalArguments.empty())
+			literalArguments = &builtin->definition->literalArguments;
 	evaluateArgs(_funCall.arguments, literalArguments);
 
 	if (EVMDialect const* dialect = m_nameRepository.evmDialect())
 	{
 		if (auto const* fun = m_nameRepository.builtin(_funCall.functionName.name))
-			if(auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(fun->data))
+			if(auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(fun->definition))
 			{
 				EVMInstructionInterpreter interpreter(dialect->evmVersion(), m_state, m_disableMemoryTrace);
 				u256 const value = interpreter.evalBuiltin(*evmFun, _funCall.arguments, values());

@@ -162,7 +162,7 @@ std::vector<YulName> AsmAnalyzer::operator()(Literal const& _literal)
 
 std::vector<YulName> AsmAnalyzer::operator()(Identifier const& _identifier)
 {
-	yulAssert(_identifier.name != YulNameRepository::emptyName());
+	yulAssert(!_identifier.name.empty());
 	auto watcher = m_errorReporter.errorWatcher();
 	YulName type = m_nameRepository.predefined().defaultType;
 
@@ -342,7 +342,7 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 
 void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 {
-	yulAssert(_funDef.name != YulNameRepository::emptyName());
+	yulAssert(!_funDef.name.empty());
 	expectValidIdentifier(_funDef.name, nativeLocationOf(_funDef));
 	Block const* virtualBlock = m_info.virtualBlocks.at(&_funDef).get();
 	yulAssert(virtualBlock, "");
@@ -359,7 +359,7 @@ void AsmAnalyzer::operator()(FunctionDefinition const& _funDef)
 
 std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 {
-	yulAssert(_funCall.functionName.name != YulNameRepository::emptyName());
+	yulAssert(!_funCall.functionName.name.empty());
 	auto watcher = m_errorReporter.errorWatcher();
 	std::vector<YulName> const* parameterTypes = nullptr;
 	std::vector<YulName> const* returnTypes = nullptr;
@@ -395,11 +395,11 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;
-		if (!f->data->literalArguments.empty())
-			literalArguments = &f->data->literalArguments;
+		if (!f->definition->literalArguments.empty())
+			literalArguments = &f->definition->literalArguments;
 
 		validateInstructions(_funCall);
-		m_sideEffects += f->data->sideEffects;
+		m_sideEffects += f->definition->sideEffects;
 	}
 	else if (m_currentScope->lookup(_funCall.functionName.name, GenericVisitor{
 		[&](Scope::Variable const&)
@@ -641,7 +641,7 @@ void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
 
 void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueType)
 {
-	yulAssert(_variable.name != YulNameRepository::emptyName());
+	yulAssert(!_variable.name.empty());
 	auto watcher = m_errorReporter.errorWatcher();
 	YulName const* variableType = nullptr;
 	bool found = false;

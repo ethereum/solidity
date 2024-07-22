@@ -584,11 +584,11 @@ void ControlFlowBuilder::operator()(yul::FunctionCall const& _functionCall)
 
 	if (auto const *builtinFunction = m_inlineAssembly->operations().nameRepository().builtin(_functionCall.functionName.name))
 	{
-		if (builtinFunction->data->controlFlowSideEffects.canTerminate)
+		if (builtinFunction->definition->controlFlowSideEffects.canTerminate)
 			connect(m_currentNode, m_transactionReturnNode);
-		if (builtinFunction->data->controlFlowSideEffects.canRevert)
+		if (builtinFunction->definition->controlFlowSideEffects.canRevert)
 			connect(m_currentNode, m_revertNode);
-		if (!builtinFunction->data->controlFlowSideEffects.canContinue)
+		if (!builtinFunction->definition->controlFlowSideEffects.canContinue)
 			m_currentNode = newLabel();
 	}
 }

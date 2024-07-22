@@ -46,7 +46,7 @@ void ExpressionSplitter::operator()(FunctionCall& _funCall)
 	auto const* builtin = m_nameRepository.builtin(_funCall.functionName.name);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
-		if (!builtin || !builtin->data->literalArgument(i - 1))
+		if (!builtin || !builtin->definition->literalArgument(i - 1))
 			outlineExpression(_funCall.arguments[i - 1]);
 }
 

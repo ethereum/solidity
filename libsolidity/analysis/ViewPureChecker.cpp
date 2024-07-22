@@ -67,7 +67,7 @@ public:
 	{
 		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_nameRepository.dialect()))
 			if (auto const* fun = m_nameRepository.builtin(_funCall.functionName.name))
-				if (auto const* evmFun = dynamic_cast<yul::BuiltinFunctionForEVM const*>(fun->data); evmFun->instruction)
+				if (auto const* evmFun = dynamic_cast<yul::BuiltinFunctionForEVM const*>(fun->definition); evmFun->instruction)
 					checkInstruction(nativeLocationOf(_funCall), *evmFun->instruction);
 
 		for (auto const& arg: _funCall.arguments)

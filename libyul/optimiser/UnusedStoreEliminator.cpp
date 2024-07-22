@@ -58,9 +58,9 @@ void UnusedStoreEliminator::run(OptimiserStepContext& _context, Block& _ast)
 	Expression const zeroLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{0}), {}}};
 	Expression const oneLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{1}), {}}};
 	Expression const thirtyTwoLiteral{Literal{{}, LiteralKind::Number, LiteralValue(u256{32}), {}}};
-	values[_context.nameRepository.predefined().placeholder_zero] = AssignedValue{&zeroLiteral, {}};
-	values[_context.nameRepository.predefined().placeholder_one] = AssignedValue{&oneLiteral, {}};
-	values[_context.nameRepository.predefined().placeholder_thirtytwo] = AssignedValue{&thirtyTwoLiteral, {}};
+	values[_context.nameRepository.predefined().placeholderZero] = AssignedValue{&zeroLiteral, {}};
+	values[_context.nameRepository.predefined().placeholderOne] = AssignedValue{&oneLiteral, {}};
+	values[_context.nameRepository.predefined().placeholderThirtyTwo] = AssignedValue{&thirtyTwoLiteral, {}};
 
 	bool const ignoreMemory = MSizeFinder::containsMSize(_context.nameRepository, _ast);
 	UnusedStoreEliminator rse{
@@ -110,7 +110,7 @@ void UnusedStoreEliminator::operator()(FunctionCall const& _functionCall)
 
 	ControlFlowSideEffects sideEffects;
 	if (auto builtin = m_nameRepository.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->data->controlFlowSideEffects;
+		sideEffects = builtin->definition->controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 
@@ -226,7 +226,7 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 	YulName functionName = _functionCall.functionName.name;
 	SideEffects sideEffects;
 	if (auto const* f = m_nameRepository.builtin(functionName))
-		sideEffects = f->data->sideEffects;
+		sideEffects = f->definition->sideEffects;
 	else
 		sideEffects = m_functionSideEffects.at(functionName);
 
@@ -258,8 +258,8 @@ std::vector<UnusedStoreEliminator::Operation> UnusedStoreEliminator::operationsF
 			if (_op.lengthConstant)
 				switch (*_op.lengthConstant)
 				{
-				case 1: ourOp.length = m_nameRepository.predefined().placeholder_one; break;
-				case 32: ourOp.length = m_nameRepository.predefined().placeholder_thirtytwo; break;
+				case 1: ourOp.length = m_nameRepository.predefined().placeholderOne; break;
+				case 32: ourOp.length = m_nameRepository.predefined().placeholderThirtyTwo; break;
 				default: yulAssert(false);
 				}
 			return ourOp;

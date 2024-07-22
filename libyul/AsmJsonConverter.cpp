@@ -42,7 +42,7 @@ Json AsmJsonConverter::operator()(Block const& _node) const
 
 Json AsmJsonConverter::operator()(TypedName const& _node) const
 {
-	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid variable name.");
+	yulAssert(!_node.name.empty(), "Invalid variable name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulTypedName");
 	ret["name"] = m_nameRepository.requiredLabelOf(_node.name);
 	ret["type"] = m_nameRepository.requiredLabelOf(_node.type);
@@ -77,7 +77,7 @@ Json AsmJsonConverter::operator()(Literal const& _node) const
 
 Json AsmJsonConverter::operator()(Identifier const& _node) const
 {
-	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid identifier");
+	yulAssert(!_node.name.empty(), "Invalid identifier");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulIdentifier");
 	ret["name"] = m_nameRepository.requiredLabelOf(_node.name);
 	return ret;
@@ -119,7 +119,7 @@ Json AsmJsonConverter::operator()(VariableDeclaration const& _node) const
 
 Json AsmJsonConverter::operator()(FunctionDefinition const& _node) const
 {
-	yulAssert(YulNameRepository::emptyName() != _node.name, "Invalid function name.");
+	yulAssert(!_node.name.empty(), "Invalid function name.");
 	Json ret = createAstNode(originLocationOf(_node), nativeLocationOf(_node), "YulFunctionDefinition");
 	ret["name"] = m_nameRepository.requiredLabelOf(_node.name);
 	for (auto const& var: _node.parameters)

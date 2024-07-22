@@ -65,7 +65,7 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 
 std::string AsmPrinter::operator()(Identifier const& _identifier)
 {
-	yulAssert(_identifier.name != YulNameRepository::emptyName(), "Invalid identifier.");
+	yulAssert(!_identifier.name.empty(), "Invalid identifier.");
 	return formatDebugData(_identifier) + std::string(m_nameRepository.requiredLabelOf(_identifier.name));
 }
 
@@ -109,7 +109,7 @@ std::string AsmPrinter::operator()(VariableDeclaration const& _variableDeclarati
 
 std::string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition)
 {
-	yulAssert(_functionDefinition.name != YulNameRepository::emptyName(), "Invalid function name.");
+	yulAssert(!_functionDefinition.name.empty(), "Invalid function name.");
 
 	std::string out = formatDebugData(_functionDefinition);
 	out += "function " + std::string(m_nameRepository.requiredLabelOf(_functionDefinition.name)) + "(";
@@ -239,21 +239,21 @@ std::string AsmPrinter::operator()(Block const& _block)
 
 std::string AsmPrinter::formatTypedName(TypedName const& _variable)
 {
-	yulAssert(_variable.name != YulNameRepository::emptyName(), "Invalid variable name.");
+	yulAssert(!_variable.name.empty(), "Invalid variable name.");
 	return formatDebugData(_variable) + std::string(m_nameRepository.requiredLabelOf(_variable.name)) + appendTypeName(_variable.type);
 }
 
 std::string AsmPrinter::appendTypeName(YulName _type, bool _isBoolLiteral) const
 {
-	if (m_printingMode == Mode::OmitDefaultType && _type != YulNameRepository::emptyName())
+	if (m_printingMode == Mode::OmitDefaultType && !_type.empty())
 	{
 		if (!_isBoolLiteral && _type == m_nameRepository.predefined().defaultType)
 			_type = {};
-		else if (_isBoolLiteral && _type == m_nameRepository.predefined().boolType && m_nameRepository.predefined().defaultType != YulNameRepository::emptyName())
+		else if (_isBoolLiteral && _type == m_nameRepository.predefined().boolType && !m_nameRepository.predefined().defaultType.empty())
 			// Special case: If we have a bool type but empty default type, do not remove the type.
 			_type = {};
 	}
-	if (_type == YulNameRepository::emptyName())
+	if (_type.empty())
 		return {};
 	else
 		return fmt::format(":{}", m_nameRepository.requiredLabelOf(_type));

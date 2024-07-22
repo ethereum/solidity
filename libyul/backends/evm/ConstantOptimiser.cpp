@@ -76,7 +76,7 @@ struct MiniEVMInterpreter
 	{
 		auto const* fun = m_yulNameRepository.builtin(_funCall.functionName.name);
 		yulAssert(fun, "Expected builtin function.");
-		auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(fun->data);
+		auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(fun->definition);
 		yulAssert(evmFun->instruction, "Expected EVM instruction.");
 		return eval(*evmFun->instruction, _funCall.arguments);
 	}
@@ -223,7 +223,7 @@ Representation RepresentationFinder::represent(
 		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_argument.expression)}
 	});
-	auto const* builtin = dynamic_cast<BuiltinFunctionForEVM const*>(m_nameRepository.builtin(_instruction)->data);
+	auto const* builtin = dynamic_cast<BuiltinFunctionForEVM const*>(m_nameRepository.builtin(_instruction)->definition);
 	yulAssert(builtin);
 	repr.cost = _argument.cost + m_meter.instructionCosts(*builtin->instruction);
 	return repr;
@@ -241,7 +241,7 @@ Representation RepresentationFinder::represent(
 		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}
 	});
-	auto const* builtin = dynamic_cast<BuiltinFunctionForEVM const*>(m_nameRepository.builtin(_instruction)->data);
+	auto const* builtin = dynamic_cast<BuiltinFunctionForEVM const*>(m_nameRepository.builtin(_instruction)->definition);
 	yulAssert(builtin);
 	repr.cost = m_meter.instructionCosts(*builtin->instruction) + _arg1.cost + _arg2.cost;
 	return repr;

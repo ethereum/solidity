@@ -376,7 +376,7 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 	std::set<YulName> toDerive;
 	for (auto const name: _usedNames)
 	{
-		yulAssert(name.yulNameRepositoryInstanceCount == m_instanceCounter.value);
+		yulAssert(name.repositoryInstanceId == m_instanceCounter.value);
 		if (!isDerivedName(name) || isVerbatimFunction(name))
 		{
 			auto const label = labelOf(name);
@@ -404,16 +404,12 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 				std::string label (baseLabel);
 				size_t bump = 1;
 				while (used.count(label) > 0 || _illegal.count(label) > 0)
-				{
 					label = fmt::format(FMT_COMPILE("{}_{}"), baseLabel, bump++);
-				}
 				if (auto const& existingDefinedName = nameOfLabel(label); existingDefinedName != emptyName() || name == emptyName())
 				{
 					std::get<0>(m_names[static_cast<size_t>(name.value)]).value = existingDefinedName.value;
 					std::get<1>(m_names[static_cast<size_t>(name.value)]) = YulNameState::DEFINED;
 				}
-				if (auto const existingDefinedName = nameOfLabel(label); existingDefinedName != emptyName() || name == emptyName())
-					m_names[name] = m_names[existingDefinedName];
 				else
 					generated.emplace_back(label, name);
 				used.insert(label);
@@ -433,11 +429,9 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 
 void YulNameRepository::assertCompatibility(YulName const& _name) const
 {
-	bool const compatible = _name.yulNameRepositoryInstanceCount == m_instanceCounter.value && _name.value < m_names.size();
+	bool const compatible = _name.repositoryInstanceId == m_instanceCounter.value && _name.value < m_names.size();
 	yulAssert(compatible, "YulName incompatible with repository (value too large or different origin).");
 }
-
-YulNameRepository::YulName const& YulNameRepository::emptyName() const { return m_predefined.empty; }
 
 void YulNameRepository::generateLabels(Block const& _ast, std::set<std::string> const& _illegal)
 {

@@ -38,7 +38,7 @@ namespace
 
 ExpressionStatement makeDiscardCall(
 	langutil::DebugData::ConstPtr const& _debugData,
-	YulNameRepository::BuiltinFunction const& _discardFunction,
+	YulNameRepository::BuiltinFunctionWrapper const& _discardFunction,
 	Expression&& _expression
 )
 {

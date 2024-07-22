@@ -78,7 +78,7 @@ public:
 	using DataFlowAnalyzer::operator();
 	void operator()(FunctionDefinition& _function) override
 	{
-		yulAssert(m_currentFunctionName == YulNameRepository::emptyName());
+		yulAssert(m_currentFunctionName.empty());
 		m_currentFunctionName = _function.name;
 		DataFlowAnalyzer::operator()(_function);
 		m_currentFunctionName = {};

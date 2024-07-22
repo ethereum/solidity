@@ -48,7 +48,7 @@ std::optional<evmasm::Instruction> yul::toEVMInstruction(YulNameRepository const
 {
 	if (_nameRepository.isEvmDialect())
 		if (auto const* builtin = _nameRepository.builtin(_name))
-			return dynamic_cast<BuiltinFunctionForEVM const*>(builtin->data)->instruction;
+			return dynamic_cast<BuiltinFunctionForEVM const*>(builtin->definition)->instruction;
 	return std::nullopt;
 }
 

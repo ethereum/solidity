@@ -80,7 +80,7 @@ std::optional<std::pair<evmasm::Instruction, std::vector<Expression> const*>>
 	if (std::holds_alternative<FunctionCall>(_expr))
 		if (_nameRepository.isEvmDialect())
 			if (auto const* builtin = _nameRepository.builtin(std::get<FunctionCall>(_expr).functionName.name))
-				if (auto const* builtinEVM = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->data); builtinEVM->instruction)
+				if (auto const* builtinEVM = dynamic_cast<BuiltinFunctionForEVM const*>(builtin->definition); builtinEVM->instruction)
 					return std::make_pair(*builtinEVM->instruction, &std::get<FunctionCall>(_expr).arguments);
 
 	return {};

@@ -92,7 +92,7 @@ void GasMeterVisitor::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
 	if (auto const* f = m_nameRepository.builtin(_funCall.functionName.name))
-		if (auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(f->data); evmFun && evmFun->instruction)
+		if (auto const* evmFun = dynamic_cast<BuiltinFunctionForEVM const*>(f->definition); evmFun && evmFun->instruction)
 		{
 			instructionCostsInternal(*evmFun->instruction);
 			return;

@@ -80,7 +80,7 @@ void UnusedAssignEliminator::operator()(FunctionCall const& _functionCall)
 
 	ControlFlowSideEffects sideEffects;
 	if (auto const* builtin = m_nameRepository.builtin(_functionCall.functionName.name))
-		sideEffects = builtin->data->controlFlowSideEffects;
+		sideEffects = builtin->definition->controlFlowSideEffects;
 	else
 		sideEffects = m_controlFlowSideEffects.at(_functionCall.functionName.name);
 

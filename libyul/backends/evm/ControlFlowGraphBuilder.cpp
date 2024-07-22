@@ -334,8 +334,9 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	yulAssert(m_currentBlock, "");
 	langutil::DebugData::ConstPtr preSwitchDebugData = debugDataOf(_switch);
 
-	auto const ghostVariableName = m_graph.nameRepository->addGhost();
-	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{YulNameRepository::emptyName(), ghostVariableName});
+	auto ghostVariableId = m_graph.ghostVariables.size();
+	auto const ghostVariableName = m_graph.nameRepository->defineName(fmt::format("GHOST[{}]", ghostVariableId));
+	auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{m_graph.nameRepository->emptyName(), ghostVariableName});
 
 	// Artificially generate:
 	// let <ghostVariable> := <switchExpression>
@@ -361,7 +362,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
 			Stack{ghostVarSlot, LiteralSlot{_case.value->value.value(), debugDataOf(*_case.value)}},
 			Stack{TemporarySlot{ghostCall, 0}},
-			CFG::BuiltinCall{debugDataOf(_case), *(equalityBuiltin->data), ghostCall, 2},
+			CFG::BuiltinCall{debugDataOf(_case), *(equalityBuiltin->definition), ghostCall, 2},
 		});
 		return operation.output.front();
 	};
@@ -518,9 +519,9 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 	{
 		Stack inputs;
 		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin->data->literalArgument(idx).has_value())
+			if (!builtin->definition->literalArgument(idx).has_value())
 				inputs.emplace_back(std::visit(*this, arg));
-		CFG::BuiltinCall builtinCall{_call.debugData, *builtin->data, _call, inputs.size()};
+		CFG::BuiltinCall builtinCall{_call.debugData, *builtin->definition, _call, inputs.size()};
 		output = &m_currentBlock->operations.emplace_back(CFG::Operation{
 			// input
 			std::move(inputs),
@@ -531,7 +532,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 			// operation
 			std::move(builtinCall)
 		}).output;
-		canContinue = builtin->data->controlFlowSideEffects.canContinue;
+		canContinue = builtin->definition->controlFlowSideEffects.canContinue;
 	}
 	else
 	{

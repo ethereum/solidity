@@ -69,22 +69,26 @@ public:
 	struct YulName
 	{
 		using ValueType = std::uint64_t;
-		ValueType value;
-		std::uint32_t yulNameRepositoryInstanceCount;
+		ValueType value{};
+		std::uint32_t repositoryInstanceId{};
 
 		bool operator==(YulName const& other) const
 		{
-			return yulNameRepositoryInstanceCount == other.yulNameRepositoryInstanceCount && value == other.value;
+			if (other.empty() && empty())
+				return true;
+			return repositoryInstanceId == other.repositoryInstanceId && value == other.value;
 		}
 		bool operator!=(YulName const& other) const
 		{
 			return !(*this == other);
 		}
-		bool operator<(YulName const& other) const
+		bool operator<(YulName const& _other) const
 		{
-			if (yulNameRepositoryInstanceCount < other.yulNameRepositoryInstanceCount)
+			if (_other.empty() && empty())
+				return false;
+			if (repositoryInstanceId < _other.repositoryInstanceId)
 				return true;
-			return value < other.value;
+			return value < _other.value;
 		}
 
 		[[nodiscard]] bool empty() const { return value == 0; }
@@ -138,7 +142,7 @@ public:
 	YulName deriveName(YulName const& _baseName);
 
 	/// The empty name.
-	YulName const& emptyName() const;
+	static constexpr YulName const& emptyName()	{ return m_emptyName; }
 
 	/// Yields the label of a yul name. The name must have been added via `defineName`, a label must have been
 	/// generated with `generateLabels`, or it is a builtin.
@@ -146,7 +150,7 @@ public:
 
 	/// If it can be assumed that the label was already generated, this function will yield it (or fail with an
 	/// assertion error).
-	std::string_view requiredLabelOf(YulName _name) const;
+	std::string_view requiredLabelOf(YulName const& _name) const;
 
 	/// Yields the name that the provided name was based on - or the name itself, if the name was directly "defined".
 	YulName const& baseNameOf(YulName const& _name) const;
@@ -200,6 +204,8 @@ public:
 
 	EVMDialect const* evmDialect() const;
 
+	std::uint32_t instanceId() const { return m_instanceCounter.value; }
+
 	/// Generates labels for derived names over the set of _usedNames, respecting a set of _illegal labels.
 	/// This will change the state of all derived names in _usedNames to "not derived" with a label associated to them.
 	void generateLabels(std::set<YulName> const& _usedNames, std::set<std::string> const& _illegal = {});
@@ -247,6 +253,7 @@ private:
 	BuiltinFunctionWrapper convertBuiltinFunction(YulName const& _name, yul::BuiltinFunction const& _builtin) const;
 	BuiltinFunctionWrapper const* fetchTypedPredefinedFunction(YulName const& _type, std::vector<std::optional<YulName>> const& _functions) const;
 
+	static constexpr auto m_emptyName = YulName{0, 0};
 	InstanceCounter m_instanceCounter;
 	std::reference_wrapper<Dialect const> m_dialect;
 	EVMDialect const* m_evmDialect;
@@ -265,3 +272,12 @@ using YulName = YulNameRepository::YulName;
 using Type = YulName;
 
 }
+
+template <>
+struct std::hash<solidity::yul::YulName>
+{
+	std::size_t operator()(solidity::yul::YulName const& key) const
+	{
+		return std::hash<solidity::yul::YulName::ValueType>{}(key.value);
+	}
+};
