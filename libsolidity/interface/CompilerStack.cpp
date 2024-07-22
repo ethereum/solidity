@@ -1486,7 +1486,8 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		YulStack stack = parseYul(compiledContract.yulIR);
 		compiledContract.yulIRAst = stack.astJson();
 		stack.optimize();
-		compiledContract.yulIROptimized = stack.print(this);
+		compiledContract.yulIROptimized = m_debugInfoSelection.ethdebug ? "/// ethdebug: enabled\n" : "";
+		compiledContract.yulIROptimized += stack.print(this);
 	}
 	{
 		// Optimizer does not maintain correct native source locations in the AST.

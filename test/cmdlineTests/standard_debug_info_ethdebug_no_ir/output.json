@@ -1,0 +1,16 @@
+{
+    "errors": [
+        {
+            "component": "general",
+            "formattedMessage": "debug.debugInfo setting for ethdebug only valid, if 'ir', 'irAst', 'irOptimized' or 'irOptimizedAst' where requested.",
+            "message": "debug.debugInfo setting for ethdebug only valid, if 'ir', 'irAst', 'irOptimized' or 'irOptimizedAst' where requested.",
+            "severity": "error",
+            "type": "FatalError"
+        }
+    ],
+    "sources": {
+        "C": {
+            "id": 0
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_debug_info_in_yul_ethdebug/in.sol"]}
+	},
+	"settings": {
+		"debug": {"debugInfo": ["ethdebug"]},
+		"optimizer": {"enabled": false},
+		"outputSelection": {
+			"*": {"*": ["ir"]}
+		}
+	}
+}

@@ -1324,6 +1324,12 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 
 	Json errors = std::move(_inputsAndSettings.errors);
 
+	if (_inputsAndSettings.debugInfoSelection.has_value() &&
+		_inputsAndSettings.debugInfoSelection->ethdebug &&
+		!isIRRequested(_inputsAndSettings.outputSelection)
+	)
+		errors.emplace_back(formatError(Error::Type::FatalError, "general", "debug.debugInfo setting for ethdebug only valid, if 'ir', 'irAst', 'irOptimized' or 'irOptimizedAst' where requested."));
+
 	bool const binariesRequested = isBinaryRequested(_inputsAndSettings.outputSelection);
 
 	try

@@ -637,7 +637,12 @@ General Information)").c_str(),
 			po::value<std::string>()->default_value(util::toString(DebugInfoSelection::Default())),
 			("Debug info components to be included in the produced EVM assembly and Yul code. "
 			"Value can be all, none or a comma-separated list containing one or more of the "
-			"following components: " + util::joinHumanReadable(DebugInfoSelection::componentMap() | ranges::views::keys) + ".").c_str()
+			"following components: " +
+				util::joinHumanReadable(
+					DebugInfoSelection::componentMap() | ranges::views::keys |
+						ranges::views::filter([](std::string const& key) { return key != "ethdebug"; }) |
+						ranges::to<std::vector>()
+				) + ".").c_str()
 		)
 		(
 			g_strStopAfter.c_str(),
@@ -1439,6 +1444,14 @@ void CommandLineParser::processArgs()
 		m_options.input.mode == InputMode::CompilerWithASTImport ||
 		m_options.input.mode == InputMode::EVMAssemblerJSON
 	);
+
+	if (m_options.output.debugInfoSelection.has_value() && m_options.output.debugInfoSelection->ethdebug &&
+		!(m_options.output.viaIR || m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized)
+	)
+		solThrow(CommandLineValidationError,
+			"--debug-info ethdebug can only be used with --" + g_strViaIR + ", --" + CompilerOutputs::componentName(&CompilerOutputs::ir) +
+			" and/or --" + CompilerOutputs::componentName(&CompilerOutputs::irOptimized) + "."
+		);
 }
 
 void CommandLineParser::parseCombinedJsonOption()

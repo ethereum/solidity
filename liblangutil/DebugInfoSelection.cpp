@@ -39,6 +39,7 @@ DebugInfoSelection const DebugInfoSelection::All(bool _value) noexcept
 	DebugInfoSelection result;
 	for (bool DebugInfoSelection::* member: componentMap() | ranges::views::values)
 		result.*member = _value;
+	result.ethdebug = false;
 	return result;
 }
 

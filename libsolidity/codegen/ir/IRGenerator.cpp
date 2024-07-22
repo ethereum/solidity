@@ -118,7 +118,7 @@ std::string IRGenerator::generate(
 		);
 	};
 
-	Whiskers t(R"(
+	Whiskers t(R"(<?isEthdebugEnabled>/// ethdebug: enabled</isEthdebugEnabled>
 		/// @use-src <useSrcMapCreation>
 		object "<CreationObject>" {
 			code {
@@ -155,6 +155,7 @@ std::string IRGenerator::generate(
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
+	t("isEthdebugEnabled", m_context.debugInfoSelection().ethdebug);
 	t("CreationObject", IRNames::creationObject(_contract));
 	t("sourceLocationCommentCreation", dispenseLocationComment(_contract));
 	t("library", _contract.isLibrary());
