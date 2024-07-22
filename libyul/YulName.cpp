@@ -376,7 +376,6 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 	std::set<YulName> toDerive;
 	for (auto const name: _usedNames)
 	{
-		yulAssert(name.repositoryInstanceId == m_instanceCounter.value);
 		if (!isDerivedName(name) || isVerbatimFunction(name))
 		{
 			auto const label = labelOf(name);
@@ -429,7 +428,7 @@ void YulNameRepository::generateLabels(std::set<YulName> const& _usedNames, std:
 
 void YulNameRepository::assertCompatibility(YulName const& _name) const
 {
-	bool const compatible = _name.repositoryInstanceId == m_instanceCounter.value && _name.value < m_names.size();
+	bool const compatible = _name.value < m_names.size();
 	yulAssert(compatible, "YulName incompatible with repository (value too large or different origin).");
 }
 

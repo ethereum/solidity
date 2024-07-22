@@ -42,7 +42,6 @@ Disambiguator::Disambiguator(
 
 YulName Disambiguator::translateIdentifier(YulName _originalName)
 {
-	_originalName = YulName{_originalName.value, m_nameRepository.instanceId()};
 	if (m_nameRepository.isBuiltinName(_originalName) || m_externallyUsedIdentifiers.count(_originalName))
 		return _originalName;
 
