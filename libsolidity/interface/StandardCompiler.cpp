@@ -426,7 +426,7 @@ std::optional<Json> checkAuxiliaryInputKeys(Json const& _input)
 
 std::optional<Json> checkSettingsKeys(Json const& _input)
 {
-	static std::set<std::string> keys{"debug", "evmVersion", "libraries", "metadata", "modelChecker", "optimizer", "outputSelection", "remappings", "stopAfter", "viaIR"};
+	static std::set<std::string> keys{"debug", "evmVersion", "eofVersion", "libraries", "metadata", "modelChecker", "optimizer", "outputSelection", "remappings", "stopAfter", "viaIR"};
 	return checkKeys(_input, keys, "settings");
 }
 
@@ -837,7 +837,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json> StandardCompiler::parseI
 	{
 		if (!settings["eofVersion"].is_number_unsigned())
 			return formatFatalError(Error::Type::JSONError, "eofVersion must be an unsigned integer.");
-		auto eofVersion = settings["evmVersion"].get<uint8_t>();
+		auto eofVersion = settings["eofVersion"].get<uint8_t>();
 		if (eofVersion != 1)
 			return formatFatalError(Error::Type::JSONError, "Invalid EOF version requested.");
 		ret.eofVersion = 1;
@@ -1308,6 +1308,7 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
 	compilerStack.setViaIR(_inputsAndSettings.viaIR);
 	compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);
+	compilerStack.setEOFVersion(_inputsAndSettings.eofVersion);
 	compilerStack.setRemappings(std::move(_inputsAndSettings.remappings));
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
 	compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
