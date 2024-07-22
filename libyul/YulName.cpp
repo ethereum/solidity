@@ -257,7 +257,6 @@ YulNameRepository::YulName const& YulNameRepository::nameOfLabel(std::string_vie
 
 YulNameRepository::YulName const& YulNameRepository::nameOfBuiltin(std::string_view const _builtin) const
 {
-	yulAssert(!_builtin.empty());
 	for (size_t i = m_indexBoundaries.beginBuiltins; i < m_indexBoundaries.endBuiltins; ++i)
 		if (baseLabelOf(std::get<0>(m_names[i])) == _builtin)
 			return std::get<0>(m_names[i]);
@@ -266,7 +265,6 @@ YulNameRepository::YulName const& YulNameRepository::nameOfBuiltin(std::string_v
 
 YulNameRepository::YulName const& YulNameRepository::nameOfType(std::string_view const _type) const
 {
-	yulAssert(!_type.empty());
 	if (!m_dialectTypes.empty())
 	{
 		for (auto const& m_dialectType: m_dialectTypes)
@@ -328,8 +326,9 @@ YulNameRepository::YulName YulNameRepository::defineName(std::string_view const 
 	}
 	else
 	{
-		if (auto const name = nameOfLabel(_label); name != emptyName())
-			return name;
+		if (!m_names.empty())
+			if (auto const name = nameOfLabel(_label); name != emptyName())
+				return name;
 
 		m_definedLabels.emplace_back(_label);
 		m_names.emplace_back(YulName{m_definedLabels.size() - 1, m_instanceCounter.value}, YulNameState::DEFINED);
