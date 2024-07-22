@@ -1,0 +1,11 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_ethdebug_output_no_via_ir/in.sol"]}
+	},
+	"settings": {
+		"outputSelection": {
+			"*": {"*": ["ethdebug"]}
+		}
+	}
+}

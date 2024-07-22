@@ -1,0 +1,12 @@
+{
+	"language": "Solidity",
+	"sources": {
+		"C": {"urls": ["standard_debug_info_in_yul_ethdebug_output_ethdebug_no_debuginfo_set/in.sol"]}
+	},
+	"settings": {
+		"viaIR": true,
+		"outputSelection": {
+			"*": {"*": ["ethdebug", "ir"]}
+		}
+	}
+}

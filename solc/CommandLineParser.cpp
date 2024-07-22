@@ -473,6 +473,7 @@ void CommandLineParser::parseOutputSelection()
 			CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
 			CompilerOutputs::componentName(&CompilerOutputs::astCompactJson),
 			CompilerOutputs::componentName(&CompilerOutputs::asmJson),
+			CompilerOutputs::componentName(&CompilerOutputs::ethdebug),
 		};
 		static std::set<std::string> const evmAssemblyJsonImportModeOutputs = {
 			CompilerOutputs::componentName(&CompilerOutputs::asm_),
@@ -641,7 +642,13 @@ General Information)").c_str(),
 			po::value<std::string>()->default_value(util::toString(DebugInfoSelection::Default())),
 			("Debug info components to be included in the produced EVM assembly and Yul code. "
 			"Value can be all, none or a comma-separated list containing one or more of the "
-			"following components: " + util::joinHumanReadable(DebugInfoSelection::componentMap() | ranges::views::keys) + ".").c_str()
+			"following components: " +
+				util::joinHumanReadable(
+					DebugInfoSelection::componentMap() | ranges::views::keys |
+						// Note: We intentionally keep ethdebug undocumented for now.
+						ranges::views::filter([](std::string const& key) { return key != "ethdebug"; }) |
+						ranges::to<std::vector>()
+				) + ".").c_str()
 		)
 		(
 			g_strStopAfter.c_str(),
@@ -762,6 +769,13 @@ General Information)").c_str(),
 		(CompilerOutputs::componentName(&CompilerOutputs::storageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in storage.")
 		(CompilerOutputs::componentName(&CompilerOutputs::transientStorageLayout).c_str(), "Slots, offsets and types of the contract's state variables located in transient storage.")
 	;
+	if (!_forHelp) // Note: We intentionally keep this undocumented for now.
+		outputComponents.add_options()
+			(
+				CompilerOutputs::componentName(&CompilerOutputs::ethdebug).c_str(),
+				"Ethdebug output of all contracts."
+			)
+		;
 	desc.add(outputComponents);
 
 	po::options_description extraOutput("Extra Output");
@@ -1446,6 +1460,41 @@ void CommandLineParser::processArgs()
 		m_options.input.mode == InputMode::CompilerWithASTImport ||
 		m_options.input.mode == InputMode::EVMAssemblerJSON
 	);
+
+	if (m_options.compiler.outputs.ethdebug)
+	{
+		if (!m_options.output.viaIR)
+			solThrow(
+				CommandLineValidationError,
+				"--" + CompilerOutputs::componentName(&CompilerOutputs::ethdebug) + " output can only be selected, if --via-ir was specified."
+			);
+
+		if (!m_options.output.debugInfoSelection.has_value())
+		{
+			m_options.output.debugInfoSelection = DebugInfoSelection::Default();
+			m_options.output.debugInfoSelection->enable("ethdebug");
+		}
+		else
+		{
+			if (!m_options.output.debugInfoSelection->ethdebug)
+				solThrow(
+					CommandLineValidationError,
+					"--debug-info should contain ethdebug, if it was set explicitly when compiling with --" +
+					CompilerOutputs::componentName(&CompilerOutputs::ethdebug) + "."
+				);
+		}
+	}
+
+	if (
+		m_options.output.debugInfoSelection.has_value() && m_options.output.debugInfoSelection->ethdebug &&
+		!(m_options.compiler.outputs.ir || m_options.compiler.outputs.irOptimized || m_options.compiler.outputs.ethdebug)
+	)
+		solThrow(
+			CommandLineValidationError,
+			"--debug-info ethdebug can only be used with --" + CompilerOutputs::componentName(&CompilerOutputs::ir) +
+			", --" + CompilerOutputs::componentName(&CompilerOutputs::irOptimized) +
+			" and/or --" + CompilerOutputs::componentName(&CompilerOutputs::ethdebug) + "."
+		);
 }
 
 void CommandLineParser::parseCombinedJsonOption()

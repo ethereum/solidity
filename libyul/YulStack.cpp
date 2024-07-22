@@ -276,6 +276,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 				{{m_charStream->name(), 0}}
 			)
 		);
+		creationObject.ethdebug["not yet implemented"] = true;
 
 		if (deployedAssembly)
 		{
@@ -287,6 +288,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 					{{m_charStream->name(), 0}}
 				)
 			);
+			deployedObject.ethdebug["not yet implemented"] = true;
 		}
 	}
 	catch (UnimplementedFeatureError const& _error)
@@ -360,7 +362,8 @@ std::string YulStack::print(
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
-	return m_parserResult->toString(
+	return (m_debugInfoSelection.ethdebug ? "/// ethdebug: enabled\n" : "") +
+		m_parserResult->toString(
 		languageToDialect(m_language, m_evmVersion),
 		AsmPrinter::TypePrinting::OmitDefault,
 		m_debugInfoSelection,

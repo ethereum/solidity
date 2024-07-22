@@ -1,0 +1,1 @@
+Error: --ethdebug output can only be selected, if --via-ir was specified.

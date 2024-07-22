@@ -426,7 +426,7 @@ std::string Assembly::assemblyString(
 {
 	std::ostringstream tmp;
 	assemblyStream(tmp, _debugInfoSelection, "", _sourceCodes);
-	return tmp.str();
+	return (_debugInfoSelection.ethdebug ? "/// ethdebug: enabled\n" : "") + tmp.str();
 }
 
 Json Assembly::assemblyJSON(std::map<std::string, unsigned> const& _sourceIndices, bool _includeSourceList) const

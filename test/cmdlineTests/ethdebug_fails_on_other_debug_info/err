@@ -1,0 +1,1 @@
+Error: --debug-info should contain ethdebug, if it was set explicitly when compiling with --ethdebug.

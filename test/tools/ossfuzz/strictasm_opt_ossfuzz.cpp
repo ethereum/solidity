@@ -42,7 +42,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		std::nullopt,
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::full(),
-		DebugInfoSelection::All()
+		DebugInfoSelection::ExceptExperimental()
 	);
 
 	if (!stack.parseAndAnalyze("source", input))

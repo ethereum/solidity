@@ -1,0 +1,7 @@
+{
+    "component": "general",
+    "formattedMessage": "''ethdebug' can only be selected as output, if 'viaIR' was set.",
+    "message": "''ethdebug' can only be selected as output, if 'viaIR' was set.",
+    "severity": "error",
+    "type": "FatalError"
+}

@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "component": "general",
+            "formattedMessage": "'settings.debug.debugInfo' can only include 'ethdebug', if output 'ir', 'irOptimized' and/or 'ethdebug' was selected.",
+            "message": "'settings.debug.debugInfo' can only include 'ethdebug', if output 'ir', 'irOptimized' and/or 'ethdebug' was selected.",
+            "severity": "error",
+            "type": "FatalError"
+        }
+    ]
+}

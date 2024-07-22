@@ -353,6 +353,10 @@ public:
 	/// @returns a JSON object with the three members ``methods``, ``events``, ``errors``. Each is a map, mapping identifiers (hashes) to function names.
 	Json interfaceSymbols(std::string const& _contractName) const;
 
+	/// @returns a JSON representing the ethdebug data of the specified contract.
+	/// Prerequisite: Successful call to parse or compile.
+	Json ethdebug(std::string const& _contractName) const;
+
 	/// @returns the Contract Metadata matching the pipeline selected using the viaIR setting.
 	std::string const& metadata(std::string const& _contractName) const { return metadata(contract(_contractName)); }
 

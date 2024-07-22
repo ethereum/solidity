@@ -156,7 +156,8 @@ static bool needsHumanTargetedStdout(CommandLineOptions const& _options)
 		_options.compiler.outputs.opcodes ||
 		_options.compiler.outputs.signatureHashes ||
 		_options.compiler.outputs.storageLayout ||
-		_options.compiler.outputs.transientStorageLayout;
+		_options.compiler.outputs.transientStorageLayout ||
+		_options.compiler.outputs.ethdebug;
 }
 
 static bool coloredOutput(CommandLineOptions const& _options)
@@ -518,6 +519,20 @@ void CommandLineInterface::handleGasEstimation(std::string const& _contract)
 			sout() << value.get<std::string>() << std::endl;
 		}
 	}
+}
+
+void CommandLineInterface::handleEthdebug(std::string const& _contract)
+{
+	solAssert(CompilerInputModes.count(m_options.input.mode) == 1);
+
+	if (!m_options.compiler.outputs.ethdebug)
+		return;
+
+	std::string data = jsonPrint(removeNullMembers(m_compiler->ethdebug(_contract)), m_options.formatting.json);
+	if (!m_options.output.dir.empty())
+		createFile(m_compiler->filesystemFriendlyName(_contract) + "_ethdebug.json", data);
+	else
+		sout() << "Debug Data (ethdebug):" << std::endl << data << std::endl;
 }
 
 void CommandLineInterface::readInputFiles()
@@ -1300,6 +1315,14 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 				m_options.formatting.json
 			) << std::endl;
 		}
+		if (m_options.compiler.outputs.ethdebug)
+		{
+			sout() << std::endl << "Debug Data (ethdebug):" << std::endl;
+			sout() << util::jsonPrint(
+				object.ethdebug,
+				m_options.formatting.json
+			) << std::endl;
+		}
 	}
 }
 
@@ -1342,6 +1365,7 @@ void CommandLineInterface::outputCompilationResults()
 			handleTransientStorageLayout(contract);
 			handleNatspec(true, contract);
 			handleNatspec(false, contract);
+			handleEthdebug(contract);
 		} // end of contracts iteration
 	}
 

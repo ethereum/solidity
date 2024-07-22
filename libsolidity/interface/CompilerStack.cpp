@@ -1091,6 +1091,14 @@ Json CompilerStack::interfaceSymbols(std::string const& _contractName) const
 	return interfaceSymbols;
 }
 
+Json CompilerStack::ethdebug(std::string const& _contractName) const
+{
+	(void)_contractName;
+
+	Json ethdebug = {{"not yet implemented", true}};
+	return ethdebug;
+}
+
 bytes CompilerStack::cborMetadata(std::string const& _contractName, bool _forIR) const
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");

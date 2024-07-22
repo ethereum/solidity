@@ -60,7 +60,7 @@ std::pair<bool, ErrorList> parse(std::string const& _source)
 		solidity::test::CommonOptions::get().eofVersion(),
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
-		DebugInfoSelection::All()
+		DebugInfoSelection::ExceptExperimental()
 	);
 	bool success = asmStack.parseAndAnalyze("source", _source);
 	return {success, asmStack.errors()};
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(to_string)
 		solidity::test::CommonOptions::get().eofVersion(),
 		YulStack::Language::StrictAssembly,
 		solidity::frontend::OptimiserSettings::none(),
-		DebugInfoSelection::All()
+		DebugInfoSelection::ExceptExperimental()
 	);
 	BOOST_REQUIRE(asmStack.parseAndAnalyze("source", code));
 	BOOST_CHECK_EQUAL(asmStack.print(), expectation);

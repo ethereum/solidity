@@ -1,0 +1,7 @@
+{
+    "component": "general",
+    "formattedMessage": "'ethdebug' need to be enabled in 'settings.debug.debugInfo', if 'ethdebug' was selected as output.",
+    "message": "'ethdebug' need to be enabled in 'settings.debug.debugInfo', if 'ethdebug' was selected as output.",
+    "severity": "error",
+    "type": "FatalError"
+}

@@ -1,0 +1,1 @@
+Error: --debug-info ethdebug can only be used with --ir, --ir-optimized and/or --ethdebug.

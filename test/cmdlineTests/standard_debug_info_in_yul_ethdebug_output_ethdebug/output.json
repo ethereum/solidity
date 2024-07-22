@@ -1,0 +1,16 @@
+{
+    "contracts": {
+        "C": {
+            "C": {
+                "ethdebug": {
+                    "not yet implemented": true
+                }
+            }
+        }
+    },
+    "sources": {
+        "C": {
+            "id": 0
+        }
+    }
+}
