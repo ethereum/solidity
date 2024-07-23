@@ -77,6 +77,9 @@ SemanticTest::SemanticTest(
 	static std::set<std::string> const yulRunTriggers{"also", "true"};
 	static std::set<std::string> const legacyRunTriggers{"also", "false", "default"};
 
+	static std::set<std::string> const EOFRunAllowedValues{"also", "true", "false"};
+	static std::set<std::string> const EOFRunTriggers{"also", "true"};
+
 	m_requiresYulOptimizer = m_reader.enumSetting<RequiresYulOptimizer>(
 		"requiresYulOptimizer",
 		{
@@ -99,8 +102,24 @@ SemanticTest::SemanticTest(
 		));
 	if (!util::contains(compileViaYulAllowedValues, compileViaYul))
 		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileViaYul value: " + compileViaYul + "."));
-	m_testCaseWantsYulRun = util::contains(yulRunTriggers, compileViaYul);
-	m_testCaseWantsLegacyRun = util::contains(legacyRunTriggers, compileViaYul);
+
+	// If viaYul is explicitly set to false default value for compileToEOF is also false.
+	std::string compileToEOF = m_reader.stringSetting("compileToEOF", compileViaYul == "false" ? "false" : "also");
+	if (compileToEOF == "true" && compileViaYul == "false")
+		BOOST_THROW_EXCEPTION(std::runtime_error(
+			"EOF tests can only be run via yul, "
+			"so they cannot specify ``compileViaYul: false``"
+			));
+	if (!util::contains(EOFRunAllowedValues, compileToEOF))
+		BOOST_THROW_EXCEPTION(std::runtime_error("Invalid compileToEOF value: " + compileToEOF + "."));
+
+	if (compileToEOF == "true" && _evmVersion < langutil::EVMVersion::prague() && shouldRun())
+		BOOST_THROW_EXCEPTION(std::runtime_error("Compilation to EOF is only possible since prague"));
+
+	// If compileToEOF flag is explicitly set to true we run EOF via yul only.
+	m_testCaseWantsYulRun = util::contains(yulRunTriggers, compileViaYul) && compileToEOF != "true";
+	m_testCaseWantsLegacyRun = util::contains(legacyRunTriggers, compileViaYul) && compileToEOF != "true";
+	m_testCaseWantsEOFRun = util::contains(EOFRunTriggers, compileToEOF);
 
 	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
 	soltestAssert(revertStrings, "Invalid revertStrings setting.");
@@ -316,15 +335,25 @@ TestCase::TestResult SemanticTest::run(std::ostream& _stream, std::string const&
 {
 	TestResult result = TestResult::Success;
 
-	if (m_testCaseWantsLegacyRun && !m_eofVersion.has_value())
-		result = runTest(_stream, _linePrefix, _formatted, false /* _isYulRun */);
+	if (m_testCaseWantsLegacyRun)
+		result = runTest(_stream, _linePrefix, _formatted, false /* _isYulRun */, false /* _isEOFRun */);
+
 
 	if (m_testCaseWantsYulRun && result == TestResult::Success)
 	{
 		if (solidity::test::CommonOptions::get().optimize)
-			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */);
+			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */, false /* _isEOFRun */);
 		else
-			result = tryRunTestWithYulOptimizer(_stream, _linePrefix, _formatted);
+			result = tryRunTestWithYulOptimizer(_stream, _linePrefix, _formatted, false);
+	}
+
+	// Run EOF test only for prage and later forks.
+	if (m_evmVersion >= langutil::EVMVersion::prague() && m_testCaseWantsEOFRun && result == TestResult::Success)
+	{
+		if (solidity::test::CommonOptions::get().optimize)
+			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */, true /* _isEOFRun */);
+		else
+			result = tryRunTestWithYulOptimizer(_stream, _linePrefix, _formatted, true);
 	}
 
 	if (result != TestResult::Success)
@@ -341,7 +370,8 @@ TestCase::TestResult SemanticTest::runTest(
 	std::ostream& _stream,
 	std::string const& _linePrefix,
 	bool _formatted,
-	bool _isYulRun
+	bool _isYulRun,
+	bool _isEOFRun
 )
 {
 	bool success = true;
@@ -353,8 +383,15 @@ TestCase::TestResult SemanticTest::runTest(
 
 	m_compileViaYul = _isYulRun;
 
+	// TODO: Add support for more EOF versions.
+	if (_isEOFRun)
+		m_eofVersion = 1;
+
 	if (_isYulRun)
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul: " << std::endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul"
+														 << (_isEOFRun ? "(EOF)" : "") << ": ";
+	else
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running legacy: ";
 
 	for (TestFunctionCall& test: m_tests)
 		test.reset();
@@ -470,6 +507,7 @@ TestCase::TestResult SemanticTest::runTest(
 
 	if (!success)
 	{
+		_stream << std::endl;
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << std::endl;
 		for (TestFunctionCall const& test: m_tests)
 		{
@@ -500,26 +538,90 @@ TestCase::TestResult SemanticTest::runTest(
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
 			<< _linePrefix << std::endl
 			<< _linePrefix << "Attention: Updates on the test will apply the detected format displayed." << std::endl;
-		if (_isYulRun && m_testCaseWantsLegacyRun)
+
+		if (m_testCaseWantsLegacyRun && m_testCaseWantsYulRun && !m_testCaseWantsEOFRun)
 		{
-			_stream << _linePrefix << std::endl << _linePrefix;
-			AnsiColorized(_stream, _formatted, {RED_BACKGROUND}) << "Note that the test passed without Yul.";
-			_stream << std::endl;
+			if (_isYulRun)
+			{
+				_stream << _linePrefix << std::endl << _linePrefix;
+				AnsiColorized(_stream, _formatted, {RED_BACKGROUND}) << "Note that the test passed without Yul.";
+				_stream << std::endl;
+			}
+			else
+			{
+				AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+					<< _linePrefix << std::endl
+					<< _linePrefix << "Note that the test also has to pass via Yul(non-EOF)." << std::endl;
+			}
 		}
-		else if (!_isYulRun && m_testCaseWantsYulRun)
-			AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
-				<< _linePrefix << std::endl
-				<< _linePrefix << "Note that the test also has to pass via Yul." << std::endl;
+		else if (!m_testCaseWantsLegacyRun && m_testCaseWantsYulRun && m_testCaseWantsEOFRun)
+		{
+			if (_isEOFRun)
+			{
+				_stream << _linePrefix << std::endl << _linePrefix;
+				AnsiColorized(_stream, _formatted, {RED_BACKGROUND})
+					<< "Note that the test passed with Yul without EOF.";
+				_stream << std::endl;
+			}
+			else
+			{
+				AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+					<< _linePrefix << std::endl
+					<< _linePrefix << "Note that the test also has to pass via Yul(EOF)." << std::endl;
+			}
+		}
+		else if (m_testCaseWantsLegacyRun && !m_testCaseWantsYulRun && m_testCaseWantsEOFRun)
+		{
+			if (_isEOFRun)
+			{
+				_stream << _linePrefix << std::endl << _linePrefix;
+				AnsiColorized(_stream, _formatted, {RED_BACKGROUND})
+					<< "Note that the test passed without Yul.";
+				_stream << std::endl;
+			}
+			else
+			{
+				AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+					<< _linePrefix << std::endl
+					<< _linePrefix << "Note that the test also has to pass via Yul(EOF)." << std::endl;
+			}
+		}
+		else if (m_testCaseWantsLegacyRun && m_testCaseWantsYulRun && m_testCaseWantsEOFRun)
+		{
+			if (!_isEOFRun && !_isYulRun)
+			{
+				AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+					<< _linePrefix << std::endl
+					<< _linePrefix << "Note that the test also has to pass via Yul and Yul(EOF)." << std::endl;
+			}
+			else if (!_isEOFRun && _isYulRun)
+			{
+				_stream << _linePrefix << std::endl << _linePrefix;
+				AnsiColorized(_stream, _formatted, {RED_BACKGROUND})
+					<< "Note that the test passed without Yul and also has to pass with Yul(EOF).";
+				_stream << std::endl;
+			}
+			else if (_isEOFRun && _isYulRun)
+			{
+				_stream << _linePrefix << std::endl << _linePrefix;
+				AnsiColorized(_stream, _formatted, {RED_BACKGROUND})
+					<< "Note that the test passed without Yul and with Yul without EOF.";
+				_stream << std::endl;
+			}
+		}
+
 		return TestResult::Failure;
 	}
 
+	AnsiColorized(_stream, _formatted, {BOLD, GREEN}) << _linePrefix << "OK" << std::endl;
 	return TestResult::Success;
 }
 
 TestCase::TestResult SemanticTest::tryRunTestWithYulOptimizer(
 	std::ostream& _stream,
 	std::string const& _linePrefix,
-	bool _formatted
+	bool _formatted,
+	bool _compileToEOF
 )
 {
 	TestResult result{};
@@ -536,7 +638,7 @@ TestCase::TestResult SemanticTest::tryRunTestWithYulOptimizer(
 
 		try
 		{
-			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */);
+			result = runTest(_stream, _linePrefix, _formatted, true /* _isYulRun */, _compileToEOF /* _isEOFRun */);
 		}
 		catch (yul::StackTooDeepError const&)
 		{
