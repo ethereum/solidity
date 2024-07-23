@@ -46,6 +46,7 @@
 #include <fstream>
 #include <limits>
 #include <iterator>
+#include <stack>
 
 using namespace solidity;
 using namespace solidity::evmasm;
@@ -886,6 +887,67 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 	return *m_tagReplacements;
 }
 
+namespace
+{
+uint16_t calculateMaxStackHeight(std::vector<AssemblyItem> const& _items, uint16_t _args)
+{
+	static auto constexpr LOC_UNVISITED = std::numeric_limits<size_t>::max();
+
+	uint16_t maxStackHeight = _args;
+	std::stack<size_t> worklist;
+	std::vector<size_t> stack_heights(_items.size(), LOC_UNVISITED);
+	stack_heights[0] = _args;
+	worklist.push(0u);
+	while (!worklist.empty())
+	{
+		size_t i = worklist.top();
+		worklist.pop();
+		AssemblyItem const& item = _items.at(i);
+		size_t stack_height_change = item.deposit();
+		size_t stackHeight = stack_heights.at(i);
+		assertThrow(stackHeight != LOC_UNVISITED, AssemblyException, "");
+
+		std::vector<size_t> successors;
+
+		if (
+			item.type() != RelativeJump &&
+			!(item.type() == Operation && SemanticInformation::terminatesControlFlow(item.instruction())) &&
+			item.type() != RetF &&
+			item.type() != ReturnContract &&
+			item.type() != JumpF
+		)
+		{
+			assertThrow(i < _items.size() - 1, AssemblyException, "No terminating instruction.");
+			successors.emplace_back(i + 1);
+		}
+
+		if (item.type() == RelativeJump || item.type() == ConditionalRelativeJump)
+		{
+			auto it = std::find(_items.begin(), _items.end(), item.tag());
+			assertThrow(it != _items.end(), AssemblyException, "Tag not found.");
+			successors.emplace_back(static_cast<size_t>(std::distance(_items.begin(), it)));
+		}
+
+		assertThrow(stackHeight + item.maxStackHeightDelta() <= std::numeric_limits<uint16_t>::max(), AssemblyException, "Invalid stack height");
+		maxStackHeight = std::max(maxStackHeight, static_cast<uint16_t>(stackHeight + item.maxStackHeightDelta()));
+		stackHeight += stack_height_change;
+
+		for (size_t s: successors)
+		{
+			solAssert(s < stack_heights.size());
+			if (stack_heights.at(s) == LOC_UNVISITED)
+			{
+				stack_heights[s] = stackHeight;
+				worklist.push(s);
+			}
+			else
+				assertThrow(stack_heights.at(s) == stackHeight, AssemblyException, "Stack height mismatch.");
+		}
+	}
+	return maxStackHeight;
+}
+}
+
 LinkerObject const& Assembly::assemble() const
 {
 	assertThrow(!m_invalid, AssemblyException, "Attempted to assemble invalid Assembly object.");
@@ -1036,7 +1098,7 @@ LinkerObject const& Assembly::assemble() const
 		{
 			ret.bytecode.push_back(codeSection.inputs);
 			ret.bytecode.push_back(codeSection.outputs);
-			appendBigEndianUint16(ret.bytecode, 0xFFFFu);	// TODO: Add stack heigh calculation
+			appendBigEndianUint16(ret.bytecode, calculateMaxStackHeight(codeSection.items, codeSection.inputs));
 		}
 	}
 
