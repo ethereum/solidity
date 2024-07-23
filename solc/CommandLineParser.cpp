@@ -776,7 +776,13 @@ General Information)").c_str(),
 		)
 		(
 			g_strCombinedJson.c_str(),
-			po::value<std::string>()->value_name(util::joinHumanReadable(CombinedJsonRequests::componentMap() | ranges::views::keys, ",")),
+			po::value<std::string>()->value_name(
+				util::joinHumanReadable(
+						CombinedJsonRequests::componentMap() | ranges::views::keys |
+						ranges::views::filter([](std::string const& key) { return key != "ethdebug"; }) |
+						ranges::to<std::vector>(), ","
+				)
+			),
 			"Output a single json document containing the specified information."
 		)
 	;
@@ -1452,6 +1458,11 @@ void CommandLineParser::processArgs()
 			"--debug-info ethdebug can only be used with --" + g_strViaIR + ", --" + CompilerOutputs::componentName(&CompilerOutputs::ir) +
 			" and/or --" + CompilerOutputs::componentName(&CompilerOutputs::irOptimized) + "."
 		);
+
+	if (m_options.compiler.combinedJsonRequests.has_value() && m_options.compiler.combinedJsonRequests->ethdebug &&
+		!(m_options.output.debugInfoSelection.has_value() && m_options.output.debugInfoSelection->ethdebug)
+	)
+		solThrow(CommandLineValidationError, "--combined-json ethdebug can only be used together with --debug-info ethdebug.");
 }
 
 void CommandLineParser::parseCombinedJsonOption()

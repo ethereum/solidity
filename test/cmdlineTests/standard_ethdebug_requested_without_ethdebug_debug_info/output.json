@@ -1,0 +1,19 @@
+{
+    "contracts": {
+        "A": {
+            "C": {
+                "ethdebug": {},
+                "evm": {
+                    "bytecode": {
+                        "object": "<BYTECODE REMOVED>"
+                    }
+                }
+            }
+        }
+    },
+    "sources": {
+        "A": {
+            "id": 0
+        }
+    }
+}

@@ -135,6 +135,7 @@ struct CombinedJsonRequests
 			{"devdoc", &CombinedJsonRequests::natspecDev},
 			{"userdoc", &CombinedJsonRequests::natspecUser},
 			{"ast", &CombinedJsonRequests::ast},
+			{"ethdebug", &CombinedJsonRequests::ethdebug},
 		};
 		return components;
 	}
@@ -156,6 +157,7 @@ struct CombinedJsonRequests
 	bool natspecDev = false;
 	bool natspecUser = false;
 	bool ast = false;
+	bool ethdebug = false;
 };
 
 struct CommandLineOptions

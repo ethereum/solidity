@@ -1326,9 +1326,10 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 
 	if (_inputsAndSettings.debugInfoSelection.has_value() &&
 		_inputsAndSettings.debugInfoSelection->ethdebug &&
-		!isIRRequested(_inputsAndSettings.outputSelection)
+		!(isIRRequested(_inputsAndSettings.outputSelection) || _inputsAndSettings.viaIR)
 	)
 		errors.emplace_back(formatError(Error::Type::FatalError, "general", "debug.debugInfo setting for ethdebug only valid, if 'ir', 'irAst', 'irOptimized' or 'irOptimizedAst' where requested."));
+
 
 	bool const binariesRequested = isBinaryRequested(_inputsAndSettings.outputSelection);
 
@@ -1435,7 +1436,7 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 	Json output;
 
 	if (errors.size() > 0)
-	output["errors"] = std::move(errors);
+		output["errors"] = std::move(errors);
 
 	if (!compilerStack.unhandledSMTLib2Queries().empty())
 		for (std::string const& query: compilerStack.unhandledSMTLib2Queries())
@@ -1487,6 +1488,10 @@ Json StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inpu
 			contractData["irOptimized"] = compilerStack.yulIROptimized(contractName);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "irOptimizedAst", wildcardMatchesExperimental))
 			contractData["irOptimizedAst"] = compilerStack.yulIROptimizedAst(contractName);
+
+		// ethdebug
+		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "ethdebug", wildcardMatchesExperimental))
+			contractData["ethdebug"] = Json::object();
 
 		// EVM
 		Json evmData;

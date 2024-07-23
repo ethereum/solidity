@@ -1,0 +1,8 @@
+{
+   "contracts": {
+      "combined_json_ethdebug_without_ethdebug_debug_info/input.sol:C": {
+         "ethdebug": {}
+      }
+   },
+   "version": "<VERSION REMOVED>"
+}

@@ -133,6 +133,7 @@ static std::string const g_strSignatureHashes = "hashes";
 static std::string const g_strSourceList = "sourceList";
 static std::string const g_strSources = "sources";
 static std::string const g_strSrcMap = "srcmap";
+static std::string const g_strEthdebug = "ethdebug";
 static std::string const g_strSrcMapRuntime = "srcmap-runtime";
 static std::string const g_strStorageLayout = "storage-layout";
 static std::string const g_strVersion = "version";
@@ -995,6 +996,8 @@ void CommandLineInterface::handleCombinedJSON()
 				contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
 					m_assemblyStack->runtimeObject(contractName).functionDebugData
 				);
+			if (m_options.compiler.combinedJsonRequests->ethdebug)
+				contractData[g_strEthdebug] = Json::object();
 		}
 	}
 
