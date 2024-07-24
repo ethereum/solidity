@@ -52,7 +52,6 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>>
 parse(std::string const& _source, Dialect const& _dialect, langutil::ErrorList& _errors);
 
 AST disambiguate(std::string const& _source, bool _yul = true);
-std::string format(std::string const& _source, bool _yul = true);
 
 solidity::yul::Dialect const& dialect(std::string const& _name, langutil::EVMVersion _evmVersion);
 

@@ -89,13 +89,6 @@ AST yul::test::disambiguate(std::string const& _source, bool _yul)
 	return AST{std::move(nameRepository), std::move(block)};
 }
 
-std::string yul::test::format(std::string const& _source, bool _yul)
-{
-	auto const version = solidity::test::CommonOptions::get().evmVersion();
-	Dialect const& dialect = _yul ? EVMDialectTyped::instance(version) : EVMDialect::strictAssemblyForEVMObjects(version);
-	return yul::AsmPrinter(yul::AsmPrinter::Mode::FullTypeInfo, dialect)(parse(_source, _yul).first->block());
-}
-
 namespace
 {
 std::map<std::string const, yul::Dialect const& (*)(langutil::EVMVersion)> const validDialects = {
