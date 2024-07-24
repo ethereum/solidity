@@ -1658,7 +1658,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				mstore(0, 0)
 			</isECRecover>
 			let <success> := <call>(<gas>, <address> <?isCall>, 0</isCall>, <pos>, sub(<end>, <pos>), 0, 32)
-			if iszero(<success>) { <forwardingRevert>() }
+			if iszero(<success>) { revert(0, 0) }
 			let <retVars> := <shl>(mload(0))
 		)");
 		templ("call", m_context.evmVersion().hasStaticCall() ? "staticcall" : "call");
@@ -1676,7 +1676,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		templ("address", toString(address));
 		templ("success", m_context.newYulVariable());
 		templ("retVars", IRVariable(_functionCall).commaSeparatedList());
-		templ("forwardingRevert", m_utils.forwardingRevertFunction());
 		if (m_context.evmVersion().canOverchargeGasForCall())
 			// Send all gas (requires tangerine whistle EVM)
 			templ("gas", "gas()");
