@@ -8,7 +8,7 @@
 
 You can talk to us on Gitter and Matrix, tweet at us on X (previously Twitter) or create a new topic in the Solidity forum. Questions, feedback, and suggestions are welcome!
 
-Solidity is a statically typed, contract-oriented, high-level language for implementing smart contracts on the Ethereum platform.
+Solidity is a high-level, contract-oriented programming language typically designed for writing smart contracts on the Ethereum Blockchain. It is a statically typed language used for creating machine-level code and compiling it on top of EVM (Ethereum Virtual Machine).
 
 For a good overview and starting point, please check out the official [Solidity Language Portal](https://soliditylang.org).
 
