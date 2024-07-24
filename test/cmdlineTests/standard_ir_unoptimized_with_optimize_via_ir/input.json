@@ -1,0 +1,12 @@
+{
+    "language": "Solidity",
+    "sources": {
+        "C.sol": {"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity *; contract C {}"}
+    },
+    "settings": {
+        "outputSelection": {"*": {"*": ["ir"]}},
+        "optimizer": {"enabled": true},
+        "viaIR": true,
+        "debug": {"debugInfo": []}
+    }
+}
