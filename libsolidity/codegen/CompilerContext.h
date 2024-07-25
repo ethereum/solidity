@@ -71,8 +71,8 @@ public:
 		m_revertStrings(_revertStrings),
 		m_reservedMemory{0},
 		m_runtimeContext(_runtimeContext),
-		m_abiFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector),
-		m_yulUtilFunctions(m_evmVersion, m_revertStrings, m_yulFunctionCollector)
+		m_abiFunctions(m_evmVersion, _eofVersion, m_revertStrings, m_yulFunctionCollector),
+		m_yulUtilFunctions(m_evmVersion, _eofVersion, m_revertStrings, m_yulFunctionCollector)
 	{
 		if (m_runtimeContext)
 			m_runtimeSub = size_t(m_asm->newSub(m_runtimeContext->m_asm).data());

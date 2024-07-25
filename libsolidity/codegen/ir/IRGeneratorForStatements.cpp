@@ -1070,7 +1070,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	{
 		auto const& event = dynamic_cast<EventDefinition const&>(functionType->declaration());
 		TypePointers paramTypes = functionType->parameterTypes();
-		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
+		ABIFunctions abi(m_context.evmVersion(), m_context.eofVersion(), m_context.revertStrings(), m_context.functionCollector());
 
 		std::vector<IRVariable> indexedArgs;
 		std::vector<std::string> nonIndexedArgs;
@@ -2783,7 +2783,7 @@ void IRGeneratorForStatements::appendBareCall(
 	else
 	{
 		templ("needsEncoding", true);
-		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
+		ABIFunctions abi(m_context.evmVersion(), m_context.eofVersion(), m_context.revertStrings(), m_context.functionCollector());
 		templ("encode", abi.tupleEncoderPacked({&argType}, {TypeProvider::bytesMemory()}));
 	}
 

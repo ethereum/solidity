@@ -285,7 +285,7 @@ std::string YulUtilFunctions::revertWithError(
 		errorArgumentTypes.push_back(arg->annotation().type);
 	}
 	templ("argumentVars", joinHumanReadablePrefixed(errorArgumentVars));
-	templ("encode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleEncoder(errorArgumentTypes, _parameterTypes));
+	templ("encode", ABIFunctions(m_evmVersion, m_eofVersion, m_revertStrings, m_functionCollector).tupleEncoder(errorArgumentTypes, _parameterTypes));
 
 	return templ.render();
 }
@@ -2592,7 +2592,7 @@ std::string YulUtilFunctions::copyArrayFromStorageToMemoryFunction(ArrayType con
 		if (_from.baseType()->isValueType())
 		{
 			solAssert(*_from.baseType() == *_to.baseType(), "");
-			ABIFunctions abi(m_evmVersion, m_revertStrings, m_functionCollector);
+			ABIFunctions abi(m_evmVersion, m_eofVersion, m_revertStrings, m_functionCollector);
 			return Whiskers(R"(
 				function <functionName>(slot) -> memPtr {
 					memPtr := <allocateUnbounded>()
@@ -2697,7 +2697,7 @@ std::string YulUtilFunctions::bytesOrStringConcatFunction(
 		templ("finalizeAllocation", finalizeAllocationFunction());
 		templ(
 			"encodePacked",
-			ABIFunctions{m_evmVersion, m_revertStrings, m_functionCollector}.tupleEncoderPacked(
+			ABIFunctions{m_evmVersion, m_eofVersion, m_revertStrings, m_functionCollector}.tupleEncoderPacked(
 				_argumentTypes,
 				targetTypes
 			)
@@ -3541,7 +3541,7 @@ std::string YulUtilFunctions::conversionFunction(Type const& _from, Type const& 
 					)")
 					(
 						"abiDecode",
-						ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).abiDecodingFunctionStruct(
+						ABIFunctions(m_evmVersion, m_eofVersion, m_revertStrings, m_functionCollector).abiDecodingFunctionStruct(
 							toStructType,
 							false
 						)
@@ -3869,6 +3869,7 @@ std::string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, Ar
 					_from.dataStoredIn(DataLocation::CallData) ?
 					ABIFunctions(
 						m_evmVersion,
+						m_eofVersion,
 						m_revertStrings,
 						m_functionCollector
 					).abiDecodingFunctionArrayAvailableLength(_to, false) :
@@ -4067,7 +4068,7 @@ std::string YulUtilFunctions::packedHashFunction(
 		templ("variables", suffixedVariableNameList("var_", 1, 1 + sizeOnStack));
 		templ("comma", sizeOnStack > 0 ? "," : "");
 		templ("allocateUnbounded", allocateUnboundedFunction());
-		templ("packedEncode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleEncoderPacked(_givenTypes, _targetTypes));
+		templ("packedEncode", ABIFunctions(m_evmVersion, m_eofVersion, m_revertStrings, m_functionCollector).tupleEncoderPacked(_givenTypes, _targetTypes));
 		return templ.render();
 	});
 }
@@ -4688,16 +4689,21 @@ std::string YulUtilFunctions::copyConstructorArgumentsToMemoryFunction(
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		std::string returnParams = suffixedVariableNameList("ret_param_",0, CompilerUtils::sizeOnStack(_contract.constructor()->parameters()));
-		ABIFunctions abiFunctions(m_evmVersion, m_revertStrings, m_functionCollector);
+		ABIFunctions abiFunctions(m_evmVersion, m_eofVersion, m_revertStrings, m_functionCollector);
 
 		return util::Whiskers(R"(
 			function <functionName>() -> <retParams> {
-				let programSize := datasize("<object>")
-				let argSize := sub(codesize(), programSize)
+				<?eof>
+					let argSize := calldatasize()
+					let memoryDataOffset := <allocate>(argSize)
+					calldatacopy(memoryDataOffset, 0, argSize)
+				<!eof>
+					let programSize := datasize("<object>")
+					let argSize := sub(codesize(), programSize)
 
-				let memoryDataOffset := <allocate>(argSize)
-				codecopy(memoryDataOffset, programSize, argSize)
-
+					let memoryDataOffset := <allocate>(argSize)
+					codecopy(memoryDataOffset, programSize, argSize)
+				</eof>
 				<retParams> := <abiDecode>(memoryDataOffset, add(memoryDataOffset, argSize))
 			}
 		)")
@@ -4706,6 +4712,7 @@ std::string YulUtilFunctions::copyConstructorArgumentsToMemoryFunction(
 		("object", _creationObjectName)
 		("allocate", allocationFunction())
 		("abiDecode", abiFunctions.tupleDecoder(FunctionType(*_contract.constructor()).parameterTypes(), true))
+		("eof", m_eofVersion.has_value())
 		.render();
 	});
 }

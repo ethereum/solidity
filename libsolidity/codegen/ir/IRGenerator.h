@@ -59,13 +59,14 @@ public:
 		m_eofVersion(_eofVersion),
 		m_context(
 			_evmVersion,
+			_eofVersion,
 			ExecutionContext::Creation,
 			_revertStrings,
 			std::move(_sourceIndices),
 			_debugInfoSelection,
 			_soliditySourceProvider
 		),
-		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector()),
+		m_utils(_evmVersion, _eofVersion, m_context.revertStrings(), m_context.functionCollector()),
 		m_optimiserSettings(_optimiserSettings)
 	{}
 
