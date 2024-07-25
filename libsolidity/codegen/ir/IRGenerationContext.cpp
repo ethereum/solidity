@@ -87,9 +87,7 @@ void IRGenerationContext::resetLocalVariables()
 
 void IRGenerationContext::addFunctionCallResults(FunctionCall const& _functionCall, std::vector<ASTPointer<VariableDeclaration>> const& _results)
 {
-	auto const& pair = m_functionCallResults.emplace(&_functionCall, _results);
-	bool didInsert = pair.second;
-	solAssert(didInsert, "Local variable added multiple times.");
+	m_functionCallResults[&_functionCall] = _results;
 }
 
 bool IRGenerationContext::isFunctionCallResults(FunctionCall const& _functionCall)
