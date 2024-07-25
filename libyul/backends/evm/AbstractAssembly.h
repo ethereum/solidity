@@ -99,7 +99,7 @@ public:
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
-	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::string _name = "") = 0;
+	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(bool _creation, std::optional<uint8_t> _eofVersion, std::string _name = "") = 0;
 	/// Appends the offset of the given sub-assembly or data.
 	virtual void appendDataOffset(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the size of the given sub-assembly or data.

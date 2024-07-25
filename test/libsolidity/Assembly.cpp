@@ -86,6 +86,7 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 		{
 			Compiler compiler(
 				solidity::test::CommonOptions::get().evmVersion(),
+				solidity::test::CommonOptions::get().eofVersion(),
 				RevertStrings::Default,
 				solidity::test::CommonOptions::get().optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal()
 			);

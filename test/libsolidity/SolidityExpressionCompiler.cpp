@@ -139,6 +139,7 @@ bytes compileFirstExpression(
 
 			CompilerContext context(
 				solidity::test::CommonOptions::get().evmVersion(),
+				solidity::test::CommonOptions::get().eofVersion(),
 				RevertStrings::Default
 			);
 			context.resetVisitedNodes(contract);

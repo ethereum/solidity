@@ -56,7 +56,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
 			bool isCreation = !boost::ends_with(subObject->name, "_deployed");
-			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, subObject->name);
+			auto subAssemblyAndID = m_assembly.createSubAssembly(isCreation, m_eofVersion, subObject->name);
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
 			compile(*subObject, *subAssemblyAndID.first, m_dialect, _optimize, m_eofVersion);
@@ -75,7 +75,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	yulAssert(_object.hasCode(), "No code.");
 	if (m_eofVersion.has_value())
 		yulAssert(
-			_optimize && (m_dialect.evmVersion() == langutil::EVMVersion()),
+			_optimize && (m_dialect.evmVersion() >= langutil::EVMVersion::prague()),
 			"Experimental EOF support is only available for optimized via-IR compilation and the most recent EVM version."
 		);
 	if (_optimize && m_dialect.evmVersion().canOverchargeGasForCall())

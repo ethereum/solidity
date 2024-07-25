@@ -62,10 +62,11 @@ class CompilerContext
 public:
 	explicit CompilerContext(
 		langutil::EVMVersion _evmVersion,
+		std::optional<uint8_t> _eofVersion,
 		RevertStrings _revertStrings,
 		CompilerContext* _runtimeContext = nullptr
 	):
-		m_asm(std::make_shared<evmasm::Assembly>(_evmVersion, _runtimeContext != nullptr, std::string{})),
+		m_asm(std::make_shared<evmasm::Assembly>(_evmVersion, _runtimeContext != nullptr, _eofVersion, std::string{})),
 		m_evmVersion(_evmVersion),
 		m_revertStrings(_revertStrings),
 		m_reservedMemory{0},
