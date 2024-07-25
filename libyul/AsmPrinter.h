@@ -46,12 +46,20 @@ struct Dialect;
 class AsmPrinter
 {
 public:
+	enum class TypePrinting
+	{
+		OmitDefault,
+		Full
+	};
+
 	explicit AsmPrinter(
-		Dialect const* _dialect = nullptr,
+		TypePrinting const _typePrintingMode,
+		Dialect const& _dialect,
 		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
 		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
 		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
 	):
+		m_typePrintingMode(_typePrintingMode),
 		m_dialect(_dialect),
 		m_debugInfoSelection(_debugInfoSelection),
 		m_soliditySourceProvider(_soliditySourceProvider)
@@ -60,13 +68,6 @@ public:
 			for (auto&& [index, name]: *_sourceIndexToName)
 				m_nameToSourceIndex[*name] = index;
 	}
-
-	explicit AsmPrinter(
-		Dialect const& _dialect,
-		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {},
-		langutil::DebugInfoSelection const& _debugInfoSelection = langutil::DebugInfoSelection::Default(),
-		langutil::CharStreamProvider const* _soliditySourceProvider = nullptr
-	): AsmPrinter(&_dialect, _sourceIndexToName, _debugInfoSelection, _soliditySourceProvider) {}
 
 	std::string operator()(Literal const& _literal);
 	std::string operator()(Identifier const& _identifier);
@@ -101,7 +102,8 @@ private:
 		return formatDebugData(_node.debugData, !isExpression);
 	}
 
-	Dialect const* const m_dialect = nullptr;
+	TypePrinting const m_typePrintingMode{};
+	Dialect const& m_dialect;
 	std::map<std::string, unsigned> m_nameToSourceIndex;
 	langutil::SourceLocation m_lastLocation = {};
 	langutil::DebugInfoSelection m_debugInfoSelection = {};
