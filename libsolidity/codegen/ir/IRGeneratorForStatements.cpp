@@ -372,6 +372,18 @@ std::string IRGeneratorForStatements::constantValueFunction(VariableDeclaration 
 	}
 }
 
+bool IRGeneratorForStatements::visit(VariableDeclarationStatement const& _varDeclStatement)
+{
+	setLocation(_varDeclStatement);
+
+	if (auto functionCall = dynamic_cast<FunctionCall const*>(_varDeclStatement.initialValue()))
+	{
+		m_context.addFunctionCallResults(*functionCall, _varDeclStatement.declarations());
+	}
+
+	return true;
+}
+
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
 {
 	setLocation(_varDeclStatement);
@@ -2770,7 +2782,9 @@ void IRGeneratorForStatements::appendBareCall(
 		</needsEncoding>
 
 		let <success> := <call>(<gas>, <address>, <?+value> <value>, </+value> <pos>, <length>, 0, 0)
-		let <returndataVar> := <extractReturndataFunction>()
+		<?needsReturndata>
+			let <returndataVar> := <extractReturndataFunction>()
+		</needsReturndata>
 	)");
 
 	templ("allocateUnbounded", m_utils.allocateUnboundedFunction());
@@ -2787,6 +2801,9 @@ void IRGeneratorForStatements::appendBareCall(
 		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
 		templ("encode", abi.tupleEncoderPacked({&argType}, {TypeProvider::bytesMemory()}));
 	}
+
+	bool unusedReturnData = m_context.isFunctionCallResults(_functionCall) && !m_context.functionCallResults(_functionCall)[1];
+	templ("needsReturndata", !unusedReturnData);
 
 	templ("success", IRVariable(_functionCall).tupleComponent(0).name());
 	templ("returndataVar", IRVariable(_functionCall).tupleComponent(1).commaSeparatedList());

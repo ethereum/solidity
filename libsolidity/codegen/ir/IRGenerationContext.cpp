@@ -85,6 +85,27 @@ void IRGenerationContext::resetLocalVariables()
 	m_localVariables.clear();
 }
 
+void IRGenerationContext::addFunctionCallResults(FunctionCall const& _functionCall, std::vector<ASTPointer<VariableDeclaration>> const& _results)
+{
+	auto const& pair = m_functionCallResults.emplace(&_functionCall, _results);
+	bool didInsert = pair.second;
+	solAssert(didInsert, "Local variable added multiple times.");
+}
+
+bool IRGenerationContext::isFunctionCallResults(FunctionCall const& _functionCall)
+{
+	return m_functionCallResults.count(&_functionCall);
+}
+
+std::vector<ASTPointer<VariableDeclaration>> const& IRGenerationContext::functionCallResults(FunctionCall const& _functionCall)
+{
+	solAssert(
+		m_functionCallResults.count(&_functionCall),
+		"Unknown functionCall"
+	);
+	return m_functionCallResults.at(&_functionCall);
+}
+
 void IRGenerationContext::registerImmutableVariable(VariableDeclaration const& _variable)
 {
 	solAssert(_variable.immutable(), "Attempted to register a non-immutable variable as immutable.");

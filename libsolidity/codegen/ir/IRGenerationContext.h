@@ -96,6 +96,10 @@ public:
 	IRVariable const& localVariable(VariableDeclaration const& _varDecl);
 	void resetLocalVariables();
 
+	void addFunctionCallResults(FunctionCall const& _functionCall, std::vector<ASTPointer<VariableDeclaration>> const& _results);
+	bool isFunctionCallResults(FunctionCall const& _functionCall);
+	std::vector<ASTPointer<VariableDeclaration>> const& functionCallResults(FunctionCall const& _functionCall);
+
 	/// Registers an immutable variable of the contract.
 	/// Should only be called at construction time.
 	void registerImmutableVariable(VariableDeclaration const& _varDecl);
@@ -169,6 +173,8 @@ private:
 	/// Memory offsets reserved for the values of immutable variables during contract creation.
 	/// This map is empty in the runtime context.
 	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
+	/// Maps function calls to their result variable declarations.
+	std::map<FunctionCall const*, std::vector<ASTPointer<VariableDeclaration>>> m_functionCallResults;
 	/// Total amount of reserved memory. Reserved memory is used to store
 	/// immutable variables during contract creation.
 	std::optional<size_t> m_reservedMemory = {0};
