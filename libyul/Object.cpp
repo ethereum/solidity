@@ -38,13 +38,14 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::yul;
 
-std::string Data::toString(Dialect const*, DebugInfoSelection const&, CharStreamProvider const*) const
+std::string Data::toString(Dialect const&, AsmPrinter::TypePrinting, DebugInfoSelection const&, CharStreamProvider const*) const
 {
 	return "data \"" + name + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 std::string Object::toString(
-	Dialect const* _dialect,
+	Dialect const& _dialect,
+	AsmPrinter::TypePrinting const _printingMode,
 	DebugInfoSelection const& _debugInfoSelection,
 	CharStreamProvider const* _soliditySourceProvider
 ) const
@@ -63,6 +64,7 @@ std::string Object::toString(
 			"\n";
 
 	std::string inner = "code " + AsmPrinter(
+		_printingMode,
 		_dialect,
 		debugData->sourceNames,
 		_debugInfoSelection,
@@ -70,7 +72,7 @@ std::string Object::toString(
 	)(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_dialect, _debugInfoSelection, _soliditySourceProvider);
+		inner += "\n" + obj->toString(_dialect, _printingMode, _debugInfoSelection, _soliditySourceProvider);
 
 	return useSrcComment + "object \"" + name + "\" {\n" + indent(inner) + "\n}";
 }

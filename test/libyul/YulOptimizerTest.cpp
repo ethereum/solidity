@@ -78,7 +78,7 @@ TestCase::TestResult YulOptimizerTest::run(std::ostream& _stream, std::string co
 		return TestResult::FatalError;
 	}
 
-	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect));
+	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, *m_dialect}(*m_object->code) : m_object->toString(*m_dialect));
 
 	// Re-parse new code for compilability
 	if (!std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))

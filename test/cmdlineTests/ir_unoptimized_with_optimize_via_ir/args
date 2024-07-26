@@ -1,0 +1,1 @@
+--ir --optimize --via-ir --debug-info none

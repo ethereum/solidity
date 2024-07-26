@@ -1,0 +1,19 @@
+Optimized IR:
+/// @use-src 0:"ir_optimized_with_optimize/input.sol"
+object "C_2" {
+    code {
+        {
+            let _1 := memoryguard(0x80)
+            mstore(64, _1)
+            if callvalue() { revert(0, 0) }
+            let _2 := datasize("C_2_deployed")
+            codecopy(_1, dataoffset("C_2_deployed"), _2)
+            return(_1, _2)
+        }
+    }
+    /// @use-src 0:"ir_optimized_with_optimize/input.sol"
+    object "C_2_deployed" {
+        code { { revert(0, 0) } }
+        data ".metadata" hex"<BYTECODE REMOVED>"
+    }
+}

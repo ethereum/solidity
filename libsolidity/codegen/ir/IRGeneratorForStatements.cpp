@@ -2256,8 +2256,7 @@ bool IRGeneratorForStatements::visit(InlineAssembly const& _inlineAsm)
 
 	solAssert(std::holds_alternative<yul::Block>(modified));
 
-	// Do not provide dialect so that we get the full type information.
-	appendCode() << yul::AsmPrinter()(std::get<yul::Block>(modified)) << "\n";
+	appendCode() << yul::AsmPrinter(yul::AsmPrinter::TypePrinting::Full, _inlineAsm.dialect())(std::get<yul::Block>(modified)) << "\n";
 	return false;
 }
 
