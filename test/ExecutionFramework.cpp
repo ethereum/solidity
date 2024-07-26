@@ -145,9 +145,12 @@ u256 ExecutionFramework::blockNumber() const
 	return m_evmcHost->tx_context.block_number;
 }
 
-void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
+void ExecutionFramework::sendMessage(bytes const& _bytecode, bytes const& _arguments, bool _isCreation, u256 const& _value)
 {
+	auto const eof = _bytecode.size() > 1 && _bytecode[0] == 0xef && _bytecode[1] == 0x00;
 	m_evmcHost->newBlock();
+
+	auto const _data = _bytecode + _arguments;
 
 	if (m_showMessages)
 	{
@@ -157,17 +160,22 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 			std::cout << "CALL   " << m_sender.hex() << " -> " << m_contractAddress.hex() << ":" << std::endl;
 		if (_value > 0)
 			std::cout << " value: " << _value << std::endl;
-		std::cout << " in:      " << util::toHex(_data) << std::endl;
+		std::cout << " in:      " << util::toHex(_bytecode + _arguments) << std::endl;
 	}
 	evmc_message message{};
-	message.input_data = _data.data();
-	message.input_size = _data.size();
+	message.input_data = eof ? _arguments.data() : _data.data();
+	message.input_size = eof ? _arguments.size() : _data.size();
+	if (eof)
+	{
+		message.code = _bytecode.data();
+		message.code_size = _bytecode.size();
+	}
 	message.sender = EVMHost::convertToEVMC(m_sender);
 	message.value = EVMHost::convertToEVMC(_value);
 
 	if (_isCreation)
 	{
-		message.kind = EVMC_CREATE;
+		message.kind = eof ? EVMC_EOFCREATE : EVMC_CREATE;
 		message.recipient = {};
 		message.code_address = {};
 	}

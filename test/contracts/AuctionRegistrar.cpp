@@ -225,7 +225,7 @@ protected:
 			return compileContract(registrarCode, "GlobalRegistrar");
 		});
 
-		sendMessage(compiled, true);
+		sendMessage(compiled, bytes(), true);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

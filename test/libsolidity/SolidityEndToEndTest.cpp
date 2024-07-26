@@ -1374,7 +1374,7 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 	ALSO_VIA_YUL(
 		compileAndRun(sourceCode);
 		bytes calldata1 = util::selectorFromSignatureH32("f()").asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
-		sendMessage(calldata1, false);
+		sendMessage(calldata1, bytes(), false);
 		BOOST_CHECK(m_transactionSuccessful);
 		BOOST_CHECK(m_output == encodeArgs(util::keccak256(bytes{'a', 'b', 'c'} + calldata1)));
 	);
@@ -1474,7 +1474,7 @@ BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5), encodeArgs(true));
 		BOOST_CHECK(!storageEmpty(m_contractAddress));
-		sendMessage(bytes(), false);
+		sendMessage(bytes(), bytes(), false);
 		BOOST_CHECK(m_transactionSuccessful);
 		BOOST_CHECK(m_output.empty());
 		BOOST_CHECK(storageEmpty(m_contractAddress));
