@@ -72,8 +72,12 @@ std::string IRGenerator::run(
 	Whiskers t(R"(
 		object "<CreationObject>" {
 			code {
-				codecopy(0, dataoffset("<DeployedObject>"), datasize("<DeployedObject>"))
-				return(0, datasize("<DeployedObject>"))
+				<?eof>
+					returncontract("<DeployedObject>", 0, 0)
+				<!eof>
+					codecopy(0, dataoffset("<DeployedObject>"), datasize("<DeployedObject>"))
+					return(0, datasize("<DeployedObject>"))
+				</eof>
 			}
 			object "<DeployedObject>" {
 				code {
@@ -82,6 +86,7 @@ std::string IRGenerator::run(
 			}
 		}
 	)");
+	t("eof", m_eofVersion.has_value());
 	t("CreationObject", IRNames::creationObject(_contract));
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("code", generate(_contract));

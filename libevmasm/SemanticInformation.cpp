@@ -301,6 +301,7 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	case Instruction::STOP:
 	case Instruction::INVALID:
 	case Instruction::REVERT:
+	case Instruction::RETURNCONTRACT:
 		return true;
 	default:
 		return false;
@@ -324,6 +325,7 @@ bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
 	case Instruction::STOP:
 	case Instruction::INVALID:
 	case Instruction::REVERT:
+	case Instruction::RETURNCONTRACT:
 		return true;
 	default:
 		return false;
@@ -482,6 +484,7 @@ SemanticInformation::Effect SemanticInformation::storage(Instruction _instructio
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
 	case Instruction::SSTORE:
+	case Instruction::EOFCREATE:
 		return SemanticInformation::Write;
 
 	case Instruction::SLOAD:
@@ -503,6 +506,7 @@ SemanticInformation::Effect SemanticInformation::transientStorage(Instruction _i
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
 	case Instruction::TSTORE:
+	case Instruction::EOFCREATE:
 		return SemanticInformation::Write;
 
 	case Instruction::TLOAD:
@@ -523,6 +527,7 @@ SemanticInformation::Effect SemanticInformation::otherState(Instruction _instruc
 	case Instruction::DELEGATECALL:
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
+	case Instruction::EOFCREATE:
 	case Instruction::SELFDESTRUCT:
 	case Instruction::STATICCALL: // because it can affect returndatasize
 		// Strictly speaking, log0, .., log4 writes to the state, but the EVM cannot read it, so they
@@ -597,6 +602,7 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
+	case Instruction::EOFCREATE:
 	case Instruction::CREATE2:
 	case Instruction::SELFDESTRUCT:
 		return true;

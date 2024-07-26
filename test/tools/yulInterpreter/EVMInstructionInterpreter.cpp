@@ -490,6 +490,8 @@ u256 EVMInstructionInterpreter::eval(
 		// TODO: Not sure about it.
 	case Instruction::DATALOAD:
 	case Instruction::DATALOADN:
+	case Instruction::EOFCREATE:
+	case Instruction::RETURNCONTRACT:
 	case Instruction::CALLF:
 	case Instruction::RETF:
 	case Instruction::JUMPF:

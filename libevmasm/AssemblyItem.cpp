@@ -161,15 +161,19 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, langutil::EVMVersion _
 	}
 	case VerbatimBytecode:
 		return std::get<2>(*m_verbatimBytecode).size();
-	case RelativeJump:
-		return 3;
-	case ConditionalRelativeJump:
-		return 3;
 	case JumpF:
 	case CallF:
 		return 3;
 	case RetF:
 		return 1;
+	case RelativeJump:
+		return 3;
+	case ConditionalRelativeJump:
+		return 3;
+	case EofCreate:
+		return 2;
+	case ReturnContract:
+		return 2;
 	case DataLoadN:
 		return 2;
 	default:
@@ -188,8 +192,6 @@ size_t AssemblyItem::arguments() const
 		return std::get<0>(*m_verbatimBytecode);
 	else if (type() == AssignImmutable)
 		return 2;
-	else if (type() == ConditionalRelativeJump)
-		return 1;
 	else if (type() == CallF || type() == JumpF)
 	{
 		assertThrow(m_functionSignature.has_value(), AssemblyException, "");
@@ -197,6 +199,12 @@ size_t AssemblyItem::arguments() const
 	}
 	else if (type() == RetF)
 		return static_cast<size_t>(data());
+	else if (type() == ConditionalRelativeJump)
+		return 1;
+	else if (type() == EofCreate)
+		return 4;
+	else if (type() == ReturnContract)
+		return 2;
 	else
 		return 0;
 }
@@ -229,8 +237,10 @@ size_t AssemblyItem::returnValues() const
 	case JumpF:
 		return 0;
 	case RetF:
+	case ReturnContract:
 		return 0;
 	case DataLoadN:
+	case EofCreate:
 		return 1;
 	default:
 		break;
@@ -370,6 +380,12 @@ std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		break;
 	case RetF:
 		text = "retf";
+		break;
+	case EofCreate:
+		text = "eofcreate(" +  std::to_string(static_cast<size_t>(data())) + ")";
+		break;
+	case ReturnContract:
+		text = "returcontract(" +  std::to_string(static_cast<size_t>(data())) + ")";
 		break;
 	case DataLoadN:
 		text = "dataloadn(" +  std::to_string(static_cast<size_t>(data())) + ")";

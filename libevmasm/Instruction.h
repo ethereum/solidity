@@ -193,6 +193,9 @@ enum class Instruction: uint8_t
 	RETF = 0xe4,              ///< return to caller from the code section of EOF continer
 	JUMPF = 0xe5,             ///< jump to a code section of EOF contaner. No stack cleaning.
 
+	EOFCREATE = 0xec,         ///< create a new account with associated container code.
+	RETURNCONTRACT = 0xee,    ///< create a new account with associated container code.
+
 	CREATE = 0xf0,            ///< create a new account with associated code
 	CALL,                     ///< message-call into an account
 	CALLCODE,                 ///< message-call with another account's code only

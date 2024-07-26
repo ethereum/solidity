@@ -64,7 +64,8 @@ public:
 			_revertStrings,
 			std::move(_sourceIndices),
 			_debugInfoSelection,
-			_soliditySourceProvider
+			_soliditySourceProvider,
+			{}
 		),
 		m_utils(_evmVersion, _eofVersion, m_context.revertStrings(), m_context.functionCollector()),
 		m_optimiserSettings(_optimiserSettings)

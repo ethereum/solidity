@@ -130,6 +130,16 @@ void NoOutputAssembly::appendFunctionReturn()
 	m_stackHeight = 0;
 }
 
+void NoOutputAssembly::appendEofCreateCall(ContainerID)
+{
+	// TODO: Implement
+
+}
+void NoOutputAssembly::appendReturnContractCall(ContainerID)
+{
+	// TODO: Implement
+}
+
 void NoOutputAssembly::appendDataOffset(std::vector<AbstractAssembly::SubID> const&)
 {
 	appendInstruction(evmasm::Instruction::PUSH1);

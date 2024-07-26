@@ -1561,23 +1561,38 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			&dynamic_cast<ContractType const&>(*functionType->returnParameterTypes().front()).contractDefinition();
 		m_context.addSubObject(contract);
 
-		Whiskers t(R"(let <memPos> := <allocateUnbounded>()
-			let <memEnd> := add(<memPos>, datasize("<object>"))
-			if or(gt(<memEnd>, 0xffffffffffffffff), lt(<memEnd>, <memPos>)) { <panic>() }
-			datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
-			<memEnd> := <abiEncode>(<memEnd><constructorParams>)
-			<?saltSet>
-				let <address> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
-			<!saltSet>
-				let <address> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
-			</saltSet>
+		Whiskers t(R"(
+			<?eof>
+				let <argPos> := <allocateUnbounded>()
+				let <memEnd> := <abiEncode>(<argPos><constructorParams>)
+				let <argSize> := sub(<memEnd>, <argPos>)
+				let <address> := eofcreate("<object>", <value>, <salt>, <argPos>, <argSize>)
+			<!eof>
+				let <memPos> := <allocateUnbounded>()
+				let <argPos> := add(<memPos>, datasize("<object>"))
+				if or(gt(<argPos>, 0xffffffffffffffff), lt(<argPos>, <memPos>)) { <panic>() }
+				datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
+				let <memEnd> := <abiEncode>(<argPos><constructorParams>)
+
+				<?saltSet>
+					let <address> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
+				<!saltSet>
+					let <address> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
+				</saltSet>
+			</eof>
 			<?isTryCall>
 				let <success> := iszero(iszero(<address>))
 			<!isTryCall>
 				if iszero(<address>) { <forwardingRevert>() }
 			</isTryCall>
 		)");
+		t("eof", m_context.eofVersion().has_value());
+		if (m_context.eofVersion().has_value())
+		{
+			t("argSize", m_context.newYulVariable());
+		}
 		t("memPos", m_context.newYulVariable());
+		t("argPos", m_context.newYulVariable());
 		t("memEnd", m_context.newYulVariable());
 		t("allocateUnbounded", m_utils.allocateUnboundedFunction());
 		t("object", IRNames::creationObject(*contract));
@@ -1590,6 +1605,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("saltSet", functionType->saltSet());
 		if (functionType->saltSet())
 			t("salt", IRVariable(_functionCall.expression()).part("salt").name());
+		else if (m_context.eofVersion().has_value()) // Set salt to 0 if not defined.
+			t("salt", "0");
 		solAssert(IRVariable(_functionCall).stackSlots().size() == 1);
 		t("address", IRVariable(_functionCall).commaSeparatedList());
 		t("isTryCall", _functionCall.annotation().tryCall);
@@ -3198,7 +3215,12 @@ IRVariable IRGeneratorForStatements::readFromLValue(IRLValue const& _lvalue)
 					")\n";
 			}
 			else
-				define(result) << "loadimmutable(\"" << std::to_string(_immutable.variable->id()) << "\")\n";
+			{
+				if (!m_context.eofVersion().has_value())
+					define(result) << "loadimmutable(\"" << std::to_string(_immutable.variable->id()) << "\")\n";
+				else
+					define(result) << "dataloadn(\"" << std::to_string(m_context.immutableVariableOffsetInDataSection(*_immutable.variable)) << "\")\n";
+			}
 		},
 		[&](IRLValue::Tuple const&) {
 			solAssert(false, "Attempted to read from tuple lvalue.");

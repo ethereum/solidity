@@ -57,6 +57,7 @@ public:
 	using LabelID = size_t;
 	using SubID = size_t;
 	using FunctionID = uint16_t;
+	using ContainerID = uint8_t;
 	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
 	virtual ~AbstractAssembly() = default;
@@ -108,6 +109,9 @@ public:
 
 	virtual void appendFunctionCall(FunctionID _functionID, int _stackDiffAfter = 0) = 0;
 	virtual void appendFunctionReturn() = 0;
+
+	virtual void appendEofCreateCall(ContainerID _containerID) = 0;
+	virtual void appendReturnContractCall(ContainerID _containerID) = 0;
 
 	/// Appends the offset of the given sub-assembly or data.
 	virtual void appendDataOffset(std::vector<SubID> const& _subPath) = 0;

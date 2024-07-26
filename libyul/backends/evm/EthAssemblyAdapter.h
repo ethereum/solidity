@@ -61,6 +61,8 @@ public:
 	void endFunction() override;
 	void appendFunctionCall(FunctionID _functionID, int _stackDiffAfter = 0) override;
 	void appendFunctionReturn() override;
+	void appendEofCreateCall(ContainerID _containerID) override;
+	void appendReturnContractCall(ContainerID _containerID) override;
 	void appendDataOffset(std::vector<SubID> const& _subPath) override;
 	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;

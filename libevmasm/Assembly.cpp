@@ -951,7 +951,7 @@ LinkerObject const& Assembly::assemble() const
 	// TODO: consider fully producing all sub and data refs in this pass already.
 	for (auto&& codeSection: m_codeSections)
 		for (AssemblyItem const& i: codeSection.items)
-			if (i.type() == PushSub)
+			if (i.type() == PushSub || i.type() == EofCreate || i.type() == ReturnContract)
 				bytesRequiredForSubs += static_cast<unsigned>(subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size());
 	unsigned bytesRequiredForDataUpperBound = static_cast<unsigned>(m_auxiliaryData.size());
 
@@ -1244,6 +1244,22 @@ LinkerObject const& Assembly::assemble() const
 				{
 					assertThrow(eof, AssemblyException, "Function return (RETF) in non-EOF code");
 					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::RETF));
+					break;
+				}
+				case EofCreate:
+				{
+					assertThrow(eof, AssemblyException, "Eof create (EOFCREATE) in non-EOF code");
+					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::EOFCREATE));
+					subRef.insert(std::make_pair(static_cast<size_t>(i.data()), ret.bytecode.size()));
+					ret.bytecode.push_back(static_cast<uint8_t>(i.data()));
+					break;
+				}
+				case ReturnContract:
+				{
+					assertThrow(eof, AssemblyException, "Return contract (RETURNCONTRACT) in non-EOF code");
+					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::RETURNCONTRACT));
+					subRef.insert(std::make_pair(static_cast<size_t>(i.data()), ret.bytecode.size()));
+					ret.bytecode.push_back(static_cast<uint8_t>(i.data()));
 					break;
 				}
 				case RelativeJump:

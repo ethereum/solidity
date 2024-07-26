@@ -144,6 +144,20 @@ public:
 		return append(newFunctionReturn());
 	}
 
+	AssemblyItem appendEOFCreate(uint16_t _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "EOF Create of undefined container");
+
+		return append(AssemblyItem::eofCreate(_containerId));
+	}
+
+	AssemblyItem appendReturnContract(uint16_t _containerId)
+	{
+		assertThrow(_containerId < m_subs.size(), AssemblyException, "Return undefined container id");
+
+		return append(AssemblyItem::returnContract(_containerId));
+	}
+
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
