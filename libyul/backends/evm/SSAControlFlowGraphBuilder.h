@@ -1,0 +1,137 @@
+/*
+	This file is part of solidity.
+
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+*/
+// SPDX-License-Identifier: GPL-3.0
+/**
+* Transformation of a Yul AST into a control flow graph.
+*/
+#pragma once
+
+#include <libyul/ControlFlowSideEffects.h>
+#include <libyul/backends/evm/SSAControlFlowGraph.h>
+#include <stack>
+
+namespace solidity::yul
+{
+
+class SSAControlFlowGraphBuilder
+{
+	SSAControlFlowGraphBuilder(
+		SSACFG& _graph,
+		AsmAnalysisInfo const& _analysisInfo,
+		std::map<FunctionDefinition const*, ControlFlowSideEffects> const& _functionSideEffects,
+		Dialect const& _dialect
+	);
+public:
+	SSAControlFlowGraphBuilder(SSAControlFlowGraphBuilder const&) = delete;
+	SSAControlFlowGraphBuilder& operator=(SSAControlFlowGraphBuilder const&) = delete;
+	static std::unique_ptr<SSACFG> build(AsmAnalysisInfo const& _analysisInfo, Dialect const& _dialect, Block const& _block);
+
+	void operator()(ExpressionStatement const& _statement);
+	void operator()(Assignment const& _assignment);
+	void operator()(VariableDeclaration const& _varDecl);
+
+	void operator()(FunctionDefinition const&);
+	void operator()(If const& _if);
+	void operator()(Switch const& _switch);
+	void operator()(ForLoop const&);
+	void operator()(Break const&);
+	void operator()(Continue const&);
+	void operator()(Leave const&);
+
+	void operator()(Block const& _block);
+
+	SSACFG::VariableId operator()(FunctionCall const& _call);
+	SSACFG::VariableId operator()(Identifier const& _identifier);
+	SSACFG::VariableId operator()(Literal const& _literal);
+
+private:
+	void assign(std::vector<std::reference_wrapper<Scope::Variable const>> _variables, Expression const* _expression);
+
+	void registerFunction(FunctionDefinition const& _function);
+	std::vector<SSACFG::VariableId> visitFunctionCall(FunctionCall const& _call);
+
+	SSACFG::VariableId zero();
+	SSACFG::VariableId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
+	SSACFG::VariableId readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block);
+	SSACFG::VariableId addPhiOperands(Scope::Variable const& _variable, SSACFG::Operation& _phi);
+	SSACFG::VariableId tryRemoveTrivialPhi(SSACFG::Operation& _phi);
+	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::VariableId _value);
+
+	SSACFG& m_graph;
+	AsmAnalysisInfo const& m_info;
+	std::map<FunctionDefinition const*, ControlFlowSideEffects> const& m_functionSideEffects;
+	Dialect const& m_dialect;
+	SSACFG::BlockId m_currentBlock;
+	SSACFG::BasicBlock& currentBlock() { return m_graph.block(m_currentBlock); }
+	Scope* m_scope = nullptr;
+	Scope::Function const& lookupFunction(YulString _name) const;
+	Scope::Variable const& lookupVariable(YulString _name) const;
+
+	struct BlockInfo {
+		bool sealed = false;
+		std::vector<std::tuple<std::reference_wrapper<SSACFG::Operation>, std::reference_wrapper<Scope::Variable const>>> incompletePhis;
+
+	};
+	std::vector<BlockInfo> m_blockInfo;
+
+	BlockInfo& blockInfo(SSACFG::BlockId _block)
+	{
+		if (_block.value >= m_blockInfo.size())
+			m_blockInfo.resize(_block.value + 1, {});
+		return m_blockInfo[_block.value];
+	}
+	void sealBlock(SSACFG::BlockId _block);
+
+	std::map<
+	    Scope::Variable const*,
+		std::vector<std::optional<SSACFG::VariableId>>
+	> m_currentDef;
+
+	struct ForLoopInfo {
+		SSACFG::BlockId breakBlock;
+		SSACFG::BlockId continueBlock;
+	};
+	std::stack<ForLoopInfo> m_forLoopInfo;
+	SSACFG::FunctionInfo* m_currentFunction = nullptr;
+
+	std::optional<SSACFG::VariableId>& currentDef(Scope::Variable const& _variable, SSACFG::BlockId _block)
+	{
+		auto& varDefs = m_currentDef[&_variable];
+		if (varDefs.size() <= _block.value)
+			varDefs.resize(_block.value + 1);
+		return varDefs.at(_block.value);
+	}
+
+	void conditionalJump(
+		langutil::DebugData::ConstPtr _debugData,
+		SSACFG::VariableId _condition,
+		SSACFG::BlockId _nonZero,
+		SSACFG::BlockId _zero
+	);
+	void jump(
+		langutil::DebugData::ConstPtr _debugData,
+		SSACFG::BlockId _target
+	);
+	void tableJump(
+		langutil::DebugData::ConstPtr _debugData,
+		SSACFG::VariableId _value,
+		std::map<u256, SSACFG::BlockId> _cases,
+		SSACFG::BlockId _defaultCase
+	);
+};
+
+}

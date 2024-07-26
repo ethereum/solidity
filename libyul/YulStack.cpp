@@ -21,6 +21,7 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -387,6 +388,12 @@ Json YulStack::cfgJson() const
 	auto exportCFGFromObject = [&](Object const& _object) -> Json {
 		// NOTE: The block Ids are reset for each object
 		YulControlFlowGraphExporter exporter{};
+		auto ssaCfg = SSAControlFlowGraphBuilder::build(
+			*_object.analysisInfo.get(),
+			languageToDialect(m_language, m_evmVersion),
+			*_object.code.get()
+		);
+		(void)ssaCfg;
 		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(
 			*_object.analysisInfo.get(),
 			languageToDialect(m_language, m_evmVersion),
