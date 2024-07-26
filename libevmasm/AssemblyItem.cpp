@@ -165,6 +165,11 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, langutil::EVMVersion _
 		return 3;
 	case ConditionalRelativeJump:
 		return 3;
+	case JumpF:
+	case CallF:
+		return 3;
+	case RetF:
+		return 1;
 	case DataLoadN:
 		return 2;
 	default:
@@ -185,6 +190,13 @@ size_t AssemblyItem::arguments() const
 		return 2;
 	else if (type() == ConditionalRelativeJump)
 		return 1;
+	else if (type() == CallF || type() == JumpF)
+	{
+		assertThrow(m_functionSignature.has_value(), AssemblyException, "");
+		return std::get<0>(*m_functionSignature);
+	}
+	else if (type() == RetF)
+		return static_cast<size_t>(data());
 	else
 		return 0;
 }
@@ -211,6 +223,13 @@ size_t AssemblyItem::returnValues() const
 		return 0;
 	case VerbatimBytecode:
 		return std::get<1>(*m_verbatimBytecode);
+	case CallF:
+		assertThrow(m_functionSignature.has_value(), AssemblyException, "");
+		return std::get<1>(*m_functionSignature);
+	case JumpF:
+		return 0;
+	case RetF:
+		return 0;
 	case DataLoadN:
 		return 1;
 	default:
@@ -343,6 +362,15 @@ std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	case ConditionalRelativeJump:
 		text = "rjumpi(" + std::string("tag_") + std::to_string(static_cast<size_t>(data())) + ")";
 		break;
+	case CallF:
+		text = "callf(" +  std::to_string(static_cast<size_t>(data())) + ")";
+		break;
+	case JumpF:
+		text = "jumpf(" +  std::to_string(static_cast<size_t>(data())) + ")";
+		break;
+	case RetF:
+		text = "retf";
+		break;
 	case DataLoadN:
 		text = "dataloadn(" +  std::to_string(static_cast<size_t>(data())) + ")";
 		break;
@@ -432,6 +460,15 @@ std::ostream& solidity::evmasm::operator<<(std::ostream& _out, AssemblyItem cons
 		break;
 	case VerbatimBytecode:
 		_out << " Verbatim " << util::toHex(_item.verbatimData());
+		break;
+	case CallF:
+		_out << " CALLF " << std::dec << _item.data();
+		break;
+	case JumpF:
+		_out << " JUMPF " << std::dec << _item.data();
+		break;
+	case RetF:
+		_out << " RETF";
 		break;
 	case UndefinedItem:
 		_out << " ???";

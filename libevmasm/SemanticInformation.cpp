@@ -203,6 +203,9 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	case PushDeployTimeAddress:
 	case AssignImmutable:
 	case VerbatimBytecode:
+	case CallF:
+	case JumpF:
+	case RetF:
 		return true;
 	case Push:
 	case PushTag:
@@ -280,7 +283,7 @@ bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 
 bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 {
-	if (_item.type() == evmasm::RelativeJump || _item.type() == evmasm::ConditionalRelativeJump)
+	if (_item.type() == evmasm::RetF || _item.type() == evmasm::RelativeJump || _item.type() == evmasm::ConditionalRelativeJump)
 		return true;
 	if (_item.type() != evmasm::Operation)
 		return false;

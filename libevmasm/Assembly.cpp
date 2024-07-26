@@ -1226,6 +1226,26 @@ LinkerObject const& Assembly::assemble() const
 						ret.bytecode.push_back(static_cast<uint8_t>(Instruction::JUMPDEST));
 					break;
 				}
+				case CallF:
+				{
+					assertThrow(eof, AssemblyException, "Function call (CALLF) in non-EOF code");
+					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::CALLF));
+					appendBigEndianUint16(ret.bytecode, i.data());
+					break;
+				}
+				case JumpF:
+				{
+					assertThrow(eof, AssemblyException, "Function call (JUMPF) in non-EOF code");
+					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::JUMPF));
+					appendBigEndianUint16(ret.bytecode, i.data());
+					break;
+				}
+				case RetF:
+				{
+					assertThrow(eof, AssemblyException, "Function return (RETF) in non-EOF code");
+					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::RETF));
+					break;
+				}
 				case RelativeJump:
 				case ConditionalRelativeJump:
 				{

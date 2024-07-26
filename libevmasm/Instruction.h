@@ -188,6 +188,11 @@ enum class Instruction: uint8_t
 	RJUMP = 0xe0,             ///< relative jump
 	RJUMPI = 0xe1,            ///< conidtional relative jump
 	RJUMPV = 0xe2,            ///< relative jump via jump table
+
+	CALLF = 0xe3,             ///< call function in a EOF code section
+	RETF = 0xe4,              ///< return to caller from the code section of EOF continer
+	JUMPF = 0xe5,             ///< jump to a code section of EOF contaner. No stack cleaning.
+
 	CREATE = 0xf0,            ///< create a new account with associated code
 	CALL,                     ///< message-call into an account
 	CALLCODE,                 ///< message-call with another account's code only

@@ -49,7 +49,7 @@ using namespace solidity::yul;
 
 StackLayout StackLayoutGenerator::run(CFG const& _cfg)
 {
-	StackLayout stackLayout;
+	StackLayout stackLayout{_cfg.useFunctions, {}, {}};
 	StackLayoutGenerator{stackLayout, nullptr}.processEntryPoint(*_cfg.entry);
 
 	for (auto& functionInfo: _cfg.functionInfo | ranges::views::values)
@@ -70,7 +70,7 @@ std::map<YulName, std::vector<StackLayoutGenerator::StackTooDeep>> StackLayoutGe
 
 std::vector<StackLayoutGenerator::StackTooDeep> StackLayoutGenerator::reportStackTooDeep(CFG const& _cfg, YulName _functionName)
 {
-	StackLayout stackLayout;
+	StackLayout stackLayout{_cfg.useFunctions, {}, {}};
 	CFG::FunctionInfo const* functionInfo = nullptr;
 	if (!_functionName.empty())
 	{
@@ -464,7 +464,9 @@ std::optional<Stack> StackLayoutGenerator::getExitLayoutOrStageDependencies(
 			Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
 				return StackSlot{_varSlot};
 			}) | ranges::to<Stack>;
-			stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
+
+			if (!m_layout.useFunctions)
+				stack.emplace_back(FunctionReturnLabelSlot{_functionReturn.info->function});
 			return stack;
 		},
 		[&](CFG::BasicBlock::Terminated const&) -> std::optional<Stack>
@@ -735,7 +737,7 @@ void StackLayoutGenerator::fillInJunk(CFG::BasicBlock const& _block, CFG::Functi
 					_addChild(_conditionalJump.zero);
 					_addChild(_conditionalJump.nonZero);
 				},
-				[&](CFG::BasicBlock::FunctionReturn const&) { yulAssert(false); },
+				[&](CFG::BasicBlock::FunctionReturn const&) { yulAssert(m_layout.useFunctions); },
 				[&](CFG::BasicBlock::Terminated const&) {},
 			}, _block->exit);
 		});

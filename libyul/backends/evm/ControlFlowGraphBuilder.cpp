@@ -51,12 +51,23 @@ namespace
 /// Removes edges to blocks that are not reachable.
 void cleanUnreachable(CFG& _cfg)
 {
+	auto const addFunctionsEntries = [&_cfg](CFG::BasicBlock* _node, auto&& _addChild)
+	{
+		for (auto const& o: _node->operations)
+		{
+			if (auto const* p = std::get_if<CFG::FunctionCall>(&o.operation); p != nullptr)
+			{
+				auto const fInfo = _cfg.functionInfo.at(&(p->function.get()));
+				_addChild(fInfo.entry);
+			}
+		}
+	};
+
 	// Determine which blocks are reachable from the entry.
 	util::BreadthFirstSearch<CFG::BasicBlock*> reachabilityCheck{{_cfg.entry}};
-	for (auto const& functionInfo: _cfg.functionInfo | ranges::views::values)
-		reachabilityCheck.verticesToTraverse.emplace_back(functionInfo.entry);
 
 	reachabilityCheck.run([&](CFG::BasicBlock* _node, auto&& _addChild) {
+		addFunctionsEntries(_node, _addChild);
 		visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::Jump const& _jump) {
 				_addChild(_jump.target);
@@ -76,6 +87,16 @@ void cleanUnreachable(CFG& _cfg)
 		cxx20::erase_if(node->entries, [&](CFG::BasicBlock* entry) -> bool {
 			return !reachabilityCheck.visited.count(entry);
 		});
+
+	// Remove functions which are never referenced.
+	_cfg.functions.erase(std::remove_if(_cfg.functions.begin(), _cfg.functions.end(), [&](auto const& item) {
+		return !reachabilityCheck.visited.count(_cfg.functionInfo.at(item).entry);
+	}), _cfg.functions.end());
+
+	// Remove functionInfos which are never referenced.
+	cxx20::erase_if(_cfg.functionInfo, [&](auto const& entry) -> bool {
+		return !reachabilityCheck.visited.count(entry.second.entry);
+	});
 }
 
 /// Sets the ``recursive`` member to ``true`` for all recursive function calls.
@@ -208,10 +229,11 @@ void markNeedsCleanStack(CFG& _cfg)
 std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 	AsmAnalysisInfo const& _analysisInfo,
 	Dialect const& _dialect,
+	std::optional<uint8_t> _eofVersion,
 	Block const& _block
 )
 {
-	auto result = std::make_unique<CFG>();
+	auto result = std::make_unique<CFG>(_eofVersion.has_value());
 	result->entry = &result->makeBlock(debugDataOf(_block));
 
 	ControlFlowSideEffectsCollector sideEffects(_dialect, _block);
@@ -540,7 +562,7 @@ Stack const& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _cal
 		Scope::Function const& function = lookupFunction(_call.functionName.name);
 		canContinue = m_graph.functionInfo.at(&function).canContinue;
 		Stack inputs;
-		if (canContinue)
+		if (!m_graph.useFunctions && canContinue)
 			inputs.emplace_back(FunctionCallReturnLabelSlot{_call});
 		for (auto const& arg: _call.arguments | ranges::views::reverse)
 			inputs.emplace_back(std::visit(*this, arg));

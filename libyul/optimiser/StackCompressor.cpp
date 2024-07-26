@@ -238,6 +238,7 @@ void eliminateVariablesOptimizedCodegen(
 
 std::tuple<bool, Block> StackCompressor::run(
 	Dialect const& _dialect,
+	std::optional<uint8_t> _eofVersion,
 	Object const& _object,
 	bool _optimizeStackAllocation,
 	size_t _maxIterations)
@@ -258,7 +259,7 @@ std::tuple<bool, Block> StackCompressor::run(
 	if (usesOptimizedCodeGenerator)
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, astRoot, _object.qualifiedDataNames());
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, astRoot);
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, _eofVersion, astRoot);
 		eliminateVariablesOptimizedCodegen(
 			_dialect,
 			astRoot,

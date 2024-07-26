@@ -193,6 +193,7 @@ std::unique_ptr<AST> Program::applyOptimisationSteps(
 	std::set<YulName> const externallyUsedIdentifiers = {};
 	OptimiserStepContext context{
 		_dialect,
+		std::nullopt, // TODO
 		_nameDispenser,
 		externallyUsedIdentifiers,
 		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment

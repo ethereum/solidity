@@ -37,6 +37,7 @@ struct StackLayout
 		/// The resulting stack layout after executing the block.
 		Stack exitLayout;
 	};
+	bool useFunctions = false;
 	std::map<CFG::BasicBlock const*, BlockInfo> blockInfos;
 	/// For each operation the complete stack layout that:
 	/// - has the slots required for the operation at the stack top.

@@ -52,7 +52,7 @@ protected:
 		auto astRoot = std::get<Block>(yul::ASTCopier{}(m_object->code()->root()));
 		NameDispenser dispenser(m_dialect, astRoot);
 		std::set<YulName> reserved;
-		OptimiserStepContext context{m_dialect, dispenser, reserved, 0};
+		OptimiserStepContext context{m_dialect, std::nullopt /* TODO */, dispenser, reserved, 0};
 		CommonSubexpressionEliminator::run(context, astRoot);
 
 		m_ssaValues(astRoot);
