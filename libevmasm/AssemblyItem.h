@@ -52,7 +52,9 @@ enum AssemblyItemType
 	PushImmutable, ///< Push the currently unknown value of an immutable variable. The actual value will be filled in by the constructor.
 	AssignImmutable, ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
 	DataLoadN, /// Loads 32 bytes from EOF data section. TODO: Why cannot it be done with builtin function?
-	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
+	VerbatimBytecode, ///< Contains data that is inserted into the bytecode code section without modification.
+	RelativeJump,
+	ConditionalRelativeJump,
 };
 
 enum class Precision { Precise , Approximate };
@@ -89,13 +91,22 @@ public:
 		m_debugData{langutil::DebugData::create()}
 	{}
 
+	static AssemblyItem jumpTo(AssemblyItem _tag, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(RelativeJump, _tag.data(), _debugData);
+	}
+	static AssemblyItem conditionalJumpTo(AssemblyItem _tag, langutil::DebugData::ConstPtr _debugData = langutil::DebugData::create())
+	{
+		return AssemblyItem(ConditionalRelativeJump, _tag.data(), _debugData);
+	}
+
 	AssemblyItem(AssemblyItem const&) = default;
 	AssemblyItem(AssemblyItem&&) = default;
 	AssemblyItem& operator=(AssemblyItem const&) = default;
 	AssemblyItem& operator=(AssemblyItem&&) = default;
 
-	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(Tag, data()); }
-	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(PushTag, data()); }
+	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump, util::Exception, ""); return AssemblyItem(Tag, data()); }
+	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag || m_type == RelativeJump || m_type == ConditionalRelativeJump, util::Exception, ""); return AssemblyItem(PushTag, data()); }
 	/// Converts the tag to a subassembly tag. This has to be called in order to move a tag across assemblies.
 	/// @param _subId the identifier of the subassembly the tag is taken from.
 	AssemblyItem toSubAssemblyTag(size_t _subId) const;

@@ -184,6 +184,10 @@ enum class Instruction: uint8_t
 
 	DATALOAD = 0xd0,          ///< load data from EOF data section
 	DATALOADN = 0xd1,         ///< load data from EOF data section
+
+	RJUMP = 0xe0,             ///< relative jump
+	RJUMPI = 0xe1,            ///< conidtional relative jump
+	RJUMPV = 0xe2,            ///< relative jump via jump table
 	CREATE = 0xf0,            ///< create a new account with associated code
 	CALL,                     ///< message-call into an account
 	CALLCODE,                 ///< message-call with another account's code only
