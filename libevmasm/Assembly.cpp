@@ -711,6 +711,11 @@ AssemblyItem Assembly::newImmutableAssignment(std::string const& _identifier)
 	return AssemblyItem{AssignImmutable, h};
 }
 
+AssemblyItem Assembly::newDataLoadN(size_t offset)
+{
+	return AssemblyItem{DataLoadN, offset};
+}
+
 Assembly& Assembly::optimise(OptimiserSettings const& _settings)
 {
 	// TODO: implement and verify `optimiseInternal` implementation for EOF.
@@ -950,6 +955,20 @@ LinkerObject const& Assembly::assemble() const
 				bytesRequiredForSubs += static_cast<unsigned>(subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size());
 	unsigned bytesRequiredForDataUpperBound = static_cast<unsigned>(m_auxiliaryData.size());
 
+	std::optional<unsigned> maxDataLoadNOffset = std::nullopt;
+	for (auto&& codeSection: m_codeSections)
+		for (AssemblyItem const& i: codeSection.items)
+			if (i.type() == DataLoadN)
+			{
+				assertThrow(i.data() <= std::numeric_limits<uint16_t>::max(), AssemblyException, "Invalid dataloadn index value.");
+				auto const offset = static_cast<unsigned>(i.data());
+				if (!maxDataLoadNOffset.has_value() || offset > maxDataLoadNOffset.value())
+					maxDataLoadNOffset = offset;
+
+			}
+
+	bytesRequiredForDataUpperBound += maxDataLoadNOffset.has_value() ? (maxDataLoadNOffset.value() + 32u) : 0u;
+
 	// Some of these may be unreferenced and not actually end up in data.
 	for (auto const& dataItem: m_data)
 		bytesRequiredForDataUpperBound += static_cast<unsigned>(dataItem.second.size());
@@ -1027,6 +1046,7 @@ LinkerObject const& Assembly::assemble() const
 	std::map<size_t, std::pair<size_t, size_t>> tagRef;
 	std::multimap<h256, unsigned> dataRef;
 	std::multimap<size_t, size_t> subRef;
+	std::map<size_t, uint16_t> dataSectionRef;
 	std::vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = numberEncodingSize(headerSize + bytesRequiredForCode + bytesRequiredForDataUpperBound);
 	// Adjust bytesPerTag for references to sub assemblies.
@@ -1175,6 +1195,14 @@ LinkerObject const& Assembly::assemble() const
 					immutableReferencesBySub.erase(i.data());
 					break;
 				}
+				case DataLoadN:
+				{
+					assertThrow(i.data() <= std::numeric_limits<uint16_t>::max(), AssemblyException, "Invalid dataloadn position.");
+					ret.bytecode.push_back(uint8_t(Instruction::DATALOADN));
+					dataSectionRef[ret.bytecode.size()] = static_cast<uint16_t>(i.data());
+					appendBigEndianUint16(ret.bytecode, i.data());
+					break;
+				}
 				case PushDeployTimeAddress:
 					ret.bytecode.push_back(static_cast<uint8_t>(Instruction::PUSH20));
 					ret.bytecode.resize(ret.bytecode.size() + 20);
@@ -1221,7 +1249,7 @@ LinkerObject const& Assembly::assemble() const
 
 		// In order for de-duplication to kick in, not only must the bytecode be identical, but
 		// link and immutables references as well.
-		const auto it = subAssemblyOffsets.find(subObject);
+		auto const it = subAssemblyOffsets.find(subObject);
 		if (it != subAssemblyOffsets.end())
 		{
 			if (!eof)
@@ -1283,7 +1311,7 @@ LinkerObject const& Assembly::assemble() const
 	if (eof)
 	{
 		// Fill the num_container_sections
-		const auto numContainers = subAssemblyOffsets.size();
+		auto const numContainers = subAssemblyOffsets.size();
 		if (numContainers > 0)
 		{
 			bytes containerSectionHeader = {};
@@ -1309,6 +1337,13 @@ LinkerObject const& Assembly::assemble() const
 				newLinkRefs[ref.first + containerSectionHeader.size()] = ref.second;
 
 			ret.linkReferences = newLinkRefs;
+
+			// We inserted some bytecode before first code section so dataSectionRef have to be updated too.
+			decltype(dataSectionRef) newDataSectionRef;
+			for (auto const& ref: dataSectionRef)
+				newDataSectionRef[ref.first + containerSectionHeader.size()] = ref.second;
+
+			dataSectionRef = newDataSectionRef;
 		}
 		else
 			assertThrow(0 == containerSizes.size(), AssemblyException, "Invalid container size");
@@ -1331,7 +1366,16 @@ LinkerObject const& Assembly::assemble() const
 	for (unsigned pos: sizeRef)
 		setBigEndian(ret.bytecode, pos, bytesPerDataRef, ret.bytecode.size());
 
-	auto dataLength = ret.bytecode.size() - dataStart;
+	auto appendedDataAndAuxDataSize = ret.bytecode.size() - dataStart;
+
+	// If some data was already added to data section (EOF only) we need to remap data section refs accordigly
+	if (eof && appendedDataAndAuxDataSize > 0)
+	{
+		for (auto [pos, val] : dataSectionRef)
+			setBigEndian(ret.bytecode, pos, 2, val + appendedDataAndAuxDataSize);
+	}
+
+	auto dataLength = appendedDataAndAuxDataSize + (maxDataLoadNOffset.has_value() ? (maxDataLoadNOffset.value() + 32u) : 0u);
 	assertThrow(
 		bytesRequiredForDataAndSubsUpperBound >= dataLength,
 		AssemblyException,

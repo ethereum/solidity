@@ -112,6 +112,9 @@ public:
 	/// Appends an assignment to an immutable variable.
 	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
 
+	/// Appends 32 bytes data load from EOF data section in dataOffset pos
+	virtual void appendDataLoadN(size_t dataOffset) = 0;
+
 	/// Appends data to the very end of the bytecode. Repeated calls concatenate.
 	virtual void appendToAuxiliaryData(bytes const& _data) = 0;
 

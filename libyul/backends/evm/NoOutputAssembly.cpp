@@ -129,6 +129,11 @@ void NoOutputAssembly::appendImmutableAssignment(std::string const&)
 	yulAssert(false, "setimmutable not implemented.");
 }
 
+void NoOutputAssembly::appendDataLoadN(size_t)
+{
+	yulAssert(false, "dataloadn not implemented.");
+}
+
 NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	EVMDialect(_copyFrom.evmVersion(), _copyFrom.providesObjectAccess())
 {

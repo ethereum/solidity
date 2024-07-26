@@ -487,6 +487,9 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SWAP14:
 	case Instruction::SWAP15:
 	case Instruction::SWAP16:
+		// TODO: Not sure about it.
+	case Instruction::DATALOAD:
+	case Instruction::DATALOADN:
 	{
 		yulAssert(false, "");
 		return 0;

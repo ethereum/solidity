@@ -51,6 +51,7 @@ enum AssemblyItemType
 	PushDeployTimeAddress, ///< Push an address to be filled at deploy time. Should not be touched by the optimizer.
 	PushImmutable, ///< Push the currently unknown value of an immutable variable. The actual value will be filled in by the constructor.
 	AssignImmutable, ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
+	DataLoadN, /// Loads 32 bytes from EOF data section. TODO: Why cannot it be done with builtin function?
 	VerbatimBytecode ///< Contains data that is inserted into the bytecode code section without modification.
 };
 

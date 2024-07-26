@@ -204,6 +204,7 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 			opcode != evmasm::Instruction::JUMP &&
 			opcode != evmasm::Instruction::JUMPI &&
 			opcode != evmasm::Instruction::JUMPDEST &&
+			opcode != evmasm::Instruction::DATALOADN &&
 			_evmVersion.hasOpcode(opcode) &&
 			!prevRandaoException(name)
 		)
@@ -345,6 +346,21 @@ std::map<YulName, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _ev
 			) {
 				yulAssert(_call.arguments.size() == 1, "");
 				_assembly.appendImmutable(formatLiteral(std::get<Literal>(_call.arguments.front())));
+			}
+		));
+		builtins.emplace(createFunction(
+			"dataloadn",
+			1,
+			1,
+			SideEffects{},
+			{LiteralKind::String},
+			[](
+				FunctionCall const& _call,
+				AbstractAssembly& _assembly,
+				BuiltinContext&
+			) {
+				yulAssert(_call.arguments.size() == 1, "");
+				_assembly.appendDataLoadN(std::stoul(formatLiteral(std::get<Literal>(_call.arguments.front()))));
 			}
 		));
 	}

@@ -161,6 +161,8 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength, langutil::EVMVersion _
 	}
 	case VerbatimBytecode:
 		return std::get<2>(*m_verbatimBytecode).size();
+	case DataLoadN:
+		return 2;
 	default:
 		break;
 	}
@@ -203,6 +205,8 @@ size_t AssemblyItem::returnValues() const
 		return 0;
 	case VerbatimBytecode:
 		return std::get<1>(*m_verbatimBytecode);
+	case DataLoadN:
+		return 1;
 	default:
 		break;
 	}
@@ -326,6 +330,9 @@ std::string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		break;
 	case VerbatimBytecode:
 		text = std::string("verbatimbytecode_") + util::toHex(std::get<2>(*m_verbatimBytecode));
+		break;
+	case DataLoadN:
+		text = "dataloadn(" +  std::to_string(static_cast<size_t>(data())) + ")";
 		break;
 	default:
 		assertThrow(false, InvalidOpcode, "");

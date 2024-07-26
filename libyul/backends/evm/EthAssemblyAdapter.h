@@ -65,6 +65,8 @@ public:
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
 
+	void appendDataLoadN(size_t dataOffset) override;
+
 	void markAsInvalid() override;
 
 	langutil::EVMVersion evmVersion() const override;

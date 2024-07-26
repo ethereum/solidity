@@ -175,6 +175,11 @@ void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifie
 	m_assembly.appendImmutableAssignment(_identifier);
 }
 
+void EthAssemblyAdapter::appendDataLoadN(size_t dataOffset)
+{
+	m_assembly.appendDataLoadN(dataOffset);
+}
+
 void EthAssemblyAdapter::markAsInvalid()
 {
 	m_assembly.markAsInvalid();
