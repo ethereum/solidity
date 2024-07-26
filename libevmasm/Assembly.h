@@ -53,7 +53,10 @@ public:
 	m_creation(_creation),
 	m_eofVersion(_eofVersion),
 	m_name(std::move(_name))
-	{}
+	{
+		// Code section number 0 has to be non-returning.
+		m_codeSections.emplace_back(CodeSection{0, 0x80, {}});
+	}
 
 	std::optional<uint8_t> eofVersion() const { return m_eofVersion; }
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
@@ -102,12 +105,6 @@ public:
 
 	/// Appends @a _data literally to the very end of the bytecode.
 	void appendToAuxiliaryData(bytes const& _data) { m_auxiliaryData += _data; }
-
-	/// Returns the assembly items.
-	AssemblyItems const& items() const { return m_items; }
-
-	/// Returns the mutable assembly items. Use with care!
-	AssemblyItems& items() { return m_items; }
 
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
@@ -181,12 +178,30 @@ public:
 
 	bool isCreation() const { return m_creation; }
 
+	struct CodeSection
+	{
+		uint8_t inputs = 0;
+		uint8_t outputs = 0;
+		AssemblyItems items{};
+	};
+
+	std::vector<CodeSection>& codeSections()
+	{
+		return m_codeSections;
+	}
+
+	std::vector<CodeSection> const& codeSections() const
+	{
+		return m_codeSections;
+	}
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
 	/// that are referenced in a super-assembly.
 	std::map<u256, u256> const& optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
 
+	/// For EOF and legacy it calculates approximate size of "pure" code without data.
 	unsigned codeSize(unsigned subTagSize) const;
 
 	/// Add all assembly items from given JSON array. This function imports the items by iterating through
@@ -223,11 +238,12 @@ protected:
 	};
 
 	std::map<std::string, NamedTagInfo> m_namedTags;
-	AssemblyItems m_items;
 	std::map<util::h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
 	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
+	std::vector<CodeSection> m_codeSections;
+	uint16_t m_currentCodeSection = 0;
 	std::map<util::h256, std::string> m_strings;
 	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 	std::map<util::h256, std::string> m_immutables; ///< Identifiers of immutables.
