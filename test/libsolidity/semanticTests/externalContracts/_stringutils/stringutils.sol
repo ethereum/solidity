@@ -220,7 +220,7 @@ library strings {
                 // Mask out irrelevant bytes and check again
                 uint256 mask = type(uint256).max; // 0xffff...
                 if(shortest < 32) {
-                  mask = ~(2 ** (8 * (32 - shortest + idx)) - 1);
+                    mask = ~(2 ** (8 * (32 - shortest + idx)) - 1);
                 }
                 uint256 diff;
                 // This depends on potential underflow.

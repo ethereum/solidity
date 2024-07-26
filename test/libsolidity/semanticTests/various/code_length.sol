@@ -57,6 +57,8 @@ contract C {
 
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // constructor()
 // gas legacy: 66989

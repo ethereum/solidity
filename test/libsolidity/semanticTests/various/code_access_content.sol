@@ -36,6 +36,8 @@ contract C {
         return true;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // testRuntime() -> true
 // gas legacy: 76575

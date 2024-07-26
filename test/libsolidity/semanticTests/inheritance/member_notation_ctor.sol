@@ -17,6 +17,8 @@ contract A {
 		return d.getX();
 	}
 }
+// ====
+// compileToEOF: false
 // ----
 // g(int256): -1 -> -1
 // gas legacy: 77876

@@ -13,5 +13,7 @@ contract C {
     }
     function fun() public pure {}
 }
+// ====
+// compileToEOF: false
 // ----
 // f() -> 0x1, 0xc06afe3a8444fc0004668591e8306bfb9968e79e946644cd0000000000000000, 9

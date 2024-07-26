@@ -36,5 +36,7 @@ contract C {
         return x < data.length;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // test() -> true

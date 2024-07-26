@@ -14,6 +14,8 @@ contract C {
         return true;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // f() -> true
 // g() -> true

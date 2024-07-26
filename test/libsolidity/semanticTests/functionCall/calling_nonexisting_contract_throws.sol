@@ -21,6 +21,8 @@ contract C {
         return 7;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // f() -> FAILURE
 // g() -> FAILURE

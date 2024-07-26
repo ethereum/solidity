@@ -25,6 +25,8 @@ contract C {
 		return (a, (new A()).f(), (new B()).f());
 	}
 }
+// ====
+// compileToEOF: false
 // ----
 // f() -> 3, 7, 5
 // gas irOptimized: 86796

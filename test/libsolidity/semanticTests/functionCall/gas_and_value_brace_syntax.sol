@@ -35,6 +35,8 @@ contract test {
         myBal = address(this).balance;
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // constructor(), 20 wei ->
 // gas irOptimized: 120218

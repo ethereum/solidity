@@ -6,6 +6,8 @@ contract C {
 		assert(msg.data.length == 0);
 	}
 }
+// ====
+// compileToEOF: false
 // ----
 // constructor(): 42 ->
 // gas irOptimized: 68239

@@ -8,6 +8,8 @@ contract C {
         emit TestB(this.f2);
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // f1() ->
 // ~ emit TestA(function): #0xc06afe3a8444fc0004668591e8306bfb9968e79ec27fc3050000000000000000

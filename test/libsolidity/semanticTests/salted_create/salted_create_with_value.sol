@@ -19,6 +19,7 @@ contract A {
 }
 // ====
 // EVMVersion: >=constantinople
+// compileToEOF: false
 // ----
 // f(), 10 ether -> 3007, 3008, 3009
 // gas irOptimized: 187022

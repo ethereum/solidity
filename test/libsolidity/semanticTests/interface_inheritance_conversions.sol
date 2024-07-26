@@ -32,6 +32,8 @@ contract C {
         return (sb.parentFun(), sb.subBFun());
     }
 }
+// ====
+// compileToEOF: false
 // ----
 // convertParent() -> 1
 // gas irOptimized: 85524
