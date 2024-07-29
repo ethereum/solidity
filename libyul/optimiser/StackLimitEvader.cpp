@@ -15,6 +15,7 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
@@ -117,31 +118,33 @@ u256 literalArgumentValue(FunctionCall const& _call)
 }
 }
 
-void StackLimitEvader::run(
+Block StackLimitEvader::run(
 	OptimiserStepContext& _context,
-	Block& _astRoot,
 	Object const& _object
 )
 {
+	yulAssert(_object.code);
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
 	yulAssert(
 		evmDialect && evmDialect->providesObjectAccess(),
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
+	auto astRoot = std::get<Block>(ASTCopier{}(_object.code->root()));
 	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, _astRoot, _object.qualifiedDataNames());
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, _astRoot);
-		run(_context, _astRoot, StackLayoutGenerator::reportStackTooDeep(*cfg));
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, astRoot, _object.qualifiedDataNames());
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, *evmDialect, astRoot);
+		run(_context, astRoot, StackLayoutGenerator::reportStackTooDeep(*cfg));
 	}
 	else
-		run(_context, _astRoot, CompilabilityChecker{
+	{
+		run(_context, astRoot, CompilabilityChecker{
 			_context.dialect,
 			_object,
 			true,
-			&_astRoot
 		}.unreachableVariables);
-
+	}
+	return astRoot;
 }
 
 void StackLimitEvader::run(

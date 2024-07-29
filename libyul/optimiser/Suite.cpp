@@ -179,13 +179,15 @@ void OptimiserSuite::run(
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
-		StackCompressor::run(
+	{
+		_object.code = std::make_shared<AST>(std::move(astRoot));
+		astRoot = std::get<1>(StackCompressor::run(
 			_dialect,
-			astRoot,
 			_object,
 			_optimizeStackAllocation,
 			stackCompressorMaxIterations
-		);
+		));
+	}
 
 	// Run the user-supplied clean up sequence
 	suite.runSequence(_optimisationCleanupSequence, astRoot);
@@ -200,18 +202,24 @@ void OptimiserSuite::run(
 		ConstantOptimiser{*evmDialect, *_meter}(astRoot);
 		if (usesOptimizedCodeGenerator)
 		{
-			StackCompressor::run(
+			_object.code = std::make_shared<AST>(std::move(astRoot));
+			astRoot = std::get<1>(StackCompressor::run(
 				_dialect,
-				astRoot,
 				_object,
 				_optimizeStackAllocation,
 				stackCompressorMaxIterations
-			);
+			));
 			if (evmDialect->providesObjectAccess())
-				StackLimitEvader::run(suite.m_context, astRoot, _object);
+			{
+				_object.code = std::make_shared<AST>(std::move(astRoot));
+				astRoot = StackLimitEvader::run(suite.m_context, _object);
+			}
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
-			StackLimitEvader::run(suite.m_context, astRoot, _object);
+		{
+			_object.code = std::make_shared<AST>(std::move(astRoot));
+			astRoot = StackLimitEvader::run(suite.m_context, _object);
+		}
 	}
 
 	dispenser.reset(astRoot);

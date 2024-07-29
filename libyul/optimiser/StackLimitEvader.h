@@ -77,9 +77,8 @@ public:
 	/// Abort and do nothing, if no ``memoryguard`` call or several ``memoryguard`` calls
 	/// with non-matching arguments are found, or if any of the unreachable variables
 	/// are contained in a recursive function.
-	static void run(
+	static Block run(
 		OptimiserStepContext& _context,
-		Block& _astRoot,
 		Object const& _object
 	);
 };

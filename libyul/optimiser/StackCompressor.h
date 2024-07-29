@@ -44,21 +44,10 @@ struct FunctionDefinition;
 class StackCompressor
 {
 public:
-	/// Try to remove local variables until the AST is compilable. Modifies the object's AST.
-	/// @returns true if it was successful.
-	static bool run(
+	/// Try to remove local variables until the AST is compilable.
+	/// @returns tuple with true if it was successful as first element, second element is the modified AST.
+	static std::tuple<bool, Block> run(
 		Dialect const& _dialect,
-		Object& _object,
-		bool _optimizeStackAllocation,
-		size_t _maxIterations
-	);
-
-	/// Try to remove local variables until the AST is compilable. Operates on provided block,
-	/// disregards the AST contained in object.
-	/// @returns true if it was successful.
-	static bool run(
-		Dialect const& _dialect,
-		Block& _astRoot,
 		Object const& _object,
 		bool _optimizeStackAllocation,
 		size_t _maxIterations

@@ -236,29 +236,15 @@ void eliminateVariablesOptimizedCodegen(
 
 }
 
-bool StackCompressor::run(
+std::tuple<bool, Block> StackCompressor::run(
 	Dialect const& _dialect,
-	Object& _object,
-	bool _optimizeStackAllocation,
-	size_t _maxIterations
-)
-{
-	yulAssert(_object.code);
-	auto block = std::get<Block>(ASTCopier{}(_object.code->root()));
-	auto result = run(_dialect, block, _object, _optimizeStackAllocation, _maxIterations);
-	_object.code = std::make_shared<AST>(std::move(block));
-	return result;
-}
-
-bool StackCompressor::run(
-	Dialect const& _dialect,
-	Block& _astRoot,
 	Object const& _object,
 	bool _optimizeStackAllocation,
 	size_t _maxIterations)
 {
+	yulAssert(_object.code);
 	yulAssert(
-		!_astRoot.statements.empty() && std::holds_alternative<Block>(_astRoot.statements.at(0)),
+		!_object.code->root().statements.empty() && std::holds_alternative<Block>(_object.code->root().statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool usesOptimizedCodeGenerator = false;
@@ -267,31 +253,36 @@ bool StackCompressor::run(
 			_optimizeStackAllocation &&
 			evmDialect->evmVersion().canOverchargeGasForCall() &&
 			evmDialect->providesObjectAccess();
-	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _astRoot);
+	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _object.code->root());
+	Block astRoot = std::get<Block>(ASTCopier{}(_object.code->root()));
 	if (usesOptimizedCodeGenerator)
 	{
-		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _astRoot, _object.qualifiedDataNames());
-		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, _astRoot);
+		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, astRoot, _object.qualifiedDataNames());
+		std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(analysisInfo, _dialect, astRoot);
 		eliminateVariablesOptimizedCodegen(
 			_dialect,
-			_astRoot,
+			astRoot,
 			StackLayoutGenerator::reportStackTooDeep(*cfg),
 			allowMSizeOptimization
 		);
 	}
 	else
+	{
 		for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 		{
-			std::map<YulName, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation, &_astRoot).stackDeficit;
+			Object object(_object);
+			object.code = std::make_shared<AST>(std::get<Block>(ASTCopier{}(astRoot)));
+			std::map<YulName, int> stackSurplus = CompilabilityChecker(_dialect, object, _optimizeStackAllocation).stackDeficit;
 			if (stackSurplus.empty())
-				return true;
+				return std::make_tuple(true, std::move(astRoot));
 			eliminateVariables(
 				_dialect,
-				_astRoot,
+				astRoot,
 				stackSurplus,
 				allowMSizeOptimization
 			);
 		}
-	return false;
+	}
+	return std::make_tuple(false, std::move(astRoot));
 }
 

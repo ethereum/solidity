@@ -400,7 +400,11 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionHoister::run(*m_context, block);
 			FunctionGrouper::run(*m_context, block);
 			size_t maxIterations = 16;
-			StackCompressor::run(*m_dialect, block, *m_object, true, maxIterations);
+			{
+				Object object(*m_object);
+				object.code = std::make_shared<AST>(std::get<Block>(ASTCopier{}(block)));
+				block = std::get<1>(StackCompressor::run(*m_dialect, object, true, maxIterations));
+			}
 			BlockFlattener::run(*m_context, block);
 			return block;
 		}},
@@ -420,12 +424,14 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		{"stackLimitEvader", [&]() {
 			auto block = disambiguate();
 			updateContext(block);
-			StackLimitEvader::run(*m_context, block, CompilabilityChecker{
+			Object object(*m_object);
+			object.code = std::make_shared<AST>(std::get<Block>(ASTCopier{}(block)));
+			auto const unreachables = CompilabilityChecker{
 				*m_dialect,
-				*m_object,
-				true,
-				&block
-			}.unreachableVariables);
+				object,
+				true
+			}.unreachableVariables;
+			StackLimitEvader::run(*m_context, block, unreachables);
 			return block;
 		}},
 		{"fakeStackLimitEvader", [&]() {

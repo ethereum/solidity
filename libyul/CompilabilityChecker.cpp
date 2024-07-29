@@ -33,20 +33,17 @@ using namespace solidity::util;
 CompilabilityChecker::CompilabilityChecker(
 	Dialect const& _dialect,
 	Object const& _object,
-	bool _optimizeStackAllocation,
-	Block const* _block
+	bool _optimizeStackAllocation
 )
 {
-	yulAssert(_object.code || _block);
+	yulAssert(_object.code);
 	if (auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{
-		if (!_block)
-			_block = &_object.code->root();
 		NoOutputEVMDialect noOutputDialect(*evmDialect);
 
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(
 			noOutputDialect,
-			*_block,
+			_object.code->root(),
 			_object.qualifiedDataNames()
 		);
 
@@ -60,12 +57,12 @@ CompilabilityChecker::CompilabilityChecker(
 		CodeTransform transform(
 			assembly,
 			analysisInfo,
-			*_block,
+			_object.code->root(),
 			noOutputDialect,
 			builtinContext,
 			_optimizeStackAllocation
 		);
-		transform(*_block);
+		transform(_object.code->root());
 
 		for (StackTooDeepError const& error: transform.stackErrors())
 		{
