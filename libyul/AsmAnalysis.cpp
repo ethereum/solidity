@@ -694,7 +694,7 @@ void AsmAnalyzer::expectValidType(YulName _type, SourceLocation const& _location
 		m_errorReporter.typeError(
 			5473_error,
 			_location,
-			fmt::format("\"{}\" is not a valid type (user defined types are not yet supported).", _type)
+			fmt::format("\"{}\" is not a valid type (user defined types are not yet supported).", _type.str())
 		);
 }
 
@@ -704,7 +704,7 @@ void AsmAnalyzer::expectType(YulName _expectedType, YulName _givenType, SourceLo
 		m_errorReporter.typeError(
 			3781_error,
 			_location,
-			fmt::format("Expected a value of type \"{}\" but got \"{}\".", _expectedType, _givenType)
+			fmt::format("Expected a value of type \"{}\" but got \"{}\".", _expectedType.str(), _givenType.str())
 		);
 }
 
