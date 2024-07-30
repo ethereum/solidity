@@ -35,7 +35,7 @@
 
 #include <libsolidity/interface/ReadFile.h>
 
-#include <libsmtutil/SolverInterface.h>
+#include <libsmtutil/BMCSolverInterface.h>
 #include <liblangutil/UniqueErrorReporter.h>
 
 #include <set>
@@ -205,7 +205,7 @@ private:
 	smtutil::Expression mergeVariablesFromLoopCheckpoints();
 	bool isInsideLoop() const;
 
-	std::unique_ptr<smtutil::SolverInterface> m_interface;
+	std::unique_ptr<smtutil::BMCSolverInterface> m_interface;
 
 	/// Flags used for better warning messages.
 	bool m_loopExecutionHappened = false;

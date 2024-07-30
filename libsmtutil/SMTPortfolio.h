@@ -19,7 +19,7 @@
 #pragma once
 
 
-#include <libsmtutil/SolverInterface.h>
+#include <libsmtutil/BMCSolverInterface.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolutil/FixedHash.h>
 
@@ -35,14 +35,14 @@ namespace solidity::smtutil
  * It also checks whether different solvers give conflicting answers
  * to SMT queries.
  */
-class SMTPortfolio: public SolverInterface
+class SMTPortfolio: public BMCSolverInterface
 {
 public:
 	/// Noncopyable.
 	SMTPortfolio(SMTPortfolio const&) = delete;
 	SMTPortfolio& operator=(SMTPortfolio const&) = delete;
 
-	SMTPortfolio(std::vector<std::unique_ptr<SolverInterface>> solvers, std::optional<unsigned> _queryTimeout);
+	SMTPortfolio(std::vector<std::unique_ptr<BMCSolverInterface>> solvers, std::optional<unsigned> _queryTimeout);
 
 	void reset() override;
 
@@ -63,7 +63,7 @@ public:
 private:
 	static bool solverAnswered(CheckResult result);
 
-	std::vector<std::unique_ptr<SolverInterface>> m_solvers;
+	std::vector<std::unique_ptr<BMCSolverInterface>> m_solvers;
 
 	std::vector<Expression> m_assertions;
 };

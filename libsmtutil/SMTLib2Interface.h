@@ -18,7 +18,9 @@
 
 #pragma once
 
-#include <libsmtutil/SolverInterface.h>
+#include <libsmtutil/BMCSolverInterface.h>
+
+#include <libsmtutil/SMTLib2Context.h>
 
 #include <libsolidity/interface/ReadFile.h>
 
@@ -34,7 +36,36 @@
 namespace solidity::smtutil
 {
 
-class SMTLib2Interface: public SolverInterface
+class SMTLib2Commands
+{
+public:
+	void push();
+	void pop();
+
+	void clear();
+
+	void assertion(std::string _expr);
+
+	void setOption(std::string _name, std::string _value);
+
+	void setLogic(std::string _logic);
+
+	void declareVariable(std::string _name, std::string _sort);
+	void declareFunction(std::string const& _name, std::vector<std::string> const& _domain, std::string const& _codomain);
+	void declareTuple(
+		std::string const& _name,
+		std::vector<std::string> const& _memberNames,
+		std::vector<std::string> const& _memberSorts
+	);
+
+	[[nodiscard]] std::string toString() const;
+private:
+	std::vector<std::string> m_commands;
+	std::vector<std::size_t> m_frameLimits;
+
+};
+
+class SMTLib2Interface: public BMCSolverInterface
 {
 public:
 	/// Noncopyable.
@@ -62,12 +93,7 @@ public:
 	// Used by CHCSmtLib2Interface
 	std::string toSExpr(Expression const& _expr);
 	std::string toSmtLibSort(SortPointer _sort);
-	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
-
-	std::map<std::string, SortPointer> variables() { return m_variables; }
-
-	std::vector<std::pair<std::string, std::string>> const& userSorts() const { return m_userSorts; }
-	std::map<SortPointer, std::string> const& sortNames() const { return m_sortNames; }
+	std::vector<std::string> toSmtLibSort(std::vector<SortPointer> const& _sort);
 
 	std::string dumpQuery(std::vector<Expression> const& _expressionsToEvaluate);
 
@@ -76,28 +102,14 @@ protected:
 
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
 
-	void write(std::string _data);
-
 	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
 	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
 
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);
 
-	std::string toSmtLibSortInternal(SortPointer _sort);
-
-	std::vector<std::string> m_accumulatedOutput;
-	std::map<std::string, SortPointer> m_variables;
-
-	/// Each pair in this vector represents an SMTChecker created
-	/// sort (a user sort), and the smtlib2 declaration of that sort.
-	/// It needs to be a vector so that the declaration order is kept,
-	/// otherwise solvers cannot parse the queries.
-	std::vector<std::pair<std::string, std::string>> m_userSorts;
-
-	/// Maps a user sort to SMT-LIB2 sort.
-	/// Remembers all declared sorts and is used as a cache as well.
-	std::map<SortPointer, std::string> m_sortNames;
+	SMTLib2Commands m_commands;
+	SMTLib2Context m_context;
 
 	std::map<util::h256, std::string> m_queryResponses;
 	std::vector<std::string> m_unhandledQueries;
