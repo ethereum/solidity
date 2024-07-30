@@ -67,8 +67,8 @@ private:
 	SSACFG::ValueId zero();
 	SSACFG::ValueId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
 	SSACFG::ValueId readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block);
-	SSACFG::ValueId addPhiOperands(Scope::Variable const& _variable, SSACFG::Operation& _phi);
-	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::Operation& _phi);
+	SSACFG::ValueId addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi);
+	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::ValueId _phi);
 	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value);
 
 	SSACFG& m_graph;
@@ -83,7 +83,7 @@ private:
 
 	struct BlockInfo {
 		bool sealed = false;
-		std::vector<std::tuple<std::reference_wrapper<SSACFG::Operation>, std::reference_wrapper<Scope::Variable const>>> incompletePhis;
+		std::vector<std::tuple<SSACFG::ValueId, std::reference_wrapper<Scope::Variable const>>> incompletePhis;
 
 	};
 	std::vector<BlockInfo> m_blockInfo;

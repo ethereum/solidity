@@ -64,7 +64,6 @@ public:
 		bool operator==(ValueId const& _rhs) const { return value == _rhs.value; }
 		bool operator!=(ValueId const& _rhs) const { return value != _rhs.value; }
 	};
-	struct Phi { BlockId block; };
 	struct BuiltinCall
 	{
 		langutil::DebugData::ConstPtr debugData;
@@ -80,7 +79,7 @@ public:
 
 	struct Operation {
 		std::vector<ValueId> outputs{};
-		std::variant<Phi, BuiltinCall, Call> kind;
+		std::variant<BuiltinCall, Call> kind;
 		std::vector<ValueId> inputs{};
 	};
 	struct BasicBlock
@@ -114,6 +113,7 @@ public:
 		struct Terminated {};
 		langutil::DebugData::ConstPtr debugData;
 		std::set<BlockId> entries;
+		std::set<ValueId> phis;
 		std::list<Operation> operations;
 		std::variant<MainExit, Jump, ConditionalJump, JumpTable, FunctionReturn, Terminated> exit = MainExit{};
 		template<typename Callable>
@@ -137,7 +137,7 @@ public:
 	BlockId makeBlock(langutil::DebugData::ConstPtr _debugData)
 	{
 		BlockId blockId { m_blocks.size() };
-		m_blocks.emplace_back(BasicBlock{std::move(_debugData), {}, {}, BasicBlock::Terminated{}});
+		m_blocks.emplace_back(BasicBlock{std::move(_debugData), {}, {}, {}, BasicBlock::Terminated{}});
 		return blockId;
 	}
 	BasicBlock& block(BlockId _id) { return m_blocks.at(_id.value); }
@@ -148,12 +148,27 @@ private:
 public:
 	struct LiteralValue { u256 value; };
 	struct VariableValue { SSACFG::BlockId definingBlock; };
+	struct PhiValue {
+		BlockId block;
+		std::vector<ValueId> arguments;
+	};
 	struct UnreachableValue {};
-	using ValueInfo = std::variant<UnreachableValue, VariableValue, LiteralValue>;
+	using ValueInfo = std::variant<UnreachableValue, VariableValue, LiteralValue, PhiValue>;
+	ValueInfo& valueInfo(SSACFG::ValueId _var)
+	{
+		yulAssert(_var.value < m_valueInfos.size());
+		return m_valueInfos.at(_var.value);
+	}
 	ValueInfo const& valueInfo(SSACFG::ValueId _var) const
 	{
 		yulAssert(_var.value < m_valueInfos.size());
 		return m_valueInfos.at(_var.value);
+	}
+	ValueId newPhi(SSACFG::BlockId _definingBlock)
+	{
+		SSACFG::ValueId id { m_valueInfos.size() };
+		m_valueInfos.emplace_back(PhiValue{_definingBlock, {}});
+		return id;
 	}
 	ValueId newVariable(SSACFG::BlockId _definingBlock)
 	{

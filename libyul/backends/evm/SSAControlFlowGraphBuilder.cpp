@@ -336,30 +336,31 @@ void SSAControlFlowGraphBuilder::registerFunction(FunctionDefinition const& _fun
 
 std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _call)
 {
-	SSACFG::Operation operation;
 	bool canContinue = true;
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
-	{
-		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
-			if (!builtin->literalArgument(idx).has_value())
-				operation.inputs.emplace_back(std::visit(*this, arg));
-		for(size_t i = 0; i < builtin->returns.size(); ++i)
+	SSACFG::Operation operation = [&](){
+		if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
 		{
-			operation.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
+			SSACFG::Operation result{{}, SSACFG::BuiltinCall{_call.debugData, *builtin, _call}, {}};
+			for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
+				if (!builtin->literalArgument(idx).has_value())
+					result.inputs.emplace_back(std::visit(*this, arg));
+			for(size_t i = 0; i < builtin->returns.size(); ++i)
+				result.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
+			canContinue = builtin->controlFlowSideEffects.canContinue;
+			return result;
 		}
-		operation.kind = SSACFG::BuiltinCall{_call.debugData, *builtin, _call};
-		canContinue = builtin->controlFlowSideEffects.canContinue;
-	}
-	else
-	{
-		Scope::Function const& function = lookupFunction(_call.functionName.name);
-		canContinue = m_graph.functionInfos.at(&function).canContinue;
-		for (auto const& arg: _call.arguments | ranges::views::reverse)
-			operation.inputs.emplace_back(std::visit(*this, arg));
-		for(size_t i = 0; i < function.returns.size(); ++i)
-			operation.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
-		operation.kind = SSACFG::Call{debugDataOf(_call), function, _call};
-	}
+		else
+		{
+			Scope::Function const& function = lookupFunction(_call.functionName.name);
+			SSACFG::Operation result{{}, SSACFG::Call{debugDataOf(_call), function, _call}, {}};
+			canContinue = m_graph.functionInfos.at(&function).canContinue;
+			for (auto const& arg: _call.arguments | ranges::views::reverse)
+				result.inputs.emplace_back(std::visit(*this, arg));
+			for(size_t i = 0; i < function.returns.size(); ++i)
+				result.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
+			return result;
+		}
+	}();
 	auto results = operation.outputs;
 	currentBlock().operations.emplace_back(std::move(operation));
 	if (!canContinue)
@@ -393,52 +394,44 @@ SSAControlFlowGraphBuilder::readVariableRecursive(Scope::Variable const& _variab
 	if (info.sealed && block.entries.size() == 1)
 		return readVariable(_variable, *block.entries.begin());
 
-	SSACFG::ValueId value = m_graph.newVariable(_block);
+	SSACFG::ValueId phi = m_graph.newPhi(_block);
+	block.phis.insert(phi);
 	if (info.sealed)
 	{
-		auto& phi = block.operations.emplace_front(SSACFG::Operation{
-			{value},
-			SSACFG::Phi{_block},
-			{}
-		});
-		writeVariable(_variable, _block, value);
-		value = addPhiOperands(_variable, phi);
+		writeVariable(_variable, _block, phi);
+		phi = addPhiOperands(_variable, phi);
 	}
 	else
-		info.incompletePhis.emplace_back(std::make_tuple(std::ref(block.operations.emplace_front(SSACFG::Operation{
-			{value},
-			SSACFG::Phi{_block},
-			{}
-		})), std::ref(_variable)));
-	writeVariable(_variable, _block, value);
-	return value;
+	{
+		info.incompletePhis.emplace_back(std::make_tuple(phi, std::ref(_variable)));
+	}
+	writeVariable(_variable, _block, phi);
+	return phi;
 }
 
 SSACFG::ValueId
-SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const& _variable, SSACFG::Operation& _operation)
+SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi)
 {
-	yulAssert(std::holds_alternative<SSACFG::Phi>(_operation.kind));
-	auto const& phi = std::get<SSACFG::Phi>(_operation.kind);
-	for (auto pred: m_graph.block(phi.block).entries)
-		_operation.inputs.emplace_back(readVariable(_variable, pred));
-	return tryRemoveTrivialPhi(_operation);
+	auto* phi = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(_phi));
+	yulAssert(phi);
+	for (auto pred: m_graph.block(phi->block).entries)
+		phi->arguments.emplace_back(readVariable(_variable, pred));
+	return tryRemoveTrivialPhi(_phi);
 }
 
-SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::Operation& _operation)
+SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId _phi)
 {
 	// TODO: double-check if this is sane
-	yulAssert(std::holds_alternative<SSACFG::Phi>(_operation.kind));
-	auto& phi = std::get<SSACFG::Phi>(_operation.kind);
-	yulAssert(_operation.outputs.size() == 1);
-	SSACFG::ValueId phiVar = _operation.outputs.front();
+	auto* phiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(_phi));
+	yulAssert(phiInfo);
 
 	SSACFG::ValueId same;
-	for (SSACFG::ValueId arg: _operation.inputs)
+	for (SSACFG::ValueId arg: phiInfo->arguments)
 	{
-		if (arg == same || arg == phiVar)
+		if (arg == same || arg == _phi)
 			continue;
 		if (same)
-			return phiVar;
+			return _phi;
 		same = arg;
 	}
 
@@ -448,6 +441,7 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::Operatio
 	};
 	std::vector<Use> uses;
 	std::vector<bool> visited;
+	std::vector<SSACFG::ValueId> phiUses;
 	auto isVisited = [&](SSACFG::BlockId _block) -> bool {
 		if (_block.value < visited.size())
 			return visited.at(_block.value);
@@ -465,32 +459,40 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::Operatio
 			return;
 		markVisited(_blockId);
 		auto& block = m_graph.block(_blockId);
+		for (auto blockPhi: block.phis)
+		{
+			if (blockPhi == _phi)
+				continue;
+			auto const* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(blockPhi));
+			yulAssert(blockPhiInfo);
+			bool usedInPhi = false;
+			for (auto input: blockPhiInfo->arguments)
+			{
+				if (input == _phi)
+					usedInPhi = true;
+			}
+			if (usedInPhi)
+				phiUses.emplace_back(blockPhi);
+		}
 		for (auto& op: block.operations)
 		{
 			// TODO: double check when phiVar occurs in outputs here and what to do about it.
-			if (op.outputs.size() == 1 && op.outputs.front() == phiVar)
+			if (op.outputs.size() == 1 && op.outputs.front() == _phi)
 				continue;
 			// TODO: check if this always hold - and if so if the assertion is really valuable.
 			for (auto& output: op.outputs)
-				yulAssert(output != phiVar);
+				yulAssert(output != _phi);
 
 			for (auto&& [n, input]: op.inputs | ranges::view::enumerate)
-				if (input == phiVar)
+				if (input == _phi)
 					uses.emplace_back(Use{std::ref(op), n});
 		}
 		block.forEachExit([&](SSACFG::BlockId _block) {
 			_recurse(_block, _recurse);
 		});
 	};
-	auto phiBlock = phi.block;
-	// TODO: it'd be nicer to avoid linear time erasure here.
-	for (auto it = m_graph.block(phiBlock).operations.begin(); it != m_graph.block(phiBlock).operations.end();)
-	{
-		if (&*it == &_operation)
-			it = m_graph.block(phiBlock).operations.erase(it);
-		else
-			++it;
-	}
+	auto phiBlock = phiInfo->block;
+	m_graph.block(phiBlock).phis.erase(_phi);
 	findUses(phiBlock, findUses);
 
 	if (!same) {
@@ -501,10 +503,17 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::Operatio
 
 	for (auto& use: uses)
 		use.operation.get().inputs.at(use.inputIndex) = same;
+	for (auto phiUse: phiUses)
+	{
+		auto* blockPhiInfo = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(phiUse));
+		yulAssert(blockPhiInfo);
+		for (auto& arg: blockPhiInfo->arguments)
+			if (arg == _phi)
+				arg = same;
+	}
 
-	for (auto& use: uses)
-		if (std::holds_alternative<SSACFG::Phi>(use.operation.get().kind))
-			tryRemoveTrivialPhi(use.operation);
+	for (auto phiUse: phiUses)
+		tryRemoveTrivialPhi(phiUse);
 
 	return same;
 }

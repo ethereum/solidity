@@ -54,6 +54,9 @@ void debugPrintCFG(SSACFG const& _ssacfg, LivenessData const& _liveness) {
 					[&](SSACFG::UnreachableValue const&) -> std::string {
 						return "[unreachable]";
 					},
+					[&](SSACFG::PhiValue const&) {
+						return "p" + std::to_string(_var.value);
+					},
 					[&](SSACFG::VariableValue const&) {
 						return "v" + std::to_string(_var.value);
 					},
@@ -75,6 +78,16 @@ void debugPrintCFG(SSACFG const& _ssacfg, LivenessData const& _liveness) {
 						std::cout << "Block b" << _blockId.value << ":" << std::endl;
 						std::cout << "[ " << util::joinHumanReadable(_liveness[_blockId].liveIn | ranges::view::transform(varToString)) << " ] => [ "
 								  <<  util::joinHumanReadable(_liveness[_blockId].liveOut | ranges::view::transform(varToString)) << " ]" << std::endl;
+						for(auto phi: block.phis)
+						{
+							auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
+							yulAssert(phiInfo);
+							std::cout << "  " << varToString(phi) << " := phi(" << std::endl;
+							yulAssert(_ssacfg.block(phiInfo->block).entries.size() == phiInfo->arguments.size());
+							for (auto&& [entry, input]: ranges::zip_view(_ssacfg.block(phiInfo->block).entries, phiInfo->arguments))
+								std::cout << "    b" << entry.value << " => " << varToString(input) << std::endl;
+							std::cout << "  )" << std::endl;
+						}
 						for (auto const& op: block.operations)
 						{
 							std::cout << "  ";
@@ -82,7 +95,7 @@ void debugPrintCFG(SSACFG const& _ssacfg, LivenessData const& _liveness) {
 								std::cout << util::joinHumanReadable(op.outputs | ranges::view::transform(varToString)) << " := ";
 
 							std::visit(util::GenericVisitor{
-										   [&](SSACFG::Phi const& _phi) {
+/*										   [&](SSACFG::Phi const& _phi) {
 											   std::cout << "phi";
 											   std::cout << "(" << std::endl;
 											   yulAssert(_ssacfg.block(_phi.block).entries.size() == op.inputs.size());
@@ -91,7 +104,7 @@ void debugPrintCFG(SSACFG const& _ssacfg, LivenessData const& _liveness) {
 												   std::cout << "    b" << entry.value << " => " << varToString(input) << std::endl;
 											   }
 											   std::cout << "  )" << std::endl;
-										   },
+										   },*/
 										   [&](SSACFG::Call const& _call) {
 											   std::cout << _call.function.get().name.str();
 											   std::cout << "(";
@@ -198,13 +211,54 @@ LivenessData calculateLiveness(SSACFG& _ssacfg)
 							   {
 							   },
 						   }, _ssacfg.block(block).exit);
-				_ssacfg.block(block).forEachExit([&](SSACFG::BlockId _exit) { blockData[block].liveOut += blockData[_exit].liveIn; });
+				_ssacfg.block(block).forEachExit([&](SSACFG::BlockId _exit) {
+					std::optional<size_t> entryIndex;
+					for (auto&& [i, exitEntries]: _ssacfg.block(_exit).entries | ranges::view::enumerate)
+						if (exitEntries == block)
+						{
+							yulAssert(!entryIndex.has_value());
+							entryIndex = i;
+						}
+					yulAssert(entryIndex.has_value());
+					blockData[block].liveOut += blockData[_exit].liveIn;
+					for (auto phi: _ssacfg.block(_exit).phis)
+					{
+						auto const* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
+						yulAssert(phiInfo);
+						blockData[block].liveOut.insert(phiInfo->arguments.at(*entryIndex));
+					}
+				});
 
 				std::set<SSACFG::ValueId> invars = blockData[block].liveOut;
 				for(auto const& op: _ssacfg.block(block).operations | ranges::view::reverse)
 				{
 					invars -= op.outputs;
 					invars += op.inputs;
+				}
+				for (auto phi: _ssacfg.block(block).phis)
+				{
+					auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
+					yulAssert(phiInfo);
+					invars.erase(phi);
+				}
+				// TODO: don't add them in the first place
+				for (auto it = invars.begin(); it != invars.end();)
+				{
+					if (std::holds_alternative<SSACFG::LiteralValue>(_ssacfg.valueInfo(*it)))
+						it = invars.erase(it);
+					else
+						++it;
+				}
+				// TODO: don't add them in the first place
+				{
+					auto& liveOut = blockData[block].liveOut;
+					for (auto it = liveOut.begin(); it != liveOut.end();)
+					{
+						if (std::holds_alternative<SSACFG::LiteralValue>(_ssacfg.valueInfo(*it)))
+							it = liveOut.erase(it);
+						else
+							++it;
+					}
 				}
 				blockData[block].liveIn += invars;
 
