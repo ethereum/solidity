@@ -332,7 +332,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 	auto makeGhostVariable = [&](auto _debugData) -> VariableSlot {
 		auto ghostVariableId = m_graph.ghostVariables.size();
 		YulString ghostVariableName("GHOST[" + std::to_string(ghostVariableId) + "]");
-		auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulstring, ghostVariableName});
+		auto& ghostVar = m_graph.ghostVariables.emplace_back(Scope::Variable{""_yulname, ghostVariableName});
 		return VariableSlot{ghostVar, _debugData};
 	};
 

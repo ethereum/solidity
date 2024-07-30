@@ -42,132 +42,118 @@
 using namespace solidity;
 using namespace solidity::yul;
 
-namespace {
+namespace
+{
 
-void debugPrintCFG(SSACFG const& _ssacfg, LivenessData const& _liveness) {
-		auto varToString = [&](SSACFG::ValueId _var) {
-			if (_var.value == std::numeric_limits<size_t>::max())
-				return std::string("INVALID");
-			auto const& info = _ssacfg.valueInfo(_var);
-			return std::visit(
-				util::GenericVisitor{
-					[&](SSACFG::UnreachableValue const&) -> std::string {
-						return "[unreachable]";
-					},
-					[&](SSACFG::PhiValue const&) {
-						return "p" + std::to_string(_var.value);
-					},
-					[&](SSACFG::VariableValue const&) {
-						return "v" + std::to_string(_var.value);
-					},
-					[&](SSACFG::LiteralValue const& _literal) {
-						std::stringstream str;
-						str << _literal.value;
-						return str.str();
-					}
-				},
-				info
-			);
-		};
-
-		auto printGraph = [&](SSACFG::BlockId _root) {
-			util::BreadthFirstSearch<SSACFG::BlockId> bfs{{{_root}}};
-			bfs.run([&](SSACFG::BlockId _blockId, auto _addChild) {
-						//yulAssert(builder.blockInfo(_blockId).sealed, "Some block isn't sealed.");
-						auto const& block = _ssacfg.block(_blockId);
-						std::cout << "Block b" << _blockId.value << ":" << std::endl;
-						std::cout << "[ " << util::joinHumanReadable(_liveness[_blockId].liveIn | ranges::view::transform(varToString)) << " ] => [ "
-								  <<  util::joinHumanReadable(_liveness[_blockId].liveOut | ranges::view::transform(varToString)) << " ]" << std::endl;
-						for(auto phi: block.phis)
-						{
-							auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
-							yulAssert(phiInfo);
-							std::cout << "  " << varToString(phi) << " := phi(" << std::endl;
-							yulAssert(_ssacfg.block(phiInfo->block).entries.size() == phiInfo->arguments.size());
-							for (auto&& [entry, input]: ranges::zip_view(_ssacfg.block(phiInfo->block).entries, phiInfo->arguments))
-								std::cout << "    b" << entry.value << " => " << varToString(input) << std::endl;
-							std::cout << "  )" << std::endl;
-						}
-						for (auto const& op: block.operations)
-						{
-							std::cout << "  ";
-							if (!op.outputs.empty())
-								std::cout << util::joinHumanReadable(op.outputs | ranges::view::transform(varToString)) << " := ";
-
-							std::visit(util::GenericVisitor{
-/*										   [&](SSACFG::Phi const& _phi) {
-											   std::cout << "phi";
-											   std::cout << "(" << std::endl;
-											   yulAssert(_ssacfg.block(_phi.block).entries.size() == op.inputs.size());
-											   for (auto&& [entry, input]: ranges::zip_view(_ssacfg.block(_phi.block).entries, op.inputs))
-											   {
-												   std::cout << "    b" << entry.value << " => " << varToString(input) << std::endl;
-											   }
-											   std::cout << "  )" << std::endl;
-										   },*/
-										   [&](SSACFG::Call const& _call) {
-											   std::cout << _call.function.get().name.str();
-											   std::cout << "(";
-											   std::cout << util::joinHumanReadable(op.inputs | ranges::view::reverse | ranges::view::transform(varToString));
-											   std::cout << ")" << std::endl;
-										   },
-										   [&](SSACFG::BuiltinCall const& _call) {
-											   std::cout << _call.builtin.get().name.str();
-											   std::cout << "(";
-											   std::cout << util::joinHumanReadable(op.inputs | ranges::view::reverse | ranges::view::transform(varToString));
-											   std::cout << ")" << std::endl;
-										   }
-									   }, op.kind);
-						}
-						std::visit(util::GenericVisitor{
-									   [&](SSACFG::BasicBlock::MainExit const&)
-									   {
-										   std::cout << "  [MAIN EXIT]" << std::endl;
-									   },
-									   [&](SSACFG::BasicBlock::Jump const& _jump)
-									   {
-										   std::cout << "  jump(b" << _jump.target.value << ")" << std::endl;
-										   _addChild(_jump.target);
-									   },
-									   [&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump)
-									   {
-										   std::cout << "  jumpif(" << varToString(_conditionalJump.condition) << ":" << std::endl;
-										   std::cout << "    true => b" << _conditionalJump.nonZero.value << std::endl;
-										   std::cout << "    false => b" <<  _conditionalJump.zero.value << std::endl;
-										   std::cout << "  )" << std::endl;
-										   _addChild(_conditionalJump.nonZero);
-										   _addChild(_conditionalJump.zero);
-									   },
-									   [&](SSACFG::BasicBlock::JumpTable const& _jumpTable)
-									   {
-										   std::cout << "  jumpv(" << varToString(_jumpTable.value) << ":" << std::endl;
-										   for (auto [v, b]: _jumpTable.cases)
-										   {
-											   std::cout << "    " << v << " => b" << b.value << std::endl;
-											   _addChild(b);
-										   }
-										   _addChild(_jumpTable.defaultCase);
-										   std::cout << "    _ => b" << _jumpTable.defaultCase.value << std::endl;
-										   std::cout << "  )" << std::endl;
-									   },
-									   [&](SSACFG::BasicBlock::FunctionReturn const& _return)
-									   {
-										   std::cout << "  leave(" << util::joinHumanReadable(_return.returnValues | ranges::view::transform(varToString)) << ")" << std::endl;
-									   },
-									   [&](SSACFG::BasicBlock::Terminated const&) { std::cout << "  [TERMINATED]" << std::endl; }
-								   }, block.exit);
-
-						std::cout << std::endl;
-					});
-		};
-		printGraph(SSACFG::BlockId{0});
-		for (auto function: _ssacfg.functions)
-		{
-			auto& info = _ssacfg.functionInfos.at(&function.get());
-			std::cout << "FUNCTION " << function.get().name.str() << std::endl;
-			printGraph(info.entry);
-		}
-}
+//void debugPrintCFG(SSACFG const& _ssacfg, LivenessData const& _liveness) {
+//		auto varToString = [&](SSACFG::ValueId _var) {
+//			if (_var.value == std::numeric_limits<size_t>::max())
+//				return std::string("INVALID");
+//			auto const& info = _ssacfg.valueInfo(_var);
+//			return std::visit(
+//				util::GenericVisitor{
+//					[&](SSACFG::UnreachableValue const&) -> std::string {
+//						return "[unreachable]";
+//					},
+//					[&](SSACFG::LiteralValue const& _literal) {
+//						std::stringstream str;
+//						str << _literal.value;
+//						return str.str();
+//					},
+//					[&](auto const&) {
+//						return "v" + std::to_string(_var.value);
+//					}
+//				},
+//				info
+//			);
+//		};
+//
+//		auto printGraph = [&](SSACFG::BlockId _root) {
+//			util::BreadthFirstSearch<SSACFG::BlockId> bfs{{{_root}}};
+//			bfs.run([&](SSACFG::BlockId _blockId, auto _addChild) {
+//						//yulAssert(builder.blockInfo(_blockId).sealed, "Some block isn't sealed.");
+//						auto const& block = _ssacfg.block(_blockId);
+//						std::cout << "Block b" << _blockId.value << ":" << std::endl;
+//						std::cout << "[ "
+//								<< util::joinHumanReadable(_liveness[_blockId].liveIn | ranges::views::transform(varToString)) << " ] => [ "
+//								<< util::joinHumanReadable(_liveness[_blockId].liveOut | ranges::views::transform(varToString)) << " ]" << std::endl;
+//						for (auto phi: block.phis)
+//						{
+//							auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_ssacfg.valueInfo(phi));
+//							yulAssert(phiInfo);
+//							std::cout << "  " << varToString(phi) << " := phi(" << std::endl;
+//							yulAssert(_ssacfg.block(phiInfo->block).entries.size() == phiInfo->arguments.size());
+//							for (auto&& [entry, input]: ranges::zip_view(_ssacfg.block(phiInfo->block).entries, phiInfo->arguments))
+//								std::cout << "    b" << entry.value << " => " << varToString(input) << std::endl;
+//							std::cout << "  )" << std::endl;
+//						}
+//						for (auto const& op: block.operations)
+//						{
+//							std::cout << "  ";
+//							if (!op.outputs.empty())
+//								std::cout << util::joinHumanReadable(op.outputs | ranges::views::transform(varToString)) << " := ";
+//
+//							std::visit(util::GenericVisitor{
+//								/*[&](SSACFG::Phi const& _phi) {
+//									std::cout << "phi";
+//									std::cout << "(" << std::endl;
+//									yulAssert(_ssacfg.block(_phi.block).entries.size() == op.inputs.size());
+//									for (auto&& [entry, input]: ranges::zip_view(_ssacfg.block(_phi.block).entries, op.inputs))
+//									{
+//										std::cout << "    b" << entry.value << " => " << varToString(input) << std::endl;
+//									}
+//									std::cout << "  )" << std::endl;
+//								},*/
+//								[&](SSACFG::Call const& _call) {
+//									std::cout << _call.function.get().name.str();
+//									std::cout << "(";
+//									std::cout << util::joinHumanReadable(op.inputs | ranges::views::reverse | ranges::views::transform(varToString));
+//									std::cout << ")" << std::endl;
+//								},
+//								[&](SSACFG::BuiltinCall const& _call) {
+//									std::cout << _call.builtin.get().name.str();
+//									std::cout << "(";
+//									std::cout << util::joinHumanReadable(op.inputs | ranges::views::reverse | ranges::views::transform(varToString));
+//									std::cout << ")" << std::endl;
+//								}
+//							}, op.kind);
+//						}
+//						std::visit(util::GenericVisitor{
+//							[&](SSACFG::BasicBlock::MainExit const&)
+//							{
+//								std::cout << "  [MAIN EXIT]" << std::endl;
+//							},
+//							[&](SSACFG::BasicBlock::Jump const& _jump)
+//							{
+//								std::cout << "  jump(b" << _jump.target.value << ")" << std::endl;
+//								_addChild(_jump.target);
+//							},
+//							[&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump)
+//							{
+//								std::cout << "  jumpif(" << varToString(_conditionalJump.condition) << ":" << std::endl;
+//								std::cout << "    true => b" << _conditionalJump.nonZero.value << std::endl;
+//								std::cout << "    false => b" <<  _conditionalJump.zero.value << std::endl;
+//								std::cout << "  )" << std::endl;
+//								_addChild(_conditionalJump.nonZero);
+//								_addChild(_conditionalJump.zero);
+//							},
+//							[&](SSACFG::BasicBlock::FunctionReturn const& _return)
+//							{
+//								std::cout << "  leave(" << util::joinHumanReadable(_return.returnValues | ranges::views::transform(varToString)) << ")" << std::endl;
+//							},
+//							[&](SSACFG::BasicBlock::Terminated const&) { std::cout << "  [TERMINATED]" << std::endl; }
+//						}, block.exit);
+//						std::cout << std::endl;
+//					});
+//		};
+//		printGraph(SSACFG::BlockId{0});
+//		for (auto function: _ssacfg.functions)
+//		{
+//			auto& info = _ssacfg.functionInfos.at(&function.get());
+//			std::cout << "FUNCTION " << function.get().name.str() << std::endl;
+//			printGraph(info.entry);
+//		}
+//}
 
 // TODO: note: this is a naive calculation with very bad complexity that
 // should be replaced by a proper algorithm exploiting the SSA properties.
@@ -176,7 +162,7 @@ LivenessData calculateLiveness(SSACFG& _ssacfg)
 {
 	LivenessData blockData(_ssacfg.numBlocks());
 	auto analyze = [&](SSACFG::BlockId _root) {
-		while(true)
+		while (true)
 		{
 			bool allSame = true;
 
@@ -193,27 +179,26 @@ LivenessData calculateLiveness(SSACFG& _ssacfg)
 			};
 			dfs(_root, dfs);
 
-			for (SSACFG::BlockId block: dfsOrder | ranges::view::reverse)
+			for (SSACFG::BlockId block: dfsOrder | ranges::views::reverse)
 			{
 				auto previousLiveOut = blockData[block].liveOut;
 				auto previousLiveIn = blockData[block].liveIn;
 				std::visit(util::GenericVisitor{
-							   [&](SSACFG::BasicBlock::MainExit const&) {
-							   },
-							   [&](SSACFG::BasicBlock::Jump const&) {},
-							   [&](SSACFG::BasicBlock::ConditionalJump const&) {},
-							   [&](SSACFG::BasicBlock::JumpTable const&) {},
-							   [&](SSACFG::BasicBlock::FunctionReturn const& _return)
-							   {
-								   blockData[block].liveOut += _return.returnValues | ranges::to<std::set>;
-							   },
-							   [&](SSACFG::BasicBlock::Terminated const&)
-							   {
-							   },
-						   }, _ssacfg.block(block).exit);
+					[&](SSACFG::BasicBlock::MainExit const&) {
+					},
+					[&](SSACFG::BasicBlock::Jump const&) {},
+					[&](SSACFG::BasicBlock::ConditionalJump const&) {},
+					[&](SSACFG::BasicBlock::FunctionReturn const& _return)
+					{
+						blockData[block].liveOut += _return.returnValues | ranges::to<std::set>;
+					},
+					[&](SSACFG::BasicBlock::Terminated const&)
+					{
+					},
+				}, _ssacfg.block(block).exit);
 				_ssacfg.block(block).forEachExit([&](SSACFG::BlockId _exit) {
 					std::optional<size_t> entryIndex;
-					for (auto&& [i, exitEntries]: _ssacfg.block(_exit).entries | ranges::view::enumerate)
+					for (auto&& [i, exitEntries]: _ssacfg.block(_exit).entries | ranges::views::enumerate)
 						if (exitEntries == block)
 						{
 							yulAssert(!entryIndex.has_value());
@@ -230,7 +215,7 @@ LivenessData calculateLiveness(SSACFG& _ssacfg)
 				});
 
 				std::set<SSACFG::ValueId> invars = blockData[block].liveOut;
-				for(auto const& op: _ssacfg.block(block).operations | ranges::view::reverse)
+				for (auto const& op: _ssacfg.block(block).operations | ranges::views::reverse)
 				{
 					invars -= op.outputs;
 					invars += op.inputs;
@@ -295,7 +280,7 @@ std::vector<StackTooDeepError> SSAEVMCodeTransform::run(
 {
 	std::unique_ptr<SSACFG> ssacfg = SSAControlFlowGraphBuilder::build(_analysisInfo, _dialect, _block);
 	auto const liveness = calculateLiveness(*ssacfg);
-	debugPrintCFG(*ssacfg, liveness);
+	//debugPrintCFG(*ssacfg, liveness);
 
 	SSAEVMCodeTransform optimizedCodeTransform(
 		_assembly,
@@ -357,12 +342,8 @@ void SSAEVMCodeTransform::operator()(SSACFG::BlockId _block)
 		return;
 
 	ScopedSaveAndRestore stackSave{m_stack, {}};
-
 	blockData(_block).label = m_assembly.newLabelId();
-
 	blockData(_block).stackIn = liveness(_block).liveIn | ranges::to<std::vector>;
-
-
 }
 
 void SSAEVMCodeTransform::operator()(SSACFG::FunctionInfo const& _functionInfo)

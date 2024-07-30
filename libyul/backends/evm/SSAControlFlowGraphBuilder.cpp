@@ -35,9 +35,60 @@
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
+#include <range/v3/view/drop_last.hpp>
 
 using namespace solidity;
 using namespace solidity::yul;
+
+namespace
+{
+/// Removes edges to blocks that are not reachable.
+void cleanUnreachable(SSACFG& _cfg)
+{
+	// Determine which blocks are reachable from the entry.
+	util::BreadthFirstSearch<SSACFG::BlockId> reachabilityCheck{{SSACFG::BlockId{0}}};
+	for (auto const& functionInfo: _cfg.functionInfos | ranges::views::values)
+		reachabilityCheck.verticesToTraverse.emplace_back(functionInfo.entry);
+
+	reachabilityCheck.run([&](SSACFG::BlockId _blockId, auto&& _addChild) {
+		auto const& block = _cfg.block(_blockId);
+		visit(util::GenericVisitor{
+			[&](SSACFG::BasicBlock::Jump const& _jump) {
+				_addChild(_jump.target);
+			},
+			[&](SSACFG::BasicBlock::ConditionalJump const& _jump) {
+				_addChild(_jump.zero);
+				_addChild(_jump.nonZero);
+			},
+			[](SSACFG::BasicBlock::FunctionReturn const&) {},
+			[](SSACFG::BasicBlock::Terminated const&) {},
+			[](SSACFG::BasicBlock::MainExit const&) {}
+		}, block.exit);
+	});
+
+	auto isUnreachableValue = [&](SSACFG::ValueId const& _value) -> bool {
+		auto* valueInfo = std::get_if<SSACFG::UnreachableValue>(&_cfg.valueInfo(_value));
+		return (valueInfo) ? true : false;
+	};
+
+
+
+	// Remove all entries from unreachable nodes from the graph.
+	for (SSACFG::BlockId blockId: reachabilityCheck.visited)
+	{
+		auto& block = _cfg.block(blockId);
+		for (auto it = block.entries.begin(); it != block.entries.end();)
+			if (reachabilityCheck.visited.count(*it))
+				it++;
+			else
+				it = block.entries.erase(it);
+		for (auto phi: block.phis)
+			if (auto* phiInfo = std::get_if<SSACFG::PhiValue>(&_cfg.valueInfo(phi)))
+				cxx20::erase_if(phiInfo->arguments, isUnreachableValue);
+	}
+}
+
+}
 
 namespace solidity::yul
 {
@@ -74,6 +125,8 @@ std::unique_ptr<SSACFG> SSAControlFlowGraphBuilder::build(
 		builder.sealBlock(builder.m_currentBlock);
 	result->block(builder.m_currentBlock).exit = SSACFG::BasicBlock::MainExit{};
 
+	cleanUnreachable(*result);
+
 	return result;
 }
 
@@ -88,7 +141,7 @@ void SSAControlFlowGraphBuilder::operator()(ExpressionStatement const& _expressi
 void SSAControlFlowGraphBuilder::operator()(Assignment const& _assignment)
 {
 	assign(
-		_assignment.variableNames | ranges::view::transform([&](auto& _var) { return std::ref(lookupVariable(_var.name)); }) | ranges::to<std::vector>,
+		_assignment.variableNames | ranges::views::transform([&](auto& _var) { return std::ref(lookupVariable(_var.name)); }) | ranges::to<std::vector>,
 		_assignment.value.get()
 	);
 }
@@ -96,7 +149,7 @@ void SSAControlFlowGraphBuilder::operator()(Assignment const& _assignment)
 void SSAControlFlowGraphBuilder::operator()(VariableDeclaration const& _variableDeclaration)
 {
 	assign(
-		_variableDeclaration.variables | ranges::view::transform([&](auto& _var) { return std::ref(lookupVariable(_var.name)); }) | ranges::to<std::vector>,
+		_variableDeclaration.variables | ranges::views::transform([&](auto& _var) { return std::ref(lookupVariable(_var.name)); }) | ranges::to<std::vector>,
 		_variableDeclaration.value.get()
 	);
 }
@@ -138,31 +191,58 @@ void SSAControlFlowGraphBuilder::operator()(If const& _if)
 	jump(debugDataOf(_if.body), afterIf);
 	sealBlock(afterIf);
 }
+
 void SSAControlFlowGraphBuilder::operator()(Switch const& _switch)
 {
-	auto expression = std::visit(*this, *_switch.expression);
-	std::map<u256, SSACFG::BlockId> cases;
-	std::optional<SSACFG::BlockId> defaultCase;
-	std::vector<std::tuple<SSACFG::BlockId, std::reference_wrapper<Block const>>> children;
-	for (auto const& _case: _switch.cases)
-	{
-		auto blockId = m_graph.makeBlock(debugDataOf(_case.body));
-		if (_case.value)
-			cases[_case.value->value.value()] = blockId;
-		children.emplace_back(std::make_tuple(blockId, std::ref(_case.body)));
-	}
-	auto afterSwitch = m_graph.makeBlock(debugDataOf(currentBlock()));
+	SSACFG::ValueId expression = std::visit(*this, *_switch.expression);
 
-	tableJump(debugDataOf(_switch), expression, cases, defaultCase ? *defaultCase : afterSwitch);
-	for (auto [blockId, block]: children)
+	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction({});
+	yulAssert(equalityBuiltin, "");
+	// Artificially generate:
+	// eq(<literal>, <caseVariable>)
+	auto makeValueCompare = [&](Case const& _case) {
+		SSACFG::ValueId outputValueId = m_graph.newVariable(m_currentBlock);
+		YulName caseVariableName("GHOST[" + std::to_string(outputValueId.value) + "]");
+
+		yul::FunctionCall const& ghostCall = m_graph.ghostCalls.emplace_back(yul::FunctionCall{
+			debugDataOf(_case),
+			yul::Identifier{{}, "eq"_yulname},
+			{*_case.value, Identifier{{}, caseVariableName}},
+		});
+		yulAssert(_case.value);
+		currentBlock().operations.emplace_back(SSACFG::Operation{
+			{outputValueId},
+			SSACFG::BuiltinCall{debugDataOf(_case), *equalityBuiltin, ghostCall},
+			{m_graph.newLiteral(_case.value->value.value()), expression},
+		});
+		return outputValueId;
+	};
+
+	auto afterSwitch = m_graph.makeBlock(debugDataOf(currentBlock()));
+	yulAssert(!_switch.cases.empty(), "");
+	for (auto const& switchCase: _switch.cases | ranges::views::drop_last(1))
 	{
-		sealBlock(blockId);
-		m_currentBlock = blockId;
-		(*this)(block);
-		jump(debugDataOf(currentBlock()), afterSwitch);
+		auto caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
+		auto elseBranch = m_graph.makeBlock(debugDataOf(_switch));
+		conditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, elseBranch);
+		sealBlock(caseBranch);
+		m_currentBlock = caseBranch;
+		(*this)(switchCase.body);
+		jump(debugDataOf(switchCase.body), afterSwitch);
+		sealBlock(elseBranch);
+		m_currentBlock = elseBranch;
 	}
+	Case const& switchCase = _switch.cases.back();
+	if (switchCase.value)
+	{
+		auto caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
+		conditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, afterSwitch);
+		sealBlock(caseBranch);
+		m_currentBlock = caseBranch;
+	}
+	(*this)(switchCase.body);
+	jump(debugDataOf(switchCase.body), afterSwitch);
 	sealBlock(afterSwitch);
-	m_currentBlock = afterSwitch;
 }
 void SSAControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 {
@@ -250,7 +330,7 @@ void SSAControlFlowGraphBuilder::operator()(Leave const& _leave)
 	auto currentBlockDebugData = debugDataOf(currentBlock());
 	currentBlock().exit = SSACFG::BasicBlock::FunctionReturn{
 		debugDataOf(_leave),
-		m_currentFunction->returns | ranges::view::transform([&](auto _var) {
+		m_currentFunction->returns | ranges::views::transform([&](auto _var) {
 			return readVariable(_var, m_currentBlock);
 		}) | ranges::to<std::vector>
 	};
@@ -344,7 +424,7 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 			for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
 				if (!builtin->literalArgument(idx).has_value())
 					result.inputs.emplace_back(std::visit(*this, arg));
-			for(size_t i = 0; i < builtin->returns.size(); ++i)
+			for (size_t i = 0; i < builtin->returns.size(); ++i)
 				result.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
 			canContinue = builtin->controlFlowSideEffects.canContinue;
 			return result;
@@ -356,7 +436,7 @@ std::vector<SSACFG::ValueId> SSAControlFlowGraphBuilder::visitFunctionCall(Funct
 			canContinue = m_graph.functionInfos.at(&function).canContinue;
 			for (auto const& arg: _call.arguments | ranges::views::reverse)
 				result.inputs.emplace_back(std::visit(*this, arg));
-			for(size_t i = 0; i < function.returns.size(); ++i)
+			for (size_t i = 0; i < function.returns.size(); ++i)
 				result.outputs.emplace_back(m_graph.newVariable(m_currentBlock));
 			return result;
 		}
@@ -385,8 +465,7 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::readVariable(Scope::Variable const& 
 	return readVariableRecursive(_variable, _block);
 }
 
-SSACFG::ValueId
-SSAControlFlowGraphBuilder::readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block)
+SSACFG::ValueId SSAControlFlowGraphBuilder::readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block)
 {
 	auto& block = m_graph.block(_block);
 	auto& info = blockInfo(_block);
@@ -409,8 +488,7 @@ SSAControlFlowGraphBuilder::readVariableRecursive(Scope::Variable const& _variab
 	return phi;
 }
 
-SSACFG::ValueId
-SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi)
+SSACFG::ValueId SSAControlFlowGraphBuilder::addPhiOperands(Scope::Variable const& _variable, SSACFG::ValueId _phi)
 {
 	auto* phi = std::get_if<SSACFG::PhiValue>(&m_graph.valueInfo(_phi));
 	yulAssert(phi);
@@ -483,7 +561,7 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId 
 			for (auto& output: op.outputs)
 				yulAssert(output != _phi);
 
-			for (auto&& [n, input]: op.inputs | ranges::view::enumerate)
+			for (auto&& [n, input]: op.inputs | ranges::views::enumerate)
 				if (input == _phi)
 					uses.emplace_back(Use{std::ref(op), n});
 		}
@@ -495,7 +573,8 @@ SSACFG::ValueId SSAControlFlowGraphBuilder::tryRemoveTrivialPhi(SSACFG::ValueId 
 	m_graph.block(phiBlock).phis.erase(_phi);
 	findUses(phiBlock, findUses);
 
-	if (!same) {
+	if (!same)
+	{
 		// This will happen for unreachable paths.
 		// TODO: check how best to deal with this
 		same = m_graph.unreachableValue();
@@ -523,7 +602,7 @@ void SSAControlFlowGraphBuilder::writeVariable(Scope::Variable const& _variable,
 	currentDef(_variable, _block) = _value;
 }
 
-Scope::Function const& SSAControlFlowGraphBuilder::lookupFunction(YulString _name) const
+Scope::Function const& SSAControlFlowGraphBuilder::lookupFunction(YulName _name) const
 {
 	Scope::Function const* function = nullptr;
 	yulAssert(m_scope->lookup(_name, util::GenericVisitor{
@@ -534,7 +613,7 @@ Scope::Function const& SSAControlFlowGraphBuilder::lookupFunction(YulString _nam
 	return *function;
 }
 
-Scope::Variable const& SSAControlFlowGraphBuilder::lookupVariable(YulString _name) const
+Scope::Variable const& SSAControlFlowGraphBuilder::lookupVariable(YulName _name) const
 {
 	yulAssert(m_scope, "");
 	Scope::Variable const* var = nullptr;
@@ -589,29 +668,6 @@ void SSAControlFlowGraphBuilder::jump(
 	yulAssert(!blockInfo(_target).sealed);
 	m_graph.block(_target).entries.insert(m_currentBlock);
 	m_currentBlock = _target;
-}
-
-void SSAControlFlowGraphBuilder::tableJump(
-	langutil::DebugData::ConstPtr _debugData,
-	SSACFG::ValueId _value,
-	std::map<u256, SSACFG::BlockId> _cases,
-	SSACFG::BlockId _defaultCase
-)
-{
-	for (auto caseBlock: _cases | ranges::view::values)
-	{
-		yulAssert(!blockInfo(caseBlock).sealed);
-		m_graph.block(caseBlock).entries.insert(m_currentBlock);
-	}
-	yulAssert(!blockInfo(_defaultCase).sealed);
-	m_graph.block(_defaultCase).entries.insert(m_currentBlock);
-	currentBlock().exit = SSACFG::BasicBlock::JumpTable{
-		std::move(_debugData),
-		_value,
-		std::move(_cases),
-		_defaultCase
-	};
-	m_currentBlock = {};
 }
 
 }

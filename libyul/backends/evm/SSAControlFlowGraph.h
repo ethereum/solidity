@@ -97,14 +97,6 @@ public:
 			langutil::DebugData::ConstPtr debugData;
 			BlockId target;
 		};
-		struct JumpTable
-		{
-			langutil::DebugData::ConstPtr debugData;
-			ValueId value;
-			std::map<u256, BlockId> cases;
-			BlockId defaultCase;
-
-		};
 		struct FunctionReturn
 		{
 			langutil::DebugData::ConstPtr debugData;
@@ -115,7 +107,7 @@ public:
 		std::set<BlockId> entries;
 		std::set<ValueId> phis;
 		std::list<Operation> operations;
-		std::variant<MainExit, Jump, ConditionalJump, JumpTable, FunctionReturn, Terminated> exit = MainExit{};
+		std::variant<MainExit, Jump, ConditionalJump, FunctionReturn, Terminated> exit = MainExit{};
 		template<typename Callable>
 		void forEachExit(Callable&& _callable)
 		{
@@ -125,12 +117,6 @@ public:
 			{
 				_callable(conditionalJump->nonZero);
 				_callable(conditionalJump->zero);
-			}
-			else if (auto* jumpTable = std::get_if<JumpTable>(&exit))
-			{
-				for (auto _case: jumpTable->cases | ranges::views::values)
-					_callable(_case);
-				_callable(jumpTable->defaultCase);
 			}
 		}
 	};
@@ -200,7 +186,7 @@ public:
 		return it->second;
 	}
 private:
-	std::vector<ValueInfo> m_valueInfos;
+	std::deque<ValueInfo> m_valueInfos;
 	std::map<u256, ValueId> m_literals;
 	std::optional<ValueId> m_unreachableValue;
 public:
@@ -218,6 +204,10 @@ public:
 	std::vector<std::reference_wrapper<Scope::Function const>> functions;
 	std::map<Scope::Function const*, FunctionInfo> functionInfos;
 
+	/// Container for generated calls for explicit ownership.
+	/// Ghost calls are used for the equality comparisons of the switch condition ghost variable with
+	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
+	std::list<yul::FunctionCall> ghostCalls;
 };
 
 }

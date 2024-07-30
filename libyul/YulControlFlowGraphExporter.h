@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libyul/backends/evm/ControlFlowGraph.h>
+#include <libyul/backends/evm/SSAControlFlowGraph.h>
 #include <libsolutil/JSON.h>
 #include <libsolutil/Visitor.h>
 
@@ -28,18 +28,15 @@ using namespace yul;
 class YulControlFlowGraphExporter
 {
 public:
-	YulControlFlowGraphExporter(){}
-	Json operator()(CFG const& _cfg);
-	Json exportBlock(CFG::BasicBlock const& _block);
-	Json exportFunction(CFG::FunctionInfo const& _functionInfo);
+	YulControlFlowGraphExporter(SSACFG const& _ssacfg);
+	Json run();
+	Json exportBlock(SSACFG::BlockId _blockId);
+	Json exportFunction(SSACFG::FunctionInfo const& _functionInfo);
+	std::string varToString(SSACFG::ValueId _var);
 
 private:
-	size_t getBlockId(CFG::BasicBlock const& _block);
-	Json toJson(CFG::BasicBlock const& _entry);
-	Json toJson(Json& _ret, CFG::Operation const& _operation);
-	Json stackToJson(Stack const& _stack);
-	Json stackSlotToJson(StackSlot const& _slot);
-
-	std::map<CFG::BasicBlock const*, size_t> m_blockIds;
-	size_t m_blockCount = 0;
+	SSACFG const& m_ssacfg;
+	Json toJson(SSACFG::BlockId _blockId);
+	Json toJson(Json& _ret, SSACFG::Operation const& _operation);
+	Json toJson(std::vector<SSACFG::ValueId> const& _values);
 };

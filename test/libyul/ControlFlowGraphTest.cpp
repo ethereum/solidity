@@ -25,9 +25,6 @@
 #include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/Object.h>
 
-// TODO: remove
-#include <libyul/YulControlFlowGraphExporter.h>
-
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/Visitor.h>
 
@@ -217,10 +214,6 @@ TestCase::TestResult ControlFlowGraphTest::run(std::ostream& _stream, std::strin
 	for (auto function: cfg->functions)
 		printer(cfg->functionInfo.at(function));
 	output << "}\n";
-
-	// TODO: remove and add commandline test
-	YulControlFlowGraphExporter exporter{};
-	exporter(*cfg);
 
 	m_obtainedResult = output.str();
 

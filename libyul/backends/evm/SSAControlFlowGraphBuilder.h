@@ -78,8 +78,8 @@ private:
 	SSACFG::BlockId m_currentBlock;
 	SSACFG::BasicBlock& currentBlock() { return m_graph.block(m_currentBlock); }
 	Scope* m_scope = nullptr;
-	Scope::Function const& lookupFunction(YulString _name) const;
-	Scope::Variable const& lookupVariable(YulString _name) const;
+	Scope::Function const& lookupFunction(YulName _name) const;
+	Scope::Variable const& lookupVariable(YulName _name) const;
 
 	struct BlockInfo {
 		bool sealed = false;
@@ -97,7 +97,7 @@ private:
 	void sealBlock(SSACFG::BlockId _block);
 
 	std::map<
-	    Scope::Variable const*,
+		Scope::Variable const*,
 		std::vector<std::optional<SSACFG::ValueId>>
 	> m_currentDef;
 
@@ -125,12 +125,6 @@ private:
 	void jump(
 		langutil::DebugData::ConstPtr _debugData,
 		SSACFG::BlockId _target
-	);
-	void tableJump(
-		langutil::DebugData::ConstPtr _debugData,
-		SSACFG::ValueId _value,
-		std::map<u256, SSACFG::BlockId> _cases,
-		SSACFG::BlockId _defaultCase
 	);
 };
 
