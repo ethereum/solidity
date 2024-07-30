@@ -16,7 +16,7 @@ as described in this specification. The encoding is not self describing and thus
 We assume that the interface functions of a contract are strongly typed, known at compilation time and static.
 We assume that all contracts will have the interface definitions of any contracts they call available at compile-time.
 
-This specification does not address contracts whose interface is dynamic or otherwise known only at run-time.
+This specification does not address contracts whose interface is dynamic or otherwise known only at run-time. Also, the ABI specification for libraries is :ref:`slightly different <library-selectors>`.
 
 .. _abi_function_selector:
 .. index:: ! selector; of a function
@@ -46,6 +46,8 @@ without the four bytes specifying the function.
 
 Types
 =====
+
+Note that the library ABIs can take types different than below e.g. for non-storage structs. See :ref:`library selectors <library-selectors>` for details.
 
 The following elementary types exist:
 
