@@ -26,6 +26,8 @@ add_executable(isoltest
 	../libsolidity/GasTest.cpp
 	../libsolidity/MemoryGuardTest.cpp
 	../libsolidity/NatspecJSONTest.cpp
+	../libsolidity/OptimizedIRCachingTest.cpp
+	../libsolidity/OptimizedIRCachingTest.h
 	../libsolidity/SyntaxTest.cpp
 	../libsolidity/SemanticTest.cpp
 	../libsolidity/AnalysisFramework.cpp

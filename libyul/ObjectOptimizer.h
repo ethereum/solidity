@@ -70,6 +70,8 @@ public:
 	/// @warning Does not ensure that nativeLocations in the resulting AST match the optimized code.
 	void optimize(Object& _object, Settings const& _settings);
 
+	size_t size() const { return m_cachedObjects.size(); }
+
 private:
 	struct CachedObject
 	{

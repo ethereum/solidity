@@ -381,6 +381,8 @@ public:
 		return VersionIsRelease ? MetadataFormat::WithReleaseVersionTag : MetadataFormat::WithPrereleaseVersionTag;
 	}
 
+	yul::ObjectOptimizer const& objectOptimizer() const { return *m_objectOptimizer; }
+
 private:
 	/// The state per source unit. Filled gradually during parsing.
 	struct Source
