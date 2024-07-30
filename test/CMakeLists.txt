@@ -88,6 +88,8 @@ set(libsolidity_sources
     libsolidity/MemoryGuardTest.h
     libsolidity/NatspecJSONTest.cpp
     libsolidity/NatspecJSONTest.h
+    libsolidity/OptimizedIRCachingTest.cpp
+    libsolidity/OptimizedIRCachingTest.h
     libsolidity/SemanticTest.cpp
     libsolidity/SemanticTest.h
     libsolidity/SemVerMatcher.cpp
