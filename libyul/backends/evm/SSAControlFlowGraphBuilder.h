@@ -54,22 +54,22 @@ public:
 
 	void operator()(Block const& _block);
 
-	SSACFG::VariableId operator()(FunctionCall const& _call);
-	SSACFG::VariableId operator()(Identifier const& _identifier);
-	SSACFG::VariableId operator()(Literal const& _literal);
+	SSACFG::ValueId operator()(FunctionCall const& _call);
+	SSACFG::ValueId operator()(Identifier const& _identifier);
+	SSACFG::ValueId operator()(Literal const& _literal);
 
 private:
 	void assign(std::vector<std::reference_wrapper<Scope::Variable const>> _variables, Expression const* _expression);
 
 	void registerFunction(FunctionDefinition const& _function);
-	std::vector<SSACFG::VariableId> visitFunctionCall(FunctionCall const& _call);
+	std::vector<SSACFG::ValueId> visitFunctionCall(FunctionCall const& _call);
 
-	SSACFG::VariableId zero();
-	SSACFG::VariableId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
-	SSACFG::VariableId readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block);
-	SSACFG::VariableId addPhiOperands(Scope::Variable const& _variable, SSACFG::Operation& _phi);
-	SSACFG::VariableId tryRemoveTrivialPhi(SSACFG::Operation& _phi);
-	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::VariableId _value);
+	SSACFG::ValueId zero();
+	SSACFG::ValueId readVariable(Scope::Variable const& _variable, SSACFG::BlockId _block);
+	SSACFG::ValueId readVariableRecursive(Scope::Variable const& _variable, SSACFG::BlockId _block);
+	SSACFG::ValueId addPhiOperands(Scope::Variable const& _variable, SSACFG::Operation& _phi);
+	SSACFG::ValueId tryRemoveTrivialPhi(SSACFG::Operation& _phi);
+	void writeVariable(Scope::Variable const& _variable, SSACFG::BlockId _block, SSACFG::ValueId _value);
 
 	SSACFG& m_graph;
 	AsmAnalysisInfo const& m_info;
@@ -98,7 +98,7 @@ private:
 
 	std::map<
 	    Scope::Variable const*,
-		std::vector<std::optional<SSACFG::VariableId>>
+		std::vector<std::optional<SSACFG::ValueId>>
 	> m_currentDef;
 
 	struct ForLoopInfo {
@@ -108,7 +108,7 @@ private:
 	std::stack<ForLoopInfo> m_forLoopInfo;
 	SSACFG::FunctionInfo* m_currentFunction = nullptr;
 
-	std::optional<SSACFG::VariableId>& currentDef(Scope::Variable const& _variable, SSACFG::BlockId _block)
+	std::optional<SSACFG::ValueId>& currentDef(Scope::Variable const& _variable, SSACFG::BlockId _block)
 	{
 		auto& varDefs = m_currentDef[&_variable];
 		if (varDefs.size() <= _block.value)
@@ -118,7 +118,7 @@ private:
 
 	void conditionalJump(
 		langutil::DebugData::ConstPtr _debugData,
-		SSACFG::VariableId _condition,
+		SSACFG::ValueId _condition,
 		SSACFG::BlockId _nonZero,
 		SSACFG::BlockId _zero
 	);
@@ -128,7 +128,7 @@ private:
 	);
 	void tableJump(
 		langutil::DebugData::ConstPtr _debugData,
-		SSACFG::VariableId _value,
+		SSACFG::ValueId _value,
 		std::map<u256, SSACFG::BlockId> _cases,
 		SSACFG::BlockId _defaultCase
 	);

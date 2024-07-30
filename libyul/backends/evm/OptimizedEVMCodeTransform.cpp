@@ -18,6 +18,7 @@
 #include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
 
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/SSAControlFlowGraphBuilder.h>
 #include <libyul/backends/evm/StackHelpers.h>
 #include <libyul/backends/evm/StackLayoutGenerator.h>
 
@@ -25,6 +26,8 @@
 
 #include <libevmasm/Instruction.h>
 
+#include <libsolutil/Algorithms.h>
+#include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
 #include <libsolutil/cxx20.h>
 
