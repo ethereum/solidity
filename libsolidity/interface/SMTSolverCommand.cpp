@@ -29,8 +29,8 @@ void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMillisec
 {
 	m_arguments.clear();
 	m_solverCmd = "eld";
-	m_arguments.emplace_back("-hsmt");
-	m_arguments.emplace_back("-in");
+	m_arguments.emplace_back("-hsmt"); // Tell Eldarica to expect input in SMT2 format
+	m_arguments.emplace_back("-in"); // Tell Eldarica to read from standard input
 	if (timeoutInMilliseconds)
 	{
 		unsigned int timeoutInSeconds = timeoutInMilliseconds.value() / 1000u;
@@ -38,7 +38,7 @@ void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMillisec
 		m_arguments.push_back("-t:" + std::to_string(timeoutInSeconds));
 	}
 	if (computeInvariants)
-		m_arguments.emplace_back("-ssol");
+		m_arguments.emplace_back("-ssol"); // Tell Eldarica to produce model (invariant)
 }
 
 void SMTSolverCommand::setCvc5(std::optional<unsigned int> timeoutInMilliseconds)
@@ -47,12 +47,12 @@ void SMTSolverCommand::setCvc5(std::optional<unsigned int> timeoutInMilliseconds
 	m_solverCmd = "cvc5";
 	if (timeoutInMilliseconds)
 	{
-		m_arguments.push_back("--tlimit-per");
+		m_arguments.emplace_back("--tlimit-per");
 		m_arguments.push_back(std::to_string(timeoutInMilliseconds.value()));
 	}
 	else
 	{
-		m_arguments.push_back("--rlimit");
+		m_arguments.emplace_back("--rlimit"); // Set resource limit cvc5 can spend on a query
 		m_arguments.push_back(std::to_string(12000));
 	}
 }
