@@ -1,0 +1,7 @@
+
+======= strict_asm_warning/input.yul (EVM) =======
+
+Pretty printed source:
+object "object" {
+    code { { selfdestruct(0) } }
+}
