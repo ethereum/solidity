@@ -21,34 +21,34 @@ object "A" {
 }
 // ----
 // Assembly:
-//     /* "source":35:48   */
+//     /* "source":55:68   */
 //   0x0e
-//     /* "source":62:75   */
+//     /* "source":90:103   */
 //   0x03
-//     /* "source":80:92   */
+//     /* "source":116:128   */
 //   swap1
-//     /* "source":87:88   */
+//     /* "source":123:124   */
 //   0x00
-//     /* "source":80:92   */
+//     /* "source":116:128   */
 //   sstore
-//     /* "source":104:106   */
+//     /* "source":148:150   */
 //   0x20
-//     /* "source":97:110   */
+//     /* "source":141:154   */
 //   sstore
-//     /* "source":20:114   */
+//     /* "source":22:170   */
 //   stop
 // stop
 // data_211450822d7f8c345093893187e7e1fbebc4ec67af72601920194be14104e336 48656c6c6f2c20576f726c643221
 // data_e1629b9dda060bb30c7908346f6af189c16773fa148d3366701fbaa35d54f3c8 414243
 //
 // sub_0: assembly {
-//         /* "source":157:176   */
+//         /* "source":242:261   */
 //       data_211450822d7f8c345093893187e7e1fbebc4ec67af72601920194be14104e336
-//         /* "source":190:191   */
+//         /* "source":285:286   */
 //       0x00
-//         /* "source":183:195   */
+//         /* "source":278:290   */
 //       sstore
-//         /* "source":140:201   */
+//         /* "source":201:314   */
 //       stop
 //     stop
 //     data_211450822d7f8c345093893187e7e1fbebc4ec67af72601920194be14104e336 48656c6c6f2c20576f726c643221
@@ -59,4 +59,4 @@ object "A" {
 // auxdata: 0x4d32
 // Bytecode: 600e6003905f5560205500fe4d32
 // Opcodes: PUSH1 0xE PUSH1 0x3 SWAP1 PUSH0 SSTORE PUSH1 0x20 SSTORE STOP INVALID 0x4D ORIGIN
-// SourceMappings: 35:13:0:-:0;62;80:12;87:1;80:12;104:2;97:13;20:94
+// SourceMappings: 55:13:0:-:0;90;116:12;123:1;116:12;148:2;141:13;22:148

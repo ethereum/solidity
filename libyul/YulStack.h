@@ -152,6 +152,13 @@ private:
 
 	void optimize(yul::Object& _object, bool _isCreation);
 
+	/// Prints the Yul object stored internally and parses it again.
+	/// This ensures that the debug info in the AST matches the source that printing would produce
+	/// rather than the initial source.
+	/// @warning Does not update the error list or the original source (@a m_charStream) to make
+	/// it possible to report errors to the user even after the optimization has been performed.
+	void reparse();
+
 	void reportUnimplementedFeatureError(langutil::UnimplementedFeatureError const& _error);
 
 	Language m_language = Language::Assembly;

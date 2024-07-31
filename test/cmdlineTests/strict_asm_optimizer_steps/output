@@ -27,58 +27,58 @@ Binary representation:
 608060405234601357600c60185f39600c5ff35b5f80fdfe608060405236155f555f80fd
 
 Text representation:
-    /* "strict_asm_optimizer_steps/input.yul":45:48   */
+    /* "strict_asm_optimizer_steps/input.yul":59:62   */
   0x80
-    /* "strict_asm_optimizer_steps/input.yul":41:43   */
+    /* "strict_asm_optimizer_steps/input.yul":55:57   */
   0x40
-    /* "strict_asm_optimizer_steps/input.yul":34:49   */
+    /* "strict_asm_optimizer_steps/input.yul":48:63   */
   mstore
-    /* "strict_asm_optimizer_steps/input.yul":61:72   */
+    /* "strict_asm_optimizer_steps/input.yul":79:90   */
   callvalue
-    /* "strict_asm_optimizer_steps/input.yul":58:89   */
+    /* "strict_asm_optimizer_steps/input.yul":76:107   */
   tag_1
   jumpi
-    /* "strict_asm_optimizer_steps/input.yul":138:162   */
+    /* "strict_asm_optimizer_steps/input.yul":160:184   */
   dataSize(sub_0)
-    /* "strict_asm_optimizer_steps/input.yul":110:136   */
+    /* "strict_asm_optimizer_steps/input.yul":132:158   */
   dataOffset(sub_0)
-    /* "strict_asm_optimizer_steps/input.yul":107:108   */
+    /* "strict_asm_optimizer_steps/input.yul":129:130   */
   0x00
-    /* "strict_asm_optimizer_steps/input.yul":98:163   */
+    /* "strict_asm_optimizer_steps/input.yul":120:185   */
   codecopy
-    /* "strict_asm_optimizer_steps/input.yul":182:206   */
+    /* "strict_asm_optimizer_steps/input.yul":208:232   */
   dataSize(sub_0)
-    /* "strict_asm_optimizer_steps/input.yul":179:180   */
+    /* "strict_asm_optimizer_steps/input.yul":205:206   */
   0x00
-    /* "strict_asm_optimizer_steps/input.yul":172:207   */
+    /* "strict_asm_optimizer_steps/input.yul":198:233   */
   return
-    /* "strict_asm_optimizer_steps/input.yul":73:89   */
+    /* "strict_asm_optimizer_steps/input.yul":91:107   */
 tag_1:
-    /* "strict_asm_optimizer_steps/input.yul":85:86   */
+    /* "strict_asm_optimizer_steps/input.yul":103:104   */
   0x00
-    /* "strict_asm_optimizer_steps/input.yul":75:87   */
+    /* "strict_asm_optimizer_steps/input.yul":93:105   */
   dup1
   revert
 stop
 
 sub_0: assembly {
-        /* "strict_asm_optimizer_steps/input.yul":298:301   */
+        /* "strict_asm_optimizer_steps/input.yul":334:337   */
       0x80
-        /* "strict_asm_optimizer_steps/input.yul":294:296   */
+        /* "strict_asm_optimizer_steps/input.yul":330:332   */
       0x40
-        /* "strict_asm_optimizer_steps/input.yul":287:302   */
+        /* "strict_asm_optimizer_steps/input.yul":323:338   */
       mstore
-        /* "strict_asm_optimizer_steps/input.yul":533:547   */
+        /* "strict_asm_optimizer_steps/input.yul":372:386   */
       calldatasize
-        /* "strict_asm_optimizer_steps/input.yul":526:548   */
+        /* "strict_asm_optimizer_steps/input.yul":365:387   */
       iszero
-        /* "strict_asm_optimizer_steps/input.yul":523:524   */
+        /* "strict_asm_optimizer_steps/input.yul":362:363   */
       0x00
-        /* "strict_asm_optimizer_steps/input.yul":516:549   */
+        /* "strict_asm_optimizer_steps/input.yul":355:388   */
       sstore
-        /* "strict_asm_optimizer_steps/input.yul":576:577   */
+        /* "strict_asm_optimizer_steps/input.yul":415:416   */
       0x00
-        /* "strict_asm_optimizer_steps/input.yul":566:578   */
+        /* "strict_asm_optimizer_steps/input.yul":405:417   */
       dup1
       revert
 }

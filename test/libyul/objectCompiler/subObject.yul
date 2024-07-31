@@ -6,21 +6,21 @@ object "a" {
 }
 // ----
 // Assembly:
-//     /* "source":20:22   */
+//     /* "source":22:29   */
 //   stop
 // stop
 // data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421
 //
 // sub_0: assembly {
-//         /* "source":149:150   */
+//         /* "source":123:124   */
 //       0x01
-//         /* "source":146:147   */
+//         /* "source":120:121   */
 //       0x00
-//         /* "source":139:151   */
+//         /* "source":113:125   */
 //       sstore
-//         /* "source":137:153   */
+//         /* "source":109:129   */
 //       stop
 // }
 // Bytecode: 00fe
 // Opcodes: STOP INVALID
-// SourceMappings: 20:2:0:-:0
+// SourceMappings: 22:7:0:-:0
