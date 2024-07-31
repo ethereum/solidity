@@ -28,6 +28,7 @@
 #include <libsolutil/JSON.h>
 
 #include <libyul/Object.h>
+#include <libyul/ObjectOptimizer.h>
 #include <libyul/ObjectParser.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
@@ -65,7 +66,7 @@ struct MachineAssemblyObject
 class YulStack: public langutil::CharStreamProvider
 {
 public:
-	enum class Language { Assembly, StrictAssembly };
+	using Language = yul::Language;
 	enum class Machine { EVM };
 	enum State {
 		Empty,
@@ -88,14 +89,16 @@ public:
 		std::optional<uint8_t> _eofVersion,
 		Language _language,
 		solidity::frontend::OptimiserSettings _optimiserSettings,
-		langutil::DebugInfoSelection const& _debugInfoSelection
+		langutil::DebugInfoSelection const& _debugInfoSelection,
+		std::shared_ptr<ObjectOptimizer> _objectOptimizer = nullptr
 	):
 		m_language(_language),
 		m_evmVersion(_evmVersion),
 		m_eofVersion(_eofVersion),
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_debugInfoSelection(_debugInfoSelection),
-		m_errorReporter(m_errors)
+		m_errorReporter(m_errors),
+		m_objectOptimizer(_objectOptimizer ? std::move(_objectOptimizer) : std::make_shared<ObjectOptimizer>())
 	{}
 
 	/// @returns the char stream used during parsing
@@ -150,8 +153,6 @@ private:
 
 	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
 
-	void optimize(yul::Object& _object, bool _isCreation);
-
 	/// Prints the Yul object stored internally and parses it again.
 	/// This ensures that the debug info in the AST matches the source that printing would produce
 	/// rather than the initial source.
@@ -173,6 +174,8 @@ private:
 	std::shared_ptr<yul::Object> m_parserResult;
 	langutil::ErrorList m_errors;
 	langutil::ErrorReporter m_errorReporter;
+
+	std::shared_ptr<ObjectOptimizer> m_objectOptimizer;
 };
 
 }

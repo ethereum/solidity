@@ -24,14 +24,12 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>
-#include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/Suite.h>
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <libsolidity/interface/OptimiserSettings.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -42,22 +40,6 @@ using namespace solidity::frontend;
 using namespace solidity::yul;
 using namespace solidity::langutil;
 using namespace solidity::util;
-
-namespace
-{
-Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _version)
-{
-	switch (_language)
-	{
-	case YulStack::Language::Assembly:
-	case YulStack::Language::StrictAssembly:
-		return EVMDialect::strictAssemblyForEVMObjects(_version);
-	}
-	yulAssert(false);
-	util::unreachable();
-}
-
-}
 
 CharStream const& YulStack::charStream(std::string const& _sourceName) const
 {
@@ -114,8 +96,44 @@ void YulStack::optimize()
 		)
 			return;
 
+		auto [optimizeStackAllocation, yulOptimiserSteps, yulOptimiserCleanupSteps] = [&]() -> std::tuple<bool, std::string, std::string>
+		{
+			if (!m_optimiserSettings.runYulOptimiser)
+			{
+				// Yul optimizer disabled, but empty sequence (:) explicitly provided
+				if (OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps))
+					return std::make_tuple(true, "", "");
+				// Yul optimizer disabled, and no sequence explicitly provided (assumes default sequence)
+				else
+				{
+					yulAssert(
+						m_optimiserSettings.yulOptimiserSteps == OptimiserSettings::DefaultYulOptimiserSteps &&
+						m_optimiserSettings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps
+					);
+					// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
+					return std::make_tuple(true, "u", "");
+				}
+			}
+			return std::make_tuple(
+				m_optimiserSettings.optimizeStackAllocation,
+				m_optimiserSettings.yulOptimiserSteps,
+				m_optimiserSettings.yulOptimiserCleanupSteps
+			);
+		}();
+
 		m_stackState = Parsed;
-		optimize(*m_parserResult, true);
+		solAssert(m_objectOptimizer);
+		m_objectOptimizer->optimize(
+			*m_parserResult,
+			ObjectOptimizer::Settings{
+				m_language,
+				m_evmVersion,
+				optimizeStackAllocation,
+				yulOptimiserSteps,
+				yulOptimiserCleanupSteps,
+				m_optimiserSettings.expectedExecutionsPerDeployment
+			}
+		);
 
 		// Optimizer does not maintain correct native source locations in the AST.
 		// We can work around it by regenerating the AST from scratch from optimized IR.
@@ -186,60 +204,6 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize, m_eofVersion);
 }
 
-void YulStack::optimize(Object& _object, bool _isCreation)
-{
-	yulAssert(_object.hasCode(), "");
-	yulAssert(_object.analysisInfo, "");
-	for (auto& subNode: _object.subObjects)
-		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
-		{
-			bool isCreation = !boost::ends_with(subObject->name, "_deployed");
-			optimize(*subObject, isCreation);
-		}
-
-	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
-	std::unique_ptr<GasMeter> meter;
-	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
-		meter = std::make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
-
-	auto [optimizeStackAllocation, yulOptimiserSteps, yulOptimiserCleanupSteps] = [&]() -> std::tuple<bool, std::string, std::string>
-	{
-		if (!m_optimiserSettings.runYulOptimiser)
-		{
-			// Yul optimizer disabled, but empty sequence (:) explicitly provided
-			if (OptimiserSuite::isEmptyOptimizerSequence(m_optimiserSettings.yulOptimiserSteps + ":" + m_optimiserSettings.yulOptimiserCleanupSteps))
-				return std::make_tuple(true, "", "");
-			// Yul optimizer disabled, and no sequence explicitly provided (assumes default sequence)
-			else
-			{
-				yulAssert(
-					m_optimiserSettings.yulOptimiserSteps == OptimiserSettings::DefaultYulOptimiserSteps &&
-					m_optimiserSettings.yulOptimiserCleanupSteps == OptimiserSettings::DefaultYulOptimiserCleanupSteps
-				);
-				return std::make_tuple(true, "u", "");
-			}
-
-		}
-		return std::make_tuple(
-			m_optimiserSettings.optimizeStackAllocation,
-			m_optimiserSettings.yulOptimiserSteps,
-			m_optimiserSettings.yulOptimiserCleanupSteps
-		);
-	}();
-
-	OptimiserSuite::run(
-		dialect,
-		meter.get(),
-		_object,
-		// Defaults are the minimum necessary to avoid running into "Stack too deep" constantly.
-		optimizeStackAllocation,
-		yulOptimiserSteps,
-		yulOptimiserCleanupSteps,
-		_isCreation ? std::nullopt : std::make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
-		{}
-	);
-}
-
 void YulStack::reparse()
 {
 	yulAssert(m_parserResult);
@@ -250,7 +214,7 @@ void YulStack::reparse()
 	// are not stored in the AST and the other info that is (location, AST ID, etc) will still be present.
 	std::string source = print(nullptr /* _soliditySourceProvider */);
 
-	YulStack cleanStack(m_evmVersion, m_eofVersion, m_language, m_optimiserSettings, m_debugInfoSelection);
+	YulStack cleanStack(m_evmVersion, m_eofVersion, m_language, m_optimiserSettings, m_debugInfoSelection, m_objectOptimizer);
 	bool reanalysisSuccessful = cleanStack.parseAndAnalyze(m_charStream->name(), source);
 	yulAssert(
 		reanalysisSuccessful,
