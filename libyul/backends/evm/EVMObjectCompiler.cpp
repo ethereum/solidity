@@ -35,7 +35,7 @@
 using namespace solidity::yul;
 
 void EVMObjectCompiler::compile(
-	Object& _object,
+	Object const& _object,
 	AbstractAssembly& _assembly,
 	EVMDialect const& _dialect,
 	bool _optimize,
@@ -46,7 +46,7 @@ void EVMObjectCompiler::compile(
 	compiler.run(_object, _optimize);
 }
 
-void EVMObjectCompiler::run(Object& _object, bool _optimize)
+void EVMObjectCompiler::run(Object const& _object, bool _optimize)
 {
 	BuiltinContext context;
 	context.currentObject = &_object;
