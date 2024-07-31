@@ -19,15 +19,7 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <libsolutil/CommonIO.h>
-#include <libsolutil/Exceptions.h>
-#include <libsolutil/Keccak256.h>
-#include <libsolutil/TemporaryDirectory.h>
-
 #include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/process.hpp>
 
 namespace solidity::frontend
@@ -37,6 +29,8 @@ void SMTSolverCommand::setEldarica(std::optional<unsigned int> timeoutInMillisec
 {
 	m_arguments.clear();
 	m_solverCmd = "eld";
+	m_arguments.emplace_back("-hsmt");
+	m_arguments.emplace_back("-in");
 	if (timeoutInMilliseconds)
 	{
 		unsigned int timeoutInSeconds = timeoutInMilliseconds.value() / 1000u;
@@ -73,32 +67,30 @@ ReadCallback::Result SMTSolverCommand::solve(std::string const& _kind, std::stri
 		if (m_solverCmd.empty())
 			return ReadCallback::Result{false, "No solver set."};
 
-		auto tempDir = solidity::util::TemporaryDirectory("smt");
-		util::h256 queryHash = util::keccak256(_query);
-		auto queryFileName = tempDir.path() / ("query_" + queryHash.hex() + ".smt2");
-
-		auto queryFile = boost::filesystem::ofstream(queryFileName);
-		queryFile << _query << std::flush;
-
 		auto solverBin = boost::process::search_path(m_solverCmd);
 
 		if (solverBin.empty())
 			return ReadCallback::Result{false, m_solverCmd + " binary not found."};
 
 		auto args = m_arguments;
-		args.push_back(queryFileName.string());
 
-		boost::process::ipstream pipe;
+		boost::process::opstream in;  // input to subprocess written to by the main process
+		boost::process::ipstream out; // output from subprocess read by the main process
 		boost::process::child solverProcess(
 			solverBin,
 			args,
-			boost::process::std_out > pipe,
+			boost::process::std_out > out,
+			boost::process::std_in < in,
 			boost::process::std_err > boost::process::null
 		);
 
+		in << _query << std::flush;
+		in.pipe().close();
+		in.close();
+
 		std::vector<std::string> data;
 		std::string line;
-		while (solverProcess.running() && std::getline(pipe, line))
+		while (solverProcess.running() && std::getline(out, line))
 			if (!line.empty())
 				data.push_back(line);
 
