@@ -49,6 +49,8 @@
 #include <libsolutil/LazyInit.h>
 #include <libsolutil/JSON.h>
 
+#include <libyul/ObjectOptimizer.h>
+
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -552,6 +554,7 @@ private:
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
+	std::shared_ptr<yul::ObjectOptimizer> m_objectOptimizer;
 
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
