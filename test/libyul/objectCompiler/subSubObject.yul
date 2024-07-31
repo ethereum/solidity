@@ -12,30 +12,30 @@ object "a" {
 }
 // ----
 // Assembly:
-//     /* "source":20:22   */
+//     /* "source":22:29   */
 //   stop
 // stop
 // data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421
 //
 // sub_0: assembly {
-//         /* "source":153:154   */
+//         /* "source":123:124   */
 //       0x01
-//         /* "source":150:151   */
+//         /* "source":120:121   */
 //       0x00
-//         /* "source":143:155   */
+//         /* "source":113:125   */
 //       sstore
-//         /* "source":141:157   */
+//         /* "source":109:129   */
 //       stop
 //     stop
 //
 //     sub_0: assembly {
-//             /* "source":203:204   */
+//             /* "source":187:188   */
 //           0x03
-//             /* "source":200:201   */
+//             /* "source":184:185   */
 //           0x02
-//             /* "source":193:205   */
+//             /* "source":177:189   */
 //           sstore
-//             /* "source":191:207   */
+//             /* "source":173:193   */
 //           stop
 //         stop
 //         data_6adf031833174bbe4c85eafe59ddb54e6584648c2c962c6f94791ab49caa0ad4 123456
@@ -43,4 +43,4 @@ object "a" {
 // }
 // Bytecode: 00fe
 // Opcodes: STOP INVALID
-// SourceMappings: 20:2:0:-:0
+// SourceMappings: 22:7:0:-:0
