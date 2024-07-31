@@ -15,10 +15,6 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-/**
- * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5
- */
-
 
 #include <libyul/YulStack.h>
 
@@ -63,7 +59,6 @@ Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _versi
 }
 
 }
-
 
 CharStream const& YulStack::charStream(std::string const& _sourceName) const
 {
@@ -274,7 +269,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 	{
 		creationObject.bytecode = std::make_shared<evmasm::LinkerObject>(creationAssembly->assemble());
 		yulAssert(creationObject.bytecode->immutableReferences.empty(), "Leftover immutables.");
-		creationObject.assembly = creationAssembly->assemblyString(m_debugInfoSelection);
+		creationObject.assembly = creationAssembly;
 		creationObject.sourceMappings = std::make_unique<std::string>(
 			evmasm::AssemblyItem::computeSourceMapping(
 				creationAssembly->items(),
@@ -285,7 +280,7 @@ YulStack::assembleWithDeployed(std::optional<std::string_view> _deployName)
 		if (deployedAssembly)
 		{
 			deployedObject.bytecode = std::make_shared<evmasm::LinkerObject>(deployedAssembly->assemble());
-			deployedObject.assembly = deployedAssembly->assemblyString(m_debugInfoSelection);
+			deployedObject.assembly = deployedAssembly;
 			deployedObject.sourceMappings = std::make_unique<std::string>(
 				evmasm::AssemblyItem::computeSourceMapping(
 					deployedAssembly->items(),

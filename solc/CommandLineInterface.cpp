@@ -177,7 +177,7 @@ void CommandLineInterface::handleEVMAssembly(std::string const& _contract)
 
 	std::string assembly;
 	if (m_options.compiler.outputs.asmJson)
-		assembly = util::jsonPrint(removeNullMembers(m_assemblyStack->assemblyJSON(_contract)), m_options.formatting.json);
+		assembly = util::jsonPrint(m_assemblyStack->assemblyJSON(_contract), m_options.formatting.json);
 	else
 		assembly = m_assemblyStack->assemblyString(_contract, m_fileReader.sourceUnits());
 
@@ -1197,6 +1197,17 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 			successful = false;
 		else
 			stack.optimize();
+
+		if (successful && m_options.compiler.outputs.asmJson)
+		{
+			std::shared_ptr<yul::Object> result = stack.parserResult();
+			if (result && !result->hasContiguousSourceIndices())
+				solThrow(
+					CommandLineExecutionError,
+					"Generating the assembly JSON output was not possible. "
+					"Source indices provided in the @use-src annotation in the Yul input do not start at 0 or are not contiguous."
+				);
+		}
 	}
 
 	for (auto const& sourceAndStack: yulStacks)
@@ -1256,10 +1267,21 @@ void CommandLineInterface::assembleYul(yul::YulStack::Language _language, yul::Y
 		if (m_options.compiler.outputs.asm_)
 		{
 			sout() << std::endl << "Text representation:" << std::endl;
-			if (!object.assembly.empty())
-				sout() << object.assembly << std::endl;
+			std::string assemblyText{object.assembly->assemblyString(stack.debugInfoSelection())};
+			if (!assemblyText.empty())
+				sout() << assemblyText << std::endl;
 			else
 				report(Error::Severity::Info, "No text representation found.");
+		}
+		if (m_options.compiler.outputs.asmJson)
+		{
+			sout() << std::endl << "EVM assembly:" << std::endl;
+			std::map<std::string, unsigned> sourceIndices;
+			stack.parserResult()->collectSourceIndices(sourceIndices);
+			sout() << util::jsonPrint(
+				object.assembly->assemblyJSON(sourceIndices),
+				m_options.formatting.json
+			) << std::endl;
 		}
 	}
 }
