@@ -86,4 +86,5 @@ std::optional<smtutil::Expression> symbolicTypeConversion(frontend::Type const* 
 smtutil::Expression member(smtutil::Expression const& _tuple, std::string const& _member);
 smtutil::Expression assignMember(smtutil::Expression const _tuple, std::map<std::string, smtutil::Expression> const& _values);
 
+void removePureAndViewModifiers(std::string& typeName);
 }

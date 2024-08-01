@@ -118,7 +118,11 @@ SortPointer smtSort(frontend::Type const& _type)
 			else if (baseType->category() == frontend::Type::Category::FixedBytes)
 				tupleName = "fixedbytes";
 			else
+			{
 				tupleName = arrayType->baseType()->toString(true);
+				// remove pure and view modifiers to unify datatypes for functions
+				removePureAndViewModifiers(tupleName);
+			}
 
 			tupleName += "_array";
 		}
@@ -639,4 +643,16 @@ smtutil::Expression assignMember(smtutil::Expression const _tuple, std::map<std:
 	return smtutil::Expression::tuple_constructor(sortExpr, args);
 }
 
+void removePureAndViewModifiers(std::string& typeName)
+{
+	std::string view = "view ";
+	auto viewPos = typeName.find(view);
+	if (viewPos != std::string::npos)
+		typeName.erase(viewPos, view.length());
+
+	std::string pure = "pure ";
+	auto purePos = typeName.find(pure);
+	if (purePos != std::string::npos)
+		typeName.erase(purePos, pure.length());
+}
 }
