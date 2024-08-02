@@ -27,8 +27,9 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/algorithm/find_if.hpp>
+#include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view.hpp>
 
 #include <array>
@@ -449,6 +450,12 @@ std::optional<smtutil::Expression> CHCSmtLib2Interface::invariantsFromSolverResp
 		}
 
 		auto parsedInterpretation = scopedParser.toSMTUtilExpression(interpretation);
+
+		// Hack to make invariants more stable across operating systems
+		if (parsedInterpretation.name == "and" || parsedInterpretation.name == "or")
+			ranges::sort(parsedInterpretation.arguments, [](Expression const& first, Expression const& second) {
+				return first.name < second.name;
+			});
 
 		Expression predicate(asAtom(args[1]), predicateArgs, SortProvider::boolSort);
 		definitions.push_back(predicate == parsedInterpretation);
