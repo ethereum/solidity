@@ -27,7 +27,7 @@ bytes YulAssembler::assemble()
 {
 	if (
 		!m_stack.parseAndAnalyze("source", m_yulProgram) ||
-		!m_stack.parserResult()->code ||
+		!m_stack.parserResult()->code() ||
 		!m_stack.parserResult()->analysisInfo ||
 		langutil::Error::containsErrors(m_stack.errors())
 	)

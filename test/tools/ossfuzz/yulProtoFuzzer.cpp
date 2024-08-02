@@ -72,7 +72,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// Parse protobuf mutated YUL code
 	if (
 		!stack.parseAndAnalyze("source", yul_source) ||
-		!stack.parserResult()->code ||
+		!stack.parserResult()->code() ||
 		!stack.parserResult()->analysisInfo ||
 		Error::containsErrors(stack.errors())
 	)

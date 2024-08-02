@@ -53,8 +53,8 @@ std::shared_ptr<Object> ObjectParser::parse(std::shared_ptr<Scanner> const& _sca
 			object->name = "object";
 			auto sourceNameMapping = tryParseSourceNameMapping();
 			object->debugData = std::make_shared<ObjectDebugData>(ObjectDebugData{sourceNameMapping});
-			object->code = parseBlock(sourceNameMapping);
-			if (!object->code)
+			object->setCode(parseBlock(sourceNameMapping));
+			if (!object->hasCode())
 				return nullptr;
 		}
 		else
@@ -87,7 +87,7 @@ std::shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 
 	expectToken(Token::LBrace);
 
-	ret->code = parseCode(std::move(sourceNameMapping));
+	ret->setCode(parseCode(std::move(sourceNameMapping)));
 
 	while (currentToken() != Token::RBrace)
 	{

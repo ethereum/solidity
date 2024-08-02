@@ -54,7 +54,7 @@ namespace po = boost::program_options;
 namespace
 {
 
-std::pair<std::shared_ptr<AST>, std::shared_ptr<AsmAnalysisInfo>> parse(std::string const& _source)
+std::pair<std::shared_ptr<AST const>, std::shared_ptr<AsmAnalysisInfo>> parse(std::string const& _source)
 {
 	YulStack stack(
 		langutil::EVMVersion(),
@@ -66,7 +66,7 @@ std::pair<std::shared_ptr<AST>, std::shared_ptr<AsmAnalysisInfo>> parse(std::str
 	if (stack.parseAndAnalyze("--INPUT--", _source))
 	{
 		yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
-		return make_pair(stack.parserResult()->code, stack.parserResult()->analysisInfo);
+		return make_pair(stack.parserResult()->code(), stack.parserResult()->analysisInfo);
 	}
 	else
 	{
@@ -77,7 +77,7 @@ std::pair<std::shared_ptr<AST>, std::shared_ptr<AsmAnalysisInfo>> parse(std::str
 
 void interpret(std::string const& _source, bool _inspect, bool _disableExternalCalls)
 {
-	std::shared_ptr<AST> ast;
+	std::shared_ptr<AST const> ast;
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 	tie(ast, analysisInfo) = parse(_source);
 	if (!ast || !analysisInfo)

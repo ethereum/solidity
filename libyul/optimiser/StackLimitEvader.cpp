@@ -123,13 +123,13 @@ Block StackLimitEvader::run(
 	Object const& _object
 )
 {
-	yulAssert(_object.code);
+	yulAssert(_object.hasCode());
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
 	yulAssert(
 		evmDialect && evmDialect->providesObjectAccess(),
 		"StackLimitEvader can only be run on objects using the EVMDialect with object access."
 	);
-	auto astRoot = std::get<Block>(ASTCopier{}(_object.code->root()));
+	auto astRoot = std::get<Block>(ASTCopier{}(_object.code()->root()));
 	if (evmDialect && evmDialect->evmVersion().canOverchargeGasForCall())
 	{
 		yul::AsmAnalysisInfo analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(*evmDialect, astRoot, _object.qualifiedDataNames());

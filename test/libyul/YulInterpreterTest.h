@@ -45,8 +45,8 @@ private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	std::string interpret();
 
-	std::shared_ptr<AST> m_ast;
-	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
+	std::shared_ptr<AST const> m_ast;
+	std::shared_ptr<AsmAnalysisInfo const> m_analysisInfo;
 	bool m_simulateExternalCallsToSelf = false;
 };
 

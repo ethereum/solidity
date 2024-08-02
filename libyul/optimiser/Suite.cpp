@@ -157,7 +157,7 @@ void OptimiserSuite::run(
 		_dialect,
 		*_object.analysisInfo,
 		reservedIdentifiers
-	)(_object.code->root()));
+	)(_object.code()->root()));
 
 	NameDispenser dispenser{_dialect, astRoot, reservedIdentifiers};
 	OptimiserStepContext context{_dialect, dispenser, reservedIdentifiers, _expectedExecutionsPerDeployment};
@@ -180,7 +180,7 @@ void OptimiserSuite::run(
 	// message once we perform code generation.
 	if (!usesOptimizedCodeGenerator)
 	{
-		_object.code = std::make_shared<AST>(std::move(astRoot));
+		_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 		astRoot = std::get<1>(StackCompressor::run(
 			_dialect,
 			_object,
@@ -202,7 +202,7 @@ void OptimiserSuite::run(
 		ConstantOptimiser{*evmDialect, *_meter}(astRoot);
 		if (usesOptimizedCodeGenerator)
 		{
-			_object.code = std::make_shared<AST>(std::move(astRoot));
+			_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 			astRoot = std::get<1>(StackCompressor::run(
 				_dialect,
 				_object,
@@ -211,13 +211,13 @@ void OptimiserSuite::run(
 			));
 			if (evmDialect->providesObjectAccess())
 			{
-				_object.code = std::make_shared<AST>(std::move(astRoot));
+				_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 				astRoot = StackLimitEvader::run(suite.m_context, _object);
 			}
 		}
 		else if (evmDialect->providesObjectAccess() && _optimizeStackAllocation)
 		{
-			_object.code = std::make_shared<AST>(std::move(astRoot));
+			_object.setCode(std::make_shared<AST>(std::move(astRoot)));
 			astRoot = StackLimitEvader::run(suite.m_context, _object);
 		}
 	}
@@ -230,8 +230,8 @@ void OptimiserSuite::run(
 	outputPerformanceMetrics(suite.m_durationPerStepInMicroseconds);
 #endif
 
-	_object.code = std::make_shared<AST>(std::move(astRoot));
-	*_object.analysisInfo = AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object);
+	_object.setCode(std::make_shared<AST>(std::move(astRoot)));
+	_object.analysisInfo = std::make_shared<AsmAnalysisInfo>(AsmAnalyzer::analyzeStrictAssertCorrect(_dialect, _object));
 }
 
 namespace

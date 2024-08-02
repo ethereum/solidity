@@ -107,7 +107,7 @@ class AST
 public:
 	explicit AST(Block _root): m_root(std::move(_root)) {}
 
-	Block const& root() const { return m_root; }
+	[[nodiscard]] Block const& root() const { return m_root; }
 private:
 	Block m_root;
 };

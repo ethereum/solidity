@@ -97,7 +97,7 @@ bool YulStack::parseAndAnalyze(std::string const& _sourceName, std::string const
 
 	yulAssert(m_stackState == Parsed);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode());
 
 	return analyzeParsed();
 }
@@ -135,7 +135,7 @@ bool YulStack::analyzeParsed()
 bool YulStack::analyzeParsed(Object& _object)
 {
 	yulAssert(m_stackState >= Parsed);
-	yulAssert(_object.code, "");
+	yulAssert(_object.hasCode());
 	_object.analysisInfo = std::make_shared<AsmAnalysisInfo>();
 
 	AsmAnalyzer analyzer(
@@ -149,7 +149,7 @@ bool YulStack::analyzeParsed(Object& _object)
 	bool success = false;
 	try
 	{
-		success = analyzer.analyze(_object.code->root());
+		success = analyzer.analyze(_object.code()->root());
 		for (auto& subNode: _object.subObjects)
 			if (auto subObject = dynamic_cast<Object*>(subNode.get()))
 				if (!analyzeParsed(*subObject))
@@ -189,7 +189,7 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 
 void YulStack::optimize(Object& _object, bool _isCreation)
 {
-	yulAssert(_object.code, "");
+	yulAssert(_object.hasCode(), "");
 	yulAssert(_object.analysisInfo, "");
 	for (auto& subNode: _object.subObjects)
 		if (auto subObject = dynamic_cast<Object*>(subNode.get()))
@@ -245,7 +245,7 @@ MachineAssemblyObject YulStack::assemble(Machine _machine)
 {
 	yulAssert(m_stackState >= AnalysisSuccessful);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
 	switch (_machine)
@@ -302,7 +302,7 @@ YulStack::assembleEVMWithDeployed(std::optional<std::string_view> _deployName)
 {
 	yulAssert(m_stackState >= AnalysisSuccessful);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	yulAssert(m_parserResult->analysisInfo, "");
 
 	evmasm::Assembly assembly(m_evmVersion, true, {});
@@ -359,7 +359,7 @@ std::string YulStack::print(
 {
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult->toString(
 		languageToDialect(m_language, m_evmVersion),
 		AsmPrinter::TypePrinting::OmitDefault,
@@ -372,7 +372,7 @@ Json YulStack::astJson() const
 {
 	yulAssert(m_stackState >= Parsed);
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	return  m_parserResult->toJson();
 }
 
@@ -380,7 +380,7 @@ std::shared_ptr<Object> YulStack::parserResult() const
 {
 	yulAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	yulAssert(m_parserResult, "");
-	yulAssert(m_parserResult->code, "");
+	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult;
 }
 

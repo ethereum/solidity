@@ -98,14 +98,14 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			return block;
 		}},
 		{"constantOptimiser", [&]() {
-			auto block = std::get<Block>(ASTCopier{}(m_object->code->root()));
+			auto block = std::get<Block>(ASTCopier{}(m_object->code()->root()));
 			updateContext(block);
 			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
 			ConstantOptimiser{dynamic_cast<EVMDialect const&>(*m_dialect), meter}(block);
 			return block;
 		}},
 		{"varDeclInitializer", [&]() {
-			auto block = std::get<Block>(ASTCopier{}(m_object->code->root()));
+			auto block = std::get<Block>(ASTCopier{}(m_object->code()->root()));
 			updateContext(block);
 			VarDeclInitializer::run(*m_context, block);
 			return block;
@@ -151,7 +151,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			return block;
 		}},
 		{"expressionSplitter", [&]() {
-			auto block = std::get<Block>(ASTCopier{}(m_object->code->root()));
+			auto block = std::get<Block>(ASTCopier{}(m_object->code()->root()));
 			updateContext(block);
 			ExpressionSplitter::run(*m_context, block);
 			return block;
@@ -401,8 +401,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionGrouper::run(*m_context, block);
 			size_t maxIterations = 16;
 			{
-				Object object(*m_object);
-				object.code = std::make_shared<AST>(std::get<Block>(ASTCopier{}(block)));
+				Object object; // (*m_object) ??
+				object.setCode(std::make_shared<AST>(std::get<Block>(ASTCopier{}(block))));
 				block = std::get<1>(StackCompressor::run(*m_dialect, object, true, maxIterations));
 			}
 			BlockFlattener::run(*m_context, block);
@@ -419,13 +419,13 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 				frontend::OptimiserSettings::DefaultYulOptimiserCleanupSteps,
 				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 			);
-			return std::get<Block>(ASTCopier{}(m_optimizedObject->code->root()));
+			return std::get<Block>(ASTCopier{}(m_optimizedObject->code()->root()));
 		}},
 		{"stackLimitEvader", [&]() {
 			auto block = disambiguate();
 			updateContext(block);
-			Object object(*m_object);
-			object.code = std::make_shared<AST>(std::get<Block>(ASTCopier{}(block)));
+			Object object; // (*m_object);
+			object.setCode(std::make_shared<AST>(std::get<Block>(ASTCopier{}(block))));
 			auto const unreachables = CompilabilityChecker{
 				*m_dialect,
 				object,
@@ -492,7 +492,7 @@ bool YulOptimizerTestCommon::runStep()
 	if (m_namedSteps.count(m_optimizerStep))
 	{
 		auto block = m_namedSteps[m_optimizerStep]();
-		m_optimizedObject->code = std::make_shared<AST>(std::move(block));
+		m_optimizedObject->setCode(std::make_shared<AST>(std::move(block)));
 	}
 	else
 		return false;
@@ -531,12 +531,12 @@ std::string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 
 Block const* YulOptimizerTestCommon::run()
 {
-	return runStep() ? &m_optimizedObject->code->root() : nullptr;
+	return runStep() ? &m_optimizedObject->code()->root() : nullptr;
 }
 
 Block YulOptimizerTestCommon::disambiguate()
 {
-	auto block = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(m_object->code->root()));
+	auto block = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(m_object->code()->root()));
 	m_analysisInfo.reset();
 	return block;
 }

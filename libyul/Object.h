@@ -119,10 +119,13 @@ public:
 	/// The path must not lead to a @a Data object (will throw in that case).
 	std::vector<size_t> pathToSubObject(std::string_view _qualifiedName) const;
 
+	std::shared_ptr<AST const> code() const;
+	void setCode(std::shared_ptr<AST const> const& _ast, std::shared_ptr<yul::AsmAnalysisInfo> = nullptr);
+	bool hasCode() const;
+
 	/// sub id for object if it is subobject of another object, max value if it is not subobject
 	size_t subId = std::numeric_limits<size_t>::max();
 
-	std::shared_ptr<AST> code;
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;
 	std::map<std::string, size_t, std::less<>> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
@@ -139,6 +142,9 @@ public:
 
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }
+
+private:
+	std::shared_ptr<AST const> m_code;
 };
 
 }

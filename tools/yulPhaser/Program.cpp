@@ -149,7 +149,7 @@ std::variant<std::unique_ptr<AST>, ErrorList> Program::parseObject(Dialect const
 	// The public API of the class does not provide access to the smart pointer so it won't be hard
 	// to switch to shared_ptr if the copying turns out to be an issue (though it would be better
 	// to refactor ObjectParser and Object to use unique_ptr instead).
-	auto astCopy = std::make_unique<AST>(std::get<Block>(ASTCopier{}(selectedObject->code->root())));
+	auto astCopy = std::make_unique<AST>(std::get<Block>(ASTCopier{}(selectedObject->code()->root())));
 
 	return std::variant<std::unique_ptr<AST>, ErrorList>(std::move(astCopy));
 }

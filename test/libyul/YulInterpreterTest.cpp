@@ -75,7 +75,7 @@ bool YulInterpreterTest::parse(std::ostream& _stream, std::string const& _linePr
 	);
 	if (stack.parseAndAnalyze("", m_source))
 	{
-		m_ast = stack.parserResult()->code;
+		m_ast = stack.parserResult()->code();
 		m_analysisInfo = stack.parserResult()->analysisInfo;
 		return true;
 	}

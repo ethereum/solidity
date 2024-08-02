@@ -47,9 +47,9 @@ protected:
 		ErrorList errorList;
 		std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 		std::tie(m_object, analysisInfo) = yul::test::parse(_source, m_dialect, errorList);
-		BOOST_REQUIRE(m_object && errorList.empty() && m_object->code);
+		BOOST_REQUIRE(m_object && errorList.empty() && m_object->hasCode());
 
-		auto astRoot = std::get<Block>(yul::ASTCopier{}(m_object->code->root()));
+		auto astRoot = std::get<Block>(yul::ASTCopier{}(m_object->code()->root()));
 		NameDispenser dispenser(m_dialect, astRoot);
 		std::set<YulName> reserved;
 		OptimiserStepContext context{m_dialect, dispenser, reserved, 0};
@@ -59,7 +59,7 @@ protected:
 		for (auto const& [name, expression]: m_ssaValues.values())
 			m_values[name].value = expression;
 
-		m_object->code = std::make_shared<AST>(std::move(astRoot));
+		m_object->setCode(std::make_shared<AST>(std::move(astRoot)));
 		return KnowledgeBase([this](YulName _var) { return util::valueOrNullptr(m_values, _var); });
 	}
 

@@ -50,7 +50,7 @@ Dialect const& defaultDialect(bool _yul)
 }
 }
 
-std::pair<std::shared_ptr<AST>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(std::string const& _source, bool _yul)
+std::pair<std::shared_ptr<AST const>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(std::string const& _source, bool _yul)
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
@@ -63,7 +63,7 @@ std::pair<std::shared_ptr<AST>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test
 	);
 	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
 		BOOST_FAIL("Invalid source.");
-	return make_pair(stack.parserResult()->code, stack.parserResult()->analysisInfo);
+	return std::make_pair(stack.parserResult()->code(), stack.parserResult()->analysisInfo);
 }
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
@@ -78,12 +78,12 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::t
 	std::shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
 	if (!parserResult)
 		return {};
-	if (!parserResult->code || errorReporter.hasErrors())
+	if (!parserResult->hasCode() || errorReporter.hasErrors())
 		return {};
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo = std::make_shared<AsmAnalysisInfo>();
 	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->qualifiedDataNames());
 	// TODO this should be done recursively.
-	if (!analyzer.analyze(parserResult->code->root()) || errorReporter.hasErrors())
+	if (!analyzer.analyze(parserResult->code()->root()) || errorReporter.hasErrors())
 		return {};
 	return {std::move(parserResult), std::move(analysisInfo)};
 }
