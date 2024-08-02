@@ -130,10 +130,11 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 				"dir1/file1.sol:L=0x1234567890123456789012345678901234567890,"
 				"dir2/file2.sol:L=0x1111122222333334444455555666667777788888",
 			"--ast-compact-json", "--asm", "--asm-json", "--opcodes", "--bin", "--bin-runtime", "--abi",
-			"--ir", "--ir-ast-json", "--ir-optimized", "--ir-optimized-ast-json", "--hashes", "--userdoc", "--devdoc", "--metadata", "--storage-layout",
+			"--ir", "--ir-ast-json", "--ir-optimized", "--ir-optimized-ast-json", "--hashes", "--userdoc", "--devdoc", "--metadata",
+			"--storage-layout", "--transient-storage-layout",
 			"--gas",
 			"--combined-json="
-				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,generated-sources,generated-sources-runtime,"
+				"abi,metadata,bin,bin-runtime,opcodes,asm,storage-layout,transient-storage-layout,generated-sources,generated-sources-runtime,"
 				"srcmap,srcmap-runtime,function-debug,function-debug-runtime,hashes,devdoc,userdoc,ast",
 			"--metadata-hash=swarm",
 			"--metadata-literal",
@@ -192,14 +193,14 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			true, true, true, true, true,
 			true, true, true, true, true,
 			true, true, true, true, true,
-			true,
+			true, true,
 		};
 		expectedOptions.compiler.estimateGas = true;
 		expectedOptions.compiler.combinedJsonRequests = {
 			true, true, true, true, true,
 			true, true, true, true, true,
 			true, true, true, true, true,
-			true, true,
+			true, true, true,
 		};
 		expectedOptions.metadata.hash = CompilerStack::MetadataHash::Bzzr1;
 		expectedOptions.metadata.literalSources = true;

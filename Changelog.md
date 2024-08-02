@@ -8,11 +8,13 @@ Language Features:
 
 Compiler Features:
  * Command Line Interface: Do not perform IR optimization when only unoptimized IR is requested.
+ * Commandline Interface: Add ``--transient-storage-layout`` output.
  * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
  * EVM: Support for the EVM version "Prague".
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
  * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
  * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
+ * Standard JSON Interface: Add ``transientStorageLayout`` output.
  * Yul Optimizer: The optimizer now treats some previously unrecognized identical literals as identical.
  * Commandline Interface: Allow the use of ``--asm-json`` output option in assembler mode to export EVM assembly of the contracts in JSON format.
 

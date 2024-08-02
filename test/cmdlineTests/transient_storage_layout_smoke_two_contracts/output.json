@@ -1,0 +1,51 @@
+{
+    "contracts": {
+        "fileA": {
+            "A": {
+                "transientStorageLayout": {
+                    "storage": [],
+                    "types": null
+                }
+            }
+        },
+        "fileB": {
+            "B": {
+                "transientStorageLayout": {
+                    "storage": [
+                        {
+                            "astId": 6,
+                            "contract": "fileB:B",
+                            "label": "x",
+                            "offset": 0,
+                            "slot": "0",
+                            "type": "t_uint256"
+                        },
+                        {
+                            "astId": 8,
+                            "contract": "fileB:B",
+                            "label": "y",
+                            "offset": 0,
+                            "slot": "1",
+                            "type": "t_uint256"
+                        }
+                    ],
+                    "types": {
+                        "t_uint256": {
+                            "encoding": "inplace",
+                            "label": "uint256",
+                            "numberOfBytes": "32"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sources": {
+        "fileA": {
+            "id": 0
+        },
+        "fileB": {
+            "id": 1
+        }
+    }
+}

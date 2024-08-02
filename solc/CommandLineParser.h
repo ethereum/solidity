@@ -86,6 +86,7 @@ struct CompilerOutputs
 			{"devdoc", &CompilerOutputs::natspecDev},
 			{"metadata", &CompilerOutputs::metadata},
 			{"storage-layout", &CompilerOutputs::storageLayout},
+			{"transient-storage-layout", &CompilerOutputs::transientStorageLayout},
 		};
 		return components;
 	}
@@ -106,6 +107,7 @@ struct CompilerOutputs
 	bool natspecDev = false;
 	bool metadata = false;
 	bool storageLayout = false;
+	bool transientStorageLayout = false;
 };
 
 struct CombinedJsonRequests
@@ -125,6 +127,7 @@ struct CombinedJsonRequests
 			{"opcodes", &CombinedJsonRequests::opcodes},
 			{"asm", &CombinedJsonRequests::asm_},
 			{"storage-layout", &CombinedJsonRequests::storageLayout},
+			{"transient-storage-layout", &CombinedJsonRequests::transientStorageLayout},
 			{"generated-sources", &CombinedJsonRequests::generatedSources},
 			{"generated-sources-runtime", &CombinedJsonRequests::generatedSourcesRuntime},
 			{"srcmap", &CombinedJsonRequests::srcMap},
@@ -146,6 +149,7 @@ struct CombinedJsonRequests
 	bool opcodes = false;
 	bool asm_ = false;
 	bool storageLayout = false;
+	bool transientStorageLayout = false;
 	bool generatedSources = false;
 	bool generatedSourcesRuntime = false;
 	bool srcMap = false;

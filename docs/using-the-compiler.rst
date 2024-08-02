@@ -423,7 +423,8 @@ Input Description
         //   irAst - AST of Yul intermediate representation of the code before optimization
         //   irOptimized - Intermediate representation after optimization
         //   irOptimizedAst - AST of intermediate representation after optimization
-        //   storageLayout - Slots, offsets and types of the contract's state variables.
+        //   storageLayout - Slots, offsets and types of the contract's state variables in storage.
+        //   transientStorageLayout - Slots, offsets and types of the contract's state variables in transient storage.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
         //   evm.bytecode.functionDebugData - Debugging information at function level
@@ -578,6 +579,8 @@ Output Description
             "irOptimizedAst": {/* ... */},
             // See the Storage Layout documentation.
             "storageLayout": {"storage": [/* ... */], "types": {/* ... */} },
+            // See the Storage Layout documentation.
+            "transientStorageLayout": {"storage": [/* ... */], "types": {/* ... */} },
             // EVM-related outputs
             "evm": {
               // Assembly (string)

@@ -1,0 +1,131 @@
+{
+    "contracts": {
+        "fileA": {
+            "A": {
+                "transientStorageLayout": {
+                    "storage": [
+                        {
+                            "astId": 10,
+                            "contract": "fileA:A",
+                            "label": "x",
+                            "offset": 0,
+                            "slot": "0",
+                            "type": "t_uint64"
+                        },
+                        {
+                            "astId": 12,
+                            "contract": "fileA:A",
+                            "label": "y",
+                            "offset": 8,
+                            "slot": "0",
+                            "type": "t_uint128"
+                        },
+                        {
+                            "astId": 14,
+                            "contract": "fileA:A",
+                            "label": "z",
+                            "offset": 0,
+                            "slot": "1",
+                            "type": "t_uint128"
+                        },
+                        {
+                            "astId": 16,
+                            "contract": "fileA:A",
+                            "label": "addr",
+                            "offset": 0,
+                            "slot": "2",
+                            "type": "t_address"
+                        },
+                        {
+                            "astId": 18,
+                            "contract": "fileA:A",
+                            "label": "b",
+                            "offset": 20,
+                            "slot": "2",
+                            "type": "t_bool"
+                        },
+                        {
+                            "astId": 21,
+                            "contract": "fileA:A",
+                            "label": "w",
+                            "offset": 0,
+                            "slot": "3",
+                            "type": "t_userDefinedValueType(MyInt)3"
+                        },
+                        {
+                            "astId": 24,
+                            "contract": "fileA:A",
+                            "label": "c",
+                            "offset": 0,
+                            "slot": "4",
+                            "type": "t_contract(C)8"
+                        },
+                        {
+                            "astId": 27,
+                            "contract": "fileA:A",
+                            "label": "e",
+                            "offset": 20,
+                            "slot": "4",
+                            "type": "t_enum(MyEnum)7"
+                        },
+                        {
+                            "astId": 31,
+                            "contract": "fileA:A",
+                            "label": "p",
+                            "offset": 0,
+                            "slot": "5",
+                            "type": "t_function_external_nonpayable()returns()"
+                        }
+                    ],
+                    "types": {
+                        "t_address": {
+                            "encoding": "inplace",
+                            "label": "address",
+                            "numberOfBytes": "20"
+                        },
+                        "t_bool": {
+                            "encoding": "inplace",
+                            "label": "bool",
+                            "numberOfBytes": "1"
+                        },
+                        "t_contract(C)8": {
+                            "encoding": "inplace",
+                            "label": "contract C",
+                            "numberOfBytes": "20"
+                        },
+                        "t_enum(MyEnum)7": {
+                            "encoding": "inplace",
+                            "label": "enum MyEnum",
+                            "numberOfBytes": "1"
+                        },
+                        "t_function_external_nonpayable()returns()": {
+                            "encoding": "inplace",
+                            "label": "function () external",
+                            "numberOfBytes": "24"
+                        },
+                        "t_uint128": {
+                            "encoding": "inplace",
+                            "label": "uint128",
+                            "numberOfBytes": "16"
+                        },
+                        "t_uint64": {
+                            "encoding": "inplace",
+                            "label": "uint64",
+                            "numberOfBytes": "8"
+                        },
+                        "t_userDefinedValueType(MyInt)3": {
+                            "encoding": "inplace",
+                            "label": "MyInt",
+                            "numberOfBytes": "16"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sources": {
+        "fileA": {
+            "id": 0
+        }
+    }
+}

@@ -26,6 +26,8 @@
 #include <libsolidity/codegen/ContractCompiler.h>
 #include <libevmasm/Assembly.h>
 
+#include <range/v3/algorithm/all_of.hpp>
+
 using namespace solidity;
 using namespace solidity::frontend;
 
@@ -35,6 +37,16 @@ void Compiler::compileContract(
 	bytes const& _metadata
 )
 {
+	auto static notTransient = [](VariableDeclaration const* _varDeclaration) {
+		solAssert(_varDeclaration);
+		return _varDeclaration->referenceLocation() != VariableDeclaration::Location::Transient;
+	};
+
+	solUnimplementedAssert(
+		ranges::all_of(_contract.stateVariables(), notTransient),
+		"Transient storage variables are not supported."
+	);
+
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimiserSettings);
 	runtimeCompiler.compileContract(_contract, _otherCompilers);
 	m_runtimeContext.appendToAuxiliaryData(_metadata);
