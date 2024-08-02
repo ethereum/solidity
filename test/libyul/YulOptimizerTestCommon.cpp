@@ -74,11 +74,19 @@ using namespace solidity::yul::test;
 using namespace solidity::frontend;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
-	std::shared_ptr<Object> _obj,
+	std::shared_ptr<Object const> _obj,
 	Dialect const& _dialect
-): m_dialect(&_dialect), m_object(_obj), m_optimizedObject(std::make_shared<Object>()), m_analysisInfo(m_object->analysisInfo)
+): m_dialect(&_dialect), m_object(_obj), m_optimizedObject(std::make_shared<Object>(*_obj))
 {
-	*m_optimizedObject = *m_object;
+	if (
+		std::any_of(
+			m_object->subObjects.begin(),
+			m_object->subObjects.end(),
+			[](auto const& subObject) { return dynamic_cast<Data*>(subObject.get()) == nullptr;}
+		)
+	)
+		solUnimplementedAssert(false, "The current implementation of YulOptimizerTests ignores subobjects that are not Data.");
+
 	m_namedSteps = {
 		{"disambiguator", [&]() { return disambiguate(); }},
 		{"nameDisplacer", [&]() {
@@ -401,7 +409,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FunctionGrouper::run(*m_context, block);
 			size_t maxIterations = 16;
 			{
-				Object object; // (*m_object) ??
+				Object object(*m_optimizedObject);
 				object.setCode(std::make_shared<AST>(std::get<Block>(ASTCopier{}(block))));
 				block = std::get<1>(StackCompressor::run(*m_dialect, object, true, maxIterations));
 			}
@@ -424,7 +432,7 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		{"stackLimitEvader", [&]() {
 			auto block = disambiguate();
 			updateContext(block);
-			Object object; // (*m_object);
+			Object object(*m_optimizedObject);
 			object.setCode(std::make_shared<AST>(std::get<Block>(ASTCopier{}(block))));
 			auto const unreachables = CompilabilityChecker{
 				*m_dialect,
@@ -536,8 +544,7 @@ Block const* YulOptimizerTestCommon::run()
 
 Block YulOptimizerTestCommon::disambiguate()
 {
-	auto block = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(m_object->code()->root()));
-	m_analysisInfo.reset();
+	auto block = std::get<Block>(Disambiguator(*m_dialect, *m_object->analysisInfo)(m_object->code()->root()));
 	return block;
 }
 

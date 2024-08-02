@@ -40,7 +40,7 @@ class YulOptimizerTestCommon
 {
 public:
 	explicit YulOptimizerTestCommon(
-		std::shared_ptr<Object> _obj,
+		std::shared_ptr<Object const> _obj,
 		Dialect const& _dialect
 	);
 	/// Sets optimiser step to be run to @param
@@ -70,9 +70,8 @@ private:
 	std::unique_ptr<NameDispenser> m_nameDispenser;
 	std::unique_ptr<OptimiserStepContext> m_context;
 
-	std::shared_ptr<Object> m_object;
+	std::shared_ptr<Object const> m_object;
 	std::shared_ptr<Object> m_optimizedObject;
-	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::map<std::string, std::function<Block(void)>> m_namedSteps;
 };
 
