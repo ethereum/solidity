@@ -20,6 +20,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Parser: Fix spuriously emitted parser error for unary plus operations when used as binary operator in some cases.
  * SMTChecker: Fix error that reports invalid number of verified checks for BMC and CHC engines.
  * SMTChecker: Fix formatting of unary minus expressions in invariants.
  * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
