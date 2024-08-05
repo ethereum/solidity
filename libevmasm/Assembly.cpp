@@ -74,7 +74,7 @@ unsigned Assembly::codeSize(unsigned subTagSize) const
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			ret += i.bytesRequired(tagSize, Precision::Approximate);
+			ret += i.bytesRequired(tagSize, m_evmVersion, Precision::Approximate);
 		if (numberEncodingSize(ret) <= tagSize)
 			return static_cast<unsigned>(ret);
 	}
@@ -753,7 +753,7 @@ std::map<u256, u256> const& Assembly::optimiseInternal(
 
 		if (_settings.runPeephole)
 		{
-			PeepholeOptimiser peepOpt{m_items};
+			PeepholeOptimiser peepOpt{m_items, m_evmVersion};
 			while (peepOpt.optimise())
 			{
 				count++;

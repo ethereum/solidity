@@ -23,7 +23,7 @@ contract A {
 // f(), 10 ether -> 3007, 3008, 3009
 // gas irOptimized: 187022
 // gas irOptimized code: 67200
-// gas legacy: 190863
+// gas legacy: 190858
 // gas legacy code: 190200
-// gas legacyOptimized: 187258
+// gas legacyOptimized: 187256
 // gas legacyOptimized code: 92400

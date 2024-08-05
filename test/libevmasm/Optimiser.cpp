@@ -1000,7 +1000,82 @@ BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 		AssemblyItem(PushTag, 1),
 		Instruction::JUMP
 	};
-	PeepholeOptimiser peepOpt(items);
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(deduplicateNextTagBlockSize3)
+{
+	AssemblyItems items{
+		Instruction::JUMP,
+		u256(0),
+		u256(1),
+		Instruction::REVERT,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		u256(1),
+		Instruction::REVERT
+	};
+
+	AssemblyItems expectation{
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		u256(1),
+		Instruction::REVERT
+	};
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(deduplicateNextTagBlockSize2)
+{
+	AssemblyItems items{
+		Instruction::JUMP,
+		u256(0),
+		Instruction::SELFDESTRUCT,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		Instruction::SELFDESTRUCT
+	};
+
+	AssemblyItems expectation{
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(0),
+		Instruction::SELFDESTRUCT
+	};
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(deduplicateNextTagBlockSize1)
+{
+	AssemblyItems items{
+		Instruction::JUMP,
+		Instruction::STOP,
+		AssemblyItem(Tag, 2),
+		Instruction::STOP
+	};
+
+	AssemblyItems expectation{
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		Instruction::STOP
+	};
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
@@ -1026,7 +1101,19 @@ BOOST_AUTO_TEST_CASE(peephole_double_push)
 		u256(4),
 		u256(5)
 	};
-	PeepholeOptimiser peepOpt(items);
+
+	// `PUSH0 PUSH0` is cheaper than `DUP1 PUSH0`
+	if (solidity::test::CommonOptions::get().evmVersion() >= EVMVersion::shanghai())
+		expectation = {
+			u256(0),
+			u256(0),
+			u256(5),
+			Instruction::DUP1,
+			u256(4),
+			u256(5)
+		};
+
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
@@ -1042,7 +1129,7 @@ BOOST_AUTO_TEST_CASE(peephole_pop_calldatasize)
 		Instruction::LT,
 		Instruction::POP
 	};
-	PeepholeOptimiser peepOpt(items);
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 	for (size_t i = 0; i < 3; i++)
 		BOOST_CHECK(peepOpt.optimise());
 	BOOST_CHECK(items.empty());
@@ -1075,7 +1162,7 @@ BOOST_AUTO_TEST_CASE(peephole_commutative_swap1)
 			u256(4),
 			u256(5)
 		};
-		PeepholeOptimiser peepOpt(items);
+		PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 		BOOST_REQUIRE(peepOpt.optimise());
 		BOOST_CHECK_EQUAL_COLLECTIONS(
 			items.begin(), items.end(),
@@ -1113,7 +1200,7 @@ BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
 			u256(4),
 			u256(5)
 		};
-		PeepholeOptimiser peepOpt(items);
+		PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 		BOOST_REQUIRE(!peepOpt.optimise());
 		BOOST_CHECK_EQUAL_COLLECTIONS(
 			items.begin(), items.end(),
@@ -1148,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
 			u256(4),
 			u256(5)
 		};
-		PeepholeOptimiser peepOpt(items);
+		PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 		BOOST_REQUIRE(peepOpt.optimise());
 		BOOST_CHECK_EQUAL_COLLECTIONS(
 			items.begin(), items.end(),
@@ -1174,7 +1261,7 @@ BOOST_AUTO_TEST_CASE(peephole_truthy_and)
 		AssemblyItem(PushTag, 1),
 		Instruction::JUMPI
 	};
-	PeepholeOptimiser peepOpt(items);
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
@@ -1207,7 +1294,7 @@ BOOST_AUTO_TEST_CASE(peephole_iszero_iszero_jumpi)
 		u256(0x20),
 		Instruction::RETURN
 	};
-	PeepholeOptimiser peepOpt(items);
+	PeepholeOptimiser peepOpt(items, solidity::test::CommonOptions::get().evmVersion());
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 	  items.begin(), items.end(),
@@ -1649,6 +1736,40 @@ BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 	});
 }
 
+BOOST_AUTO_TEST_CASE(cse_dup)
+{
+	AssemblyItems input{
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+	AssemblyItems output = input;
+
+	checkCSE(input, output);
+	checkFullCSE(input, output);
+}
+
+BOOST_AUTO_TEST_CASE(cse_push0)
+{
+	AssemblyItems input{
+		u256(0),
+		u256(0),
+		Instruction::REVERT
+	};
+	AssemblyItems output{
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+	// The CSE has a rule to replace with DUP1 PUSH0
+	checkCSE(input, output);
+
+	// The full handling by the compiler (Assembly::optimiseInternal)
+	// will not choose to replace the pattern, because the new size is the same as the old one
+	output = input;
+	checkFullCSE(input, output);
+}
+
 BOOST_AUTO_TEST_CASE(inliner)
 {
 	AssemblyItem jumpInto{Instruction::JUMP};
@@ -1873,9 +1994,10 @@ BOOST_AUTO_TEST_CASE(inliner_revert)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(inliner_revert_increased_datagas)
+BOOST_AUTO_TEST_CASE(inliner_revert_push0)
 {
-	// Inlining this would increase data gas (5 bytes v/s 4 bytes), therefore, skipped.
+	// Inlining this without PUSH0 would increase data gas (5 bytes v/s 4 bytes), therefore, it would be skipped.
+	// However, with PUSH0 it is inlined (3 bytes vs 4 bytes).
 	AssemblyItems items{
 		AssemblyItem(PushTag, 1),
 		Instruction::JUMP,
@@ -1884,8 +2006,16 @@ BOOST_AUTO_TEST_CASE(inliner_revert_increased_datagas)
 		u256(0),
 		Instruction::REVERT
 	};
+	AssemblyItems expectation{
+		u256(0),
+		u256(0),
+		Instruction::REVERT,
+		AssemblyItem(Tag, 1),
+		u256(0),
+		u256(0),
+		Instruction::REVERT
+	};
 
-	AssemblyItems expectation = items;
 	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),

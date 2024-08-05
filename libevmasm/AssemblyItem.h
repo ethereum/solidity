@@ -161,10 +161,11 @@ public:
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
+	/// @param _evmVersion the EVM version
 	/// @param _precision Whether to return a precise count (which involves
 	///                   counting immutable references which are only set after
 	///                   a call to `assemble()`) or an approx. count.
-	size_t bytesRequired(size_t _addressLength, Precision _precision = Precision::Precise) const;
+	size_t bytesRequired(size_t _addressLength, langutil::EVMVersion _evmVersion, Precision _precision = Precision::Precise) const;
 	size_t arguments() const;
 	size_t returnValues() const;
 	size_t deposit() const { return returnValues() - arguments(); }
@@ -228,11 +229,11 @@ private:
 	mutable std::optional<size_t> m_immutableOccurrences;
 };
 
-inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength,  Precision _precision = Precision::Precise)
+inline size_t bytesRequired(AssemblyItems const& _items, size_t _addressLength, langutil::EVMVersion _evmVersion, Precision _precision = Precision::Precise)
 {
 	size_t size = 0;
 	for (AssemblyItem const& item: _items)
-		size += item.bytesRequired(_addressLength, _precision);
+		size += item.bytesRequired(_addressLength, _evmVersion, _precision);
 	return size;
 }
 

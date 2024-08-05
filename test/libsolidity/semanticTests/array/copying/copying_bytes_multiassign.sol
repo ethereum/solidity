@@ -18,7 +18,7 @@ contract sender {
 }
 // ----
 // (): 7 ->
-// gas irOptimized: 110831
+// gas irOptimized: 110822
 // gas legacy: 111388
 // gas legacyOptimized: 111065
 // val() -> 0

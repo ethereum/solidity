@@ -8,9 +8,7 @@ EVM assembly:
   iszero
   tag_1
   jumpi
-  0x00
-  dup1
-  revert
+  revert(0x00, 0x00)
 tag_1:
   pop
   dataSize(sub_0)
@@ -30,9 +28,7 @@ sub_0: assembly {
       iszero
       tag_1
       jumpi
-      0x00
-      dup1
-      revert
+      revert(0x00, 0x00)
     tag_1:
       pop
       jumpi(tag_2, lt(calldatasize, 0x04))
@@ -43,9 +39,7 @@ sub_0: assembly {
       tag_3
       jumpi
     tag_2:
-      0x00
-      dup1
-      revert
+      revert(0x00, 0x00)
         /* "optimizer_inliner_add/input.sol":182:303  function f() public pure {... */
     tag_3:
       tag_4

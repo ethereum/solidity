@@ -9,9 +9,7 @@ EVM assembly:
   iszero
   tag_1
   jumpi
-  0x00
-  dup1
-  revert
+  revert(0x00, 0x00)
 tag_1:
   pop
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":93:94  x */
@@ -57,9 +55,7 @@ sub_0: assembly {
       iszero
       tag_1
       jumpi
-      0x00
-      dup1
-      revert
+      revert(0x00, 0x00)
     tag_1:
       pop
       jumpi(tag_2, lt(calldatasize, 0x04))
@@ -75,9 +71,7 @@ sub_0: assembly {
       tag_4
       jumpi
     tag_2:
-      0x00
-      dup1
-      revert
+      revert(0x00, 0x00)
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":154:209  function a() public pure returns (uint) { return f(); } */
     tag_3:
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":355:356  6 */

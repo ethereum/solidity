@@ -84,8 +84,8 @@ contract D {
 // constructor(), 1 ether ->
 // gas irOptimized: 132974
 // gas irOptimized code: 293800
-// gas legacy: 151217
-// gas legacy code: 533400
+// gas legacy: 151236
+// gas legacy code: 533800
 // gas legacyOptimized: 131436
 // gas legacyOptimized code: 276600
 // exists() -> false
@@ -95,7 +95,7 @@ contract D {
 // gas irOptimized code: 20800
 // gas legacy: 97788
 // gas legacy code: 20800
-// gas legacyOptimized: 96044
+// gas legacyOptimized: 96043
 // gas legacyOptimized code: 20800
 // exists() -> false
 // deploy_create2() ->
@@ -107,5 +107,5 @@ contract D {
 // exists() -> true
 // deploy_create2() -> FAILURE
 // gas irOptimized: 96903654
-// gas legacy: 96903660
-// gas legacyOptimized: 96903641
+// gas legacy: 96903658
+// gas legacyOptimized: 96903639

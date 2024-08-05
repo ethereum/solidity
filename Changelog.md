@@ -9,8 +9,11 @@ Language Features:
 Compiler Features:
  * Command Line Interface: Do not perform IR optimization when only unoptimized IR is requested.
  * Commandline Interface: Add ``--transient-storage-layout`` output.
+ * Constant Optimizer: Uses ``PUSH0`` if supported by the selected evm version.
  * Error Reporting: Unimplemented features are now properly reported as errors instead of being handled as if they were bugs.
  * EVM: Support for the EVM version "Prague".
+ * Peephole Optimizer: ``PUSH0``, when supported, is duplicated explicitly instead of using ``DUP1``.
+ * Peephole optimizer: Remove identical code snippets that terminate the control flow if they occur one after another.
  * SMTChecker: Add CHC engine check for underflow and overflow in unary minus operation.
  * SMTChecker: Replace CVC4 as a possible BMC backend with cvc5.
  * Standard JSON Interface: Do not perform IR optimization when only unoptimized IR is requested.
