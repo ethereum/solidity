@@ -50,7 +50,7 @@ std::string Object::toString(
 	CharStreamProvider const* _soliditySourceProvider
 ) const
 {
-	yulAssert(code, "No code");
+	yulAssert(hasCode(), "No code");
 	yulAssert(debugData, "No debug data");
 
 	std::string useSrcComment;
@@ -69,7 +69,7 @@ std::string Object::toString(
 		debugData->sourceNames,
 		_debugInfoSelection,
 		_soliditySourceProvider
-	)(*code);
+	)(code()->root());
 
 	for (auto const& obj: subObjects)
 		inner += "\n" + obj->toString(_dialect, _printingMode, _debugInfoSelection, _soliditySourceProvider);
@@ -87,11 +87,11 @@ Json Data::toJson() const
 
 Json Object::toJson() const
 {
-	yulAssert(code, "No code");
+	yulAssert(hasCode(), "No code");
 
 	Json codeJson;
 	codeJson["nodeType"] = "YulCode";
-	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(*code);
+	codeJson["block"] = AsmJsonConverter(0 /* sourceIndex */)(code()->root());
 
 	Json subObjectsJson = Json::array();
 	for (std::shared_ptr<ObjectNode> const& subObject: subObjects)
@@ -159,6 +159,19 @@ std::vector<size_t> Object::pathToSubObject(std::string_view _qualifiedName) con
 	}
 
 	return path;
+}
+
+std::shared_ptr<AST const> Object::code() const
+{
+	return m_code;
+}
+
+bool Object::hasCode() const { return code() != nullptr; }
+
+void Object::setCode(std::shared_ptr<AST const> const& _ast, std::shared_ptr<yul::AsmAnalysisInfo> _analysisInfo)
+{
+	m_code = _ast;
+	analysisInfo = std::move(_analysisInfo);
 }
 
 void Object::collectSourceIndices(std::map<std::string, unsigned>& _indices) const

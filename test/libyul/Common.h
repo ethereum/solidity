@@ -39,12 +39,13 @@ struct AsmAnalysisInfo;
 struct Block;
 struct Object;
 struct Dialect;
+class AST;
 }
 
 namespace solidity::yul::test
 {
 
-std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>>
+std::pair<std::shared_ptr<AST const>, std::shared_ptr<AsmAnalysisInfo>>
 parse(std::string const& _source, bool _yul = true);
 
 std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>>

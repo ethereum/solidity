@@ -23,6 +23,7 @@
 #include <test/libyul/Common.h>
 
 #include <libyul/Object.h>
+#include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/NameDispenser.h>
@@ -46,17 +47,19 @@ protected:
 		ErrorList errorList;
 		std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 		std::tie(m_object, analysisInfo) = yul::test::parse(_source, m_dialect, errorList);
-		BOOST_REQUIRE(m_object && errorList.empty() && m_object->code);
+		BOOST_REQUIRE(m_object && errorList.empty() && m_object->hasCode());
 
-		NameDispenser dispenser(m_dialect, *m_object->code);
+		auto astRoot = std::get<Block>(yul::ASTCopier{}(m_object->code()->root()));
+		NameDispenser dispenser(m_dialect, astRoot);
 		std::set<YulName> reserved;
 		OptimiserStepContext context{m_dialect, dispenser, reserved, 0};
-		CommonSubexpressionEliminator::run(context, *m_object->code);
+		CommonSubexpressionEliminator::run(context, astRoot);
 
-		m_ssaValues(*m_object->code);
+		m_ssaValues(astRoot);
 		for (auto const& [name, expression]: m_ssaValues.values())
 			m_values[name].value = expression;
 
+		m_object->setCode(std::make_shared<AST>(std::move(astRoot)));
 		return KnowledgeBase([this](YulName _var) { return util::valueOrNullptr(m_values, _var); });
 	}
 

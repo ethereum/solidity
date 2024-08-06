@@ -58,9 +58,7 @@
 #include <range/v3/view/stride.hpp>
 #include <range/v3/view/transform.hpp>
 
-#include <cctype>
 #include <string>
-#include <sstream>
 #include <iostream>
 #include <variant>
 
@@ -92,20 +90,21 @@ public:
 		CharStream _charStream(_input, "");
 		try
 		{
-			m_ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
-			if (!m_ast || !errorReporter.errors().empty())
+			auto ast = yul::Parser(errorReporter, m_dialect).parse(_charStream);
+			if (!m_astRoot || !errorReporter.errors().empty())
 			{
 				std::cerr << "Error parsing source." << std::endl;
 				printErrors(_charStream, errors);
 				throw std::runtime_error("Could not parse source.");
 			}
+			m_astRoot = std::make_shared<yul::Block>(std::get<yul::Block>(ASTCopier{}(ast->root())));
 			m_analysisInfo = std::make_unique<yul::AsmAnalysisInfo>();
 			AsmAnalyzer analyzer(
 				*m_analysisInfo,
 				errorReporter,
 				m_dialect
 			);
-			if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
+			if (!analyzer.analyze(*m_astRoot) || !errorReporter.errors().empty())
 			{
 				std::cerr << "Error analyzing source." << std::endl;
 				printErrors(_charStream, errors);
@@ -171,17 +170,17 @@ public:
 
 	void disambiguate()
 	{
-		*m_ast = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
+		*m_astRoot = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_astRoot));
 		m_analysisInfo.reset();
-		m_nameDispenser.reset(*m_ast);
+		m_nameDispenser.reset(*m_astRoot);
 	}
 
 	void runSteps(std::string _source, std::string _steps)
 	{
 		parse(_source);
 		disambiguate();
-		OptimiserSuite{m_context}.runSequence(_steps, *m_ast);
-		std::cout << AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, m_dialect}(*m_ast) << std::endl;
+		OptimiserSuite{m_context}.runSequence(_steps, *m_astRoot);
+		std::cout << AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, m_dialect}(*m_astRoot) << std::endl;
 	}
 
 	void runInteractive(std::string _source, bool _disambiguated = false)
@@ -212,24 +211,24 @@ public:
 					case '#':
 						return;
 					case ',':
-						VarNameCleaner::run(m_context, *m_ast);
+						VarNameCleaner::run(m_context, *m_astRoot);
 						// VarNameCleaner destroys the unique names guarantee of the disambiguator.
 						disambiguated = false;
 						break;
 					case ';':
 					{
 						Object obj;
-						obj.code = m_ast;
-						StackCompressor::run(m_dialect, obj, true, 16);
+						obj.setCode(std::make_shared<AST>(std::get<yul::Block>(ASTCopier{}(*m_astRoot))));
+						*m_astRoot = std::get<1>(StackCompressor::run(m_dialect, obj, true, 16));
 						break;
 					}
 					default:
 						OptimiserSuite{m_context}.runSequence(
 							std::string_view(&option, 1),
-							*m_ast
+							*m_astRoot
 						);
 				}
-				_source = AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, m_dialect}(*m_ast);
+				_source = AsmPrinter{AsmPrinter::TypePrinting::OmitDefault, m_dialect}(*m_astRoot);
 			}
 			catch (...)
 			{
@@ -242,7 +241,7 @@ public:
 	}
 
 private:
-	std::shared_ptr<yul::Block> m_ast;
+	std::shared_ptr<yul::Block> m_astRoot;
 	Dialect const& m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};
 	std::unique_ptr<AsmAnalysisInfo> m_analysisInfo;
 	std::set<YulName> const m_reservedIdentifiers = {};

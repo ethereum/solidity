@@ -54,7 +54,7 @@ namespace po = boost::program_options;
 namespace
 {
 
-std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>> parse(std::string const& _source)
+std::pair<std::shared_ptr<AST const>, std::shared_ptr<AsmAnalysisInfo>> parse(std::string const& _source)
 {
 	YulStack stack(
 		langutil::EVMVersion(),
@@ -66,7 +66,7 @@ std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>> parse(std::s
 	if (stack.parseAndAnalyze("--INPUT--", _source))
 	{
 		yulAssert(stack.errors().empty(), "Parsed successfully but had errors.");
-		return make_pair(stack.parserResult()->code, stack.parserResult()->analysisInfo);
+		return make_pair(stack.parserResult()->code(), stack.parserResult()->analysisInfo);
 	}
 	else
 	{
@@ -77,7 +77,7 @@ std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>> parse(std::s
 
 void interpret(std::string const& _source, bool _inspect, bool _disableExternalCalls)
 {
-	std::shared_ptr<Block> ast;
+	std::shared_ptr<AST const> ast;
 	std::shared_ptr<AsmAnalysisInfo> analysisInfo;
 	tie(ast, analysisInfo) = parse(_source);
 	if (!ast || !analysisInfo)
@@ -90,10 +90,10 @@ void interpret(std::string const& _source, bool _inspect, bool _disableExternalC
 		Dialect const& dialect(EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}));
 
 		if (_inspect)
-			InspectedInterpreter::run(std::make_shared<Inspector>(_source, state), state, dialect, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
+			InspectedInterpreter::run(std::make_shared<Inspector>(_source, state), state, dialect, ast->root(), _disableExternalCalls, /*disableMemoryTracing=*/false);
 
 		else
-			Interpreter::run(state, dialect, *ast, _disableExternalCalls, /*disableMemoryTracing=*/false);
+			Interpreter::run(state, dialect, ast->root(), _disableExternalCalls, /*disableMemoryTracing=*/false);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

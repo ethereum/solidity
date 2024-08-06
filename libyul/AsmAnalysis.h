@@ -78,6 +78,11 @@ public:
 	/// Performs analysis on the outermost code of the given object and returns the analysis info.
 	/// Asserts on failure.
 	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(
+		Dialect const& _dialect,
+		Block const& _astRoot,
+		std::set<std::string> const& _qualifiedDataNames
+	);
 
 	std::vector<YulName> operator()(Literal const& _literal);
 	std::vector<YulName> operator()(Identifier const&);

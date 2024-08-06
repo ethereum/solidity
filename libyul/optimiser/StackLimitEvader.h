@@ -59,7 +59,7 @@ public:
 	/// are contained in a recursive function.
 	static void run(
 		OptimiserStepContext& _context,
-		Object& _object,
+		Block& _astRoot,
 		std::map<YulName, std::vector<YulName>> const& _unreachableVariables
 	);
 	/// @a _stackTooDeepErrors can be determined by the StackLayoutGenerator.
@@ -69,7 +69,7 @@ public:
 	/// are contained in a recursive function.
 	static void run(
 		OptimiserStepContext& _context,
-		Object& _object,
+		Block& _astRoot,
 		std::map<YulName, std::vector<StackLayoutGenerator::StackTooDeep>> const& _stackTooDeepErrors
 	);
 	/// Determines stack too deep errors using the appropriate code generation backend.
@@ -77,9 +77,9 @@ public:
 	/// Abort and do nothing, if no ``memoryguard`` call or several ``memoryguard`` calls
 	/// with non-matching arguments are found, or if any of the unreachable variables
 	/// are contained in a recursive function.
-	static void run(
+	static Block run(
 		OptimiserStepContext& _context,
-		Object& _object
+		Object const& _object
 	);
 };
 

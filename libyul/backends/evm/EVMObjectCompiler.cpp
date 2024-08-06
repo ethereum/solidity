@@ -72,7 +72,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		}
 
 	yulAssert(_object.analysisInfo, "No analysis info.");
-	yulAssert(_object.code, "No code.");
+	yulAssert(_object.hasCode(), "No code.");
 	if (m_eofVersion.has_value())
 		yulAssert(
 			_optimize && (m_dialect.evmVersion() == langutil::EVMVersion()),
@@ -83,7 +83,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		auto stackErrors = OptimizedEVMCodeTransform::run(
 			m_assembly,
 			*_object.analysisInfo,
-			*_object.code,
+			_object.code()->root(),
 			m_dialect,
 			context,
 			OptimizedEVMCodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
@@ -91,7 +91,7 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		if (!stackErrors.empty())
 		{
 			std::vector<FunctionCall const*> memoryGuardCalls = findFunctionCalls(
-				std::as_const(*_object.code),
+				_object.code()->root(),
 				"memoryguard"_yulname
 			);
 			auto stackError = stackErrors.front();
@@ -113,14 +113,14 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		CodeTransform transform{
 			m_assembly,
 			*_object.analysisInfo,
-			*_object.code,
+			_object.code()->root(),
 			m_dialect,
 			context,
 			_optimize,
 			{},
 			CodeTransform::UseNamedLabels::ForFirstFunctionOfEachName
 		};
-		transform(*_object.code);
+		transform(_object.code()->root());
 		if (!transform.stackErrors().empty())
 			BOOST_THROW_EXCEPTION(transform.stackErrors().front());
 	}
