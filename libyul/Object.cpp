@@ -170,11 +170,8 @@ bool Object::hasCode() const { return code() != nullptr; }
 
 void Object::setCode(std::shared_ptr<AST const> const& _ast, std::shared_ptr<yul::AsmAnalysisInfo> _analysisInfo)
 {
-	if (_ast.get() != m_code.get())
-	{
-		m_code = _ast;
-		analysisInfo = std::move(_analysisInfo);
-	}
+	m_code = _ast;
+	analysisInfo = std::move(_analysisInfo);
 }
 
 void Object::collectSourceIndices(std::map<std::string, unsigned>& _indices) const
