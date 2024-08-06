@@ -324,12 +324,12 @@ void SSAControlFlowGraphBuilder::operator()(Continue const& _continue)
 	sealBlock(m_currentBlock);
 }
 
-void SSAControlFlowGraphBuilder::operator()(Leave const& _leave)
+void SSAControlFlowGraphBuilder::operator()(Leave const& _leaveStatement)
 {
 	yulAssert(m_currentFunction);
 	auto currentBlockDebugData = debugDataOf(currentBlock());
 	currentBlock().exit = SSACFG::BasicBlock::FunctionReturn{
-		debugDataOf(_leave),
+		debugDataOf(_leaveStatement),
 		m_currentFunction->returns | ranges::views::transform([&](auto _var) {
 			return readVariable(_var, m_currentBlock);
 		}) | ranges::to<std::vector>
