@@ -25,19 +25,24 @@ function test_solc_assembly_output
 }
 
 echo '{}' | msg_on_error --silent "$SOLC" - --assemble
-echo '{}' | msg_on_error --silent "$SOLC" - --yul
 echo '{}' | msg_on_error --silent "$SOLC" - --strict-assembly
 
-# Test options above in conjunction with --optimize.
-# Using both, --assemble and --optimize should fail.
+# Test in conjunction with --optimize. Using both, --assemble and --optimize should fail.
 echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null && fail "solc --assemble --optimize did not fail as expected."
-echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && fail "solc --yul --optimize did not fail as expected."
 
-# Test yul and strict assembly output
+# Test strict assembly output
 # Non-empty code results in non-empty binary representation with optimizations turned off,
 # while it results in empty binary representation with optimizations turned on.
-test_solc_assembly_output "{ let x:u256 := 0:u256 mstore(0, x) }" "{ { let x := 0 mstore(0, x) } }" "--yul"
-test_solc_assembly_output "{ let x:u256 := bitnot(7:u256) mstore(0, x) }" "{ { let x := bitnot(7) mstore(0, x) } }" "--yul"
-test_solc_assembly_output "{ let t:bool := not(true) if t { mstore(0, 1) } }" "{ { let t:bool := not(true) if t { mstore(0, 1) } } }" "--yul"
 test_solc_assembly_output "{ let x := 0 mstore(0, x) }" "{ { let x := 0 mstore(0, x) } }" "--strict-assembly"
 test_solc_assembly_output "{ let x := 0 mstore(0, x) }" "{ { } }" "--strict-assembly --optimize"
+
+# Test that --yul triggers an error
+set +e
+output=$(echo '{}' | "$SOLC" - --yul 2>&1)
+failed=$?
+expected="Error: The typed Yul dialect formerly accessible via --yul is no longer supported, please use --strict-assembly instead."
+set -e
+if [[ $output != "${expected}" ]] || (( failed == 0 ))
+then
+    fail "Incorrect error response to --yul flag: $output"
+fi
