@@ -1,6 +1,6 @@
 contract C {
-    uint transient x = 42;
-    function test() public view { assert(x == 42); }
+    uint transient x;
+    function test() public view { assert(x == 0); }
 }
 // ====
 // SMTEngine: all
