@@ -139,18 +139,21 @@ Json YulControlFlowGraphExporter::toJson(SSACFG::BlockId _blockId)
 
 	blockJson["id"] = "Block" + std::to_string(_blockId.value);
 	blockJson["instructions"] = Json::array();
-	for (auto const& phi: block.phis)
+	if (!block.phis.empty())
 	{
-		auto* phiInfo = std::get_if<SSACFG::PhiValue>(&m_ssacfg.valueInfo(phi));
-		yulAssert(phiInfo);
-		Json phiJson = Json::object();
-		phiJson["op"] = "PhiFunction";
-		phiJson["in"] = toJson(phiInfo->arguments);
-		phiJson["out"] = toJson(std::vector<SSACFG::ValueId>{phi});
-		phiJson["entries"] = m_ssacfg.block(phiInfo->block).entries
+		blockJson["entries"] = block.entries
 			| ranges::views::transform([](auto const& entry) { return "Block" + std::to_string(entry.value); })
 			| ranges::to<Json::array_t>();
-		blockJson["instructions"].push_back(phiJson);
+		for (auto const& phi: block.phis)
+		{
+			auto* phiInfo = std::get_if<SSACFG::PhiValue>(&m_ssacfg.valueInfo(phi));
+			yulAssert(phiInfo);
+			Json phiJson = Json::object();
+			phiJson["op"] = "PhiFunction";
+			phiJson["in"] = toJson(phiInfo->arguments);
+			phiJson["out"] = toJson(std::vector<SSACFG::ValueId>{phi});
+			blockJson["instructions"].push_back(phiJson);
+		}
 	}
 	for (auto const& operation: block.operations)
 		blockJson["instructions"].push_back(toJson(blockJson, operation));

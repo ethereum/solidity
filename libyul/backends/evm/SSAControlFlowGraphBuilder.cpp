@@ -71,8 +71,6 @@ void cleanUnreachable(SSACFG& _cfg)
 		return (valueInfo) ? true : false;
 	};
 
-
-
 	// Remove all entries from unreachable nodes from the graph.
 	for (SSACFG::BlockId blockId: reachabilityCheck.visited)
 	{
