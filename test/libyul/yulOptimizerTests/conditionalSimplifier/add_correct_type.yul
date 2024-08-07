@@ -5,7 +5,7 @@
     }
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: conditionalSimplifier
 //

@@ -3,7 +3,7 @@
     function f() {}
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: functionHoister
 //

@@ -54,8 +54,8 @@ Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _versi
 	case YulStack::Language::Yul:
 		return EVMDialectTyped::instance(_version);
 	}
-	yulAssert(false, "");
-	return Dialect::yulDeprecated();
+	yulAssert(false);
+	util::unreachable();
 }
 
 }

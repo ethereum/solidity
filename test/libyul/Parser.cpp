@@ -104,12 +104,12 @@ std::optional<Error> parseAndReturnFirstError(std::string const& _source, Dialec
 	return {};
 }
 
-bool successParse(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = true)
+bool successParse(std::string const& _source, Dialect const& _dialect, bool _allowWarningsAndInfos = true)
 {
 	return !parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);
 }
 
-Error expectError(std::string const& _source, Dialect const& _dialect = Dialect::yulDeprecated(), bool _allowWarningsAndInfos = false)
+Error expectError(std::string const& _source, Dialect const& _dialect, bool _allowWarningsAndInfos = false)
 {
 
 	auto error = parseAndReturnFirstError(_source, _dialect, _allowWarningsAndInfos);

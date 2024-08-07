@@ -5,7 +5,7 @@
     let e:u256
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: functionGrouper
 //

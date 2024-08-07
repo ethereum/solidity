@@ -1,6 +1,6 @@
 { { let aanteuhdaoneudbrgkjiuaothduiathudaoeuh:u256 } { let aanteuhdaoneudbrgkjiuaothduiathudaoeuh:u256 } }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: disambiguator
 //

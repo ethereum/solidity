@@ -48,31 +48,3 @@ bool Dialect::validTypeForLiteral(LiteralKind _kind, LiteralValue const&, YulNam
 	else
 		return true;
 }
-
-Dialect const& Dialect::yulDeprecated()
-{
-	static std::unique_ptr<Dialect> dialect;
-	static YulStringRepository::ResetCallback callback{[&] { dialect.reset(); }};
-
-	if (!dialect)
-	{
-		// TODO will probably change, especially the list of types.
-		dialect = std::make_unique<Dialect>();
-		dialect->defaultType = "u256"_yulname;
-		dialect->boolType = "bool"_yulname;
-		dialect->types = {
-			"bool"_yulname,
-			"u8"_yulname,
-			"s8"_yulname,
-			"u32"_yulname,
-			"s32"_yulname,
-			"u64"_yulname,
-			"s64"_yulname,
-			"u128"_yulname,
-			"s128"_yulname,
-			"u256"_yulname,
-			"s256"_yulname};
-	};
-
-	return *dialect;
-}

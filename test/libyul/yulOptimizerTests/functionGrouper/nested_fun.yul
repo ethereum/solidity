@@ -9,7 +9,7 @@
     }
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: functionGrouper
 //
