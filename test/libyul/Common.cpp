@@ -44,9 +44,9 @@ using namespace solidity::langutil;
 
 namespace
 {
-Dialect const& defaultDialect(bool _yul)
+Dialect const& defaultDialect()
 {
-	return _yul ? yul::Dialect::yulDeprecated() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
+	return yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
 }
 }
 
@@ -91,7 +91,7 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::t
 yul::Block yul::test::disambiguate(std::string const& _source, bool _yul)
 {
 	auto result = parse(_source, _yul);
-	return std::get<Block>(Disambiguator(defaultDialect(_yul), *result.second, {})(result.first->root()));
+	return std::get<Block>(Disambiguator(defaultDialect(), *result.second, {})(result.first->root()));
 }
 
 std::string yul::test::format(std::string const& _source, bool _yul)
@@ -113,11 +113,6 @@ std::map<std::string const, yul::Dialect const& (*)(langutil::EVMVersion)> const
 		"evmTyped",
 		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
 		{ return yul::EVMDialectTyped::instance(_evmVersion); }
-	},
-	{
-		"yul",
-		[](langutil::EVMVersion) -> yul::Dialect const&
-		{ return yul::Dialect::yulDeprecated(); }
 	}
 };
 
