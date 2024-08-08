@@ -250,7 +250,6 @@ BOOST_AUTO_TEST_CASE(no_import_callback)
 		{"solc", "--strict-assembly", "--no-import-callback", "input.yul"},
 		{"solc", "--import-ast", "--no-import-callback", "ast.json"},
 		{"solc", "--link", "--no-import-callback", "input.bin"},
-		{"solc", "--yul", "--no-import-callback", "input.yul"},
 	};
 
 	for (auto const& commandLine: commandLinePerInputMode)
@@ -271,13 +270,10 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 {
 	static std::vector<std::tuple<std::vector<std::string>, YulStack::Machine, YulStack::Language>> const allowedCombinations = {
 		{{"--machine=evm", "--yul-dialect=evm", "--assemble"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
-		{{"--machine=evm", "--yul-dialect=evm", "--yul"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--yul-dialect=evm", "--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--machine=evm", "--assemble"}, YulStack::Machine::EVM, YulStack::Language::Assembly},
-		{{"--machine=evm", "--yul"}, YulStack::Machine::EVM, YulStack::Language::Yul},
 		{{"--machine=evm", "--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 		{{"--assemble"}, YulStack::Machine::EVM, YulStack::Language::Assembly},
-		{{"--yul"}, YulStack::Machine::EVM, YulStack::Language::Yul},
 		{{"--strict-assembly"}, YulStack::Machine::EVM, YulStack::Language::StrictAssembly},
 	};
 
@@ -424,20 +420,20 @@ BOOST_AUTO_TEST_CASE(invalid_options_input_modes_combinations)
 {
 	std::map<std::string, std::vector<std::string>> invalidOptionInputModeCombinations = {
 		// TODO: This should eventually contain all options.
-		{"--experimental-via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--via-ir", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--metadata-literal", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--metadata-hash=swarm", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-show-proved-safe", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-show-unproved", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-show-unsupported", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-div-mod-no-slacks", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-engine=bmc", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-invariants=contract,reentrancy", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-solvers=z3,smtlib2", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-timeout=5", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-contracts=contract1.yul:A,contract2.yul:B", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}},
-		{"--model-checker-targets=underflow,divByZero", {"--assemble", "--yul", "--strict-assembly", "--standard-json", "--link"}}
+		{"--experimental-via-ir", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--via-ir", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--metadata-literal", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--metadata-hash=swarm", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-show-proved-safe", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-show-unproved", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-show-unsupported", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-div-mod-no-slacks", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-engine=bmc", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-invariants=contract,reentrancy", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-solvers=z3,smtlib2", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-timeout=5", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-contracts=contract1.yul:A,contract2.yul:B", {"--assemble", "--strict-assembly", "--standard-json", "--link"}},
+		{"--model-checker-targets=underflow,divByZero", {"--assemble", "--strict-assembly", "--standard-json", "--link"}}
 	};
 
 	for (auto const& [optionName, inputModes]: invalidOptionInputModeCombinations)
