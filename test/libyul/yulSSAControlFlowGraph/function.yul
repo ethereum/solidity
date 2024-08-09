@@ -21,7 +21,7 @@
 // ----
 // digraph SSACFG {
 // nodesep=0.7;
-// graph[fontname="DejaVu Sans"		]
+// graph[fontname="DejaVu Sans"]
 // node[shape=box,fontname="DejaVu Sans"];
 //
 // Entry0 [label="Entry"];
