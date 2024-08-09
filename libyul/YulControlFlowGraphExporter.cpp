@@ -91,25 +91,23 @@ Json YulControlFlowGraphExporter::exportBlock(SSACFG::BlockId _entryId)
 	bfs.run([&](SSACFG::BlockId _blockId, auto _addChild) {
 		auto const& block = m_ssacfg.block(_blockId);
 		// Convert current block to JSON
-		blocksJson.emplace_back(toJson(_blockId));
+		Json blockJson = toJson(_blockId);
 
 		Json exitBlockJson = Json::object();
-		exitBlockJson["id"] = "Block" + std::to_string(_blockId.value) + "Exit";
-		exitBlockJson["instructions"] = Json::array();
 		std::visit(util::GenericVisitor{
 			[&](SSACFG::BasicBlock::MainExit const&) {
-				exitBlockJson["exit"] = { "Block" + std::to_string(_blockId.value) };
+				exitBlockJson["targets"] = { "Block" + std::to_string(_blockId.value) };
 				exitBlockJson["type"] = "MainExit";
 			},
 			[&](SSACFG::BasicBlock::Jump const& _jump)
 			{
-				exitBlockJson["exit"] = { "Block" + std::to_string(_jump.target.value) };
+				exitBlockJson["targets"] = { "Block" + std::to_string(_jump.target.value) };
 				exitBlockJson["type"] = "Jump";
 				_addChild(_jump.target);
 			},
 			[&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump)
 			{
-				exitBlockJson["exit"] = { "Block" + std::to_string(_conditionalJump.zero.value), "Block" + std::to_string(_conditionalJump.nonZero.value) };
+				exitBlockJson["targets"] = { "Block" + std::to_string(_conditionalJump.zero.value), "Block" + std::to_string(_conditionalJump.nonZero.value) };
 				exitBlockJson["cond"] = varToString(_conditionalJump.condition);
 				exitBlockJson["type"] = "ConditionalJump";
 
@@ -118,15 +116,16 @@ Json YulControlFlowGraphExporter::exportBlock(SSACFG::BlockId _entryId)
 			},
 			[&](SSACFG::BasicBlock::FunctionReturn const& _return) {
 				exitBlockJson["instructions"] = toJson(_return.returnValues);
-				exitBlockJson["exit"] = { "Block" + std::to_string(_blockId.value) };
+				exitBlockJson["targets"] = { "Block" + std::to_string(_blockId.value) };
 				exitBlockJson["type"] = "FunctionReturn";
 			},
 			[&](SSACFG::BasicBlock::Terminated const&) {
-				exitBlockJson["exit"] = { "Block" + std::to_string(_blockId.value) };
+				exitBlockJson["targets"] = { "Block" + std::to_string(_blockId.value) };
 				exitBlockJson["type"] = "Terminated";
 			}
 		}, block.exit);
-		blocksJson.emplace_back(exitBlockJson);
+		blockJson["exit"] = exitBlockJson;
+		blocksJson.emplace_back(blockJson);
 	});
 
 	return blocksJson;
@@ -157,7 +156,6 @@ Json YulControlFlowGraphExporter::toJson(SSACFG::BlockId _blockId)
 	}
 	for (auto const& operation: block.operations)
 		blockJson["instructions"].push_back(toJson(blockJson, operation));
-	blockJson["exit"] = "Block" + std::to_string(_blockId.value) + "Exit";
 
 	return blockJson;
 }
