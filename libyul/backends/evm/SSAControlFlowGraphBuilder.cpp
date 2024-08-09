@@ -332,6 +332,7 @@ void SSAControlFlowGraphBuilder::operator()(Switch const& _switch)
 	yulAssert(!_switch.cases.empty(), "");
 	for (auto const& switchCase: _switch.cases | ranges::views::drop_last(1))
 	{
+		yulAssert(switchCase.value, "");
 		auto caseBranch = m_graph.makeBlock(debugDataOf(switchCase.body));
 		auto elseBranch = m_graph.makeBlock(debugDataOf(_switch));
 		conditionalJump(debugDataOf(switchCase), makeValueCompare(switchCase), caseBranch, elseBranch);
