@@ -176,14 +176,6 @@ void cleanUnreachable(SSACFG& _cfg)
 	{
 		auto& block = _cfg.block(blockId);
 
-		for (auto phi: block.phis)
-		{
-			auto& phiValue = std::get<SSACFG::PhiValue>(_cfg.valueInfo(phi));
-			yulAssert(block.entries.size() == phiValue.arguments.size());
-			for (auto&& [entry, arg]: ranges::zip_view(block.entries, phiValue.arguments))
-				yulAssert((reachabilityCheck.visited.count(entry) == 0) == isUnreachableValue(arg));
-		}
-
 		std::set<SSACFG::ValueId> maybeTrivialPhi;
 		for (auto it = block.entries.begin(); it != block.entries.end();)
 			if (reachabilityCheck.visited.count(*it))

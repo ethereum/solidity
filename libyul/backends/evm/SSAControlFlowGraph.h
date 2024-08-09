@@ -117,7 +117,7 @@ public:
 		std::vector<Operation> operations;
 		std::variant<MainExit, Jump, ConditionalJump, JumpTable, FunctionReturn, Terminated> exit = MainExit{};
 		template<typename Callable>
-		void forEachExit(Callable&& _callable)
+		void forEachExit(Callable&& _callable) const
 		{
 			if (auto* jump = std::get_if<Jump>(&exit))
 				_callable(jump->target);
@@ -194,7 +194,7 @@ public:
 	}
 	ValueId newLiteral(langutil::DebugData::ConstPtr _debugData, u256 _value)
 	{
-		auto [it, inserted] = m_literals.emplace(_value, ValueId{m_valueInfos.size()});
+		auto [it, inserted] = m_literals.emplace(_value, SSACFG::ValueId{m_valueInfos.size()});
 		if (inserted)
 			m_valueInfos.emplace_back(LiteralValue{std::move(_debugData), _value});
 		else
