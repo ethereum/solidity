@@ -109,7 +109,7 @@ Json YulControlFlowGraphExporter::exportBlock(SSACFG::BlockId _entryId)
 			},
 			[&](SSACFG::BasicBlock::ConditionalJump const& _conditionalJump)
 			{
-				exitBlockJson["exit"] = { "Block" + std::to_string(_conditionalJump.zero.value), "Block" + std::to_string(_conditionalJump.nonZero) };
+				exitBlockJson["exit"] = { "Block" + std::to_string(_conditionalJump.zero.value), "Block" + std::to_string(_conditionalJump.nonZero.value) };
 				exitBlockJson["cond"] = varToString(_conditionalJump.condition);
 				exitBlockJson["type"] = "ConditionalJump";
 
