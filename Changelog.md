@@ -28,6 +28,7 @@ Bugfixes:
  * SMTChecker: Fix error that reports invalid number of verified checks for BMC and CHC engines.
  * SMTChecker: Fix formatting of unary minus expressions in invariants.
  * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
+ * SMTChecker: Fix SMT logic error when assigning to an array of contracts or functions.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
  * Yul AST: Fix ``nativeSrc`` attributes in optimized IR AST referring to locations in unoptimized IR.
  * Yul IR Code Generation: Deterministic order of Yul subobjects.
