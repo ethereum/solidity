@@ -38,6 +38,7 @@ add_executable(isoltest
 	../libsolidity/SMTCheckerTest.cpp
 	../libyul/Common.cpp
 	../libyul/ControlFlowGraphTest.cpp
+	../libyul/SSAControlFlowGraphTest.cpp
 	../libyul/ControlFlowSideEffectsTest.cpp
 	../libyul/EVMCodeTransformTest.cpp
 	../libyul/FunctionSideEffects.cpp

@@ -130,7 +130,6 @@ private:
 				},
 				[&](CFG::BuiltinCall const& _call) {
 					m_stream << _call.functionCall.get().functionName.name.str() << ": ";
-
 				},
 				[&](CFG::Assignment const& _assignment) {
 					m_stream << "Assignment(";
