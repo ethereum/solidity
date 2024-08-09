@@ -51,7 +51,6 @@ public:
 	struct BlockId
 	{
 		size_t value = std::numeric_limits<size_t>::max();
-		operator bool() const { return value != std::numeric_limits<size_t>::max(); }
 		bool operator<(BlockId const& _rhs) const { return value < _rhs.value; }
 		bool operator==(BlockId const& _rhs) const { return value == _rhs.value; }
 		bool operator!=(BlockId const& _rhs) const { return value != _rhs.value; }
