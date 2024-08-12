@@ -5,5 +5,5 @@
     function g(a:u256) -> b {}
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----

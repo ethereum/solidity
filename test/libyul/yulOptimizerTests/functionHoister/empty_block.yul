@@ -8,7 +8,7 @@
     }
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: functionHoister
 //

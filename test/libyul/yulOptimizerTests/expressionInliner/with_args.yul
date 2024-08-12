@@ -3,7 +3,7 @@
     let y:u256 := f(7:u256)
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: expressionInliner
 //

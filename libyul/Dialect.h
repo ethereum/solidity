@@ -94,9 +94,6 @@ struct Dialect
 
 	Dialect() = default;
 	virtual ~Dialect() = default;
-
-	/// Old "yul" dialect. This is only used for testing.
-	static Dialect const& yulDeprecated();
 };
 
 }

@@ -1,6 +1,6 @@
 { }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: disambiguator
 //

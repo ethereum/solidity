@@ -2,7 +2,7 @@
 	let a:u256 function f() {}
 }
 // ====
-// dialect: yul
+// dialect: evmTyped
 // ----
 // step: functionGrouper
 //
