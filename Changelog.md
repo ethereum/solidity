@@ -30,8 +30,9 @@ Bugfixes:
  * SMTChecker: Fix internal compiler error when reporting proved targets for BMC engine.
  * SMTChecker: Fix SMT logic error when assigning to an array of contracts or functions.
  * TypeChecker: Fix segfault when assigning nested tuple to tuple.
- * Yul AST: Fix ``nativeSrc`` attributes in optimized IR AST referring to locations in unoptimized IR.
  * Yul IR Code Generation: Deterministic order of Yul subobjects.
+ * Yul Optimizer: Fix Yul source locations always referring to unoptimized source, even in optimized outputs.
+ * Yul Optimizer: Fix warnings being generated twice when there are no errors.
  * Yul Optimizer: Name simplification could lead to forbidden identifiers with a leading and/or trailing dot, e.g., ``x._`` would get simplified into ``x.``.
  * Yul Parser: Fix segfault when parsing very long location comments.
 

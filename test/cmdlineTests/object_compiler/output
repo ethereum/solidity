@@ -26,40 +26,40 @@ Binary representation:
 335f55600880600d5f395ff3fe5f545f5260205ff3
 
 Text representation:
-    /* "object_compiler/input.yul":128:136   */
+    /* "object_compiler/input.yul":65:73   */
   caller
-    /* "object_compiler/input.yul":125:126   */
+    /* "object_compiler/input.yul":62:63   */
   0x00
-    /* "object_compiler/input.yul":118:137   */
+    /* "object_compiler/input.yul":55:74   */
   sstore
-    /* "object_compiler/input.yul":240:259   */
+    /* "object_compiler/input.yul":97:116   */
   dataSize(sub_0)
-    /* "object_compiler/input.yul":217:238   */
+    /* "object_compiler/input.yul":141:162   */
   dup1
   dataOffset(sub_0)
-    /* "object_compiler/input.yul":125:126   */
+    /* "object_compiler/input.yul":138:139   */
   0x00
-    /* "object_compiler/input.yul":205:260   */
+    /* "object_compiler/input.yul":129:167   */
   codecopy
-    /* "object_compiler/input.yul":125:126   */
+    /* "object_compiler/input.yul":187:188   */
   0x00
-    /* "object_compiler/input.yul":265:295   */
+    /* "object_compiler/input.yul":180:193   */
   return
 stop
 
 sub_0: assembly {
-        /* "object_compiler/input.yul":397:398   */
+        /* "object_compiler/input.yul":294:295   */
       0x00
-        /* "object_compiler/input.yul":391:399   */
+        /* "object_compiler/input.yul":288:296   */
       sload
-        /* "object_compiler/input.yul":397:398   */
+        /* "object_compiler/input.yul":285:286   */
       0x00
-        /* "object_compiler/input.yul":381:400   */
+        /* "object_compiler/input.yul":278:297   */
       mstore
-        /* "object_compiler/input.yul":417:421   */
+        /* "object_compiler/input.yul":324:328   */
       0x20
-        /* "object_compiler/input.yul":397:398   */
+        /* "object_compiler/input.yul":321:322   */
       0x00
-        /* "object_compiler/input.yul":407:422   */
+        /* "object_compiler/input.yul":314:329   */
       return
 }

@@ -67,164 +67,164 @@ object "A" {
 }
 // ----
 // Assembly:
-//     /* "source":37:52   */
+//     /* "source":57:72   */
 //   0x00
-//     /* "source":68:81   */
+//     /* "source":96:109   */
 //   bytecodeSize
-//     /* "source":97:112   */
+//     /* "source":133:148   */
 //   dataOffset(sub_0)
-//     /* "source":128:141   */
+//     /* "source":172:185   */
 //   dataSize(sub_0)
-//     /* "source":158:175   */
+//     /* "source":210:227   */
 //   dataOffset(sub_0.sub_0)
-//     /* "source":192:207   */
+//     /* "source":252:267   */
 //   dataSize(sub_0.sub_0)
-//     /* "source":224:241   */
+//     /* "source":292:309   */
 //   swap1
 //   dataOffset(sub_0.sub_1)
-//     /* "source":258:273   */
+//     /* "source":334:349   */
 //   swap3
 //   dataSize(sub_0.sub_1)
-//     /* "source":291:310   */
+//     /* "source":375:394   */
 //   swap5
 //   dataOffset(sub_0.sub_0.sub_0)
-//     /* "source":328:345   */
+//     /* "source":420:437   */
 //   swap7
 //   dataSize(sub_0.sub_0.sub_0)
-//     /* "source":351:365   */
+//     /* "source":450:464   */
 //   swap9
-//     /* "source":358:359   */
+//     /* "source":457:458   */
 //   0x00
-//     /* "source":351:365   */
+//     /* "source":450:464   */
 //   sstore
-//     /* "source":377:379   */
+//     /* "source":484:486   */
 //   0x20
-//     /* "source":370:385   */
+//     /* "source":477:492   */
 //   sstore
-//     /* "source":397:399   */
+//     /* "source":512:514   */
 //   0x40
-//     /* "source":390:405   */
+//     /* "source":505:520   */
 //   sstore
-//     /* "source":417:419   */
+//     /* "source":540:542   */
 //   0x60
-//     /* "source":410:425   */
+//     /* "source":533:548   */
 //   sstore
-//     /* "source":437:440   */
+//     /* "source":568:571   */
 //   0x80
-//     /* "source":430:447   */
+//     /* "source":561:578   */
 //   sstore
-//     /* "source":459:462   */
+//     /* "source":598:601   */
 //   0xa0
-//     /* "source":452:469   */
+//     /* "source":591:608   */
 //   sstore
-//     /* "source":481:484   */
+//     /* "source":628:631   */
 //   0xc0
-//     /* "source":474:491   */
+//     /* "source":621:638   */
 //   sstore
-//     /* "source":503:506   */
+//     /* "source":658:661   */
 //   0xe0
-//     /* "source":496:513   */
+//     /* "source":651:668   */
 //   sstore
-//     /* "source":525:528   */
+//     /* "source":688:691   */
 //   0x0100
-//     /* "source":518:536   */
+//     /* "source":681:699   */
 //   sstore
-//     /* "source":548:551   */
+//     /* "source":719:722   */
 //   0x0120
-//     /* "source":541:559   */
+//     /* "source":712:730   */
 //   sstore
-//     /* "source":574:577   */
+//     /* "source":753:756   */
 //   0x0140
-//     /* "source":571:572   */
+//     /* "source":750:751   */
 //   0x00
-//     /* "source":564:578   */
+//     /* "source":743:757   */
 //   return
 // stop
 // data_acaf3289d7b601cbd114fb36c4d29c85bbfd5e133f14cb355c3fd8d99367964f 48656c6c6f2c20576f726c6421
 //
 // sub_0: assembly {
-//         /* "source":659:674   */
+//         /* "source":896:911   */
 //       dataOffset(sub_0)
-//         /* "source":692:705   */
+//         /* "source":939:952   */
 //       dataSize(sub_0)
-//         /* "source":723:738   */
+//         /* "source":980:995   */
 //       dataOffset(sub_1)
-//         /* "source":756:769   */
+//         /* "source":1023:1036   */
 //       dataSize(sub_1)
-//         /* "source":788:805   */
+//         /* "source":1065:1082   */
 //       swap1
 //       dataOffset(sub_0.sub_0)
-//         /* "source":824:839   */
+//         /* "source":1111:1126   */
 //       swap3
 //       dataSize(sub_0.sub_0)
-//         /* "source":847:861   */
+//         /* "source":1143:1157   */
 //       swap5
-//         /* "source":854:855   */
+//         /* "source":1150:1151   */
 //       0x00
-//         /* "source":847:861   */
+//         /* "source":1143:1157   */
 //       sstore
-//         /* "source":875:877   */
+//         /* "source":1181:1183   */
 //       0x20
-//         /* "source":868:883   */
+//         /* "source":1174:1189   */
 //       sstore
-//         /* "source":897:899   */
+//         /* "source":1213:1215   */
 //       0x40
-//         /* "source":890:905   */
+//         /* "source":1206:1221   */
 //       sstore
-//         /* "source":919:921   */
+//         /* "source":1245:1247   */
 //       0x60
-//         /* "source":912:927   */
+//         /* "source":1238:1253   */
 //       sstore
-//         /* "source":941:944   */
+//         /* "source":1277:1280   */
 //       0x80
-//         /* "source":934:951   */
+//         /* "source":1270:1287   */
 //       sstore
-//         /* "source":965:968   */
+//         /* "source":1311:1314   */
 //       0xa0
-//         /* "source":958:975   */
+//         /* "source":1304:1321   */
 //       sstore
-//         /* "source":992:995   */
+//         /* "source":1348:1351   */
 //       0xc0
-//         /* "source":989:990   */
+//         /* "source":1345:1346   */
 //       0x00
-//         /* "source":982:996   */
+//         /* "source":1338:1352   */
 //       return
 //     stop
 //
 //     sub_0: assembly {
-//             /* "source":1052:1067   */
+//             /* "source":1466:1481   */
 //           dataOffset(sub_0)
-//             /* "source":1087:1100   */
+//             /* "source":1513:1526   */
 //           dataSize(sub_0)
-//             /* "source":1110:1124   */
+//             /* "source":1547:1561   */
 //           swap1
-//             /* "source":1117:1118   */
+//             /* "source":1554:1555   */
 //           0x00
-//             /* "source":1110:1124   */
+//             /* "source":1547:1561   */
 //           sstore
-//             /* "source":1140:1142   */
+//             /* "source":1589:1591   */
 //           0x20
-//             /* "source":1133:1148   */
+//             /* "source":1582:1597   */
 //           sstore
-//             /* "source":1167:1169   */
+//             /* "source":1628:1630   */
 //           0x40
-//             /* "source":1164:1165   */
+//             /* "source":1625:1626   */
 //           0x00
-//             /* "source":1157:1170   */
+//             /* "source":1618:1631   */
 //           return
 //         stop
 //
 //         sub_0: assembly {
-//                 /* "source":1223:1232   */
+//                 /* "source":1714:1723   */
 //               invalid
 //         }
 //     }
 //
 //     sub_1: assembly {
-//             /* "source":1295:1304   */
+//             /* "source":1794:1803   */
 //           invalid
 //     }
 // }
 // Bytecode: 5f6084603d603660746010906073926001946073966001985f5560205560405560605560805560a05560c05560e05561010055610120556101405ff3fe6025601060356001906035926001945f5560205560405560605560805560a05560c05ff3fe600f6001905f5560205560405ff3fefefefe600f6001905f5560205560405ff3fefe
 // Opcodes: PUSH0 PUSH1 0x84 PUSH1 0x3D PUSH1 0x36 PUSH1 0x74 PUSH1 0x10 SWAP1 PUSH1 0x73 SWAP3 PUSH1 0x1 SWAP5 PUSH1 0x73 SWAP7 PUSH1 0x1 SWAP9 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 SSTORE PUSH1 0x60 SSTORE PUSH1 0x80 SSTORE PUSH1 0xA0 SSTORE PUSH1 0xC0 SSTORE PUSH1 0xE0 SSTORE PUSH2 0x100 SSTORE PUSH2 0x120 SSTORE PUSH2 0x140 PUSH0 RETURN INVALID PUSH1 0x25 PUSH1 0x10 PUSH1 0x35 PUSH1 0x1 SWAP1 PUSH1 0x35 SWAP3 PUSH1 0x1 SWAP5 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 SSTORE PUSH1 0x60 SSTORE PUSH1 0x80 SSTORE PUSH1 0xA0 SSTORE PUSH1 0xC0 PUSH0 RETURN INVALID PUSH1 0xF PUSH1 0x1 SWAP1 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 PUSH0 RETURN INVALID INVALID INVALID INVALID PUSH1 0xF PUSH1 0x1 SWAP1 PUSH0 SSTORE PUSH1 0x20 SSTORE PUSH1 0x40 PUSH0 RETURN INVALID INVALID
-// SourceMappings: 37:15:0:-:0;68:13;97:15;128:13;158:17;192:15;224:17;;258:15;;291:19;;328:17;;351:14;358:1;351:14;377:2;370:15;397:2;390:15;417:2;410:15;437:3;430:17;459:3;452:17;481:3;474:17;503:3;496:17;525:3;518:18;548:3;541:18;574:3;571:1;564:14
+// SourceMappings: 57:15:0:-:0;96:13;133:15;172:13;210:17;252:15;292:17;;334:15;;375:19;;420:17;;450:14;457:1;450:14;484:2;477:15;512:2;505:15;540:2;533:15;568:3;561:17;598:3;591:17;628:3;621:17;658:3;651:17;688:3;681:18;719:3;712:18;753:3;750:1;743:14

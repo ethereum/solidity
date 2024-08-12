@@ -26,99 +26,99 @@ object "a" {
 // optimizationPreset: full
 // ----
 // Assembly:
-//     /* "source":87:88   */
+//     /* "source":65:66   */
 //   0x00
-//     /* "source":81:89   */
+//     /* "source":59:67   */
 //   dup1
 //   sload
-//     /* "source":139:307   */
+//     /* "source":133:225   */
 //   dup1
 //   iszero
 //   tag_1
 //   jumpi
-//     /* "source":316:361   */
+//     /* "source":238:263   */
 //   dup1
-//     /* "source":321:325   */
+//     /* "source":243:247   */
 //   0x01
-//     /* "source":316:361   */
+//     /* "source":238:263   */
 //   eq
 //   tag_3
 //   jumpi
-//     /* "source":370:448   */
+//     /* "source":276:368   */
 //   dup1
-//     /* "source":375:379   */
+//     /* "source":281:285   */
 //   0x02
-//     /* "source":370:448   */
+//     /* "source":276:368   */
 //   eq
 //   tag_5
 //   jumpi
-//     /* "source":462:466   */
+//     /* "source":386:390   */
 //   0x03
-//     /* "source":457:502   */
+//     /* "source":381:406   */
 //   eq
 //   tag_7
 //   jumpi
-//     /* "source":87:88   */
+//     /* "source":426:427   */
 //   0x00
-//     /* "source":512:529   */
+//     /* "source":419:436   */
 //   sstore
-//     /* "source":118:502   */
+//     /* "source":108:406   */
 //   stop
-//     /* "source":467:502   */
+//     /* "source":391:406   */
 // tag_7:
-//     /* "source":481:492   */
+//     /* "source":393:404   */
 //   pop
-//     /* "source":491:492   */
+//     /* "source":403:404   */
 //   0x03
-//     /* "source":87:88   */
+//     /* "source":426:427   */
 //   0x00
-//     /* "source":512:529   */
+//     /* "source":419:436   */
 //   sstore
-//     /* "source":118:502   */
+//     /* "source":108:406   */
 //   stop
-//     /* "source":380:448   */
+//     /* "source":286:368   */
 // tag_5:
-//     /* "source":404:438   */
+//     /* "source":314:354   */
 //   pop
 //   pop
-//     /* "source":45:59   */
+//     /* "source":339:353   */
 //   0xaabbccddeeff
-//     /* "source":404:438   */
+//     /* "source":314:354   */
 //   verbatimbytecode_506002
-//     /* "source":87:88   */
+//     /* "source":426:427   */
 //   0x00
-//     /* "source":512:529   */
+//     /* "source":419:436   */
 //   sstore
-//     /* "source":118:502   */
+//     /* "source":108:406   */
 //   stop
-//     /* "source":326:361   */
+//     /* "source":248:263   */
 // tag_3:
-//     /* "source":340:351   */
+//     /* "source":250:261   */
 //   pop
 //   pop
-//     /* "source":350:351   */
+//     /* "source":260:261   */
 //   0x01
-//     /* "source":87:88   */
+//     /* "source":426:427   */
 //   0x00
-//     /* "source":512:529   */
+//     /* "source":419:436   */
 //   sstore
-//     /* "source":118:502   */
+//     /* "source":108:406   */
 //   stop
-//     /* "source":149:307   */
+//     /* "source":143:225   */
 // tag_1:
-//     /* "source":263:297   */
+//     /* "source":171:211   */
 //   pop
 //   pop
-//     /* "source":45:59   */
+//     /* "source":196:210   */
 //   0xaabbccddeeff
-//     /* "source":263:297   */
+//     /* "source":171:211   */
 //   verbatimbytecode_506000
-//     /* "source":87:88   */
+//     /* "source":426:427   */
 //   0x00
-//     /* "source":512:529   */
+//     /* "source":419:436   */
 //   sstore
-//     /* "source":118:502   */
+//     /* "source":108:406   */
 //   stop
 // Bytecode: 5f80548015603e578060011460365780600214602657600314601f575f55005b5060035f55005b505065aabbccddeeff5060025f55005b505060015f55005b505065aabbccddeeff5060005f5500
 // Opcodes: PUSH0 DUP1 SLOAD DUP1 ISZERO PUSH1 0x3E JUMPI DUP1 PUSH1 0x1 EQ PUSH1 0x36 JUMPI DUP1 PUSH1 0x2 EQ PUSH1 0x26 JUMPI PUSH1 0x3 EQ PUSH1 0x1F JUMPI PUSH0 SSTORE STOP JUMPDEST POP PUSH1 0x3 PUSH0 SSTORE STOP JUMPDEST POP POP PUSH6 0xAABBCCDDEEFF POP PUSH1 0x2 PUSH0 SSTORE STOP JUMPDEST POP POP PUSH1 0x1 PUSH0 SSTORE STOP JUMPDEST POP POP PUSH6 0xAABBCCDDEEFF POP PUSH1 0x0 PUSH0 SSTORE STOP
-// SourceMappings: 87:1:0:-:0;81:8;;139:168;;;;316:45;321:4;316:45;;;370:78;375:4;370:78;;;462:4;457:45;;;87:1;512:17;118:384;467:35;481:11;491:1;87;512:17;118:384;380:68;404:34;;45:14;404:34;87:1;512:17;118:384;326:35;340:11;;350:1;87;512:17;118:384;149:158;263:34;;45:14;263:34;87:1;512:17;118:384
+// SourceMappings: 65:1:0:-:0;59:8;;133:92;;;;238:25;243:4;238:25;;;276:92;281:4;276:92;;;386:4;381:25;;;426:1;419:17;108:298;391:15;393:11;403:1;426;419:17;108:298;286:82;314:40;;339:14;314:40;426:1;419:17;108:298;248:15;250:11;;260:1;426;419:17;108:298;143:82;171:40;;196:14;171:40;426:1;419:17;108:298

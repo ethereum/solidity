@@ -11,5 +11,5 @@ Binary representation:
 00
 
 Text representation:
-    /* "strict_asm_evm_version_constantinople/input.yul":0:2   */
+    /* "strict_asm_evm_version_constantinople/input.yul":27:34   */
   stop

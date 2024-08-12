@@ -17,18 +17,19 @@ Binary representation:
 6120005150616160025f5500
 
 Text representation:
-    /* "yul_verbatim_msize/input.yul":125:131   */
+    /* "yul_verbatim_msize/input.yul":61:67   */
   0x2000
-    /* "yul_verbatim_msize/input.yul":119:132   */
+    /* "yul_verbatim_msize/input.yul":55:68   */
   mload
+    /* "yul_verbatim_msize/input.yul":51:69   */
   pop
-    /* "yul_verbatim_msize/input.yul":137:157   */
+    /* "yul_verbatim_msize/input.yul":82:102   */
   verbatimbytecode_6161
-    /* "yul_verbatim_msize/input.yul":172:173   */
+    /* "yul_verbatim_msize/input.yul":125:126   */
   0x02
-    /* "yul_verbatim_msize/input.yul":169:170   */
+    /* "yul_verbatim_msize/input.yul":122:123   */
   0x00
-    /* "yul_verbatim_msize/input.yul":162:174   */
+    /* "yul_verbatim_msize/input.yul":115:127   */
   sstore
-    /* "yul_verbatim_msize/input.yul":0:176   */
+    /* "yul_verbatim_msize/input.yul":27:143   */
   stop

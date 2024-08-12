@@ -30,6 +30,7 @@
 #include <libyul/optimiser/Suite.h>
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 
 #include <boost/algorithm/string.hpp>
@@ -117,7 +118,10 @@ void YulStack::optimize()
 
 		m_stackState = Parsed;
 		optimize(*m_parserResult, true);
-		yulAssert(analyzeParsed(), "Invalid source code after optimization.");
+
+		// Optimizer does not maintain correct native source locations in the AST.
+		// We can work around it by regenerating the AST from scratch from optimized IR.
+		reparse();
 	}
 	catch (UnimplementedFeatureError const& _error)
 	{
@@ -239,6 +243,33 @@ void YulStack::optimize(Object& _object, bool _isCreation)
 		_isCreation ? std::nullopt : std::make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
 		{}
 	);
+}
+
+void YulStack::reparse()
+{
+	yulAssert(m_parserResult);
+	yulAssert(m_charStream);
+
+	// NOTE: Without passing in _soliditySourceProvider, printed debug info will not include code
+	// snippets, but it does not matter - we'll still get the same AST after we parse it. Snippets
+	// are not stored in the AST and the other info that is (location, AST ID, etc) will still be present.
+	std::string source = print(nullptr /* _soliditySourceProvider */);
+
+	YulStack cleanStack(m_evmVersion, m_eofVersion, m_language, m_optimiserSettings, m_debugInfoSelection);
+	bool reanalysisSuccessful = cleanStack.parseAndAnalyze(m_charStream->name(), source);
+	yulAssert(
+		reanalysisSuccessful,
+		source + "\n\n"
+		"Invalid IR generated:\n" +
+		SourceReferenceFormatter::formatErrorInformation(cleanStack.errors(), cleanStack) + "\n"
+	);
+
+	m_stackState = AnalysisSuccessful;
+	m_parserResult = std::move(cleanStack.m_parserResult);
+
+	// NOTE: We keep the char stream, and errors, even though they no longer match the object,
+	// because it's the original source that matters to the user. Optimized code may have different
+	// locations and fewer warnings.
 }
 
 MachineAssemblyObject YulStack::assemble(Machine _machine)
