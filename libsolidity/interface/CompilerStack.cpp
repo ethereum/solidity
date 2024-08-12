@@ -1170,6 +1170,7 @@ Json CompilerStack::ethdebug() const
 {
 	Json result = Json::object();
 	result["sources"] = sourceNames();
+	result["types"] = ethdebugTypes();
 	return result;
 }
 
@@ -1177,6 +1178,38 @@ Json CompilerStack::ethdebug(std::string const& _contractName, bool _runtime) co
 {
 	solAssert(m_stackState >= AnalysisSuccessful, "Analysis was not successful.");
 	return ethdebug(contract(_contractName), _runtime);
+}
+
+Json CompilerStack::ethdebugTypes() const
+{
+	std::set<EnumDefinition const*> enums;
+	std::set<StructDefinition const*> structs;
+	std::set<FunctionDefinition const*> functions;
+	for (auto const& _contract: m_contracts)
+	{
+		ContractDefinition const& contract = *_contract.second.contract;
+		for (auto const& _enum: contract.definedEnums())
+			enums.emplace(_enum);
+		for (auto const& _struct: contract.definedStructs())
+			structs.emplace(_struct);
+		for (auto const& _function: contract.definedFunctions())
+			functions.emplace(_function);
+	}
+	Json result = Json::object();
+	result["enum"] = Json::array();
+	result["structs"] = Json::array();
+	result["functions"] = Json::array();
+	for (auto const& _enum: enums)
+		if (_enum->ethdebug().has_value())
+			result["enum"].emplace_back(*_enum->ethdebug());
+	for (auto const& _struct: structs)
+		if (_struct->ethdebug().has_value())
+			result["struct"].emplace_back(*_struct->ethdebug());
+	for (auto const& _function: functions)
+		if (_function->ethdebug().has_value())
+			result["function"].emplace_back(*_function->ethdebug());
+
+	return result;
 }
 
 Json CompilerStack::ethdebug(Contract const& _contract, bool _runtime) const
