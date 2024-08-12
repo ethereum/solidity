@@ -116,4 +116,16 @@ object "C_6" {
 
 
 Debug Data (ethdebug):
-{"not yet implemented":true}
+{
+  "types": {
+    "f": {
+      "definition": {
+        "name": "f"
+      },
+      "external": true,
+      "kind": "function",
+      "parameters": [],
+      "returns": []
+    }
+  }
+}

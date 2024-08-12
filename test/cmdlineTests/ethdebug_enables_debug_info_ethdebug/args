@@ -1,1 +1,1 @@
---ethdebug --via-ir --ir
+--ethdebug --via-ir --ir --pretty-json

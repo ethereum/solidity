@@ -3,7 +3,17 @@
         "C": {
             "C": {
                 "ethdebug": {
-                    "not yet implemented": true
+                    "types": {
+                        "f": {
+                            "definition": {
+                                "name": "f"
+                            },
+                            "external": true,
+                            "kind": "function",
+                            "parameters": [],
+                            "returns": []
+                        }
+                    }
                 }
             }
         }

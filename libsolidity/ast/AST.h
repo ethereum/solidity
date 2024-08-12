@@ -126,6 +126,8 @@ public:
 
 	virtual bool experimentalSolidityOnly() const { return false; }
 
+	virtual std::optional<Json> ethdebug() const { return std::nullopt; }
+
 protected:
 	size_t const m_id = 0;
 
@@ -584,6 +586,8 @@ public:
 	/// @returns the next constructor in the inheritance hierarchy.
 	FunctionDefinition const* nextConstructor(ContractDefinition const& _mostDerivedContract) const;
 
+	std::optional<Json> ethdebug() const override;
+
 private:
 	std::multimap<std::string, FunctionDefinition const*> const& definedFunctionsByName() const;
 
@@ -753,6 +757,8 @@ public:
 
 	StructDeclarationAnnotation& annotation() const override;
 
+	std::optional<Json> ethdebug() const override;
+
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
@@ -784,6 +790,8 @@ public:
 	Type const* type() const override;
 
 	TypeDeclarationAnnotation& annotation() const override;
+
+	std::optional<Json> ethdebug() const override;
 
 private:
 	std::vector<ASTPointer<EnumValue>> m_members;
@@ -1036,6 +1044,8 @@ public:
 
 	Expression const* experimentalReturnExpression() const { return m_experimentalReturnExpression.get(); }
 
+	std::optional<Json> ethdebug() const override;
+
 private:
 	StateMutability m_stateMutability;
 	bool m_free;
@@ -1155,6 +1165,8 @@ public:
 
 	ASTPointer<Expression> const& typeExpression() const { return m_typeExpression; }
 	VariableDeclarationAnnotation& annotation() const override;
+
+	std::optional<Json> ethdebug() const override;
 
 protected:
 	Visibility defaultVisibility() const override { return Visibility::Internal; }

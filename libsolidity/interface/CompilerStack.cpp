@@ -1093,10 +1093,26 @@ Json CompilerStack::interfaceSymbols(std::string const& _contractName) const
 
 Json CompilerStack::ethdebug(std::string const& _contractName) const
 {
-	(void)_contractName;
-
-	Json ethdebug = {{"not yet implemented", true}};
-	return ethdebug;
+	Json result = Json::object();
+	Json types = Json::object();
+	ContractDefinition const& contract = contractDefinition(_contractName);
+	for (auto const& _enum : contract.definedEnums())
+	{
+		solAssert(_enum->ethdebug().has_value());
+		types[_enum->name()] = *_enum->ethdebug();
+	}
+	for (auto const& _struct : contract.definedStructs())
+	{
+		solAssert(_struct->ethdebug().has_value());
+		types[_struct->name()] = *_struct->ethdebug();
+	}
+	for (auto const& _function : contract.definedFunctions())
+	{
+		solAssert(_function->ethdebug().has_value());
+		types[_function->name()] = *_function->ethdebug();
+	}
+	result["types"] = types;
+	return result;
 }
 
 bytes CompilerStack::cborMetadata(std::string const& _contractName, bool _forIR) const

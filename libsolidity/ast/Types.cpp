@@ -414,6 +414,85 @@ std::set<FunctionDefinition const*, ASTNode::CompareByID> Type::operatorDefiniti
 	return matchingDefinitions;
 }
 
+std::optional<Json> Type::ethdebug() const
+{
+	Json result = Json::object();
+	switch (category())
+	{
+	case Category::Address:
+		result["kind"] = "address";
+		break;
+	case Category::Integer:
+	{
+		auto integer = dynamic_cast<IntegerType const*>(this);
+		if (integer->isSigned())
+			result["kind"] = "int";
+		else
+			result["kind"] = "uint";
+		result["bits"] = integer->numBits();
+		break;
+	}
+	case Category::RationalNumber:
+		result["kind"] = "rational";
+		break;
+	case Category::StringLiteral:
+		result["kind"] = "string";
+		break;
+	case Category::Bool:
+		result["kind"] = "bool";
+		break;
+	case Category::FixedPoint:
+		result["kind"] = "fixed";
+		break;
+	case Category::Array:
+		result["kind"] = "array";
+		break;
+	case Category::ArraySlice:
+		result["kind"] = "slice";
+		break;
+	case Category::FixedBytes:
+		result["kind"] = "bytes";
+		break;
+	case Category::Contract:
+		result["kind"] = "contract";
+		break;
+	case Category::Struct:
+		result["kind"] = "struct";
+		break;
+	case Category::Function:
+		result["kind"] = "function";
+		break;
+	case Category::Enum:
+		result["kind"] = "enum";
+		break;
+	case Category::UserDefinedValueType:
+		result["kind"] = "udvt";
+		break;
+	case Category::Tuple:
+		result["kind"] = "tuple";
+		break;
+	case Category::Mapping:
+		result["kind"] = "mapping";
+		break;
+	case Category::TypeType:
+		result["kind"] = "type-type";
+		break;
+	case Category::Modifier:
+		result["kind"] = "modifier";
+		break;
+	case Category::Magic:
+		result["kind"] = "magic";
+		break;
+	case Category::Module:
+		result["kind"] = "module";
+		break;
+	case Category::InaccessibleDynamic:
+		result["kind"] = "inaccessible-dynamic";
+		break;
+	}
+	return result;
+}
+
 MemberList::MemberMap Type::attachedFunctions(Type const& _type, ASTNode const& _scope)
 {
 	MemberList::MemberMap members;
