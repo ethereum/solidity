@@ -469,6 +469,14 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 						_variable.location(),
 						"Transient cannot be used as data location for constant or immutable variables."
 					);
+
+				if (_variable.value())
+					m_errorReporter.declarationError(
+						9825_error,
+						_variable.location(),
+						"Initialization of transient storage state variables is not supported."
+					);
+
 				typeLoc = DataLocation::Transient;
 				break;
 			default:
