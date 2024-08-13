@@ -26,6 +26,10 @@
 
 #include <stack>
 
+#ifdef EMSCRIPTEN_BUILD
+#include <z3++.h>
+#endif
+
 using namespace solidity::frontend::smt;
 using namespace solidity::smtutil;
 
@@ -35,6 +39,17 @@ Z3CHCSmtLib2Interface::Z3CHCSmtLib2Interface(
 	bool _computeInvariants
 ): CHCSmtLib2Interface({}, std::move(_smtCallback), _queryTimeout), m_computeInvariants(_computeInvariants)
 {
+#ifdef EMSCRIPTEN_BUILD
+	constexpr int resourceLimit = 2000000;
+	if (m_queryTimeout)
+		z3::set_param("timeout", int(*m_queryTimeout));
+	else
+		z3::set_param("rlimit", resourceLimit);
+	z3::set_param("rewriter.pull_cheap_ite", true);
+	z3::set_param("fp.spacer.q3.use_qgen", true);
+	z3::set_param("fp.spacer.mbqi", false);
+	z3::set_param("fp.spacer.ground_pobs", false);
+#endif
 }
 
 void Z3CHCSmtLib2Interface::setupSmtCallback(bool _enablePreprocessing)
@@ -47,7 +62,14 @@ CHCSolverInterface::QueryResult Z3CHCSmtLib2Interface::query(smtutil::Expression
 {
 	setupSmtCallback(true);
 	std::string query = dumpQuery(_block);
+#ifdef EMSCRIPTEN_BUILD
+	z3::set_param("fp.xform.slice", true);
+	z3::set_param("fp.xform.inline_linear", true);
+	z3::set_param("fp.xform.inline_eager", true);
+	std::string response = [&](){ z3::context context; return Z3_eval_smtlib2_string(context, query.c_str()); }();
+#else
 	std::string response = querySolver(query);
+#endif
 	// NOTE: Our internal semantics is UNSAT -> SAFE and SAT -> UNSAFE, which corresponds to usual SMT-based model checking
 	// However, with CHC solvers, the meaning is flipped, UNSAT -> UNSAFE and SAT -> SAFE.
 	// So we have to flip the answer.
@@ -56,7 +78,15 @@ CHCSolverInterface::QueryResult Z3CHCSmtLib2Interface::query(smtutil::Expression
 		// Repeat the query with preprocessing disabled, to get the full proof
 		setupSmtCallback(false);
 		query = "(set-option :produce-proofs true)" + query + "\n(get-proof)";
+#ifdef EMSCRIPTEN_BUILD
+		z3::context context;
+		z3::set_param("fp.xform.slice", false);
+		z3::set_param("fp.xform.inline_linear", false);
+		z3::set_param("fp.xform.inline_eager", false);
+		response = Z3_eval_smtlib2_string(context, query.c_str());
+#else
 		response = querySolver(query);
+#endif
 		setupSmtCallback(true);
 		if (!boost::starts_with(response, "unsat"))
 			return {CheckResult::SATISFIABLE, Expression(true), {}};
