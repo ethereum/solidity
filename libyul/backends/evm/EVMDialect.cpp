@@ -23,18 +23,13 @@
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
-#include <liblangutil/Exceptions.h>
 #include <libsolutil/StringUtils.h>
 #include <libyul/AST.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmParser.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/AbstractAssembly.h>
-
-#include <range/v3/view/reverse.hpp>
-#include <range/v3/view/tail.hpp>
 
 #include <regex>
 
@@ -460,107 +455,4 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 		function = std::make_shared<BuiltinFunctionForEVM const>(std::move(builtinFunction));
 	}
 	return function.get();
-}
-
-EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess):
-	EVMDialect(_evmVersion, _objectAccess)
-{
-	defaultType = "u256"_yulname;
-	boolType = "bool"_yulname;
-	types = {defaultType, boolType};
-
-	// Set all types to ``defaultType``
-	for (auto& fun: m_functions)
-	{
-		for (auto& p: fun.second.parameters)
-			p = defaultType;
-		for (auto& r: fun.second.returns)
-			r = defaultType;
-	}
-
-	m_functions["lt"_yulname].returns = {"bool"_yulname};
-	m_functions["gt"_yulname].returns = {"bool"_yulname};
-	m_functions["slt"_yulname].returns = {"bool"_yulname};
-	m_functions["sgt"_yulname].returns = {"bool"_yulname};
-	m_functions["eq"_yulname].returns = {"bool"_yulname};
-
-	// "not" and "bitnot" replace "iszero" and "not"
-	m_functions["bitnot"_yulname] = m_functions["not"_yulname];
-	m_functions["bitnot"_yulname].name = "bitnot"_yulname;
-	m_functions["not"_yulname] = m_functions["iszero"_yulname];
-	m_functions["not"_yulname].name = "not"_yulname;
-	m_functions["not"_yulname].returns = {"bool"_yulname};
-	m_functions["not"_yulname].parameters = {"bool"_yulname};
-	m_functions.erase("iszero"_yulname);
-
-	m_functions["bitand"_yulname] = m_functions["and"_yulname];
-	m_functions["bitand"_yulname].name = "bitand"_yulname;
-	m_functions["bitor"_yulname] = m_functions["or"_yulname];
-	m_functions["bitor"_yulname].name = "bitor"_yulname;
-	m_functions["bitxor"_yulname] = m_functions["xor"_yulname];
-	m_functions["bitxor"_yulname].name = "bitxor"_yulname;
-	m_functions["and"_yulname].parameters = {"bool"_yulname, "bool"_yulname};
-	m_functions["and"_yulname].returns = {"bool"_yulname};
-	m_functions["or"_yulname].parameters = {"bool"_yulname, "bool"_yulname};
-	m_functions["or"_yulname].returns = {"bool"_yulname};
-	m_functions["xor"_yulname].parameters = {"bool"_yulname, "bool"_yulname};
-	m_functions["xor"_yulname].returns = {"bool"_yulname};
-	m_functions["popbool"_yulname] = m_functions["pop"_yulname];
-	m_functions["popbool"_yulname].name = "popbool"_yulname;
-	m_functions["popbool"_yulname].parameters = {"bool"_yulname};
-	m_functions.insert(createFunction("bool_to_u256", 1, 1, {}, {}, [](
-		FunctionCall const&,
-		AbstractAssembly&,
-		BuiltinContext&
-	) {}));
-	m_functions["bool_to_u256"_yulname].parameters = {"bool"_yulname};
-	m_functions["bool_to_u256"_yulname].returns = {"u256"_yulname};
-	m_functions.insert(createFunction("u256_to_bool", 1, 1, {}, {}, [](
-		FunctionCall const&,
-		AbstractAssembly& _assembly,
-		BuiltinContext&
-	) {
-		// TODO this should use a Panic.
-		// A value larger than 1 causes an invalid instruction.
-		_assembly.appendConstant(2);
-		_assembly.appendInstruction(evmasm::Instruction::DUP2);
-		_assembly.appendInstruction(evmasm::Instruction::LT);
-		AbstractAssembly::LabelID inRange = _assembly.newLabelId();
-		_assembly.appendJumpToIf(inRange);
-		_assembly.appendInstruction(evmasm::Instruction::INVALID);
-		_assembly.appendLabel(inRange);
-	}));
-	m_functions["u256_to_bool"_yulname].parameters = {"u256"_yulname};
-	m_functions["u256_to_bool"_yulname].returns = {"bool"_yulname};
-}
-
-BuiltinFunctionForEVM const* EVMDialectTyped::discardFunction(YulName _type) const
-{
-	if (_type == "bool"_yulname)
-		return builtin("popbool"_yulname);
-	else
-	{
-		yulAssert(_type == defaultType, "");
-		return builtin("pop"_yulname);
-	}
-}
-
-BuiltinFunctionForEVM const* EVMDialectTyped::equalityFunction(YulName _type) const
-{
-	if (_type == "bool"_yulname)
-		return nullptr;
-	else
-	{
-		yulAssert(_type == defaultType, "");
-		return builtin("eq"_yulname);
-	}
-}
-
-EVMDialectTyped const& EVMDialectTyped::instance(langutil::EVMVersion _version)
-{
-	static std::map<langutil::EVMVersion, std::unique_ptr<EVMDialectTyped const>> dialects;
-	static YulStringRepository::ResetCallback callback{[&] { dialects.clear(); }};
-	if (!dialects[_version])
-		dialects[_version] = std::make_unique<EVMDialectTyped>(_version, true);
-	return *dialects[_version];
 }
