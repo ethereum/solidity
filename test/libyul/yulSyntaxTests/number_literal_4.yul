@@ -1,3 +1,3 @@
-{ let x:u256 := 67.235:u256 }
+{ let x := 67.235 }
 // ----
-// ParserError 4828: (16-22): Invalid number literal.
+// ParserError 4828: (11-17): Invalid number literal.

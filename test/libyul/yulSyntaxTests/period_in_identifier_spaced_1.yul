@@ -1,3 +1,3 @@
-{ let x. y:u256 }
+{ let x. y }
 // ----
-// ParserError 6913: (10-11): Call or assignment expected.
+// ParserError 6913: (11-12): Call or assignment expected.

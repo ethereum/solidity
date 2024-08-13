@@ -1,5 +1,3 @@
-{ if let x:u256 {} }
-// ====
-// dialect: evmTyped
+{ if let x {} }
 // ----
 // ParserError 1856: (5-8): Literal or identifier expected.
