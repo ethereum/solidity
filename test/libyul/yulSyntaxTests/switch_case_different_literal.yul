@@ -1,8 +1,6 @@
 {
-	switch 1:u256
-	case "1":u256 {}
-	case "2":u256 {}
+	switch 1
+	case "1" {}
+	case "2" {}
 }
-// ====
-// dialect: evmTyped
 // ----

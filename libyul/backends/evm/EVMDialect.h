@@ -102,26 +102,4 @@ protected:
 	std::set<YulName> m_reserved;
 };
 
-/**
- * EVM dialect with types u256 (default) and bool.
- * Difference to EVMDialect:
- *  - All comparison functions return type bool
- *  - bitwise operations are called bitor, bitand, bitxor and bitnot
- *  - and, or, xor take bool and return bool
- *  - iszero is replaced by not, which takes bool and returns bool
- *  - there are conversion functions bool_to_u256 and u256_to_bool.
- *  - there is popbool
- */
-struct EVMDialectTyped: public EVMDialect
-{
-	/// Constructor, should only be used internally. Use the factory function below.
-	EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectAccess);
-
-	BuiltinFunctionForEVM const* discardFunction(YulName _type) const override;
-	BuiltinFunctionForEVM const* equalityFunction(YulName _type) const override;
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("not"_yulname); }
-
-	static EVMDialectTyped const& instance(langutil::EVMVersion _version);
-};
-
 }

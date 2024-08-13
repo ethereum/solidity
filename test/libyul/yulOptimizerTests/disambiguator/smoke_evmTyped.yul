@@ -1,7 +1,0 @@
-{ }
-// ====
-// dialect: evmTyped
-// ----
-// step: disambiguator
-//
-// { }

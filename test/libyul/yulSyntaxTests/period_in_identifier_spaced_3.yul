@@ -1,3 +1,3 @@
-{ let x . y:u256 }
+{ let x . y }
 // ----
 // ParserError 1856: (8-9): Literal or identifier expected.

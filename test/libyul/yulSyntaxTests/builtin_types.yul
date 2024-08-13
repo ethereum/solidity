@@ -1,7 +1,5 @@
 {
-    let x1:bool := true:bool
-    let x2:u256 := 1:u256
+    let x1 := true
+    let x2 := 1
 }
-// ====
-// dialect: evmTyped
 // ----

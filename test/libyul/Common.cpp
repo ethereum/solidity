@@ -50,12 +50,12 @@ Dialect const& defaultDialect()
 }
 }
 
-std::pair<std::shared_ptr<AST const>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(std::string const& _source, bool _yul)
+std::pair<std::shared_ptr<AST const>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(std::string const& _source)
 {
 	YulStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().eofVersion(),
-		_yul ? YulStack::Language::Yul : YulStack::Language::StrictAssembly,
+		YulStack::Language::StrictAssembly,
 		solidity::test::CommonOptions::get().optimize ?
 			solidity::frontend::OptimiserSettings::standard() :
 			solidity::frontend::OptimiserSettings::minimal(),
@@ -88,17 +88,17 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<yul::AsmAnalysisInfo>> yul::t
 	return {std::move(parserResult), std::move(analysisInfo)};
 }
 
-yul::Block yul::test::disambiguate(std::string const& _source, bool _yul)
+yul::Block yul::test::disambiguate(std::string const& _source)
 {
-	auto result = parse(_source, _yul);
+	auto result = parse(_source);
 	return std::get<Block>(Disambiguator(defaultDialect(), *result.second, {})(result.first->root()));
 }
 
-std::string yul::test::format(std::string const& _source, bool _yul)
+std::string yul::test::format(std::string const& _source)
 {
 	auto const version = solidity::test::CommonOptions::get().evmVersion();
-	Dialect const& dialect = _yul ? EVMDialectTyped::instance(version) : EVMDialect::strictAssemblyForEVMObjects(version);
-	return yul::AsmPrinter(yul::AsmPrinter::TypePrinting::Full, dialect)(parse(_source, _yul).first->root());
+	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(version);
+	return yul::AsmPrinter(yul::AsmPrinter::TypePrinting::Full, dialect)(parse(_source).first->root());
 }
 
 namespace
@@ -108,11 +108,6 @@ std::map<std::string const, yul::Dialect const& (*)(langutil::EVMVersion)> const
 		"evm",
 		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
 		{ return yul::EVMDialect::strictAssemblyForEVMObjects(_evmVersion); }
-	},
-	{
-		"evmTyped",
-		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialectTyped::instance(_evmVersion); }
 	}
 };
 
