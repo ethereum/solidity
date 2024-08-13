@@ -24,8 +24,6 @@
 
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
-#include <libyul/optimiser/FullInliner.h>
-#include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/FunctionGrouper.h>
 #include <libyul/AST.h>
 
@@ -65,44 +63,44 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 
 BOOST_AUTO_TEST_CASE(simple)
 {
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := 2:u256 } }"), "f");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x { x := 2 } }"), "f");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
-		"function g(a:u256) -> b:u256 { b := a }"
-		"function f() -> x:u256 { x := g(2:u256) }"
+		"function g(a) -> b { b := a }"
+		"function f() -> x { x := g(2) }"
 	"}"), "g,f");
 }
 
 BOOST_AUTO_TEST_CASE(simple_inside_structures)
 {
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
-		"switch 2:u256 "
-		"case 2:u256 {"
-			"function g(a:u256) -> b:u256 { b := a }"
-			"function f() -> x:u256 { x := g(2:u256) }"
+		"switch 2 "
+		"case 2 {"
+			"function g(a) -> b { b := a }"
+			"function f() -> x { x := g(2) }"
 		"}"
 	"}"), "g,f");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{"
-		"function g(a:u256) -> b:u256 { b := a }"
+		"function g(a) -> b { b := a }"
 		"for {"
 		"} true {"
-			"function f() -> x:u256 { x := g(2:u256) }"
+			"function f() -> x { x := g(2) }"
 		"}"
 		"{"
-			"function h() -> y:u256 { y := 2:u256 }"
+			"function h() -> y { y := 2 }"
 		"}"
 	"}"), "h,g,f");
 }
 
 BOOST_AUTO_TEST_CASE(negative)
 {
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { } }"), "");
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := 2:u256 {} } }"), "");
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := f() } }"), "");
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := x } }"), "");
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256, y:u256 { x := 2:u256 } }"), "");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x { } }"), "");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x { x := 2 {} } }"), "");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x { x := f() } }"), "");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x { x := x } }"), "");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x, y { x := 2 } }"), "");
   BOOST_CHECK_EQUAL(inlinableFunctions(
-    "{ function g() -> x:u256, y:u256 {} function f(y:u256) -> x:u256 { x,y := g() } }"), "");
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f(y:u256) -> x:u256 { y := 2:u256 } }"), "");
+    "{ function g() -> x, y {} function f(y) -> x { x,y := g() } }"), "");
+	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f(y) -> x { y := 2 } }"), "");
 }
 
 

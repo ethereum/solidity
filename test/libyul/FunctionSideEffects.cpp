@@ -83,7 +83,7 @@ FunctionSideEffects::FunctionSideEffects(std::string const& _filename):
 TestCase::TestResult FunctionSideEffects::run(std::ostream& _stream, std::string const& _linePrefix, bool _formatted)
 {
 	Object obj;
-	auto parsingResult = yul::test::parse(m_source, false);
+	auto parsingResult = yul::test::parse(m_source);
 	obj.setCode(parsingResult.first, parsingResult.second);
 	if (!obj.hasCode())
 		BOOST_THROW_EXCEPTION(std::runtime_error("Parsing input failed."));
