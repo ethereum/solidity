@@ -1,6 +1,6 @@
 {
-	let x:u256
-	function f() -> x:u256 {}
+	let x
+	function f() -> x {}
 }
 // ----
-// DeclarationError 1395: (15-40): Variable name x already taken in this scope.
+// DeclarationError 1395: (10-30): Variable name x already taken in this scope.

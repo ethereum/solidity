@@ -1,3 +1,3 @@
-{ 0x42:u256 }
+{ 0x42 }
 // ----
-// ParserError 6913: (12-13): Call or assignment expected.
+// ParserError 6913: (7-8): Call or assignment expected.

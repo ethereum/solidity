@@ -1,4 +1,2 @@
-{ let x:u256 := 7:u256 }
-// ====
-// dialect: evmTyped
+{ let x := 7 }
 // ----

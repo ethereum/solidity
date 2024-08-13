@@ -1,6 +1,4 @@
 {
-    let bool:u256 := 1:u256
+    let bool := 1
 }
-// ====
-// dialect: evmTyped
 // ----
