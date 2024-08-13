@@ -52,8 +52,6 @@ Dialect const& languageToDialect(YulStack::Language _language, EVMVersion _versi
 	case YulStack::Language::Assembly:
 	case YulStack::Language::StrictAssembly:
 		return EVMDialect::strictAssemblyForEVMObjects(_version);
-	case YulStack::Language::Yul:
-		return EVMDialectTyped::instance(_version);
 	}
 	yulAssert(false);
 	util::unreachable();
@@ -179,9 +177,6 @@ void YulStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 		case Language::Assembly:
 		case Language::StrictAssembly:
 			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
-			break;
-		case Language::Yul:
-			dialect = &EVMDialectTyped::instance(m_evmVersion);
 			break;
 		default:
 			yulAssert(false, "Invalid language.");
