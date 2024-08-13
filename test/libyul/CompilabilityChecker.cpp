@@ -35,7 +35,7 @@ namespace
 std::string check(std::string const& _input)
 {
 	Object obj;
-	auto parsingResult = yul::test::parse(_input, false);
+	auto parsingResult = yul::test::parse(_input);
 	obj.setCode(parsingResult.first, parsingResult.second);
 	BOOST_REQUIRE(obj.hasCode());
 	auto functions = CompilabilityChecker(EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()), obj, true).stackDeficit;
