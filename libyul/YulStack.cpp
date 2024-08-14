@@ -351,8 +351,6 @@ std::string YulStack::print(
 	yulAssert(m_parserResult, "");
 	yulAssert(m_parserResult->hasCode(), "");
 	return m_parserResult->toString(
-		languageToDialect(m_language, m_evmVersion),
-		AsmPrinter::TypePrinting::OmitDefault,
 		m_debugInfoSelection,
 		_soliditySourceProvider
 	) + "\n";
