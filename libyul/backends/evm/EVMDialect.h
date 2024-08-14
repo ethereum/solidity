@@ -74,14 +74,14 @@ struct EVMDialect: public Dialect
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	bool reservedIdentifier(YulName _name) const override;
 
-	BuiltinFunctionForEVM const* discardFunction(YulName /*_type*/) const override { return builtin("pop"_yulname); }
-	BuiltinFunctionForEVM const* equalityFunction(YulName /*_type*/) const override { return builtin("eq"_yulname); }
+	BuiltinFunctionForEVM const* discardFunction() const override { return builtin("pop"_yulname); }
+	BuiltinFunctionForEVM const* equalityFunction() const override { return builtin("eq"_yulname); }
 	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulname); }
-	BuiltinFunctionForEVM const* memoryStoreFunction(YulName /*_type*/) const override { return builtin("mstore"_yulname); }
-	BuiltinFunctionForEVM const* memoryLoadFunction(YulName /*_type*/) const override { return builtin("mload"_yulname); }
-	BuiltinFunctionForEVM const* storageStoreFunction(YulName /*_type*/) const override { return builtin("sstore"_yulname); }
-	BuiltinFunctionForEVM const* storageLoadFunction(YulName /*_type*/) const override { return builtin("sload"_yulname); }
-	YulName hashFunction(YulName /*_type*/) const override { return "keccak256"_yulname; }
+	BuiltinFunctionForEVM const* memoryStoreFunction() const override { return builtin("mstore"_yulname); }
+	BuiltinFunctionForEVM const* memoryLoadFunction() const override { return builtin("mload"_yulname); }
+	BuiltinFunctionForEVM const* storageStoreFunction() const override { return builtin("sstore"_yulname); }
+	BuiltinFunctionForEVM const* storageLoadFunction() const override { return builtin("sload"_yulname); }
+	YulName hashFunction() const override { return "keccak256"_yulname; }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);

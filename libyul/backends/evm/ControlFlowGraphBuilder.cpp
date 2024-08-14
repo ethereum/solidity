@@ -349,7 +349,7 @@ void ControlFlowGraphBuilder::operator()(Switch const& _switch)
 		CFG::Assignment{_switch.debugData, {ghostVarSlot}}
 	});
 
-	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction({});
+	BuiltinFunction const* equalityBuiltin = m_dialect.equalityFunction();
 	yulAssert(equalityBuiltin, "");
 
 	// Artificially generate:

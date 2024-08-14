@@ -61,34 +61,23 @@ struct Dialect
 	Dialect(Dialect const&) = delete;
 	Dialect& operator=(Dialect const&) = delete;
 
-	/// Default type, can be omitted.
-	YulName defaultType;
-	/// Type used for the literals "true" and "false".
-	YulName boolType;
-	std::set<YulName> types = {{}};
-
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	virtual BuiltinFunction const* builtin(YulName /*_name*/) const { return nullptr; }
 
 	/// @returns true if the identifier is reserved. This includes the builtins too.
 	virtual bool reservedIdentifier(YulName _name) const { return builtin(_name) != nullptr; }
 
-	virtual BuiltinFunction const* discardFunction(YulName /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* equalityFunction(YulName /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* discardFunction() const { return nullptr; }
+	virtual BuiltinFunction const* equalityFunction() const { return nullptr; }
 	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
 
-	virtual BuiltinFunction const* memoryStoreFunction(YulName /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* memoryLoadFunction(YulName /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* storageStoreFunction(YulName /* _type */) const { return nullptr; }
-	virtual BuiltinFunction const* storageLoadFunction(YulName /* _type */) const { return nullptr; }
-	virtual YulName hashFunction(YulName /* _type */ ) const { return YulName{}; }
+	virtual BuiltinFunction const* memoryStoreFunction() const { return nullptr; }
+	virtual BuiltinFunction const* memoryLoadFunction() const { return nullptr; }
+	virtual BuiltinFunction const* storageStoreFunction() const { return nullptr; }
+	virtual BuiltinFunction const* storageLoadFunction() const { return nullptr; }
+	virtual YulName hashFunction() const { return YulName{}; }
 
-	/// Check whether the given type is legal for the given literal value.
-	/// Should only be called if the type exists in the dialect at all.
-	virtual bool validTypeForLiteral(LiteralKind _kind, LiteralValue const& _value, YulName _type) const;
-
-	virtual Literal zeroLiteralForType(YulName _type) const;
-	virtual Literal trueLiteral() const;
+	Literal zeroLiteral() const;
 
 	virtual std::set<YulName> fixedFunctionNames() const { return {}; }
 
