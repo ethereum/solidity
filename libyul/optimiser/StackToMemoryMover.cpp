@@ -42,7 +42,7 @@ std::vector<Statement> generateMemoryStore(
 	Expression _value
 )
 {
-	BuiltinFunction const* memoryStoreFunction = _dialect.memoryStoreFunction(_dialect.defaultType);
+	BuiltinFunction const* memoryStoreFunction = _dialect.memoryStoreFunction();
 	yulAssert(memoryStoreFunction, "");
 	std::vector<Statement> result;
 	result.emplace_back(ExpressionStatement{_debugData, FunctionCall{
@@ -58,7 +58,7 @@ std::vector<Statement> generateMemoryStore(
 
 FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::DebugData::ConstPtr const& _debugData, LiteralValue const& _mpos)
 {
-	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction(_dialect.defaultType);
+	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction();
 	yulAssert(memoryLoadFunction, "");
 	return FunctionCall{
 		_debugData,

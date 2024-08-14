@@ -128,14 +128,12 @@ std::vector<YulName> AsmAnalyzer::operator()(Literal const& _literal)
 		m_errorReporter.typeError(6708_error, nativeLocationOf(_literal), "Number literal too large (> 256 bits)");
 	}
 
-	if (!m_dialect.validTypeForLiteral(_literal.kind, _literal.value, _literal.type))
-	{
+	if (_literal.kind == LiteralKind::Boolean && !_literal.type.empty())
 		m_errorReporter.typeError(
 			5170_error,
 			nativeLocationOf(_literal),
 			"Invalid type \"" + _literal.type.str() + "\" for literal \"" + formatLiteral(_literal) + "\"."
 		);
-	}
 
 	yulAssert(erroneousLiteralValue ^ validLiteral(_literal), "Invalid literal after validating it through AsmAnalyzer.");
 	return {_literal.type};
@@ -145,7 +143,7 @@ std::vector<YulName> AsmAnalyzer::operator()(Identifier const& _identifier)
 {
 	yulAssert(!_identifier.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
-	YulName type = m_dialect.defaultType;
+	YulName type{};
 
 	if (m_currentScope->lookup(_identifier.name, GenericVisitor{
 		[&](Scope::Variable const& _var)
@@ -284,7 +282,7 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 
 		for (size_t i = 0; i < _varDecl.variables.size(); ++i)
 		{
-			YulName givenType = m_dialect.defaultType;
+			YulName givenType{};
 			if (i < types.size())
 				givenType = types[i];
 			TypedName const& variable = _varDecl.variables[i];
@@ -474,7 +472,7 @@ std::vector<YulName> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		return *returnTypes;
 	}
 	else if (returnTypes)
-		return std::vector<YulName>(returnTypes->size(), m_dialect.defaultType);
+		return std::vector<YulName>(returnTypes->size(), YulName{});
 	else
 		return {};
 }
@@ -573,13 +571,13 @@ YulName AsmAnalyzer::expectExpression(Expression const& _expr)
 			std::to_string(types.size()) +
 			" values instead."
 		);
-	return types.empty() ? m_dialect.defaultType : types.front();
+	return types.empty() ? YulName{} : types.front();
 }
 
 YulName AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
 {
 	yulAssert(_literal.kind == LiteralKind::String);
-	yulAssert(m_dialect.validTypeForLiteral(LiteralKind::String, _literal.value, _literal.type));
+	yulAssert(_literal.type.empty());
 	yulAssert(_literal.value.unlimited());
 
 	return {_literal.type};
@@ -588,12 +586,13 @@ YulName AsmAnalyzer::expectUnlimitedStringLiteral(Literal const& _literal)
 void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
 {
 	YulName type = expectExpression(_expr);
-	if (type != m_dialect.boolType)
+	static YulName boolType = {};
+	if (type != boolType)
 		m_errorReporter.typeError(
 			1733_error,
 			nativeLocationOf(_expr),
 			"Expected a value of boolean type \"" +
-			m_dialect.boolType.str() +
+			boolType.str() +
 			"\" but got \"" +
 			type.str() +
 			"\""
@@ -604,7 +603,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueTyp
 {
 	yulAssert(!_variable.name.empty(), "");
 	auto watcher = m_errorReporter.errorWatcher();
-	YulName const* variableType = nullptr;
+	std::optional<YulName> variableType = std::nullopt;
 	bool found = false;
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
@@ -625,7 +624,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueTyp
 				"Variable " + _variable.name.str() + " used before it was declared."
 			);
 		else
-			variableType = &std::get<Scope::Variable>(*var).type;
+			variableType = std::get<Scope::Variable>(*var).type;
 		found = true;
 	}
 	else if (m_resolver)
@@ -634,7 +633,7 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulName _valueTyp
 		if (m_resolver(_variable, yul::IdentifierContext::LValue, insideFunction))
 		{
 			found = true;
-			variableType = &m_dialect.defaultType;
+			variableType = YulName{};
 		}
 	}
 
@@ -690,7 +689,7 @@ void AsmAnalyzer::expectValidIdentifier(YulName _identifier, SourceLocation cons
 
 void AsmAnalyzer::expectValidType(YulName _type, SourceLocation const& _location)
 {
-	if (!m_dialect.types.count(_type))
+	if (!_type.empty())
 		m_errorReporter.typeError(
 			5473_error,
 			_location,

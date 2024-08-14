@@ -571,7 +571,7 @@ std::variant<Literal, Identifier> Parser::parseLiteralOrIdentifier(bool _unlimit
 			createDebugData(),
 			kind,
 			valueOfLiteral(currentLiteral(), kind, _unlimitedLiteralArgument && kind == LiteralKind::String),
-			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
+			{}
 		};
 		advance();
 		if (currentToken() == Token::Colon)
@@ -707,7 +707,7 @@ TypedName Parser::parseTypedName()
 		typedName.type = expectAsmIdentifier();
 	}
 	else
-		typedName.type = m_dialect.defaultType;
+		typedName.type = {};
 
 	return typedName;
 }

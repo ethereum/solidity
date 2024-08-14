@@ -53,9 +53,8 @@ std::string AsmPrinter::operator()(Literal const& _literal)
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
-		return locationComment + formattedValue + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
-		return locationComment + formattedValue + appendTypeName(_literal.type, true);
+		return locationComment + formattedValue + appendTypeName(_literal.type);
 	case LiteralKind::String:
 		break;
 	}
@@ -243,20 +242,12 @@ std::string AsmPrinter::formatTypedName(TypedName _variable)
 	return formatDebugData(_variable) + _variable.name.str() + appendTypeName(_variable.type);
 }
 
-std::string AsmPrinter::appendTypeName(YulName _type, bool _isBoolLiteral) const
+std::string AsmPrinter::appendTypeName(YulName _type) const
 {
 	yulAssert(
 		m_typePrintingMode == TypePrinting::OmitDefault || m_typePrintingMode == TypePrinting::Full,
 		"unhandled printing mode"
 	);
-	if (m_typePrintingMode == TypePrinting::OmitDefault && !_type.empty())
-	{
-		if (!_isBoolLiteral && _type == m_dialect.defaultType)
-			_type = {};
-		else if (_isBoolLiteral && _type == m_dialect.boolType && !m_dialect.defaultType.empty())
-			// Special case: If we have a bool type but empty default type, do not remove the type.
-			_type = {};
-	}
 	if (_type.empty())
 		return {};
 	else

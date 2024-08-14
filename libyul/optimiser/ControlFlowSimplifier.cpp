@@ -138,12 +138,12 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 	GenericVisitor visitor{
 		VisitorFallback<OptionalStatements>{},
 		[&](If& _ifStmt) -> OptionalStatements {
-			if (_ifStmt.body.statements.empty() && m_dialect.discardFunction(m_dialect.boolType))
+			if (_ifStmt.body.statements.empty() && m_dialect.discardFunction())
 			{
 				OptionalStatements s = std::vector<Statement>{};
 				s->emplace_back(makeDiscardCall(
 					_ifStmt.debugData,
-					*m_dialect.discardFunction(m_dialect.boolType),
+					*m_dialect.discardFunction(),
 					std::move(*_ifStmt.condition)
 				));
 				return s;
@@ -180,7 +180,7 @@ OptionalStatements ControlFlowSimplifier::reduceNoCaseSwitch(Switch& _switchStmt
 {
 	yulAssert(_switchStmt.cases.empty(), "Expected no case!");
 	BuiltinFunction const* discardFunction =
-		m_dialect.discardFunction(m_typeInfo.typeOf(*_switchStmt.expression));
+		m_dialect.discardFunction();
 	if (!discardFunction)
 		return {};
 
@@ -197,16 +197,15 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 
 	auto& switchCase = _switchStmt.cases.front();
 	langutil::DebugData::ConstPtr debugData = debugDataOf(*_switchStmt.expression);
-	YulName type = m_typeInfo.typeOf(*_switchStmt.expression);
 	if (switchCase.value)
 	{
-		if (!m_dialect.equalityFunction(type))
+		if (!m_dialect.equalityFunction())
 			return {};
 		return make_vector<Statement>(If{
 			std::move(_switchStmt.debugData),
 			std::make_unique<Expression>(FunctionCall{
 				debugData,
-				Identifier{debugData, m_dialect.equalityFunction(type)->name},
+				Identifier{debugData, m_dialect.equalityFunction()->name},
 				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
 			}),
 			std::move(switchCase.body)
@@ -214,13 +213,13 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 	}
 	else
 	{
-		if (!m_dialect.discardFunction(type))
+		if (!m_dialect.discardFunction())
 			return {};
 
 		return make_vector<Statement>(
 			makeDiscardCall(
 				debugData,
-				*m_dialect.discardFunction(type),
+				*m_dialect.discardFunction(),
 				std::move(*_switchStmt.expression)
 			),
 			std::move(switchCase.body)

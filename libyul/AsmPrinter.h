@@ -93,7 +93,7 @@ public:
 
 private:
 	std::string formatTypedName(TypedName _variable);
-	std::string appendTypeName(YulName _type, bool _isBoolLiteral = false) const;
+	std::string appendTypeName(YulName _type) const;
 	std::string formatDebugData(langutil::DebugData::ConstPtr const& _debugData, bool _statement);
 	template <class T>
 	std::string formatDebugData(T const& _node)
