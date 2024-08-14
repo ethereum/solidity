@@ -436,7 +436,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
 
 		// callee adds return parameters, but removes arguments and return label
-		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize) - static_cast<int>(parameterSize) - 1);
 
 		return false;
 	}
@@ -564,7 +564,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		unsigned returnParametersSize = CompilerUtils::sizeOnStack(functionType->returnParameterTypes());
 
 		// callee adds return parameters, but removes arguments and return label
-		m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+		m_context.adjustStackOffset(static_cast<int>(returnParametersSize) - static_cast<int>(parameterSize) - 1);
 		return false;
 	}
 
@@ -721,7 +721,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 			unsigned returnParametersSize = CompilerUtils::sizeOnStack(function.returnParameterTypes());
 			// callee adds return parameters, but removes arguments and return label
-			m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
+			m_context.adjustStackOffset(static_cast<int>(returnParametersSize) - static_cast<int>(parameterSize) - 1);
 			break;
 		}
 		case FunctionType::Kind::BareCall:
