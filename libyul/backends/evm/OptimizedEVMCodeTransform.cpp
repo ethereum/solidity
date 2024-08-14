@@ -92,7 +92,7 @@ void OptimizedEVMCodeTransform::operator()(CFG::FunctionCall const& _call)
 		m_assembly.setSourceLocation(originLocationOf(_call));
 		m_assembly.appendJumpTo(
 			getFunctionLabel(_call.function),
-			static_cast<int>(_call.function.get().returns.size() - _call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
+			static_cast<int>(_call.function.get().returns.size()) - static_cast<int>(_call.function.get().arguments.size()) - (_call.canContinue ? 1 : 0),
 			AbstractAssembly::JumpType::IntoFunction
 		);
 		if (_call.canContinue)

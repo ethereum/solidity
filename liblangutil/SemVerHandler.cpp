@@ -115,7 +115,7 @@ bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _versio
 			if (version.numbers[i] != std::numeric_limits<unsigned>::max())
 			{
 				didCompare = true;
-				cmp = static_cast<int>(_version.numbers[i] - version.numbers[i]);
+				cmp = static_cast<int>(_version.numbers[i]) - static_cast<int>(version.numbers[i]);
 			}
 
 		if (cmp == 0 && !_version.prerelease.empty() && didCompare)
