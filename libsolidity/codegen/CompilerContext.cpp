@@ -491,8 +491,8 @@ void CompilerContext::appendInlineAssembly(
 		{
 			// Store as generated sources, but first re-parse to update the source references.
 			solAssert(m_generatedYulUtilityCode.empty(), "");
-			m_generatedYulUtilityCode = yul::AsmPrinter(yul::AsmPrinter::TypePrinting::OmitDefault, dialect)(obj.code()->root());
-			std::string code = yul::AsmPrinter{yul::AsmPrinter::TypePrinting::OmitDefault, dialect}(obj.code()->root());
+			m_generatedYulUtilityCode = yul::AsmPrinter()(obj.code()->root());
+			std::string code = yul::AsmPrinter{}(obj.code()->root());
 			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
 			obj.setCode(yul::Parser(errorReporter, dialect).parse(charStream));
 			obj.analysisInfo = std::make_shared<yul::AsmAnalysisInfo>(yul::AsmAnalyzer::analyzeStrictAssertCorrect(dialect, obj));

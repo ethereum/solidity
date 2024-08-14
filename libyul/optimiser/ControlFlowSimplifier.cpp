@@ -72,8 +72,7 @@ void removeEmptyCasesFromSwitch(Switch& _switchStmt)
 
 void ControlFlowSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 {
-	TypeInfo typeInfo(_context.dialect, _ast);
-	ControlFlowSimplifier{_context.dialect, typeInfo}(_ast);
+	ControlFlowSimplifier{_context.dialect}(_ast);
 }
 
 void ControlFlowSimplifier::operator()(Block& _block)

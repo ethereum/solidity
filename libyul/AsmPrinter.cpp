@@ -244,10 +244,6 @@ std::string AsmPrinter::formatTypedName(TypedName _variable)
 
 std::string AsmPrinter::appendTypeName(YulName _type) const
 {
-	yulAssert(
-		m_typePrintingMode == TypePrinting::OmitDefault || m_typePrintingMode == TypePrinting::Full,
-		"unhandled printing mode"
-	);
 	if (_type.empty())
 		return {};
 	else
